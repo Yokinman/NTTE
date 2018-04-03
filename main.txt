@@ -1,0 +1,5 @@
+/loadmod ntte
+/loadmod telib
+
+// areas
+/loadarea areas/coast
