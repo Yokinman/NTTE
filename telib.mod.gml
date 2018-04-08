@@ -1037,7 +1037,7 @@
         sprite_index = sprHeavySlash;
         friction = 0.4;
         damage = 10;
-    }
+    } 
 
      // Misc. Visual/Sound:
     wkick = -10;
