@@ -1,7 +1,7 @@
 #define init
 //sprites
 { 
-    //diver
+     // Diver:
 	global.sprDiverIdle = sprite_add("sprites/enemies/Diver/sprDiverIdle.png", 4, 12, 12);
 	global.sprDiverWalk = sprite_add("sprites/enemies/Diver/sprDiverWalk.png", 6, 12, 12);
 	global.sprDiverHurt = sprite_add("sprites/enemies/Diver/sprDiverHurt.png", 3, 12, 12);
@@ -9,7 +9,7 @@
 	global.sprHarpoonGun = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGun.png", 1, 8, 8);
 	global.sprHarpoonGunEmpty = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGunDischarged.png", 1, 8, 8);
 	
-	//mortar
+	 // Mortar:
 	global.sprMortarIdle = sprite_add("sprites/enemies/Mortar/sprMortarIdle.png", 4, 22, 24);
 	global.sprMortarWalk = sprite_add("sprites/enemies/Mortar/sprMortarWalk.png", 8, 22, 24);
 	global.sprMortarFire = sprite_add("sprites/enemies/Mortar/sprMortarFire.png", 16, 22, 24);
@@ -19,19 +19,26 @@
 	global.sprMortarImpact = sprite_add("sprites/enemies/Mortar/sprMortarImpact.png", 7, 16, 16);
 	global.sprMortarTrail = sprite_add("sprites/enemies/Mortar/sprMortarTrail.png", 3, 4, 4);
 	
-	//big fish
+	 // Big Fish:
 	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png", 11, 32, 32);
 	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png", 8, 24, 24);  
 	global.sprBigFishEmerge = sprite_add("sprites/enemies/CoastBoss/sprBigFishEmerge.png", 5, 32, 32);
-	
-	//
+
+	 // Seagull:
 	global.sprGullIdle = sprite_add("sprites/enemies/Gull/sprGullIdle.png", 4, 12, 12);
 	global.sprGullWalk = sprite_add("sprites/enemies/Gull/sprGullWalk.png", 6, 12, 12);
 	global.sprGullHurt = sprite_add("sprites/enemies/Gull/sprGullHurt.png", 3, 12, 12);
 	global.sprGullDead = sprite_add("sprites/enemies/Gull/sprGullDead.png", 6, 16, 16);
 	global.sprGullSword = sprite_add("sprites/enemies/Gull/sprGullSword.png", 1, 6, 8);
-	
-	//big decals
+
+     // Pelican:
+    global.sprPelicanIdle = sprite_add("sprites/enemies/Pelican/sprPelicanIdle.png", 6, 24, 24);
+    global.sprPelicanWalk = sprite_add("sprites/enemies/Pelican/sprPelicanWalk.png", 6, 24, 24);
+    global.sprPelicanHurt = sprite_add("sprites/enemies/Pelican/sprPelicanHurt.png", 3, 24, 24);
+    global.sprPelicanDead = sprite_add("sprites/enemies/Pelican/sprPelicanDead.png", 6, 24, 24);
+    global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1, 6, 8);
+
+	 // Big Decals:
 	global.sprDesertBigTopDecal = sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24);
 	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 }
@@ -349,39 +356,50 @@
     		    name = string(string_upper(obj_name));
 
                  // Visual:
-    			spr_idle = global.sprDiverIdle;
-    			spr_walk = global.sprDiverWalk;
-    			spr_hurt = global.sprDiverHurt;
-    			spr_dead = global.sprDiverDead;
-    			spr_weap = global.sprHarpoonGun;
-    			spr_shadow = shd24;
+    			spr_idle = global.sprPelicanIdle;
+    			spr_walk = global.sprPelicanWalk;
+    			spr_hurt = global.sprPelicanHurt;
+    			spr_dead = global.sprPelicanDead;
+    			spr_weap = global.sprPelicanHammer;
+    			spr_shadow = shd32;
+    			spr_shadow_y = 6;
     			hitid = [spr_idle, name];
     			sprite_index = spr_idle;
-    			depth = -3;
+    			mask_index = mskRhinoFreak;
+    			depth = -2;
+
+                 // Sound:
+    			snd_hurt = sndBuffGatorHit;
+    			snd_dead = sndBuffGatorDie;
 
     			 // Vars:
-    			my_health = 12;
-    			maxhealth = my_health;
-    			raddrop = 8;
+    			maxhealth = 50;
+    			my_health = maxhealth;
+    			raddrop = 20;
+    			size = 2;
     			walk = 0;
-    			walkspd = 0.8;
+    			walkspd = 0.6;
     			maxspd = 3;
+    			dash = 0;
+    			dash_factor = 1.25;
+    			chrg_time = 24; // 0.8 Seconds
     			gunangle = random(360);
     			direction = gunangle;
     			wepangle = choose(-140, 140);
 
     			 // Alarms:
-    			alarm0 = 60 + irandom(30);
-    			
-    			on_alarm0 = script_ref_create(diver_alarm0);
-    			on_step = script_ref_create(diver_step);
+    			alarm0 = 30 + irandom(30);
+
+    			on_alarm0 = script_ref_create(pelican_alarm0);
+    			on_alarm1 = script_ref_create(pelican_alarm1);
+    			on_step = script_ref_create(pelican_step);
     			on_hurt = script_ref_create(enemyHurt);
-    			on_draw = script_ref_create(diver_draw);
+    			on_draw = script_ref_create(pelican_draw);
     		}
     	break;
     	
     	default:
-    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "Decal", "Gull"];
+    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "Decal", "Gull", "Pelican"];
     	break;
     }
     
@@ -452,7 +470,6 @@
     if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     draw_self_enemy();
     if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-
 
 #define harpoon_end_step
      // Trail:
@@ -890,7 +907,7 @@
 #define gull_alarm0
     alarm0 = 40 + irandom(30);
     target = instance_nearest(x, y, Player);
-    if(target_is_visible()) {
+    if(target_is_visible()){
         var _targetDir = point_direction(x, y, target.x, target.y);
 
          // Target Nearby:
@@ -934,15 +951,8 @@
 #define gull_alarm1
      // Slash:
     gunangle = point_direction(x, y, target.x, target.y) + random_range(10, -10);
-    with(instance_create(x, y, EnemySlash)) {
-    	motion_add(other.gunangle, 4);
-    	image_angle = direction;
-    	team = other.team;
-    	creator = other;
-    	hitid = other.hitid;
-    	damage = 1;
-    }
-    
+    with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 1;
+
      // Visual/Sound Related:
     wkick = -3;
     wepangle = -wepangle;
@@ -954,6 +964,98 @@
     draw_self_enemy();
     if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 
+#define pelican_step
+    enemyAlarms(2);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+     // Dash:
+    if(dash > 0){
+        motion_add(direction, dash * dash_factor);
+        dash -= current_time_scale;
+
+         // Dusty:
+        instance_create(x + random_range(-3, 3), y + random(6), Dust);
+        with(instance_create(x + random_range(-3, 3), y + random(6), Dust)){
+            motion_add(other.direction + random_range(-45, 45), (4 + random(1)) * other.dash_factor);
+        }
+    }
+
+     // Flash:
+    if(floor(alarm1) == 10){
+        var _dis = 18,
+            _ang = gunangle + wepangle;
+
+        with(instance_create(x + lengthdir_x(_dis, _ang), y + lengthdir_y(_dis, _ang), ThrowHit)){
+            image_speed = 0.5;
+            depth = -3;
+        }
+    }
+
+#define pelican_alarm0
+    alarm0 = 40 + random(20); // 1-2 Seconds
+    target = instance_nearest(x, y, Player);
+    if(target_is_visible() && target_in_distance(0, 320)){
+        var _targetDir = point_direction(x, y, target.x, target.y);
+
+         // Attack:
+        if(target_in_distance(0, 128) && alarm1 < 0){
+            alarm1 = chrg_time;
+            alarm0 = 10 + random(5);
+
+             // Move away a tiny bit):
+            scrWalk(5, _targetDir + 180 + random_range(-10, 10));
+
+             // Warn:
+            instance_create(x, y, AssassinNotice).depth = -3;
+            sound_play_pitch(sndRavenHit, 0.5 + random(0.1));
+        }
+
+         // Move Toward Target:
+        else scrWalk(20 + random(10), _targetDir + random_range(-10, 10));
+
+         // Aim Towards Target:
+        gunangle = _targetDir;
+        scrRight(gunangle);
+    }
+
+     // Passive Movement:
+    else{
+        alarm0 = 90 + random(30); // 3-4 Seconds
+        scrWalk(10 + random(5), random(360));
+    }
+
+#define pelican_alarm1
+    alarm0 = 40 + random(20);
+
+     // Dash:
+    dash = 12;
+    motion_set(gunangle, maxspd);
+
+     // Heavy Slash:
+    with(scrEnemyShoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
+        sprite_index = sprHeavySlash;
+        friction = 0.4;
+        damage = 10;
+    }
+
+     // Misc. Visual/Sound:
+    wkick = -10;
+    wepangle = -wepangle;
+    view_shake_at(x, y, 20); // Mmm that's heavy
+    sound_play(sndEnergyHammer);
+    sound_play_pitch(sndHammer, 0.75);
+    sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
+
+#define pelican_draw
+    var _charge = ((alarm1 > 0) ? alarm1 : 0),
+        _wobble = (_charge / 30) * sin(_charge / 2),
+        _angOff = sign(wepangle) * (60 * (_charge / chrg_time));
+
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick + _wobble, 1, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
 
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
@@ -964,6 +1066,24 @@
 #define scrRight(_dir)
     if(_dir < 90 || _dir > 270) right = 1;
     if(_dir > 90 && _dir < 270) right = -1;
+
+#define scrWalk(_walk, _dir)
+    walk = _walk;
+    speed = max(speed, friction);
+    direction = _dir;
+    gunangle = direction;
+    scrRight(direction);
+
+#define scrEnemyShoot(_object, _dir, _spd)
+    with(instance_create(x, y, _object)){
+        motion_add(_dir, _spd);
+        image_angle = direction;
+        hitid = other.hitid;
+        team = other.team;
+        creator = other;
+
+        return id;
+    }
 
 #define enemyAlarms(_maxAlarm)
     for(i = 0; i < _maxAlarm; i++){
