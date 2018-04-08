@@ -23,6 +23,8 @@
 	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png", 11, 32, 32);
 	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png", 8, 24, 24);  
 	global.sprBigFishEmerge = sprite_add("sprites/enemies/CoastBoss/sprBigFishEmerge.png", 5, 32, 32);
+	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png", 30, 8, 8);
+	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png", 9, 24, 24);
 
 	 // Seagull:
 	global.sprGullIdle = sprite_add("sprites/enemies/Gull/sprGullIdle.png", 4, 12, 12);
@@ -269,10 +271,9 @@
     	        name = string(string_upper(obj_name));
 
     	         // Visual:
-    	        sprite_index = sprBubble;
+    	        sprite_index = global.sprBubbleBomb;
     	        mask_index = sprGrenade;
-    	        image_speed = 0;
-    	        image_index = 3;
+    	        image_speed = 0.4;
 
     	         // Vars:
     	        z = 0;
@@ -330,10 +331,10 @@
                  // Vars:
     			my_health = 20;
     			maxhealth = my_health;
-    			raddrop = 15;
+    			raddrop = 10;
     			walk = 0;
     			walkspd = 0.8;
-    			maxspd = 4;
+    			maxspd = 3.5;
     			gunangle = random(360);
     			direction = gunangle;
     			wepangle = choose(-140, 140);
@@ -862,8 +863,6 @@
 #define bubble_step
      // Float Up:
     z_engine();
-    image_xscale += current_time_scale * 0.02;
-    image_yscale += current_time_scale * 0.02;
     image_angle += (sin(current_frame/8) * 10) * current_time_scale;
     depth = min(-2, -z);
 
@@ -881,6 +880,7 @@
 #define bubble_alarm0
      // Explode:
     with(instance_create(x, y, Explosion)){
+        sprite_index = global.sprBubbleExplode;
         team = other.team;
         creator = other.creator;
         hitid = other.hitid;
@@ -951,7 +951,7 @@
 #define gull_alarm1
      // Slash:
     gunangle = point_direction(x, y, target.x, target.y) + random_range(10, -10);
-    with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 1;
+    with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 2;
 
      // Visual/Sound Related:
     wkick = -3;

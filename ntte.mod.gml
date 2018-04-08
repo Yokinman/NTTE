@@ -84,7 +84,7 @@ if(GameCont.area = "coast") {
 
 	if(instance_exists(Floor)) {
 		with(hitme) if instance_exists(self) {
-			var n = instance_nearest(x - 18, y - 18, Floor);
+			var n = instance_nearest(x - 16, y - 16, Floor);
 			var d = point_distance(n.x + sprite_get_width(n.sprite_index)/2, n.y + sprite_get_height(n.sprite_index)/2, x, y);
 			if(d > sprite_get_width(n.sprite_index) - 4 and d > sprite_get_height(n.sprite_index) - 4) { 
 				if("wading" in self) {
@@ -138,7 +138,7 @@ if(GameCont.area = "coast") {
 #define draw
 if(instance_exists(Floor)) { // i stole this from blaac's hardmode
 	with(instances_matching(hitme, "wading", 1)) if instance_exists(self){ // i hate this a lot but whatever. swimmin i guess
-		var n = instance_nearest(x - 18, y - 18, Floor);
+		var n = instance_nearest(x - 16, y - 16, Floor);
 		var d = point_distance(n.x + sprite_get_width(n.sprite_index)/2, n.y + sprite_get_height(n.sprite_index)/2, x, y);
 		if object_index = Player{ 
 			if bwep != 0{ 

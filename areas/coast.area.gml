@@ -1,9 +1,9 @@
 #define init
 { //sprites
 	global.sprCoastTrans = sprite_add("../sprites/areas/Coast/sprCoastTrans.png", 1, 0, 0);
-	global.sprFloorCoast = sprite_add("../sprites/areas/Coast/sprFloorCoast.png", 4, 0, 0);
+	global.sprFloorCoast = sprite_add("../sprites/areas/Coast/sprFloorCoast.png", 4, 2, 2);
 	global.sprFloorCoastTrans = sprite_add("../sprites/areas/Coast/sprFloorCoastTrans.png", 4, 0, 0);
-	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 0, 0);
+	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
 	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
 
 	global.sprBloomingCactus1 = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus.png", 1, 12, 12);
@@ -124,7 +124,9 @@ else
 }
 
 #define area_pop_enemies
-if (random(4) < 1) obj_create(x + 16, y + 16, "Diver")
+if (random(12) < 1) obj_create(x + 16, y + 16, choose("Gull", "Pelican", "Pelican"));
+else obj_create(x + 16, y + 16, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull", "Pelican"))
+
 
 #define darksea_draw
 //transition tiles
