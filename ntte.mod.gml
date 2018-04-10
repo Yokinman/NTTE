@@ -1,5 +1,7 @@
 #define init
-global.generating = 0;
+    global.generating = 0;
+    global.surfSwim = -1;
+    global.surfSwimSize = 1000;
 
 #define step
 { // GENERATION CODE //
@@ -17,16 +19,6 @@ global.generating = 0;
     	if(GameCont.area != "coast") {
     		with(instances_matching(CustomDraw, "darksea_draw", 0)) {
     			instance_destroy();
-    		}
-    	}
-    	
-    	with(Player) {
-    		if("wading" in self) {
-    			wading = 0;
-    			image_alpha = 1;
-    			if("shd_" in self) {
-    				spr_shadow = shd_;
-    			}
     		}
     	}
     	
@@ -48,17 +40,7 @@ global.generating = 0;
     	
     	global.generating = 0;
     }
-    else if(instance_exists(GenCont))
-    {
-    	with(Player) {
-    		if("wading" in self) {
-    			wading = 0;
-    			image_alpha = 1;
-    			if("shd_" in self) {
-    				spr_shadow = shd_;
-    			}
-    		}
-    	}
+    else if(instance_exists(GenCont)){
     	global.generating = 1;
     }
 } // GENERATION CODE //
@@ -78,88 +60,158 @@ with(instances_matching(Spider, "corpse", 0)) {
 }
 
 if(GameCont.area = "coast") {
-	with(Corpse) {
-		do_portal = 0;
-	}
+     // No Portals:
+	with(Corpse) do_portal = 0;
 
-	if(instance_exists(Floor)) {
-		with(hitme) if instance_exists(self) {
-			var n = instance_nearest(x - 16, y - 16, Floor);
-			var d = point_distance(n.x + sprite_get_width(n.sprite_index)/2, n.y + sprite_get_height(n.sprite_index)/2, x, y);
-			if(d > sprite_get_width(n.sprite_index) - 4 and d > sprite_get_height(n.sprite_index) - 4) { 
-				if("wading" in self) {
-					if(wading = 0) {
-						image_alpha = 0;
-						wading = 1;
-						if(spr_shadow != mskNone) {
-							shd_ = spr_shadow;
-							spr_shadow = mskNone;
-						}
-						instance_create(x, y, RainSplash);
-						repeat(irandom_range(4, 8)) {
-							instance_create(x, y, Bubble);
-						}
-						repeat(irandom_range(2, 4)) {
-							instance_create(x, y, Dust);
-						}
-					}
-					else
-					{
-						if(!instance_exists(Portal) and object_index = Player and d >= 120) {
-							with instance_create(x, y, Portal) { image_alpha = 0; };
-						}
-					}
-					
-					if(instance_exists(enemy) and d >= 80) {
-						motion_add(point_direction(x, y, n.x, n.y), 3);
-					}
+	if(instance_exists(Floor)){
+         // Destroy Projectiles Too Far Away:
+        with(instances_matching_gt(projectile, "speed", 0)) if(distance_to_object(Floor) > 1000){
+            instance_destroy();
+        }
+
+         // Water Wading:
+		with(instances_matching([hitme, Corpse, WepPickup, Grenade, chestprop, ChestOpen], "", null)){
+		    if("wading" not in self) wading = 0;
+
+			var o = (object_index == Player),
+			    _splashvol = (o ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1));
+
+			if(distance_to_object(Floor) > 4){
+				 // Splash:
+				if(wading <= 0){
+					instance_create(x, y, RainSplash);
+					repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
+                    sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee), 1.5 + random(0.5), _splashvol);
 				}
-				else
-				{
-					wading = 0;
+				wading = distance_to_object(Floor);
+
+				 // Push Back to Shore:
+				if(
+				    wading >= 80                    &&
+				    (!o || instance_exists(enemy))  && // Don't push player if enemies exist
+				    !instance_is(self, Corpse)      && // Don't push corpses
+                    !instance_is(self, projectile)     // Don't push projectiles
+				){
+    			    var n = instance_nearest(x - 16, y - 16, Floor);
+    				motion_add(point_direction(x, y, n.x, n.y), 4);
+    			}
+
+				if(visible){
+				    script_bind_draw(swim_draw, depth, id);
+
+				     // Set visibility before+after shadow drawing & draw event:
+    				script_bind_step(reset_visible, 0, id, 0);
+    				script_bind_draw(reset_visible, depth - 0.01, id, 1);
 				}
 			}
-			else if("wading" in self and wading = 1)
-			{
-				if("shd_" in self) {
-					spr_shadow = shd_;
+			else if(wading > 0){
+			    wading = 0;
+
+			     // Sploosh:
+                sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee, sndOasisHurt), 1 + random(0.25), _splashvol);
+				repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
+				    motion_add(other.direction, other.speed);
 				}
-				image_alpha = 1;
-				wading = 0;
 			}
 		}
+
+         // Walk into Sea:
+        if(!instance_exists(enemy)) with(instances_matching_ge(Player, "wading", 120)){
+            if(!instance_exists(Portal)) with(instance_create(x, y, Portal)){
+                with(PortalL) instance_destroy();
+                sound_stop(sndPortalOpen);
+                sound_play(sndOasisPortal);
+                image_alpha = 0;
+            }
+            with(Portal){
+                x = other.x;
+                y = other.y;
+                xprevious = x;
+                yprevious = y;
+                instance_create(x, y, Bubble);
+            }
+        }
+
+         // Water Wading Surface:
+        if(!surface_exists(global.surfSwim)){
+            global.surfSwim = surface_create(global.surfSwimSize, global.surfSwimSize);
+        }
 	}
 
-	with(instances_matching(enemy, "canfly", 0)) { // things die bc of the missing walls
-		canfly = 1;
-	}
+     // things die bc of the missing walls
+	with(instances_matching(enemy, "canfly", 0)) canfly = 1;
 }
 
-#define draw
-if(instance_exists(Floor)) { // i stole this from blaac's hardmode
-	with(instances_matching(hitme, "wading", 1)) if instance_exists(self){ // i hate this a lot but whatever. swimmin i guess
-		var n = instance_nearest(x - 16, y - 16, Floor);
-		var d = point_distance(n.x + sprite_get_width(n.sprite_index)/2, n.y + sprite_get_height(n.sprite_index)/2, x, y);
-		if object_index = Player{ 
-			if bwep != 0{ 
-				if race_id != 7
-					draw_sprite_ext(weapon_get_sprt(bwep),0,x-right*2,y+ + ((d - 16) * 0.2),1,bwepflip*right*-1,90+15*right,c_silver,1)
-				else
-					draw_sprite_ext(weapon_get_sprt(bwep),0,x+lengthdir_x(bwkick*-1,gunangle),y+lengthdir_y(bwkick*-1,gunangle) + ((d - 16) * 0.2),1,right*-1,gunangle+wepangle,c_white,1);
-				}
-			if gunangle < 180{
-				draw_sprite_ext(weapon_get_sprt(wep),0,x+lengthdir_x(wkick,gunangle),y+lengthdir_y(wkick,gunangle) + ((d - 16) * 0.2),1,right,gunangle+wepangle,c_white,1);
-			}
-			draw_sprite_part_ext(sprite_index, image_index, 0, 0, sprite_width, sprite_height - ((d - 16) * 0.2), x - (sprite_width/2) * right, y + ((d - 16) * 0.2) - sprite_height/2, right, image_yscale, image_blend, 1);
-			if gunangle >= 180
-			draw_sprite_ext(weapon_get_sprt(wep),0,x+lengthdir_x(wkick*-1,gunangle),y+lengthdir_y(wkick*-1,gunangle) + ((d - 16) * 0.2),1,right,gunangle+wepangle,c_white,1);
-		}
-		else
-		{
-			draw_sprite_part_ext(sprite_index, image_index, 0, 0, sprite_width, sprite_height - ((d - 16) * 0.2), x - (sprite_width/2) * right, y + ((d - 16) * 0.2) - sprite_height/2, right, image_yscale, image_blend, 1);
-		}
+#define swim_draw(_inst)
+    var _surfw = global.surfSwimSize,
+        _surfh = global.surfSwimSize,
+        _surf = global.surfSwim;
+
+    with(_inst){
+        var _bobspd = 1 / 10,
+            _bobmax = ((wading > sprite_height) ? min(wading / sprite_height, 2) : 0),
+            _bob = _bobmax * sin((current_frame + x + y) * _bobspd),
+            _z = 2,
+            _wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2), // Wade/Water Height
+            _surfx = x - (_surfw / 2),
+            _surfy = y - (_surfh / 2);
+
+        if(object_index != Player || instance_exists(enemy)){
+            _wh = min(_wh, sprite_yoffset);
+        }
+        _wh += _bob;
+
+         // Call Draw Event to Surface:
+        surface_set_target(_surf);
+        draw_clear_alpha(0, 0);
+
+        x -= _surfx;
+        y -= _surfy;
+        if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
+        else draw_self();
+        x += _surfx;
+        y += _surfy;
+
+        surface_reset_target();
+
+         // Draw Transparent:
+        var _yoff = (_surfh / 2) - (sprite_height - sprite_yoffset),
+            _surfz = _surfy + _z + _bob,
+            t = _surfh - _yoff - _wh,
+            h = _surfh - t,
+            _y = _surfz + t;
+
+        draw_set_alpha(0.5);
+        draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
+        draw_set_alpha(1);
+
+         // Water Interference Line Thing:
+        d3d_set_fog(1, c_white, 0, 0);
+        draw_surface_part_ext(_surf, 0, t, _surfw, 1, _surfx, _y, 1, 1, c_white, 0.5);
+        d3d_set_fog(0, 0, 0, 0);
+
+         // Draw Normal:
+        var t = 0,
+            h = _surfh - t - _yoff - _wh,
+            _y = _surfz + t;
+
+        draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
 	}
-}
+    instance_destroy();
+
+#define reset_visible(_inst, _visible)
+    with(_inst){
+        if(visible == _visible) with(other) with(instances_matching_ne(CustomScript, "id", id)){
+            d = 1;
+            for(var i = 0; i <= 3; i++) if(script[i] != other.script[i]){
+                d = 0;
+                break;
+            }
+            if(d) instance_destroy();
+        }
+        else visible = _visible;
+    }
+    instance_destroy();
 
 #define draw_shadows
 with instances_matching(CustomProjectile, "name", "MORTARPLASMA") // i should prolly make this better but fuck that

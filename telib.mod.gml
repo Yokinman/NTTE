@@ -69,6 +69,7 @@
     			my_health = 12;
     			maxhealth = my_health;
     			raddrop = 8;
+    			size = 1;
     			walk = 0;
     			walkspd = 0.8;
     			maxspd = 3;
@@ -159,6 +160,7 @@
     			my_health = 75;
     			maxhealth = my_health;
     			raddrop = 30;
+    			size = 2;
     			walk = 0;
     			walkspd = 0.8;
     			maxspd = 2;
@@ -242,6 +244,7 @@
     			my_health = 120;
     			maxhealth = my_health;
     			raddrop = 50;
+    			size = 3;
     			meleedamage = 3;
     			walk = 0;
     			walkspd = 0.8;
@@ -332,6 +335,7 @@
     			my_health = 20;
     			maxhealth = my_health;
     			raddrop = 10;
+    			size = 1;
     			walk = 0;
     			walkspd = 0.8;
     			maxspd = 3.5;
@@ -421,7 +425,7 @@
 
     	if(target_in_distance(60, 320)){
     	     // Shoot Harpoon:
-    		if(spr_weap = global.sprHarpoonGun and random(4) < 1){
+    		if(spr_weap = global.sprHarpoonGun && random(4) < 1){
     		     // Harpoon/Bolt:
     			gunangle = _targetDir + random_range(10, -10);
     			with(obj_create(x, y, "Harpoon")){
@@ -981,8 +985,11 @@
         }
     }
 
-     // Flash:
-    if(floor(alarm1) == 10){
+#define pelican_alarm0
+    alarm0 = 40 + random(20); // 1-2 Seconds
+
+     // Flash (About to attack):
+    if(alarm1 >= 0){
         var _dis = 18,
             _ang = gunangle + wepangle;
 
@@ -992,18 +999,17 @@
         }
     }
 
-#define pelican_alarm0
-    alarm0 = 40 + random(20); // 1-2 Seconds
+     // Aggroed:
     target = instance_nearest(x, y, Player);
     if(target_is_visible() && target_in_distance(0, 320)){
         var _targetDir = point_direction(x, y, target.x, target.y);
 
          // Attack:
-        if(target_in_distance(0, 128) && alarm1 < 0){
+        if(((target_in_distance(0, 128) && random(3) < 2) || random(my_health) < 1) && alarm1 < 0){
             alarm1 = chrg_time;
-            alarm0 = 10 + random(5);
+            alarm0 = alarm1 - 10;
 
-             // Move away a tiny bit):
+             // Move away a tiny bit:
             scrWalk(5, _targetDir + 180 + random_range(-10, 10));
 
              // Warn:
@@ -1037,7 +1043,7 @@
         sprite_index = sprHeavySlash;
         friction = 0.4;
         damage = 10;
-    } 
+    }
 
      // Misc. Visual/Sound:
     wkick = -10;
@@ -1049,11 +1055,10 @@
 
 #define pelican_draw
     var _charge = ((alarm1 > 0) ? alarm1 : 0),
-        _wobble = (_charge / 30) * sin(_charge / 2),
         _angOff = sign(wepangle) * (60 * (_charge / chrg_time));
 
     if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick + _wobble, 1, image_blend, image_alpha);
+    draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
 
