@@ -97,11 +97,8 @@ if(GameCont.area = "coast") {
     			}
 
 				if(visible){
-				    script_bind_draw(swim_draw, depth, id);
-
-				     // Set visibility before+after shadow drawing & draw event:
     				script_bind_step(reset_visible, 0, id, 0);
-    				script_bind_draw(reset_visible, depth - 0.01, id, 1);
+				    script_bind_draw(swim_draw, depth - 0.01, id);
 				}
 			}
 			else if(wading > 0){
@@ -148,10 +145,7 @@ if(GameCont.area = "coast") {
         _surf = global.surfSwim;
 
     with(_inst){
-        var _bobspd = 1 / 10,
-            _bobmax = ((wading > sprite_height) ? min(wading / sprite_height, 2) : 0),
-            _bob = _bobmax * sin((current_frame + x + y) * _bobspd),
-            _z = 2,
+        var _z = 2,
             _wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2), // Wade/Water Height
             _surfx = x - (_surfw / 2),
             _surfy = y - (_surfh / 2);
@@ -163,6 +157,11 @@ if(GameCont.area = "coast") {
         }
 
          // Bob up & down:
+        var _bobspd = 1 / 10,
+            _bobmax = ((wading > sprite_height) ? min(wading / sprite_height, 2) : 0),
+            _bob = _bobmax * sin((current_frame + x + y) * _bobspd);
+
+        _z += _bob;
         _wh += _bob;
 
          // Call Draw Event to Surface:
@@ -171,16 +170,26 @@ if(GameCont.area = "coast") {
 
         x -= _surfx;
         y -= _surfy;
+        
+        var c = 0;
+        if(object_index == Player && canscope){
+            c = canscope;
+            canscope = 0;
+             // Manually Draw Laser Sights Here:
+            
+        }
+
         if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
         else draw_self();
         x += _surfx;
         y += _surfy;
+        if(c) canscope = c;
 
         surface_reset_target();
 
          // Draw Transparent:
         var _yoff = (_surfh / 2) - (sprite_height - sprite_yoffset),
-            _surfz = _surfy + _z + _bob,
+            _surfz = _surfy + _z,
             t = _surfh - _yoff - _wh,
             h = _surfh - t,
             _y = _surfz + t;
@@ -200,20 +209,24 @@ if(GameCont.area = "coast") {
             _y = _surfz + t;
 
         draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
+
+        visible = 1;
 	}
     instance_destroy();
 
-#define reset_visible(_inst, _visible)
+#define reset_visible(_inst)
     with(_inst){
-        if(visible == _visible) with(other) with(instances_matching_ne(CustomScript, "id", id)){
-            d = 1;
-            for(var i = 0; i <= 3; i++) if(script[i] != other.script[i]){
-                d = 0;
-                break;
+        if(!visible) with(other) with(CustomDraw){
+            if(
+                script[0] == other.script[0] &&
+                script[1] == other.script[1] &&
+                script[2] == "swim_draw"     &&
+                script[3] == _inst
+            ){
+                instance_destroy();
             }
-            if(d) instance_destroy();
         }
-        else visible = _visible;
+        else visible = 0;
     }
     instance_destroy();
 
