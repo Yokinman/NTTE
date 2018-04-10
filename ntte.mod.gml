@@ -131,23 +131,28 @@ if(GameCont.area = "coast") {
     	if(v != []) script_bind_step(reset_visible, 0, v);
 
          // Walk into Sea:
-        if(!instance_exists(enemy)) with(instances_matching_ge(Player, "wading", 120)){
-            if(!instance_exists(Portal)) with(instance_create(x, y, Portal)){
+        if(!instance_exists(enemy)) with(Player){
+            if(wading > 120 && !instance_exists(Portal)) with(instance_create(x, y, Portal)){
+                 // Destroy Effects:
                 with(PortalL) instance_destroy();
-                with(instance_nearest(x, y, PortalClear)){
-                    x = other.x;
-                    y = other.y;
-                }
+                with(instance_nearest(x, y, PortalClear)) instance_destroy();
+
+                 // Switch Sound:
                 sound_stop(sndPortalOpen);
                 sound_play(sndOasisPortal);
+
+                 // Invisible:
                 image_alpha = 0;
             }
+
+             // Whirlpool:
             with(Portal){
-                x = other.x;
-                y = other.y;
-                xprevious = x;
-                yprevious = y;
-                instance_create(x, y, Bubble);
+                var r = 5 + image_index,
+                    s = current_frame;
+
+                x = other.x + (cos(s) * r);
+                y = other.y + (sin(s) * r);
+                instance_create(x, y, choose(Sweat, Sweat, Bubble));
             }
         }
 
@@ -234,7 +239,7 @@ if(GameCont.area = "coast") {
 
         draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
 
-        if(!visible) visible = 1;
+        visible = 1;
     }
     instance_destroy();
 
