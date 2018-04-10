@@ -70,7 +70,8 @@ if(GameCont.area = "coast") {
         }
 
          // Water Wading:
-		with(instances_matching([hitme, Corpse, WepPickup, Grenade, chestprop, ChestOpen], "", null)){
+        var v = [];
+		with(instances_matching([hitme, Corpse, WepPickup, Grenade, HPPickup, AmmoPickup, chestprop, ChestOpen], "", null)){
 		    if("wading" not in self) wading = 0;
 
 			var o = (object_index == Player),
@@ -97,8 +98,22 @@ if(GameCont.area = "coast") {
     			}
 
 				if(visible){
-    				script_bind_step(reset_visible, 0, id, 0);
-				    script_bind_draw(swim_draw, depth - 0.01, id);
+				     // Set visibility:
+				    v[array_length(v)] = id;
+
+                     // Set Drawing Script:
+    				var d = depth - 0.01,
+			            _bind = 1;
+
+                    with(instances_matching(CustomDraw, "name", "swim_draw")) if(round(100 * depth) / 100 == d){ // Add to existing script
+                        inst[array_length(inst)] = other;
+                        _bind = 0;
+                        break;
+                    }
+                    if(_bind) with(script_bind_draw(swim_draw, d)){ // Make new script
+				        name = script[2];
+				        inst = [other];
+				    }
 				}
 			}
 			else if(wading > 0){
@@ -111,6 +126,9 @@ if(GameCont.area = "coast") {
 				}
 			}
 		}
+
+		 // Set Visibility of Objects Before Drawing Events:
+    	if(v != []) script_bind_step(reset_visible, 0, v);
 
          // Walk into Sea:
         if(!instance_exists(enemy)) with(instances_matching_ge(Player, "wading", 120)){
@@ -139,12 +157,12 @@ if(GameCont.area = "coast") {
 	with(instances_matching(enemy, "canfly", 0)) canfly = 1;
 }
 
-#define swim_draw(_inst)
+#define swim_draw()
     var _surfw = global.surfSwimSize,
         _surfh = global.surfSwimSize,
         _surf = global.surfSwim;
 
-    with(_inst){
+    with(inst) if(instance_exists(self)){
         var _z = 2,
             _wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2), // Wade/Water Height
             _surfx = x - (_surfw / 2),
@@ -156,13 +174,15 @@ if(GameCont.area = "coast") {
             _wh = min(_wh, sprite_yoffset);
         }
 
-         // Bob up & down:
-        var _bobspd = 1 / 10,
-            _bobmax = ((wading > sprite_height) ? min(wading / sprite_height, 2) : 0),
-            _bob = _bobmax * sin((current_frame + x + y) * _bobspd);
+         // Bobbing:
+        if(wading > sprite_height || !instance_is(self, hitme)){
+            var _bobspd = 1 / 10,
+                _bobmax = min(wading / sprite_height, 2),
+                _bob = _bobmax * sin((current_frame + x + y) * _bobspd);
 
-        _z += _bob;
-        _wh += _bob;
+            _z += _bob;
+            _wh += _bob;
+        }
 
          // Call Draw Event to Surface:
         surface_set_target(_surf);
@@ -211,20 +231,13 @@ if(GameCont.area = "coast") {
         draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
 
         visible = 1;
-	}
+    }
     instance_destroy();
 
 #define reset_visible(_inst)
-    with(_inst){
-        if(!visible) with(other) with(CustomDraw){
-            if(
-                script[0] == other.script[0] &&
-                script[1] == other.script[1] &&
-                script[2] == "swim_draw"     &&
-                script[3] == _inst
-            ){
-                instance_destroy();
-            }
+    with(_inst) if(instance_exists(self)){
+        if(!visible) with(instances_matching(CustomDraw, "name", "swim_draw")){
+            if(inst == other || array_find_index(inst, other)) instance_destroy();
         }
         else visible = 0;
     }
