@@ -134,6 +134,10 @@ if(GameCont.area = "coast") {
         if(!instance_exists(enemy)) with(instances_matching_ge(Player, "wading", 120)){
             if(!instance_exists(Portal)) with(instance_create(x, y, Portal)){
                 with(PortalL) instance_destroy();
+                with(instance_nearest(x, y, PortalClear)){
+                    x = other.x;
+                    y = other.y;
+                }
                 sound_stop(sndPortalOpen);
                 sound_play(sndOasisPortal);
                 image_alpha = 0;
@@ -230,14 +234,14 @@ if(GameCont.area = "coast") {
 
         draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
 
-        visible = 1;
+        if(!visible) visible = 1;
     }
     instance_destroy();
 
 #define reset_visible(_inst)
     with(_inst) if(instance_exists(self)){
         if(!visible) with(instances_matching(CustomDraw, "name", "swim_draw")){
-            if(inst == other || array_find_index(inst, other)) instance_destroy();
+            if(inst == other || (array_find_index(inst, other) >= 0)) instance_destroy();
         }
         else visible = 0;
     }
