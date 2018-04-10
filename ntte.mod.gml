@@ -156,9 +156,13 @@ if(GameCont.area = "coast") {
             _surfx = x - (_surfw / 2),
             _surfy = y - (_surfh / 2);
 
-        if(object_index != Player || instance_exists(enemy)){
+         // Clamping:
+        if(object_index == Van) _wh = min(_wh, 40);
+        else if(object_index != Player || instance_exists(enemy)){
             _wh = min(_wh, sprite_yoffset);
         }
+
+         // Bob up & down:
         _wh += _bob;
 
          // Call Draw Event to Surface:
