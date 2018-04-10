@@ -63,10 +63,32 @@ if(GameCont.area = "coast") {
      // No Portals:
 	with(Corpse) do_portal = 0;
 
-	if(instance_exists(Floor)){
+	if(instance_exists(Floor) && !instance_exists(GenCont)){
          // Destroy Projectiles Too Far Away:
         with(instances_matching_gt(projectile, "speed", 0)) if(distance_to_object(Floor) > 1000){
             instance_destroy();
+        }
+
+         // Walk into Sea:
+        if(!instance_exists(enemy)){
+            with(instances_matching_gt(Player, "wading", 120)){
+                if(!instance_exists(Portal)){
+                    instance_create(x, y, Portal).image_alpha = 0;
+
+                     // Switch Sound:
+                    sound_stop(sndPortalOpen);
+                    sound_play(sndOasisPortal);
+                }
+            }
+            with(Portal) if(!place_meeting(xstart, ystart, Floor)){
+                 // Spin:
+                var r = 5 + image_index,
+                    c = current_frame;
+
+                x = xstart + (cos(c) * r);
+                y = ystart + (sin(c) * r);
+                instance_create(x, y, choose(Sweat, Sweat, Bubble));
+            }
         }
 
          // Water Wading:
@@ -130,32 +152,6 @@ if(GameCont.area = "coast") {
 		 // Set Visibility of Objects Before Drawing Events:
     	if(v != []) script_bind_step(reset_visible, 0, v);
 
-         // Walk into Sea:
-        if(!instance_exists(enemy)) with(Player){
-            if(wading > 120 && !instance_exists(Portal)) with(instance_create(x, y, Portal)){
-                 // Destroy Effects:
-                with(PortalL) instance_destroy();
-                with(instance_nearest(x, y, PortalClear)) instance_destroy();
-
-                 // Switch Sound:
-                sound_stop(sndPortalOpen);
-                sound_play(sndOasisPortal);
-
-                 // Invisible:
-                image_alpha = 0;
-            }
-
-             // Whirlpool:
-            with(Portal){
-                var r = 5 + image_index,
-                    s = current_frame;
-
-                x = other.x + (cos(s) * r);
-                y = other.y + (sin(s) * r);
-                instance_create(x, y, choose(Sweat, Sweat, Bubble));
-            }
-        }
-
          // Water Wading Surface:
         if(!surface_exists(global.surfSwim)){
             global.surfSwim = surface_create(global.surfSwimSize, global.surfSwimSize);
@@ -197,22 +193,44 @@ if(GameCont.area = "coast") {
         surface_set_target(_surf);
         draw_clear_alpha(0, 0);
 
-        x -= _surfx;
-        y -= _surfy;
-        
-        var c = 0;
-        if(object_index == Player && canscope){
-            c = canscope;
-            canscope = 0;
-             // Manually Draw Laser Sights Here:
-            
+         // Save + Temporary Set Vars:
+        var s = {};
+        if(object_index == Player){
+             // Laser Sight:
+            s.canscope = canscope;
+            if(canscope){
+                canscope = 0;
+                 // Manually Draw Laser Sights Here:
+            }
+
+             // Sucked Into Abyss:
+            if(!instance_exists(enemy) && distance_to_object(Portal) <= 0){
+                s.image_xscale = image_xscale;
+                s.image_yscale = image_yscale;
+                s.image_alpha  = image_alpha;
+                with(instance_nearest(x, y, Portal)) with(other){
+                    var f = min(0.5 + (other.endgame / 60), 1);
+                    image_xscale *= f;
+                    image_yscale *= f;
+                    image_alpha  *= f;
+                }
+            }
         }
 
+        x -= _surfx;
+        y -= _surfy;
         if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
         else draw_self();
         x += _surfx;
         y += _surfy;
-        if(c) canscope = c;
+
+         // Set Saved Vars:
+        if(s != {}){
+            for(var i = 0; i < lq_size(s); i++){
+                var k = lq_get_key(s, i);
+                variable_instance_set(id, k, lq_get(s, k));
+            }
+        }
 
         surface_reset_target();
 
