@@ -66,6 +66,7 @@
     			spr_shadow = shd24;
     			hitid = [spr_idle, name];
     			sprite_index = spr_idle;
+    			mask_index = mskBandit;
     			depth = -3;
 
     			 // Vars:
@@ -273,7 +274,7 @@
     	
     	case "BubbleBomb":
     	    o = instance_create(_x, _y, CustomProjectile);
-    	    with(o) {
+    	    with(o){
     	        name = string(string_upper(obj_name));
 
     	         // Visual:
@@ -288,6 +289,7 @@
     	        friction = 0.4;
     	        damage = 0;
     	        force = 0;
+    	        typ = 2;
 
     	         // Alarms:
     	        alarm0 = 60;
@@ -297,9 +299,10 @@
     	        on_draw = script_ref_create(bubble_draw);
     	        on_hit = script_ref_create(bubble_hit);
     	        on_wall = script_ref_create(bubble_wall);
+    	        on_destroy = script_ref_create(bubble_destroy);
     	    }
     	break;
-    	
+
     	case "Decal":
     	    o = instance_create(_x, _y, CustomObject);
     		with(o){
@@ -342,6 +345,7 @@
     			spr_shadow = shd24;
     			hitid = [spr_idle, name];
     			sprite_index = spr_idle;
+    			mask_index = mskBandit;
     			depth = -2;
 
                  // Sound:
@@ -391,8 +395,8 @@
     			depth = -2;
 
                  // Sound:
-    			snd_hurt = sndBuffGatorHit;
-    			snd_dead = sndBuffGatorDie;
+    			snd_hurt = sndGatorHit;
+    			snd_dead = sndGatorDie;
 
     			 // Vars:
     			maxhealth = 50;
@@ -922,6 +926,7 @@
     instance_create(x, y, Portal);
     GameCont.area = "coast";
     GameCont.subarea = 0;
+    with(enemy) my_health = 0;
 
 
 #define bubble_step
@@ -930,6 +935,8 @@
     image_angle += (sin(current_frame/8) * 10) * current_time_scale;
     depth = min(-2, -z);
 
+     // Exploding:
+    if(alarm0 > 1 && place_meeting(x, y, Explosion)) alarm0 = 1;
     enemyAlarms(1);
 
 #define bubble_draw
@@ -949,8 +956,21 @@
         creator = other.creator;
         hitid = other.hitid;
     }
+
+     // Effects:
     sound_play_pitch(sndExplosionS, 2);
+    sound_play_pitch(sndOasisExplosion, 1 + random(1));
+    repeat(10) instance_create(x, y, Bubble);
+
     instance_destroy();
+
+#define bubble_destroy
+    sound_play_pitchvol(sndLilHunterBouncer, 2 + random(0.5), 0.5);
+    with(instance_create(x, y - z, BubblePop)){
+        image_angle = other.image_angle;
+        image_xscale = 0.5 + (other.image_index * 0.02);
+        image_yscale = image_xscale;
+    }
 
 
 #define decal_step
