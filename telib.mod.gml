@@ -299,15 +299,29 @@
     	
     	case "Decal":
     	    o = instance_create(_x, _y, CustomObject);
-    		with(o) {
+    		with(o){
     			name = string(string_upper(obj_name));
 
-    			mask_index = global.mskBigTopDecal;
+        		mask_index = global.mskBigTopDecal;
     			image_xscale = choose(-1, 1);
     			image_speed = 0;
     			depth = -8;
     			
     			on_step = script_ref_create(decal_step);
+
+    		    if(place_meeting(x, y, TopPot)) instance_destroy();
+
+            	 // TopSmalls:
+            	else{
+            		var _off = 16,
+            		    s = _off * 3;
+        
+            		for(var _ox = -s; _ox <= s; _ox += _off){
+            		    for(var _oy = -s; _oy <= s; _oy += _off){
+            		        if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+            		    }
+            		}
+    		    }
     		}
     	break;
     	
@@ -332,9 +346,9 @@
                 snd_dead = sndAllyDead;
 
                  // Vars:
-    			my_health = 20;
+    			my_health = 8;
     			maxhealth = my_health;
-    			raddrop = 10;
+    			raddrop = 6;
     			size = 1;
     			walk = 0;
     			walkspd = 0.8;
@@ -898,7 +912,7 @@
     	instance_destroy();
     	exit;
     }
-    if(place_meeting(x, y, Floor) or place_meeting(x, y, TopPot) or place_meeting(x, y, Bones)){
+    if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
         instance_delete(id);
     }
 

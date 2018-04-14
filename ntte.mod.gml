@@ -1,280 +1,129 @@
 #define init
-    global.generating = 0;
-    global.surfSwim = -1;
-    global.surfSwimSize = 1000;
+    global.newLevel = instance_exists(GenCont);
+    global.area = ["coast"];
+
+#define level_start // game_start but every level
+     // Disable Oasis Skip:
+	if(GameCont.area == 1){
+		with(instance_create(0, 0, AmmoChest)){
+			visible = 0;
+			mask_index = mskNone;
+		}
+	}
+
+     // Spawn Mortars:
+	with(LaserCrystal){
+	    if(random(4) < 1){
+	        obj_create(x, y, "Mortar");
+	        instance_delete(self);
+	    }
+	}
+
+     // Big Decals:
+	with(instances_matching(TopSmall, "bigdecal", null)) {
+	    bigdecal = 1;
+	    if(random(200) < 1) {
+			with(obj_create(x, y, "Decal")){
+			    sprite_index = mod_variable_get("mod", "telib", "sprDesertBigTopDecal");
+			}
+	    }
+	}
 
 #define step
-{ // GENERATION CODE //
-    if((!instance_exists(GenCont) and !instance_exists(menubutton)) and global.generating = 1)
-    {
-    	if(GameCont.area = 1)
-    	{
-    		with(instance_create(0, 0, AmmoChest))
-    		{
-    			visible = 0;
-    			mask_index = mskNone;
-    		}
-    	}
-    	
-    	if(GameCont.area != "coast") {
-    		with(instances_matching(CustomDraw, "darksea_draw", 0)) {
-    			instance_destroy();
-    		}
-    	}
-    	
-    	with(LaserCrystal) {
-    	    if(random(4) < 1) {
-    	        obj_create(x, y, "Mortar");
-    	        instance_delete(self);
-    	    }
-    	}
-    	
-    	with(instances_matching(TopSmall, "bigdecal", null)) {
-    	    bigdecal = 1;
-    	    if(random(200) < 1) {
-				with(obj_create(x, y, "Decal")){
-				    sprite_index = mod_variable_get("mod", "telib", "sprDesertBigTopDecal");
-				}
-    	    }
-    	}
-    	
-    	global.generating = 0;
+    { // GENERATION CODE //
+        if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
+        else if(global.newLevel){
+            global.newLevel = 0;
+            level_start();
+        }
+    } // GENERATION CODE //
+
+     // Call Area Step (Step not built into area mods):
+    if(!instance_exists(GenCont)){
+        for(var i = 0; i < array_length(global.area); i++){
+            if(GameCont.area == global.area[i]){
+                mod_script_call("area", global.area[i], "area_step");
+            }
+        }
     }
-    else if(instance_exists(GenCont)){
-    	global.generating = 1;
-    }
-} // GENERATION CODE //
 
-with(Cocoon) { 
-	obj_create(x, y, "NewCocoon");
-	instance_delete(self);
-}
-
-with(instances_matching(Spider, "corpse", 0)) {
-	if(my_health <= 0) {
-		var c = instance_create(x, y, Corpse);
-		c.sprite_index = spr_dead;
-		c.image_xscale = image_xscale;
-		c.image_yscale = image_yscale;
-	}
-}
-
-if(GameCont.area = "coast") {
-     // No Portals:
-	with(Corpse) do_portal = 0;
-
-	if(instance_exists(Floor) && !instance_exists(GenCont)){
-         // Destroy Projectiles Too Far Away:
-        with(instances_matching_gt(projectile, "speed", 0)) if(distance_to_object(Floor) > 1000){
-            instance_destroy();
+    /// Tiny Spiders (New Cocoons):
+         // Spider Cocoons:
+        with(Cocoon){ 
+        	obj_create(x, y, "NewCocoon");
+        	instance_delete(id);
         }
-
-         // Walk into Sea:
-        if(!instance_exists(enemy)){
-            with(instances_matching_gt(Player, "wading", 120)){
-                if(!instance_exists(Portal)){
-                    instance_create(x, y, Portal).image_alpha = 0;
-
-                     // Switch Sound:
-                    sound_stop(sndPortalOpen);
-                    sound_play(sndOasisPortal);
-                }
-            }
-            with(Portal) if(!place_meeting(xstart, ystart, Floor)){
-                 // Spin:
-                var r = 5 + image_index,
-                    c = current_frame;
-
-                x = xstart + (cos(c) * r);
-                y = ystart + (sin(c) * r);
-                instance_create(x, y, choose(Sweat, Sweat, Bubble));
-            }
+        
+         // Appropriate Corpses:
+        with(instances_matching(instances_matching_le(Spider, "my_health", 0), "corpse", 0)){
+        	with(scrCorpse(direction, speed)){
+        		image_xscale = other.image_xscale;
+        		image_yscale = other.image_yscale;
+        	}
         }
-
-         // Water Wading:
-        var v = [];
-		with(instances_matching([hitme, Corpse, WepPickup, Grenade, HPPickup, AmmoPickup, chestprop, ChestOpen], "", null)){
-		    if("wading" not in self) wading = 0;
-
-			var o = (object_index == Player),
-			    _splashvol = (o ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1));
-
-			if(distance_to_object(Floor) > 4){
-				 // Splash:
-				if(wading <= 0){
-					instance_create(x, y, RainSplash);
-					repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
-                    sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee), 1.5 + random(0.5), _splashvol);
-				}
-				wading = distance_to_object(Floor);
-
-				 // Push Back to Shore:
-				if(
-				    wading >= 80                    &&
-				    (!o || instance_exists(enemy))  && // Don't push player if enemies exist
-				    !instance_is(self, Corpse)      && // Don't push corpses
-                    !instance_is(self, projectile)     // Don't push projectiles
-				){
-    			    var n = instance_nearest(x - 16, y - 16, Floor);
-    				motion_add(point_direction(x, y, n.x, n.y), 4);
-    			}
-
-				if(visible){
-				     // Set visibility:
-				    v[array_length(v)] = id;
-
-                     // Set Drawing Script:
-    				var d = depth - 0.01,
-			            _bind = 1;
-
-                    with(instances_matching(CustomDraw, "name", "swim_draw")) if(round(100 * depth) / 100 == d){ // Add to existing script
-                        inst[array_length(inst)] = other;
-                        _bind = 0;
-                        break;
-                    }
-                    if(_bind) with(script_bind_draw(swim_draw, d)){ // Make new script
-				        name = script[2];
-				        inst = [other];
-				    }
-				}
-			}
-			else if(wading > 0){
-			    wading = 0;
-
-			     // Sploosh:
-                sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee, sndOasisHurt), 1 + random(0.25), _splashvol);
-				repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
-				    motion_add(other.direction, other.speed);
-				}
-			}
-		}
-
-		 // Set Visibility of Objects Before Drawing Events:
-    	if(v != []) script_bind_step(reset_visible, 0, v);
-
-         // Water Wading Surface:
-        if(!surface_exists(global.surfSwim)){
-            global.surfSwim = surface_create(global.surfSwimSize, global.surfSwimSize);
-        }
-	}
-
-     // things die bc of the missing walls
-	with(instances_matching(enemy, "canfly", 0)) canfly = 1;
-}
-
-#define swim_draw()
-    var _surfw = global.surfSwimSize,
-        _surfh = global.surfSwimSize,
-        _surf = global.surfSwim;
-
-    with(inst) if(instance_exists(self)){
-        var _z = 2,
-            _wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2), // Wade/Water Height
-            _surfx = x - (_surfw / 2),
-            _surfy = y - (_surfh / 2);
-
-         // Clamping:
-        if(object_index == Van) _wh = min(_wh, 40);
-        else if(object_index != Player || instance_exists(enemy)){
-            _wh = min(_wh, sprite_yoffset);
-        }
-
-         // Bobbing:
-        if(wading > sprite_height || !instance_is(self, hitme)){
-            var _bobspd = 1 / 10,
-                _bobmax = min(wading / sprite_height, 2),
-                _bob = _bobmax * sin((current_frame + x + y) * _bobspd);
-
-            _z += _bob;
-            _wh += _bob;
-        }
-
-         // Call Draw Event to Surface:
-        surface_set_target(_surf);
-        draw_clear_alpha(0, 0);
-
-         // Save + Temporary Set Vars:
-        var s = {};
-        if(object_index == Player){
-             // Laser Sight:
-            s.canscope = canscope;
-            if(canscope){
-                canscope = 0;
-                 // Manually Draw Laser Sights Here:
-            }
-
-             // Sucked Into Abyss:
-            if(!instance_exists(enemy) && distance_to_object(Portal) <= 0){
-                s.image_xscale = image_xscale;
-                s.image_yscale = image_yscale;
-                s.image_alpha  = image_alpha;
-                with(instance_nearest(x, y, Portal)) with(other){
-                    var f = min(0.5 + (other.endgame / 60), 1);
-                    image_xscale *= f;
-                    image_yscale *= f;
-                    image_alpha  *= f;
-                }
-            }
-        }
-
-        x -= _surfx;
-        y -= _surfy;
-        if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
-        else draw_self();
-        x += _surfx;
-        y += _surfy;
-
-         // Set Saved Vars:
-        if(s != {}){
-            for(var i = 0; i < lq_size(s); i++){
-                var k = lq_get_key(s, i);
-                variable_instance_set(id, k, lq_get(s, k));
-            }
-        }
-
-        surface_reset_target();
-
-         // Draw Transparent:
-        var _yoff = (_surfh / 2) - (sprite_height - sprite_yoffset),
-            _surfz = _surfy + _z,
-            t = _surfh - _yoff - _wh,
-            h = _surfh - t,
-            _y = _surfz + t;
-
-        draw_set_alpha(0.5);
-        draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
-        draw_set_alpha(1);
-
-         // Water Interference Line Thing:
-        d3d_set_fog(1, c_white, 0, 0);
-        draw_surface_part_ext(_surf, 0, t, _surfw, 1, _surfx, _y, 1, 1, c_white, 0.5);
-        d3d_set_fog(0, 0, 0, 0);
-
-         // Draw Normal:
-        var t = 0,
-            h = _surfh - t - _yoff - _wh,
-            _y = _surfz + t;
-
-        draw_surface_part(_surf, 0, t, _surfw, h, _surfx, _y);
-
-        visible = 1;
-    }
-    instance_destroy();
-
-#define reset_visible(_inst)
-    with(_inst) if(instance_exists(self)){
-        if(!visible) with(instances_matching(CustomDraw, "name", "swim_draw")){
-            if(inst == other || (array_find_index(inst, other) >= 0)) instance_destroy();
-        }
-        else visible = 0;
-    }
-    instance_destroy();
 
 #define draw_shadows
-with instances_matching(CustomProjectile, "name", "MORTARPLASMA") // i should prolly make this better but fuck that
-{
-	draw_sprite(shd24, 0, x, y);
-}
+    with instances_matching(CustomProjectile, "name", "MORTARPLASMA") // i should prolly make this better but fuck that
+    {
+    	draw_sprite(shd24, 0, x, y);
+    }
+
+#define scrCorpse(_dir, _spd)
+	with(instance_create(x, y, Corpse)){
+		size = other.size;
+		sprite_index = other.spr_dead;
+		mask_index = other.mask_index;
+		image_xscale = other.right * other.image_xscale;
+
+		 // Speedify:
+		direction = _dir;
+		speed = min(_spd + max(0, -other.my_health / 5), 16);
+		if(size > 0) speed /= size;
+
+        return id;
+	}
+
+#define scrFloorMake(_x, _y, _obj)
+    instance_create(_x, _y, Floor);
+    return instance_create(_x + 16, _y + 16, _obj);
+
+#define scrFloorFill(_x, _y, _w, _h)
+    _w--;
+    _h--;
+    var o = 32;
+
+     // Center Around x,y:
+    _x -= floor(_w / 2) * o;
+    _y -= floor(_h / 2) * o;
+
+     // Floors:
+    var r = [];
+    for(var _ox = 0; _ox <= _w; _ox++){
+        for(var _oy = 0; _oy <= _h; _oy++){
+            r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+        }
+    }
+    return r;
+
+#define scrFloorFillRound(_x, _y, _w, _h)
+    _w--;
+    _h--;
+    var o = 32;
+
+     // Center Around x,y:
+    _x -= floor(_w / 2) * o;
+    _y -= floor(_h / 2) * o;
+
+     // Floors:
+    var r = [];
+    for(var _ox = 0; _ox <= _w; _ox++){
+        for(var _oy = 0; _oy <= _h; _oy++){
+            if((_ox != 0 && _ox != _w) || (_oy != 0 && _oy != _h)){ // Don't Make Corner Floors
+                r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+            }
+        }
+    }
+    return r;
 
 #define obj_create(_x, _y, object_name)
-return mod_script_call("mod", "telib", "obj_create", _x, _y, object_name);
+    return mod_script_call("mod", "telib", "obj_create", _x, _y, object_name);
