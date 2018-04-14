@@ -153,23 +153,23 @@
                     if(wade_h > c) wade_h = c;
                 }
 
-				 // Push Back to Shore:
-				if(
-				    wading >= 80                    &&
-				    (!o || instance_exists(enemy))  && // Don't push player if enemies exist
-				    !instance_is(self, Corpse)      && // Don't push corpses
-                    !instance_is(self, projectile)     // Don't push projectiles
-				){
-    			    var n = instance_nearest(x - 16, y - 16, Floor);
-    				motion_add(point_direction(x, y, n.x, n.y), 4);
-    			}
-
     			 // Players Moves 20% Slower:
 		        if(o && speed > 0 && race != "fish"){
 		            var f = 0.2;
 		            x -= hspeed * f;
                     y -= vspeed * f;
 		        }
+
+				 // Push Back to Shore:
+				if(
+				    wading >= 80                    &&
+				    instance_exists(enemy)          && // Enemies Exist
+				    !instance_is(self, Corpse)      && // Don't push corpses
+                    !instance_is(self, projectile)     // Don't push projectiles
+				){
+    			    var n = instance_nearest(x - 16, y - 16, Floor);
+    				motion_add(point_direction(x, y, n.x, n.y), 4);
+    			}
 
                  // Set Drawing Script:
 				var d = depth - 0.01,
