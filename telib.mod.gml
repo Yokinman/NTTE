@@ -39,6 +39,9 @@
     global.sprPelicanHurt = sprite_add("sprites/enemies/Pelican/sprPelicanHurt.png", 3, 24, 24);
     global.sprPelicanDead = sprite_add("sprites/enemies/Pelican/sprPelicanDead.png", 6, 24, 24);
     global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1, 6, 8);
+    
+     // Cat:
+    global.sprAcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png", 4, 16, 16);
 
 	 // Big Decals:
 	global.sprDesertBigTopDecal = sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24);
@@ -417,8 +420,51 @@
     		}
     	break;
     	
+    	case "Cat":
+    	    o = instance_create(_x, _y, CustomEnemy);
+    		with(o) {
+    		    name = string(string_upper(obj_name));
+
+                 // Visual:
+    			spr_idle = sprBanditIdle;
+    			spr_walk = sprBanditWalk;
+    			spr_hurt = sprBanditHurt;
+    			spr_dead = sprBanditDead;
+    			spr_weap = sprToxicThrower;
+    			spr_shadow = shd24;
+    			hitid = [spr_idle, name];
+    			sprite_index = spr_idle;
+    			mask_index = mskBandit;
+    			depth = -2;
+
+                 // Sound:
+    			snd_hurt = sndScorpionHit;
+    			snd_dead = sndSalamanderDead;
+
+    			 // Vars:
+    			maxhealth = 18;
+    			my_health = maxhealth;
+    			raddrop = 6;
+    			size = 1;
+    			walk = 0;
+    			walkspd = 0.8;
+    			maxspd = 3;
+    			gunangle = random(360);
+    			direction = gunangle;
+    			ammo = 0;
+
+    			 // Alarms:
+    			alarm0 = 40 + irandom(20);
+
+    			on_alarm0 = script_ref_create(cat_alarm0);
+    			on_step = script_ref_create(cat_step);
+    			on_hurt = script_ref_create(enemyHurt);
+    			on_draw = script_ref_create(cat_draw);
+    		}
+    	break;
+    	
     	default:
-    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "Decal", "Gull", "Pelican"];
+    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "Decal", "Gull", "Pelican", "Cat"];
     	break;
     }
     
@@ -1075,6 +1121,71 @@
     draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
+#define cat_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+#define cat_alarm0
+    alarm0 = 20 + random(20);
+    
+    if(ammo > 0) {
+        repeat(2)
+        with(scrEnemyShoot(ToxicGas, gunangle + random_range(6, -6), 4)) {
+            friction = 0.1;
+        }
+        gunangle += 12;
+        ammo--;
+        if(ammo = 0) {
+            alarm0 = 40;
+            repeat(3) {
+                var _dir = random_range(16, -16);
+                with(instance_create(x, y, AcidStreak)) {
+                    motion_add(other.gunangle + _dir, 3);
+                    image_angle = direction;
+                }
+            }
+            wkick += 6;
+            sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
+            sound_stop(sndFlamerLoop);
+        } else {
+            alarm0 = 2;
+            wkick += 1;
+        }
+    } else {
+        target = instance_nearest(x, y, Player);
+        if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+            if(target_in_distance(0, 140) and random(3) < 1) {
+                scrRight(_targetDir);
+                gunangle = _targetDir - 45;
+                ammo = 10;
+                with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
+                    sprite_index = global.sprAcidPuff;
+                    image_angle = other.gunangle;
+                }
+                sound_play(sndToxicBoltGas);
+                sound_play(sndEmpty);
+                sound_loop(sndFlamerLoop);
+                wkick += 4;
+                alarm0 = 4;
+            } else {
+                alarm0 = 20 + random(20);
+                scrWalk(20 + random(5), _targetDir + random_range(20, -20));
+                scrRight(gunangle);
+            }
+        } else {
+            alarm0 = 30 + random(20); // 3-4 Seconds
+            scrWalk(20 + random(10), random(360));
+            scrRight(gunangle);
+        }
+    }
+    
+#define cat_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
 
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);

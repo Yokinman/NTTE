@@ -51,8 +51,8 @@
 
 #macro swimDraw global.swimDraw
 
-#define area_name
-    return "COAST-@1(sprInterfaceIcons)";
+#define area_name(sub, loop)
+    return "@1(sprInterfaceIcons)-" + string(sub);
 
 #define area_secret
     return 1;

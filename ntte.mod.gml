@@ -18,6 +18,14 @@
 	        instance_delete(self);
 	    }
 	}
+	
+	 // Spawn Cats:
+	with(Rat){
+	    if(random(8) < 1){
+	        obj_create(x, y, "Cat");
+	        instance_delete(self);
+	    }
+	}
 
      // Big Decals:
 	with(instances_matching(TopSmall, "bigdecal", null)) {
