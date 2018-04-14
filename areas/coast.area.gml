@@ -217,15 +217,17 @@
         _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
 
     /// Make Floors:
-         // Special - 4x4 to 5x5 Rounded Fills:
-        if(random(5) < 1) scrFloorFillRound(_x, _y, choose(4, 5), choose(4, 5));
+         // Special - 4x4 to 6x6 Rounded Fills:
+        if(random(5) < 1){
+            scrFloorFillRound(_x, _y, irandom_range(4, 6), irandom_range(4, 6));
+        }
 
-         // Normal - 1x1 to 3x3 Fills:
-        else scrFloorFill(_x, _y, irandom_range(1, 3), irandom_range(1, 3));
+         // Normal - 2x1 Fills:
+        else scrFloorFill(_x, _y, 2, 1);
 
      // Change Direction:
     var _trn = 0;
-    if(random(14) < 5) _trn = choose(90, 90, -90, -90, 180);
+    if(random(7) < 3) _trn = choose(90, -90, 180);
     direction += _trn;
 
      // Turn Arounds:
@@ -234,8 +236,14 @@
         if(_outOfSpawn) scrFloorMake(_x, _y, WeaponChest);
 
          // Start New Island:
-        if(random(1) < 1){
-            instance_create(_x - lengthdir_x(96, direction), _y - lengthdir_x(96, direction), FloorMaker);
+        if(random(2) < 1){
+            var d = direction + 180;
+            _x += lengthdir_x(96, d);
+            _y += lengthdir_y(96, d);
+            with(instance_create(_x, _y, FloorMaker)) direction = d + choose(-90, 0, 90);
+            if(_outOfSpawn){
+                instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
+            }
         }
     }
 
@@ -252,7 +260,7 @@
     return mod_script_call("mod", "ntte", "scrFloorFill", _x, _y, _w, _h);
 
 #define scrFloorFillRound(_x, _y, _w, _h)
-    return mod_script_call("mod", "ntte", "scrFloorFill", _x, _y, _w, _h);
+    return mod_script_call("mod", "ntte", "scrFloorFillRound", _x, _y, _w, _h);
 
 #define area_finish
      // Area End:
@@ -280,7 +288,7 @@
     
 #define area_pop_props
     if(random(12) < 1){
-        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
+        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm", "Palm");
         scrCoastProp(x + (sprite_width / 2), y + (sprite_height / 2), o);
     }
 
