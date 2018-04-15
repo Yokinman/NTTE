@@ -35,7 +35,6 @@
     global.surfSwim = -1;
     global.surfSwimSize = 1000;
     global.swimInst = [Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Grenade, hitme];
-    global.swimDraw = [];
     global.seaDepth = 10;
 
      // Prevent Crash on Mod Reload:
@@ -48,8 +47,6 @@
             instance_delete(id);
         }
     }
-
-#macro swimDraw global.swimDraw
 
 #define area_name(sub, loop)
     return "@1(sprInterfaceIcons)-" + string(sub);
@@ -425,7 +422,7 @@
     if(!instance_exists(enemy) && !instance_exists(Portal)){
         var _int = 300, // Flash every X frames
             _lst = 30,  // Flash lasts X frames
-            _max = ((flash <= 0) ? 0.3 : 0.15); // Max flash alpha
+            _max = ((flash <= _lst) ? 0.3 : 0.15); // Max flash alpha
 
         draw_set_color(c_white);
         draw_set_alpha(_max * (1 - ((flash mod _int) / _lst)));
