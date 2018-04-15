@@ -86,6 +86,7 @@
     	with(script_bind_draw(darksea_draw, global.seaDepth)){
     		name = script[2];
     		wave = 0;
+    		flash = 0;
     	}
 	}
 
@@ -380,7 +381,7 @@
         surface_set_target(_surfWavesSub);
     
     	var sfoff = 10, // Does this actually do anything
-            _int = 30,  // Interval (Starts every X frames)
+            _int = 35,  // Interval (Starts every X frames)
     	    _sc1 = 0.5, // Scaler 1
     	    _sc2 = 0.3, // Scaler 2
     	    _len = 8,   // Wave length (Travels X distance)
@@ -420,14 +421,26 @@
      // Foam:
     draw_surface(_surfWavesSub, _surfx - sfoff, _surfy - sfoff);
 
-     // Darken Ocean w/ Enemies Exist:
-    draw_set_color(c_black);
-    draw_set_alpha(image_alpha);
-    draw_rectangle(0, 0, 20000, 20000, 0);
-    draw_set_alpha(1);
+     // Flash Ocean w/ Can Leave Level:
+    if(!instance_exists(enemy) && !instance_exists(Portal)){
+        var _int = 300, // Flash every X frames
+            _lst = 30,  // Flash lasts X frames
+            _max = ((flash <= 0) ? 0.3 : 0.15); // Max flash alpha
 
-    var l = 0.02 * (instance_exists(enemy) ? 1 : -1);
-    image_alpha = clamp(image_alpha + l, 0, 0.12);
+        draw_set_color(c_white);
+        draw_set_alpha(_max * (1 - ((flash mod _int) / _lst)));
+        draw_rectangle(0, 0, 20000, 20000, 0);
+        draw_set_alpha(1);
+
+         // Flash Sound:
+        if(!(flash mod _int)){
+            sound_play_pitchvol(sndOasisHorn, 0.5, 2);
+            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), 0.4);
+        }
+
+        flash++;
+    }
+    else flash = 0;
 
     wave++;
 
