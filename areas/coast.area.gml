@@ -433,6 +433,19 @@
         if(!(flash mod _int)){
             sound_play_pitchvol(sndOasisHorn, 0.5, 2);
             sound_play_pitchvol(sndOasisExplosion, 1 + random(1), 0.4);
+            for(var i = 0; i < maxp; i++) view_shake[i] += 8;
+            with(Floor) if(random(5) < 1){
+                for(var d = 0; d < 360; d += 45){
+                    var _x = x + lengthdir_x(32, d),
+                        _y = y + lengthdir_y(32, d);
+
+                    if(!position_meeting(_x, _y, Floor)){
+                        repeat(irandom_range(3, 6)){
+                            instance_create(_x + random(32), _y + random(32), choose(Sweat, Sweat, Bubble));
+                        }
+                    }
+                }
+            }
         }
 
         flash++;
