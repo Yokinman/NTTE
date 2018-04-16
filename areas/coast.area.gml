@@ -1,9 +1,9 @@
 #define init
     { //sprites
-    	global.sprCoastTrans = sprite_add("../sprites/areas/Coast/sprCoastTrans.png", 1, 0, 0);
-    	global.sprFloorCoast = sprite_add("../sprites/areas/Coast/sprFloorCoast.png", 4, 2, 2);
-    	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
-    	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
+    	global.sprCoastTrans    = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",    1, 0,  0);
+    	global.sprFloorCoast    = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",    4, 2,  2);
+    	global.sprFloorCoastB   = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png",   3, 2,  2);
+    	global.sprDetailCoast   = sprite_add("../sprites/areas/Coast/sprDetailCoast.png",   6, 4,  4);
 
     	//global.sprFloorCoastTrans = sprite_add("../sprites/areas/Coast/sprFloorCoastTrans.png", 4, 0, 0);
 
@@ -38,17 +38,11 @@
     global.surfSwimSize = 1000;
     global.swimInst = [Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Grenade, hitme];
     global.swimInstVisible = [];
-    global.seaDepth = 10;
+    global.seaDepth = 10.1;
 
      // Prevent Crash on Mod Reload:
     if(GameCont.area == mod_current){
-        with(instances_matching(prop, "name", "BloomingCactus", "Palm")){
-            with(scrCoastProp(x, y, name)){
-                x = other.x;
-                y = other.y;
-            }
-            instance_delete(id);
-        }
+        with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
     }
 
 #macro DebugLag 0
@@ -81,8 +75,13 @@
 #define area_start
      // No Walls:
     with(Wall) instance_destroy();
-    with(TopSmall) instance_destroy();
     with(FloorExplo) instance_destroy();
+
+     // Top Decals:
+    with(TopSmall){
+        if(random(80) < 1) obj_create(x, y, "CoastDecal");
+        instance_destroy();
+    }
 
      // Bind Sea Drawing Scripts:
 	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){
@@ -162,7 +161,7 @@
 
          // Water Wading:
         if(DebugLag) trace_time();
-        var _inst = instances_matching_lt(instances_matching(global.swimInst, "visible", 1), "depth", global.seaDepth),
+        var _inst = instances_matching(instances_matching_lt(instances_matching(global.swimInst, "visible", 1), "depth", global.seaDepth), "nowade", null),
             _lag = (array_length(_inst) > 100), // When there's over 100 swimmable objects, don't draw them swimming when they're offscreen
             _wadeCol = make_color_rgb(44, 37, 122),
             v = 0;
@@ -249,20 +248,20 @@
                             }
                         }
                     }
-    
+
                      // Call Draw Event to Surface:
                     surface_set_target(_surfSwim);
                     draw_clear_alpha(0, 0);
-    
+
                     x -= _surfSwimx;
                     y -= _surfSwimy;
                     if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
                     else draw_self();
                     x += _surfSwimx;
                     y += _surfSwimy;
-    
+
                     surface_reset_target();
-    
+
                      // Set Saved Vars:
                     if(s != {}){
                         for(var i = 0; i < lq_size(s); i++){
@@ -270,25 +269,25 @@
                             variable_instance_set(id, k, lq_get(s, k));
                         }
                     }
-            
+
                     /// Draw Bottom:
                     surface_set_target(_surfSwimBot);
                         var _yoff = _surfSwimh - ((_surfSwimh / 2) - (sprite_height - sprite_yoffset)),
                             _y = _surfSwimy + _z,
                             t = _yoff - _wh,
                             h = _surfSwimh - t;
-    
+
                         d3d_set_fog(1, _wadeCol, 0, 0);
                         draw_surface_part(_surfSwim, 0, t, _surfSwimw, h, _surfSwimx - _surfx, (_y + t) - _surfy);
                         d3d_set_fog(0, 0, 0, 0);
                     surface_reset_target();
-    
+
                     /// Draw Top:
                     surface_set_target(_surfSwimTop);
                          // Manually Draw Laser Sights:
                         if(o && canscope){
                             draw_set_color(c_red);
-        
+
                             var w = [wep];
                             if(race == "steroids") w = [wep, bwep];
                             for(var i = 0; i < array_length(w); i++) if(weapon_get_laser_sight(w[i])){
@@ -300,21 +299,21 @@
                                     _md = 1000, // Max Distance
                                     d = _md,    // Distance
                                     m = 0;      // Minor hitscan increment distance
-                    
+
                                 while(d > 0){ // A strange but fast hitscan system
                                      // Major Hitscan Mode:
                                     if(m <= 0){
                                         _lx = _sx + lengthdir_x(d, gunangle);
                                         _ly = _sy + lengthdir_y(d, gunangle);
                                         d -= sqrt(_md);
-                    
+
                                          // Enter minor hitscan mode once no walls on path:
                                         if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
                                             m = 2;
                                             d = sqrt(_md);
                                         }
                                     }
-                    
+
                                      // Minor Hitscan Mode:
                                     else{
                                         if(position_meeting(_lx, _ly, Wall)) break;
@@ -323,7 +322,7 @@
                                         d -= m;
                                     }
                                 }
-                    
+
                                  // Draw Laser:
                                 var _ox = lengthdir_x(right, gunangle - 90),
                                     _oy = lengthdir_y(right, gunangle - 90),
@@ -335,7 +334,7 @@
                                             _sy + ((_ly - _sy) / 10),
                                             _ly
                                         ];
-                
+
                                 draw_primitive_begin(pr_trianglestrip);
                                 draw_set_alpha((sin(degtorad(gunangle)) * 5) - (max(_wh - (sprite_yoffset - 2), 0)));
                                 for(var j = 0; j < array_length(_dx); j++){
@@ -344,15 +343,15 @@
                                     draw_set_alpha(1);
                                 }
                                 draw_primitive_end();
-    
+
                                 //draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
                             }
                             draw_set_alpha(1);
                         }
-    
+
                          // Self:
                         draw_surface_part(_surfSwim, 0, 0, _surfSwimw, t, _surfSwimx - _surfx, _y - _surfy);
-    
+
                          // Water Interference Line Thing:
                         d3d_set_fog(1, c_white, 0, 0);
                         draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _surfSwimx - _surfx, (_y + t) - _surfy, 1, 1, c_white, 0.8);
@@ -379,6 +378,53 @@
 
      // things die bc of the missing walls
 	with(instances_matching(enemy, "canfly", 0)) canfly = 1;
+
+     // Bind End Step:
+    script_bind_end_step(end_step, 0);
+
+#define end_step
+     // Watery Dust:
+    with(instances_matching(Dust, "coast_water", null)){
+        coast_water = 1;
+        if(!place_meeting(x, y, Floor)){
+            if(random(5) < 1 && point_seen(x, y, -1)){
+                sound_play(choose(sndOasisChest, sndOasisCrabAttack, sndOasisMelee));
+            }
+            instance_create(x, y, choose(Sweat, Sweat, Sweat, Bubble));
+            instance_destroy();
+        }
+    }
+
+     // Watery Explosion Sounds:
+    var e = 0,
+        s = 0;
+
+    with(instances_matching(Explosion, "coast_water", null)){
+        coast_water = 1;
+        if(!position_meeting(x, y, Floor)){
+            if(object_index == SmallExplosion) s++;
+            else e++;
+        }
+    }
+    if(e > 0 || s > 0){
+        var _vol = max((20 / (distance_to_object(Player) + 1)) * (0.25 + (distance_to_object(Floor) / 50)), 0.15);
+        if(e > 0) sound_play_pitchvol(sndOasisExplosion, 1, e * _vol);
+        if(s > 0) sound_play_pitchvol(sndOasisExplosion, 1, s * _vol);
+    }
+
+     // Watery Melting Scorch Marks:
+    with(instances_matching(MeltSplat, "coast_water", null)){
+        coast_water = 1;
+        if(!position_meeting(x, y, Floor)){
+            sound_play(sndOasisExplosionSmall);
+            repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
+                instance_create(x, y, choose(Sweat, Sweat, Sweat, Bubble));
+            }
+            instance_destroy();
+        }
+    }
+
+    instance_destroy();
 
 #define area_make_floor
     var _x = x,
@@ -473,10 +519,11 @@
         _surfh = global.surfH,
         _surfx = global.surfX,
         _surfy = global.surfY,
-        _wave = wave++;
+        _wave = wave++,
+        _floor = instances_matching(instances_matching(Floor, "coast_water", null), "visible", 1);
 
      // Draw Floor Transition Tile Surface:
-    if(array_length(instances_matching(Floor, "coasttrans", null)) > 0 || !surface_exists(_surfTrans)){
+    if(array_length(_floor) > 0 || !surface_exists(_surfTrans)){
          // Surface Setup:
     	if(!surface_exists(_surfTrans)){
     	    global.surfTrans = surface_create(_surfw, _surfh);
@@ -486,40 +533,37 @@
     	draw_clear_alpha(0, 0);
 
          // Draw Floors to Surface:
-    	with(Floor){
-    		coasttrans = visible;
-            if(coasttrans){
-                var _x = x - _surfx,
-                    _y = y - _surfy;
-    
-        		for(var a = 0; a < 360; a += 45){
-        			 // Draw Underwater Transition Tiles:
-        			var _spr = global.sprFloorCoast,
-        			    _ox = lengthdir_x(32, a),
-        			    _oy = lengthdir_y(32, a);
-    
-        			draw_sprite(_spr, irandom(sprite_get_number(_spr) - 1), _x + _ox, _y + _oy);
-    
-        		     // Fill in Gaps (Cardinal Directions Only):
-        		    if((a / 90) == round(a / 90)){
-        		        var _floors = 0;
-            			for(var i = 1; i <= 10; i++){
-            				if(!position_meeting(x + (_ox * i), y + (_oy * i), Floor)) _floors++;
-            				else break;
-            			}
-            			if(_floors <= 5) for(var i = 1; i <= _floors; i++){
-            				draw_sprite(_spr, irandom(sprite_get_number(_spr) - 1), _x + (_ox * i), _y + (_oy * i));
-            		    }
+    	with(Floor) if(visible){
+            var _x = x - _surfx,
+                _y = y - _surfy;
+
+    		for(var a = 0; a < 360; a += 45){
+    			 // Draw Underwater Transition Tiles:
+    			var _spr = global.sprFloorCoast,
+    			    _ox = lengthdir_x(32, a),
+    			    _oy = lengthdir_y(32, a);
+
+    			draw_sprite(_spr, irandom(sprite_get_number(_spr) - 1), _x + _ox, _y + _oy);
+
+    		     // Fill in Gaps (Cardinal Directions Only):
+    		    if((a / 90) == round(a / 90)){
+    		        var f = 0;
+        			for(var i = 1; i <= 10; i++){
+        				if(!position_meeting(x + (_ox * i), y + (_oy * i), Floor)) f++;
+        				else break;
+        			}
+        			if(f <= 5) for(var i = 1; i <= f; i++){
+        				draw_sprite(_spr, irandom(sprite_get_number(_spr) - 1), _x + (_ox * i), _y + (_oy * i));
         		    }
-        		}
-            }
-    	}
+    		    }
+    		}
+        }
 
     	surface_reset_target();
     }
 
      // Draw Waves Surface:
-    if(array_length(instances_matching(Floor, "coastfoam", null)) || !surface_exists(_surfWaves)){
+    if(array_length(_floor) || !surface_exists(_surfWaves)){
          // Surface Setup:
     	if(!surface_exists(_surfWaves)){
     	    global.surfWaves = surface_create(_surfw, _surfh);
@@ -530,11 +574,14 @@
 
          // Draw Floors in White to Surface:
     	d3d_set_fog(1, c_white, 1, 1)
-    	with(Floor){
-    		coastfoam = visible;
-    		if(coastfoam) draw_sprite(global.sprFloorCoast, image_index, x - _surfx, y - _surfy);
+    	with(Floor) if(visible){
+    	    draw_sprite_ext(global.sprFloorCoast, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    	}
+    	with(instances_matching(CustomHitme, "name", "CoastDecal")){
+    	    draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     	}
     	d3d_set_fog(0, 0, 0, 0);
+        surface_reset_target();
 
          // Clear Waves Subsurface:
     	if(surface_exists(_surfWavesSub)){
@@ -543,6 +590,7 @@
     	    surface_reset_target();
     	}
     }
+    with(_floor) coast_water = 1;
 
     /// Drawing Wave Foam:
          // Surface Setup:
@@ -579,6 +627,11 @@
      // Draw Sea Transition Floor Tiles:
     draw_surface(_surfTrans, _surfx, _surfy);
 
+     // Submerged Rock Decals:
+    with(instances_matching(CustomHitme, "name", "CoastDecal")){
+        draw_sprite_ext(spr_bot, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    }
+
      // Draw Bottom Halves of Swimming Objects:
     if(surface_exists(_surfSwimBot)) draw_surface(_surfSwimBot, _surfx, _surfy);
     else global.surfSwimBot = surface_create(_surfw, _surfh);
@@ -608,10 +661,12 @@
         draw_rectangle(0, 0, 20000, 20000, 0);
         draw_set_alpha(1);
 
-         // Flash Sound:
         if(!(flash mod _int)){
+             // Sound:
             sound_play_pitchvol(sndOasisHorn, 0.5, 2);
-            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), 0.4);
+            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
+
+             // Effects:
             for(var i = 0; i < maxp; i++) view_shake[i] += 8;
             with(Floor) if(random(5) < 1){
                 for(var d = 0; d < 360; d += 45){

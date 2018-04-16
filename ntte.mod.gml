@@ -28,13 +28,9 @@
 	}
 
      // Big Decals:
-	with(instances_matching(TopSmall, "bigdecal", null)) {
-	    bigdecal = 1;
-	    if(random(200) < 1) {
-			with(obj_create(x, y, "Decal")){
-			    sprite_index = mod_variable_get("mod", "telib", "sprDesertBigTopDecal");
-			}
-	    }
+	with(TopSmall) if(random(200) < 1) {
+		obj_create(x, y, "BigDecal");
+		break;
 	}
 
 #define step
