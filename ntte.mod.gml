@@ -66,12 +66,6 @@
         	}
         }
 
-#define draw_shadows
-    with instances_matching(CustomProjectile, "name", "MORTARPLASMA") // i should prolly make this better but fuck that
-    {
-    	draw_sprite(shd24, 0, x, y);
-    }
-
 #define scrCorpse(_dir, _spd)
 	with(instance_create(x, y, Corpse)){
 		size = other.size;

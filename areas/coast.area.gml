@@ -494,16 +494,16 @@
     var _x = x + 16,
         _y = y + 16;
 
-    if(random(12) < 1){
-        obj_create(_x, _y, choose("Gull", "Pelican", "Pelican"));
+    if(random(15) < GameCont.subarea){
+        obj_create(_x, _y, choose("TrafficCrab", "Pelican", "Pelican"));
     }
     else{
-        obj_create(_x, _y, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull", "Pelican"))
+        obj_create(_x, _y, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull", "TrafficCrab"))
     }
-    
+
 #define area_pop_props
     if(random(12) < 1){
-        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm", "Palm");
+        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
         scrCoastProp(x + (sprite_width / 2), y + (sprite_height / 2), o);
     }
 

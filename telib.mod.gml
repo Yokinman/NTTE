@@ -43,6 +43,13 @@
      // Cat:
     global.sprAcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png", 4, 16, 16);
 
+     // Traffic Crab:
+    global.sprCrabIdle = sprite_add("sprites/enemies/Crab/sprTrafficCrabIdle.png", 5, 24, 24);
+    global.sprCrabWalk = sprite_add("sprites/enemies/Crab/sprTrafficCrabWalk.png", 6, 24, 24);
+    global.sprCrabHurt = sprite_add("sprites/enemies/Crab/sprTrafficCrabHurt.png", 3, 24, 24);
+    global.sprCrabDead = sprite_add("sprites/enemies/Crab/sprTrafficCrabDead.png", 9, 24, 24);
+    global.sprCrabFire = sprite_add("sprites/enemies/Crab/sprTrafficCrabFire.png", 2, 24, 24);
+
      // Coast Water Rock Decal:
     global.sprTopDecalCoast = sprite_add("sprites/areas/Coast/sprTopDecalCoast.png", 2, 16, 16);
     global.sprMidDecalCoast = sprite_add("sprites/areas/Coast/sprMidDecalCoast.png", 2, 16, 16);
@@ -172,7 +179,7 @@ with(CustomObject){
     	
     	case "MortarPlasma":
     	    o = instance_create(_x, _y, CustomProjectile);
-    	    with(o) {
+    	    with(o){
                  // Visual:
     	        sprite_index = global.sprMortarPlasma;
     	        mask_index = mskNone;
@@ -405,6 +412,61 @@ with(CustomObject){
     		}
     	break;
 
+        case "TrafficCrab":
+            o = instance_create(_x, _y, CustomEnemy);
+            with(o){
+                 // Visual:
+                spr_idle = global.sprCrabIdle;
+                spr_walk = global.sprCrabWalk;
+                spr_hurt = global.sprCrabHurt;
+                spr_dead = global.sprCrabDead;
+                spr_fire = global.sprCrabFire;
+                spr_shadow = shd48;
+                hitid = [spr_idle, _name];
+                sprite_index = spr_idle;
+                mask_index = mskScorpion;
+                depth = -2;
+
+                 // Sound:
+                snd_hurt = sndHitRock;
+                snd_dead = sndPlantTBKill;
+                snd_mele = sndGoldScorpionMelee;
+
+                 // Vars:
+                maxhealth = 20;
+                raddrop = 10;
+                size = 2;
+                meleedamage = 3;
+                walk = 0;
+                walkspd = 1;
+                maxspd = 2.5;
+    			gunangle = random(360);
+    			direction = gunangle;
+    			sweep_spd = 10;
+                sweep_dir = right;
+                ammo = 0;
+
+                 // Alarms:
+                alarm0 = 30 + random(10);
+            }
+        break;
+
+        case "CrabVenom":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                 // Visual:
+                sprite_index = sprScorpionBullet;
+                mask_index = mskEnemyBullet1;
+                depth = -3;
+
+                 // Vars:
+                friction = 0.75;
+                damage = 2;
+                force = 4;
+                typ = 2;
+            }
+        break;
+
         case "CoastDecal":
             o = instance_create(_x, _y, CustomHitme);
             with(o){
@@ -428,8 +490,8 @@ with(CustomObject){
                 size = 5;
 
                  // Offset:
-                x += random_range(-5, 5);
-                y += random_range(-5, 5);
+                x += random_range(-10, 10);
+                y += random_range(-10, 10);
     
                  // Doesn't Use Coast Wading System:
                 nowade = 1;
@@ -437,7 +499,7 @@ with(CustomObject){
         break;
 
     	default:
-    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "CoastDecal"];
+    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "CoastDecal"];
     }
 
      /// Auto Assign Name + Scripts:
@@ -457,6 +519,7 @@ with(CustomObject){
                  // Exceptions:
                 else{
                     if(v == "on_hurt") on_hurt = enemyHurt;
+                    if(v == "on_death") on_death = scrDefaultDrop;
                 }
             }
         }
@@ -481,13 +544,7 @@ with(CustomObject){
     		if(spr_weap = global.sprHarpoonGun && random(4) < 1){
     		     // Harpoon/Bolt:
     			gunangle = _targetDir + random_range(10, -10);
-    			with(obj_create(x, y, "Harpoon")){
-    			    motion_add(other.gunangle, 12);
-    				image_angle = direction;
-    				team = other.team;
-    				creator = other;
-    				hitid = other.hitid;
-    			}
+    			scrEnemyShoot("Harpoon", gunangle, 12);
 
                 wkick = 8;
                 sound_play(sndCrossbow);
@@ -666,14 +723,10 @@ with(CustomObject){
         scrRight(_targetDir);
         
          // Shoot Mortar:
-        with(obj_create(x - (2 * right), y, "MortarPlasma")) {
+        with(scrEnemyShootExt(x - (2 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
             depth = 12;
-            zspeed = point_distance(x, y - z, other.target.x, other.target.y)/8 + random_range(1, -1);
-            motion_add(_targetDir, 3);
-            team = other.team;
-            creator = other.id;
-            hitid = other.hitid;
+            zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + random_range(1, -1);
             right = other.right;
         }
 
@@ -1187,6 +1240,10 @@ with(CustomObject){
     draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
+#define Pelican_death
+    pickup_drop(80, 0);
+    pickup_drop(60, 5);
+
 #define Cat_step
     enemyAlarms(1);
     enemySprites();
@@ -1253,6 +1310,107 @@ with(CustomObject){
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
+#define TrafficCrab_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+     // Attack Sprite:
+    if(ammo > 0){
+        sprite_index = spr_fire;
+        image_index = 0;
+    }
+
+#define TrafficCrab_alrm0
+     // Spray Venom:
+    if(ammo > 0){
+        alarm0 = 2;
+        walk = 1;
+
+        sound_play(sndOasisCrabAttack);
+        sound_play_pitchvol(sndFlyFire, 2 + random(1), 0.5);
+
+         // Venom:
+        var _x = x + (right * (4 + (sweep_dir * 10))),
+            _y = y + 4;
+
+        repeat(choose(2, 3)){
+            scrEnemyShootExt(_x, _y, "CrabVenom", gunangle + random_range(-10, 10), 10 + random(2));
+        }
+        gunangle += (sweep_dir * sweep_spd);
+
+         // End:
+        if(--ammo <= 0){
+            alarm0 = 30 + random(20);
+            sprite_index = spr_idle;
+
+             // Move Towards Player:
+            var _dir = (instance_exists(target) ? point_direction(x, y, target.x, target.y) : random(360));
+            scrWalk(15, _dir);
+
+             // Switch Claws:
+            sweep_dir *= -1;
+        }
+    }
+
+     // Normal AI:
+    else{
+        alarm0 = 35 + random(15);
+        target = instance_nearest(x, y, Player);
+
+        if(target_is_visible()){
+            var _targetDir = point_direction(x, y, target.x, target.y);
+
+             // Attack:
+            var _max = 128;
+            if(target_in_distance(0, _max)){
+                scrWalk(1, _targetDir + (sweep_dir * random(90)));
+
+                alarm0 = 1;
+                ammo = 10;
+                gunangle = _targetDir - (sweep_dir * (sweep_spd * (ammo / 2)));
+
+                sound_play_pitch(sndScorpionFireStart, 0.8);
+                sound_play_pitch(sndGoldScorpionFire, 1.5);
+            }
+
+             // Move Towards Player:
+            else scrWalk(30, _targetDir + (random_range(20, 40) * choose(-1, 1)));
+
+             // Facing:
+            scrRight(_targetDir);
+        }
+
+         // Passive Movement:
+        else scrWalk(10, random(360));
+    }
+
+#define TrafficCrab_draw
+    draw_self_enemy();
+
+#define TrafficCrab_death
+    pickup_drop(10, 10);
+
+     // Splat:
+    var _ang = random(360);
+    for(var a = _ang; a < _ang + 360; a += (360 / 3)){
+        with(instance_create(x, y, MeleeHitWall)){
+            motion_add(a, 1);
+            image_angle = direction + 180;
+            image_blend = make_color_rgb(174, 58, 45);//make_color_rgb(133, 249, 26);
+        }
+    }
+
+#define CrabVenom_step
+    if(speed <= 0) instance_destroy();
+
+#define CrabVenom_anim
+    image_speed = 0;
+    image_index = image_number - 1;
+
+#define CrabVenom_destroy
+    with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
+
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
@@ -1271,15 +1429,22 @@ with(CustomObject){
     scrRight(direction);
 
 #define scrEnemyShoot(_object, _dir, _spd)
-    with(instance_create(x, y, _object)){
+    return scrEnemyShootExt(x, y, _object, _dir, _spd);
+
+#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)
+    var _inst = noone;
+
+    if(is_string(_object)) _inst = obj_create(_x, _y, _object);
+    else _inst = instance_create(_x, _y, _object);
+    with(_inst){
         motion_add(_dir, _spd);
         image_angle = direction;
         hitid = other.hitid;
         team = other.team;
         creator = other;
-
-        return id;
     }
+
+    return _inst;
 
 #define enemyAlarms(_maxAlarm)
     for(i = 0; i < _maxAlarm; i++){
@@ -1309,7 +1474,7 @@ with(CustomObject){
      // Not Hurt:
     if(sprite_index != spr_hurt){
         if(speed <= 0) sprite_index = spr_idle;
-    	else if(sprite_index = spr_idle) sprite_index = spr_walk;
+    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
     }
 
      // Hurt:
@@ -1335,33 +1500,27 @@ with(CustomObject){
     return 0;
 
 #define target_is_visible
-	return (instance_exists(target) and !collision_line(x, y, target.x, target.y, Wall, false, false));
+	return (instance_exists(target) && !collision_line(x, y, target.x, target.y, Wall, false, false));
 
 #define scrDefaultDrop
-    scrPickups(50);
-
-#define scrPickups(_dropchance)
-    with(instance_nearest(x,y,Player)){
-        var _need = 0;
-        var w = wep;
-        repeat(2){
-            if(w = bwep && bwep = 0) _need += 0.5;
-            else{
-                if(ammo[weapon_get_type(w)] < typ_amax[weapon_get_type(w)] * 0.2) _need += 0.75;
-                else{
-                    if(ammo[weapon_get_type(w)] > typ_amax[weapon_get_type(w)] * 0.6) _need += 0.1;
-                    else _need += 0.5;
-                }
-            }
-            w = bwep;
-        }
-    
-        if(random(100) < _dropchance * (_need + (skill_get(4) * 0.6))){
-            if(random(maxhealth) > my_health && random(3) < 2 && GameCont.crown != 2) instance_create(other.x + random_range(-2, 2), other.y + random_range(-2, 2), HPPickup);
-            else if(GameCont.crown != 5) instance_create(other.x + random_range(-2, 2), other.y + random_range(-2, 2), AmmoPickup);
-        }
-    }
+    pickup_drop(16, 0); // Bandit drop-ness
 
 #define z_engine
     z += zspeed * current_time_scale;
     zspeed -= zfric * current_time_scale;
+
+#define instances_named(_object, _name)
+    return instances_matching(_object, "name", _name);
+
+#define draw_bloom
+    draw_set_blend_mode(bm_add);
+    with(instances_named(CustomProjectile, "MortarPlasma")){
+        draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, 0.1 * image_alpha);
+    }
+    with(instances_named(CustomProjectile, "CrabVenom")){
+        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+    }
+    draw_set_blend_mode(bm_normal);
+
+#define draw_shadows
+    with(instances_named(CustomProjectile, "MortarPlasma")) draw_sprite(shd24, 0, x, y);
