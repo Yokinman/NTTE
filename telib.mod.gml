@@ -457,6 +457,7 @@ with(CustomObject){
                  // Exceptions:
                 else{
                     if(v == "on_hurt") on_hurt = enemyHurt;
+                    if(v == "on_death") on_death = scrDefaultDrop;
                 }
             }
         }
@@ -1186,6 +1187,10 @@ with(CustomObject){
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
+
+#define Pelican_death
+    scrPickups(80);
+    scrPickups(60);
 
 #define Cat_step
     enemyAlarms(1);
