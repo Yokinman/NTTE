@@ -41,6 +41,10 @@
     global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1, 6, 8);
     
      // Cat:
+    global.sprCatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png", 4, 12, 12);
+    global.sprCatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png", 6, 12, 12);
+    global.sprCatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png", 3, 12, 12);
+    global.sprCatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png", 6, 12, 12);
     global.sprAcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png", 4, 16, 16);
 
      // Traffic Crab:
@@ -380,10 +384,10 @@ with(CustomObject){
     	    o = instance_create(_x, _y, CustomEnemy);
     		with(o) {
                  // Visual:
-    			spr_idle = sprBanditIdle;
-    			spr_walk = sprBanditWalk;
-    			spr_hurt = sprBanditHurt;
-    			spr_dead = sprBanditDead;
+    			spr_idle = global.sprCatIdle;
+    			spr_walk = global.sprCatWalk;
+    			spr_hurt = global.sprCatHurt;
+    			spr_dead = global.sprCatDead;
     			spr_weap = sprToxicThrower;
     			spr_shadow = shd24;
     			hitid = [spr_idle, _name];
@@ -436,7 +440,7 @@ with(CustomObject){
                 maxhealth = 20;
                 raddrop = 10;
                 size = 2;
-                meleedamage = 3;
+                meleedamage = 4;
                 walk = 0;
                 walkspd = 1;
                 maxspd = 2.5;
@@ -1243,6 +1247,20 @@ with(CustomObject){
 #define Pelican_death
     pickup_drop(80, 0);
     pickup_drop(60, 5);
+
+     // Hmm:
+    if(place_meeting(x, y, WepPickup)){
+        with(instance_nearest(x, y, WepPickup)){
+            if(wep == wep_sledgehammer){
+                sprite_index = other.spr_weap;
+
+                var _dis = 16,
+                    _dir = rotation;
+
+                instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), ThrowHit).image_speed = 0.35;
+            }
+        }
+    }
 
 #define Cat_step
     enemyAlarms(1);
