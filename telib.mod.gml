@@ -53,6 +53,8 @@
     global.sprCrabHurt = sprite_add("sprites/enemies/Crab/sprTrafficCrabHurt.png", 3, 24, 24);
     global.sprCrabDead = sprite_add("sprites/enemies/Crab/sprTrafficCrabDead.png", 9, 24, 24);
     global.sprCrabFire = sprite_add("sprites/enemies/Crab/sprTrafficCrabFire.png", 2, 24, 24);
+     // Palanking:
+    global.sprPalankingTemp = sprite_add("sprites/enemies/Palanking/sprTemp.png", 1, 40, 40);
 
      // Coast Water Rock Decal:
     global.sprTopDecalCoast = sprite_add("sprites/areas/Coast/sprTopDecalCoast.png", 2, 16, 16);
@@ -501,9 +503,58 @@ with(CustomObject){
                 nowade = 1;
             }
         break;
+        
+        case "Palanking":
+            o = instance_create(_x, _y, CustomEnemy);
+            with(o){
+                 // for sani's bosshudredux
+    	        boss = 1;
+    	        bossname = "PALANKING";
+    	        col = c_red;
+
+    	        /// Visual:
+        	        spr_idle = global.sprPalankingTemp;
+        			spr_walk = global.sprPalankingTemp;
+        			spr_hurt = global.sprPalankingTemp;
+        			spr_dead = global.sprPalankingTemp;
+    			    spr_weap = mskNone;
+        			spr_shadow = shd48;
+        			mask_index = mskBigMaggot;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+    			    depth = -1;
+        			
+        			 // Fire:
+        			spr_sfir = global.sprPalankingTemp;
+        			spr_fire = global.sprPalankingTemp;
+        			spr_efir = global.sprPalankingTemp;
+
+                 // Sound:
+        		snd_hurt = sndOasisBossHurt;
+        		snd_dead = sndOasisBossDead;
+
+    			 // Vars:
+    			my_health = 350;
+    			maxhealth = my_health;
+    			raddrop = 100;
+    			size = 3;
+    			meleedamage = 3;
+    			walk = 0;
+    			walkspd = 0.8;
+    			maxspd = 3;
+    			ammo = 0;
+    			gunangle = random(360);
+    			direction = gunangle;
+
+    			 // Alarms:
+    			alarm0 = 60 + irandom(40);
+    			alarm1 = 30 + irandom(10);
+    			alarm2 = -1;
+            }
+        break;
 
     	default:
-    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "CoastDecal"];
+    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "CoastDecal", "Palanking"];
     }
 
      /// Auto Assign Name + Scripts:
@@ -981,8 +1032,6 @@ with(CustomObject){
     image_angle += (sin(current_frame/8) * 10) * current_time_scale;
     depth = min(-2, -z);
 
-     // Exploding:
-    if(alarm0 > 1 && place_meeting(x, y, Explosion)) alarm0 = 1;
     enemyAlarms(1);
 
 #define BubbleBomb_draw
@@ -1429,6 +1478,59 @@ with(CustomObject){
 #define CrabVenom_destroy
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
 
+#define Palanking_step
+    enemyAlarms(3);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+    
+#define Palanking_alrm0
+    alarm0 = 40 + random(20);
+    target = instance_nearest(x, y, Player);
+     // Bubble Attack:
+    if(ammo > 0) {
+        alarm0 = 4;
+        scrEnemyShoot("BubbleBomb", gunangle + random_range(10, -10), 8 + random(4));
+        motion_add(gunangle + 180, 4);
+        sound_play_pitchvol(sndExplosionS, 3, 0.4);
+        ammo--;
+        if(ammo = 0)
+        alarm0 = 60 + random(20);
+    }
+    
+     // Normal AI:
+    else {
+         // Bubble Bomb Burp:
+        if(target_in_distance(0, 160) and random(4) < 1) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            gunangle = _targetDir;
+            ammo = 10;
+            alarm0 = 5;
+            sound_play_pitchvol(sndVenuz, 0.4, 0.8);
+        } else if(target_in_distance(80, 900) and random(2) < 1) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            gunangle = _targetDir;
+            scrWalk(20, gunangle);
+            with(scrEnemyShoot(EnemySlash, gunangle + 20, 4)) { sprite_index = sprHeavySlash; image_speed = 0.2; }
+            with(scrEnemyShoot(EnemySlash, gunangle - 20, 4)) { sprite_index = sprHeavySlash; image_speed = 0.2; }
+            alarm0 = 60 + random(20);
+        }
+    }
+    
+#define Palanking_alrm1
+    target = instance_nearest(x, y, Player);
+    
+    if(target_is_visible()) {
+        if(random(2) < 1) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            scrEnemyShootExt(x + choose(12, -12), y + choose(12, -12), EnemyBullet1, _targetDir + random_range(30, -30), 3);
+        }
+    }
+    
+    alarm1 += 30 + random(10);
+
+#define Palanking_alrm2
+    
+    
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
