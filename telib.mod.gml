@@ -1,6 +1,4 @@
 #define init
-//sprites
-{ 
      // Diver:
 	global.sprDiverIdle = sprite_add("sprites/enemies/Diver/sprDiverIdle.png", 4, 12, 12);
 	global.sprDiverWalk = sprite_add("sprites/enemies/Diver/sprDiverWalk.png", 6, 12, 12);
@@ -53,6 +51,10 @@
     global.sprCrabHurt = sprite_add("sprites/enemies/Crab/sprTrafficCrabHurt.png", 3, 24, 24);
     global.sprCrabDead = sprite_add("sprites/enemies/Crab/sprTrafficCrabDead.png", 9, 24, 24);
     global.sprCrabFire = sprite_add("sprites/enemies/Crab/sprTrafficCrabFire.png", 2, 24, 24);
+
+     // Harpoon Launcher:
+    global.sprHarpoon = sprite_add("sprites/weps/sprHarpoon.png", 1, 4, 3);
+
      // Palanking:
     global.sprPalankingTemp = sprite_add("sprites/enemies/Palanking/sprTemp.png", 1, 40, 40);
 
@@ -68,10 +70,10 @@
 	    "102"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 40)
 	}
 	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
-}
-with(CustomObject){
-    sprite_index = lq_get(global.sprBigTopDecal, "102");
-}
+
+    with(instances_named(CustomObject, "BigDecal")){
+        sprite_index = lq_get(global.sprBigTopDecal, "102");
+    }
 
 #define obj_create(_x, _y, obj_name)
     var o = noone,
@@ -473,6 +475,22 @@ with(CustomObject){
             }
         break;
 
+        case "PlayerHarpoon":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                sprite_index = global.sprHarpoon;
+                mask_index = mskBolt;
+
+                 // Vars:
+				creator = noone;
+				target = noone;
+				link = noone;
+				damage = 2;
+				force = 8;
+				typ = 2;
+            }
+        break;
+
         case "CoastDecal":
             o = instance_create(_x, _y, CustomHitme);
             with(o){
@@ -554,7 +572,7 @@ with(CustomObject){
         break;
 
     	default:
-    		return ["Diver", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "CoastDecal", "Palanking"];
+    		return ["Diver", "Harpoon", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "PlayerHarpoon", "CoastDecal", "Palanking"];
     }
 
      /// Auto Assign Name + Scripts:
@@ -1477,6 +1495,69 @@ with(CustomObject){
 
 #define CrabVenom_destroy
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
+
+#define PlayerHarpoon_wall
+     // Stick in Wall:
+    if(speed > 0){
+        speed = 0;
+        target = other;
+        sound_play(sndBoltHitWall);
+        move_contact_solid(direction, 16);
+        instance_create(x, y, Dust);
+    }
+
+#define PlayerHarpoon_step
+     // Hit Pickups/Chests:
+    if(speed > 0){
+        if(place_meeting(x, y, chestprop)){
+            with(instance_nearest(x, y, chestprop)) with(other){
+                event_perform(ev_collision, Wall);
+            }
+        }
+    }
+
+     // Stuck in Target:
+    var _targ = target,
+        _link = link;
+
+    if(instance_exists(_targ)){
+        if(_targ.object_index != Wall){
+             // Stay on Target:
+            var _odis = 16,
+                _odir = image_angle;
+
+            x = _targ.x - lengthdir_x(_odis, _odir);
+            y = _targ.y - lengthdir_y(_odis, _odir);
+            xprevious = x;
+            yprevious = y;
+            visible = _targ.visible;
+
+             // Pull Target:
+            if(instance_exists(_link)) with(_targ) if(distance_to_object(_link) > 15){
+                var _dir = point_direction(other.x, other.y, _link.x, _link.y),
+                    _pull = (("size" in _link) ? _link.size / 2 : 4);
+
+                hspeed += lengthdir_x(_pull, _dir);
+                vspeed += lengthdir_y(_pull, _dir);
+            }
+        }
+    }
+    else if(speed <= 0) instance_destroy();
+
+#define PlayerHarpoon_hit
+    if(speed > 0 && projectile_canhit(other)){
+        speed = 0;
+        target = other;
+        projectile_hit_push(other, damage, force);
+    }
+
+#define PlayerHarpoon_draw
+    var _targ = target,
+        _link = link;
+
+    if(instance_exists(_link)) draw_line_width(x, y, _link.x, _link.y, 1);
+
+    draw_self();
 
 #define Palanking_step
     enemyAlarms(3);
