@@ -108,10 +108,12 @@
          // Player:
         with(instances_matching_gt(Player, "wading", 0)){
 			 // Player Moves 20% Slower in Water:
-            if(speed > 0 && race != "fish"){
-                var f = 0.2;
-                x -= hspeed * f;
-                y -= vspeed * f;
+            if(speed > 0){
+                var f = ((race == "fish") ? 0 : -0.2) + (0.2 * skill_get(mut_extra_feet));
+                if(f != 0){
+                    x += hspeed * f;
+                    y += vspeed * f;
+                }
             }
 
              // Walk into Sea for Next Level:
@@ -379,6 +381,22 @@
      // things die bc of the missing walls
 	with(instances_matching(enemy, "canfly", 0)) canfly = 1;
 
+     // Weird fix for ultra bolts destroying themselves when not touching a floor. doesn't really work well with bolt marrow:
+    with(UltraBolt){
+        if(!place_meeting(x, y, Floor)){
+            with(instance_create(0, 0, Floor)){
+                x = other.x;
+                y = other.y;
+                xprevious = x;
+                yprevious = y;
+                name = "UltraBoltCoastFix";
+                mask_index = sprBoltTrail;
+                creator = other;
+                visible = 0;
+            }
+        }
+    }
+
      // Bind End Step:
     script_bind_end_step(end_step, 0);
 
@@ -423,6 +441,8 @@
             instance_destroy();
         }
     }
+
+    with(instances_matching(Floor, "name", "UltraBoltCoastFix")) instance_destroy();
 
     instance_destroy();
 
