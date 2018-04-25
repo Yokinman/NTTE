@@ -58,6 +58,24 @@
      // Palanking:
     global.sprPalankingTemp = sprite_add("sprites/enemies/Palanking/sprTemp.png", 1, 40, 40);
 
+     // Blooming Cactus:
+	global.sprBloomingCactusIdle[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus.png",     1, 12, 12);
+	global.sprBloomingCactusHurt[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusHurt.png", 3, 12, 12);
+	global.sprBloomingCactusDead[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusDead.png", 4, 12, 12);
+
+	global.sprBloomingCactusIdle[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2.png",     1, 12, 12);
+	global.sprBloomingCactusHurt[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Hurt.png", 3, 12, 12);
+	global.sprBloomingCactusDead[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Dead.png", 4, 12, 12);
+
+	global.sprBloomingCactusIdle[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3.png",     1, 12, 12);
+	global.sprBloomingCactusHurt[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
+	global.sprBloomingCactusDead[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
+
+     // Palm:
+	global.sprPalmIdle = sprite_add("sprites/areas/Coast/Props/sprPalm.png",     1, 24, 40);
+	global.sprPalmHurt = sprite_add("sprites/areas/Coast/Props/sprPalmHurt.png", 3, 24, 40);
+	global.sprPalmDead = sprite_add("sprites/areas/Coast/Props/sprPalmDead.png", 4, 24, 40);
+
      // Coast Water Rock Decal:
     global.sprTopDecalCoast = sprite_add("sprites/areas/Coast/sprTopDecalCoast.png", 2, 16, 16);
     global.sprMidDecalCoast = sprite_add("sprites/areas/Coast/sprMidDecalCoast.png", 2, 16, 16);
@@ -288,15 +306,15 @@
         			image_xscale = choose(-1, 1);
         			image_speed = 0;
         			depth = -8;
-    
+
             		mask_index = global.mskBigTopDecal;
-    
+
         		    if(place_meeting(x, y, TopPot)) instance_destroy();
                 	else{
                          // TopSmalls:
                 		var _off = 16,
                 		    s = _off * 3;
-            
+
                 		for(var _ox = -s; _ox <= s; _ox += _off){
                 		    for(var _oy = -s; _oy <= s; _oy += _off){
                 		        if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
@@ -306,7 +324,7 @@
         		}
     	    }
     	break;
-    	
+	
     	case "Gull": 
     	    o = instance_create(_x, _y, CustomEnemy);
     		with(o) {
@@ -485,9 +503,39 @@
 				creator = noone;
 				target = noone;
 				link = noone;
+				rope_length = 0;
 				damage = 2;
 				force = 8;
 				typ = 2;
+            }
+        break;
+
+        case "BloomingCactus":
+            o = instance_create(_x, _y, Cactus);
+            with(o){
+                var s = irandom(array_length(global.sprBloomingCactusIdle) - 1);
+                spr_idle = global.sprBloomingCactusIdle[s];
+                spr_hurt = global.sprBloomingCactusHurt[s];
+                spr_dead = global.sprBloomingCactusDead[s];
+            }
+        break;
+
+        case "Palm":
+            o = instance_create(_x, _y, CustomProp);
+            with(o){
+                spr_idle = global.sprPalmIdle;
+                spr_hurt = global.sprPalmHurt;
+                spr_dead = global.sprPalmDead;
+                spr_shadow = -1;
+
+                mask_index = mskStreetLight;
+
+                snd_hurt = sndHitPlant;
+                snd_dead = sndHitPlant;
+
+                my_health = 40;
+
+                depth = -(y / 20000);
             }
         break;
 
@@ -572,7 +620,7 @@
         break;
 
     	default:
-    		return ["Diver", "Harpoon", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "PlayerHarpoon", "CoastDecal", "Palanking"];
+    		return ["Diver", "Harpoon", "NewCocoon", "Mortar", "MortarPlasma", "CoastBoss", "BubbleBomb", "BigDecal", "Gull", "Pelican", "Cat", "TrafficCrab", "CrabVenom", "PlayerHarpoon", "BloomingCactus", "Palm", "CoastDecal", "Palanking"];
     }
 
      /// Auto Assign Name + Scripts:
@@ -1503,6 +1551,7 @@
         target = other;
         sound_play(sndBoltHitWall);
         move_contact_solid(direction, 16);
+        rope_length = distance_to_object(creator);
         instance_create(x, y, Dust);
     }
 
@@ -1518,7 +1567,7 @@
 
      // Stuck in Target:
     var _targ = target,
-        _link = link;
+        _link = ((link != noone) ? link : creator);
 
     if(instance_exists(_targ)){
         if(_targ.object_index != Wall){
@@ -1533,12 +1582,22 @@
             visible = _targ.visible;
 
              // Pull Target:
-            if(instance_exists(_link)) with(_targ) if(distance_to_object(_link) > 15){
-                var _dir = point_direction(other.x, other.y, _link.x, _link.y),
-                    _pull = (("size" in _link) ? _link.size / 2 : 4);
+            if(instance_exists(_link)){
+                with(link) if(rope_length > other.rope_length) rope_length = other.rope_length;
 
-                hspeed += lengthdir_x(_pull, _dir);
-                vspeed += lengthdir_y(_pull, _dir);
+                if(!instance_is(_targ, prop) && ("name" not in _targ || _targ.name != "CoastDecal")) with(_targ){
+                    var _dis = point_distance(x, y, _link.x, _link.y) - other.rope_length;
+                    if(_dis > 0){
+                        var _dir = point_direction(other.x, other.y, _link.x, _link.y),
+                            _pull = (("size" in self) ? (size + 1) : 2),
+                            _drag = min(_dis / 3, 10 / _pull);
+
+                        hspeed += lengthdir_x(_pull, _dir);
+                        vspeed += lengthdir_y(_pull, _dir);
+                        x += lengthdir_x(_drag, _dir);
+                        y += lengthdir_y(_drag, _dir);
+                    }
+                }
             }
         }
     }
@@ -1548,16 +1607,29 @@
     if(speed > 0 && projectile_canhit(other)){
         speed = 0;
         target = other;
+        rope_length = distance_to_object(creator);
         projectile_hit_push(other, damage, force);
     }
 
 #define PlayerHarpoon_draw
     var _targ = target,
-        _link = link;
+        _link = ((link != noone) ? link : creator);
 
-    if(instance_exists(_link)) draw_line_width(x, y, _link.x, _link.y, 1);
+    if(instance_exists(_link)){
+        draw_set_color(c_white);
+        draw_line_width(x, y, _link.x, _link.y, 1);
+    }
 
     draw_self();
+
+#define Palm_death
+     // Leaves:
+    repeat(15) with(instance_create(x + random_range(-15, 15), y - 30 + random_range(-10, 10), Feather)){
+        sprite_index = sprLeaf;
+        image_yscale = random_range(1, 3);
+        motion_add(point_direction(other.x, other.y, x, y), 1 + random(1));
+        vspeed += 2;
+    }
 
 #define Palanking_step
     enemyAlarms(3);

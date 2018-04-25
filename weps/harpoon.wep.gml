@@ -40,7 +40,6 @@
             last_harpoon = noone;
         }
         else{
-            _poon.link = other;
             last_harpoon = _poon;
         }
     }

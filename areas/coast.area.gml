@@ -1,28 +1,9 @@
 #define init
-    { //sprites
-    	global.sprCoastTrans    = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",    1, 0,  0);
-    	global.sprFloorCoast    = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",    4, 2,  2);
-    	global.sprFloorCoastB   = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png",   3, 2,  2);
-    	global.sprDetailCoast   = sprite_add("../sprites/areas/Coast/sprDetailCoast.png",   6, 4,  4);
-
-    	//global.sprFloorCoastTrans = sprite_add("../sprites/areas/Coast/sprFloorCoastTrans.png", 4, 0, 0);
-
-    	global.sprBloomingCactusIdle[0] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus.png",     1, 12, 12);
-    	global.sprBloomingCactusHurt[0] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactusHurt.png", 3, 12, 12);
-    	global.sprBloomingCactusDead[0] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactusDead.png", 4, 12, 12);
-
-    	global.sprBloomingCactusIdle[1] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus2.png",     1, 12, 12);
-    	global.sprBloomingCactusHurt[1] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus2Hurt.png", 3, 12, 12);
-    	global.sprBloomingCactusDead[1] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus2Dead.png", 4, 12, 12);
-
-    	global.sprBloomingCactusIdle[2] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus3.png",     1, 12, 12);
-    	global.sprBloomingCactusHurt[2] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
-    	global.sprBloomingCactusDead[2] = sprite_add("../sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
-
-    	global.sprPalmIdle = sprite_add("../sprites/areas/Coast/Props/sprPalm.png",     1, 24, 40);
-    	global.sprPalmHurt = sprite_add("../sprites/areas/Coast/Props/sprPalmHurt.png", 3, 24, 40);
-    	global.sprPalmDead = sprite_add("../sprites/areas/Coast/Props/sprPalmDead.png", 4, 24, 40);
-    }
+     // Sprites:
+	global.sprCoastTrans    = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",    1, 0,  0);
+	global.sprFloorCoast    = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",    4, 2,  2);
+	global.sprFloorCoastB   = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png",   3, 2,  2);
+	global.sprDetailCoast   = sprite_add("../sprites/areas/Coast/sprDetailCoast.png",   6, 4,  4);
 
      // Sea/Surface Business:
     global.surfW = 5000;
@@ -524,7 +505,7 @@
 #define area_pop_props
     if(random(12) < 1){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        scrCoastProp(x + (sprite_width / 2), y + (sprite_height / 2), o);
+        obj_create(x + (sprite_width / 2), y + (sprite_height / 2), o);
     }
 
 #define darksea_draw
@@ -720,40 +701,6 @@
         else global.swimInstVisible[array_find_index(_inst, self)] = noone;
     }
     instance_destroy();
-
-#define scrCoastProp(_x, _y, _name)
-    switch(_name){
-        case "BloomingCactus":
-            with(instance_create(_x, _y, Cactus)){
-                name = _name;
-
-                var s = irandom(array_length(global.sprBloomingCactusIdle) - 1);
-                spr_idle = global.sprBloomingCactusIdle[s];
-                spr_hurt = global.sprBloomingCactusHurt[s];
-                spr_dead = global.sprBloomingCactusDead[s];
-
-                return id;
-            }
-        break;
-
-        case "Palm":
-            with(instance_create(_x, _y, StreetLight)){
-                name = _name;
-
-                spr_idle = global.sprPalmIdle;
-                spr_hurt = global.sprPalmHurt;
-                spr_dead = global.sprPalmDead;
-
-                snd_hurt = sndHitPlant;
-                snd_dead = sndHitPlant;
-
-                my_health = 40;
-
-                return id;
-            }
-        break;
-    }
-    return noone;
 
 #define obj_create(_x, _y, object_name)
     return mod_script_call("mod", "telib", "obj_create", _x, _y, object_name);
