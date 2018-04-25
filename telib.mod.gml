@@ -504,9 +504,11 @@
 				target = noone;
 				link = noone;
 				rope_length = 0;
+				break_force = 0;
+				can_break = 0;
 				damage = 2;
 				force = 8;
-				typ = 2;
+				typ = 0;
             }
         break;
 
@@ -523,19 +525,21 @@
         case "Palm":
             o = instance_create(_x, _y, CustomProp);
             with(o){
+                 // Visual:
                 spr_idle = global.sprPalmIdle;
                 spr_hurt = global.sprPalmHurt;
                 spr_dead = global.sprPalmDead;
                 spr_shadow = -1;
-
+                depth = -(y / 20000);
                 mask_index = mskStreetLight;
 
+                 // Sound:
                 snd_hurt = sndHitPlant;
                 snd_dead = sndHitPlant;
 
+                 // Vars:
                 my_health = 40;
-
-                depth = -(y / 20000);
+                size = 1;
             }
         break;
 
@@ -1544,17 +1548,6 @@
 #define CrabVenom_destroy
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
 
-#define PlayerHarpoon_wall
-     // Stick in Wall:
-    if(speed > 0){
-        speed = 0;
-        target = other;
-        sound_play(sndBoltHitWall);
-        move_contact_solid(direction, 16);
-        rope_length = distance_to_object(creator);
-        instance_create(x, y, Dust);
-    }
-
 #define PlayerHarpoon_step
      // Hit Pickups/Chests:
     if(speed > 0){
@@ -1567,11 +1560,13 @@
 
      // Stuck in Target:
     var _targ = target,
-        _link = ((link != noone) ? link : creator);
+        _link = link;
 
     if(instance_exists(_targ)){
-        if(_targ.object_index != Wall){
-             // Stay on Target:
+        var _inWall = (_targ.object_index == Wall);
+
+         // Stay on Target:
+        if(!_inWall){
             var _odis = 16,
                 _odir = image_angle;
 
@@ -1580,24 +1575,45 @@
             xprevious = x;
             yprevious = y;
             visible = _targ.visible;
+        }
+
+         // Rope Linked:
+        if(instance_exists(_link)){
+            var _linkDis = point_distance(_targ.x, _targ.y, _link.x, _link.y) - rope_length,
+                _linkDir = point_direction(x, y, _link.x, _link.y);
+
+            if(_link != creator){
+                with(_link) if(rope_length <= 0) rope_length = other.rope_length;
+            }
 
              // Pull Target:
-            if(instance_exists(_link)){
-                with(link) if(rope_length > other.rope_length) rope_length = other.rope_length;
+            if(!_inWall && _linkDis > 0){
+                if(!instance_is(_targ, prop)) with(instances_matching_ne(_targ, "name", "CoastDecal")){
+                    var _pull = (("size" in self) ? (size + 1) : 2),
+                        _drag = min(_linkDis / 3, 10 / _pull);
 
-                if(!instance_is(_targ, prop) && ("name" not in _targ || _targ.name != "CoastDecal")) with(_targ){
-                    var _dis = point_distance(x, y, _link.x, _link.y) - other.rope_length;
-                    if(_dis > 0){
-                        var _dir = point_direction(other.x, other.y, _link.x, _link.y),
-                            _pull = (("size" in self) ? (size + 1) : 2),
-                            _drag = min(_dis / 3, 10 / _pull);
-
-                        hspeed += lengthdir_x(_pull, _dir);
-                        vspeed += lengthdir_y(_pull, _dir);
-                        x += lengthdir_x(_drag, _dir);
-                        y += lengthdir_y(_drag, _dir);
-                    }
+                    hspeed += lengthdir_x(_pull, _linkDir);
+                    vspeed += lengthdir_y(_pull, _linkDir);
+                    x += lengthdir_x(_drag, _linkDir);
+                    y += lengthdir_y(_drag, _linkDir);
                 }
+            }
+
+             // Rope Stretching:
+            if(can_break){
+                break_force = max(_linkDis, 0);
+
+                 // Break:
+                if(break_force > 100){
+                    sound_play_pitch(sndHammerHeadEnd, 2);
+                    with(_link) link = noone;
+                    link = noone;
+                }
+            }
+            else if(_linkDis <= 0) can_break = 1;
+            if(_link != creator) with(_link){
+                if(!instance_exists(target)) other.can_break = 0;
+                can_break = other.can_break;
             }
         }
     }
@@ -1607,17 +1623,41 @@
     if(speed > 0 && projectile_canhit(other)){
         speed = 0;
         target = other;
-        rope_length = distance_to_object(creator);
+        if(instance_exists(link) && rope_length <= 0){
+            rope_length = point_distance(x, y, link.x, link.y);
+        }
         projectile_hit_push(other, damage, force);
+    }
+
+#define PlayerHarpoon_wall
+     // Stick in Wall:
+    if(speed > 0){
+        speed = 0;
+        target = other;
+        move_contact_solid(direction, 16);
+        if(instance_exists(link) && rope_length <= 0){
+            rope_length = point_distance(x, y, link.x, link.y);
+        }
+        instance_create(x, y, Dust);
+        sound_play(sndBoltHitWall);
     }
 
 #define PlayerHarpoon_draw
     var _targ = target,
-        _link = ((link != noone) ? link : creator);
+        _link = link;
 
     if(instance_exists(_link)){
-        draw_set_color(c_white);
-        draw_line_width(x, y, _link.x, _link.y, 1);
+        var _wid = 1,
+            _col = c_white;
+
+         // Rope Stretching:
+        if(can_break){
+            _wid = min(rope_length / point_distance(x, y, _link.x, _link.y), 2);
+            _col = merge_color(_col, c_red, clamp(break_force / 100, 0, 1)) 
+        }
+
+        draw_set_color(_col);
+        draw_line_width(x, y, _link.x, _link.y, _wid);
     }
 
     draw_self();

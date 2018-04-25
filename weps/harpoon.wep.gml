@@ -1,5 +1,5 @@
 #define init
-    global.sprHarpoonLauncher = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 6, 4);
+    global.sprHarpoonLauncher = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 3, 4);
 
 #define weapon_name
     return "HARPOON LAUNCHER";
@@ -34,12 +34,13 @@
 
      // Link Harpoons:
     with(_wep){
-        if(instance_exists(last_harpoon)){
+        if(instance_exists(last_harpoon) && last_harpoon.link == other){
             _poon.link = last_harpoon;
             last_harpoon.link = _poon;
             last_harpoon = noone;
         }
         else{
+            _poon.link = other;
             last_harpoon = _poon;
         }
     }
