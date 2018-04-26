@@ -678,7 +678,7 @@
 
              // Reload Harpoon:
     		else if(spr_weap = global.sprHarpoonGunEmpty){
-    			sound_play(sndCrossReload);
+    			sound_play_hit(sndCrossReload,0);
     			spr_weap = global.sprHarpoonGun;
     			wkick = 2;
     		}
@@ -752,7 +752,7 @@
      // Stick in Wall:
     if(speed > 0){
         speed = 0;
-        sound_play(sndBoltHitWall);
+        sound_play_hit(sndBoltHitWall,.1);
         move_contact_solid(direction, 16);
         instance_create(x, y, Dust);
         alarm0 = 30;
@@ -980,6 +980,21 @@
             motion_add(point_direction(x, y, target.x, target.y), 1);
         }
         scrRight(direction);
+        if chance_frame(100) 
+            repeat(random(3))
+                with instance_create(x+(random(16) * other.right),bbox_bottom+random_range(12,16),Dust){
+                    gravity = .3;
+                    motion_add(other.direction+(other.right * random_range(80,130)), random_range(2,4));
+                    if (place_meeting(x,y,FloorExplo) && irandom(2)) || !irandom(3){
+                        sprite_index = sprDebris1;
+                    }
+                    else{
+                        image_blend = make_color_rgb(236,188,82);
+                    }
+                    image_xscale *= .75;
+                    image_yscale *= .75;
+                    depth = other.depth + choose(-1,1);
+                }
     }
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
@@ -1821,6 +1836,9 @@
 #define z_engine
     z += zspeed * current_time_scale;
     zspeed -= zfric * current_time_scale;
+
+#define chance_frame(_percent)
+    return random(100) <= _percent * current_time_scale;
 
 #define instances_named(_object, _name)
     return instances_matching(_object, "name", _name);
