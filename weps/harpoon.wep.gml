@@ -1,14 +1,10 @@
 #define init
     global.sprHarpoonLauncher = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 3, 4);
 
-#define weapon_name
-    return "HARPOON LAUNCHER";
-
-#define weapon_type
-    return 3;
-
-#define weapon_sprt
-    return global.sprHarpoonLauncher;
+#define weapon_name return "HARPOON LAUNCHER";
+#define weapon_type return 3; // Bolt
+#define weapon_load return 2; // 0.07 Seconds
+#define weapon_sprt return global.sprHarpoonLauncher;
 
 #define weapon_fire(_wep)
      // Pack into Lightweight Object:
@@ -23,9 +19,9 @@
     sound_play_pitch(sndNadeReload, 0.8);
 
      // Shoot Harpoon:
-    var _poon = obj_create(x, y, "PlayerHarpoon");
+    var _poon = obj_create(x, y, "Harpoon");
     with(_poon){
-        motion_add(other.gunangle, 22);
+        motion_add(other.gunangle + (random_range(-5, 5) * other.accuracy), 22);
         image_angle = direction;
         image_yscale = other.right;
         team = other.team;
