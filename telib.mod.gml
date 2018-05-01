@@ -16,7 +16,8 @@
     	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png", 9, 24, 24);
 
          // Harpoon:
-        global.sprHarpoon = sprite_add("sprites/weps/sprHarpoon.png", 1, 4, 3);
+        global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
+        global.sprNetNade = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
 
         //#region COAST
              // Blooming Cactus:
@@ -101,6 +102,10 @@
     with(instances_named(CustomObject, "BigDecal")){
         sprite_index = lq_defget(global.sprBigTopDecal, string(GameCont.area), mskNone);
     }
+
+     // Harpoon Ropes:
+    global.poonRope = [];
+
 
 #define obj_create(_x, _y, obj_name)
     var o = noone,
@@ -216,18 +221,38 @@
             o = instance_create(_x, _y, CustomProjectile);
             with(o){
                 sprite_index = global.sprHarpoon;
+                image_speed = 0;
                 mask_index = mskBolt;
 
                  // Vars:
 				creator = noone;
 				target = noone;
-				link = noone;
-				rope_length = 0;
-				break_force = 0;
-				can_break = 0;
+				rope = noone;
+				set_rope_length = 1;
+				pull_speed = 0;
+				canmove = 1;
 				damage = 3;
 				force = 8;
 				typ = 0;
+				blink = 30;
+            }
+        break;
+
+        case "NetNade":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                sprite_index = global.sprNetNade;
+                image_speed = 0.4;
+                mask_index = sprGrenade;
+
+                 // Vars:
+                friction = 0.4;
+                creator = noone;
+                damage = 10;
+                force = 4;
+                typ = 1;
+                
+                alarm0 = 60;
             }
         break;
 
@@ -639,7 +664,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "BubbleBomb", "CoastBoss", "Harpoon",
+    		return ["BigDecal", "BubbleBomb", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
     		        "Cat",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -912,27 +937,13 @@
 
 
 #define Harpoon_step
-     // Hit Pickups/Chests:
-    if(speed > 0){
-        if(place_meeting(x, y, chestprop)){
-            with(instance_nearest(x, y, chestprop)) with(other){
-                event_perform(ev_collision, Wall);
-            }
-        }
-    }
-
      // Stuck in Target:
-    var _targ = target,
-        _link = link;
-
+    var _targ = target;
     if(instance_exists(_targ)){
-        var _inWall = (_targ.object_index == Wall);
-
-         // Stay on Target:
-        if(!_inWall){
+        if(canmove){
             var _odis = 16,
                 _odir = image_angle;
-
+    
             x = _targ.x - lengthdir_x(_odis, _odir);
             y = _targ.y - lengthdir_y(_odis, _odir);
             xprevious = x;
@@ -940,90 +951,157 @@
             visible = _targ.visible;
         }
 
-         // Rope Linked:
-        if(instance_exists(_link)){
-            var _linkDis = point_distance(_targ.x, _targ.y, _link.x, _link.y) - rope_length,
-                _linkDir = point_direction(x, y, _link.x, _link.y);
+         // Pickup-able:
+        if(alarm0 < 0){
+            image_index = 0;
 
-            if(_link != creator){
-                with(_link) if(rope_length <= 0) rope_length = other.rope_length;
+            var _pickup = 1;
+            with(rope) if(!broken) _pickup = 0;
+            if(_pickup){
+                alarm0 = 200 + random(20);
+                if(GameCont.crown == crwn_haste) alarm0 /= 3;
             }
+        }
+        else if(instance_exists(Player)){
+             // Shine:
+            image_speed = (image_index < 1 ? random(0.04) : 0.4);
 
-             // Pull Target:
-            if(!_inWall && _linkDis > 0){
-                if(!instance_is(_targ, prop)) with(instances_matching_ne(_targ, "name", "CoastDecal")){
-                    var _pull = (("size" in self) ? (2 / size) : 2),
-                        _drag = min(_linkDis / 3, 10 / (("size" in self) ? (size * 2) : 2));
+             // Attraction:
+            var p = instance_nearest(x, y, Player);
+            if(point_distance(x, y, p.x, p.y) < (skill_get(mut_plutonium_hunger) ? 100 : 50)){
+                var _dis = 10,
+                    _dir = point_direction(x, y, p.x, p.y);
 
-                    hspeed += lengthdir_x(_pull, _linkDir);
-                    vspeed += lengthdir_y(_pull, _linkDir);
-                    x += lengthdir_x(_drag, _linkDir);
-                    y += lengthdir_y(_drag, _linkDir);
+                x += lengthdir_x(_dis, _dir);
+                y += lengthdir_y(_dis, _dir);
+                xprevious = x;
+                yprevious = y;
+
+                 // Pick Up Bolt Ammo:
+                if(place_meeting(x, y, p) || place_meeting(x, y, Portal)){
+                    with(p){
+                        ammo[3] = min(ammo[3] + 1, typ_amax[3]);
+                        instance_create(x, y, PopupText).text = "+1 BOLTS";
+                        sound_play(sndAmmoPickup);
+                    }
+                    instance_destroy();
                 }
-            }
-
-             // Rope Stretching:
-            if(can_break){
-                break_force = max(_linkDis, 0);
-
-                 // Break:
-                if(break_force > 100){
-                    sound_play_pitch(sndHammerHeadEnd, 2);
-                    with(_link) link = noone;
-                    link = noone;
-                }
-            }
-            else if(_linkDis <= 0) can_break = 1;
-            if(_link != creator) with(_link){
-                if(!instance_exists(target)) other.can_break = 0;
-                can_break = other.can_break;
             }
         }
     }
-    else if(speed <= 0) instance_destroy();
+
+    else{
+        with(rope){
+             // Rope Length:
+            if(!harpoon_stuck) length = point_distance(link1.x, link1.y, link2.x, link2.y);
+        }
+
+         // Stick in Chests:
+        if(speed > 0){
+            var c = instance_nearest(x, y, chestprop);
+            if(place_meeting(x, y, c)) scrHarpoonStick(c);
+        }
+
+        else instance_destroy();
+    }
+
+    if(instance_exists(self)) enemyAlarms(1);
 
 #define Harpoon_hit
-    if(speed > 0 && projectile_canhit(other)){
-        speed = 0;
-        target = other;
-        if(instance_exists(link) && rope_length <= 0){
-            rope_length = point_distance(x, y, link.x, link.y);
+    if(speed > 0){
+        if(projectile_canhit(other)){
+            projectile_hit_push(other, damage, force);
+    
+             // Stick in enemies that don't die:
+            if(other.my_health > 0){
+                if(
+                    (instance_is(other, prop) && other.object_index != RadChest)
+                    ||
+                    ("name" in other && name == "CoastDecal")
+                ){
+                    canmove = 0;
+                }
+                scrHarpoonStick(other);
+            }
         }
-        projectile_hit_push(other, damage, force);
     }
 
 #define Harpoon_wall
-     // Stick in Wall:
     if(speed > 0){
-        speed = 0;
-        target = other;
         move_contact_solid(direction, 16);
-        if(instance_exists(link) && rope_length <= 0){
-            rope_length = point_distance(x, y, link.x, link.y);
-        }
         instance_create(x, y, Dust);
         sound_play(sndBoltHitWall);
+
+         // Stick in Wall:
+        canmove = 0;
+        scrHarpoonStick(other);
     }
 
-#define Harpoon_draw
-    var _targ = target,
-        _link = link;
+#define Harpoon_alrm0
+     // Blinking:
+    if(blink-- > 0){
+        alarm0 = 2;
+        visible = !visible;
+    }
+    else instance_destroy();
 
-    if(instance_exists(_link)){
-        var _wid = 1,
-            _col = c_white;
+#define Harpoon_destroy
+    scrHarpoonUnrope(rope);
 
-         // Rope Stretching:
-        if(can_break){
-            _wid = min(rope_length / point_distance(x, y, _link.x, _link.y), 2);
-            _col = merge_color(_col, c_red, clamp(break_force / 100, 0, 1)) 
+
+#define NetNade_step
+    if(alarm0 < 15) sprite_index = sprGrenadeBlink;
+    enemyAlarms(1);
+
+#define NetNade_hit
+    if(speed > 0 && projectile_canhit(other)){
+        projectile_hit_push(other, damage, force);
+        instance_destroy();
+    }
+
+#define NetNade_wall
+    instance_destroy();
+
+#define NetNade_alrm0
+    instance_destroy();
+
+#define NetNade_destroy
+    sound_play(sndHeavyCrossbow);
+    sound_play(sndFlakExplode);
+    view_shake_at(x, y, 20);
+
+    instance_create(x, y, PortalClear);
+
+     // Harpoon-Splosion:
+    var _num = 10,
+        _ang = random(360),
+        f = noone, // First Harpoon Created
+        h = noone; // Last Harpoon Created
+
+    for(var a = _ang; a < _ang + 360; a += (360 / _num)){
+        with(obj_create(x, y, "Harpoon")){
+            motion_add(a + random_range(-5, 5), 22);
+            image_angle = direction;
+            team = other.team;
+            creator = other.creator;
+            if(direction > 90 && direction < 270){
+                image_yscale = -1;
+            }
+
+             // Effects:
+            with(instance_create(x, y, MeleeHitWall)){
+                motion_add(other.direction, 1 + random(2));
+                image_angle = direction + 180;
+                image_speed = 0.6;
+            }
+
+             // Link Harpoon:
+            if(!instance_exists(f)) f = id;
+            if(instance_exists(h)) scrHarpoonRope(id, h);
+            h = id;
         }
-
-        draw_set_color(_col);
-        draw_line_width(x, y, _link.x, _link.y, _wid);
     }
-
-    draw_self();
+    scrHarpoonRope(f, h);
 
 
 #define CoastDecal_step
@@ -1805,7 +1883,7 @@
     return _inst;
 
 #define enemyAlarms(_maxAlarm)
-    for(i = 0; i < _maxAlarm; i++){
+    for(var i = 0; i < _maxAlarm; i++){
     	var a = alarm_get(i);
     	if(a > 0){
              // Decrement Alarm:
@@ -1886,3 +1964,125 @@
 
 #define draw_shadows
     with(instances_named(CustomProjectile, "MortarPlasma")) draw_sprite(shd24, 0, x, y);
+
+
+#define step
+     // Harpoon Connections:
+    for(var i = 0; i < array_length(global.poonRope); i++){
+        var _rope = global.poonRope[i],
+            _link1 = _rope.link1,
+            _link2 = _rope.link2;
+
+        if(instance_exists(_link1) && instance_exists(_link2)){
+            var _length = _rope.length,
+                _linkDis = point_distance(_link1.x, _link1.y, _link2.x, _link2.y) - _length,
+                _linkDir = point_direction(_link1.x, _link1.y, _link2.x, _link2.y);
+
+             // Pull Link:
+            if(_linkDis > 0) with([_link1, _link2]){
+                if(_rope.creator != id){
+                    if(canmove) with(target){
+                        var _pull = other.pull_speed,
+                            _drag = min(_linkDis / 3, 10 / (("size" in self) ? (size * 2) : 2));
+
+                        hspeed += lengthdir_x(_pull, _linkDir);
+                        vspeed += lengthdir_y(_pull, _linkDir);
+                        x += lengthdir_x(_drag, _linkDir);
+                        y += lengthdir_y(_drag, _linkDir);
+                    }
+                }
+                _linkDir += 180;
+            }
+
+             // Deteriorate Rope:
+            var _deteriorate = (_rope.deteriorate_timer == 0);
+            if(_deteriorate) _rope.length *= 0.9;
+            else if(_rope.deteriorate_timer > 0){
+                _rope.deteriorate_timer -= min(1, _rope.deteriorate_timer);
+            }
+
+             // Rope Stretching:
+            with(_rope){
+                break_force = max(_linkDis, 0);
+
+                 // Break:
+                if(break_timer > 0) break_timer -= current_time_scale;
+                else if(break_force > 100 || (_deteriorate && _length <= 1)){
+                    if(_deteriorate) with([_link1, _link2]) image_index = 1;
+                    else sound_play_pitch(sndHammerHeadEnd, 2);
+                    scrHarpoonUnrope(_rope);
+                }
+            }
+
+             // Draw Rope:
+            script_bind_draw(draw_rope, 0, _rope);
+        }
+        else scrHarpoonUnrope(_rope);
+    }
+
+#define draw_rope(_rope)
+    with(_rope) if(instance_exists(link1) && instance_exists(link2)){
+        var _x1 = link1.x,
+            _y1 = link1.y,
+            _x2 = link2.x,
+            _y2 = link2.y,
+            _wid = min(length / point_distance(_x1, _y1, _x2, _y2), 2),
+            _col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 45), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+
+        draw_set_color(_col);
+        draw_line_width(_x1, _y1, _x2, _y2, _wid);
+    }
+    instance_destroy();
+
+#define scrHarpoonStick(_instance) /// Called from Harpoon
+    speed = 0;
+    target = _instance;
+
+     // Set Rope Vars:
+    pull_speed = (("size" in target) ? (2 / target.size) : 2);
+    with(rope){
+        if(!harpoon_stuck){
+            harpoon_stuck = 1;
+            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+        }
+
+         // Deteriorate rope if only stuck in unmovable objects:
+        var m = 1;
+        with([link1, link2]) if("canmove" not in self || canmove) m = 0;
+        if(m){
+            deteriorate_timer = 60;
+            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+        }
+    }
+
+#define scrHarpoonRope(_link1, _link2)
+    var r = {
+        link1 : _link1,
+        link2 : _link2,
+        length : 0,
+        harpoon_stuck : 0,
+        break_force : 0,
+        break_timer : 90,
+        creator : noone,
+        deteriorate_timer : -1,
+        broken : 0
+    }
+    global.poonRope[array_length(global.poonRope)] = r;
+    with([_link1, _link2]) rope[array_length(rope)] = r;
+
+    return r;
+
+#define scrHarpoonUnrope(_rope)
+    with(_rope){
+        broken = 1;
+
+        var i = 0,
+            a = [],
+            _ropeIndex = array_find_index(global.poonRope, self);
+    
+        for(var j = 0; j < array_length(global.poonRope); j++){
+            if(j != _ropeIndex) a[i++] = global.poonRope[j];
+        }
+    
+        global.poonRope = a;
+    }

@@ -9,7 +9,7 @@
 #define weapon_fire(_wep)
      // Pack into Lightweight Object:
     if(!is_object(wep)){
-        wep = { wep : _wep, last_harpoon : noone };
+        wep = { wep : _wep, link : noone, rope : noone };
         _wep = wep;
     }
 
@@ -19,27 +19,33 @@
     sound_play_pitch(sndNadeReload, 0.8);
 
      // Shoot Harpoon:
-    var _poon = obj_create(x, y, "Harpoon");
-    with(_poon){
-        motion_add(other.gunangle + (random_range(-5, 5) * other.accuracy), 22);
+    with(obj_create(x, y, "Harpoon")){
+        motion_add(other.gunangle + (random_range(-3, 3) * other.accuracy), 22);
         image_angle = direction;
         image_yscale = other.right;
         team = other.team;
         creator = other;
-    }
 
-     // Link Harpoons:
-    with(_wep){
-        if(instance_exists(last_harpoon) && last_harpoon.link == other){
-            _poon.link = last_harpoon;
-            last_harpoon.link = _poon;
-            last_harpoon = noone;
+         // Link Harpoon:
+        if(!instance_exists(_wep.link)){
+            rope = scrHarpoonRope(id, other);
+            _wep.rope = rope;
+            _wep.link = id;
         }
         else{
-            _poon.link = other;
-            last_harpoon = _poon;
+            rope[array_length(rope)] = _wep.rope;
+            _wep.rope.link2 = id;
+            _wep.link = noone;
+            _wep.rope = noone;
+        }
+        with(rope){
+            break_timer = 90;
+            creator = other.creator;
         }
     }
+
+#define scrHarpoonRope(_link1, _link2)
+    return mod_script_call("mod", "telib", "scrHarpoonRope", _link1, _link2);
 
 #define obj_create(_x, _y, _object)
     return mod_script_call("mod", "telib", "obj_create", _x, _y, _object);
