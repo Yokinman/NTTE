@@ -1,3 +1,4 @@
+#macro current_frame_active (current_frame < floor(current_frame) + current_time_scale)
 #define init
     //#region SPRITES
     	 // Big Decals:
@@ -24,11 +25,11 @@
         	global.sprBloomingCactusIdle[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus.png",     1, 12, 12);
         	global.sprBloomingCactusHurt[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusHurt.png", 3, 12, 12);
         	global.sprBloomingCactusDead[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusDead.png", 4, 12, 12);
-        
+
         	global.sprBloomingCactusIdle[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2.png",     1, 12, 12);
         	global.sprBloomingCactusHurt[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Hurt.png", 3, 12, 12);
         	global.sprBloomingCactusDead[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Dead.png", 4, 12, 12);
-        
+
         	global.sprBloomingCactusIdle[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3.png",     1, 12, 12);
         	global.sprBloomingCactusHurt[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
         	global.sprBloomingCactusDead[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
@@ -75,6 +76,13 @@
             global.sprCrabDead = sprite_add("sprites/enemies/Crab/sprTrafficCrabDead.png", 9, 24, 24);
             global.sprCrabFire = sprite_add("sprites/enemies/Crab/sprTrafficCrabFire.png", 2, 24, 24);
     	//#endregion
+
+        //#region OASIS
+             // Hammerhead:
+            global.sprHammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png", 6, 24, 24);
+            global.sprHammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png", 3, 24, 24);
+            global.sprHammerheadChrg = sprite_add("sprites/enemies/Hammer/sprHammerheadDash.png", 2, 24, 24);
+        //#endregion
 
         //#region SEWERS
              // Cat:
@@ -228,12 +236,11 @@
 				creator = noone;
 				target = noone;
 				rope = noone;
-				set_rope_length = 1;
 				pull_speed = 0;
 				canmove = 1;
 				damage = 3;
 				force = 8;
-				typ = 0;
+				typ = 1;
 				blink = 30;
             }
         break;
@@ -248,6 +255,7 @@
                  // Vars:
                 friction = 0.4;
                 creator = noone;
+                lasthit = noone;
                 damage = 10;
                 force = 4;
                 typ = 1;
@@ -547,6 +555,48 @@
             break;
     	//#endregion
 
+        //#region OASIS
+            case "Hammerhead":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                     // Visual:
+        			spr_idle = global.sprHammerheadIdle;
+        			spr_walk = global.sprHammerheadIdle;
+        			spr_hurt = global.sprHammerheadHurt;
+        			spr_dead = sprBoneFish1Dead; //global.sprHammerheadDead
+        			spr_chrg = global.sprHammerheadChrg;
+        			spr_shadow = shd48;
+        			spr_shadow_y = 2;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+        			mask_index = mskScorpion;
+        			depth = -2;
+    
+                     // Sound:
+        			snd_hurt = sndOasisHurt;
+        			snd_dead = sndOasisDeath;
+    
+        			 // Vars:
+        			maxhealth = 30;
+        			my_health = maxhealth;
+        			raddrop = 12;
+        			size = 2;
+        			walk = 0;
+        			walkspd = 0.8;
+        			maxspd = 4;
+        			meleedamage = 4;
+        			direction = random(360);
+        			rotate = 0;
+        			charge = 0;
+        			charge_dir = 0;
+        			charge_wait = 0;
+    
+        			 // Alarms:
+        			alarm0 = 40 + irandom(20);
+        		}
+                break;
+        //#endregion
+
         //#region SEWERS
         	case "Cat":
         	    o = instance_create(_x, _y, CustomEnemy);
@@ -666,6 +716,7 @@
     	default:
     		return ["BigDecal", "BubbleBomb", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
+    		        "Hammerhead",
     		        "Cat",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -936,6 +987,19 @@
     with(enemy) my_health = 0;
 
 
+#define Harpoon_end_step
+     // Trail:
+    var _x1 = x,
+        _y1 = y,
+        _x2 = xprevious,
+        _y2 = yprevious;
+
+    with(instance_create(x, y, BoltTrail)){
+        image_yscale = 0.6;
+        image_xscale = point_distance(_x1, _y1, _x2, _y2);
+        image_angle = point_direction(_x1, _y1, _x2, _y2);
+    }
+
 #define Harpoon_step
      // Stuck in Target:
     var _targ = target;
@@ -969,6 +1033,8 @@
              // Attraction:
             var p = instance_nearest(x, y, Player);
             if(point_distance(x, y, p.x, p.y) < (skill_get(mut_plutonium_hunger) ? 100 : 50)){
+                canmove = 0;
+
                 var _dis = 10,
                     _dir = point_direction(x, y, p.x, p.y);
 
@@ -991,13 +1057,24 @@
     }
 
     else{
-        with(rope){
-             // Rope Length:
-            if(!harpoon_stuck) length = point_distance(link1.x, link1.y, link2.x, link2.y);
+         // Rope Length:
+        with(rope) if(!harpoon_stuck){
+            if(instance_exists(link1) && instance_exists(link2)){
+                length = point_distance(link1.x, link1.y, link2.x, link2.y);
+            }
         }
 
-         // Stick in Chests:
         if(speed > 0){
+             // Bolt Marrow:
+            if(skill_get(mut_bolt_marrow)){
+                var n = instance_nearest(x, y, enemy);
+                if(distance_to_object(n) < 16 && !place_meeting(x, y, n)){
+                    direction = point_direction(x, y, n.x, n.y);
+                    image_angle = direction;
+                }
+            }
+
+             // Stick in Chests:
             var c = instance_nearest(x, y, chestprop);
             if(place_meeting(x, y, c)) scrHarpoonStick(c);
         }
@@ -1050,52 +1127,60 @@
 
 
 #define NetNade_step
-    if(alarm0 < 15) sprite_index = sprGrenadeBlink;
+    if(alarm0 > 0 && alarm0 < 15) sprite_index = sprGrenadeBlink;
     enemyAlarms(1);
 
 #define NetNade_hit
     if(speed > 0 && projectile_canhit(other)){
+        lasthit = other;
         projectile_hit_push(other, damage, force);
-        instance_destroy();
+        if(alarm0 > 1) alarm0 = 1;
     }
 
 #define NetNade_wall
-    instance_destroy();
+    if(alarm0 > 1) alarm0 = 1;
 
 #define NetNade_alrm0
     instance_destroy();
 
 #define NetNade_destroy
-    sound_play(sndHeavyCrossbow);
+     // Effects:
+    repeat(8) instance_create(x, y, Dust);
+    sound_play(sndUltraCrossbow);
     sound_play(sndFlakExplode);
     view_shake_at(x, y, 20);
 
-    instance_create(x, y, PortalClear);
+     // Break Walls:
+    while(distance_to_object(Wall) < 32){
+        with(instance_nearest(x, y, Wall)){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
+    }
 
      // Harpoon-Splosion:
     var _num = 10,
         _ang = random(360),
+        o = 8, // Spawn Offset
         f = noone, // First Harpoon Created
-        h = noone; // Last Harpoon Created
+        h = noone; // Latest Harpoon Created
 
     for(var a = _ang; a < _ang + 360; a += (360 / _num)){
-        with(obj_create(x, y, "Harpoon")){
+        with(obj_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), "Harpoon")){
             motion_add(a + random_range(-5, 5), 22);
             image_angle = direction;
             team = other.team;
             creator = other.creator;
-            if(direction > 90 && direction < 270){
-                image_yscale = -1;
-            }
+            if(direction > 90 && direction < 270) image_yscale = -1;
 
-             // Effects:
+             // Explosion Effect:
             with(instance_create(x, y, MeleeHitWall)){
                 motion_add(other.direction, 1 + random(2));
                 image_angle = direction + 180;
                 image_speed = 0.6;
             }
 
-             // Link Harpoon:
+             // Link harpoons to each other:
             if(!instance_exists(f)) f = id;
             if(instance_exists(h)) scrHarpoonRope(id, h);
             h = id;
@@ -1616,6 +1701,131 @@
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
 
 
+#define Hammerhead_step
+    enemyAlarms(1);
+    if(sprite_index != spr_chrg) enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+     // Swim in a circle:
+    if(rotate != 0){
+        rotate -= clamp(rotate, -1, 1) * current_time_scale;
+        direction += rotate;
+        if(speed > 0) scrRight(direction);
+    }
+
+     // Charge:
+    if(charge > 0 || charge_wait > 0){
+        direction += angle_difference(charge_dir + (sin(charge / 5) * 20), direction) / 3;
+        scrRight(direction);
+    }
+    if(charge_wait > 0){
+        charge_wait -= current_time_scale;
+
+        x += random_range(-1, 1);
+        y += random_range(-1, 1);
+        x -= lengthdir_x(charge_wait / 5, charge_dir);
+        y -= lengthdir_y(charge_wait / 5, charge_dir);
+        sprite_index = choose(spr_hurt, spr_chrg);
+
+         // Start Charge:
+        if(charge_wait <= 0){
+            sound_play_pitch(sndRatkingCharge, 0.4 + random(0.2));
+            view_shake_at(x, y, 15);
+        }
+    }
+    else if(charge > 0){
+        charge -= current_time_scale;
+
+        if(sprite_index != spr_hurt) sprite_index = spr_chrg;
+
+         // Fast Movement:
+        motion_add(direction, 3);
+        scrRight(direction);
+
+         // Break Walls:
+        if(place_meeting(x + hspeed, y + vspeed, Wall)){
+            with(Wall) if(place_meeting(x - other.hspeed, y - other.vspeed, other)){
+                 // Effects:
+                if(random(2) < 1) with(instance_create(x + 8, y + 8, Hammerhead)){
+                    motion_add(random(360), 1);
+                }
+                instance_create(x, y, Smoke);
+                sound_play_pitchvol(sndHammerHeadProc, 0.75, 0.5);
+
+                instance_create(x, y, FloorExplo);
+                instance_destroy();
+            }
+        }
+
+         // Effects:
+        if(current_frame_active){
+            with(instance_create(x + random_range(-8, 8), y + 8, Dust)){
+                motion_add(random(360), 1)
+            }
+        }
+        if !(charge mod 5) view_shake_at(x, y, 10);
+
+         // Charge End:
+        if(charge <= 0){
+            sprite_index = spr_idle;
+            sound_play_pitch(sndRatkingChargeEnd, 0.6);
+        }
+    }
+
+#define Hammerhead_alrm0
+    alarm0 = 30 + random(20);
+
+    target = instance_nearest(x, y, Player);
+    if(target_in_distance(0, 256)){
+        var _targetDir = point_direction(x, y, target.x, target.y);
+        if(target_is_visible()){
+             // Close Range Charge:
+            if(target_in_distance(0, 96) && random(3) < 2){
+                charge = 15 + random(10);
+                charge_wait = 15;
+                charge_dir = _targetDir;
+                sound_play_pitchvol(sndHammerHeadEnd, 0.6, 0.25);
+            }
+
+             // Move Towards Target:
+            else{
+                scrWalk(30, _targetDir + random_range(-20, 20));
+                rotate = random_range(-20, 20);
+            }
+        }
+
+        else{
+             // Charge Through Walls:
+            if(my_health < maxhealth && random(3) < 1){
+                charge = 30;
+                charge_wait = 15;
+                charge_dir = _targetDir;
+                alarm0 = charge + charge_wait + random(10);
+                sound_play_pitchvol(sndHammerHeadEnd, 0.6, 0.25);
+            }
+
+             // Movement:
+            else{
+                rotate = random_range(-30, 30);
+                scrWalk(20 + random(10), _targetDir + random_range(-90, 90));
+            }
+        }
+    }
+
+     // Passive Movement:
+    else{
+        scrWalk(30, direction);
+        scrRight(direction);
+        rotate = random_range(-30, 30);
+        alarm0 += random(walk);
+    }
+
+    scrRight(direction);
+
+#define Hammerhead_draw
+    draw_self_enemy();
+
+
 #define Cat_step
     enemyAlarms(1);
     enemySprites();
@@ -1857,7 +2067,7 @@
     walk = _walk;
     speed = max(speed, friction);
     direction = _dir;
-    gunangle = direction;
+    if("gunangle" in self) gunangle = direction;
     scrRight(direction);
 
 #define scrRight(_dir)
@@ -1980,7 +2190,7 @@
 
              // Pull Link:
             if(_linkDis > 0) with([_link1, _link2]){
-                if(_rope.creator != id){
+                if("name" in self && name == "Harpoon"){
                     if(canmove) with(target){
                         var _pull = other.pull_speed,
                             _drag = min(_linkDis / 3, 10 / (("size" in self) ? (size * 2) : 2));
@@ -2026,7 +2236,7 @@
             _y1 = link1.y,
             _x2 = link2.x,
             _y2 = link2.y,
-            _wid = min(length / point_distance(_x1, _y1, _x2, _y2), 2),
+            _wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
             _col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 45), 0, 0.5)) * clamp(break_force / 100, 0, 1));
 
         draw_set_color(_col);
@@ -2041,10 +2251,7 @@
      // Set Rope Vars:
     pull_speed = (("size" in target) ? (2 / target.size) : 2);
     with(rope){
-        if(!harpoon_stuck){
-            harpoon_stuck = 1;
-            length = point_distance(link1.x, link1.y, link2.x, link2.y);
-        }
+        harpoon_stuck = 1;
 
          // Deteriorate rope if only stuck in unmovable objects:
         var m = 1;
