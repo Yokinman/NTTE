@@ -1,13 +1,13 @@
 #define init
      // Sprites:
-	global.sprCoastTrans    = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",    1, 0,  0);
-	global.sprFloorCoast    = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",    4, 2,  2);
-	global.sprFloorCoastB   = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png",   3, 2,  2);
-	global.sprDetailCoast   = sprite_add("../sprites/areas/Coast/sprDetailCoast.png",   6, 4,  4);
+	global.sprCoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
+	global.sprFloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
+	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
+	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
 
      // Sea/Surface Business:
-    global.surfW = 5000;
-    global.surfH = 5000;
+    global.surfW = 2000;
+    global.surfH = 2000;
     global.surfX = 10000 - (global.surfW / 2);
     global.surfY = 10000 - (global.surfH / 2);
     global.surfTrans = -1;
@@ -59,6 +59,10 @@
     with(FloorExplo) instance_destroy();
 
      // Top Decals:
+    with(TopSmall) if(random(200) < 1){
+        obj_create(x, y, "CoastBigDecal");
+        break;
+    }
     with(TopSmall){
         if(random(80) < 1) obj_create(x, y, "CoastDecal");
         instance_destroy();
@@ -581,6 +585,9 @@
     	with(instances_matching(CustomHitme, "name", "CoastDecal")){
     	    draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     	}
+    	with(instances_matching(CustomHitme, "name", "CoastBigDecal")){
+    	    draw_sprite_ext(spr_bot, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    	}
     	d3d_set_fog(0, 0, 0, 0);
         surface_reset_target();
 
@@ -629,9 +636,11 @@
     draw_surface(_surfTrans, _surfx, _surfy);
 
      // Submerged Rock Decals:
-    with(instances_matching(CustomHitme, "name", "CoastDecal")){
+    with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastBigDecal")){
+        if(nexthurt > current_frame + 3) d3d_set_fog(1, c_white, 0, 0);
         draw_sprite_ext(spr_bot, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     }
+    d3d_set_fog(0, 0, 0, 0);
 
      // Draw Bottom Halves of Swimming Objects:
     if(surface_exists(_surfSwimBot)) draw_surface(_surfSwimBot, _surfx, _surfy);
@@ -702,8 +711,8 @@
     }
     instance_destroy();
 
-#define obj_create(_x, _y, object_name)
-    return mod_script_call("mod", "telib", "obj_create", _x, _y, object_name);
+#define obj_create(_x, _y, _obj)
+    return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
 
 /*#define area_transit
     if (lastarea != "coast" && area = "bigfish") { //hacky way to make sure you go to the right area

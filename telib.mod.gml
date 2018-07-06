@@ -34,10 +34,16 @@
         	global.sprBloomingCactusHurt[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
         	global.sprBloomingCactusDead[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
 
-             // Coast Water Rock Decal:
+             // Coast Decal:
             global.sprTopDecalCoast = sprite_add("sprites/areas/Coast/sprTopDecalCoast.png", 2, 16, 16);
             global.sprMidDecalCoast = sprite_add("sprites/areas/Coast/sprMidDecalCoast.png", 2, 16, 16);
             global.sprBotDecalCoast = sprite_add("sprites/areas/Coast/sprBotDecalCoast.png", 2, 16, 16);
+
+             // Coast Decal (Big):
+    	    global.sprShellIdle = sprite_add("sprites/areas/Coast/sprShell.png",     1, 32, 32);
+    	    global.sprShellHurt = sprite_add("sprites/areas/Coast/sprShellHurt.png", 3, 32, 32);
+    	    global.sprShellDead = sprite_add("sprites/areas/Coast/sprShellDead.png", 6, 32, 32);
+    	    global.sprShellBot  = sprite_add("sprites/areas/Coast/sprShellBot.png",  1, 32, 32);
 
              // Diver:
         	global.sprDiverIdle = sprite_add("sprites/enemies/Diver/sprDiverIdle.png", 4, 12, 12);
@@ -275,6 +281,39 @@
                 }
             break;
 
+            case "CoastBigDecal":
+                o = instance_create(_x, _y, CustomHitme);
+                with(o){
+                     // Visual:
+                    spr_idle = global.sprShellIdle;
+                    spr_walk = spr_idle;
+                    spr_hurt = global.sprShellHurt;
+                    spr_dead = global.sprShellDead;
+                    spr_bot = global.sprShellBot;
+                    image_xscale = choose(-1, 1);
+                    image_speed = 0.4;
+                    mask_index = mskScrapBoss;
+                    spr_shadow = -1;
+                    depth = -2 + (-y / 20000);
+                    friction = 3;
+
+                     // Sound:
+                    snd_hurt = sndHitRock;
+                    snd_dead = sndHyperCrystalHurt;
+
+                     // Vars:
+                    my_health = 100;
+                    size = 4;
+
+                     // Offset:
+                    x += random_range(-10, 10);
+                    y += random_range(-10, 10);
+        
+                     // Doesn't Use Coast Wading System:
+                    nowade = true;
+                }
+            break;
+
             case "CoastDecal":
                 o = instance_create(_x, _y, CustomHitme);
                 with(o){
@@ -292,17 +331,18 @@
         
                      // Sound:
                     snd_hurt = sndHitRock;
+                    snd_dead = sndWallBreakRock;
         
                      // Vars:
                     my_health = 50;
-                    size = 5;
+                    size = 3;
     
                      // Offset:
                     x += random_range(-10, 10);
                     y += random_range(-10, 10);
         
                      // Doesn't Use Coast Wading System:
-                    nowade = 1;
+                    nowade = true;
                 }
             break;
 
@@ -715,7 +755,7 @@
 
     	default:
     		return ["BigDecal", "BubbleBomb", "CoastBoss", "Harpoon", "NetNade",
-    		        "BloomingCactus", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
+    		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -737,9 +777,11 @@
                 }
     
                  // Exceptions:
-                else{
-                    if(v == "on_hurt") on_hurt = enemyHurt;
-                    else if(v == "on_death") on_death = scrDefaultDrop;
+                else switch(v){
+                    case "on_hurt":
+                        on_hurt = enemyHurt; break;
+                    case "on_death":
+                        on_death = scrDefaultDrop; break;
                 }
             }
         }
@@ -1094,7 +1136,7 @@
                 if(
                     (instance_is(other, prop) && other.object_index != RadChest)
                     ||
-                    ("name" in other && name == "CoastDecal")
+                    ("name" in other && (name == "CoastDecal" || name == "CoastBigDecal"))
                 ){
                     canmove = 0;
                 }
@@ -1189,10 +1231,85 @@
     scrHarpoonRope(f, h);
 
 
+#define CoastBigDecal_step
+     // Animate:
+    if(image_index + image_speed > image_number - 1){
+        if(sprite_index != spr_dead) sprite_index = spr_idle;
+        else{
+            image_speed = 0;
+            image_index = image_number - 1;
+        }
+    }
+
+     // Pushing:
+    CoastDecal_step();
+
+#define CoastBigDecal_hurt(_hitdmg, _hitvel, _hitdir)
+    nexthurt = current_frame + 6;   // I-Frames
+    sound_play(snd_hurt);           // Sound
+
+     // Hurt Sprite:
+    sprite_index = spr_hurt;
+    image_index = 0;
+
+     // Splashy FX:
+    repeat(_hitdmg / 5){
+        var _dis = 24,
+            _dir = _hitdir + 180 + random_range(-30, 30);
+
+        with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Sweat)){
+            speed = random(speed);
+            direction = _dir;
+        }
+    }
+
+     // Damage:
+    if(my_health > 0){
+        my_health -= _hitdmg;
+
+         // Break:
+        if(my_health <= 0){
+            mask_index = mskNone;
+            sprite_index = spr_dead;
+
+             // Can Stand On Corpse:
+            with(instance_create(0, 0, Floor)){
+                x = other.x;
+                y = other.y;
+                visible = 0;
+                mask_index = mskSalamander;
+            }
+
+             // Weapon Drop:
+            //pickup_drop(0, 100);
+
+             // Visual Stuff:
+            depth = 1;
+            with(instances_matching(BoltStick, "target", id)) instance_destroy();
+
+             // Break Sound:
+            sound_play_pitchvol(snd_dead, 1 + random(0.2), 1);
+        }
+    }
+
+
 #define CoastDecal_step
+     // Pushing:
     if(place_meeting(x, y, hitme)){
-        with(instances_matching_le(hitme, "size", size)){
-            if(place_meeting(x, y, other)) motion_add(point_direction(other.x, other.y, x, y), size);
+        with(instances_matching_lt(hitme, "size", size)){
+            if(place_meeting(x, y, other)){
+                motion_add(point_direction(other.x, other.y, x, y), 1);
+            }
+        }
+        with(instances_matching_ge(hitme, "size", size)){
+            if(place_meeting(x, y, other) && object_index != Player){
+                with(other) motion_add(point_direction(other.x, other.y, x, y), 4);
+            }
+        }
+        with(Player){
+            if(place_meeting(x, y, other)){
+                motion_add(point_direction(other.x, other.y, x, y), 1);
+            }
         }
     }
 
@@ -1217,7 +1334,7 @@
             }
 
              // Visual:
-            depth = 1;
+            depth = 0;
             var _ang = random(360);
             for(var a = _ang; a < _ang + 360; a += 360 / 3){
                 with(instance_create(x, y, MeleeHitWall)) image_angle = a + random_range(-10, 10);
@@ -1230,12 +1347,12 @@
             with(instances_matching(BoltStick, "target", id)) instance_destroy();
 
              // Break Sound:
-            sound_play_pitchvol(sndWallBreakRock, 0.7 + random(0.2), 0.7);
+            sound_play_pitchvol(snd_dead, 0.7 + random(0.2), 0.7);
         }
     }
 
 #define CoastDecal_draw
-    var _hurt = (nexthurt > current_frame + 4);
+    var _hurt = (nexthurt > current_frame + 3);
     if(_hurt) d3d_set_fog(1, c_white, 0, 0);
 
     if(my_health > 0) draw_sprite_ext(spr_top, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);

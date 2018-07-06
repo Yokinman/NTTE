@@ -34,13 +34,12 @@
 	}
 
 #define step
-    { // GENERATION CODE //
-        if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
-        else if(global.newLevel){
-            global.newLevel = 0;
-            level_start();
-        }
-    } // GENERATION CODE //
+     // GENERATION CODE //
+    if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
+    else if(global.newLevel){
+        global.newLevel = 0;
+        level_start();
+    }
 
      // Call Area Step (Step not built into area mods):
     if(!instance_exists(GenCont)){
@@ -123,5 +122,5 @@
     }
     return r;
 
-#define obj_create(_x, _y, object_name)
-    return mod_script_call("mod", "telib", "obj_create", _x, _y, object_name);
+#define obj_create(_x, _y, _obj)
+    return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
