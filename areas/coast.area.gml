@@ -86,7 +86,7 @@
 
 	if(instance_exists(Floor)){
          // Destroy Projectiles Too Far Away:
-        with(instances_matching_gt(projectile, "speed", 0)){
+        with(instances_matching_gt(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
             if(distance_to_object(Floor) > 1000) instance_destroy();
         }
 
@@ -149,7 +149,7 @@
          // Water Wading:
         if(DebugLag) trace_time();
         var _inst = instances_matching(instances_matching_lt(instances_matching(global.swimInst, "visible", 1), "depth", global.seaDepth), "nowade", null),
-            _lag = (array_length(_inst) > 100), // When there's over 100 swimmable objects, don't draw them swimming when they're offscreen
+            _lag = (array_length(_inst) > 1000), // When there's over 100 swimmable objects, don't draw them swimming when they're offscreen
             _wadeCol = make_color_rgb(44, 37, 122),
             v = 0;
 
@@ -161,6 +161,8 @@
 			var o = (object_index == Player),
 			    _splashvol = (o ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1)),
 			    _dis = distance_to_object(Floor);
+			    
+			_dis = distance_to_object(Floor);
 
 			if(_dis > 4){
 				 // Splash:
@@ -257,16 +259,16 @@
                         }
                     }
 
-                    /// Draw Bottom:
-                    surface_set_target(_surfSwimBot);
-                        var _yoff = _surfSwimh - ((_surfSwimh / 2) - (sprite_height - sprite_yoffset)),
-                            _y = _surfSwimy + _z,
-                            t = _yoff - _wh,
-                            h = _surfSwimh - t;
+                     // Draw Bottom:
+                    var _yoff = _surfSwimh - ((_surfSwimh / 2) - (sprite_height - sprite_yoffset)),
+                        _y = _surfSwimy + _z,
+                        t = _yoff - _wh,
+                        h = _surfSwimh - t;
 
-                        d3d_set_fog(1, _wadeCol, 0, 0);
-                        draw_surface_part(_surfSwim, 0, t, _surfSwimw, h, _surfSwimx - _surfx, (_y + t) - _surfy);
-                        d3d_set_fog(0, 0, 0, 0);
+                    surface_set_target(_surfSwimBot);
+                    d3d_set_fog(1, _wadeCol, 0, 0);
+                    draw_surface_part(_surfSwim, 0, t, _surfSwimw, h, _surfSwimx - _surfx, (_y + t) - _surfy);
+                    d3d_set_fog(0, 0, 0, 0);
                     surface_reset_target();
 
                     /// Draw Top:
@@ -346,14 +348,16 @@
                     surface_reset_target();
 			    }
 			}
-			else if(wading > 0){
-			    wading = 0;
-
-			     // Sploosh:
-                sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee, sndOasisHurt), 1 + random(0.25), _splashvol);
-				repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
-				    motion_add(other.direction, other.speed);
-				}
+			else{
+			    if(wading > 0){
+    
+    			     // Sploosh:
+                    sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee, sndOasisHurt), 1 + random(0.25), _splashvol);
+    				repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
+    				    motion_add(other.direction, other.speed);
+    				}
+			    }
+				wading = 0;
 		    }
 		}
 		if(DebugLag) trace_time("Wading");
@@ -380,6 +384,11 @@
                 visible = 0;
             }
         }
+    }
+
+     // Popo Freaks Can't Spawn After Level End:
+    if(CanLeaveCoast){
+        with(WantRevivePopoFreak) instance_destroy();
     }
 
      // Bind End Step:
@@ -583,10 +592,7 @@
     	    draw_sprite_ext(global.sprFloorCoast, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     	}
     	with(instances_matching(CustomHitme, "name", "CoastDecal")){
-    	    draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-    	}
-    	with(instances_matching(CustomHitme, "name", "CoastBigDecal")){
-    	    draw_sprite_ext(spr_bot, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     	}
     	d3d_set_fog(0, 0, 0, 0);
         surface_reset_target();
@@ -636,11 +642,12 @@
     draw_surface(_surfTrans, _surfx, _surfy);
 
      // Submerged Rock Decals:
-    with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastBigDecal")){
-        if(nexthurt > current_frame + 3) d3d_set_fog(1, c_white, 0, 0);
-        draw_sprite_ext(spr_bot, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    with(instances_matching(CustomHitme, "name", "CoastDecal")){
+        var h = (nexthurt > current_frame + 3);
+        if(h) d3d_set_fog(1, c_white, 0, 0);
+        draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+        if(h) d3d_set_fog(0, 0, 0, 0);
     }
-    d3d_set_fog(0, 0, 0, 0);
 
      // Draw Bottom Halves of Swimming Objects:
     if(surface_exists(_surfSwimBot)) draw_surface(_surfSwimBot, _surfx, _surfy);
