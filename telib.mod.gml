@@ -10,11 +10,13 @@
     	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
     	 // Big Fish:
-    	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png", 11, 32, 32);
-    	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png", 8, 24, 24);  
-    	global.sprBigFishEmerge = sprite_add("sprites/enemies/CoastBoss/sprBigFishEmerge.png", 5, 32, 32);
-    	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png", 30, 8, 8);
-    	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png", 9, 24, 24);
+    	global.sprBigFishBecome = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",    4,  40, 38)
+    	global.sprBigFishSpwn = sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",      11, 32, 32);
+    	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",       11, 32, 32);
+    	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8,  24, 24);  
+    	global.sprBigFishEmerge = sprite_add("sprites/enemies/CoastBoss/sprBigFishEmerge.png",   5,  32, 32);
+    	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",       30, 8,  8);
+    	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png", 9,  24, 24);
 
          // Harpoon:
         global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -168,10 +170,10 @@
     	    with(o){
     	         // Visual:
     	        sprite_index = global.sprBubbleBomb;
-    	        mask_index = sprGrenade;
-    	        image_speed = 0.4;
+    	        image_speed = 0.5;
 
     	         // Vars:
+    	        mask_index = -1;
     	        z = 0;
     	        zspeed = -0.5;
     	        zfric = -0.02;
@@ -181,10 +183,50 @@
     	        typ = 2;
 
     	         // Alarms:
-    	        alarm0 = 60;
+    	        alarm0 = (image_number / image_speed); // 2 seconds
     	    }
     	break;
-    	
+
+        case "BubbleExplosion":
+            o = instance_create(_x, _y, Explosion);
+            with(o){
+                sprite_index = global.sprBubbleExplode;
+                mask_index = mskExplosion;
+                hitid = [sprite_index, "BUBBLE EXPLO"];
+                damage = 2;
+                alarm0 = -1; // No scorchmark
+            }
+
+             // Effects:
+            repeat(10) instance_create(_x, _y, Bubble);
+            sound_play_pitch(sndExplosionS, 2);
+            sound_play_pitch(sndOasisExplosion, 1 + random(1));
+        break;
+
+        case "CoastBossBecome":
+            o = instance_create(_x, _y, CustomProp);
+            with(o){
+                 // Visual:
+                spr_idle = global.sprBigFishBecome;
+                spr_hurt = spr_idle;
+                spr_dead = sprBigSkullDead;
+                spr_shadow = shd32;
+                image_speed = 0;
+                depth = -1;
+
+                 // Sound:
+                snd_hurt = sndHitRock;
+                snd_dead = -1;
+
+                 // Vars:
+                mask_index = mskBigSkull;
+                maxhealth = 50;
+                my_health = maxhealth;
+                size = 2;
+                part = 0;
+            }
+            break;
+
     	case "CoastBoss":
     	    o = instance_create(_x, _y, CustomEnemy);
     	    with(o){
@@ -194,15 +236,15 @@
     	        col = c_red;
 
     	        /// Visual:
+    	            spr_spwn = global.sprBigFishSpwn;
         	        spr_idle = sprBigFishIdle;
         			spr_walk = sprBigFishWalk;
         			spr_hurt = sprBigFishHurt;
         			spr_dead = sprBigFishDead;
     			    spr_weap = mskNone;
         			spr_shadow = shd48;
-        			mask_index = mskBigMaggot;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
+        			sprite_index = spr_spwn;
     			    depth = -1;
         			
         			 // Fire:
@@ -220,6 +262,7 @@
         		snd_dead = sndOasisBossDead;
 
     			 // Vars:
+        		mask_index = mskBigMaggot;
     			maxhealth = 120;
     			raddrop = 50;
     			size = 3;
@@ -701,7 +744,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "BubbleBomb", "CoastBoss", "Harpoon", "NetNade",
+    		return ["BigDecal", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat",
@@ -753,6 +796,18 @@
     image_angle += (sin(current_frame/8) * 10) * current_time_scale;
     depth = min(-2, -z);
 
+     // Collision:
+    if(place_meeting(x, y, Player)) with(Player){
+        if(place_meeting(x, y, other)) with(other){
+            motion_add(point_direction(other.x, other.y, x, y), 1.5);
+        }
+    }
+    if(place_meeting(x, y, object_index)) with(instances_named(object_index, name)){
+        if(place_meeting(x, y, other)) with(other){
+            motion_add(point_direction(other.x, other.y, x, y), 0.5);
+        }
+    }
+
     enemyAlarms(1);
 
 #define BubbleBomb_draw
@@ -762,31 +817,40 @@
     // nada
 
 #define BubbleBomb_wall
-    move_bounce_solid(false);
+    if(speed > 0){
+        sound_play(sndBouncerBounce);
+        move_bounce_solid(false);
+    }
 
 #define BubbleBomb_alrm0
      // Explode:
-    with(instance_create(x, y, Explosion)){
-        sprite_index = global.sprBubbleExplode;
+    with(obj_create(x, y, "BubbleExplosion")){
         team = other.team;
-        creator = other.creator;
         hitid = other.hitid;
     }
-
-     // Effects:
-    sound_play_pitch(sndExplosionS, 2);
-    sound_play_pitch(sndOasisExplosion, 1 + random(1));
-    repeat(10) instance_create(x, y, Bubble);
 
     instance_destroy();
 
 #define BubbleBomb_destroy
      // Pop:
     sound_play_pitchvol(sndLilHunterBouncer, 2 + random(0.5), 0.5);
-    with(instance_create(x, y - z, BubblePop)){
+    with(instance_create(x, y - z, BulletHit)){
+        sprite_index = sprPlayerBubblePop;
         image_angle = other.image_angle;
-        image_xscale = 0.5 + (other.image_index * 0.02);
+        image_xscale = 0.5 + (0.01 * other.image_index);
         image_yscale = image_xscale;
+    }
+
+
+#define CoastBossBecome_step
+    image_index = part;
+    if(part >= image_number - 1){
+        with(obj_create(x - (image_xscale * 8), y - 6, "CoastBoss")){
+            x = xstart;
+            y = ystart;
+            right = other.image_xscale;
+        }
+        instance_delete(id);
     }
 
 
@@ -794,14 +858,29 @@
     enemyAlarms(3);
 
      // Animate:
-    if(sprite_index != spr_hurt and sprite_index != spr_fire and sprite_index != spr_sfir and sprite_index != spr_efir and sprite_index != spr_dive and sprite_index != spr_swim and sprite_index != spr_rise)
+    if(sprite_index != spr_hurt and sprite_index != spr_fire and sprite_index != spr_sfir and sprite_index != spr_efir and sprite_index != spr_dive and sprite_index != spr_swim and sprite_index != spr_rise && sprite_index != spr_spwn)
     {
         if(speed <= 0) sprite_index = spr_idle;
     	else if(sprite_index == spr_idle) sprite_index = spr_walk;
     }
-    else if(image_index > sprite_get_number(sprite_index) - 1){
+    else if(image_index > image_number - 1){
         var _lstspr = sprite_index;
         if(fork()){
+            if(sprite_index == spr_spwn) {
+                sprite_index = spr_idle;
+
+                 // Spawn FX:
+                hspeed += 2 * right;
+                vspeed += orandom(2);
+                view_shake_at(x, y, 15);
+                sound_play(sndOasisBossIntro);
+                instance_create(x, y, PortalClear);
+                repeat(10) with(instance_create(x, y, Dust)){
+                    motion_add(random(360), 5);
+                }
+                exit;
+            }
+
             if(sprite_index = spr_hurt) {
                 sprite_index = spr_idle;
                 exit;
@@ -880,8 +959,7 @@
      // Flash White w/ Hurt While Diving:
     if(
         sprite_index != spr_hurt &&
-        nexthurt > current_frame &&
-        ((nexthurt + current_frame) mod (room_speed / 10)) = 0
+        nexthurt > current_frame + 3
     ){
         d3d_set_fog(1, c_white, 0, 0);
         draw_self_enemy();
@@ -914,7 +992,7 @@
          // Move Towards Target:
         else{
             walk = 30 + random(10);
-            direction = _targetDir + random_range(-15, 15);
+            direction = _targetDir + orandom(15);
             alarm0 = 30 + irandom(20);
         }
     
@@ -1156,7 +1234,7 @@
 
     for(var a = _ang; a < _ang + 360; a += (360 / _num)){
         with(obj_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), "Harpoon")){
-            motion_add(a + random_range(-5, 5), 22);
+            motion_add(a + orandom(5), 22);
             image_angle = direction;
             team = other.team;
             creator = other.creator;
@@ -1220,8 +1298,8 @@
         team = 0;
 
          // Offset:
-        x += random_range(-10, 10);
-        y += random_range(-10, 10);
+        x += orandom(10);
+        y += orandom(10);
 
          // Doesn't Use Coast Wading System:
         nowade = true;
@@ -1272,7 +1350,7 @@
      // Splashy FX:
     repeat(1 + (_hitdmg / 5)){
         var _dis = (shell ? 24 : 8),
-            _dir = _hitdir + 180 + random_range(-30, 30);
+            _dir = _hitdir + 180 + orandom(30);
 
         with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Sweat)){
             speed = random(speed);
@@ -1309,11 +1387,11 @@
             if(!shell){
                 var _ang = random(360);
                 for(var a = _ang; a < _ang + 360; a += 360 / 3){
-                    with(instance_create(x, y, MeleeHitWall)) image_angle = a + random_range(-10, 10);
+                    with(instance_create(x, y, MeleeHitWall)) image_angle = a + orandom(10);
                 }
                 repeat(choose(2, 3)){
-                    with(instance_create(x + random_range(-2, 2), y + random_range(-2, 2), Debris)){
-                        motion_set(_hitdir + random_range(-10, 10), (speed + _hitvel) / 2);
+                    with(instance_create(x + orandom(2), y + orandom(2), Debris)){
+                        motion_set(_hitdir + orandom(10), (speed + _hitvel) / 2);
                     }
                 }
             }
@@ -1339,7 +1417,7 @@
     	     // Shoot Harpoon:
     		if(spr_weap = global.sprHarpoonGun && random(4) < 1){
     		     // Harpoon/Bolt:
-    			gunangle = _targetDir + random_range(10, -10);
+    			gunangle = _targetDir + orandom(10);
     			scrEnemyShoot("DiverHarpoon", gunangle, 12);
 
                 wkick = 8;
@@ -1360,8 +1438,8 @@
          // Move Away From Target:
     	else{
     		alarm0 = 45 + irandom(30);
-    		direction = _targetDir + 180 + random_range(30, -30);
-    		gunangle = direction + random_range(15, -15);
+    		direction = _targetDir + 180 + orandom(30);
+    		gunangle = direction + orandom(15);
     		walk = 15 + irandom(15);
     	}
 
@@ -1372,7 +1450,7 @@
      // Passive Movement:
     else{
     	direction = random(360);
-    	gunangle = direction + random_range(15, -15);
+    	gunangle = direction + orandom(15);
     	walk = 30;
     	scrRight(direction);
     }
@@ -1459,8 +1537,8 @@
     		else{
     		    alarm0 = 40 + irandom(10);
         		walk = 20 + irandom(15);
-        		direction = _targetDir + random_range(20, -20);
-        		gunangle = direction + random_range(15, -15);
+        		direction = _targetDir + orandom(20);
+        		gunangle = direction + orandom(15);
     		}
     	}
 
@@ -1468,8 +1546,8 @@
     	else{
     		alarm0 = 30 + irandom(10);
     		walk = 10 + irandom(20);
-    		direction = _targetDir + random_range(20, -20);
-    		gunangle = direction + random_range(15, -15);
+    		direction = _targetDir + orandom(20);
+    		gunangle = direction + orandom(15);
     	}
 
     	 // Facing:
@@ -1480,13 +1558,13 @@
     else{
     	walk = 30;
     	direction = random(360);
-    	gunangle = direction + random_range(15, -15);
+    	gunangle = direction + orandom(15);
     	scrRight(direction);
     }
 
 #define Gull_alrm1
      // Slash:
-    gunangle = point_direction(x, y, target.x, target.y) + random_range(10, -10);
+    gunangle = point_direction(x, y, target.x, target.y) + orandom(10);
     with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 2;
 
      // Visual/Sound Related:
@@ -1513,7 +1591,7 @@
      // Bubble Attack:
     if(ammo > 0) {
         alarm0 = 4;
-        scrEnemyShoot("BubbleBomb", gunangle + random_range(10, -10), 8 + random(4));
+        scrEnemyShoot("BubbleBomb", gunangle + orandom(10), 8 + random(4));
         motion_add(gunangle + 180, 4);
         sound_play_pitchvol(sndExplosionS, 3, 0.4);
         ammo--;
@@ -1546,7 +1624,7 @@
     if(target_is_visible()) {
         if(random(2) < 1) {
             var _targetDir = point_direction(x, y, target.x, target.y);
-            scrEnemyShootExt(x + choose(12, -12), y + choose(12, -12), EnemyBullet1, _targetDir + random_range(30, -30), 3);
+            scrEnemyShootExt(x + choose(12, -12), y + choose(12, -12), EnemyBullet1, _targetDir + orandom(30), 3);
         }
     }
     
@@ -1558,7 +1636,7 @@
 
 #define Palm_death
      // Leaves:
-    repeat(15) with(instance_create(x + random_range(-15, 15), y - 30 + random_range(-10, 10), Feather)){
+    repeat(15) with(instance_create(x + orandom(15), y - 30 + orandom(10), Feather)){
         sprite_index = sprLeaf;
         image_yscale = random_range(1, 3);
         motion_add(point_direction(other.x, other.y, x, y), 1 + random(1));
@@ -1577,9 +1655,9 @@
         dash -= current_time_scale;
 
          // Dusty:
-        instance_create(x + random_range(-3, 3), y + random(6), Dust);
-        with(instance_create(x + random_range(-3, 3), y + random(6), Dust)){
-            motion_add(other.direction + random_range(-45, 45), (4 + random(1)) * other.dash_factor);
+        instance_create(x + orandom(3), y + random(6), Dust);
+        with(instance_create(x + orandom(3), y + random(6), Dust)){
+            motion_add(other.direction + orandom(45), (4 + random(1)) * other.dash_factor);
         }
     }
 
@@ -1608,7 +1686,7 @@
             alarm0 = alarm1 - 10;
 
              // Move away a tiny bit:
-            scrWalk(5, _targetDir + 180 + random_range(-10, 10));
+            scrWalk(5, _targetDir + 180 + orandom(10));
 
              // Warn:
             instance_create(x, y, AssassinNotice).depth = -3;
@@ -1616,7 +1694,7 @@
         }
 
          // Move Toward Target:
-        else scrWalk(20 + random(10), _targetDir + random_range(-10, 10));
+        else scrWalk(20 + random(10), _targetDir + orandom(10));
 
          // Aim Towards Target:
         gunangle = _targetDir;
@@ -1703,7 +1781,7 @@
             _y = y + 4;
 
         repeat(choose(2, 3)){
-            scrEnemyShootExt(_x, _y, "TrafficCrabVenom", gunangle + random_range(-10, 10), 10 + random(2));
+            scrEnemyShootExt(_x, _y, "TrafficCrabVenom", gunangle + orandom(10), 10 + random(2));
         }
         gunangle += (sweep_dir * sweep_spd);
 
@@ -1806,8 +1884,8 @@
     if(charge_wait > 0){
         charge_wait -= current_time_scale;
 
-        x += random_range(-1, 1);
-        y += random_range(-1, 1);
+        x += orandom(1);
+        y += orandom(1);
         x -= lengthdir_x(charge_wait / 5, charge_dir);
         y -= lengthdir_y(charge_wait / 5, charge_dir);
         sprite_index = choose(spr_hurt, spr_chrg);
@@ -1844,7 +1922,7 @@
 
          // Effects:
         if(current_frame_active){
-            with(instance_create(x + random_range(-8, 8), y + 8, Dust)){
+            with(instance_create(x + orandom(8), y + 8, Dust)){
                 motion_add(random(360), 1)
             }
         }
@@ -1874,8 +1952,8 @@
 
              // Move Towards Target:
             else{
-                scrWalk(30, _targetDir + random_range(-20, 20));
-                rotate = random_range(-20, 20);
+                scrWalk(30, _targetDir + orandom(20));
+                rotate = orandom(20);
             }
         }
 
@@ -1891,8 +1969,8 @@
 
              // Movement:
             else{
-                rotate = random_range(-30, 30);
-                scrWalk(20 + random(10), _targetDir + random_range(-90, 90));
+                rotate = orandom(30);
+                scrWalk(20 + random(10), _targetDir + orandom(90));
             }
         }
     }
@@ -1901,7 +1979,7 @@
     else{
         scrWalk(30, direction);
         scrRight(direction);
-        rotate = random_range(-30, 30);
+        rotate = orandom(30);
         alarm0 += random(walk);
     }
 
@@ -1921,7 +1999,7 @@
     
     if(ammo > 0) {
         repeat(2)
-        with(scrEnemyShoot(ToxicGas, gunangle + random_range(6, -6), 4)) {
+        with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)) {
             friction = 0.1;
         }
         gunangle += 12;
@@ -1929,7 +2007,7 @@
         if(ammo = 0) {
             alarm0 = 40;
             repeat(3) {
-                var _dir = random_range(16, -16);
+                var _dir = orandom(16);
                 with(instance_create(x, y, AcidStreak)) {
                     motion_add(other.gunangle + _dir, 3);
                     image_angle = direction;
@@ -1962,7 +2040,7 @@
                 alarm0 = 4;
             } else {
                 alarm0 = 20 + random(20);
-                scrWalk(20 + random(5), _targetDir + random_range(20, -20));
+                scrWalk(20 + random(5), _targetDir + orandom(20));
                 scrRight(gunangle);
             }
         } else {
@@ -2017,7 +2095,7 @@
          // Move Towards Target:
         else{
             walk = 15 + random(30);
-            direction = _targetDir + random_range(-15, 15);
+            direction = _targetDir + orandom(15);
             alarm0 = 40 + irandom(40);
         }
 
@@ -2053,7 +2131,7 @@
         with(scrEnemyShootExt(x - (2 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
             depth = 12;
-            zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + random_range(1, -1);
+            zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
             right = other.right;
         }
 
@@ -2096,7 +2174,7 @@
 
      // Trail:
     if(random(2) < 1){
-        with(instance_create(x + random_range(4, -4), y - z + random_range(4, -4), PlasmaTrail)) {
+        with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
             sprite_index = global.sprMortarTrail;
             depth = other.depth;
         }
@@ -2255,6 +2333,9 @@
     with(instances_named(CustomProjectile, "TrafficCrabVenom")){
         draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
     }
+    with(instances_named(CustomProjectile, "BubbleBomb")){
+        //draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    }
     draw_set_blend_mode(bm_normal);
 
 #define draw_shadows
@@ -2378,3 +2459,6 @@
     
         global.poonRope = a;
     }
+
+#define orandom(n) // For offsets
+    return random_range(-n, n);

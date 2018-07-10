@@ -86,7 +86,7 @@
 
 	if(instance_exists(Floor)){
          // Destroy Projectiles Too Far Away:
-        with(instances_matching_gt(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
+        with(instances_matching_le(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
             if(distance_to_object(Floor) > 1000) instance_destroy();
         }
 
