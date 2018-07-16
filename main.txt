@@ -1,5 +1,9 @@
 /loadmod ntte
 /loadmod telib
 
-// areas
+// Areas \\
 /loadarea areas/coast
+
+// Weps \\
+/loadwep weps/harpoon
+/loadwep weps/netlauncher

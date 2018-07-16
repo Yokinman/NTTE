@@ -10,13 +10,15 @@
     	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
     	 // Big Fish:
-    	global.sprBigFishBecome = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",    4,  40, 38)
-    	global.sprBigFishSpwn = sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",      11, 32, 32);
-    	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",       11, 32, 32);
-    	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8,  24, 24);  
-    	global.sprBigFishEmerge = sprite_add("sprites/enemies/CoastBoss/sprBigFishEmerge.png",   5,  32, 32);
-    	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",       30, 8,  8);
-    	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png", 9,  24, 24);
+    	global.sprBigFishBecome = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",        4, 40, 38);
+    	global.sprBigFishSpwn = sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",         11, 32, 32);
+    	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",          11, 32, 32);
+    	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",           8, 24, 24);
+    	global.sprBigFishRise = sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",           5, 32, 32);
+    	global.sprBigFishSwimFrnt = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
+    	global.sprBigFishSwimBack = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
+    	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",          30,  8,  8);
+    	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",     9, 24, 24);
 
          // Harpoon:
         global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -255,7 +257,7 @@
         			 // Swim:
         			spr_dive = global.sprBigFishLeap;
         			spr_swim = global.sprBigFishSwim;
-        			spr_rise = global.sprBigFishEmerge;
+        			spr_rise = global.sprBigFishRise;
 
                  // Sound:
         		snd_hurt = sndOasisBossHurt;
@@ -271,8 +273,11 @@
     			walkspd = 0.8;
     			maxspd = 3;
     			ammo = 4;
+    			swim = 0;
     			gunangle = random(360);
     			direction = gunangle;
+    			swim_ang_frnt = direction;
+    			swim_ang_back = direction;
 
     			 // Alarms:
     			alarm0 = 60 + irandom(40);
@@ -541,7 +546,7 @@
                     spr_dead = global.sprCrabDead;
                     spr_fire = global.sprCrabFire;
                     spr_shadow = shd48;
-                    hitid = [spr_idle, _name];
+                    hitid = [spr_idle, "Traffic Crab"];
                     sprite_index = spr_idle;
                     mask_index = mskScorpion;
                     depth = -2;
@@ -779,6 +784,7 @@
 
     return o;
 
+#define draw
 
 #define BigDecal_step
     if(place_meeting(x, y, FloorExplo)){
@@ -918,27 +924,49 @@
     enemyWalk(walkspd, maxspd);
 
      // Swim Towards Target:
-    if(sprite_index == spr_swim){
+    if(swim){
+         // temporary //
+        spr_shadow = -1;
+        alarm0 = -1;
+         // temporary //
+
+         // Follow Target:
         target = instance_nearest(x, y, Player);
         if(instance_exists(target)){
-            motion_add(point_direction(x, y, target.x, target.y), 1);
+            motion_add(point_direction(x, y, target.x, target.y), 0.6);
         }
         scrRight(direction);
-        if chance_frame(100) 
-            repeat(random(3))
-                with instance_create(x+(random(16) * other.right),bbox_bottom+random_range(12,16),Dust){
-                    gravity = .3;
-                    motion_add(other.direction+(other.right * random_range(80,130)), random_range(2,4));
-                    if (place_meeting(x,y,FloorExplo) && irandom(2)) || !irandom(3){
-                        sprite_index = sprDebris1;
+
+         // Turn Fins:
+        swim_ang_frnt += angle_difference(direction, swim_ang_frnt) / 3;
+        swim_ang_back += angle_difference(swim_ang_frnt, swim_ang_back) / 10;
+
+         // Effects:
+        if(current_frame_active && random(4) < 3){
+            repeat(random(3)){
+                var _x = x + orandom(4),
+                    _y = bbox_bottom + orandom(4);
+
+                if((place_meeting(x, y, FloorExplo) && random(10) < 1) || random(30) < 1){
+                    with(instance_create(_x, _y, Debris)){
+                        speed /= 2;
                     }
-                    else{
-                        image_blend = make_color_rgb(236,188,82);
-                    }
-                    image_xscale *= .75;
-                    image_yscale *= .75;
-                    depth = other.depth + choose(-1,1);
                 }
+                else{
+                    var _oDis = orandom(10),
+                        _oDir = swim_ang_back;
+
+                    _x += lengthdir_x(_oDis, _oDir);
+                    _y += lengthdir_y(_oDis, _oDir);
+
+                    with(instance_create(_x, _y, Dust)){
+                        gravity = .3;
+                        image_xscale *= .75;
+                        image_yscale *= .75;
+                    }
+                }
+            }
+        }
     }
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
@@ -956,18 +984,19 @@
     }
 
 #define CoastBoss_draw
-     // Flash White w/ Hurt While Diving:
-    if(
-        sprite_index != spr_hurt &&
-        nexthurt > current_frame + 3
-    ){
-        d3d_set_fog(1, c_white, 0, 0);
+    var h = (nexthurt > current_frame + 3);
+
+    if(swim){
+        if(h) d3d_set_fog(1, c_white, 0, 0);
+        CoastBoss_draw_fins(x, bbox_bottom, image_xscale, image_yscale);
+    }
+     // Normal Self:
+    else{
+        if(h && sprite_index != spr_hurt) d3d_set_fog(1, c_white, 0, 0);
         draw_self_enemy();
-        d3d_set_fog(0, 0, 0, 0);
     }
 
-     // Normal Self:
-    else draw_self_enemy();
+    if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define CoastBoss_alrm0
     alarm0 = 80 + irandom(20);
@@ -1052,6 +1081,51 @@
     GameCont.area = "coast";
     GameCont.subarea = 0;
     with(enemy) my_health = 0;
+
+#define CoastBoss_draw_fins(_x, _y, _xscale, _yscale)
+    var __x = _x,
+        __y = _y;
+
+    for(var a = 0; a < 4; a++){
+        if(a < 3){
+            _x = __x + lengthdir_x(1, a * 90);
+            _y = __y + lengthdir_y(1, a * 90);
+        }
+        else{
+            _x = __x;
+            _y = __y;
+        }
+
+        var _sprFrnt = global.sprBigFishSwimFrnt,
+            _sprBack = global.sprBigFishSwimBack,
+            _blend = ((a < 3) ? c_black : image_blend),
+            _alpha = image_alpha,
+            _swimSpd = (current_frame / 3),
+            _angFrnt = swim_ang_frnt,
+            _disFrnt = 10 * _xscale,
+            _dirFrnt = _angFrnt + (5 * sin(_swimSpd)),
+            _xFrnt = _x + lengthdir_x(_disFrnt, _dirFrnt),
+            _yFrnt = _y + lengthdir_y(_disFrnt, _dirFrnt),
+            _angBack = swim_ang_back,
+            _disBack = 10 * _xscale,
+            _dirBack = _angBack + 180 + (5 * sin(_swimSpd)),
+            _xBack = _x + lengthdir_x(_disBack, _dirBack),
+            _yBack = _y + lengthdir_y(_disBack, _dirBack);
+    
+        _angFrnt += (10 * cos(_swimSpd));
+        _xFrnt += lengthdir_x(_yscale / 2, _angFrnt - 90);
+        _yFrnt += lengthdir_y(_yscale / 2, _angFrnt - 90);
+        for(var i = 0; i < sprite_get_number(_sprFrnt); i++){
+            draw_sprite_ext(_sprFrnt, i, _xFrnt, _yFrnt - (i * _yscale), _xscale, _yscale, _angFrnt, _blend, _alpha);
+        }
+
+        _angBack -= (20 * cos(_swimSpd));
+        _xBack += lengthdir_x(_yscale / 2, _angBack - 90);
+        _yBack += lengthdir_y(_yscale / 2, _angBack - 90);
+        for(var i = 0; i < sprite_get_number(_sprBack); i++){
+            draw_sprite_ext(_sprBack, i, _xBack, _yBack - (i * _yscale), _xscale, _yscale, _angBack, _blend, _alpha);
+        }
+    }
 
 
 #define Harpoon_end_step
@@ -2339,7 +2413,12 @@
     draw_set_blend_mode(bm_normal);
 
 #define draw_shadows
-    with(instances_named(CustomProjectile, "MortarPlasma")) draw_sprite(shd24, 0, x, y);
+    with(instances_named(CustomProjectile, "MortarPlasma")) if(visible){
+        draw_sprite(shd24, 0, x, y);
+    }
+    with(instances_named(CustomEnemy, "CoastBoss")) if(swim){
+        CoastBoss_draw_fins(x, bbox_bottom, image_xscale, -image_yscale);
+    }
 
 
 #define step
