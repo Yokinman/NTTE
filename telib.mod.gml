@@ -244,19 +244,19 @@
         			spr_hurt = sprBigFishHurt;
         			spr_dead = sprBigFishDead;
     			    spr_weap = mskNone;
-        			spr_shadow = shd48;
+    			    spr_shad = shd48;
+        			spr_shadow = spr_shad;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_spwn;
-    			    depth = -1;
+    			    depth = -2;
         			
         			 // Fire:
-        			spr_sfir = sprBigFishFireStart;
+        			spr_chrg = sprBigFishFireStart;
         			spr_fire = sprBigFishFire;
         			spr_efir = sprBigFishFireEnd;
 
         			 // Swim:
         			spr_dive = global.sprBigFishLeap;
-        			spr_swim = global.sprBigFishSwim;
         			spr_rise = global.sprBigFishRise;
 
                  // Sound:
@@ -265,7 +265,7 @@
 
     			 // Vars:
         		mask_index = mskBigMaggot;
-    			maxhealth = 120;
+    			maxhealth = 120 * (1 + ((1/3) * GameCont.loops));
     			raddrop = 50;
     			size = 3;
     			meleedamage = 3;
@@ -278,6 +278,7 @@
     			direction = gunangle;
     			swim_ang_frnt = direction;
     			swim_ang_back = direction;
+    			shot_wave = 0;
 
     			 // Alarms:
     			alarm0 = 60 + irandom(40);
@@ -784,8 +785,6 @@
 
     return o;
 
-#define draw
-
 #define BigDecal_step
     if(place_meeting(x, y, FloorExplo)){
     	instance_destroy();
@@ -824,6 +823,7 @@
 
 #define BubbleBomb_wall
     if(speed > 0){
+        speed *= 0.5;
         sound_play(sndBouncerBounce);
         move_bounce_solid(false);
     }
@@ -864,8 +864,15 @@
     enemyAlarms(3);
 
      // Animate:
-    if(sprite_index != spr_hurt and sprite_index != spr_fire and sprite_index != spr_sfir and sprite_index != spr_efir and sprite_index != spr_dive and sprite_index != spr_swim and sprite_index != spr_rise && sprite_index != spr_spwn)
-    {
+    if(
+        sprite_index != spr_hurt &&
+        sprite_index != spr_spwn &&
+        sprite_index != spr_dive &&
+        sprite_index != spr_rise &&
+        sprite_index != spr_efir &&
+        sprite_index != spr_fire &&
+        sprite_index != spr_chrg 
+    ){
         if(speed <= 0) sprite_index = spr_idle;
     	else if(sprite_index == spr_idle) sprite_index = spr_walk;
     }
@@ -884,112 +891,207 @@
                 repeat(10) with(instance_create(x, y, Dust)){
                     motion_add(random(360), 5);
                 }
-                exit;
-            }
-
-            if(sprite_index = spr_hurt) {
-                sprite_index = spr_idle;
-                exit;
-            }
-
-            if(sprite_index = spr_sfir) {
-                sprite_index = spr_fire
-                exit;
-            }
-
-            if(sprite_index = spr_fire and ammo = 0) {
-                sprite_index = spr_efir;
-                exit;
-            }
-
-            if(sprite_index = spr_efir) {
-                sprite_index = spr_idle;
-                exit;
-            }
+                exit; }
 
             if(sprite_index = spr_dive) {
-                sprite_index = spr_swim;
-                exit;
-            }
-
-            if(sprite_index = spr_rise) {
                 sprite_index = spr_idle;
-                spr_shadow = shd48;
-                exit;
-            }
+
+                 // Start Swimming:
+                swim = true;
+                direction = 90 - (right * 90);
+                swim_ang_frnt = direction;
+                swim_ang_back = direction;
+                exit; }
+
+            if(sprite_index = spr_hurt || sprite_index == spr_efir){
+                sprite_index = spr_idle;
+                exit; }
+
+            if(sprite_index = spr_rise){
+                sprite_index = spr_idle;
+                spr_shadow = spr_shad;
+                exit; }
+
+            if(sprite_index = spr_chrg){
+                sprite_index = spr_fire;
+                exit; }
+
+            if(sprite_index = spr_fire && ammo <= 0){
+                sprite_index = spr_efir;
+                exit; }
         }
         if(sprite_index != _lstspr) image_index = 0;
     }
 
+     // Movement:
     enemyWalk(walkspd, maxspd);
 
-     // Swim Towards Target:
+     // Swimming:
     if(swim){
-         // temporary //
-        spr_shadow = -1;
-        alarm0 = -1;
-         // temporary //
+        speed += 0.8;
 
-         // Follow Target:
+         // Follow Player:
         target = instance_nearest(x, y, Player);
         if(instance_exists(target)){
-            motion_add(point_direction(x, y, target.x, target.y), 0.6);
+            direction += (angle_difference(point_direction(x, y, target.x, target.y), direction) / 10) * current_time_scale;
         }
-        scrRight(direction);
 
          // Turn Fins:
-        swim_ang_frnt += angle_difference(direction, swim_ang_frnt) / 3;
-        swim_ang_back += angle_difference(swim_ang_frnt, swim_ang_back) / 10;
+        swim_ang_frnt += (angle_difference(direction, swim_ang_frnt) / 3) * current_time_scale;
+        swim_ang_back += (angle_difference(swim_ang_frnt, swim_ang_back) / 10) * current_time_scale;
 
-         // Effects:
-        if(current_frame_active && random(4) < 3){
-            repeat(random(3)){
-                var _x = x + orandom(4),
-                    _y = bbox_bottom + orandom(4);
+         // Break Walls:
+        if(place_meeting(x + hspeed, y + vspeed, Wall)){
+            speed /= 2;
 
-                if((place_meeting(x, y, FloorExplo) && random(10) < 1) || random(30) < 1){
-                    with(instance_create(_x, _y, Debris)){
+             // Effects:
+            var w = instance_nearest(x, y, Wall);
+            with(instance_create(w.x, w.y, MeleeHitWall)){
+                motion_add(point_direction(x, y, other.x, other.y), 1);
+                image_angle = direction + 180;
+            }
+            sound_play_pitchvol(sndHammerHeadProc, 1.4 + random(0.2), 0.5);
+
+             // Break Wall:
+            with(w){
+                instance_create(x, y, FloorExplo);
+                instance_destroy();
+            }
+        }
+
+         // Visual:
+        spr_shadow = mskNone;
+        if(current_frame_active){
+            var _cx = x,
+                _cy = bbox_bottom;
+
+             // Debris:
+            if((place_meeting(x, y, FloorExplo) && random(30) < 1) || random(40) < 1){
+                repeat(irandom(2)){
+                    with(instance_create(_cx, _cy, Debris)){
                         speed /= 2;
                     }
                 }
-                else{
-                    var _oDis = orandom(10),
-                        _oDir = swim_ang_back;
+            }
 
-                    _x += lengthdir_x(_oDis, _oDir);
-                    _y += lengthdir_y(_oDis, _oDir);
+             // Ripping Through Ground:
+            var _oDis = [16, -4],
+                _oDir = [swim_ang_frnt, swim_ang_back],
+                _ang = [20, 30];
 
-                    with(instance_create(_x, _y, Dust)){
-                        gravity = .3;
-                        image_xscale *= .75;
-                        image_yscale *= .75;
+            for(var o = 0; o < array_length(_oDis); o++){
+                for(var i = -1; i <= 1; i += 2){
+                    var _x = _cx + lengthdir_x(_oDis[o], _oDir[o]),
+                        _y = _cy + lengthdir_y(_oDis[o], _oDir[o]),
+                        a = (i * _ang[o]);
+
+                     // Cool Trail FX:
+                    if(speed > 1) with(instance_create(_x, _y, BoltTrail)){
+                        motion_add(_oDir[o] + 180 + a, (other.speed + random(other.speed)) / 2);
+                        image_xscale = speed * 2;
+                        image_yscale = (skill_get(mut_bolt_marrow) ? 0.6 : 1);
+                        image_angle = direction;
+                        hspeed += other.hspeed;
+                        vspeed += other.vspeed;
+                        friction = random(0.5);
+                        //image_blend = make_color_rgb(110, 184, 247);
+                    }
+
+                     // Kick up Dust:
+                    if(random(20) < 1){
+                        with(instance_create(_x, _y, Dust)){
+                            hspeed += other.hspeed / 2;
+                            vspeed += other.vspeed / 2;
+                            motion_add(_oDir[o] + 180 + (2 * a), other.speed);
+                            image_xscale *= .75;
+                            image_yscale = image_xscale;
+                        }
                     }
                 }
             }
+
+             // Quakes:
+            if(random(3) < 1) view_shake_at(_cx, _cy, 4);
         }
     }
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
-    if(sprite_index != spr_swim){ // Can't be hurt while swimming
+     // Can't be hurt while swimming:
+    /*if(swim){
+        sound_play_pitch(sndCrystalPropBreak, 0.7);
+        sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
+        with(other) repeat(5) with(instance_create(x, y, Dust)){
+            motion_add(random(360), 3);
+        }
+    }
+    else{*/
         my_health -= _hitdmg;           // Damage
-        motion_add(_hitdir, _hitvel);	// Knockback
         nexthurt = current_frame + 6;	// I-Frames
-        sound_play_hit(snd_hurt, 0.3);	// Sound
+
+         // Sound:
+        sound_play_hit(swim ? sndBigMaggotHit : snd_hurt, 0.3);
+
+         // Knockback:
+        if(!swim){
+            motion_add(_hitdir, _hitvel);
+        }
 
          // Hurt Sprite:
-        if(sprite_index != spr_fire and sprite_index != spr_sfir and sprite_index != spr_efir and sprite_index != spr_dive and sprite_index != spr_rise) {
+        if(
+            sprite_index != spr_fire &&
+            sprite_index != spr_chrg &&
+            sprite_index != spr_efir &&
+            sprite_index != spr_dive &&
+            sprite_index != spr_rise
+        ){
             sprite_index = spr_hurt;
             image_index = 0;
         }
-    }
+    //}
 
 #define CoastBoss_draw
     var h = (nexthurt > current_frame + 3);
 
     if(swim){
         if(h) d3d_set_fog(1, c_white, 0, 0);
-        CoastBoss_draw_fins(x, bbox_bottom, image_xscale, image_yscale);
+
+        var _cx = x,
+            _cy = bbox_bottom;
+    
+        for(var a = 0; a < 4; a++){
+            var _x = _cx,
+                _y = _cy,
+                _xscale = image_xscale,
+                _yscale = image_yscale,
+                _blend = image_blend,
+                _alpha = image_alpha,
+                _swimSpd = (current_frame / 3),
+                _spr = [global.sprBigFishSwimFrnt,      global.sprBigFishSwimBack           ],
+                _ang = [swim_ang_frnt,                  swim_ang_back                       ],
+                _dis = [10 * _xscale,                   10 * _xscale                        ], // Offset Distance
+                _dir = [_ang[0] + (5 * sin(_swimSpd)),  _ang[1] + 180 + (5 * sin(_swimSpd))], // Offset Direction
+                _trn = [15 * cos(_swimSpd),             -25 * cos(_swimSpd)                 ];
+    
+             // Outline:
+            if(a < 3){
+                _blend = c_black;
+                _x += lengthdir_x(1, a * 90);
+                _y += lengthdir_y(1, a * 90);
+            }
+    
+             // Draw Front & Back Fins:
+            for(var j = 0; j < array_length(_spr); j++){
+                var s = _spr[j],
+                    _drawx = _x + lengthdir_x(_dis[j], _dir[j]),
+                    _drawy = _y + lengthdir_y(_dis[j], _dir[j]);
+    
+                for(var i = 0; i < sprite_get_number(s); i++){
+                    draw_sprite_ext(s, i, _drawx, _drawy - (i * _yscale), _xscale, _yscale, _ang[j] + _trn[j], _blend, _alpha);
+                }
+            }
+        }
     }
+
      // Normal Self:
     else{
         if(h && sprite_index != spr_hurt) d3d_set_fog(1, c_white, 0, 0);
@@ -999,32 +1101,33 @@
     if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define CoastBoss_alrm0
-    alarm0 = 80 + irandom(20);
+    alarm0 = 60 + irandom(20);
     target = instance_nearest(x, y, Player);
     if(target_in_distance(0, 160)) {
         var _targetDir = point_direction(x, y, target.x, target.y);
     
          // Bubble Attack:
         if(random(2) < 1) {
-            alarm1 = 6;
-            sprite_index = spr_sfir;
             image_index = 0;
+            sprite_index = spr_chrg;
+            sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
+
             gunangle = _targetDir;
-            sound_play(sndOasisBossFire);
             ammo = 3 * (GameCont.loops + 2);
-            alarm0 = 60 + (2 * ammo);
+
+            alarm1 = 6;
+            alarm0 = 40 + (2 * ammo);
         }
     
          // Dive:
-        else if(random(2) < 1) alarm2 = 6;
+        else if(random(4) < 1) alarm2 = 6;
     
          // Move Towards Target:
         else{
-            walk = 30 + random(10);
-            direction = _targetDir + orandom(15);
-            alarm0 = 30 + irandom(20);
+            scrWalk(30 + random(10), _targetDir + orandom(15));
+            alarm0 = walk + random(10);
         }
-    
+
         scrRight(_targetDir);
     }
 
@@ -1033,10 +1136,8 @@
 
      // Passive Movement:
     else{
-        walk = 20;
         alarm0 = 40 + irandom(20);
-        direction = random(360);
-        scrRight(direction);
+        scrWalk(20, random(360));
     }
 
 #define CoastBoss_alrm1
@@ -1045,11 +1146,13 @@
         alarm1 = 2;
         sound_play(sndOasisShoot);
         with(obj_create(x, y, "BubbleBomb")) {
-            motion_add(other.gunangle + sin(current_frame/4) * 24, 8 + random_range(0, 2))
+            motion_add(other.gunangle + (sin(other.shot_wave / 4) * 24), 8 + random(2))
+            hitid = other.hitid;
             team = other.team;
-            creator = other.id;
-            hitid = [other.spr_idle, "BIG FISH"];
+            creator = other;
         }
+        shot_wave += alarm1;
+        walk++;
         ammo--;
     }
 
@@ -1057,22 +1160,44 @@
     target = instance_nearest(x, y, Player);
 
      // Dive:
-    if((sprite_index != spr_dive and sprite_index != spr_swim) or point_distance(x, y, target.x, target.y) > 120){
-        if(sprite_index != spr_swim) {
+    var _notSwimming = (sprite_index != spr_dive && !swim);
+    if(_notSwimming || (instance_exists(target) && point_distance(x, y, target.x, target.y) > 120)){
+        if(_notSwimming){
             sprite_index = spr_dive;
             image_index = 0;
             spr_shadow = mskNone;
             sound_play(sndOasisBossMelee);
         }
-        
-        alarm0 = 80;
-        alarm2 = 60;
+
+        alarm2 = 90;
+        alarm0 = alarm2 + 10;
     }
 
      // Un-Dive:
     else{
-        sprite_index = spr_rise;
+        swim = false;
         image_index = 0;
+        sprite_index = spr_rise;
+        scrRight(direction);
+        speed = 0;
+
+         // Babbies:
+        if(GameCont.loops > 0) repeat(GameCont.loops * 2){
+            instance_create(x, y, BoneFish);
+        }
+
+         // Effects:
+        instance_create(x, y, PortalClear);
+        sound_play_pitchvol(sndFootOrgSand1, 0.5, 5);
+        sound_play_pitchvol(sndToxicBoltGas, 0.5 + random(0.2), 0.5);
+        repeat(10){
+            var _dis = 12,
+                _dir = random(360);
+
+            with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Dust)){
+                motion_add(_dir, 3);
+            }
+        }
     }
 
 #define CoastBoss_death
@@ -1081,51 +1206,6 @@
     GameCont.area = "coast";
     GameCont.subarea = 0;
     with(enemy) my_health = 0;
-
-#define CoastBoss_draw_fins(_x, _y, _xscale, _yscale)
-    var __x = _x,
-        __y = _y;
-
-    for(var a = 0; a < 4; a++){
-        if(a < 3){
-            _x = __x + lengthdir_x(1, a * 90);
-            _y = __y + lengthdir_y(1, a * 90);
-        }
-        else{
-            _x = __x;
-            _y = __y;
-        }
-
-        var _sprFrnt = global.sprBigFishSwimFrnt,
-            _sprBack = global.sprBigFishSwimBack,
-            _blend = ((a < 3) ? c_black : image_blend),
-            _alpha = image_alpha,
-            _swimSpd = (current_frame / 3),
-            _angFrnt = swim_ang_frnt,
-            _disFrnt = 10 * _xscale,
-            _dirFrnt = _angFrnt + (5 * sin(_swimSpd)),
-            _xFrnt = _x + lengthdir_x(_disFrnt, _dirFrnt),
-            _yFrnt = _y + lengthdir_y(_disFrnt, _dirFrnt),
-            _angBack = swim_ang_back,
-            _disBack = 10 * _xscale,
-            _dirBack = _angBack + 180 + (5 * sin(_swimSpd)),
-            _xBack = _x + lengthdir_x(_disBack, _dirBack),
-            _yBack = _y + lengthdir_y(_disBack, _dirBack);
-    
-        _angFrnt += (10 * cos(_swimSpd));
-        _xFrnt += lengthdir_x(_yscale / 2, _angFrnt - 90);
-        _yFrnt += lengthdir_y(_yscale / 2, _angFrnt - 90);
-        for(var i = 0; i < sprite_get_number(_sprFrnt); i++){
-            draw_sprite_ext(_sprFrnt, i, _xFrnt, _yFrnt - (i * _yscale), _xscale, _yscale, _angFrnt, _blend, _alpha);
-        }
-
-        _angBack -= (20 * cos(_swimSpd));
-        _xBack += lengthdir_x(_yscale / 2, _angBack - 90);
-        _yBack += lengthdir_y(_yscale / 2, _angBack - 90);
-        for(var i = 0; i < sprite_get_number(_sprBack); i++){
-            draw_sprite_ext(_sprBack, i, _xBack, _yBack - (i * _yscale), _xscale, _yscale, _angBack, _blend, _alpha);
-        }
-    }
 
 
 #define Harpoon_end_step
@@ -2415,9 +2495,6 @@
 #define draw_shadows
     with(instances_named(CustomProjectile, "MortarPlasma")) if(visible){
         draw_sprite(shd24, 0, x, y);
-    }
-    with(instances_named(CustomEnemy, "CoastBoss")) if(swim){
-        CoastBoss_draw_fins(x, bbox_bottom, image_xscale, -image_yscale);
     }
 
 

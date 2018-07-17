@@ -3,11 +3,18 @@
     global.area = ["coast"];
 
 #define level_start // game_start but every level
-     // Disable Oasis Skip:
 	if(GameCont.area == 1){
+         // Disable Oasis Skip:
 		with(instance_create(0, 0, AmmoChest)){
 			visible = 0;
 			mask_index = mskNone;
+		}
+
+	     // Replace Big Skull w/ Coast Boss Spawner:
+		with(BigSkull){
+		    trace("Coast Boss")
+		    obj_create(x, y, "CoastBossBecome");
+		    instance_delete(id);
 		}
 	}
 

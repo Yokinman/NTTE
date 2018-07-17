@@ -149,7 +149,7 @@
          // Water Wading:
         if(DebugLag) trace_time();
         var _inst = instances_matching(instances_matching_lt(instances_matching(global.swimInst, "visible", 1), "depth", global.seaDepth), "nowade", null),
-            _lag = (array_length(_inst) > 1000), // When there's over 100 swimmable objects, don't draw them swimming when they're offscreen
+            _lag = (array_length(_inst) > 100), // When there's over 100 swimmable objects, don't draw them swimming when they're offscreen
             _wadeCol = make_color_rgb(44, 37, 122),
             v = 0;
 
@@ -161,8 +161,6 @@
 			var o = (object_index == Player),
 			    _splashvol = (o ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1)),
 			    _dis = distance_to_object(Floor);
-			    
-			_dis = distance_to_object(Floor);
 
 			if(_dis > 4){
 				 // Splash:
