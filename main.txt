@@ -5,5 +5,6 @@
 /loadarea areas/coast
 
 // Weps \\
+/loadwep weps/crabbone
 /loadwep weps/harpoon
 /loadwep weps/netlauncher

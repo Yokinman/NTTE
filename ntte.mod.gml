@@ -10,12 +10,41 @@
 			mask_index = mskNone;
 		}
 
-	     // Replace Big Skull w/ Coast Boss Spawner:
-		with(BigSkull){
-		    trace("Coast Boss")
-		    obj_create(x, y, "CoastBossBecome");
-		    instance_delete(id);
+	     // Spawn Sharky Skull on 1-3:
+		with(BigSkull) instance_delete(id);
+		if(GameCont.subarea == 3){
+		    var _spawned = false;
+		    do{
+    		    with(instance_random(Floor)){
+                    if(point_distance(x, y, 10016, 10016) > 48){
+                        if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+    		                obj_create(x + 16, y + 16, "CoastBossBecome");
+    		                _spawned = true;
+                        }
+                    }
+    		    }
+		    }
+		    until _spawned;
 		}
+
+         // Consistently Spawning Crab Skeletons:
+        if(!instance_exists(BonePile)){
+		    var _spawned = false;
+            do{
+                with(instance_random(Floor)){
+                    if(point_distance(x, y, 10016, 10016) > 48){
+                        if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+                            instance_create(x + 16, y + 16, BonePile);
+    		                _spawned = true;
+                        }
+                    }
+                }
+            }
+            until _spawned;
+        }
+
+         // Crab Skeletons Drop Bones:
+        with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
 	}
 
      // Spawn Mortars:
@@ -86,6 +115,13 @@
 
         return id;
 	}
+
+#define instance_random(_obj)
+	if(instance_exists(_obj)){
+		var i = instances_matching(_obj, "", undefined);
+		return i[irandom(array_length(i) - 1)];
+	}
+	return noone;
 
 #define scrFloorMake(_x, _y, _obj)
     instance_create(_x, _y, Floor);

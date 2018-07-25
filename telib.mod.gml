@@ -10,15 +10,16 @@
     	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
     	 // Big Fish:
-    	global.sprBigFishBecome = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",        4, 40, 38);
-    	global.sprBigFishSpwn = sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",         11, 32, 32);
-    	global.sprBigFishLeap = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",          11, 32, 32);
-    	global.sprBigFishSwim = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",           8, 24, 24);
-    	global.sprBigFishRise = sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",           5, 32, 32);
-    	global.sprBigFishSwimFrnt = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
-    	global.sprBigFishSwimBack = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
-    	global.sprBubbleBomb = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",          30,  8,  8);
-    	global.sprBubbleExplode = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",     9, 24, 24);
+    	global.sprBigFishBecomeIdle = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",      4, 40, 38);
+    	global.sprBigFishBecomeHurt = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuildHurt.png",  4, 40, 38);
+    	global.sprBigFishSpwn =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",     11, 32, 32);
+    	global.sprBigFishLeap =       sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",      11, 32, 32);
+    	global.sprBigFishSwim =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8, 24, 24);
+    	global.sprBigFishRise =       sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",       5, 32, 32);
+    	global.sprBigFishSwimFrnt =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
+    	global.sprBigFishSwimBack =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
+    	global.sprBubbleBomb =        sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
+    	global.sprBubbleExplode =     sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
 
          // Harpoon:
         global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -167,6 +168,30 @@
     	    }
     	break;
 
+        case "Bone":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                 // Visual:
+                sprite_index = sprBone;
+                hitid = [sprite_index, _name];
+
+                 // Vars:
+                mask_index = mskFlakBullet;
+                friction = 1;
+                damage = 50;
+                force = 1;
+                typ = 1;
+                creator = noone;
+                rotation = 0;
+                rotspeed = (1 / 3) * choose(-1, 1);
+            }
+            break;
+
+        case "BoneSpawner":
+            o = instance_create(_x, _y, CustomObject);
+            with(o) creator = noone;
+            break;
+
     	case "BubbleBomb":
     	    o = instance_create(_x, _y, CustomProjectile);
     	    with(o){
@@ -182,7 +207,7 @@
     	        friction = 0.4;
     	        damage = 0;
     	        force = 0;
-    	        typ = 2;
+    	        typ = 1;
 
     	         // Alarms:
     	        alarm0 = (image_number / image_speed); // 2 seconds
@@ -209,8 +234,8 @@
             o = instance_create(_x, _y, CustomProp);
             with(o){
                  // Visual:
-                spr_idle = global.sprBigFishBecome;
-                spr_hurt = spr_idle;
+                spr_idle = global.sprBigFishBecomeIdle;
+                spr_hurt = global.sprBigFishBecomeHurt;
                 spr_dead = sprBigSkullDead;
                 spr_shadow = shd32;
                 image_speed = 0;
@@ -750,7 +775,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat",
@@ -795,6 +820,118 @@
     }
 
 
+#define Bone_step
+     // Spin:
+    rotation += speed * rotspeed;
+
+     // Into Portal:
+    if(place_meeting(x, y, Portal)){
+        if(speed > 0){
+            sound_play_pitchvol(sndMutant14Turn, 0.6 + random(0.2), 0.8);
+            repeat(3) instance_create(x, y, Smoke);
+        }
+        instance_destroy();
+    }
+
+     // Turn Back Into Weapon:
+    else if(speed <= 0){
+         // Don't Get Stuck on Wall:
+        mask_index = mskWepPickup;
+        if(place_meeting(x, y, Wall)){
+            var w = instance_nearest(x, y, Wall),
+                _dir = point_direction(w.x, w.y, x, y);
+
+            while(place_meeting(x, y, w)){
+                x += lengthdir_x(4, _dir);
+                y += lengthdir_y(4, _dir);
+            }
+        }
+
+        instance_destroy();
+    }
+
+#define Bone_draw
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
+
+#define Bone_hit
+    if(projectile_canhit(other)){
+         // Secret:
+        if("name" in other && other.name == "CoastBossBecome"){
+            with(other){
+                part++;
+
+                 // Hit:
+                sound_play_hit(snd_hurt, 0.3);
+                sprite_index = spr_hurt;
+                image_index = 0;
+            }
+
+             // Effects:
+            sound_play_hit(sndMutant14Turn, 0.2);
+            repeat(3){
+                instance_create(x + orandom(4), y + orandom(4), Bubble);
+                with(instance_create(x, y, Smoke)){
+                    motion_add(random(360), 1);
+                    depth = -2;
+                }
+            }
+
+            instance_delete(id);
+            exit;
+        }
+
+        projectile_hit_push(other, damage, speed * force);
+
+         // Bounce Off Enemy:
+        direction = point_direction(other.x, other.y, x, y);
+        speed /= 2;
+        rotspeed *= -1;
+
+         // Sound:
+        sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
+    }
+
+#define Bone_wall
+     // Bounce Off Wall:
+    if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+    if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+    speed /= 2;
+    rotspeed *= -1;
+
+     // Effects:
+    sound_play_hit(sndHitWall, 0.2);
+    instance_create(x, y, Dust);
+
+#define Bone_destroy
+    with(instance_create(x, y, WepPickup)){
+        wep = "crabbone";
+        rotation = other.rotation;
+    }
+
+
+#define BoneSpawner_step
+    if(instance_exists(creator)){
+         // Follow Creator:
+        x = creator.x;
+        y = creator.y;
+    }
+    else{
+         // Enter the bone zone:
+        with(instance_create(x, y, WepPickup)){
+            wep = "crabbone";
+            motion_add(random(360), 3);
+        }
+
+         // Effects:
+        repeat(2) with(instance_create(x, y, Dust)){
+            motion_add(random(360), 3);
+        }
+
+        with(instances_named(object_index, name)) instance_destroy();
+        instance_destroy();
+    }
+
+
 #define BubbleBomb_step
      // Float Up:
     z_engine();
@@ -813,6 +950,19 @@
         }
     }
 
+     // Baseball:
+    var _slash = [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash],
+        _meeting = false;
+
+    for(var i = 0; i < array_length(_slash); i++){
+        if(place_meeting(x, y, _slash[i])){
+            var s = instance_nearest(x, y, _slash[i]);
+            direction = s.direction;
+            speed = 8;
+            break;
+        }
+    }
+
     enemyAlarms(1);
 
 #define BubbleBomb_draw
@@ -823,15 +973,15 @@
 
 #define BubbleBomb_wall
     if(speed > 0){
-        speed *= 0.5;
         sound_play(sndBouncerBounce);
         move_bounce_solid(false);
+        speed *= 0.5;
     }
 
 #define BubbleBomb_alrm0
      // Explode:
     with(obj_create(x, y, "BubbleExplosion")){
-        team = other.team;
+        team = ((other.team == 2) ? -1 : other.team);
         hitid = other.hitid;
     }
 
@@ -849,14 +999,33 @@
 
 
 #define CoastBossBecome_step
+     // Animate:
     image_index = part;
-    if(part >= image_number - 1){
+    if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
+    else if(sprite_index == spr_hurt) sprite_index = spr_idle;
+
+     // Skeleton Rebuilt:
+    if(part >= sprite_get_number(spr_idle) - 1){
         with(obj_create(x - (image_xscale * 8), y - 6, "CoastBoss")){
             x = xstart;
             y = ystart;
             right = other.image_xscale;
         }
+        with(WantBoss) instance_destroy();
         instance_delete(id);
+    }
+
+     // Too Late:
+    else if(instance_exists(Portal)) instance_destroy();
+
+#define CoastBossBecome_death
+     // Death Effects:
+    if(part > 0){
+        sound_play(sndOasisDeath);
+        repeat(part * 2) instance_create(x, y, Bubble);
+    }
+    else for(var a = direction; a < direction + 360; a += (360 / 10)){
+        with(instance_create(x, y, Dust)) motion_add(a, 3);
     }
 
 
@@ -1017,14 +1186,19 @@
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Can't be hurt while swimming:
-    /*if(swim){
-        sound_play_pitch(sndCrystalPropBreak, 0.7);
-        sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
-        with(other) repeat(5) with(instance_create(x, y, Dust)){
-            motion_add(random(360), 3);
+    if(swim){
+        with(other) if("typ" in self && typ != 0){
+             // Effects:
+            sound_play_pitch(sndCrystalPropBreak, 0.7);
+            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
+            repeat(5) with(instance_create(x, y, Dust)){
+                motion_add(random(360), 3);
+            }
+
+            instance_destroy();
         }
     }
-    else{*/
+    else{
         my_health -= _hitdmg;           // Damage
         nexthurt = current_frame + 6;	// I-Frames
 
@@ -1047,7 +1221,7 @@
             sprite_index = spr_hurt;
             image_index = 0;
         }
-    //}
+    }
 
 #define CoastBoss_draw
     var h = (nexthurt > current_frame + 3);
