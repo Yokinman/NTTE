@@ -1,10 +1,11 @@
 #define init
 
 #define weapon_name return "BONE";
-#define weapon_type return 0; // Melee
-#define weapon_load return 1; // 0.03 Seconds
-#define weapon_area return -1;
+#define weapon_type return 0;                   // Melee
+#define weapon_load return 1;                   // 0.03 Seconds
+#define weapon_area return -1;                  // Doesn't spawn normally
 #define weapon_sprt return sprBone;
+#define weapon_text return "BONE THE FISH";
 
 #define weapon_fire(_wep)
     _wep.thrown = true;

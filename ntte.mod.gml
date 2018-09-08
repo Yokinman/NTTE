@@ -12,36 +12,38 @@
 
 	     // Spawn Sharky Skull on 1-3:
 		with(BigSkull) instance_delete(id);
-		if(GameCont.subarea == 3){
-		    var _spawned = false;
-		    do{
-    		    with(instance_random(Floor)){
-                    if(point_distance(x, y, 10016, 10016) > 48){
-                        if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
-    		                obj_create(x + 16, y + 16, "CoastBossBecome");
-    		                _spawned = true;
+		if(instance_exists(Floor)){
+    		if(GameCont.subarea == 3){
+    		    var _spawned = false;
+    		    do{
+        		    with(instance_random(Floor)){
+                        if(point_distance(x, y, 10016, 10016) > 48){
+                            if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+        		                obj_create(x + 16, y + 16, "CoastBossBecome");
+        		                _spawned = true;
+                            }
                         }
-                    }
+        		    }
     		    }
-		    }
-		    until _spawned;
-		}
+    		    until _spawned;
+    		}
 
-         // Consistently Spawning Crab Skeletons:
-        if(!instance_exists(BonePile)){
-		    var _spawned = false;
-            do{
-                with(instance_random(Floor)){
-                    if(point_distance(x, y, 10016, 10016) > 48){
-                        if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
-                            instance_create(x + 16, y + 16, BonePile);
-    		                _spawned = true;
+             // Consistently Spawning Crab Skeletons:
+            if(!instance_exists(BonePile)){
+    		    var _spawned = false;
+                do{
+                    with(instance_random(Floor)){
+                        if(point_distance(x, y, 10016, 10016) > 48){
+                            if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+                                instance_create(x + 16, y + 16, BonePile);
+        		                _spawned = true;
+                            }
                         }
                     }
                 }
+                until _spawned;
             }
-            until _spawned;
-        }
+		}
 
          // Crab Skeletons Drop Bones:
         with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
@@ -79,11 +81,8 @@
 
      // Call Area Step (Step not built into area mods):
     if(!instance_exists(GenCont)){
-        for(var i = 0; i < array_length(global.area); i++){
-            if(GameCont.area == global.area[i]){
-                mod_script_call("area", global.area[i], "area_step");
-            }
-        }
+        var a = array_find_index(global.area, GameCont.area);
+        if(a >= 0) mod_script_call("area", global.area[a], "area_step");
     }
 
     /// Tiny Spiders (New Cocoons):
