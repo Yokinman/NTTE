@@ -103,7 +103,11 @@
             global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1,  6,  8);
 
              // Seal:
-            global.sprTrident = sprite_add("sprites/enemies/Seal/sprTrident.png", 1, 18, 0);
+            global.sprSealIdle = sprite_add("sprites/enemies/Seal/sprSealIdle.png", 4, 12, 12);
+            global.sprSealWalk = sprite_add("sprites/enemies/Seal/sprSealWalk.png", 6, 12, 12);
+            global.sprSealHurt = sprite_add("sprites/enemies/Seal/sprSealHurt.png", 3, 12, 12);
+            global.sprSealDead = sprite_add("sprites/enemies/Seal/sprSealDead.png", 6, 12, 12);
+            global.sprTrident  = sprite_add("sprites/enemies/Seal/sprTrident.png",  1, 18,  0);
 
              // Traffic Crab:
             global.sprCrabIdle = sprite_add("sprites/enemies/Crab/sprTrafficCrabIdle.png", 5, 24, 24);
@@ -537,7 +541,7 @@
         			//alarm2 = 30 + irandom(10);
                 }
                 break;
-    
+
             case "Palm":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -608,10 +612,10 @@
                 with(o){
                      // Visual:
                     spr_spwn = sprRavenLand;
-                    spr_idle = sprRavenIdle;
-                    spr_walk = sprRavenWalk;
-                    spr_hurt = sprRavenHurt;
-                    spr_dead = sprRavenDead;
+                    spr_idle = global.sprSealIdle;
+                    spr_walk = global.sprSealWalk;
+                    spr_hurt = global.sprSealHurt;
+                    spr_dead = global.sprSealDead;
                     spr_weap = mskNone;
                     spr_shadow = shd24;
                     hitid = [spr_idle, _name];
@@ -619,8 +623,9 @@
                     depth = -2;
 
                      // Sound:
-                    snd_hurt = sndRavenHit;
-                    snd_dead = sndRavenDie;
+                    var _male = irandom(1);
+                    snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
+                    snd_dead = (_male ? sndFireballerDead : sndFreakDead);
 
                      // Vars:
                     mask_index = mskBandit;
@@ -2448,18 +2453,20 @@
         sprite_index = spr_lagh;
         image_index = 0;
 
-         // Effects:
+         // Sound:
         sound_play_hit(sndHitWall, 0.3);
-        if(instance_exists(other)){
-            with(instance_create(other.x, other.y, Dust)){
-                coast_water = 1;
-                if(y > other.y + 12) depth = other.depth - 1;
-            }
-            if(random(2) < 1) with(other){
-                sound_play_hit(sndHitRock, 0.3);
-                with(instance_create(x, y, Debris)){
-                    motion_set(_hitdir + 180 + orandom(other.force * 4), 2 + random(other.force / 2));
-                }
+    }
+
+     // Effects:
+    if(instance_exists(other) && instance_is(other, projectile)){
+        with(instance_create(other.x, other.y, Dust)){
+            coast_water = 1;
+            if(y > other.y + 12) depth = other.depth - 1;
+        }
+        if(random(2) < 1) with(other){
+            sound_play_hit(sndHitRock, 0.3);
+            with(instance_create(x, y, Debris)){
+                motion_set(_hitdir + 180 + orandom(other.force * 4), 2 + random(other.force / 2));
             }
         }
     }
@@ -2638,6 +2645,7 @@
 
      // Animate:
     if(sprite_index != spr_spwn){
+        image_index += random(0.1) * current_time_scale;
         enemySprites();
     }
     else if(image_index > image_number - 1) sprite_index = spr_idle;
