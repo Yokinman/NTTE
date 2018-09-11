@@ -90,7 +90,7 @@
         with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
     }
 
-#macro DebugLag 1
+#macro DebugLag 0
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
