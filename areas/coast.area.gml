@@ -23,12 +23,74 @@
     global.swimInstVisible = [];
     global.seaDepth = 10.1;
 
+    global.shadeWade = shader_create(
+        "/// Vertex Shader ///
+
+        struct VertexShaderInput
+        {
+            float4 vPosition : POSITION;
+            float2 vTexcoord : TEXCOORD0;
+        };
+
+        struct VertexShaderOutput
+        {
+            float4 vPosition : SV_POSITION;
+            float2 vTexcoord : TEXCOORD0;
+        };
+
+        uniform float4x4 matrix_world_view_projection;
+
+        VertexShaderOutput main(VertexShaderInput INPUT)
+        {
+            VertexShaderOutput OUT;
+
+            OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+            OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+
+            return OUT;
+        }
+        ",
+
+
+        "/// Fragment/Pixel Shader ///
+
+        struct PixelShaderInput
+        {
+            float2 vTexcoord : TEXCOORD0;
+        };
+
+        sampler2D s0;
+
+        uniform float WadeY;
+        uniform float WadeTop;
+
+        float4 main(PixelShaderInput INPUT) : SV_TARGET
+        {
+            float X = INPUT.vTexcoord.x;
+            float Y = INPUT.vTexcoord.y;
+            float4 Color = tex2D(s0, float2(X, Y));
+            float A = Color.a;
+
+            if(Y < WadeY){
+                if(WadeTop){
+                    if(Y < WadeY - (1.0 / 1000.0)) return Color;
+                    return float4(1.0, 1.0, 1.0, 0.8 * A);
+                }
+            }
+            else if(!WadeTop){
+                return float4(0.17, 0.15, 0.48, A);
+            }
+
+            return float4(0.0, 0.0, 0.0, 0.0);
+        }
+    ");
+
      // Prevent Crash on Mod Reload:
     if(GameCont.area == mod_current){
         with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
     }
 
-#macro DebugLag 0
+#macro DebugLag 1
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
@@ -37,6 +99,9 @@
 
 #define area_secret
     return 1;
+
+#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
+    return [_lastx, 9];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -173,7 +238,7 @@
          // Water Wading:
         if(DebugLag) trace_time();
         var _inst = instances_matching(instances_matching_lt(instances_matching_ne(global.swimInst, "visible", false), "depth", global.seaDepth), "nowade", null, false),
-            _wadeCol = WadeColor;
+            _tex = surface_get_texture(_surfSwim);
 
         global.swimInstVisible = [];
 
@@ -282,12 +347,13 @@
                 }
             }
 
+
             /// Draw Top:
                 var _yoff = _surfSwimh - ((_surfSwimh / 2) - (sprite_height - sprite_yoffset)),
                     t = _yoff - _wh;
     
                 surface_set_target(_surfSwimTop);
-        
+
                  // Manually Draw Laser Sights:
                 if(o && canscope){
                     draw_set_color(c_red);
@@ -352,19 +418,33 @@
                     draw_set_alpha(1);
                 }
     
-                 // Self:
-                draw_surface_part(_surfSwim, 0, 0, _surfSwimw, t, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+                 // Activate Shaders & Draw Top:
+                shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+                shader_set_fragment_constant_f(0, [t / _surfSwimh]);
+                shader_set(global.shadeWade);
     
-                 // Water Interference Line Thing:
-                d3d_set_fog(1, c_white, 0, 0);
-                draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _surfSwimx - _surfx, (_surfSwimy + _z + t) - _surfy, 1, 1, c_white, 0.8);
+                shader_set_fragment_constant_f(1, [1]);
+                texture_set_stage(0, _tex);
+                draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+                        /* old way with draw_surface_part, GROSS!
+                        draw_surface_part(_surfSwim, 0, 0, _surfSwimw, t, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+        
+                         // Water Interference Line Thing:
+                        d3d_set_fog(1, c_white, 0, 0);
+                        draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _surfSwimx - _surfx, (_surfSwimy + _z + t) - _surfy, 1, 1, c_white, 0.8);*/
 
              // Draw Bottom:
             surface_set_target(_surfSwimBot);
-            d3d_set_fog(1, _wadeCol, 0, 0);
+            shader_set_fragment_constant_f(1, [0]);
+            texture_set_stage(0, _tex);
             draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
-            d3d_set_fog(0, 0, 0, 0);
+                        /* old way with draw_surface_part, GROSS!
+                        d3d_set_fog(1, _wadeCol, 0, 0);
+                        draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+                        d3d_set_fog(0, 0, 0, 0);*/
             surface_reset_target();
+
+            shader_reset();
         }
 
          // Push Back to Shore:
