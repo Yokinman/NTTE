@@ -8,3 +8,4 @@
 /loadwep weps/crabbone
 /loadwep weps/harpoon
 /loadwep weps/netlauncher
+/loadwep weps/bubble launcher
