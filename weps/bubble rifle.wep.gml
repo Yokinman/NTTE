@@ -25,6 +25,8 @@ repeat(2)
     move_contact_solid(other.gunangle,6)
     motion_add(other.gunangle+random_range(-12,12)*other.accuracy,9);
     friction *= random_range(.8,1.2);
+    team = other.team;
+    creator = other;
   }
   wait(2);
   if !instance_exists(self){exit}

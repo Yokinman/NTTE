@@ -66,9 +66,8 @@
 
         float4 main(PixelShaderInput INPUT) : SV_TARGET
         {
-            float X = INPUT.vTexcoord.x;
+            float4 Color = tex2D(s0, INPUT.vTexcoord);
             float Y = INPUT.vTexcoord.y;
-            float4 Color = tex2D(s0, float2(X, Y));
             float A = Color.a;
 
             if(Y < WadeY){
@@ -242,13 +241,13 @@
 
         global.swimInstVisible = [];
 
-        with(_inst){
-            if("wading" not in self){
-                wading = 0;
-                wading_clamp = 0;
-                if(object_index == Van) wading_clamp = 40;
-            }
+        with(instances_matching(_inst, "wading", null)){
+            wading = 0;
+            wading_clamp = 0;
+            if(object_index == Van) wading_clamp = 40;
+        }
 
+        with(_inst){
              // In Water:
             var _dis = distance_to_object(Floor);
             if(_dis > 4){
@@ -277,7 +276,9 @@
 			    wading = 0;
 		    }
         }
+        if(DebugLag) trace_time("Wading");
 
+        if(DebugLag) trace_time();
         with(instances_seen(instances_matching_gt(_inst, "wading", 0), 8)){
 	        var o = (object_index == Player);
 
@@ -446,6 +447,7 @@
 
             shader_reset();
         }
+		if(DebugLag) trace_time("Wading Drawing");
 
          // Push Back to Shore:
         var _push = [enemy, Pickup, chestprop];
@@ -454,7 +456,6 @@
             var n = instance_nearest(x - 16, y - 16, Floor);
     		motion_add(point_direction(x, y, n.x, n.y), 4);
         }
-		if(DebugLag) trace_time("Wading");
 
 		 // Set Visibility of Swimming Objects Before & After Drawing Events:
     	script_bind_step(reset_visible, 0, 0);

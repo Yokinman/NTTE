@@ -1096,7 +1096,10 @@
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 
 #define BubbleBomb_hit
-    // nada
+    speed *= 0.9;
+    var _dir = point_direction(x, y, other.x, other.y);
+    x += lengthdir_x(1, _dir);
+    y += lengthdir_y(1, _dir);
 
 #define BubbleBomb_wall
     if(speed > 0){
@@ -1110,7 +1113,12 @@
 
      // Explode:
     with(obj_create(x, y, "BubbleExplosion")){
-        team = ((other.team == 2) ? -1 : other.team); // Popo nade logic
+        team = other.team;
+        var c = other.creator;
+        if(instance_exists(c)){
+            if(c.object_index == Player) team = 2;
+            else if(team == 2) team = -1; // Popo nade logic
+        }
         hitid = other.hitid;
     }
     instance_destroy();
