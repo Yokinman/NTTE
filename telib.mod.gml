@@ -279,7 +279,7 @@
     	case "CoastBoss":
     	    o = instance_create(_x, _y, CustomEnemy);
     	    with(o){
-    	         // for sani's bosshudredux
+    	         // For Sani's bosshudredux:
     	        boss = 1;
     	        bossname = "BIG FISH";
     	        col = c_red;
@@ -480,7 +480,7 @@
             case "Palanking":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
-                     // for sani's bosshudredux
+                     // For Sani's bosshudredux:
         	        boss = 1;
         	        bossname = "PALANKING";
         	        col = c_red;
@@ -781,6 +781,49 @@
         			alarm0 = 40 + irandom(20);
         		}
         	break;
+        	
+        	case "CatBoss":
+        	    o = instance_create(_x, _y, CustomEnemy);
+        		with(o){
+        		     // For Sani's bosshudredux:
+        	        boss = 1;
+        	        bossname = "BIG CAT";
+        	        col = c_green;
+        		    
+                     // Visual:
+        			spr_idle = global.sprCatIdle;
+        			spr_walk = global.sprCatWalk;
+        			spr_hurt = global.sprCatHurt;
+        			spr_dead = global.sprCatDead;
+        			spr_weap = sprToxicThrower;
+        			spr_shadow = shd24;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+        			mask_index = mskBandit;
+        			depth = -2;
+        			image_xscale *= 1.5;
+        			image_yscale *= 1.5
+    
+                     // Sound:
+        			snd_hurt = sndScorpionHit;
+        			snd_dead = sndSalamanderDead;
+    
+        			 // Vars:
+        			maxhealth = 80 * (1 + ((1/3) * GameCont.loops));
+        			my_health = maxhealth;
+        			raddrop = 6;
+        			size = 1;
+        			walk = 0;
+        			walkspd = 0.8;
+        			maxspd = 3;
+        			gunangle = random(360);
+        			direction = gunangle;
+        			ammo = 0;
+    
+        			 // Alarms:
+        			alarm0 = 40 + irandom(20);
+        		}
+        	break;
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -863,7 +906,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
-    		        "Cat",
+    		        "Cat", "CatBoss",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -3217,6 +3260,81 @@
     	}
     }
 
+#define CatBoss_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+#define CatBoss_alrm0
+    alarm0 = 20 + random(20);
+    
+    if(ammo > 0) {
+        with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
+            friction = 0.1;
+        }
+        gunangle += 24;
+        ammo--;
+        if(ammo = 0) {
+            alarm0 = 40;
+            repeat(3) {
+                var _dir = orandom(16);
+                with(instance_create(x, y, AcidStreak)) {
+                    motion_add(other.gunangle + _dir, 3);
+                    image_angle = direction;
+                }
+            }
+            scrEnemyShoot(ToxicGrenade, gunangle + orandom(4), 10);
+            wkick += 6;
+            sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
+            sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
+            sound_stop(sndFlamerLoop);
+        } else {
+            alarm0 = 1;
+            wkick += 1;
+        }
+    } else {
+        target = instance_nearest(x, y, Player);
+        if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+            if(target_in_distance(0, 140) and random(3) < 1) {
+                if(random(3) < 3) {
+                    scrRight(_targetDir);
+                    gunangle = _targetDir - 45;
+                    ammo = 20;
+                    with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
+                        sprite_index = global.sprAcidPuff;
+                        image_angle = other.gunangle;
+                    }
+                    sound_play(sndToxicBoltGas);
+                    sound_play(sndEmpty);
+                    var s = sndFlamerLoop;
+                    sound_loop(sndFlamerLoop);
+                    sound_pitch(sndFlamerLoop, random_range(1.8, 1.4));
+                    wkick += 4;
+                    alarm0 = 4;
+                }
+            } else {
+                alarm0 = 20 + random(20);
+                scrWalk(20 + random(5), _targetDir + orandom(20));
+                scrRight(gunangle);
+            }
+        } else {
+            alarm0 = 30 + random(20); // 3-4 Seconds
+            scrWalk(20 + random(10), random(360));
+            scrRight(gunangle);
+        }
+    }
+    
+#define CatBoss_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define CatBoss_death
+sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
+pickup_drop(100, 20);
+pickup_drop(60, 0);
 
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
