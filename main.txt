@@ -9,3 +9,5 @@
 /loadwep weps/harpoon
 /loadwep weps/netlauncher
 /loadwep weps/bubble launcher
+/loadwep weps/bubble rifle
+/loadwep weps/bubble minigun

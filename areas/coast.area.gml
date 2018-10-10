@@ -1,9 +1,14 @@
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+
 #define init
+    global.spawn_enemy = 0;
+
      // Sprites:
 	global.sprCoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
 	global.sprFloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
 	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
 	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
+    global.sprWaterStreak = sprite_add("../sprites/areas/Coast/sprWaterStreak.png", 7, 8, 8);
 
      // Sea/Surface Business:
     global.surfW = 2000;
@@ -19,7 +24,7 @@
     global.surfSwimBot = -1;
     global.surfSwimTop = -1;
     global.surfSwimSize = 1000;
-    global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Grenade, hitme];
+    global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
     global.swimInstVisible = [];
     global.seaDepth = 10.1;
 
@@ -100,7 +105,7 @@
     return 1;
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx, 9];
+    return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -236,7 +241,7 @@
 
          // Water Wading:
         if(DebugLag) trace_time();
-        var _inst = instances_matching(instances_matching_lt(instances_matching_ne(global.swimInst, "visible", false), "depth", global.seaDepth), "nowade", null, false),
+        var _inst = instances_matching(instances_matching_lt(global.swimInst, "depth", global.seaDepth), "nowade", null, false),
             _tex = surface_get_texture(_surfSwim);
 
         global.swimInstVisible = [];
@@ -244,7 +249,9 @@
         with(instances_matching(_inst, "wading", null)){
             wading = 0;
             wading_clamp = 0;
+            wading_sink = 0;
             if(object_index == Van) wading_clamp = 40;
+            if(object_index == Corpse) wading_sink = 1;
         }
 
         with(_inst){
@@ -255,12 +262,18 @@
 
                 if(wading <= 0){
 		    		 // Splash:
-    				instance_create(x, y, RainSplash);
     				repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
     				var _vol = ((object_index == Player) ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1));
                     sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee), 1.5 + random(0.5), _vol);
                 }
                 wading = _dis;
+
+                 // Splashies:
+    		    if(current_frame_active && random(20) < min(speed, 4)){
+    		        with(instance_create(x, y, Dust)){
+    		            motion_add(other.direction + orandom(10), 3);
+    		        }
+    		    }
             }
 
 		     // Out of Water:
@@ -283,7 +296,7 @@
 	        var o = (object_index == Player);
 
              // Wading Vars:
-            var _z = 2,
+            var _z = 1,
                 _wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2),
                 _surfSwimx = x - (_surfSwimw / 2),
                 _surfSwimy = y - (_surfSwimh / 2);
@@ -296,11 +309,16 @@
              // Bobbing:
             if(wading > sprite_height || !instance_is(id, hitme)){
                 var _bobspd = 1/10,
-                    _bobmax = min(wading / sprite_height, 2),
+                    _bobmax = min(wading / sprite_height, 2) / (1 + (wading_sink / 10)),
                     _bob = _bobmax * sin((current_frame + x + y) * _bobspd);
                 
                 _z += _bob;
                 _wh += _bob;
+            }
+
+            if(wading_sink != 0){
+                _wh += wading_sink / 8;
+                _z += wading_sink / 5;
             }
 
              // Save + Temporarily Set Vars:
@@ -322,6 +340,8 @@
                         image_xscale *= f;
                         image_yscale *= f;
                         image_alpha  *= f;
+                        _wh += (1 - f) * 48;
+                        _z += (1 - f) * 48;
                     }
                 }
             }
@@ -418,36 +438,46 @@
                     }
                     draw_set_alpha(1);
                 }
+
+                 // Draw Top:
+                if(true){ // there's so much lag fluctuation i can't tell which way is faster
+                    draw_surface_part(_surfSwim, 0, 0, _surfSwimw, t, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
     
-                 // Activate Shaders & Draw Top:
-                shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-                shader_set_fragment_constant_f(0, [t / _surfSwimh]);
-                shader_set(global.shadeWade);
-    
-                shader_set_fragment_constant_f(1, [1]);
-                texture_set_stage(0, _tex);
-                draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
-                        /* old way with draw_surface_part, GROSS!
-                        draw_surface_part(_surfSwim, 0, 0, _surfSwimw, t, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
-        
-                         // Water Interference Line Thing:
-                        d3d_set_fog(1, c_white, 0, 0);
-                        draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _surfSwimx - _surfx, (_surfSwimy + _z + t) - _surfy, 1, 1, c_white, 0.8);*/
+                     // Water Interference Line Thing:
+                    d3d_set_fog(1, c_white, 0, 0);
+                    draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _surfSwimx - _surfx, (_surfSwimy + _z + t) - _surfy, 1, 1, c_white, 0.8);
+                }
+                    else{
+                         // Activate Shaders:
+                        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+                        shader_set_fragment_constant_f(0, [t / _surfSwimh]);
+                        shader_set(global.shadeWade);
+
+                        shader_set_fragment_constant_f(1, [1]);
+                        texture_set_stage(0, _tex);
+                        draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+                    }
 
              // Draw Bottom:
             surface_set_target(_surfSwimBot);
-            shader_set_fragment_constant_f(1, [0]);
-            texture_set_stage(0, _tex);
-            draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
-                        /* old way with draw_surface_part, GROSS!
-                        d3d_set_fog(1, _wadeCol, 0, 0);
-                        draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
-                        d3d_set_fog(0, 0, 0, 0);*/
+            if(true){ // there's so much lag fluctuation i can't tell which way is faster
+                d3d_set_fog(1, WadeColor, 0, 0);
+                draw_surface_ext(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy, 1, 1, 0, c_white, (1 - (wading_sink / 120)));//draw_surface(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy);
+                d3d_set_fog(0, 0, 0, 0);
+            }
+                else{
+                    shader_set_fragment_constant_f(1, [0]);
+                    texture_set_stage(0, _tex);
+                    draw_surface_ext(_surfSwim, _surfSwimx - _surfx, _surfSwimy + _z - _surfy, 1, 1, 0, c_white, 1 - (wading_sink / 120));
+                    shader_reset();
+                }
             surface_reset_target();
-
-            shader_reset();
         }
 		if(DebugLag) trace_time("Wading Drawing");
+
+        with(instances_matching_gt(instances_matching_lt(instances_matching(instances_matching_le(instances_matching_gt(Corpse, "wading", 30), "speed", 0), "image_speed", 0), "size", 3), "wading_sink", 0)){
+            if(wading_sink++ >= 120) instance_destroy();
+        }
 
          // Push Back to Shore:
         var _push = [enemy, Pickup, chestprop];
@@ -494,10 +524,24 @@
     with(instances_matching(Dust, "coast_water", null)){
         coast_water = 1;
         if(!place_meeting(x, y, Floor)){
-            if(random(5) < 1 && point_seen(x, y, -1)){
-                sound_play(choose(sndOasisChest, sndOasisCrabAttack, sndOasisMelee));
+            if(random(instance_number(AcidStreak) + 10) < 1){
+                if(point_seen(x, y, -1)){
+                    sound_play_pitch(sndOasisCrabAttack, 0.9 + random(0.2));
+                }
+                with(scrWaterStreak(x, y, random(360), 2)){
+                    hspeed += other.hspeed / 2;
+                    vspeed += other.vspeed / 2;
+                }
             }
-            instance_create(x, y, choose(Sweat, Sweat, Sweat, Bubble));
+            else{
+                if(random(5) < 1 && point_seen(x, y, -1)){
+                    sound_play(choose(sndOasisChest, sndOasisMelee));
+                }
+                with(instance_create(x, y, Sweat)){
+                    hspeed = other.hspeed / 2;
+                    vspeed = other.vspeed / 2;
+                }
+            }
             instance_destroy();
         }
     }
@@ -525,7 +569,8 @@
         if(!position_meeting(x, y, Floor)){
             sound_play(sndOasisExplosionSmall);
             repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
-                instance_create(x, y, choose(Sweat, Sweat, Sweat, Bubble));
+                if(random(6) < 1) scrWaterStreak(x, y, random(360), 4);
+                else instance_create(x, y, Sweat);
             }
             instance_destroy();
         }
@@ -589,7 +634,7 @@
 #define area_finish
      // Area End:
     if(lastarea = mod_current && subarea >= 3) {
-    	area = 101;
+    	area = 101; // Oasis
     	subarea = 1;
     }
 
@@ -603,18 +648,46 @@
     var _x = x + 16,
         _y = y + 16;
 
-    if(random(18) < GameCont.subarea){
-        obj_create(_x, _y, choose("TrafficCrab", "Pelican", "Pelican"));
+    if(global.spawn_enemy-- <= 0){
+        global.spawn_enemy = 2;
+
+         // Normal Enemies:
+        if(styleb){
+            obj_create(_x, _y, choose("TrafficCrab", "TrafficCrab", "Diver"));
+        }
+        else{
+            if(random(18) < GameCont.subarea){
+                obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));
+            }
+            else{
+                obj_create(_x, _y, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull"));
+            }
+        }
     }
-    else{
-        obj_create(_x, _y, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull", "TrafficCrab"))
+
+     // Seal Lands:
+    else if(GameCont.subarea == 3){
+        var _seals = instances_matching(CustomEnemy, "name", "Seal");
+        if(random(2 * array_length(_seals)) < 1){
+            if(styleb) obj_create(_x, _y, "Seal");
+            else repeat(4) obj_create(_x, _y, "Seal");
+        }
     }
 
 #define area_pop_props
+    var _x = x + 16,
+        _y = y + 16;
+
     if(random(12) < 1){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        obj_create(x + (sprite_width / 2), y + (sprite_height / 2), o);
+        obj_create(_x, _y, o);
     }
+
+    //if(point_distance(_x, _y, )){
+        if(random(60 - GameCont.subarea) < 1){
+            obj_create(_x + orandom(8), _y + orandom(8), "SealMine");
+        }
+    //}
 
 #define darksea_draw
     if(DebugLag) trace_time();
@@ -828,7 +901,11 @@
     
                     if(!position_meeting(_x, _y, Floor)){
                         repeat(irandom_range(3, 6)){
-                            instance_create(_x + random(32), _y + random(32), choose(Sweat, Sweat, Bubble));
+                            if(random(instance_number(AcidStreak) + 6) < 1){
+                                sound_play_hit(sndOasisCrabAttack, 0.2);
+                                scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
+                            }
+                            else instance_create(_x + random(32), _y + random(32), Sweat);
                         }
                     }
                 }
@@ -864,6 +941,35 @@
     var d = (_direction mod 360);
     if(d < 90 || d > 270) right = 1;
     if(d > 90 && d < 270) right = -1;
+
+#define scrWaterStreak(_x, _y, _dir, _spd)
+    with(instance_create(_x, _y, AcidStreak)){
+        sprite_index = global.sprWaterStreak;
+        motion_add(_dir, _spd);
+        vspeed -= 2;
+        image_angle = direction;
+        image_speed = 0.4 + random(0.2);
+        depth = 0;
+
+        return id;
+    }
+
+#define nearest_instance(_x, _y, _instances)
+	var	_nearest = noone,
+		d = 1000000;
+
+	with(_instances){
+		var _dis = point_distance(_x, _y, x, y);
+		if(_dis < d){
+			_nearest = id;
+			d = _dis;
+		}
+	}
+
+	return _nearest;
+    
+#define orandom(n)
+    return random_range(-n, n);
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);

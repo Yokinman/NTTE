@@ -8,6 +8,10 @@
 #define weapon_text return "BONE THE FISH";
 
 #define weapon_fire(_wep)
+    if(!is_object(_wep)){
+        step(true);
+        _wep = wep;
+    }
     _wep.thrown = true;
 
      // Throw Bone:
