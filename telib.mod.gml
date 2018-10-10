@@ -253,13 +253,13 @@
     	        image_speed = 0.5;
 
     	         // Vars:
-    	        mask_index = -1;
+    	        mask_index = mskFlakBullet;
     	        z = 0;
     	        zspeed = -0.5;
     	        zfric = -0.02;
     	        friction = 0.4;
     	        damage = 0;
-    	        force = 0;
+    	        force = 2;
     	        typ = 1;
     	        my_projectile = noone;
     	    }
@@ -271,7 +271,8 @@
                 sprite_index = global.sprBubbleExplode;
                 mask_index = mskExplosion;
                 hitid = [sprite_index, "BUBBLE EXPLO"];
-                damage = 2;
+                damage = 3;
+                force = 1;
                 alarm0 = -1; // No scorchmark
             }
 
@@ -1145,9 +1146,11 @@
             motion_add(point_direction(other.x, other.y, x, y), 1.5);
         }
     }
-    if(place_meeting(x, y, object_index)) with(instances_named(object_index, name)){
-        if(place_meeting(x, y, other)) with(other){
-            motion_add(point_direction(other.x, other.y, x, y), 0.5);
+    if(place_meeting(x, y, object_index)){
+        with(nearest_instance(x, y, instances_matching_ne(instances_named(object_index, name), "id", id))){
+            if(place_meeting(x, y, other)){
+                with(other) motion_add(point_direction(other.x, other.y, x, y), 0.5);
+            }
         }
     }
 
@@ -1163,6 +1166,16 @@
                 speed = 8;
                 break;
             }
+        }
+    }
+
+     // Charged:
+    if(current_frame_active){
+        image_blend = c_white;
+        if(random(image_number - image_index + 8) < 1){
+            image_blend = c_black;
+            var o = image_index / 3;
+            instance_create(x + orandom(o), y + orandom(o), PortalL);
         }
     }
 
@@ -1207,13 +1220,18 @@
 
 #define BubbleBomb_draw
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    //draw_sprite_ext(asset_get_index(`sprPortalL${(x mod 5) + 1}`), image_index, x, y - z, image_xscale, image_yscale, image_angle / 3, image_blend, image_alpha);
 
 #define BubbleBomb_hit
     if(other.team != 0){
-        speed *= 0.9;
-        var _dir = point_direction(x, y, other.x, other.y);
-        x += lengthdir_x(2, _dir);
-        y += lengthdir_y(2, _dir);
+         // Knockback:
+        if(random(2) < 1){
+            speed *= 0.9;
+            with(other) motion_add(other.direction, other.force);
+        }
+
+         // Speed Up:
+        if(team == 2) image_index += image_speed * 2;
     }
 
 #define BubbleBomb_wall
@@ -4325,3 +4343,20 @@
         if(_array[i] == _value) c++;
     }
     return c;
+
+#define nearest_instance(_x, _y, _instances)
+	var	_nearest = noone,
+		d = 1000000;
+
+	with(_instances){
+		var _dis = point_distance(_x, _y, x, y);
+		if(_dis < d){
+			_nearest = id;
+			d = _dis;
+		}
+	}
+
+	return _nearest;
+
+#define frame_active(_interval)
+    return ((current_frame mod _interval) < current_time_scale);
