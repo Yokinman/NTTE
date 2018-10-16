@@ -121,6 +121,7 @@
             global.sprSealHeavyTell = sprite_add("sprites/enemies/Seal/sprHeavySealTell.png",   2, 16, 17);
             global.sprSealMine      = sprite_add("sprites/enemies/Seal/sprSealMine.png",        1, 12, 12);
             global.sprSealMineHurt  = sprite_add("sprites/enemies/Seal/sprSealMineHurt.png",    3, 12, 12);
+            global.sprSealAnchor    = sprite_add("sprites/enemies/Seal/sprHeavySealAnchor.png", 1,  0, 12);
 
              // Traffic Crab:
             global.sprCrabIdle = sprite_add("sprites/enemies/Crab/sprTrafficCrabIdle.png", 5, 24, 24);
@@ -543,7 +544,7 @@
         			 // Vars:
             		mask_index = mskNone;
             		mask_hold = global.mskPalanking;
-        			maxhealth = scrBossHP(250);
+        			maxhealth = scrBossHP(350);
         			raddrop = 80;
         			size = 4;
         			walk = 0;
@@ -642,49 +643,75 @@
             	break;
 
             case "Seal":
-                o = instance_create(_x, _y, CustomEnemy);
+                 // Elite Spawn:
+                if(random(16) < 1){
+                    return obj_create(_x, _y, "SealHeavy");
+                }
+
+                 // Normal Spawn:
+                else{
+                    o = instance_create(_x, _y, CustomEnemy);
+                    with(o){
+                         // Visual:
+                        spr_spwn = global.sprSealSpwn;
+                        spr_idle = global.sprSealIdle;
+                        spr_walk = global.sprSealWalk;
+                        spr_hurt = global.sprSealHurt;
+                        spr_dead = global.sprSealDead;
+                        spr_weap = mskNone;
+                        spr_shadow = shd24;
+                        hitid = [spr_idle, _name];
+                        sprite_index = spr_spwn;
+                        depth = -2;
+    
+                         // Sound:
+                        var _male = irandom(1);
+                        snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
+                        snd_dead = (_male ? sndFireballerDead : sndFreakDead);
+    
+                         // Vars:
+                        mask_index = mskBandit;
+                        maxhealth = 12;
+                        raddrop = 1;
+                        size = 1;
+                        walk = 0;
+                        walkspd = 0.8;
+                        maxspd = 3.5;
+                        type = 0;
+                        hold = false;
+                        hold_x = 0;
+                        hold_y = 0;
+                        creator = noone;
+                        wepangle = 0;
+                        gunangle = random(360);
+                        direction = gunangle;
+                        slide = 0;
+                        scared = false;
+                        shield = choose(true, false);
+                        shield_ang = gunangle;
+                        shield_draw = true;
+                        surfClamShield = -1;
+    
+                        alarm0 = 20 + random(20);
+                    }
+                }
+                break;
+
+            case "SealAnchor":
+                o = instance_create(_x, _y, CustomSlash);
                 with(o){
                      // Visual:
-                    spr_spwn = global.sprSealSpwn;
-                    spr_idle = global.sprSealIdle;
-                    spr_walk = global.sprSealWalk;
-                    spr_hurt = global.sprSealHurt;
-                    spr_dead = global.sprSealDead;
-                    spr_weap = mskNone;
-                    spr_shadow = shd24;
-                    hitid = [spr_idle, _name];
-                    sprite_index = spr_spwn;
+                    sprite_index = global.sprSealAnchor;
+                    image_speed = 0;
                     depth = -2;
 
-                     // Sound:
-                    var _male = irandom(1);
-                    snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
-                    snd_dead = (_male ? sndFireballerDead : sndFreakDead);
-
                      // Vars:
-                    mask_index = mskBandit;
-                    maxhealth = 12;
-                    raddrop = 1;
-                    size = 1;
-                    walk = 0;
-                    walkspd = 0.8;
-                    maxspd = 3.5;
-                    type = 0;
-                    hold = false;
-                    hold_x = 0;
-                    hold_y = 0;
-                    creator = noone;
-                    wepangle = 0;
-                    gunangle = random(360);
-                    direction = gunangle;
-                    slide = 0;
-                    scared = false;
-                    shield = choose(true, false);
-                    shield_ang = gunangle;
-                    shield_draw = true;
-                    surfClamShield = -1;
-
-                    alarm0 = 20 + random(20);
+                    mask_index = -1;
+                    damage = 4;
+                    force = 6;
+                    team = 1;
+                    last_x = [x, x];
+                    last_y = [y, y];
                 }
                 break;
 
@@ -697,7 +724,8 @@
                     spr_walk = global.sprSealHeavyWalk;
                     spr_hurt = global.sprSealHeavyHurt;
                     spr_dead = global.sprSealHeavyDead;
-                    spr_weap = sprAnchor;
+                    spr_chrg = global.sprSealHeavyTell;
+                    spr_weap = global.sprSealAnchor;
                     spr_shadow = shd24;
                     hitid = [spr_idle, "HEAVY SEAL"];
                     sprite_index = spr_spwn;
@@ -723,6 +751,11 @@
                     my_mine_spin = 0;
                     target_x = x;
                     target_y = y;
+                    anchor = noone;
+                    anchor_swap = false;
+                    anchor_spin = 0;
+                    anchor_throw = 0;
+                    anchor_retract = 0;
 
                     alarm0 = 40 + random(30);
                 }
@@ -975,7 +1008,7 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
-    		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
+    		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -1006,7 +1039,6 @@
             }
         }
     }
-
     return o;
 
 #define BigDecal_step
@@ -2297,16 +2329,33 @@
             }
         }
         else{
-             // Freeze Minions:
+             // Freeze Enemies:
             with(Seal) alarm0 = 30 + random(120);
+            if(current_frame_active) with(WantRevivePopoFreak) alarm0++;
 
-             // Disable Shooting:
-            if(intro_pan != 0) with(Player){
-                clicked = false;
-                can_shoot = false;
-                bcan_shoot = false;
-                reload = max(reload, 2);
-                breload = max(breload, 2);
+            if(instance_exists(Player) && intro_pan != 0){
+                 // Disable Shooting:
+                with(Player){
+                    clicked = false;
+                    can_shoot = false;
+                    bcan_shoot = false;
+                    reload = max(reload, 2);
+                    breload = max(breload, 2);
+                }
+
+                 // Attract Pickups:
+                with(Pickup) if(object_index != WepPickup){
+                    var t = instance_nearest(x, y, Player);
+                    if(point_distance(x, y, t.x, t.y) > 30){
+                        var _dis = 6,
+                            _dir = point_direction(x, y, t.x, t.y);
+    
+                        if(object_index == Rad || object_index == BigRad) _dis *= 2;
+    
+                        x += lengthdir_x(_dis, _dir);
+                        y += lengthdir_y(_dis, _dir);
+                    }
+                }
             }
         }
     }
@@ -2654,24 +2703,19 @@
         _dir = (seal_spawn * 90) + orandom(40),
         _x = seal_spawn_x + lengthdir_x(_dis, _dir),
         _y = seal_spawn_y + lengthdir_y(_dis, _dir),
-        o = noone;
-
-    if(random(16) < 1) o = obj_create(_x, _y, "SealHeavy");
-    else{
         o = obj_create(_x, _y, "Seal");
 
-         // Randomize Type:
-        with(o){
-            var _pick = [];
-            for(var i = 0; i < array_length(seal_chance); i++){
-                if(seal_chance[i] > 0) repeat(seal_chance[i]){
-                    array_push(_pick, i);
-                }
-            }
-            type = _pick[irandom(array_length(_pick) - 1)];
-        }
-    }
     with(o){
+         // Randomize Type:
+        var _pick = [];
+        for(var i = 0; i < array_length(seal_chance); i++){
+            if(seal_chance[i] > 0) repeat(seal_chance[i]){
+                array_push(_pick, i);
+            }
+        }
+        type = _pick[irandom(array_length(_pick) - 1)];
+
+         // Important Stuff:
         creator = other;
         kills = 0;
         array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
@@ -2729,7 +2773,7 @@
             coast_water = 1;
             if(y > other.y + 12) depth = other.depth - 1;
         }
-        if(random(2) < 1) with(other){
+        if(random(8) < other.damage) with(other){
             sound_play_hit(sndHitRock, 0.3);
             with(instance_create(x, y, Debris)){
                 motion_set(_hitdir + 180 + orandom(other.force * 4), 2 + random(other.force / 2));
@@ -3385,6 +3429,75 @@
     pickup_drop(60, 0);
 
 
+#define SealAnchor_step
+    if(instance_exists(creator)){
+        x = creator.x;
+        y = creator.y;
+        with(creator){
+            x += other.hspeed / 20;
+            y += other.vspeed / 20;
+        }
+    }
+    else{
+        if(friction <= 0){
+            sound_play_pitch(sndSwapSword, 2.4);
+            friction = 0.4;
+            speed /= 3;
+        }
+
+         // Explode:
+        if(speed < 1){
+            var o = 8;
+            obj_create(x + lengthdir_x(o, image_angle), y + lengthdir_y(o, image_angle), "BubbleExplosion");
+            sound_play_pitchvol(sndWallBreakBrick, 1.2 + random(0.1), 0.75);
+            sound_play_pitch(sndSwapHammer, 1.3);
+            instance_destroy();
+        }
+    }
+
+#define SealAnchor_end_step
+     // Effects:
+    var _dis = [2, sprite_width - 2],
+        _dir = direction;
+
+    for(var i = 0; i < array_length(_dis); i++){
+        var _x = x + lengthdir_x(_dis[i], _dir),
+            _y = y + lengthdir_y(_dis[i], _dir);
+
+        with(instance_create(_x, _y, BoltTrail)){
+            image_angle = point_direction(x, y, other.last_x[i], other.last_y[i]);
+            image_xscale = point_distance(x, y, other.last_x[i], other.last_y[i]);
+            image_yscale = 0.6;
+        }
+
+        last_x[i] = _x;
+        last_y[i] = _y;
+    }
+
+#define SealAnchor_draw
+    if(instance_exists(creator)){
+        draw_set_color(c_black);
+        draw_line(x, y, creator.x, creator.y);
+    }
+    draw_self();
+
+#define SealAnchor_hit
+    if(projectile_canhit_melee(other)){
+        projectile_hit_push(other, damage, force);
+    }
+
+#define SealAnchor_projectile
+    if(team != other.team){
+        with(other){
+            if(typ == 1){
+                direction = other.image_angle;
+                image_angle = direction;
+            }
+            else if(typ == 2) instance_destroy()
+        }
+    }
+
+
 #define SealHeavy_step
     enemyWalk(walkspd, maxspd);
     enemyAlarms(1);
@@ -3393,45 +3506,152 @@
     if(sprite_index != spr_spwn) enemySprites();
     else if(anim_end) sprite_index = spr_idle;
 
-     // Spin Mine:
-    if(instance_exists(my_mine)){
-         // Turn Gradually:
-        if(my_mine_spin == 0){
-            my_mine_ang += angle_difference(gunangle, my_mine_ang) / 5;
-        }
+     // Anchor Flail:
+    if(anchor_spin != 0){
+        gunangle += anchor_spin + current_time_scale;
+        gunangle = ((gunangle + 360) mod 360);
+        speed = max(speed, 1.5);
 
-         // Spinny Momentum:
-        else{
-            my_mine_ang += my_mine_spin * current_time_scale;
-            my_mine_ang = ((my_mine_ang + 360) mod 360);
-            scrRight(my_mine_ang);
+         // Spinning Anchor:
+        var _ang = gunangle;
+        scrRight(_ang);
 
-            my_mine_spin += 1.5 * sign(my_mine_spin) * current_time_scale;
+        if(instance_exists(anchor)){
+            sprite_index = spr_walk;
+            with(anchor){
+                direction = _ang;
+                image_angle = direction;
+            }
 
-             // Animate:
-            sprite_index = global.sprSealHeavyTell;
-        }
+             // Throw Out Anchor:
+            if(anchor_throw > 0){
+                anchor.speed += anchor_throw * current_time_scale;
+                anchor_throw -= current_time_scale;
+            }
 
-         // Holding:
-        with(my_mine){
-            var _dis = 16,
-                _dir = other.my_mine_ang;
-
-            x = other.x + lengthdir_x(_dis, _dir);
-            y = other.y + lengthdir_y(_dis, _dir);
-
-            if(other.my_mine_spin != 0){
-                image_angle += other.my_mine_spin / 3;
-
-                 // Starting to Toss:
-                if(other.alarm0 < 5){
-                    z = sqr(5 - other.alarm0);
-                    zspeed = 0;
+             // Retract Anchor:
+            if(anchor_retract){
+                anchor.speed -= 0.5 * current_time_scale;
+                if(anchor.speed <= 0){
+                    with(anchor) instance_destroy();
+                    anchor = noone;
                 }
+            }
+        }
 
-                 // FX:
-                if(current_frame_active){
-                    instance_create(x, y, Dust);
+        else{
+            if(alarm0 < 20) sprite_index = spr_chrg;
+
+             // Stop Spinning:
+            if(anchor_retract){
+                anchor_spin *= 0.8;
+                if(abs(anchor_spin) < 1){
+                    anchor_spin = 0;
+                    anchor_throw = 0;
+                    anchor_retract = false;
+                }
+            }
+
+             // Build Up Speed:
+            else{
+                anchor_spin += sign(anchor_spin) * 0.4 * current_time_scale;
+                var c = 20;
+                anchor_spin = clamp(anchor_spin, -c, c);
+            }
+        }
+
+         // Effects:
+        if(current_frame_active){
+            with(instance_create(x, y, Dust)){
+                motion_add(_ang, 2);
+            }
+
+             // Swoop Sounds:
+            if(((_ang + 360) mod 360) < abs(anchor_spin)){
+                var _snd = 1.5;
+                if(instance_exists(anchor)) _snd = 8;
+                sound_play_pitchvol(sndMeleeFlip, 0.1 + random(0.1), _snd);
+            }
+        }
+    }
+
+    else{
+         // Unequip Anchor:
+        if(anchor_swap){
+            anchor_swap = false;
+            sound_play(sndMeleeFlip);
+            instance_create(x, y, WepSwap);
+        }
+
+         // Spin Mine:
+        if(instance_exists(my_mine)){
+             // Turn Gradually:
+            if(my_mine_spin == 0){
+                my_mine_ang += angle_difference(gunangle, my_mine_ang) / 5;
+            }
+
+             // Spinny Momentum:
+            else{
+                my_mine_ang += my_mine_spin * current_time_scale;
+                my_mine_ang = ((my_mine_ang + 360) mod 360);
+                scrRight(my_mine_ang);
+    
+                my_mine_spin += 1.5 * sign(my_mine_spin) * current_time_scale;
+    
+                 // Animate:
+                sprite_index = spr_chrg;
+            }
+    
+             // Holding:
+            with(my_mine){
+                var _dis = 16,
+                    _dir = other.my_mine_ang;
+    
+                x = other.x + lengthdir_x(_dis, _dir);
+                y = other.y + lengthdir_y(_dis, _dir);
+    
+                if(other.my_mine_spin != 0){
+                    image_angle += other.my_mine_spin / 3;
+    
+                     // Starting to Toss:
+                    if(other.alarm0 < 5){
+                        z = sqr(5 - other.alarm0);
+                        zspeed = 0;
+                    }
+    
+                     // FX:
+                    if(current_frame_active){
+                        instance_create(x, y, Dust);
+                    }
+                }
+            }
+        }
+    
+         // Pick Up Mines:
+        else{
+            my_mine = noone;
+            if(place_meeting(x, y, CustomHitme)){
+                with(instances_named(CustomHitme, "SealMine")){
+                    if(place_meeting(x, y, other)){
+                        with(other){
+                            alarm0 = 20;
+                            my_mine = other;
+                            my_mine_ang = point_direction(x, y, other.x, other.y);
+                            scrRight(my_mine_ang);
+                        }
+                        creator = other;
+                        hitid = other.hitid;
+    
+                         // Effects:
+                        sound_play_pitchvol(sndSwapHammer, 0.6 + orandom(0.1), 0.8);
+                        for(var a = direction; a < direction + 360; a += (360 / 20)){
+                            with(instance_create(x, y, Dust)){
+                                motion_add(a, 4);
+                            }
+                        }
+
+                        break;
+                    }
                 }
             }
         }
@@ -3460,47 +3680,120 @@
         sound_play_pitchvol(sndAssassinAttack, 0.8 + orandom(0.1), 0.8);
     }
 
-    else if(target_is_visible()){
-        var _targetDir = point_direction(x, y, target.x, target.y);
-        if(target_in_distance(0, 240)){
-            gunangle = _targetDir;
-            target_x = target.x;
-            target_y = target.y;
+    else{
+         // Spinning Anchor:
+        if(anchor_spin != 0){
+             // Throw Out Anchor:
+            if(!instance_exists(anchor)){
+                alarm0 = 60;
+                anchor = scrEnemyShoot("SealAnchor", gunangle, 0);
+                anchor_throw = 8;
+                if(instance_exists(target)) direction = point_direction(x, y, target.x, target.y);
 
-             // Pick Up Mine:
-            if(my_mine == noone){
-                alarm0 = 20;
-                my_mine_ang = gunangle;
-                my_mine = obj_create(x, y, "SealMine");
-                with(my_mine){
-                    zspeed = 5;
-                    creator = other;
-                    hitid = other.hitid;
+                 // Effects:
+                sound_play_pitch(sndHammer, 0.8 + orandom(0.1));
+                repeat(5) with(instance_create(x, y, Dust)){
+                    motion_add(other.gunangle, 4);
                 }
             }
 
-            else if(instance_exists(my_mine)){
-                alarm0 = 20;
+             // Retract Anchor:
+            else{
+                alarm0 = 120 + random(30);
+                anchor_retract = true;
+            }
+        }
 
-                 // Start Toss:
-                if(target_in_distance(0, 144)){
-                    my_mine_spin = choose(-1, 1);
+        else if(target_is_visible()){
+            var _targetDir = point_direction(x, y, target.x, target.y);
+
+            target_x = target.x;
+            target_y = target.y;
     
-                    sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
-                    sound_play_pitch(sndSteroidsUpg, 0.75 + orandom(0.1));
-                    repeat(5) with(instance_create(target_x, target_y, Dust)){
-                        motion_add(random(360), 3);
+             // Not Holding Mine:
+            if(my_mine == noone){
+                 // Pick Up Mine:
+                if(distance_to_object(Floor) > 24 && random(4) < 3){
+                    alarm0 = 20;
+                    gunangle = _targetDir;
+                    my_mine = obj_create(x, y, "SealMine");
+                    my_mine_ang = gunangle;
+                    with(my_mine){
+                        zspeed = 5;
+                        creator = other;
+                        hitid = other.hitid;
                     }
                 }
+    
+                 // On Land:
+                else{
+                     // Start Spinning Anchor:
+                    if((target_in_distance(0, 180) && random(4) < 3) || target_in_distance(0, 100)){
+                        alarm0 = 60;
+                        gunangle = _targetDir;
+                        anchor_spin = choose(-1, 1) * 5;
+                        sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
 
-                 // Walk Closer:
-                else scrWalk(10 + random(10), _targetDir + orandom(20));
+                         // Equip Anchor:
+                        anchor_swap = true;
+                        sound_play(sndSwapHammer);
+                        instance_create(x, y, WepSwap);
+                    }
+
+                     // Walk Closer:
+                    else alarm0 = 30 + random(30);
+                    scrWalk(8 + random(16), _targetDir + orandom(30));
+                }
+            }
+    
+             // Holding Mine:
+            else{
+                if(instance_exists(my_mine)){
+                    alarm0 = 20;
+        
+                    if(target_in_distance(0, 144)){
+                         // Too Close:
+                        if(target_in_distance(0, 48)){
+                            scrWalk(20, _targetDir + 180);
+                            gunangle = _targetDir;
+                        }
+        
+                         // Start Toss:
+                        else{
+                            gunangle = _targetDir;
+                            my_mine_ang = _targetDir;
+                            my_mine_spin = choose(-1, 1);
+        
+                            sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
+                            sound_play_pitch(sndSteroidsUpg, 0.75 + orandom(0.1));
+                            repeat(5) with(instance_create(target_x, target_y, Dust)){
+                                motion_add(random(360), 3);
+                            }
+                        }
+                    }
+        
+                     // Out of Range:
+                    else scrWalk(10 + random(10), _targetDir + orandom(20));
+                }
+                else my_mine = noone;
             }
         }
     }
 
 #define SealHeavy_draw
-    draw_self_enemy();
+    if(!anchor_swap){
+        draw_sprite_ext(spr_weap, 0, x + right, y + 6, 1, 1, 90 + (right * 30), image_blend, image_alpha);
+    }
+
+    if(gunangle >  180) draw_self_enemy();
+
+    if(!instance_exists(anchor)){
+        if(anchor_swap){
+            draw_weapon(spr_weap, x, y, gunangle, 0, wkick, 1, image_blend, image_alpha);
+        }
+    }
+
+    if(gunangle <= 180) draw_self_enemy();
 
 
 #define SealMine_step
