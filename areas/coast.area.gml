@@ -10,6 +10,10 @@
 	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
     global.sprWaterStreak = sprite_add("../sprites/areas/Coast/sprWaterStreak.png", 7, 8, 8);
 
+     // Music:
+    global.musCoast = sound_add("../music/musCoast.ogg");
+    global.musCoastBoss = sound_add("../music/musCoastBoss.ogg");
+
      // Sea/Surface Business:
     global.surfW = 2000;
     global.surfH = 2000;
@@ -105,7 +109,7 @@
     return 1;
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8];
+    return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8, (_subarea == 1)];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -124,6 +128,7 @@
     goal = 100;
     BackCont.shadcol = c_black;
     background_color = make_color_rgb(27, 118, 184);
+    sound_play_music(global.musCoast);
 
 #define area_start
      // No Walls:
