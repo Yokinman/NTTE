@@ -172,6 +172,13 @@
         }
     //#endregion
 
+    //#region MUSIC
+    global.mus = {};
+    with(global.mus){
+        Palanking = sound_add("music/musPalanking.ogg");
+    }
+    //#endregion
+
      // Refresh Big Decals on Mod Load:
     with(instances_named(CustomObject, "BigDecal")){
         sprite_index = lq_defget(global.sprBigTopDecal, string(GameCont.area), mskNone);
@@ -184,6 +191,7 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 #macro snd global.snd
+#macro mus global.mus
 
 #define obj_create(_x, _y, obj_name)
     var o = noone,
@@ -2440,12 +2448,6 @@
     }
     else if(anim_end) sprite_index = spr_idle;
 
-     // Boss Intro:
-    if(!intro && sprite_index == spr_call){
-        intro = true;
-        scrBossIntro("Palanking", sndBigDogIntro, musBoss2);
-    }
-
      // Smack Smack:
     if(sprite_index == spr_call){
         var _img = floor(image_index);
@@ -2524,6 +2526,7 @@
         depth = other.depth + (0.1 * dsin(point_direction(0, 24, hold_x, hold_y)));
     }
 
+
 #define Palanking_alrm0
     if(intro_pan == 0){
         alarm0 = 60;
@@ -2535,6 +2538,15 @@
          // Call for Seals:
         if(fork()){
             wait 15;
+
+             // Boss Intro:
+            if(!intro){
+                intro = true;
+                scrBossIntro("Palanking", sndBigDogIntro, mus.Palanking);
+            }
+
+            wait 1;
+
             sprite_index = spr_call;
             image_index = 0;
             sound_play(snd.PalankingCall);
@@ -2801,6 +2813,14 @@
     if(h) d3d_set_fog(1, c_white, 0, 0);
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define Palanking_death
+    repeat(3) pickup_drop(50, 0);
+
+     // Boss Defeated:
+    sound_play(sndBossWin);
+    sound_stop(mus.Palanking);
+    with(MusCont) alarm_set(3, 180);
 
 
 #define Palm_step

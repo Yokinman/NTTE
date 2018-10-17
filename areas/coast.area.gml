@@ -12,7 +12,6 @@
 
      // Music:
     global.musCoast = sound_add("../music/musCoast.ogg");
-    global.musCoastBoss = sound_add("../music/musCoastBoss.ogg");
 
      // Sea/Surface Business:
     global.surfW = 2000;
