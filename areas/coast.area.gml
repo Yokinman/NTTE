@@ -98,11 +98,11 @@
     }
 
 #macro DebugLag 0
-#macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
+#macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - array_length_1d(instances_matching(CustomEnemy,"name","Blaaczilla")) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #define area_name(sub, loop)
-    return "@1(sprInterfaceIcons)-" + string(sub);
+    return "@1(sprInterfaceIcons)1-" + string(sub);
 
 #define area_secret
     return 1;
@@ -163,6 +163,13 @@
             ystart = y;
         }
     }
+    
+     // spawn blaaczilla - WIP
+    // if random(1) < 1{
+    //     var _len = 300,
+    //         _dir = irandom(359);
+    //     obj_create(10016+lengthdir_x(_len,_dir),10016+lengthdir_y(_len,_dir),"Blaaczilla");
+    // }
 
      // Bind Sea Drawing Scripts:
 	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){
@@ -644,7 +651,7 @@
 #define area_finish
      // Area End:
     if(lastarea = mod_current && subarea >= 3) {
-    	area = 101; // Oasis
+    	area = "oasis";
     	subarea = 1;
     }
 
@@ -687,9 +694,10 @@
 #define area_pop_props
     var _x = x + 16,
         _y = y + 16;
-
     if(random(12) < 1){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
+        if !styleb && random(5) < 1
+            o = "BuriedCar";
         obj_create(_x, _y, o);
     }
 
@@ -807,6 +815,10 @@
                 draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, c_white, 1);
             }
         }
+         // Blaaczilla:
+        with(instances_matching(CustomEnemy, "name", "Blaaczilla")){
+    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    	}
 
          // Rock Decals:
     	with(instances_matching(CustomHitme, "name", "CoastDecal")){
@@ -866,6 +878,13 @@
         draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
     d3d_set_fog(0, 0, 0, 0);
+    
+     // blaaczilla bottom half:
+    d3d_set_fog(1,WadeColor,0,0);
+    with instances_matching(CustomEnemy,"name","Blaaczilla"){
+        draw_sprite_ext(spr_bott,image_index,x,y,image_xscale*right,image_yscale,image_angle,image_blend,image_alpha);
+    }
+    d3d_set_fog(0,0,0,0);
 
      // Draw Bottom Halves of Swimming Objects:
     if(surface_exists(_surfSwimBot)) draw_surface(_surfSwimBot, _surfx, _surfy);
