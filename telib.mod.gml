@@ -824,6 +824,23 @@
         			alarm0 = 40 + irandom(20);
         		}
         	break;
+        	
+        	case "CatGrenade":
+        	    o = instance_create(_x, _y, CustomProjectile);
+        	    with(o){
+                     // Visual:
+        	        sprite_index = sprToxicGrenade;
+        	        mask_index = mskNone;
+    
+        	         // Vars:
+        	        z = 1;
+        	        zspeed = 0;
+        	        zfric = 0.8;
+        	        damage = 0;
+        	        force = 0;
+        	        right = choose(-1, 1);
+        	    }
+        	break;
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -906,7 +923,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
     		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
-    		        "Cat", "CatBoss",
+    		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -3270,12 +3287,13 @@
     
     if(ammo > 0) {
         with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
-            friction = 0.1;
+            friction = 0.2;
         }
         gunangle += 24;
         ammo--;
         if(ammo = 0) {
             alarm0 = 40;
+            
             repeat(3) {
                 var _dir = orandom(16);
                 with(instance_create(x, y, AcidStreak)) {
@@ -3283,7 +3301,18 @@
                     image_angle = direction;
                 }
             }
-            scrEnemyShoot(ToxicGrenade, gunangle + orandom(4), 10);
+            
+            target = instance_nearest(x, y, Player);
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+            with(scrEnemyShootExt(x - (2 * right), y, "CatGrenade", _targetDir, 3)){
+                z += 12;
+                depth = 12;
+                zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
+                right = other.right;
+            }
+            
+            gunangle = _targetDir;
             wkick += 6;
             sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
             sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
@@ -3335,6 +3364,52 @@
 sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
 pickup_drop(100, 20);
 pickup_drop(60, 0);
+
+#define CatGrenade_step
+     // Rise & Fall:
+    z_engine();
+    depth = max(-z, -12);
+
+     // Trail:
+    if(random(2) < 1){
+        with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
+            sprite_index = sprToxicGas;
+            image_xscale = 0.25;
+            image_yscale = image_xscale;
+            image_angle = random(360);
+            image_speed = 0.4;
+            depth = other.depth;
+        }
+    }
+
+     // Hit:
+    if(z <= 0) instance_destroy();
+
+#define CatGrenade_destroy
+    with(instance_create(x, y, Explosion)){
+        team = other.team;
+        creator = other.creator;
+        hitid = other.hitid;
+    }
+    
+    repeat(18) {
+        with(scrEnemyShoot(ToxicGas, random(360), 4)) {
+            friction = 0.2;
+        }
+    }
+
+     // Sound:
+    sound_play(sndGrenade);
+    sound_play(sndToxicBarrelGas);
+
+#define CatGrenade_draw
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
+
+#define CatGrenade_hit
+    // nada
+
+#define CatGrenade_wall
+    // nada
 
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
@@ -3461,7 +3536,7 @@ pickup_drop(60, 0);
     draw_set_blend_mode(bm_normal);
 
 #define draw_shadows
-    with(instances_named(CustomProjectile, "MortarPlasma")) if(visible){
+    with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
         draw_sprite(shd24, 0, x, y);
     }
 
