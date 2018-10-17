@@ -100,6 +100,29 @@
         	}
         }
 
+#define scrBossIntro(_name, _sound, _music)
+    var _path = "sprites/intros/",
+        _lastSub = GameCont.subarea; // !!!
+
+    with(instance_create(0, 0, BanditBoss)){
+        sprite_replace_image(sprBossIntro,          _path + "spr" + _name + "Main.png", 0);
+        sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + _name + "Back.png", 0);
+        sprite_replace_image(sprBossName,           _path + "spr" + _name + "Name.png", 0);
+        event_perform(ev_alarm, 6);
+        sound_stop(sndBigBanditIntro);
+        instance_delete(id);
+        if(fork()){
+            wait 1;
+            sprite_restore(sprBossIntro);
+            sprite_restore(sprBossIntroBackLayer);
+            sprite_restore(sprBossName);
+            exit;
+        }
+    }
+    sound_play(_sound);
+    sound_play_music(_music);
+    GameCont.subarea = _lastSub; // !!!
+
 #define scrCorpse(_dir, _spd)
 	with(instance_create(x, y, Corpse)){
 		size = other.size;
