@@ -557,6 +557,7 @@
         			gunangle = random(360);
         			direction = gunangle;
         			nowade = true;
+        			active = false;
         			intro = false;
         			intro_pan = 0;
         			intro_pan_x = x;
@@ -2266,8 +2267,8 @@
         }
     }
 
-     // Out of Intro:
-    if(intro){
+     // Fight Time:
+    if(active){
          // Seals Run Over to Lift:
         if(_sealNum < seal_max){
             with(instances_named(CustomEnemy, "Seal")){
@@ -2316,7 +2317,7 @@
         }
     }
 
-     // Intro Stuff:
+     // Pre-Intro Stuff:
     else{
         x = xstart;
         y = ystart;
@@ -2370,18 +2371,13 @@
     
         UberCont.opt_shake = 1;
         for(var i = 0; i < maxp; i++){
+            view_object[i] = id;
             view_pan_factor[i] = 10000;
             if(intro_pan <= 0) view_pan_factor[i] = null;
-
             with(player_find(i)){
                 var g = gunangle,
-                    _x = x,
-                    _y = y;
-
-                with(view_object[index]){
-                    _x = x;
-                    _y = y;
-                }
+                    _x = other.x,
+                    _y = other.y;
 
                 gunangle = point_direction(_x, _y, _px, _py);
                 weapon_post(wkick, point_distance(_x, _y, _px, _py) / 1.5, 0);
@@ -2389,6 +2385,9 @@
             }
         }
         UberCont.opt_shake = s;
+    }
+    else for(var i = 0; i < maxp; i++){
+        if(view_object[i] == id) view_object[i] = noone;
     }
 
      // Z-Axis:
@@ -2440,6 +2439,12 @@
         else sprite_index = spr_walk;
     }
     else if(anim_end) sprite_index = spr_idle;
+
+     // Boss Intro:
+    if(!intro && sprite_index == spr_call){
+        intro = true;
+        scrBossIntro("Palanking", sndBigDogIntro, musBoss2);
+    }
 
      // Smack Smack:
     if(sprite_index == spr_call){
@@ -2556,7 +2561,7 @@
                 break;
 
             case 1:
-                if(!intro){
+                if(!active){
                     if(array_length(seal) < seal_max || array_count(seal, noone) > 0){
                          // Seal Plop:
                         //repeat(4) instance_create(other.x + x, other.y + y, Sweat);
@@ -2577,7 +2582,7 @@
         
                      // Lift Palanking:
                     else{
-                        intro = true;
+                        active = true;
                         zgoal = 12;
                         alarm0 = 30;
                     }
@@ -2745,7 +2750,7 @@
 
 #define Palanking_hurt(_hitdmg, _hitvel, _hitdir)
     nexthurt = current_frame + 6;	// I-Frames
-    if(intro){
+    if(active){
         my_health -= _hitdmg;			// Damage
         motion_add(_hitdir, _hitvel);	// Knockback
         sound_play_hit(snd_hurt, 0.3);	// Sound
@@ -2782,7 +2787,7 @@
     }
 
 #define Palanking_draw
-    var h = (nexthurt > current_frame + 3 && intro);
+    var h = (nexthurt > current_frame + 3 && active);
 
      // Palanquin Bottom:
     if(z > 4 || place_meeting(x, y, Floor)){
@@ -3243,7 +3248,7 @@
             	break;
 
             default:
-                if(instance_exists(creator) && creator.intro){
+                if(instance_exists(creator) && creator.active){
                     scrWalk(10 + random(10), point_direction(x, y, creator.x, creator.y));
                 }
                 else{
@@ -4620,6 +4625,9 @@
     var n = 0;
     for(var i = 0; i < maxp; i++) n += player_is_active(i);
     return round(_hp * (1 + ((1/3) * GameCont.loops)) * (1 + (0.5 * (n - 1))));
+
+#define scrBossIntro(_name, _sound, _music)
+    mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
 
 #define scrWaterStreak(_x, _y, _dir, _spd)
     return mod_script_call("area", "coast", "scrWaterStreak", _x, _y, _dir, _spd);

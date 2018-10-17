@@ -128,7 +128,13 @@
     goal = 100;
     BackCont.shadcol = c_black;
     background_color = make_color_rgb(27, 118, 184);
-    sound_play_music(global.musCoast);
+    if(fork()){
+        wait 2;
+        sound_play_music(mus1);
+        sound_play_music(global.musCoast);
+        exit;
+    }
+    
 
 #define area_start
      // No Walls:

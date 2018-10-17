@@ -100,13 +100,8 @@
         	}
         }
 
-     // Boss Intro:
-    if(button_pressed(0, "horn")){
-        //scrBossIntro("Test", sndBigDogIntro, musBoss2);
-    }
-
 #define scrBossIntro(_name, _sound, _music)
-    var _path = "sprites/Intros/",
+    var _path = "sprites/intros/",
         _lastSub = GameCont.subarea; // !!!
 
     with(instance_create(0, 0, BanditBoss)){
