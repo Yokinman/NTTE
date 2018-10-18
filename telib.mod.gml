@@ -30,6 +30,12 @@
         global.sprNetNade = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
 
         //#region COAST
+             // Blaaczilla:
+        	global.sprBlaaczillaIdle = sprite_add("sprites/enemies/Blaaczilla/sprBlaaczillaIdle.png",14,80,80);
+        	global.sprBlaaczillaHurt = sprite_add("sprites/enemies/Blaaczilla/sprBlaaczillaHurt.png",3,80,80);
+        	global.sprBlaaczillaBott = sprite_add("sprites/enemies/Blaaczilla/sprBlaaczillaBott.png",1,80,80);
+        	global.sprBlaaczillaFoam = sprite_add("sprites/enemies/Blaaczilla/sprBlaaczillaFoam.png",1,80,80);
+        	
              // Blooming Cactus:
         	global.sprBloomingCactusIdle[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus.png",     1, 12, 12);
         	global.sprBloomingCactusHurt[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusHurt.png", 3, 12, 12);
@@ -42,6 +48,10 @@
         	global.sprBloomingCactusIdle[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3.png",     1, 12, 12);
         	global.sprBloomingCactusHurt[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
         	global.sprBloomingCactusDead[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
+        	
+        	 // Buried Car:
+        	global.sprBuriedCarIdle = sprite_add("sprites/areas/Coast/Props/sprBuriedCarIdle.png",1,16,16);
+        	global.sprBuriedCarHurt = sprite_add("sprites/areas/Coast/Props/sprBuriedCarHurt.png",3,16,16);
 
              // Decal Big Shell Prop:
     	    global.sprShellIdle = sprite_add("sprites/areas/Coast/Decals/sprShellIdle.png", 1, 32, 32);
@@ -421,6 +431,40 @@
             break;
 
         //#region COAST
+            case "Blaaczilla":
+        	    o = instance_create(_x,_y,CustomEnemy);
+        	    with(o){
+        	         // visual
+        	        spr_idle = global.sprBlaaczillaIdle;
+        	        spr_walk = spr_idle;
+        	        spr_hurt = global.sprBlaaczillaHurt;
+        	        spr_bott = global.sprBlaaczillaBott;
+        	        spr_foam = global.sprBlaaczillaFoam;
+        	        sprite_index = spr_idle;
+        	        depth = -3;
+        	        
+        	         // sounds
+        	        snd_hurt = sndOasisBossHurt;
+        	        
+        	         // variables
+        	        mask_index = spr_foam;
+        	        friction = 0.4;
+        	        maxhealth = 999999999;
+        	        my_health = maxhealth;
+        	        size = 8;
+        	        team = 0;
+        	        nowade = true;
+        	        right = choose(-1,1);
+        	        walk = 0;
+        			walkspd = 1.2;
+        			maxspd = 2.6;
+        			scared = false;
+        			
+        			 // alarms
+        			alarm0 = 30;
+        	    }
+        	    break;
+        	    
             case "BloomingCactus":
                 o = instance_create(_x, _y, Cactus);
                 with(o){
@@ -428,6 +472,18 @@
                     spr_idle = global.sprBloomingCactusIdle[s];
                     spr_hurt = global.sprBloomingCactusHurt[s];
                     spr_dead = global.sprBloomingCactusDead[s];
+                }
+                break;
+                
+            case "BuriedCar":
+                o = instance_create(_x,_y,Barrel); // barrels don't move when shot, cars do
+                with(o){
+                    spr_idle = global.sprBuriedCarIdle;
+                    spr_hurt = global.sprBuriedCarHurt;
+                    spr_dead = mskNone;
+                    spr_shadow = mskNone;
+                    maxhealth = 20;
+                    my_health = maxhealth;
                 }
                 break;
 
@@ -1083,7 +1139,7 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
-    		        "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
+    		        "Blaaczilla", "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -1125,6 +1181,45 @@
         instance_delete(id);
     }
 
+#define Blaaczilla_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd,maxspd);
+    if nexthurt > current_frame && !scared{
+        scared = true;
+        instance_create(x+right*65,y-24,AssassinNotice);
+    }
+    
+#define Blaaczilla_alrm0
+    alarm0 = 20;
+    if instance_exists(Player){
+        if !scared{
+             // finds the nearest wading player
+            var _p = noone,
+                _bigdist = 10000;
+            with(Player) if !place_meeting(x,y,Floor){
+                var _distance = point_distance(x,y,other.x,other.y);
+                if _distance < _bigdist{
+                    _p = self;
+                    _bigdist = _distance;
+                }
+            }
+            if instance_exists(_p){
+                direction = point_direction(x,y,_p.x,_p.y);
+                right = 1;
+                if _p.x < x
+                    right = -1;
+            }
+            else{
+                direction = irandom(359);
+                scrRight(direction);
+            }
+        }
+        else{
+            direction = point_direction(10016,10016,x,y);
+            walk = 999999999; // he's very scared
+        }
+    }
 
 #define Bone_step
      // Spin:

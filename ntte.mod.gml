@@ -1,6 +1,6 @@
 #define init
     global.newLevel = instance_exists(GenCont);
-    global.area = ["coast"];
+    global.area = ["coast","oasis"];
 
 #define level_start // game_start but every level
 	if(GameCont.area == 1){

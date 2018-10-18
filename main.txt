@@ -3,6 +3,7 @@
 
 // Areas \\
 /loadarea areas/coast
+/loadarea areas/oasis
 
 // Weps \\
 /loadwep weps/crabbone
