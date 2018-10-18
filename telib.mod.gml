@@ -1,5 +1,6 @@
 #define init
     //#region SPRITES
+
     	 // Big Decals:
     	global.sprBigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 40),
@@ -19,6 +20,10 @@
     	global.sprBigFishSwimBack =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
     	global.sprBubbleBomb =        sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
     	global.sprBubbleExplode =     sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
+
+         // Bone:
+        global.sprBone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
+        global.sprBoneShard = sprite_add("sprites/weps/projectiles/sprBoneShard.png", 1, 3, 2);
 
          // Harpoon:
         global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -175,7 +180,7 @@
     //#region MUSIC
     global.mus = {};
     with(global.mus){
-        Palanking = sound_add("music/musPalanking.ogg");
+        SealKing = sound_add("music/musSealKing.ogg");
     }
     //#endregion
 
@@ -231,7 +236,7 @@
             o = instance_create(_x, _y, CustomProjectile);
             with(o){
                  // Visual:
-                sprite_index = sprBone;
+                sprite_index = global.sprBone;
                 hitid = [sprite_index, _name];
 
                  // Vars:
@@ -243,6 +248,7 @@
                 creator = noone;
                 rotation = 0;
                 rotspeed = (1 / 3) * choose(-1, 1);
+                broken = false;
 
                  // Annoying Fix:
                 if(place_meeting(x, y, PortalShock)) Bone_destroy();
@@ -1156,42 +1162,44 @@
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
 
 #define Bone_hit
-    if(projectile_canhit(other)){
-         // Secret:
-        if("name" in other && other.name == "CoastBossBecome"){
-            with(other){
-                part++;
+     // Secret:
+    if("name" in other && other.name == "CoastBossBecome"){
+        with(other){
+            part++;
 
-                 // Hit:
-                sound_play_hit(snd_hurt, 0.3);
-                sprite_index = spr_hurt;
-                image_index = 0;
-            }
-
-             // Effects:
-            sound_play_hit(sndMutant14Turn, 0.2);
-            repeat(3){
-                instance_create(x + orandom(4), y + orandom(4), Bubble);
-                with(instance_create(x, y, Smoke)){
-                    motion_add(random(360), 1);
-                    depth = -2;
-                }
-            }
-
-            instance_delete(id);
-            exit;
+             // Hit:
+            sound_play_hit(snd_hurt, 0.3);
+            sprite_index = spr_hurt;
+            image_index = 0;
         }
 
-        projectile_hit_push(other, damage, speed * force);
+         // Effects:
+        sound_play_hit(sndMutant14Turn, 0.2);
+        repeat(3){
+            instance_create(x + orandom(4), y + orandom(4), Bubble);
+            with(instance_create(x, y, Smoke)){
+                motion_add(random(360), 1);
+                depth = -2;
+            }
+        }
 
-         // Bounce Off Enemy:
-        direction = point_direction(other.x, other.y, x, y);
-        speed /= 2;
-        rotspeed *= -1;
-
-         // Sound:
-        sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
+        instance_delete(id);
+        exit;
     }
+
+    projectile_hit_push(other, damage, speed * force);
+
+     // Bounce Off Enemy:
+    direction = point_direction(other.x, other.y, x, y);
+    speed /= 2;
+    rotspeed *= -1;
+
+     // Sound:
+    sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
+
+     // Break:
+    broken = true;
+    instance_destroy();
 
 #define Bone_wall
      // Bounce Off Wall:
@@ -1206,7 +1214,18 @@
 
 #define Bone_destroy
     instance_create(x, y, Dust);
-    with(instance_create(x, y, WepPickup)){
+
+     // Darn:
+    if(broken){
+        sound_play_pitch(sndHitRock, 1.4 + random(0.2));
+        repeat(2) with(instance_create(x, y, Shell)){
+            sprite_index = global.sprBoneShard;
+            motion_add(random(360), 2);
+        }
+    }
+
+     // Pickupable:
+    else with(instance_create(x, y, WepPickup)){
         wep = "crabbone";
         rotation = other.rotation;
     }
@@ -1428,6 +1447,12 @@
                 instance_create(x, y, PortalClear);
                 repeat(10) with(instance_create(x, y, Dust)){
                     motion_add(random(360), 5);
+                }
+
+                 // Intro:
+                if(!intro){
+                    intro = true;
+                    scrBossIntro("", sndOasisBossIntro, musBoss1);
                 }
                 exit; }
 
@@ -1757,6 +1782,9 @@
     GameCont.area = "coast";
     GameCont.subarea = 0;
     with(enemy) my_health = 0;
+
+     // Boss Win Music:
+    with(MusCont) alarm_set(1, 1);
 
 
 #define Harpoon_end_step
@@ -2602,7 +2630,7 @@
              // Boss Intro:
             if(!intro){
                 intro = true;
-                scrBossIntro("Palanking", sndBigDogIntro, mus.Palanking);
+                scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
             }
 
             wait 1;
@@ -2877,10 +2905,8 @@
 #define Palanking_death
     repeat(3) pickup_drop(50, 0);
 
-     // Boss Defeated:
-    sound_play(sndBossWin);
-    sound_stop(mus.Palanking);
-    with(MusCont) alarm_set(3, 180);
+     // Boss Win Music:
+    with(MusCont) alarm_set(1, 1);
 
 
 #define Palm_step
@@ -3534,8 +3560,8 @@
         if(speed < 1){
             var o = 8;
             obj_create(x + lengthdir_x(o, image_angle), y + lengthdir_y(o, image_angle), "BubbleExplosion");
-            sound_play_pitchvol(sndWallBreakBrick, 1.2 + random(0.1), 0.75);
-            sound_play_pitch(sndSwapHammer, 1.3);
+            sound_play_pitchvol(sndWallBreakBrick, 1.2 + random(0.1), 0.7);
+            sound_play_pitchvol(sndSwapHammer, 1.3, 0.6);
             instance_destroy();
         }
     }

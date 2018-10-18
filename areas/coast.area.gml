@@ -624,11 +624,16 @@
                 instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
             }
         }
+
+         // ++B Floors
+        else if(!styleb && random(3) < 1){
+            styleb = 1;
+        }
     }
 
      // Ammo Chests (Dead Ends):
     if(random(19 + instance_number(FloorMaker)) > 22){
-        if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest)
+        if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
         instance_destroy();
     }
 
