@@ -92,9 +92,17 @@
     return mod_script_call("mod","ntte","scrFloorFillRound",_x,_y,_w,_h);
     
 #define area_finish
-     // area end
-    area = 3;
-    subarea = 3;
+     // Area End:
+    if(lastarea == mod_current && subarea >= 1){
+        area = 3;
+        subarea = 3;
+    }
+
+     // Next Subarea: 
+    else{
+    	lastarea = area;
+    	subarea++;
+    }
     
 #define area_pop_enemies
     var _x = x+16,

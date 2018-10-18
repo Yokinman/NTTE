@@ -176,9 +176,9 @@
     //#endregion
 
     //#region SOUNDS
-         // Palanking:
         global.snd = {};
         with(global.snd){
+             // Palanking:
             PalankingHurt  = sound_add("sounds/enemies/Palanking/sndPalankingHurt.ogg");
             PalankingDead  = sound_add("sounds/enemies/Palanking/sndPalankingDead.ogg");
             PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
@@ -188,10 +188,10 @@
     //#endregion
 
     //#region MUSIC
-    global.mus = {};
-    with(global.mus){
-        SealKing = sound_add("music/musSealKing.ogg");
-    }
+        global.mus = {};
+        with(global.mus){
+            SealKing = sound_add("music/musSealKing.ogg");
+        }
     //#endregion
 
      // Refresh Big Decals on Mod Load:
@@ -476,14 +476,22 @@
                 break;
                 
             case "BuriedCar":
-                o = instance_create(_x,_y,Barrel); // barrels don't move when shot, cars do
+                o = instance_create(_x, _y, CustomProp);
                 with(o){
+                     // Visual:
                     spr_idle = global.sprBuriedCarIdle;
                     spr_hurt = global.sprBuriedCarHurt;
                     spr_dead = mskNone;
                     spr_shadow = mskNone;
+
+                     // Sound:
+                    snd_hurt = sndHitMetal;
+
+                     // Vars:
+                    size = 2;
                     maxhealth = 20;
                     my_health = maxhealth;
+                    my_floor = instance_nearest(x - 16, y - 16, Floor);
                 }
                 break;
 
@@ -664,7 +672,8 @@
 
                      // Vars:
                     mask_index = mskStreetLight;
-                    my_health = 30;
+                    maxhealth = 30;
+                    my_health = maxhealth;
                     size = 1;
                     my_enemy = noone;
                     my_enemy_mask = mskNone;
@@ -672,7 +681,7 @@
                     if(random(10) < 1) my_enemy = obj_create(x, y, "Diver");
                 }
                 break;
-    
+
         	case "Pelican":
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o) {
@@ -1139,7 +1148,7 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
-    		        "Blaaczilla", "BloomingCactus", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
+    		        "Blaaczilla", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "Hammerhead",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -1181,45 +1190,6 @@
         instance_delete(id);
     }
 
-#define Blaaczilla_step
-    enemyAlarms(1);
-    enemySprites();
-    enemyWalk(walkspd,maxspd);
-    if nexthurt > current_frame && !scared{
-        scared = true;
-        instance_create(x+right*65,y-24,AssassinNotice);
-    }
-    
-#define Blaaczilla_alrm0
-    alarm0 = 20;
-    if instance_exists(Player){
-        if !scared{
-             // finds the nearest wading player
-            var _p = noone,
-                _bigdist = 10000;
-            with(Player) if !place_meeting(x,y,Floor){
-                var _distance = point_distance(x,y,other.x,other.y);
-                if _distance < _bigdist{
-                    _p = self;
-                    _bigdist = _distance;
-                }
-            }
-            if instance_exists(_p){
-                direction = point_direction(x,y,_p.x,_p.y);
-                right = 1;
-                if _p.x < x
-                    right = -1;
-            }
-            else{
-                direction = irandom(359);
-                scrRight(direction);
-            }
-        }
-        else{
-            direction = point_direction(10016,10016,x,y);
-            walk = 999999999; // he's very scared
-        }
-    }
 
 #define Bone_step
      // Spin:
@@ -2084,6 +2054,75 @@
     scrHarpoonRope(f, h);
 
 
+#define Blaaczilla_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd,maxspd);
+    if nexthurt > current_frame && !scared{
+        scared = true;
+        instance_create(x+right*65,y-24,AssassinNotice);
+    }
+    
+#define Blaaczilla_alrm0
+    alarm0 = 20;
+    if instance_exists(Player){
+        if !scared{
+             // finds the nearest wading player
+            var _p = noone,
+                _bigdist = 10000;
+            with(Player) if !place_meeting(x,y,Floor){
+                var _distance = point_distance(x,y,other.x,other.y);
+                if _distance < _bigdist{
+                    _p = self;
+                    _bigdist = _distance;
+                }
+            }
+            if instance_exists(_p){
+                direction = point_direction(x,y,_p.x,_p.y);
+                right = 1;
+                if _p.x < x
+                    right = -1;
+            }
+            else{
+                direction = irandom(359);
+                scrRight(direction);
+            }
+        }
+        else{
+            direction = point_direction(10016,10016,x,y);
+            walk = 999999999; // he's very scared
+        }
+    }
+
+
+#define BuriedCar_step
+    if(instance_exists(my_floor)){
+        x = my_floor.x + 16;
+        y = my_floor.y + 16;
+    }
+    else instance_destroy();
+
+#define BuriedCar_death
+     // Explosion:
+    repeat(2) instance_create(x + orandom(3), y + orandom(3), Explosion);
+    repeat(2) instance_create(x + orandom(3), y + orandom(3), SmallExplosion);
+    sound_play(sndExplosionCar);
+
+     // Break Floor:
+    if(instance_exists(my_floor)){
+        mod_variable_set("area", "coast", "surfFloorReset", true);
+        with(my_floor){
+            if(place_meeting(x, y, Detail)){
+                with(Detail) if(place_meeting(x, y, other)){
+                    instance_destroy();
+                }
+            }
+            instance_destroy();
+        }
+        repeat(4) instance_create(x + orandom(8), y + orandom(8), Debris);
+    }
+
+
 #define CoastDecal_create(_x, _y, _shell)
     with(instance_create(_x, _y, CustomHitme)){
         name = "CoastDecal";
@@ -2721,15 +2760,6 @@
          // Call for Seals:
         if(fork()){
             wait 15;
-
-             // Boss Intro:
-            if(!intro){
-                intro = true;
-                scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
-            }
-
-            wait 1;
-
             sprite_index = spr_call;
             image_index = 0;
             sound_play(snd.PalankingCall);
@@ -2742,16 +2772,16 @@
     else{
         switch(phase){
             case 0: // Wave of Seals:
-                var n = 5;
-                if(array_length(Seal) < 4 * n){
+                var _groups = 5;
+                if(array_length(Seal) < seal_max * _groups){
                     var _x = 10016,
                         _y = 10016;
 
-                    scrSealSpawn(_x, _y, point_direction(_x, _y, seal_spawn_x, seal_spawn_y) + (360 / n), 15);
+                    scrSealSpawn(_x, _y, point_direction(_x, _y, seal_spawn_x, seal_spawn_y) + (360 / _groups), 15);
                     intro_pan_x = seal_spawn_x;
                     intro_pan_y = seal_spawn_y;
 
-                    alarm0 = 50;
+                    alarm0 = (seal_max * 8) + 10;
                 }
                 break;
 
@@ -2784,6 +2814,12 @@
                 }
                 else{
                     alarm1 = 60 + irandom(40);
+
+                     // Boss Intro:
+                    if(!intro){
+                        intro = true;
+                        scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
+                    }
         
                      // Walk Towards Player:
                     target = instance_nearest(x, y, Player);
@@ -2917,7 +2953,7 @@
 
          // Important Stuff:
         creator = other;
-        kills = 0;
+        if(other.active) kills = 0;
         array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
     }
 
@@ -2925,7 +2961,7 @@
 
 #define scrSealSpawn(_xstart, _ystart, _dir, _delay)
     alarm3 = _delay;
-    seal_spawn = 4;
+    seal_spawn = seal_max;
 
      // Find Spawn Location:
     seal_spawn_x = _xstart;
@@ -3457,6 +3493,7 @@
                     if(scared){
                         if(point_distance(x, y, target.x, target.y) < 120 || random(array_length(instances_named(object_index, name))) < 2){
                             scrWalk(20 + random(10), _targetDir + 180 + orandom(50));
+                            if(random(3) < 1) slide = walk - 5;
                             alarm0 = walk;
                         }
                         else{
@@ -3647,8 +3684,9 @@
     else{
         if(friction <= 0){
             sound_play_pitch(sndSwapSword, 2.4);
-            friction = 0.4;
+            friction = 0.6;
             speed /= 3;
+            typ = 1;
         }
 
          // Explode:
@@ -3935,7 +3973,7 @@
                 else{
                      // Start Spinning Anchor:
                     if((target_in_distance(0, 180) && random(4) < 3) || target_in_distance(0, 100)){
-                        alarm0 = 60;
+                        alarm0 = 45;
                         gunangle = _targetDir;
                         anchor_spin = choose(-1, 1) * 5;
                         sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
@@ -3984,6 +4022,9 @@
                 else my_mine = noone;
             }
         }
+
+         // Passive Movement:
+        else scrWalk(5, random(360));
     }
 
 #define SealHeavy_draw
