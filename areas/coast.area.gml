@@ -98,7 +98,7 @@
     }
 
 #macro DebugLag 0
-#macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - array_length_1d(instances_matching(CustomEnemy,"name","Blaaczilla")) - instance_number(Van) <= 0))
+#macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #define area_name(sub, loop)
@@ -671,7 +671,7 @@
         _y = y + 16;
 
     if(global.spawn_enemy-- <= 0){
-        global.spawn_enemy = 2;
+        global.spawn_enemy = 1;
 
          // Normal Enemies:
         if(styleb){
@@ -710,7 +710,7 @@
     else if(random(80) < 1){
         with(obj_create(_x + orandom(8), _y + orandom(8), "SealMine")){
              // Move to sea:
-            if(random(3) < 2){
+            if(!other.styleb){
                 var d = 24 + random(16);
                 while(distance_to_object(Floor) < d){
                     var o = 64;
@@ -831,7 +831,7 @@
         }
 
          // Blaaczilla:
-        with(instances_matching(CustomEnemy, "name", "Blaaczilla")){
+        with(instances_matching(CustomHitme, "name", "Blaaczilla")){
     	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, image_blend, 1);
     	}
 
@@ -892,11 +892,9 @@
     with(instances_matching(CustomEnemy, "name", "Palanking")){
         draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
-    d3d_set_fog(0, 0, 0, 0);
     
      // blaaczilla bottom half:
-    d3d_set_fog(1,WadeColor,0,0);
-    with instances_matching(CustomEnemy,"name","Blaaczilla"){
+    with instances_matching(CustomHitme,"name","Blaaczilla"){
         draw_sprite_ext(spr_bott,image_index,x,y,image_xscale*right,image_yscale,image_angle,image_blend,image_alpha);
     }
     d3d_set_fog(0,0,0,0);
