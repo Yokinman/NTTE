@@ -193,6 +193,15 @@
 #define area_step
      // No Portals:
 	with(instances_matching_ne(Corpse, "do_portal", false)) do_portal = false;
+	
+	 // Attract pickups on level end
+	with instances_matching(GameObject,"object_index",Rad,AmmoPickup,HPPickup) if CanLeaveCoast && speed <= 0 && instance_exists(Player){
+	    var _p = instance_nearest(x,y,Player),
+	        _l = 8,
+	        _d = point_direction(x,y,_p.x,_p.y);
+	    x += lengthdir_x(_l,_d);
+	    y += lengthdir_y(_l,_d);
+	}
 
 	if(instance_exists(Floor)){
          // Destroy Projectiles Too Far Away:

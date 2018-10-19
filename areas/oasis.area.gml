@@ -33,28 +33,15 @@
     BackCont.shadcol = shd_color;
     background_color = bg_color;
     sound_play_music(mus101);
+    sound_play_ambient(amb101);
     
 #define area_step
-     // lightning
-    with instances_matching(Lightning,"team",2){
-        image_speed = 0.1;
-        if floor(image_index) == sprite_get_number(sprite_index)-1{
-            team = 0;
-            sprite_index = sprEnemyLightning;
-            image_speed = 0.3;
-            image_index = 0;
-            if random(8) < 1{
-                sound_play_hit(sndLightningHit,0.2);
-                with instance_create(x,y,GunWarrantEmpty)
-                    image_angle = other.direction;
-            }
-            else if random(3) < 1
-                instance_create(x+orandom(18),y+orandom(18),PortalL)
-        }
+     // Run underwater code:
+    mod_script_call("mod","ntte","underwater_step");
+     // Spawn trench entrance:
+    with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","TrenchEntrance")){
+        with nearest_instance(10016,10016,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"TrenchEntrance");
     }
-     // reskin opened chests
-    with instances_matching(ChestOpen,"sprite_index",sprWeaponChestOpen)
-        sprite_index = sprClamChestOpen;
         
 #define area_make_floor
     var _x = x,
@@ -155,6 +142,9 @@
         
 #define obj_create(_x,_y,_obj)
     return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
+    
+#define nearest_instance(_x,_y,_instance)
+    return mod_script_call("mod","telib","nearest_instance",_x,_y,_instance);
     
 #define orandom(_n)
     return irandom_range(-_n,_n);

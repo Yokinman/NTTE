@@ -4,6 +4,7 @@
 // Areas \\
 /loadarea areas/coast
 /loadarea areas/oasis
+/loadarea areas/trench
 
 // Weps \\
 /loadwep weps/crabbone
