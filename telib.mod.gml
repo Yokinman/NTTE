@@ -153,7 +153,15 @@
             global.sprHammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png", 6, 24, 24);
             global.sprHammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png", 3, 24, 24);
             global.sprHammerheadChrg = sprite_add("sprites/enemies/Hammer/sprHammerheadDash.png", 2, 24, 24);
+             // Trench Entrance:
+            global.sprTrenchEntrance = sprite_add("sprites/areas/Oasis/sprTrenchEntrance.png", 2, 16, 16);
         //#endregion
+        
+        //#region TRENCH
+             // Kelp:
+            global.sprKelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png",6,16,22);
+            global.sprKelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png",3,16,22);
+            global.sprKelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png",8,16,22);
 
         //#region SEWERS
              // Cat:
@@ -989,7 +997,34 @@
         			alarm0 = 40 + irandom(20);
         		}
                 break;
+                
+            case "TrenchEntrance":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    sprite_index = global.sprTrenchEntrance;
+                    image_speed = 0;
+                    mask_index = mskWepPickup;
+                }
+                break;
         //#endregion
+        
+        //#region TRENCH
+            case "Kelp":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = global.sprKelpIdle;
+                    spr_hurt = global.sprKelpHurt;
+                    spr_dead = global.sprKelpDead;
+                    sprite_index = spr_idle;
+                    image_speed = 0.2;
+                     
+                     // Sounds:
+                    snd_hurt = sndOasisHurt;
+                    snd_dead = sndOasisDeath;
+                }
+                break;
 
         //#region SEWERS
         	case "Cat":
@@ -1168,7 +1203,8 @@
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
     		        "Blaaczilla", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
-    		        "Hammerhead",
+    		        "Hammerhead", "TrenchEntrance",
+    		        "Kelp",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -4410,6 +4446,24 @@
 #define Hammerhead_draw
     draw_self_enemy();
 
+#define TrenchEntrance_step
+    if !image_index && place_meeting(x,y,Player){
+        image_index = 1;
+        with instance_create(x,y,Portal){
+            image_alpha = 0;
+        }
+        sound_stop(sndPortalOpen);
+        sound_play_pitchvol(sndNothingHurtMid,0.6,0.7);
+        sound_play_pitchvol(sndNothingBeamEnd,0.4,1);
+        with(GameCont){
+            area = "trench";
+            subarea = 0;
+        }
+        repeat(10) instance_create(x+orandom(8),y+orandom(8),Bubble);
+        repeat(10) with instance_create(x,y,Debris){
+            motion_add(irandom(359),3+random(3));
+        }
+    }
 
 #define Cat_step
     enemyAlarms(1);
@@ -5071,3 +5125,10 @@ pickup_drop(60, 0);
 
 #define frame_active(_interval)
     return ((current_frame mod _interval) < current_time_scale);
+    
+#define draw_dark
+    draw_set_color(c_gray);
+    with instances_matching(CustomProp,"name","Kelp"){
+        draw_circle(x,y,48+orandom(1),0);
+    }
+    draw_set_color(c_white);

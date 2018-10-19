@@ -1,6 +1,6 @@
 #define init
     global.newLevel = instance_exists(GenCont);
-    global.area = ["coast","oasis"];
+    global.area = ["coast","oasis","trench"];
 
 #define level_start // game_start but every level
 	if(GameCont.area == 1){
@@ -99,6 +99,29 @@
         		image_yscale = other.image_yscale;
         	}
         }
+        
+#define underwater_step
+     // Run in underwater area step events
+     // lightning
+    with instances_matching(Lightning,"team",2){
+        image_speed = 0.1;
+        if floor(image_index) == sprite_get_number(sprite_index)-1{
+            team = 0;
+            sprite_index = sprEnemyLightning;
+            image_speed = 0.3;
+            image_index = 0;
+            if random(8) < 1{
+                sound_play_hit(sndLightningHit,0.2);
+                with instance_create(x,y,GunWarrantEmpty)
+                    image_angle = other.direction;
+            }
+            else if random(3) < 1
+                instance_create(x+orandom(18),y+orandom(18),PortalL)
+        }
+    }
+     // reskin opened chests
+    with instances_matching(ChestOpen,"sprite_index",sprWeaponChestOpen)
+        sprite_index = sprClamChestOpen;
 
 #define scrBossIntro(_name, _sound, _music)
     var _path = "sprites/intros/",
@@ -189,3 +212,6 @@
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+    
+#define orandom(_n)
+    return irandom_range(-_n,_n);
