@@ -640,11 +640,16 @@
                 instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
             }
         }
+
+         // ++B Floors
+        else if(!styleb && random(3) < 1){
+            styleb = 1;
+        }
     }
 
      // Ammo Chests (Dead Ends):
     if(random(19 + instance_number(FloorMaker)) > 22){
-        if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest)
+        if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
         instance_destroy();
     }
 
@@ -703,18 +708,27 @@
 #define area_pop_props
     var _x = x + 16,
         _y = y + 16;
+
     if(random(12) < 1){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        if !styleb && random(5) < 1
-            o = "BuriedCar";
+        if(!styleb && random(6) < 1) o = "BuriedCar";
         obj_create(_x, _y, o);
     }
 
-    //if(point_distance(_x, _y, )){
-        if(random(60 - GameCont.subarea) < 1){
-            obj_create(_x + orandom(8), _y + orandom(8), "SealMine");
+     // Mine:
+    else if(random(80) < 1){
+        with(obj_create(_x + orandom(8), _y + orandom(8), "SealMine")){
+             // Move to sea:
+            if(random(3) < 2){
+                var d = 24 + random(16);
+                while(distance_to_object(Floor) < d){
+                    var o = 64;
+                    x += lengthdir_x(o, direction);
+                    y += lengthdir_y(o, direction);
+                }
+            }
         }
-    //}
+    }
 
 #define darksea_draw
     if(DebugLag) trace_time();
@@ -824,14 +838,15 @@
                 draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, c_white, 1);
             }
         }
+
          // Blaaczilla:
         with(instances_matching(CustomEnemy, "name", "Blaaczilla")){
-    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, image_blend, 1);
     	}
 
          // Rock Decals:
     	with(instances_matching(CustomHitme, "name", "CoastDecal")){
-    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, 1);
     	}
 
         surface_reset_target();
@@ -1011,8 +1026,3 @@
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
-
-/*#define area_transit
-    if (lastarea != "coast" && area = "bigfish") { //hacky way to make sure you go to the right area
-        area = "coast";
-    }*/
