@@ -164,12 +164,24 @@
         }
     }
     
-     // spawn blaaczilla - WIP
-    // if random(1) < 1{
-    //     var _len = 300,
-    //         _dir = irandom(359);
-    //     obj_create(10016+lengthdir_x(_len,_dir),10016+lengthdir_y(_len,_dir),"Blaaczilla");
-    // }
+     // spawn blaaczilla
+    var _forcespawn = false;
+     // check for blaac
+    for(var i = 0; i < maxp; i++)
+        if player_get_alias(i) == "blaac"
+            _forcespawn = true;
+    if (random(25) < 1+GameCont.loops || _forcespawn) && GameCont.subarea != 3{
+        var _n = 10016,
+            _f = instance_furthest(_n,_n,Floor),
+            _l = 1.75*point_distance(_n,_n,_f.x,_f.y),
+            _d = 180+point_direction(_n,_n,_f.x,_f.y);
+        obj_create(_n+lengthdir_x(_l,_d),_n+lengthdir_y(_l,_d),"Blaaczilla");
+        if fork(){
+            wait(30)
+            sound_play_pitchvol(sndOasisBossFire,0.75,0.25);
+            exit;
+        }
+    }
 
      // Bind Sea Drawing Scripts:
 	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){

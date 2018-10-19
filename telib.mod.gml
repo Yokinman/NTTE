@@ -464,7 +464,7 @@
         	        maxhealth = 999999999;
         	        my_health = maxhealth;
         	        size = 8;
-        	        team = 0;
+        	        team = 1;
         	        nowade = true;
         	        right = choose(-1, 1);
         	        walk = 0;
@@ -2113,10 +2113,16 @@
     enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd,maxspd);
+     // Run away when hurt:
     if nexthurt > current_frame && !scared{
         scared = true;
         instance_create(x+right*65,y-24,AssassinNotice);
     }
+    
+     // Pushed away from floors:
+    var _f = instance_nearest(x,y,Floor);
+    if point_distance(x,y,_f.x,_f.y) <= 128
+        motion_add_ct(point_direction(_f.x,_f.y,x,y),3);
 
      // Push Player:
     if(place_meeting(x, y, Player)){
@@ -2129,31 +2135,43 @@
     draw_self_enemy();
     
 #define Blaaczilla_alrm0
-    alarm0 = 20;
+    alarm0 = 30;
     if instance_exists(Player){
-        if !scared{
-             // finds the nearest wading player
-            var _p = noone,
-                _bigdist = 10000;
-            with(Player) if !place_meeting(x,y,Floor){
-                var _distance = point_distance(x,y,other.x,other.y);
-                if _distance < _bigdist{
-                    _p = self;
-                    _bigdist = _distance;
-                }
+         // finds the nearest wading player
+        var _p = noone,
+            _bigdist = 10000;
+        with(Player) if !collision_line(x,y,other.x,other.y,Floor,0,0){
+            var _distance = point_distance(x,y,other.x,other.y);
+            if _distance < _bigdist{
+                _p = self;
+                _bigdist = _distance;
             }
+        }
+        if !scared{
             if instance_exists(_p){
-                direction = point_direction(x,y,_p.x,_p.y);
-                scrRight(direction);
+                 // investigate wading player
+                if point_distance(x,y,_p.x,_p.y) > 128
+                    scrWalk(20+irandom(10),point_direction(x,y,_p.x,_p.y));
+                else if random(4) < 1
+                    instance_create(x+right*65,y-24,HealFX);
+                scrRight(point_direction(x,y,_p.x,_p.y));
             }
             else{
-                direction += random(20);
+                 // wander
+                scrWalk(20+irandom(10),direction+random(20));
                 scrRight(direction);
             }
         }
-        else scrWalk(999999999, point_direction(10016, 10016, x, y));
+        else{
+            if instance_exists(_p)
+                scrWalk(999999999, point_direction(_p.x, _p.y, x, y));
+            else{
+                _p = instance_nearest(x,y,Player);
+                scrWalk(20+irandom(10),point_direction(_p.x, _p.y, x, y));
+            }
+            scrRight(direction);
+        }
     }
-
 
 #define BuriedCar_step
     if(instance_exists(my_floor)){
