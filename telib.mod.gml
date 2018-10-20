@@ -150,9 +150,25 @@
 
         //#region OASIS
              // Hammerhead:
-            global.sprHammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png", 6, 24, 24);
-            global.sprHammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png", 3, 24, 24);
-            global.sprHammerheadChrg = sprite_add("sprites/enemies/Hammer/sprHammerheadDash.png", 2, 24, 24);
+            global.sprHammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png",  6, 24, 24);
+            global.sprHammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png",  3, 24, 24);
+            global.sprHammerheadDead = sprite_add("sprites/enemies/Hammer/sprHammerheadDead.png", 10, 24, 24);
+            global.sprHammerheadChrg = sprite_add("sprites/enemies/Hammer/sprHammerheadDash.png",  2, 24, 24);
+
+             // Puffer:
+            global.sprPufferIdle       = sprite_add("sprites/enemies/Puffer/sprPufferIdle.png",     6, 15, 16);
+            global.sprPufferHurt       = sprite_add("sprites/enemies/Puffer/sprPufferHurt.png",     3, 15, 16);
+            global.sprPufferDead       = sprite_add("sprites/enemies/Puffer/sprPufferDead.png",    11, 15, 16);
+            global.sprPufferChrg       = sprite_add("sprites/enemies/Puffer/sprPufferChrg.png",     9, 15, 16);
+            global.sprPufferFire[0, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow0.png",    2, 15, 16);
+            global.sprPufferFire[0, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB0.png",   2, 15, 16);
+            global.sprPufferFire[1, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow1.png",    2, 15, 16);
+            global.sprPufferFire[1, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB1.png",   2, 15, 16);
+            global.sprPufferFire[2, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow2.png",    2, 15, 16);
+            global.sprPufferFire[2, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB2.png",   2, 15, 16);
+            global.sprPufferFire[3, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow3.png",    2, 15, 16);
+            global.sprPufferFire[3, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB3.png",   2, 15, 16);
+
              // Trench Entrance:
             global.sprTrenchEntrance = sprite_add("sprites/areas/Oasis/sprTrenchEntrance.png", 2, 16, 16);
         //#endregion
@@ -162,6 +178,7 @@
             global.sprKelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png",6,16,22);
             global.sprKelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png",3,16,22);
             global.sprKelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png",8,16,22);
+        //#endregion
 
         //#region SEWERS
              // Cat:
@@ -401,6 +418,21 @@
     			alarm2 = -1;
     	    }
     	    break;
+
+        case "CustomChest":
+            o = instance_create(_x, _y, chestprop);
+            with(o){
+                 // Visual:
+                sprite_index = sprAmmoChest;
+                spr_open = sprAmmoChestOpen;
+
+                 // Sound:
+                snd_open = sndAmmoChest;
+
+                on_step = script_bind_step(CustomChest_step, 0, id);
+                on_open = ["", "", ""];
+            }
+            break;
 
         case "Harpoon":
             o = instance_create(_x, _y, CustomProjectile);
@@ -958,6 +990,19 @@
     	//#endregion
 
         //#region OASIS
+            case "ClamChest":
+                with(obj_create(_x, _y, "CustomChest")){
+                     // Visual:
+                    sprite_index = sprClamChest;
+                    spr_open = sprClamChestOpen;
+
+                     // Sound:
+                    snd_open = sndOasisChest;
+
+                    on_open = script_ref_create(ClamChest_open);
+                }
+                break;
+
             case "Hammerhead":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
@@ -965,13 +1010,12 @@
         			spr_idle = global.sprHammerheadIdle;
         			spr_walk = global.sprHammerheadIdle;
         			spr_hurt = global.sprHammerheadHurt;
-        			spr_dead = sprBoneFish1Dead; //global.sprHammerheadDead
+        			spr_dead = global.sprHammerheadDead;
         			spr_chrg = global.sprHammerheadChrg;
         			spr_shadow = shd48;
         			spr_shadow_y = 2;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
-        			mask_index = mskScorpion;
         			depth = -2;
     
                      // Sound:
@@ -979,8 +1023,8 @@
         			snd_dead = sndOasisDeath;
     
         			 // Vars:
-        			maxhealth = 30;
-        			my_health = maxhealth;
+        			mask_index = mskScorpion;
+        			maxhealth = 40;
         			raddrop = 12;
         			size = 2;
         			walk = 0;
@@ -994,10 +1038,46 @@
         			charge_wait = 0;
     
         			 // Alarms:
-        			alarm0 = 40 + irandom(20);
+        			alarm0 = 40 + random(20);
         		}
                 break;
-                
+
+            case "Puffer":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                     // Visual:
+        			spr_idle = global.sprPufferIdle;
+        			spr_walk = global.sprPufferIdle;
+        			spr_hurt = global.sprPufferHurt;
+        			spr_dead = global.sprPufferDead;
+        			spr_chrg = global.sprPufferChrg;
+        			spr_fire = global.sprPufferFire[0, 0];
+        			spr_shadow = shd16;
+        			spr_shadow_y = 7;
+        			hitid = [spr_idle, _name];
+        			depth = -2;
+
+                     // Sound:
+                    snd_hurt = sndOasisHurt;
+                    snd_dead = sndOasisDeath;
+
+                     // Vars:
+        			mask_index = mskFreak;
+                    maxhealth = 10;
+        			raddrop = 6;
+        			size = 1;
+        			walk = 0;
+        			walkspd = 0.8;
+        			maxspd = 3;
+        			meleedamage = 2;
+        			direction = random(360);
+        			blow = 0;
+
+                     // Alarms:
+                    alarm0 = 40 + random(80);
+                }
+                break;
+
             case "TrenchEntrance":
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
@@ -1025,6 +1105,7 @@
                     snd_dead = sndOasisDeath;
                 }
                 break;
+        //#endregion
 
         //#region SEWERS
         	case "Cat":
@@ -1201,9 +1282,9 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "Harpoon", "NetNade",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "NetNade",
     		        "Blaaczilla", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
-    		        "Hammerhead", "TrenchEntrance",
+    		        "ClamChest", "Hammerhead", "Puffer", "TrenchEntrance",
     		        "Kelp",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
@@ -1905,6 +1986,31 @@
 
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);
+
+
+#define CustomChest_step(_inst)
+    if(instance_exists(_inst)) with(_inst){
+         // Open Chest:
+        var c = [Player, PortalShock];
+        for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
+            with(instance_nearest(x, y, c[i])) with(other){
+                 // Call Chest Open Event:
+                var e = on_open;
+                if(mod_script_exists(e[0], e[1], e[2])){
+                    mod_script_call(e[0], e[1], e[2], (i == 0));
+                }
+
+                 // Effects:
+                with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
+                instance_create(x, y, FXChestOpen);
+                sound_play(snd_open);
+
+                instance_destroy();
+            }
+            break;
+        }
+    }
+    else instance_destroy();
 
 
 #define Harpoon_end_step
@@ -4340,6 +4446,28 @@
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
 
 
+#define ClamChest_open(_player)
+    var w = ["harpoon", "bubble rifle", "bubble shotgun"],
+        _wep = "";
+
+     // Random Cool Wep:
+    var m = 0;
+    do _wep = w[irandom(array_length(w) - 1)];
+    until (mod_exists("weapon", _wep) || ++m > 200);
+
+    if(mod_exists("weapon", _wep)){
+        with(instance_create(x, y, WepPickup)){
+            wep = _wep;
+            ammo = true;
+        }
+    }
+
+     // Angry puffer cause you dont have cool weapons loaded
+    else with(obj_create(x, y, "Puffer")){
+        instance_create(x, y, AssassinNotice);
+    }
+
+
 #define Hammerhead_step
     enemyAlarms(1);
     if(sprite_index != spr_chrg) enemySprites();
@@ -4463,6 +4591,116 @@
 
 #define Hammerhead_draw
     draw_self_enemy();
+
+
+#define Puffer_step
+    enemyAlarms(1);
+    enemyWalk(walkspd, maxspd);
+
+     // Animate:
+    if(sprite_index != spr_fire){
+        if(sprite_index != spr_chrg) enemySprites();
+
+         // Charged:
+        else if(anim_end) blow = 1;
+    }
+
+     // Puffering:
+    if(blow > 0){
+        blow -= 0.03 * current_time_scale;
+
+         // Blowing:
+        motion_add_ct(direction + (10 * sin(current_frame / 6)), 2);
+        scrRight(direction + 180);
+
+         // Effects:
+        if(current_frame_active && random(4) < 3){
+            var l = 8, d = direction + 180;
+            with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bubble)){
+                motion_add(d, 3);
+            }
+            sound_play_pitchvol(sndRoll, 1.2 + random(0.4), 0.6);
+        }
+
+         // Animate:
+        var _sprFire = global.sprPufferFire,
+            _blowLvl = clamp(floor(blow * array_length(_sprFire)), 0, array_length(_sprFire) - 1),
+            _back = (direction > 180);
+
+        spr_fire = _sprFire[_blowLvl, _back];
+        sprite_index = spr_fire;
+    }
+    else if(sprite_index == spr_fire) sprite_index = spr_idle;
+
+#define Puffer_alrm0
+    alarm0 = 20 + random(30);
+    target = instance_nearest(x, y, Player);
+
+    if(blow <= 0){
+        if(instance_exists(target)){
+            var _targetDir = point_direction(x, y, target.x, target.y);
+
+             // Puff Time:
+            if(target_is_visible() && target_in_distance(0, 256) && random(2) < 1){
+                alarm0 = 30;
+
+                scrWalk(8, _targetDir);
+                scrRight(direction + 180);
+                sprite_index = spr_chrg;
+                image_index = 0;
+
+                 // Effects:
+                repeat(3) instance_create(x, y, Dust);
+                sound_play_pitch(sndOasisCrabAttack, 0.8);
+                sound_play_pitchvol(sndBouncerBounce, 0.6 + orandom(0.2), 2);
+            }
+
+             // Get Closer:
+            else scrWalk(alarm0, _targetDir + orandom(20));
+        }
+
+         // Passive Movement:
+        else scrWalk(10, random(360));
+    }
+
+#define Puffer_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);  // Sound
+
+     // Hurt Sprite:
+    if(sprite_index != spr_fire && sprite_index != spr_chrg){
+        sprite_index = spr_hurt;
+        image_index = 0;
+    }
+
+#define Puffer_draw
+    var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    draw_self_enemy();
+    if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define Puffer_death
+    pickup_drop(50, 0);
+
+     // Powerful Death:
+    var _num = 3;
+    if(blow > 0) _num *= ceil(blow * 4);
+    if(sprite_index == spr_chrg) _num += image_index;
+    if(_num > 3){
+        sound_play_pitch(sndOasisExplosionSmall, 1 + random(0.2));
+        sound_play_pitchvol(sndOasisExplosion, 0.8 + random(0.4), _num / 15);
+    }
+    while(_num-- > 0){
+        with(instance_create(x, y, Bubble)){
+            motion_add(random(360), _num / 2);
+            hspeed += other.hspeed / 3;
+            vspeed += other.vspeed / 3;
+            friction *= 2;
+        }
+    }
+
 
 #define TrenchEntrance_step
     if !image_index && place_meeting(x,y,Player){
@@ -4861,6 +5099,7 @@ pickup_drop(60, 0);
     scrRight(direction);
 
 #define scrRight(_dir)
+    _dir = (_dir + 360) mod 360;
     if(_dir < 90 || _dir > 270) right = 1;
     if(_dir > 90 && _dir < 270) right = -1;
 

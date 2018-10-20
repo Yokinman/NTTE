@@ -29,48 +29,68 @@
     }
     
 #define area_setup
-    goal = 100;
+    goal = 130;
     BackCont.shadcol = shd_color;
     background_color = bg_color;
     sound_play_music(mus101);
     sound_play_ambient(amb101);
-    
+
+#define area_start
+     // Fix B Floors:
+    with(instances_matching(Floor, "styleb", true)) depth = 8;
+
+     // Coolin Clammin:
+    with(WeaponChest){
+        obj_create(x, y, "ClamChest");
+        instance_delete(id);
+    }
+
 #define area_step
      // Run underwater code:
     mod_script_call("mod","ntte","underwater_step");
      // Spawn trench entrance:
     with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","TrenchEntrance")){
-        with nearest_instance(10016,10016,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"TrenchEntrance");
+        with nearest_instance(10000,10000,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"TrenchEntrance");
     }
         
 #define area_make_floor
     var _x = x,
         _y = y,
         _outOfSpawn = point_distance(_x,_y,10016,10016) > 48;
-     // make floors
-    if random(3) < 1{
-        scrFloorFillRound(_x,_y,3,3);
+
+     // Normal:
+	instance_create(_x, _y, Floor);
+	
+	 // Special - Diamond:
+	if(random(3) < 1){
+	    var o = 32;
+	    for(var d = 0; d < 360; d += 90){
+	        instance_create(_x + lengthdir_x(o, d), _y + lengthdir_y(o, d), Floor);
+	    }
+	}
+
+     // Turn:
+    var _trn = 0;
+    if(random(4) < 1){
+	    _trn = choose(90, 90, -90, -90, 180);
     }
-    instance_create(_x,_y,Floor);
-     // turn
-    var _turn = 0;
-    if random(6) < 3
-        _turn = choose(90,-90,180);
-    direction += _turn;
-     // turnarounds
-    if _turn == 180{
-        if _outOfSpawn
-            with scrFloorMake(_x,_y,WeaponChest)
-                sprite_index = sprClamChest;
+    direction += _trn;
+
+     // Turn Arounds (Weapon Chests):
+    if(_trn == 180 && _outOfSpawn){
+        with(scrFloorMake(_x, _y, WeaponChest)){
+            sprite_index = sprClamChest;
+        }
     }
-     // dead ends
-    if random(19+instance_number(FloorMaker)) > 22{
-        if _outOfSpawn
-            scrFloorMake(_x,_y,AmmoChest);
-        instance_destroy();
-    }
-    else if random(5) < 1
-        instance_create(_x,_y,FloorMaker);
+
+     // Dead Ends (Ammo Chests):
+	if(random(19 + instance_number(FloorMaker)) > 20){
+		if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
+		instance_destroy();
+	}
+
+	 // Branch:
+	if(random(5) < 1) instance_create(_x, _y, FloorMaker);
         
 #define scrFloorMake(_x,_y,_obj)
     return mod_script_call("mod","ntte","scrFloorMake",_x,_y,_obj);
@@ -79,33 +99,41 @@
     return mod_script_call("mod","ntte","scrFloorFillRound",_x,_y,_w,_h);
     
 #define area_finish
+    lastarea = area;
+
      // Area End:
-    if(lastarea == mod_current && subarea >= 1){
+    if(subarea >= 1){
         area = 3;
         subarea = 3;
     }
 
      // Next Subarea: 
-    else{
-    	lastarea = area;
-    	subarea++;
-    }
+    else subarea++;
     
 #define area_pop_enemies
-    var _x = x+16,
-        _y = y+16;
-        
-    if random(5) < 1{
-        if random(3) < 2
-            instance_create(_x,_y,Crab);
-        else
-            obj_create(_x,_y,"Hammerhead");
-    }
-    else{
-        if random(6) < 5
-            instance_create(_x,_y,BoneFish);
-        else
-            obj_create(_x,_y,"Diver");
+    var _x = x + 16,
+        _y = y + 16;
+
+    if(random(2) < 1){
+         // Shoals:
+        if(random(2) < 1){
+            if(!styleb && random(4) < 3){
+                repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
+            }
+            else{
+                repeat(irandom_range(2, 5)) obj_create(_x, _y, "Puffer");
+            }
+        }
+
+        else{
+            if(random(5) < 2) obj_create(_x, _y, "Diver");
+            else{
+                if(!styleb){
+                    if(random(2) < 1) instance_create(_x,_y,Crab);
+                }
+                else obj_create(_x, _y, "Hammerhead"); 
+            }
+        }
     }
     
 #define area_pop_props
@@ -142,12 +170,7 @@
             obj_create(_x,_y,choose(WaterPlant,WaterPlant,OasisBarrel,WaterMine));
         }
     }
-    
-#define area_pop_extras
-     // fix b tiles
-    with instances_matching(Floor,"styleb",true)
-        depth -= 1;
-        
+
 #define obj_create(_x,_y,_obj)
     return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
     
