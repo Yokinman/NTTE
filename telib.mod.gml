@@ -1103,6 +1103,9 @@
                      // Sounds:
                     snd_hurt = sndOasisHurt;
                     snd_dead = sndOasisDeath;
+                    
+                     // Vars:
+                    depth = -2;
                 }
                 break;
         //#endregion
@@ -3051,7 +3054,7 @@
             alarm1 = 5;
             ammo = 10;
             gunangle = _targetDir;
-            sound_play_pitchvol(sndVenuz, 0.4, 0.8);
+            sound_play_pitchvol(sndRatKingVomit, 0.75, 1.2);
         }
 
          // Wave Slash:
@@ -5384,8 +5387,9 @@ pickup_drop(60, 0);
     return ((current_frame mod _interval) < current_time_scale);
     
 #define draw_dark
+    //draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
     draw_set_color(c_gray);
     with instances_matching(CustomProp,"name","Kelp"){
-        draw_circle(x,y,48+orandom(1),0);
+        draw_circle(x,y,32+orandom(1),0);
     }
     draw_set_color(c_white);

@@ -141,7 +141,6 @@
             area = 104; // cursed caves
     	subarea = 1;
     }
-
      // Next Subarea: 
     else{
     	lastarea = area;
@@ -153,7 +152,8 @@
 #define area_pop_props
      // top decal
      // how do you do them
-    if random(7) < 1{
+    var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
+    if random(_wallChance) < 1{
          // quarter walls
         if point_distance(x,y,10016,10016) > 100 && !place_meeting(x,y,NOWALLSHEREPLEASE){
             var _x = x+choose(0,16),
@@ -187,45 +187,46 @@
     return irandom_range(-_n,_n);
     
 #define draw_pit
-    var _x = 10000-0.5*global.surfw,
-        _y = 10000-0.5*global.surfh;
-     // draw pit walls
-    if !surface_exists(global.surf[0]){
-         // create surface
-        global.surf[0] = surface_create(global.surfw,global.surfh);
-        surface_set_target(global.surf[0]);
-             // draw pit wall sprites
-            var _sprFull = [global.sprPitBot,global.sprPit,global.sprPitTop],
-                _sprSmall = [global.sprPitSmallBot,global.sprPitSmall,global.sprPitSmallTop];
-            for (var _h = 0; _h <= 2; _h++){
-                with instances_matching(Floor,"sprite_index",global.sprFloorTrench){
-                    draw_sprite(_sprFull[_h],1,x-_x,y-_y);
+    if !instance_exists(GenCont){
+        var _x = 10000-0.5*global.surfw,
+            _y = 10000-0.5*global.surfh;
+         // draw pit walls
+        if !surface_exists(global.surf[0]){
+             // create surface
+            global.surf[0] = surface_create(global.surfw,global.surfh);
+            surface_set_target(global.surf[0]);
+                 // draw pit wall sprites
+                var _sprFull = [global.sprPitBot,global.sprPit,global.sprPitTop],
+                    _sprSmall = [global.sprPitSmallBot,global.sprPitSmall,global.sprPitSmallTop];
+                for (var _h = 0; _h <= 2; _h++){
+                    with instances_matching(Floor,"sprite_index",global.sprFloorTrench){
+                        draw_sprite(_sprFull[_h],1,x-_x,y-_y);
+                    }
+                    with instances_matching(GameObject,"object_index",Wall,FloorExplo){
+                        draw_sprite(_sprSmall[_h],1,x-_x,y-_y);
+                    }
                 }
-                with instances_matching(GameObject,"object_index",Wall,FloorExplo){
-                    draw_sprite(_sprSmall[_h],1,x-_x,y-_y);
+            surface_reset_target();
+        }
+         // draw pit mask
+        if !surface_exists(global.surf[1]){
+            global.surf[1] = surface_create(global.surfw,global.surfh);
+            surface_set_target(global.surf[1])
+                draw_set_color(c_black);
+                with instances_matching(Floor,"styleb",true){
+                    draw_sprite(sprite_index,image_index,x-_x,y-_y);
                 }
-            }
-        surface_reset_target();
-    }
-     // draw pit mask
-    if !surface_exists(global.surf[1]){
-        global.surf[1] = surface_create(global.surfw,global.surfh);
+        }
         surface_set_target(global.surf[1])
+            draw_set_color_write_enable(1,1,1,0);
             draw_set_color(c_black);
-            with instances_matching(Floor,"styleb",true){
-                draw_sprite(sprite_index,image_index,x-_x,y-_y);
-            }
+            draw_rectangle(0,0,global.surfw,global.surfh,0);
+            draw_set_color(c_white);
+            
+             // > > > DRAW YOUR PIT SHIT HERE < < <
+             
+            draw_surface(global.surf[0],0,0);
+            draw_set_color_write_enable(1,1,1,1);
+        surface_reset_target();
+        draw_surface(global.surf[1],_x,_y);
     }
-    surface_set_target(global.surf[1])
-        draw_set_color_write_enable(1,1,1,0);
-        draw_set_color(c_black);
-        draw_rectangle(0,0,global.surfw,global.surfh,0);
-        draw_set_color(c_white);
-        
-         // > > > DRAW YOUR PIT SHIT HERE < < <
-         
-        draw_surface(global.surf[0],0,0);
-        draw_set_color_write_enable(1,1,1,1);
-    surface_reset_target();
-    draw_surface(global.surf[1],_x,_y);
-    
