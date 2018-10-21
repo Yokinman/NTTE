@@ -1417,15 +1417,9 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "NetNade",
-<<<<<<< HEAD
-    		        "Blaaczilla", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
-    		        "ClamChest", "Hammerhead", "Puffer", "TrenchEntrance",
-    		        "Kelp", "YetiCrab", "Jellyfish",
-=======
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Kelp",
->>>>>>> origin/master
+    		        "Kelp", "YetiCrab", "Jellyfish",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
