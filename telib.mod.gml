@@ -189,8 +189,8 @@
             global.sprPufferFire[3, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow3.png",    2, 15, 16);
             global.sprPufferFire[3, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB3.png",   2, 15, 16);
 
-             // Trench Entrance:
-            global.sprTrenchEntrance = sprite_add("sprites/areas/Oasis/sprTrenchEntrance.png", 2, 16, 16);
+             // Mystery Crack:
+            global.sprCrack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAB6klEQVRoQ+WTUW7DMAxDc4j97H+n2xl292wyykBmaMuOndZYPx4QS65EMum27/tbI4sr8vHzvXu4z7TcMWTxVdQMci0yGPWBLL4aJX77+sxqdqdkEr1S3yOLK2DizXQvbDwKQRZXozeMqQFEA56FMhph2qcEYMPwjPozYWO91HTLoiIadBd4AYk/uVVwr4DSnx0ibAjXFH7RaGiHATZbAvcFwwHgbXCN8X2+z/B95jDARiPwO+I0nwsRfogS3xuAUQrB6kk4m+vhYRzwjuzQQjTQaLnDmFnAv5fGenHzsMf2SjEMLuOZh6EHeBHgex7f9/Olmas8ZmJP2uUPNZQJLxR9g5e04Gf7udLICKTteGihFgDj77XiAzxgA6OQtkxARCkAX4cBnK+AudLAKKQtW9yCf0McCOAlvRw7WPwMRgMANZOlYHo5iZ8Aa8sW9lAKwBasHMBpBxdawCfKRmcZB2kPGRiFd2SHVtL/02FCZ5sHbGCU03wutADjvnZXAICNXOU0lwuK9CkGb/zuAJIGMnMFnpsdavAbN7xpFcpM1BenDEb4GUZ2qFEK4G7jhtoN2CBgTSWd2aHG3SYZ22fGjdruyDjD/ay5El5oawCReWP5AEwg8DU8M7VeC7K4CioM5l8H8Axk8X3Yt1/rleuAjYarfgAAAABJRU5ErkJggg==", 2, 16, 16);
         //#endregion
         
         //#region TRENCH
@@ -4764,7 +4764,7 @@
     }
 
 
-#define TrenchEntrance_step
+#define Crack_step
     if !image_index && place_meeting(x,y,Player){
         image_index = 1;
         with instance_create(x,y,Portal){
