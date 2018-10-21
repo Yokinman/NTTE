@@ -1,36 +1,44 @@
 #define init
-     // Sprites:
+    //#region SPRITES
          // Floors:
-        global.sprFloorTrench = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",4,0,0);
-        global.sprFloorTrenchB = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",4,2,2);
-        global.sprFloorTrenchExplo = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png",5,1,1);
-         // Walls:
-        global.sprWallTrenchTrans = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",8,0,0);
-        global.sprWallTrenchBot = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",4,0,0);
-        global.sprWallTrenchOut = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",1,4,12);
-        global.sprWallTrenchTop = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",8,0,0);
-         // Misc:
-        global.sprDebrisTrench = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",4,0,0);
-        global.sprDetailTrench = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",6,0,0);
-        global.sprTopDecalTrench = sprite_add("../sprites/areas/Trench/sprTopDecalTrench.png",1,0,0);
-         // Pits:
-             // Small:
-            global.sprPit = sprite_add("../sprites/areas/Trench/Pit/sprPit.png",1,2,2);
-            global.sprPitTop = sprite_add("../sprites/areas/Trench/Pit/sprPitTop.png",1,2,2);
-            global.sprPitBot = sprite_add("../sprites/areas/Trench/Pit/sprPitBot.png",1,2,2);
-             // Large:
-            global.sprPitSmall = sprite_add("../sprites/areas/Trench/Pit/sprPitSmall.png",1,3,3);
-            global.sprPitSmallTop = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallTop.png",1,3,3);
-            global.sprPitSmallBot = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallBot.png",1,3,3);
-            
-     // Surface:
-    global.surfw = 2000;
-    global.surfh = 2000;
-    global.surf = [noone, noone];
-    global.resetsurfaces = true;
+        global.sprFloorTrench       = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",      4, 0, 0);
+        global.sprFloorTrenchB      = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",     4, 2, 2);
+        global.sprFloorTrenchExplo  = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png", 5, 1, 1);
 
-#macro bg_color make_color_rgb(100,114,127);
-#macro shd_color c_black;
+         // Walls:
+        global.sprWallTrenchTrans   = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",  8, 0,  0);
+        global.sprWallTrenchBot     = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",    4, 0,  0);
+        global.sprWallTrenchOut     = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",    1, 4, 12);
+        global.sprWallTrenchTop     = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",    8, 0,  0);
+
+         // Misc:
+        global.sprDebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4, 0, 0);
+        global.sprDetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6, 0, 0);
+        global.sprTopDecalTrench    = sprite_add("../sprites/areas/Trench/sprTopDecalTrench.png",   1, 0, 0);
+
+        /// Pits:
+             // Small:
+            global.sprPit       = sprite_add("../sprites/areas/Trench/Pit/sprPit.png",      1, 2, 2);
+            global.sprPitTop    = sprite_add("../sprites/areas/Trench/Pit/sprPitTop.png",   1, 2, 2);
+            global.sprPitBot    = sprite_add("../sprites/areas/Trench/Pit/sprPitBot.png",   1, 2, 2);
+
+             // Large:
+            global.sprPitSmall      = sprite_add("../sprites/areas/Trench/Pit/sprPitSmall.png",     1, 3, 3);
+            global.sprPitSmallTop   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallTop.png",  1, 3, 3);
+            global.sprPitSmallBot   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallBot.png",  1, 3, 3);
+    //#endregion
+            
+    //#region SURFACES
+        global.surfw = 2000;
+        global.surfh = 2000;
+        global.surf = [noone, noone];
+        global.resetsurfaces = true;
+    //#endregion
+
+#macro bgrColor make_color_rgb(100, 114, 127)
+#macro shdColor c_black
+#macro musMain  musBoss5
+#macro ambMain  amb101
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
@@ -43,26 +51,31 @@
     
 #define area_sprite(_spr)
     switch(_spr){
-         // floors
-        case(sprFloor1): return global.sprFloorTrench;
-        case(sprFloor1B): return global.sprFloorTrenchB;
-        case(sprFloor1Explo): return global.sprFloorTrenchExplo;
-         // walls
-        case(sprWall1Trans): return global.sprWallTrenchTrans;
-        case(sprWall1Bot): return global.sprWallTrenchBot;
-        case(sprWall1Out): return global.sprWallTrenchOut;
-        case(sprWall1Top): return global.sprWallTrenchTop;
-         // misc
-        case(sprDebris1): return global.sprDebrisTrench;
-        case(sprDetail1): return global.sprDetailTrench;
+         // Floors:
+        case sprFloor1      : return global.sprFloorTrench;
+        case sprFloor1B     : return global.sprFloorTrenchB;
+        case sprFloor1Explo : return global.sprFloorTrenchExplo;
+
+         // Walls:
+        case sprWall1Trans  : return global.sprWallTrenchTrans;
+        case sprWall1Bot    : return global.sprWallTrenchBot;
+        case sprWall1Out    : return global.sprWallTrenchOut;
+        case sprWall1Top    : return global.sprWallTrenchTop;
+
+         // Misc:
+        case sprDebris1     : return global.sprDebrisTrench;
+        case sprDetail1     : return global.sprDetailTrench;
     }
     
 #define area_setup
     goal = 100;
-    BackCont.shadcol = shd_color;
+
+    background_color = bgrColor;
+    BackCont.shadcol = shdColor;
+    sound_play_music(musMain);
+    sound_play_ambient(ambMain);
     TopCont.darkness = true;
-    background_color = bg_color;
-    sound_play_ambient(amb101);
+
      // reset surfaces
     for(var i = 0; i <= 1; i++) if surface_exists(global.surf[i])
         surface_free(global.surf[i]);
@@ -70,7 +83,7 @@
 #define area_start
      // Bind pit drawing scripts:
 	if !array_length_1d(instances_matching(CustomDraw, "name", "draw_pit"))
-    	with(script_bind_draw(draw_pit, 8))
+    	with(script_bind_draw(draw_pit, 7))
     		name = "draw_pit"
     
 #define area_step
@@ -78,13 +91,28 @@
     mod_script_call("mod","ntte","underwater_step");
     
      // mess with depth -- temporary fix for scorchmarks showing in the pits
-    with instances_matching_ne(FloorExplo,"depth",7.9)
-        depth = 7.9;
-    with instances_matching_ne(ScorchTop,"depth",8.1)
-        depth = 8.1;
-    with instances_matching_ne(Scorch,"depth",8.2)
-        depth = 8.2;
-        
+    with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
+        trench_fix = true;
+        depth = 7;
+    }
+
+#define area_effect(_vx, _vy)
+    var _x = _vx + random(game_width),
+        _y = _vy + random(game_height);
+
+     // Player Bubbles:
+    if(random(4) < 1){
+        with(Player) instance_create(x, y, Bubble);
+    }
+
+     // Floor Bubbles:
+    else{
+        var f = instance_nearest(_x, _y, Floor);
+        with(f) instance_create(x + random(32), y + random(32), Bubble);
+    }
+
+    return 30 + random(20);
+
 #define area_make_floor
     var _x = x,
         _y = y,
@@ -173,7 +201,7 @@
 #define area_pop_extras
      // fix b tiles
     with instances_matching(Floor,"styleb",true)
-        depth -= 1;
+        depth = 8;
      // delete stuff
     with instances_matching(Floor,"styleb",true){
         with(Detail) if place_meeting(x,y,other)

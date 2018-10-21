@@ -3,33 +3,36 @@
 #define init
     global.spawn_enemy = 0;
 
-     // Sprites:
-	global.sprCoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
-	global.sprFloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
-	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
-	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
-    global.sprWaterStreak = sprite_add("../sprites/areas/Coast/sprWaterStreak.png", 7, 8, 8);
+    //#region SPRITES
+    	global.sprCoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
+    	global.sprFloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
+    	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
+    	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
+        global.sprWaterStreak = sprite_add("../sprites/areas/Coast/sprWaterStreak.png", 7, 8, 8);
+    //#endregion
 
-     // Music:
-    global.musCoast = sound_add("../music/musCoast.ogg");
+    //#region MUSIC
+        global.musCoast = sound_add("../music/musCoast.ogg");
+    //#endregion
 
-     // Sea/Surface Business:
-    global.surfW = 2000;
-    global.surfH = 2000;
-    global.surfX = 10000 - (global.surfW / 2);
-    global.surfY = 10000 - (global.surfH / 2);
-    global.surfTrans = -1;
-    global.surfFloor = -1;
-    global.surfFloorReset = false;
-    global.surfWaves = -1;
-    global.surfWavesSub = -1;
-    global.surfSwim = -1;
-    global.surfSwimBot = -1;
-    global.surfSwimTop = -1;
-    global.surfSwimSize = 1000;
-    global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
-    global.swimInstVisible = [];
-    global.seaDepth = 10.1;
+    //#region SURFACES
+        global.surfW = 2000;
+        global.surfH = 2000;
+        global.surfX = 10000 - (global.surfW / 2);
+        global.surfY = 10000 - (global.surfH / 2);
+        global.surfTrans = -1;
+        global.surfFloor = -1;
+        global.surfFloorReset = false;
+        global.surfWaves = -1;
+        global.surfWavesSub = -1;
+        global.surfSwim = -1;
+        global.surfSwimBot = -1;
+        global.surfSwimTop = -1;
+        global.surfSwimSize = 1000;
+        global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
+        global.swimInstVisible = [];
+        global.seaDepth = 10.1;
+    //#endregion
 
     global.shadeWade = shader_create(
         "/// Vertex Shader ///
@@ -97,6 +100,11 @@
         with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
     }
 
+#macro bgrColor make_color_rgb(27, 118, 184)
+#macro shdColor c_black
+#macro musMain  global.musCoast
+#macro ambMain  amb1
+
 #macro DebugLag 0
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
@@ -112,25 +120,26 @@
 
 #define area_sprite(_spr)
     switch(_spr){
+         // Floors:
         case sprFloor1:         return global.sprFloorCoast;
         case sprFloor1B:        return global.sprFloorCoastB;
-        case sprFloor1Explo:    return sprFloor1Explo;
-        case sprWall1Trans:     return sprWall1Trans;
-        case sprWall1Bot:       return sprWall1Bot;
-        case sprWall1Out:       return sprWall1Out;
-        case sprWall1Top:       return sprWall1Top;
-        case sprDebris1:        return sprDebris1;
+
+         // Misc:
     	case sprDetail1:        return global.sprDetailCoast;
     }
 
 #define area_setup
     goal = 100;
-    BackCont.shadcol = c_black;
-    background_color = make_color_rgb(27, 118, 184);
+
+    background_color = bgrColor;
+    BackCont.shadcol = shdColor;
+    sound_play_ambient(ambMain);
+
+     // Hopefully temporary fix for custom music bug:
     if(fork()){
         wait 2;
         sound_play_music(mus1);
-        sound_play_music(global.musCoast);
+        sound_play_music(musMain);
         exit;
     }
     

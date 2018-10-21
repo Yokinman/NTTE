@@ -1,6 +1,7 @@
 #define init
     global.newLevel = instance_exists(GenCont);
     global.area = ["coast","oasis","trench"];
+    global.effect_timer = 0;
 
      // Water Level Sounds:
     global.waterSound = {
@@ -209,6 +210,9 @@
             sndMutant15Dead,
             sndMutant16Dead,
             sndSuperSlugger
+            ],
+        "sndOasisHorn" : [
+            sndVenuz
             ]
     };
     for(var i = 0; i < lq_size(global.waterSound); i++){
@@ -217,6 +221,8 @@
             s[j] = [s[j], 1];
         }
     }
+
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #define level_start // game_start but every level
 	if(GameCont.area == 1){
@@ -295,10 +301,30 @@
         level_start();
     }
 
-     // Call Area Step (Step not built into area mods):
+     // Call Area Events (Not built into area mods):
     if(!instance_exists(GenCont)){
         var a = array_find_index(global.area, GameCont.area);
-        if(a >= 0) mod_script_call("area", global.area[a], "area_step");
+        if(a >= 0){
+             // Step:
+            mod_script_call("area", global.area[a], "area_step");
+
+             // Floor FX:
+            if(global.effect_timer <= 0){
+                global.effect_timer = random(60);
+                if(mod_script_exists("area", global.area[a], "area_effect")){
+                     // Pick Random Player's Screen:
+                    do var i = irandom(maxp - 1);
+                    until player_is_active(i);
+                    var _vx = view_xview[i], _vy = view_yview[i];
+
+                     // FX:
+                    var t = mod_script_call("area", global.area[a], "area_effect", _vx, _vy);
+                    if(!is_undefined(t) && t > 0) global.effect_timer = t;
+                }
+            }
+            else global.effect_timer -= current_time_scale;
+        }
+        else global.effect_timer = 0;
     }
 
     /// Tiny Spiders (New Cocoons):
@@ -316,62 +342,121 @@
         	}
         }
 
-#define underwater_step
-     // Run in underwater area step events
-     // lightning
-    with instances_matching(Lightning,"team",2){
-        image_speed = 0.1;
-        if floor(image_index) == sprite_get_number(sprite_index)-1{
-            team = 0;
-            sprite_index = sprEnemyLightning;
-            image_speed = 0.3;
-            image_index = 0;
-            if random(8) < 1{
-                sound_play_hit(sndLightningHit,0.2);
-                with instance_create(x,y,GunWarrantEmpty)
-                    image_angle = other.direction;
+#define underwater_step /// Call from underwater area step events
+     // Lightning:
+    with(Lightning){
+        image_index -= image_speed * 0.75;
+
+         // Zap:
+        if(image_index > image_number - 1){
+            with(instance_create(x, y, EnemyLightning)){
+                image_speed = 0.3;
+                image_angle = other.image_angle;
+                image_xscale = other.image_xscale;
+                if(random(8) < 1){
+                    sound_play_hit(sndLightningHit,0.2);
+                    with(instance_create(x, y, GunWarrantEmpty)){
+                        image_angle = other.direction;
+                    }
+                }
+                else if(random(3) < 1){
+                    instance_create(x + orandom(18), y + orandom(18), PortalL);
+                }
             }
-            else if random(3) < 1
-                instance_create(x+orandom(18),y+orandom(18),PortalL)
+            instance_destroy();
         }
     }
-     // reskin opened chests
-    with instances_matching(ChestOpen,"sprite_index",sprWeaponChestOpen)
-        sprite_index = sprClamChestOpen;
 
-    script_bind_step(underwater_poststep, 0);
-    script_bind_draw(underwater_bubbledraw, -3);
+     // Flames Boil Water:
+    with(Flame){
+        if(sprite_index != sprFishBoost){
+            if(image_index > 2){
+                sprite_index = sprFishBoost;
+                image_index = 0;
 
-#define underwater_poststep
+                 // FX:
+                if(random(3) < 1){
+                    instance_create(x, y, Bubble);
+                    sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), 0.4);
+                }
+            }
+        }
+
+         // Hot hot hot:
+        else if(current_frame_active && random(100) < 1){
+            instance_create(x, y, Bubble);
+        }
+
+         // Go away ugly smoke:
+        if(place_meeting(x, y, Smoke)){
+            with(instance_nearest(x, y, Smoke)) instance_destroy();
+            if(random(2) < 1) with(instance_create(x, y, Bubble)){
+                motion_add(other.direction, other.speed / 2);
+            }
+        }
+    }
+
+     // Chest Stuff:
+    with(instances_matching(ChestOpen, "waterchest", null)){
+        waterchest = true;
+        repeat(3) instance_create(x, y, Bubble);
+        if(sprite_index == sprWeaponChestOpen) sprite_index = sprClamChestOpen;
+    }
+
+    script_bind_step(underwater_sound, 0);
+    script_bind_draw(underwater_draw, -3);
+    script_bind_end_step(underwater_end_step, 0);
+
+#define underwater_sound
     instance_destroy();
 
      // Replace Sounds w/ Oasis Sounds:
     for(var i = 0; i < lq_size(global.waterSound); i++){
-        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i)),
-            _sounds = lq_get_value(global.waterSound, i);
-
-        for(var j = 0; j < array_length(_sounds); j++){
-            var _snd = _sounds[j];
-            if(audio_is_playing(_snd[0]) && _snd[1] < current_frame){
-                sound_play_pitchvol(_sndOasis, 1, 2);
-                _snd[1] = current_frame + 1;
+        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
+        with(lq_get_value(global.waterSound, i)){
+            var _snd = self;
+            if(audio_is_playing(_snd[0])){
+                if(_snd[1] < current_frame){
+                    sound_play_pitchvol(_sndOasis, 1, 2);
+                    _snd[1] = current_frame + 1;
+                }
+                sound_stop(_snd[0]);
             }
-            sound_stop(_snd[0]);
         }
     }
     with(instances_matching_ne(enemy, "snd_hurt", sndOasisHurt, -1)) snd_hurt = sndOasisHurt;
     with(instances_matching_ne(enemy, "snd_dead", sndOasisDeath, -1)) snd_dead = sndOasisDeath;
 
-     // Dust -> Bubbles:
+#define underwater_end_step
+    instance_destroy();
+
+     // Just in case - backup sound stopping:
+    for(var i = 0; i < lq_size(global.waterSound); i++){
+        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
+        with(lq_get_value(global.waterSound, i)) sound_stop(self[0]);
+    }
+
+     // Bubbles:
     with(Dust){
         instance_create(x, y, Bubble);
         instance_destroy();
     }
+    with(instances_matching(Smoke, "waterbubble", null)){
+        waterbubble = true;
+        instance_create(x, y, Bubble);
+    }
+    with(instances_matching(BoltTrail, "waterbubble", null)){
+        if(image_xscale != 0 && random(4) < 1){
+            waterbubble = true;
+            instance_create(x, y, Bubble);
+        }
+        else waterbubble = false;
+    }
 
-#define underwater_bubbledraw
+#define underwater_draw
     instance_destroy();
 
-     // Air Bubble:
+     // Air Bubbles:
     with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak], "visible", true)){
         draw_sprite(sprPlayerBubble, -1, x, y);
         if(my_health <= 0) instance_create(x, y, BubblePop);
@@ -382,6 +467,18 @@
             instance_create(x, y, BubblePop);
         }
     }
+
+     // :
+    d3d_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
+    draw_set_blend_mode(bm_add);
+    with(Flame) if(sprite_index != sprFishBoost){
+        var s = 1.5,
+            a = 0.1;
+
+        draw_sprite_ext(sprDragonFire, image_index + 2, x, y, image_xscale * s, image_yscale * s, image_angle, image_blend, image_alpha * a);
+    }
+    draw_set_blend_mode(bm_normal);
+    d3d_set_fog(0, 0, 0, 0);
 
 
 #define scrBossIntro(_name, _sound, _music)

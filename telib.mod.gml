@@ -95,9 +95,11 @@
             global.sprPalankingWalk = sprite_add("sprites/enemies/Palanking/sprPalankingWalk.png",     16, 40, 24);
             global.sprPalankingHurt = sprite_add("sprites/enemies/Palanking/sprPalankingHurt.png",      3, 40, 24);
             global.sprPalankingDead = sprite_add("sprites/enemies/Palanking/sprPalankingDead.png",      1, 40, 24);
+            global.sprPalankingBurp = sprite_add("sprites/enemies/Palanking/sprPalankingBurp.png",      5, 40, 24);
             global.sprPalankingFoam = sprite_add("sprites/enemies/Palanking/sprPalankingFoam.png",      1, 40, 24);
             global.mskPalanking     = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
             global.sprGroundSlash   = sprite_add("sprites/enemies/projectiles/sprGroundSlash.png",      3,  0, 21);
+            global.sprPalankingSlash = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",      5, 36, 36);
             if(fork()){
                 wait 30;
                 sprite_collision_mask(global.mskPalanking, false, 0, 0, 0, 0, 0, 0, 0);
@@ -119,15 +121,31 @@
             global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1,  6,  8);
 
              // Seal:
-            global.sprSealIdle      = sprite_add("sprites/enemies/Seal/sprSealIdle.png",    6, 12, 12);
-            global.sprSealWalk      = sprite_add("sprites/enemies/Seal/sprSealWalk.png",    6, 12, 12);
-            global.sprSealHurt      = sprite_add("sprites/enemies/Seal/sprSealHurt.png",    3, 12, 12);
-            global.sprSealDead      = sprite_add("sprites/enemies/Seal/sprSealDead.png",    6, 12, 12);
-            global.sprSealSpwn      = sprite_add("sprites/enemies/Seal/sprSealSpwn.png",    6, 12, 12);
-            global.sprHookPole      = sprite_add("sprites/enemies/Seal/sprHookPole.png",    1, 18,  2);
-            global.sprClamShield    = sprite_add("sprites/enemies/Seal/sprClamShield.png", 14,  7,  1);
-            global.sprSabre         = sprite_add("sprites/enemies/Seal/sprSabre.png",       1, -2,  1);
-            global.sprBlunderbuss   = sprite_add("sprites/enemies/Seal/sprBlunderbuss.png", 1,  7,  1);
+            global.sprSealIdle[0] = sprite_add("sprites/enemies/Seal/sprSealIdle.png",      6, 12, 12);
+            global.sprSealWalk[0] = sprite_add("sprites/enemies/Seal/sprSealWalk.png",      6, 12, 12);
+            global.sprSealHurt[0] = sprite_add("sprites/enemies/Seal/sprSealHurt.png",      3, 12, 12);
+            global.sprSealDead[0] = sprite_add("sprites/enemies/Seal/sprSealDead.png",      6, 12, 12);
+            global.sprSealSpwn[0] = sprite_add("sprites/enemies/Seal/sprSealSpwn.png",      6, 12, 12);
+            global.sprSealWeap[0] = mskNone;
+            global.sprSealIdle[1] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
+            global.sprSealWalk[1] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
+            global.sprSealHurt[1] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
+            global.sprSealDead[1] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
+            global.sprSealSpwn[1] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
+            global.sprSealWeap[1] = sprite_add("sprites/enemies/Seal/sprHookPole.png",      1, 18,  2);
+            global.sprSealIdle[2] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
+            global.sprSealWalk[2] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
+            global.sprSealHurt[2] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
+            global.sprSealDead[2] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
+            global.sprSealSpwn[2] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
+            global.sprSealWeap[2] = sprite_add("sprites/enemies/Seal/sprSabre.png",         1, -2,  1);
+            global.sprSealIdle[3] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
+            global.sprSealWalk[3] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
+            global.sprSealHurt[3] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
+            global.sprSealDead[3] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
+            global.sprSealSpwn[3] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
+            global.sprSealWeap[3] = sprite_add("sprites/enemies/Seal/sprBlunderbuss.png",   1,  7,  1);
+            global.sprClamShield  = sprite_add("sprites/enemies/Seal/sprClamShield.png",   14,  7,  1);
 
              // Seal (Heavy):
             global.sprSealHeavySpwn = sprite_add("sprites/enemies/Seal/sprHeavySealSpwn.png",   6, 16, 17);
@@ -211,6 +229,7 @@
             PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
             PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
             PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
+            sound_volume(PalankingHurt, 0.6);
         }
     //#endregion
 
@@ -303,9 +322,10 @@
     	         // Visual:
     	        sprite_index = global.sprBubbleBomb;
     	        image_speed = 0.5;
+    	        depth = -2;
 
     	         // Vars:
-    	        mask_index = mskFlakBullet;
+    	        mask_index = mskSuperFlakBullet;
     	        z = 0;
     	        zspeed = -0.5;
     	        zfric = -0.02;
@@ -350,7 +370,7 @@
                 snd_dead = -1;
 
                  // Vars:
-                mask_index = mskBigSkull;
+                mask_index = mskScorpion;
                 maxhealth = 50 + (100 * GameCont.loops);
                 my_health = maxhealth;
                 size = 2;
@@ -638,26 +658,22 @@
         	        bossname = "PALANKING";
         	        col = c_red;
 
-        	        /// Visual:
-        	            spr_bott = global.sprPalankingBott;
-        	            spr_taun = global.sprPalankingTaunt;
-        	            spr_call = global.sprPalankingCall;
-            	        spr_idle = global.sprPalankingIdle;
-            			spr_walk = global.sprPalankingWalk;
-            			spr_hurt = global.sprPalankingHurt;
-            			spr_dead = global.sprPalankingDead;
-            			spr_foam = global.sprPalankingFoam;
-        			    spr_shadow_hold = shd64B; // Actually a good use for this shadow hell yeah
-        			    spr_shadow = mskNone;
-                        spr_shadow_y = 24;
-            			hitid = [spr_idle, _name];
-            			sprite_index = spr_idle;
-        			    depth = -3;
-
-            			 // Fire:
-            			spr_sfir = global.sprPalankingIdle;
-            			spr_fire = global.sprPalankingIdle;
-            			spr_efir = global.sprPalankingIdle;
+        	         // Visual:
+    	            spr_bott = global.sprPalankingBott;
+    	            spr_taun = global.sprPalankingTaunt;
+    	            spr_call = global.sprPalankingCall;
+        	        spr_idle = global.sprPalankingIdle;
+        			spr_walk = global.sprPalankingWalk;
+        			spr_hurt = global.sprPalankingHurt;
+        			spr_dead = global.sprPalankingDead;
+        			spr_burp = global.sprPalankingBurp;
+        			spr_foam = global.sprPalankingFoam;
+    			    spr_shadow_hold = shd64B; // Actually a good use for this shadow hell yeah
+    			    spr_shadow = mskNone;
+                    spr_shadow_y = 24;
+        			hitid = [spr_idle, "SEAL KING"];
+        			sprite_index = spr_idle;
+    			    depth = -3;
 
                      // Sound:
             		snd_hurt = snd.PalankingHurt;
@@ -792,12 +808,12 @@
                     o = instance_create(_x, _y, CustomEnemy);
                     with(o){
                          // Visual:
-                        spr_spwn = global.sprSealSpwn;
-                        spr_idle = global.sprSealIdle;
-                        spr_walk = global.sprSealWalk;
-                        spr_hurt = global.sprSealHurt;
-                        spr_dead = global.sprSealDead;
-                        spr_weap = mskNone;
+                        spr_spwn = global.sprSealSpwn[0];
+                        spr_idle = global.sprSealIdle[0];
+                        spr_walk = global.sprSealWalk[0];
+                        spr_hurt = global.sprSealHurt[0];
+                        spr_dead = global.sprSealDead[0];
+                        spr_weap = global.sprSealWeap[0];
                         spr_shadow = shd24;
                         hitid = [spr_idle, _name];
                         sprite_index = spr_spwn;
@@ -1021,6 +1037,7 @@
                      // Sound:
         			snd_hurt = sndOasisHurt;
         			snd_dead = sndOasisDeath;
+        			snd_mele = sndBigBanditMeleeHit;
     
         			 // Vars:
         			mask_index = mskScorpion;
@@ -1462,7 +1479,7 @@
      // Float Up:
     z_engine();
     image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
-    depth = min(-2, -z);
+    depth = min(depth, -z);
 
      // Collision:
     if(place_meeting(x, y, Player)) with(Player){
@@ -1657,6 +1674,7 @@
                 if(!intro){
                     intro = true;
                     scrBossIntro("", sndOasisBossIntro, musBoss1);
+                    with(MusCont) alarm_set(3, -1);
                 }
                 exit; }
 
@@ -2027,6 +2045,7 @@
         image_yscale = 0.6;
         image_xscale = point_distance(_x1, _y1, _x2, _y2);
         image_angle = point_direction(_x1, _y1, _x2, _y2);
+        creator = other.creator;
     }
 
 #define Harpoon_step
@@ -2849,11 +2868,14 @@
     }
 
      // Animate:
-    if(sprite_index != spr_hurt && sprite_index != spr_call && sprite_index != spr_taun){
-        if(speed <= 0) sprite_index = spr_idle;
-        else sprite_index = spr_walk;
+    if(sprite_index != spr_burp){
+        if(sprite_index != spr_hurt && sprite_index != spr_call && sprite_index != spr_taun){
+            if(speed <= 0) sprite_index = spr_idle;
+            else sprite_index = spr_walk;
+        }
+        else if(anim_end) sprite_index = spr_idle;
     }
-    else if(anim_end) sprite_index = spr_idle;
+    else if(anim_end) image_index = 1;
 
      // Smack Smack:
     if(sprite_index == spr_call){
@@ -3027,51 +3049,76 @@
      // Bubble Bomb Burp:
     if(ammo > 0){
         alarm1 = 4;
+        with(scrEnemyShootExt(x, y - z + 2, "BubbleBomb", gunangle + orandom(10), 8 + random(4))){
+            depth = other.depth - 1;
+        }
+        motion_add(gunangle + 180, 0.5);
 
-        scrEnemyShoot("BubbleBomb", gunangle + orandom(10), 8 + random(4));
-        sound_play_pitchvol(sndExplosionS, 3, 0.4);
-        motion_add(gunangle + 180, 4);
+         // Effects:
+        sound_play_pitchvol(sndRatkingCharge, 0.4 + random(0.4), 1.4);
+        repeat(irandom(2)) with(instance_create(x, y - z + 2, Bubble)){
+            motion_add(other.gunangle + orandom(20), 2 + random(2));
+            depth = other.depth - 1;
+            image_xscale = random_range(0.7, 0.8);
+            image_yscale = image_xscale;
+            image_speed *= 1.5;
+            gravity /= 2;
+            coast_water = false;
+        }
 
-        if(--ammo <= 0) alarm1 = 60 + random(20);
+         // End:
+        if(--ammo <= 0){
+            alarm1 = 40 + random(20);
+            sound_play_pitch(snd_hurt, 0.6);
+            sprite_index = spr_hurt;
+            image_index = 0;
+        }
     }
-    
+
      // Normal AI:
     else if(target_is_visible()){
         var _targetDir = point_direction(x, y, target.x, target.y);
 
-        scrWalk(60, _targetDir + orandom(30));
-
-         // Call for Seals:
-        if(z <= 0 || random(8) < 1){
-            sprite_index = spr_call;
-            image_index = 0;
-            sound_play(snd.PalankingCall);
-            scrSealSpawn(x, y, random(360), 30);
-        }
-
-         // Begin Bubble Bomb Attack:
-        if(target_in_distance(0, 160) and random(4) < 1) {
-            alarm1 = 5;
-            ammo = 10;
-            gunangle = _targetDir;
-            sound_play_pitchvol(sndRatKingVomit, 0.75, 1.2);
-        }
-
-         // Wave Slash:
-        else if(target_in_distance(80, 900) and random(2) < 1) {
+         // Kingly Bash:
+        if(target_in_distance(0, 80) && random(1) < 1){
             alarm1 = 60 + random(20);
 
             gunangle = _targetDir;
             scrWalk(20, gunangle);
-            with(scrEnemyShoot(EnemySlash, gunangle + 20, 4)){
-                sprite_index = sprHeavySlash;
-                image_speed = 0.2;
+            with(scrEnemyShoot(EnemySlash, gunangle, 4)){
+                sprite_index = global.sprPalankingSlash;
+                depth = other.depth - 1;
                 damage = 0;
             }
-            with(scrEnemyShoot(EnemySlash, gunangle - 20, 4)){
-                sprite_index = sprHeavySlash;
-                image_speed = 0.2;
-                damage = 0;
+        }
+
+        else{
+            scrWalk(60, _targetDir + orandom(30));
+    
+             // Call for Seals:
+            if(z <= 0 || random(array_length(Seal)) < 1){
+                sprite_index = spr_call;
+                image_index = 0;
+                sound_play(snd.PalankingCall);
+                scrSealSpawn(x, y, random(360), 30);
+                alarm1 = alarm3 + random(8);
+            }
+
+             // Begin Burp Attack:
+            else if(random(2) < 1){
+                if(target_in_distance(0, 192)){
+                    gunangle = _targetDir;
+                    alarm1 = 5;
+                    ammo = 10;
+        
+                    sprite_index = spr_burp;
+                    image_index = 0;
+        
+                    sound_play_pitchvol(sndRhinoFreakMelee, 0.5, 1);
+                    sound_play_pitchvol(sndExplosion, 0.3, 0.25);
+                    sound_play_pitch(sndBigGeneratorHurt, 0.4);
+                    sound_play_pitch(sndRatKingVomit, 0.9);
+                }
             }
         }
     }
@@ -3128,13 +3175,24 @@
 
     with(o){
          // Randomize Type:
-        var _pick = [];
-        for(var i = 0; i < array_length(seal_chance); i++){
-            if(seal_chance[i] > 0) repeat(seal_chance[i]){
-                array_push(_pick, i);
+        if(name == "Seal"){
+            var _pick = [];
+            for(var i = 0; i < array_length(seal_chance); i++){
+                if(seal_chance[i] > 0) repeat(seal_chance[i]){
+                    array_push(_pick, i);
+                }
             }
+            type = _pick[irandom(array_length(_pick) - 1)];
+    
+             // Set Sprites:
+            spr_idle = global.sprSealIdle[type];
+            spr_walk = global.sprSealWalk[type];
+            spr_hurt = global.sprSealHurt[type];
+            spr_dead = global.sprSealDead[type];
+            spr_spwn = global.sprSealSpwn[type];
+            spr_weap = global.sprSealWeap[type];
+            sprite_index = spr_spwn;
         }
-        type = _pick[irandom(array_length(_pick) - 1)];
 
          // Important Stuff:
         creator = other;
@@ -3172,7 +3230,7 @@
         sound_play_hit(snd_hurt, 0.3);	// Sound
 
          // Hurt Sprite:
-        if(sprite_index != spr_call){
+        if(sprite_index != spr_call && sprite_index != spr_burp){
             sprite_index = spr_hurt;
             image_index = 0;
         }
@@ -3389,8 +3447,6 @@
      // Type Step:
     switch(type){
         case seal_hookpole:
-            spr_weap = global.sprHookPole;
-            
              // About to Stab:
             if(alarm1 > 0) wkick += 2 * current_time_scale;
 
@@ -3403,8 +3459,6 @@
         case seal_shield:
              // Shield Mode:
             if(shield){
-                spr_weap = mskNone;
-
                  // Turn:
                 var t = angle_difference(gunangle, shield_ang) / 8;
                 shield_ang += t;
@@ -3450,7 +3504,6 @@
 
              // Sword Stabby Mode:
             else{
-                spr_weap = global.sprSabre;
                 if(wepangle == 0) wepangle = choose(-120, 120);
                 shield_ang = 90;
             }
@@ -3495,8 +3548,6 @@
             break;
 
         case seal_blunderbuss:
-            spr_weap = global.sprBlunderbuss;
-
              // Powder Smoke:
             if(alarm1 > 0 && current_frame_active){
                 sound_play(asset_get_index(`sndFootPlaSand${1 + irandom(5)}`));
@@ -3511,7 +3562,6 @@
             break;
 
         default:
-            spr_weap = mskNone;
             if(walk > 0) direction += orandom(10);
     }
 
@@ -3812,7 +3862,7 @@
     if(type == seal_shield && _drawWep){
          // Back Dagger:
         if(shield){
-            draw_sprite_ext(global.sprSabre, 0, x + 2 - (8 * right), y - 16, 1, 1, 270 + (right * 25), c_white, image_alpha);
+            draw_sprite_ext(spr_weap, 0, x + 2 - (8 * right), y - 16, 1, 1, 270 + (right * 25), c_white, image_alpha);
         }
 
          // Back Shield:
@@ -3833,12 +3883,9 @@
     if(gunangle >  180) draw_self_enemy();
 
     if(_drawWep){
-         // Weapon:
-        draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
-        
          // 3D Shield + Auto-Outline:
-        if(type == seal_shield){
-            if(shield && surface_exists(surfClamShield)){
+        if(type == seal_shield && shield){
+            if(surface_exists(surfClamShield)){
                 var _surfx = surfClamShieldX,
                     _surfy = surfClamShieldY + 5;
         
@@ -3851,6 +3898,9 @@
                 draw_surface(surfClamShield, _surfx, _surfy);
             }
         }
+
+         // Weapon:
+        else draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
     }
 
      // Self:
