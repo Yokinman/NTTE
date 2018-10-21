@@ -1,7 +1,9 @@
 #define init
 
-#macro bg_color area_get_background_color(101);
-#macro shd_color area_get_shadow_color(101);
+#macro bgrColor area_get_background_color(101);
+#macro shdColor area_get_shadow_color(101);
+#macro musMain  mus101
+#macro ambMain  amb101
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)2-" + string(_subarea);
@@ -14,26 +16,29 @@
     
 #define area_sprite(_spr)
     switch(_spr){
-         // floors
-        case(sprFloor1): return sprFloor101;
-        case(sprFloor1B): return sprFloor101B;
-        case(sprFloor1Explo): return sprFloor101Explo;
-         // walls
-        case(sprWall1Trans): return sprWall101Trans;
-        case(sprWall1Bot): return sprWall101Bot;
-        case(sprWall1Out): return sprWall101Out;
-        case(sprWall1Top): return sprWall101Top;
-         // misc
-        case(sprDebris1): return sprDebris101;
-        case(sprDetail1): return sprDetail101;
+         // Floors:
+        case sprFloor1      : return sprFloor101;
+        case sprFloor1B     : return sprFloor101B;
+        case sprFloor1Explo : return sprFloor101Explo;
+
+         // Walls:
+        case sprWall1Trans  : return sprWall101Trans;
+        case sprWall1Bot    : return sprWall101Bot;
+        case sprWall1Out    : return sprWall101Out;
+        case sprWall1Top    : return sprWall101Top;
+
+         // Misc:
+        case sprDebris1     : return sprDebris101;
+        case sprDetail1     : return sprDetail101;
     }
     
 #define area_setup
     goal = 130;
-    BackCont.shadcol = shd_color;
-    background_color = bg_color;
-    sound_play_music(mus101);
-    sound_play_ambient(amb101);
+
+    background_color = bgrColor;
+    BackCont.shadcol = shdColor;
+    sound_play_music(musMain);
+    sound_play_ambient(ambMain);
 
 #define area_start
      // Fix B Floors:
@@ -52,7 +57,24 @@
     with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","TrenchEntrance")){
         with nearest_instance(10000,10000,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"TrenchEntrance");
     }
-        
+
+#define area_effect(_vx, _vy)
+    var _x = _vx + random(game_width),
+        _y = _vy + random(game_height);
+
+     // Player Bubbles:
+    if(random(4) < 1){
+        with(Player) instance_create(x, y, Bubble);
+    }
+
+     // Floor Bubbles:
+    else{
+        var f = instance_nearest(_x, _y, Floor);
+        with(f) instance_create(x + random(32), y + random(32), Bubble);
+    }
+
+    return 30 + random(20);
+
 #define area_make_floor
     var _x = x,
         _y = y,
@@ -121,7 +143,7 @@
                 repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
             }
             else{
-                repeat(irandom_range(2, 5)) obj_create(_x, _y, "Puffer");
+                repeat(irandom_range(1, 4)) obj_create(_x, _y, "Puffer");
             }
         }
 

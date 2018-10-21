@@ -1,6 +1,17 @@
 #define init
     global.sprBone = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
 
+     // Global Step:
+    while(true){
+        with(WepPickup) if(is_object(wep)){
+            if(wep_get(wep) == mod_current && lq_defget(wep, "ammo", 1) > 1){
+                wep.ammo--;
+                with(instance_create(x, y, WepPickup)) wep = mod_current;
+            }
+        }
+        wait 1;
+    }
+
 #define weapon_name return "BONE";
 #define weapon_text return "BONE THE FISH";
 #define weapon_type return 0;   // Melee
@@ -62,12 +73,10 @@
         with(WepPickup) if(place_meeting(x, y, other)){
             if(wep_get(wep) == mod_current){
                 w.ammo++;
-                with(instance_create(x, y, DiscDisappear)){
-                    image_angle = other.rotation;
-                }
-                sound_play_pitchvol(sndHPPickup, 4, 0.6);
-                sound_play_pitch(sndPickupDisappear, 0.8);
-                sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.5);
+                with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
+                sound_play_pitchvol(sndHPPickup, 4, 1);
+                sound_play_pitch(sndPickupDisappear, 1.2);
+                sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
                 instance_destroy();
             }
         }
