@@ -133,30 +133,32 @@
             global.sprSealDead[1] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
             global.sprSealSpwn[1] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
             global.sprSealWeap[1] = sprite_add("sprites/enemies/Seal/sprHookPole.png",      1, 18,  2);
-            global.sprSealIdle[2] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
-            global.sprSealWalk[2] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
-            global.sprSealHurt[2] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
-            global.sprSealDead[2] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
-            global.sprSealSpwn[2] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
+            global.sprSealIdle[2] = sprite_add("sprites/enemies/Seal/sprSealIdle2.png",     6, 12, 12);
+            global.sprSealWalk[2] = sprite_add("sprites/enemies/Seal/sprSealWalk2.png",     6, 12, 12);
+            global.sprSealHurt[2] = sprite_add("sprites/enemies/Seal/sprSealHurt2.png",     3, 12, 12);
+            global.sprSealDead[2] = sprite_add("sprites/enemies/Seal/sprSealDead2.png",     6, 12, 12);
+            global.sprSealSpwn[2] = sprite_add("sprites/enemies/Seal/sprSealSpwn2.png",     6, 12, 12);
             global.sprSealWeap[2] = sprite_add("sprites/enemies/Seal/sprSabre.png",         1, -2,  1);
-            global.sprSealIdle[3] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
-            global.sprSealWalk[3] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
-            global.sprSealHurt[3] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
-            global.sprSealDead[3] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
-            global.sprSealSpwn[3] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
+            global.sprSealIdle[3] = sprite_add("sprites/enemies/Seal/sprSealIdle3.png",     6, 12, 12);
+            global.sprSealWalk[3] = sprite_add("sprites/enemies/Seal/sprSealWalk3.png",     6, 12, 12);
+            global.sprSealHurt[3] = sprite_add("sprites/enemies/Seal/sprSealHurt3.png",     3, 12, 12);
+            global.sprSealDead[3] = sprite_add("sprites/enemies/Seal/sprSealDead3.png",     6, 12, 12);
+            global.sprSealSpwn[3] = sprite_add("sprites/enemies/Seal/sprSealSpwn3.png",     6, 12, 12);
             global.sprSealWeap[3] = sprite_add("sprites/enemies/Seal/sprBlunderbuss.png",   1,  7,  1);
             global.sprClamShield  = sprite_add("sprites/enemies/Seal/sprClamShield.png",   14,  7,  1);
 
              // Seal (Heavy):
-            global.sprSealHeavySpwn = sprite_add("sprites/enemies/Seal/sprHeavySealSpwn.png",   6, 16, 17);
-            global.sprSealHeavyIdle = sprite_add("sprites/enemies/Seal/sprHeavySealIdle.png",  10, 16, 17);
-            global.sprSealHeavyWalk = sprite_add("sprites/enemies/Seal/sprHeavySealWalk.png",   8, 16, 17);
-            global.sprSealHeavyHurt = sprite_add("sprites/enemies/Seal/sprHeavySealHurt.png",   3, 16, 17);
-            global.sprSealHeavyDead = sprite_add("sprites/enemies/Seal/sprHeavySealDead.png",   7, 16, 17);
-            global.sprSealHeavyTell = sprite_add("sprites/enemies/Seal/sprHeavySealTell.png",   2, 16, 17);
-            global.sprSealMine      = sprite_add("sprites/enemies/Seal/sprSealMine.png",        1, 12, 12);
-            global.sprSealMineHurt  = sprite_add("sprites/enemies/Seal/sprSealMineHurt.png",    3, 12, 12);
-            global.sprSealAnchor    = sprite_add("sprites/enemies/Seal/sprHeavySealAnchor.png", 1,  0, 12);
+            global.sprSealHeavySpwn = sprite_add("sprites/enemies/SealHeavy/sprHeavySealSpwn.png",   6, 16, 17);
+            global.sprSealHeavyIdle = sprite_add("sprites/enemies/SealHeavy/sprHeavySealIdle.png",  10, 16, 17);
+            global.sprSealHeavyWalk = sprite_add("sprites/enemies/SealHeavy/sprHeavySealWalk.png",   8, 16, 17);
+            global.sprSealHeavyHurt = sprite_add("sprites/enemies/SealHeavy/sprHeavySealHurt.png",   3, 16, 17);
+            global.sprSealHeavyDead = sprite_add("sprites/enemies/SealHeavy/sprHeavySealDead.png",   7, 16, 17);
+            global.sprSealHeavyTell = sprite_add("sprites/enemies/SealHeavy/sprHeavySealTell.png",   2, 16, 17);
+            global.sprSealAnchor    = sprite_add("sprites/enemies/SealHeavy/sprHeavySealAnchor.png", 1,  0, 12);
+
+             // Sea/Seal Mine:
+            global.sprSealMine      = sprite_add("sprites/areas/Coast/props/sprSeaMine.png",      1, 12, 12);
+            global.sprSealMineHurt  = sprite_add("sprites/areas/Coast/props/sprSeaMineHurt.png",  3, 12, 12);
 
              // Traffic Crab:
             global.sprCrabIdle = sprite_add("sprites/enemies/Crab/sprTrafficCrabIdle.png", 5, 24, 24);
@@ -2967,9 +2969,11 @@
          // Call for Seals:
         if(fork()){
             wait 15;
-            sprite_index = spr_call;
-            image_index = 0;
-            sound_play(snd.PalankingCall);
+            if(instance_exists(self)){
+                sprite_index = spr_call;
+                image_index = 0;
+                sound_play(snd.PalankingCall);
+            }
             exit;
         }
 
@@ -3718,6 +3722,11 @@
                     else{
                         scrWalk(10, _targetDir + orandom(90));
                         if(random(2) < 1) slide = 15;
+                    }
+
+                     // Important:
+                    if(random(3) < 1){
+                        instance_create(x, y, CaveSparkle).depth = depth - 1;
                     }
                 }
             	break;
