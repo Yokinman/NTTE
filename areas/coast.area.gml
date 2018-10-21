@@ -173,22 +173,26 @@
         }
     }
     
-     // spawn blaaczilla
-    var _forcespawn = false;
-     // check for blaac
-    for(var i = 0; i < maxp; i++)
-        if player_get_alias(i) == "blaac"
-            _forcespawn = true;
-    if (random(25) < 1+GameCont.loops || _forcespawn) && GameCont.subarea != 3{
-        var _n = 10016,
-            _f = instance_furthest(_n,_n,Floor),
-            _l = 1.75*point_distance(_n,_n,_f.x,_f.y),
-            _d = 180+point_direction(_n,_n,_f.x,_f.y);
-        obj_create(_n+lengthdir_x(_l,_d),_n+lengthdir_y(_l,_d),"Blaaczilla");
-        if fork(){
-            wait(30)
-            sound_play_pitchvol(sndOasisBossFire,0.75,0.25);
-            exit;
+     // Spawn Thing:
+    if(GameCont.subarea != 3){
+        var _forcespawn = false;
+         // check for blaac
+        for(var i = 0; i < maxp; i++){
+            if(player_get_alias(i) == "blaac") _forcespawn = true;
+        }
+
+        if(random(25) < 1 + GameCont.loops || _forcespawn){
+            var _n = 10016,
+                _f = instance_furthest(_n,_n,Floor),
+                _l = 1.75*point_distance(_n,_n,_f.x,_f.y),
+                _d = 180+point_direction(_n,_n,_f.x,_f.y);
+
+            obj_create(_n + lengthdir_x(_l,_d), _n + lengthdir_y(_l,_d), "Creature");
+            if(fork()){
+                wait(30);
+                sound_play_pitchvol(sndOasisBossFire,0.75,0.25);
+                exit;
+            }
         }
     }
 
@@ -860,8 +864,8 @@
             }
         }
 
-         // Blaaczilla:
-        with(instances_matching(CustomHitme, "name", "Blaaczilla")){
+         // Thing:
+        with(instances_matching(CustomHitme, "name", "Creature")){
     	    draw_sprite_ext(spr_foam, image_index, x - _surfx, y - _surfy, image_xscale * right, image_yscale, image_angle, image_blend, 1);
     	}
 
@@ -923,8 +927,8 @@
         draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
     
-     // blaaczilla bottom half:
-    with instances_matching(CustomHitme,"name","Blaaczilla"){
+     // Thing bottom half:
+    with instances_matching(CustomHitme, "name", "Creature"){
         draw_sprite_ext(spr_bott,image_index,x,y,image_xscale*right,image_yscale,image_angle,image_blend,image_alpha);
     }
     d3d_set_fog(0,0,0,0);
