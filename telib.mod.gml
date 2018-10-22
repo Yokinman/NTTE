@@ -279,7 +279,7 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 #macro snd global.snd
-#macro mus global.mus
+#macro mus global.mus // remove this comment later
 
 #define obj_create(_x, _y, obj_name)
     var o = noone,

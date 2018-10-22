@@ -37,7 +37,7 @@
 
 #macro bgrColor make_color_rgb(100, 114, 127)
 #macro shdColor c_black
-#macro musMain  musBoss5
+#macro musMain  musBoss5 // remove this comment later
 #macro ambMain  amb101
 
 #define area_name(_subarea, _loop)
