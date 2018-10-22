@@ -53,9 +53,9 @@
 #define area_step
      // Run underwater code:
     mod_script_call("mod","ntte","underwater_step");
-     // Spawn trench entrance:
-    with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","TrenchEntrance")){
-        with nearest_instance(10000,10000,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"TrenchEntrance");
+     // Spawn cool crack effect:
+    with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","Crack")){
+        with nearest_instance(10000,10000,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"Crack");
     }
 
 #define area_effect(_vx, _vy)
