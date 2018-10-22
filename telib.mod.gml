@@ -389,7 +389,7 @@
                     exit;
                 }
             break;
-            
+
         case "SmallBubbleExplosion":
             o = instance_create(_x, _y, SmallExplosion);
             with(o){
