@@ -2923,6 +2923,7 @@
                 phase++;
             }
         }
+
         else{
              // Freeze Enemies:
             with(Seal) alarm0 = 30 + random(120);
