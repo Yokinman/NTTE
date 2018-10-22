@@ -178,8 +178,6 @@
 #define area_pop_enemies
     
 #define area_pop_props
-     // top decal
-     // how do you do them
     var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
     if random(_wallChance) < 1{
          // quarter walls
@@ -195,7 +193,7 @@
     else if random(16) < 1 && !styleb{
         var _x = x+16+orandom(8),
             _y = y+16+orandom(8);
-        obj_create(_x,_y,"Kelp");
+        obj_create(_x,_y,choose("Kelp","Kelp","Vent"));
     }
     
 #define area_pop_extras
@@ -252,7 +250,7 @@
             draw_set_color(c_white);
             
              // > > > DRAW YOUR PIT SHIT HERE < < <
-             
+            
             draw_surface(global.surf[0],0,0);
             draw_set_color_write_enable(1,1,1,1);
         surface_reset_target();

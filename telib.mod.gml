@@ -203,6 +203,10 @@
             global.sprKelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png",6,16,22);
             global.sprKelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png",3,16,22);
             global.sprKelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png",8,16,22);
+             // Vent:
+            global.sprVentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png",1,12,14);
+            global.sprVentHurt = sprite_add("sprites/areas/Trench/Props/sprVentHurt.png",3,12,14);
+            global.sprVentDead = sprite_add("sprites/areas/Trench/Props/sprVentDead.png",6,12,14);
         //#endregion
 
         //#region SEWERS
@@ -345,7 +349,7 @@
     	    break;
 
         case "BubbleExplosion":
-            o = instance_create(_x, _y, Explosion);
+            o = instance_create(_x, _y, PopoExplosion);
             with(o){
                 sprite_index = global.sprBubbleExplode;
                 mask_index = mskExplosion;
@@ -359,6 +363,32 @@
             repeat(10) instance_create(_x, _y, Bubble);
             sound_play_pitch(sndExplosionS, 2);
             sound_play_pitch(sndOasisExplosion, 1 + random(1));
+             // Crown of Explosions:
+            if GameCont.crown == 2
+                if fork(){
+                    wait(0);
+                    repeat(choose(2,3))
+                        with obj_create(_x,_y,"SmallBubbleExplosion") if instance_exists(o)
+                            team = o.team;
+                    exit;
+                }
+            break;
+            
+        case "SmallBubbleExplosion":
+            o = instance_create(_x, _y, SmallExplosion);
+            with(o){
+                sprite_index = global.sprBubbleExplode;
+                mask_index = mskExplosion;
+                image_xscale = 0.5;
+                image_yscale = 0.5;
+                hitid = [sprite_index,"BUBBLE EXPLO"];
+                damage = 3;
+                force = 1;
+                alarm0 = -1; // No scorchmark
+            }
+             // Effects:
+            repeat(10) instance_create(_x, _y, Bubble);
+            sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
             break;
 
         case "CoastBossBecome":
@@ -1132,6 +1162,27 @@
                     depth = -2;
                 }
                 break;
+            
+            case "Vent":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = global.sprVentIdle;
+                    spr_hurt = global.sprVentHurt;
+                    spr_dead = global.sprVentDead;
+                    spr_shadow = mskNone;
+                    sprite_index = spr_idle;
+                    
+                     // Sounds
+                    snd_hurt = sndOasisHurt;
+                    snd_dead = sndOasisExplosionSmall;
+                    
+                     // Vars:
+                    depth = -2;
+                    maxhealth = 12;
+                    my_health = maxhealth;
+                }
+                break;
         //#endregion
 
         //#region SEWERS
@@ -1312,7 +1363,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Kelp",
+    		        "Vent", "Kelp",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -4787,6 +4838,21 @@
             motion_add(irandom(359),3+random(3));
         }
     }
+
+
+#define Vent_step
+    if random(5) < current_time_scale{
+        with instance_create(x,y,Bubble){
+            friction = 0.2;
+            motion_set(irandom_range(85,95),random_range(4,7));
+        }
+        // with instance_create(x,y-8,Smoke){
+        //     motion_set(irandom_range(65,115),random_range(10,100));
+        // }
+    }
+
+#define Vent_death
+    obj_create(x,y,"BubbleExplosion");
 
 #define Cat_step
     enemyAlarms(1);
