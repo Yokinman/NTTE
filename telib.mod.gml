@@ -199,19 +199,21 @@
         //#endregion
         
         //#region TRENCH
-             // Jellyfish:
-                  // Blue:
-                global.sprJellyfishBlueIdle = sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",10,32,48);
-                global.sprJellyfishBlueHurt = sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",3,32,48);
-                global.sprJellyfishBlueDead = sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",10,32,48);
-                  // Purple:
-                global.sprJellyfishPurpleIdle = sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",10,32,48);
-                global.sprJellyfishPurpleHurt = sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",3,32,48);
-                global.sprJellyfishPurpleDead = sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png",10,32,48);
-                  // Green:
-                global.sprJellyfishGreenIdle = sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",10,32,48);
-                global.sprJellyfishGreenHurt = sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",3,32,48);
-                global.sprJellyfishGreenDead = sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",10,32,48);
+             // Jellyfish (0 = blue, 1 = purple, 2 = green):
+            global.sprJellyfishFire = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",1,24,24);
+            global.sprJellyfishUncharged = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png",1,24,24);
+            global.sprJellyfishIdle = [
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",1,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",1,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",1,24,24)];
+            global.sprJellyfishHurt = [
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",3,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",3,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",3,24,24)];
+            global.sprJellyfishDead = [
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",13,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png",13,24,24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",13,24,24)];
              // Kelp:
             global.sprKelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png",6,16,22);
             global.sprKelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png",3,16,22);
@@ -388,6 +390,23 @@
                             team = o.team;
                     exit;
                 }
+            break;
+            
+        case "LightningDisc":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                 // Visual:
+                sprite_index = sprEnemyLightning;
+                image_speed = 0.4;
+        
+                 // Vars:
+                mask_index = mskWepPickup;
+                rotspeed = random_range(10, 20) * choose(-1, 1);
+                rotation = 0;
+                radius = 16;
+                ammo = 10;
+                typ = 0;
+            }
             break;
 
         case "SmallBubbleExplosion":
@@ -1164,24 +1183,14 @@
             o = instance_create(_x, _y, CustomEnemy);
                 with(o) {
                      // Visual:
-                    var c = irandom_range(1, 3);
-                    if(c = 1) { // Blue:
-                        spr_idle = global.sprJellyfishBlueIdle;
-                        spr_walk = spr_idle;
-                        spr_hurt = global.sprJellyfishBlueHurt;
-                        spr_dead = global.sprJellyfishBlueDead;
-                    } else if(c = 2) {
-                        spr_idle = global.sprJellyfishPurpleIdle;
-                        spr_walk = spr_idle;
-                        spr_hurt = global.sprJellyfishPurpleHurt;
-                        spr_dead = global.sprJellyfishPurpleDead;
-                    } else if(c = 3) {
-                        spr_idle = global.sprJellyfishGreenIdle;
-                        spr_walk = spr_idle;
-                        spr_hurt = global.sprJellyfishGreenHurt;
-                        spr_dead = global.sprJellyfishGreenDead;
-                    }
-                    spr_weap = mskNone;
+                    var c = irandom(2);
+                    spr_charged = global.sprJellyfishIdle[c];
+                    spr_uncharged = global.sprJellyfishUncharged;
+                    spr_idle = spr_charged;
+                    spr_walk = spr_charged;
+                    spr_hurt = global.sprJellyfishHurt[c];
+                    spr_dead = global.sprJellyfishDead[c];
+                    spr_fire = global.sprJellyfishFire;
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
@@ -1201,7 +1210,8 @@
                     walk = 0;
                     walkspd = 1;
                     maxspd = 2;
-                    meleedamage = 2;
+                    meleedamage = 4;
+                    charged = true;
                     direction = random(360);
                     
                      // Alarms:
@@ -1767,6 +1777,110 @@
         image_yscale = image_xscale;
     }
 
+
+#define LightningDisc_step
+    rotation += rotspeed;
+
+     // Particles:
+    if(random(30) < image_xscale){
+        var d = random(360),
+            r = random(radius),
+            _x = x + lengthdir_x(r * image_xscale, d),
+            _y = y + lengthdir_y(r * image_yscale, d);
+    
+        with(instance_create(_x, _y, PortalL)){
+            motion_add(random(360), 1);
+            hspeed += other.hspeed;
+            vspeed += other.vspeed;
+        }
+    }
+
+     // Shrink:
+    var s = 1/160;
+    image_xscale -= s;
+    image_yscale -= s;
+    if(image_xscale <= 0 || image_yscale <= 0){
+        sound_play_hit(sndLightningHit, 0.5);
+        instance_create(x, y, LightningHit);
+        instance_destroy();
+    }
+
+#define LightningDisc_hit
+    if(projectile_canhit_melee(other)){
+         // Slow:
+        x -= hspeed;
+        y -= vspeed;
+        direction += orandom(30);
+
+         // Electricity Field:
+        var _tx = other.x,
+            _ty = other.y,
+            d = random(360),
+            r = radius,
+            _x = x + lengthdir_x(r * image_xscale, d),
+            _y = y + lengthdir_y(r * image_yscale, d);
+
+        with(instance_create(_x, _y, EnemyLightning)){
+            ammo = other.image_xscale + random(other.image_xscale * 2);
+            direction = point_direction(x, y, _tx, _ty) + orandom(12);
+            image_angle = direction;
+            team = other.team;
+            hitid = other.hitid;
+            creator = other.creator;
+            event_perform(ev_alarm, 0);
+        }
+
+         // Effects:
+        with(other) instance_create(x, y, Smoke);
+        sound_play(sndLightningHit);
+    }
+
+#define LightningDisc_wall
+     // Bounce:
+    if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+    if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+
+    with(other){
+         // Bounce Effect:
+        var _x = x + 8,
+            _y = y + 8,
+            _dis = 8,
+            _dir = point_direction(_x, _y, other.x, other.y);
+
+        instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), PortalL);
+
+         // Too Powerful:
+        if(other.image_xscale > 1.2 || other.image_yscale > 1.2){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
+    }
+
+#define LightningDisc_draw
+    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 1, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
+
+#define LightningDisc_bloom
+    with(instances_matching(CustomProjectile, "name", "LightningDisc")){
+        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+    }
+
+#define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
+    var _off = (360 / _num),
+        _ysc = _stretch * (0.5 + random(1));
+
+    for(var d = _angle; d < _angle + 360; d += _off){
+        var _ro = random(2),
+            _rx = (_radius * _xscale) + _ro,
+            _ry = (_radius * _yscale) + _ro,
+            _x1 = _x + lengthdir_x(_rx, d),
+            _y1 = _y + lengthdir_y(_ry, d),
+            _x2 = _x + lengthdir_x(_rx, d + _off),
+            _y2 = _y + lengthdir_y(_ry, d + _off),
+            _xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
+            _ang = point_direction(_x1, _y1, _x2, _y2);
+
+        draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
+    }
 
 #define CoastBossBecome_step
      // Animate:
@@ -5394,18 +5508,53 @@ pickup_drop(60, 0);
     draw_self_enemy();
 
 #define Jellyfish_step
-    enemyAlarms(1);
-    enemySprites();
+    enemyAlarms(3);
+    if sprite_index != spr_fire
+        enemySprites();
     enemyWalk(walkspd, maxspd);
     
     if(place_meeting(x + hspeed, y + vspeed, Wall)) {
         move_bounce_solid(false);
+         // Steer towards or away from target:
+        if target_is_visible()
+            motion_add(point_direction(x,y,target.x,target.y)+(!charged ? 180 : 0),1);
     }
     
-#define Jellyfish_alrm0
-    alarm0 = 30 + random(10);
-    walk = alarm0; // Always on the move
+#define Jellyfish_alrm0 // fire
+    alarm0 = 40 + random(40);
+     // Always movin':
+    scrWalk(alarm0,direction);
     target = instance_nearest(x, y, Player);
+    if target_is_visible() && target_in_distance(32,256) && charged{
+        sound_play(sndLightningCrystalCharge);
+        sprite_index = spr_fire;
+        alarm1 = 30;
+    }
+    
+#define Jellyfish_alrm1 // shoot
+    target = instance_nearest(x, y, Player);
+    if instance_exists(target){
+        spr_idle = spr_uncharged;
+        sprite_index = spr_idle;
+        charged = false;
+        sound_play_hit(sndLightningHit,0.25);
+        var _t = target;
+        with obj_create(x,y,"LightningDisc"){
+            direction = point_direction(x,y,_t.x,_t.y);
+            speed = 2;
+            creator = other;
+            team = creator.team;
+        }
+        alarm2 = 150;
+    }
+    else{
+        sprite_index = spr_idle;
+    }
+    
+#define Jellyfish_alrm2 // regain charge
+    spr_idle = spr_charged;
+    sprite_index = spr_idle;
+    charge = true;
 
 #define Jellyfish_draw
     draw_self_enemy();
@@ -5595,7 +5744,7 @@ pickup_drop(60, 0);
         else scrHarpoonUnrope(_rope);
     }
     
-    with(Player) {
+    with(Player) if player_get_alias(index) == "BioOnPC"{
         if(button_pressed(index, "horn")) {
             with(obj_create(mouse_x[index], mouse_y[index], "YetiCrab")) {
                 spr_idle = global.sprKingCrabIdle;
