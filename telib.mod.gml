@@ -391,23 +391,6 @@
                     exit;
                 }
             break;
-            
-        case "LightningDisc":
-            o = instance_create(_x, _y, CustomProjectile);
-            with(o){
-                 // Visual:
-                sprite_index = sprEnemyLightning;
-                image_speed = 0.4;
-        
-                 // Vars:
-                mask_index = mskWepPickup;
-                rotspeed = random_range(10, 20) * choose(-1, 1);
-                rotation = 0;
-                radius = 16;
-                ammo = 10;
-                typ = 0;
-            }
-            break;
 
         case "SmallBubbleExplosion":
             o = instance_create(_x, _y, SmallExplosion);
@@ -543,6 +526,27 @@
 				force = 8;
 				typ = 1;
 				blink = 30;
+            }
+            break;
+            
+        case "LightningDisc":
+            o = instance_create(_x, _y, CustomProjectile);
+            with(o){
+                 // Visual:
+                sprite_index = sprEnemyLightning;
+                image_speed = 0.4;
+                depth = -3;
+
+                 // Vars:
+                mask_index = mskWepPickup;
+                rotspeed = random_range(10, 20) * choose(-1, 1);
+                rotation = 0;
+                radius = 16;
+                charge = 1;
+                ammo = 10;
+                typ = 0;
+                image_xscale = 0;
+                image_yscale = 0;
             }
             break;
 
@@ -1196,7 +1200,7 @@
                     hitid = [spr_idle, _name];
                     sprite_index = spr_idle;
                     mask_index = mskLaserCrystal;
-                    depth = -4;
+                    depth = -2;
                     
                      // Sound:
                     snd_hurt = sndHitPlant;
@@ -1221,6 +1225,7 @@
                     walk = alarm0;
                 }
                 break;
+
             case "Kelp":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -1239,6 +1244,7 @@
                     depth = -2;
                 }
                 break;
+
             case "Vent":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -1258,7 +1264,8 @@
                     maxhealth = 12;
                     my_health = maxhealth;
                 }
-                break;       
+                break;
+
             case "YetiCrab":
             o = instance_create(_x, _y, CustomEnemy);
                 with(o) {
@@ -1472,7 +1479,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "NetNade",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Jellyfish", "Kelp", "Vent", "YetiCrab",
@@ -1777,110 +1784,6 @@
         image_yscale = image_xscale;
     }
 
-
-#define LightningDisc_step
-    rotation += rotspeed;
-
-     // Particles:
-    if(random(30) < image_xscale){
-        var d = random(360),
-            r = random(radius),
-            _x = x + lengthdir_x(r * image_xscale, d),
-            _y = y + lengthdir_y(r * image_yscale, d);
-    
-        with(instance_create(_x, _y, PortalL)){
-            motion_add(random(360), 1);
-            hspeed += other.hspeed;
-            vspeed += other.vspeed;
-        }
-    }
-
-     // Shrink:
-    var s = 1/160;
-    image_xscale -= s;
-    image_yscale -= s;
-    if(image_xscale <= 0 || image_yscale <= 0){
-        sound_play_hit(sndLightningHit, 0.5);
-        instance_create(x, y, LightningHit);
-        instance_destroy();
-    }
-
-#define LightningDisc_hit
-    if(projectile_canhit_melee(other)){
-         // Slow:
-        x -= hspeed;
-        y -= vspeed;
-        direction += orandom(30);
-
-         // Electricity Field:
-        var _tx = other.x,
-            _ty = other.y,
-            d = random(360),
-            r = radius,
-            _x = x + lengthdir_x(r * image_xscale, d),
-            _y = y + lengthdir_y(r * image_yscale, d);
-
-        with(instance_create(_x, _y, EnemyLightning)){
-            ammo = other.image_xscale + random(other.image_xscale * 2);
-            direction = point_direction(x, y, _tx, _ty) + orandom(12);
-            image_angle = direction;
-            team = other.team;
-            hitid = other.hitid;
-            creator = other.creator;
-            event_perform(ev_alarm, 0);
-        }
-
-         // Effects:
-        with(other) instance_create(x, y, Smoke);
-        sound_play(sndLightningHit);
-    }
-
-#define LightningDisc_wall
-     // Bounce:
-    if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-    if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-
-    with(other){
-         // Bounce Effect:
-        var _x = x + 8,
-            _y = y + 8,
-            _dis = 8,
-            _dir = point_direction(_x, _y, other.x, other.y);
-
-        instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), PortalL);
-
-         // Too Powerful:
-        if(other.image_xscale > 1.2 || other.image_yscale > 1.2){
-            instance_create(x, y, FloorExplo);
-            instance_destroy();
-        }
-    }
-
-#define LightningDisc_draw
-    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 1, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
-
-#define LightningDisc_bloom
-    with(instances_matching(CustomProjectile, "name", "LightningDisc")){
-        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
-    }
-
-#define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
-    var _off = (360 / _num),
-        _ysc = _stretch * (0.5 + random(1));
-
-    for(var d = _angle; d < _angle + 360; d += _off){
-        var _ro = random(2),
-            _rx = (_radius * _xscale) + _ro,
-            _ry = (_radius * _yscale) + _ro,
-            _x1 = _x + lengthdir_x(_rx, d),
-            _y1 = _y + lengthdir_y(_ry, d),
-            _x2 = _x + lengthdir_x(_rx, d + _off),
-            _y2 = _y + lengthdir_y(_ry, d + _off),
-            _xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
-            _ang = point_direction(_x1, _y1, _x2, _y2);
-
-        draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
-    }
 
 #define CoastBossBecome_step
      // Animate:
@@ -2446,6 +2349,135 @@
 
 #define Harpoon_destroy
     scrHarpoonUnrope(rope);
+
+
+#define LightningDisc_step
+    rotation += rotspeed;
+
+     // Charge Up:
+    if(image_xscale < charge){
+        image_xscale += 0.05;
+        image_yscale = image_xscale;
+        if(instance_exists(creator)){
+            x = creator.x;
+            y = creator.y;
+        }
+        x -= hspeed;
+        y -= vspeed;
+
+         // Effects:
+        sound_play_pitch(sndLightningHit, image_xscale);
+    }
+    else if(charge > 0){
+        charge = 0;
+        sound_play_pitch(sndLightningCannonEnd, 3 + random(1));
+        instance_create(x, y, GunWarrantEmpty);
+    }
+
+     // Slow:
+    var _maxSpd = 2;
+    if(charge <= 0 && speed > _maxSpd) speed--;
+
+     // Particles:
+    if(random(30) < image_xscale || (charge <= 0 && speed > _maxSpd && random(3) < image_xscale)){
+        var d = random(360),
+            r = random(radius),
+            _x = x + lengthdir_x(r * image_xscale, d),
+            _y = y + lengthdir_y(r * image_yscale, d);
+
+        with(instance_create(_x, _y, PortalL)){
+            motion_add(random(360), 1);
+            if(other.charge <= 0){
+                hspeed += other.hspeed;
+                vspeed += other.vspeed;
+            }
+        }
+    }
+
+     // Shrink:
+    if(charge <= 0){
+        var s = 1/160;
+        image_xscale -= s;
+        image_yscale -= s;
+        if(image_xscale <= 0 || image_yscale <= 0){
+            sound_play_hit(sndLightningHit, 0.5);
+            instance_create(x, y, LightningHit);
+            instance_destroy();
+        }
+    }
+
+#define LightningDisc_hit
+    if(projectile_canhit_melee(other)){
+         // Slow:
+        x -= hspeed;
+        y -= vspeed;
+        direction += orandom(30);
+
+         // Electricity Field:
+        var _tx = other.x,
+            _ty = other.y,
+            d = random(360),
+            r = radius,
+            _x = x + lengthdir_x(r * image_xscale, d),
+            _y = y + lengthdir_y(r * image_yscale, d);
+
+        with(instance_create(_x, _y, EnemyLightning)){
+            ammo = other.image_xscale + random(other.image_xscale * 2);
+            direction = point_direction(x, y, _tx, _ty) + orandom(12);
+            image_angle = direction;
+            team = other.team;
+            hitid = other.hitid;
+            creator = other.creator;
+            event_perform(ev_alarm, 0);
+        }
+
+         // Effects:
+        with(other) instance_create(x, y, Smoke);
+        sound_play(sndLightningHit);
+    }
+
+#define LightningDisc_wall
+     // Bounce:
+    if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+    if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+
+    with(other){
+         // Bounce Effect:
+        var _x = x + 8,
+            _y = y + 8,
+            _dis = 8,
+            _dir = point_direction(_x, _y, other.x, other.y);
+
+        instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), PortalL);
+        sound_play(sndLightningHit);
+
+         // Too Powerful:
+        if(other.image_xscale > 1.2 || other.image_yscale > 1.2){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
+    }
+
+#define LightningDisc_draw
+    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 1, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
+
+#define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
+    var _off = (360 / _num),
+        _ysc = _stretch * (0.5 + random(1));
+
+    for(var d = _angle; d < _angle + 360; d += _off){
+        var _ro = random(2),
+            _rx = (_radius * _xscale) + _ro,
+            _ry = (_radius * _yscale) + _ro,
+            _x1 = _x + lengthdir_x(_rx, d),
+            _y1 = _y + lengthdir_y(_ry, d),
+            _x2 = _x + lengthdir_x(_rx, d + _off),
+            _y2 = _y + lengthdir_y(_ry, d + _off),
+            _xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
+            _ang = point_direction(_x1, _y1, _x2, _y2);
+
+        draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
+    }
 
 
 #define NetNade_step
@@ -5526,6 +5558,10 @@ pickup_drop(60, 0);
     scrWalk(alarm0,direction);
     target = instance_nearest(x, y, Player);
     if target_is_visible() && target_in_distance(32,256) && charged{
+        scrEnemyShoot("LightningDisc", point_direction(x, y, target.x, target.y), 8);
+
+         // Effects:
+        sound_play_hit(sndLightningHit, 0.25);
         sound_play(sndLightningCrystalCharge);
         sprite_index = spr_fire;
         alarm1 = 30;
@@ -5534,17 +5570,9 @@ pickup_drop(60, 0);
 #define Jellyfish_alrm1 // shoot
     target = instance_nearest(x, y, Player);
     if instance_exists(target){
+        charged = false;
         spr_idle = spr_uncharged;
         sprite_index = spr_idle;
-        charged = false;
-        sound_play_hit(sndLightningHit,0.25);
-        var _t = target;
-        with obj_create(x,y,"LightningDisc"){
-            direction = point_direction(x,y,_t.x,_t.y);
-            speed = 2;
-            creator = other;
-            team = creator.team;
-        }
         alarm2 = 150;
     }
     else{
@@ -5681,6 +5709,9 @@ pickup_drop(60, 0);
     }
     with(instances_named(CustomProjectile, "BubbleBomb")){
         //draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    }
+    with(instances_named(CustomProjectile, "LightningDisc")){
+        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
     }
     draw_set_blend_mode(bm_normal);
 
