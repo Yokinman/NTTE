@@ -199,6 +199,23 @@
         //#endregion
         
         //#region TRENCH
+             // Eel (0 = blue, 1 = purple, 2 = green):
+            global.sprEelIdle = [
+                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",8,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",8,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",8,16,16)];
+            global.sprEelHurt = [
+                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",3,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",3,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",3,16,16)];
+            global.sprEelDead = [
+                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",9,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",9,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",9,16,16)];
+            global.sprEelTell = [
+                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",8,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",8,16,16),
+                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
              // Jellyfish (0 = blue, 1 = purple, 2 = green):
             global.sprJellyfishFire = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",1,24,24);
             global.sprJellyfishUncharged = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png",1,24,24);
@@ -1183,11 +1200,47 @@
         //#endregion
         
         //#region TRENCH
-            case "Jellyfish":
-            o = instance_create(_x, _y, CustomEnemy);
-                with(o) {
+            case "Eel":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
                      // Visual:
-                    var c = irandom(2);
+                    c = irandom(2);
+                    spr_idle = global.sprEelIdle[c];
+                    spr_walk = spr_idle;
+                    spr_hurt = global.sprEelHurt[c];
+                    spr_dead = global.sprEelDead[c];
+                    spr_tell = global.sprEelTell[c];
+                    spr_shadow = shd24;
+                    sprite_index = spr_idle;
+                    mask_index = mskRat;
+                    depth = -2;
+                    
+                     // Sound:
+                    snd_hurt = sndHitFlesh;
+                    snd_dead = sndMaggotSpawnDie;
+                    snd_melee = sndMaggotBite;
+                    
+                     // Vars:
+                    maxhealth = 12;
+                    raddrop = 6;
+                    meleedamage = 2;
+                    size = 1;
+                    walk = 0;
+                    walkspd = 1.2;
+                    maxspd = 3;
+                    pitDepth = 0;
+                    direction = irandom(259);
+                    
+                     // Alarms:
+                    alarm0 = 30;
+                }
+                break;
+                
+            case "Jellyfish":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                     // Visual:
+                    c = irandom(2);
                     spr_charged = global.sprJellyfishIdle[c];
                     spr_uncharged = global.sprJellyfishUncharged;
                     spr_idle = spr_charged;
@@ -1213,7 +1266,7 @@
                     size = 2;
                     walk = 0;
                     walkspd = 1;
-                    maxspd = 2;
+                    maxspd = 2.6;
                     meleedamage = 4;
                     charged = true;
                     direction = random(360);
@@ -1482,7 +1535,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Jellyfish", "Kelp", "Vent", "YetiCrab",
+    		        "Eel", "Jellyfish", "Kelp", "Vent", "YetiCrab",
     		        "Cat", "CatBoss", "CatGrenade",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -5088,7 +5141,102 @@
         }
     }
 
+#define Eel_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+    
+#define Eel_alrm0
+    alarm0 = 30;
+    target = instance_nearest(x,y,Player);
+     // When you walking:
+    if target_is_visible(){
+        scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y)+orandom(20));
+    }
+    else
+        scrWalk(irandom_range(17,30), direction+orandom(30));
+     // Change color to match nearest jelly:
+    var _t = nearest_instance(x,y,instances_matching(CustomEnemy,"name","Jellyfish"));
+    if instance_exists(_t) && _t.c != c{
+        c = _t.c;
+        spr_idle = global.sprEelIdle[c];
+        spr_walk = spr_idle;
+        spr_hurt = global.sprEelHurt[c];
+        spr_dead = global.sprEelDead[c];
+        spr_tell = global.sprEelTell[c];
+        sprite_index = spr_idle;
+    }
+    
+#define Eel_draw
+    if pitDepth == 0
+        draw_self_enemy();
+    
+#define Jellyfish_step
+    enemyAlarms(3);
+    if sprite_index != spr_fire
+        enemySprites();
+    var _maxSpd = clamp(0.07*walk*current_time_scale,1,maxspd); // arbitrary values, feel free to fiddle
+    enemyWalk(walkspd, _maxSpd);
+    
+    if(place_meeting(x + hspeed, y + vspeed, Wall)) {
+        move_bounce_solid(false);
+        scrRight(direction);
+    }
+    
+#define Jellyfish_alrm0
+    alarm0 = 40 + random(20);
+     // Always movin':
+    scrWalk(alarm0,direction);
+    target = instance_nearest(x, y, Player);
+    if target_is_visible(){
+         // Steer towards target:
+        motion_add(point_direction(x,y,target.x,target.y)+(!charged ? 180 : 0),0.4);
+         // Attack:
+        if charged{
+            if random(6) < 1 && target_in_distance(32,256){
+                 // Shoot lightning disc:
+                scrEnemyShoot("LightningDisc", point_direction(x, y, target.x, target.y), 8);
+        
+                 // Effects:
+                sound_play_hit(sndLightningHit, 0.25);
+                sound_play_pitch(sndLightningCrystalCharge,0.8);
+                sprite_index = spr_fire;
+                alarm1 = 30;
+            }
+            else{
+                var _t = nearest_instance(x, y, instances_matching(instances_matching(instances_matching(
+                    CustomEnemy,    "name","Eel"),
+                                    "pitDepth",0),  // If not in pit
+                                    "c",c));        // If the same color, jellyfish are pretty racist
+                if instance_exists(_t) && !collision_line(x,y,_t.x,_t.y,Wall,0,0) && !point_distance(x,y,_t.x,_t.y) < 128
+                     // TEMPORARY STUFF: Put lightning arc code here
+                    with obj_create(_t.x,_t.y,"SmallBubbleExplosion")
+                        team = other.team;
+            }
+        }
+    }
+    scrRight(direction);
+    
+#define Jellyfish_alrm1 // shoot
+    target = instance_nearest(x, y, Player);
+    if instance_exists(target){
+        charged = false;
+        spr_walk = spr_uncharged;
+        sprite_index = spr_walk;
+        alarm2 = 150;
+    }
+    else{
+        sprite_index = spr_walk;
+    }
+    
+#define Jellyfish_alrm2 // regain charge
+    spr_walk = spr_charged;
+    sprite_index = spr_walk;
+    charged = true;
 
+#define Jellyfish_draw
+    draw_self_enemy();
+    
 #define Vent_step
     if random(5) < current_time_scale{
         with instance_create(x,y,Bubble){
@@ -5102,6 +5250,75 @@
 
 #define Vent_death
     obj_create(x,y,"BubbleExplosion");
+
+#define YetiCrab_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+#define YetiCrab_alrm0
+    alarm0 = 30 + random(10);
+    target = instance_nearest(x, y, Player);
+
+    if(is_king = 0) { // Is a follower: 
+        if(instance_exists(nearest_instance(x, y, instances_matching(CustomEnemy, "is_king", 1)))) { // Track king:
+            var nearest_king = nearest_instance(x, y, instances_matching(CustomEnemy, "is_king", 1)); 
+            var king_dir = point_direction(x, y, nearest_king.x, nearest_king.y);
+            if(point_distance(x, y, nearest_king.x, nearest_king.y) > 16 and point_distance(x, y, target.x, target.y) < point_distance(x, y, nearest_king.x, nearest_king.y)) { // Check distance from king:
+                scrRight(king_dir);
+                
+                 // Follow king in a jittery manner:
+                scrWalk(5, king_dir + orandom(5));
+                alarm0 = 5 + random(5);
+            }
+            
+             // Chase player instead:
+            else if(target_is_visible()) {
+                var _targetDir = point_direction(x, y, target.x, target.y);
+                scrRight(_targetDir);
+                
+                 // Chase player:
+                scrWalk(30, _targetDir + orandom(10));
+                scrRight(direction);
+            } else { 
+                 // Crab rave:
+                scrWalk(30, random(360));
+                scrRight(direction);
+            }
+        }
+         // No leader to follow:
+        else if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+             // Sad chase :( :
+            if(fork()) {
+                repeat(irandom_range(4, 10)) {
+                    wait random_range(1, 3);
+                    if(!instance_exists(other)) exit; else instance_create(x, y, Sweat); // Its tears shhh
+                }
+                
+                exit;
+            }
+            scrWalk(30, _targetDir + orandom(10));
+            scrRight(direction);
+        } else { 
+             // Crab rave:
+            scrWalk(30, random(360));
+            scrRight(direction);
+        }
+    } 
+    
+     // Is a leader:
+    else {
+        var _targetDir = point_direction(x, y, target.x, target.y);
+        
+         // Chase player:
+        scrWalk(30, _targetDir + orandom(10));
+        scrRight(direction);
+    }
+    
+#define YetiCrab_draw
+    draw_self_enemy();
 
 #define Cat_step
     enemyAlarms(1);
@@ -5468,125 +5685,6 @@ pickup_drop(60, 0);
 #define CatGrenade_wall
     // nada
 
-#define YetiCrab_step
-    enemyAlarms(1);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-    
-    
-
-#define YetiCrab_alrm0
-    alarm0 = 30 + random(10);
-    target = instance_nearest(x, y, Player);
-
-    if(is_king = 0) { // Is a follower: 
-        if(instance_exists(nearest_instance(x, y, instances_matching(CustomEnemy, "is_king", 1)))) { // Track king:
-            var nearest_king = nearest_instance(x, y, instances_matching(CustomEnemy, "is_king", 1)); 
-            var king_dir = point_direction(x, y, nearest_king.x, nearest_king.y);
-            if(point_distance(x, y, nearest_king.x, nearest_king.y) > 16 and point_distance(x, y, target.x, target.y) < point_distance(x, y, nearest_king.x, nearest_king.y)) { // Check distance from king:
-                scrRight(king_dir);
-                
-                 // Follow king in a jittery manner:
-                scrWalk(5, king_dir + orandom(5));
-                alarm0 = 5 + random(5);
-            }
-            
-             // Chase player instead:
-            else if(target_is_visible()) {
-                var _targetDir = point_direction(x, y, target.x, target.y);
-                scrRight(_targetDir);
-                
-                 // Chase player:
-                scrWalk(30, _targetDir + orandom(10));
-                scrRight(direction);
-            } else { 
-                 // Crab rave:
-                scrWalk(30, random(360));
-                scrRight(direction);
-            }
-        }
-         // No leader to follow:
-        else if(target_is_visible()) {
-            var _targetDir = point_direction(x, y, target.x, target.y);
-            
-             // Sad chase :( :
-            if(fork()) {
-                repeat(irandom_range(4, 10)) {
-                    wait random_range(1, 3);
-                    if(!instance_exists(other)) exit; else instance_create(x, y, Sweat); // Its tears shhh
-                }
-                
-                exit;
-            }
-            scrWalk(30, _targetDir + orandom(10));
-            scrRight(direction);
-        } else { 
-             // Crab rave:
-            scrWalk(30, random(360));
-            scrRight(direction);
-        }
-    } 
-    
-     // Is a leader:
-    else {
-        var _targetDir = point_direction(x, y, target.x, target.y);
-        
-         // Chase player:
-        scrWalk(30, _targetDir + orandom(10));
-        scrRight(direction);
-    }
-    
-#define YetiCrab_draw
-    draw_self_enemy();
-
-#define Jellyfish_step
-    enemyAlarms(3);
-    if sprite_index != spr_fire
-        enemySprites();
-    enemyWalk(walkspd, maxspd);
-    
-    if(place_meeting(x + hspeed, y + vspeed, Wall)) {
-        move_bounce_solid(false);
-         // Steer towards or away from target:
-        if target_is_visible()
-            motion_add(point_direction(x,y,target.x,target.y)+(!charged ? 180 : 0),1);
-    }
-    
-#define Jellyfish_alrm0 // fire
-    alarm0 = 40 + random(40);
-     // Always movin':
-    scrWalk(alarm0,direction);
-    target = instance_nearest(x, y, Player);
-    if target_is_visible() && target_in_distance(32,256) && charged{
-        scrEnemyShoot("LightningDisc", point_direction(x, y, target.x, target.y), 8);
-
-         // Effects:
-        sound_play_hit(sndLightningHit, 0.25);
-        sound_play(sndLightningCrystalCharge);
-        sprite_index = spr_fire;
-        alarm1 = 30;
-    }
-    
-#define Jellyfish_alrm1 // shoot
-    target = instance_nearest(x, y, Player);
-    if instance_exists(target){
-        charged = false;
-        spr_idle = spr_uncharged;
-        sprite_index = spr_idle;
-        alarm2 = 150;
-    }
-    else{
-        sprite_index = spr_idle;
-    }
-    
-#define Jellyfish_alrm2 // regain charge
-    spr_idle = spr_charged;
-    sprite_index = spr_idle;
-    charge = true;
-
-#define Jellyfish_draw
-    draw_self_enemy();
-
 #define draw_self_enemy()
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
@@ -5909,7 +6007,15 @@ pickup_drop(60, 0);
 #define draw_dark
     //draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
     draw_set_color(c_gray);
+     // Kelp:
     with instances_matching(CustomProp,"name","Kelp"){
         draw_circle(x,y,32+orandom(1),0);
     }
     draw_set_color(c_white);
+    
+#define draw_dark_end
+     // Eels:
+    // with instances_matching(CustomEnemy,"name","Eel"){
+    //     if chargeTime > 0
+    //         draw_circle(x,y,24+orandom(1),0);
+    // }

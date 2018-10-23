@@ -37,7 +37,7 @@
 
 #macro bgrColor make_color_rgb(100, 114, 127)
 #macro shdColor c_black
-#macro musMain  musBoss5 // remove this comment later
+#macro musMain  musBoss5
 #macro ambMain  amb101
 
 #define area_name(_subarea, _loop)
@@ -68,7 +68,7 @@
     }
     
 #define area_setup
-    goal = 100;
+    goal = 150;
 
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
