@@ -234,7 +234,7 @@
 	}
 	
      // Explosion debris splash FX:
-	with(Explosion) if random(3) < current_time_scale{
+	with(Explosion) if(current_time_scale && random(5) < 1){
         var _len = irandom_range(24,48),
             _dir = irandom(359);
         with instance_create(x+lengthdir_x(_len,_dir),y+lengthdir_y(_len,_dir),RainSplash)

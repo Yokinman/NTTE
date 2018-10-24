@@ -949,6 +949,7 @@
                     maxspd = 3;
                     pitDepth = 0;
                     direction = random(360);
+                    arc_inst = noone;
                     arcing = 0;
                     wave = 0;
                     
@@ -4877,14 +4878,13 @@
     wave += current_time_scale;
 
      // Arc Lightning w/ Jelly:
-    var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jellyfish"));
-    if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100){
+    if(instance_exists(arc_inst) && point_distance(x, y, arc_inst.x, arc_inst.y) < 100){
          // Start Arcing:
         if(arcing < 1){
             arcing += 0.15;
 
-            var _dis = random(point_distance(x, y, _inst.x, _inst.y)),
-                _dir = point_direction(x, y, _inst.x, _inst.y);
+            var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
+                _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
 
             with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
                 motion_add(random(360), 1);
@@ -4894,7 +4894,7 @@
                 sound_play_pitch(sndLightningHit, 2);
 
                  // Color:
-                var c = _inst.c;
+                var c = arc_inst.c;
                 spr_idle = spr.EelIdle[c];
                 spr_walk = spr_idle;
                 spr_hurt = spr.EelHurt[c];
@@ -4907,7 +4907,7 @@
 
          // Arcing:
         else{
-            with(lightning_connect(x, y, _inst.x, _inst.y, 12 * sin(wave / 30))){
+            with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
                 image_index = ((current_frame + other) * image_speed) mod image_number;
                 image_speed_raw = 4;
                 team = other.team;
@@ -4920,8 +4920,14 @@
             }
         }
     }
-    else arcing = 0;
-    
+    else{
+        arc_inst = noone;
+        arcing = 0;
+
+        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jellyfish"));
+        if(point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+    }
+
 #define Eel_alrm0
     alarm0 = 30;
     target = instance_nearest(x,y,Player);
