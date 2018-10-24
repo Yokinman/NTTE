@@ -223,11 +223,11 @@
 
              // Jellyfish (0 = blue, 1 = purple, 2 = green):
             JellyfishFire       = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",      1, 24, 24);
-            JellyfishUncharged  = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png", 1, 24, 24);
+            JellyfishUncharged  = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png", 8, 24, 24);
             JellyfishIdle = [
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",    1, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",  1, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",   1, 24, 24)];
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",    8, 24, 24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",  8, 24, 24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",   8, 24, 24)];
             JellyfishHurt = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",    3, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",  3, 24, 24),

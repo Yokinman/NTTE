@@ -232,6 +232,15 @@
 	    x += lengthdir_x(_l,_d);
 	    y += lengthdir_y(_l,_d);
 	}
+	
+     // Explosion debris splash FX:
+	with(Explosion) if random(3) < current_time_scale{
+        var _len = irandom_range(24,48),
+            _dir = irandom(359);
+        with instance_create(x+lengthdir_x(_len,_dir),y+lengthdir_y(_len,_dir),RainSplash)
+            if place_meeting(x,y,Floor)
+                instance_destroy();
+	}
 
 	if(instance_exists(Floor)){
          // Destroy Projectiles Too Far Away:

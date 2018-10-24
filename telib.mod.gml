@@ -985,11 +985,9 @@
                     my_health = maxhealth;
                     raddrop = 16;
                     size = 2;
-                    walk = 0;
                     walkspd = 1;
                     maxspd = 2.6;
                     meleedamage = 4;
-                    charged = true;
                     direction = random(360);
                     
                      // Alarms:
@@ -4902,6 +4900,8 @@
                 spr_hurt = spr.EelHurt[c];
                 spr_dead = spr.EelDead[c];
                 spr_tell = spr.EelTell[c];
+                if sprite_index != spr_hurt
+                    sprite_index = spr_walk;
             }
         }
 
@@ -4937,7 +4937,7 @@
         draw_self_enemy();
     
 #define Jellyfish_step
-    enemyAlarms(3);
+    enemyAlarms(2);
     if sprite_index != spr_fire
         enemySprites();
     var _maxSpd = clamp(0.07*walk*current_time_scale,1,maxspd); // arbitrary values, feel free to fiddle
@@ -4955,50 +4955,27 @@
     target = instance_nearest(x, y, Player);
     if target_is_visible(){
          // Steer towards target:
-        motion_add(point_direction(x,y,target.x,target.y)+(!charged ? 180 : 0),0.4);
+        motion_add(point_direction(x,y,target.x,target.y),0.4);
          // Attack:
-        if charged{
-            if random(6) < 1 && target_in_distance(32,256){
-                 // Shoot lightning disc:
-                scrEnemyShoot("LightningDisc", point_direction(x, y, target.x, target.y), 8);
-        
-                 // Effects:
-                sound_play_hit(sndLightningHit, 0.25);
-                sound_play_pitch(sndLightningCrystalCharge,0.8);
-                sprite_index = spr_fire;
-                alarm1 = 30;
-            }
-            else{
-                var _t = nearest_instance(x, y, instances_matching(instances_matching(instances_matching(
-                    CustomEnemy,    "name","Eel"),
-                                    "pitDepth",0),  // If not in pit
-                                    "c",c));        // If the same color, jellyfish are pretty racist
-                if instance_exists(_t) && !collision_line(x,y,_t.x,_t.y,Wall,0,0) && !point_distance(x,y,_t.x,_t.y) < 128
-                     // TEMPORARY STUFF: Put lightning arc code here
-                    with obj_create(_t.x,_t.y,"SmallBubbleExplosion")
-                        team = other.team;
-            }
+        if random(5) < 1 && target_in_distance(32,256){
+             // Shoot lightning disc:
+            scrEnemyShoot("LightningDisc", point_direction(x, y, target.x, target.y), 8);
+    
+             // Effects:
+            sound_play_hit(sndLightningHit, 0.25);
+            sound_play_pitch(sndLightningCrystalCharge,0.8);
+            sprite_index = spr_fire;
+            alarm1 = 30;
         }
     }
     scrRight(direction);
     
-#define Jellyfish_alrm1 // shoot
-    target = instance_nearest(x, y, Player);
-    if instance_exists(target){
-        charged = false;
-        spr_walk = spr_uncharged;
-        sprite_index = spr_walk;
-        alarm2 = 150;
-    }
-    else{
-        sprite_index = spr_walk;
-    }
-    
-#define Jellyfish_alrm2 // regain charge
-    spr_walk = spr_charged;
+#define Jellyfish_alrm1
     sprite_index = spr_walk;
-    charged = true;
-
+    
+#define Jellyfish_death
+    pickup_drop(70, 2);
+    
 #define Jellyfish_draw
     draw_self_enemy();
     

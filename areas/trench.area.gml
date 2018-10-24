@@ -186,6 +186,15 @@
     }
     
 #define area_pop_enemies
+    var _x = x + 16,
+        _y = y + 16;
+    
+    if random(9) < 1{
+        obj_create(_x,_y,"Jellyfish");
+    }
+    else if random(3) < 1{
+        obj_create(_x,_y,"Eel");
+    }
     
 #define area_pop_props
     var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
