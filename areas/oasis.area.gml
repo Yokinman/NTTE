@@ -1,4 +1,12 @@
 #define init
+    global.spr = mod_variable_get("mod", "teassets", "spr");
+    global.snd = mod_variable_get("mod", "teassets", "snd");
+    global.mus = mod_variable_get("mod", "teassets", "mus");
+
+#macro spr global.spr
+#macro msk spr.msk
+#macro snd global.snd
+#macro mus global.mus
 
 #macro bgrColor area_get_background_color(101);
 #macro shdColor area_get_shadow_color(101);
@@ -193,13 +201,37 @@
         }
     }
 
-#define obj_create(_x,_y,_obj)
-    return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
-    
-#define nearest_instance(_x,_y,_instance)
-    return mod_script_call("mod","telib","nearest_instance",_x,_y,_instance);
-    
-#define orandom(_n)
-    return irandom_range(-_n,_n);
-    
-    
+
+ /// HELPER SCRIPTS ///
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
+#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
+#define scrRight(_dir)                                                                          mod_script_call("mod", "teassets", "scrRight", _dir);
+#define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrEnemyShoot", _object, _dir, _spd);
+#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call("mod", "teassets", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
+#define enemyAlarms(_maxAlarm)                                                                  mod_script_call("mod", "teassets", "enemyAlarms", _maxAlarm);
+#define enemyWalk(_spd, _max)                                                                   mod_script_call("mod", "teassets", "enemyWalk", _spd, _max);
+#define enemySprites()                                                                          mod_script_call("mod", "teassets", "enemySprites");
+#define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call("mod", "teassets", "enemyHurt", _hitdmg, _hitvel, _hitdir);
+#define scrDefaultDrop()                                                                        mod_script_call("mod", "teassets", "scrDefaultDrop");
+#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
+#define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
+#define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define draw_rope(_rope)                                                                        mod_script_call("mod", "teassets", "draw_rope", _rope);
+#define scrHarpoonStick(_instance)                                                              mod_script_call("mod", "teassets", "scrHarpoonStick", _instance);
+#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "teassets", "scrHarpoonRope", _link1, _link2);
+#define scrHarpoonUnrope(_rope)                                                                 mod_script_call("mod", "teassets", "scrHarpoonUnrope", _rope);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
+#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
+#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
+#define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
+#define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
+#define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);
+#define array_flip(_array)                                                              return  mod_script_call("mod", "teassets", "array_flip", _array);
+#define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
+#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
+#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+#define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);

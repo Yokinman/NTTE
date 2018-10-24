@@ -1,3 +1,4 @@
+/loadmod teassets
 /loadmod ntte
 /loadmod telib
 

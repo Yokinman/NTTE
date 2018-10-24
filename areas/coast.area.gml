@@ -1,19 +1,17 @@
-#macro current_frame_active ((current_frame mod 1) < current_time_scale)
-
 #define init
+    global.spr = mod_variable_get("mod", "teassets", "spr");
+    global.snd = mod_variable_get("mod", "teassets", "snd");
+    global.mus = mod_variable_get("mod", "teassets", "mus");
+
+     // SPRITES //
+    with(spr){
+    	CoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
+    	FloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
+    	FloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
+    	DetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
+    }
+
     global.spawn_enemy = 0;
-
-    //#region SPRITES
-    	global.sprCoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
-    	global.sprFloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
-    	global.sprFloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
-    	global.sprDetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
-        global.sprWaterStreak = sprite_add("../sprites/areas/Coast/sprWaterStreak.png", 7, 8, 8);
-    //#endregion
-
-    //#region MUSIC
-        global.musCoast = sound_add("../music/musCoast.ogg");
-    //#endregion
 
     //#region SURFACES
         global.surfW = 2000;
@@ -100,10 +98,17 @@
         with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
     }
 
+#macro spr global.spr
+#macro msk spr.msk
+#macro snd global.snd
+#macro mus global.mus
+
 #macro bgrColor make_color_rgb(27, 118, 184)
 #macro shdColor c_black
-#macro musMain  global.musCoast
+#macro musMain  mus.Coast
 #macro ambMain  amb1
+
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro DebugLag 0
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
@@ -121,11 +126,11 @@
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
-        case sprFloor1:         return global.sprFloorCoast;
-        case sprFloor1B:        return global.sprFloorCoastB;
+        case sprFloor1:         return spr.FloorCoast;
+        case sprFloor1B:        return spr.FloorCoastB;
 
          // Misc:
-    	case sprDetail1:        return global.sprDetailCoast;
+    	case sprDetail1:        return spr.DetailCoast;
     }
 
 #define area_setup
@@ -790,7 +795,7 @@
 
     		for(var a = 0; a < 360; a += 45){
     			 // Draw Underwater Transition Tiles:
-    			var _spr = global.sprFloorCoast,
+    			var _spr = spr.FloorCoast,
     			    _ox = lengthdir_x(sprite_get_width(mask_index), a),
     			    _oy = lengthdir_y(sprite_get_height(mask_index), a);
 
@@ -829,7 +834,7 @@
     	d3d_set_fog(1, c_white, 1, 1)
     	with(Floor) if(visible){
     	    var _spr = sprite_index;
-    	    if(_spr == global.sprFloorCoastB) _spr = global.sprFloorCoast;
+    	    if(_spr == spr.FloorCoastB) _spr = spr.FloorCoast;
     	    draw_sprite_ext(_spr, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     	}
     	d3d_set_fog(0, 0, 0, 0);
@@ -945,7 +950,7 @@
 
      // Caustics:
     draw_set_alpha(0.4);
-    draw_sprite_tiled(global.sprCoastTrans, 0, sin(_wave * 0.02) * 4, sin(_wave * 0.05) * 2);
+    draw_sprite_tiled(spr.CoastTrans, 0, sin(_wave * 0.02) * 4, sin(_wave * 0.05) * 2);
     draw_set_alpha(1);
 
      // Foam:
@@ -1006,46 +1011,37 @@
     }
     instance_destroy();
 
-#define instances_seen(_obj, _ext)
-    var _vx = view_xview_nonsync,
-        _vy = view_yview_nonsync,
-        o = _ext;
 
-    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - o), "bbox_left", _vx + game_width + o), "bbox_bottom", _vy - o), "bbox_top", _vy + game_height + o);
-
-#define scrRight(_direction)
-    var d = (_direction mod 360);
-    if(d < 90 || d > 270) right = 1;
-    if(d > 90 && d < 270) right = -1;
-
-#define scrWaterStreak(_x, _y, _dir, _spd)
-    with(instance_create(_x, _y, AcidStreak)){
-        sprite_index = global.sprWaterStreak;
-        motion_add(_dir, _spd);
-        vspeed -= 2;
-        image_angle = direction;
-        image_speed = 0.4 + random(0.2);
-        depth = 0;
-
-        return id;
-    }
-
-#define nearest_instance(_x, _y, _instances)
-	var	_nearest = noone,
-		d = 1000000;
-
-	with(_instances){
-		var _dis = point_distance(_x, _y, x, y);
-		if(_dis < d){
-			_nearest = id;
-			d = _dis;
-		}
-	}
-
-	return _nearest;
-    
-#define orandom(n)
-    return random_range(-n, n);
-
-#define obj_create(_x, _y, _obj)
-    return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+ /// HELPER SCRIPTS ///
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
+#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
+#define scrRight(_dir)                                                                          mod_script_call("mod", "teassets", "scrRight", _dir);
+#define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrEnemyShoot", _object, _dir, _spd);
+#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call("mod", "teassets", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
+#define enemyAlarms(_maxAlarm)                                                                  mod_script_call("mod", "teassets", "enemyAlarms", _maxAlarm);
+#define enemyWalk(_spd, _max)                                                                   mod_script_call("mod", "teassets", "enemyWalk", _spd, _max);
+#define enemySprites()                                                                          mod_script_call("mod", "teassets", "enemySprites");
+#define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call("mod", "teassets", "enemyHurt", _hitdmg, _hitvel, _hitdir);
+#define scrDefaultDrop()                                                                        mod_script_call("mod", "teassets", "scrDefaultDrop");
+#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
+#define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
+#define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define draw_rope(_rope)                                                                        mod_script_call("mod", "teassets", "draw_rope", _rope);
+#define scrHarpoonStick(_instance)                                                              mod_script_call("mod", "teassets", "scrHarpoonStick", _instance);
+#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "teassets", "scrHarpoonRope", _link1, _link2);
+#define scrHarpoonUnrope(_rope)                                                                 mod_script_call("mod", "teassets", "scrHarpoonUnrope", _rope);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
+#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
+#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
+#define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
+#define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
+#define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);
+#define array_flip(_array)                                                              return  mod_script_call("mod", "teassets", "array_flip", _array);
+#define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
+#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
+#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+#define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);

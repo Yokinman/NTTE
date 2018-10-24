@@ -1,304 +1,23 @@
 #define init
-    //#region SPRITES
-
-    	 // Big Decals:
-    	global.sprBigTopDecal = {
-    	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 40),
-    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 40),
-    	    "102"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 40)
-    	}
-    	global.mskBigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
-
-    	 // Big Fish:
-    	global.sprBigFishBecomeIdle = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",      4, 40, 38);
-    	global.sprBigFishBecomeHurt = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuildHurt.png",  4, 40, 38);
-    	global.sprBigFishSpwn =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",     11, 32, 32);
-    	global.sprBigFishLeap =       sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",      11, 32, 32);
-    	global.sprBigFishSwim =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8, 24, 24);
-    	global.sprBigFishRise =       sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",       5, 32, 32);
-    	global.sprBigFishSwimFrnt =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
-    	global.sprBigFishSwimBack =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
-    	global.sprBubbleBomb =        sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
-    	global.sprBubbleExplode =     sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
-
-         // Bone:
-        global.sprBone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
-        global.sprBoneShard = sprite_add("sprites/weps/projectiles/sprBoneShard.png", 1, 3, 2);
-
-         // Harpoon:
-        global.sprHarpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
-        global.sprNetNade = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
-
-        //#region COAST
-             // Blooming Cactus:
-        	global.sprBloomingCactusIdle[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus.png",     1, 12, 12);
-        	global.sprBloomingCactusHurt[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusHurt.png", 3, 12, 12);
-        	global.sprBloomingCactusDead[0] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactusDead.png", 4, 12, 12);
-
-        	global.sprBloomingCactusIdle[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2.png",     1, 12, 12);
-        	global.sprBloomingCactusHurt[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Hurt.png", 3, 12, 12);
-        	global.sprBloomingCactusDead[1] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus2Dead.png", 4, 12, 12);
-
-        	global.sprBloomingCactusIdle[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3.png",     1, 12, 12);
-        	global.sprBloomingCactusHurt[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Hurt.png", 3, 12, 12);
-        	global.sprBloomingCactusDead[2] = sprite_add("sprites/areas/Coast/Props/sprBloomingCactus3Dead.png", 4, 12, 12);
-        	
-        	 // Buried Car:
-        	global.sprBuriedCarIdle = sprite_add("sprites/areas/Coast/Props/sprBuriedCarIdle.png",1,16,16);
-        	global.sprBuriedCarHurt = sprite_add("sprites/areas/Coast/Props/sprBuriedCarHurt.png",3,16,16);
-
-             // Decal Big Shell Prop:
-    	    global.sprShellIdle = sprite_add("sprites/areas/Coast/Decals/sprShellIdle.png", 1, 32, 32);
-    	    global.sprShellHurt = sprite_add("sprites/areas/Coast/Decals/sprShellHurt.png", 3, 32, 32);
-    	    global.sprShellDead = sprite_add("sprites/areas/Coast/Decals/sprShellDead.png", 6, 32, 32);
-    	    global.sprShellBott = sprite_add("sprites/areas/Coast/Decals/sprShellBott.png", 1, 32, 32);
-    	    global.sprShellFoam = sprite_add("sprites/areas/Coast/Decals/sprShellFoam.png", 1, 32, 32);
-
-             // Decal Water Rock Props:
-            global.sprRockIdle[0] = sprite_add("sprites/areas/Coast/Decals/sprRock1Idle.png", 1, 16, 16);
-            global.sprRockHurt[0] = sprite_add("sprites/areas/Coast/Decals/sprRock1Hurt.png", 3, 16, 16);
-            global.sprRockDead[0] = sprite_add("sprites/areas/Coast/Decals/sprRock1Dead.png", 1, 16, 16);
-            global.sprRockBott[0] = sprite_add("sprites/areas/Coast/Decals/sprRock1Bott.png", 1, 16, 16);
-            global.sprRockFoam[0] = sprite_add("sprites/areas/Coast/Decals/sprRock1Foam.png", 1, 16, 16);
-            global.sprRockIdle[1] = sprite_add("sprites/areas/Coast/Decals/sprRock2Idle.png", 1, 16, 16);
-            global.sprRockHurt[1] = sprite_add("sprites/areas/Coast/Decals/sprRock2Hurt.png", 3, 16, 16);
-            global.sprRockDead[1] = sprite_add("sprites/areas/Coast/Decals/sprRock2Dead.png", 1, 16, 16);
-            global.sprRockBott[1] = sprite_add("sprites/areas/Coast/Decals/sprRock2Bott.png", 1, 16, 16);
-            global.sprRockFoam[1] = sprite_add("sprites/areas/Coast/Decals/sprRock2Foam.png", 1, 16, 16);
-
-             // Diver:
-        	global.sprDiverIdle = sprite_add("sprites/enemies/Diver/sprDiverIdle.png", 4, 12, 12);
-        	global.sprDiverWalk = sprite_add("sprites/enemies/Diver/sprDiverWalk.png", 6, 12, 12);
-        	global.sprDiverHurt = sprite_add("sprites/enemies/Diver/sprDiverHurt.png", 3, 12, 12);
-        	global.sprDiverDead = sprite_add("sprites/enemies/Diver/sprDiverDead.png", 9, 16, 16);
-        	global.sprHarpoonGun = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGun.png", 1, 8, 8);
-        	global.sprHarpoonGunEmpty = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGunDischarged.png", 1, 8, 8);
-
-        	 // Gull:
-        	global.sprGullIdle = sprite_add("sprites/enemies/Gull/sprGullIdle.png", 4, 12, 12);
-        	global.sprGullWalk = sprite_add("sprites/enemies/Gull/sprGullWalk.png", 6, 12, 12);
-        	global.sprGullHurt = sprite_add("sprites/enemies/Gull/sprGullHurt.png", 3, 12, 12);
-        	global.sprGullDead = sprite_add("sprites/enemies/Gull/sprGullDead.png", 6, 16, 16);
-        	global.sprGullSword = sprite_add("sprites/enemies/Gull/sprGullSword.png", 1, 6, 8);
-
-             // Palanking:
-            global.sprPalankingBott = sprite_add("sprites/enemies/Palanking/sprPalankingBase.png",      1, 40, 24);
-            global.sprPalankingTaunt = sprite_add("sprites/enemies/Palanking/sprPalankingTaunt.png",   31, 40, 24);
-            global.sprPalankingCall = sprite_add("sprites/enemies/Palanking/sprPalankingCall.png",      9, 40, 24);
-            global.sprPalankingIdle = sprite_add("sprites/enemies/Palanking/sprPalankingIdle.png",     16, 40, 24);
-            global.sprPalankingWalk = sprite_add("sprites/enemies/Palanking/sprPalankingWalk.png",     16, 40, 24);
-            global.sprPalankingHurt = sprite_add("sprites/enemies/Palanking/sprPalankingHurt.png",      3, 40, 24);
-            global.sprPalankingDead = sprite_add("sprites/enemies/Palanking/sprPalankingDead.png",      1, 40, 24);
-            global.sprPalankingBurp = sprite_add("sprites/enemies/Palanking/sprPalankingBurp.png",      5, 40, 24);
-            global.sprPalankingFoam = sprite_add("sprites/enemies/Palanking/sprPalankingFoam.png",      1, 40, 24);
-            global.mskPalanking     = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
-            global.sprGroundSlash   = sprite_add("sprites/enemies/projectiles/sprGroundSlash.png",      3,  0, 21);
-            global.sprPalankingSlash = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",      5, 36, 36);
-            if(fork()){
-                wait 30;
-                sprite_collision_mask(global.mskPalanking, false, 0, 0, 0, 0, 0, 0, 0);
-                exit;
-            }
-
-             // Palm:
-        	global.sprPalmIdle      = sprite_add("sprites/areas/Coast/Props/sprPalm.png",         1, 24, 40);
-        	global.sprPalmHurt      = sprite_add("sprites/areas/Coast/Props/sprPalmHurt.png",     3, 24, 40);
-        	global.sprPalmDead      = sprite_add("sprites/areas/Coast/Props/sprPalmDead.png",     4, 24, 40);
-        	global.sprPalmFortIdle  = sprite_add("sprites/areas/Coast/Props/sprPalmFortIdle.png", 1, 32, 56);
-        	global.sprPalmFortHurt  = sprite_add("sprites/areas/Coast/Props/sprPalmFortHurt.png", 3, 32, 56);
-
-             // Pelican:
-            global.sprPelicanIdle   = sprite_add("sprites/enemies/Pelican/sprPelicanIdle.png",   6, 24, 24);
-            global.sprPelicanWalk   = sprite_add("sprites/enemies/Pelican/sprPelicanWalk.png",   6, 24, 24);
-            global.sprPelicanHurt   = sprite_add("sprites/enemies/Pelican/sprPelicanHurt.png",   3, 24, 24);
-            global.sprPelicanDead   = sprite_add("sprites/enemies/Pelican/sprPelicanDead.png",   6, 24, 24);
-            global.sprPelicanHammer = sprite_add("sprites/enemies/Pelican/sprPelicanHammer.png", 1,  6,  8);
-
-             // Seal:
-            global.sprSealIdle[0] = sprite_add("sprites/enemies/Seal/sprSealIdle.png",      6, 12, 12);
-            global.sprSealWalk[0] = sprite_add("sprites/enemies/Seal/sprSealWalk.png",      6, 12, 12);
-            global.sprSealHurt[0] = sprite_add("sprites/enemies/Seal/sprSealHurt.png",      3, 12, 12);
-            global.sprSealDead[0] = sprite_add("sprites/enemies/Seal/sprSealDead.png",      6, 12, 12);
-            global.sprSealSpwn[0] = sprite_add("sprites/enemies/Seal/sprSealSpwn.png",      6, 12, 12);
-            global.sprSealWeap[0] = mskNone;
-            global.sprSealIdle[1] = sprite_add("sprites/enemies/Seal/sprSealIdle1.png",     6, 12, 12);
-            global.sprSealWalk[1] = sprite_add("sprites/enemies/Seal/sprSealWalk1.png",     6, 12, 12);
-            global.sprSealHurt[1] = sprite_add("sprites/enemies/Seal/sprSealHurt1.png",     3, 12, 12);
-            global.sprSealDead[1] = sprite_add("sprites/enemies/Seal/sprSealDead1.png",     6, 12, 12);
-            global.sprSealSpwn[1] = sprite_add("sprites/enemies/Seal/sprSealSpwn1.png",     6, 12, 12);
-            global.sprSealWeap[1] = sprite_add("sprites/enemies/Seal/sprHookPole.png",      1, 18,  2);
-            global.sprSealIdle[2] = sprite_add("sprites/enemies/Seal/sprSealIdle2.png",     6, 12, 12);
-            global.sprSealWalk[2] = sprite_add("sprites/enemies/Seal/sprSealWalk2.png",     6, 12, 12);
-            global.sprSealHurt[2] = sprite_add("sprites/enemies/Seal/sprSealHurt2.png",     3, 12, 12);
-            global.sprSealDead[2] = sprite_add("sprites/enemies/Seal/sprSealDead2.png",     6, 12, 12);
-            global.sprSealSpwn[2] = sprite_add("sprites/enemies/Seal/sprSealSpwn2.png",     6, 12, 12);
-            global.sprSealWeap[2] = sprite_add("sprites/enemies/Seal/sprSabre.png",         1, -2,  1);
-            global.sprSealIdle[3] = sprite_add("sprites/enemies/Seal/sprSealIdle3.png",     6, 12, 12);
-            global.sprSealWalk[3] = sprite_add("sprites/enemies/Seal/sprSealWalk3.png",     6, 12, 12);
-            global.sprSealHurt[3] = sprite_add("sprites/enemies/Seal/sprSealHurt3.png",     3, 12, 12);
-            global.sprSealDead[3] = sprite_add("sprites/enemies/Seal/sprSealDead3.png",     6, 12, 12);
-            global.sprSealSpwn[3] = sprite_add("sprites/enemies/Seal/sprSealSpwn3.png",     6, 12, 12);
-            global.sprSealWeap[3] = sprite_add("sprites/enemies/Seal/sprBlunderbuss.png",   1,  7,  1);
-            global.sprClamShield  = sprite_add("sprites/enemies/Seal/sprClamShield.png",   14,  7,  1);
-
-             // Seal (Heavy):
-            global.sprSealHeavySpwn = sprite_add("sprites/enemies/SealHeavy/sprHeavySealSpwn.png",   6, 16, 17);
-            global.sprSealHeavyIdle = sprite_add("sprites/enemies/SealHeavy/sprHeavySealIdle.png",  10, 16, 17);
-            global.sprSealHeavyWalk = sprite_add("sprites/enemies/SealHeavy/sprHeavySealWalk.png",   8, 16, 17);
-            global.sprSealHeavyHurt = sprite_add("sprites/enemies/SealHeavy/sprHeavySealHurt.png",   3, 16, 17);
-            global.sprSealHeavyDead = sprite_add("sprites/enemies/SealHeavy/sprHeavySealDead.png",   7, 16, 17);
-            global.sprSealHeavyTell = sprite_add("sprites/enemies/SealHeavy/sprHeavySealTell.png",   2, 16, 17);
-            global.sprSealAnchor    = sprite_add("sprites/enemies/SealHeavy/sprHeavySealAnchor.png", 1,  0, 12);
-
-             // Sea/Seal Mine:
-            global.sprSealMine      = sprite_add("sprites/areas/Coast/props/sprSeaMine.png",      1, 12, 12);
-            global.sprSealMineHurt  = sprite_add("sprites/areas/Coast/props/sprSeaMineHurt.png",  3, 12, 12);
-
-             // Traffic Crab:
-            global.sprCrabIdle = sprite_add("sprites/enemies/Crab/sprTrafficCrabIdle.png", 5, 24, 24);
-            global.sprCrabWalk = sprite_add("sprites/enemies/Crab/sprTrafficCrabWalk.png", 6, 24, 24);
-            global.sprCrabHurt = sprite_add("sprites/enemies/Crab/sprTrafficCrabHurt.png", 3, 24, 24);
-            global.sprCrabDead = sprite_add("sprites/enemies/Crab/sprTrafficCrabDead.png", 9, 24, 24);
-            global.sprCrabFire = sprite_add("sprites/enemies/Crab/sprTrafficCrabFire.png", 2, 24, 24);
-
-             // Strange Creature:
-        	global.sprCreatureIdle = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAACMAAAACgCAMAAADXNXIqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMAUExURQAAAAU9IAxsQWkrGXVgQ/w4ALiVetS/rwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKuM2GgAAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjE3M26fYwAADJxJREFUeF7t24ty20YSQFFlLcv//8VZYNCkAGLwIAYU0c45VSvSeM3dSRWqI1c+/gUASMYAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0DDAAQDoGGAAgHQMMAJCOAQYASMcAAwCkY4ABANIxwAAA6RhgAIB0WgaYj4k4eCERFuLghURYiIMXEmEhDl5IhIU4eCERFuLglUTZII5dSZQN4tiVRNkgjl1JlA3i2JVE2SCOXUmUDeLYlUTZII5dSZQN4tjZDj03kv6ZiINxyVtFSoSFOBiXvFWkRFiIg3HJW0VKhIU4GJe8VaREWIiDcclbRUqEhTgYl7xXtETZII7FFe8VLVE2iGNxxXtFS5QN4lhc8V7REmWDOBZXvFe0RNkgjsUV7xUtUTaIY3HFe0VLlA3iWFzxVpHyI33PPrBERFLVCxqfoa+NvjZX79sM1LdOXxt9bS7et5V3et9TT1tu+9+3N+6hvjb62ly9bzkw2nqX7JsE6luir42+Jst5o76T3y/7H7W+eeMdLI1x18/R10Zfm6v3LQcOSaVscMG+hw3UN6evjb4mi3mlbJp3Yt/eBy3WdWWxhRM/vYX62uhrc/2+pcC+bx54pb7aBuqb0tdGX5vFvC6tknde367HLO9eSasF/ugW6mujr83V+7rAyJkpJdXAa/Qtb+A/P5enr5G+Nrn7qnln9e14ykpdPe3mh7ZQXxt9ba7etxoYKVVX7/upCUtfG31t9K3YfsZKXWdhvAo/sYP62uhrc/m+1cCubznwRyaY9b7VDdTX0ddGX5v1vi5vue+M99/WIza2L0TP3Mt3UF8bfW3+jr7FQH36muhr83f0Rc1ce9/GE/ZtXy+KHr14B/W10dfm7+lbCNS3VwQ90LdXBD3Qt1cEPbhMX/Q8au5bf8BiXyw/8pYd1NdGX5u0ffOYq/dN/0PMb/qqYvURfXP62jzRV0vutfat3r/QF0s/qh9/5d/D6Wujr03SvoXAhcP6ZmLlB/oe6WvzV/UtHW7sW7u93hcL7/a6N7S+Nvra5Ox7NvDH+54M1PcoFt5J36NYeCd9D2LdvRr7Vu6u98Wy+/3zqh3U10Zfm5x9Twdeve9lb2h9bfS1ydkXiz6hrW/55iN9tdPdsZfsoL42+trk7NsIrOhuuXRft4H6vsWiT9A3Fos+Qd9IrPmE7p6WvsV7j+3f/Hy55QU7qK+NvjZJ+zYCK6f1TQyLLtF3o69N0r5hzUXn9y3deqyvEjjcc/oO6mujr03Svq3A+QXX6qttYP9DXyhLrtA30Ndmoa+suGJ+xXDkeN/CnYf3byHw7L+H09dGX5usfduB8XmXo+/sN7S+NvraZO0ra61Z6Dv+fqnfeHz/FgJPfgPqa6OvTdq+7cD4vNM3URZboa+nr03avrLWmtP76vctB240zk+3Blbpa6OvTdq+7cD4vLv1nRrY0Pd4Wt+Evj30tVns28pb7juaV71vdf9WC+dnb0fO3EB9bfS1ydvXBw7rLZid1jehbwd9bfL2dcv9cF/1tpXADfMrbjf90AZu0NfT1yZv36HA4UNfr6y1Ql9HX5u8fWWpFfNLbkeO9tVuW9m/frG1ysr/heGm7uO0HdTXRl+bzH0bgcMFE3HoGn1dRny5u92kr+iXKuvW6dPXaq2vX6ksWzdcMXG762Bf7a6NDSw/FszPdUc+fv3+3T3zp/4Blx8L5ue6I/pG9G1K3VcCY+25cn6iO3Khvnlgd0DfmL4t+tqs9lUSRubnuiNNfZW71vdv9a+5hguGz6+vP4Ovr4/fv399bAZ+FPGHFfrq9OkrtgOHmrnh/PDl6xZY+ro3zObSewOP95XA2+eor7wB9Q30bdBXd1Jfp7RU3E/2n5HX9zW8/yp3HeyLc4Nb3OCrvvZYd7pc+rr9i3MDfWuiaCrODfStiaKpODd4b181ME6FSWDp23jB7A/UV6NvQt+aSJqIU+GtfVE0FecGk7yh7+D7r3LXjg28+/j4VfTrx6HONK9XEuP5FVH352vH/umb06fv7pm+euDTfU8FPtk3BOq70zen75p9UTfNe75vJa9y1/7Aj/53y70+MI5V6jpfX5+fi423vO6qHfun75E+fSP7+yaBcej+m+eJW98ZgU/0lb8eL777qhu4s+/8F7S+GX2P/qt91fff8333vNrrZX7Hvr6y2j3wOy+Wmvi6qUZ+715/4Vn7VxbSV6EvFgp/W9+hwF+3m+pvl/C5HfjqvtoGRl1H311ZSF+FvlgovKSvrHPP+37/1V4wEdfnVfomefO+efC+/et1S5UB8Ptf3+p18W3QZY4bPz6+T3997tlAffoG+mqe6iuB/W94hyM7+iIwFnsIPLfvtoHfffXXc3wJfcRCX3dO3yN9i/RV7O+LvKfff+P3yziv+v6bBz+xgQ/6paY9XUyludPvYb/0ePf+dBef+w/4gb6evo6+irLWLDC+PYi+aWD3hnllX3k9T/u6JePLA30VZQ19h5U19B3VL9XljVbsp5X4OrX//TcPPhrYl0x3b/H1POgjHy9/4QbqG+gL+ibmfRuBfd8s8OV9D4ErfeUlPTmvT5++u3f3Pf/+q/TNgw8Fdq/WzjRoo6+/YHK+63vZBuq703ej767WdyTwtX3deuMFn+3rr9f3Td9u+u4a+qY9z+bV33/z4COBt7xJX/eH9cDZ9r1sA/V903ej76b09YGxVnEk8Mp9Lxyw9H3Td6cvRF9fdHckr9I3D34+cNi7XixV9H9YDXw42fd1yZs7qC/oC/rGzuo7FHjlvu4h+kb07aRv7Ky+I3mVvnnv04Gfn7dfEcVSRfnDauBU6esec/4G6pvQV6Vv2ncs8MJ9w4Cl70bfTvomTuo7lFfpm/c+G9jlnbF/pe8VG6hvSl+VvoeYg4Gb/wr3rr6YAPUFffvomzqp71jevG+e+2xg54T9i74XbGBH34i+Gn2PLU8GvmyA6XSPnQce7NucAPXV6YuFgr7dhrxpy7G8+ftlnns4MFYa2x9Y4rq39M+9oHv6dtE38l/qeyKwa/vs+173AoyFJvb39TvYbWD3mI1AfXX6KvTtsdi3P6+8Xsr75aFvXvt8YP/Y1v0rfaXw/A3UN6avRl9jYJ928b4SqG9M3w76xs7s25831FX65rUHAsujY6WpvYXd9pWHdF6wgcNza/TtoG/sb+2rpuzt6wuHp3R3rAee27c78HsH9X3Tt4O+sXP74nPTbYDpTPPmsUcDY6WpvYHlCeFFGxgrTenbQd/Y39rXFjgq1Deib5u+sf9U39684QmDaV8lNpbdbwiMpaaeCixf+h/rOxir7qdvIlbdT99ErLpfjr62wFJYProfV+0rgd3/9N3p26ZvIlbdb6Vvb979AeXnuK/aGgvvtRa4s/B+Xflc30B9c/r0fYt194q+emB8brndXT4v2He/UN+Evm36HsS6e0Xf8Pyp+tG5+3Xly7hvoTWW3ufzM+4aK833L+Vb1cbpBbHyPvpmYuV99M3Eyvuk7CsL3z7ja83G6QWx8j5NfXE+/rBXrLyPvplYeR99M7HyPin77quWLyvrb5xeG7Zi/WVx3btExbK47l2iYllc9y5RsSyue5eoWBbXvUtULIvr3iUqlsV17xIVy+K6d4mKZXHdu0TFsrjuXaJiWVz3LlGxLK57l6hYFte9S1Qsi+teauu3RQAAl2OAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAdAwwAEA6BhgAIB0DDACQjgEGAEjHAAMApGOAAQDSMcAAAOkYYACAZP799/9U6bLI9L+tDwAAAABJRU5ErkJggg==",
-        	14, 80, 80);
-        	global.sprCreatureHurt = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAeAAAACgCAMAAADjJU9/AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMAUExURQAAAAU9IAxsQXVgQ7iVetS/r////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHiDNaAAAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjE3M26fYwAABYhJREFUeF7tmomS2joURCF2+P8/nmhpBttos9GWpk/VC4MsXXf1GZNJXm4/ghoJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYnI8EP7ZgbSZuW7A2E0jmwVptrs2F0xDYMRZ0dt+CNewYC7IgmQdr2FGN0wPhMQV2jsG1hM5CNOjwFL3znZsGg3mwvzfx7v68GOh4QL4To+CuEBzqSLQ9X5v7FZgOcagjY/KVDoK2M+BkH5LPxu4B8fRWPCxf2RgoOwkOdyDanq8uUKCtEIc7MDBfyRT4ugAGNCZRX6i5X3o9xEPz5WfA1TUwoyWp+gzhx8PT5SEenC83AqIugzHNyNS3AaXtaW54eL7MBGj6AAxqRLQ+FLRhiOHx+dIDIOkjMKoJkf5QzoEBhifIlzwPRR+CYQ041V+MhoZnyJc6DkGfg3m1CfeHXopp9yfiKfIlDsNODTCxLnX6sz/FtjE8R774WbipA2bW5NLnX+CyXWpheJJ80aMwUwtMrcel/kINupX6hmfJFzsJL/XA3FpE+jtfII7UNjxNvshBWKkJJtch1t/lAiv/pdY8+cLn4KQumF2DaH/Jv/mzvF1+FljV8ET5JBgLkwu+nC94DEYqg+EViPeXbs/wvgMrNQXPlK+j4HqGEwXaNlIthgr0hyoanilf6BR8VAfjPybVny3jvaQXbsMO++/cHg+zXk3wVPn4BKf/D6u9vsMsmP4ej1svwZ3zzSS4bFe2QAPK2YFL/qJ9Xde/jnV1980XeHPgTYKp8gVOuXEtwPww2FMgON/fFvv5Zr7/DVjwoDyPazBToBng9uYFz5VvEsHYYcFKnDMF+voMuwZ37TlWex3zQ6C9v2tlwe3z9RRswT324JoHa3HKCzSlYKgpEGuh+kwx67LYDsMlPuurLbhHvt6CHbgRwCLAYoKyAl0dmwKxfEcTW9Zfgi2+6jM7834ny/ceGHdsDG72fjssxynrz/Eq8HkIRWx5/izzxPS47fB221wvETxZvlGCLcG7uQwpThSIkfYPkQ7fwa6wdcEXB0yHrpptfWZzXcGI1zTfSMFBkCJOeYFuHr6+321Tpr1Dfbu3B2yJu+tLXcFd8n2J4MVWZ34P2/VnfktL9ffWr93fSHC7fN8hGPUd+jDv0gUe+l2aCW6YbzrBWcPlBdoG7YvvzoImPPZdssDDRTPENJo1PFk+asGeZXl+BKIJj3uXLPCA6c+MqSnY0zbffIJzhs8WaOoL9Xe6QPuAlDzCk+XjF2yw39kfF+j6CzwiRybLN6HgjOErBQb685wr0P+YmzE8Wb5vEBx8QDzlBbofYWyD9QU3zTej4LThCwW6/sIFFjdoCvRjcoYny/flgssfET/D0lPw5/kCYdHySJAkDGopp16B9tX8lzaMu5bTNF8wK2oeB3LEQDGl/H52BSgvcPOaFjxXvkhWFF0KTu14rrsNCWeZy2FQTRnLglM7bKXPV3wZJHM5DO5cRtN8qW9GX30C7BsF+omDfaNAijjY15Tcp434z5FgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJJkeCyZFgciSYHAkmR4LJkWByJJgcCSZHgsmRYHIkmBwJpubn5x8Du/CP6ZKb1gAAAABJRU5ErkJggg==",
-        	3, 80, 80);
-        	global.sprCreatureBott = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAKjSURBVHhe7dJBbiNXFATB2fpKvv+95JUB4yMtUU1NacSORWwSJFHNfr/e3t7g22SElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZ/1S//vr77f+cn+VnyPjV6mD+NOfmK+p3f6LzuX6njM+qh+I1nO/6WRmvqsG8rvP9X5HxihrIPZy38BkZr6hh3Md5D4/KeEWN4j7Oe3hUxitqFPdy3sQjMl5Rg7iX8yYekfGKGsT9nHfxkYxX1Bju57yLj2S8osZwT+dtvCfjFTWEezpv4z0Zr6gh3NN5G+/JeEUN4Z7O23hPxqtqDPdz3sV7Ml5VY7iX8yY+kvGqGsR9nPfwiIzPqGG8vvMOHpXxGTWO13bewGdkfFaN5HWd7/8zMn6FGsrrOd/7Z2X8SjWa13G+78/K+LvUA/Bzne/3iozfoR6Qr3f+76W+96/zs8/K+NPUH/Vf5+e/Q+16xPk7ryYjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCCsZYSUjrGSElYywkhFWMsJKRljJCBtvv/4Bi0CUPGa5758AAAAASUVORK5CYII=",
-        	1, 80, 80);
-        	global.sprCreatureFoam = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAIVSURBVHhe7dLBTsIAFERR/v+nMe6voBUGtGeSs7npok3f5Xq9wstkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGd/YrdXzvLmMT/AXVu/9U/9l9W1PkfEB7P+u/vdhGX/BzrW6gR/JeJCdd3UP35LxIDv36ibuyniQnXt1E3dlPMis7uKmjAeZ1V3clPEgs8/VbXwp4y/ZeVf3cFPGB/nLq+/hCTI+0Tus3osXyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhJWMsJIRVjLCSkZYyQgrGWElI6xkhI3r5QPGwQeqRTAO1AAAAABJRU5ErkJggg==",
-        	1, 80, 80);
-    	//#endregion
-
-        //#region OASIS
-             // Hammerhead:
-            global.sprHammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png",  6, 24, 24);
-            global.sprHammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png",  3, 24, 24);
-            global.sprHammerheadDead = sprite_add("sprites/enemies/Hammer/sprHammerheadDead.png", 10, 24, 24);
-            global.sprHammerheadChrg = sprite_add("sprites/enemies/Hammer/sprHammerheadDash.png",  2, 24, 24);
-
-             // Puffer:
-            global.sprPufferIdle       = sprite_add("sprites/enemies/Puffer/sprPufferIdle.png",     6, 15, 16);
-            global.sprPufferHurt       = sprite_add("sprites/enemies/Puffer/sprPufferHurt.png",     3, 15, 16);
-            global.sprPufferDead       = sprite_add("sprites/enemies/Puffer/sprPufferDead.png",    11, 15, 16);
-            global.sprPufferChrg       = sprite_add("sprites/enemies/Puffer/sprPufferChrg.png",     9, 15, 16);
-            global.sprPufferFire[0, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow0.png",    2, 15, 16);
-            global.sprPufferFire[0, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB0.png",   2, 15, 16);
-            global.sprPufferFire[1, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow1.png",    2, 15, 16);
-            global.sprPufferFire[1, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB1.png",   2, 15, 16);
-            global.sprPufferFire[2, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow2.png",    2, 15, 16);
-            global.sprPufferFire[2, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB2.png",   2, 15, 16);
-            global.sprPufferFire[3, 0] = sprite_add("sprites/enemies/Puffer/sprPufferBlow3.png",    2, 15, 16);
-            global.sprPufferFire[3, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB3.png",   2, 15, 16);
-
-             // Ground Crack Effect:
-            global.sprCrack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAB6klEQVRoQ+WTUW7DMAxDc4j97H+n2xl292wyykBmaMuOndZYPx4QS65EMum27/tbI4sr8vHzvXu4z7TcMWTxVdQMci0yGPWBLL4aJX77+sxqdqdkEr1S3yOLK2DizXQvbDwKQRZXozeMqQFEA56FMhph2qcEYMPwjPozYWO91HTLoiIadBd4AYk/uVVwr4DSnx0ibAjXFH7RaGiHATZbAvcFwwHgbXCN8X2+z/B95jDARiPwO+I0nwsRfogS3xuAUQrB6kk4m+vhYRzwjuzQQjTQaLnDmFnAv5fGenHzsMf2SjEMLuOZh6EHeBHgex7f9/Olmas8ZmJP2uUPNZQJLxR9g5e04Gf7udLICKTteGihFgDj77XiAzxgA6OQtkxARCkAX4cBnK+AudLAKKQtW9yCf0McCOAlvRw7WPwMRgMANZOlYHo5iZ8Aa8sW9lAKwBasHMBpBxdawCfKRmcZB2kPGRiFd2SHVtL/02FCZ5sHbGCU03wutADjvnZXAICNXOU0lwuK9CkGb/zuAJIGMnMFnpsdavAbN7xpFcpM1BenDEb4GUZ2qFEK4G7jhtoN2CBgTSWd2aHG3SYZ22fGjdruyDjD/ay5El5oawCReWP5AEwg8DU8M7VeC7K4CioM5l8H8Axk8X3Yt1/rleuAjYarfgAAAABJRU5ErkJggg==",
-            2, 16, 16);
-        //#endregion
-        
-        //#region TRENCH
-             // Eel (0 = blue, 1 = purple, 2 = green):
-            global.sprEelIdle = [
-                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",8,16,16)];
-            global.sprEelHurt = [
-                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",3,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",3,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",3,16,16)];
-            global.sprEelDead = [
-                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",9,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",9,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",9,16,16)];
-            global.sprEelTell = [
-                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
-             // Jellyfish (0 = blue, 1 = purple, 2 = green):
-            global.sprJellyfishFire = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",1,24,24);
-            global.sprJellyfishUncharged = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png",1,24,24);
-            global.sprJellyfishIdle = [
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",1,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",1,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",1,24,24)];
-            global.sprJellyfishHurt = [
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",3,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",3,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",3,24,24)];
-            global.sprJellyfishDead = [
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",13,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png",13,24,24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",13,24,24)];
-             // Kelp:
-            global.sprKelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png",6,16,22);
-            global.sprKelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png",3,16,22);
-            global.sprKelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png",8,16,22);
-             // Vent
-            global.sprVentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png",1,12,14);
-            global.sprVentHurt = sprite_add("sprites/areas/Trench/Props/sprVentHurt.png",3,12,14);
-            global.sprVentDead = sprite_add("sprites/areas/Trench/Props/sprVentDead.png",6,12,14);
-             // Yeti Crab:
-            global.sprYetiCrabIdle = sprite_add("sprites/enemies/YetiCrab/sprYetiCrab.png",1,12,12);
-            global.sprKingCrabIdle = sprite_add("sprites/enemies/YetiCrab/sprKingCrab.png",1,12,12);
-        //#endregion
-
-        //#region SEWERS
-             // Cat:
-            global.sprCatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png", 4, 12, 12);
-            global.sprCatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png", 6, 12, 12);
-            global.sprCatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png", 3, 12, 12);
-            global.sprCatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png", 6, 12, 12);
-            global.sprAcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png", 4, 16, 16);
-        //#endregion
-
-        //#region CRYSTAL CAVES
-        	 // Mortar:
-        	global.sprMortarIdle = sprite_add("sprites/enemies/Mortar/sprMortarIdle.png", 4, 22, 24);
-        	global.sprMortarWalk = sprite_add("sprites/enemies/Mortar/sprMortarWalk.png", 8, 22, 24);
-        	global.sprMortarFire = sprite_add("sprites/enemies/Mortar/sprMortarFire.png", 16, 22, 24);
-        	global.sprMortarHurt = sprite_add("sprites/enemies/Mortar/sprMortarHurt.png", 3, 22, 24);
-        	global.sprMortarDead = sprite_add("sprites/enemies/Mortar/sprMortarDead.png", 14, 22, 24);
-        	global.sprMortarPlasma = sprite_add("sprites/enemies/Mortar/sprMortarPlasma.png", 1, 4, 4);
-        	global.sprMortarImpact = sprite_add("sprites/enemies/Mortar/sprMortarImpact.png", 7, 16, 16);
-        	global.sprMortarTrail = sprite_add("sprites/enemies/Mortar/sprMortarTrail.png", 3, 4, 4);
-        //#endregion
-    //#endregion
-
-    //#region SOUNDS
-        global.snd = {};
-        with(global.snd){
-             // Palanking:
-            PalankingHurt  = sound_add("sounds/enemies/Palanking/sndPalankingHurt.ogg");
-            PalankingDead  = sound_add("sounds/enemies/Palanking/sndPalankingDead.ogg");
-            PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
-            PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
-            PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
-            sound_volume(PalankingHurt, 0.6);
-        }
-    //#endregion
-
-    //#region MUSIC
-        global.mus = {};
-        with(global.mus){
-            SealKing = sound_add("music/musSealKing.ogg");
-        }
-    //#endregion
+    global.spr = mod_variable_get("mod", "teassets", "spr");
+    global.snd = mod_variable_get("mod", "teassets", "snd");
+    global.mus = mod_variable_get("mod", "teassets", "mus");
 
      // Refresh Big Decals on Mod Load:
     with(instances_named(CustomObject, "BigDecal")){
-        sprite_index = lq_defget(global.sprBigTopDecal, string(GameCont.area), mskNone);
+        sprite_index = lq_defget(spr.BigTopDecal, string(GameCont.area), mskNone);
     }
 
      // Harpoon Ropes:
     global.poonRope = [];
 
+#macro spr global.spr
+#macro msk spr.msk
+#macro snd global.snd
+#macro mus global.mus
+
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
-
-#macro snd global.snd
-#macro mus global.mus // remove this comment later
 
 #define obj_create(_x, _y, obj_name)
     var o = noone,
@@ -307,16 +26,16 @@
     switch(obj_name){
     	case "BigDecal":
     	    var a = string(GameCont.area);
-    	    if(lq_exists(global.sprBigTopDecal, a)){
+    	    if(lq_exists(spr.BigTopDecal, a)){
         	    o = instance_create(_x, _y, CustomObject);
         		with(o){
         		     // Visual:
-        		    sprite_index = lq_get(global.sprBigTopDecal, a);
+        		    sprite_index = lq_get(spr.BigTopDecal, a);
         			image_xscale = choose(-1, 1);
         			image_speed = 0;
         			depth = -8;
 
-            		mask_index = global.mskBigTopDecal;
+            		mask_index = msk.BigTopDecal;
 
         		    if(place_meeting(x, y, TopPot)) instance_destroy();
                 	else{
@@ -338,7 +57,7 @@
             o = instance_create(_x, _y, CustomProjectile);
             with(o){
                  // Visual:
-                sprite_index = global.sprBone;
+                sprite_index = spr.Bone;
                 hitid = [sprite_index, _name];
 
                  // Vars:
@@ -366,7 +85,7 @@
     	    o = instance_create(_x, _y, CustomProjectile);
     	    with(o){
     	         // Visual:
-    	        sprite_index = global.sprBubbleBomb;
+    	        sprite_index = spr.BubbleBomb;
     	        image_speed = 0.5;
     	        depth = -2;
 
@@ -386,7 +105,7 @@
         case "BubbleExplosion":
             o = instance_create(_x, _y, PopoExplosion);
             with(o){
-                sprite_index = global.sprBubbleExplode;
+                sprite_index = spr.BubbleExplode;
                 mask_index = mskExplosion;
                 hitid = [sprite_index, "BUBBLE EXPLO"];
                 damage = 3;
@@ -412,7 +131,7 @@
         case "SmallBubbleExplosion":
             o = instance_create(_x, _y, SmallExplosion);
             with(o){
-                sprite_index = global.sprBubbleExplode;
+                sprite_index = spr.BubbleExplode;
                 mask_index = mskExplosion;
                 image_xscale = 0.5;
                 image_yscale = 0.5;
@@ -430,8 +149,8 @@
             o = instance_create(_x, _y, CustomProp);
             with(o){
                  // Visual:
-                spr_idle = global.sprBigFishBecomeIdle;
-                spr_hurt = global.sprBigFishBecomeHurt;
+                spr_idle = spr.BigFishBecomeIdle;
+                spr_hurt = spr.BigFishBecomeHurt;
                 spr_dead = sprBigSkullDead;
                 spr_shadow = shd32;
                 image_speed = 0;
@@ -459,7 +178,7 @@
     	        col = c_red;
 
     	        /// Visual:
-    	            spr_spwn = global.sprBigFishSpwn;
+    	            spr_spwn = spr.BigFishSpwn;
         	        spr_idle = sprBigFishIdle;
         			spr_walk = sprBigFishWalk;
         			spr_hurt = sprBigFishHurt;
@@ -477,8 +196,8 @@
         			spr_efir = sprBigFishFireEnd;
 
         			 // Swim:
-        			spr_dive = global.sprBigFishLeap;
-        			spr_rise = global.sprBigFishRise;
+        			spr_dive = spr.BigFishLeap;
+        			spr_rise = spr.BigFishRise;
 
                  // Sound:
         		snd_hurt = sndOasisBossHurt;
@@ -529,7 +248,7 @@
         case "Harpoon":
             o = instance_create(_x, _y, CustomProjectile);
             with(o){
-                sprite_index = global.sprHarpoon;
+                sprite_index = spr.Harpoon;
                 image_speed = 0;
                 mask_index = mskBolt;
 
@@ -570,7 +289,7 @@
         case "NetNade":
             o = instance_create(_x, _y, CustomProjectile);
             with(o){
-                sprite_index = global.sprNetNade;
+                sprite_index = spr.NetNade;
                 image_speed = 0.4;
                 mask_index = sprGrenade;
 
@@ -590,10 +309,10 @@
             case "BloomingCactus":
                 o = instance_create(_x, _y, Cactus);
                 with(o){
-                    var s = irandom(array_length(global.sprBloomingCactusIdle) - 1);
-                    spr_idle = global.sprBloomingCactusIdle[s];
-                    spr_hurt = global.sprBloomingCactusHurt[s];
-                    spr_dead = global.sprBloomingCactusDead[s];
+                    var s = irandom(array_length(spr.BloomingCactusIdle) - 1);
+                    spr_idle = spr.BloomingCactusIdle[s];
+                    spr_hurt = spr.BloomingCactusHurt[s];
+                    spr_dead = spr.BloomingCactusDead[s];
                 }
                 break;
                 
@@ -601,8 +320,8 @@
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprBuriedCarIdle;
-                    spr_hurt = global.sprBuriedCarHurt;
+                    spr_idle = spr.BuriedCarIdle;
+                    spr_hurt = spr.BuriedCarHurt;
                     spr_dead = mskNone;
                     spr_shadow = mskNone;
 
@@ -627,11 +346,11 @@
         	    o = instance_create(_x, _y, CustomHitme);
         	    with(o){
         	         // visual
-        	        spr_idle = global.sprCreatureIdle;
+        	        spr_idle = spr.CreatureIdle;
         	        spr_walk = spr_idle;
-        	        spr_hurt = global.sprCreatureHurt;
-        	        spr_bott = global.sprCreatureBott;
-        	        spr_foam = global.sprCreatureFoam;
+        	        spr_hurt = spr.CreatureHurt;
+        	        spr_bott = spr.CreatureBott;
+        	        spr_foam = spr.CreatureFoam;
         	        sprite_index = spr_idle;
         	        image_speed = 0.4;
         	        depth = -3;
@@ -662,11 +381,11 @@
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o){
                      // Visual:
-        			spr_idle = global.sprDiverIdle;
-        			spr_walk = global.sprDiverWalk;
-        			spr_hurt = global.sprDiverHurt;
-        			spr_dead = global.sprDiverDead;
-        			spr_weap = global.sprHarpoonGun;
+        			spr_idle = spr.DiverIdle;
+        			spr_walk = spr.DiverWalk;
+        			spr_hurt = spr.DiverHurt;
+        			spr_dead = spr.DiverDead;
+        			spr_weap = spr.HarpoonGun;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
@@ -711,11 +430,11 @@
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o){
                      // Visual:
-        			spr_idle = global.sprGullIdle;
-        			spr_walk = global.sprGullWalk;
-        			spr_hurt = global.sprGullHurt;
-        			spr_dead = global.sprGullDead;
-        			spr_weap = global.sprGullSword;
+        			spr_idle = spr.GullIdle;
+        			spr_walk = spr.GullWalk;
+        			spr_hurt = spr.GullHurt;
+        			spr_dead = spr.GullDead;
+        			spr_weap = spr.GullSword;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
@@ -752,15 +471,15 @@
         	        col = c_red;
 
         	         // Visual:
-    	            spr_bott = global.sprPalankingBott;
-    	            spr_taun = global.sprPalankingTaunt;
-    	            spr_call = global.sprPalankingCall;
-        	        spr_idle = global.sprPalankingIdle;
-        			spr_walk = global.sprPalankingWalk;
-        			spr_hurt = global.sprPalankingHurt;
-        			spr_dead = global.sprPalankingDead;
-        			spr_burp = global.sprPalankingBurp;
-        			spr_foam = global.sprPalankingFoam;
+    	            spr_bott = spr.PalankingBott;
+    	            spr_taun = spr.PalankingTaunt;
+    	            spr_call = spr.PalankingCall;
+        	        spr_idle = spr.PalankingIdle;
+        			spr_walk = spr.PalankingWalk;
+        			spr_hurt = spr.PalankingHurt;
+        			spr_dead = spr.PalankingDead;
+        			spr_burp = spr.PalankingBurp;
+        			spr_foam = spr.PalankingFoam;
     			    spr_shadow_hold = shd64B; // Actually a good use for this shadow hell yeah
     			    spr_shadow = mskNone;
                     spr_shadow_y = 24;
@@ -774,7 +493,7 @@
 
         			 // Vars:
             		mask_index = mskNone;
-            		mask_hold = global.mskPalanking;
+            		mask_hold = msk.Palanking;
         			maxhealth = scrBossHP(350);
         			raddrop = 80;
         			size = 4;
@@ -813,9 +532,9 @@
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprPalmIdle;
-                    spr_hurt = global.sprPalmHurt;
-                    spr_dead = global.sprPalmDead;
+                    spr_idle = spr.PalmIdle;
+                    spr_hurt = spr.PalmHurt;
+                    spr_dead = spr.PalmDead;
                     spr_shadow = -1;
                     depth = -2 - (y / 20000);
 
@@ -837,8 +556,8 @@
                         with(my_enemy) depth = -3;
 
                          // Visual:
-                        spr_idle = global.sprPalmFortIdle;
-                        spr_hurt = global.sprPalmFortHurt;
+                        spr_idle = spr.PalmFortIdle;
+                        spr_hurt = spr.PalmFortHurt;
 
                          // Sound:
                         snd_dead = sndGeneratorBreak;
@@ -854,11 +573,11 @@
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o) {
                      // Visual:
-        			spr_idle = global.sprPelicanIdle;
-        			spr_walk = global.sprPelicanWalk;
-        			spr_hurt = global.sprPelicanHurt;
-        			spr_dead = global.sprPelicanDead;
-        			spr_weap = global.sprPelicanHammer;
+        			spr_idle = spr.PelicanIdle;
+        			spr_walk = spr.PelicanWalk;
+        			spr_hurt = spr.PelicanHurt;
+        			spr_dead = spr.PelicanDead;
+        			spr_weap = spr.PelicanHammer;
         			spr_shadow = shd32;
         			spr_shadow_y = 6;
         			hitid = [spr_idle, _name];
@@ -901,12 +620,12 @@
                     o = instance_create(_x, _y, CustomEnemy);
                     with(o){
                          // Visual:
-                        spr_spwn = global.sprSealSpwn[0];
-                        spr_idle = global.sprSealIdle[0];
-                        spr_walk = global.sprSealWalk[0];
-                        spr_hurt = global.sprSealHurt[0];
-                        spr_dead = global.sprSealDead[0];
-                        spr_weap = global.sprSealWeap[0];
+                        spr_spwn = spr.SealSpwn[0];
+                        spr_idle = spr.SealIdle[0];
+                        spr_walk = spr.SealWalk[0];
+                        spr_hurt = spr.SealHurt[0];
+                        spr_dead = spr.SealDead[0];
+                        spr_weap = spr.SealWeap[0];
                         spr_shadow = shd24;
                         hitid = [spr_idle, _name];
                         sprite_index = spr_spwn;
@@ -949,7 +668,7 @@
                 o = instance_create(_x, _y, CustomSlash);
                 with(o){
                      // Visual:
-                    sprite_index = global.sprSealAnchor;
+                    sprite_index = spr.SealAnchor;
                     image_speed = 0;
                     depth = -2;
 
@@ -967,13 +686,13 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_spwn = global.sprSealHeavySpwn;
-                    spr_idle = global.sprSealHeavyIdle;
-                    spr_walk = global.sprSealHeavyWalk;
-                    spr_hurt = global.sprSealHeavyHurt;
-                    spr_dead = global.sprSealHeavyDead;
-                    spr_chrg = global.sprSealHeavyTell;
-                    spr_weap = global.sprSealAnchor;
+                    spr_spwn = spr.SealHeavySpwn;
+                    spr_idle = spr.SealHeavyIdle;
+                    spr_walk = spr.SealHeavyWalk;
+                    spr_hurt = spr.SealHeavyHurt;
+                    spr_dead = spr.SealHeavyDead;
+                    spr_chrg = spr.SealHeavyTell;
+                    spr_weap = spr.SealAnchor;
                     spr_shadow = shd24;
                     hitid = [spr_idle, "HEAVY SEAL"];
                     sprite_index = spr_spwn;
@@ -1013,8 +732,8 @@
                 o = instance_create(_x, _y, CustomHitme);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprSealMine;
-                    spr_hurt = global.sprSealMineHurt;
+                    spr_idle = spr.SealMine;
+                    spr_hurt = spr.SealMineHurt;
                     spr_dead = sprScorchmark;
                     spr_shadow = shd24;
                     hitid = [spr_idle, "WATER MINE"];
@@ -1046,11 +765,11 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprCrabIdle;
-                    spr_walk = global.sprCrabWalk;
-                    spr_hurt = global.sprCrabHurt;
-                    spr_dead = global.sprCrabDead;
-                    spr_fire = global.sprCrabFire;
+                    spr_idle = spr.CrabIdle;
+                    spr_walk = spr.CrabWalk;
+                    spr_hurt = spr.CrabHurt;
+                    spr_dead = spr.CrabDead;
+                    spr_fire = spr.CrabFire;
                     spr_shadow = shd48;
                     hitid = [spr_idle, "Traffic Crab"];
                     sprite_index = spr_idle;
@@ -1116,11 +835,11 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-        			spr_idle = global.sprHammerheadIdle;
-        			spr_walk = global.sprHammerheadIdle;
-        			spr_hurt = global.sprHammerheadHurt;
-        			spr_dead = global.sprHammerheadDead;
-        			spr_chrg = global.sprHammerheadChrg;
+        			spr_idle = spr.HammerheadIdle;
+        			spr_walk = spr.HammerheadIdle;
+        			spr_hurt = spr.HammerheadHurt;
+        			spr_dead = spr.HammerheadDead;
+        			spr_chrg = spr.HammerheadChrg;
         			spr_shadow = shd48;
         			spr_shadow_y = 2;
         			hitid = [spr_idle, _name];
@@ -1156,12 +875,12 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-        			spr_idle = global.sprPufferIdle;
-        			spr_walk = global.sprPufferIdle;
-        			spr_hurt = global.sprPufferHurt;
-        			spr_dead = global.sprPufferDead;
-        			spr_chrg = global.sprPufferChrg;
-        			spr_fire = global.sprPufferFire[0, 0];
+        			spr_idle = spr.PufferIdle;
+        			spr_walk = spr.PufferIdle;
+        			spr_hurt = spr.PufferHurt;
+        			spr_dead = spr.PufferDead;
+        			spr_chrg = spr.PufferChrg;
+        			spr_fire = spr.PufferFire[0, 0];
         			spr_shadow = shd16;
         			spr_shadow_y = 7;
         			hitid = [spr_idle, _name];
@@ -1192,7 +911,7 @@
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
                      // Visual:
-                    sprite_index = global.sprCrack;
+                    sprite_index = spr.Crack;
                     image_speed = 0;
                     mask_index = mskWepPickup;
                 }
@@ -1205,11 +924,11 @@
                 with(o){
                      // Visual:
                     c = irandom(2);
-                    spr_idle = global.sprEelIdle[c];
+                    spr_idle = spr.EelIdle[c];
                     spr_walk = spr_idle;
-                    spr_hurt = global.sprEelHurt[c];
-                    spr_dead = global.sprEelDead[c];
-                    spr_tell = global.sprEelTell[c];
+                    spr_hurt = spr.EelHurt[c];
+                    spr_dead = spr.EelDead[c];
+                    spr_tell = spr.EelTell[c];
                     spr_shadow = shd24;
                     sprite_index = spr_idle;
                     mask_index = mskRat;
@@ -1229,7 +948,9 @@
                     walkspd = 1.2;
                     maxspd = 3;
                     pitDepth = 0;
-                    direction = irandom(259);
+                    direction = random(360);
+                    arcing = 0;
+                    wave = 0;
                     
                      // Alarms:
                     alarm0 = 30;
@@ -1241,13 +962,13 @@
                 with(o){
                      // Visual:
                     c = irandom(2);
-                    spr_charged = global.sprJellyfishIdle[c];
-                    spr_uncharged = global.sprJellyfishUncharged;
+                    spr_charged = spr.JellyfishIdle[c];
+                    spr_uncharged = spr.JellyfishUncharged;
                     spr_idle = spr_charged;
                     spr_walk = spr_charged;
-                    spr_hurt = global.sprJellyfishHurt[c];
-                    spr_dead = global.sprJellyfishDead[c];
-                    spr_fire = global.sprJellyfishFire;
+                    spr_hurt = spr.JellyfishHurt[c];
+                    spr_dead = spr.JellyfishDead[c];
+                    spr_fire = spr.JellyfishFire;
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
@@ -1283,9 +1004,9 @@
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprKelpIdle;
-                    spr_hurt = global.sprKelpHurt;
-                    spr_dead = global.sprKelpDead;
+                    spr_idle = spr.KelpIdle;
+                    spr_hurt = spr.KelpHurt;
+                    spr_dead = spr.KelpDead;
                     sprite_index = spr_idle;
                     image_speed = 0.2;
                      
@@ -1302,9 +1023,9 @@
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
                      // Visual:
-                    spr_idle = global.sprVentIdle;
-                    spr_hurt = global.sprVentHurt;
-                    spr_dead = global.sprVentDead;
+                    spr_idle = spr.VentIdle;
+                    spr_hurt = spr.VentHurt;
+                    spr_dead = spr.VentDead;
                     spr_shadow = mskNone;
                     sprite_index = spr_idle;
                     
@@ -1323,10 +1044,10 @@
             o = instance_create(_x, _y, CustomEnemy);
                 with(o) {
                      // Visual:
-                    spr_idle = global.sprYetiCrabIdle;
-                    spr_walk = global.sprYetiCrabIdle;
-                    spr_hurt = global.sprYetiCrabIdle;
-                    spr_dead = global.sprYetiCrabIdle;
+                    spr_idle = spr.YetiCrabIdle;
+                    spr_walk = spr.YetiCrabIdle;
+                    spr_hurt = spr.YetiCrabIdle;
+                    spr_dead = spr.YetiCrabIdle;
                     spr_weap = mskNone;
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
@@ -1362,10 +1083,10 @@
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o){
                      // Visual:
-        			spr_idle = global.sprCatIdle;
-        			spr_walk = global.sprCatWalk;
-        			spr_hurt = global.sprCatHurt;
-        			spr_dead = global.sprCatDead;
+        			spr_idle = spr.CatIdle;
+        			spr_walk = spr.CatWalk;
+        			spr_hurt = spr.CatHurt;
+        			spr_dead = spr.CatDead;
         			spr_weap = sprToxicThrower;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
@@ -1403,10 +1124,10 @@
         	        col = c_green;
         		    
                      // Visual:
-        			spr_idle = global.sprCatIdle;
-        			spr_walk = global.sprCatWalk;
-        			spr_hurt = global.sprCatHurt;
-        			spr_dead = global.sprCatDead;
+        			spr_idle = spr.CatIdle;
+        			spr_walk = spr.CatWalk;
+        			spr_hurt = spr.CatHurt;
+        			spr_dead = spr.CatDead;
         			spr_weap = sprToxicThrower;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
@@ -1460,11 +1181,11 @@
         	    o = instance_create(_x, _y, CustomEnemy);
         	    with(o) {
                      // Visual:
-        	        spr_idle = global.sprMortarIdle;
-        			spr_walk = global.sprMortarWalk;
-        			spr_fire = global.sprMortarFire;
-        			spr_hurt = global.sprMortarHurt;
-        			spr_dead = global.sprMortarDead;
+        	        spr_idle = spr.MortarIdle;
+        			spr_walk = spr.MortarWalk;
+        			spr_fire = spr.MortarFire;
+        			spr_hurt = spr.MortarHurt;
+        			spr_dead = spr.MortarDead;
         			spr_weap = mskNone;
         			spr_shadow = shd48;
         			spr_shadow_y = 4;
@@ -1498,7 +1219,7 @@
         	    o = instance_create(_x, _y, CustomProjectile);
         	    with(o){
                      // Visual:
-        	        sprite_index = global.sprMortarPlasma;
+        	        sprite_index = spr.MortarPlasma;
         	        mask_index = mskNone;
     
         	         // Vars:
@@ -1550,13 +1271,20 @@
         for(var i = 0; i < array_length(_scrt); i++){
             var v = "on_" + _scrt[i];
             if(v not in self || is_undefined(variable_instance_get(id, v))){
-                var s = name + "_" + _scrt[i];
-                if(mod_script_exists("mod", mod_current, s)){
-                    variable_instance_set(id, v, ["mod", mod_current, s]);
+                var s = name + "_" + _scrt[i],
+                    _mod = [mod_current],
+                    m = false;
+
+                for(var j = 0; j < array_length(_mod); j++){
+                    if(mod_script_exists("mod", _mod[j], s)){
+                        variable_instance_set(id, v, ["mod", _mod[j], s]);
+                        m = true;
+                        break;
+                    }
                 }
     
                  // Exceptions:
-                else switch(v){
+                if(!m) switch(v){
                     case "on_hurt":
                         on_hurt = enemyHurt; break;
                     case "on_death":
@@ -1670,7 +1398,7 @@
     if(broken){
         sound_play_pitch(sndHitRock, 1.4 + random(0.2));
         repeat(2) with(instance_create(x, y, Shell)){
-            sprite_index = global.sprBoneShard;
+            sprite_index = spr.BoneShard;
             motion_add(random(360), 2);
         }
     }
@@ -2088,7 +1816,7 @@
                 _blend = image_blend,
                 _alpha = image_alpha,
                 _swimSpd = (current_frame / 3),
-                _spr = [global.sprBigFishSwimFrnt,      global.sprBigFishSwimBack           ],
+                _spr = [spr.BigFishSwimFrnt,      spr.BigFishSwimBack           ],
                 _ang = [swim_ang_frnt,                  swim_ang_back                       ],
                 _dis = [10 * _xscale,                   10 * _xscale                        ], // Offset Distance
                 _dir = [_ang[0] + (5 * sin(_swimSpd)),  _ang[1] + 180 + (5 * sin(_swimSpd))], // Offset Direction
@@ -2409,14 +2137,14 @@
 
      // Charge Up:
     if(image_xscale < charge){
-        image_xscale += 0.05;
+        image_xscale += 0.05 * current_time_scale;
         image_yscale = image_xscale;
         if(instance_exists(creator)){
             x = creator.x;
             y = creator.y;
         }
-        x -= hspeed;
-        y -= vspeed;
+        x -= hspeed * current_time_scale;
+        y -= vspeed * current_time_scale;
 
          // Effects:
         sound_play_pitch(sndLightningHit, image_xscale);
@@ -2429,27 +2157,29 @@
 
      // Slow:
     var _maxSpd = 2;
-    if(charge <= 0 && speed > _maxSpd) speed--;
+    if(charge <= 0 && speed > _maxSpd) speed -= current_time_scale;
 
      // Particles:
-    if(random(30) < image_xscale || (charge <= 0 && speed > _maxSpd && random(3) < image_xscale)){
-        var d = random(360),
-            r = random(radius),
-            _x = x + lengthdir_x(r * image_xscale, d),
-            _y = y + lengthdir_y(r * image_yscale, d);
-
-        with(instance_create(_x, _y, PortalL)){
-            motion_add(random(360), 1);
-            if(other.charge <= 0){
-                hspeed += other.hspeed;
-                vspeed += other.vspeed;
+    if(current_frame_active){
+        if(random(30) < image_xscale || (charge <= 0 && speed > _maxSpd && random(3) < image_xscale)){
+            var d = random(360),
+                r = random(radius),
+                _x = x + lengthdir_x(r * image_xscale, d),
+                _y = y + lengthdir_y(r * image_yscale, d);
+    
+            with(instance_create(_x, _y, PortalL)){
+                motion_add(random(360), 1);
+                if(other.charge <= 0){
+                    hspeed += other.hspeed;
+                    vspeed += other.vspeed;
+                }
             }
         }
     }
 
      // Shrink:
     if(charge <= 0){
-        var s = 1/160;
+        var s = 1/160 * current_time_scale;
         image_xscale -= s;
         image_yscale -= s;
         if(image_xscale <= 0 || image_yscale <= 0){
@@ -2697,19 +2427,19 @@
          // Visual:
         if(shell){
             type = 0;
-            spr_idle = global.sprShellIdle;
-            spr_hurt = global.sprShellHurt;
-            spr_dead = global.sprShellDead;
-            spr_bott = global.sprShellBott;
-            spr_foam = global.sprShellFoam;
+            spr_idle = spr.ShellIdle;
+            spr_hurt = spr.ShellHurt;
+            spr_dead = spr.ShellDead;
+            spr_bott = spr.ShellBott;
+            spr_foam = spr.ShellFoam;
         }
         else{
-            type = irandom(array_length(global.sprRockIdle) - 1);
-            spr_idle = global.sprRockIdle[type];
-            spr_hurt = global.sprRockHurt[type];
-            spr_dead = global.sprRockDead[type];
-            spr_bott = global.sprRockBott[type];
-            spr_foam = global.sprRockFoam[type];
+            type = irandom(array_length(spr.RockIdle) - 1);
+            spr_idle = spr.RockIdle[type];
+            spr_hurt = spr.RockHurt[type];
+            spr_dead = spr.RockDead[type];
+            spr_bott = spr.RockBott[type];
+            spr_foam = spr.RockFoam[type];
         }
         spr_walk = spr_idle;
         image_xscale = choose(-1, 1);
@@ -2848,19 +2578,19 @@
 
     	if(target_in_distance(60, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
     	     // Shoot Harpoon:
-    		if(spr_weap = global.sprHarpoonGun && random(4) < 1){
+    		if(spr_weap = spr.HarpoonGun && random(4) < 1){
     			gunangle = _targetDir + orandom(10);
     			scrEnemyShoot("DiverHarpoon", gunangle, 12);
 
                 wkick = 8;
                 sound_play(sndCrossbow);
-    			spr_weap = global.sprHarpoonGunEmpty;
+    			spr_weap = spr.HarpoonGunEmpty;
     		}
 
              // Reload Harpoon:
-    		else if(spr_weap = global.sprHarpoonGunEmpty){
+    		else if(spr_weap = spr.HarpoonGunEmpty){
     			sound_play_hit(sndCrossReload,0);
-    			spr_weap = global.sprHarpoonGun;
+    			spr_weap = spr.HarpoonGun;
     			wkick = 2;
     		}
 
@@ -3448,7 +3178,7 @@
             gunangle = _targetDir;
             scrWalk(20, gunangle);
             with(scrEnemyShoot(EnemySlash, gunangle, 4)){
-                sprite_index = global.sprPalankingSlash;
+                sprite_index = spr.PalankingSlash;
                 depth = other.depth - 1;
                 damage = 0;
             }
@@ -3499,7 +3229,7 @@
         for(var a = 0; a < 360; a += (360 / 16)){
              // Ground Smash Slash:
             with(scrEnemyShootExt(x + lengthdir_x(_dis, a), y + 28 + lengthdir_y(_dis * 0.66, a), EnemySlash, a, 1)){
-                sprite_index = global.sprGroundSlash;
+                sprite_index = spr.GroundSlash;
                 image_speed = 0.5;
                 mask_index = -1;
                 damage = 10;
@@ -3547,12 +3277,12 @@
             type = _pick[irandom(array_length(_pick) - 1)];
     
              // Set Sprites:
-            spr_idle = global.sprSealIdle[type];
-            spr_walk = global.sprSealWalk[type];
-            spr_hurt = global.sprSealHurt[type];
-            spr_dead = global.sprSealDead[type];
-            spr_spwn = global.sprSealSpwn[type];
-            spr_weap = global.sprSealWeap[type];
+            spr_idle = spr.SealIdle[type];
+            spr_walk = spr.SealWalk[type];
+            spr_hurt = spr.SealHurt[type];
+            spr_dead = spr.SealDead[type];
+            spr_spwn = spr.SealSpwn[type];
+            spr_weap = spr.SealWeap[type];
             sprite_index = spr_spwn;
         }
 
@@ -3875,7 +3605,7 @@
                 shield_draw = false;
 
                 var _shielding = shield,
-                    _spr = global.sprClamShield,
+                    _spr = spr.ClamShield,
                     _dis = 10 + (_shielding ? wkick : 0),
                     _dir = shield_ang,
                     _surfw = surfClamShieldW,
@@ -5043,7 +4773,7 @@
         }
 
          // Animate:
-        var _sprFire = global.sprPufferFire,
+        var _sprFire = spr.PufferFire,
             _blowLvl = clamp(floor(blow * array_length(_sprFire)), 0, array_length(_sprFire) - 1),
             _back = (direction > 180);
 
@@ -5145,6 +4875,52 @@
     enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd, maxspd);
+
+    wave += current_time_scale;
+
+     // Arc Lightning w/ Jelly:
+    var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jellyfish"));
+    if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100){
+         // Start Arcing:
+        if(arcing < 1){
+            arcing += 0.15;
+
+            var _dis = random(point_distance(x, y, _inst.x, _inst.y)),
+                _dir = point_direction(x, y, _inst.x, _inst.y);
+
+            with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
+                motion_add(random(360), 1);
+                alarm0 = 8;
+            }
+            if(arcing >= 1){
+                sound_play_pitch(sndLightningHit, 2);
+
+                 // Color:
+                var c = _inst.c;
+                spr_idle = spr.EelIdle[c];
+                spr_walk = spr_idle;
+                spr_hurt = spr.EelHurt[c];
+                spr_dead = spr.EelDead[c];
+                spr_tell = spr.EelTell[c];
+            }
+        }
+
+         // Arcing:
+        else{
+            with(lightning_connect(x, y, _inst.x, _inst.y, 12 * sin(wave / 30))){
+                image_index = ((current_frame + other) * image_speed) mod image_number;
+                image_speed_raw = 4;
+                team = other.team;
+                if(random(100) < 1){
+                    with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
+                        motion_add(random(360), 1);
+                    }
+                    sound_play_hit(sndLightningReload, 0.5);
+                }
+            }
+        }
+    }
+    else arcing = 0;
     
 #define Eel_alrm0
     alarm0 = 30;
@@ -5155,17 +4931,6 @@
     }
     else
         scrWalk(irandom_range(17,30), direction+orandom(30));
-     // Change color to match nearest jelly:
-    var _t = nearest_instance(x,y,instances_matching(CustomEnemy,"name","Jellyfish"));
-    if instance_exists(_t) && _t.c != c{
-        c = _t.c;
-        spr_idle = global.sprEelIdle[c];
-        spr_walk = spr_idle;
-        spr_hurt = global.sprEelHurt[c];
-        spr_dead = global.sprEelDead[c];
-        spr_tell = global.sprEelTell[c];
-        sprite_index = spr_idle;
-    }
     
 #define Eel_draw
     if pitDepth == 0
@@ -5320,6 +5085,7 @@
 #define YetiCrab_draw
     draw_self_enemy();
 
+
 #define Cat_step
     enemyAlarms(1);
     enemySprites();
@@ -5361,7 +5127,7 @@
                 gunangle = _targetDir - 45;
                 ammo = 10;
                 with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
-                    sprite_index = global.sprAcidPuff;
+                    sprite_index = spr.AcidPuff;
                     image_angle = other.gunangle;
                 }
                 sound_play(sndToxicBoltGas);
@@ -5385,6 +5151,143 @@
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
+
+
+#define CatBoss_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+    
+
+#define CatBoss_alrm0
+    alarm0 = 20 + random(20);
+    
+    if(ammo > 0) {
+        with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
+            friction = 0.2;
+        }
+        gunangle += 24;
+        ammo--;
+        if(ammo = 0) {
+            alarm0 = 40;
+            
+            repeat(3) {
+                var _dir = orandom(16);
+                with(instance_create(x, y, AcidStreak)) {
+                    motion_add(other.gunangle + _dir, 3);
+                    image_angle = direction;
+                }
+            }
+            
+            target = instance_nearest(x, y, Player);
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+            with(scrEnemyShootExt(x - (2 * right), y, "CatGrenade", _targetDir, 3)){
+                z += 12;
+                depth = 12;
+                zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
+                right = other.right;
+            }
+            
+            gunangle = _targetDir;
+            wkick += 6;
+            sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
+            sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
+            sound_stop(sndFlamerLoop);
+        } else {
+            alarm0 = 1;
+            wkick += 1;
+        }
+    } else {
+        target = instance_nearest(x, y, Player);
+        if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x, target.y);
+            
+            if(target_in_distance(0, 140) and random(3) < 1) {
+                if(random(3) < 3) {
+                    scrRight(_targetDir);
+                    gunangle = _targetDir - 45;
+                    ammo = 20;
+                    with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
+                        sprite_index = spr.AcidPuff;
+                        image_angle = other.gunangle;
+                    }
+                    sound_play(sndToxicBoltGas);
+                    sound_play(sndEmpty);
+                    var s = sndFlamerLoop;
+                    sound_loop(sndFlamerLoop);
+                    sound_pitch(sndFlamerLoop, random_range(1.8, 1.4));
+                    wkick += 4;
+                    alarm0 = 4;
+                }
+            } else {
+                alarm0 = 20 + random(20);
+                scrWalk(20 + random(5), _targetDir + orandom(20));
+                scrRight(gunangle);
+            }
+        } else {
+            alarm0 = 30 + random(20); // 3-4 Seconds
+            scrWalk(20 + random(10), random(360));
+            scrRight(gunangle);
+        }
+    }
+    
+#define CatBoss_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define CatBoss_death
+    sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
+    pickup_drop(100, 20);
+    pickup_drop(60, 0);
+
+
+#define CatGrenade_step
+     // Rise & Fall:
+    z_engine();
+    depth = max(-z, -12);
+
+     // Trail:
+    if(random(2) < 1){
+        with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
+            sprite_index = sprToxicGas;
+            image_xscale = 0.25;
+            image_yscale = image_xscale;
+            image_angle = random(360);
+            image_speed = 0.4;
+            depth = other.depth;
+        }
+    }
+
+     // Hit:
+    if(z <= 0) instance_destroy();
+
+#define CatGrenade_destroy
+    with(instance_create(x, y, Explosion)){
+        team = other.team;
+        creator = other.creator;
+        hitid = other.hitid;
+    }
+    
+    repeat(18) {
+        with(scrEnemyShoot(ToxicGas, random(360), 4)) {
+            friction = 0.2;
+        }
+    }
+
+     // Sound:
+    sound_play(sndGrenade);
+    sound_play(sndToxicBarrelGas);
+
+#define CatGrenade_draw
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
+
+#define CatGrenade_hit
+    // nada
+
+#define CatGrenade_wall
+    // nada
 
 
 #define Mortar_step
@@ -5506,7 +5409,7 @@
      // Trail:
     if(random(2) < 1){
         with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
-            sprite_index = global.sprMortarTrail;
+            sprite_index = spr.MortarTrail;
             depth = other.depth;
         }
     }
@@ -5516,7 +5419,7 @@
 
 #define MortarPlasma_destroy
     with(instance_create(x, y, PlasmaImpact)){
-        sprite_index = global.sprMortarImpact;
+        sprite_index = spr.MortarImpact;
         team = other.team;
         creator = other.creator;
         hitid = other.hitid;
@@ -5548,274 +5451,6 @@
     		image_xscale = 0.6;
     		image_yscale = image_xscale;
     	}
-    }
-
-#define CatBoss_step
-    enemyAlarms(1);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-    
-
-#define CatBoss_alrm0
-    alarm0 = 20 + random(20);
-    
-    if(ammo > 0) {
-        with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
-            friction = 0.2;
-        }
-        gunangle += 24;
-        ammo--;
-        if(ammo = 0) {
-            alarm0 = 40;
-            
-            repeat(3) {
-                var _dir = orandom(16);
-                with(instance_create(x, y, AcidStreak)) {
-                    motion_add(other.gunangle + _dir, 3);
-                    image_angle = direction;
-                }
-            }
-            
-            target = instance_nearest(x, y, Player);
-            var _targetDir = point_direction(x, y, target.x, target.y);
-            
-            with(scrEnemyShootExt(x - (2 * right), y, "CatGrenade", _targetDir, 3)){
-                z += 12;
-                depth = 12;
-                zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
-                right = other.right;
-            }
-            
-            gunangle = _targetDir;
-            wkick += 6;
-            sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
-            sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
-            sound_stop(sndFlamerLoop);
-        } else {
-            alarm0 = 1;
-            wkick += 1;
-        }
-    } else {
-        target = instance_nearest(x, y, Player);
-        if(target_is_visible()) {
-            var _targetDir = point_direction(x, y, target.x, target.y);
-            
-            if(target_in_distance(0, 140) and random(3) < 1) {
-                if(random(3) < 3) {
-                    scrRight(_targetDir);
-                    gunangle = _targetDir - 45;
-                    ammo = 20;
-                    with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
-                        sprite_index = global.sprAcidPuff;
-                        image_angle = other.gunangle;
-                    }
-                    sound_play(sndToxicBoltGas);
-                    sound_play(sndEmpty);
-                    var s = sndFlamerLoop;
-                    sound_loop(sndFlamerLoop);
-                    sound_pitch(sndFlamerLoop, random_range(1.8, 1.4));
-                    wkick += 4;
-                    alarm0 = 4;
-                }
-            } else {
-                alarm0 = 20 + random(20);
-                scrWalk(20 + random(5), _targetDir + orandom(20));
-                scrRight(gunangle);
-            }
-        } else {
-            alarm0 = 30 + random(20); // 3-4 Seconds
-            scrWalk(20 + random(10), random(360));
-            scrRight(gunangle);
-        }
-    }
-    
-#define CatBoss_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
-
-#define CatBoss_death
-sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
-pickup_drop(100, 20);
-pickup_drop(60, 0);
-
-#define CatGrenade_step
-     // Rise & Fall:
-    z_engine();
-    depth = max(-z, -12);
-
-     // Trail:
-    if(random(2) < 1){
-        with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
-            sprite_index = sprToxicGas;
-            image_xscale = 0.25;
-            image_yscale = image_xscale;
-            image_angle = random(360);
-            image_speed = 0.4;
-            depth = other.depth;
-        }
-    }
-
-     // Hit:
-    if(z <= 0) instance_destroy();
-
-#define CatGrenade_destroy
-    with(instance_create(x, y, Explosion)){
-        team = other.team;
-        creator = other.creator;
-        hitid = other.hitid;
-    }
-    
-    repeat(18) {
-        with(scrEnemyShoot(ToxicGas, random(360), 4)) {
-            friction = 0.2;
-        }
-    }
-
-     // Sound:
-    sound_play(sndGrenade);
-    sound_play(sndToxicBarrelGas);
-
-#define CatGrenade_draw
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
-
-#define CatGrenade_hit
-    // nada
-
-#define CatGrenade_wall
-    // nada
-
-#define draw_self_enemy()
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-
-#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)
-	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
-
-#define scrWalk(_walk, _dir)
-    walk = _walk;
-    speed = max(speed, friction);
-    direction = _dir;
-    if("gunangle" in self) gunangle = direction;
-    scrRight(direction);
-
-#define scrRight(_dir)
-    _dir = (_dir + 360) mod 360;
-    if(_dir < 90 || _dir > 270) right = 1;
-    if(_dir > 90 && _dir < 270) right = -1;
-
-#define scrEnemyShoot(_object, _dir, _spd)
-    return scrEnemyShootExt(x, y, _object, _dir, _spd);
-
-#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)
-    var _inst = noone;
-
-    if(is_string(_object)) _inst = obj_create(_x, _y, _object);
-    else _inst = instance_create(_x, _y, _object);
-    with(_inst){
-        motion_add(_dir, _spd);
-        image_angle = _dir;
-        hitid = other.hitid;
-        team = other.team;
-        creator = other;
-        if(skill_get(mut_euphoria) && object_index == CustomProjectile){
-            speed *= 0.8;
-        }
-    }
-
-    return _inst;
-
-#define enemyAlarms(_maxAlarm)
-    for(var i = 0; i < _maxAlarm; i++){
-    	var a = alarm_get(i);
-    	if(a > 0){
-             // Decrement Alarm:
-            a -= ceil(current_time_scale);
-    		alarm_set(i, a);
-
-             // Call Alarm:
-    		if(a <= 0){
-    		    alarm_set(i, -1);
-    		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
-    		    if(!instance_exists(self)) exit;
-    		}
-    	}
-    }
-
-#define enemyWalk(_spd, _max)
-    if(walk > 0){
-        motion_add(direction, _spd);
-        walk -= current_time_scale;
-    }
-    if(speed > _max) speed = _max; // Max Speed
-
-#define enemySprites
-     // Not Hurt:
-    if(sprite_index != spr_hurt){
-        if(speed <= 0) sprite_index = spr_idle;
-    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
-    }
-
-     // Hurt:
-    else if(image_index > image_number - 1){
-        sprite_index = spr_idle;
-    }
-
-#define enemyHurt(_hitdmg, _hitvel, _hitdir)
-    my_health -= _hitdmg;			// Damage
-    motion_add(_hitdir, _hitvel);	// Knockback
-    nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 0.3);	// Sound
-
-     // Hurt Sprite:
-    sprite_index = spr_hurt;
-    image_index = 0;
-
-#define target_in_distance(_disMin, _disMax)
-    if(instance_exists(target)){
-        var _dis = point_distance(x, y, target.x, target.y);
-        return (_dis > _disMin && _dis < _disMax);
-    }
-    return 0;
-
-#define target_is_visible()
-    if(instance_exists(target)){
-        if(!collision_line(x, y, target.x, target.y, Wall, false, false)) return true;
-    }
-    return false;
-
-#define scrDefaultDrop
-    pickup_drop(16, 0); // Bandit drop-ness
-
-#define z_engine
-    z += zspeed * current_time_scale;
-    zspeed -= zfric * current_time_scale;
-
-#define chance_frame(_percent)
-    return random(100) <= _percent * current_time_scale;
-
-#define instances_named(_object, _name)
-    return instances_matching(_object, "name", _name);
-
-
-#define draw_bloom
-    draw_set_blend_mode(bm_add);
-    with(instances_named(CustomProjectile, "MortarPlasma")){
-        draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, 0.1 * image_alpha);
-    }
-    with(instances_named(CustomProjectile, "TrafficCrabVenom")){
-        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
-    }
-    with(instances_named(CustomProjectile, "BubbleBomb")){
-        //draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-    }
-    with(instances_named(CustomProjectile, "LightningDisc")){
-        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
-    }
-    draw_set_blend_mode(bm_normal);
-
-#define draw_shadows
-    with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
-        draw_sprite(shd24, 0, x, y);
     }
 
 
@@ -5876,10 +5511,10 @@ pickup_drop(60, 0);
     with(Player) if player_get_alias(index) == "BioOnPC"{
         if(button_pressed(index, "horn")) {
             with(obj_create(mouse_x[index], mouse_y[index], "YetiCrab")) {
-                spr_idle = global.sprKingCrabIdle;
-                spr_walk = global.sprKingCrabIdle;
-                spr_hurt = global.sprKingCrabIdle;
-                spr_dead = global.sprKingCrabIdle;
+                spr_idle = spr.KingCrabIdle;
+                spr_walk = spr.KingCrabIdle;
+                spr_hurt = spr.KingCrabIdle;
+                spr_dead = spr.KingCrabIdle;
                 
                 maxspd = 3.5;
                 is_king = 1;
@@ -5891,119 +5526,27 @@ pickup_drop(60, 0);
         }
     }
 
-#define draw_rope(_rope)
-    with(_rope) if(instance_exists(link1) && instance_exists(link2)){
-        var _x1 = link1.x,
-            _y1 = link1.y,
-            _x2 = link2.x,
-            _y2 = link2.y,
-            _wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
-            _col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 45), 0, 0.5)) * clamp(break_force / 100, 0, 1));
-
-        draw_set_color(_col);
-        draw_line_width(_x1, _y1, _x2, _y2, _wid);
+#define draw_bloom
+    draw_set_blend_mode(bm_add);
+    with(instances_named(CustomProjectile, "MortarPlasma")){
+        draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, 0.1 * image_alpha);
     }
-    instance_destroy();
+    with(instances_named(CustomProjectile, "TrafficCrabVenom")){
+        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+    }
+    with(instances_named(CustomProjectile, "BubbleBomb")){
+        //draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    }
+    with(instances_named(CustomProjectile, "LightningDisc")){
+        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+    }
+    draw_set_blend_mode(bm_normal);
 
-#define scrHarpoonStick(_instance) /// Called from Harpoon
-    speed = 0;
-    target = _instance;
-
-     // Set Rope Vars:
-    pull_speed = (("size" in target) ? (2 / target.size) : 2);
-    with(rope){
-        harpoon_stuck = 1;
-
-         // Deteriorate rope if only stuck in unmovable objects:
-        var m = 1;
-        with([link1, link2]) if("canmove" not in self || canmove) m = 0;
-        if(m){
-            deteriorate_timer = 60;
-            length = point_distance(link1.x, link1.y, link2.x, link2.y);
-        }
+#define draw_shadows
+    with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
+        draw_sprite(shd24, 0, x, y);
     }
 
-#define scrHarpoonRope(_link1, _link2)
-    var r = {
-        link1 : _link1,
-        link2 : _link2,
-        length : 0,
-        harpoon_stuck : 0,
-        break_force : 0,
-        break_timer : 90,
-        creator : noone,
-        deteriorate_timer : -1,
-        broken : 0
-    }
-    global.poonRope[array_length(global.poonRope)] = r;
-    with([_link1, _link2]) rope[array_length(rope)] = r;
-
-    return r;
-
-#define scrHarpoonUnrope(_rope)
-    with(_rope){
-        broken = 1;
-
-        var i = 0,
-            a = [],
-            _ropeIndex = array_find_index(global.poonRope, self);
-    
-        for(var j = 0; j < array_length(global.poonRope); j++){
-            if(j != _ropeIndex) a[i++] = global.poonRope[j];
-        }
-    
-        global.poonRope = a;
-    }
-
-#define array_flip(_array)
-    var a = array_clone(_array),
-        m = array_length(_array);
-
-    for(var i = 0; i < m; i++){
-        _array[@i] = a[(m - 1) - i];
-    }
-
-#define scrBossHP(_hp)
-    var n = 0;
-    for(var i = 0; i < maxp; i++) n += player_is_active(i);
-    return round(_hp * (1 + ((1/3) * GameCont.loops)) * (1 + (0.5 * (n - 1))));
-
-#define scrBossIntro(_name, _sound, _music)
-    mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
-
-#define scrWaterStreak(_x, _y, _dir, _spd)
-    return mod_script_call("area", "coast", "scrWaterStreak", _x, _y, _dir, _spd);
-
-#define orandom(n) // For offsets
-    return random_range(-n, n);
-
-#define floor_ext(_num, _round)
-    return floor(_num / _round) * _round;
-
-#define array_count(_array, _value)
-    var c = 0;
-    for(var i = 0; i < array_length(_array); i++){
-        if(_array[i] == _value) c++;
-    }
-    return c;
-
-#define nearest_instance(_x, _y, _instances)
-	var	_nearest = noone,
-		d = 1000000;
-
-	with(_instances){
-		var _dis = point_distance(_x, _y, x, y);
-		if(_dis < d){
-			_nearest = id;
-			d = _dis;
-		}
-	}
-
-	return _nearest;
-
-#define frame_active(_interval)
-    return ((current_frame mod _interval) < current_time_scale);
-    
 #define draw_dark
     //draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
     draw_set_color(c_gray);
@@ -6019,3 +5562,37 @@ pickup_drop(60, 0);
     //     if chargeTime > 0
     //         draw_circle(x,y,24+orandom(1),0);
     // }
+
+
+ /// HELPER SCRIPTS /// 
+#define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
+#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
+#define scrRight(_dir)                                                                          mod_script_call("mod", "teassets", "scrRight", _dir);
+#define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrEnemyShoot", _object, _dir, _spd);
+#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call("mod", "teassets", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
+#define enemyAlarms(_maxAlarm)                                                                  mod_script_call("mod", "teassets", "enemyAlarms", _maxAlarm);
+#define enemyWalk(_spd, _max)                                                                   mod_script_call("mod", "teassets", "enemyWalk", _spd, _max);
+#define enemySprites()                                                                          mod_script_call("mod", "teassets", "enemySprites");
+#define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call("mod", "teassets", "enemyHurt", _hitdmg, _hitvel, _hitdir);
+#define scrDefaultDrop()                                                                        mod_script_call("mod", "teassets", "scrDefaultDrop");
+#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
+#define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
+#define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define draw_rope(_rope)                                                                        mod_script_call("mod", "teassets", "draw_rope", _rope);
+#define scrHarpoonStick(_instance)                                                              mod_script_call("mod", "teassets", "scrHarpoonStick", _instance);
+#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "teassets", "scrHarpoonRope", _link1, _link2);
+#define scrHarpoonUnrope(_rope)                                                                 mod_script_call("mod", "teassets", "scrHarpoonUnrope", _rope);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
+#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
+#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
+#define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
+#define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
+#define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);
+#define array_flip(_array)                                                              return  mod_script_call("mod", "teassets", "array_flip", _array);
+#define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
+#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
+#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+#define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
