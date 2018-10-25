@@ -2092,6 +2092,7 @@
          // Bubble Trail:
         else if(swim > 80){
             scrEnemyShoot("BubbleBomb", direction + orandom(10), 4);
+            sound_play_hit(sndBouncerBounce, 0.3);
         }
     }
 
