@@ -10,8 +10,6 @@
     global.surfH = 2000;
     global.surf = noone;
     
-    global.surfSC = noone;
-    
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -52,8 +50,8 @@
     
 #define area_setup
     goal = 75;
-    maxrooms = 7;
-    safespawn = 0; // why does this shift everything around ?? its so the spawn stays at 10016,10016
+    maxrooms = 8;
+    safespawn = 0; // why does this shift everything around ?? its so the spawn stays at 10016,10016 - that's stupid i hate it
 
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
@@ -141,8 +139,13 @@
     var _x = x,
         _y = y,
         _outOfSpawn = point_distance(_x,_y,10016,10016) > 48;
+    
      // Normal:
 	instance_create(_x, _y, Floor);
+	
+     // Start room:
+    if !array_length_1d(instances_matching(Rooms,"type","Start"))
+        scrRoomCreate(_x,_y,"Start");
 	
 	 // Special - Rooms:
 	if random(5) < 1 //&& variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
@@ -150,7 +153,7 @@
 	    
 	 // Spawn cathole:
     if random(7) < 1
-        obj_create(_x,_y,"Cathole");
+        obj_create(_x+16,_y+16,"Cathole");
 
      // Turn:
     var _trn = 0;
@@ -231,8 +234,16 @@
         myy = y;
         depth = -10;
         mask_index = mskFloor;
-        //on_draw = script_ref_create(RoomGen_draw);
+         // on_draw = script_ref_create(RoomGen_draw);
         switch(_type){
+            case "Start":
+                image_xscale = 3;
+                image_yscale = 3;
+                
+                important = true;
+                carpeted = true;
+                
+                break;
             case "Default":
                 image_xscale = irandom_range(3,6); // width
                 image_yscale = 9-image_xscale; // height
@@ -276,13 +287,13 @@
                 array_push(_roomfloors,self);
         _numfloors = array_length_1d(_roomfloors)-1;
         
-        // var c = make_color_hsv(irandom(255),255,255);
-        //     with(_roomfloors) image_blend = c;
-         // Yeet walls:
         with(Wall) if place_meeting(x,y,other) instance_delete(id);
-        
          // populate rooms
         switch(type){
+            case "Start":
+                obj_create(myx,myy,"CatLight");
+            
+                break;
             case "Default":
                 
                 break;
@@ -319,7 +330,6 @@
     draw_rectangle_color(x,y,x+o,y+o,c,c,c,c,true);
         c = c_blue;
     draw_rectangle_color(myx,myy,myx+o,myy+o,c,c,c,c,true);
-    //draw_rectangle_color(x,y,x+image_xscale*o,y+image_yscale*o,c,c,c,c,true);
         
 #define scrFloorMake(_x,_y,_obj)
     return mod_script_call("mod","ntte","scrFloorMake",_x,_y,_obj);
@@ -360,7 +370,7 @@
             }
         }
     }
-    else if random(12) < 1{
+    else if random(20) < 1{
         var _x = x + 16 + orandom(8),
             _y = y + 16 + orandom(8);
         obj_create(_x,_y,"CatLight");

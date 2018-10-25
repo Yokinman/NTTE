@@ -260,6 +260,7 @@
             CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",    6, 12, 12);
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
              // Manholes:
+            Manhole = sprite_add("sprites/areas/Sewers/sprManhole.png",12,16,48);
             BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
             PizzaManhole = sprite_add("sprites/areas/Sewers/sprPizzaManhole.png",2,0,0);
              // Rugs:
