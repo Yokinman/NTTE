@@ -51,6 +51,7 @@
     BackCont.shadcol = shdColor;
     sound_play_music(musMain);
     sound_play_ambient(ambMain);
+    TopCont.darkness = true;
 
 #define area_start
      // Fix B Floors:
@@ -77,7 +78,7 @@
 	
 	 // Special - Rooms:
 	if random(6) < 1 && variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
-	    scrRoomCreate(_x,_y,"Default");
+	    scrRoomCreate(_x,_y, choose("Default", "Light"));
 	    
 	 // Spawn cathole:
     if random(7) < 1
@@ -164,7 +165,7 @@
         myy = y;
         depth = -10;
         mask_index = mskFloor;
-        // on_draw = script_ref_create(RoomGen_draw);
+        on_draw = script_ref_create(RoomGen_draw);
         switch(_type){
             case "Default":
                 image_xscale = irandom_range(3,6); // width
@@ -183,6 +184,12 @@
                 image_yscale = 6;
 
                 important = true;
+                
+                break;
+                
+            case "Light":
+                image_xscale = 2;
+                image_yscale = 2;
                 
                 break;
         }
@@ -227,6 +234,12 @@
             case "Boss":
                 obj_create(myx,myy,"CatholeBig");
                 
+                break;
+                
+            case "Light":
+                obj_create(myx, myy, "CatLight");
+                scrFloorFill(myx, myy, image_xscale, image_yscale);
+            
                 break;
         }
     }

@@ -1211,6 +1211,11 @@
                     depth = 8;
                 }
                 break;
+                
+            case "CatLight":
+                o = instance_create(_x, _y, CustomObject);
+                break;
+            
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -4974,7 +4979,7 @@
         arcing = 0;
 
         var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jellyfish"));
-        if(point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+        if(instance_exists(_inst) and point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
     }
 
 #define Eel_alrm0
@@ -5321,7 +5326,6 @@
 #define CatGrenade_wall
     // nada
 
-
 #define Mortar_step
     enemyAlarms(2);
 
@@ -5585,6 +5589,22 @@
      // Kelp:
     with instances_matching(CustomProp,"name","Kelp"){
         draw_circle(x,y,32+orandom(1),0);
+    }
+    draw_set_color(c_white);
+    
+     // CatLight:
+    with instances_matching(CustomObject,"name","CatLight"){
+        if(random(60) > 1) { 
+            var w = orandom(1);
+            
+            draw_set_color(c_gray);
+            draw_triangle(x, y - 48, x - 20 + w, y + 8, x + 20 + w, y + 8, 0); 
+            draw_ellipse(x - 20 + w, y + 4, x + 20 + w, y + 18, 0); 
+            
+            draw_set_color(c_black);
+            draw_triangle(x, y - 48, x - 16 + w, y + 8, x + 16 + w, y + 8, 0); 
+            draw_ellipse(x - 16 + w, y + 4, x + 16 + w, y + 12, 0); 
+        }
     }
     draw_set_color(c_white);
     
