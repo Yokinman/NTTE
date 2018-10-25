@@ -9,7 +9,10 @@
     }
 
      // Harpoon Ropes:
-    global.poonRope = [];
+    global.poonRope = []; // poon poon poon poon poon
+
+     // Cat Level Lights:
+    global.catLight = [];
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1213,9 +1216,20 @@
                 break;
                 
             case "CatLight":
-                o = instance_create(_x, _y, CustomObject);
-                break;
-            
+                var o = {
+                    x : _x,
+                    y : _y,
+                    w1 : 12,
+                    w2 : 32,
+                    h1 : 32,
+                    h2 : 8,
+                    offset : 0,
+                    active : true
+                    };
+
+                array_push(global.catLight, o);
+                exit;
+
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -1299,7 +1313,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Eel", "Jelly", "Kelp", "Vent", "YetiCrab",
-    		        "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig",
+    		        "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -5330,6 +5344,41 @@
 #define CatGrenade_wall
     // nada
 
+
+#define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
+     // Trapezoid Bit:
+    var _x1a = _x - (_w1 / 2),
+        _x2a = _x1a + _w1,
+        _y1 = _y,
+        _x1b = _x - (_w2 / 2) + _offset,
+        _x2b = _x1b + _w2,
+        _y2 = _y + _h1;
+
+    draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2);
+
+     // Half Oval Bit:
+    var _segments = 8,
+        _cw = _w2 / 2,
+        _cx = _x1b + _cw,
+        _cy = _y2;
+
+    draw_primitive_begin(pr_trianglefan);
+    draw_vertex(_cx, _cy);
+    for(var i = 0; i <= _segments; i++){
+        var a = (i / _segments) * -180;
+        draw_vertex(_cx + lengthdir_x(_cw, a), _cy + lengthdir_y(_h2, a));
+    }
+    draw_primitive_end();
+
+#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)
+    draw_primitive_begin(pr_trianglestrip);
+    draw_vertex(_x1a, _y1);
+    draw_vertex(_x1b, _y2);
+    draw_vertex(_x2a, _y1);
+    draw_vertex(_x2b, _y2);
+    draw_primitive_end();
+
+
 #define Mortar_step
     enemyAlarms(2);
 
@@ -5547,6 +5596,9 @@
         }
         else scrHarpoonUnrope(_rope);
     }
+
+     // Reset Lights:
+    if(instance_exists(GenCont)) global.catLight = [];
     
     with(Player) if player_get_alias(index) == "BioOnPC"{
         if(button_pressed(index, "horn")) {
@@ -5567,7 +5619,6 @@
     }
 
 #define draw_bloom
-    draw_set_blend_mode(bm_add);
     with(instances_named(CustomProjectile, "MortarPlasma")){
         draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, 0.1 * image_alpha);
     }
@@ -5580,39 +5631,46 @@
     with(instances_named(CustomProjectile, "LightningDisc")){
         scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
     }
-    draw_set_blend_mode(bm_normal);
 
 #define draw_shadows
     with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
         draw_sprite(shd24, 0, x, y);
     }
 
-#define draw_dark
+#define draw_dark // Drawing Grays
     //draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
     draw_set_color(c_gray);
+
      // Kelp:
     with instances_matching(CustomProp,"name","Kelp"){
         draw_circle(x,y,32+orandom(1),0);
     }
-    draw_set_color(c_white);
-    
-     // CatLight:
-    with instances_matching(CustomObject,"name","CatLight"){
-        if(random(60) > 1) { 
-            var w = orandom(1);
-            
-            draw_set_color(c_gray);
-            draw_triangle(x, y - 48, x - 20 + w, y + 8, x + 20 + w, y + 8, 0); 
-            draw_ellipse(x - 20 + w, y + 4, x + 20 + w, y + 18, 0); 
-            
-            draw_set_color(c_black);
-            draw_triangle(x, y - 48, x - 16 + w, y + 8, x + 16 + w, y + 8, 0); 
-            draw_ellipse(x - 16 + w, y + 4, x + 16 + w, y + 12, 0); 
+
+     // Cat Light:
+    with(global.catLight){
+        offset = random_range(-1, 1);
+
+         // Flicker:
+        if(current_frame_active){
+            if(random(60) < 1) active = false;
+            else active = true;
+        }
+
+        if(active){
+            var b = 2; // Border Size
+            CatLight_draw(x, y, w1 + b, w2 + (3 * (2 * b)), h1 + (2 * b), h2 + b, offset);
         }
     }
     draw_set_color(c_white);
-    
-#define draw_dark_end
+
+#define draw_dark_end // Drawing Clear
+    draw_set_color(c_black);
+
+     // Cat Light:
+    with(global.catLight) if(active){
+        CatLight_draw(x, y, w1, w2, h1, h2, offset);
+    }
+
      // Eels:
     // with instances_matching(CustomEnemy,"name","Eel"){
     //     if chargeTime > 0
