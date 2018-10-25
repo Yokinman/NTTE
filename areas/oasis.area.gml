@@ -10,14 +10,13 @@
 
 #macro bgrColor area_get_background_color(101);
 #macro shdColor area_get_shadow_color(101);
-#macro musMain  mus101
-#macro ambMain  amb101
+
+#define area_music      return mus101;
+#define area_ambience   return amb101;
+#define area_secret     return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)2-" + string(_subarea);
-    
-#define area_secret
-    return true;
     
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     return [_lastx+0.5,-8,1];
@@ -42,11 +41,8 @@
     
 #define area_setup
     goal = 130;
-
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
-    sound_play_music(musMain);
-    sound_play_ambient(ambMain);
 
 #define area_start
      // Fix B Floors:

@@ -296,8 +296,14 @@
      // MUSIC //
     global.mus = {};
     with(global.mus){
-         // Coast:
-        Coast    = sound_add("music/musCoast.ogg");
+        Placeholder = sound_add("music/musPlaceholder.ogg");
+
+         // Areas:
+        Coast   = sound_add("music/musCoast.ogg");
+        Oasis   = mus101;
+        Trench  = musBoss5;
+
+         // Bosses:
         SealKing = sound_add("music/musSealKing.ogg");
     }
 

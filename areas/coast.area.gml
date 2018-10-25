@@ -93,20 +93,10 @@
         }
     ");
 
-     // Prevent Crash on Mod Reload:
-    if(GameCont.area == mod_current){
-        with(instances_matching(prop, "name", "BloomingCactus", "Palm")) instance_destroy();
-    }
-
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-
-#macro bgrColor make_color_rgb(27, 118, 184)
-#macro shdColor c_black
-#macro musMain  mus.Coast
-#macro ambMain  amb1
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
@@ -114,11 +104,15 @@
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
+#macro bgrColor make_color_rgb(27, 118, 184)
+#macro shdColor c_black
+
+#define area_music      return mus.Coast;
+#define area_ambience   return amb0b;
+#define area_secret     return true;
+
 #define area_name(sub, loop)
     return "@1(sprInterfaceIcons)1-" + string(sub);
-
-#define area_secret
-    return 1;
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8, (_subarea == 1)];
@@ -135,19 +129,8 @@
 
 #define area_setup
     goal = 100;
-
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
-    sound_play_ambient(ambMain);
-
-     // Hopefully temporary fix for custom music bug:
-    if(fork()){
-        wait 2;
-        sound_play_music(mus1);
-        sound_play_music(musMain);
-        exit;
-    }
-    
 
 #define area_start
      // No Walls:

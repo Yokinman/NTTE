@@ -1,7 +1,12 @@
 #define init
+    global.spr = mod_variable_get("mod", "teassets", "spr");
+    global.snd = mod_variable_get("mod", "teassets", "snd");
+    global.mus = mod_variable_get("mod", "teassets", "mus");
+
     global.newLevel = instance_exists(GenCont);
     global.area = ["secret","coast","oasis","trench"];
     global.effect_timer = 0;
+    global.currentMusic = -1;
 
      // Water Level Sounds:
     global.waterSound = {
@@ -222,6 +227,11 @@
         }
     }
 
+#macro spr global.spr
+#macro msk spr.msk
+#macro snd global.snd
+#macro mus global.mus
+
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #define level_start // game_start but every level
@@ -314,29 +324,77 @@
     }
 
      // Call Area Events (Not built into area mods):
-    if(!instance_exists(GenCont)){
-        var a = array_find_index(global.area, GameCont.area);
-        if(a >= 0){
+    var a = array_find_index(global.area, GameCont.area);
+    if(a >= 0){
+        var _area = global.area[a];
+
+        if(!instance_exists(GenCont)){
              // Step:
-            mod_script_call("area", global.area[a], "area_step");
+            mod_script_call("area", _area, "area_step");
 
              // Floor FX:
             if(global.effect_timer <= 0){
                 global.effect_timer = random(60);
-                if(mod_script_exists("area", global.area[a], "area_effect")){
+                if(mod_script_exists("area", _area, "area_effect")){
                      // Pick Random Player's Screen:
                     do var i = irandom(maxp - 1);
                     until player_is_active(i);
                     var _vx = view_xview[i], _vy = view_yview[i];
 
                      // FX:
-                    var t = mod_script_call("area", global.area[a], "area_effect", _vx, _vy);
+                    var t = mod_script_call("area", _area, "area_effect", _vx, _vy);
                     if(!is_undefined(t) && t > 0) global.effect_timer = t;
                 }
             }
             else global.effect_timer -= current_time_scale;
         }
         else global.effect_timer = 0;
+
+         // Music / Ambience:
+        if(instance_exists(GenCont) || instance_exists(mutbutton)){
+             // Music:
+            var _mus = -1;
+            if(mod_script_exists("area", _area, "area_music")){
+                _mus = mod_script_call("area", _area, "area_music");
+
+                 // Custom Music:
+                if(_mus >= 300000){
+                    if(!audio_is_playing(mus.Placeholder)){
+                        sound_play_music(-1);
+                        sound_play_music(mus.Placeholder);
+                    }
+                }
+
+                 // Normal Music:
+                else{
+                    sound_play_music(_mus);
+                    _mus = -1;
+                }
+            }
+
+             // Set Custom Music:
+            if(global.currentMusic != _mus){
+                sound_stop(global.currentMusic);
+                global.currentMusic = _mus;
+            }
+
+             // Ambience:
+            if(mod_script_exists("area", _area, "area_ambience")){
+                sound_play_ambient(mod_script_call("area", _area, "area_ambience"));
+            }
+        }
+    }
+    else sound_stop(mus.Placeholder);
+
+     // Fix for Custom Music:
+    if(audio_is_playing(mus.Placeholder)){
+        if(!audio_is_playing(global.currentMusic)){
+            sound_loop(global.currentMusic);
+        }
+    }
+    else if(global.currentMusic != -1){
+        sound_stop(global.currentMusic);
+        global.currentMusic = -1;
     }
 
     /// Tiny Spiders (New Cocoons):
@@ -353,6 +411,12 @@
         		image_yscale = other.image_yscale;
         	}
         }
+
+#define draw_gui_end
+     // Custom Music Volume Fix:
+    if(global.currentMusic != -1){
+        sound_volume(global.currentMusic, audio_sound_get_gain(mus.Placeholder));
+    }
 
 #define underwater_step /// Call from underwater area step events
      // Lightning:
@@ -516,6 +580,7 @@
     }
     sound_play(_sound);
     sound_play_music(_music);
+    sound_stop(global.currentMusic);
     GameCont.subarea = _lastSub; // !!!
 
 #define scrCorpse(_dir, _spd)
@@ -587,5 +652,5 @@
     
 #define orandom(_n)
     return irandom_range(-_n,_n);
-    
+
 #macro pizza "secret"

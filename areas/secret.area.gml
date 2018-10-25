@@ -17,19 +17,18 @@
 #macro snd global.snd
 #macro mus global.mus
 
+#macro Rooms instances_matching(CustomObject,"name","RoomGen")
+
 #macro bgrColor area_get_background_color(102)
 #macro shdColor area_get_shadow_color(2)
-#macro musMain  mus2
-#macro ambMain  amb102
 
-#macro Rooms instances_matching(CustomObject,"name","RoomGen")
+#define area_music      return mus2;
+#define area_ambience   return amb102;
+#define area_secret     return true;
 
 #define area_name(_subarea, _loop)
     return "2-?";
-    
-#define area_secret
-    return true;
-    
+
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     return [_lastx+0.5,-8,1];
     
@@ -54,12 +53,10 @@
 #define area_setup
     goal = 75;
     maxrooms = 7;
-    safespawn = 0; // why does this shift everything around ??
+    safespawn = 0; // why does this shift everything around ?? its so the spawn stays at 10016,10016
 
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
-    sound_play_music(musMain);
-    sound_play_ambient(ambMain);
     TopCont.darkness = true;
 
 #define area_start

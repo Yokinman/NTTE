@@ -47,14 +47,13 @@
 
 #macro bgrColor make_color_rgb(100, 114, 127)
 #macro shdColor c_black
-#macro musMain  musBoss5
-#macro ambMain  amb101
+
+#define area_music      return musBoss5;
+#define area_ambience   return amb101;
+#define area_secret     return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
-    
-#define area_secret
-    return true;
     
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8, (_subarea == 1)];
@@ -79,11 +78,8 @@
     
 #define area_setup
     goal = 150;
-
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
-    sound_play_music(musMain);
-    sound_play_ambient(ambMain);
     TopCont.darkness = true;
 
      // reset surfaces

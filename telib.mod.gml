@@ -4,9 +4,9 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
 
      // Refresh Big Decals on Mod Load:
-    with(instances_named(CustomObject, "BigDecal")){
+    /*with(instances_named(CustomObject, "BigDecal")){
         sprite_index = lq_defget(spr.BigTopDecal, string(GameCont.area), mskNone);
-    }
+    }*/
 
      // Harpoon Ropes:
     global.poonRope = []; // poon poon poon poon poon
@@ -1761,7 +1761,7 @@
 
          // Break Walls:
         if(place_meeting(x + hspeed, y + vspeed, Wall)){
-            speed /= 2;
+            speed *= 2/3;
 
              // Effects:
             var w = instance_nearest(x, y, Wall);
@@ -1771,10 +1771,10 @@
             }
             sound_play_pitchvol(sndHammerHeadProc, 1.4 + random(0.2), 0.5);
 
-             // Break Wall:
-            with(w){
-                instance_create(x, y, FloorExplo);
-                instance_destroy();
+             // Break Walls:
+            with(instance_create(x, y, PortalClear)){
+                image_xscale /= 2;
+                image_yscale = image_xscale;
             }
         }
 
