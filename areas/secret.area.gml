@@ -75,10 +75,15 @@
         o = 32;
 
      // Reset surfaces:
-    if global.resetSurf{
-        if surface_exists(global.surf)
+    if(global.resetSurf){
+        if(surface_exists(global.surf)){
+            surface_set_target(global.surf);
+            draw_clear_alpha(0, 0);
+            surface_reset_target();
             surface_free(global.surf);
+        }
         global.resetSurf = false;
+        exit;
     }
     
      // Create surface:
@@ -371,8 +376,9 @@
         }
     }
     else if random(20) < 1{
-        var _x = x + 16 + orandom(8),
-            _y = y + 16 + orandom(8);
+        var _x = x + 16,
+            _y = y - 16;
+
         obj_create(_x,_y,"CatLight");
     }
     

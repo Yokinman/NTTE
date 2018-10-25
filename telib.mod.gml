@@ -5859,7 +5859,7 @@
     }
 
      // Reset Lights:
-    if(instance_exists(GenCont)) global.catLight = [];
+    if(instance_exists(FloorMaker)) global.catLight = [];
     
     with(Player) if player_get_alias(index) == "BioOnPC"{
         if(button_pressed(index, "horn")) {
