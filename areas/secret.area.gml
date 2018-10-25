@@ -51,7 +51,7 @@
     BackCont.shadcol = shdColor;
     sound_play_music(musMain);
     sound_play_ambient(ambMain);
-    TopCont.darkness = true;
+    TopCont.darkness = false; // for now
 
 #define area_start
      // Fix B Floors:
@@ -78,7 +78,7 @@
 	
 	 // Special - Rooms:
 	if random(6) < 1 && variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
-	    scrRoomCreate(_x,_y, choose("Default", "Light"));
+	    scrRoomCreate(_x,_y, "Default"); //choose("Default", "Light"));
 	    
 	 // Spawn cathole:
     if random(7) < 1
