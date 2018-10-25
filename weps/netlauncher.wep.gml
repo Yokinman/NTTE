@@ -5,6 +5,7 @@
 #define weapon_type return 3;   // Bolt
 #define weapon_load return 20;  // 0.67 Seconds
 #define weapon_cost return 10;   // 4 Bolts
+#define weapon_swap return sndSwapShotgun;
 #define weapon_sprt return global.sprNetLauncher;
 
 #define weapon_laser_sight

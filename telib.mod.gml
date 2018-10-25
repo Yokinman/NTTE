@@ -136,8 +136,8 @@
             with(o){
                 sprite_index = spr.BubbleExplode;
                 mask_index = mskExplosion;
-                image_xscale = 0.5;
-                image_yscale = 0.5;
+                image_xscale = 0.5; // Bad!
+                image_yscale = 0.5; // Lazy!
                 hitid = [sprite_index,"BUBBLE EXPLO"];
                 damage = 3;
                 force = 1;
@@ -217,17 +217,19 @@
     			maxspd = 3;
     			ammo = 4;
     			swim = 0;
+    			swim_target = noone;
     			gunangle = random(360);
     			direction = gunangle;
     			intro = false;
     			swim_ang_frnt = direction;
     			swim_ang_back = direction;
     			shot_wave = 0;
-    			swimx = x;
-    			swimy = y;
+    			fish_train = [];
+    			fish_train_regen = 0;
+    			for(var i = 0; i < (GameCont.loops * 3); i++) fish_train[i] = noone;
 
     			 // Alarms:
-    			alarm0 = 60 + irandom(40);
+    			alarm0 = 90;
     			alarm1 = -1;
     			alarm2 = -1;
     	    }
@@ -1488,7 +1490,7 @@
             motion_add(random(360), 3);
         }
 
-        with(instances_named(object_index, name)) instance_destroy();
+        //with(instances_named(object_index, name)) instance_destroy();
         instance_destroy();
     }
 
@@ -1700,7 +1702,7 @@
                 sprite_index = spr_idle;
 
                  // Start Swimming:
-                swim = true;
+                swim = 180;
                 direction = 90 - (right * 90);
                 swim_ang_frnt = direction;
                 swim_ang_back = direction;
@@ -1730,11 +1732,28 @@
     enemyWalk(walkspd, maxspd);
 
      // Swimming:
-    if(swim){
-        speed += 0.8 * current_time_scale;
+    if(swim > 0){
+        swim -= current_time_scale;
 
-         // Follow Player:
-        direction += (angle_difference(point_direction(x, y, swimx, swimy), direction) / 10) * current_time_scale;
+         // Jus keep movin:
+        if(instance_exists(swim_target)){
+            speed += (friction + (swim / 120)) * current_time_scale;
+
+             // Turning:
+            var _x = swim_target.x,
+                _y = swim_target.y;
+
+            if(point_distance(x, y, _x, _y) < 100){
+                var _dis = 80,
+                    _dir = direction + (10 * right);
+    
+                _x += lengthdir_x(_dis, _dir);
+                _y += lengthdir_y(_dis, _dir);
+            }
+
+            direction += (angle_difference(point_direction(x, y, _x, _y), direction) / 16) * current_time_scale;
+        }
+        else swim = 0;
 
          // Turn Fins:
         swim_ang_frnt += (angle_difference(direction, swim_ang_frnt) / 3) * current_time_scale;
@@ -1811,7 +1830,89 @@
             }
 
              // Quakes:
-            if(random(3) < 1) view_shake_at(_cx, _cy, 4);
+            if(random(4) < 1) view_shake_at(_cx, _cy, 4);
+        }
+
+         // Un-Dive:
+        if(swim <= 0){
+            swim = 0;
+            alarm2 = -1;
+            image_index = 0;
+            sprite_index = spr_rise;
+            scrRight(direction);
+            speed = 0;
+        
+             // Babbies:
+            /*if(GameCont.loops > 0) repeat(GameCont.loops * 3){
+                with(instance_create(x, y, BoneFish)) kills = 0;
+            }*/
+        
+             // Effects:
+            instance_create(x, y, PortalClear);
+            sound_play_pitchvol(sndFootOrgSand1, 0.5, 5);
+            sound_play_pitchvol(sndToxicBoltGas, 0.5 + random(0.2), 0.5);
+            repeat(10){
+                var _dis = 12,
+                    _dir = random(360);
+
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Dust)){
+                    motion_add(_dir, 3);
+                }
+            }
+        }
+    }
+
+     // Fish Train:
+    if(fish_train_regen > 0) fish_train_regen -= current_time_scale;
+    if(array_length(fish_train) > 0){
+        var _leader = id,
+            _broken = false;
+    
+        for(var i = 0; i < array_length(fish_train); i++){
+            if(_broken) fish_train[i] = noone;
+            else{
+                var _fish = fish_train[i],
+                    b = false;
+    
+                 // Train Regen:
+                if(fish_train_regen <= 0 && !instance_exists(_fish)){
+                    fish_train_regen = 5;
+
+                    if(random(100) < 1) _fish = obj_create(_leader.x, _leader.y, "Puffer");
+                    else _fish = instance_create(_leader.x, _leader.y, BoneFish);
+                    with(_fish){
+                        kills = 0;
+                        creator = other;
+                    }
+
+                    fish_train[i] = _fish;
+                }
+    
+                if(instance_exists(_fish)){
+                    with(_fish){
+                        alarm1 = 30;
+    
+                        var _dis = distance_to_object(_leader),
+                            _max = 6;
+    
+                        if(_dis > _max){
+                            var l = 2,
+                                d = point_direction(x, y, _leader.x, _leader.y);
+    
+                            while(_dis > _max){
+                                x += lengthdir_x(l, d);
+                                y += lengthdir_y(l, d);
+                                _dis -= l;
+                            }
+                        }
+                        _leader = id;
+                    }
+                }
+                else{
+                    _broken = true;
+                    fish_train[i] = noone;
+                }
+            }
         }
     }
 
@@ -1911,42 +2012,45 @@
     if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define CoastBoss_alrm0
-    alarm0 = 60 + irandom(20);
+    alarm0 = 30 + random(20);
+
     target = instance_nearest(x, y, Player);
-    if(target_in_distance(0, 160)) {
-        var _targetDir = point_direction(x, y, target.x, target.y);
-    
-         // Bubble Attack:
-        if(random(3) < 2) {
-            image_index = 0;
-            sprite_index = spr_chrg;
-            sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
 
-            gunangle = _targetDir;
-            ammo = 4 * (GameCont.loops + 2);
+    if(instance_exists(target)){
+        if(target_in_distance(0, 160) && (target.reload <= 0 || random(3) < 2)){
+            var _targetDir = point_direction(x, y, target.x, target.y);
 
-            alarm1 = 3;
-            alarm0 = -1;
+             // Move Towards Target:
+            if((target_in_distance(0, 64) && random(2) < 1) || random(4) < 1){
+                scrWalk(30 + random(10), _targetDir + orandom(10));
+                alarm0 = walk + random(10);
+            }
+
+             // Bubble Blow:
+            else{
+                gunangle = _targetDir;
+                ammo = 4 * (GameCont.loops + 2);
+
+                scrWalk(8, gunangle + orandom(30));
+
+                image_index = 0;
+                sprite_index = spr_chrg;
+                sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
+
+                alarm1 = 3;
+                alarm0 = -1;
+            }
+
+            scrRight(_targetDir);
         }
     
          // Dive:
-        else if(random(4) < 1) alarm2 = 6;
-    
-         // Move Towards Target:
-        else{
-            scrWalk(30 + random(10), _targetDir + orandom(15));
-            alarm0 = walk + random(10);
-        }
-
-        scrRight(_targetDir);
+        else alarm2 = 6;
     }
-
-     // Dive:
-    else if(instance_exists(target)) alarm2 = 6;
 
      // Passive Movement:
     else{
-        alarm0 = 40 + irandom(20);
+        alarm0 = 40 + random(20);
         scrWalk(20, random(360));
     }
 
@@ -1958,61 +2062,36 @@
 
              // Blammo:
             sound_play(sndOasisShoot);
-            scrEnemyShoot("BubbleBomb", gunangle + (sin(shot_wave / 4) * 24), 8 + random(4));
+            scrEnemyShoot("BubbleBomb", gunangle + (sin(shot_wave / 4) * 16), 8 + random(4));
             shot_wave += alarm1;
             walk++;
 
              // End:
             if(--ammo <= 0){
-                alarm0 = 40;
+                alarm0 = 60;
             }
         }
     }
 
 #define CoastBoss_alrm2
     target = instance_nearest(x, y, Player);
+    swim_target = target;
 
-     // Dive:
-    var _notSwimming = (sprite_index != spr_dive && !swim);
-    if(_notSwimming || (instance_exists(target) && (point_distance(x, y, target.x, target.y) > 80 || random(2) < 1))){
-        if(_notSwimming){
+    alarm2 = 8;
+    alarm0 = alarm2 + 10;
+
+    if(sprite_index != spr_dive){
+         // Dive:
+        if(swim <= 0){
             sprite_index = spr_dive;
             image_index = 0;
             spr_shadow = mskNone;
             sound_play(sndOasisBossMelee);
         }
 
-        swimx = target.x + orandom(48);
-        swimy = target.y + orandom(48);
-
-        alarm2 = 15;
-        alarm0 = alarm2 + 10;
-    }
-
-     // Un-Dive:
-    else{
-        swim = false;
-        image_index = 0;
-        sprite_index = spr_rise;
-        scrRight(direction);
-        speed = 0;
-
-         // Babbies:
-        if(GameCont.loops > 0) repeat(GameCont.loops * 3){
-            with(instance_create(x, y, BoneFish)) kills = 0;
-        }
-
-         // Effects:
-        instance_create(x, y, PortalClear);
-        sound_play_pitchvol(sndFootOrgSand1, 0.5, 5);
-        sound_play_pitchvol(sndToxicBoltGas, 0.5 + random(0.2), 0.5);
-        repeat(10){
-            var _dis = 12,
-                _dir = random(360);
-
-            with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Dust)){
-                motion_add(_dir, 3);
-            }
+         // Bubble Trail:
+        else if(swim > 80){
+            scrEnemyShoot("BubbleBomb", direction + orandom(10), 4);
         }
     }
 
@@ -2190,6 +2269,70 @@
 
 #define Harpoon_destroy
     scrHarpoonUnrope(rope);
+
+#define draw_rope(_rope)
+    with(_rope) if(instance_exists(link1) && instance_exists(link2)){
+        var _x1 = link1.x,
+            _y1 = link1.y,
+            _x2 = link2.x,
+            _y2 = link2.y,
+            _wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
+            _col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 45), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+
+        draw_set_color(_col);
+        draw_line_width(_x1, _y1, _x2, _y2, _wid);
+    }
+    instance_destroy();
+
+#define scrHarpoonStick(_instance) /// Called from Harpoon
+    speed = 0;
+    target = _instance;
+
+     // Set Rope Vars:
+    pull_speed = (("size" in target) ? (2 / target.size) : 2);
+    with(rope){
+        harpoon_stuck = 1;
+
+         // Deteriorate rope if only stuck in unmovable objects:
+        var m = 1;
+        with([link1, link2]) if("canmove" not in self || canmove) m = 0;
+        if(m){
+            deteriorate_timer = 60;
+            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+        }
+    }
+
+#define scrHarpoonRope(_link1, _link2)
+    var r = {
+        link1 : _link1,
+        link2 : _link2,
+        length : 0,
+        harpoon_stuck : 0,
+        break_force : 0,
+        break_timer : 90,
+        creator : noone,
+        deteriorate_timer : -1,
+        broken : 0
+    }
+    global.poonRope[array_length(global.poonRope)] = r;
+    with([_link1, _link2]) rope[array_length(rope)] = r;
+
+    return r;
+
+#define scrHarpoonUnrope(_rope)
+    with(_rope){
+        broken = 1;
+
+        var i = 0,
+            a = [],
+            _ropeIndex = array_find_index(global.poonRope, self);
+    
+        for(var j = 0; j < array_length(global.poonRope); j++){
+            if(j != _ropeIndex) a[i++] = global.poonRope[j];
+        }
+    
+        global.poonRope = a;
+    }
 
 
 #define LightningDisc_step
@@ -5781,10 +5924,6 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
-#define draw_rope(_rope)                                                                        mod_script_call("mod", "teassets", "draw_rope", _rope);
-#define scrHarpoonStick(_instance)                                                              mod_script_call("mod", "teassets", "scrHarpoonStick", _instance);
-#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "teassets", "scrHarpoonRope", _link1, _link2);
-#define scrHarpoonUnrope(_rope)                                                                 mod_script_call("mod", "teassets", "scrHarpoonUnrope", _rope);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);

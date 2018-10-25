@@ -7,7 +7,8 @@
 #define weapon_cost return 2;   // 2 Ammo
 #define weapon_load return 3;   // 0.10 Seconds
 #define weapon_area return -1;  // Doesn't spawn normally
-#define weapon_auto return true;
+#define weapon_auto return 1;   // Automatic
+#define weapon_swap return sndSwapMotorized;
 #define weapon_sprt return global.sprBubbleMinigun;
 
 #define weapon_reloaded

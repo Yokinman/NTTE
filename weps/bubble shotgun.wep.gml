@@ -7,6 +7,7 @@
 #define weapon_cost return 3;   // 3 Ammo
 #define weapon_load return 17;  // 0.6 Seconds
 #define weapon_area return -1;  // Doesn't spawn normally
+#define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleShotgun;
 
 #define weapon_reloaded

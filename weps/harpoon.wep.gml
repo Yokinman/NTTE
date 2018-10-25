@@ -4,6 +4,7 @@
 #define weapon_name return "HARPOON LAUNCHER";
 #define weapon_type return 3; // Bolt
 #define weapon_load return 2; // 0.07 Seconds
+#define weapon_swap return sndSwapBow;
 #define weapon_sprt return global.sprHarpoonLauncher;
 
 #define weapon_fire(_wep)

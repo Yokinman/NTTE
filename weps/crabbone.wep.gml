@@ -17,6 +17,7 @@
 #define weapon_type return 0;   // Melee
 #define weapon_load return 6;   // 0.20 Seconds
 #define weapon_area return -1;  // Doesn't spawn normally
+#define weapon_swap return sndBloodGamble;
 #define weapon_sprt return global.sprBone;
 
 #define weapon_fire(_wep)
