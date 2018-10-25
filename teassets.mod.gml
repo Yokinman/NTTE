@@ -262,6 +262,10 @@
              // Manholes:
             BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
             PizzaManhole = sprite_add("sprites/areas/Sewers/sprPizzaManhole.png",2,0,0);
+             // Rugs:
+            Rug = [
+                sprite_add("sprites/areas/Sewers/sprRugBot.png",9,0,0),
+                sprite_add("sprites/areas/Sewers/sprRugTop.png",9,0,0)];
         //#endregion
 
         //#region CRYSTAL CAVES

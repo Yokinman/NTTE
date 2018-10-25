@@ -3,6 +3,15 @@
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
     
+     // Surface
+    global.resetSurf = true;
+     
+    global.surfW = 2000;
+    global.surfH = 2000;
+    global.surf = noone;
+    
+    global.surfSC = noone;
+    
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -51,11 +60,73 @@
     BackCont.shadcol = shdColor;
     sound_play_music(musMain);
     sound_play_ambient(ambMain);
-    TopCont.darkness = false; // for now
+    TopCont.darkness = true;
 
 #define area_start
      // Fix B Floors:
     with(instances_matching(Floor, "styleb", true)) depth = 8;
+    
+     // Bind scripts:
+    if !array_length_1d(instances_matching(CustomDraw,"name","draw_rugs"))
+        with script_bind_draw(draw_rugs,7){
+            name = "draw_rugs";
+        }
+        
+#define draw_rugs
+    if !instance_exists(GenCont){
+
+    var _x = 10000 - global.surfW / 2,
+        _y = 10000 - global.surfH / 2,
+        o = 32;
+
+     // Reset surfaces:
+    if global.resetSurf{
+        if surface_exists(global.surf)
+            surface_free(global.surf);
+        global.resetSurf = false;
+    }
+    
+     // Create surface:
+    if !surface_exists(global.surf){
+        global.surf = surface_create(global.surfW,global.surfH);
+        surface_set_target(global.surf);
+        
+            with instances_matching(Rooms,"carpeted",true){
+                var _s = spr.Rug,
+                    _i = 8,
+                    _c = [
+                        choose(make_color_rgb(77, 49, 49), make_color_rgb(46, 56, 41)),
+                        choose(make_color_rgb(160, 75, 99), make_color_rgb(214, 134, 5))];
+                for (var n = 0; n <= 1; n++){
+                    d3d_set_fog(true,_c[n],0,0)
+                    for (var xx = 0; xx < image_xscale; xx++)
+                        for (var yy = 0; yy < image_yscale; yy++){
+                            if !xx _i = 4;
+                            if xx == image_xscale - 1 _i = 0; 
+                            if !yy{
+                                _i = 2;
+                                if !xx _i = 3;
+                                if xx == image_xscale - 1 _i = 1;
+                            }
+                            if yy == image_yscale - 1{
+                                _i = 6;
+                                if !xx _i = 5;
+                                if xx == image_xscale - 1 _i = 7;
+                            }
+                            if (yy && yy != image_yscale - 1) && (xx && xx != image_xscale - 1) _i = 8;
+                            
+                            draw_sprite(_s[n],_i,x-_x+xx*o,y-_y+yy*o);
+                        }
+                }
+                    
+            }
+            d3d_set_fog(false,c_white,0,0);
+    }
+
+    surface_reset_target();
+    draw_surface(global.surf,_x,_y);
+    
+    }
 
 #define area_step
 
@@ -77,8 +148,8 @@
 	instance_create(_x, _y, Floor);
 	
 	 // Special - Rooms:
-	if random(6) < 1 && variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
-	    scrRoomCreate(_x,_y, "Default"); //choose("Default", "Light"));
+	if random(5) < 1 //&& variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
+	    scrRoomCreate(_x,_y, choose("Default","Default")); //choose("Default", "Light"));
 	    
 	 // Spawn cathole:
     if random(7) < 1
@@ -86,7 +157,7 @@
 
      // Turn:
     var _trn = 0;
-    if(random(3) < 1){
+    if(random(4) < 1){
 	    _trn = choose(90, -90, 180);
     }
     direction += _trn;
@@ -148,9 +219,6 @@
 	    with instances_matching_ne(Floor,"roomtype",false){
 	        sprite_index = sprFloor2;
 	    }
-	     // Populate Rooms:
-	    with(Rooms)
-            scrRoomPop(self);
 	     // Destroy floormakers
 	    with(FloorMaker) instance_delete(id);
 	}
@@ -160,16 +228,19 @@
     with instance_create(_x,_y,CustomObject){
         name = "RoomGen";
         type = _type;
+        carpeted = false;
         important = false;
         myx = x;
         myy = y;
         depth = -10;
         mask_index = mskFloor;
-        on_draw = script_ref_create(RoomGen_draw);
+        //on_draw = script_ref_create(RoomGen_draw);
         switch(_type){
             case "Default":
                 image_xscale = irandom_range(3,6); // width
                 image_yscale = 9-image_xscale; // height
+                
+                carpeted = (random(3) < 2);
                 
                 break;
             case "Exit":
@@ -184,12 +255,6 @@
                 image_yscale = 6;
 
                 important = true;
-                
-                break;
-                
-            case "Light":
-                image_xscale = 2;
-                image_yscale = 2;
                 
                 break;
         }
@@ -216,6 +281,8 @@
         
         // var c = make_color_hsv(irandom(255),255,255);
         //     with(_roomfloors) image_blend = c;
+         // Yeet walls:
+        with(Wall) if place_meeting(x,y,other) instance_delete(id);
         
          // populate rooms
         switch(type){
@@ -224,22 +291,27 @@
                 break;
             case "Exit":
                 with obj_create(myx,myy,"Manhole") sprite_index = spr.PizzaManhole;
+                 // Create walls
                 for (var xx = 1; xx <= 4; xx += 3)
-                    for (var yy = 1; yy <= 4; yy += 3){
+                    for (var yy = 1; yy <= 4; yy += 3)
                         instance_create(x+xx*16,y+yy*16,Wall);
-                        instance_create(x+xx*16,y+yy*16,NOWALLSHEREPLEASE);
-                    }
                 
                 break;
             case "Boss":
+                 // Spawn boss spawner
                 obj_create(myx,myy,"CatholeBig");
                 
-                break;
+                 // Create walls
+                for (var xx = 1; xx <= 10; xx += 9)
+                    for (var yy = 1; yy <= 10; yy += 9)
+                        instance_create(x+xx*16,y+yy*16,Wall);
+                        
+                 // Spawn backup chests
+                var _chest = [RadChest,AmmoChest,WeaponChest],
+                    _d = irandom(3);
+                for (var _i = 0; _i <= 2; _i++)
+                    if !instance_exists(_chest[_i]) instance_create(myx+lengthdir_x(80,(_i+_d)*90)+32,myy+lengthdir_y(80,(_i+_d)*90)+32,_chest[_i]);
                 
-            case "Light":
-                obj_create(myx, myy, "CatLight");
-                scrFloorFill(myx, myy, image_xscale, image_yscale);
-            
                 break;
         }
     }
@@ -262,6 +334,8 @@
     return mod_script_call("mod","ntte","scrFloorFillRound",_x,_y,_w,_h);
     
 #define area_finish
+    global.resetSurf = true;
+    
     lastarea = area;
 
      // Area End:
@@ -278,7 +352,7 @@
         _y = y + 16;
     
 #define area_pop_props
-    if random(20) < 1{
+    if random(10) < 1{
          // quarter walls
         if point_distance(x,y,10016,10016) > 100 && !place_meeting(x,y,NOWALLSHEREPLEASE){
             var _x = x+choose(0,16),
@@ -289,6 +363,16 @@
             }
         }
     }
+    else if random(12) < 1{
+        var _x = x + 16 + orandom(8),
+            _y = y + 16 + orandom(8);
+        obj_create(_x,_y,"CatLight");
+    }
+    
+#define area_pop_extras
+     // Populate Rooms:
+    with(Rooms)
+        scrRoomPop(self);
 
 #define obj_create(_x,_y,_obj)
     return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
