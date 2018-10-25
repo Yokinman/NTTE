@@ -1,6 +1,6 @@
 #define init
     global.newLevel = instance_exists(GenCont);
-    global.area = ["coast","oasis","trench"];
+    global.area = ["secret","coast","oasis","trench"];
     global.effect_timer = 0;
 
      // Water Level Sounds:
@@ -285,6 +285,18 @@
 	        obj_create(x, y, "Cat");
 	        instance_delete(self);
 	    }
+	}
+	
+	 // Sewer manhole:
+	with(PizzaEntrance){
+	    with obj_create(x,y,"Manhole") toarea = pizza;
+	    instance_delete(id);
+	}
+	
+	 // OG gators:
+	with(Gator){
+	    with instance_create(x,y,GatorSmoke) image_speed = 0.4;
+	    instance_delete(id);
 	}
 
      // Big Decals:
@@ -575,3 +587,5 @@
     
 #define orandom(_n)
     return irandom_range(-_n,_n);
+    
+#macro pizza "secret"

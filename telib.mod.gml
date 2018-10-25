@@ -285,6 +285,20 @@
                 image_yscale = 0;
             }
             break;
+            
+        case "Manhole":
+            o = instance_create(_x, _y, CustomObject);
+            with(o){
+                 // Visual:
+                sprite_index = sprPizzaEntrance;
+                image_speed = 0;
+                mask_index = mskFloor;
+                
+                 // Vars:
+                depth = 8;
+                toarea = 102; // go to pizza sewers
+            }
+            break;
 
         case "NetNade":
             o = instance_create(_x, _y, CustomProjectile);
@@ -1111,7 +1125,7 @@
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
         		}
-        	break;
+        	    break;
         	
         	case "CatBoss":
         	    o = instance_create(_x, _y, CustomEnemy);
@@ -1154,7 +1168,7 @@
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
         		}
-        	break;
+        	    break;
         	
         	case "CatGrenade":
         	    o = instance_create(_x, _y, CustomProjectile);
@@ -1171,7 +1185,31 @@
         	        force = 0;
         	        right = choose(-1, 1);
         	    }
-        	break;
+        	    break;
+        	
+            case "Cathole":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    sprite_index = sprPizzaEntrance;
+                    image_speed = 0;
+                    
+                     // Vars:
+                    depth = 8;
+                }
+                break;
+                
+            case "CatholeBig":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    sprite_index = spr.BigManhole;
+                    image_speed = 0;
+                    
+                     // Vars:
+                    depth = 8;
+                }
+                break;
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -1251,11 +1289,11 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "NetNade",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Eel", "Jellyfish", "Kelp", "Vent", "YetiCrab",
-    		        "Cat", "CatBoss", "CatGrenade",
+    		        "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -2242,6 +2280,17 @@
 #define LightningDisc_draw
     scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 1, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
 
+#define Manhole_step
+    var _canhole = (!instance_exists(FrogQueen) && !array_length_1d(instances_matching(CustomEnemy,"name","CatBoss")));
+    if place_meeting(x,y,Explosion) && !image_index && _canhole{
+        image_index = 1;
+        with(GameCont) area = other.toarea;
+        with(enemy) my_health = 0;
+         // portal
+        with instance_create(x+16,y+16,Portal) image_alpha = 0;
+        sound_stop(sndPortalOpen);
+    }
+    
 #define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
     var _off = (360 / _num),
         _ysc = _stretch * (0.5 + random(1));

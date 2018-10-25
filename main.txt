@@ -6,6 +6,7 @@
 /loadarea areas/coast
 /loadarea areas/oasis
 /loadarea areas/trench
+/loadarea areas/secret
 
 // Weps \\
 /loadwep weps/crabbone

@@ -259,6 +259,9 @@
             CatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png",    3, 12, 12);
             CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",    6, 12, 12);
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
+             // Manholes:
+            BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
+            PizzaManhole = sprite_add("sprites/areas/Sewers/sprPizzaManhole.png",2,0,0);
         //#endregion
 
         //#region CRYSTAL CAVES
