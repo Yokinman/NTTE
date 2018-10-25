@@ -965,25 +965,25 @@
                     direction = random(360);
                     arc_inst = noone;
                     arcing = 0;
-                    wave = 0;
+                    wave = random(100);
                     
                      // Alarms:
                     alarm0 = 30;
                 }
                 break;
                 
-            case "Jellyfish":
+            case "Jelly":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
                     c = irandom(2);
-                    spr_charged = spr.JellyfishIdle[c];
-                    spr_uncharged = spr.JellyfishUncharged;
+                    spr_charged = spr.JellyIdle[c];
+                    spr_uncharged = spr.JellyUncharged;
                     spr_idle = spr_charged;
                     spr_walk = spr_charged;
-                    spr_hurt = spr.JellyfishHurt[c];
-                    spr_dead = spr.JellyfishDead[c];
-                    spr_fire = spr.JellyfishFire;
+                    spr_hurt = spr.JellyHurt[c];
+                    spr_dead = spr.JellyDead[c];
+                    spr_fire = spr.JellyFire;
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
@@ -1298,7 +1298,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Eel", "Jellyfish", "Kelp", "Vent", "YetiCrab",
+    		        "Eel", "Jelly", "Kelp", "Vent", "YetiCrab",
     		        "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -4962,9 +4962,13 @@
          // Arcing:
         else{
             with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
-                image_index = ((current_frame + other) * image_speed) mod image_number;
-                image_speed_raw = 4;
-                team = other.team;
+                image_index = (other.wave * image_speed) mod image_number;
+                image_speed_raw = image_number;
+                hitid = other.arc_inst.hitid;
+                team = other.arc_inst.team;
+                creator = other.arc_inst;
+
+                 // Effects:
                 if(random(100) < 1){
                     with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
                         motion_add(random(360), 1);
@@ -4978,8 +4982,8 @@
         arc_inst = noone;
         arcing = 0;
 
-        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jellyfish"));
-        if(instance_exists(_inst) and point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
+        if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
     }
 
 #define Eel_alrm0
@@ -4996,7 +5000,7 @@
     if pitDepth == 0
         draw_self_enemy();
     
-#define Jellyfish_step
+#define Jelly_step
     enemyAlarms(2);
     if sprite_index != spr_fire
         enemySprites();
@@ -5008,7 +5012,7 @@
         scrRight(direction);
     }
     
-#define Jellyfish_alrm0
+#define Jelly_alrm0
     alarm0 = 40 + random(20);
      // Always movin':
     scrWalk(alarm0,direction);
@@ -5030,13 +5034,13 @@
     }
     scrRight(direction);
     
-#define Jellyfish_alrm1
+#define Jelly_alrm1
     sprite_index = spr_walk;
     
-#define Jellyfish_death
+#define Jelly_death
     pickup_drop(70, 2);
     
-#define Jellyfish_draw
+#define Jelly_draw
     draw_self_enemy();
     
 #define Vent_step

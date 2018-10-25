@@ -190,7 +190,7 @@
         _y = y + 16;
     
     if random(9) < 1{
-        obj_create(_x,_y,"Jellyfish");
+        obj_create(_x,_y,"Jelly");
     }
     else if random(3) < 1{
         obj_create(_x,_y,"Eel");

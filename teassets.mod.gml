@@ -222,17 +222,17 @@
                 sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
 
              // Jellyfish (0 = blue, 1 = purple, 2 = green):
-            JellyfishFire       = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",      1, 24, 24);
-            JellyfishUncharged  = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png", 8, 24, 24);
-            JellyfishIdle = [
+            JellyFire       = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",      1, 24, 24);
+            JellyUncharged  = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png", 8, 24, 24);
+            JellyIdle = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",    8, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",  8, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",   8, 24, 24)];
-            JellyfishHurt = [
+            JellyHurt = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",    3, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",  3, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",   3, 24, 24)];
-            JellyfishDead = [
+            JellyDead = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",   13, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png", 13, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",  13, 24, 24)];
@@ -508,9 +508,10 @@
     return r;
 
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)
-    with(instance_create(_x1, _y1, (_enemy ? EnemyLightning : Lightning))){
-        image_xscale = point_distance(_x1, _y1, _x2, _y2) / 2;
+    with(instance_create(_x2, _y2, (_enemy ? EnemyLightning : Lightning))){
+        image_xscale = -point_distance(_x1, _y1, _x2, _y2) / 2;
         image_angle = point_direction(_x1, _y1, _x2, _y2);
+        direction = image_angle;
         return id;
     }
 
