@@ -1123,11 +1123,13 @@
         			walkspd = 0.8;
         			maxspd = 3;
         			gunangle = random(360);
+        			hole = noone;
         			direction = gunangle;
         			ammo = 0;
     
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
+        			alarm1 = 40 + irandom(20);
         		}
         	    break;
         	
@@ -1196,10 +1198,12 @@
                 with(o){
                      // Visual:
                     sprite_index = sprPizzaEntrance;
+                    mask_index = mskEnemyBullet1;
                     image_speed = 0;
                     
                      // Vars:
                     depth = 8;
+                    fullofrats = true;
                 }
                 break;
                 
@@ -5142,12 +5146,73 @@
 
 
 #define Cat_step
-    enemyAlarms(1);
+    enemyAlarms(2);
     enemySprites();
     enemyWalk(walkspd, maxspd);
+    
+    if instance_exists(hole) && place_meeting(x,y,hole) && instance_exists(target){
+        alarm0 = -1;
+        canfly = true;
+        with(hole) if fork(){
+             // Open manhole
+            sound_play_hit(sndSwapHammer,-0.2);
+            image_index = 1;
+            wait(30);
+             // Close manhole
+            sound_play_hit(sndSwapHammer,0.2)
+            image_index = 0;
+            exit;
+        }
+        var _endhole = nearest_instance(target.x,target.y,instances_matching(CustomObject,"name","Cathole")),
+            _x = _endhole.x+16,
+            _y = _endhole.y+16;
+        x = 0;
+        y = 0;
+        if fork(){
+            wait(30); if !instance_exists(self) exit;
+             // tell
+            instance_create(_x+choose(-1,1)*8,_y-8,AssassinNotice);
+            sound_play_hit(sndAssassinGetUp,0.4);
+            wait(10); if !instance_exists(self) exit;
+            
+            alarm0 = 5;
+            alarm1 = 120;
+            canfly = false;
+            hole = noone;
+            x = _x;
+            y = _y;
+             // check exit
+            if !instance_exists(_endhole) exit;
+            
+            with(_endhole){
+                 // Release the rats
+                if fullofrats{
+                    instance_create(x,y,PortalClear);
+                    repeat(irandom_range(1,3)+GameCont.loops) with instance_create(_x,_y,choose(FastRat,FastRat,Rat))
+                        motion_set(irandom(359),2);
+                }
+                fullofrats = false;
+                
+                 // Effects
+                repeat(irandom_range(4,10)) with instance_create(x,y,Dust) motion_set(irandom(359),random_range(3,5));
+                sleep(20);
+                view_shake_at(_x,_y,20);
+                
+                 // Open manhole
+                sound_play_hit(sndSwapHammer,-0.2);
+                image_index = 1;
+                wait(30);
+                 // Close manhole
+                sound_play_hit(sndSwapHammer,0.2)
+                image_index = 0;
+                exit;
+            }
+            exit;
+        }
+    }
 
 #define Cat_alrm0
-    alarm0 = 20 + random(20);
+    alarm0 = 20 + irandom(20);
     
     if(ammo > 0) {
         repeat(2)
@@ -5191,16 +5256,39 @@
                 wkick += 4;
                 alarm0 = 4;
             } else {
-                alarm0 = 20 + random(20);
-                scrWalk(20 + random(5), _targetDir + orandom(20));
+                alarm0 = 20 + irandom(20);
+                scrWalk(20 + irandom(5), _targetDir + orandom(20));
                 scrRight(gunangle);
             }
         } else {
-            alarm0 = 30 + random(20); // 3-4 Seconds
-            scrWalk(20 + random(10), random(360));
-            scrRight(gunangle);
+            if (!target_is_visible() || !target_in_distance(0,128)) && instance_exists(hole) && my_health < maxhealth && random(7) < 1 && GameCont.area == sewers{
+                 // Move towards nearest cathole
+                alarm0 = 60 + irandom(30);
+                scrWalk(alarm0,point_direction(x,y,hole.x+16,hole.y+16));
+            } else {
+                 // Wander
+                alarm0 = 30 + irandom(20); // 3-4 Seconds
+                scrWalk(20 + irandom(10), irandom(360));
+                scrRight(gunangle);
+            }
         }
     }
+    
+#define Cat_alrm1
+    alarm1 = 60;
+    hole = noone;
+    var _array = instances_matching(CustomObject,"name","Cathole"),
+        _dist = 10000;
+        
+     // Bootleg nearest_instance() to find the nearest visible cathole
+    with(_array) if !collision_line(other.x,other.y,x,y,Wall,0,0){
+        var _mydist = point_distance(x,y,other.x,other.y);
+        if _mydist < _dist{
+            _dist = _mydist;
+            other.hole = self;
+        }
+    }
+    
     
 #define Cat_draw
     if(gunangle >  180) draw_self_enemy();
@@ -5710,3 +5798,4 @@
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
+#macro sewers "secret"
