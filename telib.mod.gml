@@ -1097,6 +1097,26 @@
         //#endregion
 
         //#region SEWERS
+            case "Cabinet":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.CabinetIdle;
+                    spr_hurt = spr.CabinetHurt;
+                    spr_dead = spr.CabinetDead;
+                    sprite_index = spr_idle;
+                    
+                     // Sounds:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndStreetLightBreak;
+                    
+                     // Vars:
+                    maxhealth = 20;
+                    my_health = maxhealth;
+                    size = 1;
+                }
+                break;
+                
         	case "Cat":
         	    o = instance_create(_x, _y, CustomEnemy);
         		with(o){
@@ -1240,6 +1260,96 @@
 
                 array_push(global.catLight, o);
                 exit;
+                
+            case "ChairFront":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.ChairFrontIdle;
+                    spr_hurt = spr.ChairFrontHurt;
+                    spr_dead = spr.ChairDead;
+                    sprite_index = spr_idle;
+                    
+                     // Sounds:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndStreetLightBreak;
+                    
+                     // Vars:
+                    maxhealth = 4;
+                    my_health = maxhealth;
+                    size = 1;
+                }
+                break;
+                
+            case "ChairSide":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.ChairSideIdle;
+                    spr_hurt = spr.ChairSideHurt;
+                    spr_dead = spr.ChairDead;
+                    sprite_index = spr_idle;
+                    
+                     // Sounds:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndStreetLightBreak;
+                    
+                     // Vars:
+                    maxhealth = 4;
+                    my_health = maxhealth;
+                    size = 1;
+                }
+                break;
+
+            case "Couch":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.CouchIdle;
+                    spr_hurt = spr.CouchHurt;
+                    spr_dead = spr.CouchDead;
+                    sprite_index = spr_idle;
+                    
+                     // Sounds:
+                    snd_hurt = sndHitPlant;
+                    snd_dead = sndWheelPileBreak;
+                    
+                     // Vars:
+                    maxhealth = 20;
+                    my_health = maxhealth;
+                    size = 3;
+                }
+                break;
+                
+            case "Paper":
+                o = instance_create(_x, _y, Feather);
+                with(o){
+                    sprite_index = spr.Paper;
+                    friction = 0.2;
+                }
+                break;
+                
+            case "NewTable":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.TableIdle;
+                    spr_hurt = spr.TableHurt;
+                    spr_dead = spr.TableDead;
+                    spr_shadow = shd32;
+                    sprite_index = spr_idle;
+                    depth--;
+                    
+                     // Sounds:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndStreetLightBreak;
+                    
+                     // Vars:
+                    maxhealth = 8;
+                    my_health = maxhealth;
+                    size = 2;
+                }
+                break;
 
         //#endregion
 
@@ -1324,7 +1434,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Eel", "Jelly", "Kelp", "Vent", "YetiCrab",
-    		        "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight",
+    		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Paper", "NewTable",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -5294,6 +5404,11 @@
     draw_self_enemy();
 
 
+#define Cabinet_death
+    repeat(irandom_range(8,16))
+        with obj_create(x,y,"Paper")
+            motion_set(irandom(359),random_range(2,8));
+    
 #define Cat_step
     enemyAlarms(2);
     enemySprites();
@@ -5578,6 +5693,7 @@
         //Cathole_effects();
          // Players standing on top keep cats in
         if place_meeting(x,y,Player){
+            with instance_nearest(x,y,Player) motion_add(point_direction(other.x,other.y,x,y),2);
             alarm0 = 30 + irandom(20);
             image_index = 6;
             image_speed = 0.4;
