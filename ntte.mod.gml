@@ -4,7 +4,7 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
 
     global.newLevel = instance_exists(GenCont);
-    global.area = ["secret","coast","oasis","trench"];
+    global.area = ["secret", "coast", "oasis", "trench", "pizza"];
     global.effect_timer = 0;
     global.currentMusic = -1;
 
@@ -290,8 +290,8 @@
 	}
 	
 	 // Spawn Cats:
-	with(Rat){
-	    if(random(8) < 1){
+	if(GameCont.area == 2){
+	    with(Rat) if(random(8) < 1){
 	        obj_create(x, y, "Cat");
 	        instance_delete(self);
 	    }

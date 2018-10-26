@@ -1239,7 +1239,7 @@
                     };
 
                 array_push(global.catLight, o);
-                exit;
+                return o;
 
         //#endregion
 
@@ -5922,6 +5922,10 @@
             CatLight_draw(x, y, w1 + b, w2 + (3 * (2 * b)), h1 + (2 * b), h2 + b, offset);
         }
     }
+
+     // TV:
+    with(TV) draw_circle(x, y, 64 + random(2), 0);
+
     draw_set_color(c_white);
 
 #define draw_dark_end // Drawing Clear
@@ -5930,6 +5934,12 @@
      // Cat Light:
     with(global.catLight) if(active){
         CatLight_draw(x, y, w1, w2, h1, h2, offset);
+    }
+
+     // TV:
+    with(TV){
+        var o = orandom(1);
+        CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
     }
 
      // Eels:
