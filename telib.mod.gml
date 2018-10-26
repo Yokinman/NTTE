@@ -1259,10 +1259,7 @@
                     };
 
                 array_push(global.catLight, o);
-<<<<<<< HEAD
                 return o;
-=======
-                exit;
                 
             case "ChairFront":
                 o = instance_create(_x, _y, CustomProp);
@@ -1353,8 +1350,6 @@
                     size = 2;
                 }
                 break;
->>>>>>> 0fa9b62182cea7d8e148c4298d8a755e44c77de3
-
         //#endregion
 
         //#region CRYSTAL CAVES
