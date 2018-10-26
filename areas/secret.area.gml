@@ -10,12 +10,16 @@
     global.surfH = 2000;
     global.surf = noone;
     
+#macro debug false
+    
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
 
 #macro Rooms instances_matching(CustomObject,"name","RoomGen")
+
+#macro roomTypes choose("Table", "Dining", "Office", "Couch", "Lounge")
 
 #macro bgrColor area_get_background_color(102)
 #macro shdColor area_get_shadow_color(2)
@@ -150,11 +154,11 @@
 	
      // Start room:
     if !array_length_1d(instances_matching(Rooms,"type","Start"))
-        scrRoomCreate(_x,_y,"Start");
+        scrRoomCreate(10000,10000,"Start");
 	
 	 // Special - Rooms:
 	if random(5) < 1 //&& variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
-	    scrRoomCreate(_x,_y, choose("Default","Default")); //choose("Default", "Light"));
+	    scrRoomCreate(_x,_y, roomTypes); //choose("Default", "Light"));
 	    
 	 // Spawn cathole:
     if random(7) < 1
@@ -180,11 +184,6 @@
 	
 	 // Branch:
 	if(random(9) < 1) instance_create(_x, _y, FloorMaker);
-	
-	 // Spawn manhole:
-	if !array_length_1d(instances_matching(Rooms,"type","Exit")) && instance_number(Floor) >= GenCont.goal / 2{
-	    scrRoomCreate(_x, _y, "Exit");
-	}
 	
 	 // Finishing touches
 	if instance_number(Floor) >= GenCont.goal{
@@ -239,37 +238,41 @@
         myy = y;
         depth = -10;
         mask_index = mskFloor;
-         // on_draw = script_ref_create(RoomGen_draw);
+        if debug on_draw = script_ref_create(RoomGen_draw);
         switch(_type){
-            case "Start":
-                image_xscale = 3;
-                image_yscale = 3;
-                
-                important = true;
-                carpeted = true;
-                
+             // IMPORTANT ROOMS
+             
+            case "Start": scrRoomVars(3, 3, true, true);
                 break;
-            case "Default":
-                image_xscale = irandom_range(3,6); // width
-                image_yscale = 9-image_xscale; // height
                 
-                carpeted = (random(3) < 2);
-                
+            case "Boss": scrRoomVars(6, 6, true, false);
                 break;
-            case "Exit":
-                image_xscale = 3;
-                image_yscale = 3;
                 
-                important = true;
+             // SMALL ROOMS
                 
-                break
-            case "Boss":
-                image_xscale = 6;
-                image_yscale = 6;
-
-                important = true;
-                
+            case "Table": scrRoomVars(3, 3, false, (random(5) < 2));
                 break;
+                
+            case "Couch": scrRoomVars(3, 2, false, true);
+                break;
+             
+             // LARGE ROOMS
+             
+            case "Dining": scrRoomVars(4, 3, false, (random(3) < 1));
+                break;
+            
+            case "Office": scrRoomVars(3, 4, false, false);
+                break;
+                
+            case "Lounge": scrRoomVars(4,4,false,false);
+                break;
+                
+                
+             // DEFAULT RANDOM ROOM
+                
+            default:
+                scrRoomVars(irandom_range(3,6), irandom_range(3,6), false, (random(4) < 1));
+                type = "Default";
         }
          // Weird fix for a problem i don't understand
         var xo, yo;
@@ -279,6 +282,12 @@
         x -= floor(image_xscale / 2)*o - xo;
         y -= floor(image_yscale / 2)*o - yo;
     }
+    
+#define scrRoomVars(_w,_h,_important,_carpeted)
+    image_xscale = _w;
+    image_yscale = _h;
+    important = _important;
+    carpeted = _carpeted;
     
 #define scrRoomPop(_room)
     var o = 32;
@@ -295,24 +304,14 @@
         with(Wall) if place_meeting(x,y,other) instance_delete(id);
          // populate rooms
         switch(type){
-            case "Start":
-                obj_create(myx,myy,"CatLight");
-            
-                break;
-            case "Default":
-                
-                break;
-            case "Exit":
-                with obj_create(myx,myy,"Manhole") sprite_index = spr.PizzaManhole;
-                 // Create walls
-                for (var xx = 1; xx <= 4; xx += 3)
-                    for (var yy = 1; yy <= 4; yy += 3)
-                        instance_create(x+xx*16,y+yy*16,Wall);
-                
-                break;
+             // IMPORTANT ROOMS
+             
             case "Boss":
                  // Spawn boss spawner
                 obj_create(myx,myy,"CatholeBig");
+                
+                 // delete this later
+                obj_create(myx+32,myy+32,"Cat");
                 
                  // Create walls
                 for (var xx = 1; xx <= 10; xx += 9)
@@ -325,7 +324,63 @@
                 for (var _i = 0; _i <= 2; _i++)
                     if !instance_exists(_chest[_i]) instance_create(myx+lengthdir_x(80,(_i+_d)*90)+32,myy+lengthdir_y(80,(_i+_d)*90)+32,_chest[_i]);
                 
-                break;
+            break;
+             
+             // SMALL ROOMS
+            
+            case "Table":
+                with obj_create(myx+16,myy+16,"NewTable"){
+                    if random(5) < 4
+                        obj_create(x+orandom(2),y-18+orandom(2),"ChairFront");
+                    obj_create(x,y-32,"CatLight");
+                }
+                
+            break;
+            
+            case "Couch":
+                obj_create(myx+16,myy+16,"Couch");
+                if random(5) < 2
+                    instance_create(x+orandom(24), y+irandom(16), PizzaBox);
+                
+            break;
+                
+             // LARGE ROOMS
+            
+            case "Dining":
+                with obj_create(myx+32,myy+16,"NewTable"){
+                    for (var _r = -1; _r <= 1; _r += 2){
+                        with obj_create(x+24*_r,y+orandom(2),"ChairSide") image_xscale = _r;
+                        obj_create(x+12*_r,y-18+orandom(2),"ChairFront");
+                    }
+                    obj_create(x,y-32,"CatLight")
+                }
+                
+            break;
+             
+            case "Office":
+                for (var xx = 0; xx <= 1; xx++)
+                    for (var yy = 0; yy <= 2; yy++){
+                        if random(4) < 3{
+                            with obj_create(x+32+xx*o+orandom(2),y+32+yy*o+orandom(2),"NewTable")
+                                obj_create(x+orandom(2),y-18+orandom(2),choose("ChairFront,ChairFront,ChairSide"));
+                        }
+                        else obj_create(x+32+xx*o+orandom(2),y+32+yy*o+orandom(2),"Cabinet");
+                    }
+            
+            break;
+            
+            case "Lounge":
+                with obj_create(myx+32,myy,"Couch"){
+                    with obj_create(x+orandom(2),y+16+orandom(2),"NewTable"){
+                        obj_create(x,y-32,"CatLight");
+                        for (var _r = -1; _r <= 1; _r += 2) if random(3) < 2
+                            with obj_create(x+24*_r,y+orandom(2),"ChairSide") image_xscale = _r;
+                    }
+                    instance_create(x+orandom(16), y+orandom(16), PizzaBox);
+                }
+            
+            break;
+             
         }
     }
     
@@ -333,6 +388,7 @@
     var c = (important ? c_red : c_green),
         o = 32;
     draw_rectangle_color(x,y,x+o,y+o,c,c,c,c,true);
+    draw_text_nt(x + 35, y, type);
         c = c_blue;
     draw_rectangle_color(myx,myy,myx+o,myy+o,c,c,c,c,true);
         
@@ -375,17 +431,15 @@
             }
         }
     }
-    else if random(20) < 1{
-        var _x = x + 16,
-            _y = y - 16;
 
-        obj_create(_x,_y,"CatLight");
-    }
-    
 #define area_pop_extras
      // Populate Rooms:
     with(Rooms)
         scrRoomPop(self);
+        
+     // Light up specific things:
+    with instances_matching(GameObject,"object_index",AmmoChest,AmmoChestMystery,RadChest,WeaponChest,BigWeaponChest) obj_create(x,y-32,"CatLight");
+    obj_create(10016,10016-32,"CatLight");
 
 #define obj_create(_x,_y,_obj)
     return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
