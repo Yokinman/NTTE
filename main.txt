@@ -1,6 +1,7 @@
 /loadmod teassets
 /loadmod ntte
 /loadmod telib
+/loadmod telib2
 
 // Areas \\
 /loadarea areas/coast

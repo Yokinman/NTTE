@@ -11,7 +11,7 @@
 #macro mus global.mus
 
 #macro bgrColor area_get_background_color(102)
-#macro shdColor area_get_shadow_color(2)
+#macro shdColor area_get_shadow_color(102)
 
 #define area_music      return mus102;
 #define area_ambience   return amb102;
@@ -22,7 +22,7 @@
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     return [_lastx+0.5,-8,1];
-    
+
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
@@ -42,64 +42,13 @@
     }
 
 #define area_setup
-    goal = 16;
+    goal = 20;
+    safespawn = false;
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
     TopCont.darkness = true;
 
 #define area_start
-     // Turtle Den:
-    var _fx = 10000,
-        _fy = 10000;
-
-    with(instance_nearest(10000, 20000, Floor)){
-        _fx = x - 64;
-        _fy = y + 64;
-        instance_create(x + 16, y + 64, PortalClear);
-    }
-
-    with(scrFloorFill(_fx, _fy, 6, 4)){
-        var _x = x,
-            _y = y,
-            _west = !position_meeting(_x - 16, _y, Floor),
-            _east = !position_meeting(_x + 48, _y, Floor),
-            _nort = !position_meeting(_x, _y - 16, Floor),
-            _sout = !position_meeting(_x, _y + 48, Floor);
-
-        for(var _ox = -16; _ox <= 32; _ox += 16){
-            for(var _oy = -16; _oy <= 32; _oy += 16){
-                if(!position_meeting(_x + _ox, _y + _oy, Floor)){
-                    with(instance_create(_x + _ox, _y + _oy, Wall)){
-                        instance_create(x, y, Top);
-                        instance_create(x - 16, y - 16, Top);
-                        if(position_meeting(x, y + 16, Floor)) visible = 1;
-                        else visible = 0;
-                    }
-                }
-            }
-        }
-
-         // Corner Walls:
-        if(_nort){
-            if(_west) instance_create(_x, _y, Wall);
-            else if(_east) instance_create(_x + 16, _y, Wall);
-        }
-        else if(_sout){
-            if(_west) instance_create(_x, _y + 16, Wall);
-            else if(_east) instance_create(_x + 16, _y + 16, Wall);
-        }
-    
-         // Gimme pizza:
-        else if(_east){
-            _x += 16;
-            _y += 16;
-            repeat(irandom_range(1, 4)){
-                if(random(4) < 1) instance_create(_x + orandom(4), _y + orandom(4), HealthChest);
-                else instance_create(_x + orandom(8), _y + orandom(4), choose(PizzaBox, HPPickup));
-            }
-        }
-    }
-
      // B Floors:
     with(Floor) if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
         styleb = true;
@@ -114,8 +63,8 @@
     }
 
      // TV:
-    var _x = _fx - 16,
-        _y = _fy;
+    var _x = 10000 - 48,
+        _y = 10000;
 
     with(instance_create(_x, _y, TV)){
         spr_hurt = spr.TVHurt;
@@ -144,6 +93,9 @@
     }
     with(instance_create(_x - 32, _y - 32, Rat)) right = 1;
     with(Turtle) alarm1 += 10;
+
+     // Door:
+    obj_create(_x, _y, "PizzaDoor")
 
 #define area_step
     script_bind_end_step(end_step, 0);
@@ -206,30 +158,38 @@
     GameCont.area = "pizza";
 
 #define area_make_floor
-    if(goal - instance_number(Floor) < 4){
-        direction = 270;
-        instance_create(x, y, Floor);
-    }
-    else{
-        var _lastDir = direction;
-        direction = choose(0, 180, 270);
-        var _turn = abs(angle_difference(_lastDir, direction));
+    var _x = 10000 - 32;
+        _y = 10000;
 
-         // Turnarounds:
-        if(_turn == 180){
-            scrFloorMake(x, y, WeaponChest);
-        }
-
-         // Corners:
-        else if(_turn == 90){
-            scrFloorMake(x, y, AmmoChest);
-        }
-
-         // Normal:
-        else instance_create(x, y, Floor);
-    }
+    styleb = 0;
+    scrFloorFill(_x, _y, 6, 4);
 
 #define area_pop_props
+    var _x = x,
+        _y = y,
+        _west = !position_meeting(_x - 16, _y, Floor),
+        _east = !position_meeting(_x + 48, _y, Floor),
+        _nort = !position_meeting(_x, _y - 16, Floor),
+        _sout = !position_meeting(_x, _y + 48, Floor);
+
+    if(_nort){
+        if(_west) instance_create(_x, _y, Wall);
+        else if(_east) instance_create(_x + 16, _y, Wall);
+    }
+    else if(_sout){
+        if(_west) instance_create(_x, _y + 16, Wall);
+        else if(_east) instance_create(_x + 16, _y + 16, Wall);
+    }
+
+     // Gimme pizza:
+    else if(_east){
+        _x += 16;
+        _y += 16;
+        repeat(irandom_range(1, 4)){
+            if(random(3) < 1) instance_create(_x + orandom(4), _y + orandom(4), HealthChest);
+            else instance_create(_x + orandom(8), _y + orandom(4), choose(PizzaBox, HPPickup));
+        }
+    }
     
 #define area_pop_extras
     

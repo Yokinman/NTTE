@@ -234,8 +234,8 @@
          // Player:
         with(instances_matching_gt(Player, "wading", 0)){
 			 // Player Moves 20% Slower in Water:
-            if(speed > 0){
-                var f = ((race == "fish") ? 0 : -0.2) + (0.2 * skill_get(mut_extra_feet));
+            if(!skill_get(mut_extra_feet) && speed > 0){
+                var f = ((race == "fish") ? 0 : -0.2);
                 if(f != 0){
                     x += hspeed * f;
                     y += vspeed * f;
@@ -664,7 +664,7 @@
         }
 
          // ++B Floors
-        else if(!styleb && random(3) < 1){
+        else if(!styleb && random(4) < 1){
             styleb = 1;
         }
     }

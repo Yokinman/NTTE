@@ -89,11 +89,13 @@
             PalankingIdle   = sprite_add("sprites/enemies/Palanking/sprPalankingIdle.png",     16, 40, 24);
             PalankingWalk   = sprite_add("sprites/enemies/Palanking/sprPalankingWalk.png",     16, 40, 24);
             PalankingHurt   = sprite_add("sprites/enemies/Palanking/sprPalankingHurt.png",      3, 40, 24);
-            PalankingDead   = sprite_add("sprites/enemies/Palanking/sprPalankingDead.png",      1, 40, 24);
+            PalankingDead   = sprite_add("sprites/enemies/Palanking/sprPalankingDead.png",     11, 40, 24);
             PalankingBurp   = sprite_add("sprites/enemies/Palanking/sprPalankingBurp.png",      5, 40, 24);
+            PalankingFire   = sprite_add("sprites/enemies/Palanking/sprPalankingFire.png",     11, 40, 24);
             PalankingFoam   = sprite_add("sprites/enemies/Palanking/sprPalankingFoam.png",      1, 40, 24);
+            PalankingChunk  = sprite_add("sprites/enemies/Palanking/sprPalankingChunk.png",     5, 16, 16);
             GroundSlash     = sprite_add("sprites/enemies/projectiles/sprGroundSlash.png",      3,  0, 21);
-            PalankingSlash  = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",   5, 36, 36);
+            PalankingSlash  = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",   3,  0, 24);
             msk.Palanking   = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
             if(fork()){
                 wait 30;
@@ -509,6 +511,21 @@
 
         return id;
     }
+
+#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)
+	while(_raddrop > 0){
+		var r = (_raddrop > 15);
+		repeat(r ? 1 : _raddrop){
+			if(r) _raddrop -= 10;
+			with(instance_create(_x, _y, (r ? BigRad : Rad))){
+				speed = _spd;
+				direction = _dir;
+				motion_add(random(360), random(_raddrop / 2) + 2);
+				speed *= power(0.9, speed);
+			}
+		}
+		if(!r) break;
+	}
 
 #define orandom(n) // For offsets
     return random_range(-n, n);
