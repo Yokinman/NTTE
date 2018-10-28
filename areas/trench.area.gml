@@ -78,6 +78,7 @@
     
 #define area_setup
     goal = 150;
+    safespawn = 2;
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
     TopCont.darkness = true;
@@ -259,6 +260,9 @@
             draw_set_color(c_white);
             
              // > > > DRAW YOUR PIT SHIT HERE < < <
+            with instances_matching(CustomEnemy,"name","Pitsquid"){
+                mod_script_call("mod","telib","Pitsquid_draw");
+            }
             
             draw_surface(global.surf[0],0,0);
             draw_set_color_write_enable(1,1,1,1);

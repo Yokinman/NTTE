@@ -938,6 +938,13 @@
         //#endregion
         
         //#region TRENCH
+            case "Angler":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                    
+                }
+                break;
+                
             case "Eel":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
@@ -1034,6 +1041,34 @@
                     
                      // Vars:
                     depth = -2;
+                }
+                break;
+                
+            case "Pitsquid":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                     // Visual:
+                    spr_cornea = spr.PitsquidCornea;
+                    spr_pupil = spr.PitsquidPupil;
+                    spr_eyelid = spr.PitsquidEyelid;
+                    mask_index = mskNone;
+                    visible = true;
+                    
+                     // Sounds:
+                    
+                     
+                     // Vars:
+                    canfly = true;
+                    maxhealth = scrBossHP(450);
+                    my_health = maxhealth;
+                    
+                    target = noone;
+                    walk = 0;
+                    
+                    eyenum = 3;
+                    eyelen = array_create(eyenum);
+                    eyedir = array_create(eyenum);
+                    blink = array_create(eyenum);
                 }
                 break;
 
@@ -1432,7 +1467,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Eel", "Jelly", "Kelp", "Vent", "YetiCrab",
+    		        "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
     		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Paper", "NewTable",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
@@ -5319,6 +5354,54 @@
 #define Jelly_draw
     draw_self_enemy();
     
+#define Pitsquid_step
+    for (var i = 0; i < eyenum; i++){
+        var _x = Pitsquid_eyepos(i,"x"),
+            _y = Pitsquid_eyepos(i,"y"),
+            _t = noone;
+            
+         // Spot nearest visible player
+        var _dist = 10000,
+            _cansee = true;
+         // Check to see if obscured by solid floor
+        with instances_matching_ne(Floor,"styleb",true) if point_distance(x + 16, y + 16 - 8, _x, _y) <= 8 other._cansee = false;
+        
+        with(Player) if _cansee && !collision_line(x, y, other.x, other.y, Wall, 0, 0){
+            var _mydist = point_distance(x, y, other.x, other.y);
+            if _mydist < _dist{
+                _dist = _mydist;
+                _t = self;
+            }
+        }
+        
+        if instance_exists(_t){
+            blink[i] = clamp(blink[i] - image_speed, 0, 2); // Keeps eyes open
+            eyelen[i] = 5; // clamp(point_distance(x, y, _t.x, _t.y) / 6, 0, 5);
+            eyedir[i] = point_direction(_x, _y, _t.x, _t.y);
+        }
+        else{
+            blink[i] = clamp(blink[i] + image_speed, 0, 2); // Keeps eyes closed
+        }
+    }
+
+#define Pitsquid_draw
+    for (var i = 0; i < eyenum; i++){
+        var _x = Pitsquid_eyepos(i,"x"),
+            _y = Pitsquid_eyepos(i,"y");
+        draw_sprite(spr_cornea, 1, _x, _y);
+        draw_sprite(spr_pupil, 1, _x + lengthdir_x(eyelen[i],eyedir[i]), _y + lengthdir_y(eyelen[i],eyedir[i]));
+        draw_sprite(spr_eyelid, blink[i], _x, _y);
+    }
+    
+#define Pitsquid_eyepos(_eye,_axis)
+    var _len = 24,
+        _dir = image_angle + (360 / eyenum) * _eye;
+    switch(_axis){
+        case "x": return x+lengthdir_x(_len,_dir);
+        case "y": return y+lengthdir_y(_len,_dir);
+    }
+    return 0;
+
 #define Vent_step
     if random(5) < current_time_scale{
         with instance_create(x,y,Bubble){

@@ -241,6 +241,12 @@
             KelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png", 6, 16, 22);
             KelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png", 3, 16, 22);
             KelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png", 8, 16, 22);
+            
+             // Pit Squid:
+            PitsquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png", 1, 19, 19);
+            PitsquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png", 1, 19, 19);
+            PitsquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png", 3, 19, 19);
+            PitsquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png", 14, 19, 19);
 
              // Vent
             VentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png", 1, 12, 14);
