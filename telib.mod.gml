@@ -1823,7 +1823,7 @@
     
      // Bubble charge effect:
     if speed <= 0 && random(12) < current_time_scale
-        with instance_create(x,y,BulletHit) sprite_index = spr.BubbleCharge;
+        with instance_create(x, y - z, BulletHit) sprite_index = spr.BubbleCharge;
 
 #define BubbleBomb_end_step
      // Hold Projectile:
