@@ -92,6 +92,12 @@
 	if !array_length_1d(instances_matching(CustomDraw, "name", "draw_pit"))
     	with(script_bind_draw(draw_pit, 7))
     		name = "draw_pit"
+    		
+     // Anglers:
+    with(RadChest) if random(40) < 1{
+        obj_create(x, y, "Angler");
+        instance_delete(id);
+    }
     
 #define area_step
      // Run underwater code
@@ -186,11 +192,16 @@
     var _x = x + 16,
         _y = y + 16;
     
-    if random(9) < 1{
-        obj_create(_x,_y,"Jelly");
+    if !styleb && random(18) < 1{
+        obj_create(_x, _y, "Angler");
     }
-    else if random(3) < 1{
-        obj_create(_x,_y,"Eel");
+    else{
+        if random(9) < 1{
+            obj_create(_x,_y,"Jelly");
+        }
+        else if random(3) < 1{
+            obj_create(_x,_y,"Eel");
+        }
     }
     
 #define area_pop_props
@@ -216,6 +227,7 @@
      // fix b tiles
     with instances_matching(Floor,"styleb",true)
         depth = 8;
+        
      // delete stuff
     with instances_matching(Floor,"styleb",true){
         with(Detail) if place_meeting(x,y,other)

@@ -961,7 +961,41 @@
             case "Angler":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
-                    
+                     // Visual:
+        	        spr_idle =      spr.AnglerIdle;
+        			spr_walk =      spr.AnglerWalk;
+        			spr_hurt =      spr.AnglerHurt;
+        			spr_dead =      spr.AnglerDead;
+        			spr_appear =    spr.AnglerAppear;
+        			 // spr_shadow = shd64;
+        			 // spr_shadow_y = 6;
+        			spr_shadow = shd24;
+        			    spr_shadow_y = 9;
+        			    spr_shadow_x = 6;
+        			mask_index = msk.AnglerHidden;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_appear;
+        			image_speed = 0;
+        			depth = -2
+    
+                     // Sound:
+        			snd_hurt = sndFireballerHurt;
+        			snd_dead = sndFireballerDead;
+    
+        			 // Vars:
+        			maxhealth = 80;
+        			raddrop = 24;
+        			meleedamage = 4;
+        			size = 2;
+        			walk = 0;
+        			walkspd = 0.6;
+        			maxspd = 3;
+        			direction = 0;
+        			scrRight(direction);
+        			hiding = true;
+    
+                     // Alarms:
+        			alarm0 = 30 + irandom(30);
                 }
                 break;
                 
@@ -1437,9 +1471,24 @@
         //#endregion
 
         //#region CRYSTAL CAVES
+        	case "InvMortar":
+        	    o = obj_create(_x, _y, "Mortar");
+        	    with(o){
+        	        // Visual:
+        	       spr_idle = spr.InvMortarIdle;
+        	       spr_walk = spr.InvMortarWalk;
+        	       spr_fire = spr.InvMortarFire;
+        	       spr_hurt = spr.InvMortarHurt;
+        	       spr_dead = spr.InvMortarDead;
+        	       
+        	        // Reassign scripts:
+        	       on_hurt = ["mod", "telib2", "InvMortar_hurt"];
+        	    }
+        	    break;
+        	    
         	case "Mortar":
         	    o = instance_create(_x, _y, CustomEnemy);
-        	    with(o) {
+        	    with(o){
                      // Visual:
         	        spr_idle = spr.MortarIdle;
         			spr_walk = spr.MortarWalk;
@@ -1461,7 +1510,7 @@
         			 // Vars:
         			maxhealth = 75;
         			raddrop = 30;
-        			size = 2;
+        			size = 3;
         			walk = 0;
         			walkspd = 0.8;
         			maxspd = 2;
@@ -1473,7 +1522,7 @@
         			alarm0 = 100 + irandom(40);
         			alarm1 = -1;
         	    }
-        	break;
+        	    break;
 
         	case "MortarPlasma":
         	    o = instance_create(_x, _y, CustomProjectile);
@@ -1490,7 +1539,7 @@
         	        force = 0;
         	        right = choose(-1, 1);
         	    }
-        	break;
+        	    break;
 
         	case "NewCocoon":
         	    o = instance_create(_x, _y, CustomProp);
@@ -1509,7 +1558,7 @@
         			nexthurt = current_frame;
         			size = 1;
         		}
-        	break;
+        	    break;
         	
         	case "Spiderling":
         	    o = instance_create(_x, _y, CustomEnemy);
@@ -1524,7 +1573,7 @@
         			mask_index = mskMaggot;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
-        			depth = -4;
+        			depth = -2;
     
                      // Sound:
         			snd_hurt = sndSpiderHurt;
@@ -1550,9 +1599,9 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
+    		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
     		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
-    		        "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
+    		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
 
@@ -1771,6 +1820,10 @@
             instance_create(x + orandom(o), y + orandom(o), PortalL);
         }
     }
+    
+     // Bubble charge effect:
+    if speed <= 0 && random(12) < current_time_scale
+        with instance_create(x,y,BulletHit) sprite_index = spr.BubbleCharge;
 
 #define BubbleBomb_end_step
      // Hold Projectile:
@@ -5403,6 +5456,71 @@
         }
     }
 
+#define Angler_step
+    enemyAlarms(1);
+    if sprite_index != spr_appear || (image_index < 1 && image_speed > 0){
+        if sprite_index == spr_appear && speed > 0
+            sprite_index = spr_walk;
+        enemySprites();
+    }
+    enemyWalk(walkspd, maxspd);
+    
+#define Angler_draw
+    if hiding{
+        draw_set_blend_mode(bm_add);
+        draw_sprite_ext(sprRadChestGlow, image_index, x + 6 * right, y + 8, image_xscale * right * 2, image_yscale * 2, image_angle, image_blend, 0.1);
+        draw_set_blend_mode(bm_normal);
+        draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    }
+    draw_self_enemy();
+    
+#define Angler_hurt(_hitdmg, _hitvel, _hitdir)
+    if hiding
+        scrAnglerAppear();
+    enemyHurt(_hitdmg, _hitvel, _hitdir);
+
+#define Angler_alrm0
+    alarm0 = 20 + irandom(20);
+    target = instance_nearest(x, y, Player);
+    
+
+    if !hiding{
+         // Walk:
+        if target_is_visible() && target_in_distance(0, 128){
+             // Walk towards target:
+            scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y));
+        }
+        else{
+             // Wander:
+            scrWalk(20 + irandom(30), direction + orandom(30));
+        }
+         // Face right:
+        scrRight(direction);
+    }
+    else{
+        alarm0 = 6 + irandom(6);
+         // Stop hiding:
+        if target_is_visible() && target_in_distance(0, 48){
+            scrAnglerAppear();
+        }
+    }
+    
+#define Angler_death
+    pickup_drop(80, 0);
+    pickup_drop(60, 5);
+    
+#define scrAnglerAppear
+    view_shake_at(x, y, 10);
+    with instance_create(x, y, PortalClear){
+        team = other.team;
+    }
+    image_speed = 0.4; image_index = 1;
+    mask_index = mskFireBaller;
+    spr_shadow = shd64B;
+        spr_shadow_y = 5;
+        spr_shadow_x = 0;
+    hiding = false;
+
 #define Eel_step
     enemyAlarms(1);
     enemySprites();
@@ -5773,32 +5891,58 @@
     }
 
 #define draw_shadows
-    with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
-        draw_sprite(shd24, 0, x, y);
+    // with(instances_named(CustomProjectile, ["MortarPlasma", "CatGrenade"])) if(visible){
+    //     draw_sprite(shd24, 0, x, y - z);
+    // }
+    with instances_matching(CustomProjectile, "name", "MortarPlasma", "CatGrenade") if visible{
+        var _percent = clamp(96 / z, 0.1, 1),
+            _w = ceil(18 * _percent),
+            _h = ceil(6 * _percent);
+        draw_ellipse(x - _w / 2, y - _h / 2, x + _w / 2, y + _h / 2, false);
     }
 
 #define draw_dark // Drawing Grays
-    //draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
+     // draw_set_blend_mode_ext(11,4); // blend mode for color on darkness, thanks jsburg
     draw_set_color(c_gray);
-
-     // Kelp:
-    with instances_matching(CustomProp,"name","Kelp"){
-        draw_circle(x,y,32+orandom(1),0);
-    }
-
-    draw_set_color(c_white);
-
-#define draw_dark_end // Drawing Clear
+     // Draw mid-dark:
+         // Jellies:
+        with instances_matching(CustomEnemy,"name","Jelly"){
+            var arg = (((image_index >= 1 && image_index < 2) || (image_index >= 3 && image_index < 4)) && sprite_index == spr_idle)
+                    || (sprite_index == spr_fire)
+                    || ((image_index < 1 || image_index >= 2) && sprite_index == spr_hurt);
+            draw_circle(x, y, 80 + orandom(1) + (arg ? 5 : 0), false);
+        }
+         // Kelp:
+        with instances_matching(CustomProp,"name","Kelp"){
+            draw_circle(x, y, 32 + orandom(1), false);
+        }
+         // Mortar:
+        with instances_matching(CustomEnemy,"name","Mortar","InvMortar") if sprite_index == spr_fire{
+            draw_circle(x + 6 * right, y - 16, 48 - alarm1 + orandom(4), false)
+        }
+         // Mortar plasma:
+        with instances_matching(CustomProjectile,"name","MortarPlasma"){
+            draw_circle(x, y - z, 64 + orandom(1), false);
+        }
+    
     draw_set_color(c_black);
+     // Draw light:
+         // Jellies:
+        with instances_matching(CustomEnemy,"name","Jelly"){
+            var arg = (((image_index >= 1 && image_index < 2) || (image_index >= 3 && image_index < 4)) && sprite_index == spr_idle)
+                    || (sprite_index == spr_fire)
+                    || ((image_index < 1 || image_index >= 2) && sprite_index == spr_hurt);
+            draw_circle(x, y, 40 + orandom(1) + (arg ? 5 : 0), false);
+        }
+         // Mortar:
+        with instances_matching(CustomEnemy,"name","Mortar","InvMortar") if sprite_index == spr_fire{
+            draw_circle(x + 6 * right, y - 16, 24 - alarm1 + orandom(4), false)
+        }
+         // Mortar plasma:
+        with instances_matching(CustomProjectile,"name","MortarPlasma"){
+            draw_circle(x, y - z, 32 + orandom(1), false);
+        }
 
-     // Eels:
-    // with instances_matching(CustomEnemy,"name","Eel"){
-    //     if chargeTime > 0
-    //         draw_circle(x,y,24+orandom(1),0);
-    // }
-
-
- /// HELPER SCRIPTS /// 
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);

@@ -23,6 +23,7 @@
     	BigFishSwimBack =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
     	BubbleBomb =        sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
     	BubbleExplode =     sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
+    	BubbleCharge =      sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
 
          // Bone:
         Bone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
@@ -205,6 +206,13 @@
         //#endregion
         
         //#region TRENCH
+             // Angler:
+            AnglerIdle =        sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
+            AnglerWalk =        sprite_add("sprites/enemies/Angler/sprAnglerWalk.png",      8, 32, 32);
+            AnglerHurt =        sprite_add("sprites/enemies/Angler/sprAnglerHurt.png",      3, 32, 32);
+            AnglerDead =        sprite_add("sprites/enemies/Angler/sprAnglerDead.png",      7, 32, 32);
+            AnglerAppear =      sprite_add("sprites/enemies/Angler/sprAnglerAppear.png",    4, 32, 32);
+            msk.AnglerHidden =  sprite_add("sprites/enemies/Angler/mskAnglerHidden.png",    1, 32, 32);
              // Eel (0 = blue, 1 = purple, 2 = green):
             EelIdle = [
                 sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",8,16,16),
@@ -327,6 +335,12 @@
         	MortarPlasma  = sprite_add("sprites/enemies/Mortar/sprMortarPlasma.png",  1,  4,  4);
         	MortarImpact  = sprite_add("sprites/enemies/Mortar/sprMortarImpact.png",  7, 16, 16);
         	MortarTrail   = sprite_add("sprites/enemies/Mortar/sprMortarTrail.png",   3,  4,  4);
+        	 // Cursed mortar:
+        	InvMortarIdle    = sprite_add("sprites/enemies/InvMortar/sprInvMortarIdle.png",    4, 22, 24);
+        	InvMortarWalk    = sprite_add("sprites/enemies/InvMortar/sprInvMortarWalk.png",    8, 22, 24);
+        	InvMortarFire    = sprite_add("sprites/enemies/InvMortar/sprInvMortarFire.png",   16, 22, 24);
+        	InvMortarHurt    = sprite_add("sprites/enemies/InvMortar/sprInvMortarHurt.png",    3, 22, 24);
+        	InvMortarDead    = sprite_add("sprites/enemies/InvMortar/sprInvMortarDead.png",   14, 22, 24);
         	 // Spiderling:
         	SpiderlingIdle = sprite_add("sprites/enemies/Spiderling/sprSpiderlingIdle.png", 4, 8, 8);
         	SpiderlingWalk = sprite_add("sprites/enemies/Spiderling/sprSpiderlingWalk.png", 4, 8, 8);

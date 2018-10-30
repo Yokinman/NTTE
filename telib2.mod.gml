@@ -433,6 +433,22 @@
         floor_reveal(_path, 2);
 
 
+#define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
+    if random(1) < _hitdmg / 25{
+        var _a = instances_matching(enemy, "object_index", InvLaserCrystal, InvSpider),
+            _n = array_length_1d(_a),
+            _x = x,
+            _y = y;
+        if _n
+            with _a[irandom(_n-1)] if distance_to_object(instance_nearest(x,y,Player)) > 32{
+                other.x = x;
+                other.y = y;
+                x = _x;
+                y = _y;
+            }
+    }
+    Mortar_hurt(_hitdmg, _hitvel, _hitdir);
+    
 #define Mortar_step
     enemyAlarms(2);
 
@@ -448,6 +464,19 @@
          // End Fire Sprite:
         if(sprite_index = spr_fire && (image_index > sprite_get_number(spr_fire) - 1)){
             sprite_index = spr_idle;
+        }
+    }
+    
+     // Charging effect:
+    if sprite_index == spr_fire && random(5) < current_time_scale{
+        var _x = x + 6 * right,
+            _y = y - 16,
+            _l = irandom_range(16, 24),
+            _d = irandom(359);
+        with instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), LaserCharge){
+            depth = other.depth - 1;
+            motion_set(_d + 180, random_range(1,2));
+            alarm0 = point_distance(x, y, _x, _y) / speed;
         }
     }
 
@@ -495,7 +524,7 @@
         if(target < 0)
         exit;
 
-        var _targetDir = point_direction(x, y, target.x, target.y);
+        var _targetDir = point_direction(x, y, target.x, target.y) + orandom(6);
 
          // Sound:
         sound_play(sndCrystalTB);
@@ -561,6 +590,7 @@
     if(z <= 0) instance_destroy();
 
 #define MortarPlasma_destroy
+    view_shake_at(x, y, 8);
     with(instance_create(x, y, PlasmaImpact)){
         sprite_index = spr.MortarImpact;
         team = other.team;
@@ -573,7 +603,9 @@
     sound_play(sndPlasmaHit);
 
 #define MortarPlasma_draw
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
+    var _maxtilt = 45,
+        _angle = 90 - clamp(hspeed * 20, -_maxtilt, _maxtilt);
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, _angle, image_blend, image_alpha);
 
 #define MortarPlasma_hit
     // nada
@@ -597,10 +629,11 @@
     alarm0 = 10 + irandom(10);
     target = instance_nearest(x,y,Player);
     
-    if target_is_visible(){
+    if target_is_visible() && target_in_distance(0, 96){
         scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
     }
     else scrWalk(12, direction + orandom(20));
+    scrRight(direction);
 
 #define step
      // Reset Lights:

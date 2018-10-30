@@ -183,6 +183,12 @@
             }
         }
     }
+    
+     // Anglers:
+    with(RadChest) if random(40) < 1{
+        obj_create(x, y, "Angler");
+        instance_delete(id);
+    }
 
      // Bind Sea Drawing Scripts:
 	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){

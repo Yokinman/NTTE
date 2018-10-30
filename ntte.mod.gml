@@ -289,6 +289,14 @@
 	    }
 	}
 	
+     // Spawn Cursed Mortars:
+	with(InvLaserCrystal){
+	    if(random(4) < 1){
+	        obj_create(x, y, "InvMortar");
+	        instance_delete(self);
+	    }
+	}
+	
 	 // Spawn Cats:
 	if(GameCont.area == 2){
 	    with(Rat) if(random(8) < 1){

@@ -53,6 +53,12 @@
         obj_create(x, y, "ClamChest");
         instance_delete(id);
     }
+    
+     // Anglers:
+    with(RadChest) if random(40) < 1{
+        obj_create(x, y, "Angler");
+        instance_delete(id);
+    }
 
 #define area_step
      // Run underwater code:
