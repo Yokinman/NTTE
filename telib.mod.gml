@@ -11,9 +11,6 @@
      // Harpoon Ropes:
     global.poonRope = []; // poon poon poon poon poon
 
-     // Cat Level Lights:
-    global.catLight = [];
-
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -1316,7 +1313,7 @@
                     active : true
                     };
 
-                array_push(global.catLight, o);
+                array_push(mod_variable_get("mod", "telib2", "catLight"), o);
                 return o;
                 
             case "ChairFront":
@@ -1378,15 +1375,7 @@
                     size = 3;
                 }
                 break;
-                
-            case "Paper":
-                o = instance_create(_x, _y, Feather);
-                with(o){
-                    sprite_index = spr.Paper;
-                    friction = 0.2;
-                }
-                break;
-                
+
             case "NewTable":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -1406,6 +1395,41 @@
                     maxhealth = 8;
                     my_health = maxhealth;
                     size = 2;
+                }
+                break;
+
+            case "Paper":
+                o = instance_create(_x, _y, Feather);
+                with(o){
+                    sprite_index = spr.Paper;
+                    friction = 0.2;
+                }
+                break;
+
+            case "PizzaDrain":
+                o = instance_create(_x, _y, CustomHitme);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.PizzaDrainIdle;
+                    spr_walk = spr_idle;
+                    spr_hurt = spr.PizzaDrainHurt;
+                    spr_dead = spr.PizzaDrainDead;
+                    spr_shadow = mskNone;
+                    image_xscale = choose(-1, 1);
+                    image_speed = 0.4;
+                    depth = -7;
+
+                     // Sound:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndStatueDead;
+
+                     // Vars:
+                    mask_index = mskBanditBoss;
+                    maxhealth = 40;
+                    my_health = maxhealth;
+                    team = 0;
+                    size = 3;
+                    target = instance_nearest(x, y, Wall);
                 }
                 break;
         //#endregion
@@ -1491,7 +1515,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
-    		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Paper", "NewTable",
+    		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
     		        "Mortar", "MortarPlasma", "NewCocoon"
     		        ];
     }
@@ -2833,13 +2857,13 @@
         image_speed = 0.4;
         spr_shadow = mskNone;
         depth = (shell ? -2 : 0) + (-y / 20000);
-        friction = 3;
 
          // Sound:
         snd_hurt = sndHitRock;
         snd_dead = (shell ? sndHyperCrystalHurt : sndWallBreakRock);
 
          // Vars:
+        friction = 3;
         mask_index = (shell ? mskScrapBoss : mskBandit);
         mask_floor = (shell ? mskSalamander : mskAlly);
         maxhealth = (shell ? 100 : 50);
@@ -5649,9 +5673,6 @@
         else scrHarpoonUnrope(_rope);
     }
 
-     // Reset Lights:
-    if(instance_exists(FloorMaker)) global.catLight = [];
-    
     with(Player) if player_get_alias(index) == "BioOnPC"{
         if(button_pressed(index, "horn")) {
             with(obj_create(mouse_x[index], mouse_y[index], "YetiCrab")) {
@@ -5698,40 +5719,10 @@
         draw_circle(x,y,32+orandom(1),0);
     }
 
-     // Cat Light:
-    with(global.catLight){
-        offset = random_range(-1, 1);
-
-         // Flicker:
-        if(current_frame_active){
-            if(random(60) < 1) active = false;
-            else active = true;
-        }
-
-        if(active){
-            var b = 2; // Border Size
-            CatLight_draw(x, y, w1 + b, w2 + (3 * (2 * b)), h1 + (2 * b), h2 + b, offset);
-        }
-    }
-
-     // TV:
-    with(TV) draw_circle(x, y, 64 + random(2), 0);
-
     draw_set_color(c_white);
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
-
-     // Cat Light:
-    with(global.catLight) if(active){
-        CatLight_draw(x, y, w1, w2, h1, h2, offset);
-    }
-
-     // TV:
-    with(TV){
-        var o = orandom(1);
-        CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
-    }
 
      // Eels:
     // with instances_matching(CustomEnemy,"name","Eel"){
@@ -5769,5 +5760,10 @@
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
+#define area_generate(_x, _y, _area)                                                    return  mod_script_call("mod", "teassets", "area_generate", _x, _y, _area);
+#define scrFloorWalls()                                                                 return  mod_script_call("mod", "teassets", "scrFloorWalls");
+#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call("mod", "teassets", "floor_reveal", _floors, _maxTime);
+#define area_border(_y, _area, _color)                                                  return  mod_script_call("mod", "teassets", "area_border", _y, _area, _color);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call("mod", "teassets", "area_get_sprite", _area, _spr);
 #macro sewers "secret"
 #define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)                              return  mod_script_call("mod", "telib2", "CatLight_draw", _x, _y, _w1, _w2, _h1, _h2, _offset);

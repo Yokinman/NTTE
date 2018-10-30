@@ -21,7 +21,7 @@
 
 #macro roomTypes choose("Table", "Dining", "Office", "Couch", "Lounge")
 
-#macro bgrColor area_get_background_color(102)
+#macro bgrColor area_get_background_color(2)
 #macro shdColor area_get_shadow_color(2)
 
 #define area_music      return mus2;
@@ -38,14 +38,14 @@
     switch(_spr){
          // Floors:
         case sprFloor1      : return sprFloor2;
-        case sprFloor1B     : return sprFloor2;
+        case sprFloor1B     : return sprFloor2B;
         case sprFloor1Explo : return sprFloor2Explo;
 
          // Walls:
-        case sprWall1Trans  : return sprWall102Trans;
-        case sprWall1Bot    : return sprWall102Bot;
-        case sprWall1Out    : return sprWall102Out;
-        case sprWall1Top    : return sprWall102Top;
+        case sprWall1Trans  : return sprWall2Trans;
+        case sprWall1Bot    : return sprWall2Bot;
+        case sprWall1Out    : return sprWall2Out;
+        case sprWall1Top    : return sprWall2Top;
 
          // Misc:
         case sprDebris1     : return sprDebris2;
@@ -154,7 +154,7 @@
 	
      // Start room:
     if !array_length_1d(instances_matching(Rooms,"type","Start"))
-        scrRoomCreate(10000,10000,"Start");
+        scrRoomCreate(GenCont.spawn_x - 16, GenCont.spawn_y - 16, "Start");
 	
 	 // Special - Rooms:
 	if random(5) < 1 //&& variable_instance_exists(GenCont, "maxrooms") && array_length_1d(Rooms) < GenCont.maxrooms
@@ -224,7 +224,7 @@
 	        sprite_index = sprFloor2;
 	    }
 	     // Destroy floormakers
-	    with(FloorMaker) instance_delete(id);
+	    with(FloorMaker) instance_destroy();
 	}
 	
 #define scrRoomCreate(_x,_y,_type)
@@ -402,8 +402,6 @@
     return mod_script_call("mod","ntte","scrFloorFillRound",_x,_y,_w,_h);
     
 #define area_finish
-    global.resetSurf = true;
-    
     lastarea = area;
 
      // Area End:
@@ -414,7 +412,11 @@
 
      // Next Subarea: 
     else subarea++;
-    
+
+#define area_transit
+    global.resetSurf = true;
+    //GameCont.area = mod_current;
+
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
@@ -439,7 +441,7 @@
         
      // Light up specific things:
     with instances_matching(GameObject,"object_index",AmmoChest,AmmoChestMystery,RadChest,WeaponChest,BigWeaponChest) obj_create(x,y-32,"CatLight");
-    obj_create(10016,10016-32,"CatLight");
+    obj_create(spawn_x, spawn_y - 32, "CatLight");
 
 #define obj_create(_x,_y,_obj)
     return mod_script_call("mod","telib","obj_create",_x,_y,_obj);
@@ -449,5 +451,3 @@
     
 #define orandom(_n)
     return irandom_range(-_n,_n);
-    
-    

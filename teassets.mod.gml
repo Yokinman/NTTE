@@ -267,37 +267,51 @@
             CatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png",    3, 12, 12);
             CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",    6, 12, 12);
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
+
+             // Drain:
+            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/sprPizzaDrain.png",     1, 24, 38);
+            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/sprPizzaDrainHurt.png", 3, 24, 38);
+            PizzaDrainDead = mskNone;
+
              // Manholes:
             Manhole = sprite_add("sprites/areas/Sewers/sprManhole.png",12,16,48);
             BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
             PizzaManhole = sprite_add("sprites/areas/Sewers/sprPizzaManhole.png",2,0,0);
+
              // Furniture:
                  // Rug:
                 Rug = [
-                    sprite_add("sprites/areas/Sewers/Props/sprRugBot.png",9,0,0),
-                    sprite_add("sprites/areas/Sewers/Props/sprRugTop.png",9,0,0)];
+                    sprite_add("sprites/areas/Sewers/Props/sprRugBot.png", 9, 0, 0),
+                    sprite_add("sprites/areas/Sewers/Props/sprRugTop.png", 9, 0, 0)];
+
                  // Table:
-                TableIdle = sprite_add("sprites/areas/Sewers/Props/sprTableIdle.png",1,16,16);
-                TableHurt = sprite_add("sprites/areas/Sewers/Props/sprTableHurt.png",3,16,16);
-                TableDead = sprite_add("sprites/areas/Sewers/Props/sprTableDead.png",3,16,16);
+                TableIdle = sprite_add("sprites/areas/Sewers/Props/sprTableIdle.png", 1, 16, 16);
+                TableHurt = sprite_add("sprites/areas/Sewers/Props/sprTableHurt.png", 3, 16, 16);
+                TableDead = sprite_add("sprites/areas/Sewers/Props/sprTableDead.png", 3, 16, 16);
+
                  // Chairs:
-                ChairDead = sprite_add("sprites/areas/Sewers/Props/sprChairDead.png",3,12,12);
+                    ChairDead       = sprite_add("sprites/areas/Sewers/Props/sprChairDead.png",         3, 12, 12);
+
                      // Side:
-                    ChairSideIdle = sprite_add("sprites/areas/Sewers/Props/sprChairSideIdle.png",1,12,12);
-                    ChairSideHurt = sprite_add("sprites/areas/Sewers/Props/sprChairSideHurt.png",3,12,12);
+                    ChairSideIdle   = sprite_add("sprites/areas/Sewers/Props/sprChairSideIdle.png",     1, 12, 12);
+                    ChairSideHurt   = sprite_add("sprites/areas/Sewers/Props/sprChairSideHurt.png",     3, 12, 12);
+
                      // Front:
-                    ChairFrontIdle = sprite_add("sprites/areas/Sewers/Props/sprChairFrontIdle.png",1,12,12);
-                    ChairFrontHurt = sprite_add("sprites/areas/Sewers/Props/sprChairFrontHurt.png",3,12,12);
+                    ChairFrontIdle  = sprite_add("sprites/areas/Sewers/Props/sprChairFrontIdle.png",    1, 12, 12);
+                    ChairFrontHurt  = sprite_add("sprites/areas/Sewers/Props/sprChairFrontHurt.png",    3, 12, 12);
+
                  // Cabinet:
-                CabinetIdle = sprite_add("sprites/areas/Sewers/Props/sprCabinetIdle.png",1,12,12);
-                CabinetHurt = sprite_add("sprites/areas/Sewers/Props/sprCabinetHurt.png",3,12,12);
-                CabinetDead = sprite_add("sprites/areas/Sewers/Props/sprCabinetDead.png",3,12,12);
+                CabinetIdle = sprite_add("sprites/areas/Sewers/Props/sprCabinetIdle.png", 1, 12, 12);
+                CabinetHurt = sprite_add("sprites/areas/Sewers/Props/sprCabinetHurt.png", 3, 12, 12);
+                CabinetDead = sprite_add("sprites/areas/Sewers/Props/sprCabinetDead.png", 3, 12, 12);
+
                  // Couch:
-                CouchIdle = sprite_add("sprites/areas/Sewers/Props/sprCouchIdle.png",1,32,32);
-                CouchHurt = sprite_add("sprites/areas/Sewers/Props/sprCouchHurt.png",3,32,32);
-                CouchDead = sprite_add("sprites/areas/Sewers/Props/sprCouchDead.png",3,32,32);
+                CouchIdle = sprite_add("sprites/areas/Sewers/Props/sprCouchIdle.png", 1, 32, 32);
+                CouchHurt = sprite_add("sprites/areas/Sewers/Props/sprCouchHurt.png", 3, 32, 32);
+                CouchDead = sprite_add("sprites/areas/Sewers/Props/sprCouchDead.png", 3, 32, 32);
+
              // FX:
-            Paper = sprite_add("sprites/areas/Sewers/Props/sprPaper.png",3,5,6);
+            Paper = sprite_add("sprites/areas/Sewers/Props/sprPaper.png", 3, 5, 6);
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -555,7 +569,7 @@
 	var	_nearest = noone,
 		d = 1000000;
 
-	with(_instances){
+	with(_instances) if(instance_exists(self)){
 		var _dis = point_distance(_x, _y, x, y);
 		if(_dis < d){
 			_nearest = id;
@@ -574,3 +588,273 @@
 
 #define frame_active(_interval)
     return ((current_frame mod _interval) < current_time_scale);
+
+#define area_generate(_sx, _sy, _area)
+    GameCont.area = _area;
+
+     // Store Player Positions:
+    var _px = [], _py = [], _vx = [], _vy = [];
+    with(Player){
+        _px[index] = x;
+        _py[index] = y;
+        _vx[index] = view_xview[index];
+        _vy[index] = view_yview[index];
+    }
+
+     // No Duplicates:
+    with(instances_matching([TopCont, SubTopCont, BackCont], "", null)) instance_destroy();
+
+     // Exclude These:
+    var _oldFloor = instances_matching(Floor, "", null),
+        _oldChest = [],
+        _chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
+
+    for(var i = 0; i < array_length(_chest); i++){
+        _oldChest[i] = instances_matching(_chest[i], "", null);
+    }
+
+     // Generate Level:
+    with(instance_create(0, 0, GenCont)){
+        var _hard = GameCont.hard;
+        spawn_x = _sx + 16;
+        spawn_y = _sy + 16;
+
+         // FloorMaker Fixes:
+        goal += instance_number(Floor);
+        var _floored = instance_nearest(10000, 10000, Floor);
+        with(FloorMaker){
+            goal = other.goal;
+            if(!position_meeting(x, y, _floored)){
+                with(instance_nearest(x, y, Floor)) instance_destroy();
+            }
+            x = _sx;
+            y = _sy;
+            instance_create(x, y, Floor);
+        }
+
+         // Floor & Chest Gen:
+        while(instance_exists(FloorMaker)){
+            with(FloorMaker) if(instance_exists(self)){
+                event_perform(ev_step, ev_step_normal);
+            }
+        }
+
+         // Find Newly Generated Things:
+        var f = instances_matching(Floor, "", null),
+            _newFloor = array_slice(f, 0, array_length(f) - array_length(_oldFloor)),
+            _newChest = [];
+
+        for(var i = 0; i < array_length(_chest); i++){
+            var c = instances_matching(_chest[i], "", null);
+            _newChest[i] = array_slice(c, 0, array_length(c) - array_length(_oldChest[i]));
+        }
+
+         // Make Walls:
+        with(_newFloor) scrFloorWalls();
+
+         // Spawn Enemies:
+        with(_newFloor){
+            if(random(_hard + 10) < _hard){
+                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+                    // (distance to spawn coordinates > 120) check
+                    mod_script_call("area", _area, "area_pop_enemies");
+                }
+            }
+        }
+        with(_newFloor){
+             // Minimum Enemy Count:
+            if(instance_number(enemy) < (3 + (_hard / 1.5))){
+                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+                    // (distance to spawn coordinates > 120) check
+                    mod_script_call("area", _area, "area_pop_enemies");
+                }
+            }
+             
+              // Crown of Blood:
+            if(GameCont.crown = crwn_blood){
+                if(random(_hard + 8) < _hard){
+                    if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+                        // (distance to spawn coordinates > 120) check
+                        mod_script_call("area", _area, "area_pop_enemies");
+                    }
+                }
+            }
+            
+             // Props:
+            mod_script_call("area", _area, "area_pop_props");
+        }
+
+         // Find # of Chests to Keep:
+        gol = 1;
+        wgol = 0;
+        agol = 0;
+        rgol = 0;
+        if(skill_get(mut_open_mind)){
+            var m = choose(0, 1, 2);
+            switch(m){
+                case 0: wgol++; break;
+                case 1: agol++; break;
+                case 2: rgol++; break;
+            }
+        }
+        mod_script_call("area", _area, "area_pop_chests");
+
+         // Clear Extra Chests:
+        var _extra = [wgol, agol, rgol, rgol, 0];
+        for(var i = 0; i < array_length(_newChest); i++){
+            var n = array_length(_newChest[i]);
+            if(n > 0 && gol + _extra[i] > 0){
+                while(n-- > gol + _extra[i]){
+                    instance_delete(nearest_instance(_sx + random_range(-250, 250), _sy + random_range(-250, 250), _newChest[i]));
+                }
+            }
+        }
+
+         // Crown of Love:
+        if(GameCont.crown = crwn_love){
+            for(var i = 0; i < array_length(_newChest); i++) with(_newChest[i]){
+                if(instance_exists(self)){
+                    instance_create(x, y, AmmoChest);
+                    instance_delete(id);
+                }
+            }
+        }
+
+         // Rad Can -> Health Chest:
+        else{
+            var _lowHP = false;
+            with(Player) if(my_health < maxhealth / 2) _lowHP = true;
+            with(_newChest[2]) if(instance_exists(self)){
+                if((_lowHP && random(2) < 1) || (GameCont.crown == crwn_life && random(3) < 2)){
+                    array_push(_newChest[4], instance_create(x, y, HealthChest));
+                    instance_destroy();
+                    break;
+                }
+            }
+        }
+
+         // Mimics:
+        with(_newChest[1]) if(instance_exists(self) && random(11) < 1){
+            instance_create(x, y, Mimic);
+            instance_delete(id);
+        }
+        with(_newChest[4]) if(instance_exists(self) && random(51) < 1){
+            instance_create(x, y, SuperMimic);
+            instance_delete(id);
+        }
+
+         // Extras:
+        mod_script_call("area", _area, "area_pop_extras");
+
+         // Done + Fix Random Wall Spawn:
+        var _wall = instances_matching(Wall, "", null);
+
+        event_perform(ev_alarm, 1);
+
+        if(instance_number(Wall) > array_length(_wall)){
+            with(Wall.id) instance_delete(id);
+        }
+    }
+
+     // Remove Portal FX:
+    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();
+    repeat(4) with(instance_nearest(10016, 10016, PortalL)) instance_destroy();
+    with(instance_nearest(10016, 10016, PortalClear)) instance_destroy();
+    sound_stop(sndPortalOpen);
+
+     // Reset Player & Camera Pos:
+    var s = UberCont.opt_shake;
+    UberCont.opt_shake = 1;
+    with(Player){
+        sound_stop(snd_wrld);
+
+        x = _px[index];
+        y = _py[index];
+
+        var g = gunangle,
+            _x = _vx[index],
+            _y = _vy[index];
+
+        gunangle = point_direction(0, 0, _x, _y);
+        weapon_post(wkick, point_distance(0, 0, _x, _y), 0);
+        gunangle = g;
+    }
+    UberCont.opt_shake = s;
+
+#define scrFloorWalls() /// this is gross but dont blame me it runs faster than a for loop which is important
+    if(!position_meeting(x - 16, y - 16, Floor)) instance_create(x - 16, y - 16, Wall);
+    if(!position_meeting(x,      y - 16, Floor)) instance_create(x,      y - 16, Wall);
+    if(!position_meeting(x + 16, y - 16, Floor)) instance_create(x + 16, y - 16, Wall);
+    if(!position_meeting(x + 32, y - 16, Floor)) instance_create(x + 32, y - 16, Wall);
+    if(!position_meeting(x + 32, y,      Floor)) instance_create(x + 32, y,      Wall);
+    if(!position_meeting(x + 32, y + 16, Floor)) instance_create(x + 32, y + 16, Wall);
+    if(!position_meeting(x - 16, y,      Floor)) instance_create(x - 16, y,      Wall);
+    if(!position_meeting(x - 16, y + 16, Floor)) instance_create(x - 16, y + 16, Wall);
+    if(!position_meeting(x - 16, y + 32, Floor)) instance_create(x - 16, y + 32, Wall);
+    if(!position_meeting(x,      y + 32, Floor)) instance_create(x,      y + 32, Wall);
+    if(!position_meeting(x + 16, y + 32, Floor)) instance_create(x + 16, y + 32, Wall);
+    if(!position_meeting(x + 32, y + 32, Floor)) instance_create(x + 32, y + 32, Wall);
+
+#define floor_reveal(_floors, _maxTime)
+    if(instance_is(self, CustomDraw) && script[2] == "floor_reveal"){
+        if(array_length(_floors) > num){
+            var _yOffset = 8;
+            draw_set_color(area_get_background_color(102));
+    
+             // Hiding Floors:
+            with(array_slice(_floors, num + 1, array_length(_floors) - (num + 1))){
+                draw_rectangle(x - 15, y - _yOffset, x + 32 + 15, y + 31 - _yOffset, 0);
+            }
+    
+             // Revealing Floor:
+            if(time-- > 0){
+                var a = (time / _maxTime);
+                _yOffset += 4 * a;
+    
+                draw_set_alpha(a);
+                draw_set_color(merge_color(draw_get_color(), c_white, a));
+                with(_floors[num]){
+                    draw_rectangle(x - 15, y - _yOffset, x + 32 + 15, y + 31 - _yOffset, 0);
+                }
+                draw_set_alpha(1);
+            }
+    
+             // Next Floor:
+            else{
+                num++;
+                time = _maxTime;
+            }
+        }
+        else instance_destroy();
+    }
+    else with(script_bind_draw(floor_reveal, -7, _floors, _maxTime)){
+        time = _maxTime;
+        num = 0;
+    }
+
+#define area_border(_y, _area, _color)
+    if(instance_is(self, CustomDraw) && script[2] == "area_border"){
+         // Wall Fixes:
+        with(instances_matching(Wall, "cat_border_fix", null)){
+            cat_border_fix = true;
+            if(y >= _y){
+                sprite_index = area_get_sprite(_area, sprWall1Bot);
+                topspr = area_get_sprite(_area, sprWall1Top);
+                outspr = area_get_sprite(_area, sprWall1Out);
+            }
+        }
+        with(instances_matching(TopSmall, "cat_border_fix", null)){
+            cat_border_fix = true;
+            if(y >= _y){
+                sprite_index = area_get_sprite(_area, sprWall1Trans);
+            }
+        }
+    
+         // Background:
+        draw_set_color(_color);
+        draw_rectangle(0, _y, 20000, 20000, 0);
+    }
+    else script_bind_draw(area_border, 10000, _y, _area, _color);
+
+#define area_get_sprite(_area, _spr)
+    return mod_script_call("area", _area, "area_sprite", _spr);

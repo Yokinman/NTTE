@@ -3,6 +3,8 @@
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
 
+    global.catLight = [];
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -363,6 +365,74 @@
     draw_primitive_end();
 
 
+#define PizzaDrain_step
+     // Stay Still:
+    if(instance_exists(target)){
+        x = target.x;
+        y = target.y + 16;
+    }
+    else{
+        x = xstart;
+        y = ystart;
+    }
+    speed = 0;
+
+     // Animate:
+    if(sprite_index != spr_idle){
+        if(anim_end) sprite_index = spr_idle;
+    }
+
+     // Death:
+    if(my_health <= 0) instance_destroy();
+
+#define PizzaDrain_destroy
+    sound_play(snd_dead);
+
+     // Corpse:
+    with(instance_create(x, y, Corpse)){
+        sprite_index = other.spr_dead;
+        mask_index = other.mask_index;
+        image_xscale = other.image_xscale;
+        size = other.size;
+    }
+
+    /// Entrance:
+        var _sx = (floor(x / 32) * 32) - 16,
+            _sy = (floor(y / 32) * 32) - 16;
+
+         // Borderize Area:
+        var _borderY = _sy - 248;
+        area_border(_borderY, string(GameCont.area), background_color);
+
+         // Path Gen:
+        var _dir = 90,
+            _path = [];
+
+        instance_create(_sx + 16, _sy + 16, PortalClear);
+        while(_sy >= _borderY - 224){
+            with(instance_create(_sx, _sy, Floor)) array_push(_path, id);
+    
+            if(_sy >= _borderY + 32) _dir = 90;
+            else{
+                _dir += choose(0, 0, 0, -90, 90);
+                if(((_dir + 360) mod 360) == 270) _dir = 90;
+            }
+    
+            _sx += lengthdir_x(32, _dir);
+            _sy += lengthdir_y(32, _dir);
+        }
+
+         // Generate the Realm:
+        area_generate(_sx, _sy, sewers);
+
+         // Finish Path:
+        with(_path){
+            sprite_index = area_get_sprite(sewers, sprFloor1B);
+            scrFloorWalls();
+        }
+        floor_reveal(_path, 2);
+
+
 #define Mortar_step
     enemyAlarms(2);
 
@@ -527,6 +597,52 @@
     }
 
 
+#define step
+     // Reset Lights:
+    with(instances_matching(GenCont, "catlight_reset", null)){
+        catlight_reset = true;
+        global.catLight = [];
+    }
+
+#define draw_dark // Drawing Grays
+    draw_set_color(c_gray);
+
+     // Cat Light:
+    with(global.catLight){
+        offset = random_range(-1, 1);
+
+         // Flicker:
+        if(current_frame_active){
+            if(random(60) < 1) active = false;
+            else active = true;
+        }
+
+        if(active){
+            var b = 2; // Border Size
+            CatLight_draw(x, y, w1 + b, w2 + (3 * (2 * b)), h1 + (2 * b), h2 + b, offset);
+        }
+    }
+
+     // TV:
+    with(TV) draw_circle(x, y, 64 + random(2), 0);
+
+    draw_set_color(c_white);
+
+#define draw_dark_end // Drawing Clear
+    draw_set_color(c_black);
+
+     // Cat Light:
+    with(global.catLight) if(active){
+        CatLight_draw(x, y, w1, w2, h1, h2, offset);
+    }
+
+     // TV:
+    with(TV){
+        var o = orandom(1);
+        CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
+    }
+
+
 
  /// HELPER SCRIPTS /// 
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
@@ -557,5 +673,10 @@
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
+#define area_generate(_x, _y, _area)                                                    return  mod_script_call("mod", "teassets", "area_generate", _x, _y, _area);
+#define scrFloorWalls()                                                                 return  mod_script_call("mod", "teassets", "scrFloorWalls");
+#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call("mod", "teassets", "floor_reveal", _floors, _maxTime);
+#define area_border(_y, _area, _color)                                                  return  mod_script_call("mod", "teassets", "area_border", _y, _area, _color);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call("mod", "teassets", "area_get_sprite", _area, _spr);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #macro sewers "secret"

@@ -42,7 +42,7 @@
     }
 
 #define area_setup
-    goal = 20;
+    goal = 1;
     safespawn = false;
     background_color = bgrColor;
     BackCont.shadcol = shdColor;
@@ -62,11 +62,11 @@
         spr_dead = sprPizzaChestOpen;
     }
 
-     // TV:
-    var _x = 10000 - 48,
+     // Toons Viewer:
+    var _x = 10000,
         _y = 10000;
 
-    with(instance_create(_x, _y, TV)){
+    with(instance_create(_x - 48, _y, TV)){
         spr_hurt = spr.TVHurt;
         spr_dead = spr.TVHurt;
         maxhealth = 15;
@@ -74,7 +74,6 @@
     }
 
      // Turtles:
-    _y += 48;
     var c = [1, 2, 4],
         a = random(360);
 
@@ -82,20 +81,20 @@
         var _dis = 20 + random(4),
             _dir = a + (i * (360 / array_length(c))) + orandom(10);
 
-        with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), Turtle)){
+        with(instance_create(_x - 48 + lengthdir_x(_dis, _dir), _y + 48 + lengthdir_y(_dis, _dir), Turtle)){
             snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
             scrRight(_dir + 180);
         }
     }
-    with(instance_create(_x + 96, _y - random(16), Turtle)){
+    with(instance_create(_x + 48, _y + random_range(32, 48), Turtle)){
         snd_dead = sndTurtleDead3;
         right = 1;
     }
-    with(instance_create(_x - 32, _y - 32, Rat)) right = 1;
+    with(instance_create(_x - 80, _y + 16, Rat)) right = 1;
     with(Turtle) alarm1 += 10;
 
      // Door:
-    obj_create(_x, _y, "PizzaDoor")
+    obj_create(_x + 56, _y - 48, "PizzaDrain");
 
 #define area_step
     script_bind_end_step(end_step, 0);
