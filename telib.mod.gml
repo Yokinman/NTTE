@@ -998,6 +998,8 @@
                     arc_inst = noone;
                     arcing = 0;
                     wave = random(100);
+                    gunangle = 0;
+                    ammo = 0;
                     
                      // Alarms:
                     alarm0 = 30;
@@ -1008,14 +1010,14 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    c = irandom(2);
+                    var _eliteChance = 0;
+                    c = (random(100) < _eliteChance ? 3 : irandom(2));
                     spr_charged = spr.JellyIdle[c];
-                    spr_uncharged = spr.JellyUncharged;
                     spr_idle = spr_charged;
                     spr_walk = spr_charged;
                     spr_hurt = spr.JellyHurt[c];
                     spr_dead = spr.JellyDead[c];
-                    spr_fire = spr.JellyFire;
+                    spr_fire = (c == 3 ? spr.JellyEliteFire : spr.JellyFire);
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
@@ -1028,9 +1030,9 @@
                     snd_dead = sndEnemyDie;
                     
                      // Vars:
-                    maxhealth = 52;
+                    maxhealth = 52 // (c == 3 ? 72 : 52);
                     my_health = maxhealth;
-                    raddrop = 16;
+                    raddrop = 16 // (c == 3 ? 38 : 16);
                     size = 2;
                     walkspd = 1;
                     maxspd = 2.6;
@@ -1508,6 +1510,40 @@
         			size = 1;
         		}
         	break;
+        	
+        	case "Spiderling":
+        	    o = instance_create(_x, _y, CustomEnemy);
+        	    with(o){
+                     // Visual:
+        	        spr_idle = spr.SpiderlingIdle;
+        			spr_walk = spr.SpiderlingWalk;
+        			spr_hurt = spr.SpiderlingHurt;
+        			spr_dead = spr.SpiderlingDead;
+        			spr_shadow = shd16;
+        			spr_shadow_y = 2;
+        			mask_index = mskMaggot;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+        			depth = -4;
+    
+                     // Sound:
+        			snd_hurt = sndSpiderHurt;
+        			snd_dead = sndSpiderDead;
+    
+        			 // Vars:
+        			maxhealth = 4;
+        			raddrop = 2;
+        			size = 1;
+        			walk = 0;
+        			walkspd = 0.8;
+        			maxspd = 3;
+        			direction = irandom(359);
+    
+                     // Alarms:
+        			alarm0 = 20 + irandom(20);
+        	    }
+        	    break;
+        	    
     	//#endregion
 
     	default:
@@ -1516,7 +1552,7 @@
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
     		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
-    		        "Mortar", "MortarPlasma", "NewCocoon"
+    		        "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
 
@@ -5391,7 +5427,7 @@
                 sound_play_pitch(sndLightningHit, 2);
 
                  // Color:
-                var c = arc_inst.c;
+                var c = min(arc_inst.c,2);
                 spr_idle = spr.EelIdle[c];
                 spr_walk = spr_idle;
                 spr_hurt = spr.EelHurt[c];
@@ -5432,12 +5468,43 @@
 #define Eel_alrm0
     alarm0 = 30;
     target = instance_nearest(x,y,Player);
-     // When you walking:
-    if target_is_visible(){
-        scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y)+orandom(20));
+    if ammo{
+        alarm0 = 3;
+        ammo--;
+        
+        var _dist = irandom(256);
+        repeat(2)
+            with instance_create(x + lengthdir_x(_dist, gunangle), y + lengthdir_y(_dist, gunangle), LaserCharge){
+                alarm0 = 6;
+                motion_set(irandom(359), 2);
+                if collision_line(x, y, other.x, other.y, Wall, 0, 0) instance_destroy();
+            }
+        
+         // Shoot:
+        if ammo <= 0{
+            sound_play(sndLaser);
+            with scrEnemyShoot(EnemyLaser, gunangle + orandom(15), 0){
+                    alarm0 = 1;
+                }
+        }
     }
-    else
-        scrWalk(irandom_range(17,30), direction+orandom(30));
+    else{
+         // Begin shoot laser
+        if instance_exists(arc_inst) && arc_inst.c == 3 && random(5) < 1 && target_is_visible() && target_in_distance(0,96){
+            alarm0 = 3;
+            ammo = 10;
+            gunangle = point_direction(x, y, target.x, target.y);
+            sound_play(sndLaserCrystalCharge);
+        }
+        else{
+             // When you walking:
+            if target_is_visible(){
+                scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y)+orandom(20));
+            }
+            else
+                scrWalk(irandom_range(17,30), direction+orandom(30));
+        }
+    }
     
 #define Eel_draw
     if pitDepth == 0

@@ -585,17 +585,22 @@
 #define NewCocoon_death
      // Hatch 1-3 Spiders:
     repeat(irandom_range(1, 3)) {
-    	with(instance_create(x, y, Spider)) {
-    		maxhealth = round(maxhealth / 4.5);
-    		my_health = maxhealth;
-    		spr_shadow = shd16;
-    		corpse = 0;
-    		
-    		image_xscale = 0.6;
-    		image_yscale = image_xscale;
-    	}
+    	obj_create(x,y,"Spiderling");
     }
 
+#define Spiderling_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd,maxspd);
+    
+#define Spiderling_alrm0
+    alarm0 = 10 + irandom(10);
+    target = instance_nearest(x,y,Player);
+    
+    if target_is_visible(){
+        scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
+    }
+    else scrWalk(12, direction + orandom(20));
 
 #define step
      // Reset Lights:
@@ -603,7 +608,6 @@
         catlight_reset = true;
         global.catLight = [];
     }
-
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 

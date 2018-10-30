@@ -223,21 +223,24 @@
                 sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",8,16,16),
                 sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
 
-             // Jellyfish (0 = blue, 1 = purple, 2 = green):
-            JellyFire       = sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",      1, 24, 24);
-            JellyUncharged  = sprite_add("sprites/enemies/Jellyfish/sprJellyfishUncharged.png", 8, 24, 24);
+             // Jellyfish (0 = blue, 1 = purple, 2 = green, 3 = elite):
+            JellyFire =         sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",        6, 24, 24);
+            JellyEliteFire =    sprite_add("sprites/enemies/Jellyfish/sprJellyfishEliteFire.png",   6, 24, 24);
             JellyIdle = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueIdle.png",    8, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleIdle.png",  8, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",   8, 24, 24)];
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenIdle.png",   8, 24, 24)
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishEliteIdle.png",   8, 24, 24)];
             JellyHurt = [
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueHurt.png",    3, 24, 24),
                 sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleHurt.png",  3, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",   3, 24, 24)];
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenHurt.png",   3, 24, 24)
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishEliteHurt.png",   3, 24, 24)];
             JellyDead = [
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",   13, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png", 13, 24, 24),
-                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",  13, 24, 24)];
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishBlueDead.png",   10, 24, 24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishPurpleDead.png", 10, 24, 24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishGreenDead.png",  10, 24, 24),
+                sprite_add("sprites/enemies/Jellyfish/sprJellyfishEliteDead.png",  10, 24, 24)];
 
              // Kelp:
             KelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png", 6, 16, 22);
@@ -324,6 +327,11 @@
         	MortarPlasma  = sprite_add("sprites/enemies/Mortar/sprMortarPlasma.png",  1,  4,  4);
         	MortarImpact  = sprite_add("sprites/enemies/Mortar/sprMortarImpact.png",  7, 16, 16);
         	MortarTrail   = sprite_add("sprites/enemies/Mortar/sprMortarTrail.png",   3,  4,  4);
+        	 // Spiderling:
+        	SpiderlingIdle = sprite_add("sprites/enemies/Spiderling/sprSpiderlingIdle.png", 4, 8, 8);
+        	SpiderlingWalk = sprite_add("sprites/enemies/Spiderling/sprSpiderlingWalk.png", 4, 8, 8);
+        	SpiderlingHurt = sprite_add("sprites/enemies/Spiderling/sprSpiderlingHurt.png", 3, 8, 8);
+        	SpiderlingDead = sprite_add("sprites/enemies/Spiderling/sprSpiderlingDead.png", 7, 8, 8);
         //#endregion
     }
 
