@@ -411,7 +411,7 @@
         	obj_create(x, y, "NewCocoon");
         	instance_delete(id);
         }
-        
+
          // Appropriate Corpses:
         with(instances_matching(instances_matching_le(Spider, "my_health", 0), "corpse", 0)){
         	with(scrCorpse(direction, speed)){

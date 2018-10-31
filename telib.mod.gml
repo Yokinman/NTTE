@@ -1199,7 +1199,7 @@
                     
                      // Sounds:
                     snd_hurt = sndHitMetal;
-                    snd_dead = sndStreetLightBreak;
+                    snd_dead = sndSodaMachineBreak;
                     
                      // Vars:
                     maxhealth = 20;
@@ -1315,13 +1315,22 @@
                     image_speed = 0;
                     
                      // Vars:
-                    depth = 0;
+                    depth = 7;
                     fullofrats = true;
                     cat = noone;
-                }
-                with(Floor) if place_meeting(x,y,o){
-                    sprite_index = sprPizzaEntrance;
-                    image_index = 1;
+
+                    if(place_meeting(x, y, CustomObject)){
+                        with(instances_named(CustomObject, "CatholeBig")){
+                            if(place_meeting(x, y, other)) with(other){
+                                instance_destroy();
+                                exit;
+                            }
+                        }
+                    }
+                    with(instance_nearest(x, y, Floor)) if(place_meeting(x, y, other)){
+                        sprite_index = sprPizzaEntrance;
+                        image_index = 1;
+                    }
                 }
                 break;
                 
@@ -1438,6 +1447,8 @@
                 o = instance_create(_x, _y, Feather);
                 with(o){
                     sprite_index = spr.Paper;
+                    image_index = random(image_number);
+                    image_speed = 0;
                     friction = 0.2;
                 }
                 break;
