@@ -85,7 +85,7 @@
 #macro snd global.snd
 #macro mus global.mus
 
-#macro RoomDebug false
+#macro RoomDebug true
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
@@ -215,6 +215,7 @@
              // Starting Room:
             if(!_strt){
                 room_create(-1, -1, "Start");
+                _done = false;
             }
 
              // Boss Room:
@@ -231,7 +232,7 @@
                 }
 
                 with(_furthest){
-                    room_create(x, y, "Boss");
+                    room_create(x + sign(x), y + sign(y), "Boss");
                 }
 
                 _done = false;
@@ -321,9 +322,11 @@
         room_pop();
 
     	 // Cat Spawners:
-        with(floors) if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
-            if(random(10) < 1){
-                obj_create(x + 16, y + 16, "Cathole");
+        with(floors) if(instance_exists(self)){
+            if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
+                if(random(10) < 1){
+                    obj_create(x + 16, y + 16, "Cathole");
+                }
             }
         }
     }
