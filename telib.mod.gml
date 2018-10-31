@@ -128,23 +128,6 @@
                 }
             break;
 
-        case "SmallBubbleExplosion":
-            o = instance_create(_x, _y, SmallExplosion);
-            with(o){
-                sprite_index = spr.BubbleExplode;
-                mask_index = mskExplosion;
-                image_xscale = 0.5; // Bad!
-                image_yscale = 0.5; // Lazy!
-                hitid = [sprite_index,"BUBBLE EXPLO"];
-                damage = 3;
-                force = 1;
-                alarm0 = -1; // No scorchmark
-            }
-             // Effects:
-            repeat(10) instance_create(_x, _y, Bubble);
-            sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
-            break;
-
         case "CoastBossBecome":
             o = instance_create(_x, _y, CustomProp);
             with(o){
@@ -319,6 +302,23 @@
                 
                 alarm0 = 60;
             }
+            break;
+            
+        case "SmallBubbleExplosion":
+            o = instance_create(_x, _y, SmallExplosion);
+            with(o){
+                sprite_index = spr.BubbleExplode;
+                mask_index = mskExplosion;
+                image_xscale = 0.5; // Bad!
+                image_yscale = 0.5; // Lazy!
+                hitid = [sprite_index,"BUBBLE EXPLO"];
+                damage = 3;
+                force = 1;
+                alarm0 = -1; // No scorchmark
+            }
+             // Effects:
+            repeat(10) instance_create(_x, _y, Bubble);
+            sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
             break;
 
         //#region COAST
@@ -1731,8 +1731,11 @@
     sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
 
      // Break:
-    broken = true;
-    instance_destroy();
+    var i = nearest_instance(x, y, instances_matching(CustomProp,"name","CoastBossBecome"));
+    if !(instance_exists(i) && point_distance(x, y, i.x, i.y) <= 32){
+        broken = true;
+        instance_destroy();
+    }
 
 #define Bone_wall
      // Bounce Off Wall:
