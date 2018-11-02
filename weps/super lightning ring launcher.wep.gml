@@ -1,41 +1,48 @@
 #define init
-    global.sprLightningRingLauncher = sprite_add_weapon("../sprites/weps/sprLightningRingLauncher.png", 6, 3);
+    global.sprSuperLightningRingLauncher = sprite_add_weapon("../sprites/weps/sprSuperLightningRingLauncher.png", 7, 4);
 
-#define weapon_name return "LIGHTNING RING LAUNCHER";
-#define weapon_text return "JELLY TECHNOLOGY";
+#define weapon_name return "SUPER LIGHTNING RING LAUNCHER";
+#define weapon_text return "THEY POPULATE QUCKLY";
 #define weapon_type return 5;   // Energy
-#define weapon_cost return 3;   // 3 Ammo
-#define weapon_load return 37;  // 1.23 Seconds
+#define weapon_cost return 10;  // 10 Ammo
+#define weapon_load return 80;  // 2.67 Seconds
 #define weapon_area return -1;  // Doesn't spawn normally
 #define weapon_swap return sndSwapEnergy;
-#define weapon_sprt return global.sprLightningRingLauncher;
+#define weapon_sprt return global.sprSuperLightningRingLauncher;
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #define weapon_fire
-o = instance_create(x, y, CustomProjectile);
-with(o){
-     // Visual:
-    sprite_index = sprLightning;
-    image_speed = 0.4;
-    depth = -3;
+var _ang = -20
+var _i = _ang * -1
+repeat(5)
+{
+  o = instance_create(x, y, CustomProjectile);
+  with(o){
+       // Visual:
+      sprite_index = sprLightning;
+      image_speed = 0.4;
+      depth = -3;
 
-     // Vars:
-    team = other.team;
-    creator = other;
-    mask_index = mskWepPickup;
-    rotspeed = random_range(10, 20) * choose(-1, 1);
-    rotation = 0;
-    radius = 10;
-    charge = 1;
-    ammo = 12+skill_get(mut_laser_brain)*4;
-    typ = 0;
-    direction = other.gunangle + random_range(-6,6) * other.accuracy;
-    image_xscale = 0;
-    image_yscale = 0;
-    on_step = LightningDisc_step
-    on_draw = LightningDisc_draw
-    on_wall = LightningDisc_wall
-    on_hit  = LightningDisc_hit
+       // Vars:
+      team = other.team;
+      creator = other;
+      mask_index = mskWepPickup;
+      rotspeed = random_range(10, 20) * choose(-1, 1);
+      rotation = 0;
+      radius = 10;
+      charge = 1;
+      ammo = 10+skill_get(mut_laser_brain)*4;
+      typ = 0;
+      i = _i
+      direction = other.gunangle + i + random_range(-3,3) * other.accuracy;
+      image_xscale = 0;
+      image_yscale = 0;
+      on_step = LightningDisc_step
+      on_draw = LightningDisc_draw
+      on_wall = LightningDisc_wall
+      on_hit  = LightningDisc_hit
+  }
+  _i += -20/2.5
 }
 
 #define LightningDisc_step
@@ -43,10 +50,10 @@ rotation += rotspeed;
 
  // Charge Up:
 if(image_xscale < charge){
-    image_xscale += 0.05 * current_time_scale;
+    image_xscale += 0.03 * current_time_scale;
     image_yscale = image_xscale;
     if(instance_exists(creator)){
-        with creator weapon_post(other.image_xscale*3,other.image_xscale*-10,1)
+        with creator weapon_post(other.image_xscale*6,other.image_xscale*-3,1)
         x = creator.x + lengthdir_x(16,creator.gunangle);
         y = creator.y + lengthdir_y(16,creator.gunangle);
         if place_meeting(x,y,Wall){x = creator.x;y = creator.y}
@@ -60,17 +67,23 @@ if(image_xscale < charge){
 }
 else if(charge > 0){
     charge = 0;
-    with creator weapon_post(8,0,60)
-    motion_add(creator.gunangle + random_range(-6,6) * creator.accuracy,8)
+    with creator
+    {
+      weapon_post(12,0,30)
+      motion_add(gunangle-180,4)
+    }
+    motion_add(creator.gunangle + i + random_range(-3,3) * creator.accuracy,8)
     var _p = random_range(.8,1.2)
-    sound_play_pitch(sndLightningCannonEnd, 2 * _p);    
+    sound_play_pitch(sndLightningCannonEnd, 2 * _p);
     if skill_get(mut_laser_brain) = true
     {
-      sound_play_pitch(sndLightningRifleUpg, 1.4 * _p);
+      sound_play_pitch(sndLightningShotgunUpg, 1.2 * _p);
+      sound_play_pitch(sndLightningCannonUpg, 1.6 * _p);
     }
     else
     {
-      sound_play_pitch(sndLightningRifle, .8 * _p);
+      sound_play_pitch(sndLightningShotgun, 1.2 * _p);
+      sound_play_pitch(sndLightningCannon, 1.6 * _p);
     }
     instance_create(x, y, GunWarrantEmpty);
 }
