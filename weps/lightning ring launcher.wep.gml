@@ -98,7 +98,9 @@ if(current_frame_active){
 
  // Shrink:
 if(charge <= 0){
-    var s = 1/160 * current_time_scale /+skill_get(mut_laser_brain)*.7;
+    var q = .9
+    if skill_get(mut_laser_brain) = 1 q = .65
+    var s = 1/160 * current_time_scale /.7;
     image_xscale -= s;
     image_yscale -= s;
     if(image_xscale <= 0 || image_yscale <= 0){
