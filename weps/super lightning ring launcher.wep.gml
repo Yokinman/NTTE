@@ -12,7 +12,7 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #define weapon_fire
-var _ang = -20
+var _ang = -40
 var _i = _ang * -1
 repeat(5)
 {
@@ -34,7 +34,7 @@ repeat(5)
       ammo = 10+skill_get(mut_laser_brain)*4;
       typ = 0;
       i = _i
-      direction = other.gunangle + i + random_range(-3,3) * other.accuracy;
+      direction = other.gunangle + i + random_range(-4  ,4) * other.accuracy;
       image_xscale = 0;
       image_yscale = 0;
       on_step = LightningDisc_step
@@ -42,7 +42,7 @@ repeat(5)
       on_wall = LightningDisc_wall
       on_hit  = LightningDisc_hit
   }
-  _i += -20/2.5
+  _i += _ang/2
 }
 
 #define LightningDisc_step
