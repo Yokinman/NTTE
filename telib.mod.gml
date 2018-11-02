@@ -146,7 +146,6 @@
                  // Vars:
                 mask_index = mskScorpion;
                 maxhealth = 50 + (100 * GameCont.loops);
-                my_health = maxhealth;
                 size = 2;
                 part = 0;
             }
@@ -347,7 +346,6 @@
                      // Vars:
                     size = 2;
                     maxhealth = 20;
-                    my_health = maxhealth;
                     my_floor = instance_nearest(x - 16, y - 16, Floor);
                 }
                 break;
@@ -378,7 +376,6 @@
         	        mask_index = spr_foam;
         	        friction = 0.4;
         	        maxhealth = 999999999;
-        	        my_health = maxhealth;
         	        size = 8;
         	        team = 1;
         	        nowade = true;
@@ -584,7 +581,6 @@
                      // Vars:
                     mask_index = mskStreetLight;
                     maxhealth = 30;
-                    my_health = maxhealth;
                     size = 1;
                     my_enemy = noone;
                     my_enemy_mask = mskNone;
@@ -594,16 +590,10 @@
                         my_enemy = obj_create(x, y, "Diver");
                         with(my_enemy) depth = -3;
 
-                         // Visual:
                         spr_idle = spr.PalmFortIdle;
                         spr_hurt = spr.PalmFortHurt;
-
-                         // Sound:
                         snd_dead = sndGeneratorBreak;
-
-                         // Vars:
                         maxhealth = 40;
-                        my_health = maxhealth;
                     }
                 }
                 break;
@@ -630,7 +620,6 @@
     
         			 // Vars:
         			maxhealth = 50;
-        			my_health = maxhealth;
         			raddrop = 20;
         			size = 2;
         			walk = 0;
@@ -786,7 +775,6 @@
                     mask_index = mskNone;
                     friction = 0;
                     maxhealth = 10;
-                    my_health = maxhealth;
                     creator = noone;
                     canfly = true;
                     size = 2;
@@ -1065,7 +1053,6 @@
                     
                      // Vars:
                     maxhealth = 52 // (c == 3 ? 72 : 52);
-                    my_health = maxhealth;
                     raddrop = 16 // (c == 3 ? 38 : 16);
                     size = 2;
                     walkspd = 1;
@@ -1116,7 +1103,6 @@
                      // Vars:
                     canfly = true;
                     maxhealth = scrBossHP(450);
-                    my_health = maxhealth;
                     
                     target = noone;
                     walk = 0;
@@ -1145,7 +1131,6 @@
                      // Vars:
                     depth = -2;
                     maxhealth = 12;
-                    my_health = maxhealth;
                 }
                 break;
 
@@ -1171,7 +1156,6 @@
                     
                      // Vars:
                     maxhealth = 12;
-                    my_health = maxhealth;
                     raddrop = 3;
                     size = 1;
                     walk = 0;
@@ -1203,7 +1187,6 @@
                     
                      // Vars:
                     maxhealth = 20;
-                    my_health = maxhealth;
                     size = 1;
                 }
                 break;
@@ -1216,7 +1199,7 @@
         			spr_walk = spr.CatWalk;
         			spr_hurt = spr.CatHurt;
         			spr_dead = spr.CatDead;
-        			spr_weap = sprToxicThrower;
+        			spr_weap = spr.CatWeap;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
@@ -1229,7 +1212,6 @@
     
         			 // Vars:
         			maxhealth = 18;
-        			my_health = maxhealth;
         			raddrop = 6;
         			size = 1;
         			walk = 0;
@@ -1274,7 +1256,6 @@
     
         			 // Vars:
         			maxhealth = 80 * (1 + ((1/3) * GameCont.loops));
-        			my_health = maxhealth;
         			raddrop = 6;
         			size = 1;
         			walk = 0;
@@ -1288,7 +1269,32 @@
         			alarm0 = 40 + irandom(20);
         		}
         	    break;
-        	
+
+        	case "CatDoor":
+        	    o = instance_create(_x, _y, CustomProp);
+        	    with(o){
+        	         // Visual:
+        	        spr_idle = spr.CatDoorIdle[0];
+        	        spr_hurt = spr.CatDoorHurt[0];
+        	        spr_shadow = mskNone;
+        	        image_xscale = 1;
+        	        image_speed = 0;
+        	        depth = -3;
+
+                     // Sound:
+                    snd_hurt = sndHitMetal;
+                    snd_dead = sndGeneratorBreak;
+
+        	         // Vars:
+        	        mask_index = msk.CatDoor;
+        	        maxhealth = 15;
+        	        size = 2;
+        	        side = 0;
+        	        my_wall = noone;
+        	        my_invisiwall = noone;
+        	    }
+        	    break;
+
         	case "CatGrenade":
         	    o = instance_create(_x, _y, CustomProjectile);
         	    with(o){
@@ -1305,7 +1311,7 @@
         	        right = choose(-1, 1);
         	    }
         	    break;
-        	
+
             case "Cathole":
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
@@ -1333,7 +1339,7 @@
                     }
                 }
                 break;
-                
+
             case "CatholeBig":
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
@@ -1345,7 +1351,7 @@
                     depth = 8;
                 }
                 break;
-                
+
             case "CatLight":
                 var o = {
                     x : _x,
@@ -1360,7 +1366,7 @@
 
                 array_push(mod_variable_get("mod", "telib2", "catLight"), o);
                 return o;
-                
+
             case "ChairFront":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -1376,28 +1382,17 @@
                     
                      // Vars:
                     maxhealth = 4;
-                    my_health = maxhealth;
                     size = 1;
                 }
                 break;
-                
+
             case "ChairSide":
-                o = instance_create(_x, _y, CustomProp);
+                o = obj_create(_x, _y, "ChairFront");
                 with(o){
                      // Visual:
                     spr_idle = spr.ChairSideIdle;
                     spr_hurt = spr.ChairSideHurt;
-                    spr_dead = spr.ChairDead;
                     sprite_index = spr_idle;
-                    
-                     // Sounds:
-                    snd_hurt = sndHitMetal;
-                    snd_dead = sndStreetLightBreak;
-                    
-                     // Vars:
-                    maxhealth = 4;
-                    my_health = maxhealth;
-                    size = 1;
                 }
                 break;
 
@@ -1416,7 +1411,6 @@
                     
                      // Vars:
                     maxhealth = 20;
-                    my_health = maxhealth;
                     size = 3;
                 }
                 break;
@@ -1434,11 +1428,10 @@
                     
                      // Sounds:
                     snd_hurt = sndHitMetal;
-                    snd_dead = sndStreetLightBreak;
+                    snd_dead = sndHydrantBreak;
                     
                      // Vars:
                     maxhealth = 8;
-                    my_health = maxhealth;
                     size = 2;
                 }
                 break;
@@ -1473,7 +1466,6 @@
                      // Vars:
                     mask_index = mskBanditBoss;
                     maxhealth = 40;
-                    my_health = maxhealth;
                     team = 0;
                     size = 3;
                     target = instance_nearest(x, y, Wall);
@@ -1611,12 +1603,12 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
-    		        "Cabinet", "Cat", "CatBoss", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
+    		        "Cabinet", "Cat", "CatBoss", "CatDoor", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
 
-     /// Auto Assign Name + Scripts:
+     /// Auto Assign Things:
     var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10", "alrm11"];
     with(o){
         if("name" not in self) name = string(obj_name);
@@ -1641,10 +1633,25 @@
                 if(!m) switch(v){
                     case "on_hurt":
                         on_hurt = enemyHurt; break;
+
                     case "on_death":
-                        on_death = scrDefaultDrop; break;
+                        if(instance_is(self, CustomEnemy)){
+                            on_death = scrDefaultDrop;
+                        }
+                        break;
+
+                    case "on_draw":
+                        if(instance_is(self, CustomEnemy)){
+                            on_draw = draw_self_enemy;
+                        }
+                        break;
                 }
             }
+        }
+
+         // Auto-fill HP:
+        if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
+            if(my_health == 1) my_health = maxhealth;
         }
     }
     return o;
@@ -2864,7 +2871,7 @@
 
 #define Creature_draw
     draw_self_enemy();
-    
+
 #define Creature_alrm0
     alarm0 = 30;
     if instance_exists(Player){
@@ -5162,9 +5169,6 @@
         else scrWalk(10, random(360));
     }
 
-#define TrafficCrab_draw
-    draw_self_enemy();
-
 #define TrafficCrab_death
     pickup_drop(10, 10);
 
@@ -5337,9 +5341,6 @@
     }
 
     scrRight(direction);
-
-#define Hammerhead_draw
-    draw_self_enemy();
 
 
 #define Puffer_step
@@ -5681,10 +5682,8 @@
     
 #define Jelly_death
     pickup_drop(70, 2);
-    
-#define Jelly_draw
-    draw_self_enemy();
-    
+
+
 #define Pitsquid_step
     for (var i = 0; i < eyenum; i++){
         var _x = Pitsquid_eyepos(i,"x"),
@@ -5813,8 +5812,6 @@
         scrRight(direction);
     }
     
-#define YetiCrab_draw
-    draw_self_enemy();
 
 
 

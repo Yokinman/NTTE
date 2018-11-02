@@ -242,6 +242,48 @@
     pickup_drop(60, 0);
 
 
+#define CatDoor_step
+     // Side:
+    if(image_angle != (side * 90)){
+        spr_idle = spr.CatDoorIdle[side];
+        spr_hurt = spr.CatDoorHurt[side];
+        image_angle = (side * 90);
+    }
+
+     // :
+    var s = current_time_scale;
+    if(distance_to_object(hitme) > 4) s *= -0.5;
+    else{
+        with(nearest_instance(x, y, instances_matching_ne(hitme, "id", id))) s *= min(speed / 4, 1);
+        if(image_index <= 0){
+            sound_play_pitchvol(sndMeleeFlip, 1.2 + orandom(0.2), 0.8);
+        }
+    }
+
+    image_index = clamp(image_index + s, 0, image_number - 1);
+
+     // Temporary
+    if(sprite_index == spr_hurt) sprite_index = spr_idle;
+
+     // Block Line of Sight:
+    if(!instance_exists(my_wall)) my_wall = instance_create(0, 0, Wall);
+    with(my_wall){
+        x = other.x;
+        y = other.y;
+        image_angle = other.image_angle;
+        if(other.image_index < 1) sprite_index = other.mask_index;
+        else sprite_index = -1;
+        image_index = image_number - 1;
+        mask_index = -1;
+        visible = 0;
+        topspr = -1;
+        outspr = -1;
+    }
+
+#define CatDoor_death
+    instance_delete(my_wall);
+
+
 #define CatGrenade_step
      // Rise & Fall:
     z_engine();
