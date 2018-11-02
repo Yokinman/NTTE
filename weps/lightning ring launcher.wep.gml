@@ -63,7 +63,7 @@ else if(charge > 0){
     with creator weapon_post(8,0,60)
     motion_add(creator.gunangle + random_range(-6,6) * creator.accuracy,8)
     var _p = random_range(.8,1.2)
-    sound_play_pitch(sndLightningCannonEnd, 2 * _p);    
+    sound_play_pitch(sndLightningCannonEnd, 2 * _p);
     if skill_get(mut_laser_brain) = true
     {
       sound_play_pitch(sndLightningRifleUpg, 1.4 * _p);
@@ -101,7 +101,7 @@ if(current_frame_active){
 if(charge <= 0){
     var q = .8
     if skill_get(mut_laser_brain) = 1 q = .5
-    var s = 1/160 * current_time_scale /.7;
+    var s = 1/160 * current_time_scale / q;
     image_xscale -= s;
     image_yscale -= s;
     if(image_xscale <= 0 || image_yscale <= 0){
