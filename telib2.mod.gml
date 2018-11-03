@@ -318,10 +318,12 @@
     sound_play_hit(snd_hurt, 0.3);	// Sound
 
      // Push Open Force:
-    var _sx = lengthdir_x(other.hspeed, image_angle),
-        _sy = lengthdir_y(other.vspeed, image_angle);
-
-    openang += (_sx + _sy);
+    if(instance_exists(other)){
+        var _sx = lengthdir_x(other.hspeed, image_angle),
+            _sy = lengthdir_y(other.vspeed, image_angle);
+    
+        openang += (_sx + _sy);
+    }
 
 #define CatDoor_draw
     var h = (nexthurt > current_frame + 3);
