@@ -65,7 +65,7 @@
     if(ammo > 0) {
         repeat(2)
         with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)) {
-            friction = 0.1;
+            friction = 0.12;
         }
         gunangle += 12;
         ammo--;

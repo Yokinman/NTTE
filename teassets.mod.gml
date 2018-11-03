@@ -309,37 +309,37 @@
              // Furniture:
                  // Rug:
                 Rug = [
-                    sprite_add("sprites/areas/Sewers/Props/sprRugBot.png", 9, 0, 0),
-                    sprite_add("sprites/areas/Sewers/Props/sprRugTop.png", 9, 0, 0)];
+                    sprite_add("sprites/areas/Lair/Props/sprRugBot.png", 9, 0, 0),
+                    sprite_add("sprites/areas/Lair/Props/sprRugTop.png", 9, 0, 0)];
 
                  // Table:
-                TableIdle = sprite_add("sprites/areas/Sewers/Props/sprTableIdle.png", 1, 16, 16);
-                TableHurt = sprite_add("sprites/areas/Sewers/Props/sprTableHurt.png", 3, 16, 16);
-                TableDead = sprite_add("sprites/areas/Sewers/Props/sprTableDead.png", 3, 16, 16);
+                TableIdle = sprite_add("sprites/areas/Lair/Props/sprTableIdle.png", 1, 16, 16);
+                TableHurt = sprite_add("sprites/areas/Lair/Props/sprTableHurt.png", 3, 16, 16);
+                TableDead = sprite_add("sprites/areas/Lair/Props/sprTableDead.png", 3, 16, 16);
 
                  // Chairs:
-                    ChairDead       = sprite_add("sprites/areas/Sewers/Props/sprChairDead.png",         3, 12, 12);
+                    ChairDead       = sprite_add("sprites/areas/Lair/Props/sprChairDead.png",         3, 12, 12);
 
                      // Side:
-                    ChairSideIdle   = sprite_add("sprites/areas/Sewers/Props/sprChairSideIdle.png",     1, 12, 12);
-                    ChairSideHurt   = sprite_add("sprites/areas/Sewers/Props/sprChairSideHurt.png",     3, 12, 12);
+                    ChairSideIdle   = sprite_add("sprites/areas/Lair/Props/sprChairSideIdle.png",     1, 12, 12);
+                    ChairSideHurt   = sprite_add("sprites/areas/Lair/Props/sprChairSideHurt.png",     3, 12, 12);
 
                      // Front:
-                    ChairFrontIdle  = sprite_add("sprites/areas/Sewers/Props/sprChairFrontIdle.png",    1, 12, 12);
-                    ChairFrontHurt  = sprite_add("sprites/areas/Sewers/Props/sprChairFrontHurt.png",    3, 12, 12);
+                    ChairFrontIdle  = sprite_add("sprites/areas/Lair/Props/sprChairFrontIdle.png",    1, 12, 12);
+                    ChairFrontHurt  = sprite_add("sprites/areas/Lair/Props/sprChairFrontHurt.png",    3, 12, 12);
 
                  // Cabinet:
-                CabinetIdle = sprite_add("sprites/areas/Sewers/Props/sprCabinetIdle.png", 1, 12, 12);
-                CabinetHurt = sprite_add("sprites/areas/Sewers/Props/sprCabinetHurt.png", 3, 12, 12);
-                CabinetDead = sprite_add("sprites/areas/Sewers/Props/sprCabinetDead.png", 3, 12, 12);
+                CabinetIdle = sprite_add("sprites/areas/Lair/Props/sprCabinetIdle.png", 1, 12, 12);
+                CabinetHurt = sprite_add("sprites/areas/Lair/Props/sprCabinetHurt.png", 3, 12, 12);
+                CabinetDead = sprite_add("sprites/areas/Lair/Props/sprCabinetDead.png", 3, 12, 12);
 
                  // Couch:
-                CouchIdle = sprite_add("sprites/areas/Sewers/Props/sprCouchIdle.png", 1, 32, 32);
-                CouchHurt = sprite_add("sprites/areas/Sewers/Props/sprCouchHurt.png", 3, 32, 32);
-                CouchDead = sprite_add("sprites/areas/Sewers/Props/sprCouchDead.png", 3, 32, 32);
+                CouchIdle = sprite_add("sprites/areas/Lair/Props/sprCouchIdle.png", 1, 32, 32);
+                CouchHurt = sprite_add("sprites/areas/Lair/Props/sprCouchHurt.png", 3, 32, 32);
+                CouchDead = sprite_add("sprites/areas/Lair/Props/sprCouchDead.png", 3, 32, 32);
 
              // FX:
-            Paper = sprite_add("sprites/areas/Sewers/Props/sprPaper.png", 3, 5, 6);
+            Paper = sprite_add("sprites/areas/Lair/Props/sprPaper.png", 3, 5, 6);
         //#endregion
 
         //#region CRYSTAL CAVES

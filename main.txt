@@ -16,3 +16,4 @@
 /loadwep weps/bubble rifle
 /loadwep weps/bubble shotgun
 /loadwep weps/bubble minigun
+/loadwep weps/lightning ring launcher

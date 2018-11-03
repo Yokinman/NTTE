@@ -2,6 +2,22 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    
+     // Sprites:
+    with(spr){
+         // Floors:
+        FloorLair =         sprite_add("../sprites/areas/Lair/sprFloorLair.png",           8, 0, 0);
+        FloorLairB =        sprite_add("../sprites/areas/Lair/sprFloorLairB.png",          2, 0, 0);
+        FloorLairExplo =    sprite_add("../sprites/areas/Lair/sprFloorLairExplo.png",      4, 1, 1);
+         // Walls:
+        WallLairBot =       sprite_add("../sprites/areas/Lair/sprWallLairBot.png",         4, 0, 0);
+        WallLairOut =       sprite_add("../sprites/areas/Lair/sprWallLairOut.png",         5, sprite_get_xoffset(sprWall2Out), sprite_get_yoffset(sprWall2Out));
+        WallLairTop =       sprite_add("../sprites/areas/Lair/sprWallLairTop.png",         4, 0, 0);
+        WallLairTrans =     sprite_add("../sprites/areas/Lair/sprWallLairTrans.png",       1, 0, 0);
+         // Misc:
+        DebrisLair =        sprite_add("../sprites/areas/Lair/sprDebrisLair.png",          4, 4, 4);
+        TopDecalLair =      sprite_add("../sprites/areas/Lair/sprTopDecalLair.png",        2, 0, 0);
+    }
 
      // Carpet Surface:
     global.resetSurf = true;
@@ -28,43 +44,141 @@
         },
 
          // SMALL:
-        "Table" : {
+        "SmallClutter" : {
+            w : 2,
+            h : 2
+        },
+        
+        "MediumClutter" : {
+            w : 3,
+            h : 3
+        },
+        
+        "SmallPillars" : {
+            w : 3,
+            h : 3
+        },  
+        
+        "SmallRing" : {
+            w : 2,
+            h : 2
+        },
+        
+        "WideSmallRing" : {
+            w : 3,
+            h : 2
+        },
+        
+        "TallSmallRing" : {
+            w : 2,
+            h : 3
+        },
+        
+        "MediumRing" : {
             w : 3,
             h : 3,
-            carpet : 0.40
+            layout : [
+                [L,L,L],
+                [L,0,L],
+                [L,L,L]
+                ]
         },
-        "Couch" : {
+        
+        "Table" : {
+            w : 3,
+            h : 3
+            // carpet : 0.40
+        },
+        
+        "Toilet" : {
             w : 3,
             h : 2,
-            carpet : 1.00
+        },
+        
+        "SmallTriangle" : {
+            h : 3,
+            w : 3,
+            layout : [
+                [L,0,0],
+                [L,L,0],
+                [L,L,L]
+                ]
         },
 
          // LARGE:
+        "SmallAtrium" : {
+            w : 6,
+            h : 6,
+            layout : [
+                [0,0,L,L,0,0],
+                [0,0,L,L,0,0],
+                [L,L,L,L,L,L],
+                [L,L,L,L,L,L],
+                [0,0,L,L,0,0],
+                [0,0,L,L,0,0]
+                ]
+        },
+        
+        "Lounge" : {
+            w : 5,
+            h : 4,
+            layout : [
+                [L,L,L,L,L],
+                [L,L,L,L,L],
+                [L,L,L,L,L],
+                [L,0,0,0,L]
+                ]
+        },
+         
         "Dining" : {
             w : 4,
             h : 3,
             carpet : 0.33
         },
-        "Office" : {
-            w : 3,
-            h : 4
-        },
-        "Lounge" : {
+        
+        "Cafeteria" : {
             w : 4,
-            h : 4
-        },
-
-         // TEST:
-        "Test" : {
-            w : 4,
-            h : 4,
+            h : 6,
             layout : [
-                [0,0,L,L],
-                [0,0,L,L],
+                [0,L,0,0],
+                [L,L,L,L],
+                [L,L,L,L],
+                [L,L,L,L],
                 [L,L,L,L],
                 [L,L,L,L]
                 ]
-        }
+        },
+
+        "Office" : {
+            w : 6,
+            h : 4,
+            layout : [
+                [0,0,L,L,0,0],
+                [L,L,L,L,L,L],
+                [L,L,L,L,L,L],
+                [L,L,L,L,L,L]
+                ]
+        },
+        
+        "Garage" : {
+            w : 4,
+            h : 3
+        },
+        
+        "LargeRing" : {
+            w : 6,
+            h : 6,
+            layout : [
+                [L,L,L,L,L,L],
+                [L,L,L,L,L,L],
+                [L,L,0,0,L,L],
+                [L,L,0,0,L,L],
+                [L,L,L,L,L,L],
+                [L,L,L,L,L,L]
+                ]
+        },
+    
+        
     };
 
      // Set Defaults:
@@ -89,7 +203,7 @@
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
-#macro bgrColor area_get_background_color(102)
+#macro bgrColor make_color_rgb(160, 157, 75)
 #macro shdColor area_get_shadow_color(102)
 
 #define area_music      return mus2;
@@ -105,18 +219,18 @@
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
-        case sprFloor1      : return sprFloor2;
-        case sprFloor1B     : return sprFloor6B;
-        case sprFloor1Explo : return sprFloor2Explo;
+        case sprFloor1      : return spr.FloorLair;
+        case sprFloor1B     : return spr.FloorLairB;
+        case sprFloor1Explo : return spr.FloorLairExplo;
 
          // Walls:
-        case sprWall1Trans  : return sprWall102Trans;
-        case sprWall1Bot    : return sprWall102Bot;
-        case sprWall1Out    : return sprWall102Out;
-        case sprWall1Top    : return sprWall102Top;
+        case sprWall1Trans  : return spr.WallLairTrans;
+        case sprWall1Bot    : return spr.WallLairBot;
+        case sprWall1Out    : return spr.WallLairOut;
+        case sprWall1Top    : return spr.WallLairTop;
 
          // Misc:
-        case sprDebris1     : return sprDebris2;
+        case sprDebris1     : return spr.DebrisLair;
         case sprDetail1     : return sprDetail2;
     }
 
@@ -312,6 +426,19 @@
     var _x = x + 16,
         _y = y + 16;
     
+    if !place_meeting(x, y, Wall) && random(3) < 2{
+        if random(12) < 1{
+             // Rat packs:
+            repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
+        }
+        else if !styleb{
+            if random(8) < 1{
+                instance_create(_x, _y, Bandit);
+            }
+            else obj_create(_x, _y, "Cat");
+        }
+    }
+    
 #define area_pop_props
     var _x = x + 16,
         _y = y + 16;
@@ -329,6 +456,10 @@
                 }
             }
         }
+    }
+     // Delete stuck dudes:
+    with(enemy) if place_meeting(x, y, Wall){
+        instance_delete(id);
     }
         
      // Light up specific things:
@@ -378,7 +509,7 @@
         return self;
     }
 
-#define room_pop()
+#define room_pop
     var o = 32,
         _x = global.room_center[0] + (x * o), // Left
         _y = global.room_center[1] + (y * o), // Top
@@ -387,9 +518,12 @@
 
     switch(type){
          // IMPORTANT ROOMS
-        case "Boss":
+        case "Boss" : {
              // Spawn boss spawner
-            obj_create(_cx - 32, _cy - 32, "CatholeBig");
+            with obj_create(_cx - 32, _cy - 32, "CatholeBig"){
+                with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
+                    obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
+            }
 
              // delete this later
             obj_create(_cx, _cy, "Cat");
@@ -404,12 +538,81 @@
             var _chest = [RadChest,AmmoChest,WeaponChest],
                 _d = irandom(3);
             for (var _i = 0; _i <= 2; _i++)
-                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(80,(_i+_d)*90)+o, _cy + lengthdir_y(80,(_i+_d)*90)+o,_chest[_i]);
+                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(80,(_i+_d)*90), _cy + lengthdir_y(80,(_i+_d)*90),_chest[_i]);
 
             break;
+        }
          
          // SMALL ROOMS
-        case "Table":
+        case "SmallClutter" : {
+             // Props:
+            repeat(irandom_range(2, 4)){
+                var _prop = choose("ChairFront", "ChairSide", "Table", "Cabinet"),
+                    _px = _cx + orandom(24),
+                    _py = _cy + orandom(24);
+                if is_string(_prop) obj_create(_px, _py, _prop);
+                else instance_create(_px, _py, _prop);
+            }
+            break;
+        }
+            
+        case "MediumClutter" : {
+             // Props:
+            repeat(irandom_range(2, 6)){
+                var _prop = choose("ChairFront", "ChairSide", "Table", "Cabinet"),
+                    _px = _cx + orandom(32),
+                    _py = _cy + orandom(32);
+                if is_string(_prop) obj_create(_px, _py, _prop);
+                else instance_create(_px, _py, _prop);
+            }
+            break;
+        }
+        
+        case "SmallPillars" : {
+             // Walls:
+            instance_create(_x + 16,            _y + 16,            Wall);
+            instance_create(_x + 64,            _y + 16,            Wall);
+            instance_create(_x + 16,            _y + 64,            Wall);
+            instance_create(_x + 64,            _y + 64,            Wall);
+            break;
+        }
+            
+        case "SmallRing" : {
+             // Walls:
+            for (var xx = 1; xx <= 2; xx++)
+                for (var yy = 1; yy <= 2; yy++)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+            break;
+        }
+            
+        case "WideSmallRing" : {
+             // Walls:
+            for (var xx = 2; xx <= 3; xx++)
+                for (var yy = 1; yy <= 2; yy++)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+            break;
+        }
+            
+        case "TallSmallRing" : {
+             // Walls:
+            for (var xx = 1; xx <= 2; xx++)
+                for (var yy = 2; yy <= 3; yy++)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+            break;
+        }
+            
+        case "MediumRing" : {
+            for (var xx = 2; xx <= 3; xx++)
+                for (var yy = 2; yy <= 3; yy++)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+            break;
+        }
+         
+        case "Table" : {
             with(obj_create(_cx, _cy,"NewTable")){
                 if(random(5) < 4){
                     obj_create(x + orandom(2), y - 18 + orandom(2), "ChairFront");
@@ -417,16 +620,71 @@
                 obj_create(x, y-32, "CatLight");
             }
             break;
+        }
         
-        case "Couch":
-            obj_create(_cx, _cy, "Couch");
-            if(random(5) < 2){
-                instance_create(_x + orandom(24), _y + irandom(16), PizzaBox);
-            }
+        case "Toilet" : {
+             // Walls:
+            for (var yy = 0; yy <= 1; yy++)
+                with instance_create(_x + o, _y + yy *16, Wall)
+                    instance_create(x, y, NOWALLSHEREPLEASE);
+            with instance_create(_x + 80, _y + 3 * 16, Wall)
+                instance_create(x, y, NOWALLSHEREPLEASE);
+             // Props:
+            with obj_create(_x + 16 + orandom(2), _y + 8, "ChairFront")
+                obj_create(x, y - o, "CatLight");
             break;
+        }
+        
+        case "SmallTriangle" : {
+             // Walls:
+            for (i = 1; i <= 5; i += 2)
+                with instance_create(_x + i * 16, _y + (i - 1) * 16, Wall)
+                    instance_create(x, y, NOWALLSHEREPLEASE);
+             // Props:
+            break;
+        }
             
          // LARGE ROOMS
-        case "Dining":
+        case "SmallAtrium" : {
+             // Walls:
+                 // Horizontal:
+                for (var xx = 4; xx <= 7; xx += 3)
+                    for (var yy = 3; yy <= 8; yy += 5)
+                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                            instance_create(x, y, NOWALLSHEREPLEASE);
+                 // Vertical:
+                for (var xx = 3; xx <= 8; xx += 5)
+                    for (var yy = 4; yy <= 7; yy += 3)
+                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                            instance_create(x, y, NOWALLSHEREPLEASE);
+                 // Extras:
+                for (var xx = 3; xx <= 8; xx += 5)
+                    for (var yy = 3; yy <= 8; yy += 5)
+                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                            instance_create(x, y, NOWALLSHEREPLEASE);
+            for (var xx = 5; xx <= 6; xx++)
+                for (var yy = 5; yy <= 6; yy++)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall){
+                        if !place_meeting(x, y, Floor)
+                            instance_delete(id);
+                        else instance_create(x, y, NOWALLSHEREPLEASE);
+                    }
+            break;
+        }
+        
+        case "Lounge" : {
+             // Walls
+            for (var xx = 2; xx <= 7; xx += 5)
+                for (var yy = 0; yy <= 5; yy += 5)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+             // Props:
+            with obj_create(_cx + orandom(2), _y + 16 + orandom(2), "Couch")
+                obj_create(x + orandom(2), y + 20 + orandom(2), "NewTable");
+            break;  
+        }
+        
+        case "Dining" : {
             with(obj_create(_cx, _cy, "NewTable")){
                 for(var _r = -1; _r <= 1; _r += 2){
                     with(obj_create(x + (24 * _r), y + orandom(2), "ChairSide")) image_xscale = _r;
@@ -435,41 +693,83 @@
                 obj_create(x, y - 32, "CatLight");
             }
             break;
+        }
+        
+        case "Cafeteria" : {
+             // Walls:
+            for (var i = 0; i <= 1; i++)
+                for (var xx = 0; xx <= 7; xx += 7)
+                    for (var yy = 3; yy <= 4; yy++)
+                        with instance_create(_x + xx * 16, _y + yy * 16 + i * 96, Wall)
+                            instance_create(x, y, NOWALLSHEREPLEASE);
+             // Props:
+                 // Vending machine:
+                instance_create(_x + 48, _y + 16, SodaMachine);
+                 // Tables and chairs:
+                for (var i = 0; i <= 2; i++)
+                    with obj_create(_cx + orandom(2), _cy - 16 + i * o + orandom(2), "NewTable"){
+                         // Chairs:
+                        if random(5) < 2 with obj_create(x - 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = -1;
+                        if random(5) < 2 with obj_create(x + 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = 1;
+                        if random(5) < 2 obj_create(x + orandom(2), y - 14 + orandom(2), "ChairFront");
+                         // Lights:
+                        if random(3) < 2 obj_create(x, y - o, "CatLight");
+                    }
+            break;
+        }
 
-        case "Office":
-            for(var _ox = o; _ox < (w * o); _ox += o){
-                for(var _oy = o; _oy < (h * o); _oy += o){
-                    if(random(4) < 3){
-                        with(obj_create(_x + _ox + orandom(2), _y + _oy + orandom(2), "NewTable")){
-                            obj_create(x + orandom(2), y - 18 + orandom(2), choose("ChairFront", "ChairFront", "ChairSide"));
+        case "Office" : {
+             // Walls:
+            for (var xx = 1; xx <= 10; xx += 9)
+                for (var yy = 2; yy <= 7; yy += 5){
+                    instance_create(_x + xx * 16, _y + yy * 16, Wall);
+                    instance_create(_x + xx * 16, _y + yy * 16, NOWALLSHEREPLEASE);
+                }
+             // Props:
+            with obj_create(_cx + orandom(2), _cy - 38 + orandom(2), "NewTable"){
+                obj_create(x + orandom(4), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
+            for (var xx = -3; xx <= 3; xx += 6)
+                obj_create(_cx + xx * 16, _y + 42 + orandom(2), "Cabinet");
+            }
+            break;
+        }
+        
+        case "Garage" : {
+             // Walls:
+            for (var xx = 3; xx <= 4; xx++)
+                for (var yy = 0; yy <= 5; yy += 5)
+                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
+                        instance_create(x, y, NOWALLSHEREPLEASE);
+             // Props:
+                 // Cars:
+                for (var yy = 0; yy <= 1; yy++)
+                    instance_create(_x + o + orandom(2), _y + yy * o + o + orandom(2), Car);
+                 // Tires:
+                repeat(irandom_range(2, 4))
+                    with instance_create(_x + 90 + irandom(28), _y + 10 + irandom(86), Tires)
+                        if random(10) < 1{
+                            obj_create(x, y, choose("ChairFront","ChairSide"));
+                            instance_delete(id);
                         }
+             // Lights:
+            for (var xx = -1; xx <= 1; xx += 2)
+                obj_create(_cx + xx * 40, _cy - o, "CatLight");
+            
+            break;
+        }
+            
+        case "LargeRing" : {
+             // Walls:
+            for (var xx = -2; xx <= 1; xx += 3)
+                for (var yy = -2; yy <= 1; yy += 3)
+                    with instance_create(_cx + xx * 16, _cy + yy * 16, Wall){
+                        if !place_meeting(x, y, Floor)
+                            instance_delete(id);
+                        else instance_create(x, y, NOWALLSHEREPLEASE);
                     }
-                    else obj_create(_x + _ox + orandom(2), _y + _oy + orandom(2), "Cabinet");
-                }
-            }
-            break;
+        break;
+        }
 
-        case "Lounge":
-            with(obj_create(_cx, _cy - 16, "Couch")){
-                with(obj_create(x + orandom(2), y + 16 + orandom(2), "NewTable")){
-                    obj_create(x, y - 32, "CatLight");
-                    for(var _r = -1; _r <= 1; _r += 2) if(random(3) < 2){
-                        with(obj_create(x + (24 * _r), y + orandom(2), "ChairSide")) image_xscale = _r;
-                    }
-                }
-                instance_create(x + orandom(16), y + orandom(16), PizzaBox);
-            }
-            break;
-
-         // TEST:
-        case "Test":
-            instance_create(_cx + 32, _cy - 40, TV);
-            with(floors) if(y >= _cy && random(3) < 1){
-                with(obj_create(x + 16, y + 12, "ChairFront")){
-                    with(instance_create(x, y + 16 + orandom(4), PizzaBox)) depth = other.depth - 1;
-                }
-            }
-            break;
     }
         
 #define draw_rugs
@@ -625,7 +925,7 @@
     lastarea = area;
 
      // Area End:
-    if(subarea >= 1) && false{
+    if background_color == bgrColor{
         area = 3;
         subarea = 1;
     }
