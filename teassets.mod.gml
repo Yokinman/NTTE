@@ -282,7 +282,7 @@
 
              // Door:
             CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 2, 0);
-            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 2, 0);
+            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 4, 0);
             msk.CatDoorLOS  = sprite_add("sprites/areas/Sewers/props/mskCatDoorLOS.png",     1, 4, 0);
             if(fork()){
                 wait 30;
