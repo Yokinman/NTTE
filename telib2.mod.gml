@@ -247,19 +247,25 @@
     var s = 0,
         _open = false;
 
-    with(instances_matching_ne(hitme, "team", team)){
-        if(distance_to_object(other) <= 0){
-            var _sx = lengthdir_x(hspeed, other.image_angle),
-                _sy = lengthdir_y(vspeed, other.image_angle);
-
-            s = 10/3 * (_sx + _sy);
-            _open = true;
+    if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0){
+        with(instances_matching_ne(hitme, "team", team)){
+            if(distance_to_object(other) <= 0){
+                var _sx = lengthdir_x(hspeed, other.image_angle),
+                    _sy = lengthdir_y(vspeed, other.image_angle);
+    
+                s = 3 * (_sx + _sy);
+                _open = true;
+            }
         }
     }
     if(_open){
         if(s != 0){
-            if(abs(openang) < 4){
-                sound_play_pitchvol(sndMeleeFlip, 1.2 + orandom(0.2), 0.8);
+            if(abs(openang) < abs(s) && abs(openang) < 4){
+                var _vol = clamp(40 / (distance_to_object(Player) + 1), 0, 1);
+                if(_vol > 0.2){
+                    sound_play_pitchvol(sndMeleeFlip, 1 + random(0.4), 0.8 * _vol);
+                    sound_play_pitchvol(((openang > 0) ? sndAmmoChest : sndWeaponChest), 0.4 + random(0.2), 0.5 * _vol);
+                }
             }
             openang += s;
         }
@@ -722,12 +728,15 @@
     else scrWalk(12, direction + orandom(20));
     scrRight(direction);
 
+
+
 #define step
      // Reset Lights:
     with(instances_matching(GenCont, "catlight_reset", null)){
         catlight_reset = true;
         global.catLight = [];
     }
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 

@@ -1277,7 +1277,7 @@
         	        sprite_index = spr.CatDoor;
         	        spr_shadow = mskNone;
         	        image_speed = 0;
-        	        depth = -3;
+        	        depth = -3 - (y / 20000);
 
                      // Sound:
                     snd_hurt = sndHitMetal;
@@ -1287,6 +1287,7 @@
         	        mask_index = msk.CatDoor;
         	        maxhealth = 15;
         	        size = 2;
+        	        team = 0;
         	        openang = 0;
         	        my_wall = noone;
         	    }

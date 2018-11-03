@@ -177,8 +177,7 @@
                 [L,L,L,L,L,L]
                 ]
         },
-    
-        
+
     };
 
      // Set Defaults:
@@ -387,30 +386,43 @@
                  // Make Hallways:
                 styleb = true;
                 with(RoomList) with(link){
-                    var _lx1 = _x + ((x + floor(w / 2)) * o),
-                        _ly1 = _y + ((y + floor(h / 2)) * o),
-                        _lx2 = _x + ((other.x + floor(other.w / 2)) * o),
-                        _ly2 = _y + ((other.y + floor(other.h / 2)) * o),
-                        _dir = round(point_direction(_lx1, _ly1, _lx2, _ly2) / 90) * 90,
-                        _mx = 0,
-                        _my = 0;
+                    var _fx = x + floor(w / 2),
+                        _fy = y + floor(h / 2),
+                        _tx = other.x + floor(other.w / 2),
+                        _ty = other.y + floor(other.h / 2),
+                        _dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
+                        _tries = 100;
+
+                    while(_tries-- > 0){
+                        instance_create(_x + (_fx * o), _y + (_fy * o), Floor);
+
+                         // Turn Corner:
+                        if(_fx == _tx || _fy == _ty) _dir = point_direction(_fx, _fy, _tx, _ty);
     
-                    if(_dir == 0 || _dir == 180){
-                        _mx = _lx1;
-                        _my = _ly2;
-                        if(_lx1 > _lx2) _lx1 += o;
-                    }
-                    else{
-                        _mx = _lx2;
-                        _my = _ly1;
-                        if(_ly1 > _ly2) _ly1 += o;
-                    }
+                         // End Hallway & Spawn Door:
+                        for(var a = _dir; a < _dir + 360; a += 90){
+                            var _dx = _fx - other.x + lengthdir_x(1, a),
+                                _dy = _fy - other.y + lengthdir_y(1, a);
+        
+                            if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
+                                if(other.layout[_dy, _dx]){
+                                    _fx = _x + 16 + (_fx * o) + lengthdir_x(16 - 2, a);
+                                    _fy = _y + 16 + (_fy * o) + lengthdir_y(16 - 2, a) + 1;
+                                    for(var _side = -1; _side <= 1; _side += 2){
+                                        with(obj_create(_fx + lengthdir_x(16 * _side, a - 90), _fy + lengthdir_y(16 * _side, a - 90), "CatDoor")){
+                                            image_angle = a;
+                                            image_yscale = -_side;
+                                        }
+                                    }
+                                    _tries = 0;
+                                    break;
+                                }
+                            }
+                        }
     
-                    for(var _fx = min(_lx1, _lx2); _fx < max(_lx1, _lx2); _fx += o){
-                        instance_create(_fx, _my, Floor);
-                    }
-                    for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += o){
-                        instance_create(_mx, _fy, Floor);
+                        _fx += lengthdir_x(1, _dir);
+                        _fy += lengthdir_y(1, _dir);
+                        if(_fx == _tx && _fy == _ty) break;
                     }
                 }
     
@@ -438,7 +450,7 @@
             else obj_create(_x, _y, "Cat");
         }
     }
-    
+
 #define area_pop_props
     var _x = x + 16,
         _y = y + 16;
@@ -457,6 +469,29 @@
             }
         }
     }
+
+     // Important Door Stuff:
+    with(instances_matching(CustomHitme, "name", "CatDoor")){
+         // Remove Blocking Walls:
+        var _x = floor((x + lengthdir_x(8, image_angle - (90 * image_yscale)) + lengthdir_x(16, image_angle)) / 16) * 16,
+            _y = floor((y + lengthdir_y(8, image_angle - (90 * image_yscale)) + lengthdir_y(16, image_angle)) / 16) * 16;
+
+        if(position_meeting(_x, _y, Wall)){
+            with(instance_nearest(_x, _y, Wall)) instance_destroy();
+        }
+
+         // Make sure door isn't placed weirdly:
+        var _x = (floor((x + 16 + lengthdir_x(8, image_angle - (90 * image_yscale))) / 32) * 32) - 16,
+            _y = (floor((y + 16 + lengthdir_y(8, image_angle - (90 * image_yscale))) / 32) * 32) - 16;
+
+        for(var i = 0; i <= 180; i += 180){
+            if(position_meeting(_x + lengthdir_x(32, image_angle - 90 + i), _y + lengthdir_y(32, image_angle - 90 + i), Floor)){
+                instance_delete(id);
+                break;
+            }
+        }
+    }
+
      // Delete stuck dudes:
     with(enemy) if place_meeting(x, y, Wall){
         instance_delete(id);
@@ -867,7 +902,40 @@
         draw_set_color(c_dkgray);
         with(RoomList){
             if(is_object(link)) with(link){
-                var _lx1 = _x + ((x + floor(w / 2)) * o),
+                var _fx = x + floor(w / 2),
+                    _fy = y + floor(h / 2),
+                    _tx = other.x + floor(other.w / 2),
+                    _ty = other.y + floor(other.h / 2),
+                    _dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
+                    _tries = 100;
+
+                while(_tries-- > 0){
+                    if(_fx == _tx || _fy == _ty){
+                        _dir = point_direction(_fx, _fy, _tx, _ty); // Turn Corner
+                    }
+
+                    draw_set_color(c_dkgray);
+                    draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+
+                     // End Hallway & Spawn Door:
+                    for(var a = 0; a < 360; a += 90){
+                        var _dx = _fx - other.x + lengthdir_x(1, a),
+                            _dy = _fy - other.y + lengthdir_y(1, a);
+    
+                        if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
+                            if(other.layout[_dy, _dx]){
+                                draw_set_color(c_orange);
+                                draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+                                _tries = 0;
+                            }
+                        }
+                    }
+
+                    _fx += lengthdir_x(1, _dir);
+                    _fy += lengthdir_y(1, _dir);
+                    if(_fx == _tx && _fy == _ty) break;
+                }
+                /*var _lx1 = _x + ((x + floor(w / 2)) * o),
                     _ly1 = _y + ((y + floor(h / 2)) * o),
                     _lx2 = _x + ((other.x + floor(other.w / 2)) * o),
                     _ly2 = _y + ((other.y + floor(other.h / 2)) * o),
@@ -893,7 +961,7 @@
                 }
                 for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += o){
                     draw_rectangle(_mx, _fy, _mx + o - 1, _fy + o - 1, 0);
-                }
+                }*/
             }
         }
 

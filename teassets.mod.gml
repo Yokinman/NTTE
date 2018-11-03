@@ -281,8 +281,8 @@
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
 
              // Door:
-            CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 3, 0);
-            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 4, 0);
+            CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 2, 0);
+            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 2, 0);
             msk.CatDoorLOS  = sprite_add("sprites/areas/Sewers/props/mskCatDoorLOS.png",     1, 4, 0);
             if(fork()){
                 wait 30;
