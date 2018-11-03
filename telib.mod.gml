@@ -1271,13 +1271,11 @@
         	    break;
 
         	case "CatDoor":
-        	    o = instance_create(_x, _y, CustomProp);
+        	    o = instance_create(_x, _y, CustomHitme);
         	    with(o){
         	         // Visual:
-        	        spr_idle = spr.CatDoorIdle[0];
-        	        spr_hurt = spr.CatDoorHurt[0];
+        	        sprite_index = spr.CatDoor;
         	        spr_shadow = mskNone;
-        	        image_xscale = 1;
         	        image_speed = 0;
         	        depth = -3;
 
@@ -1289,9 +1287,8 @@
         	        mask_index = msk.CatDoor;
         	        maxhealth = 15;
         	        size = 2;
-        	        side = 0;
+        	        openang = 0;
         	        my_wall = noone;
-        	        my_invisiwall = noone;
         	    }
         	    break;
 

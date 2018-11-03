@@ -281,18 +281,12 @@
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
 
              // Door:
-            CatDoorIdle[0] = sprite_add("sprites/areas/Sewers/props/sprCatDoorEast.png",        1, 0, 24);
-            CatDoorIdle[1] = sprite_add("sprites/areas/Sewers/props/sprCatDoorNort.png",        5, 0, 18);
-            CatDoorIdle[2] = sprite_add("sprites/areas/Sewers/props/sprCatDoorWest.png",        1, 0, 24);
-            CatDoorIdle[3] = sprite_add("sprites/areas/Sewers/props/sprCatDoorSout.png",        1, 0, 16);
-            CatDoorHurt[0] = sprite_add("sprites/areas/Sewers/props/sprCatDoorEastHurt.png",    3, 0, 24);
-            CatDoorHurt[1] = sprite_add("sprites/areas/Sewers/props/sprCatDoorNortHurt.png",    3, 0, 16);
-            CatDoorHurt[2] = sprite_add("sprites/areas/Sewers/props/sprCatDoorWestHurt.png",    3, 0, 24);
-            CatDoorHurt[3] = sprite_add("sprites/areas/Sewers/props/sprCatDoorSoutHurt.png",    3, 0, 16);
-            msk.CatDoor    = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",            5, 0, 16);
+            CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 3, 0);
+            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 4, 0);
+            msk.CatDoorLOS  = sprite_add("sprites/areas/Sewers/props/mskCatDoorLOS.png",     1, 4, 0);
             if(fork()){
                 wait 30;
-                sprite_collision_mask(msk.CatDoor, true, 0, 0, 0, 0, 0, 0, 0);
+                sprite_collision_mask(msk.CatDoorLOS, false, 1, 0, 0, 0, 0, 0, 0);
                 exit;
             }
 

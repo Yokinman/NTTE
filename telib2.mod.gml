@@ -243,44 +243,89 @@
 
 
 #define CatDoor_step
-     // Side:
-    if(image_angle != (side * 90)){
-        spr_idle = spr.CatDoorIdle[side];
-        spr_hurt = spr.CatDoorHurt[side];
-        image_angle = (side * 90);
-    }
+     // Opening & Closing:
+    var s = 0,
+        _open = false;
 
-     // :
-    var s = current_time_scale;
-    if(distance_to_object(hitme) > 4) s *= -0.5;
-    else{
-        with(nearest_instance(x, y, instances_matching_ne(hitme, "id", id))) s *= min(speed / 4, 1);
-        if(image_index <= 0){
-            sound_play_pitchvol(sndMeleeFlip, 1.2 + orandom(0.2), 0.8);
+    with(instances_matching_ne(hitme, "team", team)){
+        if(distance_to_object(other) <= 0){
+            var _sx = lengthdir_x(hspeed, other.image_angle),
+                _sy = lengthdir_y(vspeed, other.image_angle);
+
+            s = 10/3 * (_sx + _sy);
+            _open = true;
         }
     }
+    if(_open){
+        if(s != 0){
+            if(abs(openang) < 4){
+                sound_play_pitchvol(sndMeleeFlip, 1.2 + orandom(0.2), 0.8);
+            }
+            openang += s;
+        }
+        openang = clamp(openang, -90, 90);
+    }
+    else openang *= 0.8;
 
-    image_index = clamp(image_index + s, 0, image_number - 1);
-
-     // Temporary
-    if(sprite_index == spr_hurt) sprite_index = spr_idle;
+     // Collision:
+    if(abs(openang) > 20) mask_index = mskNone;
+    else mask_index = msk.CatDoor;
 
      // Block Line of Sight:
     if(!instance_exists(my_wall)) my_wall = instance_create(0, 0, Wall);
     with(my_wall){
         x = other.x;
         y = other.y;
+        if(other.mask_index == mskNone) mask_index = -1;
+        else mask_index = msk.CatDoorLOS;
         image_angle = other.image_angle;
-        if(other.image_index < 1) sprite_index = other.mask_index;
-        else sprite_index = -1;
-        image_index = image_number - 1;
-        mask_index = -1;
+        sprite_index = -1;
         visible = 0;
         topspr = -1;
         outspr = -1;
     }
 
-#define CatDoor_death
+     // Death:
+    if(my_health <= 0){
+        sound_play(snd_dead);
+
+        repeat(4) with(instance_create(x, y, Shell)){
+            sprite_index = sprDebris102; // Temporary duh
+            image_index = random(image_number);
+            image_speed = 0;
+            motion_add(other.direction + orandom(20), other.speed);
+        }
+        repeat(4) with(instance_create(x, y, Dust)){
+            motion_add(other.direction + orandom(20), other.speed / 2);
+        }
+
+        instance_destroy();
+    }
+
+     // Stay Still:
+    else speed = 0;
+
+#define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);	// Sound
+
+     // Push Open Force:
+    var _sx = lengthdir_x(other.hspeed, image_angle),
+        _sy = lengthdir_y(other.vspeed, image_angle);
+
+    openang += (_sx + _sy);
+
+#define CatDoor_draw
+    var h = (nexthurt > current_frame + 3);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    for(var i = 0; i < image_number; i++){
+        draw_sprite_ext(sprite_index, i, x, y - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), image_blend, image_alpha);
+    }
+    if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define CatDoor_destroy
     instance_delete(my_wall);
 
 
