@@ -204,7 +204,7 @@
             Crack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAB6klEQVRoQ+WTUW7DMAxDc4j97H+n2xl292wyykBmaMuOndZYPx4QS65EMum27/tbI4sr8vHzvXu4z7TcMWTxVdQMci0yGPWBLL4aJX77+sxqdqdkEr1S3yOLK2DizXQvbDwKQRZXozeMqQFEA56FMhph2qcEYMPwjPozYWO91HTLoiIadBd4AYk/uVVwr4DSnx0ibAjXFH7RaGiHATZbAvcFwwHgbXCN8X2+z/B95jDARiPwO+I0nwsRfogS3xuAUQrB6kk4m+vhYRzwjuzQQjTQaLnDmFnAv5fGenHzsMf2SjEMLuOZh6EHeBHgex7f9/Olmas8ZmJP2uUPNZQJLxR9g5e04Gf7udLICKTteGihFgDj77XiAzxgA6OQtkxARCkAX4cBnK+AudLAKKQtW9yCf0McCOAlvRw7WPwMRgMANZOlYHo5iZ8Aa8sW9lAKwBasHMBpBxdawCfKRmcZB2kPGRiFd2SHVtL/02FCZ5sHbGCU03wutADjvnZXAICNXOU0lwuK9CkGb/zuAJIGMnMFnpsdavAbN7xpFcpM1BenDEb4GUZ2qFEK4G7jhtoN2CBgTSWd2aHG3SYZ22fGjdruyDjD/ay5El5oawCReWP5AEwg8DU8M7VeC7K4CioM5l8H8Axk8X3Yt1/rleuAjYarfgAAAABJRU5ErkJggg==",
             2, 16, 16);
         //#endregion
-        
+
         //#region TRENCH
              // Angler:
             AnglerIdle =        sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
@@ -254,7 +254,7 @@
             KelpIdle = sprite_add("sprites/areas/Trench/Props/sprKelpIdle.png", 6, 16, 22);
             KelpHurt = sprite_add("sprites/areas/Trench/Props/sprKelpHurt.png", 3, 16, 22);
             KelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png", 8, 16, 22);
-            
+
              // Pit Squid:
             PitsquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png", 1, 19, 19);
             PitsquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png", 1, 19, 19);
@@ -370,6 +370,9 @@
         PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
         PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
         sound_volume(PalankingHurt, 0.6);
+        // Cat:
+        CatHurt = sound_add("sounds/enemies/Cat/sndCatHurt.ogg");
+        sound_volume(CatHurt, 0.8);
     }
 
      // MUSIC //
@@ -702,7 +705,7 @@
                     mod_script_call("area", _area, "area_pop_enemies");
                 }
             }
-             
+
               // Crown of Blood:
             if(GameCont.crown = crwn_blood){
                 if(random(_hard + 8) < _hard){
@@ -712,7 +715,7 @@
                     }
                 }
             }
-            
+
              // Props:
             mod_script_call("area", _area, "area_pop_props");
         }
@@ -833,17 +836,17 @@
         if(array_length(_floors) > num){
             var _yOffset = 8;
             draw_set_color(area_get_background_color(102));
-    
+
              // Hiding Floors:
             with(array_slice(_floors, num + 1, array_length(_floors) - (num + 1))){
                 draw_rectangle(x - 15, y - _yOffset, x + 32 + 15, y + 31 - _yOffset, 0);
             }
-    
+
              // Revealing Floor:
             if(time-- > 0){
                 var a = (time / _maxTime);
                 _yOffset += 4 * a;
-    
+
                 draw_set_alpha(a);
                 draw_set_color(merge_color(draw_get_color(), c_white, a));
                 with(_floors[num]){
@@ -851,7 +854,7 @@
                 }
                 draw_set_alpha(1);
             }
-    
+
              // Next Floor:
             else{
                 num++;
@@ -882,7 +885,7 @@
                 sprite_index = area_get_sprite(_area, sprWall1Trans);
             }
         }
-    
+
          // Background:
         draw_set_color(_color);
         draw_rectangle(0, _y, 20000, 20000, 0);
