@@ -372,7 +372,7 @@
         sound_volume(PalankingHurt, 0.6);
         // Cat:
         CatHurt = sound_add("sounds/enemies/Cat/sndCatHurt.ogg");
-        sound_volume(CatHurt, 0.8);
+        sound_volume(CatHurt, 0.6);
     }
 
      // MUSIC //

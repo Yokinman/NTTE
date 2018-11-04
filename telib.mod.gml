@@ -615,7 +615,7 @@
         			depth = -2;
 
                      // Sound:
-        			snd_hurt = snd_hurtndGatorHit;
+        			snd_hurt = sndGatorHit;
         			snd_dead = sndGatorDie;
 
         			 // Vars:
