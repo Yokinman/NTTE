@@ -4561,7 +4561,7 @@
                 }
             }
         	sound_play_pitchvol(sndDoubleShotgun, 1.5, 1);
-        	motion_add(other.gunangle + 180, 4);
+        	motion_add(gunangle + 180, 4);
         	wkick = 10;
 
             break;
