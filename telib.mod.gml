@@ -303,6 +303,39 @@
             }
             break;
 
+        case "ParrotFeather":
+            o = instance_create(_x, _y, CustomObject);
+            with(o){
+                 // Visual:
+                sprite_index = spr.ParrotFeather;
+                depth = -8;
+
+                 // Vars:
+                mask_index = mskLaser;
+                creator = noone;
+                target = noone;
+                stick = false;
+                stickx = 0;
+                sticky = 0;
+                stick_time = 30;
+                fall = 30 + random(40);
+                rot = orandom(3);
+
+                 // Push:
+                motion_add(random(360), 4 + random(2));
+                image_angle = direction + 135;
+            }
+            break;
+
+        case "ParrotChester":
+            o = instance_create(_x, _y, CustomObject)
+            with(o){
+                 // Vars:
+                creator = noone;
+                num = 12;
+            }
+            break;
+        
         case "SmallBubbleExplosion":
             o = instance_create(_x, _y, SmallExplosion);
             with(o){
@@ -1597,7 +1630,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade", "ParrotFeather", "ParrotChester",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
@@ -5968,6 +6001,8 @@
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
+#define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);

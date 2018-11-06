@@ -459,6 +459,91 @@
     draw_vertex(_x2b, _y2);
     draw_primitive_end();
 
+#define ParrotFeather_step
+    speed *= 0.9;
+    if(instance_exists(target)){
+        if(stick){
+             // Fall Off:
+            if(stick_time <= 0 || !target.charm.charmed){
+                target = noone;
+            }
+            else stick_time -= current_time_scale;
+        }
+        else{
+             // Fly Towards Enemy:
+            motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
+            image_angle = direction + 135;
+
+            if(place_meeting(x, y, target)){
+                 // Effects:
+                with(instance_create(x, y, Dust)) depth = other.depth - 1;
+                sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);
+                sound_play_pitchvol(sndChickenThrow, 1 + orandom(0.3), 0.25);
+                sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3), 0.5);
+
+                 // Stick to & Charm Enemy:
+                if(target != creator){
+                    stick = true;
+                    stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
+                    sticky = random(y - target.y);
+                    image_angle = random(360);
+                    speed = 0;
+    
+                     // Charm Enemy:
+                    var c = scrCharm(target, true);
+                    c.time += 30 + (skill_get(mut_throne_butt) * 15);
+                    stick_time = c.time;
+                }
+
+                 // Player Pickup:
+                else{
+                    with(creator) feather_ammo++;
+                    trace(creator.feather_ammo);
+                    instance_destroy();
+                }
+            }
+        }
+    }
+
+     // Fall to Ground:
+    else{
+        with(instance_create(x, y, Feather)){
+            sprite_index = other.sprite_index;
+            image_angle = other.image_angle;
+            image_blend = merge_color(other.image_blend, c_black, 0.5);
+        }
+        instance_destroy();
+    }
+
+#define ParrotFeather_end_step
+    if(stick && instance_exists(target)){
+        x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
+        y = target.y + (sticky * image_yscale);
+        visible = target.visible;
+        depth = target.depth - 1;
+    }
+
+
+#define ParrotChester_step
+    if(instance_exists(creator)){
+        x = creator.x;
+        y = creator.y;
+    }
+    else{
+         // Feather Pickups:
+        var t = instances_matching(Player, "race", "parrot");
+        if(array_length(t) > 0 && num > 0){
+            with(t) repeat(other.num){
+                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
+                    target = other;
+                    creator = other;
+                }
+            }
+        }
+
+        instance_destroy();
+    }
+
 
 #define PizzaDrain_step
      // Stay Still:
@@ -796,6 +881,8 @@
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
+#define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);

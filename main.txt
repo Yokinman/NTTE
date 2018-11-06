@@ -9,6 +9,9 @@
 /loadarea areas/trench
 /loadarea areas/secret
 
+// Races \\
+/loadrace races/parrot
+
 // Weps \\
 /loadwep weps/crabbone
 /loadwep weps/harpoon
