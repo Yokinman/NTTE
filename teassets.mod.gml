@@ -802,7 +802,7 @@
                                             else event_perform(ev_alarm, i);
                                         }
                                         break;
-    
+
                                     case MeleeBandit:
                                     case JungleAssassin:
                                         event_perform(ev_alarm, i);
