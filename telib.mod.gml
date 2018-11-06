@@ -337,7 +337,7 @@
                 num = 12;
             }
             break;
-        
+
         case "SmallBubbleExplosion":
             o = instance_create(_x, _y, SmallExplosion);
             with(o){
@@ -1242,7 +1242,7 @@
         			depth = -2;
 
                      // Sound:
-        			snd_hurt = snd.CatHurt;
+        			snd_hurt = sndGatorHit
         			snd_dead = sndSalamanderDead;
 
         			 // Vars:
