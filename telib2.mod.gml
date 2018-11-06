@@ -2,6 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
     global.catLight = [];
 
@@ -9,6 +10,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)

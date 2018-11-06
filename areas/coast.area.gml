@@ -2,6 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
      // SPRITES //
     with(spr){
@@ -14,8 +15,6 @@
     global.spawn_enemy = 0;
 
     //#region SURFACES
-        global.surfScale = 1;
-        global.surfScaleTop = 1;
         global.surfW = 1600;
         global.surfH = 1600;
         global.surfX = 10000;
@@ -38,11 +37,12 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#macro surfScale global.surfScale
-#macro surfScaleTop global.surfScaleTop
+#macro surfScale sav.BotWaterQuality
+#macro surfScaleTop sav.TopWaterQuality
 #macro surfWBot global.surfW * surfScale
 #macro surfHBot global.surfH * surfScale
 #macro surfWTop global.surfW * surfScaleTop

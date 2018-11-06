@@ -381,7 +381,8 @@
         PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
         PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
         sound_volume(PalankingHurt, 0.6);
-        // Cat:
+
+         // Cat:
         CatHurt = sound_add("sounds/enemies/Cat/sndCatHurt.ogg");
         sound_volume(CatHurt, 0.6);
     }
@@ -399,8 +400,35 @@
          // Bosses:
         SealKing = sound_add("music/musSealKing.ogg");
     }
-    
-    // SHADERS //
+
+     // SAVE FILE //
+    global.save = { // to all of u in the future, don't b a fool, add secret vars to the save file like `sav.varname = true`, use lq_exists(sav, "varname") to equal your true/false
+        "BotWaterQuality" : 1,
+        "TopWaterQuality" : 1
+        };
+
+    if(fork()){
+         // Load Existing Save:
+        var _path = SavePath;
+        wait file_load(_path);
+
+        if(file_exists(_path)){
+            var _save = json_decode(string_load(_path));
+            if(_save != json_error){
+                for(var i = 0; i < lq_size(_save); i++){
+                    var k = lq_get_key(_save, i);
+                    lq_set(global.save, k, lq_get(_save, k));
+                }
+                exit;
+            }
+        }
+
+         // New Save File:
+        string_save(json_encode(global.save), _path);
+        exit;
+    }
+
+     // SHADERS //
     global.eye_shader = shader_create(
         "/// Vertex Shader ///
 
@@ -480,15 +508,7 @@
 
     global.charm = ds_list_create();
     global.charm_step = noone;
-
-    while(true){
-        if(!instance_exists(global.charm_step)){
-            global.charm_step = script_bind_end_step(charm_step, 0);
-            with(global.charm_step) persistent = true;
-        }
-        
-        wait 1;
-    }
+    
 
 #macro EyeShader global.eye_shader
 
@@ -498,6 +518,16 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
+
+#macro SavePath "save.sav"
+
+#define step
+    if(!instance_exists(global.charm_step)){
+        global.charm_step = script_bind_end_step(charm_step, 0);
+        with(global.charm_step) persistent = true;
+    }
+
 
  /// HELPER SCRIPTS ///
 #define obj_create(_x, _y, _obj)
@@ -655,7 +685,6 @@
     with(i) creator = other;
     return i;
 
-
 #define charm_draw(_inst)
     instance_destroy();
 
@@ -680,7 +709,6 @@
     }
 
     shader_reset();
-
 
 #define charm_step
     var _charmList = ds_list_to_array(global.charm),
@@ -1508,4 +1536,7 @@
     return mod_script_call("area", _area, "area_sprite", _spr);
 
 #define cleanup
-with(global.charm_step) instance_destroy();
+    with(global.charm_step) instance_destroy();
+
+     // Save Save:
+    string_save(json_encode(sav), SavePath);
