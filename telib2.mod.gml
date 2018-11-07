@@ -613,6 +613,73 @@
             scrFloorWalls();
         }
         floor_reveal(_path, 2);
+        
+#define Pet_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+    
+    if(place_meeting(x + hspeed, y, Wall) or place_meeting(x, y + vspeed, Wall)) {
+        move_bounce_solid(false);
+    }
+    
+    if(!instance_exists(leader) and instance_exists(Player)) {
+        var p = instance_nearest(x, y, Player);
+        with(p) {
+            if(other.leader != self and point_distance(other.x, other.y, x, y) < 16) {
+                if(!is_array(pet)) {
+                    pet[0] = other.pet_type;
+                } else if(array_length(pet) < maxpets) {
+                    pet[array_length(pet)] = other.pet_type;
+                } else {
+                    pet[irandom_range(0, array_length(pet))] = other.pet_type;
+                }
+                
+                other.leader = self;
+                
+                sound_play(sndHealthChestBig);
+                sound_play(sndHitFlesh);
+                instance_create(x, y, HealFX);
+            }
+        }
+    }
+    
+    if(instance_exists(leader)) {
+        switch(pet_type) {
+            case 0: // CoolGuy:
+                with(instances_matching(HPPickup, "coolguy_ability", null)) {
+                    coolguy_ability = 1;
+                    
+                     // Increases amount pickups heal for, also makes it pizza:
+                    num += 1;
+                    sprite_index = sprSlice;
+                }
+                break;
+        }
+    }
+    
+#define Pet_draw
+    draw_self_enemy();
+    
+#define Pet_alrm0
+    alarm0 = 40 + random(20);
+
+    switch(pet_type) {
+        default: // Follows leader around:
+            if(instance_exists(leader)) {
+                var _leaderDir = point_direction(x, y, leader.x, leader.y);
+                
+                if(point_distance(x, y, leader.x, leader.y) > 24) {
+                    scrWalk(10, _leaderDir + orandom(10));
+                    scrRight(direction);
+                    alarm0 = 10 + random(5);
+                }
+            } else {
+                scrWalk(15, random(360));
+                scrRight(direction);
+            }
+            break;
+    }
 
 
 #define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
@@ -889,6 +956,7 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
+#define scrSetPet(_pet)                                                                 return  mod_script_call("mod", "teassets", "scrSetPet", _pet);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

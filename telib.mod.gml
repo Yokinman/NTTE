@@ -354,6 +354,40 @@
             repeat(10) instance_create(_x, _y, Bubble);
             sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
             break;
+            
+        case "Pet":
+            o = instance_create(_x, _y, CustomHitme);
+            with(o) {
+                 // Visual:
+                spr_idle = spr.CoolGuyIdle;
+                spr_walk = spr.CoolGuyWalk;
+                spr_hurt = sprMutant1Hurt;
+                spr_shadow = shd16;
+                spr_shadow_y = 4;
+                sprite_index = spr_idle;
+                mask_index = mskPlayer;
+                image_speed = 0.4;
+                right = choose(1, -1);
+                depth = -2;
+                
+                 // Sound:
+                snd_hurt = sndFrogEggHurt;
+                
+                 // Vars:
+                pet_type = 0;
+                leader = -4;
+                friction = 0.4;
+                team = 2;
+                maxhealth = 999999999;
+                size = 1;
+                walk = 0;
+                walkspd = 2;
+                maxspd = 3;
+                direction = random(360);
+                
+                alarm0 = 20 + random(10);
+            }
+            break;
 
         //#region COAST
             case "BloomingCactus":
@@ -1632,7 +1666,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade", "ParrotFeather", "ParrotChester",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
@@ -1756,6 +1790,16 @@
             }
         }
 
+        instance_delete(id);
+        exit;
+    }
+    
+    if(other.object_index = ScrapBoss) {
+        with(other) {
+            var c = scrCharm(self, true);
+            c.time = 300;
+        }
+        sound_play(sndBigDogTaunt);
         instance_delete(id);
         exit;
     }
@@ -5900,24 +5944,6 @@
             script_bind_draw(draw_rope, 0, _rope);
         }
         else scrHarpoonUnrope(_rope);
-    }
-
-    with(Player) if player_get_alias(index) == "BioOnPC"{
-        if(button_pressed(index, "horn")) {
-            with(obj_create(mouse_x[index], mouse_y[index], "YetiCrab")) {
-                spr_idle = spr.KingCrabIdle;
-                spr_walk = spr.KingCrabIdle;
-                spr_hurt = spr.KingCrabIdle;
-                spr_dead = spr.KingCrabIdle;
-
-                maxspd = 3.5;
-                is_king = 1;
-            }
-
-            repeat(irandom_range(2, 4)) {
-                obj_create(mouse_x[index], mouse_y[index], "YetiCrab");
-            }
-        }
     }
 
 #define draw_bloom

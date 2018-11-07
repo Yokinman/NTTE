@@ -212,10 +212,23 @@
             ParrotPortrait = sprite_add("sprites/races/Parrot/sprParrotPortrait.png", 1, 20, 221);
             ParrotSelect   = sprite_add("sprites/races/Parrot/sprParrotSelect.png",   1, 0, 0);
             
+             // Player Sprites:
+            ParrotIdle = sprite_add("sprites/races/Parrot/sprParrotIdle.png",  4, 12, 12);
+            ParrotWalk = sprite_add("sprites/races/Parrot/sprParrotWalk.png",  6, 12, 12);
+            ParrotHurt = sprite_add("sprites/races/Parrot/sprParrotHurt.png",  3, 12, 12);
+            ParrotDead = sprite_add("sprites/races/Parrot/sprParrotDead.png",  6, 12, 12);
+            
              // Parrot Feather:
             ParrotFeather = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gccEhAKigKoTwAAAF5JREFUGNNjYMADipi4/hOUZEQWXMQi+J+BgYHhwr+fDH3/vjEyMDAwMCFLWkn+Y7jw7yeDARM7XBNcgZXkP4ZpT38zZEmzYtq3iEXwfxET1/87svz/YdagAJwSxAAAEiYfBSYTcvYAAAAASUVORK5CYII=", 1, 4, 4);
         //#endregion
-
+        
+        //#region PETS
+             // CoolGuy:
+            CoolGuyIdle = sprite_add("sprites/pets/Pizza/sprCoolGuyIdle.png", 4, 10, 10);
+            CoolGuyWalk = sprite_add("sprites/pets/Pizza/sprCoolGuyWalk.png", 6, 10, 10);
+        
+        //#endregion
+        
         //#region TRENCH
              // Angler:
             AnglerIdle =        sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
@@ -1215,6 +1228,22 @@
 		}
 		if(!r) break;
 	}
+
+#define scrSetPet(_pet)
+     // Set the pet that the pet object is:
+    switch(_pet) {
+        case 0: // CoolGuy:
+             // Visual:
+            spr_idle = spr.CoolGuyIdle;
+            spr_walk = spr.CoolGuyWalk;
+            spr_hurt = sprMutant1Hurt;
+            
+             // Sound:
+            snd_hurt = sndFrogEggHurt;
+            break;
+    }
+    
+    pet_type = _pet;
 
 #define orandom(n) // For offsets
     return random_range(-n, n);

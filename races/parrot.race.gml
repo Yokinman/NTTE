@@ -29,11 +29,11 @@
 #macro spr global.spr
 
 #define race_name                                                                       return "PARROT";
-#define race_text                                                                       return "BIRDS OF A @rFEATHER@w#@rCHARM@w";
+#define race_text                                                                       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
 #define race_portrait                                                                   return spr.ParrotPortrait;
 #define race_mapicon                                                                    return spr.ParrotMap;
 #define race_menu_button                                                                sprite_index = spr.ParrotSelect;
-#define race_tb_text                                                                    return "@rCHARM@s LASTS LONGER";
+#define race_tb_text                                                                    return "@rFEATHERS@s LAST LONGER";
 #define race_ttip                                                                       if(GameCont.level == 10 && random(5) < 1) { return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird"); } else { return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s"); }
 #define race_ultra_name
     switch (argument0) {
@@ -53,6 +53,11 @@
 #define create
     feather_ammo = 0;
     feather_load = 0;
+    
+    spr_idle = spr.ParrotIdle;
+    spr_walk = spr.ParrotWalk;
+    spr_hurt = spr.ParrotHurt;
+    spr_dead = spr.ParrotDead;
 
 #define game_start
     if(fork()){

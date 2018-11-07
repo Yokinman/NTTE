@@ -322,8 +322,24 @@
 		obj_create(x, y, "BigDecal");
 		break;
 	}
+	
+	 // Spawn pets:
+	with(Player) {
+        if(is_array(pet)) {
+    	    for(i = 0; i < maxpets; i++) {
+    	        with(obj_create(x, y, "Pet")) {
+    	            scrSetPet(other.pet[other.i]);
+    	            leader = other;
+    	        }
+    	    }
+	    }
+	}
 
 #define step
+    with(instances_matching(Player, "pet", null)) {
+        pet = 0;
+    }
+
      // GENERATION CODE //
     if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
     else if(global.newLevel){
@@ -403,6 +419,11 @@
     else if(global.currentMusic != -1){
         sound_stop(global.currentMusic);
         global.currentMusic = -1;
+    }
+
+     // Give players pet variables:
+    with(instances_matching(Player, "maxpets", null)) {
+        maxpets = 1;
     }
 
     /// Tiny Spiders (New Cocoons):
@@ -657,6 +678,9 @@
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+
+#define scrSetPet(_pet)
+    return mod_script_call("mod", "teassets", "scrSetPet", _pet);
     
 #define orandom(_n)
     return irandom_range(-_n,_n);
