@@ -500,7 +500,6 @@
                  // Player Pickup:
                 else{
                     with(creator) feather_ammo++;
-                    trace(creator.feather_ammo);
                     instance_destroy();
                 }
             }

@@ -28,13 +28,21 @@
 
 #macro spr global.spr
 
-#define race_name                                                                       return "PARROT";
-#define race_text                                                                       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_portrait                                                                   return spr.ParrotPortrait;
-#define race_mapicon                                                                    return spr.ParrotMap;
-#define race_menu_button                                                                sprite_index = spr.ParrotSelect;
-#define race_tb_text                                                                    return "@rFEATHERS@s LAST LONGER";
-#define race_ttip                                                                       if(GameCont.level == 10 && random(5) < 1) { return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird"); } else { return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s"); }
+#define race_name           return "PARROT";
+#define race_text           return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
+#define race_tb_text        return "@rFEATHERS@s LAST LONGER";
+#define race_portrait       return spr.ParrotPortrait;
+#define race_mapicon        return spr.ParrotMap;
+#define race_menu_button    sprite_index = spr.ParrotSelect;
+
+#define race_ttip
+    if(GameCont.level == 10 && random(5) < 1){
+        return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird");
+    }
+    else{
+        return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s");
+    }
+
 #define race_ultra_name
     switch (argument0) {
         case 1: return "FLOCK TOGETHER";
@@ -64,6 +72,7 @@
         do wait 1;
         until !instance_exists(GenCont);
 
+         // Starting Feather Ammo:
         repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
             target = other;
             creator = other;
@@ -76,7 +85,7 @@
      /// ACTIVE : Charm
     if(feather_load <= 0 || button_pressed(index, "spec")){
         var n = 3;
-        if(button_check(index, "spec") && feather_ammo >= n){
+        if((button_check(index, "spec") || usespec > 0) && feather_ammo >= n){
             feather_ammo -= n;
             feather_load = 3;
 
@@ -108,6 +117,11 @@
                 }
             }
         }
+    }
+
+#define draw
+    if(button_check(index, "spec")){
+        draw_text_nt(x, y - 32, string(feather_ammo));
     }
 
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
