@@ -13,17 +13,14 @@
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
     	 // Big Fish:
-    	BigFishBecomeIdle = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",      4, 40, 38);
-    	BigFishBecomeHurt = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuildHurt.png",  4, 40, 38);
-    	BigFishSpwn =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",     11, 32, 32);
-    	BigFishLeap =       sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",      11, 32, 32);
-    	BigFishSwim =       sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8, 24, 24);
-    	BigFishRise =       sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",       5, 32, 32);
-    	BigFishSwimFrnt =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
-    	BigFishSwimBack =   sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
-    	BubbleBomb =        sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
-    	BubbleExplode =     sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
-    	BubbleCharge =      sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
+    	BigFishBecomeIdle   = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuild.png",      4, 40, 38);
+    	BigFishBecomeHurt   = sprite_add("sprites/enemies/CoastBoss/sprBigFishBuildHurt.png",  4, 40, 38);
+    	BigFishSpwn         = sprite_add("sprites/enemies/CoastBoss/sprBigFishSpawn.png",     11, 32, 32);
+    	BigFishLeap         = sprite_add("sprites/enemies/CoastBoss/sprBigFishLeap.png",      11, 32, 32);
+    	BigFishSwim         = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwim.png",       8, 24, 24);
+    	BigFishRise         = sprite_add("sprites/enemies/CoastBoss/sprBigFishRise.png",       5, 32, 32);
+    	BigFishSwimFrnt     = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimFront.png",  6,  4,  1);
+    	BigFishSwimBack     = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
 
          // Bone:
         Bone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
@@ -32,6 +29,11 @@
          // Harpoon:
         Harpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
         NetNade = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
+
+         // Bubble Bombs:
+    	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
+    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
+    	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
 
         //#region COAST
              // Blooming Cactus:

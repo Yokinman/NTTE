@@ -206,7 +206,9 @@
     			swim_ang_back = direction;
     			shot_wave = 0;
     			fish_train = [];
-    			fish_train_regen = 0;
+    			fish_swim = [];
+    			fish_swim_delay = 0;
+    			fish_swim_regen = 0;
     			for(var i = 0; i < (GameCont.loops * 3); i++) fish_train[i] = noone;
 
     			 // Alarms:
@@ -2246,35 +2248,70 @@
     }
 
      // Fish Train:
-    if(fish_train_regen > 0) fish_train_regen -= current_time_scale;
     if(array_length(fish_train) > 0){
         var _leader = id,
             _broken = false;
 
         for(var i = 0; i < array_length(fish_train); i++){
-            if(_broken) fish_train[i] = noone;
+            if(_broken){
+                with(fish_train[i]) visible = 1;
+                fish_train[i] = noone;
+            }
             else{
                 var _fish = fish_train[i],
                     b = false;
 
-                 // Train Regen:
-                if(fish_train_regen <= 0 && !instance_exists(_fish)){
-                    fish_train_regen = 5;
+                 // Fish Regen:
+                if(array_length(fish_swim) > i && fish_swim[i]){
+                    if(!instance_exists(_fish) && fish_swim_regen <= 0){
+                        fish_swim_regen = 3;
 
-                    if(random(100) < 1) _fish = obj_create(_leader.x, _leader.y, "Puffer");
-                    else _fish = instance_create(_leader.x, _leader.y, BoneFish);
-                    with(_fish){
-                        kills = 0;
-                        creator = other;
+                        if(random(100) < 1) _fish = obj_create(_leader.x, _leader.y, "Puffer");
+                        else _fish = instance_create(_leader.x, _leader.y, BoneFish);
+                        with(_fish){
+                            kills = 0;
+                            creator = other;
+
+                             // Keep Distance:
+                            var l = 2,
+                                d = _leader.direction + 180;
+
+                            while(point_distance(x, y, _leader.x, _leader.y) < 24){
+                                x += lengthdir_x(l, d);
+                                y += lengthdir_y(l, d);
+                                direction = d;
+                            }
+
+                             // Spawn Poof:
+                            //sound_play(snd)
+                            repeat(8) with(instance_create(x, y, Dust)){
+                                motion_add(random(360), 1);
+                                depth = other.depth - 1;
+                            }
+                        }
+
+                        fish_train[i] = _fish;
                     }
-
-                    fish_train[i] = _fish;
                 }
 
                 if(instance_exists(_fish)){
                     with(_fish){
-                        alarm1 = 30;
+                        alarm1 = 15 + (i * 4);
 
+                         // Swimming w/ Big Fish:
+                        visible = !other.fish_swim[i];
+                        if(other.fish_swim[i]){
+                            scrRight(point_direction(x, y, _leader.x, _leader.y));
+
+                            if(random(3) < 1 && speed > 0){
+                                with(instance_create(x + orandom(6), y + random(8), Sweat)){
+                                    direction = other.direction + choose(-120, 120) + orandom(10);
+                                    speed = 0.5;
+                                }
+                            }
+                        }
+
+                         // Follow the Leader:
                         var _dis = distance_to_object(_leader),
                             _max = 6;
 
@@ -2287,6 +2324,7 @@
                                 y += lengthdir_y(l, d);
                                 _dis -= l;
                             }
+                            motion_add(d, 1);
                         }
                         _leader = id;
                     }
@@ -2298,6 +2336,27 @@
             }
         }
     }
+
+     // Gradual Swim Train:
+    if(fish_swim_delay <= 0){
+        fish_swim_delay = 3;
+        for(var i = 0; i <= 1; i++){
+            var p = array_find_last_index(fish_swim, i);
+            if(p >= 0 && p < array_length(fish_train) - 1){
+                fish_swim[p + 1] = i;
+
+                 // EZ burrow:
+                with(fish_train[p + 1]){
+                    repeat(8) with(instance_create(x + orandom(8) + hspeed, y + orandom(8) + vspeed, Dust)){
+                        depth = other.depth - 1;
+                    }
+                }
+            }
+        }
+        fish_swim[0] = (swim > 0);
+    }
+    fish_swim_delay -= current_time_scale;
+    fish_swim_regen -= current_time_scale;
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Can't be hurt while swimming:
@@ -2346,12 +2405,23 @@
 #define CoastBoss_draw
     var h = (nexthurt > current_frame + 3);
 
-    if(swim){
-        if(h) d3d_set_fog(1, c_white, 0, 0);
+    var _leader = id;
+    with(fish_train) if(instance_exists(self) && other.fish_swim[array_find_index(other.fish_train, self)]){
+        var _spr = sprite_index,
+            _img = image_index,
+            _xscale = image_xscale * right,
+            _yscale = image_yscale,
+            _x = x - (sprite_get_xoffset(_spr) * _xscale),
+            _y = bbox_bottom - (sprite_get_yoffset(_spr) * _yscale) - 1 + spr_shadow_y;
 
+        draw_sprite_part_ext(_spr, _img, 0, 0, sprite_get_width(_spr), sprite_get_yoffset(_spr), _x, _y, _xscale, _yscale, image_blend, image_alpha);
+    }
+
+    if(swim > 0){
         var _cx = x,
             _cy = bbox_bottom;
 
+        if(h) d3d_set_fog(1, c_white, 0, 0);
         for(var a = 0; a < 4; a++){
             var _x = _cx,
                 _y = _cy,
@@ -2360,10 +2430,10 @@
                 _blend = image_blend,
                 _alpha = image_alpha,
                 _swimSpd = (current_frame / 3),
-                _spr = [spr.BigFishSwimFrnt,      spr.BigFishSwimBack           ],
+                _spr = [spr.BigFishSwimFrnt,            spr.BigFishSwimBack                 ],
                 _ang = [swim_ang_frnt,                  swim_ang_back                       ],
                 _dis = [10 * _xscale,                   10 * _xscale                        ], // Offset Distance
-                _dir = [_ang[0] + (5 * sin(_swimSpd)),  _ang[1] + 180 + (5 * sin(_swimSpd))], // Offset Direction
+                _dir = [_ang[0] + (5 * sin(_swimSpd)),  _ang[1] + 180 + (5 * sin(_swimSpd)) ], // Offset Direction
                 _trn = [15 * cos(_swimSpd),             -25 * cos(_swimSpd)                 ];
 
              // Outline:
@@ -5969,6 +6039,14 @@
             _w = ceil(18 * _percent),
             _h = ceil(6 * _percent);
         draw_ellipse(x - _w / 2, y - _h / 2, x + _w / 2, y + _h / 2, false);
+    }
+
+    with(instances_named(CustomEnemy, "CoastBoss")){
+        for(var i = 0; i < array_length(fish_swim); i++){
+            if(fish_swim[i]) with(fish_train[i]){
+                draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+            }
+        }
     }
 
 #define draw_dark // Drawing Grays
