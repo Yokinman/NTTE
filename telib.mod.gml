@@ -131,7 +131,7 @@
             break;
 
         case "CoastBossBecome":
-            o = instance_create(_x, _y, CustomProp);
+            o = instance_create(_x, _y, CustomHitme);
             with(o){
                  // Visual:
                 spr_idle = spr.BigFishBecomeIdle;
@@ -482,7 +482,7 @@
         			 // Vars:
         			mask_index = mskBandit;
         			maxhealth = 12;
-        			raddrop = 8;
+        			raddrop = 4;
         			size = 1;
         			walk = 0;
         			walkspd = 0.8;
@@ -531,7 +531,7 @@
                      // Vars:
         			mask_index = mskBandit;
         			maxhealth = 8;
-        			raddrop = 6;
+        			raddrop = 3;
         			size = 1;
         			walk = 0;
         			walkspd = 0.8;
@@ -991,7 +991,7 @@
                      // Vars:
         			mask_index = mskFreak;
                     maxhealth = 10;
-        			raddrop = 6;
+        			raddrop = 4;
         			size = 1;
         			walk = 0;
         			walkspd = 0.8;
@@ -2014,10 +2014,12 @@
 
 
 #define CoastBossBecome_step
+    speed = 0;
+
      // Animate:
     image_index = part;
     if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
-    else if(sprite_index == spr_hurt) sprite_index = spr_idle;
+    else sprite_index = spr_idle;
 
      // Skeleton Rebuilt:
     if(part >= sprite_get_number(spr_idle) - 1){
@@ -2032,7 +2034,21 @@
         instance_delete(id);
     }
 
-#define CoastBossBecome_death
+     // Death:
+    else if(my_health <= 0) instance_destroy();
+
+#define CoastBossBecome_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);  // Sound
+
+#define CoastBossBecome_destroy
+    with(instance_create(x, y, Corpse)){
+        sprite_index = other.spr_dead;
+        image_xscale = other.image_xscale;
+        size = other.size;
+    }
+
      // Death Effects:
     if(part > 0){
         sound_play(sndOasisDeath);
@@ -3291,6 +3307,9 @@
     with(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) draw_self();
     if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 
+#define Diver_death
+    pickup_drop(20, 0);
+
 
 #define DiverHarpoon_end_step
      // Trail:
@@ -3533,17 +3552,11 @@
                 }
             }
 
-            if(instance_exists(Player) && intro_pan != 0){
-                 // Disable Shooting:
-                with(Player){
-                    clicked = false;
-                    can_shoot = false;
-                    bcan_shoot = false;
-                    reload = max(reload, 2);
-                    breload = max(breload, 2);
-                }
+             // Just in case:
+            with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")) my_health = 0;
 
-                 // Attract Pickups:
+             // Attract Pickups:
+            if(instance_exists(Player) && intro_pan > 0){
                 with(Pickup) if(object_index != WepPickup && speed <= 0){
                     var t = instance_nearest(x, y, Player);
                     if(point_distance(x, y, t.x, t.y) > 30){
@@ -3584,6 +3597,9 @@
             }
         }
         UberCont.opt_shake = s;
+
+         // Enable/Disable Players:
+        with(Player) visible = (other.intro_pan <= 0); // REDRAW PLAYER, i will do this later but cant right now so this is a reminder
     }
     else for(var i = 0; i < maxp; i++){
         if(view_object[i] == id) view_object[i] = noone;
@@ -3721,9 +3737,10 @@
     }
 
 #define Palanking_alrm0
-    if(intro_pan == 0){
+    if(intro_pan <= 0){
         alarm0 = 60;
 
+         // Enable Cinematic:
         intro_pan = 10;
         intro_pan_x = x;
         intro_pan_y = y;
@@ -3754,7 +3771,7 @@
                     intro_pan_x = seal_spawn_x;
                     intro_pan_y = seal_spawn_y;
 
-                    alarm0 = (seal_max * 8) + 16;
+                    alarm0 = alarm3 + 14;
                 }
                 break;
 
@@ -3967,7 +3984,13 @@
         array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
     }
 
-    if(--seal_spawn > 0) alarm3 = 4 + random(4);
+    if(--seal_spawn > 0) alarm3 = 4 + random(2);
+
+     // Continue Intro:
+    if(alarm0 > 0){
+        alarm0 += alarm3;
+        intro_pan += alarm3;
+    }
 
 #define Palanking_alrm4
      // Biggo Slash:
@@ -4763,7 +4786,7 @@
     }
 
 #define Seal_death
-    pickup_drop(60, 0);
+    pickup_drop(50, 0);
 
 
 #define SealAnchor_step
@@ -5140,6 +5163,9 @@
 
     if(gunangle <= 180) draw_self_enemy();
 
+#define SealHeavy_death
+    pickup_drop(50, 0);
+
 
 #define SealMine_step
      // Animate:
@@ -5447,7 +5473,7 @@
         var _targetDir = point_direction(x, y, target.x, target.y);
         if(target_is_visible()){
              // Close Range Charge:
-            if(target_in_distance(0, 96) && random(3) < 2){
+            if(target_in_distance(0, 96) && random(4) < 3){
                 charge = 15 + random(10);
                 charge_wait = 15;
                 charge_dir = _targetDir;
@@ -5488,6 +5514,9 @@
     }
 
     scrRight(direction);
+
+#define Hammerhead_death
+    pickup_drop(30, 8);
 
 
 #define Puffer_step
@@ -5579,7 +5608,7 @@
     if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define Puffer_death
-    pickup_drop(50, 0);
+    pickup_drop(30, 0);
 
      // Powerful Death:
     var _num = 3;
@@ -6042,9 +6071,9 @@
     }
 
     with(instances_named(CustomEnemy, "CoastBoss")){
-        for(var i = 0; i < array_length(fish_swim); i++){
-            if(fish_swim[i]) with(fish_train[i]){
-                draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+        for(var i = 0; i < array_length(fish_train); i++){
+            if(array_length(fish_swim) > i && fish_swim[i]){
+                with(fish_train[i]) draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
             }
         }
     }

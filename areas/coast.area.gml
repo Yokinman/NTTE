@@ -176,13 +176,14 @@
 	with(instances_matching_ne(Corpse, "do_portal", false)) do_portal = false;
 	
 	 // Attract pickups on level end
+	/*if(CanLeaveCoast && !instance_exists(Portal)){ im gonna change this a little   cant right now so just commenting it out for reasons
 	with instances_matching(GameObject,"object_index",Rad,AmmoPickup,HPPickup) if CanLeaveCoast && speed <= 0 && instance_exists(Player){
 	    var _p = instance_nearest(x,y,Player),
 	        _l = 8,
 	        _d = point_direction(x,y,_p.x,_p.y);
 	    x += lengthdir_x(_l,_d);
 	    y += lengthdir_y(_l,_d);
-	}
+	}*/
 	
      // Explosion debris splash FX:
 	with(Explosion) if(current_time_scale && random(5) < 1){
