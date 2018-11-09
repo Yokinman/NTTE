@@ -65,7 +65,13 @@
     return "@1(sprInterfaceIcons)1-" + string(sub);
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx + ((_lastarea == mod_current) ? 8.75 : 0.5), -8, (_subarea == 1)];
+    var _x = 18.5;
+    switch(_subarea){
+        case 1 : _x += 0;    break;
+        case 2 : _x += 6;    break;
+        case 3 : _x += 12;    break;
+    }
+    return [_x, -9, (_subarea == 3 || _subarea == 3)];
 
 #define area_sprite(_spr)
     switch(_spr){

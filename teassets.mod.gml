@@ -6,9 +6,9 @@
 
     	 // Big Decals:
     	BigTopDecal = {
-    	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 40),
-    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 40),
-    	    "102"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 40)
+    	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24),
+    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 24),
+    	    "102"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24)
     	}
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
@@ -398,8 +398,6 @@
         sound_volume(PalankingHurt, 0.6);
 
          // Cat:
-        CatHurt = sound_add("sounds/enemies/Cat/sndCatHurt.ogg");
-        sound_volume(CatHurt, 0.6);
     }
 
      // MUSIC //

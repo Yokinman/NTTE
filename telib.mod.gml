@@ -1734,6 +1734,31 @@
         instance_delete(id);
     }
 
+#define BigDecal_destroy
+     // General FX:
+    sleep(100);
+    view_shake_at(x, y, 50);
+    with instance_create(x, y, PortalClear) mask_index = other.mask_index;
+    
+    repeat(irandom_range(9, 18)) with instance_create(x, y, Debris) motion_set(irandom(359), random_range(6, 12));
+    
+     // Area specific events:
+    var _x = x,
+        _y = y + 16;
+    switch(GameCont.area){
+        case 1 : // Spawn a handful of crab bones:
+            repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
+                motion_set(irandom(359), random_range(3, 6));
+                wep = "crabbone";
+            }
+            
+        break;
+        
+        case 2 : // Spawn a bunch of frog eggs:
+            repeat(irandom_range(3, 5)) with instance_create(_x + orandom(24), _y + irandom(16), FrogEgg) alarm0 = irandom_range(20, 40);
+            
+        break;
+    }
 
 #define Bone_step
      // Spin:
