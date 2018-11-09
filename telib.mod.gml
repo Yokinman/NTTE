@@ -8,6 +8,15 @@
     /*with(instances_named(CustomObject, "BigDecal")){
         sprite_index = lq_defget(spr.BigTopDecal, string(GameCont.area), mskNone);
     }*/
+     // Trench big decal bubble spawn points:
+    global.decalVents = [
+        [2, -14],
+        [15, 8],
+        [1, 0],
+        [-19, 17],
+        [-12, 25],
+        [11, 28],
+        [24, 18]];
 
      // Harpoon Ropes:
     global.poonRope = []; // poon poon poon poon poon
@@ -1726,6 +1735,21 @@
     return o;
 
 #define BigDecal_step
+    if !instance_exists(SpiralCont){
+         // FX:
+        if GameCont.area == "trench"{
+            // Trench vent bubbles:
+            for (var i = 0; i < array_length(global.decalVents); i++) if random(8) < current_time_scale{
+                var p = global.decalVents[i];
+                with instance_create(x + p[0], y + p[1], Bubble){
+                    depth = -9;
+                    friction = 0.2;
+                    motion_set(irandom_range(85, 95), random_range(4, 7));
+                }
+            }
+        }
+    }
+
     if(place_meeting(x, y, FloorExplo)){
     	instance_destroy();
     	exit;
@@ -1751,12 +1775,10 @@
                 motion_set(irandom(359), random_range(3, 6));
                 wep = "crabbone";
             }
-            
         break;
         
         case 2 : // Spawn a bunch of frog eggs:
             repeat(irandom_range(3, 5)) with instance_create(_x + orandom(24), _y + irandom(16), FrogEgg) alarm0 = irandom_range(20, 40);
-            
         break;
     }
 
