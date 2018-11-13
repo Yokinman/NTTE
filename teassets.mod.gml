@@ -225,10 +225,15 @@
         //#endregion
         
         //#region PETS
+             // Parrot:
+            PetParrotIdle = sprite_add("sprites/pets/Coast/sprPetParrotIdle.png",   6, 12, 12);
+            PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);
+            PetParrotHurt = sprite_add("sprites/pets/Coast/sprPetParrotDodge.png",  3, 12, 12);
+
              // CoolGuy:
-            CoolGuyIdle = sprite_add("sprites/pets/Pizza/sprCoolGuyIdle.png", 4, 10, 10);
-            CoolGuyWalk = sprite_add("sprites/pets/Pizza/sprCoolGuyWalk.png", 6, 10, 10);
-        
+            PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
+            PetCoolGuyWalk = sprite_add("sprites/pets/Pizza/sprPetCoolGuyWalk.png",    6, 12, 12);
+            PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
         //#endregion
         
         //#region TRENCH

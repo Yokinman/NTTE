@@ -375,35 +375,33 @@
             break;
 
         case "Pet":
-            o = instance_create(_x, _y, CustomHitme);
+            o = instance_create(_x, _y, CustomObject);
             with(o) {
                  // Visual:
-                spr_idle = spr.CoolGuyIdle;
-                spr_walk = spr.CoolGuyWalk;
-                spr_hurt = sprMutant1Hurt;
+                spr_idle = spr.PetParrotIdle;
+                spr_walk = spr.PetParrotWalk;
+                spr_hurt = spr.PetParrotHurt;
                 spr_shadow = shd16;
+                spr_shadow_x = 0;
                 spr_shadow_y = 4;
-                sprite_index = spr_idle;
                 mask_index = mskPlayer;
                 image_speed = 0.4;
                 right = choose(1, -1);
                 depth = -2;
-                
+
                  // Sound:
                 snd_hurt = sndFrogEggHurt;
-                
+
                  // Vars:
-                pet_type = 0;
-                leader = -4;
-                friction = 0.4;
-                team = 2;
-                maxhealth = 999999999;
-                size = 1;
+                pet = "Parrot";
+                leader = noone;
+                can_take = true;
                 walk = 0;
                 walkspd = 2;
                 maxspd = 3;
+                friction = 0.4;
                 direction = random(360);
-                
+
                 alarm0 = 20 + random(10);
             }
             break;
@@ -3103,71 +3101,137 @@
     scrHarpoonRope(f, h);
 
 
+#define Pet_create(_x, _y, _name)
+    with(obj_create(_x, _y, "Pet")){
+        pet = _name;
+
+         // Custom Create Event:
+        var _scrt = pet + "_create";
+        if(mod_script_exists("mod", "petlib", _scrt)){
+            mod_script_call("mod", "petlib", _scrt);
+        }
+
+         // Default:
+        else{
+             // Sprites:
+            spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
+            spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_walk);
+            spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_hurt);
+        }
+    }
+
 #define Pet_step
     enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd, maxspd);
-    
-    if(place_meeting(x + hspeed, y, Wall) or place_meeting(x, y + vspeed, Wall)) {
-        move_bounce_solid(false);
+
+     // Wall Collision:
+    if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
+    if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
+
+     // Custom Step Event:
+    if(visible){
+        var _scrt = pet + "_step";
+        if(mod_script_exists("mod", "petlib", _scrt)){
+            mod_script_call("mod", "petlib", _scrt);
+        }
     }
-    
-    if(!instance_exists(leader) and instance_exists(Player)) {
-        var p = instance_nearest(x, y, Player);
-        with(p) {
-            if(other.leader != self and point_distance(other.x, other.y, x, y) < 16) {
-                if(!is_array(pet)) {
-                    pet[0] = other.pet_type;
-                } else if(array_length(pet) < maxpets) {
-                    pet[array_length(pet)] = other.pet_type;
-                } else {
-                    pet[irandom_range(0, array_length(pet))] = other.pet_type;
-                }
-                
-                other.leader = self;
-                
-                sound_play(sndHealthChestBig);
-                sound_play(sndHitFlesh);
-                instance_create(x, y, HealFX);
+
+     // Player Owns Pet:
+    if(instance_exists(leader)){
+        persistent = true;
+
+         // Enter Portal:
+        if(visible){
+            if(place_meeting(x, y, Portal)){
+                visible = false;
+                repeat(3) instance_create(x, y, Dust);
             }
         }
-    }
-    
-    if(instance_exists(leader)) {
-        switch(pet_type) {
-            case 0: // CoolGuy:
-                with(instances_matching(HPPickup, "coolguy_ability", null)) {
-                    coolguy_ability = 1;
-                    
-                     // Increases amount pickups heal for, also makes it pizza:
-                    num += 1;
-                    sprite_index = sprSlice;
-                }
-                break;
+        else{
+            x = leader.x;
+            y = leader.y;
         }
+    }
+
+     // No Owner:
+    else{
+        persistent = false;
+
+         // Looking for a home:
+        var _alone = true;
+        if(instance_exists(Player)){
+            with(Player) if(point_distance(x, y, other.x, other.y) < 16) _alone = false;
+            if(!_alone && can_take){
+                with(instance_nearest(x, y, Player)){
+                    var _max = array_length(pet);
+                    if(_max > 0){
+                         // Remove Oldest Pet:
+                        with(pet[_max - 1]) leader = noone;
+                        pet = array_slice(pet, 0, _max - 1);
+
+                         // Add New Pet:
+                        other.leader = self;
+                        array_insert(pet, 0, other);
+
+                         // Effects:
+                        instance_create(x, y, HealFX);
+                        sound_play(sndHealthChestBig);
+                        sound_play(sndHitFlesh);
+                    }
+                }
+                can_take = false;
+            }
+        }
+        if(_alone) can_take = true;
     }
     
 #define Pet_draw
-    draw_self_enemy();
+    image_alpha = abs(image_alpha);
+
+     // Custom Draw Event:
+    var _scrt = pet + "_draw";
+    if(mod_script_exists("mod", "petlib", _scrt)){
+        mod_script_call("mod", "petlib", _scrt);
+    }
+
+     // Default:
+    else draw_self_enemy();
+
+     // CustomObject draw events are annoying:
+    image_alpha = -abs(image_alpha);
     
 #define Pet_alrm0
     alarm0 = 40 + random(20);
 
-    switch(pet_type) {
-        default: // Follows leader around:
-            if(instance_exists(leader)) {
-                var _leaderDir = point_direction(x, y, leader.x, leader.y);
-                
-                if(point_distance(x, y, leader.x, leader.y) > 24) {
-                    scrWalk(10, _leaderDir + orandom(10));
-                    scrRight(direction);
-                    alarm0 = 10 + random(5);
-                }
-            } else {
-                scrWalk(15, random(360));
-                scrRight(direction);
+     // Where leader be:
+    var _leaderDir = 0,
+        _leaderDis = 0;
+
+    if(instance_exists(leader)){
+        _leaderDir = point_direction(x, y, leader.x, leader.y);
+        _leaderDis = point_distance(x, y, leader.x, leader.y);
+    }
+
+     // Custom Alarm Event:
+    var _scrt = pet + "_alrm0";
+    if(mod_script_exists("mod", "petlib", _scrt)){
+        var a = mod_script_call("mod", "petlib", _scrt, _leaderDir, _leaderDis);
+        if(a > 0) alarm0 = a;
+    }
+
+     // Default:
+    else{
+         // Follow Leader Around:
+        if(instance_exists(leader)){
+            if(_leaderDis > 24){
+                scrWalk(10, _leaderDir + orandom(10));
+                alarm0 = 10 + random(5);
             }
-            break;
+        }
+
+         // Idle Movement:
+        else scrWalk(15, random(360));
     }
 
 
@@ -4053,6 +4117,10 @@
     //     draw_sprite(shd24, 0, x, y - z);
     // }
 
+    with(instances_named(CustomObject, "Pet")){
+        draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+    }
+
     with(instances_matching(CustomProjectile, "name", "MortarPlasma", "CatGrenade")) if(visible){
         var _percent = clamp(96 / z, 0.1, 1),
             _w = ceil(18 * _percent),
@@ -4064,7 +4132,9 @@
     with(instances_named(CustomEnemy, "CoastBoss")){
         for(var i = 0; i < array_length(fish_train); i++){
             if(array_length(fish_swim) > i && fish_swim[i]){
-                with(fish_train[i]) draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+                with(fish_train[i]) if(visible){
+                    draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+                }
             }
         }
     }

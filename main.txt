@@ -2,6 +2,7 @@
 /loadmod ntte
 /loadmod telib
 /loadmod telib2
+/loadmod petlib
 
 // Areas \\
 /loadarea areas/coast
