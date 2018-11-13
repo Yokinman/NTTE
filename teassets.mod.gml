@@ -1151,7 +1151,7 @@
 
              // Uncharm:
             else{
-                if(canmelee){
+                if("canmelee" in self && canmelee){
                     alarm11 = 30;
                     canmelee = false;
                 }
@@ -1562,6 +1562,9 @@
 
 #define area_get_sprite(_area, _spr)
     return mod_script_call("area", _area, "area_sprite", _spr);
+
+#define in_range(_num, _lower, _upper)
+    return (_num >= _lower && _num <= _upper);
 
 #define cleanup
     with(global.charm_step) instance_destroy();
