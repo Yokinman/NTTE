@@ -26,7 +26,6 @@
 
      // Effects:
     sound_play_pitchvol(sndLightningCannonUpg, 0.5, 0.4);
-    weapon_post(2, 0, 0);
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
