@@ -322,23 +322,13 @@
 		obj_create(x, y, "BigDecal");
 		break;
 	}
-	
-	 // Spawn pets:
-	with(Player) {
-        if(is_array(pet)) {
-    	    for(i = 0; i < maxpets; i++) {
-    	        with(obj_create(x, y, "Pet")) {
-    	            scrSetPet(other.pet[other.i]);
-    	            leader = other;
-    	        }
-    	    }
-	    }
-	}
+
+     // Visibilize Pets:
+    with(instances_matching(CustomObject, "name", "Pet")) visible = true;
 
 #define step
-    with(instances_matching(Player, "pet", null)) {
-        pet = 0;
-    }
+     // Pet Slots:
+    with(instances_matching(Player, "pet", null)) pet = [noone];
 
      // GENERATION CODE //
     if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
@@ -419,11 +409,6 @@
     else if(global.currentMusic != -1){
         sound_stop(global.currentMusic);
         global.currentMusic = -1;
-    }
-
-     // Give players pet variables:
-    with(instances_matching(Player, "maxpets", null)) {
-        maxpets = 1;
     }
 
     /// Tiny Spiders (New Cocoons):
