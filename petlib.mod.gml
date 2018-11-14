@@ -27,9 +27,39 @@
     depth = -3;
 
      // Vars:
+    maxspd = 3.5;
     perched = false;
+    pickup = noone;
+    pickup_x = 0;
+    pickup_y = 0;
+    pickup_held = false;
 
 #define Parrot_step
+     // Grabbing Pickup:
+    if(instance_exists(pickup)){
+        if(pickup_held){
+            if(pickup.x == pickup_x && pickup.y == pickup_y){
+                with(pickup){
+                    x = other.x;
+                    y = other.y + 4;
+                    xprevious = x;
+                    yprevious = y;
+                }
+                pickup_x = pickup.x;
+                pickup_y = pickup.y;
+            }
+            else other.pickup = noone;
+        }
+
+         // Grab Pickup:
+        else if(place_meeting(x, y, pickup)){
+            pickup_held = true;
+            pickup_x = pickup.x;
+            pickup_y = pickup.y;
+        }
+    }
+    else pickup_held = false;
+
      // Perch on Leader's Head:
     if(instance_exists(leader) && leader.race != "horror"){ // Horror is too painful to stand on
         var _x = leader.x,
@@ -38,7 +68,7 @@
         if(perched){
             x = leader.x;
             y = leader.y;
-            if(leader.speed > 0){
+            if(leader.speed > 0 || instance_exists(pickup)){
                 x = _x;
                 y = _y;
                 perched = false;
@@ -47,7 +77,7 @@
         }
 
          // Perch:
-        else if(point_distance(x, y, _x, _y) < 8 && leader.speed <= 0){
+        else if(point_distance(x, y, _x, _y) < 8 && leader.speed <= 0 && !instance_exists(pickup)){
             perched = true;
             sound_play_pitch(sndBouncerBounce, 1.5 + orandom(0.1));
         }
@@ -55,23 +85,44 @@
     else perched = false;
 
 #define Parrot_alrm0(_leaderDir, _leaderDis)
-     // Fly Toward Leader:
-    if(!perched && instance_exists(leader)){
-        scrWalk(10 + random(10), _leaderDir + orandom(30));
-        if(_leaderDis > 32) return walk;
-    }
+    if(instance_exists(leader)){
+         // Fly Toward Pickup:
+        if(instance_exists(pickup)){
+            if(!pickup_held){
+                scrWalk(8, point_direction(x, y, pickup.x, pickup.y));
+                return walk;
+            }
+        }
+        else{
+            pickup_held = false;
+            var _pickup = nearest_instance(x, y, instances_matching(Pickup, "object_index", AmmoPickup, HPPickup, RoguePickup))
+            if(instance_exists(_pickup)){
+                if(!collision_line(x, y, _pickup.x, _pickup.y, Wall, false, false)){
+                    pickup = _pickup;
+                    return 1;
+                }
+            }
+        }
 
-     // Look Around:
-    else{
-        scrRight(random(360));
+         // Fly Toward Leader:
+        if(!perched){
+            scrWalk(10 + random(10), _leaderDir + orandom(30));
+            if(_leaderDis > 32) return walk;
+        }
 
-         // Repeat the sound:
-        if(random(3) < 1) with(leader){
-            sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
-            sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
-            return 60 + random(30);
+        else{
+             // Look Around:
+            scrRight(random(360));
+
+             // Repeat sound:
+            if(random(3) < 1) with(leader){
+                sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
+                sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
+                return 40 + random(20);
+            }
         }
     }
+    else scrRight(random(360));
 
     return (30 + random(30));
 
@@ -81,13 +132,18 @@
         var _uvsStart = sprite_get_uvs(leader.sprite_index, 0),
             _uvsCurrent = sprite_get_uvs(leader.sprite_index, leader.image_index),
             _x = leader.x,
-            _y = leader.y - sprite_get_yoffset(leader.sprite_index) + sprite_get_bbox_top(leader.sprite_index) - 4 + (_uvsCurrent[5] - _uvsStart[5]);
+            _y = leader.y - sprite_get_yoffset(leader.sprite_index) + sprite_get_bbox_top(leader.sprite_index) - 4;
 
          // Manual Bobbing:
-        with(leader) if(race == "parrot"){
-            var _frame = floor(image_index);
-            if(_frame == 1 || _frame == 2) _y++;
+        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in leader){
+            with(leader){
+                var _bob = parrot_bob;
+                _y += _bob[floor(image_index mod array_length(_bob))];
+            }
         }
+
+         // Auto Bobbing:
+        else _y += (_uvsCurrent[5] - _uvsStart[5]);
 
         draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
