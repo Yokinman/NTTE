@@ -61,11 +61,13 @@
 #define create
     feather_ammo = 0;
     feather_load = 0;
-    
+
     spr_idle = spr.ParrotIdle;
     spr_walk = spr.ParrotWalk;
     spr_hurt = spr.ParrotHurt;
     spr_dead = spr.ParrotDead;
+
+    parrot_bob = [0, 1, 1, 0]; // Pet thing
 
 #define game_start
     if(fork()){

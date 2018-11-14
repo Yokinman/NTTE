@@ -938,7 +938,7 @@
                      // Sound:
                     snd_open = sndOasisChest;
 
-                    on_open = script_ref_create(ClamChest_open);
+                    on_open = script_ref_create_ext("mod", "telib2", "ClamChest_open");
                 }
                 break;
 
@@ -1565,9 +1565,6 @@
         	       spr_fire = spr.InvMortarFire;
         	       spr_hurt = spr.InvMortarHurt;
         	       spr_dead = spr.InvMortarDead;
-
-        	        // Reassign scripts:
-        	       on_hurt = ["mod", "telib2", "InvMortar_hurt"];
         	    }
         	    break;
 
@@ -3125,10 +3122,6 @@
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
-     // Wall Collision:
-    if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
-    if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
-
      // Custom Step Event:
     if(visible){
         var _scrt = pet + "_step";
@@ -3143,14 +3136,14 @@
 
          // Enter Portal:
         if(visible){
-            if(place_meeting(x, y, Portal)){
+            if(place_meeting(x, y, Portal) || instance_exists(GenCont)){
                 visible = false;
                 repeat(3) instance_create(x, y, Dust);
             }
         }
         else{
-            x = leader.x;
-            y = leader.y;
+            x = leader.x + orandom(16);
+            y = leader.y + orandom(16);
         }
     }
 
@@ -3185,7 +3178,29 @@
         }
         if(_alone) can_take = true;
     }
-    
+
+#define Pet_end_step
+     // Wall Collision:
+    if(place_meeting(x, y, Wall)){
+        x = xprevious;
+        y = yprevious;
+        if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
+        if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
+        x += hspeed;
+        y += vspeed;
+
+        if(instance_exists(leader)){
+            var _x = x,
+                _y = y;
+
+            mp_potential_step(leader.x, leader.y, 1, false);
+            if(place_meeting(x, y, Wall)){
+                x = _x;
+                y = _y;
+            }
+        }
+    }
+
 #define Pet_draw
     image_alpha = abs(image_alpha);
 
@@ -3202,36 +3217,37 @@
     image_alpha = -abs(image_alpha);
     
 #define Pet_alrm0
-    alarm0 = 40 + random(20);
-
-     // Where leader be:
-    var _leaderDir = 0,
-        _leaderDis = 0;
-
-    if(instance_exists(leader)){
-        _leaderDir = point_direction(x, y, leader.x, leader.y);
-        _leaderDis = point_distance(x, y, leader.x, leader.y);
-    }
-
-     // Custom Alarm Event:
-    var _scrt = pet + "_alrm0";
-    if(mod_script_exists("mod", "petlib", _scrt)){
-        var a = mod_script_call("mod", "petlib", _scrt, _leaderDir, _leaderDis);
-        if(a > 0) alarm0 = a;
-    }
-
-     // Default:
-    else{
-         // Follow Leader Around:
+    alarm0 = 30;
+    if(visible){
+         // Where leader be:
+        var _leaderDir = 0,
+            _leaderDis = 0;
+    
         if(instance_exists(leader)){
-            if(_leaderDis > 24){
-                scrWalk(10, _leaderDir + orandom(10));
-                alarm0 = 10 + random(5);
-            }
+            _leaderDir = point_direction(x, y, leader.x, leader.y);
+            _leaderDis = point_distance(x, y, leader.x, leader.y);
         }
 
-         // Idle Movement:
-        else scrWalk(15, random(360));
+         // Custom Alarm Event:
+        var _scrt = pet + "_alrm0";
+        if(mod_script_exists("mod", "petlib", _scrt)){
+            var a = mod_script_call("mod", "petlib", _scrt, _leaderDir, _leaderDis);
+            if(is_real(a) && a > 0) alarm0 = a;
+        }
+    
+         // Default:
+        else{
+             // Follow Leader Around:
+            if(instance_exists(leader)){
+                if(_leaderDis > 24){
+                    scrWalk(10, _leaderDir + orandom(10));
+                    alarm0 = 10 + random(5);
+                }
+            }
+    
+             // Idle Movement:
+            else scrWalk(15, random(360));
+        }
     }
 
 
@@ -4117,7 +4133,7 @@
     //     draw_sprite(shd24, 0, x, y - z);
     // }
 
-    with(instances_named(CustomObject, "Pet")){
+    with(instances_named(CustomObject, "Pet")) if(visible){
         draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
     }
 
@@ -4132,7 +4148,7 @@
     with(instances_named(CustomEnemy, "CoastBoss")){
         for(var i = 0; i < array_length(fish_train); i++){
             if(array_length(fish_swim) > i && fish_swim[i]){
-                with(fish_train[i]) if(visible){
+                with(fish_train[i]){
                     draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
                 }
             }
