@@ -13,11 +13,52 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
-#define step
-    if(button_pressed(0, "horn")){
-        mod_script_call("mod", "telib", "Pet_create", mouse_x[0], mouse_y[0], "Mimic");
-    }
+#define chat_command(_cmd, _arg, _ind)
+    if _cmd == "pet"
+        mod_script_call("mod", "telib", "Pet_create", mouse_x[_ind], mouse_y[_ind], _arg);
+    return true;
 
+#define Mimic_create
+     // Visual:
+    spr_idle = spr.PetMimicIdle;
+    spr_walk = spr.PetMimicWalk;
+    spr_hurt = spr.PetMimicHurt;
+    spr_open = spr.PetMimicOpen;
+    spr_hide = spr.PetMimicHide;
+    depth = -2;
+    
+     // Vars:
+    maxspd = 2;
+    open = false;
+    wep = 0;
+    
+#define CoolGuy_create
+     // Visual:
+    spr_idle = spr.PetCoolGuyIdle;
+    spr_walk = spr.PetCoolGuyWalk;
+    spr_hurt = spr.PetCoolGuyHurt;
+    depth = -2;
+    
+     // Vars:
+    maxspd = 3;
+
+#define Mimic_step
+     // Hides when untamed:
+    if !instance_exists(leader)
+        sprite_index = spr_hide;
+    
+     // Sparkle:
+    if frame_active(10 + orandom(2)) instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
+    
+#define Mimic_alrm0(_leaderDir, _leaderDis)
+    if instance_exists(leader){
+        if _leaderDis > 48{
+            scrWalk(20 + irandom(30), _leaderDir + orandom(10));
+            scrRight(direction);
+        }
+    }
+    
+    return 30 + irandom(30);
 
 #define Parrot_create
      // Visual:
@@ -153,38 +194,6 @@
 
 
  /// HELPER SCRIPTS ///
-#define Mimic_create
-     // Visual:
-    spr_idle = spr.PetMimicIdle;
-    spr_walk = spr.PetMimicWalk;
-    spr_hurt = spr.PetMimicHurt;
-    spr_open = spr.PetMimicOpen;
-    spr_hide = spr.PetMimicHide;
-    depth = -2;
-    
-     // Vars:
-    maxspd = 2;
-    open = false;
-    wep = 0;
-    
-#define Mimic_step
-     // Hides when untamed:
-    if !instance_exists(leader)
-        sprite_index = spr_hide;
-    
-     // Sparkle:
-    if frame_active(10 + orandom(2)) instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
-    
-#define Mimic_alrm0(_leaderDir, _leaderDis)
-    if instance_exists(leader){
-        if _leaderDis > 48{
-            scrWalk(20 + irandom(30), _leaderDir + orandom(10));
-            scrRight(direction);
-        }
-    }
-    
-    return 30 + irandom(30);
-
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
