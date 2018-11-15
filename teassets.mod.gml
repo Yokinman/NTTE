@@ -235,6 +235,14 @@
             PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
             PetCoolGuyWalk = sprite_add("sprites/pets/Pizza/sprPetCoolGuyWalk.png",    6, 12, 12);
             PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
+            
+             // Golden Chest Mimic:
+            PetMimicIdle = sprite_add("sprites/pets/Mansion/sprPetMimicIdle.png",       16, 16, 16);
+            PetMimicWalk = sprite_add("sprites/pets/Mansion/sprPetMimicWalk.png",       6,  16, 16);
+            PetMimicHurt = sprite_add("sprites/pets/Mansion/sprPetMimicHurt.png",       3,  16, 16);
+            PetMimicOpen = sprite_add("sprites/pets/Mansion/sprPetMimicOpen.png",       1,  16, 16);
+            PetMimicHide = sprite_add("sprites/pets/Mansion/sprPetMimicHide.png",       1,  16, 16);
+            
         //#endregion
         
         //#region TRENCH
