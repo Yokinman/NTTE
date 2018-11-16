@@ -243,6 +243,9 @@
             PetMimicOpen = sprite_add("sprites/pets/Mansion/sprPetMimicOpen.png",       1,  16, 16);
             PetMimicHide = sprite_add("sprites/pets/Mansion/sprPetMimicHide.png",       1,  16, 16);
             
+            // Prism:
+            PetPrismIdle = sprite_add("sprites/pets/Cursed Caves/sprPetPrismIdle.png", 6, 12, 12);
+            
         //#endregion
         
         //#region TRENCH

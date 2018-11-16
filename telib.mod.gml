@@ -405,6 +405,8 @@
                 pet = "Parrot";
                 leader = noone;
                 can_take = true;
+                can_tp = true;
+                tp_distance = 240;
                 walk = 0;
                 walkspd = 2;
                 maxspd = 3;
@@ -3121,7 +3123,8 @@
 
 
 #define Pet_create(_x, _y, _name)
-    with(obj_create(_x, _y, "Pet")){
+    var p = obj_create(_x, _y, "Pet");
+    with(p){
         pet = _name;
 
          // Custom Create Event:
@@ -3139,7 +3142,10 @@
         }
     }
 
+    return p;
+
 #define Pet_step
+    if(instance_exists(BackFromCharSelect)) { instance_delete(self); exit; }
     enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd, maxspd);
@@ -3155,6 +3161,22 @@
      // Player Owns Pet:
     if(instance_exists(leader)){
         persistent = true;
+
+         // Teleport To Leader: 
+        if(can_tp and point_distance(x, y, leader.x, leader.y) > tp_distance) {
+             // Decide Which Floor:
+            var f = instance_nearest(leader.x + orandom(16), leader.y + orandom(16), Floor);
+            var fx = f.x + (f.sprite_width/2);
+            var fy = f.y + (f.sprite_height/2);
+            
+             // Teleport:
+            x = fx;
+            y = fy;
+            
+             // Effects:
+            sound_play_pitch(sndCrystalTB, 1.40 + orandom(0.10));
+            repeat(2) instance_create(x + orandom(8), y + orandom(8), CaveSparkle);
+        }
 
          // Enter Portal:
         if(visible){

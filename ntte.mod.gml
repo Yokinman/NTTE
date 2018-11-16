@@ -322,6 +322,25 @@
 		obj_create(x, y, "BigDecal");
 		break;
 	}
+    
+     // Spawn CoolGuy:
+    if(GameCont.area = "pizza") with(TV) {
+        var f = instance_nearest(x, y + 48, Floor);
+        Pet_create(x, f.y + 16, "CoolGuy");
+    }
+    
+     // Spawn Gold Mimic:
+    if(GameCont.area = 103) with(GoldChest) {
+        with(Pet_create(x, y, "Mimic")) {
+            wep = decide_wep_gold(18, 18 + GameCont.loops, 0);
+        }
+        instance_delete(self);
+    }
+
+     // Spawn Prism:
+    with(BigCursedChest) {
+        Pet_create(x, y, "Prism");
+    }
 
      // Visibilize Pets:
     with(instances_matching(CustomObject, "name", "Pet")) visible = true;
@@ -431,6 +450,42 @@
     if(global.currentMusic != -1){
         sound_volume(global.currentMusic, audio_sound_get_gain(mus.Placeholder));
     }
+
+#define decide_wep_gold(_minhard, _maxhard, _nowep)
+    var _list = ds_list_create(),
+        s = weapon_get_list(_list, _minhard, _maxhard);
+
+    ds_list_shuffle(_list);
+
+    for(i = 0; i < s; i++) {
+        var w = ds_list_find_value(_list, i),
+            c = 0;
+
+         // Weapon Exceptions:
+        if(is_array(_nowep) && array_find_index(_nowep, w) >= 0) c = true;
+        if(w == _nowep) c = true;
+
+         // Specific Weapon Spawn Conditions:
+        if(
+            !weapon_get_gold(w)             ||
+            w == wep_golden_nuke_launcher   ||
+            w == wep_golden_disc_gun        ||
+            w == wep_golden_frog_pistol
+        ){
+            c = true;
+        }
+
+        if(c) continue;
+        break;
+    }
+
+    ds_list_destroy(_list);
+
+     // Set Weapon:
+    if(!c) return w;
+
+     // Default:
+    return choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
 
 #define underwater_step /// Call from underwater area step events
      // Lightning:
@@ -663,6 +718,9 @@
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+
+#define Pet_create(_x, _y, _pet)
+    return mod_script_call("mod", "telib", "Pet_create", _x, _y, _pet);
 
 #define scrSetPet(_pet)
     return mod_script_call("mod", "teassets", "scrSetPet", _pet);

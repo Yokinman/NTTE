@@ -18,6 +18,24 @@
         mod_script_call("mod", "telib", "Pet_create", mouse_x[_ind], mouse_y[_ind], _arg);
     return true;
 
+#define CoolGuy_create
+     // Visual:
+    spr_idle = spr.PetCoolGuyIdle;
+    spr_walk = spr.PetCoolGuyWalk;
+    spr_hurt = spr.PetCoolGuyHurt;
+    depth = -2;
+    
+     // Vars:
+    maxspd = 3;
+    
+#define CoolGuy_step
+    with(instances_matching(HPPickup, "coolguy", null)) {
+        coolguy = 1;
+         // Healthy Pizza:
+        num++;
+        sprite_index = sprSlice;
+    }
+
 #define Mimic_create
      // Visual:
     spr_idle = spr.PetMimicIdle;
@@ -29,23 +47,41 @@
     
      // Vars:
     maxspd = 2;
+    can_tp = false;
     open = false;
-    wep = 0;
-    
-#define CoolGuy_create
-     // Visual:
-    spr_idle = spr.PetCoolGuyIdle;
-    spr_walk = spr.PetCoolGuyWalk;
-    spr_hurt = spr.PetCoolGuyHurt;
-    depth = -2;
-    
-     // Vars:
-    maxspd = 3;
+    wep = wep_revolver;
+    child_wep = -4;
 
 #define Mimic_step
      // Hides when untamed:
     if !instance_exists(leader)
         sprite_index = spr_hide;
+    else {
+         // Leader is close enough to open:
+        if(leader.bwep != wep_none and point_distance(x, y, leader.x, leader.y) < 16) {
+             // Spawn stored weapon:
+            if(!instance_exists(child_wep)) {
+                if(instance_exists(leader.nearwep) and leader.wep = wep) {
+                    wep = leader.nearwep.wep;
+                    child_wep = leader.nearwep;
+                } else {
+                    with(instance_create(x, y, WepPickup)) {
+                        wep = other.wep;
+                        other.child_wep = self;
+                    }
+                    sound_play(sndGoldChest);
+                }
+            } else {
+                sprite_index = spr_open;
+            }
+        } else if(instance_exists(child_wep)) with(child_wep) {
+            instance_delete(self);
+        }
+        
+        if(sprite_index = spr_open) {
+            walk = 0;
+        }
+    }
     
      // Sparkle:
     if frame_active(10 + orandom(2)) instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
@@ -69,6 +105,7 @@
 
      // Vars:
     maxspd = 3.5;
+    tp_distance = 160;
     perched = false;
     pickup = noone;
     pickup_x = 0;
@@ -192,6 +229,55 @@
      // Normal:
     else draw_self_enemy();
 
+#define Prism_create
+     // Visual:
+    spr_idle = spr.PetPrismIdle;
+    spr_walk = spr.PetPrismIdle;
+    depth = -3;
+
+     // Vars:
+    maxspd = 3;
+    tp_distance = 120;
+    spawn_loc = [x, y];
+    alarm0 = -1;
+    
+#define Prism_step
+    repeat(irandom(4)) instance_create(x + orandom(4), y + orandom(4), Curse);
+    
+    if(instance_exists(leader)) {
+         // Aimlessly Floats
+        scrWalk(1, direction);
+        
+         // Duplicate Friendly Bullets:
+        with(instances_matching(projectile, "team", leader.team)) if(place_meeting(x, y, other) and "prism_duplicate" not in self) {
+            prism_duplicate = 1;
+            
+             // Duplicate and Adjust:
+            with(instance_copy(false)) { direction += orandom(20); image_angle = direction; }
+            direction += orandom(20);
+            image_angle = direction;
+            
+             // Effects:
+            sound_play_pitch(sndCrystalShield, 1.40 + orandom(0.10));
+            instance_create(x + orandom(4), y + orandom(4), CaveSparkle);
+        }
+    } else {
+         // Jitters Around:
+        if(random(30) < 1) {
+             // Decide Which Floor:
+            var f = instance_nearest(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor);
+            var fx = f.x + (f.sprite_width/2);
+            var fy = f.y + (f.sprite_height/2);
+            
+             // Teleport:
+            x = fx;
+            y = fy;
+            
+             // Effects:
+            sound_play_pitch(sndCrystalTB, 1.20 + orandom(0.10));
+            repeat(irandom_range(4, 8)) instance_create(x + orandom(4), y + orandom(4), Curse);
+        }
+    }
 
  /// HELPER SCRIPTS ///
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);

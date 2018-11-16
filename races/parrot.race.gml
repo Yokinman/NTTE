@@ -80,6 +80,12 @@
             creator = other;
             speed *= 3;
         }
+        
+        with(Pet_create(x, y, "Parrot")) {
+            leader = other;
+            array_insert(other.pet, 0, self);
+        }
+        
         exit;
     }
 
@@ -129,3 +135,4 @@
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
+#define Pet_create(_x, _y, _pet)                                                        return  mod_script_call("mod", "telib", "Pet_create", _x, _y, _pet);
