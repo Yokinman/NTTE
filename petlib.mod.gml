@@ -93,8 +93,8 @@
             if(wep == wep_none && !place_meeting(x, y, WepPickup)){
                  // Place Weapon:
                 with(Player) if(place_meeting(x, y, other) && button_pressed(index, "pick")){
-                    if(!curse){
-                        if(wep != wep_none && canpick){
+                    if(canpick && wep != wep_none){
+                        if(!curse){
                             with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
                             wep = wep_none;
                             scrSwap();
@@ -108,8 +108,8 @@
     
                             break;
                         }
+                        else sound_play(sndCursedReminder);
                     }
-                    else sound_play(sndCursedReminder);
                 }
 
                  // Draw Indicator:
