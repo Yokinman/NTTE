@@ -92,21 +92,24 @@
              // Not Holding Weapon:
             if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(TopCont)){
                  // Place Weapon:
-                with(Player) if(place_meeting(x, y, other)){
-                    if(wep != wep_none && !curse && canpick && button_pressed(index, "pick")){
-                        with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
-                        wep = wep_none;
-                        scrSwap();
-
-                         // Effects:
-                        sound_play(sndSwapGold);
-                        sound_play(sndWeaponPickup);
-                        with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
-                            depth = other.depth - 1;
+                with(Player) if(place_meeting(x, y, other) && button_pressed(index, "pick")){
+                    if(!curse){
+                        if(wep != wep_none && canpick){
+                            with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
+                            wep = wep_none;
+                            scrSwap();
+    
+                             // Effects:
+                            sound_play(sndSwapGold);
+                            sound_play(sndWeaponPickup);
+                            with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
+                                depth = other.depth - 1;
+                            }
+    
+                            break;
                         }
-
-                        break;
                     }
+                    else sound_play(sndCursedReminder);
                 }
 
                  // Draw Indicator:
