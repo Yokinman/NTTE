@@ -407,6 +407,7 @@
                 can_take = true;
                 can_tp = true;
                 tp_distance = 240;
+                team = 2;
                 walk = 0;
                 walkspd = 2;
                 maxspd = 3;
@@ -1776,7 +1777,7 @@
     sleep(100);
     view_shake_at(x, y, 50);
     with instance_create(x, y, PortalClear) mask_index = other.mask_index;
-    
+
     repeat(irandom_range(9, 18)) with instance_create(x, y, Debris) motion_set(irandom(359), random_range(6, 12));
     
      // Area specific events:
@@ -3145,10 +3146,18 @@
     return p;
 
 #define Pet_step
-    if(instance_exists(BackFromCharSelect)) { instance_delete(self); exit; }
+    if(instance_exists(Menu)){ instance_destroy(); exit; }
+
     enemyAlarms(1);
-    enemySprites();
     enemyWalk(walkspd, maxspd);
+
+     // Animate:
+    var _scrt = pet + "_anim";
+    if(mod_script_exists("mod", "petlib", _scrt)){
+         // Custom Animation Event:
+        mod_script_call("mod", "petlib", _scrt);
+    }
+    else enemySprites();
 
      // Custom Step Event:
     if(visible){
@@ -3163,7 +3172,7 @@
         persistent = true;
 
          // Teleport To Leader: 
-        if(can_tp and point_distance(x, y, leader.x, leader.y) > tp_distance) {
+        if(can_tp && point_distance(x, y, leader.x, leader.y) > tp_distance) {
              // Decide Which Floor:
             var f = instance_nearest(leader.x + orandom(16), leader.y + orandom(16), Floor);
             var fx = f.x + (f.sprite_width/2);
@@ -3221,6 +3230,26 @@
             }
         }
         if(_alone) can_take = true;
+    }
+
+     // Dodge:
+    if(instance_exists(leader)) team = leader.team;
+    if(place_meeting(x, y, projectile) && sprite_index != spr_hurt){
+        with(instances_matching_ne(projectile, "team", team)){
+            if(place_meeting(x, y, other)) with(other){
+                 // Custom Dodge Event:
+                var _scrt = pet + "_hurt";
+                if(mod_script_exists("mod", "petlib", _scrt)){
+                    mod_script_call("mod", "petlib", _scrt);
+                }
+
+                 // Default:
+                else{
+                    sprite_index = spr_hurt;
+                    image_index = 0;
+                }
+            }
+        }
     }
 
 #define Pet_end_step
@@ -4099,6 +4128,9 @@
 
 
 
+#define game_start
+    with(instances_named(CustomObject, "Pet")) instance_destroy();
+
 #define step
      // Harpoon Connections:
     for(var i = 0; i < array_length(global.poonRope); i++){
@@ -4283,6 +4315,7 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
+#define scrSwap()                                                                       return  mod_script_call("mod", "teassets", "scrSwap");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

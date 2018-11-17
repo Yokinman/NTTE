@@ -18,6 +18,7 @@
         mod_script_call("mod", "telib", "Pet_create", mouse_x[_ind], mouse_y[_ind], _arg);
     return true;
 
+
 #define CoolGuy_create
      // Visual:
     spr_idle = spr.PetCoolGuyIdle;
@@ -36,6 +37,7 @@
         sprite_index = sprSlice;
     }
 
+
 #define Mimic_create
      // Visual:
     spr_idle = spr.PetMimicIdle;
@@ -43,58 +45,120 @@
     spr_hurt = spr.PetMimicHurt;
     spr_open = spr.PetMimicOpen;
     spr_hide = spr.PetMimicHide;
-    depth = -2;
+    depth = -1;
     
      // Vars:
+    mask_index = mskFreak;
     maxspd = 2;
     can_tp = false;
+    wep = wep_none;
+    ammo = true;
+    curse = false;
     open = false;
-    wep = wep_revolver;
-    child_wep = -4;
+
+#define Mimic_anim
+    if(sprite_index != spr_hurt || anim_end){
+        if(speed > 0) sprite_index = spr_walk;
+        else if(sprite_index != spr_walk || in_range(image_index, 3, 3 + image_speed)){
+            if(instance_exists(leader)) sprite_index = spr_idle;
+            else sprite_index = spr_hide;
+        }
+    }
 
 #define Mimic_step
-     // Hides when untamed:
-    if !instance_exists(leader)
-        sprite_index = spr_hide;
-    else {
-         // Leader is close enough to open:
-        if(leader.bwep != wep_none and point_distance(x, y, leader.x, leader.y) < 16) {
-             // Spawn stored weapon:
-            if(!instance_exists(child_wep)) {
-                if(instance_exists(leader.nearwep) and leader.wep = wep) {
-                    wep = leader.nearwep.wep;
-                    child_wep = leader.nearwep;
-                } else {
-                    with(instance_create(x, y, WepPickup)) {
-                        wep = other.wep;
-                        other.child_wep = self;
-                    }
-                    sound_play(sndGoldChest);
-                }
-            } else {
-                sprite_index = spr_open;
-            }
-        } else if(instance_exists(child_wep)) with(child_wep) {
-            instance_delete(self);
-        }
-        
-        if(sprite_index = spr_open) {
+    if(instance_exists(leader)){
+         // Open Chest:
+        if(place_meeting(x, y, Player)){
             walk = 0;
+            sprite_index = spr_open;
+            if(!open){
+                open = true;
+
+                 // Drop Weapon:
+                if(wep != wep_none){
+                    with(instance_create(x, y, WepPickup)){
+                        wep = other.wep;
+                        ammo = other.ammo;
+                        curse = other.curse;
+                    }
+                    wep = wep_none;
+                }
+
+                 // Effects:
+                sound_play(sndGoldChest);
+                with(instance_create(x, y, FXChestOpen)) depth = other.depth - 1;
+            }
+
+             // Not Holding Weapon:
+            if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(TopCont)){
+                 // Place Weapon:
+                with(Player) if(place_meeting(x, y, other)){
+                    if(wep != wep_none && !curse && canpick && button_pressed(index, "pick")){
+                        with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
+                        wep = wep_none;
+                        scrSwap();
+
+                         // Effects:
+                        sound_play(sndSwapGold);
+                        sound_play(sndWeaponPickup);
+                        with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
+                            depth = other.depth - 1;
+                        }
+
+                        break;
+                    }
+                }
+
+                 // Draw Indicator:
+                script_bind_draw(Mimic_draw_indicator, TopCont.depth, id);
+            }
+        }
+
+         // Regrab Weapon:
+        else if(open){
+            open = false;
+            if(wep == wep_none){
+                if(place_meeting(x, y, WepPickup)){
+                    with(instance_nearest(x, y, WepPickup)){
+                        other.wep = wep;
+                        other.ammo = ammo;
+                        other.curse = curse;
+                        instance_destroy();
+                    }
+                }
+            }
         }
     }
     
      // Sparkle:
-    if frame_active(10 + orandom(2)) instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
-    
+    if(frame_active(10 + orandom(2))){
+        instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
+    }
+
 #define Mimic_alrm0(_leaderDir, _leaderDis)
-    if instance_exists(leader){
-        if _leaderDis > 48{
+    if(instance_exists(leader)){
+        if(_leaderDis > 48){
             scrWalk(20 + irandom(30), _leaderDir + orandom(10));
             scrRight(direction);
         }
     }
     
     return 30 + irandom(30);
+
+#define Mimic_draw
+    draw_self_enemy();
+
+     // Wep Depth Fix:
+    if(place_meeting(x, y, WepPickup)){
+        with(WepPickup) if(place_meeting(x, y, other)){
+            event_perform(ev_draw, 0);
+        }
+    }
+
+#define Mimic_draw_indicator(_inst)
+    instance_destroy();
+    with(_inst) draw_sprite(sprEPickup, 0, x, y - 7);
+
 
 #define Parrot_create
      // Visual:
@@ -204,6 +268,16 @@
 
     return (30 + random(30));
 
+#define Parrot_hurt
+    sprite_index = spr_hurt;
+    image_index = 0;
+
+     // Movin'
+    scrWalk(maxspd, point_direction(other.x, other.y, x, y));
+    var o = 6;
+    x += lengthdir_x(o, direction);
+    y += lengthdir_y(o, direction);
+
 #define Parrot_draw
      // Perched:
     if(instance_exists(leader) && perched){
@@ -303,7 +377,7 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
-#define scrSetPet(_pet)                                                                 return  mod_script_call("mod", "teassets", "scrSetPet", _pet);
+#define scrSwap()                                                                       return  mod_script_call("mod", "teassets", "scrSwap");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

@@ -1246,21 +1246,18 @@
 		if(!r) break;
 	}
 
-#define scrSetPet(_pet)
-     // Set the pet that the pet object is:
-    switch(_pet) {
-        case 0: // CoolGuy:
-             // Visual:
-            spr_idle = spr.CoolGuyIdle;
-            spr_walk = spr.CoolGuyWalk;
-            spr_hurt = sprMutant1Hurt;
-            
-             // Sound:
-            snd_hurt = sndFrogEggHurt;
-            break;
-    }
-    
-    pet_type = _pet;
+#define scrSwap()
+	var _swap = ["wep", "curse", "reload", "wkick", "wepflip", "wepangle", "can_shoot"];
+	for(var i = 0; i < array_length(_swap); i++){
+		var	s = _swap[i],
+			_temp = [variable_instance_get(id, "b" + s), variable_instance_get(id, s)];
+
+		for(var j = 0; j < array_length(_temp); j++) variable_instance_set(id, chr(98 * j) + s, _temp[j]);
+	}
+
+	wepangle = (weapon_is_melee(wep) ? choose(120, -120) : 0);
+	can_shoot = (reload <= 0);
+	clicked = 0;
 
 #define orandom(n) // For offsets
     return random_range(-n, n);
