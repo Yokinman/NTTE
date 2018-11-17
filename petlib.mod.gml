@@ -90,7 +90,7 @@
             }
 
              // Not Holding Weapon:
-            if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(TopCont)){
+            if(wep == wep_none && !place_meeting(x, y, WepPickup)){
                  // Place Weapon:
                 with(Player) if(place_meeting(x, y, other) && button_pressed(index, "pick")){
                     if(!curse){
@@ -113,7 +113,9 @@
                 }
 
                  // Draw Indicator:
-                script_bind_draw(Mimic_draw_indicator, TopCont.depth, id);
+                if(instance_exists(TopCont)){
+                    script_bind_draw(Mimic_draw_indicator, TopCont.depth, id);
+                }
             }
         }
 
