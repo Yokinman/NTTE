@@ -57,7 +57,9 @@
 
                 		for(var _ox = -s; _ox <= s; _ox += _off){
                 		    for(var _oy = -s; _oy <= s; _oy += _off){
-                		        if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+                		        if(!position_meeting(x + _ox, y + _oy, Floor)){
+                		            if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+                		        }
                 		    }
                 		}
         		    }
@@ -1385,7 +1387,12 @@
         	        size = 2;
         	        team = 0;
         	        openang = 0;
+        	        openang_last = openang;
         	        my_wall = noone;
+        	        partner = noone;
+        	        my_surf = -1;
+        	        my_surf_w = 32;
+        	        my_surf_h = 50;
         	    }
         	    break;
 
@@ -3618,6 +3625,21 @@
         outspr = -1;
     }
 
+     // Draw Self:
+    if(!surface_exists(my_surf) || openang != openang_last){
+        if(!surface_exists(my_surf)) my_surf = surface_create(my_surf_w, my_surf_h);
+        surface_set_target(my_surf);
+        draw_clear_alpha(0, 0);
+
+         // Draw 3D Door:
+        for(var i = 0; i < image_number; i++){
+            draw_sprite_ext(sprite_index, i, (my_surf_w / 2), (my_surf_h / 2) - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), image_blend, 1);
+        }
+
+        surface_reset_target();
+    }
+    openang_last = openang;
+
      // Death:
     if(my_health <= 0){
         sound_play(snd_dead);
@@ -3648,17 +3670,24 @@
     if(instance_exists(other)){
         var _sx = lengthdir_x(other.hspeed, image_angle),
             _sy = lengthdir_y(other.vspeed, image_angle);
-    
+
         openang += (_sx + _sy);
     }
 
-#define CatDoor_draw
-    var h = (nexthurt > current_frame + 3);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
-    for(var i = 0; i < image_number; i++){
-        draw_sprite_ext(sprite_index, i, x, y - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), image_blend, image_alpha);
+     // Shared Hurt:
+    if(_hitdmg > 0){
+        with(partner) if(my_health > other.my_health){
+            CatDoor_hurt(_hitdmg, _hitvel, _hitdir);
+        }
     }
-    if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define CatDoor_draw
+    if(surface_exists(my_surf)){
+        var h = (nexthurt > current_frame + 3);
+        if(h) d3d_set_fog(1, image_blend, 0, 0);
+        draw_surface_ext(my_surf, x - (my_surf_w / 2), y - (my_surf_h / 2), 1, 1, 0, c_white, image_alpha);
+        if(h) d3d_set_fog(0, 0, 0, 0);
+    }
 
 #define CatDoor_destroy
     instance_delete(my_wall);
@@ -3923,7 +3952,12 @@
 
         instance_create(_sx + 16, _sy + 16, PortalClear);
         while(_sy >= _borderY - 224){
-            with(instance_create(_sx, _sy, Floor)) array_push(_path, id);
+            with(instance_create(_sx, _sy, Floor)){
+                array_push(_path, id);
+
+                 // Stuff in path fix:
+                with(instance_rectangle(x, y, x + 32, y + 32, [TopSmall, Wall])) instance_destroy();
+            }
 
             if(!in_range(_sy, _borderY - 160, _borderY + 32)) _dir = 90;
             else{
@@ -4369,6 +4403,7 @@
 #define array_flip(_array)                                                              return  mod_script_call("mod", "teassets", "array_flip", _array);
 #define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call("mod", "teassets", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call("mod", "teassets", "area_generate", _x, _y, _area);

@@ -283,7 +283,7 @@
             wading_clamp = 0;
             wading_sink = 0;
             if(object_index == Van) wading_clamp = 40;
-            if(object_index == Corpse) wading_sink = 1;
+            if(instance_is(self, Corpse)) wading_sink = 1;
         }
 
         with(_inst){
@@ -498,6 +498,7 @@
         }
 
 		 // Set Visibility of Swimming Objects Before & After Drawing Events:
+		script_bind_draw(corpse_fix, 10000000);
     	script_bind_step(reset_visible, 0, 0);
     	script_bind_draw(reset_visible, -14, 1);
 	}
@@ -528,6 +529,13 @@
 
      // Bind End Step:
     script_bind_end_step(end_step, 0);
+
+#define corpse_fix
+    instance_destroy();
+    with(instances_matching(instances_matching_ne(Corpse, "object_index", CorpseActive), "visible_fix", null)){
+        visible_fix = true;
+        if(wading > 0) visible = 0;
+    }
 
 #define end_step
      // Watery Dust:
@@ -960,12 +968,12 @@
     else global.surfSwimTop = surface_create(surfWTop, surfHTop);
 
 #define reset_visible(_visible)
+    instance_destroy();
     var _inst = global.swimInstVisible;
     with(_inst){
         if(instance_exists(self) && visible != _visible) visible = _visible;
         else global.swimInstVisible[array_find_index(_inst, self)] = noone;
     }
-    instance_destroy();
 
 
  /// HELPER SCRIPTS ///

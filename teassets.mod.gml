@@ -1316,6 +1316,9 @@
 
 	return _nearest;
 
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)
+    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "x", _x1), "x", _x2), "y", _y1), "y", _y2);
+
 #define instances_seen(_obj, _ext)
     var _vx = view_xview_nonsync,
         _vy = view_yview_nonsync,
@@ -1339,7 +1342,9 @@
     }
 
      // No Duplicates:
-    with(instances_matching([TopCont, SubTopCont, BackCont], "", null)) instance_destroy();
+    with(TopCont) instance_destroy();
+    with(SubTopCont) instance_destroy();
+    with(BackCont) instance_destroy();
 
      // Exclude These:
     var _oldFloor = instances_matching(Floor, "", null),
@@ -1572,34 +1577,49 @@
 #define area_border(_y, _area, _color)
     if(instance_is(self, CustomDraw) && script[2] == "area_border"){
          // Sprite Fixes:
-        var _spr = [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)];
-        with(instances_matching(Wall, "cat_border_fix", null)){
-            cat_border_fix = true;
-            if(y >= _y){
-                sprite_index = _spr[0];
-                topspr = _spr[1];
-                outspr = _spr[2];
+        var o = instances_matching(Wall, "cat_border_fix", null);
+        if(array_length(o) > 0){
+            var _spr = [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)];
+            with(o){
+                cat_border_fix = true;
+                if(y >= _y){
+                    sprite_index = _spr[0];
+                    topspr = _spr[1];
+                    outspr = _spr[2];
+                }
             }
         }
-        var _spr = area_get_sprite(_area, sprWall1Trans);
-        with(instances_matching(TopSmall, "cat_border_fix", null)){
-            cat_border_fix = true;
-            if(y >= _y) sprite_index = _spr;
+        var o = instances_matching(TopSmall, "cat_border_fix", null);
+        if(array_length(o) > 0){
+            var _spr = area_get_sprite(_area, sprWall1Trans);
+            with(o){
+                cat_border_fix = true;
+                if(y >= _y) sprite_index = _spr;
+            }
         }
-        var _spr = area_get_sprite(_area, sprFloor1Explo);
-        with(instances_matching(FloorExplo, "cat_border_fix", null)){
-            cat_border_fix = true;
-            if(y >= _y) sprite_index = _spr;
+        var o = instances_matching(FloorExplo, "cat_border_fix", null);
+        if(array_length(o) > 0){
+            var _spr = area_get_sprite(_area, sprFloor1Explo);
+            with(o){
+                cat_border_fix = true;
+                if(y >= _y) sprite_index = _spr;
+            }
         }
-        var _spr = area_get_sprite(_area, sprDebris1);
-        with(instances_matching(Debris, "cat_border_fix", null)){
-            cat_border_fix = true;
-            if(y >= _y) sprite_index = _spr;
+        var o = instances_matching(Debris, "cat_border_fix", null);
+        if(array_length(o) > 0){
+            var _spr = area_get_sprite(_area, sprDebris1);
+            with(o){
+                cat_border_fix = true;
+                if(y >= _y) sprite_index = _spr;
+            }
         }
 
          // Background:
+        var _vx = view_xview_nonsync,
+            _vy = view_yview_nonsync;
+
         draw_set_color(_color);
-        draw_rectangle(0, _y, 20000, 20000, 0);
+        draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
     }
     else script_bind_draw(area_border, 10000, _y, _area, _color);
 

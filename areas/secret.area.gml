@@ -415,10 +415,16 @@
                                 if(other.layout[_dy, _dx]){
                                     _fx = _x + 16 + (_fx * o) + lengthdir_x(16 - 2, a);
                                     _fy = _y + 16 + (_fy * o) + lengthdir_y(16 - 2, a) + 1;
+                                    var p = noone;
                                     for(var _side = -1; _side <= 1; _side += 2){
                                         with(obj_create(_fx + lengthdir_x(16 * _side, a - 90), _fy + lengthdir_y(16 * _side, a - 90), "CatDoor")){
                                             image_angle = a;
                                             image_yscale = -_side;
+
+                                             // Link Doors:
+                                            partner = p;
+                                            with(partner) partner = other;
+                                            p = id;
                                         }
                                     }
                                     _tries = 0;
