@@ -131,8 +131,13 @@
 #define area_start
      // Floor Setup:
     with(Floor){
-         // Fix Depth:
-        if(styleb) depth = 8;
+        if(styleb){
+             // Fix Depth:
+            depth = 8;
+
+             // Slippery pits:
+            traction = 0.1;
+        }
 
          // Footsteps:
         material = (styleb ? 0 : 4);
@@ -157,6 +162,44 @@
     with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
         trench_fix = true;
         depth = 7;
+    }
+
+     // Above Pits:
+    with(Player){
+        var _x = x,
+            _y = bbox_bottom,
+            f = nearest_instance(_x - 16, _y - 16, instances_matching(Floor, "styleb", true));
+
+        if(instance_exists(f)){
+            var _x1 = f.x + 0,
+                _y1 = f.y + 0,
+                _x2 = _x1 + 32,
+                _y2 = _y1 + 32;
+
+            if(point_in_rectangle(_x, _y, _x1, _y1, _x2, _y2) && !position_meeting(_x, _y, FloorExplo)){
+                if(canwalk){
+                     // Check if moving:
+                    var _moving = false,
+                        _moveKey = ["nort", "sout", "east", "west"];
+
+                    for(var i = 0; i < array_length(_moveKey); i++){
+                        if(button_check(index, _moveKey[i])){
+                            _moving = true;
+                            break;
+                        }
+                    }
+
+                     // do a spin:
+                    if(!_moving){
+                        var _x = x + cos(wave / 10) * 0.25 * right,
+                            _y = y + sin(wave / 10) * 0.25 * right;
+
+                        if(!place_meeting(_x, y, Wall)) x = _x;
+                        if(!place_meeting(x, _y, Wall)) y = _y;
+                    }
+                }
+            }
+        }
     }
 
 #define area_effect(_vx, _vy)
