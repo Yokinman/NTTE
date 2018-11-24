@@ -40,6 +40,8 @@
         global.resetsurfaces = true;
     //#endregion
 
+    global.trench_visited = [];
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -48,21 +50,54 @@
 #macro bgrColor make_color_rgb(100, 114, 127)
 #macro shdColor c_black
 
+#macro TrenchVisited global.trench_visited
+
 #define area_music      return musBoss5;
 #define area_ambience   return amb101;
 #define area_secret     return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
-    
+
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 36.5;
-    switch(_subarea){
-        case 1 : _x += 0;     break;
-        case 2 : _x += 6;     break;
-        case 3 : _x += 12;     break;
+    var _x = 36.5 + (8.8 * (_subarea - 1)),
+        _y = -9;
+
+     // Manual Line Shadow:
+    if(_subarea == 3){
+        if(GameCont.area != mod_current || GameCont.subarea != _subarea || GameCont.loops != _loops){
+             // Map Offset:
+            var _dx = view_xview_nonsync + (game_width / 2),
+                _dy = view_yview_nonsync + (game_height / 2);
+
+            if(instance_exists(GameOverButton)){
+                _dx -= 120;
+                _dy += 1;
+            }
+            else{
+                _dx -= 70;
+                _dy += 6;
+            }
+
+             // Draw Shadow:
+            var _x1 = _dx + _x - 1,
+                _y1 = _dy + _y,
+                _x2 = _dx + 62,
+                _y2 = _dy + 0;
+
+            var c = draw_get_color();
+            draw_set_color(c_black);
+            draw_line_width(_x1, _y1 + 1, _x2, _y2 + 1, 1);
+            draw_set_color(c);
+        }
     }
-    return [_x, -9, (_subarea == 3)];
+
+     // Map Stuff:
+    if(array_length(TrenchVisited) <= _loops){
+        TrenchVisited[@_loops] = (_lastarea == "oasis");
+    }
+
+    return [_x, _y, (_subarea == 1)];
     
 #define area_sprite(_spr)
     switch(_spr){
@@ -81,7 +116,7 @@
         case sprDebris1     : return spr.DebrisTrench;
         case sprDetail1     : return spr.DetailTrench;
     }
-    
+
 #define area_setup
     goal = 150;
     safespawn = 2;
@@ -94,6 +129,15 @@
         surface_free(global.surf[i]);
     
 #define area_start
+     // Floor Setup:
+    with(Floor){
+         // Fix Depth:
+        if(styleb) depth = 8;
+
+         // Footsteps:
+        material = (styleb ? 0 : 4);
+    }
+
      // Bind pit drawing scripts:
 	if !array_length_1d(instances_matching(CustomDraw, "name", "draw_pit"))
     	with(script_bind_draw(draw_pit, 7))
@@ -230,10 +274,6 @@
     }
     
 #define area_pop_extras
-     // fix b tiles
-    with instances_matching(Floor,"styleb",true)
-        depth = 8;
-        
      // delete stuff
     with instances_matching(Floor,"styleb",true){
         with(Detail) if place_meeting(x,y,other)

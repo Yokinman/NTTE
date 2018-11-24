@@ -542,6 +542,7 @@
 #macro EyeShader global.eye_shader
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
+#macro anim_end (image_index > image_number - 1 + image_speed)
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1259,6 +1260,24 @@
 	can_shoot = (reload <= 0);
 	clicked = 0;
 
+#define scrPortalPoof()
+     // Get Rid of Portals (but make it look cool):
+    if(instance_exists(Portal)){
+        var _spr = sprite_duplicate(sprPortalDisappear);
+        with(Portal) if(endgame >= 100){
+            mask_index = mskNone;
+            sprite_index = _spr;
+            image_index = 0;
+            if(fork()){
+                while(instance_exists(self)){
+                    if(anim_end) instance_destroy();
+                    wait 1;
+                }
+                exit;
+            }
+        }
+    }
+
 #define orandom(n) // For offsets
     return random_range(-n, n);
 
@@ -1552,20 +1571,30 @@
 
 #define area_border(_y, _area, _color)
     if(instance_is(self, CustomDraw) && script[2] == "area_border"){
-         // Wall Fixes:
+         // Sprite Fixes:
+        var _spr = [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)];
         with(instances_matching(Wall, "cat_border_fix", null)){
             cat_border_fix = true;
             if(y >= _y){
-                sprite_index = area_get_sprite(_area, sprWall1Bot);
-                topspr = area_get_sprite(_area, sprWall1Top);
-                outspr = area_get_sprite(_area, sprWall1Out);
+                sprite_index = _spr[0];
+                topspr = _spr[1];
+                outspr = _spr[2];
             }
         }
+        var _spr = area_get_sprite(_area, sprWall1Trans);
         with(instances_matching(TopSmall, "cat_border_fix", null)){
             cat_border_fix = true;
-            if(y >= _y){
-                sprite_index = area_get_sprite(_area, sprWall1Trans);
-            }
+            if(y >= _y) sprite_index = _spr;
+        }
+        var _spr = area_get_sprite(_area, sprFloor1Explo);
+        with(instances_matching(FloorExplo, "cat_border_fix", null)){
+            cat_border_fix = true;
+            if(y >= _y) sprite_index = _spr;
+        }
+        var _spr = area_get_sprite(_area, sprDebris1);
+        with(instances_matching(Debris, "cat_border_fix", null)){
+            cat_border_fix = true;
+            if(y >= _y) sprite_index = _spr;
         }
 
          // Background:

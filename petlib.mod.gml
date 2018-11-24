@@ -14,10 +14,11 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 #define chat_command(_cmd, _arg, _ind)
-    if _cmd == "pet"
-        mod_script_call("mod", "telib", "Pet_create", mouse_x[_ind], mouse_y[_ind], _arg);
-    return true;
-
+    switch(_cmd){
+        case "pet":
+            mod_script_call("mod", "telib", "Pet_create", mouse_x[_ind], mouse_y[_ind], _arg);
+            return true;
+    }
 
 #define CoolGuy_create
      // Visual:
@@ -25,7 +26,7 @@
     spr_walk = spr.PetCoolGuyWalk;
     spr_hurt = spr.PetCoolGuyHurt;
     depth = -2;
-    
+
      // Vars:
     maxspd = 3;
     
@@ -98,14 +99,14 @@
                             with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
                             wep = wep_none;
                             scrSwap();
-    
+
                              // Effects:
                             sound_play(sndSwapGold);
                             sound_play(sndWeaponPickup);
                             with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
                                 depth = other.depth - 1;
                             }
-    
+
                             break;
                         }
                         else sound_play(sndCursedReminder);

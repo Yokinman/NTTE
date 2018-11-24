@@ -57,6 +57,8 @@
 #macro bgrColor make_color_rgb(27, 118, 184)
 #macro shdColor c_black
 
+#macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
+
 #define area_music      return mus.Coast;
 #define area_ambience   return amb0b;
 #define area_secret     return true;
@@ -65,13 +67,16 @@
     return "@1(sprInterfaceIcons)1-" + string(sub);
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 18.5;
-    switch(_subarea){
-        case 1 : _x += 0;    break;
-        case 2 : _x += 6;    break;
-        case 3 : _x += 12;    break;
+    var _x = 0.5 + (9 * (_subarea - 1)),
+        _y = -9,
+        _showLine = (_subarea != 1);
+
+    if(array_length(TrenchVisited) <= _loops || !TrenchVisited[_loops]){
+        _x += 18;
+        _showLine = true;
     }
-    return [_x, -9, (_subarea == 3 || _subarea == 3)];
+
+    return [_x, _y, (_subarea == 1), _showLine];
 
 #define area_sprite(_spr)
     switch(_spr){

@@ -1558,13 +1558,28 @@
                     snd_dead = sndStatueDead;
 
                      // Vars:
-                    mask_index = mskBanditBoss;
+                    mask_index = mskIcon;
                     maxhealth = 40;
                     team = 0;
                     size = 3;
                     target = instance_nearest(x, y, Wall);
                 }
                 break;
+
+            case "PizzaTV":
+                o = instance_create(_x, _y, TV);
+                with(o){
+                     // Visual:
+                    spr_hurt = spr.TVHurt;
+                    spr_dead = spr.TVHurt;
+
+                     // Vars:
+                    maxhealth = 15;
+                    my_health = 15;
+
+                    script_bind_end_step(PizzaTV_end_step, 0, id);
+                }
+                return o;
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -1694,7 +1709,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
-    		        "Cabinet", "Cat", "CatBoss", "CatDoor", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain",
+    		        "Cabinet", "Cat", "CatBoss", "CatDoor", "CatGrenade", "Cathole", "CatholeBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
@@ -2089,9 +2104,10 @@
             y = ystart;
             right = other.image_xscale;
         }
-        with(Portal) instance_destroy();
         with(WantBoss) instance_destroy();
         with(BanditBoss) my_health = 0;
+        scrPortalPoof();
+
         instance_delete(id);
     }
 
@@ -3872,11 +3888,18 @@
         if(anim_end) sprite_index = spr_idle;
     }
 
+     // Break:
+    with(instances_matching_le(instances_matching_ge(instances_matching_lt(FloorExplo, "y", y), "x", x - 16), "x", x)){
+        instance_create(x, y, PortalClear);
+        other.my_health = 0;
+    }
+
      // Death:
     if(my_health <= 0) instance_destroy();
 
 #define PizzaDrain_destroy
     sound_play(snd_dead);
+    scrPortalPoof();
 
      // Corpse:
     with(instance_create(x, y, Corpse)){
@@ -3901,10 +3924,10 @@
         instance_create(_sx + 16, _sy + 16, PortalClear);
         while(_sy >= _borderY - 224){
             with(instance_create(_sx, _sy, Floor)) array_push(_path, id);
-    
-            if(_sy >= _borderY + 32) _dir = 90;
+
+            if(!in_range(_sy, _borderY - 160, _borderY + 32)) _dir = 90;
             else{
-                _dir += choose(0, 0, 0, -90, 90);
+                _dir += choose(0, 0, 0, 0, -90, 90);
                 if(((_dir + 360) mod 360) == 270) _dir = 90;
             }
     
@@ -3913,7 +3936,7 @@
         }
 
          // Generate the Realm:
-        area_generate(_sx, _sy, sewers);
+        area_generate(_sx, _sy - 32, sewers);
 
          // Finish Path:
         with(_path){
@@ -3921,6 +3944,29 @@
             scrFloorWalls();
         }
         floor_reveal(_path, 2);
+
+
+#define PizzaTV_end_step(_inst)
+    if(instance_exists(_inst)) with(_inst){
+        depth = 0;
+    
+         // Death without needing a corpse sprite haha:
+        if(my_health <= 0){
+            with(instance_create(x, y, Corpse)){
+                sprite_index = other.spr_dead;
+                mask_index = other.mask_index;
+                size = other.size;
+            }
+    
+             // Zap:
+            sound_play_pitch(sndPlantPotBreak, 1.6);
+            sound_play_pitchvol(sndLightningHit, 1, 2);
+            repeat(2) instance_create(x, y, PortalL);
+    
+            instance_delete(id);
+        }
+    }
+    else instance_destroy();
 
 
 #define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
@@ -4316,6 +4362,7 @@
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call("mod", "teassets", "scrSwap");
+#define scrPortalPoof()                                                                 return  mod_script_call("mod", "teassets", "scrPortalPoof");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

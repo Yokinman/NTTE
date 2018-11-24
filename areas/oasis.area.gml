@@ -11,6 +11,8 @@
 #macro bgrColor area_get_background_color(101);
 #macro shdColor area_get_shadow_color(101);
 
+#macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
+
 #define area_music      return mus101;
 #define area_ambience   return amb101;
 #define area_secret     return true;
@@ -19,9 +21,43 @@
     return "@1(sprInterfaceIcons)2-" + string(_subarea);
     
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 30.5;
-    return [_x + 6, -9, 1];
-    
+    var _x = 27.5,
+        _y = -9;
+
+    if(array_length(TrenchVisited) <= _loops || !TrenchVisited[_loops]){
+        _x += 16.5;
+
+         // Manual Line Shadow:
+        if(GameCont.area != mod_current || GameCont.subarea != _subarea || GameCont.loops != _loops){
+             // Map Offset:
+            var _dx = view_xview_nonsync + (game_width / 2),
+                _dy = view_yview_nonsync + (game_height / 2);
+
+            if(instance_exists(GameOverButton)){
+                _dx -= 120;
+                _dy += 1;
+            }
+            else{
+                _dx -= 70;
+                _dy += 6;
+            }
+
+             // Draw Shadow:
+            var _x1 = _dx + _x,
+                _y1 = _dy + _y,
+                _x2 = _dx + 53,
+                _y2 = _dy + 0;
+
+            var c = draw_get_color();
+            draw_set_color(c_black);
+            draw_line_width(_x1, _y1 + 1, _x2, _y2 + 1, 1);
+            draw_set_color(c);
+        }
+    }
+
+     // Return Map Stuff:
+    return [_x, _y, (_subarea == 1)];
+
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
@@ -46,8 +82,14 @@
     BackCont.shadcol = shdColor;
 
 #define area_start
-     // Fix B Floors:
-    with(instances_matching(Floor, "styleb", true)) depth = 8;
+     // Floor Setup:
+    with(Floor){
+         // Fix Depth:
+        if(styleb) depth = 8;
+
+         // Footsteps:
+        material = (styleb ? 4 : 1);
+    }
 
      // Coolin Clammin:
     with(WeaponChest){

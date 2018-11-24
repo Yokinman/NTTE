@@ -49,12 +49,20 @@
     TopCont.darkness = true;
 
 #define area_start
-     // B Floors:
-    with(Floor) if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
-        styleb = true;
-        sprite_index = area_sprite(sprFloor1B);
+     // Floor Setup:
+    with(Floor){
+         // Pizza Floors:
+        if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
+            styleb = true;
+            sprite_index = area_sprite(sprFloor1B);
+        }
+
+         // Fix Depth:
+        if(styleb) depth = 8;
+
+         // Footsteps:
+        material = (styleb ? 6 : 2);
     }
-    with(instances_matching(Floor, "styleb", true)) depth = 8;
 
      // Pizza Chests:
     with(HealthChest){
@@ -66,12 +74,7 @@
     var _x = 10000,
         _y = 10000;
 
-    with(instance_create(_x - 48, _y, TV)){
-        spr_hurt = spr.TVHurt;
-        spr_dead = spr.TVHurt;
-        maxhealth = 15;
-        my_health = 15;
-    }
+    obj_create(_x - 48, _y, "PizzaTV");
 
      // Turtles:
     var c = [1, 2, 4],
@@ -106,27 +109,6 @@
     with(instances_matching(HPPickup, "sliced", null)){
         sliced = true;
         sprite_index = sprSlice;
-    }
-
-     // Important TV Things:
-    with(TV){
-        depth = 0;
-
-         // Death without needing a corpse sprite haha:
-        if(my_health <= 0){
-            with(instance_create(x, y, Corpse)){
-                sprite_index = other.spr_dead;
-                mask_index = other.mask_index;
-                size = other.size;
-            }
-    
-             // Zap:
-            sound_play_pitch(sndPlantPotBreak, 1.6);
-            sound_play_pitchvol(sndLightningHit, 1, 2);
-            repeat(2) instance_create(x, y, PortalL);
-    
-            instance_delete(id);
-        }
     }
 
 #define area_effect(_vx, _vy)

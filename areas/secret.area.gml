@@ -238,7 +238,6 @@
     if(RoomDebug) GameCont.area = mod_current;
     
 #define area_setup
-    goal = 6;
     safespawn = false;
     TopCont.darkness = true;
 
@@ -250,8 +249,14 @@
     if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
 
 #define area_start
-     // Fix B Floors:
-    with(instances_matching(Floor, "styleb", true)) depth = 8;
+     // Floor Setup:
+    with(Floor){
+         // Fix Depth:
+        if(styleb) depth = 8;
+
+         // Footsteps:
+        material = (styleb ? 6 : 2);
+    }
 
      // Bind scripts:
     if(array_length(instances_matching(CustomDraw, "name", "draw_rugs")) <= 0){
@@ -277,10 +282,7 @@
     global.room_center = [_x, _y];
 
      // Spawn Rooms:
-    if(array_length(RoomList) < goal){
-        with(Floor) instance_destroy();
-
-         // Create Random Normal Room:
+    if(array_length(RoomList) < 6){
         var k = "";
         do k = lq_get_key(RoomType, irandom(lq_size(RoomType) - 1));
         until (lq_get(RoomType, k).special == false);
@@ -305,7 +307,7 @@
                         if(random(2) < 1){
                             _dir += choose(-90, -90, 90, 90, 180);
                         }
-    
+
                         x += lengthdir_x(1, _dir);
                         y += lengthdir_y(1, _dir);
                     }
@@ -327,7 +329,12 @@
 
              // Starting Room:
             if(!_strt){
+                var _maxY = 0;
+                with(RoomList) if(y > _maxY) _maxY = y + floor(h / 2);
+                with(RoomList) y -= _maxY;
+
                 room_create(-1, -1, "Start");
+
                 _done = false;
             }
 

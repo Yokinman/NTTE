@@ -234,52 +234,85 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
+#define game_start
+    mod_variable_set("area", "trench", "trench_visited", []);
+
 #define level_start // game_start but every level
-	if(GameCont.area == 1){
-         // Disable Oasis Skip:
-		with(instance_create(0, 0, AmmoChest)){
-			visible = 0;
-			mask_index = mskNone;
-		}
-
-	     // Spawn Sharky Skull on 1-3:
-		with(BigSkull) instance_delete(id);
-		if(instance_exists(Floor)){
-    		if(GameCont.subarea == 3){
-    		    var _spawned = false;
-    		    do{
-        		    with(instance_random(Floor)){
-                        if(point_distance(x, y, 10016, 10016) > 48){
-                            if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
-        		                obj_create(x + 16, y + 16, "CoastBossBecome");
-        		                _spawned = true;
-                            }
-                        }
-        		    }
-    		    }
-    		    until _spawned;
+    switch(GameCont.area){
+        case 1: /// DESERT
+             // Disable Oasis Skip:
+    		with(instance_create(0, 0, AmmoChest)){
+    			visible = 0;
+    			mask_index = mskNone;
     		}
-
-             // Consistently Spawning Crab Skeletons:
-            if(!instance_exists(BonePile)){
-    		    var _spawned = false;
-                do{
-                    with(instance_random(Floor)){
-                        if(point_distance(x, y, 10016, 10016) > 48){
-                            if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
-                                instance_create(x + 16, y + 16, BonePile);
-        		                _spawned = true;
+    
+    	     // Spawn Sharky Skull on 1-3:
+    		with(BigSkull) instance_delete(id);
+    		if(instance_exists(Floor)){
+        		if(GameCont.subarea == 3){
+        		    var _spawned = false;
+        		    do{
+            		    with(instance_random(Floor)){
+                            if(point_distance(x, y, 10016, 10016) > 48){
+                                if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+            		                obj_create(x + 16, y + 16, "CoastBossBecome");
+            		                _spawned = true;
+                                }
+                            }
+            		    }
+        		    }
+        		    until _spawned;
+        		}
+    
+                 // Consistently Spawning Crab Skeletons:
+                if(!instance_exists(BonePile)){
+        		    var _spawned = false;
+                    do{
+                        with(instance_random(Floor)){
+                            if(point_distance(x, y, 10016, 10016) > 48){
+                                if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+                                    instance_create(x + 16, y + 16, BonePile);
+            		                _spawned = true;
+                                }
                             }
                         }
                     }
+                    until _spawned;
                 }
-                until _spawned;
-            }
-		}
+    		}
+    
+             // Crab Skeletons Drop Bones:
+            with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
+            break;
 
-         // Crab Skeletons Drop Bones:
-        with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
-	}
+        case 2: /// SEWERS
+             // Spawn Cats:
+    	    with(Rat) if(random(8) < 1){
+    	        obj_create(x, y, "Cat");
+    	        instance_delete(self);
+    	    }
+            break;
+
+        case 103: /// MANSIOM
+             // Spawn Gold Mimic:
+            with(instance_nearest(x, y, GoldChest)){
+                with(Pet_create(x, y, "Mimic")){
+                    wep = decide_wep_gold(18, 18 + GameCont.loops, 0);
+                }
+                instance_delete(self);
+            }
+            break;
+
+        case 104: /// CURSED CAVES
+             // Spawn Prism:
+            with(BigCursedChest) {
+                Pet_create(x, y, "Prism");
+            }
+            break;
+
+        case "trench":
+            break;
+    }
 
      // Spawn Mortars:
 	with(LaserCrystal){
@@ -293,14 +326,6 @@
 	with(InvLaserCrystal){
 	    if(random(4) < 1){
 	        obj_create(x, y, "InvMortar");
-	        instance_delete(self);
-	    }
-	}
-	
-	 // Spawn Cats:
-	if(GameCont.area == 2){
-	    with(Rat) if(random(8) < 1){
-	        obj_create(x, y, "Cat");
 	        instance_delete(self);
 	    }
 	}
@@ -327,19 +352,6 @@
     if(GameCont.area = "pizza") with(TV) {
         var f = instance_nearest(x, y + 48, Floor);
         Pet_create(x, f.y + 16, "CoolGuy");
-    }
-    
-     // Spawn Gold Mimic:
-    if(GameCont.area = 103) with(GoldChest) {
-        with(Pet_create(x, y, "Mimic")) {
-            wep = decide_wep_gold(18, 18 + GameCont.loops, 0);
-        }
-        instance_delete(self);
-    }
-
-     // Spawn Prism:
-    with(BigCursedChest) {
-        Pet_create(x, y, "Prism");
     }
 
      // Visibilize Pets:
