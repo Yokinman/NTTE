@@ -332,7 +332,7 @@
 	
 	 // Sewer manhole:
 	with(PizzaEntrance){
-	    with obj_create(x,y,"Manhole") toarea = pizza;
+	    with obj_create(x,y,"Manhole") toarea = "pizza";
 	    instance_delete(id);
 	}
 	
@@ -739,5 +739,3 @@
     
 #define orandom(_n)
     return irandom_range(-_n,_n);
-
-#macro pizza "secret"

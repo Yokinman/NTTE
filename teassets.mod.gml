@@ -8,7 +8,7 @@
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24),
     	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 24),
-    	    "102"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
+    	    "pizza"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
     	    "trench": sprite_add("sprites/areas/Trench/sprTrenchBigTopDecal.png", 1, 32, 24)
     	}
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);

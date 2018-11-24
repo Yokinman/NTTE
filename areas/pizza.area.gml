@@ -135,8 +135,6 @@
      // Next Subarea: 
     else subarea++;
 
-#define area_transit
-    GameCont.area = "pizza";
 
 #define area_make_floor
     var _x = 10000 - 32;

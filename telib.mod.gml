@@ -310,7 +310,7 @@
 
                  // Vars:
                 depth = 8;
-                toarea = 102; // go to pizza sewers
+                toarea = "pizza"; // go to pizza sewers
             }
             break;
 

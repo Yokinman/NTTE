@@ -7,6 +7,7 @@
 // Areas \\
 /loadarea areas/coast
 /loadarea areas/oasis
+/loadarea areas/pizza
 /loadarea areas/trench
 /loadarea areas/secret
 
