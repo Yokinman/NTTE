@@ -198,7 +198,7 @@
 #macro snd global.snd
 #macro mus global.mus
 
-#macro RoomDebug false
+#macro RoomDebug true
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
@@ -477,7 +477,7 @@
         with(floors) if(instance_exists(self)){
             if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
                 if(random(10) < 1){
-                    obj_create(x + 16, y + 16, "Cathole");
+                    obj_create(x + 16, y + 16, "CatHole");
                 }
             }
         }
@@ -568,7 +568,7 @@
          // IMPORTANT ROOMS
         case "Boss" : {
              // Spawn boss spawner
-            with obj_create(_cx - 32, _cy - 32, "CatholeBig"){
+            with obj_create(_cx - 32, _cy - 32, "CatHoleBig"){
                 with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
                     obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
             }
