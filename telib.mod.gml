@@ -1301,7 +1301,6 @@
         			maxspd = 2.5;
         			gunangle = random(360);
         			direction = gunangle;
-        			ammo = 0;
 
         			 // Alarms:
         			alarm0 = 60;
@@ -1319,9 +1318,10 @@
                     spr_dead = sprBigMaggotDead;
         			spr_weap = sprSawnOffShotgun;
         			spr_shadow = shd48;
-        			hitid = [spr_idle, _name];
+        			hitid = [spr_idle, "BIG BAT"];
         			mask_index = mskScorpion;
         			image_angle = 90;
+        			image_blend = c_red;
         			depth = -2;
 
                      // Sound:
@@ -1329,15 +1329,15 @@
                     snd_dead = sndRatkingCharge;
 
                      // Vars:
-        			maxhealth = 30;
-        			raddrop = 12;
-        			size = 2;
+        			maxhealth = scrBossHP(100);
+        			raddrop = 24;
+        			size = 3;
         			walk = 0;
         			walkspd = 0.8;
-        			maxspd = 2.5;
-        			gunangle = random(360);
+        			maxspd = 3;
+        			gunangle = irandom(359);
         			direction = gunangle;
-        			ammo = 0;
+        			attack = 0;
 
         			 // Alarms:
         			alarm0 = 60;
@@ -1348,18 +1348,21 @@
                 var o = instance_create(_x, _y, CustomSlash);
                 with(o){
                      // Visual:
-                    sprite_index = mskWepPickup;
-                    mask_index = mskWepPickup;
-                    image_speed = 0.1;
-                    
-                    image_xscale = 2;
-                    image_yscale = 2;
+                    sprite_index = spr.BatScreech;
+                    mask_index = msk.BatScreech;
+                    image_speed = 0.4;
                     
                      // Vars:
-                    damage = 1;
                     creator = noone;
                     candeflect = false;
                 }
+                
+                 // Effects:
+                instance_create(o.x, o.y, PortalClear);
+                repeat(12 + irandom(6))
+                    with instance_create(o.x, o.y, Dust)
+                        motion_set(irandom(359), 4 + random(4));
+                
                 break;
 
             case "Cabinet":
@@ -1433,7 +1436,7 @@
         			spr_dead = spr.CatDead;
         			spr_weap = sprToxicThrower;
         			spr_shadow = shd24;
-        			hitid = [spr_idle, _name];
+        			hitid = [spr_idle, bossname];
         			sprite_index = spr_idle;
         			mask_index = mskBandit;
         			depth = -2;
@@ -3496,39 +3499,28 @@
         var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
         
          // Follow nearest ally:
-        if instance_exists(c) && point_distance(x, y, c.x, c.y) > 64 
+        if instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64 
             scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
             
          // Wander:
         else if random(3) < 1
             scrWalk(10 + irandom(20), direction + orandom(24));
-        scrRight(direction);
+            
+        gunangle = direction;
+        scrRight(gunangle);
     }
     
 #define Bat_alrm1
-    alarm1 = 30 + irandom(30);
+    alarm1 = 20 + irandom(20);
 
     if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
-        alarm1 = 75 + irandom(45);
+        alarm1 = 40 + irandom(20);
         
         sound_play_gun(sndNothing2Hurt, 0.4, -100);
-        sleep(30);
-        
+        view_shake_at(x, y, 16);
+        sleep(40);
+    
         scrEnemyShoot("BatScreech", 0, 0);
-    }
-    
-#define BatScreech_step
-    if instance_exists(creator){
-        x = creator.x;
-        y = creator.y;
-    }
-    
-#define BatScreech_hit
-    with instances_matching_ne(hitme, "team", team) if place_meeting(x, y, other){
-        var l = 8,
-            d = point_direction(other.x, other.y, x, y);
-        x += lengthdir_x(l, d);
-        y += lengthdir_y(l, d);
     }
     
 #define OLDBat_alrm0
@@ -3587,6 +3579,61 @@
     //pickup_drop(0, 100);
     pickup_drop(60, 5);
 
+#define BatBoss_step
+    enemyAlarms(1);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+    
+#define BatBoss_alrm0
+    alarm0 = 20 + irandom(20);
+    target = instance_nearest(x, y, Player);
+    
+    if target_is_visible(){
+        gunangle = point_direction(x, y, target.x, target.y);
+        scrRight(gunangle);
+        
+         // Walk towards target:
+        if random(5) < 4{
+            scrWalk(20 + irandom(15), gunangle + irandom_range(25, 45) * right);
+        }
+        
+         // Fire: -- placeholder
+        if random(5) < 3 && target_in_distance(0, 180){
+            var d = gunangle - 45;
+            for (var i = 0; i < 90; i += 30) for (var ii = 0; ii < 4; ii++)
+                scrEnemyShoot(EnemyBullet2, d + i + orandom(2), 4 + ii / 2);
+        }
+    }
+    else{
+        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "CatBoss"));
+        
+         // Follow cat boss:
+        if instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64 
+            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
+            
+         // Wander:
+        else if random(3) < 1
+            scrWalk(10 + irandom(20), direction + orandom(24));
+            
+        gunangle = direction;
+        scrRight(gunangle);
+    }
+
+#define BatBoss_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define BatScreech_hit
+    with instances_matching_ne(hitme, "team", team)
+        if place_meeting(x, y, other)
+            motion_add(point_direction(other.x, other.y, x, y), 1);
+            
+#define BatScreech_draw
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index - 1, x, y, image_xscale * 1.5, image_yscale * 1.5, image_angle, image_blend, image_alpha * 0.1);
+    draw_set_blend_mode(bm_normal);
 
 #define Cabinet_death
     repeat(irandom_range(8,16))

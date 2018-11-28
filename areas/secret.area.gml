@@ -472,7 +472,7 @@
             if random(8) < 1{
                 instance_create(_x, _y, Bandit);
             }
-            else obj_create(_x, _y, "Cat");
+            else obj_create(_x, _y, choose("Cat", "Cat", "Bat"));
         }
     }
 
@@ -581,13 +581,13 @@
         case "Boss" : {
              // Spawn boss spawner
             with obj_create(_cx - 32, _cy - 32, "CatHoleBig"){
-                obj_create(x + 32, y + 32, "CatBoss");
                 with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
                     obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
             }
 
              // delete this later
-            obj_create(_cx, _cy, "Cat");
+            obj_create(_cx, _cy, "CatBoss");
+            obj_create(_cx, _cy, "BatBoss");
 
              // Corner Columns:
             instance_create(_x + 80,           _y + 80,           Wall);
