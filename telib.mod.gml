@@ -1280,10 +1280,48 @@
                     spr_walk = sprBigMaggotIdle;
                     spr_hurt = sprBigMaggotHurt;
                     spr_dead = sprBigMaggotDead;
+        			spr_weap = sprRavenGun;
+        			spr_shadow = shd48;
+        			hitid = [spr_idle, _name];
+        			mask_index = mskScorpion;
+        			image_angle = 90;
+        			depth = -2;
+
+                     // Sound:
+                    snd_hurt = sndSalamanderHurt;
+                    snd_dead = sndRatkingCharge;
+
+                     // Vars:
+        			maxhealth = 30;
+        			raddrop = 12;
+        			size = 2;
+        			walk = 0;
+        			scream = 0;
+        			walkspd = 0.8;
+        			maxspd = 2.5;
+        			gunangle = random(360);
+        			direction = gunangle;
+        			ammo = 0;
+
+        			 // Alarms:
+        			alarm0 = 60;
+        			alarm1 = 120;
+                }
+                break;
+                
+            case "BatBoss":
+                var o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                     // Visual:
+                    spr_idle = sprBigMaggotIdle;
+                    spr_walk = sprBigMaggotIdle;
+                    spr_hurt = sprBigMaggotHurt;
+                    spr_dead = sprBigMaggotDead;
         			spr_weap = sprSawnOffShotgun;
         			spr_shadow = shd48;
         			hitid = [spr_idle, _name];
         			mask_index = mskScorpion;
+        			image_angle = 90;
         			depth = -2;
 
                      // Sound:
@@ -1303,6 +1341,24 @@
 
         			 // Alarms:
         			alarm0 = 60;
+                }
+                break;
+                
+            case "BatScreech" :
+                var o = instance_create(_x, _y, CustomSlash);
+                with(o){
+                     // Visual:
+                    sprite_index = mskWepPickup;
+                    mask_index = mskWepPickup;
+                    image_speed = 0.1;
+                    
+                    image_xscale = 2;
+                    image_yscale = 2;
+                    
+                     // Vars:
+                    damage = 1;
+                    creator = noone;
+                    candeflect = false;
                 }
                 break;
 
@@ -1389,14 +1445,13 @@
         			snd_dead = sndSalamanderDead;
 
         			 // Vars:
-        			maxhealth = 80 * (1 + ((1/3) * GameCont.loops));
-        			raddrop = 6;
-        			size = 2;
+        			maxhealth = scrBossHP(100);
+        			raddrop = 24;
+        			size = 3;
         			walk = 0;
                     dash = 0;
         			gunangle = random(360);
         			direction = gunangle;
-        			ammo = 0;
 
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
@@ -1498,6 +1553,7 @@
 
                      // Vars:
                     depth = 8;
+                    canboss = true;
                 }
                 break;
 
@@ -1764,7 +1820,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
-    		        "Bat", "Cabinet", "Cat", "CatBoss", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
+    		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
@@ -3396,7 +3452,7 @@
 
 
 #define Bat_step
-    enemyAlarms(1);
+    enemyAlarms(2);
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
@@ -3407,6 +3463,75 @@
     }
 
 #define Bat_alrm0
+    alarm0 = 15 + irandom(20);
+    target = instance_nearest(x, y, Player);
+    
+    if target_is_visible(){
+        gunangle = point_direction(x, y, target.x, target.y);
+        scrRight(gunangle);
+        
+        if !target_in_distance(0, 75){
+             // Walk to target:
+            if random(5) < 4
+                scrWalk(15 + irandom(20), gunangle + orandom(8));
+        }
+        else if target_in_distance(0, 45){
+            // Walk away from target:
+            scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
+            alarm0 = walk;
+        }
+            
+         // Attack target:
+        if random(5) < 2 && target_in_distance(50, 200){
+            sound_play(sndRustyRevolver);
+            
+            scrEnemyShoot(EnemyBullet2, gunangle + orandom(4), 5);
+            with instance_create(x, y, AcidStreak){
+                motion_set(other.gunangle, 2);
+                image_angle = direction;
+            }
+        }
+    }
+    else{
+        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
+        
+         // Follow nearest ally:
+        if instance_exists(c) && point_distance(x, y, c.x, c.y) > 64 
+            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
+            
+         // Wander:
+        else if random(3) < 1
+            scrWalk(10 + irandom(20), direction + orandom(24));
+        scrRight(direction);
+    }
+    
+#define Bat_alrm1
+    alarm1 = 30 + irandom(30);
+
+    if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
+        alarm1 = 75 + irandom(45);
+        
+        sound_play_gun(sndNothing2Hurt, 0.4, -100);
+        sleep(30);
+        
+        scrEnemyShoot("BatScreech", 0, 0);
+    }
+    
+#define BatScreech_step
+    if instance_exists(creator){
+        x = creator.x;
+        y = creator.y;
+    }
+    
+#define BatScreech_hit
+    with instances_matching_ne(hitme, "team", team) if place_meeting(x, y, other){
+        var l = 8,
+            d = point_direction(other.x, other.y, x, y);
+        x += lengthdir_x(l, d);
+        y += lengthdir_y(l, d);
+    }
+    
+#define OLDBat_alrm0
     alarm0 = 30 + random(30);
 
     target = instance_nearest(x, y, Player);
@@ -3459,7 +3584,8 @@
 
 #define Bat_death
     sound_play_pitch(sndScorpionFireStart, 1.2);
-    pickup_drop(0, 100);
+    //pickup_drop(0, 100);
+    pickup_drop(60, 5);
 
 
 #define Cabinet_death
@@ -3635,7 +3761,7 @@
             }
             
              // Attack:
-            else if target_in_distance(0, 180){
+            else if target_in_distance(0, 240){
                 alarm2 = 30;
                 
                 sound_play(sndShotReload);

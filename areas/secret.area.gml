@@ -38,9 +38,21 @@
             special : true
         },
         "Boss" : {
-            w : 6,
-            h : 6,
-            special : true
+            w : 10,
+            h : 10,
+            special : true,
+            layout : [
+                [0,0,0,L,L,L,L,0,0,0],
+                [0,0,0,L,L,L,L,0,0,0],
+                [0,0,L,L,L,L,L,L,0,0],
+                [L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L],
+                [0,0,L,L,L,L,L,L,0,0],
+                [0,0,0,L,L,L,L,0,0,0],
+                [0,0,0,L,L,L,L,0,0,0]
+                ]
         },
 
          // SMALL:
@@ -569,6 +581,7 @@
         case "Boss" : {
              // Spawn boss spawner
             with obj_create(_cx - 32, _cy - 32, "CatHoleBig"){
+                obj_create(x + 32, y + 32, "CatBoss");
                 with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
                     obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
             }
@@ -577,16 +590,16 @@
             obj_create(_cx, _cy, "Cat");
 
              // Corner Columns:
-            instance_create(_x + 16,           _y + 16,           Wall);
-            instance_create(_x + (w * o) - 32, _y + 16,           Wall);
-            instance_create(_x + 16,           _y + (h * o) - 32, Wall);
-            instance_create(_x + (w * o) - 32, _y + (h * o) - 32, Wall);
+            instance_create(_x + 80,           _y + 80,           Wall);
+            instance_create(_x + (w * o) - 96, _y + 80,           Wall);
+            instance_create(_x + 80,           _y + (h * o) - 96, Wall);
+            instance_create(_x + (w * o) - 96, _y + (h * o) - 96, Wall);
 
              // Spawn backup chests
             var _chest = [RadChest,AmmoChest,WeaponChest],
                 _d = irandom(3);
             for (var _i = 0; _i <= 2; _i++)
-                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(80,(_i+_d)*90), _cy + lengthdir_y(80,(_i+_d)*90),_chest[_i]);
+                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(144,(_i+_d)*90), _cy + lengthdir_y(144,(_i+_d)*90),_chest[_i]);
 
             break;
         }
