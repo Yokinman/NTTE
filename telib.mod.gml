@@ -1412,7 +1412,7 @@
         	        
         	         // Alarms:
         	        alarm0 = 1;
-        	        alarm1 = 16;
+        	        alarm1 = 24;
         	    }
         	    break;
 
@@ -3634,9 +3634,9 @@
                 direction = gunangle + irandom_range(30, 60) * right;
             }
             
-             // Close range attack:
+             // Attack:
             else if target_in_distance(0, 180){
-                alarm2 = 20;
+                alarm2 = 30;
                 
                 sound_play(sndShotReload);
                 with scrEnemyShoot("CatBossAttack", 0, 0) direction = other.gunangle;
