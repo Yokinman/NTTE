@@ -1414,6 +1414,7 @@
         			hole = noone;
         			direction = gunangle;
         			ammo = 0;
+        			cantravel = false;
 
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
@@ -3516,10 +3517,15 @@
     if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
         alarm1 = 40 + irandom(20);
         
-        sound_play_gun(sndNothing2Hurt, 0.4, -100);
+        sound_play_gun(sndMolesargeHurt, 0, -1);
+        sound_play_pitch(sndNothing2Hurt, 0.6 + random(0.2));
         view_shake_at(x, y, 16);
         sleep(40);
     
+         // Alert nearest cat:
+        with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat")){
+            cantravel = true;
+        }
         scrEnemyShoot("BatScreech", 0, 0);
     }
     
@@ -3624,15 +3630,19 @@
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
+#define BatScreech_step
+    while place_meeting(x, y, ToxicGas) 
+        with instance_nearest(x, y, ToxicGas)
+            instance_delete(id);
+
 #define BatScreech_hit
     with instances_matching_ne(hitme, "team", team)
         if place_meeting(x, y, other)
             motion_add(point_direction(other.x, other.y, x, y), 1);
             
 #define BatScreech_draw
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
     draw_set_blend_mode(bm_add);
-    draw_sprite_ext(sprite_index, image_index - 1, x, y, image_xscale * 1.5, image_yscale * 1.5, image_angle, image_blend, image_alpha * 0.1);
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * 0.4);
     draw_set_blend_mode(bm_normal);
 
 #define Cabinet_death
@@ -3683,6 +3693,11 @@
 
 #define Cat_alrm0
     alarm0 = 20 + irandom(20);
+    
+    if (my_health < maxhealth || target_is_visible()) && !cantravel{
+        cantravel = true;
+        instance_create(x + 10 * right, y - 5, AssassinNotice);
+    }
     
     if(ammo > 0) {
         repeat(2)
@@ -3750,7 +3765,7 @@
         exit;
     }
     alarm1 = 90 + irandom(60); // 3-5 seconds
-    if my_health < maxhealth{
+    if cantravel{
          // Locate nearest cathole:
         if (!target_is_visible() || !target_in_distance(0,128)) {
             hole = noone;
@@ -3869,6 +3884,16 @@
         view_shake_at(x, y, 12);
     }
 
+#define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			
+    nexthurt = current_frame + 6;	
+    sound_play_hit(snd_hurt, 0.3);	
+    if !dash motion_add(_hitdir, _hitvel);
+
+     // Hurt Sprite:
+    sprite_index = spr_hurt;
+    image_index = 0;
+    
 #define CatBossAttack_step
     enemyAlarms(2);
 
