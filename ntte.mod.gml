@@ -295,7 +295,7 @@
 
         case 103: /// MANSIOM
              // Spawn Gold Mimic:
-            with(instance_nearest(x, y, GoldChest)){
+            with(instance_nearest(10016, 10016, GoldChest)){
                 with(Pet_create(x, y, "Mimic")){
                     wep = decide_wep_gold(18, 18 + GameCont.loops, 0);
                 }

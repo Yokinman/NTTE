@@ -294,7 +294,7 @@
     global.room_center = [_x, _y];
 
      // Spawn Rooms:
-    if(array_length(RoomList) < 6){
+    if(array_length(RoomList) < 4){
         var k = "";
         do k = lq_get_key(RoomType, irandom(lq_size(RoomType) - 1));
         until (lq_get(RoomType, k).special == false);
