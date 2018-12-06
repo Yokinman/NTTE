@@ -534,7 +534,7 @@
     instance_destroy();
     with(instances_matching(instances_matching_ne(Corpse, "object_index", CorpseActive), "visible_fix", null)){
         visible_fix = true;
-        if(wading > 0) visible = 0;
+        if("wading" in self && wading > 0) visible = 0;
     }
 
 #define end_step

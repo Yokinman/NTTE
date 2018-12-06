@@ -1435,7 +1435,7 @@
         			spr_walk = spr.CatWalk;
         			spr_hurt = spr.CatHurt;
         			spr_dead = spr.CatDead;
-        			spr_weap = sprToxicThrower;
+        			spr_weap = spr.CatBossWeap;
         			spr_shadow = shd24;
         			hitid = [spr_idle, bossname];
         			sprite_index = spr_idle;
@@ -1465,13 +1465,25 @@
         	case "CatBossAttack" :
         	    o = instance_create(_x, _y, CustomObject);
         	    with(o){
+        	         // Visual:
+        	        image_blend = c_lime;
+        	        image_yscale = 1.5;
+        			hitid = [spr.CatIdle, "BIG CAT"];
+
         	         // Vars:
-        	        directions = [];
-        	        distances = [];
-        	        
+        	        team = 1;
+        	        creator = noone;
+        	        fire_line = [];
+        	        var _off = 30 + (10 * GameCont.loops);
+        	        repeat(3 + GameCont.loops) array_push(fire_line, {
+        	            dir : 0,
+        	            dis : 0,
+        	            dir_goal : orandom(_off),
+        	            dis_goal : 1000
+                        });
+
         	         // Alarms:
-        	        alarm0 = 1;
-        	        alarm1 = 24;
+        	        alarm0 = 30;
         	    }
         	    break;
 
@@ -3700,9 +3712,9 @@
     }
     
     if(ammo > 0) {
-        repeat(2)
-        with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)) {
+        repeat(2) with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)){
             friction = 0.12;
+            team = 0;
         }
         gunangle += 12;
         ammo--;
@@ -3782,6 +3794,25 @@
             }
         }
     }
+
+#define Cat_hurt(_hitdmg, _hitvel, _hitdir)
+    if(!instance_is(other, ToxicGas)){
+        my_health -= _hitdmg;           // Damage
+        nexthurt = current_frame + 6;   // I-Frames
+        sound_play_hit(snd_hurt, 0.3);  // Hurt Sound
+        motion_add(_hitdir, _hitvel);   // Knockback
+    
+         // Hurt Sprite:
+        sprite_index = spr_hurt;
+        image_index = 0;
+    }
+
+     // Toxic immune
+    else with(other){
+		instance_copy(false);
+		instance_delete(id);
+		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
+	}
     
 #define Cat_draw
     if(gunangle >  180) draw_self_enemy();
@@ -3824,10 +3855,11 @@
             
              // Attack:
             else if target_in_distance(0, 240){
-                alarm2 = 30;
-                
+                alarm0 = 40;
+                scrEnemyShoot("CatBossAttack", gunangle, 0);
                 sound_play(sndShotReload);
-                with scrEnemyShoot("CatBossAttack", 0, 0) direction = other.gunangle;
+                sound_play_pitchvol(sndLilHunterSniper, 2 + random(0.5), 0.5);
+                sound_play_pitch(sndSnowTankAim, 2.5 + random(0.5));
             }
         }
         
@@ -3866,101 +3898,48 @@
             }
             
          // Gas:
-        repeat(3 + irandom(3))
-            with scrEnemyShoot(ToxicGas, direction + 180 + orandom(4), 1 + random(2))
+        repeat(3 + irandom(3)){
+            with(scrEnemyShoot(ToxicGas, direction + 180 + orandom(4), 1 + random(2))){
                 friction = 0.16;
+                team = 0;
+            }
+        }
                 
          // Effects:
+        wkick = 6;
+        gunangle = direction;
         repeat(1 + irandom(2))
             with instance_create(x, y, AcidStreak)
                 image_angle = other.direction + 180 + orandom(64);
     }
     else{
         meleedamage = 0;
-         
+
         sound_play(sndFlamerStop);
         sound_stop(sndFlamerLoop);
-        
+
         view_shake_at(x, y, 12);
     }
 
 #define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)
-    my_health -= _hitdmg;			
-    nexthurt = current_frame + 6;	
-    sound_play_hit(snd_hurt, 0.3);	
-    if !dash motion_add(_hitdir, _hitvel);
-
-     // Hurt Sprite:
-    sprite_index = spr_hurt;
-    image_index = 0;
+    if(!instance_is(other, ToxicGas)){
+        my_health -= _hitdmg;			
+        nexthurt = current_frame + 6;	
+        sound_play_hit(snd_hurt, 0.3);	
+        if !dash motion_add(_hitdir, _hitvel);
     
-#define CatBossAttack_step
-    enemyAlarms(2);
-
-#define CatBossAttack_alrm0
-    if instance_exists(creator){
-        var d = direction + 120 * creator.right;
-        with instance_create(creator.x, creator.y, Shell){
-            sprite_index = sprShotShell;
-            motion_add(d + orandom(16), 2 + random(1));
-        }
+         // Hurt Sprite:
+        sprite_index = spr_hurt;
+        image_index = 0;
     }
 
-    repeat(2 + irandom(1)) array_push(directions, direction + orandom(45));
-
-    for (var i = 0; i < array_length(directions); i++){
-        var l = 0;
-        do l++
-        until position_meeting(x + lengthdir_x(l, directions[i]), y + lengthdir_y(l, directions[i]), Wall) || l >= 360
-        
-        distances[i] = l;
-
-        repeat round(distances[i] / 16){
-            var l = irandom(distances[i]);
-             // Tell:
-            with instance_create(x + lengthdir_x(l, directions[i]) + orandom(4), y + lengthdir_y(l, directions[i]) + orandom(4), EatRad){
-                sprite_index = choose(sprEatBigRad, sprEatBigRad, sprEatBigRadPlut);
-                motion_set(other.directions[i], 1);
-            }
-        }
-    }
-
-#define CatBossAttack_alrm1
-    sound_play(sndHyperSlugger);
-    sound_play(sndToxicBarrelGas);
+     // Toxic immune
+    else with(other){
+        instance_copy(false);
+		instance_delete(id);
+		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
+	}
     
-    view_shake_at(x, y, 32);
-
-     // Cat knockback:
-    if instance_exists(creator) with(creator){
-        motion_add(other.direction + 180, 3);
-    }
-    
-     // Projectiles + effects:
-    for (var i = 0; i < array_length(directions); i++){
-        repeat round(distances[i] / 8){
-            var l = irandom(distances[i]),
-                d = directions[i];
-             // Toxic gas:
-            with scrEnemyShootExt(x + lengthdir_x(l, directions[i]) + orandom(1), y + lengthdir_y(l, directions[i]) + orandom(1), ToxicGas, directions[i], random(1)){
-                direction = d;
-                friction = 0.1;
-                
-                 // Acid:
-                with instance_create(x, y, AcidStreak) image_angle = d + orandom(4);
-                
-                 // Smoke
-                if irandom(other.distances[i]) > l * 1.6
-                    with instance_create(x, y, Smoke){
-                        motion_set(d + orandom(6), 4 + random(4));
-                        depth = other.depth - 1;
-                    }
-            }
-        }
-    }
-    
-    instance_delete(id);
-
 #define OLDCatBoss_alrm0
     alarm0 = 20 + random(20);
     
@@ -4043,6 +4022,108 @@
     sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
     pickup_drop(100, 20);
     pickup_drop(60, 0);
+
+     // Hmmmm
+    instance_create(x, y, ToxicDelay);
+
+
+#define CatBossAttack_step
+     // Follow Creator:
+    if(instance_exists(creator)){
+        var o = 16;
+        x = creator.x + lengthdir_x(o, creator.gunangle);
+        y = creator.y + lengthdir_y(o, creator.gunangle);
+    }
+
+     // Hitscan Lines:
+    with(fire_line){
+        dir += angle_difference(dir_goal, dir) / 7;
+
+         // Line Hitscan:
+        var o = 4,
+            _dir = dir + other.direction,
+            _x = 0,
+            _y = 0,
+            _ox = lengthdir_x(o, _dir),
+            _oy = lengthdir_y(o, _dir);
+
+        dis = 0;
+        with(other) while(other.dis < other.dis_goal){
+            other.dis += o;
+            _x += _ox;
+            _y += _oy;
+            if(position_meeting(x + _x, y + _y, Wall)) break;
+
+             // Sparkly Laser:
+            if(current_frame_active && random(250) < 1){
+                with(instance_create(x + _x + orandom(4), y + _y + orandom(4), EatRad)){
+                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
+                    motion_set(_dir + 180 + orandom(60), 2);
+                }
+            }
+        }
+    }
+
+    enemyAlarms(1);
+
+#define CatBossAttack_draw
+     // Laser Sights:
+    var _x = x,
+        _y = y;
+
+    draw_set_color(image_blend);
+    with(fire_line){
+        var _dir = dir + other.direction;
+        draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), other.image_yscale);
+
+         // Bloom:
+        draw_set_blend_mode(bm_add);
+        draw_set_alpha(0.1);
+        draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), other.image_yscale * 3);
+        draw_set_alpha(1);
+        draw_set_blend_mode(bm_normal);
+    }
+
+#define CatBossAttack_alrm0
+     // Hitscan Toxic:
+    var _x = x,
+        _y = y;
+
+    for(var i = 0; i < array_length(fire_line); i++){
+        var _line = fire_line[i],
+            _dis = _line.dis,
+            _dir = _line.dir + direction;
+
+        while(_dis > 0){
+            with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), ToxicGas)){
+                friction += random_range(0.1, 0.2);
+                growspeed *= _dis / _line.dis;
+                creator = other.creator;
+                hitid = other.hitid;
+
+                if(random(2) < 1){
+                    with(instance_create(x + orandom(8), y + orandom(8), AcidStreak)){
+                        motion_add(_dir + orandom(8), 4);
+                        image_angle = direction;
+                    }
+                }
+            }
+            _dis -= 6;
+        }
+    }
+
+     // Effects:
+    view_shake_at(x, y, 32);
+    sound_play(sndHyperSlugger);
+    sound_play(sndToxicBarrelGas);
+
+     // Cat knockback:
+    with(creator){
+        motion_add(other.direction + 180, 2);
+        wkick = 12;
+    }
+
+    instance_destroy();
 
 
 #define CatDoor_step

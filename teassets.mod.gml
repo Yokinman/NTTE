@@ -327,6 +327,9 @@
             CatWeap = sprite_add("sprites/enemies/Cat/sprCatToxer.png",   1,  3,  4);
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
 
+             // Cat Boss:
+            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png", 1, 4, 7);
+
              // Door:
             CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 2, 0);
             msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 4, 0);
@@ -594,7 +597,8 @@
     if(is_string(_object)) _inst = obj_create(_x, _y, _object);
     else _inst = instance_create(_x, _y, _object);
     with(_inst){
-        motion_add(_dir, _spd);
+        if(_spd <= 0) direction = _dir;
+        else motion_add(_dir, _spd);
         image_angle = _dir;
         hitid = other.hitid;
         team = other.team;
