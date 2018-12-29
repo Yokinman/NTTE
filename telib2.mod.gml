@@ -2865,53 +2865,493 @@
     pickup_drop(70, 2);
 
 
-#define Pitsquid_step
-    for (var i = 0; i < eyenum; i++){
-        var _x = Pitsquid_eyepos(i,"x"),
-            _y = Pitsquid_eyepos(i,"y"),
-            _t = noone;
+#define PitSquid_step
+    enemyAlarms(2);
 
-         // Spot nearest visible player
-        var _dist = 10000,
-            _cansee = true;
-         // Check to see if obscured by solid floor
-        with instances_matching_ne(Floor,"styleb",true) if point_distance(x + 16, y + 16 - 8, _x, _y) <= 8 other._cansee = false;
+     // Pit Z Movement:
+    if(sink){
+         // Quickly Sink:
+        pit_height -= 0.075 * current_time_scale;
+        with(eye) blink = true;
 
-        with(Player) if _cansee && !collision_line(x, y, other.x, other.y, Wall, 0, 0){
-            var _mydist = point_distance(x, y, other.x, other.y);
-            if _mydist < _dist{
-                _dist = _mydist;
-                _t = self;
+         // Start Rising:
+        if(pit_height <= 0){
+            sink = false;
+            x = sink_targetx;
+            y = sink_targety;
+            pit_height = -random_range(0.2, 0.5);
+        }
+    }
+    else{
+         // Slow Initial Rise:
+        if(pit_height < 0.5){
+            pit_height += abs(sin(current_frame / 30)) * 0.01 * current_time_scale;
+
+             // Prepare Bite:
+            if(bite <= 0 && pit_height > 0.3){
+                bite = 1.2;
             }
         }
 
-        if instance_exists(_t){
-            blink[i] = clamp(blink[i] - image_speed, 0, 2); // Keeps eyes open
-            eyelen[i] = 5; // clamp(point_distance(x, y, _t.x, _t.y) / 6, 0, 5);
-            eyedir[i] = point_direction(_x, _y, _t.x, _t.y);
-        }
-        else{
-            blink[i] = clamp(blink[i] + image_speed, 0, 2); // Keeps eyes closed
+         // Quickly Rise:
+        else if(pit_height < 1){
+            pit_height += 0.1;
+
+             // Reached Top of Pit:
+            if(pit_height >= 1){
+                pit_height = 1;
+                view_shake_at(x, y, 30);
+                sound_play(sndOasisExplosion);
+            }
         }
     }
 
-#define Pitsquid_draw
-    for (var i = 0; i < eyenum; i++){
-        var _x = Pitsquid_eyepos(i,"x"),
-            _y = Pitsquid_eyepos(i,"y");
-        draw_sprite(spr_cornea, 1, _x, _y);
-        draw_sprite(spr_pupil, 1, _x + lengthdir_x(eyelen[i],eyedir[i]), _y + lengthdir_y(eyelen[i],eyedir[i]));
-        draw_sprite(spr_eyelid, blink[i], _x, _y);
+     // Sinking/Rising FX:
+    if(in_range(pit_height, 0.5, 0.9) && current_frame_active){
+        instance_create(x + orandom(32), y + orandom(32), Smoke);
+        view_shake_at(x, y, 4);
     }
 
-#define Pitsquid_eyepos(_eye,_axis)
-    var _len = 24,
-        _dir = image_angle + (360 / eyenum) * _eye;
-    switch(_axis){
-        case "x": return x+lengthdir_x(_len,_dir);
-        case "y": return y+lengthdir_y(_len,_dir);
+     // Movement:
+    if(speed > 0){
+        eye_angle += (speed / 3) * current_time_scale;
+        direction += sin(current_frame / 20) * current_time_scale;
+
+         // Effects:
+        if(current_frame_active){
+            view_shake_max_at(x, y, min(speed * 4, 3));
+            if(random(10) < speed){
+                instance_create(x + orandom(40), y + orandom(40), Bubble);
+            }
+        }
     }
-    return 0;
+
+     // Find Nearest Visible Player:
+    var	_target = noone,
+		d = 1000000;
+
+	with(Player) if(!collision_line(x, y, other.x, other.y, Wall, 0, 0)){
+		var _dis = point_distance(x, y, other.x, other.y);
+		if(_dis < d){
+			_target = id;
+			d = _dis;
+		}
+	}
+
+     // Eyes:
+    for(var i = 0; i < array_length(eye); i++){
+        var _dis = (24 + eye_dis_offset) * max(pit_height, 0),
+            _dir = image_angle + eye_angle + (360 / array_length(eye)) * i,
+            _x = x + lengthdir_x(_dis * image_xscale, _dir),
+            _y = y + lengthdir_y(_dis * image_yscale, _dir);
+
+        with(eye[i]){
+            x = _x;
+            y = _y;
+
+             // Eye Under Floor:
+            var _cansee = false;
+            with(instance_nearest(_x - 16, _y - 16 - 8, Floor)){
+                if(styleb) _cansee = true;
+            }
+
+             // Look at Player:
+            var _seen = false;
+            if(_cansee && instance_exists(_target)){
+                _seen = true;
+                dir += angle_difference(point_direction(x, y, _target.x, _target.y), dir) / 2;
+                dis = clamp(point_distance(x, y, _target.x, _target.y) / 6, 0, 5);
+            }
+            else dir += sin((current_frame) / 20) * 1.5;
+
+             // Blinking:
+            if(blink){
+                var n = sprite_get_number(spr.PitSquidEyelid) - 1;
+                blink_img = min(blink_img + other.image_speed, n);
+
+                 // End Blink:
+                if(blink_img >= n){
+                    if(random(4) < 1 && instance_exists(Player)){
+                        blink = false;
+                    }
+                }
+            }
+            else{
+                blink_img = max(blink_img - other.image_speed, 0);
+
+                 // New Blink:
+                if(blink_img <= 0){
+                    if(current_frame_active && random(_seen ? 150 : 100) < 1){
+                        blink = true;
+                    }
+                }
+            }
+        }
+    }
+
+     // Bite:
+    var o = 0;
+    if(bite > 0){
+        o = 8;
+
+        var _spr = spr.PitSquidMaw,
+            _img = ((1 - bite) * sprite_get_number(_spr));
+
+         // Finish chomp at top of pit:
+        if(_img < 6 || pit_height > 0.5){
+            bite -= (image_speed / sprite_get_number(_spr)) * current_time_scale;
+        }
+
+         // Bite Time:
+        if(in_range(_img, 8, 9)){
+            mask_index = _spr;
+            image_index = _img;
+            if(place_meeting(x, y, hitme)){
+                with(instances_matching_ne(hitme, "team", team)){
+                    if(place_meeting(x, y, other)) with(other){
+                        if(projectile_canhit_melee(other)){
+                            projectile_hit_raw(other, meleedamage, true);
+                        }
+                    }
+                }
+            }
+            mask_index = mskNone;
+
+             // Chomp FX:
+            if(_img - image_speed < 8){
+                sound_play_pitchvol(snd_mele, 0.8 + orandom(0.1), 0.8);
+                sound_play_pitchvol(sndOasisChest, 0.8 + orandom(0.1), 1);
+                repeat(3) instance_create(x, y + 16, Bubble);
+            }
+        }
+    }
+    eye_dis_offset += ((o - eye_dis_offset) / 5) * current_time_scale;
+
+    /*if(button_pressed(0, "horn")){
+        scrBossIntro(name, sndBigBanditIntro, musBoss2);
+    }*/
+
+    if(button_pressed(0, "horn")){
+        alarm1 = 4;
+        ammo = 6;
+        gunangle = point_direction(x, y, mouse_x, mouse_y);
+    }
+    if(button_pressed(0, "key8")){
+        sink = true;
+    }
+    if(button_pressed(0, "key9")){
+        bite = 1.2;
+    }
+
+#define PitSquid_end_step
+     // Collisions:
+    if(pit_height > 0.5){
+        mask_index = mskReviveArea;
+
+         // Wall Collision:
+        if(place_meeting(x, y, Wall)){
+            speed *= 0.8;
+            x = xprevious;
+            y = yprevious;
+            if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+            if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+            if(!place_meeting(x + hspeed, y, Wall)) x += hspeed;
+            if(!place_meeting(x, y + vspeed, Wall)) y += vspeed;
+        }
+
+         // Floor Collision:
+        if(place_meeting(x, y, Floor)){
+            var f = noone;
+            with(instances_matching(Floor, "styleb", false)) if(place_meeting(x, y, other)){
+                f = id;
+                break;
+            }
+            if(instance_exists(f)){
+                speed *= 0.8;
+                x = xprevious;
+                y = yprevious;
+                if(place_meeting(x + hspeed, y, f)) hspeed *= -1;
+                if(place_meeting(x, y + vspeed, f)) vspeed *= -1;
+                if(!place_meeting(x + hspeed, y, f)) x += hspeed;
+                if(!place_meeting(x, y + vspeed, f)) y += vspeed;
+            }
+        }
+
+         // Destroy Stuff:
+        if(pit_height >= 1){
+            var _xsc = image_xscale,
+                _ysc = image_yscale;
+
+             // Clear Walls:
+            if(place_meeting(x, y, Wall)){
+                image_xscale = _xsc * 1.6;
+                image_yscale = _ysc * 1.6;
+                with(Wall) if(place_meeting(x, y, other)){
+                    instance_create(x, y, FloorExplo);
+                    instance_destroy();
+                }
+            }
+    
+             // Clear Floors:
+            if(place_meeting(x, y, Floor)){
+                var _floors = instances_matching(Floor, "styleb", false),
+                    f = noone;
+    
+                with(_floors) if(place_meeting(x, y, other)){
+                    f = id;
+                    break;
+                }
+                if(instance_exists(f)){
+                    image_xscale = _xsc * 1.2;
+                    image_yscale = _ysc * 1.2;
+                    with(_floors) if(place_meeting(x, y, other)){
+                        styleb = true;
+                        sprite_index = area_get_sprite(GameCont.area, sprFloor1B);
+                        depth = 8;
+                        material = 0;
+                        traction = 0.1;
+
+                         // Effects:
+                        sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
+                        repeat(sprite_width / 8){
+                            instance_create(x + random(32), y + random(32), Debris);
+                        }
+
+                         // TopSmall Fix:
+                        if(place_meeting(x, y, TopSmall)){
+                            with(TopSmall) if(place_meeting(x, y, other)){
+                                instance_destroy();
+                            }
+                        }
+                    }
+                    mod_variable_set("area", "trench", "surf_reset", true);
+                }
+            }
+
+            image_xscale = _xsc;
+            image_yscale = _ysc;
+        }
+    }
+    mask_index = mskNone;
+
+#define PitSquid_alrm0
+    alarm0 = 30 + random(30);
+
+    target = instance_nearest(x, y, Player);
+    if(instance_exists(target)){
+        var _targetDis = point_distance(x, y, target.x, target.y),
+            _targetDir = point_direction(x, y, target.x, target.y);
+
+        if(_targetDis > 96 || pit_height < 1 || random(2) < 1){
+            motion_add(_targetDir, 1);
+            sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
+            sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
+        }
+
+        if(pit_height >= 1 && random(2) < 1){
+             // Check LOS to Player:
+            var _targetSeen = (target_is_visible() && target_in_distance(0, 256));
+            if(_targetSeen){
+                var f = instances_matching(Floor, "styleb", true);
+                with(f) x -= 10000;
+                if(collision_line(x, y, target.x, target.y, Floor, false, false)){
+                    _targetSeen = false;
+                }
+                with(f) x += 10000;
+            }
+    
+             // Sink into pit:
+            if(!_targetSeen){
+                sink = true;
+                sink_targetx = target.x;
+                sink_targety = target.y;
+                alarm0 = 60;
+            }
+        }
+    }
+
+#define PitSquid_alrm1
+    alarm1 = 60 + random(30);
+
+    if(pit_height >= 1){
+        target = instance_nearest(x, y, Player);
+
+        if(instance_exists(target)){
+            var _targetDis = point_distance(x, y, target.x, target.y),
+                _targetDir = point_direction(x, y, target.x, target.y);
+
+            if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
+                var c = id;
+                with(target){
+                    var f = instance_nearest(x - 16, y - 16, Floor),
+                        e = instance_nearest(x - 8, y - 8, FloorExplo);
+            
+                    if((f.styleb || !place_meeting(x, y, f)) || (e.styleb || !place_meeting(x, y, e))){
+                        other.alarm1 = 60 + random(30);
+                        with(obj_create(x, y, "Tentacle")){
+                            alarm0 = 20;
+                            team = c.team;
+                            creator = c;
+                        }
+                    }
+                }
+            }
+    
+             // Bite Player:
+            else{
+                motion_set(_targetDir, _targetDis / 32);
+                bite = 1.2;
+            }
+        }
+    }
+
+    /*if(ammo > 0){
+        alarm1 = 4;
+
+        var _dis = 60 + (24 * (6 - ammo)),
+            _dir = gunangle;
+
+        with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "Tentacle")){
+            creator = other;
+            xoff = x - other.x;
+            yoff = y - other.y;
+            dir = _dir + (90 * (((other.ammo % 2) * 2) - 1));
+            spd = 5;
+            move_delay = 4 * (other.ammo - 1);
+            depth -= y / 20000;
+        }
+
+        ammo--;
+    }*/
+
+
+#define Tentacle_step
+    if(sprite_index != mskNone){
+        if(instance_exists(creator)){
+             // Animate:
+            if(sprite_index != spr_idle){
+                if((sprite_index != spr_hurt && sprite_index != spr_spwn) || anim_end){
+                    sprite_index = spr_idle;
+                }
+            }
+
+             // Keep w/ Pit Squid:
+            if(spd != 0){
+                x = creator.x + xoff;
+                y = creator.y + yoff;
+                if(move_delay <= 0){
+                    xoff += lengthdir_x(spd, dir);
+                    yoff += lengthdir_y(spd, dir);
+                    spd -= clamp(spd, -friction, friction);
+                    if(spd <= 0) with(creator){
+                        motion_add(point_direction(x, y, other.x, other.y), 0.4);
+                    }
+                    if(sprite_index != spr_hurt){
+                        sprite_index = spr_hurt;
+                        image_index = 1;
+                    }
+                    scrRight(dir + 180);
+                    //instance_create(x, y, Dust);
+                }
+                else move_delay -= current_time_scale;
+    
+                 // Clear Walls:
+                if(place_meeting(x, y, Wall)){
+                    with(Wall) if(place_meeting(x, y, other)){
+                        instance_create(x, y, FloorExplo);
+                        instance_destroy();
+                    }
+                }
+    
+                 // Clear Floors:
+                if(place_meeting(x, y, Floor)){
+                    var _floors = instances_matching(Floor, "styleb", false),
+                        f = noone;
+        
+                    with(_floors) if(place_meeting(x, y, other)){
+                        f = id;
+                        break;
+                    }
+                    if(instance_exists(f)){
+                        with(_floors) if(place_meeting(x, y, other)){
+                            styleb = true;
+                            sprite_index = area_get_sprite(GameCont.area, sprFloor1B);
+                            depth = 8;
+                            material = 0;
+                            traction = 0.1;
+    
+                             // Effects:
+                            sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
+                            sound_play_pitchvol(sndWallBreakRock, 1 + orandom(0.2), 0.3 + random(0.2));
+                            repeat(sprite_width / 8){
+                                instance_create(x + random(32), y + random(32), Debris);
+                            }
+    
+                             // TopSmall Fix:
+                            if(place_meeting(x, y, TopSmall)){
+                                with(TopSmall) if(place_meeting(x, y, other)){
+                                    instance_destroy();
+                                }
+                            }
+                        }
+                        mod_variable_set("area", "trench", "surf_reset", true);
+                    }
+                }
+            }
+    
+             // Retract:
+            else if(point_distance(x, y, creator.x + creator.hspeed, creator.y + creator.vspeed + 16) < 64 || creator.pit_height < 1){
+                my_health = 0;
+                raddrop = 0;
+                snd_dead = -1;
+                sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
+            }
+        }
+        else if(sprite_index != spr_spwn || anim_end){
+            my_health = 0;
+        }
+    }
+    else my_health = maxhealth;
+    speed = 0;
+    enemyAlarms(1);
+
+#define Tentacle_hurt(_hitdmg, _hitvel, _hitdir)
+    if(sprite_index != mskNone){
+        my_health -= _hitdmg;
+        nexthurt = current_frame + 6;
+        sound_play_hit(snd_hurt, 0.3);
+    
+         // Hurt Papa Squid:
+        with(creator){
+            my_health -= _hitdmg;
+            nexthurt = current_frame + 6;
+            sound_play_hit(snd_hurt, 0.3);
+        }
+    
+         // Hurt Sprite:
+        if(sprite_index != spr_spwn){
+            sprite_index = spr_hurt;
+            image_index = 0;
+        }
+        scrRight(_hitdir + 180);
+    }
+
+#define Tentacle_alrm0
+    if(creator.pit_height < 1) instance_delete(id);
+
+     // Appear:
+    else{
+        mask_index = mskOldGuardianDeflect;
+        sprite_index = spr_spwn;
+        image_index = 0;
+        canfly = false;
+
+        sound_play_pitchvol(sndBigMaggotUnburrow, 1.5 + random(1), 1)
+    }
+
+#define Tentacle_death
+    //repeat(2) instance_create(x, y, Dust);
+
 
 #define Vent_step
     if random(5) < current_time_scale{

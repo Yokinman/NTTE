@@ -299,10 +299,13 @@
             KelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png", 8, 16, 22);
 
              // Pit Squid:
-            PitsquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png", 1, 19, 19);
-            PitsquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png", 1, 19, 19);
-            PitsquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png", 3, 19, 19);
-            PitsquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png", 14, 19, 19);
+            PitSquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png",   1, 19, 19);
+            PitSquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png",    1, 19, 19);
+            PitSquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png",   3, 19, 19);
+            PitSquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png",     14, 19, 19);
+            TentacleIdle    = sprite_add("sprites/enemies/Pitsquid/sprTentacleIdle.png",     8, 20, 28);
+            TentacleHurt    = sprite_add("sprites/enemies/Pitsquid/sprTentacleHurt.png",     3, 20, 28);
+            TentacleDead    = sprite_add("sprites/enemies/Pitsquid/sprTentacleDead.png",     6, 20, 28);
 
              // Vent
             VentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png", 1, 12, 14);

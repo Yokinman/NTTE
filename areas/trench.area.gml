@@ -37,7 +37,7 @@
         global.surfw = 2000;
         global.surfh = 2000;
         global.surf = [noone, noone];
-        global.resetsurfaces = true;
+        global.surf_reset = false;
     //#endregion
 
     global.trench_visited = [];
@@ -174,33 +174,118 @@
             var _x1 = f.x + 0,
                 _y1 = f.y + 0,
                 _x2 = _x1 + 32,
-                _y2 = _y1 + 32;
+                _y2 = _y1 + 32,
+                e = instance_nearest(_x - 8, _y - 8, FloorExplo);
 
-            if(point_in_rectangle(_x, _y, _x1, _y1, _x2, _y2) && !position_meeting(_x, _y, FloorExplo)){
+            if(point_in_rectangle(_x, _y, _x1, _y1, _x2, _y2) && (!position_meeting(_x, _y, e) || e.styleb)){
+                 // Check if moving:
+                var _moving = false;
                 if(canwalk){
-                     // Check if moving:
-                    var _moving = false,
-                        _moveKey = ["nort", "sout", "east", "west"];
-
+                    var _moveKey = ["nort", "sout", "east", "west"];
                     for(var i = 0; i < array_length(_moveKey); i++){
                         if(button_check(index, _moveKey[i])){
                             _moving = true;
                             break;
                         }
                     }
+                }
 
-                     // do a spin:
-                    if(!_moving){
-                        var _x = x + cos(wave / 10) * 0.25 * right,
-                            _y = y + sin(wave / 10) * 0.25 * right;
+                 // do a spin:
+                if(!_moving){
+                    var _x = x + cos(wave / 10) * 0.25 * right,
+                        _y = y + sin(wave / 10) * 0.25 * right;
 
-                        if(!place_meeting(_x, y, Wall)) x = _x;
-                        if(!place_meeting(x, _y, Wall)) y = _y;
-                    }
+                    if(!place_meeting(_x, y, Wall)) x = _x;
+                    if(!place_meeting(x, _y, Wall)) y = _y;
                 }
             }
         }
     }
+
+     // Floaty Effects Above Pits:
+    with(instances_matching([WepPickup, chestprop], "", null)){
+        var _x = x,
+            _y = bbox_bottom,
+            f = instance_nearest(_x - 16, _y - 16, Floor);
+
+        if(instance_exists(f) && f.styleb){
+            var _x = x + cos((current_frame + x + y) / 10) * 0.15,
+                _y = y + sin((current_frame + x + y) / 10) * 0.15;
+
+            if(!place_meeting(_x, y, Wall)) x = _x;
+            if(!place_meeting(x, _y, Wall)) y = _y;
+        }
+    }
+
+     // Stuff Falling Into Pits:
+    with(instances_matching_le([Debris, Shell, ChestOpen], "speed", 1)){
+        var _x = x,
+            _y = bbox_bottom,
+            f = instance_nearest(_x - 16, _y - 16, Floor);
+
+        if(instance_exists(f) && f.styleb){
+            pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
+            instance_destroy();
+        }
+    }
+    with(instances_matching(Corpse, "image_speed", 0)){
+        var _x = x,
+            _y = y,
+            f = instance_nearest(_x - 16, _y - 16, Floor);
+
+        if(instance_exists(f) && f.styleb){
+            pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
+            instance_destroy();
+        }
+    }
+
+     // Lag Helper:
+    var s = instances_matching(CustomObject, "name", "PitSink"),
+        m = array_length(s);
+
+    while(m > 80) with(s[--m]) instance_destroy();
+
+#define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
+    with(instance_create(_x, _y, CustomObject)){
+        name = "PitSink";
+
+         // Visual:
+        sprite_index = _spr;
+        image_index = _img;
+        image_xscale = _xsc;
+        image_yscale = _ysc;
+        image_angle = _ang;
+        image_speed = 0;
+        visible = false;
+
+         // Vars:
+        if(_dir == 0) direction = random(360);
+        else direction = _dir;
+        speed = max(_spd, 1);
+        friction = 0.01;
+        rotspeed = _rot;
+
+        on_step = pit_sink_step;
+
+        return id;
+    }
+
+#define pit_sink_step
+     // Blackness Consumes:
+    image_blend = merge_color(image_blend, c_black, 0.05);
+
+     // Shrink into Abyss:
+    var d = random_range(0.001, 0.01) * current_time_scale
+    image_xscale -= sign(image_xscale) * d;
+    image_yscale -= sign(image_yscale) * d;
+    y += 1/3 * current_time_scale;
+
+     // Spins:
+    direction += rotspeed * current_time_scale;
+    image_angle += rotspeed * current_time_scale;
+
+     // He gone:
+    if(abs(image_xscale) < 0.2) instance_destroy();
 
 #define area_effect(_vx, _vy)
     var _x = _vx + random(game_width),
@@ -324,51 +409,104 @@
     }
     
 #define draw_pit
-    if !instance_exists(GenCont){
-        var _x = 10000-0.5*global.surfw,
-            _y = 10000-0.5*global.surfh;
-         // draw pit walls
-        if !surface_exists(global.surf[0]){
-             // create surface
-            global.surf[0] = surface_create(global.surfw,global.surfh);
+    if(!instance_exists(GenCont)){
+        var _surfx = 10000 - (0.5 * global.surfw),
+            _surfy = 10000 - (0.5 * global.surfh);
+
+         // Pit Walls:
+        if(!surface_exists(global.surf[0]) || global.surf_reset){
+            if(!surface_exists(global.surf[0])){
+                global.surf[0] = surface_create(global.surfw,global.surfh);
+            }
             surface_set_target(global.surf[0]);
-                 // draw pit wall sprites
-                var _sprFull = [spr.PitBot,spr.Pit,spr.PitTop],
-                    _sprSmall = [spr.PitSmallBot,spr.PitSmall,spr.PitSmallTop];
-                for (var _h = 0; _h <= 2; _h++){
-                    with instances_matching(Floor,"sprite_index",spr.FloorTrench){
-                        draw_sprite(_sprFull[_h],1,x-_x,y-_y);
-                    }
-                    with instances_matching(GameObject,"object_index",Wall,FloorExplo){
-                        draw_sprite(_sprSmall[_h],1,x-_x,y-_y);
-                    }
+            draw_clear_alpha(0, 0);
+
+            var _spr = [spr.PitBot, spr.Pit, spr.PitTop];
+            for(var i = 0; i < array_length(_spr); i++){
+                with(instances_matching(Floor, "sprite_index", spr.FloorTrench)){
+                    draw_sprite(_spr[i], image_index, x - _surfx, y - _surfy);
                 }
+            }
+            var _spr = [spr.PitSmallBot, spr.PitSmall, spr.PitSmallTop];
+            for(var i = 0; i < array_length(_spr); i++){
+                with(instances_matching([Wall, FloorExplo], "styleb", false, null)){
+                    draw_sprite(_spr[i], image_index, x - _surfx, y - _surfy);
+                }
+            }
+
             surface_reset_target();
         }
-         // draw pit mask
-        if !surface_exists(global.surf[1]){
-            global.surf[1] = surface_create(global.surfw,global.surfh);
-            surface_set_target(global.surf[1])
-                draw_set_color(c_black);
-                with instances_matching(Floor,"styleb",true){
-                    draw_sprite(sprite_index,image_index,x-_x,y-_y);
-                }
-        }
-        surface_set_target(global.surf[1])
-            draw_set_color_write_enable(1,1,1,0);
-            draw_set_color(c_black);
-            draw_rectangle(0,0,global.surfw,global.surfh,0);
-            draw_set_color(c_white);
-            
-             // > > > DRAW YOUR PIT SHIT HERE < < <
-            with instances_matching(CustomEnemy,"name","Pitsquid"){
-                mod_script_call("mod","telib","Pitsquid_draw");
+
+         // Pit Mask:
+        if(!surface_exists(global.surf[1]) || global.surf_reset){
+            if(!surface_exists(global.surf[1])){
+                global.surf[1] = surface_create(global.surfw, global.surfh);
             }
-            
-            draw_surface(global.surf[0],0,0);
-            draw_set_color_write_enable(1,1,1,1);
+            surface_set_target(global.surf[1]);
+            draw_clear_alpha(0, 0);
+
+            draw_set_color(c_black);
+            with(instances_matching(Floor, "styleb", true)){
+                draw_sprite(sprite_index, image_index, x - _surfx, y - _surfy);
+            }
+        }
+        global.surf_reset = false;
+
+        surface_set_target(global.surf[1]);
+
+        draw_set_color_write_enable(1, 1, 1, 0);
+        draw_set_color(c_black);
+        draw_rectangle(0, 0, global.surfw, global.surfh, 0);
+        draw_set_color(c_white);
+
+        /// > > > DRAW YOUR PIT SHIT HERE < < <
+             // Pit Squid:
+            with(instances_matching(CustomEnemy, "name", "PitSquid")){
+                var h = (nexthurt > current_frame + 3),
+                    _xscal = image_xscale * max(pit_height, 0),
+                    _yscal = image_yscale * max(pit_height, 0),
+                    _angle = image_angle,
+                    _blend = merge_color(c_black, image_blend, pit_height),
+                    _alpha = image_alpha;
+
+                 // Eyes:
+                with(eye){
+                    var _x = x - _surfx,
+                        _y = y - _surfy + 16,
+                        l = dis * max(other.pit_height, 0),
+                        d = dir;
+
+                    with(other){
+                         // Cornea + Pupil:
+                        if(h) d3d_set_fog(1, c_white, 0, 0);
+                        if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
+                            draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xscal, _yscal, _angle, _blend, _alpha);
+                            draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xscal, _yscal, _angle, _blend, _alpha);
+                        }
+                        if(h) d3d_set_fog(0, 0, 0, 0);
+
+                         // Eyelid:
+                        draw_sprite_ext(spr.PitSquidEyelid, other.blink_img, _x, _y, _xscal, _yscal, _angle, _blend, _alpha);
+                    }
+                }
+
+                 // Bite:
+                if(bite > 0 && bite <= 1){
+                    draw_sprite_ext(spr.PitSquidMaw, ((1 - bite) * sprite_get_number(spr.PitSquidMaw)), x - _surfx, y - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+                }
+            }
+
+             // Stuff that fell in pit:
+            with(instances_named(CustomObject, "PitSink")){
+                draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+            }
+
+            draw_surface(global.surf[0], 0, 0);
+
+        draw_set_color_write_enable(1, 1, 1, 1);
         surface_reset_target();
-        draw_surface(global.surf[1],_x,_y);
+
+        draw_surface(global.surf[1], _surfx, _surfy);
     }
 
 

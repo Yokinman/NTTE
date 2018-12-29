@@ -581,8 +581,9 @@
             }
         }
     }
-    with(instances_matching_ne(enemy, "snd_hurt", sndOasisHurt, -1)) snd_hurt = sndOasisHurt;
-    with(instances_matching_ne(enemy, "snd_dead", sndOasisDeath, -1)) snd_dead = sndOasisDeath;
+    var e = instances_matching_lt(enemy, "size", 4);
+    with(instances_matching_ne(e, "snd_hurt", sndOasisHurt, -1)) snd_hurt = sndOasisHurt;
+    with(instances_matching_ne(e, "snd_dead", sndOasisDeath, -1)) snd_dead = sndOasisDeath;
 
 #define underwater_end_step
     instance_destroy();
@@ -651,7 +652,7 @@
             sound_stop(sndBigBanditIntro);
             instance_delete(id);
             if(fork()){
-                wait 1;
+                wait 0;
                 sprite_restore(sprBossIntro);
                 sprite_restore(sprBossIntroBackLayer);
                 sprite_restore(sprBossName);

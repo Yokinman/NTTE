@@ -1058,9 +1058,8 @@
         			 // spr_shadow = shd64;
         			 // spr_shadow_y = 6;
         			spr_shadow = shd24;
-        			    spr_shadow_y = 9;
-        			    spr_shadow_x = 6;
-        			mask_index = msk.AnglerHidden;
+    			    spr_shadow_y = 9;
+    			    spr_shadow_x = 6;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_appear;
         			image_speed = 0;
@@ -1071,6 +1070,7 @@
         			snd_dead = sndFireballerDead;
 
         			 // Vars:
+        			mask_index = msk.AnglerHidden;
         			maxhealth = 80;
         			raddrop = 24;
         			meleedamage = 4;
@@ -1187,30 +1187,86 @@
                 }
                 break;
 
-            case "Pitsquid":
+            case "PitSquid":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_cornea = spr.PitsquidCornea;
-                    spr_pupil = spr.PitsquidPupil;
-                    spr_eyelid = spr.PitsquidEyelid;
-                    mask_index = mskNone;
-                    visible = true;
+                    
 
                      // Sounds:
-
+                    snd_hurt = sndBallMamaHurt;
+                    snd_mele = sndMaggotBite;
 
                      // Vars:
-                    canfly = true;
+                    friction = 0.01;
+                    mask_index = mskNone;
+                    meleedamage = 8;
                     maxhealth = scrBossHP(450);
-
+                    raddrop = 1;
+                    size = 5;
+                    canfly = true;
                     target = noone;
-                    walk = 0;
+                    bite = false;
+                    sink = false;
+                    sink_targetx = x;
+                    sink_targety = y;
+                    pit_height = 1;
 
-                    eyenum = 3;
-                    eyelen = array_create(eyenum);
-                    eyedir = array_create(eyenum);
-                    blink = array_create(eyenum);
+                     // Eyes:
+                    eye = [];
+                    eye_angle = random(360);
+                    eye_dis_offset = 0;
+                    repeat(3){
+                        array_push(eye, {
+                            x : 0,
+                            y : 0,
+                            dis : 5,
+                            dir : random(360),
+                            blink : false,
+                            blink_img : 0
+                        });
+                    }
+
+                     // Alarms:
+                    alarm0 = 90;
+                }
+                break;
+
+            case "Tentacle":
+                o = instance_create(_x, _y, CustomEnemy);
+                with(o){
+                    instance_create(x, y, CaveSparkle); // Temporary tell or something
+
+                     // Visual:
+                    spr_spwn = spr.SealSpwn[0];
+                    spr_idle = spr.TentacleIdle;
+                    spr_walk = spr.TentacleIdle;
+                    spr_hurt = spr.TentacleHurt;
+                    spr_dead = spr.TentacleDead;
+                    depth = -2;
+                    hitid = [spr_idle, "PIT SQUID"];
+                    sprite_index = mskNone;
+
+                     // Sound:
+                    snd_hurt = sndHitFlesh;
+                    snd_dead = sndMaggotSpawnDie;
+                    snd_mele = sndPlantSnare;
+
+                     // Vars:
+                    mask_index = mskNone;
+                    meleedamage = 3;
+                    maxhealth = 20;
+                    raddrop = 0;
+                    size = 3;
+                    xoff = 0;
+                    yoff = 0;
+                    dir = 0;
+                    spd = 0;
+                    move_delay = 0;
+                    creator = noone;
+                    canfly = true;
+
+                    alarm0 = 1;
                 }
                 break;
 
@@ -1235,7 +1291,7 @@
                 break;
 
             case "YetiCrab":
-            o = instance_create(_x, _y, CustomEnemy);
+                o = instance_create(_x, _y, CustomEnemy);
                 with(o) {
                      // Visual:
                     spr_idle = spr.YetiCrabIdle;
@@ -1835,7 +1891,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Angler", "Eel", "Jelly", "Kelp", "Pitsquid", "Vent", "YetiCrab",
+    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "Vent", "YetiCrab",
     		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
