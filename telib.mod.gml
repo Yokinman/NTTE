@@ -1235,15 +1235,13 @@
             case "Tentacle":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
-                    instance_create(x, y, CaveSparkle); // Temporary tell or something
-
                      // Visual:
-                    spr_spwn = spr.SealSpwn[0];
+                    spr_spwn = spr.TentacleSpwn;
                     spr_idle = spr.TentacleIdle;
                     spr_walk = spr.TentacleIdle;
                     spr_hurt = spr.TentacleHurt;
                     spr_dead = spr.TentacleDead;
-                    depth = -2;
+                    depth = -2 - (y / 20000);
                     hitid = [spr_idle, "PIT SQUID"];
                     sprite_index = mskNone;
 
@@ -1265,8 +1263,10 @@
                     move_delay = 0;
                     creator = noone;
                     canfly = true;
+                    kills = 0;
 
                     alarm0 = 1;
+                    alarm1 = 90;
                 }
                 break;
 

@@ -3032,9 +3032,23 @@
     }*/
 
     if(button_pressed(0, "horn")){
-        alarm1 = 4;
-        ammo = 6;
-        gunangle = point_direction(x, y, mouse_x, mouse_y);
+        var _num = 8;
+        for(var i = 0; i < _num; i++){
+            var l = 64,
+                d = (i * (360 / _num)) + eye_angle;
+
+            with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d) + 20, "Tentacle")){
+                creator = other;
+                xoff = x - other.x;
+                yoff = y - other.y;
+                dir = d;
+                spd = 6;
+                alarm0 = 5 + random(15);
+                alarm1 += alarm0;
+                move_delay = 50 - alarm0;
+                scrRight(d + 180);
+            }
+        }
     }
     if(button_pressed(0, "key8")){
         sink = true;
@@ -3180,6 +3194,7 @@
             var _targetDis = point_distance(x, y, target.x, target.y),
                 _targetDir = point_direction(x, y, target.x, target.y);
 
+             // Tentacles:
             if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
                 var c = id;
                 with(target){
@@ -3193,6 +3208,15 @@
                             team = c.team;
                             creator = c;
                         }
+
+                         // Tell:
+                        with(instance_create(x, bbox_bottom - 4, ThrowHit)){
+                            image_alpha = 0.5;
+                            image_speed = 0.4;
+                            image_angle = random(360);
+                            image_xscale = 0.5;
+                            image_yscale = 0.5;
+                        }
                     }
                 }
             }
@@ -3204,25 +3228,6 @@
             }
         }
     }
-
-    /*if(ammo > 0){
-        alarm1 = 4;
-
-        var _dis = 60 + (24 * (6 - ammo)),
-            _dir = gunangle;
-
-        with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "Tentacle")){
-            creator = other;
-            xoff = x - other.x;
-            yoff = y - other.y;
-            dir = _dir + (90 * (((other.ammo % 2) * 2) - 1));
-            spd = 5;
-            move_delay = 4 * (other.ammo - 1);
-            depth -= y / 20000;
-        }
-
-        ammo--;
-    }*/
 
 
 #define Tentacle_step
@@ -3246,14 +3251,25 @@
                     if(spd <= 0) with(creator){
                         motion_add(point_direction(x, y, other.x, other.y), 0.4);
                     }
+
+                     // Animate:
                     if(sprite_index != spr_hurt){
                         sprite_index = spr_hurt;
                         image_index = 1;
                     }
                     scrRight(dir + 180);
-                    //instance_create(x, y, Dust);
+
+                     // Effects:
+                    if(current_frame_active && random(3) < 1){
+                        instance_create(x, y, Dust);
+                    }
                 }
-                else move_delay -= current_time_scale;
+                else{
+                    move_delay -= current_time_scale;
+                    if(move_delay <= 0){
+                        sound_play_pitchvol(sndFastRatSpawn, 0.6 + random(0.2), 3);
+                    }
+                }
     
                  // Clear Walls:
                 if(place_meeting(x, y, Wall)){
@@ -3300,11 +3316,10 @@
             }
     
              // Retract:
-            else if(point_distance(x, y, creator.x + creator.hspeed, creator.y + creator.vspeed + 16) < 64 || creator.pit_height < 1){
-                my_health = 0;
-                raddrop = 0;
-                snd_dead = -1;
-                sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
+            else if(alarm1 > 1){
+                if(point_distance(x, y, creator.x + creator.hspeed, creator.y + creator.vspeed + 16) < 64 || creator.pit_height < 1){
+                    alarm1 = 1;
+                }
             }
         }
         else if(sprite_index != spr_spwn || anim_end){
@@ -3313,7 +3328,7 @@
     }
     else my_health = maxhealth;
     speed = 0;
-    enemyAlarms(1);
+    enemyAlarms(2);
 
 #define Tentacle_hurt(_hitdmg, _hitvel, _hitdir)
     if(sprite_index != mskNone){
@@ -3337,7 +3352,7 @@
     }
 
 #define Tentacle_alrm0
-    if(creator.pit_height < 1) instance_delete(id);
+    if(creator.pit_height < 1) instance_delete(self);
 
      // Appear:
     else{
@@ -3348,6 +3363,12 @@
 
         sound_play_pitchvol(sndBigMaggotUnburrow, 1.5 + random(1), 1)
     }
+
+#define Tentacle_alrm1
+    my_health = 0;
+    raddrop = 0;
+    snd_dead = -1;
+    sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
 
 #define Tentacle_death
     //repeat(2) instance_create(x, y, Dust);
