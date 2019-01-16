@@ -273,6 +273,9 @@
                 sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",8,16,16),
                 sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",8,16,16),
                 sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
+    
+             // Floor Chunks (Pit Squid):
+            FloorTrenchBreak = sprite_add("sprites/areas/Trench/sprFloorTrenchBreak.png", 4, 12, 12);
 
              // Jellyfish (0 = blue, 1 = purple, 2 = green, 3 = elite):
             JellyFire =         sprite_add("sprites/enemies/Jellyfish/sprJellyfishFire.png",        6, 24, 24);

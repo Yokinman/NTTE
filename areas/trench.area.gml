@@ -6,20 +6,20 @@
      // SPRITES //
     with(spr){
          // Floors:
-        FloorTrench       = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",      4, 0, 0);
-        FloorTrenchB      = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",     4, 2, 2);
-        FloorTrenchExplo  = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png", 5, 1, 1);
+        FloorTrench       = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",      4,  0,  0);
+        FloorTrenchB      = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",     4,  2,  2);
+        FloorTrenchExplo  = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png", 5,  1,  1);
 
          // Walls:
-        WallTrenchTrans   = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",  8, 0,  0);
-        WallTrenchBot     = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",    4, 0,  0);
-        WallTrenchOut     = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",    1, 4, 12);
-        WallTrenchTop     = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",    8, 0,  0);
+        WallTrenchTrans   = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",  8,  0,  0);
+        WallTrenchBot     = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",    4,  0,  0);
+        WallTrenchOut     = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",    1,  4, 12);
+        WallTrenchTop     = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",    8,  0,  0);
 
          // Misc:
-        DebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4, 0, 0);
-        DetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6, 0, 0);
-        TopDecalTrench    = sprite_add("../sprites/areas/Trench/sprTopDecalTrench.png",   1, 0, 0);
+        DebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4,  0, 0);
+        DetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6,  0, 0);
+        TopDecalTrench    = sprite_add("../sprites/areas/Trench/sprTopDecalTrench.png",   1,  0, 0);
 
         /// Pits:
              // Small:

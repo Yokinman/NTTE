@@ -1270,6 +1270,26 @@
                 }
                 break;
 
+            case "TrenchFloorChunk":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    sprite_index = spr.FloorTrenchBreak;
+                    image_index = irandom(image_number - 1)
+                    image_speed = 0;
+                    image_alpha = 0;
+
+                     // Vars:
+        	        z = 0;
+        	        zspeed = 6 + random(4);
+        	        zfric = 0.3;
+        	        friction = 0.05;
+        	        rotspeed = random_range(1, 2) * choose(-1, 1);
+
+        	        motion_add(random(360), 2 + random(3));
+                }
+                break;
+
             case "Vent":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -1891,7 +1911,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "Vent", "YetiCrab",
+    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "TrenchFloorChunk", "Vent", "YetiCrab",
     		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];

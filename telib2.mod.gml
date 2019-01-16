@@ -3127,9 +3127,26 @@
 
                          // Effects:
                         sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
-                        repeat(sprite_width / 8){
-                            instance_create(x + random(32), y + random(32), Debris);
+                        for(var _ox = 0; _ox < 32; _ox += 16){
+                            for(var _oy = 0; _oy < 32; _oy += 16){
+                                var _x = x + _ox + 8,
+                                    _y = y + _oy + 8,
+                                    _dir = point_direction(other.x, other.y, _x, _y),
+                                    _spd = 8 - (point_distance(other.x, other.y, _x, _y) / 16);
+
+                                if(random(6) < 1 && object_index != FloorExplo){
+                                    with(obj_create(_x, _y, "TrenchFloorChunk")){
+                                        direction = _dir;
+                                        zspeed = _spd;
+                                        image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
+                                    }
+                                }
+                                else instance_create(_x, _y, Debris);
+                            }
                         }
+                        /*repeat(sprite_width / 8){
+                            instance_create(x + random(32), y + random(32), Debris);
+                        }*/
 
                          // TopSmall Fix:
                         if(place_meeting(x, y, TopSmall)){
@@ -3374,6 +3391,49 @@
     //repeat(2) instance_create(x, y, Dust);
 
 
+#define TrenchFloorChunk_step
+    z_engine();
+    depth = -z / 8;
+    image_angle += rotspeed * current_time_scale;
+
+    if(z <= 0) instance_destroy();
+
+#define TrenchFloorChunk_draw
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
+
+#define TrenchFloorChunk_destroy
+    sound_play_pitchvol(sndOasisExplosionSmall, 0.5 + random(0.3), 0.3 + random(0.1));
+    var n = 3;
+
+     // Fall into Pit:
+    if(place_meeting(x, y, Floor) && instance_nearest(x - 16, y - 16, Floor).styleb){
+        with(instance_create(x, y, Debris)){
+            sprite_index = other.sprite_index;
+            image_index = other.image_index;
+            image_angle = other.image_angle;
+            direction = other.direction;
+            speed = other.speed;
+        }
+    }
+
+     // Break on ground:
+    else{
+        y -= 2;
+        sound_play_pitchvol(sndWallBreak, 0.5 + random(0.3), 0.4);
+        repeat(3) with(instance_create(x, y, Debris)){
+            speed = 4 + random(2);
+            if(!place_meeting(x, y, Floor)) depth = -8;
+        }
+        n = 6;
+    }
+
+     // Ground smacky:
+    repeat(n) with(instance_create(x + orandom(4), y + orandom(4), Smoke)){
+        motion_add(point_direction(other.x, other.y, x, y), 2);
+        if(!place_meeting(x, y, Floor)) depth = -8;
+    }
+
+
 #define Vent_step
     if random(5) < current_time_scale{
         with instance_create(x,y,Bubble){
@@ -3460,6 +3520,11 @@
 #define draw_bloom
     with(instances_named(CustomProjectile, "TrafficCrabVenom")){
         draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+    }
+
+#define draw_shadows
+    with(instances_named(CustomObject, "TrenchFloorChunk")){
+        draw_circle(x, y, 8 / ((z / 10) + 1), 0);
     }
 
 #define draw_dark // Drawing Grays
