@@ -3393,8 +3393,18 @@
 
 #define TrenchFloorChunk_step
     z_engine();
-    depth = -z / 8;
     image_angle += rotspeed * current_time_scale;
+
+     // Stay above walls:
+    depth = clamp(-z / 8, -8, 0);
+    if(!place_meeting(x, y - z, Floor)){
+        depth = min(depth, -8);
+    }
+
+     // Effects:
+    if(current_frame_active && random(10) < 1){
+        instance_create(x, y - z, Bubble);
+    }
 
     if(z <= 0) instance_destroy();
 
@@ -3523,8 +3533,9 @@
     }
 
 #define draw_shadows
-    with(instances_named(CustomObject, "TrenchFloorChunk")){
-        draw_circle(x, y, 8 / ((z / 10) + 1), 0);
+    with(instances_named(CustomObject, "TrenchFloorChunk")) if(visible){
+        var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
+        draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
     }
 
 #define draw_dark // Drawing Grays
