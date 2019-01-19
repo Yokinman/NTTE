@@ -2943,7 +2943,8 @@
         var _dis = (24 + eye_dis_offset) * max(pit_height, 0),
             _dir = image_angle + eye_angle + (360 / array_length(eye)) * i,
             _x = x + lengthdir_x(_dis * image_xscale, _dir),
-            _y = y + lengthdir_y(_dis * image_yscale, _dir);
+            _y = y + lengthdir_y(_dis * image_yscale, _dir),
+            f = floor_at(_x, _y - 8);
 
         with(eye[i]){
             x = _x;
@@ -2951,8 +2952,8 @@
 
              // Eye Under Floor:
             var _cansee = false;
-            with(instance_nearest(_x - 16, _y - 16 - 8, Floor)){
-                if(styleb) _cansee = true;
+            if(instance_exists(f) && f.styleb){
+                _cansee = true;
             }
 
              // Look at Player:
@@ -3215,10 +3216,8 @@
             if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
                 var c = id;
                 with(target){
-                    var f = instance_nearest(x - 16, y - 16, Floor),
-                        e = instance_nearest(x - 8, y - 8, FloorExplo);
-            
-                    if((f.styleb || !place_meeting(x, y, f)) || (e.styleb || !place_meeting(x, y, e))){
+                    var f = floor_at(x, y);
+                    if(instance_exists(f) && f.styleb){
                         other.alarm1 = 60 + random(30);
                         with(obj_create(x, y, "Tentacle")){
                             alarm0 = 20;
@@ -3249,7 +3248,7 @@
 
 #define Tentacle_step
     if(sprite_index != mskNone){
-        if(instance_exists(creator)){
+        if(instance_exists(creator) || creator == noone){
              // Animate:
             if(sprite_index != spr_idle){
                 if((sprite_index != spr_hurt && sprite_index != spr_spwn) || anim_end){
@@ -3259,14 +3258,20 @@
 
              // Keep w/ Pit Squid:
             if(spd != 0){
-                x = creator.x + xoff;
-                y = creator.y + yoff;
+                if(instance_exists(creator)){
+                    x = creator.x + xoff;
+                    y = creator.y + yoff;
+                }
+                else{
+                    x = xstart + xoff;
+                    y = ystart + yoff;
+                }
                 if(move_delay <= 0){
-                    xoff += lengthdir_x(spd, dir);
-                    yoff += lengthdir_y(spd, dir);
-                    spd -= clamp(spd, -friction, friction);
+                    xoff += lengthdir_x(spd, dir) * current_time_scale;
+                    yoff += lengthdir_y(spd, dir) * current_time_scale;
+                    spd -= clamp(spd, -friction, friction) * current_time_scale;
                     if(spd <= 0) with(creator){
-                        motion_add(point_direction(x, y, other.x, other.y), 0.4);
+                        motion_add(point_direction(x, y, other.x, other.y), 0.4 * current_time_scale);
                     }
 
                      // Animate:
@@ -3316,9 +3321,25 @@
                              // Effects:
                             sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
                             sound_play_pitchvol(sndWallBreakRock, 1 + orandom(0.2), 0.3 + random(0.2));
-                            repeat(sprite_width / 8){
-                                instance_create(x + random(32), y + random(32), Debris);
+                            if(object_index != FloorExplo && other.sprite_index == other.spr_spwn && random(2) < 1){
+                                var _ox = choose(8, 24),
+                                    _oy = choose(8, 24),
+                                    _dir = point_direction(other.x, other.y, x, y),
+                                    _spd = other.spd;
+
+                                with(obj_create(x + _ox, y + _oy, "TrenchFloorChunk")){
+                                    speed /= 2;
+                                    direction = _dir;
+                                    zspeed = 3 + random(2);
+                                    image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
+                                }
                             }
+                            repeat(2){
+                                instance_create(x + random(sprite_width), y + random(sprite_height), Debris);
+                            }
+                            /*repeat(sprite_width / 8){
+                                instance_create(x + random(32), y + random(32), Debris);
+                            }*/
     
                              // TopSmall Fix:
                             if(place_meeting(x, y, TopSmall)){
@@ -3333,7 +3354,7 @@
             }
     
              // Retract:
-            else if(alarm1 > 1){
+            else if(alarm1 > 1 && instance_exists(creator)){
                 if(point_distance(x, y, creator.x + creator.hspeed, creator.y + creator.vspeed + 16) < 64 || creator.pit_height < 1){
                     alarm1 = 1;
                 }
@@ -3369,7 +3390,9 @@
     }
 
 #define Tentacle_alrm0
-    if(creator.pit_height < 1) instance_delete(self);
+    if(instance_exists(creator) && creator.pit_height < 1){
+        instance_delete(self);
+    }
 
      // Appear:
     else{
@@ -3391,15 +3414,54 @@
     //repeat(2) instance_create(x, y, Dust);
 
 
+#define TentacleRip_step
+     // Effects:
+    if(current_frame_active){
+        view_shake_max_at(x, y, 3);
+        if(frame_active(12)){
+            with(instance_create(x + orandom(6), y - 4 + orandom(6), Smoke)){
+                image_xscale *= 0.5;
+                image_yscale *= 0.5;
+                hspeed *= 0.5;
+                vspeed = -random_range(1, 3);
+            }
+        }
+        if(current_frame_active && random(5) < 1){
+            sound_play_pitchvol(sndOasisDeath, random(3), 0.3);
+        }
+    }
+
+     // Launch Tentacles:
+    if(anim_end){
+        for(var i = 0; i < 360; i += (360 / 8)){
+            with(obj_create(x + lengthdir_x(12, i), y + lengthdir_y(12, i), "Tentacle")){
+                dir = i;
+                spd = 6;
+                move_delay = 10;
+            }
+        }
+
+         // Effects:
+        view_shake_at(x, y, 30);
+        sound_play_hit(sndWallBreak, 0.3);
+        sound_play_pitchvol(sndWallBreakCrystal, 2.5, 0.6);
+        repeat(6) with(instance_create(x, y, Smoke)){
+            motion_add(random(360), 4);
+        }
+
+        instance_destroy();
+    }
+
+
 #define TrenchFloorChunk_step
     z_engine();
     image_angle += rotspeed * current_time_scale;
 
      // Stay above walls:
-    depth = clamp(-z / 8, -8, 0);
-    if(!place_meeting(x, y - z, Floor)){
+    /*depth = clamp(-z / 8, -8, 0);
+    if(place_meeting(x, y - z, Wall) || !place_meeting(x, y - z, Floor)){
         depth = min(depth, -8);
-    }
+    }*/
 
      // Effects:
     if(current_frame_active && random(10) < 1){
@@ -3416,7 +3478,8 @@
     var n = 3;
 
      // Fall into Pit:
-    if(place_meeting(x, y, Floor) && instance_nearest(x - 16, y - 16, Floor).styleb){
+    var f = floor_at(x, y);
+    if(instance_exists(f) && f.styleb){
         with(instance_create(x, y, Debris)){
             sprite_index = other.sprite_index;
             image_index = other.image_index;
@@ -3533,9 +3596,11 @@
     }
 
 #define draw_shadows
-    with(instances_named(CustomObject, "TrenchFloorChunk")) if(visible){
-        var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
-        draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
+    with(instances_named(CustomObject, "TrenchFloorChunk")){
+        if(visible && place_meeting(x, y, Floor)){
+            var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
+            draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
+        }
     }
 
 #define draw_dark // Drawing Grays
@@ -3620,5 +3685,6 @@
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call("mod", "teassets", "floor_reveal", _floors, _maxTime);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call("mod", "teassets", "area_border", _y, _area, _color);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call("mod", "teassets", "area_get_sprite", _area, _spr);
+#define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call("mod", "teassets", "in_range", _num, _lower, _upper);
 #macro sewers "secret"

@@ -166,48 +166,34 @@
 
      // Above Pits:
     with(Player){
-        var _x = x,
-            _y = bbox_bottom,
-            f = nearest_instance(_x - 16, _y - 16, instances_matching(Floor, "styleb", true));
-
-        if(instance_exists(f)){
-            var _x1 = f.x + 0,
-                _y1 = f.y + 0,
-                _x2 = _x1 + 32,
-                _y2 = _y1 + 32,
-                e = instance_nearest(_x - 8, _y - 8, FloorExplo);
-
-            if(point_in_rectangle(_x, _y, _x1, _y1, _x2, _y2) && (!position_meeting(_x, _y, e) || e.styleb)){
-                 // Check if moving:
-                var _moving = false;
-                if(canwalk){
-                    var _moveKey = ["nort", "sout", "east", "west"];
-                    for(var i = 0; i < array_length(_moveKey); i++){
-                        if(button_check(index, _moveKey[i])){
-                            _moving = true;
-                            break;
-                        }
+        var f = floor_at(x, bbox_bottom);
+        if(instance_exists(f) && f.styleb){
+             // Check if moving:
+            var _moving = false;
+            if(canwalk){
+                var _moveKey = ["nort", "sout", "east", "west"];
+                for(var i = 0; i < array_length(_moveKey); i++){
+                    if(button_check(index, _moveKey[i])){
+                        _moving = true;
+                        break;
                     }
                 }
+            }
 
-                 // do a spin:
-                if(!_moving){
-                    var _x = x + cos(wave / 10) * 0.25 * right,
-                        _y = y + sin(wave / 10) * 0.25 * right;
+             // do a spin:
+            if(!_moving){
+                var _x = x + cos(wave / 10) * 0.25 * right,
+                    _y = y + sin(wave / 10) * 0.25 * right;
 
-                    if(!place_meeting(_x, y, Wall)) x = _x;
-                    if(!place_meeting(x, _y, Wall)) y = _y;
-                }
+                if(!place_meeting(_x, y, Wall)) x = _x;
+                if(!place_meeting(x, _y, Wall)) y = _y;
             }
         }
     }
 
      // Floaty Effects Above Pits:
     with(instances_matching([WepPickup, chestprop], "", null)){
-        var _x = x,
-            _y = bbox_bottom,
-            f = instance_nearest(_x - 16, _y - 16, Floor);
-
+        var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             var _x = x + cos((current_frame + x + y) / 10) * 0.15,
                 _y = y + sin((current_frame + x + y) / 10) * 0.15;
@@ -219,20 +205,14 @@
 
      // Stuff Falling Into Pits:
     with(instances_matching_le([Debris, Shell, ChestOpen], "speed", 1)){
-        var _x = x,
-            _y = bbox_bottom,
-            f = instance_nearest(_x - 16, _y - 16, Floor);
-
+        var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
             instance_destroy();
         }
     }
     with(instances_matching(Corpse, "image_speed", 0)){
-        var _x = x,
-            _y = y,
-            f = instance_nearest(_x - 16, _y - 16, Floor);
-
+        var f = floor_at(x, y);
         if(instance_exists(f) && f.styleb){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
             instance_destroy();
@@ -539,3 +519,4 @@
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
+#define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);

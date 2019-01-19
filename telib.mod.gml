@@ -1270,6 +1270,19 @@
                 }
                 break;
 
+            case "TentacleRip":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    sprite_index = spr.TentacleWarn;
+                    image_speed = 0.4;
+                    depth = 6;
+
+                     // Vars:
+                    creator = noone;
+                }
+                break;
+
             case "TrenchFloorChunk":
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
@@ -1278,6 +1291,7 @@
                     image_index = irandom(image_number - 1)
                     image_speed = 0;
                     image_alpha = 0;
+                    depth = -8;
 
                      // Vars:
         	        z = 0;
@@ -1911,7 +1925,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "TrenchFloorChunk", "Vent", "YetiCrab",
+    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
     		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
@@ -5039,4 +5053,5 @@
 #define area_border(_y, _area, _color)                                                  return  mod_script_call("mod", "teassets", "area_border", _y, _area, _color);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call("mod", "teassets", "area_get_sprite", _area, _spr);
 #macro sewers "secret"
+#define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call("mod", "teassets", "in_range", _num, _lower, _upper);

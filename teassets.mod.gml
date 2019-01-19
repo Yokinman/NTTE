@@ -306,10 +306,11 @@
             PitSquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png",    1, 19, 19);
             PitSquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png",   3, 19, 19);
             PitSquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png",     14, 19, 19);
-            TentacleSpwn    = sprite_add("sprites/enemies/Pitsquid/sprTentacleSpwn.png",     4, 20, 28);
+            TentacleSpwn    = sprite_add("sprites/enemies/Pitsquid/sprTentacleSpwn.png",     6, 20, 28);
             TentacleIdle    = sprite_add("sprites/enemies/Pitsquid/sprTentacleIdle.png",     8, 20, 28);
             TentacleHurt    = sprite_add("sprites/enemies/Pitsquid/sprTentacleHurt.png",     3, 20, 28);
             TentacleDead    = sprite_add("sprites/enemies/Pitsquid/sprTentacleDead.png",     6, 20, 28);
+            TentacleWarn    = sprite_add("sprites/enemies/PitSquid/sprTentacleWarn.png",    15, 12, 12);
 
              // Vent
             VentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png", 1, 12, 14);
@@ -1640,6 +1641,19 @@
 
 #define area_get_sprite(_area, _spr)
     return mod_script_call("area", _area, "area_sprite", _spr);
+
+#define floor_at(_x, _y)
+    with(instances_matching(instances_matching(Floor, "x", floor(_x / 16) * 16), "y", floor(_y / 16) * 16)){
+        if(position_meeting(_x, _y, self)){
+            return self;
+        }
+    }
+    with(instances_matching(instances_matching(Floor, "x", (floor((_x + 16) / 32) * 32) - 16), "y", (floor((_y + 16) / 32) * 32) - 16)){
+        if(position_meeting(_x, _y, self)){
+            return self;
+        }
+    }
+    return noone;
 
 #define in_range(_num, _lower, _upper)
     return (_num >= _lower && _num <= _upper);
