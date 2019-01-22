@@ -1366,20 +1366,20 @@
                 var o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_idle = sprBigMaggotIdle;
-                    spr_walk = sprBigMaggotIdle;
-                    spr_hurt = sprBigMaggotHurt;
-                    spr_dead = sprBigMaggotDead;
+                    spr_idle = spr.BatIdle;
+                    spr_walk = spr.BatWalk;
+                    spr_hurt = spr.BatHurt;
+                    spr_dead = spr.BatDead;
+                    spr_fire = spr.BatYell;
         			spr_weap = sprRavenGun;
         			spr_shadow = shd48;
         			hitid = [spr_idle, _name];
         			mask_index = mskScorpion;
-        			image_angle = 90;
         			depth = -2;
 
                      // Sound:
-                    snd_hurt = sndSalamanderHurt;
-                    snd_dead = sndRatkingCharge;
+                    snd_hurt = sndSuperFireballerHurt;
+                    snd_dead = sndFrogEggDead;
 
                      // Vars:
         			maxhealth = 30;
@@ -3559,8 +3559,13 @@
 
 #define Bat_step
     enemyAlarms(2);
-    enemySprites();
     enemyWalk(walkspd, maxspd);
+
+     // Walk:
+    if((sprite_index != spr_fire && sprite_index != spr_hurt) || anim_end){
+        if(speed <= 0) sprite_index = spr_idle;
+        else sprite_index = spr_walk;
+    }
 
      // Bounce:
     if(place_meeting(x + hspeed, y + vspeed, Wall)){
@@ -3619,8 +3624,8 @@
     if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
         alarm1 = 40 + irandom(20);
         
-        sound_play_gun(sndMolesargeHurt, 0, -1);
-        sound_play_pitch(sndNothing2Hurt, 0.6 + random(0.2));
+        //sound_play_gun(sndMolesargeHurt, 0, -1);
+        sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
         view_shake_at(x, y, 16);
         sleep(40);
     
@@ -3629,6 +3634,8 @@
             cantravel = true;
         }
         scrEnemyShoot("BatScreech", 0, 0);
+        sprite_index = spr_fire;
+        image_index = 0;
     }
     
 #define OLDBat_alrm0

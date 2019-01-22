@@ -3479,7 +3479,7 @@
 
      // Fall into Pit:
     var f = floor_at(x, y);
-    if(instance_exists(f) && f.styleb){
+    if(instance_exists(f) && f.styleb && !place_meeting(x, y, Wall)){
         with(instance_create(x, y, Debris)){
             sprite_index = other.sprite_index;
             image_index = other.image_index;

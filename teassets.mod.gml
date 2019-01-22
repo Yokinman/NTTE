@@ -324,8 +324,13 @@
 
         //#region SEWERS
              // Bat:
-            BatScreech =        sprite_add("sprites/enemies/Bat/sprBatScreech.png", 8, 48, 48);
-            msk.BatScreech =    sprite_add("sprites/enemies/Bat/mskBatScreech.png", 8, 48, 48);
+            BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",    24, 16, 16);
+            BatWalk         = sprite_add("sprites/enemies/Bat/sprBatWalk.png",    12, 16, 16);
+            BatHurt         = sprite_add("sprites/enemies/Bat/sprBatHurt.png",     3, 16, 16);
+            BatDead         = sprite_add("sprites/enemies/Bat/sprBatDead.png",     6, 16, 16);
+            BatYell         = sprite_add("sprites/enemies/Bat/sprBatYell.png",     6, 16, 16);
+            BatScreech      = sprite_add("sprites/enemies/Bat/sprBatScreech.png",  8, 48, 48);
+            msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
             
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",    4, 12, 12);
