@@ -1387,6 +1387,7 @@
         			size = 2;
         			walk = 0;
         			scream = 0;
+        			stress = 0; 
         			walkspd = 0.8;
         			maxspd = 2.5;
         			gunangle = random(360);
@@ -1402,16 +1403,17 @@
                 var o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_idle = sprBigMaggotIdle;
-                    spr_walk = sprBigMaggotIdle;
-                    spr_hurt = sprBigMaggotHurt;
-                    spr_dead = sprBigMaggotDead;
+                    spr_idle = spr.BatIdle;
+                    spr_walk = spr.BatWalk;
+                    spr_hurt = spr.BatHurt;
+                    spr_dead = spr.BatDead;
         			spr_weap = sprSawnOffShotgun;
         			spr_shadow = shd48;
         			hitid = [spr_idle, "BIG BAT"];
         			mask_index = mskScorpion;
-        			image_angle = 90;
-        			image_blend = c_red;
+        			image_xscale = 1.2;
+        			image_yscale = 1.2;
+        			image_blend = merge_color(c_red, c_white, 0.5);
         			depth = -2;
 
                      // Sound:
@@ -1423,14 +1425,22 @@
         			raddrop = 24;
         			size = 3;
         			walk = 0;
+        			scream = 0;
+        			stress = 0;
         			walkspd = 0.8;
         			maxspd = 3;
         			gunangle = irandom(359);
         			direction = gunangle;
         			attack = 0;
+        			
+        			charge = 0;
+        			max_charge = 40;
+        			charged = false;
 
         			 // Alarms:
         			alarm0 = 60;
+        			alarm1 = 90;
+        			alarm2 = 120;
                 }
                 break;
                 
@@ -3587,19 +3597,42 @@
                 scrWalk(15 + irandom(20), gunangle + orandom(8));
         }
         else if target_in_distance(0, 45){
-            // Walk away from target:
+             // Walk away from target:
             scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
             alarm0 = walk;
         }
             
          // Attack target:
         if random(5) < 2 && target_in_distance(50, 200){
-            sound_play(sndRustyRevolver);
+             // Sounds:
+            sound_play_pitchvol(sndRustyRevolver, 0.8, 0.7);
+            sound_play_pitchvol(sndSnowTankShoot, 1.2, 0.6);
+            sound_play_pitchvol(sndFrogEggHurt, 1 + random(0.4), 3.5);
             
-            scrEnemyShoot(EnemyBullet2, gunangle + orandom(4), 5);
-            with instance_create(x, y, AcidStreak){
-                motion_set(other.gunangle, 2);
-                image_angle = direction;
+             // Bullets:
+            var d = 4,
+                s = 2;
+            for (var i = 0; i <= 5; i++){
+                with scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(2 + i), s * i){
+                    move_contact_solid(direction, d + d * i);
+                    
+                     // Effects:
+                    with instance_create(x, y, AcidStreak){
+                        motion_set(other.direction + orandom(4), other.speed * 0.8);
+                        image_angle = direction;
+                    }
+                    
+                    if i <= 2
+                        with instance_create(x, y, Smoke){
+                            motion_set(other.direction + orandom(8 * i), 4 - i);
+                        }
+                }
+            }
+            
+             // Effects:
+            with instance_create(x, y, Shell){
+                sprite_index = sprShotShell;
+                motion_set(other.gunangle + 130 * choose(-1, 1) + orandom(20), 5);
             }
         }
     }
@@ -3689,15 +3722,26 @@
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
+#define Bat_hurt(_hitdmg, _hitvel, _hitdir)
+    stress += _hitdmg;
+    enemyHurt(_hitdmg, _hitvel, _hitdir);
+    
 #define Bat_death
     sound_play_pitch(sndScorpionFireStart, 1.2);
     //pickup_drop(0, 100);
     pickup_drop(60, 5);
 
 #define BatBoss_step
-    enemyAlarms(1);
+    enemyAlarms(3);
     enemySprites();
-    enemyWalk(walkspd, maxspd);
+    
+    
+    if charge > 0
+         // slow walk:
+        enemyWalk(walkspd, maxspd * 0.5);
+    else
+         // normal walk:
+        enemyWalk(walkspd, maxspd);
     
 #define BatBoss_alrm0
     alarm0 = 20 + irandom(20);
@@ -3710,13 +3754,6 @@
          // Walk towards target:
         if random(5) < 4{
             scrWalk(20 + irandom(15), gunangle + irandom_range(25, 45) * right);
-        }
-        
-         // Fire: -- placeholder
-        if random(5) < 3 && target_in_distance(0, 180){
-            var d = gunangle - 45;
-            for (var i = 0; i < 90; i += 30) for (var ii = 0; ii < 4; ii++)
-                scrEnemyShoot(EnemyBullet2, d + i + orandom(2), 4 + ii / 2);
         }
     }
     else{
@@ -3733,11 +3770,103 @@
         gunangle = direction;
         scrRight(gunangle);
     }
+    
+#define BatBoss_alrm1
+    alarm1 = 50 + irandom(50);
+
+     // charge up attack
+    if target_is_visible() || charge > 0{
+        if charge < max_charge{
+            alarm1 = 1;
+            
+            charge += current_time_scale;
+            
+             // effects:
+            if charge mod 2 == 0{
+                sound_play_pitchvol(sndLuckyShotProc, (charge / max_charge) + 1.3, 0.2);
+                sound_play_pitchvol(sndPickupDisappear, 0.4, 0.6);
+                
+                if target_is_visible(){
+                    gunangle = point_direction(x, y, target.x, target.y);
+                }
+            }
+        }
+        else{
+             // fire if charged
+            if charged{
+                alarm0 = 30 + irandom(20);
+                alarm1 = 90 + irandom(60);
+                
+                charged = false;
+                charge = 0;
+                
+                 // fire:
+                for (var i = -1; i <= 1; i++){
+                    var d = 4,
+                        s = 3;
+                    for (var ii = 0; ii <= 16; ii++){
+                        with scrEnemyShoot("TrafficCrabVenom", gunangle + i * 16 + orandom(2 + ii), s + ii){
+                            move_contact_solid(direction, d + d * ii);
+                            
+                             // Effects:
+                            with instance_create(x, y, AcidStreak){
+                                motion_set(other.direction + orandom(4), other.speed * 0.8);
+                                image_angle = direction;
+                            }
+                            
+                            if i <= 2
+                                with instance_create(x, y, Smoke){
+                                    motion_set(other.direction + orandom(8 * ii), 4 - ii);
+                                }
+                        }
+                    }
+                }
+                
+                 // effects:
+                sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
+                sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
+                sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
+                
+                motion_add(gunangle + 180, maxspd);
+                view_shake_at(x, y, 20);
+                sleep(50);
+            }
+             // finish charging
+            else{
+                alarm0 = 0;
+                alarm1 = 35;
+                
+                charged = true;
+                
+                if target_is_visible(){
+                    gunangle = point_direction(x, y, target.x, target.y);
+                    scrRight(gunangle);
+                }
+                
+                 // effects:
+                sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
+                sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
+                
+                with instance_create(x, y, ImpactWrists){
+                    move_contact_solid(other.gunangle, 8);
+                    depth = other.depth - 1;
+                }
+            }
+        }
+    }
+
+#define BatBoss_alrm2
 
 #define BatBoss_draw
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
+    
+     // draw_text_nt(x, y - 30, string(charge) + "/" + string(max_charge) + "(" + string(charged) + ")");
+    
+#define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
+    stress += _hitdmg;
+    enemyHurt(_hitdmg, _hitvel, _hitdir);
 
 #define BatScreech_step
     while place_meeting(x, y, ToxicGas) 

@@ -3405,10 +3405,14 @@
     }
 
 #define Tentacle_alrm1
-    my_health = 0;
-    raddrop = 0;
-    snd_dead = -1;
     sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
+
+    with instance_create(x, y, CorpseActive){
+        sprite_index = spr.TentacleDead;
+        size = 0;
+    }
+    
+    instance_destroy();
 
 #define Tentacle_death
     //repeat(2) instance_create(x, y, Dust);
