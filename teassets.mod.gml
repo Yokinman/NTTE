@@ -334,6 +334,9 @@
             BatScreech      = sprite_add("sprites/enemies/Bat/sprBatScreech.png",  8, 48, 48);
             msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
             
+             // Bat Boss:
+            VenomFlak = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
+            
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",    4, 12, 12);
             CatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png",    6, 12, 12);
