@@ -173,7 +173,6 @@
             sndBigWeaponChest,
             sndChest,
             sndCursedChest,
-            sndEXPChest,
             sndGoldChest,
             sndHealthChest,
             sndHealthChestBig,
@@ -595,7 +594,7 @@
     }
 
      // Bubbles:
-    with(Dust){
+    with(instances_matching(Dust, "waterbubble", null)){
         instance_create(x, y, Bubble);
         instance_destroy();
     }

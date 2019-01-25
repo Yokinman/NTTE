@@ -1057,12 +1057,9 @@
         			spr_appear =    spr.AnglerAppear;
         			 // spr_shadow = shd64;
         			 // spr_shadow_y = 6;
-        			spr_shadow = shd24;
-    			    spr_shadow_y = 9;
-    			    spr_shadow_x = 6;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_appear;
-        			image_speed = 0;
+        			image_speed = 0.4;
         			depth = -2
 
                      // Sound:
@@ -1070,17 +1067,18 @@
         			snd_dead = sndFireballerDead;
 
         			 // Vars:
-        			mask_index = msk.AnglerHidden;
-        			maxhealth = 80;
-        			raddrop = 24;
+        			//mask_index = mskFrogQueen;
+        			maxhealth = 50;
+        			raddrop = 25;
         			meleedamage = 4;
         			size = 2;
         			walk = 0;
         			walkspd = 0.6;
         			maxspd = 3;
-        			direction = 0;
-        			scrRight(direction);
         			hiding = true;
+        			ammo = 0;
+
+                    scrAnglerHide();
 
                      // Alarms:
         			alarm0 = 30 + irandom(30);
@@ -5150,6 +5148,9 @@
 
 
 
+#define scrAnglerAppear()                                                                       mod_script_call("mod", "telib2", "scrAnglerAppear");
+#define scrAnglerHide()                                                                         mod_script_call("mod", "telib2", "scrAnglerHide");
+
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
@@ -5172,6 +5173,7 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
+#define scrCorpse(_dir, _spd)                                                           return  mod_script_call("mod", "teassets", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call("mod", "teassets", "scrSwap");
 #define scrPortalPoof()                                                                 return  mod_script_call("mod", "teassets", "scrPortalPoof");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);

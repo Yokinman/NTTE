@@ -2654,50 +2654,110 @@
 
 #define Angler_step
     enemyAlarms(1);
-    if sprite_index != spr_appear || (image_index < 1 && image_speed > 0){
-        if sprite_index == spr_appear && speed > 0
-            sprite_index = spr_walk;
+    enemyWalk(walkspd, maxspd + (6 * (ammo >= 0 && walk > 0)));
+
+     // Animate:
+    if(hiding){
+        sprite_index = spr_appear;
+        if(image_index > 0){
+            image_index -= min(image_index, image_speed * 2 * current_time_scale);
+        }
+    }
+    else if(sprite_index != spr_appear || anim_end){
+        if(sprite_index == spr_appear) sprite_index = spr_idle;
         enemySprites();
     }
-    enemyWalk(walkspd, maxspd);
 
 #define Angler_draw
-    if hiding{
-        draw_set_blend_mode(bm_add);
-        draw_sprite_ext(sprRadChestGlow, image_index, x + 6 * right, y + 8, image_xscale * right * 2, image_yscale * 2, image_angle, image_blend, 0.1);
-        draw_set_blend_mode(bm_normal);
-        draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-    }
+    var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
     draw_self_enemy();
+    if(h) d3d_set_fog(0, 0, 0, 0);
+
+     // Canister Bloom:
+    if(hiding){
+        draw_set_blend_mode(bm_add);
+        draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+        draw_set_blend_mode(bm_normal);
+    }
 
 #define Angler_hurt(_hitdmg, _hitvel, _hitdir)
-    if hiding
-        scrAnglerAppear();
-    enemyHurt(_hitdmg, _hitvel, _hitdir);
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);	// Sound
+
+    if(my_health > 0 && hiding) scrAnglerAppear();
+
+     // Hurt Sprite:
+    else{
+        sprite_index = spr_hurt;
+        image_index = 0;
+    }
+
+     // Emergency:
+    if(my_health < 30 && random(3) < 2 && ammo < 0){
+        walk = 0;
+        ammo = 1;
+        alarm0 = 4;
+    }
 
 #define Angler_alrm0
-    alarm0 = 20 + irandom(20);
-    target = instance_nearest(x, y, Player);
+    alarm0 = 6 + irandom(6);
 
-
-    if !hiding{
-         // Walk:
-        if target_is_visible() && target_in_distance(0, 128){
-             // Walk towards target:
-            scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y));
+     // Hiding:
+    if(hiding){
+        if(target_is_visible() && target_in_distance(0, 48)){
+            scrAnglerAppear(); // Unhide
         }
-        else{
-             // Wander:
-            scrWalk(20 + irandom(30), direction + orandom(30));
-        }
-         // Face right:
-        scrRight(direction);
     }
+
     else{
-        alarm0 = 6 + irandom(6);
-         // Stop hiding:
-        if target_is_visible() && target_in_distance(0, 48){
-            scrAnglerAppear();
+         // Charging:
+        if(ammo > 0){
+            ammo--;
+            alarm0 = 8;
+            target = instance_nearest(x, y, Player);
+    
+             // Charge:
+            scrWalk(4, point_direction(x, y, target.x, target.y) + orandom(40));
+            speed = maxspd + 10;
+    
+             // Effects:
+            sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 0.8);
+            sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.3);
+            repeat(8) with(instance_create(x + orandom(16), y + orandom(16), Bubble)){
+                motion_add(other.direction + 180, random(4));
+            }
+            sprite_index = spr_hurt; // Temporary?
+            image_index = 1;
+        }
+        else if(ammo == 0){
+            ammo = -1;
+            alarm0 = 15;
+
+             // Back up:
+            scrWalk(8, direction + 180);
+            scrRight(direction + 180);
+        }
+
+         // Normal AI:
+        else{
+            alarm0 = 20 + irandom(20);
+            target = instance_nearest(x, y, Player);
+        
+             // Move Toward Player:
+            if(target_is_visible() && target_in_distance(0, 128)){
+                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y));
+            }
+    
+             // Wander:
+            else scrWalk(20 + irandom(30), direction + orandom(30));
+
+             // Hide:
+            if(!target_in_distance(0, 160)){
+                scrAnglerHide();
+            }
         }
     }
 
@@ -2705,17 +2765,83 @@
     pickup_drop(80, 0);
     pickup_drop(60, 5);
 
-#define scrAnglerAppear
-    view_shake_at(x, y, 10);
-    with instance_create(x, y, PortalClear){
-        team = other.team;
-    }
-    image_speed = 0.4; image_index = 1;
-    mask_index = mskFireBaller;
-    spr_shadow = shd64B;
-        spr_shadow_y = 5;
-        spr_shadow_x = 0;
+    /// Light Broke:
+        var _x = x + (20 * right),
+            _y = y - 10;
+    
+        if(hiding){
+            _x = x;
+            _y = y;
+        }
+
+        if(raddrop > 0){
+            repeat(raddrop) with(instance_create(_x, _y, Rad)){
+                motion_add(random(360), random(5));
+                motion_add(other.direction, other.speed / 4);
+            }
+            raddrop = 0;
+        }
+
+         // it is very broke
+        with(scrCorpse(direction + orandom(10), speed + random(2))){
+            x = _x;
+            y = _y;
+            sprite_index = sprRadChestCorpse;
+            mask_index = -1;
+            size = 2;
+        }
+
+         // Effects:
+        sound_play_pitchvol(sndEXPChest, 1, 0.5);
+        with(instance_create(_x, _y, ExploderExplo)){
+            motion_add(other.direction, 1);
+        }
+
+#define scrAnglerAppear()
     hiding = false;
+
+     // Anglers rise up
+    mask_index = mskFrogQueen;
+    spr_shadow = shd64B;
+    spr_shadow_y = 3;
+    spr_shadow_x = 0;
+    instance_create(x, y, PortalClear);
+
+     // Time 2 Charge
+    alarm0 = 15;
+    ammo = 3;
+
+     // Effects:
+    sound_play_pitchvol(sndBigBanditMelee, 1.6 + random(0.4), 0.3);
+    view_shake_at(x, y, 10);
+    repeat(5){
+        with(instance_create(x + orandom(24), y + orandom(24), Dust)){
+            waterbubble = true;
+        }
+    }
+
+#define scrAnglerHide()
+    hiding = true;
+
+     // Anglers rise down
+    sprite_index = spr_appear;
+    image_index = image_number - 1 + image_speed;
+    mask_index = msk.AnglerHidden;
+	spr_shadow = shd24;
+    spr_shadow_y = 9;
+    spr_shadow_x = 6 * right;
+    walk = 0;
+
+     // Effects:
+    sound_play_pitchvol(sndBigBanditIntro, 1.6 + random(0.5), 0.2);
+    view_shake_at(x, y, 10);
+    repeat(5){
+        with(instance_create(x + orandom(24), y + orandom(24), Dust)){
+            waterbubble = true;
+            motion_add(random(360), 2)
+        }
+    }
+
 
 #define Eel_step
     enemyAlarms(1);
@@ -3610,6 +3736,23 @@
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+     // Anglers:
+    d3d_set_fog(1, c_gray, 0, 0);
+    with(instances_matching(CustomEnemy, "name", "Angler")){
+        var _img = image_index;
+
+        if(sprite_index != spr_appear){
+            _img = sprite_get_number(spr_appear) - 1;
+        }
+
+         // Manual buzziness since it's a sprite:
+        var o = random(2);
+        for(var a = 0; a < 360; a += 45){
+            draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
+        }
+    }
+    d3d_set_fog(0, 0, 0, 0);
+
      // Jellies:
     with(instances_matching(CustomEnemy, "name", "Jelly")){
         var o = 0,
@@ -3633,6 +3776,23 @@
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+     // Anglers:
+    draw_set_blend_mode(bm_subtract);
+    with(instances_matching(CustomEnemy, "name", "Angler")){
+        var _img = image_index;
+
+        if(sprite_index != spr_appear){
+            _img = sprite_get_number(spr_appear) - 1;
+        }
+
+         // Manual buzziness since it's a sprite:
+        var o = random(2);
+        for(var a = 0; a < 360; a += 45){
+            draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
+        }
+    }
+    draw_set_blend_mode(bm_normal);
 
      // Jellies:
     with(instances_matching(CustomEnemy, "name", "Jelly")){
@@ -3675,6 +3835,7 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
+#define scrCorpse(_dir, _spd)                                                           return  mod_script_call("mod", "teassets", "scrCorpse", _dir, _spd);
 #define scrSetPet(_pet)                                                                 return  mod_script_call("mod", "teassets", "scrSetPet", _pet);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);

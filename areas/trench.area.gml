@@ -204,18 +204,22 @@
     }
 
      // Stuff Falling Into Pits:
-    with(instances_matching_le([Debris, Shell, ChestOpen], "speed", 1)){
+    with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "pit_check", null), "speed", 1)){
+        pit_check = true;
         var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
             instance_destroy();
         }
     }
-    with(instances_matching(Corpse, "image_speed", 0)){
-        var f = floor_at(x, y);
-        if(instance_exists(f) && f.styleb){
-            pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
-            instance_destroy();
+    with(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0)){
+        if(instance_exists(enemy) || instance_exists(Portal)){
+            pit_check = true;
+            var f = floor_at(x, y);
+            if(instance_exists(f) && f.styleb){
+                pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
+                instance_destroy();
+            }
         }
     }
 
@@ -428,6 +432,10 @@
             draw_set_color(c_black);
             with(instances_matching(Floor, "styleb", true)){
                 draw_sprite(sprite_index, image_index, x - _surfx, y - _surfy);
+            }
+
+            with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "pit_check", null)){
+                pit_check = null;
             }
         }
         global.surf_reset = false;

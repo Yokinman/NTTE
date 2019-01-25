@@ -250,12 +250,14 @@
         
         //#region TRENCH
              // Angler:
-            AnglerIdle =        sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
-            AnglerWalk =        sprite_add("sprites/enemies/Angler/sprAnglerWalk.png",      8, 32, 32);
-            AnglerHurt =        sprite_add("sprites/enemies/Angler/sprAnglerHurt.png",      3, 32, 32);
-            AnglerDead =        sprite_add("sprites/enemies/Angler/sprAnglerDead.png",      7, 32, 32);
-            AnglerAppear =      sprite_add("sprites/enemies/Angler/sprAnglerAppear.png",    4, 32, 32);
-            msk.AnglerHidden =  sprite_add("sprites/enemies/Angler/mskAnglerHidden.png",    1, 32, 32);
+            AnglerIdle       = sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
+            AnglerWalk       = sprite_add("sprites/enemies/Angler/sprAnglerWalk.png",      8, 32, 32);
+            AnglerHurt       = sprite_add("sprites/enemies/Angler/sprAnglerHurt.png",      3, 32, 32);
+            AnglerDead       = sprite_add("sprites/enemies/Angler/sprAnglerDead.png",      7, 32, 32);
+            AnglerAppear     = sprite_add("sprites/enemies/Angler/sprAnglerAppear.png",    4, 32, 32);
+            AnglerLight      = sprite_add("sprites/enemies/Angler/sprAnglerLight.png",     4, 80, 80);
+            msk.AnglerHidden = sprite_add("sprites/enemies/Angler/mskAnglerHidden.png",    1, 32, 32);
+
              // Eel (0 = blue, 1 = purple, 2 = green):
             EelIdle = [
                 sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",8,16,16),
@@ -1266,6 +1268,21 @@
 			}
 		}
 		if(!r) break;
+	}
+
+#define scrCorpse(_dir, _spd)
+	with(instance_create(x, y, Corpse)){
+		size = other.size;
+		sprite_index = other.spr_dead;
+		mask_index = other.mask_index;
+		image_xscale = other.right * other.image_xscale;
+
+		 // Speedify:
+		direction = _dir;
+		speed = min(_spd + max(0, -other.my_health / 5), 16);
+		if(size > 0) speed /= size;
+
+        return id;
 	}
 
 #define scrSwap()
