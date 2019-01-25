@@ -210,7 +210,7 @@
 #macro snd global.snd
 #macro mus global.mus
 
-#macro RoomDebug false
+#macro RoomDebug true
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
@@ -468,12 +468,6 @@
              // Rat packs:
             repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
         }
-        else if !styleb{
-            if random(8) < 1{
-                instance_create(_x, _y, Bandit);
-            }
-            else obj_create(_x, _y, choose("Cat", "Cat", "Bat"));
-        }
     }
 
 #define area_pop_props
@@ -569,6 +563,10 @@
         return self;
     }
 
+#define create_enemies(_x, _y, _num)
+    var _e = choose("Cat", "Cat", "Bat");
+    repeat(_num + irandom(GameCont.loops * 2)) obj_create(_x, _y, _e);
+
 #define room_pop
     var o = 32,
         _x = global.room_center[0] + (x * o), // Left
@@ -614,6 +612,9 @@
                 if is_string(_prop) obj_create(_px, _py, _prop);
                 else instance_create(_px, _py, _prop);
             }
+             // Enemies:
+            create_enemies(_cx, _cy, irandom(3));
+            
             break;
         }
             
@@ -626,6 +627,9 @@
                 if is_string(_prop) obj_create(_px, _py, _prop);
                 else instance_create(_px, _py, _prop);
             }
+             // Enemies:
+            create_enemies(_cx, _cy, irandom(5));
+            
             break;
         }
         
@@ -635,6 +639,9 @@
             instance_create(_x + 64,            _y + 16,            Wall);
             instance_create(_x + 16,            _y + 64,            Wall);
             instance_create(_x + 64,            _y + 64,            Wall);
+             // Enemies:
+            create_enemies(_cx, _cy, 1);
+            
             break;
         }
             
@@ -680,6 +687,9 @@
                 }
                 obj_create(x, y-32, "CatLight");
             }
+             // Enemies:
+            create_enemies(_cx, _cy, 1 + irandom(2));
+            
             break;
         }
         
@@ -693,6 +703,9 @@
              // Props:
             with obj_create(_x + 16 + orandom(2), _y + 8, "ChairFront")
                 obj_create(x, y - o, "CatLight");
+             // Enemies:
+            create_enemies(_x, _y, irandom(1));
+            
             break;
         }
         
@@ -702,6 +715,9 @@
                 with instance_create(_x + i * 16, _y + (i - 1) * 16, Wall)
                     instance_create(x, y, NOWALLSHEREPLEASE);
              // Props:
+             // Enemies:
+            create_enemies(_cx, _cy, 1 + irandom(1));
+            
             break;
         }
             
@@ -730,6 +746,10 @@
                             instance_delete(id);
                         else instance_create(x, y, NOWALLSHEREPLEASE);
                     }
+             // Enemies:
+            for (var d = 0; d <= 360; d += 90)
+                create_enemies(_cx + lengthdir_x(80, d), _cy + lengthdir_y(80, d), irandom(1));
+                
             break;
         }
         
@@ -742,6 +762,10 @@
              // Props:
             with obj_create(_cx + orandom(2), _y + 16 + orandom(2), "Couch")
                 obj_create(x + orandom(2), y + 20 + orandom(2), "NewTable");
+                
+             // Enemies:
+            create_enemies(_cx, _y + 16, 3);
+            
             break;  
         }
         
@@ -753,6 +777,9 @@
                 }
                 obj_create(x, y - 32, "CatLight");
             }
+             // Enemies:
+            create_enemies(_cx, _cy, 1 + irandom(1));
+            
             break;
         }
         
@@ -776,6 +803,8 @@
                          // Lights:
                         if random(3) < 2 obj_create(x, y - o, "CatLight");
                     }
+             // Enemies:
+            create_enemies(_cx, _cy, 2 + irandom(1));
             break;
         }
 
@@ -792,6 +821,9 @@
             for (var xx = -3; xx <= 3; xx += 6)
                 obj_create(_cx + xx * 16, _y + 42 + orandom(2), "Cabinet");
             }
+             // Enemies:
+            create_enemies(_cx, _cy, 1 + irandom(1));
+            
             break;
         }
         
@@ -815,6 +847,9 @@
              // Lights:
             for (var xx = -1; xx <= 1; xx += 2)
                 obj_create(_cx + xx * 40, _cy - o, "CatLight");
+            
+             // Enemies:
+            create_enemies(_cx, _cy, 1 + irandom(1));
             
             break;
         }

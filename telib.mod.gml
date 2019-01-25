@@ -1816,7 +1816,7 @@
                      // Vars:
                     friction = 0.4;
                     damage = 6;
-                    time = 60;
+                    time = 40;
                     
                     on_step = VenomFlak_step;
                     on_draw = VenomFlak_draw;
