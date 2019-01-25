@@ -210,7 +210,7 @@
 #macro snd global.snd
 #macro mus global.mus
 
-#macro RoomDebug true
+#macro RoomDebug false
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
