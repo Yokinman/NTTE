@@ -1387,7 +1387,7 @@
         			size = 2;
         			walk = 0;
         			scream = 0;
-        			stress = 0; 
+        			stress = 20; 
         			walkspd = 0.8;
         			maxspd = 2.5;
         			gunangle = random(360);
@@ -1407,6 +1407,7 @@
                     spr_walk = spr.BatWalk;
                     spr_hurt = spr.BatHurt;
                     spr_dead = spr.BatDead;
+                    spr_fire = spr.BatYell;
         			spr_weap = sprSawnOffShotgun;
         			spr_shadow = shd48;
         			hitid = [spr_idle, "BIG BAT"];
@@ -1426,16 +1427,12 @@
         			size = 3;
         			walk = 0;
         			scream = 0;
-        			stress = 0;
+        			stress = 20;
         			walkspd = 0.8;
         			maxspd = 3;
         			gunangle = irandom(359);
         			direction = gunangle;
         			attack = 0;
-        			
-        			charge = 0;
-        			max_charge = 40;
-        			charged = false;
 
         			 // Alarms:
         			alarm0 = 60;
@@ -1807,6 +1804,28 @@
                     script_bind_end_step(PizzaTV_end_step, 0, id);
                 }
                 return o;
+                break;
+                
+            case "VenomFlak":
+                o = instance_create(_x, _y, CustomProjectile);
+                with(o){
+                     // Visual:
+                    sprite_index = spr.VenomFlak;
+                    image_speed = 0.4;
+                    
+                     // Vars:
+                    friction = 0.4;
+                    damage = 6;
+                    time = 60;
+                    
+                    on_step = VenomFlak_step;
+                    on_draw = VenomFlak_draw;
+                    on_destroy = VenomFlak_destroy;
+                    on_wall = VenomFlak_wall;
+                }
+                return o;
+                break;
+                
         //#endregion
 
         //#region CRYSTAL CAVES
@@ -1936,7 +1955,7 @@
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
-    		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV",
+    		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV", "VenomFlak",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
     }
@@ -3568,7 +3587,7 @@
 
 
 #define Bat_step
-    enemyAlarms(2);
+    enemyAlarms(1);
     enemyWalk(walkspd, maxspd);
 
      // Walk:
@@ -3635,6 +3654,22 @@
                 motion_set(other.gunangle + 130 * choose(-1, 1) + orandom(20), 5);
             }
         }
+        
+         // Screech:
+        else{
+            if irandom(stress) >= 15{
+                stress -= 8;
+                scrBatScreech();
+                
+                 // Fewer mass screeches:
+                with instances_matching(CustomEnemy, "name", "Bat"){
+                    stress = max(stress - 4, 10);
+                }
+            }
+            
+             // Build up stress:
+            else stress += 4;
+        }
     }
     else{
         var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
@@ -3658,18 +3693,25 @@
         alarm1 = 40 + irandom(20);
         
         //sound_play_gun(sndMolesargeHurt, 0, -1);
-        sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
-        view_shake_at(x, y, 16);
-        sleep(40);
-    
-         // Alert nearest cat:
-        with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat")){
-            cantravel = true;
-        }
-        scrEnemyShoot("BatScreech", 0, 0);
-        sprite_index = spr_fire;
-        image_index = 0;
+        scrBatScreech();
     }
+    
+#define scrBatScreech
+     // Effects:
+    sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
+    sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
+    
+    view_shake_at(x, y, 16);
+    sleep(40);
+
+     // Alert nearest cat:
+    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
+        cantravel = true;
+        
+     // Screech:
+    scrEnemyShoot("BatScreech", 0, 0);
+    sprite_index = spr_fire;
+    image_index = 0;
     
 #define OLDBat_alrm0
     alarm0 = 30 + random(30);
@@ -3723,8 +3765,19 @@
     if(gunangle <= 180) draw_self_enemy();
 
 #define Bat_hurt(_hitdmg, _hitvel, _hitdir)
-    stress += _hitdmg;
-    enemyHurt(_hitdmg, _hitvel, _hitdir);
+     // Get hurt:
+    if !instance_is(other, ToxicGas){
+        stress += _hitdmg;
+        enemyHurt(_hitdmg, _hitvel, _hitdir);
+    }
+    
+     // Screech:
+    else{
+        stress -= 4;
+        nexthurt = current_frame + 5;
+        
+        scrBatScreech();
+    }
     
 #define Bat_death
     sound_play_pitch(sndScorpionFireStart, 1.2);
@@ -3734,14 +3787,7 @@
 #define BatBoss_step
     enemyAlarms(3);
     enemySprites();
-    
-    
-    if charge > 0
-         // slow walk:
-        enemyWalk(walkspd, maxspd * 0.5);
-    else
-         // normal walk:
-        enemyWalk(walkspd, maxspd);
+    enemyWalk(walkspd, maxspd);
     
 #define BatBoss_alrm0
     alarm0 = 20 + irandom(20);
@@ -3752,8 +3798,45 @@
         scrRight(gunangle);
         
          // Walk towards target:
-        if random(5) < 4{
+        if random(5) < 3{
             scrWalk(20 + irandom(15), gunangle + irandom_range(25, 45) * right);
+        }
+        
+         // Fire at player:
+        else if random(5) < 3{
+             // Tell:
+            with instance_create(x + right * 18, y + 16, AssassinNotice)
+                depth = other.depth - 1;
+            
+            if fork(){
+                wait(10);
+                if !instance_exists(self) exit;
+                
+                 // Fire:
+                motion_add(gunangle + 180, maxspd);
+                scrEnemyShoot("VenomFlak", gunangle + orandom(10), 12);
+                
+                 // Effects:
+                sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
+                sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
+                
+                repeat(3 + irandom(2)) instance_create(x + orandom(6), y + orandom(6), Smoke){
+                    motion_set(other.gunangle + orandom(2), 4 + random(4));
+                }
+                
+                exit;
+            }
+        }
+        
+         // Screech:
+        else{
+            if irandom(stress) >= 15{
+                stress -= 8;
+                scrBatBossScreech();
+            }
+            
+             // Build up stress:
+            else stress += 4;
         }
     }
     else{
@@ -3772,88 +3855,88 @@
     }
     
 #define BatBoss_alrm1
-    alarm1 = 50 + irandom(50);
+    // alarm1 = 50 + irandom(50);
 
-     // charge up attack
-    if target_is_visible() || charge > 0{
-        if charge < max_charge{
-            alarm1 = 1;
+    //  // charge up attack
+    // if target_is_visible() || charge > 0{
+    //     if charge < max_charge{
+    //         alarm1 = 1;
             
-            charge += current_time_scale;
+    //         charge += current_time_scale;
             
-             // effects:
-            if charge mod 2 == 0{
-                sound_play_pitchvol(sndLuckyShotProc, (charge / max_charge) + 1.3, 0.2);
-                sound_play_pitchvol(sndPickupDisappear, 0.4, 0.6);
+    //          // effects:
+    //         if charge mod 2 == 0{
+    //             sound_play_pitchvol(sndLuckyShotProc, (charge / max_charge) + 1.3, 0.2);
+    //             sound_play_pitchvol(sndPickupDisappear, 0.4, 0.6);
                 
-                if target_is_visible(){
-                    gunangle = point_direction(x, y, target.x, target.y);
-                }
-            }
-        }
-        else{
-             // fire if charged
-            if charged{
-                alarm0 = 30 + irandom(20);
-                alarm1 = 90 + irandom(60);
+    //             if target_is_visible(){
+    //                 gunangle = point_direction(x, y, target.x, target.y);
+    //             }
+    //         }
+    //     }
+    //     else{
+    //          // fire if charged
+    //         if charged{
+    //             alarm0 = 30 + irandom(20);
+    //             alarm1 = 90 + irandom(60);
                 
-                charged = false;
-                charge = 0;
+    //             charged = false;
+    //             charge = 0;
                 
-                 // fire:
-                for (var i = -1; i <= 1; i++){
-                    var d = 4,
-                        s = 3;
-                    for (var ii = 0; ii <= 16; ii++){
-                        with scrEnemyShoot("TrafficCrabVenom", gunangle + i * 16 + orandom(2 + ii), s + ii){
-                            move_contact_solid(direction, d + d * ii);
+    //              // fire:
+    //             for (var i = -1; i <= 1; i++){
+    //                 var d = 4,
+    //                     s = 3;
+    //                 for (var ii = 0; ii <= 16; ii++){
+    //                     with scrEnemyShoot("TrafficCrabVenom", gunangle + i * 16 + orandom(2 + ii), s + ii){
+    //                         move_contact_solid(direction, d + d * ii);
                             
-                             // Effects:
-                            with instance_create(x, y, AcidStreak){
-                                motion_set(other.direction + orandom(4), other.speed * 0.8);
-                                image_angle = direction;
-                            }
+    //                          // Effects:
+    //                         with instance_create(x, y, AcidStreak){
+    //                             motion_set(other.direction + orandom(4), other.speed * 0.8);
+    //                             image_angle = direction;
+    //                         }
                             
-                            if i <= 2
-                                with instance_create(x, y, Smoke){
-                                    motion_set(other.direction + orandom(8 * ii), 4 - ii);
-                                }
-                        }
-                    }
-                }
+    //                         if i <= 2
+    //                             with instance_create(x, y, Smoke){
+    //                                 motion_set(other.direction + orandom(8 * ii), 4 - ii);
+    //                             }
+    //                     }
+    //                 }
+    //             }
                 
-                 // effects:
-                sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
-                sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
-                sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
+    //              // effects:
+    //             sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
+    //             sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
+    //             sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
                 
-                motion_add(gunangle + 180, maxspd);
-                view_shake_at(x, y, 20);
-                sleep(50);
-            }
-             // finish charging
-            else{
-                alarm0 = 0;
-                alarm1 = 35;
+    //             motion_add(gunangle + 180, maxspd);
+    //             view_shake_at(x, y, 20);
+    //             sleep(50);
+    //         }
+    //          // finish charging
+    //         else{
+    //             alarm0 = 0;
+    //             alarm1 = 35;
                 
-                charged = true;
+    //             charged = true;
                 
-                if target_is_visible(){
-                    gunangle = point_direction(x, y, target.x, target.y);
-                    scrRight(gunangle);
-                }
+    //             if target_is_visible(){
+    //                 gunangle = point_direction(x, y, target.x, target.y);
+    //                 scrRight(gunangle);
+    //             }
                 
-                 // effects:
-                sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
-                sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
+    //              // effects:
+    //             sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
+    //             sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
                 
-                with instance_create(x, y, ImpactWrists){
-                    move_contact_solid(other.gunangle, 8);
-                    depth = other.depth - 1;
-                }
-            }
-        }
-    }
+    //             with instance_create(x, y, ImpactWrists){
+    //                 move_contact_solid(other.gunangle, 8);
+    //                 depth = other.depth - 1;
+    //             }
+    //         }
+    //     }
+    // }
 
 #define BatBoss_alrm2
 
@@ -3865,8 +3948,40 @@
      // draw_text_nt(x, y - 30, string(charge) + "/" + string(max_charge) + "(" + string(charged) + ")");
     
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
-    stress += _hitdmg;
-    enemyHurt(_hitdmg, _hitvel, _hitdir);
+     // Get hurt:
+    if !instance_is(other, ToxicGas){
+        stress += _hitdmg;
+        enemyHurt(_hitdmg, _hitvel, _hitdir);
+    }
+    
+     // Screech:
+    else{
+        stress -= 4;
+        nexthurt = current_frame + 5;
+        
+        scrBatBossScreech();
+    }
+    
+#define scrBatBossScreech
+     // Effects:
+    sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
+    sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
+    
+    view_shake_at(x, y, 16);
+    sleep(40);
+
+     // Alert nearest cat:
+    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
+        cantravel = true;
+        
+     // Screech:
+    scrEnemyShoot("BatScreech", 0, 0);
+    var l = 64;
+    for (var d = 0; d <= 360; d += 360 / 6)
+        scrEnemyShootExt(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0);
+    
+    sprite_index = spr_fire;
+    image_index = 0;
 
 #define BatScreech_step
     while place_meeting(x, y, ToxicGas) 
@@ -4592,6 +4707,79 @@
     draw_vertex(_x2b, _y2);
     draw_primitive_end();
 
+#define VenomFlak_wall
+    move_bounce_solid(false);
+    speed = min(speed, 8);
+    
+     // effects:
+    with instance_create(x, y, AcidStreak){
+        motion_set(other.direction, 3);
+        image_angle = direction;
+         // fat splat:
+        image_yscale *= 2;
+    }
+    
+    sound_play_pitchvol(sndShotgunHitWall, 1.2, 1);
+    sound_play_pitchvol(sndFrogEggHurt, 0.7, 0.2);
+    
+#define VenomFlak_destroy
+    instance_create(x, y, PortalClear);
+
+     // effects:
+    for (var i = 0; i <= 360; i += 360 / 20){
+        with instance_create(x, y, Smoke)
+            motion_set(i, 4 + random(4));
+    }
+
+    view_shake_at(x, y, 20);
+    
+    sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
+    sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
+    sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
+    
+     // bullets:
+    for (var d = 0; d <= 360; d += 360 / 12){
+        
+         // lines of venom:
+        if (d mod 90) == 0{
+            for (var i = 0; i <= 5; i++){
+                with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2 + i), 2 * i){
+                    move_contact_solid(direction, 4 + 4 * i);
+                    
+                     // effects:
+                    with instance_create(x, y, AcidStreak){
+                        motion_set(other.direction + orandom(4), other.speed * 0.8);
+                        image_angle = direction;
+                    }
+                }
+            }
+        }
+        
+         // single venom bullets:
+        else{
+            with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2), 5.8 + random(0.4)){
+                move_contact_solid(direction, 6);
+            }
+        }
+    }
+    
+#define VenomFlak_step
+     // effects:
+    if random(3) < current_time_scale
+        with instance_create(x, y, Smoke)
+            depth = other.depth + 1;
+        
+     // timeout:
+    time -= current_time_scale;
+    if time <= 0
+        instance_destroy();
+        
+#define VenomFlak_draw
+    draw_self();
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+    draw_set_blend_mode(bm_normal);
+    
 #define ParrotFeather_step
     speed *= 0.9;
     if(instance_exists(target)){
