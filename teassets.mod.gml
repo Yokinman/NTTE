@@ -695,45 +695,6 @@
     z += zspeed * current_time_scale;
     zspeed -= zfric * current_time_scale;
 
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)
-    var _lastx = _x1,
-        _lasty = _y1,
-        _x = _lastx,
-        _y = _lasty,
-        o = max(point_distance(_x1, _y1, _x2, _y2) / 8, 10),
-        a = 0,
-        r = [];
-
-    while(point_distance(_x, _y, _x2, _y2) > 2 * o){
-        var _dir = point_direction(_x, _y, _x2, _y2);
-        _x += lengthdir_x(o, _dir);
-        _y += lengthdir_y(o, _dir);
-
-        var _off = 4 * sin((point_distance(_x, _y, _x2, _y2) / 8) + (current_frame / 6)),
-            m = point_distance(_x, _y, _x2, _y2) / point_distance(_x1, _y1, _x2, _y2),
-            _ox = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(m * pi)),
-            _oy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(m * pi/2));
-
-        array_push(r, scrLightning(_lastx, _lasty, _ox, _oy, true));
-        _lastx = _ox;
-        _lasty = _oy;
-    }
-    array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, true));
-
-    for(var i = 0; i < array_length(r); i++){
-        with(r[i]) ammo = (array_length(r) - 1) - i;
-    }
-
-    return r;
-
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)
-    with(instance_create(_x2, _y2, (_enemy ? EnemyLightning : Lightning))){
-        image_xscale = -point_distance(_x1, _y1, _x2, _y2) / 2;
-        image_angle = point_direction(_x1, _y1, _x2, _y2);
-        direction = image_angle;
-        return id;
-    }
-
 #define alarm_creator(_object, _alarm)
   /// Calls alarm event and sets creator on objects that were spawned during it
     with(instances_matching(_object, "creator", null)) creator = noone;
@@ -1367,6 +1328,13 @@
         o = _ext;
 
     return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - o), "bbox_left", _vx + game_width + o), "bbox_bottom", _vy - o), "bbox_top", _vy + game_height + o);
+
+#define instance_random(_obj)
+	if(instance_exists(_obj)){
+		var i = instances_matching(_obj, "", undefined);
+		return i[irandom(array_length(i) - 1)];
+	}
+	return noone;
 
 #define frame_active(_interval)
     return ((current_frame mod _interval) < current_time_scale);

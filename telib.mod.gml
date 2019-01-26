@@ -1090,6 +1090,8 @@
                 with(o){
                      // Visual:
                     c = irandom(2);
+                    if(c == 0 && GameCont.crown == crwn_guns) c = 1;
+                    if(c == 1 && GameCont.crown == crwn_life) c = 0;
                     spr_idle = spr.EelIdle[c];
                     spr_walk = spr_idle;
                     spr_hurt = spr.EelHurt[c];
@@ -1107,7 +1109,7 @@
 
                      // Vars:
                     maxhealth = 12;
-                    raddrop = 6;
+                    raddrop = 2;
                     meleedamage = 2;
                     size = 1;
                     walk = 0;
@@ -1132,6 +1134,8 @@
                      // Visual:
                     var _eliteChance = 0;
                     c = (random(100) < _eliteChance ? 3 : irandom(2));
+                    if(c == 0 && GameCont.crown == crwn_guns) c = 1;
+                    if(c == 1 && GameCont.crown == crwn_life) c = 0;
                     spr_charged = spr.JellyIdle[c];
                     spr_idle = spr_charged;
                     spr_walk = spr_charged;
@@ -5353,8 +5357,6 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);

@@ -2723,6 +2723,7 @@
 
 #define Angler_alrm0
     alarm0 = 6 + irandom(6);
+    target = instance_nearest(x, y, Player);
 
      // Hiding:
     if(hiding){
@@ -2736,15 +2737,14 @@
         if(ammo > 0){
             ammo--;
             alarm0 = 8;
-            target = instance_nearest(x, y, Player);
     
              // Charge:
-            scrWalk(5, point_direction(x, y, target.x, target.y) + orandom(40));
+            scrWalk(5, (target_is_visible() ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
             speed = maxspd + 10;
     
              // Effects:
-            sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 0.8);
-            sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.3);
+            sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
+            sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.5);
             repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Bubble)){
                 motion_add(other.direction + 180, random(4));
             }
@@ -2763,7 +2763,6 @@
          // Normal AI:
         else{
             alarm0 = 20 + irandom(20);
-            target = instance_nearest(x, y, Player);
         
              // Move Toward Player:
             if(target_is_visible() && target_in_distance(0, 128)){
@@ -2876,58 +2875,66 @@
     wave += current_time_scale;
 
      // Arc Lightning w/ Jelly:
-    if(instance_exists(arc_inst) && point_distance(x, y, arc_inst.x, arc_inst.y) < 100){
-         // Start Arcing:
-        if(arcing < 1){
-            arcing += 0.15;
-
-            var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
-                _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
-
-            with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
-                motion_add(random(360), 1);
-                alarm0 = 8;
+    if(!instance_exists(target) || target_in_distance(0, 160)){
+        if(instance_exists(arc_inst) && point_distance(x, y, arc_inst.x, arc_inst.y) < 100){
+             // Start Arcing:
+            if(arcing < 1){
+                arcing += 0.15;
+    
+                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
+                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
+    
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
+                    motion_add(random(360), 1);
+                    alarm0 = 8;
+                }
+                if(arcing >= 1){
+                    sound_play_pitch(sndLightningHit, 2);
+    
+                     // Color:
+                    c = min(arc_inst.c,2);
+                    spr_idle = spr.EelIdle[c];
+                    spr_walk = spr_idle;
+                    spr_hurt = spr.EelHurt[c];
+                    spr_dead = spr.EelDead[c];
+                    spr_tell = spr.EelTell[c];
+                    if sprite_index != spr_hurt
+                        sprite_index = spr_walk;
+                }
             }
-            if(arcing >= 1){
-                sound_play_pitch(sndLightningHit, 2);
-
-                 // Color:
-                var c = min(arc_inst.c,2);
-                spr_idle = spr.EelIdle[c];
-                spr_walk = spr_idle;
-                spr_hurt = spr.EelHurt[c];
-                spr_dead = spr.EelDead[c];
-                spr_tell = spr.EelTell[c];
-                if sprite_index != spr_hurt
-                    sprite_index = spr_walk;
+    
+             // Arcing:
+            else{
+                with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
+                    image_index = (other.wave * image_speed) mod image_number;
+                    image_speed_raw = image_number;
+                    hitid = other.arc_inst.hitid;
+                    team = other.arc_inst.team;
+                    creator = other.arc_inst;
+    
+                     // Effects:
+                    if(random(100) < 1){
+                        with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
+                            motion_add(random(360), 1);
+                        }
+                        sound_play_hit(sndLightningReload, 0.5);
+                    }
+                }
             }
         }
-
-         // Arcing:
         else{
-            with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
-                image_index = (other.wave * image_speed) mod image_number;
-                image_speed_raw = image_number;
-                hitid = other.arc_inst.hitid;
-                team = other.arc_inst.team;
-                creator = other.arc_inst;
+            arc_inst = noone;
+            arcing = 0;
 
-                 // Effects:
-                if(random(100) < 1){
-                    with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
-                        motion_add(random(360), 1);
-                    }
-                    sound_play_hit(sndLightningReload, 0.5);
-                }
+            if(frame_active(8)){
+                var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
+                if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
             }
         }
     }
     else{
         arc_inst = noone;
         arcing = 0;
-
-        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
-        if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
     }
 
 #define Eel_alrm0
@@ -2974,6 +2981,47 @@
 #define Eel_draw
     if pitDepth == 0
         draw_self_enemy();
+
+#define Eel_death
+     // Type-Pickups:
+    switch(c){
+        case 0: // Blue
+            if(random(4) < 3 * pickup_chance_multiplier){
+                instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
+
+                 // FX:
+                with(instance_create(x, y, FXChestOpen)){
+                    motion_add(other.direction, random(1));
+                }
+            }
+            break;
+
+        case 1: // Purple
+            if(random(4) < 3 * pickup_chance_multiplier){
+                instance_create(x + orandom(2), y + orandom(2), HPPickup);
+
+                 // FX:
+                repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AllyDamage)){
+                    motion_add(other.direction + orandom(30), random(1));
+                }
+            }
+            break;
+
+        case 2: // Green
+            with(instance_create(x, y, BigRad)){
+                motion_add(other.direction, other.speed);
+                motion_add(random(360), 3);
+                speed *= power(0.9, speed);
+            }
+
+             // FX:
+            repeat(2) with(instance_create(x + orandom(4), y + orandom(4), EatRad)){
+                sprite_index = sprEatBigRadPlut;
+                motion_add(other.direction + orandom(30), 1);
+            }
+            break;
+    }
+
 
 #define Jelly_step
     enemyAlarms(2);
@@ -3929,6 +3977,47 @@
 
 
  /// HELPER SCRIPTS ///
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc)
+    trace_time();
+    var _maxDis = point_distance(_x1, _y1, _x2, _y2),
+        _lastx = _x1,
+        _lasty = _y1,
+        _x = _lastx,
+        _y = _lasty,
+        o = max(_maxDis / 8, 10),
+        a = 0,
+        r = [];
+
+    while(point_distance(_x, _y, _x2, _y2) > 2 * o){
+        var _dir = point_direction(_x, _y, _x2, _y2);
+        _x += lengthdir_x(o, _dir);
+        _y += lengthdir_y(o, _dir);
+
+        var d = point_distance(_x, _y, _x2, _y2),
+            _off = 4 * sin((d / 8) + (current_frame / 6)),
+            m = d / _maxDis,
+            _ox = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(m * pi)),
+            _oy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(m * pi/2));
+
+        array_push(r, scrLightning(_lastx, _lasty, _ox, _oy, true));
+        _lastx = _ox;
+        _lasty = _oy;
+    }
+    array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, true));
+
+    var _ammo = array_length(r) - 1;
+    with(r) ammo = _ammo--;
+
+    return r;
+
+#define scrLightning(_x1, _y1, _x2, _y2, _enemy)
+    with(instance_create(_x2, _y2, (_enemy ? EnemyLightning : Lightning))){
+        image_xscale = -point_distance(_x1, _y1, _x2, _y2) / 2;
+        image_angle = point_direction(_x1, _y1, _x2, _y2);
+        direction = image_angle;
+        return id;
+    }
+
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -3944,8 +4033,6 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);

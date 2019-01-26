@@ -153,7 +153,30 @@
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
-    
+
+     // Fix Props:
+    if(instance_exists(Floor)){
+        with(instances_matching(CustomProp, "name", "Kelp", "Vent")){
+            if(floor_at(x, y).styleb){
+                var t = 100;
+                while(t-- > 0){
+                    var f = instance_random(instances_matching(Floor, "styleb", false));
+                    if(instance_exists(f)){
+                        var _x = f.x + 16 + orandom(8),
+                            _y = f.y + 16 + orandom(8);
+
+                        if(point_distance(other.spawn_x, other.spawn_y, _x, _y) > 48){
+                            x = _x;
+                            y = _y;
+                        }
+                        else continue;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
 #define area_step
      // Run underwater code
     mod_script_call("mod","ntte","underwater_step");
@@ -205,16 +228,16 @@
 
      // Stuff Falling Into Pits:
     with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "pit_check", null), "speed", 1)){
-        pit_check = true;
+        if(speed <= 0) pit_check = true;
         var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
             instance_destroy();
         }
     }
-    with(instances_matching(instances_matching_le(instances_matching(Corpse, "pit_check", null), "speed", 0), "image_speed", 0)){
+    with(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0)){
         if(instance_exists(enemy) || instance_exists(Portal)){
-            pit_check = true;
+            if(speed <= 0) pit_check = true;
             var f = floor_at(x, y);
             if(instance_exists(f) && f.styleb){
                 pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
@@ -323,6 +346,24 @@
     }
     else if random(5) < 1
         instance_create(_x,_y,FloorMaker);
+
+     // Crown Vault (code taken from u19):
+    with(GenCont) if(instance_number(Floor) > goal){
+        if(GameCont.subarea == 2 && GameCont.vaults < 3){
+            var f = instance_furthest(spawn_x, spawn_y, Floor);
+            if(instance_exists(f)){
+                with(
+                    instance_nearest(
+                        (((f.x * 2) + spawn_x) / 3) + orandom(64),
+                        (((f.y * 2) + spawn_y) / 3) + orandom(64),
+                        Floor
+                    )
+                ){
+                    instance_create(x + 16, y + 16, ProtoStatue);
+                }
+            }
+        }
+    }
         
 #define scrFloorMake(_x,_y,_obj)
     return mod_script_call("mod","ntte","scrFloorMake",_x,_y,_obj);
@@ -354,15 +395,17 @@
     var _x = x + 16,
         _y = y + 16;
     
-    if !styleb && random(18) < 1{
+    if(!styleb && random(18) < 1){
         obj_create(_x, _y, "Angler");
     }
     else{
-        if random(9) < 1{
-            obj_create(_x,_y,"Jelly");
+        if(random(9) < 1){
+            with(obj_create(_x,_y,"Jelly")){
+                repeat(2) obj_create(x, y, "Eel");
+            }
         }
-        else if random(3) < 1{
-            obj_create(_x,_y,"Eel");
+        else if(random(5) < 1){
+            obj_create(_x, _y, "Eel");
         }
     }
     
@@ -514,8 +557,6 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
@@ -526,5 +567,6 @@
 #define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+#define instance_random(_obj)                                                           return  mod_script_call("mod", "teassets", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);
 #define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);
