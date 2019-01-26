@@ -4,7 +4,14 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.newLevel = false;
+
     global.catLight = [];
+
+    global.surfAnglerTrail = -1;
+    global.surfAnglerTrailClear = -1;
+    global.surfAnglerTrailX = 10000 - (surfAnglerTrailW / 2);
+    global.surfAnglerTrailY = 10000 - (surfAnglerTrailH / 2);
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -14,6 +21,13 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
+
+#macro surfAnglerTrail global.surfAnglerTrail
+#macro surfAnglerClear global.surfAnglerTrailClear
+#macro surfAnglerTrailX global.surfAnglerTrailX
+#macro surfAnglerTrailY global.surfAnglerTrailY
+#macro surfAnglerTrailW 1200
+#macro surfAnglerTrailH 1200
 
 #define Creature_step
     enemyAlarms(1);
@@ -2654,7 +2668,7 @@
 
 #define Angler_step
     enemyAlarms(1);
-    enemyWalk(walkspd, maxspd + (6 * (ammo >= 0 && walk > 0)));
+    enemyWalk(walkspd, maxspd + (8 * (ammo >= 0 && walk > 0)));
 
      // Animate:
     if(hiding){
@@ -2666,6 +2680,11 @@
     else if(sprite_index != spr_appear || anim_end){
         if(sprite_index == spr_appear) sprite_index = spr_idle;
         enemySprites();
+    }
+
+     // Charging:
+    if(ammo >= 0){
+        speed += ((speed * 0.85) - speed) * current_time_scale;
     }
 
 #define Angler_draw
@@ -2720,13 +2739,13 @@
             target = instance_nearest(x, y, Player);
     
              // Charge:
-            scrWalk(4, point_direction(x, y, target.x, target.y) + orandom(40));
+            scrWalk(5, point_direction(x, y, target.x, target.y) + orandom(40));
             speed = maxspd + 10;
     
              // Effects:
             sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 0.8);
             sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.3);
-            repeat(8) with(instance_create(x + orandom(16), y + orandom(16), Bubble)){
+            repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Bubble)){
                 motion_add(other.direction + 180, random(4));
             }
             sprite_index = spr_hurt; // Temporary?
@@ -2789,6 +2808,12 @@
             sprite_index = sprRadChestCorpse;
             mask_index = -1;
             size = 2;
+        }
+        
+         // yea...
+        with(instance_create(_x, _y, PortalClear)){
+            image_xscale = 0.4;
+            image_yscale = 0.4;
         }
 
          // Effects:
@@ -3719,6 +3744,98 @@
 
 
 
+
+#define step
+    if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
+    else if(global.newLevel){
+        global.newLevel = 0;
+
+         // Center Angler Trail Surfaces:
+        var _x = 0,
+            _y = 0;
+
+        with(Floor){
+            _x += x;
+            _y += y;
+        }
+        _x /= instance_number(Floor);
+        _y /= instance_number(Floor);
+        _x -= surfAnglerTrailW / 2;
+        _y -= surfAnglerTrailH / 2;
+        surfAnglerTrailX = _x;
+        surfAnglerTrailY = _y;
+    }
+
+    script_bind_draw(draw_anglertrail, -3);
+
+#define draw_anglertrail
+    var _surfTrail = surfAnglerTrail,
+        _surfClear = surfAnglerClear,
+        _surfX = surfAnglerTrailX,
+        _surfY = surfAnglerTrailY;
+
+    if(!surface_exists(_surfTrail)){
+        _surfTrail = surface_create(surfAnglerTrailW, surfAnglerTrailH);
+        surfAnglerTrail = _surfTrail;
+    }
+    if(!surface_exists(_surfClear)){
+        _surfClear = surface_create(surfAnglerTrailW, surfAnglerTrailH);
+        surfAnglerClear = _surfClear;
+    }
+
+     // Clear Trail Surface Over Time:
+    if(frame_active(1)){
+        surface_set_target(_surfClear);
+
+        draw_clear(c_black);
+        draw_set_blend_mode(bm_subtract);
+        draw_surface(_surfTrail, 0, 0);
+        draw_sprite_tiled(sprStreetLight, 0, irandom(128), irandom(128));
+
+        surface_set_target(_surfTrail);
+
+        for(var a = 0; a < 360; a += 90){
+            draw_surface(_surfClear, lengthdir_x(1, a), lengthdir_y(1, a));
+        }
+
+        draw_set_blend_mode(bm_normal);
+    }
+
+     // Draw Trails:
+    surface_set_target(_surfTrail);
+    d3d_set_fog(1, c_black, 0, 0);
+    with(instances_matching_ge(instances_matching(CustomEnemy, "name", "Angler"), "ammo", 0)){
+        if(visible && sprite_index != spr_appear){
+            var _x1 = xprevious,
+                _y1 = yprevious,
+                _x2 = x,
+                _y2 = y,
+                _dis = point_distance(_x1, _y1, _x2, _y2),
+                _dir = point_direction(_x1, _y1, _x2, _y2),
+                _spr = spr.AnglerTrail,
+                _img = image_index,
+                _xscal = image_xscale * right,
+                _yscal = image_yscale,
+                _angle = image_angle,
+                _blend = c_white,
+                _alpha = image_alpha;
+
+            for(var o = 0; o <= _dis; o++){
+                draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - _surfX, _y1 + lengthdir_y(o, _dir) - _surfY, _xscal, _yscal, _angle, _blend, _alpha);
+            }
+        }
+    }
+    d3d_set_fog(0, 0, 0, 0);
+    surface_reset_target();
+
+     // Trail Surface:
+    d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
+    draw_set_blend_mode(bm_add);
+    draw_surface(_surfTrail, _surfX, _surfY);
+    draw_set_blend_mode(bm_normal);
+    d3d_set_fog(0, 0, 0, 0);
+
+    instance_destroy();
 
 #define draw_bloom
     with(instances_named(CustomProjectile, "TrafficCrabVenom")){
