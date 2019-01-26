@@ -212,7 +212,7 @@
             instance_destroy();
         }
     }
-    with(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0)){
+    with(instances_matching(instances_matching_le(instances_matching(Corpse, "pit_check", null), "speed", 0), "image_speed", 0)){
         if(instance_exists(enemy) || instance_exists(Portal)){
             pit_check = true;
             var f = floor_at(x, y);
