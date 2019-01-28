@@ -269,62 +269,91 @@
 
 
 #define Diver_step
-    enemyAlarms(1);
+    enemyAlarms(2);
     enemySprites();
     enemyWalk(walkspd, maxspd);
+
+     // Reloading Effects:
+    if(reload > 0){
+        reload -= current_time_scale;
+
+        if(in_range(reload, 6, 12)){
+            wkick += ((6 - wkick) * 3/5) * current_time_scale;
+        }
+
+        if(reload <= 0){
+            alarm0 = max(alarm0, 30)
+            wkick = -2;
+    		sound_play_hit(sndCrossReload, 0.1);
+
+    		var l = 8,
+    		    d = gunangle;
+
+            instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+        }
+    }
 
 #define Diver_alrm0
     alarm0 = 60 + irandom(30);
     target = instance_nearest(x, y, Player);
     if(target_is_visible()) {
-        var _targetDir = point_direction(x, y, target.x, target.y);
+        var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 
-    	if(target_in_distance(60, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
+    	if(target_in_distance(64, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
     	     // Shoot Harpoon:
-    		if(spr_weap = spr.HarpoonGun && random(4) < 1){
-    			gunangle = _targetDir + orandom(10);
+    		if(reload <= 0){
+    		    gunangle = _targetDir;
     			scrEnemyShoot("DiverHarpoon", gunangle, 12);
-
-                wkick = 8;
                 sound_play(sndCrossbow);
-    			spr_weap = spr.HarpoonGunEmpty;
+    			reload = 90 + random(30);
+                wkick = 8;
     		}
 
-             // Reload Harpoon:
-    		else if(spr_weap = spr.HarpoonGunEmpty){
-    			sound_play_hit(sndCrossReload,0);
-    			spr_weap = spr.HarpoonGun;
-    			wkick = 2;
+    		 // Reposition:
+    		else if(random(2) < 1){
+    		    scrWalk(10, _targetDir + choose(-90, 90) + orandom(10));
+    		    gunangle = _targetDir;
     		}
 
-    		alarm0 = 30 + irandom(30);
+    		alarm0 = 20 + random(30);
     	}
 
          // Move Away From Target:
     	else{
-    		alarm0 = 45 + irandom(30);
-    		direction = _targetDir + 180 + orandom(30);
-    		gunangle = direction + orandom(15);
-    		walk = 15 + irandom(15);
+    		alarm0 = 20 + irandom(30);
+    		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
+    		gunangle = _targetDir + orandom(15);
     	}
 
     	 // Facing:
-    	scrRight(_targetDir);
+    	scrRight(gunangle);
     }
 
-     // Passive Movement:
-    else{
-    	direction = random(360);
-    	gunangle = direction + orandom(15);
-    	walk = 30;
-    	scrRight(direction);
-    }
+     // Wander:
+    else scrWalk(30, random(360));
 
 #define Diver_draw
-    if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    var _kick = wkick,
+        _ang = gunangle,
+        _flip = right,
+        _blend = image_blend,
+        _alpha = image_alpha;
+
+     // Bolt:
+    if(reload < 6){
+        var _ox = 6 - (_kick + reload),
+            _oy = -right,
+            _x = x + lengthdir_x(_ox, _ang) + lengthdir_x(_oy, _ang - 90),
+            _y = y + lengthdir_y(_ox, _ang) + lengthdir_y(_oy, _ang - 90);
+    
+        draw_sprite_ext(sprBolt, 1, _x, _y, 1, _flip, _ang, _blend, _alpha);
+    }
+
+     // Self:
+    if(gunangle <= 180) draw_weapon(spr_weap, x, y, _ang, 0, _kick, _flip, _blend, _alpha);
     draw_self_enemy();
-    with(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) draw_self();
-    if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    with(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) draw_self(); // In tree
+    if(gunangle > 180) draw_weapon(spr_weap, x, y, _ang, 0, _kick, _flip, _blend, _alpha);
 
 #define Diver_death
     pickup_drop(20, 0);

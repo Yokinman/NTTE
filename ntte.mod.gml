@@ -7,6 +7,7 @@
     global.area = ["secret", "coast", "oasis", "trench", "pizza"];
     global.effect_timer = 0;
     global.currentMusic = -1;
+    global.bones = [];
 
      // Water Level Sounds:
     global.waterSound = {
@@ -456,11 +457,77 @@
         	}
         }
 
+     // Fixes weird delay thing:
+    script_bind_step(bone_step, 0);
+
+#define bone_step
+    instance_destroy();
+
+     // Reset Bone Ammo Indicator:
+    global.bones = [];
+    with(Player){
+        var _wep = [wep, bwep];
+        for(var i = 0; i < array_length(_wep); i++){
+            if(is_object(_wep[i]) && wep_get(_wep[i]) == "crabbone"){
+                if(_wep[i].ammo > 1){
+                    array_push(global.bones, {
+                        ammo : _wep[i].ammo,
+                        index : index,
+                        primary : !i,
+                        steroids : (race == "steroids")
+                        });
+                }
+            }
+        }
+    }
+
+     // Draw Bone Ammo Indicators:
+    var d = 0;
+    if(instance_exists(TopCont)) d = TopCont.depth;
+    if(instance_exists(GenCont)) d = GenCont.depth;
+    if(instance_exists(LevCont)) d = LevCont.depth;
+    if(d != 0) with(global.bones){
+        script_bind_draw(ammo_draw_scrt, d - 1, index, primary, ammo, steroids);
+    }
+
 #define draw_gui_end
      // Custom Music Volume Fix:
     if(global.currentMusic != -1){
         sound_volume(global.currentMusic, audio_sound_get_gain(mus.Placeholder));
     }
+
+#define draw_pause
+     // Draw Bone Ammo Indicators:
+    with(global.bones){
+        ammo_draw(index, primary, ammo, steroids);
+    }
+
+#define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
+    instance_destroy();
+    ammo_draw(_index, _primary, _ammo, _steroids)
+
+#define ammo_draw(_index, _primary, _ammo, _steroids)
+    var _active = 0;
+    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
+
+    draw_set_visible_all(0);
+    draw_set_visible(_index, 1);
+    draw_set_projection(0);
+
+    var _x = (_primary ? 42 : 86),
+        _y = 21;
+
+    if(_active > 1) _x -= 19;
+
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_set_color(c_white);
+    if(!_primary && !_steroids) draw_set_color(c_silver);
+
+    draw_text_shadow(_x, _y, string(_ammo));
+
+    draw_reset_projection();
+    draw_set_visible_all(1);
 
 #define decide_wep_gold(_minhard, _maxhard, _nowep)
     var _list = ds_list_create(),
@@ -736,6 +803,9 @@
 
 #define scrSetPet(_pet)
     return mod_script_call("mod", "teassets", "scrSetPet", _pet);
-    
+
+#define wep_get(_wep)
+    return mod_script_call("mod", "teassets", "wep_get", _wep);
+
 #define orandom(_n)
     return irandom_range(-_n,_n);

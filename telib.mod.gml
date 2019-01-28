@@ -518,6 +518,7 @@
         			maxspd = 3;
         			gunangle = random(360);
         			direction = gunangle;
+        			reload = 0;
 
                      // Alarms:
         			alarm0 = 60 + irandom(30);
@@ -1891,10 +1892,9 @@
         	         // Vars:
         	        z = 1;
         	        zspeed = 0;
-        	        zfric = 0.8;
+        	        zfric = 0.4; // 0.8
         	        damage = 0;
         	        force = 0;
-        	        right = choose(-1, 1);
         	    }
         	    break;
 
@@ -5071,11 +5071,54 @@
         scrRight(_targetDir);
         
          // Shoot Mortar:
-        with(scrEnemyShootExt(x - (2 * right), y, "MortarPlasma", _targetDir, 3)){
+        with(scrEnemyShootExt(x + (5 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
             depth = 12;
-            zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
-            right = other.right;
+            zspeed = ((point_distance(x, y, other.target.x + orandom(16), other.target.y + orandom(16)) - z) * zfric) / (speed * 2);
+
+             // Cool particle line
+            var _x = x,
+                _y = y,
+                _z = z,
+                _zspd = zspeed,
+                _zfrc = zfric,
+                i = 0;
+        
+            while(_z > 0){
+                with(instance_create(_x, _y - _z, BoltTrail)){
+                    image_angle = point_direction(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
+                    image_xscale = point_distance(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
+                    image_yscale = random(1.5);
+                    image_blend = make_color_rgb(235, 0, 67);
+                    depth = -8;
+                    if(random(6) < 1){
+                        with(instance_create(x + orandom(8), y + orandom(8), LaserCharge)){
+                            motion_add(point_direction(x, y, _x, _y - _z), 1);
+                            alarm0 = (point_distance(x, y, _x, _y - _z) / speed) + 1;
+                            depth = -8;
+                        }
+                    }
+                }
+
+                _x += hspeed;
+                _y += vspeed;
+                _z += _zspd;
+                _zspd -= _zfrc;
+                i++;
+            }
+            var _ang = random(360);
+            for(var a = _ang; a < _ang + 360; a += 120 + orandom(30)){
+                var l = 16,
+                    _tx = _x,
+                    _ty = _y;
+
+                with(instance_create(_x + lengthdir_x(l, a), _y + lengthdir_y(l, a), LaserCharge)){
+                    motion_add(point_direction(x, y, _tx, _ty), (point_distance(x, y, _tx, _ty) / i));
+                    alarm0 = i;
+                }
+                i *= 3/4;
+            }
+            with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
         }
 
         alarm1 = 4;
@@ -5115,8 +5158,20 @@
     z_engine();
     depth = max(-z, -12);
 
+     // Facing:
+    if(in_range(direction, 30, 150) || in_range(direction, 210, 330)){
+        image_index = round((point_direction(0, 0, speed, zspeed) + 90) / (360 / image_number));
+        image_angle = direction;
+    }
+    else{
+        if(zspeed > 5) image_index = 0;
+        else if(zspeed > 2) image_index = 1;
+        else image_index = 2;
+        image_angle = point_direction(0, 0, hspeed, -zspeed);
+    }
+
      // Trail:
-    if(random(2) < 1){
+    if(current_frame_active && random(2) < 1){
         with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
             sprite_index = spr.MortarTrail;
             depth = other.depth;
@@ -5127,7 +5182,6 @@
     if(z <= 0) instance_destroy();
 
 #define MortarPlasma_destroy
-    view_shake_at(x, y, 8);
     with(instance_create(x, y, PlasmaImpact)){
         sprite_index = spr.MortarImpact;
         team = other.team;
@@ -5136,13 +5190,17 @@
         damage = 1;
     }
 
-     // Sound:
+     // Effects:
+    view_shake_at(x, y, 8);
     sound_play(sndPlasmaHit);
 
 #define MortarPlasma_draw
-    var _maxtilt = 45,
-        _angle = 90 - clamp(hspeed * 20, -_maxtilt, _maxtilt);
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, _angle, image_blend, image_alpha);
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+
+     // Bloom:
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    draw_set_blend_mode(bm_normal);
 
 #define MortarPlasma_hit
     // nada
@@ -5242,10 +5300,6 @@
     /*with(instances_named(CustomProjectile, "BubbleBomb")){
         draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
     }*/
-
-    with(instances_named(CustomProjectile, "MortarPlasma")){
-        draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, 0.1 * image_alpha);
-    }
 
     with(instances_named(CustomProjectile, "LightningDisc")){
         scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);

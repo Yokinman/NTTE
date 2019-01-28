@@ -83,36 +83,6 @@
         }
     }
 
-     // Ammo Indicator:
-    if(w.ammo > 1){
-        script_bind_draw(ammo_draw, -100, index, _primary, w.ammo, (race == "steroids"));
-    }
-
-#define ammo_draw(_index, _primary, _ammo, _steroids)
-    instance_destroy();
-
-    var _active = 0;
-    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-
-    draw_set_visible_all(0);
-    draw_set_visible(_index, 1);
-    draw_set_projection(0);
-
-    var _x = (_primary ? 42 : 86),
-        _y = 21;
-
-    if(_active > 1) _x -= 19;
-
-    draw_set_halign(fa_left);
-    draw_set_valign(fa_top);
-    draw_set_color(c_white);
-    if(!_primary && !_steroids) draw_set_color(c_silver);
-
-    draw_text_shadow(_x, _y, string(_ammo));
-
-    draw_reset_projection();
-    draw_set_visible_all(1);
-
 #define scrSwap()
 	var _swap = ["wep", "curse", "reload", "wkick", "wepflip", "wepangle", "can_shoot"];
 	for(var i = 0; i < array_length(_swap); i++){
@@ -127,10 +97,7 @@
 	clicked = 0;
 
 #define wep_get(_wep)
-    if(is_object(_wep)){
-        return wep_get(lq_defget(_wep, "wep", 0));
-    }
-    return _wep;
+    return mod_script_call("mod", "teassets", "wep_get", _wep);
 
 #define obj_create(_x, _y, _obj)
     return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
