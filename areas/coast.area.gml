@@ -634,7 +634,7 @@
         }
 
          // ++B Floors
-        else if(!styleb && random(4) < 1){
+        else if(!styleb && random(5) < 1){
             styleb = 1;
         }
     }
@@ -675,15 +675,13 @@
         global.spawn_enemy = 1;
 
          // Normal Enemies:
-        if(styleb){
-            obj_create(_x, _y, choose("TrafficCrab", "TrafficCrab", "Diver"));
-        }
+        if(styleb) obj_create(_x, _y, "TrafficCrab");
         else{
             if(random(18) < GameCont.subarea){
                 obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));
             }
             else{
-                obj_create(_x, _y, choose("Diver", "Diver", "Gull", "Gull", "Gull", "Gull", "Gull"));
+                obj_create(_x, _y, choose("Diver", "Gull", "Gull", "Gull", "Gull"));
             }
         }
     }
@@ -720,6 +718,12 @@
                 }
             }
         }
+    }
+
+#define area_pop_extras
+     // The new bandits
+    with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+        obj_create(x, y, "Diver");
     }
 
 #define darksea_draw

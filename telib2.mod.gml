@@ -303,7 +303,9 @@
     	     // Shoot Harpoon:
     		if(reload <= 0){
     		    gunangle = _targetDir;
-    			scrEnemyShoot("DiverHarpoon", gunangle, 12);
+    			with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
+    			    if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
+    			}
                 sound_play(sndCrossbow);
     			reload = 90 + random(30);
                 wkick = 8;
@@ -2845,7 +2847,7 @@
         }
 
          // Effects:
-        sound_play_pitchvol(sndEXPChest, 1, 0.5);
+        sound_play(sndEXPChest);
         with(instance_create(_x, _y, ExploderExplo)){
             motion_add(other.direction, 1);
         }
@@ -2865,7 +2867,7 @@
     ammo = 3;
 
      // Effects:
-    sound_play_pitchvol(sndBigBanditMelee, 1.6 + random(0.4), 0.3);
+    sound_play_pitchvol(sndFrogClose, 0.6 + random(0.2), 2);
     view_shake_at(x, y, 10);
     repeat(5){
         with(instance_create(x + orandom(24), y + orandom(24), Dust)){
@@ -2886,7 +2888,7 @@
     walk = 0;
 
      // Effects:
-    sound_play_pitchvol(sndBigBanditIntro, 1.6 + random(0.5), 0.2);
+    sound_play_pitchvol(sndJockFire, 1.6 + random(0.5), 0.2);
     view_shake_at(x, y, 10);
     repeat(5){
         with(instance_create(x + orandom(24), y + orandom(24), Dust)){
@@ -2921,19 +2923,23 @@
                     sound_play_pitch(sndLightningHit, 2);
     
                      // Color:
-                    c = min(arc_inst.c,2);
-                    spr_idle = spr.EelIdle[c];
-                    spr_walk = spr_idle;
-                    spr_hurt = spr.EelHurt[c];
-                    spr_dead = spr.EelDead[c];
-                    spr_tell = spr.EelTell[c];
-                    if sprite_index != spr_hurt
-                        sprite_index = spr_walk;
+                    if(arc_inst.c <= 2){
+                        c = max(arc_inst.c, 0);
+                        spr_idle = spr.EelIdle[c];
+                        spr_walk = spr_idle;
+                        spr_hurt = spr.EelHurt[c];
+                        spr_dead = spr.EelDead[c];
+                        spr_tell = spr.EelTell[c];
+                        if(sprite_index != spr_hurt){
+                            sprite_index = spr_idle;
+                        }
+                    }
                 }
             }
     
              // Arcing:
             else{
+                if(arc_inst.c > 2) elite = 30;
                 with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
                     image_index = (other.wave * image_speed) mod image_number;
                     image_speed_raw = image_number;
@@ -2953,7 +2959,7 @@
         }
         else{
             arc_inst = noone;
-            arcing = 0;
+            arcing = false;
 
             if(frame_active(8)){
                 var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
@@ -2963,7 +2969,18 @@
     }
     else{
         arc_inst = noone;
-        arcing = 0;
+        arcing = false;
+    }
+    if(elite > 0){
+        elite -= current_time_scale;
+        if(current_frame_active && random(30) < 1){
+            instance_create(x, y, PortalL);
+        }
+        if(elite <= 0){
+            instance_create(x, y, PortalL);
+            sprite_index = spr_hurt;
+            image_index = 0;
+        }
     }
 
 #define Eel_alrm0
@@ -2991,7 +3008,7 @@
     }
     else{
          // Begin shoot laser
-        if instance_exists(arc_inst) && arc_inst.c == 3 && random(5) < 1 && target_is_visible() && target_in_distance(0,96){
+        if false && instance_exists(arc_inst) && arc_inst.c == 3 && random(5) < 1 && target_is_visible() && target_in_distance(0,96){
             alarm0 = 3;
             ammo = 10;
             gunangle = point_direction(x, y, target.x, target.y);
@@ -3000,7 +3017,7 @@
         else{
              // When you walking:
             if target_is_visible(){
-                scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y)+orandom(20));
+                scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y) + orandom(20));
             }
             else
                 scrWalk(irandom_range(17,30), direction+orandom(30));
@@ -3008,14 +3025,34 @@
     }
 
 #define Eel_draw
-    if pitDepth == 0
-        draw_self_enemy();
+    var _spr = sprite_index;
+    if(elite > 0){
+        if(_spr == spr_idle) _spr = spr.EeliteIdle;
+        else if(_spr == spr_walk) _spr = spr.EeliteWalk;
+        else if(_spr == spr_hurt) _spr = spr.EeliteHurt;
+    }
+    draw_sprite_ext(_spr, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
 #define Eel_death
+    if(elite){
+        spr_dead = spr.EeliteDead;
+
+         // Death Lightning:
+        repeat(2) with(scrEnemyShoot(EnemyLightning, random(360), 0.5)){
+            alarm0 = 2 + random(4);
+            ammo = 1 + random(2);
+            image_speed *= random_range(0.75, 1);
+            with(instance_create(x, y, LightningHit)){
+                motion_add(other.direction, random(2));
+            }
+        }
+        sound_play_pitchvol(sndLightningCrystalDeath, 1.5 + random(0.5), 1);
+    }
+
      // Type-Pickups:
-    switch(c){
+    else switch(c){
         case 0: // Blue
-            if(random(4) < 3 * pickup_chance_multiplier){
+            if(random(3) < 2 * pickup_chance_multiplier){
                 instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
 
                  // FX:
@@ -3026,7 +3063,7 @@
             break;
 
         case 1: // Purple
-            if(random(4) < 3 * pickup_chance_multiplier){
+            if(random(3) < 2 * pickup_chance_multiplier){
                 instance_create(x + orandom(2), y + orandom(2), HPPickup);
 
                  // FX:
@@ -3066,16 +3103,30 @@
 
 #define Jelly_alrm0
     alarm0 = 40 + random(20);
-     // Always movin':
-    scrWalk(alarm0,direction);
     target = instance_nearest(x, y, Player);
-    if target_is_visible(){
+
+     // Always movin':
+    scrWalk(alarm0, direction);
+
+    if(target_is_visible()){
+        var _targetDir = point_direction(x, y, target.x, target.y);
+
          // Steer towards target:
-        motion_add(point_direction(x,y,target.x,target.y),0.4);
+        motion_add(_targetDir, 0.4);
+
          // Attack:
-        if random(5) < 1 && target_in_distance(32,256){
+        if(random(3) < 1 && target_in_distance(32, 256)){
+            alarm0 += 60;
+
              // Shoot lightning disc:
-            scrEnemyShoot("LightningDiscEnemy", point_direction(x, y, target.x, target.y), 8);
+            if(c > 2){
+                for(var a = _targetDir; a < _targetDir + 360; a += (360 / 3)){
+                    with(scrEnemyShoot("LightningDiscEnemy", a, 8)){
+                        shrink /= 2; // Last twice as long
+                    }
+                }
+            }
+            else scrEnemyShoot("LightningDiscEnemy", _targetDir, 8);
 
              // Effects:
             sound_play_hit(sndLightningHit, 0.25);
@@ -3090,7 +3141,8 @@
     sprite_index = spr_walk;
 
 #define Jelly_death
-    pickup_drop(70, 2);
+    if(c <= 2) pickup_drop(50, 2);
+    else pickup_drop(100, 10);
 
 
 #define PitSquid_step
@@ -3930,6 +3982,11 @@
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+     // Divers:
+    with(instances_named(CustomEnemy, "Diver")){
+        draw_circle(x, y, 40 + orandom(1), false);
+    }
+
      // Anglers:
     d3d_set_fog(1, c_gray, 0, 0);
     with(instances_matching(CustomEnemy, "name", "Angler")){
@@ -3963,6 +4020,16 @@
         draw_circle(x, y, 80 + o + orandom(1), false);
     }
 
+     // Elite Eels:
+    with(instances_matching_gt(instances_named(CustomEnemy, "Eel"), "elite", 0)){
+        draw_circle(x, y, 48 + orandom(2), false);
+    }
+
+     // Lightning Discs:
+    with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
+        draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
+    }
+
      // Kelp:
     with(instances_matching(CustomProp, "name", "Kelp")){
         draw_circle(x, y, 32 + orandom(1), false);
@@ -3970,6 +4037,11 @@
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+     // Divers:
+    with(instances_named(CustomEnemy, "Diver")){
+        draw_circle(x, y, 16 + orandom(1), false);
+    }
 
      // Anglers:
     draw_set_blend_mode(bm_subtract);
@@ -4002,6 +4074,16 @@
         }
 
         draw_circle(x, y, 40 + o + orandom(1), false);
+    }
+
+     // Elite Eels:
+    with(instances_matching_gt(instances_named(CustomEnemy, "Eel"), "elite", 0)){
+        draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
+    }
+
+     // Lightning Discs:
+    with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
+        draw_circle(x - 1, y - 1, (radius * image_xscale * 1.5) + 4 + orandom(1), false);
     }
 
 

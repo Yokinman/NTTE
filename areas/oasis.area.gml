@@ -201,7 +201,7 @@
         }
 
         else{
-            if(random(5) < 2) obj_create(_x, _y, "Diver");
+            if(random(5) < 1) obj_create(_x, _y, "Diver");
             else{
                 if(!styleb){
                     if(random(2) < 1) instance_create(_x,_y,Crab);
@@ -244,6 +244,12 @@
         else{
             obj_create(_x,_y,choose(WaterPlant,WaterPlant,OasisBarrel,WaterMine));
         }
+    }
+
+#define area_pop_extras
+     // The new bandits
+    with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+        obj_create(x, y, "Diver");
     }
 
 

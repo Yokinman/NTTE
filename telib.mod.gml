@@ -280,6 +280,7 @@
                     rotation = 0;
                     radius = 12;
                     charge = 1;
+                    charge_spd = 1;
                     ammo = 10;
                     typ = 0;
                     shrink = 1/160;
@@ -287,6 +288,7 @@
                     is_enemy = false;
                     image_xscale = 0;
                     image_yscale = 0;
+                    stretch = 1;
                 }
                 break;
     
@@ -975,7 +977,7 @@
         			depth = -2;
 
                      // Sound:
-        			snd_hurt = sndOasisHurt;
+        			snd_hurt = sndSalamanderHurt;
         			snd_dead = sndOasisDeath;
         			snd_mele = sndBigBanditMeleeHit;
 
@@ -1065,7 +1067,7 @@
 
                      // Sound:
         			snd_hurt = sndFireballerHurt;
-        			snd_dead = sndFireballerDead;
+        			snd_dead = choose(sndFrogEggDead, sndFrogEggOpen2);
 
         			 // Vars:
         			//mask_index = mskFrogQueen;
@@ -1100,15 +1102,16 @@
                     spr_tell = spr.EelTell[c];
                     spr_shadow = shd24;
                     sprite_index = spr_idle;
-                    mask_index = mskRat;
+                    image_index = random(image_number - 1);
                     depth = -2;
 
                      // Sound:
                     snd_hurt = sndHitFlesh;
-                    snd_dead = sndMaggotSpawnDie;
+                    snd_dead = sndFastRatDie;
                     snd_melee = sndMaggotBite;
 
                      // Vars:
+                    mask_index = mskRat;
                     maxhealth = 12;
                     raddrop = 2;
                     meleedamage = 2;
@@ -1122,6 +1125,7 @@
                     arcing = 0;
                     wave = random(100);
                     gunangle = 0;
+                    elite = 0;
                     ammo = 0;
 
                      // Alarms:
@@ -1133,8 +1137,7 @@
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    var _eliteChance = 0;
-                    c = (random(100) < _eliteChance ? 3 : irandom(2));
+                    c = irandom(2);
                     if(c == 0 && GameCont.crown == crwn_guns) c = 1;
                     if(c == 1 && GameCont.crown == crwn_life) c = 0;
                     spr_charged = spr.JellyIdle[c];
@@ -1147,14 +1150,14 @@
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
                     sprite_index = spr_idle;
-                    mask_index = mskLaserCrystal;
                     depth = -2;
 
                      // Sound:
-                    snd_hurt = sndHitPlant;
-                    snd_dead = sndEnemyDie;
+                    snd_hurt = sndHitFlesh;
+                    snd_dead = sndBigMaggotDie;
 
                      // Vars:
+                    mask_index = mskLaserCrystal;
                     maxhealth = 52 // (c == 3 ? 72 : 52);
                     raddrop = 16 // (c == 3 ? 38 : 16);
                     size = 2;
@@ -1168,6 +1171,28 @@
 
                      // Always on the move:
                     walk = alarm0;
+                }
+                break;
+
+            case "JellyElite":
+                o = obj_create(_x, _y, "Jelly");
+                with(o){
+                    c = 3;
+
+                     // Visual:
+                    spr_charged = spr.JellyIdle[c]
+                    spr_idle = spr_charged;
+                    spr_walk = spr_charged;
+                    spr_hurt = spr.JellyHurt[c];
+                    spr_dead = spr.JellyDead[c];
+                    spr_fire = spr.JellyEliteFire;
+
+                     // Sound:
+                    snd_hurt = sndLightningCrystalHit;
+                    snd_dead = sndLightningCrystalDeath;
+
+                     // Vars:
+                    raddrop *= 2;
                 }
                 break;
 
@@ -1947,6 +1972,7 @@
 
                      // Alarms:
         			alarm0 = 20 + irandom(20);
+        			alarm1 = 300 + random(90);
         	    }
         	    break;
 
@@ -1956,7 +1982,7 @@
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        "Angler", "Eel", "Jelly", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
+    		        "Angler", "Eel", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
     		        "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "NewTable", "Paper", "PizzaDrain", "PizzaTV", "VenomFlak",
     		        "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
@@ -3135,7 +3161,7 @@
 
      // Charge Up:
     if(image_xscale < charge){
-        image_xscale += (charge / 20) * current_time_scale;
+        image_xscale += (charge / 20) * charge_spd * current_time_scale;
         image_yscale = image_xscale;
 
         if(instance_exists(creator)){
@@ -3291,7 +3317,7 @@
     }
 
 #define LightningDisc_draw
-    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 1, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
+    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
 
 #define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
     var _off = (360 / _num),
@@ -5216,19 +5242,58 @@
     }
 
 #define Spiderling_step
-    enemyAlarms(1);
+    enemyWalk(walkspd, maxspd);
     enemySprites();
-    enemyWalk(walkspd,maxspd);
+    enemyAlarms(2);
     
 #define Spiderling_alrm0
     alarm0 = 10 + irandom(10);
     target = instance_nearest(x,y,Player);
-    
-    if target_is_visible() && target_in_distance(0, 96){
+
+     // Move towards player:
+    if(target_is_visible() && target_in_distance(0, 96)){
         scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
     }
+
+     // Wander:
     else scrWalk(12, direction + orandom(20));
-    scrRight(direction);
+
+#define Spiderling_alrm1
+     // Shhh dont tell anybody
+    with(instance_create(x, y, Spider)){
+        x = other.x;
+        y = other.y;
+        right = other.right;
+        alarm1 = 10 + random(10);
+    }
+
+     // Effects
+    for(var a = 0; a < 360; a += (360 / 6)){
+        var o = random(8);
+        with(instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), Smoke)){
+            motion_add(a + orandom(20), 1 + random(1.5));
+            depth = -3;
+            with(instance_create(x, y, Dust)){
+                depth = other.depth;
+                motion_add(other.direction + orandom(90), 2);
+            }
+        }
+    }
+    for(var a = direction; a < direction + 360; a += (360 / 3)){
+        with(instance_create(x, y, Shell)){
+            motion_add(a + orandom(30), 3 + random(4));
+            friction *= 2;
+            sprite_index = sprHyperCrystalShard;
+            image_index = random(image_number - 1);
+            image_speed = 0;
+            depth = 0;
+        }
+    }
+    sound_play_hit(sndHitRock, 0.3);
+    sound_play_hit(sndBouncerBounce, 0.5);
+    sound_play_pitchvol(sndCocoonBreak, 2 + random(1), 0.8);
+
+    instance_delete(id);
 
 
 

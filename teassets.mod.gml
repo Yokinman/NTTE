@@ -261,22 +261,26 @@
 
              // Eel (0 = blue, 1 = purple, 2 = green):
             EelIdle = [
-                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",8,16,16)];
+                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",           8, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",         8, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",          8, 16, 16)];
             EelHurt = [
-                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",3,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",3,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",3,16,16)];
+                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",           3, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",         3, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",          3, 16, 16)];
             EelDead = [
-                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",9,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",9,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",9,16,16)];
+                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",           9, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",         9, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",          9, 16, 16)];
             EelTell = [
-                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",8,16,16),
-                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",8,16,16)];
-    
+                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",           8, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",         8, 16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",          8, 16, 16)];
+
+            EeliteIdle = sprite_add("sprites/enemies/Eel/sprEelIdleElite.png", 8, 16, 16);
+            EeliteHurt = sprite_add("sprites/enemies/Eel/sprEelHurtElite.png", 3, 16, 16);
+            EeliteDead = sprite_add("sprites/enemies/Eel/sprEelDeadElite.png", 9, 16, 16);
+
              // Floor Chunks (Pit Squid):
             FloorTrenchBreak = sprite_add("sprites/areas/Trench/sprFloorTrenchBreak.png", 4, 12, 12);
 
@@ -1332,7 +1336,7 @@
     return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - o), "bbox_left", _vx + game_width + o), "bbox_bottom", _vy - o), "bbox_top", _vy + game_height + o);
 
 #define instance_random(_obj)
-	if(instance_exists(_obj)){
+	if(is_array(_obj) || instance_exists(_obj)){
 		var i = instances_matching(_obj, "", undefined);
 		return i[irandom(array_length(i) - 1)];
 	}

@@ -155,7 +155,7 @@
     }
 
      // Fix Props:
-    if(instance_exists(Floor)){
+    if(instance_exists(Floor) && instance_exists(Player)){
         with(instances_matching(CustomProp, "name", "Kelp", "Vent")){
             if(floor_at(x, y).styleb){
                 var t = 100;
@@ -163,9 +163,10 @@
                     var f = instance_random(instances_matching(Floor, "styleb", false));
                     if(instance_exists(f)){
                         var _x = f.x + 16 + orandom(8),
-                            _y = f.y + 16 + orandom(8);
+                            _y = f.y + 16 + orandom(8),
+                            p = instance_nearest(x, y, Player);
 
-                        if(point_distance(other.spawn_x, other.spawn_y, _x, _y) > 48){
+                        if(point_distance(p.x, p.y, _x, _y) > 48){
                             x = _x;
                             y = _y;
                         }
@@ -395,16 +396,30 @@
     var _x = x + 16,
         _y = y + 16;
     
+     // Anglers:
     if(!styleb && random(18) < 1){
         obj_create(_x, _y, "Angler");
     }
+
     else{
         if(random(9) < 1){
-            with(obj_create(_x,_y,"Jelly")){
-                repeat(2) obj_create(x, y, "Eel");
+             // Elite Jellies:
+            var _eliteChance = 5 * (GameCont.loops + 1);
+            if(random(100) < _eliteChance){
+                with(obj_create(_x, _y, "JellyElite")){
+                    repeat(3) obj_create(x, y, "Eel");
+                }
+            }
+
+             // Jellies:
+            else{
+                obj_create(_x, _y, "Jelly");
+                obj_create(_x, _y, "Eel");
             }
         }
-        else if(random(5) < 1){
+
+         // Random Eel Spawns:
+        else if(random(4) < 1){
             obj_create(_x, _y, "Eel");
         }
     }
@@ -427,8 +442,17 @@
             _y = y+16+orandom(8);
         obj_create(_x,_y,choose("Kelp","Kelp","Vent"));
     }
-    
+
 #define area_pop_extras
+     // The new bandits
+    with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+        obj_create(x, y, "Diver");
+    }
+    with(Bandit){
+        obj_create(x, y, "Diver");
+        instance_delete(id);
+    }
+
      // delete stuff
     with instances_matching(Floor,"styleb",true){
         with(Detail) if place_meeting(x,y,other)

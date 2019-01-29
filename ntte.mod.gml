@@ -161,8 +161,7 @@
             ],
         "sndOasisPopo" : [
             sndEliteIDPDPortalSpawn,
-            sndIDPDPortalSpawn,
-            sndVanWarning
+            sndIDPDPortalSpawn
             ],
         "sndOasisPortal" : [
             sndLaserCannonCharge,
@@ -647,9 +646,13 @@
             }
         }
     }
-    var e = instances_matching_lt(enemy, "size", 4);
-    with(instances_matching_ne(e, "snd_hurt", sndOasisHurt, -1)) snd_hurt = sndOasisHurt;
-    with(instances_matching_ne(e, "snd_dead", sndOasisDeath, -1)) snd_dead = sndOasisDeath;
+    with(instances_matching(enemy, "underwater_sound_check", null)){
+        underwater_sound_check = true;
+        if(object_index != CustomEnemy){
+            if(snd_hurt != -1) snd_hurt = sndOasisHurt;
+            if(snd_dead != -1) snd_hurt = sndOasisDeath;
+        }
+    }
 
 #define underwater_end_step
     instance_destroy();
