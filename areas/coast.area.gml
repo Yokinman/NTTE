@@ -221,7 +221,6 @@
 
                 with(instances_matching(CustomDraw, "name", "darksea_draw")){
                     _dis *= 1 + (flash / 450);
-                    trace(_dis);
                 }
 
                 gunangle = point_direction(_cx, _cy, _x, _y);
