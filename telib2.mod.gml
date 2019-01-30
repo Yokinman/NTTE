@@ -587,7 +587,7 @@
 
          // Begin Intro:
         if(alarm0 < 0 && instance_exists(Player)){
-            if(instance_number(enemy) - instance_number(Van) <= 1){
+            if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
                 alarm0 = 30;
                 phase++;
             }
@@ -595,7 +595,6 @@
 
         else{
              // Freeze Things:
-            with(Seal) alarm0 = 30 + random(90);
             if(current_frame_active){
                 with(instances_matching([WantRevivePopoFreak, Van, IDPDSpawn], "", null)){
                     alarm0 += max(1, current_time_scale);
@@ -648,8 +647,17 @@
         }
         UberCont.opt_shake = s;
 
+         // Hold Off Seals:
+        with(Seal) alarm0 = 30 + random(90);
+
          // Enable/Disable Players:
-        with(Player) visible = (other.intro_pan <= 0); // REDRAW PLAYER, i will do this later but cant right now so this is a reminder
+        if(intro_pan > 0){
+            with(Player) if(visible){
+                visible = false;
+                script_bind_draw(draw_palankingplayer, depth, id);
+            }
+        }
+        else with(Player) visible = true;
     }
     else for(var i = 0; i < maxp; i++){
         if(view_object[i] == id) view_object[i] = noone;
@@ -787,11 +795,12 @@
     }
 
 #define Palanking_alrm0
-    if(intro_pan <= 0){
+    var s = instances_matching_ne(Seal, "type", 0);
+    if(intro_pan <= 0 && array_length(s) <= 0){
         alarm0 = 60;
 
          // Enable Cinematic:
-        intro_pan = 10;
+        intro_pan = 10 + alarm0;
         intro_pan_x = x;
         intro_pan_y = y;
 
@@ -813,7 +822,7 @@
         switch(phase){
             case 0: // Wave of Seals:
                 var _groups = 5;
-                if(array_length(Seal) < seal_max * _groups){
+                if(array_length(s) < seal_max * _groups){
                     var _x = 10016,
                         _y = 10016;
 
@@ -822,6 +831,9 @@
                     intro_pan_y = seal_spawn_y;
 
                     alarm0 = alarm3 + 14;
+                }
+                if(array_length(s) < seal_max){
+                    intro_pan += alarm0;
                 }
                 break;
 
@@ -867,12 +879,10 @@
                         scrWalk(90, point_direction(x, y, target.x, target.y));
                     }
                 }
+                intro_pan += alarm0;
                 break;
         }
     }
-
-     // Pan Camera:
-    intro_pan += alarm0;
 
 #define Palanking_alrm1
     alarm1 = 40 + random(20);
@@ -1034,13 +1044,10 @@
         array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
     }
 
-    if(--seal_spawn > 0) alarm3 = 4 + random(2);
+    if(--seal_spawn > 0) alarm3 = 4 + random(4);
 
      // Continue Intro:
-    if(alarm0 > 0){
-        alarm0 += alarm3;
-        intro_pan += alarm3;
-    }
+    if(alarm0 > 0) alarm0 += alarm3;
 
 #define Palanking_alrm4
      // Biggo Slash:
@@ -1841,11 +1848,11 @@
 
 #define SealAnchor_step
     if(instance_exists(creator)){
-        x = creator.x;
-        y = creator.y;
+        x = creator.x + (hspeed * (1 - current_time_scale));
+        y = creator.y + (vspeed * (1 - current_time_scale));
         with(creator){
-            x += other.hspeed / 20;
-            y += other.vspeed / 20;
+            x += (other.hspeed / 20) * current_time_scale;
+            y += (other.vspeed / 20) * current_time_scale;
         }
     }
     else{
@@ -1887,8 +1894,25 @@
 
 #define SealAnchor_draw
     if(instance_exists(creator)){
-        draw_set_color(c_black);
-        draw_line(x, y, creator.x, creator.y);
+        var _oy = 2,
+            _x = x + lengthdir_x(_oy, direction - 90),
+            _y = y + lengthdir_y(_oy, direction - 90),
+            _spr = spr.SealChain,
+            _dir = point_direction(_x, _y, creator.x, creator.y),
+            n = ceil(point_distance(x, y, creator.x, creator.y)) / sprite_get_width(_spr),
+            l = 0,
+            t = 0,
+            w = sprite_get_width(_spr),
+            h = sprite_get_height(_spr);
+
+        for(var i = 0; i < n; i++){
+            if(i >= n - 1){
+                w = point_distance(_x, _y, creator.x, creator.y);
+            }
+            draw_sprite_general(_spr, 0, l, t, w, h, _x, _y, 1, 1, _dir, image_blend, image_blend, image_blend, image_blend, image_alpha);
+            _x += lengthdir_x(w, _dir);
+            _y += lengthdir_y(w, _dir);
+        }
     }
     draw_self();
 
@@ -1922,7 +1946,7 @@
 
      // Anchor Flail:
     if(anchor_spin != 0){
-        gunangle += anchor_spin + current_time_scale;
+        gunangle += anchor_spin * current_time_scale;
         gunangle = ((gunangle + 360) mod 360);
         speed = max(speed, 1.5);
 
@@ -2867,7 +2891,7 @@
     ammo = 3;
 
      // Effects:
-    sound_play_pitchvol(sndFrogClose, 0.6 + random(0.2), 2);
+    sound_play_pitch(sndBigBanditMeleeStart, 0.8 + random(0.2));
     view_shake_at(x, y, 10);
     repeat(5){
         with(instance_create(x + orandom(24), y + orandom(24), Dust)){
@@ -3964,6 +3988,10 @@
     draw_set_blend_mode(bm_normal);
     d3d_set_fog(0, 0, 0, 0);
 
+    instance_destroy();
+
+#define draw_palankingplayer(_inst)
+    with(_inst) event_perform(ev_draw, 0);
     instance_destroy();
 
 #define draw_bloom

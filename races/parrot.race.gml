@@ -1,5 +1,9 @@
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
+    global.snd = mod_variable_get("mod", "teassets", "snd");
+    global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
+
     global.chest_list = [];
     global.chest_vars = [];
 
@@ -27,6 +31,10 @@
     }
 
 #macro spr global.spr
+#macro msk spr.msk
+#macro snd global.snd
+#macro mus global.mus
+#macro sav global.save
 
 #define race_name           return "PARROT";
 #define race_text           return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";

@@ -206,32 +206,76 @@
 	}
 
 	if(instance_exists(Floor)){
+        with(Player){
+             // Move Camera Towards Sea at Level End:
+            if(CanLeaveCoast){
+                UberCont.opt_shake = 1;
+
+                var g = gunangle,
+                    _x = x,
+                    _y = y,
+                    _cx = (surfX + (global.surfW / 2)),
+                    _cy = (surfY + (global.surfH / 2));
+
+                gunangle = point_direction(_cx, _cy, _x, _y);
+                weapon_post(wkick, min(point_distance(_cx, _cy, _x, _y) / 10, 50) - (("wading" in self) ? wading / 5 : 0), 0);
+                gunangle = g;
+
+                UberCont.opt_shake = s;
+            }
+
+             // Wading Players:
+            if("wading" in self && wading > 0){
+    			 // Player Moves 20% Slower in Water:
+                if(!skill_get(mut_extra_feet) && speed > 0){
+                    var f = ((race == "fish") ? 0 : -0.2);
+                    if(f != 0){
+                        x += hspeed * f;
+                        y += vspeed * f;
+                    }
+                }
+    
+                 // Walk into Sea for Next Level:
+                if(CanLeaveCoast){
+                    if(wading > 120 && !instance_exists(Portal)){
+                        instance_create(x, y, Portal);
+    
+                         // Switch Sound:
+                        sound_stop(sndPortalOpen);
+                        sound_play(sndOasisPortal);
+                    }
+
+                     // Push Out to Sea:
+                    else{
+                         // Check if Player is Controlling Movement:
+                        var _moving = false;
+                        if(canwalk){
+                            _moveKey = ["east", "nort", "west", "sout"];
+                            for(var i = 0; i < array_length(_moveKey); i++){
+                                if(button_check(index, _moveKey[i])){
+                                    _moving = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                         // Go out to the sea pls
+                        var f = instance_nearest(x, y, Floor),
+                            _dir = point_direction(f.x, f.y, x, y) + (20 * cos(current_frame / 30));
+
+                        if(!_moving || abs(angle_difference(_dir, direction)) > 90){
+                            var _dis = 2 * max(sin(current_frame / 10), 0) * current_time_scale;
+                            x += lengthdir_x(_dis, _dir);
+                            y += lengthdir_y(_dis, _dir);
+                        }
+                    }
+                }
+            }
+        }
+
          // Destroy Projectiles Too Far Away:
         with(instances_matching_le(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
             if(distance_to_object(Floor) > 1000) instance_destroy();
-        }
-
-         // Player:
-        with(instances_matching_gt(Player, "wading", 0)){
-			 // Player Moves 20% Slower in Water:
-            if(!skill_get(mut_extra_feet) && speed > 0){
-                var f = ((race == "fish") ? 0 : -0.2);
-                if(f != 0){
-                    x += hspeed * f;
-                    y += vspeed * f;
-                }
-            }
-
-             // Walk into Sea for Next Level:
-            if(CanLeaveCoast){
-                if(wading > 120 && !instance_exists(Portal)){
-                    instance_create(x, y, Portal);
-
-                     // Switch Sound:
-                    sound_stop(sndPortalOpen);
-                    sound_play(sndOasisPortal);
-                }
-            }
         }
 
          // Spinny Water Portals:
