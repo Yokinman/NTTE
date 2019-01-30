@@ -209,6 +209,7 @@
         with(Player){
              // Move Camera Towards Sea at Level End:
             if(CanLeaveCoast){
+                var s = UberCont.opt_shake;
                 UberCont.opt_shake = 1;
 
                 var g = gunangle,
