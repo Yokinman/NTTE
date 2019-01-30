@@ -523,7 +523,7 @@
         			reload = 0;
 
                      // Alarms:
-        			alarm0 = 60 + irandom(30);
+        			alarm0 = 90 + irandom(60);
         		}
             	break;
 
