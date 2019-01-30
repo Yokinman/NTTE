@@ -216,10 +216,16 @@
                     _x = x,
                     _y = y,
                     _cx = (surfX + (global.surfW / 2)),
-                    _cy = (surfY + (global.surfH / 2));
+                    _cy = (surfY + (global.surfH / 2)),
+                    _dis = point_distance(_cx, _cy, _x, _y);
+
+                with(instances_matching(CustomDraw, "name", "darksea_draw")){
+                    _dis *= 1 + (flash / 450);
+                    trace(_dis);
+                }
 
                 gunangle = point_direction(_cx, _cy, _x, _y);
-                weapon_post(wkick, min(point_distance(_cx, _cy, _x, _y) / 12, 50) - (("wading" in self) ? wading / 5 : 0), 0);
+                weapon_post(wkick, min(_dis / 15, 40) - (("wading" in self) ? wading / 5 : 0), 0);
                 gunangle = g;
 
                 UberCont.opt_shake = s;
