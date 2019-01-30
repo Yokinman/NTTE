@@ -208,7 +208,7 @@
 	if(instance_exists(Floor)){
         with(Player){
              // Move Camera Towards Sea at Level End:
-            if(CanLeaveCoast){
+            if(CanLeaveCoast && !instance_exists(Portal)){
                 var s = UberCont.opt_shake;
                 UberCont.opt_shake = 1;
 
@@ -219,7 +219,7 @@
                     _cy = (surfY + (global.surfH / 2));
 
                 gunangle = point_direction(_cx, _cy, _x, _y);
-                weapon_post(wkick, min(point_distance(_cx, _cy, _x, _y) / 10, 50) - (("wading" in self) ? wading / 5 : 0), 0);
+                weapon_post(wkick, min(point_distance(_cx, _cy, _x, _y) / 12, 50) - (("wading" in self) ? wading / 5 : 0), 0);
                 gunangle = g;
 
                 UberCont.opt_shake = s;
