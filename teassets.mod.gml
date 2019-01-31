@@ -214,7 +214,7 @@
             ParrotLoadout  = sprite_add("sprites/races/Parrot/sprParrotLoadout.png",  1, 16, 16);
             ParrotMap      = sprite_add("sprites/races/Parrot/sprParrotMap.png",      1, 10, 10);
             ParrotPortrait = sprite_add("sprites/races/Parrot/sprParrotPortrait.png", 1, 20, 221);
-            ParrotSelect   = sprite_add("sprites/races/Parrot/sprParrotSelect.png",   1, 0, 0);
+            ParrotSelect   = sprite_add("sprites/races/Parrot/sprParrotSelect.png",   2, 0, 0);
             
              // Player Sprites:
             ParrotIdle = sprite_add("sprites/races/Parrot/sprParrotIdle.png",  4, 12, 12);
@@ -701,6 +701,14 @@
 #define z_engine()
     z += zspeed * current_time_scale;
     zspeed -= zfric * current_time_scale;
+
+#define unlock_get(_unlock)
+    var u = lq_defget(sav, "unlock", {});
+    return lq_defget(u, _unlock, false);
+
+#define unlock_set(_unlock, _value)
+    if(!lq_exists(sav, "unlock")) sav.unlock = {};
+    lq_set(sav.unlock, _unlock, _value);
 
 #define alarm_creator(_object, _alarm)
   /// Calls alarm event and sets creator on objects that were spawned during it

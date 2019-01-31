@@ -41,7 +41,15 @@
 #define race_tb_text        return "@rFEATHERS@s LAST LONGER";
 #define race_portrait       return spr.ParrotPortrait;
 #define race_mapicon        return spr.ParrotMap;
-#define race_menu_button    sprite_index = spr.ParrotSelect;
+#define race_menu_button
+    sprite_index = spr.ParrotSelect;
+    image_index = race_avail();
+
+#define race_avail
+    return unlock_get("parrot");
+
+#define race_lock
+    return "REACH @1(sprInterfaceIcons)1-1";
 
 #define race_ttip
     if(GameCont.level == 10 && random(5) < 1){
@@ -142,5 +150,7 @@
 
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define Pet_create(_x, _y, _pet)                                                        return  mod_script_call("mod", "telib", "Pet_create", _x, _y, _pet);

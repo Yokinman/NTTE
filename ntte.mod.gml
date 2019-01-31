@@ -2,6 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
     global.newLevel = instance_exists(GenCont);
     global.area = ["secret", "coast", "oasis", "trench", "pizza"];
@@ -230,14 +231,15 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
 
 #define game_start
-    mod_variable_set("area", "trench", "trench_visited", []);
     with(UnlockCont) instance_destroy();
+    mod_variable_set("area", "trench", "trench_visited", []);
 
 #define level_start // game_start but every level
     switch(GameCont.area){
@@ -309,6 +311,14 @@
              // Spawn Prism:
             with(BigCursedChest) {
                 Pet_create(x, y, "Prism");
+            }
+            break;
+
+        case "coast":
+             // who's that bird? \\
+            if(!unlock_get("parrot")){
+                unlock_set("parrot", true); // It's a secret yo
+                scrUnlock("PARROT", "FOR REACHING COAST", spr.ParrotPortrait, sndRavenScreech);
             }
             break;
 
@@ -1050,3 +1060,6 @@
 
 #define orandom(_n)
     return irandom_range(-_n,_n);
+
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
