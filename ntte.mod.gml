@@ -10,6 +10,38 @@
     global.currentMusic = -1;
     global.bones = [];
 
+     // Options Menu:
+    global.option_NTTE_splat = 0;
+    global.option_open = false;
+    global.option_slct = -1;
+    global.option_pop = 0;
+    global.option_menu = [
+        {   name : "Water Quality",
+            type : opt_title,
+            text : "Reduce to help#performance in coast"
+            },
+        {   name : "Main",
+            type : opt_slider,
+            text : "Water foam,#underwater visuals,#etc.",
+            varname : "WaterQualityMain"
+            },
+        {   name : "Wading",
+            type : opt_slider,
+            text : "Top halves of#swimming objects",
+            varname : "WaterQualityTop"
+            }
+        ];
+
+    with(OptionMenu){
+        if("name" not in self) name = "";
+        if("type" not in self) type = opt_title;
+        if("varname" not in self) varname = name;
+        if("clicked" not in self) clicked = false;
+        if(type >= 0 && varname not in opt){
+            lq_set(opt, varname, 0);
+        }
+    }
+
      // Water Level Sounds:
     global.waterSound = {
         "sndOasisShoot" : [
@@ -232,10 +264,21 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
+#macro opt sav.option
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
+
+#macro OptionOpen global.option_open
+#macro OptionMenu global.option_menu
+#macro OptionSlct global.option_slct
+#macro OptionPop  global.option_pop
+#macro opt_title -1
+#macro opt_toggle 0
+#macro opt_slider 1
+#macro opt_sorter 2
+//#macro opt_other 3
 
 #define game_start
     with(UnlockCont) instance_destroy();
@@ -318,7 +361,7 @@
              // who's that bird? \\
             if(!unlock_get("parrot")){
                 unlock_set("parrot", true); // It's a secret yo
-                scrUnlock("PARROT", "FOR REACHING COAST", spr.ParrotPortrait, sndRavenScreech);
+                scrUnlock("PARROT", "FOR REACHING COAST", spr.Parrot[0].Portrait, sndRavenScreech);
             }
             break;
 
@@ -509,10 +552,230 @@
     }
 
 #define draw_pause
+    if(GameCont.area == "coast"){
+        mod_variable_set("area", GameCont.area, "surfReset", true);
+    }
+
      // Draw Bone Ammo Indicators:
     with(global.bones){
         ammo_draw(index, primary, ammo, steroids);
     }
+    
+    draw_set_projection(0);
+
+     // NTTE Menu Button:
+    if(instance_exists(OptionMenuButton)){
+        var _draw = true;
+        with(OptionMenuButton) if(alarm_get(0) >= 0 || alarm_get(1) >= 0) _draw = false;
+        if(_draw){
+            var _x = (game_width / 2),
+                _y = (game_height / 2) + 59,
+                _hover = false;
+
+             // Button Clicking:
+            for(var i = 0; i < maxp; i++){
+                if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x - 57, _y - 12, _x + 57, _y + 12)){
+                    _hover = true;
+                    if(button_pressed(i, "fire")){
+                        global.option_open = true;
+                        with(OptionMenuButton) instance_destroy();
+                        sound_play(sndClick);
+                        break;
+                    }
+                }
+            }
+
+             // Splat:
+            global.option_NTTE_splat += (_hover ? 1 : -1) * current_time_scale;
+            global.option_NTTE_splat = clamp(global.option_NTTE_splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
+            draw_sprite(sprMainMenuSplat, global.option_NTTE_splat, (game_width / 2), _y);
+
+             // Gray Out Other Options:
+            if(global.option_NTTE_splat > 0){
+                var _spr = sprOptionsButtons;
+                for(var j = 0; j < sprite_get_number(_spr); j++){
+                    var _dx = (game_width / 2),
+                        _dy = (game_height / 2) - 36 + (j * 24);
+
+                    draw_sprite_ext(_spr, j, _dx, _dy, 1, 1, 0, make_color_rgb(155, 155, 155), 1);
+                }
+            }
+
+             // Button:
+            draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_rgb(155, 155, 155)), 1);
+        }
+    }
+
+     // NTTE Options Menu:
+    var _x = (game_width / 2),
+        _y = (game_height / 2) - 40,
+        _tooltip = "";
+
+    draw_set_font(fntM);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_middle);
+
+    if(OptionOpen){
+        OptionPop++;
+
+         // Option Selecting & Splat:
+        for(var i = 0; i < array_length(OptionMenu); i++){
+            var _option = OptionMenu[i],
+                _selected = (OptionSlct == i);
+
+             // Select:
+            for(var p = 0; p < maxp; p++) if(player_is_active(p)){
+                var _vx = view_xview[p],
+                    _vy = view_yview[p],
+                    _mx = mouse_x[p] - _vx,
+                    _my = mouse_y[p] - _vy;
+
+                if(point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6)){
+                    if(_option.type >= 0){
+                        OptionSlct = i;
+                    }
+
+                    with(_option){
+                         // Click:
+                        if(!clicked){
+                            if(button_pressed(p, "fire")){
+                                clicked = true;
+                                switch(type){
+                                    case opt_slider:
+                                        sound_play(sndSlider);
+                                        break;
+
+                                    default:
+                                        sound_play(sndClick);
+                                        break;
+                                }
+                            }
+                        }
+                        else if(!button_check(p, "fire")){
+                            clicked = false;
+                            switch(type){
+                                case opt_slider:
+                                    sound_play(sndSliderLetGo);
+                                    break;
+                            }
+                        }
+
+                         // Option Specifics:
+                        switch(type){
+                            case opt_toggle:
+                                if(button_pressed(p, "fire")){
+                                    lq_set(opt, varname, !lq_get(opt, varname));
+                                }
+                                break;
+
+                            case opt_slider:
+                                if(button_check(p, "fire") && clicked){
+                                    var _slider = clamp(round(_mx - (_x + 40)) / 100, 0, 1);
+                                    lq_set(opt, varname, _slider);
+                                }
+                                else{
+                                    var _adjust = 0.1 * (button_pressed(p, "east") - button_pressed(p, "west"));
+                                    if(_adjust != 0){
+                                        lq_set(opt, varname, clamp(lq_get(opt, varname) + _adjust, 0, 2));
+                                    }
+                                }
+                                break;
+                        }
+
+                         // Description on Hover:
+                        if("text" in self){
+                            if(!button_check(p, "fire")){
+                                if(_mx < (game_width / 2) + 32){
+                                    if(player_is_local_nonsync(p)){
+                                        _tooltip = text;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else _option.clicked = false;
+            }
+
+            with(_option){
+                if("splat" not in self) splat = 0;
+                appear = (i + 3);
+                x = _x;
+                y = _y;
+
+                if(OptionPop >= appear){
+                     // Appear Pop:
+                    if(OptionPop == appear) sound_play_pitch(sndAppear, random_range(0.5, 1.5));
+    
+                     // Selection Splat:
+                    splat += (_selected ? 1 : -1) * current_time_scale;
+                    splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
+                    if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _x, _y);
+                }
+            }
+            _y += 16;
+        }
+
+         // Option Text:
+        for(var i = 0; i < array_length(OptionMenu); i++){
+            var _option = OptionMenu[i],
+                _selected = (OptionSlct == i);
+
+            with(_option) if(OptionPop >= appear){
+                 // Option Name:
+                var _x = x - 80,
+                    _y = y;
+
+                if(_selected){
+                    _y--;
+                    draw_set_color(c_white);
+                }
+                else draw_set_color(make_color_rgb(125, 131, 141));
+                if(OptionPop < (appear + 1)) _y++;
+
+                draw_text_shadow(_x, _y, name);
+
+                 // Option Specifics:
+                _x += 124;
+                var _value = lq_get(opt, varname);
+                with(other) switch(other.type){
+                    case opt_toggle:
+                        draw_text_shadow(_x, _y, (_value ? "ON" : "OFF"));
+                        break;
+
+                    case opt_slider:
+                        var _dx = _x - 5,
+                            _dy = _y - 2,
+                            w = 6 + (100 * _value),
+                            h = sprite_get_height(sprOptionSlider);
+
+                         // Slider:
+                        draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
+                        draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);
+                        draw_sprite(sprSliderEnd,         1,             _dx + w - 2,   _y);
+
+                         // Text:
+                        draw_set_color(c_white);
+                        draw_text_shadow(_x, _y + 1, string_format(_value * 100, 0, 0) + "%");
+                        break;
+                }
+            }
+        }
+
+         // Tooltip:
+        draw_reset_projection();
+        if(_tooltip != ""){
+            draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
+        }
+
+        if(instance_exists(menubutton)) OptionOpen = false;
+    }
+    else{
+        OptionPop = false;
+        OptionSlct = -1;
+    }
+
+    draw_reset_projection();
 
 #define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
     instance_destroy();
@@ -780,7 +1043,7 @@
 
      // Add New Unlock:
     var u = {
-        nam : _name,
+        nam : [_name, _name], // [splash popup, gameover popup]
         txt : _text,
         spr : _sprite,
         img : 0,
@@ -844,7 +1107,13 @@
             unlock_porty = 0;
 
              // Screen Dim + Letterbox:
-            with(TopCont) visible = _delayOver;
+            with(TopCont){
+                visible = _delayOver;
+                if(darkness){
+                   visible = true;
+                   darkness = 2;
+                }
+            }
             game_letterbox = _delayOver;
 
              // Sound:
@@ -893,7 +1162,7 @@
     if(unlock_delay <= 0){
         if(unlock_image > 0){
             var _unlock = unlock[unlock_index],
-                _nam = _unlock.nam,
+                _nam = _unlock.nam[1],
                 _spr = _unlock.spr,
                 _img = _unlock.img,
                 _x = game_width / 2,
@@ -959,7 +1228,7 @@
          // Unlock Text:
         if(splash_texty < 2){
             var _unlock = unlock[splash_index],
-                _nam = _unlock.nam,
+                _nam = _unlock.nam[0],
                 _txt = _unlock.txt,
                 _tx = _x - 4,
                 _ty = _y - 16 + splash_texty;

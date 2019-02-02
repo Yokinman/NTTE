@@ -379,13 +379,33 @@
      // reset surfaces
     for(var i = 0; i <= 1; i++) if surface_exists(global.surf[i])
         surface_free(global.surf[i]);
+
      // Area End:
     if(lastarea = mod_current && subarea >= 3) {
         area = 4; // crystal caves
-        if array_length_1d(instances_matching(Player,"curse",true)) || array_length_1d(instances_matching(Player,"bcurse",true))
-            area = 104; // cursed caves
     	subarea = 1;
+        
+         // Cursed Caves:
+        with(Player) if(curse || bcurse){
+            other.area = 104;
+        }
+
+         // who's that bird? \\
+        var _isParrot = false;
+        for(var i = 0; i < maxp; i++){
+            if(player_get_race(i) == "parrot"){
+                _isParrot = true;
+                break;
+            }
+        }
+        if(_isParrot && !unlock_get("parrot_bskin")){
+            unlock_set("parrot_bskin", true); // It's a secret yo
+            with(scrUnlock("PARROT B", "FOR BEATING THE AQUATIC ROUTE", spr.Parrot[1].Portrait, sndRavenScreech)){
+                nam[0] += "-SKIN";
+            }
+        }
     }
+
      // Next Subarea: 
     else{
     	lastarea = area;
@@ -581,8 +601,11 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "teassets", "scrUnlock", _name, _text, _sprite, _sound);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);

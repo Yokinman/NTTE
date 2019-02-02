@@ -31,6 +31,7 @@
         global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
         global.swimInstVisible = [];
         global.seaDepth = 10.1;
+        global.surfReset = true;
     //#endregion
 
 #macro spr global.spr
@@ -38,11 +39,12 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
+#macro opt sav.option
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#macro surfScale sav.BotWaterQuality
-#macro surfScaleTop sav.TopWaterQuality
+#macro surfScale (1/3 + (2/3 * opt.WaterQualityMain))
+#macro surfScaleTop (1/2 + (1/2 * opt.WaterQualityTop))
 #macro surfWBot global.surfW * surfScale
 #macro surfHBot global.surfH * surfScale
 #macro surfWTop global.surfW * surfScaleTop
@@ -108,18 +110,6 @@
         instance_destroy();
     }
 
-     // Center Sea Surfaces:
-    surfX = 0;
-    surfY = 0;
-    with(Floor){
-        surfX += x;
-        surfY += y;
-    }
-    surfX /= instance_number(Floor);
-    surfY /= instance_number(Floor);
-    surfX -= global.surfW / 2;
-    surfY -= global.surfW / 2;
-
      // Spawn Boss:
     if(GameCont.subarea == 3){
         with(obj_create(10016, 10016, "Palanking")){
@@ -176,6 +166,7 @@
     }
 
      // Reset Wave Foam:
+    global.surfReset = true;
     if(surface_exists(global.surfWaves)){
         surface_set_target(global.surfWaves);
         draw_clear_alpha(0, 0);
@@ -780,6 +771,23 @@
     if(DebugLag) trace_time();
 
     wave += current_time_scale;
+
+     // Center Sea Surfaces:
+    if(global.surfReset){
+        global.surfReset = false;
+        surfX = 0;
+        surfY = 0;
+        with(Floor){
+            surfX += x;
+            surfY += y;
+        }
+        surfX /= instance_number(Floor);
+        surfY /= instance_number(Floor);
+        surfX -= global.surfW / 2;
+        surfY -= global.surfH / 2;
+        surface_destroy(global.surfTrans);
+        surface_destroy(global.surfFloor);
+    }
 
     var _surfTrans = global.surfTrans,
         _surfFloor = global.surfFloor,

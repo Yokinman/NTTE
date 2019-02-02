@@ -36,23 +36,62 @@
 #macro mus global.mus
 #macro sav global.save
 
-#define race_name           return "PARROT";
-#define race_text           return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_tb_text        return "@rFEATHERS@s LAST LONGER";
-#define race_portrait       return spr.ParrotPortrait;
-#define race_mapicon        return spr.ParrotMap;
-#define race_menu_button
-    sprite_index = spr.ParrotSelect;
-    image_index = race_avail();
+#define race_name       return "PARROT";
+#define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
+#define race_tb_text    return "@rFEATHERS@s LAST LONGER";
 
+/// Sprites
+#define race_menu_button
+    sprite_index = spr.Parrot[0].Select;
+    image_index = !race_avail();
+
+#define race_portrait(p, _skin)
+    return spr.Parrot[_skin].Portrait;
+
+#define race_mapicon(p, _skin)
+    return spr.Parrot[_skin].Map;
+
+#define race_skin_button(_skin)
+    sprite_index = spr.Parrot[_skin].Loadout;
+    image_index = !race_skin_avail(_skin);
+
+#define race_sprite(_spr)
+    switch(_spr){
+        case sprMutant1Idle:    return spr.Parrot[bskin].Idle;
+        case sprMutant1Walk:    return spr.Parrot[bskin].Walk;
+        case sprMutant1Hurt:    return spr.Parrot[bskin].Hurt;
+        case sprMutant1Dead:    return spr.Parrot[bskin].Dead;
+        case sprMutant1GoSit:   return spr.Parrot[bskin].Hurt;
+        case sprMutant1Sit:     return spr.Parrot[bskin].Dead;
+    }
+
+/// Lock Status
 #define race_avail
     return unlock_get("parrot");
 
 #define race_lock
     return "REACH @1(sprInterfaceIcons)1-1";
 
+/// Skins
+#define race_skins()
+    return 2;
+
+#define race_skin_avail(_skin)
+    if(_skin == 0) return true;
+    return unlock_get("parrot_" + chr(97 + _skin) + "skin");
+
+#define race_skin_name(_skin)
+    if(race_skin_avail(_skin)){
+        return chr(65 + _skin) + " SKIN";
+    }
+    else switch(_skin){
+        case 0: return "EDIT THE SAVE FILE LMAO";
+        case 1: return "COMPLETE THE#AQUATIC ROUTE";
+    }
+
+/// Text Stuff
 #define race_ttip
-    if(GameCont.level == 10 && random(5) < 1){
+    if(GameCont.level >= 10 && random(5) < 1){
         return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird");
     }
     else{
@@ -78,12 +117,8 @@
     feather_ammo = 0;
     feather_load = 0;
 
-    spr_idle = spr.ParrotIdle;
-    spr_walk = spr.ParrotWalk;
-    spr_hurt = spr.ParrotHurt;
-    spr_dead = spr.ParrotDead;
-
-    parrot_bob = [0, 1, 1, 0]; // Pet thing
+     // Pet thing:
+    parrot_bob = [0, 1, 1, 0];
 
 #define game_start
     if(fork()){

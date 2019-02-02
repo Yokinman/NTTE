@@ -210,17 +210,30 @@
         //#endregion
 
         //#region PARROT
-             // Parrot Icons:
-            ParrotLoadout  = sprite_add("sprites/races/Parrot/sprParrotLoadout.png",  1, 16, 16);
-            ParrotMap      = sprite_add("sprites/races/Parrot/sprParrotMap.png",      1, 10, 10);
-            ParrotPortrait = sprite_add("sprites/races/Parrot/sprParrotPortrait.png", 1, 20, 221);
-            ParrotSelect   = sprite_add("sprites/races/Parrot/sprParrotSelect.png",   2, 0, 0);
-            
-             // Player Sprites:
-            ParrotIdle = sprite_add("sprites/races/Parrot/sprParrotIdle.png",  4, 12, 12);
-            ParrotWalk = sprite_add("sprites/races/Parrot/sprParrotWalk.png",  6, 12, 12);
-            ParrotHurt = sprite_add("sprites/races/Parrot/sprParrotHurt.png",  3, 12, 12);
-            ParrotDead = sprite_add("sprites/races/Parrot/sprParrotDead.png",  6, 12, 12);
+            Parrot = array_create(2);
+            for(var i = 0; i < array_length(Parrot); i++){
+                var _sprt = [
+                        ["Loadout",  2, 16,  16, true],
+                        ["Map",      1, 10,  10, true],
+                        ["Portrait", 1, 20, 221, true],
+                        ["Select",   2,  0,   0, false],
+                        ["Idle",     4, 12,  12, true],
+                        ["Walk",     6, 12,  12, true],
+                        ["Hurt",     3, 12,  12, true],
+                        ["Dead",     6, 12,  12, true],
+                    ];
+
+                Parrot[i] = {};
+                with(_sprt){
+                    var _name = self[0],
+                        _img = self[1],
+                        _x = self[2],
+                        _y = self[3],
+                        _hasB = self[4];
+
+                    lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
+                }
+            }
             
              // Parrot Feather:
             ParrotFeather = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gccEhAKigKoTwAAAF5JREFUGNNjYMADipi4/hOUZEQWXMQi+J+BgYHhwr+fDH3/vjEyMDAwMCFLWkn+Y7jw7yeDARM7XBNcgZXkP4ZpT38zZEmzYtq3iEXwfxET1/87svz/YdagAJwSxAAAEiYfBSYTcvYAAAAASUVORK5CYII=", 1, 4, 4);
@@ -434,6 +447,8 @@
         	SpiderlingHurt = sprite_add("sprites/enemies/Spiderling/sprSpiderlingHurt.png", 3, 8, 8);
         	SpiderlingDead = sprite_add("sprites/enemies/Spiderling/sprSpiderlingDead.png", 7, 8, 8);
         //#endregion
+
+        OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
     }
 
      // SOUNDS //
@@ -465,10 +480,12 @@
     }
 
      // SAVE FILE //
-    global.save = { // to all of u in the future, don't b a fool, add secret vars to the save file like `sav.varname = true`, use lq_exists(sav, "varname") to equal your true/false
-        "BotWaterQuality" : 1,
-        "TopWaterQuality" : 1
-        };
+    global.save = {
+        option : {
+            "WaterQualityMain" : 1,
+            "WaterQualityTop" : 1
+        }
+    };
 
     if(fork()){
          // Load Existing Save:
@@ -492,6 +509,7 @@
     }
 
      // SHADERS //
+    //trace("can your computer handle shaders? idiot?")
     global.eye_shader = shader_create(
         "/// Vertex Shader ///
 
@@ -582,6 +600,7 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
+#macro opt sav.option
 
 #macro SavePath "save.sav"
 
@@ -1222,6 +1241,9 @@
 
 #define scrBossIntro(_name, _sound, _music)
     mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
+
+#define scrUnlock(_name, _text, _sprite, _sound)
+    return mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
 
 #define scrWaterStreak(_x, _y, _dir, _spd)
     with(instance_create(_x, _y, AcidStreak)){
