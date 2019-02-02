@@ -557,7 +557,7 @@
     }
 
      // Draw Bone Ammo Indicators:
-    with(global.bones){
+    if(instance_exists(PauseButton)) with(global.bones){
         ammo_draw(index, primary, ammo, steroids);
     }
     
