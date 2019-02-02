@@ -416,7 +416,7 @@
     var _x = x + 16,
         _y = y + 16;
     
-    if(GameCont.loop > 0 && random(3) < 1) {
+    if(GameCont.loops > 0 && random(3) < 1) {
         if(random(9) < 1) {
             if(random(6) < 1) {
                 instance_create(_x, _y, Salamander);
@@ -435,7 +435,7 @@
         else{
             if(random(9) < 1){
                  // Elite Jellies:
-                var _eliteChance = 5 * (GameCont.loop + 1);
+                var _eliteChance = 5 * (GameCont.loops + 1);
                 if(random(100) < _eliteChance){
                     with(obj_create(_x, _y, "JellyElite")){
                         repeat(3) obj_create(x, y, "Eel");

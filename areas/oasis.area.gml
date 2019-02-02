@@ -193,7 +193,7 @@
          // Shoals:
         if(random(2) < 1){
             if(!styleb && random(4) < 3){
-                if(GameCont.loop > 0 && random(2) < 1) repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
+                if(GameCont.loops > 0 && random(2) < 1) repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
                 repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
             }
             else{
@@ -202,7 +202,7 @@
         }
 
         else{
-            if(GameCont.loop > 0 && random(3) < 1) {
+            if(GameCont.loops > 0 && random(3) < 1) {
                 if(random(4) < 1) {
                     instance_create(_x, _y, choose(ExploFreak, ExploGuardian));
                 }

@@ -715,7 +715,7 @@
     if(global.spawn_enemy-- <= 0){
         global.spawn_enemy = 1;
 
-        if(GameCont.loop > 0 && random(3) < 1) {
+        if(GameCont.loops > 0 && random(3) < 1) {
             if(random(18) < GameCont.subarea) {
                 instance_create(_x, _y, choose(RhinoFreak, SnowBot));
             } else {
