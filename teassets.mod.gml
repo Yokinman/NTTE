@@ -205,7 +205,7 @@
             PufferFire[3, 1] = sprite_add("sprites/enemies/Puffer/sprPufferBlowB3.png",   2, 15, 16);
 
              // Ground Crack Effect:
-            Crack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAB6klEQVRoQ+WTUW7DMAxDc4j97H+n2xl292wyykBmaMuOndZYPx4QS65EMum27/tbI4sr8vHzvXu4z7TcMWTxVdQMci0yGPWBLL4aJX77+sxqdqdkEr1S3yOLK2DizXQvbDwKQRZXozeMqQFEA56FMhph2qcEYMPwjPozYWO91HTLoiIadBd4AYk/uVVwr4DSnx0ibAjXFH7RaGiHATZbAvcFwwHgbXCN8X2+z/B95jDARiPwO+I0nwsRfogS3xuAUQrB6kk4m+vhYRzwjuzQQjTQaLnDmFnAv5fGenHzsMf2SjEMLuOZh6EHeBHgex7f9/Olmas8ZmJP2uUPNZQJLxR9g5e04Gf7udLICKTteGihFgDj77XiAzxgA6OQtkxARCkAX4cBnK+AudLAKKQtW9yCf0McCOAlvRw7WPwMRgMANZOlYHo5iZ8Aa8sW9lAKwBasHMBpBxdawCfKRmcZB2kPGRiFd2SHVtL/02FCZ5sHbGCU03wutADjvnZXAICNXOU0lwuK9CkGb/zuAJIGMnMFnpsdavAbN7xpFcpM1BenDEb4GUZ2qFEK4G7jhtoN2CBgTSWd2aHG3SYZ22fGjdruyDjD/ay5El5oawCReWP5AEwg8DU8M7VeC7K4CioM5l8H8Axk8X3Yt1/rleuAjYarfgAAAABJRU5ErkJggg==",
+            Crack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAABk0lEQVRoQ+WVS3KDQAxEOUQ22ed0OUPujhEVTWk6PWK+sSgWrwwPI0/3YHvb9/3RUPkkqHwSVEbg4+f7eOHXZkJlBLAAr5CRsqh8FxLEwq6jE7avz+Plr6+BygiUChAkMKNUkAeVUbCBvOCIFqX3elAZCRr8WDYF3oezGFRGIgvFgqqzmOs4D6EyCmn3C+Eyb6+Z86uvApWt1H7fWsEw6diDlIBzLVQiElDBa8KKAmRmCsLCY9ASx3u89VFZ4j8LqArnYe8/jnG+QqWHhMXAzI0yXICgM34LYGvMTmqQIedg06p1Wgb7sBayIBMorSk7aUVD2zJmgQFG0blYQjroQXcc/Qi6UyzECOwz5DjJHlbsvIIBRsH5CpW1zN59y8ynwFsnlVfoI7SyAAGD9IJzLVS2sLIEmc0CtXC1PipbWVnC+S8Doaqp+JGmMgqy+PMp6Cmh8geaygjgzp1FYMgCV7tuofJd6I4reF0Qz0IL3n0lqIzAVRCvIHQeVEagt4BWqLwLM0qg8k6MlkDlnXh8AWPs2wudfCE+JW5sAwAAAABJRU5ErkJggg==",
             2, 16, 16);
         //#endregion
 
@@ -345,6 +345,7 @@
 
         //#region SEWERS
              // Bat:
+            BatWeap         = sprite_add_weapon("sprites/enemies/Bat/sprBatWeap.png", 2,  6);
             BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",    24, 16, 16);
             BatWalk         = sprite_add("sprites/enemies/Bat/sprBatWalk.png",    12, 16, 16);
             BatHurt         = sprite_add("sprites/enemies/Bat/sprBatHurt.png",     3, 16, 16);
@@ -354,7 +355,8 @@
             msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
             
              // Bat Boss:
-            VenomFlak = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
+            BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png", 4,  8);
+            VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
             
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",    4, 12, 12);
@@ -383,9 +385,9 @@
             PizzaDrainDead = mskNone;
 
              // Manholes:
+            ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png", 1, 0, 0);
             Manhole = sprite_add("sprites/areas/Sewers/sprManhole.png",12,16,48);
             BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
-            PizzaManhole = sprite_add("sprites/areas/Sewers/sprPizzaManhole.png",2,0,0);
 
              // Furniture:
                  // Rug:
@@ -418,6 +420,11 @@
                 CouchIdle = sprite_add("sprites/areas/Lair/Props/sprCouchIdle.png", 1, 32, 32);
                 CouchHurt = sprite_add("sprites/areas/Lair/Props/sprCouchHurt.png", 3, 32, 32);
                 CouchDead = sprite_add("sprites/areas/Lair/Props/sprCouchDead.png", 3, 32, 32);
+                
+                 // Soda Machine:
+                SodaMachineIdle = sprite_add("sprites/areas/Lair/Props/sprSodaMachineIdle.png", 1, 16, 16);
+                SodaMachineHurt = sprite_add("sprites/areas/Lair/Props/sprSodaMachineHurt.png", 3, 16, 16);
+                SodaMachineDead = sprite_add("sprites/areas/Lair/Props/sprSodaMachineDead.png", 3, 16, 16);
 
              // FX:
             Paper = sprite_add("sprites/areas/Lair/Props/sprPaper.png", 3, 5, 6);

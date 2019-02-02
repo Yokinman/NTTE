@@ -1399,7 +1399,7 @@
                     spr_hurt = spr.BatHurt;
                     spr_dead = spr.BatDead;
                     spr_fire = spr.BatYell;
-        			spr_weap = sprRavenGun;
+        			spr_weap = spr.BatWeap;
         			spr_shadow = shd48;
         			hitid = [spr_idle, _name];
         			mask_index = mskScorpion;
@@ -1436,7 +1436,7 @@
                     spr_hurt = spr.BatHurt;
                     spr_dead = spr.BatDead;
                     spr_fire = spr.BatYell;
-        			spr_weap = sprSawnOffShotgun;
+        			spr_weap = spr.BatBossWeap;
         			spr_shadow = shd48;
         			hitid = [spr_idle, "BIG BAT"];
         			mask_index = mskScorpion;
@@ -1679,8 +1679,7 @@
                         }
                     }
                     with(instance_nearest(x, y, Floor)) if(place_meeting(x, y, other)){
-                        sprite_index = sprPizzaEntrance;
-                        image_index = 1;
+                        sprite_index = spr.ManholeBottom;
                     }
                 }
                 break;

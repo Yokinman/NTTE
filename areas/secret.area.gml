@@ -6,8 +6,8 @@
      // Sprites:
     with(spr){
          // Floors:
-        FloorLair =         sprite_add("../sprites/areas/Lair/sprFloorLair.png",           8, 0, 0);
-        FloorLairB =        sprite_add("../sprites/areas/Lair/sprFloorLairB.png",          2, 0, 0);
+        FloorLair =         sprite_add("../sprites/areas/Lair/sprFloorLair.png",           4, 0, 0);
+        FloorLairB =        sprite_add("../sprites/areas/Lair/sprFloorLairB.png",          8, 0, 0);
         FloorLairExplo =    sprite_add("../sprites/areas/Lair/sprFloorLairExplo.png",      4, 1, 1);
          // Walls:
         WallLairBot =       sprite_add("../sprites/areas/Lair/sprWallLairBot.png",         4, 0, 0);
@@ -792,7 +792,12 @@
                             instance_create(x, y, NOWALLSHEREPLEASE);
              // Props:
                  // Vending machine:
-                instance_create(_x + 48, _y + 16, SodaMachine);
+                with instance_create(_x + 48, _y + 16, SodaMachine){
+                    spr_idle = spr.SodaMachineIdle;
+                    spr_hurt = spr.SodaMachineHurt;
+                    spr_dead = spr.SodaMachineDead;
+                    sprite_index = spr_idle;
+                }
                  // Tables and chairs:
                 for (var i = 0; i <= 2; i++)
                     with obj_create(_cx + orandom(2), _cy - 16 + i * o + orandom(2), "NewTable"){
