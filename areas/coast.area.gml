@@ -715,14 +715,22 @@
     if(global.spawn_enemy-- <= 0){
         global.spawn_enemy = 1;
 
-         // Normal Enemies:
-        if(styleb) obj_create(_x, _y, "TrafficCrab");
-        else{
-            if(random(18) < GameCont.subarea){
-                obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));
+        if(GameCont.loop > 0 && random(3) < 1) {
+            if(random(18) < GameCont.subarea) {
+                instance_create(_x, _y, choose(RhinoFreak, SnowBot));
+            } else {
+                instance_create(_x, _y, choose(Raven, Raven, Raven, MeleeBandit))
             }
+        } else {
+             // Normal Enemies:
+            if(styleb) obj_create(_x, _y, "TrafficCrab");
             else{
-                obj_create(_x, _y, choose("Diver", "Gull", "Gull", "Gull", "Gull"));
+                if(random(18) < GameCont.subarea){
+                    obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));
+                }
+                else{
+                    obj_create(_x, _y, choose("Diver", "Gull", "Gull", "Gull", "Gull"));
+                }
             }
         }
     }

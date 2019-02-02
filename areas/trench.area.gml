@@ -416,31 +416,43 @@
     var _x = x + 16,
         _y = y + 16;
     
-     // Anglers:
-    if(!styleb && random(18) < 1){
-        obj_create(_x, _y, "Angler");
-    }
-
-    else{
-        if(random(9) < 1){
-             // Elite Jellies:
-            var _eliteChance = 5 * (GameCont.loops + 1);
-            if(random(100) < _eliteChance){
-                with(obj_create(_x, _y, "JellyElite")){
-                    repeat(3) obj_create(x, y, "Eel");
+    if(GameCont.loop > 0 && random(3) < 1) {
+        if(random(9) < 1) {
+            if(random(6) < 1) {
+                instance_create(_x, _y, Salamander);
+            } else {
+                instance_create(_x, _y, Crab);
+            }
+        } else {
+            instance_create(_x, _y, Rat);
+        }
+    } else {
+         // Anglers:
+        if(!styleb && random(18) < 1){
+            obj_create(_x, _y, "Angler");
+        }
+    
+        else{
+            if(random(9) < 1){
+                 // Elite Jellies:
+                var _eliteChance = 5 * (GameCont.loop + 1);
+                if(random(100) < _eliteChance){
+                    with(obj_create(_x, _y, "JellyElite")){
+                        repeat(3) obj_create(x, y, "Eel");
+                    }
+                }
+    
+                 // Jellies:
+                else{
+                    obj_create(_x, _y, "Jelly");
+                    obj_create(_x, _y, "Eel");
                 }
             }
-
-             // Jellies:
-            else{
-                obj_create(_x, _y, "Jelly");
+    
+             // Random Eel Spawns:
+            else if(random(4) < 1){
                 obj_create(_x, _y, "Eel");
             }
-        }
-
-         // Random Eel Spawns:
-        else if(random(4) < 1){
-            obj_create(_x, _y, "Eel");
         }
     }
     

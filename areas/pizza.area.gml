@@ -141,7 +141,7 @@
         _y = 10000;
 
     styleb = 0;
-    scrFloorFill(_x, _y, 6, 4);
+    scrFloorFill(_x, _y, 8, 6);
 
 #define area_pop_props
     var _x = x,
