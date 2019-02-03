@@ -424,6 +424,43 @@
                 break;
         //#endregion
 
+        //#region DESERT
+            case "BabyScorpion":
+        	    o = instance_create(_x, _y, CustomEnemy);
+        		with(o){
+                     // Visual:
+        			spr_idle = spr.BabyScorpionIdle;
+        			spr_walk = spr.BabyScorpionWalk;
+        			spr_hurt = spr.BabyScorpionHurt;
+        			spr_dead = spr.BabyScorpionDead;
+        			spr_fire = spr.BabyScorpionFire;
+        			spr_shadow = shd24;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+        			depth = -2;
+
+        			 // Sound:
+        			snd_hurt = sndScorpionHit;
+        			snd_dead = sndScorpionDie;
+        			snd_fire = sndScorpionFireStart;
+
+        			 // Vars:
+        			mask_index = mskBandit;
+        			maxhealth = 5;
+        			raddrop = 4;
+        			size = 1;
+        			walk = 0;
+        			walkspd = 0.8;
+        			maxspd = 2.4;
+        			gunangle = random(360);
+        			direction = gunangle;
+
+                     // Alarms:
+        			alarm0 = 40 + irandom(30);
+        		}
+            	break;
+        //#endregion
+
         //#region COAST
             case "BloomingCactus":
                 o = instance_create(_x, _y, Cactus);
@@ -1979,6 +2016,7 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
+    		        "BabyScorpion",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
@@ -3612,6 +3650,68 @@
         }
     }
 
+#define BabyScorpion_step
+    enemyAlarms(2);
+    enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+#define BabyScorpion_alrm0
+    alarm0 = 50 + irandom(30);
+    target = instance_nearest(x, y, Player);
+    if(target_is_visible()) {
+        var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+
+    	if(target_in_distance(32, 96) > 0 and random(3) < 2){
+    	     // Shoot Poison:
+		    gunangle = _targetDir;
+		     // Golden Baby:
+		    if(gold) {
+		        repeat(6) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(30), 6);
+		        repeat(4) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 10);
+		    } 
+		    
+		     // Normal Baby:
+		    else {
+		        repeat(2) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 8);
+		    }
+		    motion_add(_targetDir + 180, 3);
+            sound_play_pitch(snd_fire, 1.6);
+            
+    		alarm0 = 20 + random(30);
+    	}
+
+         // Move Away From Target:
+        else if(target_in_distance(0, 32) > 0) {
+            alarm0 = 20 + irandom(30);
+            scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
+        }
+        
+         // Move Towards Target:
+    	else{
+    		alarm0 = 30 + irandom(20);
+    		scrWalk(20 + random(15), _targetDir + orandom(40));
+    		gunangle = _targetDir + orandom(15);
+    	}
+
+    	 // Facing:
+    	scrRight(gunangle);
+    }
+
+     // Wander:
+    else scrWalk(30, random(360));
+    
+#define BabyScorpion_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 1.6);	// Sound
+
+     // Hurt Sprite:
+    sprite_index = spr_hurt;
+    image_index = 0;
+
+#define BabyScorpion_death
+    sound_play_pitch(snd_dead, 1.6);
 
 #define Bat_step
     enemyAlarms(1);
