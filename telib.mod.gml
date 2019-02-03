@@ -1865,6 +1865,9 @@
         	       spr_fire = spr.InvMortarFire;
         	       spr_hurt = spr.InvMortarHurt;
         	       spr_dead = spr.InvMortarDead;
+        	        // Shh don't tell yokin:
+        	       on_hurt = script_ref_create(InvMortar_hurt);
+        	       on_step = script_ref_create(InvMortar_step);
         	    }
         	    break;
 
@@ -2053,7 +2056,10 @@
     }
 
     if(place_meeting(x, y, FloorExplo)){
-    	instance_destroy();
+        if !instance_exists(GenCont)
+    	    instance_destroy();
+    	else
+    	    instance_delete(id);
     	exit;
     }
     if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
@@ -3523,6 +3529,7 @@
 
      // Dodge:
     if(instance_exists(leader)) team = leader.team;
+        else team = 1;
     if(place_meeting(x, y, projectile) && sprite_index != spr_hurt){
         with(instances_matching_ne(projectile, "team", team)){
             if(place_meeting(x, y, other)) with(other){
@@ -3642,7 +3649,7 @@
             if random(5) < 4
                 scrWalk(15 + irandom(20), gunangle + orandom(8));
         }
-        else if target_in_distance(0, 45){
+        else if target_in_distance(0, 50){
              // Walk away from target:
             scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
             alarm0 = walk;
@@ -4995,21 +5002,46 @@
     else instance_destroy();
 
 
+#define InvMortar_step
+    if random(3) < current_time_scale
+        instance_create(x + orandom(8), y + orandom(8), Curse);
+    
+    Mortar_step();
+
 #define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
-    if random(1) < _hitdmg / 25{
-        var _a = instances_matching(enemy, "object_index", InvLaserCrystal, InvSpider),
-            _n = array_length_1d(_a),
+    Mortar_hurt(_hitdmg, _hitvel, _hitdir);
+
+    if my_health > 0 && random(1) < _hitdmg / 25{
+        var _a = instances_matching([InvLaserCrystal, InvSpider], "", null),
+            _n = array_length(_a),
             _x = x,
             _y = y;
-        if _n
-            with _a[irandom(_n-1)] if distance_to_object(instance_nearest(x,y,Player)) > 32{
+            
+         // Swap places with another dude:
+        if _n{
+            with(_a[irandom(_n-1)]){
                 other.x = x;
                 other.y = y;
                 x = _x;
                 y = _y;
+                nexthurt = current_frame + 6;
+                
+                 // Unstick from walls by annihilating them:
+                with instance_create(x, y, PortalClear)
+                    mask_index = other.mask_index;
+                
+                 // Effects:
+                sprite_index = spr_hurt;
+                image_index = 0;
+                sleep(15);
+                view_shake_at(x, y, 12);
             }
+            
+             // Unstick from walls by annihilating them:
+            with instance_create(x, y, PortalClear)
+                mask_index = other.mask_index;
+        }
     }
-    Mortar_hurt(_hitdmg, _hitvel, _hitdir);
     
 #define Mortar_step
     enemyAlarms(2);

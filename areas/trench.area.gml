@@ -216,7 +216,7 @@
     }
 
      // Floaty Effects Above Pits:
-    with(instances_matching([WepPickup, chestprop], "", null)){
+    with(instances_matching([WepPickup, chestprop, RadChestarea_effect], "", null)){
         var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             var _x = x + cos((current_frame + x + y) / 10) * 0.15,
@@ -302,6 +302,11 @@
      // Player Bubbles:
     if(random(4) < 1){
         with(Player) instance_create(x, y, Bubble);
+    }
+    
+     // Pet Bubbles:
+    if(random(4) < 1){
+        with instances_matching(CustomObject, "name", "Pet") instance_create(x, y, Bubble);
     }
 
      // Floor Bubbles:

@@ -866,7 +866,7 @@
     }
 
      // Flames Boil Water:
-    with(Flame){
+    with instances_matching(projectile, "object_index", Flame, TrapFire){
         if(sprite_index != sprFishBoost){
             if(image_index > 2){
                 sprite_index = sprFishBoost;
@@ -960,7 +960,7 @@
     instance_destroy();
 
      // Air Bubbles:
-    with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak], "visible", true)){
+    with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak, Salamander], "visible", true)){
         draw_sprite(sprPlayerBubble, -1, x, y);
         if(my_health <= 0) instance_create(x, y, BubblePop);
     }
@@ -969,6 +969,9 @@
         if(my_health <= 0 && candie && spiriteffect <= 0){
             instance_create(x, y, BubblePop);
         }
+    }
+    with instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism"){
+        draw_sprite(sprPlayerBubble, -1, x, y);
     }
 
      // :

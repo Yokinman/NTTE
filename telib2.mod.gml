@@ -2447,7 +2447,7 @@
 
 
 #define ClamChest_open(_player)
-    var w = ["harpoon", "bubble rifle", "bubble shotgun"],
+    var w = ["harpoon", "netlauncher", "bubble rifle", "bubble shotgun", "bubble minigun", "lightning ring launcher", "super lightning ring launcher"],
         _wep = "";
 
      // Random Cool Wep:
@@ -2459,6 +2459,13 @@
         with(instance_create(x, y, WepPickup)){
             wep = _wep;
             ammo = true;
+            
+             // Unlock new weapon:
+            if !unlock_get(_wep){
+                unlock_set(_wep, true);
+                sound_play(sndGoldUnlock);
+                scrUnlock(weapon_get_name(_wep), "YOU'LL SEE IT AGAIN", weapon_get_sprt(_wep), sndGoldUnlock);
+            }
         }
     }
 
@@ -2800,7 +2807,7 @@
              // Effects:
             sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
             sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.5);
-            repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Bubble)){
+            repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Dust)){
                 motion_add(other.direction + 180, random(4));
             }
             sprite_index = spr_hurt; // Temporary?
@@ -4196,3 +4203,6 @@
 #define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call("mod", "teassets", "in_range", _num, _lower, _upper);
 #macro sewers "secret"
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
+#define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);

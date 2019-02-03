@@ -56,6 +56,8 @@
     ammo = true;
     curse = false;
     open = false;
+    hush = 0;
+    hushtime = 0;
 
 #define Mimic_anim
     if(sprite_index != spr_hurt || anim_end){
@@ -67,6 +69,9 @@
     }
 
 #define Mimic_step
+    if hushtime <= 0 hush = max(hush - 0.1, 0);
+    hushtime -= current_time_scale;
+
     if(instance_exists(leader)){
          // Open Chest:
         if(place_meeting(x, y, Player)){
@@ -86,8 +91,11 @@
                 }
 
                  // Effects:
-                sound_play(sndGoldChest);
+                sound_play_pitchvol(sndGoldChest, 0.9 + random(0.2), 1 - hush);
+                sound_play_pitchvol(sndMimicSlurp, 0.9 + random(0.2), 1 - hush);
                 with(instance_create(x, y, FXChestOpen)) depth = other.depth - 1;
+                hush = min(hush + 0.2, 0.6);
+                hushtime = 30;
             }
 
              // Not Holding Weapon:

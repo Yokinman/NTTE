@@ -119,6 +119,11 @@
     if(random(4) < 1){
         with(Player) instance_create(x, y, Bubble);
     }
+    
+     // Pet Bubbles:
+    if(random(4) < 1){
+        with instances_matching(CustomObject, "name", "Pet") instance_create(x, y, Bubble);
+    }
 
      // Floor Bubbles:
     else{
