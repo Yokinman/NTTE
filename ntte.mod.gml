@@ -332,25 +332,37 @@
             with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
             
              // Spawn Baby Scorpions:
-            with(Scorpion) {
-                if(random(4) < 1) {
+            with(Scorpion){
+                if(random(4) < 1){
                     repeat(irandom_range(1,3)) obj_create(x, y, "BabyScorpion");
                 }
             }
             
              // Spawn Golden Lads:
-            with(GoldScorpion) {
-                with(obj_create(x, y, "BabyScorpion")) {
-                   gold = 1;
-                   spr_idle = spr.BabyScorpionGoldIdle;
-                   spr_walk = spr.BabyScorpionGoldWalk;
-                   spr_hurt = spr.BabyScorpionGoldHurt;
-                   spr_dead = spr.BabyScorpionGoldDead;
-                   spr_fire = spr.BabyScorpionGoldFire;
-                   raddrop += 6;
+            with(GoldScorpion){
+                if(random(4) < 1){
+                    repeat(irandom_range(1,3)) obj_create(x, y, "GoldBabyScorpion");
                 }
             }
-            break;
+            
+             // Rare scorpion desert (EASTER EGG):
+            if random(200) < 1{
+                with(Bandit) if random(5) > 1{
+                    var gold = (random(20) < 1);
+                    
+                     // Normal scorpion:
+                    if random(5) < 2 instance_create(x, y, !gold ? Scorpion : GoldScorpion);
+                    
+                     // Baby scorpions:
+                    else repeat(1 + irandom(2)) obj_create(x, y, !gold ? "BabyScorpion" : "GoldBabyScorpion");
+                     
+                    instance_delete(id);
+                }
+                
+                 // Scary sound:
+                sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
+                sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
+            }
 
         case 2: /// SEWERS
              // Spawn Cats:

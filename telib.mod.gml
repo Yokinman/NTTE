@@ -437,6 +437,7 @@
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
+        			mask_index = mskBandit;
         			depth = -2;
 
         			 // Sound:
@@ -445,8 +446,8 @@
         			snd_fire = sndScorpionFireStart;
 
         			 // Vars:
-        			mask_index = mskBandit;
-        			maxhealth = 5;
+        			gold = false;
+        			maxhealth = 7;
         			raddrop = 4;
         			size = 1;
         			walk = 0;
@@ -459,6 +460,35 @@
         			alarm0 = 40 + irandom(30);
         		}
             	break;
+            	
+            case "GoldBabyScorpion":
+                o = obj_create(_x, _y, "BabyScorpion");
+                with(o){
+                     // Visual:
+        			spr_idle = spr.BabyScorpionGoldIdle;
+        			spr_walk = spr.BabyScorpionGoldWalk;
+        			spr_hurt = spr.BabyScorpionGoldHurt;
+        			spr_dead = spr.BabyScorpionGoldDead;
+        			spr_fire = spr.BabyScorpionGoldFire;
+        			spr_shadow = shd24;
+        			hitid = [spr_idle, _name];
+        			sprite_index = spr_idle;
+        			mask_index = mskBandit;
+        			depth = -2;
+
+        			 // Sound:
+        			snd_hurt = sndGoldScorpionHurt;
+        			snd_dead = sndGoldScorpionDead;
+        			snd_fire = sndGoldScorpionFire;
+
+        			 // Vars:
+        			gold = true;
+        			maxhealth = 16;
+        			my_health = maxhealth;
+        			raddrop = 14;
+                }
+                break;
+            	
         //#endregion
 
         //#region COAST
@@ -2019,7 +2049,7 @@
 
     	default:
     		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
-    		        "BabyScorpion",
+    		        "BabyScorpion", "GoldBabyScorpion",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        "Angler", "Eel", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
@@ -3665,21 +3695,22 @@
 #define BabyScorpion_alrm0
     alarm0 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
+    
     if(target_is_visible()) {
         var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 
     	if(target_in_distance(32, 96) > 0 and random(3) < 2){
-    	     // Shoot Poison:
 		    gunangle = _targetDir;
-		     // Golden Baby:
+		    
+		     // Golden poison shot:
 		    if(gold) {
-		        repeat(6) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(30), 6);
-		        repeat(4) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 10);
+		        repeat(6) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(30), 5 + random(2));
+		        repeat(4) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 10 + random(4));
 		    } 
 		    
-		     // Normal Baby:
+		     // Normal poison shot:
 		    else {
-		        repeat(2) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 8);
+		        repeat(2) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 6 + random(4));
 		    }
 		    motion_add(_targetDir + 180, 3);
             sound_play_pitch(snd_fire, 1.6);
@@ -3711,14 +3742,29 @@
     my_health -= _hitdmg;			// Damage
     motion_add(_hitdir, _hitvel);	// Knockback
     nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 1.6);	// Sound
-
+    sound_play_hit(snd_hurt, 0);	// Sound
+    
+     // Correct sound pitch:
+    audio_sound_pitch(snd_hurt, 1.3 + random(0.3));
+    
      // Hurt Sprite:
     sprite_index = spr_hurt;
     image_index = 0;
 
 #define BabyScorpion_death
-    sound_play_pitch(snd_dead, 1.6);
+    var l = 6,
+        d = irandom(359);
+    for(var i = 0; i < 360; i += 360 / 3){
+        with instance_create(x + lengthdir_x(l, d + i), y + lengthdir_y(l, d + i), AcidStreak){
+            motion_set(d + i, 4);
+            image_angle = direction;
+        }
+    }
+    
+    sound_play_hit_big(snd_dead, 0);
+    audio_sound_pitch(snd_dead, 1.3 + random(0.3));
+    
+    scrDefaultDrop();
 
 #define Bat_step
     enemyAlarms(1);
