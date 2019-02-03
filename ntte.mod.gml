@@ -330,6 +330,26 @@
     
              // Crab Skeletons Drop Bones:
             with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
+            
+             // Spawn Baby Scorpions:
+            with(Scorpion) {
+                if(random(4) < 1) {
+                    repeat(irandom_range(1,3)) obj_create(x, y, "BabyScorpion");
+                }
+            }
+            
+             // Spawn Golden Lads:
+            with(GoldScorpion) {
+                with(obj_create(x, y, "BabyScorpion")) {
+                   gold = 1;
+                   spr_idle = spr.BabyScorpionGoldIdle;
+                   spr_walk = spr.BabyScorpionGoldWalk;
+                   spr_hurt = spr.BabyScorpionGoldHurt;
+                   spr_dead = spr.BabyScorpionGoldDead;
+                   spr_fire = spr.BabyScorpionGoldFire;
+                   raddrop += 6;
+                }
+            }
             break;
 
         case 2: /// SEWERS
