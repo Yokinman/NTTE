@@ -898,7 +898,7 @@
     }
 
      // Flames Boil Water:
-    with instances_matching(projectile, "object_index", Flame, TrapFire){
+    with instances_matching([Flame, TrapFire], "", null){
         if(sprite_index != sprFishBoost){
             if(image_index > 2){
                 sprite_index = sprFishBoost;
@@ -992,7 +992,7 @@
     instance_destroy();
 
      // Air Bubbles:
-    with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak, Salamander], "visible", true)){
+    with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak, Salamander, Necromancer, Freak, Rat], "visible", true)){
         draw_sprite(sprPlayerBubble, -1, x, y);
         if(my_health <= 0) instance_create(x, y, BubblePop);
     }
@@ -1125,63 +1125,76 @@
      // Game Over Splash:
     if(instance_exists(UnlockScreen)) unlock_delay = 1;
     else if(!instance_exists(Player)){
-         // Disable Game Over Screen:
-        with(GameOverButton) alarm_set(0, 30);
-        with(TopCont){
-            gameoversplat = 0;
-            go_addy1 = 9999;
-            dead = false;
+        while(
+            unlock_index >= 0                   &&
+            unlock_index < array_length(unlock) &&
+            unlock[unlock_index].spr == -1
+        ){
+            unlock_index++; // No Game Over Splash
         }
 
-         // Delay Unlocks:
-        if(unlock_delay > 0){
-            unlock_delay -= current_time_scale;
-            var _delayOver = (unlock_delay <= 0);
-
-            unlock_delay_continue = 20;
-            unlock_porty = 0;
-
-             // Screen Dim + Letterbox:
+        if(unlock_index < array_length(unlock)){
+             // Disable Game Over Screen:
+            with(GameOverButton){
+                if(game_letterbox) alarm_set(0, 30);
+                else instance_destroy();
+            }
             with(TopCont){
-                visible = _delayOver;
-                if(darkness){
-                   visible = true;
-                   darkness = 2;
+                gameoversplat = 0;
+                go_addy1 = 9999;
+                dead = false;
+            }
+    
+             // Delay Unlocks:
+            if(unlock_delay > 0){
+                unlock_delay -= current_time_scale;
+                var _delayOver = (unlock_delay <= 0);
+    
+                unlock_delay_continue = 20;
+                unlock_porty = 0;
+    
+                 // Screen Dim + Letterbox:
+                with(TopCont){
+                    visible = _delayOver;
+                    if(darkness){
+                       visible = true;
+                       darkness = 2;
+                    }
+                }
+                game_letterbox = _delayOver;
+    
+                 // Sound:
+                if(_delayOver){
+                    sound_play(sndCharUnlock);
+                    sound_play(unlock[unlock_index].snd);
                 }
             }
-            game_letterbox = _delayOver;
-
-             // Sound:
-            if(_delayOver){
-                sound_play(sndCharUnlock);
-                sound_play(unlock[unlock_index].snd);
-            }
-        }
-        else{
-             // Animate Unlock Splash:
-            var _img = sprite_get_number(unlock_sprit) - 1;
-            unlock_image += clamp(_img - unlock_image, -1, 1) * current_time_scale;
-
-             // Portrait Offset:
-            if(unlock_porty < 3){
-                unlock_porty += current_time_scale;
-            }
-
-             // Next Unlock:
-            if(unlock_delay_continue > 0) unlock_delay_continue -= current_time_scale;
-            else for(var i = 0; i < maxp; i++){
-                if(button_pressed(i, "fire") || button_pressed(i, "okay")){
-                    if(unlock_index < array_length(unlock)){
-                        unlock_index++;
-                        unlock_delay = 1;
+            else{
+                 // Animate Unlock Splash:
+                var _img = sprite_get_number(unlock_sprit) - 1;
+                unlock_image += clamp(_img - unlock_image, -1, 1) * current_time_scale;
+    
+                 // Portrait Offset:
+                if(unlock_porty < 3){
+                    unlock_porty += current_time_scale;
+                }
+    
+                 // Next Unlock:
+                if(unlock_delay_continue > 0) unlock_delay_continue -= current_time_scale;
+                else for(var i = 0; i < maxp; i++){
+                    if(button_pressed(i, "fire") || button_pressed(i, "okay")){
+                        if(unlock_index < array_length(unlock)){
+                            unlock_index++;
+                            unlock_delay = 1;
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
 
          // Done:
-        if(unlock_index >= array_length(unlock)){
+        else{
             with(TopCont){
                 go_addy1 = 55;
                 dead = true;

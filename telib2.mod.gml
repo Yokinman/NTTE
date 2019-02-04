@@ -2461,10 +2461,10 @@
             ammo = true;
             
              // Unlock new weapon:
-            if !unlock_get(_wep){
+            if(!unlock_get(_wep)){
                 unlock_set(_wep, true);
                 sound_play(sndGoldUnlock);
-                scrUnlock(weapon_get_name(_wep), "YOU'LL SEE IT AGAIN", weapon_get_sprt(_wep), sndGoldUnlock);
+                scrUnlock(weapon_get_name(_wep), "YOU'LL SEE IT AGAIN", -1, -1);
             }
         }
     }

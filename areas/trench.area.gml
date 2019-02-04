@@ -216,7 +216,7 @@
     }
 
      // Floaty Effects Above Pits:
-    with(instances_matching([WepPickup, chestprop, RadChestarea_effect], "", null)){
+    with(instances_matching([WepPickup, chestprop, RadChest], "", null)){
         var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
             var _x = x + cos((current_frame + x + y) / 10) * 0.15,
