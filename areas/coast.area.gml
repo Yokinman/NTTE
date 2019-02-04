@@ -795,6 +795,10 @@
         surfY -= global.surfH / 2;
         surface_destroy(global.surfTrans);
         surface_destroy(global.surfFloor);
+        surface_destroy(global.surfWaves);
+        surface_destroy(global.surfWavesSub);
+        surface_destroy(global.surfSwimBot);
+        surface_destroy(global.surfSwimTop);
     }
 
     var _surfTrans = global.surfTrans,

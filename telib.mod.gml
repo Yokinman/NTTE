@@ -435,6 +435,7 @@
         			spr_dead = spr.BabyScorpionDead;
         			spr_fire = spr.BabyScorpionFire;
         			spr_shadow = shd24;
+        			spr_shadow_y = -1;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
         			mask_index = mskBandit;
@@ -3738,29 +3739,30 @@
     my_health -= _hitdmg;			// Damage
     motion_add(_hitdir, _hitvel);	// Knockback
     nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 0);	// Sound
-    
-     // Correct sound pitch:
-    audio_sound_pitch(snd_hurt, 1.3 + random(0.3));
-    
+
+     // Pitched Sound:
+    var v = clamp(50 / (distance_to_object(Player) + 1), 0, 2);
+    sound_play_pitchvol(snd_hurt, 1.2 + random(0.3), v);
+
      // Hurt Sprite:
     sprite_index = spr_hurt;
     image_index = 0;
 
 #define BabyScorpion_death
+    scrDefaultDrop();
+
+     // Effects:
     var l = 6,
         d = irandom(359);
+
     for(var i = 0; i < 360; i += 360 / 3){
         with instance_create(x + lengthdir_x(l, d + i), y + lengthdir_y(l, d + i), AcidStreak){
             motion_set(d + i, 4);
             image_angle = direction;
         }
     }
-    
-    sound_play_hit_big(snd_dead, 0);
-    audio_sound_pitch(snd_dead, 1.3 + random(0.3));
-    
-    scrDefaultDrop();
+    sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 1.3);
+    snd_dead = -1;
 
 #define Bat_step
     enemyAlarms(1);
