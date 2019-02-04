@@ -906,8 +906,24 @@
 
                  // FX:
                 if(random(3) < 1){
-                    instance_create(x, y, Bubble);
-                    sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), 0.4);
+                    var xx = x,
+                        yy = y,
+                        vol = 0.4;
+                    if fork(){
+                        repeat(1 + irandom(3)){
+                            instance_create(xx, yy, Bubble);
+                            
+                            view_shake_max_at(xx, yy, 3);
+                            sleep(6);
+                            
+                            sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), vol);
+                            audio_sound_set_track_position(sndOasisPortal, 0.52 + random(0.04));
+                            vol -= 0.1;
+                            
+                            wait(10 + irandom(20));
+                        }
+                        exit;
+                    }
                 }
             }
         }

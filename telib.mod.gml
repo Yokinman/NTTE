@@ -2108,7 +2108,7 @@
 
 
 #define BigDecal_step
-    if !instance_exists(SpiralCont){
+    if !instance_exists(GenCont){
          // FX:
         if GameCont.area == "trench"{
             // Trench vent bubbles:
@@ -2124,11 +2124,7 @@
     }
 
     if(place_meeting(x, y, FloorExplo)){
-        if !instance_exists(GenCont)
-    	    instance_destroy();
-    	else
-    	    instance_delete(id);
-    	exit;
+        instance_destroy();
     }
     if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
         instance_delete(id);

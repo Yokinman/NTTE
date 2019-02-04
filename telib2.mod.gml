@@ -2710,21 +2710,39 @@
 
 
 #define Crack_step
-    if !image_index && place_meeting(x,y,Player){
-        image_index = 1;
-        with instance_create(x,y,Portal){
-            image_alpha = 0;
+    if !image_index{
+        if place_meeting(x, y, Player){
+            image_index = 1;
+             // Open effects:
+            // sound_play_pitchvol(sndFlameCannon,     0.8, 0.3);
+            sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
+            sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
+            sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
+            
+            sleep(50);
+            view_shake_at(x, y, 20);
+            
+            repeat(5 + irandom(5)) with instance_create(x, y, Debris)
+                motion_set(irandom(359), 3 + random(5));
+                
+            repeat(10 + irandom(10)) with instance_create(x, y, Bubble)
+                motion_set(irandom(359), 1 + random(2));
+                
+             // Portal
+            with instance_create(x, y, Portal){
+                sound_stop(sndPortalOpen);
+                image_alpha = 0;
+                GameCont.area = "trench";
+                GameCont.subarea = 0;
+            }
         }
-        sound_stop(sndPortalOpen);
-        sound_play_pitchvol(sndNothingHurtMid,0.6,0.7);
-        sound_play_pitchvol(sndNothingBeamEnd,0.4,1);
-        with(GameCont){
-            area = "trench";
-            subarea = 0;
-        }
-        repeat(10) instance_create(x+orandom(8),y+orandom(8),Bubble);
-        repeat(10) with instance_create(x,y,Debris){
-            motion_add(irandom(359),3+random(3));
+        
+         // Bubble effects:
+        else if random(4) < 1 * current_time_scale{
+            with instance_create(x, y, Bubble){
+                motion_set(90 + orandom(5), 4 + random(3));
+                friction = 0.2;
+            }
         }
     }
 
