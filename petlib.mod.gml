@@ -91,11 +91,11 @@
                 }
 
                  // Effects:
-                sound_play_pitchvol(sndGoldChest, 0.9 + random(0.2), 1 - hush);
-                sound_play_pitchvol(sndMimicSlurp, 0.9 + random(0.2), 1 - hush);
+                sound_play_pitchvol(sndGoldChest, 0.9 + random(0.2), 0.8 - hush);
+                sound_play_pitchvol(sndMimicSlurp, 0.9 + random(0.2), 0.8 - hush);
                 with(instance_create(x, y, FXChestOpen)) depth = other.depth - 1;
-                hush = min(hush + 0.2, 0.6);
-                hushtime = 30;
+                hush = min(hush + 0.2, 0.4);
+                hushtime = 60;
             }
 
              // Not Holding Weapon:
@@ -152,12 +152,26 @@
 #define Mimic_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
         if(_leaderDis > 48){
-            scrWalk(20 + irandom(30), _leaderDir + orandom(10));
-            scrRight(direction);
+             // Pathfinding:
+            if(array_length(path) > 0){
+                scrWalk(15, path_dir);
+                return 5 + random(10);
+            }
+            
+             // Wander Toward Leader:
+            else{
+                scrWalk(20 + irandom(30), _leaderDir + orandom(10));
+            }
         }
     }
     
     return 30 + irandom(30);
+
+#define Mimic_hurt
+    if(sprite_index != spr_open){
+        sprite_index = spr_hurt;
+        image_index = 0;
+    }
 
 #define Mimic_draw
     draw_self_enemy();
@@ -262,10 +276,20 @@
 
          // Fly Toward Leader:
         if(!perched){
-            scrWalk(10 + random(10), _leaderDir + orandom(30));
-            if(_leaderDis > 32) return walk;
+             // Pathfinding:
+            if(array_length(path) > 0){
+                scrWalk(5 + random(5), path_dir + orandom(30));
+                return walk;
+            }
+
+             // Wander Toward Leader:
+            else{
+                scrWalk(10 + random(10), _leaderDir + orandom(30));
+                if(_leaderDis > 32) return walk;
+            }
         }
 
+         // Perched:
         else{
              // Look Around:
             scrRight(random(360));

@@ -1718,6 +1718,119 @@
     }
     return _wep;
 
+#define path_create(_xstart, _ystart, _xtarget, _ytarget)
+     // Auto-Determine Grid Size:
+    var _tileSize = 16,
+        _areaWidth = (ceil(abs(_xtarget - _xstart) / _tileSize) * _tileSize) + 320,
+        _areaHeight = (ceil(abs(_ytarget - _ystart) / _tileSize) * _tileSize) + 320;
+
+    _areaWidth = max(_areaWidth, _areaHeight);
+    _areaHeight = max(_areaWidth, _areaHeight);
+
+    var _triesMax = 4 * ceil((_areaWidth + _areaHeight) / _tileSize);
+
+     // Clamp Path X/Y:
+    _xstart = floor(_xstart / _tileSize) * _tileSize;
+    _ystart = floor(_ystart / _tileSize) * _tileSize;
+    _xtarget = floor(_xtarget / _tileSize) * _tileSize;
+    _ytarget = floor(_ytarget / _tileSize) * _tileSize;
+
+     // Grid Setup:
+    var _gridw = ceil(_areaWidth / _tileSize),
+        _gridh = ceil(_areaHeight / _tileSize),
+        _gridx = round((((_xstart + _xtarget) / 2) - (_areaWidth / 2)) / _tileSize) * _tileSize,
+        _gridy = round((((_ystart + _ytarget) / 2) - (_areaHeight / 2)) / _tileSize) * _tileSize,
+        _grid = ds_grid_create(_gridw, _gridh),
+        _gridCost = ds_grid_create(_gridw, _gridh);
+
+    ds_grid_clear(_grid, -1);
+
+     // Mark Walls:
+    with(instance_rectangle(_gridx, _gridy, _gridx + _areaWidth, _gridy + _areaHeight, Wall)){
+        _grid[# ((x - _gridx) / _tileSize), ((y - _gridy) / _tileSize)] = -2;
+    }
+
+     // Pathing:
+    var _x1 = (_xtarget - _gridx) / _tileSize,
+        _y1 = (_ytarget - _gridy) / _tileSize,
+        _x2 = (_xstart - _gridx) / _tileSize,
+        _y2 = (_ystart - _gridy) / _tileSize,
+        _searchList = [[_x1, _y1, 0]],
+        _tries = _triesMax;
+
+    while(_tries-- > 0){
+        var _search = _searchList[0],
+            _sx = _search[0],
+            _sy = _search[1],
+            _sp = _search[2];
+
+        if(_sp >= 1000000) break; // No more searchable tiles
+        _search[2] = 1000000;
+
+         // Sort Through Neighboring Tiles:
+        var _costSoFar = _gridCost[# _sx, _sy];
+        for(var i = 0; i < 2*pi; i += pi/2){
+            var _nx = _sx + cos(i),
+                _ny = _sy - sin(i),
+                _nc = _costSoFar + 1;
+
+            if(_grid[# _nx, _ny] == -1){
+                if(_nx >= 0 && _ny >= 0){
+                    if(_nx < _gridw && _ny < _gridh){
+                        _gridCost[# _nx, _ny] = _nc;
+                        _grid[# _nx, _ny] = point_direction(_nx, _ny, _sx, _sy);
+
+                         // Add to Search List:
+                        array_push(_searchList, [
+                            _nx,
+                            _ny,
+                            point_distance(_x2, _y2, _nx, _ny) + (abs(_x2 - _nx) + abs(_y2 - _ny)) + _nc
+                            ]);
+                    }
+                }
+            }
+
+             // Path Complete:
+            if(_nx == _x2 && _ny == _y2){
+                _tries = 0;
+                break;
+            }
+        }
+
+         // Next:
+        array_sort_sub(_searchList, 2, true);
+    }
+
+     // Pack Path into Array:
+    var _x = _xstart,
+        _y = _ystart,
+        _path = [[_x + (_tileSize / 2), _y + (_tileSize / 2)]],
+        _tries = _triesMax;
+
+    while(_tries-- > 0){
+        var _dir = _grid[# ((_x - _gridx) / _tileSize), ((_y - _gridy) / _tileSize)];
+        if(_dir >= 0){
+            _x += lengthdir_x(_tileSize, _dir);
+            _y += lengthdir_y(_tileSize, _dir);
+            array_push(_path, [_x + (_tileSize / 2), _y + (_tileSize / 2)]);
+        }
+        else{
+            _path = []; // Couldn't find path
+            break;
+        }
+
+         // Done:
+        if(_x == _xtarget && _y == _ytarget){
+            break;
+        }
+    }
+    if(_tries <= 0) _path = []; // Couldn't find path
+
+    ds_grid_destroy(_grid);
+    ds_grid_destroy(_gridCost);
+
+    return _path;
+
 #define cleanup
     with(global.charm_step) instance_destroy();
 

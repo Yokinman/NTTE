@@ -410,14 +410,18 @@
                     pet = "Parrot";
                     leader = noone;
                     can_take = true;
-                    can_tp = true;
-                    tp_distance = 240;
+                    can_path = true;
+                    path = [];
+                    path_dir = 0;
                     team = 2;
                     walk = 0;
                     walkspd = 2;
                     maxspd = 3;
                     friction = 0.4;
                     direction = random(360);
+
+                    //can_tp = true;
+                    //tp_distance = 240;
     
                     alarm0 = 20 + random(10);
                 }
@@ -3532,7 +3536,7 @@
         persistent = true;
 
          // Teleport To Leader: 
-        if(can_tp && point_distance(x, y, leader.x, leader.y) > tp_distance) {
+        /*if(can_tp && point_distance(x, y, leader.x, leader.y) > tp_distance) {
              // Decide Which Floor:
             var f = instance_nearest(leader.x + orandom(16), leader.y + orandom(16), Floor);
             var fx = f.x + (f.sprite_width/2);
@@ -3545,7 +3549,29 @@
              // Effects:
             sound_play_pitch(sndCrystalTB, 1.40 + orandom(0.10));
             repeat(2) instance_create(x + orandom(8), y + orandom(8), CaveSparkle);
+        }*/
+
+         // Pathfind to Leader:
+        var _xtarget = leader.x,
+            _ytarget = leader.y;
+
+        if(can_path && collision_line(x, y, _xtarget, _ytarget, Wall, false, false)){
+            var _pathEndX = x,
+                _pathEndY = y;
+
+             // Find Path's Endpoint:
+            if(array_length(path) > 0){
+                var p = path[array_length(path) - 1];
+                _pathEndX = p[0];
+                _pathEndY = p[1];
+            }
+
+             // Create path if current one doesn't reach leader:
+            if(collision_line(_pathEndX, _pathEndY, _xtarget, _ytarget, Wall, false, false)){
+                path = path_create(x, y, _xtarget, _ytarget);
+            }
         }
+        else path = [];
 
          // Enter Portal:
         if(visible){
@@ -3622,17 +3648,6 @@
         if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
         x += hspeed;
         y += vspeed;
-
-        if(instance_exists(leader)){
-            var _x = x,
-                _y = y;
-
-            mp_potential_step(leader.x, leader.y, 1, false);
-            if(place_meeting(x, y, Wall)){
-                x = _x;
-                y = _y;
-            }
-        }
     }
 
 #define Pet_draw
@@ -3660,6 +3675,33 @@
         if(instance_exists(leader)){
             _leaderDir = point_direction(x, y, leader.x, leader.y);
             _leaderDis = point_distance(x, y, leader.x, leader.y);
+        }
+
+         // Find Current Path Direction:
+        if(array_length(path) > 0){
+             // Find Nearest Point on Path:
+            var	_nearest = 0,
+        		d = 1000000;
+        
+            for(var i = 0; i < array_length(path); i++){
+                var _x = path[i, 0],
+                    _y = path[i, 1],
+        		    _dis = point_distance(_x, _y, x, y);
+        
+        		if(_dis < d){
+        			_nearest = i;
+        			d = _dis;
+        		}
+        	}
+
+             // Find Direction to Next Point on Path:
+            var _follow = _nearest + 1;
+            if(_follow < array_length(path)){
+                var _x = path[_follow, 0],
+                    _y = path[_follow, 1];
+    
+                path_dir = point_direction(x, y, _x, _y);
+            }
         }
 
          // Custom Alarm Event:
@@ -5677,3 +5719,4 @@
 #macro sewers "secret"
 #define floor_at(_x, _y)                                                                return  mod_script_call("mod", "teassets", "floor_at", _x, _y);
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call("mod", "teassets", "in_range", _num, _lower, _upper);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call("mod", "teassets", "path_create", _xstart, _ystart, _xtarget, _ytarget);

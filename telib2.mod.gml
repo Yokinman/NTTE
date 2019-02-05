@@ -4224,3 +4224,4 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call("mod", "teassets", "path_create", _xstart, _ystart, _xtarget, _ytarget);
