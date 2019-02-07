@@ -586,10 +586,12 @@
         y = ystart;
 
          // Begin Intro:
-        if(alarm0 < 0 && instance_exists(Player)){
-            if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
-                alarm0 = 30;
-                phase++;
+        if(alarm0 < 0){
+            if(instance_exists(Player)){
+                if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
+                    alarm0 = 30;
+                    phase++;
+                }
             }
         }
 
@@ -652,9 +654,13 @@
 
          // Enable/Disable Players:
         if(intro_pan > 0){
-            with(Player) if(visible){
-                visible = false;
-                script_bind_draw(draw_palankingplayer, depth, id);
+            with(Player){
+                sprite_index = spr_idle;
+                if("wading" not in self || wading == 0){
+                    visible = true;
+                    script_bind_draw(draw_palankingplayer, depth, id);
+                }
+                else visible = false;
             }
         }
         else with(Player) visible = true;
@@ -795,8 +801,7 @@
     }
 
 #define Palanking_alrm0
-    var s = instances_matching_ne(Seal, "type", 0);
-    if(intro_pan <= 0 && array_length(s) <= 0){
+    if(intro_pan <= 0 && seal_group <= 0){
         alarm0 = 60;
 
          // Enable Cinematic:
@@ -822,7 +827,9 @@
         switch(phase){
             case 0: // Wave of Seals:
                 var _groups = 5;
-                if(array_length(s) < seal_max * _groups){
+                if(seal_group < _groups){
+                    seal_group++;
+
                     var _x = 10016,
                         _y = 10016;
 
@@ -831,9 +838,7 @@
                     intro_pan_y = seal_spawn_y;
 
                     alarm0 = alarm3 + 14;
-                }
-                if(array_length(s) < seal_max){
-                    intro_pan += alarm0;
+                    if(seal_group <= 1) intro_pan += alarm3;
                 }
                 break;
 
@@ -878,6 +883,11 @@
                     if(instance_exists(target)){
                         scrWalk(90, point_direction(x, y, target.x, target.y));
                     }
+                }
+                if(intro_pan <= 0){
+                    intro_pan_x = x;
+                    intro_pan_y = y;
+                    intro_pan = 10;
                 }
                 intro_pan += alarm0;
                 break;
@@ -1044,7 +1054,10 @@
         array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
     }
 
-    if(--seal_spawn > 0) alarm3 = 4 + random(4);
+    if(--seal_spawn > 0){
+        alarm3 = max(4 - GameCont.loops, 2) * random_range(1, 2);
+        if(seal_group <= 1) intro_pan += alarm3;
+    }
 
      // Continue Intro:
     if(alarm0 > 0) alarm0 += alarm3;
@@ -4016,7 +4029,10 @@
     instance_destroy();
 
 #define draw_palankingplayer(_inst)
-    with(_inst) event_perform(ev_draw, 0);
+    with(_inst){
+        event_perform(ev_draw, 0);
+        visible = false;
+    }
     instance_destroy();
 
 #define draw_bloom

@@ -705,6 +705,7 @@
                     seal_x = [];
                     seal_y = [];
                     seal_max = 4 + (2 * GameCont.loops);
+                    seal_group = 0;
                     seal_spawn = 0;
                     seal_spawn_x = x;
                     seal_spawn_y = y;
@@ -2131,7 +2132,7 @@
     if(place_meeting(x, y, FloorExplo)){
         instance_destroy();
     }
-    if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
+    else if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
         instance_delete(id);
     }
 

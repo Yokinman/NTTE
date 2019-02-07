@@ -390,6 +390,15 @@
             break;
 
         case "coast":
+             // Cool parrot:
+            if(GameCont.subarea == 1){
+                with(instances_matching(instances_matching(CustomHitme, "name", "CoastDecal"), "shell", true)){
+                    with(Pet_create(x, y, "Parrot")){
+                        perched = other;
+                    }
+                }
+            }
+
              // who's that bird? \\
             if(!unlock_get("parrot")){
                 unlock_set("parrot", true); // It's a secret yo

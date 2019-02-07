@@ -101,7 +101,12 @@
     with(FloorExplo) instance_destroy();
 
      // Top Decals:
-    with(TopSmall) if(random(200) < 1){
+    if(GameCont.subarea == 1){
+        with(instance_random(TopSmall)){
+            obj_create(x, y, "CoastBigDecal");
+        }
+    }
+    else with(TopSmall) if(random(200) < 1){
         obj_create(x, y, "CoastBigDecal");
         break;
     }
@@ -316,6 +321,10 @@
         if(DebugLag) trace_time();
         var _inst = instances_matching(instances_matching_lt(global.swimInst, "depth", global.seaDepth), "nowade", null, false),
             _tex = surface_get_texture(_surfSwim);
+
+        with(instances_matching(instances_matching_lt(instances_matching(CustomObject, "name", "Pet"), "depth", global.seaDepth), "nowade", null, false)){
+            array_push(_inst, id); // Let pets wade in water
+        }
 
         global.swimInstVisible = [];
 
@@ -542,6 +551,15 @@
 		script_bind_draw(corpse_fix, 10000000);
     	script_bind_step(reset_visible, 0, 0);
     	script_bind_draw(reset_visible, -14, 1);
+
+         // Fix Spirit:
+        if(skill_get(mut_strong_spirit)){
+            with(instances_matching_gt(Player, "wading", 0)){
+                if(visible && canspirit){
+                    script_bind_draw(draw_spiritfix, -8, x, y, wave);
+                }
+            }
+        }
 	}
 
      // things die bc of the missing walls
@@ -715,14 +733,29 @@
     if(global.spawn_enemy-- <= 0){
         global.spawn_enemy = 1;
 
-        if(GameCont.loops > 0 && random(3) < 1) {
-            if(random(18) < GameCont.subarea) {
-                instance_create(_x, _y, choose(RhinoFreak, SnowBot));
-            } else {
-                instance_create(_x, _y, choose(Raven, Raven, Raven, MeleeBandit))
+         // Loop Spawns:
+        if(GameCont.loops > 0 && random(3) < 1){
+             // Bushes:
+            if(random(3) < 1){
+                with(instance_nearest(x, y, prop)){
+                    var _ang = random(360),
+                        _num = irandom_range(1, 4);
+
+                    for(var a = _ang; a < _ang + 360; a += (360 / _num)){
+                        var o = 16 + random(16);
+                        instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), choose(JungleAssassinHide, JungleAssassinHide, Bush));
+                    }
+                }
             }
-        } else {
-             // Normal Enemies:
+
+             // Birds:
+            else repeat(irandom_range(1, 2)){
+                instance_create(_x, _y, Raven);
+            }
+        }
+
+         // Normal Enemies:
+        else{
             if(styleb) obj_create(_x, _y, "TrafficCrab");
             else{
                 if(random(18) < GameCont.subarea){
@@ -730,6 +763,18 @@
                 }
                 else{
                     obj_create(_x, _y, choose("Diver", "Gull", "Gull", "Gull", "Gull"));
+                }
+            }
+        }
+
+         // TMNST:
+        if(random(6) < 1){
+            var _dir = random(360),
+                _dis = 640 + random(1080);
+
+            for(var i = 1; i <= 4; i++){
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Turtle)){
+                    snd_dead = asset_get_index(`sndTurtleDead${i}`);
                 }
             }
         }
@@ -793,6 +838,7 @@
         surfY /= instance_number(Floor);
         surfX -= global.surfW / 2;
         surfY -= global.surfH / 2;
+
         surface_destroy(global.surfTrans);
         surface_destroy(global.surfFloor);
         surface_destroy(global.surfWaves);
@@ -891,6 +937,9 @@
     if(!surface_exists(_surfWaves)){
     	global.surfWaves = surface_create(_surfw, _surfh);
     	_surfWaves = global.surfWaves;
+        surface_set_target(_surfWaves);
+        draw_clear_alpha(0, 0);
+        surface_reset_target();
     }
     if((_wave mod _int) < current_time_scale){
         surface_set_target(_surfWaves);
@@ -924,6 +973,9 @@
         if(!surface_exists(_surfWavesSub)){
         	global.surfWavesSub = surface_create(_surfw, _surfh);
         	_surfWavesSub = global.surfWavesSub;
+            surface_set_target(_surfWavesSub);
+            draw_clear_alpha(0, 0);
+            surface_reset_target();
         }
         surface_set_target(_surfWavesSub);
     
@@ -1049,6 +1101,11 @@
         else global.swimInstVisible[array_find_index(_inst, self)] = noone;
     }
 
+#define draw_spiritfix(_x, _y, _wave)
+    draw_sprite(sprHalo, -1, _x, _y + sin(_wave / 10));
+    instance_destroy();
+    
+
 
  /// HELPER SCRIPTS ///
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
@@ -1076,4 +1133,5 @@
 #define instances_named(_object, _name)                                                 return  mod_script_call("mod", "teassets", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+#define instance_random(_obj)                                                           return  mod_script_call("mod", "teassets", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "teassets", "frame_active", _interval);

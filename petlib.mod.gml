@@ -198,13 +198,19 @@
      // Vars:
     maxspd = 3.5;
     tp_distance = 160;
-    perched = false;
+    perched = noone;
     pickup = noone;
     pickup_x = 0;
     pickup_y = 0;
     pickup_held = false;
 
 #define Parrot_step
+    if(speed > 0 || instance_exists(perched)){
+        nowade = true;
+        wading = 0;
+    }
+    else nowade = false;
+
      // Grabbing Pickup:
     if(instance_exists(pickup)){
         if(pickup_held){
@@ -230,29 +236,32 @@
     }
     else pickup_held = false;
 
-     // Perch on Leader's Head:
-    if(instance_exists(leader) && leader.race != "horror"){ // Horror is too painful to stand on
-        var _x = leader.x,
-            _y = leader.bbox_top - 8;
-    
-        if(perched){
-            x = leader.x;
-            y = leader.y;
-            if(leader.speed > 0 || instance_exists(pickup)){
-                x = _x;
-                y = _y;
-                perched = false;
+     // Perching:
+    if(instance_exists(perched)){
+        can_take = false;
+        if("race" not in perched || perched.race != "horror"){ // Horror is too painful to stand on
+            x = perched.x;
+            y = perched.y;
+            if(perched.speed > 0 || instance_exists(pickup) || ("my_health" in perched && perched.my_health <= 0)){
+                x = perched.x;
+                y = perched.bbox_top - 8;
+                perched = noone;
                 scrWalk(16, random(360));
             }
         }
-
-         // Perch:
-        else if(point_distance(x, y, _x, _y) < 8 && leader.speed <= 0 && !instance_exists(pickup)){
-            perched = true;
+        else perched = noone;
+    }
+    else if(!instance_exists(leader)){
+        can_take = true;
+    }
+    
+     // Perch on Leader:
+    else if(instance_exists(leader)){
+        if(point_distance(x, y, leader.x, leader.bbox_top - 8) < 8 && leader.speed <= 0 && !instance_exists(pickup)){
+            perched = leader;
             sound_play_pitch(sndBouncerBounce, 1.5 + orandom(0.1));
         }
     }
-    else perched = false;
 
 #define Parrot_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
@@ -275,7 +284,7 @@
         }
 
          // Fly Toward Leader:
-        if(!perched){
+        if(perched != leader){
              // Pathfinding:
             if(array_length(path) > 0){
                 scrWalk(5 + random(5), path_dir + orandom(30));
@@ -289,44 +298,44 @@
             }
         }
 
-         // Perched:
-        else{
-             // Look Around:
-            scrRight(random(360));
-
-             // Repeat sound:
-            if(random(3) < 1) with(leader){
-                sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
-                sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
-                return 40 + random(20);
-            }
+         // Repeat sound:
+        else if(random(3) < 1) with(leader){
+            sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
+            sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
+            return 40 + random(20);
         }
     }
-    else scrRight(random(360));
+
+     // Look Around:
+    if(!instance_exists(leader) || instance_exists(perched)){
+        scrRight(random(360));
+    }
 
     return (30 + random(30));
 
 #define Parrot_hurt
-    sprite_index = spr_hurt;
-    image_index = 0;
-
-     // Movin'
-    scrWalk(maxspd, point_direction(other.x, other.y, x, y));
-    var o = 6;
-    x += lengthdir_x(o, direction);
-    y += lengthdir_y(o, direction);
+    if(instance_exists(leader) && !instance_exists(perched)){
+        sprite_index = spr_hurt;
+        image_index = 0;
+    
+         // Movin'
+        scrWalk(maxspd, point_direction(other.x, other.y, x, y));
+        var o = 6;
+        x += lengthdir_x(o, direction);
+        y += lengthdir_y(o, direction);
+    }
 
 #define Parrot_draw
      // Perched:
-    if(instance_exists(leader) && perched){
-        var _uvsStart = sprite_get_uvs(leader.sprite_index, 0),
-            _uvsCurrent = sprite_get_uvs(leader.sprite_index, leader.image_index),
-            _x = leader.x,
-            _y = leader.y - sprite_get_yoffset(leader.sprite_index) + sprite_get_bbox_top(leader.sprite_index) - 4;
+    if(instance_exists(perched)){
+        var _uvsStart = sprite_get_uvs(perched.sprite_index, 0),
+            _uvsCurrent = sprite_get_uvs(perched.sprite_index, perched.image_index),
+            _x = perched.x,
+            _y = perched.y - sprite_get_yoffset(perched.sprite_index) + sprite_get_bbox_top(perched.sprite_index) - 4;
 
          // Manual Bobbing:
-        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in leader){
-            with(leader){
+        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
+            with(perched){
                 var _bob = parrot_bob;
                 _y += _bob[floor(image_index mod array_length(_bob))];
             }
@@ -340,6 +349,7 @@
 
      // Normal:
     else draw_self_enemy();
+
 
 #define Prism_create
      // Visual:
