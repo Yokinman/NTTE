@@ -20,6 +20,7 @@
             return true;
     }
 
+
 #define CoolGuy_create
      // Visual:
     spr_idle = spr.PetCoolGuyIdle;
@@ -29,14 +30,110 @@
 
      // Vars:
     maxspd = 3;
+    poop = 0;
+    poop_delay = 0;
     
 #define CoolGuy_step
-    with(instances_matching(HPPickup, "coolguy", null)) {
-        coolguy = 1;
-         // Healthy Pizza:
-        num++;
-        sprite_index = sprSlice;
+    if(instance_exists(HPPickup)){
+        var h = nearest_instance(x, y, instances_matching_ne(HPPickup, "sprite_index", sprSlice));
+        if(instance_exists(h)){
+            if(!collision_line(x, y, h.x, h.y, Wall, false, false)){
+                alarm0 = 40;
+                scrWalk(5, point_direction(x, y, h.x, h.y));
+
+                 // Nom:
+                if(place_meeting(x, y, h)){
+                    with(h){
+                        sound_play_pitchvol(sndFrogEggHurt, 0.6 + random(0.2), 0.3);
+                        sound_play_pitchvol(sndHitRock, 2 + orandom(0.2), 0.5);
+                        repeat(2) with(instance_create(x, y, AllyDamage)){
+                            motion_add(random(360), 1);
+                            image_blend = c_yellow;
+                        }
+                        instance_destroy();
+                    }
+                    poop++;
+                    poop_delay = alarm0 - 10;
+                }
+            }
+        }
     }
+
+     // 
+    if(poop_delay > 0){
+        poop_delay -= current_time_scale;
+        if(poop_delay < 10) walk = 0;
+    }
+    else if(poop > 0){
+
+         // Effects:
+        sound_play_pitchvol(choose(sndFrogGasRelease, sndFrogGasReleaseButt), 1.4 + random(0.2), 0.8);
+        sound_play_pitchvol(sndFrogEggOpen1, 2 + orandom(0.4), 0.5);
+        repeat(5) with(instance_create(x, y, Dust)){
+            hspeed = 2 * -other.right;
+            motion_add(random(360), 1);
+        }
+
+         // Big Boy:
+        if(random(poop) > 4 && random(2) < 1){
+            poop -= 2;
+            vspeed = -2;
+            with(instance_create(x + orandom(4), y + orandom(4), HealthChest)){
+                sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
+                spr_dead = sprPizzaChestOpen;
+                motion_add(random(360), 1);
+                vspeed += 4;
+            }
+        }
+
+         // Box:
+        else if(poop >= 2 && random(3) < 1){
+            poop -= 2;
+            vspeed = -2;
+            obj_create(x, y, "PizzaBoxCool");
+        }
+
+         // Slice:
+        else{
+            poop--;
+            with(instance_create(x + orandom(4), y + orandom(4), HPPickup)){
+                sprite_index = sprSlice;
+                hspeed = 3 * -other.right;
+                vspeed = random(1);
+                num++;
+            }
+        }
+
+        poop_delay = 8;
+    }
+
+#define CoolGuy_alrm0(_leaderDir, _leaderDis)
+     // Follow Leader Around:
+    if(instance_exists(leader)){
+        if(_leaderDis > 24){
+             // Pathfinding:
+            if(array_length(path) > 0){
+                scrWalk(8, path_dir + orandom(20));
+                return walk;
+            }
+
+             // Move Toward Leader:
+            else{
+                scrWalk(10, _leaderDir + orandom(10));
+                return 10 + random(5);
+            }
+        }
+    }
+
+     // Idle Movement:
+    else scrWalk(15, random(360));
+
+#define CoolGuy_draw
+    var _x = x,
+        _y = y;
+
+    if(poop > 0 && poop_delay < 20) _x += sin(current_frame * 5) * 1.5;
+    draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
 
 #define Mimic_create
@@ -51,7 +148,6 @@
      // Vars:
     mask_index = mskFreak;
     maxspd = 2;
-    can_tp = false;
     wep = wep_none;
     ammo = true;
     curse = false;
@@ -197,7 +293,6 @@
 
      // Vars:
     maxspd = 3.5;
-    tp_distance = 160;
     perched = noone;
     pickup = noone;
     pickup_x = 0;
@@ -359,7 +454,6 @@
 
      // Vars:
     maxspd = 3;
-    tp_distance = 120;
     spawn_loc = [x, y];
     alarm0 = -1;
     

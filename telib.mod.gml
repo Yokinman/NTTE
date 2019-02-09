@@ -48,22 +48,48 @@
             			image_speed = 0;
             			depth = -8;
     
+                         // Vars:
                 		mask_index = msk.BigTopDecal;
-    
-            		    if(place_meeting(x, y, TopPot)) instance_destroy();
-                    	else{
-                             // TopSmalls:
-                    		var _off = 16,
-                    		    s = _off * 3;
-    
-                    		for(var _ox = -s; _ox <= s; _ox += _off){
-                    		    for(var _oy = -s; _oy <= s; _oy += _off){
-                    		        if(!position_meeting(x + _ox, y + _oy, Floor)){
-                    		            if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
-                    		        }
-                    		    }
-                    		}
+
+                         // Avoid Bad Stuff:
+                        var _tries = 1000;
+            		    while(_tries-- > 0){
+            		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor)){
+            		            var _dis = 16,
+            		                _dir = irandom(3) * 90;
+
+            		            x += lengthdir_x(_dis, _dir);
+            		            y += lengthdir_y(_dis, _dir);
+            		        }
+            		        else break;
             		    }
+
+                         // TopSmalls:
+                		var _off = 16,
+                		    s = _off * 3;
+
+                		for(var _ox = -s; _ox <= s; _ox += _off){
+                		    for(var _oy = -s; _oy <= s; _oy += _off){
+                		        if(!position_meeting(x + _ox, y + _oy, Floor)){
+                		            if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+                		        }
+                		    }
+                		}
+
+                		 // TopDecals:
+                		var _num = irandom(4),
+                		    _ang = random(360);
+
+                		for(var i = _ang; i < _ang + 360; i += (360 / _num)){
+                		    var _dis = 24 + random(12),
+                		        _dir = i + orandom(30);
+
+                            with(scrTopDecal(0, 0, GameCont.area)){
+                                x = other.x + lengthdir_x(_dis * 1.5, _dir);
+                                y = other.y + lengthdir_y(_dis, _dir) + 40;
+                                if(place_meeting(x, y, Floor)) instance_destroy();
+                            }
+                		}
             		}
         	    }
         	    break;
@@ -424,6 +450,23 @@
                     //tp_distance = 240;
     
                     alarm0 = 20 + random(10);
+                }
+                break;
+
+            case "PizzaBoxCool":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = sprPizzaBox;
+                    spr_hurt = sprPizzaBoxHurt;
+                    spr_dead = sprPizzaBoxDead;
+
+                     // Sound:
+                    snd_hurt = sndHitPlant;
+                    snd_dead = sndPizzaBoxBreak;
+
+                     // Vars:
+                    maxhealth = 4;
                 }
                 break;
         //#endregion
@@ -2054,7 +2097,7 @@
     	//#endregion
 
     	default:
-    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet",
+    		return ["BigDecal", "Bone", "BoneSpawner", "BubbleBomb", "BubbleExplosion", "CoastBossBecome", "CoastBoss", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "Manhole", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool",
     		        "BabyScorpion", "GoldBabyScorpion",
     		        "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        "ClamChest", "Hammerhead", "Puffer", "Crack",
@@ -2114,50 +2157,62 @@
 
 
 #define BigDecal_step
-    if !instance_exists(GenCont){
-         // FX:
-        if GameCont.area == "trench"{
-            // Trench vent bubbles:
-            for (var i = 0; i < array_length(global.decalVents); i++) if random(8) < current_time_scale{
-                var p = global.decalVents[i];
-                with instance_create(x + p[0], y + p[1], Bubble){
-                    depth = -9;
-                    friction = 0.2;
-                    motion_set(irandom_range(85, 95), random_range(4, 7));
+    if(!instance_exists(GenCont)){
+         // Area-Specifics:
+        switch(GameCont.area){
+            case "trench":
+                // Trench vent bubbles:
+                for(var i = 0; i < array_length(global.decalVents); i++){
+                    if(random(8) < current_time_scale){
+                        var p = global.decalVents[i];
+                        with(instance_create(x + p[0], y + p[1], Bubble)){
+                            depth = -9;
+                            friction = 0.2;
+                            motion_set(90 + orandom(5), random_range(4, 7));
+                        }
+                    }
                 }
-            }
+                break;
         }
-    }
 
-    if(place_meeting(x, y, FloorExplo)){
-        instance_destroy();
-    }
-    else if(place_meeting(x, y, Floor) || place_meeting(x, y, Bones)){
-        instance_delete(id);
+         // he ded lol:
+        if(place_meeting(x, y, Floor)){
+            instance_destroy();
+        }
     }
 
 #define BigDecal_destroy
      // General FX:
     sleep(100);
     view_shake_at(x, y, 50);
-    with instance_create(x, y, PortalClear) mask_index = other.mask_index;
+    with(instance_create(x, y, PortalClear)){
+        mask_index = other.mask_index;
+    }
+    repeat(irandom_range(9, 18)){
+        with(instance_create(x, y, Debris)){
+            speed = random_range(6, 12);
+        }
+    }
 
-    repeat(irandom_range(9, 18)) with instance_create(x, y, Debris) motion_set(irandom(359), random_range(6, 12));
-    
-     // Area specific events:
+     // Area-Specifics:
     var _x = x,
         _y = y + 16;
+
     switch(GameCont.area){
         case 1 : // Spawn a handful of crab bones:
             repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
                 motion_set(irandom(359), random_range(3, 6));
                 wep = "crabbone";
             }
-        break;
+            break;
         
         case 2 : // Spawn a bunch of frog eggs:
-            repeat(irandom_range(3, 5)) with instance_create(_x + orandom(24), _y + irandom(16), FrogEgg) alarm0 = irandom_range(20, 40);
-        break;
+            repeat(irandom_range(3, 5)){
+                with(instance_create(_x + orandom(24), _y + irandom(16), FrogEgg)){
+                    alarm0 = irandom_range(20, 40);
+                }
+            }
+            break;
     }
 
 #define Bone_step
@@ -3717,15 +3772,45 @@
              // Follow Leader Around:
             if(instance_exists(leader)){
                 if(_leaderDis > 24){
-                    scrWalk(10, _leaderDir + orandom(10));
-                    alarm0 = 10 + random(5);
+                     // Pathfinding:
+                    if(array_length(path) > 0){
+                        scrWalk(8, path_dir + orandom(20));
+                        alarm0 = walk;
+                    }
+
+                     // Move Toward Leader:
+                    else{
+                        scrWalk(10, _leaderDir + orandom(10));
+                        alarm0 = 10 + random(5);
+                    }
                 }
             }
-    
+
              // Idle Movement:
             else scrWalk(15, random(360));
         }
     }
+
+
+#define PizzaBoxCool_death
+    var _num = choose(1, 2);
+
+     // Big luck:
+    if(random(10) < 1){
+        _num = 4;
+        repeat(5) instance_create(x + orandom(4), y + orandom(4), Dust);
+        sound_play_pitch(snd_dead, 0.6);
+        snd_dead = -1;
+    }
+
+     // +Yum
+    repeat(_num){
+        with(instance_create(x + orandom(2 * _num), y + orandom(2 * _num), HPPickup)){
+            sprite_index = sprSlice;
+            num++;
+        }
+    }
+
 
 #define BabyScorpion_step
     enemyAlarms(2);
@@ -5698,6 +5783,7 @@
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "teassets", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call("mod", "teassets", "scrCorpse", _dir, _spd);

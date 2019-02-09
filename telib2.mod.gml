@@ -608,18 +608,7 @@
 
              // Attract Pickups:
             if(instance_exists(Player) && intro_pan > 0){
-                with(Pickup) if(object_index != WepPickup && speed <= 0){
-                    var t = instance_nearest(x, y, Player);
-                    if(point_distance(x, y, t.x, t.y) > 30){
-                        var _dis = 6,
-                            _dir = point_direction(x, y, t.x, t.y);
-
-                        if(object_index == Rad || object_index == BigRad) _dis *= 2;
-
-                        x += lengthdir_x(_dis, _dir);
-                        y += lengthdir_y(_dis, _dir);
-                    }
-                }
+                scrPickupPortalize();
             }
         }
     }
@@ -661,6 +650,7 @@
                     script_bind_draw(draw_palankingplayer, depth, id);
                 }
                 else visible = false;
+                scrRight(point_direction(x, y, mouse_x[index], mouse_y[index]));
             }
         }
         else with(Player) visible = true;
@@ -4217,10 +4207,12 @@
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
+#define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "teassets", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "teassets", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call("mod", "teassets", "scrCorpse", _dir, _spd);
 #define scrSetPet(_pet)                                                                 return  mod_script_call("mod", "teassets", "scrSetPet", _pet);
+#define scrPickupPortalize()                                                            return  mod_script_call("mod", "teassets", "scrPickupPortalize");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

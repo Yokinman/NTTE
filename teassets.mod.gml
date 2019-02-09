@@ -4,11 +4,16 @@
     with(global.spr){
         msk = {};
 
+         // Top Decals:
+        TopDecal = {
+            "trench" : sprite_add("sprites/areas/Trench/sprTopDecalTrench.png", 1, 19, 24)
+        }
+
     	 // Big Decals:
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24),
     	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 24),
-    	    "pizza"   : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
+    	    "pizza" : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
     	    "trench": sprite_add("sprites/areas/Trench/sprTrenchBigTopDecal.png", 1, 32, 24)
     	}
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
@@ -1268,6 +1273,43 @@
 #define scrUnlock(_name, _text, _sprite, _sound)
     return mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
 
+#define scrTopDecal(_x, _y, _area)
+    _area = string(_area);
+    var _topDecal = {
+        "0"   : TopDecalNightDesert,
+        "1"   : TopDecalDesert,
+        "2"   : TopDecalSewers,
+        "3"   : TopDecalScrapyard,
+        "4"   : TopDecalCave,
+        "5"   : TopDecalCity,
+        "7"   : TopDecalPalace,
+        "102" : TopDecalPizzaSewers,
+        "104" : TopDecalInvCave,
+        "105" : TopDecalJungle,
+        "106" : TopPot,
+        "pizza" : TopDecalPizzaSewers
+        };
+
+    if(lq_exists(_topDecal, _area)){
+        return instance_create(_x, _y, lq_get(_topDecal, _area));
+    }
+    else if(lq_exists(spr.TopDecal, _area)){
+        with(instance_create(_x, _y, TopPot)){
+            sprite_index = lq_get(spr.TopDecal, _area);
+            image_index = irandom(image_number - 1);
+
+             // Area-Specifics:
+            switch(_area){
+                case "trench":
+                    right = choose(-1, 1);
+                    break;
+            }
+
+            return id;
+        }
+    }
+    return noone;
+
 #define scrWaterStreak(_x, _y, _dir, _spd)
     with(instance_create(_x, _y, AcidStreak)){
         sprite_index = spr.WaterStreak;
@@ -1337,6 +1379,56 @@
                     wait 1;
                 }
                 exit;
+            }
+        }
+    }
+
+#define scrPickupPortalize()
+    var _scrt = "scrPickupPortalize";
+    if(!instance_is(self, CustomEndStep) || script[2] != _scrt){
+        with(CustomEndStep) if(script[2] == _scrt) exit;
+        script_bind_end_step(scrPickupPortalize, 0);
+    }
+
+     // Attract Pickups:
+    else{
+        instance_destroy();
+        if(instance_exists(Player) && !instance_exists(Portal)){
+            var _pluto = skill_get(mut_plutonium_hunger);
+
+             // Normal Pickups:
+            var _attractDis = 30 + (40 * _pluto);
+            with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "", null)){
+                var p = instance_nearest(x, y, Player);
+                if(point_distance(x, y, p.x, p.y) >= _attractDis){
+                    var _dis = 6 * current_time_scale,
+                        _dir = point_direction(x, y, p.x, p.y),
+                        _x = x + lengthdir_x(_dis, _dir),
+                        _y = y + lengthdir_y(_dis, _dir);
+
+                    if(place_free(_x, y)) x = _x;
+                    if(place_free(x, _y)) y = _y;
+                }
+            }
+
+             // Rads:
+            var _attractDis = 80 + (60 * _pluto),
+                _attractDisProto = 170;
+
+            with(instances_matching([Rad, BigRad], "speed", 0)){
+                var s = instance_nearest(x, y, ProtoStatue);
+                if(distance_to_object(s) >= _attractDisProto || collision_line(x, y, s.x, s.y, Wall, false, false)){
+                    if(distance_to_object(Player) >= _attractDis){
+                        var p = instance_nearest(x, y, Player),
+                            _dis = 12 * current_time_scale,
+                            _dir = point_direction(x, y, p.x, p.y),
+                            _x = x + lengthdir_x(_dis, _dir),
+                            _y = y + lengthdir_y(_dis, _dir);
+    
+                        if(place_free(_x, y)) x = _x;
+                        if(place_free(x, _y)) y = _y;
+                    }
+                }
             }
         }
     }

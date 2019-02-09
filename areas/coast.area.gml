@@ -106,10 +106,6 @@
             obj_create(x, y, "CoastBigDecal");
         }
     }
-    else with(TopSmall) if(random(200) < 1){
-        obj_create(x, y, "CoastBigDecal");
-        break;
-    }
     with(TopSmall){
         if(random(80) < 1) obj_create(x, y, "CoastDecal");
         instance_destroy();
@@ -182,16 +178,12 @@
      // No Portals:
 	with(instances_matching_ne(Corpse, "do_portal", false)) do_portal = false;
 	
-	 // Attract pickups on level end
-	/*if(CanLeaveCoast && !instance_exists(Portal)){ im gonna change this a little   cant right now so just commenting it out for reasons
-	with instances_matching(GameObject,"object_index",Rad,AmmoPickup,HPPickup) if CanLeaveCoast && speed <= 0 && instance_exists(Player){
-	    var _p = instance_nearest(x,y,Player),
-	        _l = 8,
-	        _d = point_direction(x,y,_p.x,_p.y);
-	    x += lengthdir_x(_l,_d);
-	    y += lengthdir_y(_l,_d);
-	}*/
-	
+	 // It's like a portal exists but no it doesn't:
+	if(CanLeaveCoast && !instance_exists(Portal)){
+	    scrPickupPortalize();
+	    with(instances_matching_gt(Ally, "alarm2", 1)) alarm2 = 1;
+	}
+
      // Explosion debris splash FX:
 	with(Explosion) if(current_time_scale && random(5) < 1){
         var _len = irandom_range(24,48),
@@ -767,8 +759,8 @@
             }
         }
 
-         // TMNST:
-        if(random(6) < 1){
+         // TMST:
+        if(GameCont.loops > 0 && random(6) < 1){
             var _dir = random(360),
                 _dis = 640 + random(1080);
 
@@ -1126,6 +1118,7 @@
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
+#define scrPickupPortalize()                                                            return  mod_script_call("mod", "teassets", "scrPickupPortalize");
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call("mod", "teassets", "array_count", _array, _value);

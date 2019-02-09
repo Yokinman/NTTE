@@ -17,9 +17,8 @@
         WallTrenchTop     = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",    8,  0,  0);
 
          // Misc:
-        DebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4,  0, 0);
-        DetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6,  0, 0);
-        TopDecalTrench    = sprite_add("../sprites/areas/Trench/sprTopDecalTrench.png",   1,  0, 0);
+        DebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4,  0,  0);
+        DetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6,  0,  0);
 
         /// Pits:
              // Small:
@@ -480,6 +479,11 @@
         obj_create(_x,_y,choose("Kelp","Kelp","Vent"));
     }
 
+     // Top Decals:
+    if(random(160) < 1){
+        scrTopDecal(x + 16, y + 16, "trench");
+    }
+
 #define area_pop_extras
      // The new bandits
     with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
@@ -623,6 +627,7 @@
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "teassets", "scrBossIntro", _name, _sound, _music);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "teassets", "scrUnlock", _name, _text, _sprite, _sound);
+#define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "teassets", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrWaterStreak", _x, _y, _dir, _spd);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "teassets", "floor_ext", _num, _round);
