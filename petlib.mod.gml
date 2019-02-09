@@ -29,17 +29,17 @@
     depth = -2;
 
      // Vars:
-    maxspd = 3;
+    maxspd = 3.5;
     poop = 0;
     poop_delay = 0;
-    
+
 #define CoolGuy_step
     if(instance_exists(HPPickup)){
         var h = nearest_instance(x, y, instances_matching_ne(HPPickup, "sprite_index", sprSlice));
         if(instance_exists(h)){
             if(!collision_line(x, y, h.x, h.y, Wall, false, false)){
                 alarm0 = 40;
-                scrWalk(5, point_direction(x, y, h.x, h.y));
+                direction = point_direction(x, y, h.x, h.y);
 
                  // Nom:
                 if(place_meeting(x, y, h)){
@@ -60,10 +60,7 @@
     }
 
      // 
-    if(poop_delay > 0){
-        poop_delay -= current_time_scale;
-        if(poop_delay < 10) walk = 0;
-    }
+    if(poop_delay > 0) poop_delay -= current_time_scale;
     else if(poop > 0){
 
          // Effects:
@@ -107,26 +104,39 @@
         poop_delay = 8;
     }
 
+     // He just keep movin
+    if(poop <= 0 || poop_delay > 10) speed = maxspd;
+    if(place_meeting(x + hspeed, y + vspeed, Wall)){
+        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+        scrRight(direction);
+    }
+
 #define CoolGuy_alrm0(_leaderDir, _leaderDis)
      // Follow Leader Around:
     if(instance_exists(leader)){
         if(_leaderDis > 24){
              // Pathfinding:
             if(array_length(path) > 0){
-                scrWalk(8, path_dir + orandom(20));
-                return walk;
+                direction = path_dir + orandom(20);
             }
 
-             // Move Toward Leader:
-            else{
-                scrWalk(10, _leaderDir + orandom(10));
-                return 10 + random(5);
-            }
+             // Turn Toward Leader:
+            else direction += angle_difference(_leaderDir, direction) / 2;
         }
+        else direction += orandom(16);
+        scrRight(direction);
+
+        return 8;
     }
 
      // Idle Movement:
-    else scrWalk(15, random(360));
+    else{
+        direction += orandom(16);
+        scrRight(direction);
+
+        return 10 + random(10);
+    }
 
 #define CoolGuy_draw
     var _x = x,
