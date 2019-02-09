@@ -441,8 +441,10 @@
      // Big Decals:
     var _chance = 1/2;
     if(is_real(GameCont.area)){
-        if(GameCont.area < 100) _chance /= 2;
-        if(GameCont.area & 1) _chance /= 2;
+        if(GameCont.area < 100){
+            _chance /= 2;
+            if(GameCont.area & 1) _chance /= 2;
+        }
     }
     if(random(1) < _chance){
         var _tries = 1000;
