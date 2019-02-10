@@ -10,6 +10,9 @@
     global.currentMusic = -1;
     global.bones = [];
 
+     // Make Custom CampChars for:
+    global.campchar = ["parrot"];
+
      // Options Menu:
     global.option_NTTE_splat = 0;
     global.option_open = false;
@@ -267,6 +270,7 @@
 #macro opt sav.option
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
+#macro anim_end (image_index > image_number - 1 + image_speed)
 
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
 
@@ -411,7 +415,8 @@
     }
 
      // Spawn Mortars:
-	with(LaserCrystal){
+	with(instances_matching(LaserCrystal, "mortar_check", null, false)){
+	    mortar_check = true;
 	    if(random(4) < 1){
 	        obj_create(x, y, "Mortar");
 	        instance_delete(self);
@@ -469,6 +474,8 @@
     with(instances_matching(CustomObject, "name", "Pet")) visible = true;
 
 #define step
+    script_bind_begin_step(begin_step, 0);
+
      // Pet Slots:
     with(instances_matching(Player, "pet", null)) pet = [noone];
 
@@ -570,6 +577,65 @@
 
      // Fixes weird delay thing:
     script_bind_step(bone_step, 0);
+
+#define begin_step
+    instance_destroy();
+
+     // Custom CampChars:
+    if(instance_exists(Menu)){
+         // Make Custom CampChars:
+        for(var i = 0; i < array_length(global.campchar); i++){
+            var n = global.campchar[i];
+            if(mod_exists("race", n) && unlock_get(n)){
+                if(array_length(instances_matching(CampChar, "race", n)) <= 0){
+                    with(CampChar_create(64, 48, n)){
+                         // Poof in:
+                        repeat(8) with(instance_create(x, y + 4, Dust)){
+                            motion_add(random(360), 3);
+                            depth = other.depth - 1;
+                        }
+                    }
+                }
+            }
+        }
+
+         // Reset Camera:
+        with(instances_matching(instances_matching(CampChar, "num", 17), "move_back", true)){
+            move_back = false;
+            x = xstart;
+            y = ystart;
+        }
+
+         // CampChar Stuff:
+        for(var i = 0; i < maxp; i++){
+            if(player_is_local_nonsync(i)){
+                var r = player_get_race(i)
+                if(array_find_index(global.campchar, r) >= 0){
+                    with(instances_matching(CampChar, "race", player_get_race(i))){
+                         // Move Camera:
+                        with(instances_matching(CampChar, "num", 17)){
+                            x = other.x;
+                            y = other.y;
+                            move_back = true;
+                        }
+
+                         // Manually Animate:
+                        if(anim_end){
+                            if(sprite_index != spr_menu){
+                                if(sprite_index == spr_to){
+                                    sprite_index = spr_menu;
+                                }
+                                else{
+                                    sprite_index = spr_to;
+                                }
+                            }
+                            image_index = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 #define bone_step
     instance_destroy();
@@ -1032,21 +1098,69 @@
     instance_destroy();
 
      // Air Bubbles:
-    with(instances_matching([Ally, Sapling, Bandit, Grunt, Inspector, Shielder, EliteGrunt, EliteInspector, EliteShielder, PopoFreak, Salamander, Necromancer, Freak, Rat], "visible", true)){
-        draw_sprite(sprPlayerBubble, -1, x, y);
-        if(my_health <= 0) instance_create(x, y, BubblePop);
-    }
-    with(instances_matching_ne(Player, "race", "fish")) if(visible){
-        draw_sprite(sprPlayerBubble, -1, x, y);
-        if(my_health <= 0 && candie && spiriteffect <= 0){
-            instance_create(x, y, BubblePop);
+    with(instances_matching(hitme, "spr_bubble", null)){
+        spr_bubble = -1;
+        spr_bubble_pop = -1;
+        spr_bubble_x = 0;
+        spr_bubble_y = 0;
+        switch(object_index){
+            case Ally:
+            case Sapling:
+            case Bandit:
+            case Grunt:
+            case Inspector:
+            case Shielder:
+            case EliteGrunt:
+            case EliteInspector:
+            case EliteShielder:
+            case PopoFreak:
+            case Necromancer:
+            case Freak:
+            case FastRat:
+            case Rat:
+                spr_bubble = sprPlayerBubble;
+                spr_bubble_pop = sprPlayerBubblePop;
+                break;
+
+            case Player:
+                if(race != "fish"){
+                    spr_bubble = sprPlayerBubble;
+                    spr_bubble_pop = sprPlayerBubblePop;
+                }
+                break;
+
+            case Ratking:
+            case RatkingRage:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
+                spr_bubble_y = 2;
+                break;
+
+            case FireBaller:
+            case SuperFireBaller:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
+                spr_bubble_y = -6;
+                break;
         }
     }
-    with instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism"){
+    with(instances_matching(instances_matching_ne(instances_seen(hitme, 16), "spr_bubble", -1), "visible", true)){
+        draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
+
+         // Death Pop:
+        if(my_health <= 0){
+            if(!instance_is(self, Player) || (candie && spiriteffect <= 0)){
+                instance_create(x + spr_bubble_x, y + spr_bubble_y, BubblePop);
+            }
+        }
+    }
+
+     // Pet Bubbles:
+    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism"), "visible", true)){
         draw_sprite(sprPlayerBubble, -1, x, y);
     }
 
-     // :
+     // Boiling Water:
     d3d_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
     draw_set_blend_mode(bm_add);
     with(Flame) if(sprite_index != sprFishBoost){
@@ -1058,6 +1172,39 @@
     draw_set_blend_mode(bm_normal);
     d3d_set_fog(0, 0, 0, 0);
 
+
+#define CampChar_create(_x, _y, _race)
+    _race = race_get_name(_race);
+    with(instance_create(_x, _y, CampChar)){
+        num = _race;
+        race = _race;
+
+         // Visual:
+        spr_slct = race_get_sprite(_race, sprFishMenu);
+        spr_menu = race_get_sprite(_race, sprFishMenuSelected);
+        spr_to   = race_get_sprite(_race, sprFishMenuSelect);
+        spr_from = race_get_sprite(_race, sprFishMenuDeselect);
+        sprite_index = spr_slct;
+
+         // Auto Offset:
+        var _tries = 1000;
+        while(_tries-- > 0){
+             // Move Somewhere:
+            x = xstart;
+            y = ystart;
+            move_contact_solid(random(360), random_range(32, 64) + random(random(64)));
+            x = round(x);
+            y = round(y);
+
+             // Safe:
+            var o = 12;
+            if(!collision_ellipse(x - o, y - o, x + o, y + o, CampChar, true, true) && !place_meeting(x, y, TV)){
+                break;
+            }
+        }
+
+        return id;
+    }
 
 #define scrBossIntro(_name, _sound, _music)
     var _path = "sprites/intros/",
@@ -1420,3 +1567,5 @@
 
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
+#define race_get_sprite(_race, _sprite)                                                 return  mod_script_call("mod", "teassets", "race_get_sprite", _race, _sprite);
+#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);

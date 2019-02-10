@@ -205,6 +205,10 @@
     	//#endregion
 
         //#region OASIS
+             // Big Bubble:
+            BigBubble    = sprite_add("sprites/areas/Oasis/sprBigBubble.png",    1, 24, 24);
+            BigBubblePop = sprite_add("sprites/areas/Oasis/sprBigBubblePop.png", 4, 24, 24);
+
              // Hammerhead:
             HammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png",  6, 24, 24);
             HammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png",  3, 24, 24);
@@ -1922,6 +1926,31 @@
     ds_grid_destroy(_gridCost);
 
     return _path;
+
+#define race_get_sprite(_race, _sprite)
+    var i = race_get_id(_race),
+        n = race_get_name(_race);
+
+    if(i < 17){
+        var a = string_upper(string_char_at(n, 1)) + string_lower(string_delete(n, 1, 1));
+        switch(_sprite){
+            case sprMutant1Idle:        return asset_get_index(`sprMutant${i}Idle`);
+            case sprMutant1Walk:        return asset_get_index(`sprMutant${i}Walk`);
+            case sprMutant1Hurt:        return asset_get_index(`sprMutant${i}Hurt`);
+            case sprMutant1Dead:        return asset_get_index(`sprMutant${i}Dead`);
+            case sprMutant1GoSit:       return asset_get_index(`sprMutant${i}GoSit`);
+            case sprMutant1Sit:         return asset_get_index(`sprMutant${i}Sit`);
+            case sprFishMenu:           return asset_get_index("spr" + a + "Menu");
+            case sprFishMenuSelected:   return asset_get_index("spr" + a + "MenuSelected");
+            case sprFishMenuSelect:     return asset_get_index("spr" + a + "MenuSelect");
+            case sprFishMenuDeselect:   return asset_get_index("spr" + a + "MenuDeselect");
+        }
+    }
+    if(mod_script_exists("race", n, "race_sprite")){
+        var s = mod_script_call("race", n, "race_sprite", _sprite);
+        if(!is_undefined(s)) return s;
+    }
+    return -1;
 
 #define cleanup
     with(global.charm_step) instance_destroy();

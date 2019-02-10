@@ -55,14 +55,19 @@
     sprite_index = spr.Parrot[_skin].Loadout;
     image_index = !race_skin_avail(_skin);
 
-#define race_sprite(_spr)
+#define race_sprite(_spr)  
+    var b = (("bskin" in self) ? bskin : 0);
     switch(_spr){
-        case sprMutant1Idle:    return spr.Parrot[bskin].Idle;
-        case sprMutant1Walk:    return spr.Parrot[bskin].Walk;
-        case sprMutant1Hurt:    return spr.Parrot[bskin].Hurt;
-        case sprMutant1Dead:    return spr.Parrot[bskin].Dead;
-        case sprMutant1GoSit:   return spr.Parrot[bskin].Hurt;
-        case sprMutant1Sit:     return spr.Parrot[bskin].Dead;
+        case sprMutant1Idle:        return spr.Parrot[b].Idle;
+        case sprMutant1Walk:        return spr.Parrot[b].Walk;
+        case sprMutant1Hurt:        return spr.Parrot[b].Hurt;
+        case sprMutant1Dead:        return spr.Parrot[b].Dead;
+        case sprMutant1GoSit:       return spr.Parrot[b].Hurt;
+        case sprMutant1Sit:         return spr.Parrot[b].Dead;
+        case sprFishMenu:           return spr.Parrot[b].Idle;
+        case sprFishMenuSelected:   return spr.Parrot[b].Walk;
+        case sprFishMenuSelect:     return spr.Parrot[b].Dead;
+        case sprFishMenuDeselect:   return spr.Parrot[b].Hurt;
     }
 
 /// Lock Status

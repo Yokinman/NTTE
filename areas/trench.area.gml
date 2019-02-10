@@ -421,7 +421,9 @@
         _y = y + 16;
     
     if(GameCont.loops > 0 && random(3) < 1) {
-        if(random(9) < 1) {
+        if(random(5) < 1) instance_create(_x, _y, FireBaller);
+        else if(random(2) < 1) instance_create(_x, _y, Spider);
+        /*if(random(9) < 1) {
             if(random(6) < 1) {
                 instance_create(_x, _y, Salamander);
             } else {
@@ -429,7 +431,7 @@
             }
         } else {
             instance_create(_x, _y, Rat);
-        }
+        }*/
     } else {
          // Anglers:
         if(!styleb && random(18) < 1){
@@ -445,7 +447,7 @@
                         repeat(3) obj_create(x, y, "Eel");
                     }
                 }
-    
+
                  // Jellies:
                 else{
                     obj_create(_x, _y, "Jelly");
@@ -458,6 +460,22 @@
                 obj_create(_x, _y, "Eel");
             }
         }
+        // Laser Crystals
+        // Cursed Spiders
+        // Spiders
+        // Explo Freak
+        // Rhino Freak
+        // Fireballer
+        // Super Fireballer
+        // Bonefish
+        // Hermit Crab
+        // Traffic Crab
+        // Puffers
+        // Hammerhead
+        // Salamander
+        // Sniper
+        // Bat
+        // Seal
     }
     
 #define area_pop_props

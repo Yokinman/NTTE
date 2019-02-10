@@ -366,7 +366,7 @@
         if(DebugLag) trace_time("Wading");
 
         if(DebugLag) trace_time();
-        with(instances_seen(instances_matching_gt(_inst, "wading", 0), 8)){
+        with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
 	        var o = (object_index == Player);
 
              // Wading Vars:

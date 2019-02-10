@@ -198,7 +198,9 @@
          // Shoals:
         if(random(2) < 1){
             if(!styleb && random(4) < 3){
-                if(GameCont.loops > 0 && random(2) < 1) repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
+                if(GameCont.loops > 0 && random(2) < 1){
+                    repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
+                }
                 repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
             }
             else{
@@ -208,16 +210,13 @@
 
         else{
             if(GameCont.loops > 0 && random(3) < 1) {
-                if(random(4) < 1) {
-                    instance_create(_x, _y, choose(ExploFreak, ExploGuardian));
-                }
-                else instance_create(_x, _y, choose(Necromancer, Guardian));
+                instance_create(_x, _y, (styleb ? Necromancer : Ratking));
             }
-            else {
+            else{
                 if(random(5) < 1) obj_create(_x, _y, "Diver");
                 else{
                     if(!styleb){
-                        if(random(2) < 1) instance_create(_x,_y,Crab);
+                        if(random(2) < 1) instance_create(_x, _y, Crab);
                     }
                     else obj_create(_x, _y, "Hammerhead"); 
                 }
