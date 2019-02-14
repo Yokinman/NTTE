@@ -6,10 +6,7 @@
 #define weapon_type return 5;   // Energy
 #define weapon_cost return 3;   // 3 Ammo
 #define weapon_load return 37;  // 1.23 Seconds
-#define weapon_area             // Spawns naturlly only after unlock
-    if !unlock_get(mod_current) return -1;
-    return 9;
-    
+#define weapon_area return (unlock_get(mod_current) ? 9 : -1);
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprLightningRingLauncher;
 
@@ -21,6 +18,7 @@
         motion_add(other.gunangle, 10);
         if(skill_get(mut_laser_brain)){
             charge *= 1.2;
+            stretch *= 1.2;
             image_speed *= 0.75;
         }
         team = other.team;

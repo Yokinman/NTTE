@@ -1168,6 +1168,14 @@
             case "Angler":
                 o = instance_create(_x, _y, CustomEnemy);
                 with(o){
+                     // Offset:
+                    x = _x - (right * 6);
+                    y = _y - 8;
+                    xstart = x;
+                    ystart = y;
+                    xprevious = x;
+                    yprevious = y;
+
                      // Visual:
         	        spr_idle =      spr.AnglerIdle;
         			spr_walk =      spr.AnglerWalk;
@@ -1246,6 +1254,14 @@
 
                      // Alarms:
                     alarm0 = 30;
+                }
+                break;
+
+            case "InkStain":
+                o = instance_create(_x, _y, CustomObject);
+                with(o){
+                     // Visual:
+                    //sprite_index = 
                 }
                 break;
 
@@ -2178,6 +2194,14 @@
          // he ded lol:
         if(place_meeting(x, y, Floor)){
             instance_destroy();
+        }
+    }
+
+#define BigDecal_draw
+     // Bubble Fix:
+    if(distance_to_object(Bubble) < 40){
+        with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom, Bubble)){
+            draw_self();
         }
     }
 
@@ -3303,19 +3327,35 @@
         if(instance_is(creator, Player)){
             direction = creator.gunangle;
 
+            var _big = (charge >= 2.5);
+            if(_big){
+                x += hspeed;
+                y += vspeed;
+            }
+
              // Attempt to Unstick from Wall:
             if(place_meeting(x, y, Wall)){
-                var w = instance_nearest(x, y, Wall),
-                    _dis = 2,
-                    _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
+                if(!_big){
+                    var w = instance_nearest(x, y, Wall),
+                        _dis = 2,
+                        _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
+    
+                    while(place_meeting(x, y, w)){
+                        x += lengthdir_x(_dis, _dir);
+                        y += lengthdir_y(_dis, _dir);
+                    }
+                }
 
-                while(place_meeting(x, y, w)){
-                    x += lengthdir_x(_dis, _dir);
-                    y += lengthdir_y(_dis, _dir);
+                 // Big boy:
+                else with(Wall) if(place_meeting(x, y, other)){
+                    instance_create(x, y, FloorExplo);
+                    instance_destroy();
                 }
             }
 
-            move_contact_solid(direction, speed);
+            if(!_big){
+                move_contact_solid(direction, speed);
+            }
 
              // Sorry roid man:
             with(creator) wkick = 5 * (other.image_xscale / other.charge);
@@ -3331,28 +3371,41 @@
         sound_play_pitch(sndLightningHit, (image_xscale / charge));
         if(!is_enemy) sound_play_pitch(sndPlasmaReload, (image_xscale / charge) * 3);
     }
-    else if(charge > 0){
-        charge = 0;
-
-         // Just in case:
-        if(place_meeting(x, y, Wall)){
-            with(Wall) if(place_meeting(x, y, other)){
-                instance_create(x, y, FloorExplo);
-                instance_destroy();
+    else{
+        if(charge > 0){
+             // Just in case:
+            if(place_meeting(x, y, Wall)){
+                with(Wall) if(place_meeting(x, y, other)){
+                    instance_create(x, y, FloorExplo);
+                    instance_destroy();
+                }
             }
+    
+             // Player Shooting:
+            if(instance_is(creator, Player)) with(creator){
+                weapon_post(-4, 16, 8);
+                with(other) direction += orandom(6) * other.accuracy;
+            }
+    
+             // Effects:
+            sound_play_pitch(sndLightningCannonEnd, (3 + random(1)) / charge);
+            with(instance_create(x, y, GunWarrantEmpty)) image_angle = other.direction;
+            if(!is_enemy && skill_get(mut_laser_brain)){
+                sound_play_pitch(sndLightningPistolUpg, 0.8);
+            }
+
+            charge = 0;
         }
 
-         // Player Shooting:
-        if(instance_is(creator, Player)) with(creator){
-            weapon_post(-4, 16, 8);
-            with(other) direction += orandom(6) * other.accuracy;
-        }
-
-         // Effects:
-        sound_play_pitch(sndLightningCannonEnd, 3 + random(1));
-        with(instance_create(x, y, GunWarrantEmpty)) image_angle = other.direction;
-        if(!is_enemy && skill_get(mut_laser_brain)){
-            sound_play_pitch(sndLightningPistolUpg, 0.8);
+         // Random Zapp:
+        if(!is_enemy){
+            if(current_frame_active && random(30) < 1){
+                with(nearest_instance(x, y, instances_matching_ne(hitme, "team", team, 0))){
+                    if(!place_meeting(x, y, other) && distance_to_object(other) < 32){
+                        with(other) LightningDisc_hit();
+                    }
+                }
+            }
         }
     }
 
@@ -3395,7 +3448,7 @@
          // Slow:
         x -= hspeed;
         y -= vspeed;
-        direction += orandom(30);
+        direction = point_direction(x, y, other.x, other.y) + orandom(10);
 
          // Electricity Field:
         var _tx = other.x,
@@ -3421,7 +3474,7 @@
     }
 
 #define LightningDisc_wall
-    if(image_xscale >= charge){
+    if(image_xscale >= charge && (image_xscale < 2.5 || image_yscale < 2.5)){
          // Bounce:
         if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
@@ -3438,7 +3491,7 @@
         }
     }
 
-     // Too Powerful:
+     // Too powerful to b contained:
     if(image_xscale > 1.2 || image_yscale > 1.2){
         with(other){
             instance_create(x, y, FloorExplo);
@@ -4778,7 +4831,16 @@
     var s = 0,
         _open = false;
 
-    if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0){
+    if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0 || distance_to_object(CustomObject) <= 0){
+        with(instances_named(CustomObject, "Pet")){
+            if(distance_to_object(other) <= 0){
+                var _sx = lengthdir_x(hspeed, other.image_angle),
+                    _sy = lengthdir_y(vspeed, other.image_angle);
+    
+                s = 3 * (_sx + _sy);
+                _open = true;
+            }
+        }
         with(instances_matching_ne(hitme, "team", team)){
             if(distance_to_object(other) <= 0){
                 var _sx = lengthdir_x(hspeed, other.image_angle),
@@ -4815,6 +4877,8 @@
         y = other.y;
         if(other.mask_index == mskNone) mask_index = -1;
         else mask_index = msk.CatDoorLOS;
+        image_xscale = other.image_xscale;
+        image_yscale = other.image_yscale;
         image_angle = other.image_angle;
         sprite_index = -1;
         visible = 0;

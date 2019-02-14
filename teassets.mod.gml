@@ -296,7 +296,8 @@
             AnglerAppear     = sprite_add("sprites/enemies/Angler/sprAnglerAppear.png",    4, 32, 32);
             AnglerTrail      = sprite_add("sprites/enemies/Angler/sprAnglerTrail.png",     8, 32, 32);
             AnglerLight      = sprite_add("sprites/enemies/Angler/sprAnglerLight.png",     4, 80, 80);
-            msk.AnglerHidden = sprite_add("sprites/enemies/Angler/mskAnglerHidden.png",    1, 32, 32);
+            msk.AnglerHidden =[sprite_add("sprites/enemies/Angler/mskAnglerHidden1.png",   1, 32, 32),
+                               sprite_add("sprites/enemies/Angler/mskAnglerHidden2.png",   1, 32, 32)];
 
              // Eel (0 = blue, 1 = purple, 2 = green):
             EelIdle = [

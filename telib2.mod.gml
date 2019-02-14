@@ -2933,7 +2933,7 @@
      // Anglers rise down
     sprite_index = spr_appear;
     image_index = image_number - 1 + image_speed;
-    mask_index = msk.AnglerHidden;
+    mask_index = msk.AnglerHidden[right < 0];
 	spr_shadow = shd24;
     spr_shadow_y = 9;
     spr_shadow_x = 6 * right;
