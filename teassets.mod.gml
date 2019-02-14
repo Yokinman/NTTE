@@ -762,6 +762,9 @@
     if(!lq_exists(sav, "unlock")) sav.unlock = {};
     lq_set(sav.unlock, _unlock, _value);
 
+#define scrPickupIndicator(_text)
+    return mod_script_call("mod", "ntte", "scrPickupIndicator", _text);
+
 #define alarm_creator(_object, _alarm)
   /// Calls alarm event and sets creator on objects that were spawned during it
     with(instances_matching(_object, "creator", null)) creator = noone;

@@ -416,7 +416,7 @@
     
             case "Pet":
                 o = instance_create(_x, _y, CustomObject);
-                with(o) {
+                with(o){
                      // Visual:
                     spr_idle = spr.PetParrotIdle;
                     spr_walk = spr.PetParrotWalk;
@@ -445,6 +445,10 @@
                     maxspd = 3;
                     friction = 0.4;
                     direction = random(360);
+                    pickup_indicator = noone;
+                    surf_draw = -1;
+                    surf_draw_w = 64;
+                    surf_draw_h = 64;
 
                     //can_tp = true;
                     //tp_distance = 240;
@@ -3614,12 +3618,16 @@
             spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_walk);
             spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_hurt);
         }
+
+        with(scrPickupIndicator(pet)) mask_index = mskWepPickup;
     }
 
     return p;
 
 #define Pet_step
     if(instance_exists(Menu)){ instance_destroy(); exit; }
+
+    var _pickup = pickup_indicator;
 
     enemyAlarms(1);
     enemyWalk(walkspd, maxspd);
@@ -3642,6 +3650,7 @@
 
      // Player Owns Pet:
     if(instance_exists(leader)){
+        can_take = false;
         persistent = true;
 
          // Teleport To Leader: 
@@ -3700,36 +3709,39 @@
         persistent = false;
 
          // Looking for a home:
-        var _alone = true;
-        if(instance_exists(Player)){
-            with(Player) if(point_distance(x, y, other.x, other.y) < 16) _alone = false;
-            if(!_alone && can_take){
-                with(instance_nearest(x, y, Player)){
-                    var _max = array_length(pet);
-                    if(_max > 0){
-                         // Remove Oldest Pet:
-                        with(pet[_max - 1]) leader = noone;
-                        pet = array_slice(pet, 0, _max - 1);
-
-                         // Add New Pet:
-                        other.leader = self;
-                        array_insert(pet, 0, other);
-
-                         // Effects:
-                        instance_create(x, y, HealFX);
-                        sound_play(sndHealthChestBig);
-                        sound_play(sndHitFlesh);
+        if(instance_exists(Player) && can_take && instance_exists(_pickup)){
+            with(player_find(_pickup.pick)){
+                var _max = array_length(pet);
+                if(_max > 0){
+                     // Remove Oldest Pet:
+                    with(pet[_max - 1]){
+                        leader = noone;
+                        can_take = true;
                     }
+                    pet = array_slice(pet, 0, _max - 1);
+
+                     // Add New Pet:
+                    other.leader = self;
+                    array_insert(pet, 0, other);
+                    with(other) direction = point_direction(x, y, other.x, other.y);
+
+                     // Effects:
+                    with(instance_create(x, y, WepSwap)){
+                        sprite_index = sprHealFX;
+                        creator = other;
+                    }
+                    sound_play(sndHealthChestBig);
+                    sound_play(sndHitFlesh);
                 }
-                can_take = false;
             }
         }
-        if(_alone) can_take = true;
     }
+    with(_pickup) visible = other.can_take;
 
      // Dodge:
     if(instance_exists(leader)) team = leader.team;
-        else team = 1;
+    else team = 1;
+
     if(place_meeting(x, y, projectile) && sprite_index != spr_hurt){
         with(instances_matching_ne(projectile, "team", team)){
             if(place_meeting(x, y, other)) with(other){
@@ -3748,6 +3760,17 @@
         }
     }
 
+     // Pet Collision:
+    if(place_meeting(x, y, object_index)){
+        with(instances_named(object_index, name)){
+            if(place_meeting(x, y, other)){
+                var _dir = point_direction(other.x, other.y, x, y);
+                motion_add(_dir, 1);
+                with(other) motion_add(_dir + 180, 1);
+            }
+        }
+    }
+
 #define Pet_end_step
      // Wall Collision:
     if(place_meeting(x, y, Wall)){
@@ -3762,6 +3785,27 @@
 #define Pet_draw
     image_alpha = abs(image_alpha);
 
+     // Outline Setup:
+    var _outline = (instance_exists(leader) && player_get_outlines(leader.index) && player_is_local_nonsync(leader.index));
+    if(_outline){
+        var _surf = surf_draw,
+            _surfw = surf_draw_w,
+            _surfh = surf_draw_h,
+            _surfx = x - (_surfw / 2),
+            _surfy = y - (_surfh / 2);
+    
+        if(!surface_exists(_surf)){
+            _surf = surface_create(_surfw, _surfh)
+            surf_draw = _surf;
+        }
+    
+        surface_set_target(_surf);
+        draw_clear_alpha(0, 0);
+
+        x -= _surfx;
+        y -= _surfy;
+    }
+
      // Custom Draw Event:
     var _scrt = pet + "_draw";
     if(mod_script_exists("mod", "petlib", _scrt)){
@@ -3770,6 +3814,28 @@
 
      // Default:
     else draw_self_enemy();
+
+     // Draw Outline:
+    if(_outline){
+        x += _surfx;
+        y += _surfy;
+
+        surface_reset_target();
+
+        d3d_set_fog(1, player_get_color(leader.index), 0, 0);
+        for(var a = 0; a <= 360; a += 90){
+            var _x = _surfx,
+                _y = _surfy;
+
+            if(a >= 360) d3d_set_fog(0, 0, 0, 0);
+            else{
+                _x += dcos(a);
+                _y -= dsin(a);
+            }
+
+            draw_surface(_surf, _x, _y);
+        }
+    }
 
      // CustomObject draw events are annoying:
     image_alpha = -abs(image_alpha);
@@ -5843,6 +5909,7 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "teassets", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);

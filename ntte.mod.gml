@@ -475,6 +475,7 @@
 
 #define step
     script_bind_begin_step(begin_step, 0);
+    script_bind_end_step(end_step, 0);
 
      // Pet Slots:
     with(instances_matching(Player, "pet", null)) pet = [noone];
@@ -630,6 +631,40 @@
                                 }
                             }
                             image_index = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+#define end_step
+    instance_destroy();
+
+     // Convert WepPickups to Pickup Indicators:
+    with(instances_matching(WepPickup, "convert_pickup_indicator", true)){
+        var v = ["creator", "mask_index", "xoff", "yoff"],
+            _save = {};
+
+        with(v) lq_set(_save, self, variable_instance_get(other, self));
+        instance_change(CustomObject, true);
+        with(v) variable_instance_set(other, self, lq_get(_save, self));
+
+        name = "PickupIndicator";
+        on_end_step = pickup_indicator_end_step;
+    }
+
+     // Make Game Display Pickup Indicators:
+    with(instances_matching(Player, "nearwep", noone)){
+        if(place_meeting(x, y, CustomObject)){
+            with(nearest_instance(x, y, instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true))){
+                if(place_meeting(x, y, other)){
+                    x += xoff;
+                    y += yoff;
+                    with(other){
+                        nearwep = other;
+                        if(canpick && button_pressed(index, "pick")){
+                            other.pick = index;
                         }
                     }
                 }
@@ -1486,6 +1521,46 @@
 
     draw_reset_projection();
 
+#define scrPickupIndicator(_text)
+    with(instance_create(0, 0, WepPickup)){
+        name = _text;
+        type = 0;
+        creator = other;
+        xoff = 0;
+        yoff = 0;
+        pick = -1;
+        convert_pickup_indicator = true;
+        mask_index = mskNone;
+        visible = 0;
+
+        return id;
+    }
+
+#define pickup_indicator_end_step
+    pick = -1;
+
+     // Follow Creator:
+    var c = creator;
+    if(c != noone){
+        if(instance_exists(c)){
+            x = c.x;
+            y = c.y;
+            persistent = c.persistent;
+            image_index = c.image_index;
+            image_angle = c.image_angle;
+            image_xscale = c.image_xscale;
+            image_yscale = c.image_yscale;
+            if(mask_index == mskNone){
+                mask_index = c.mask_index;
+                if(mask_index == -1) mask_index = c.sprite_index;
+            }
+            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
+                c.pickup_indicator = id;
+            }
+        }
+        else instance_destroy();
+    }
+
 #define scrCorpse(_dir, _spd)
 	with(instance_create(x, y, Corpse)){
 		size = other.size;
@@ -1568,4 +1643,5 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call("mod", "teassets", "race_get_sprite", _race, _sprite);
+#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);

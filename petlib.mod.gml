@@ -164,6 +164,8 @@
     open = false;
     hush = 0;
     hushtime = 0;
+    mimic_pickup = scrPickupIndicator("");
+    with(mimic_pickup) mask_index = mskWepPickup;
 
 #define Mimic_anim
     if(sprite_index != spr_hurt || anim_end){
@@ -177,6 +179,8 @@
 #define Mimic_step
     if hushtime <= 0 hush = max(hush - 0.1, 0);
     hushtime -= current_time_scale;
+
+    with(mimic_pickup) visible = false;
 
     if(instance_exists(leader)){
          // Open Chest:
@@ -206,6 +210,8 @@
 
              // Not Holding Weapon:
             if(wep == wep_none && !place_meeting(x, y, WepPickup)){
+                with(mimic_pickup) visible = true;
+
                  // Place Weapon:
                 with(Player) if(place_meeting(x, y, other) && button_pressed(index, "pick")){
                     if(canpick && wep != wep_none){
@@ -225,11 +231,6 @@
                         }
                         else sound_play(sndCursedReminder);
                     }
-                }
-
-                 // Draw Indicator:
-                if(instance_exists(TopCont)){
-                    script_bind_draw(Mimic_draw_indicator, TopCont.depth, id);
                 }
             }
         }
@@ -325,6 +326,12 @@
                     y = other.y + 4;
                     xprevious = x;
                     yprevious = y;
+
+                     // Keep pickup alive:
+                    if(blink < 30){
+                        blink = 30;
+                        visible = true;
+                    }
                 }
                 pickup_x = pickup.x;
                 pickup_y = pickup.y;
@@ -435,8 +442,8 @@
     if(instance_exists(perched)){
         var _uvsStart = sprite_get_uvs(perched.sprite_index, 0),
             _uvsCurrent = sprite_get_uvs(perched.sprite_index, perched.image_index),
-            _x = perched.x,
-            _y = perched.y - sprite_get_yoffset(perched.sprite_index) + sprite_get_bbox_top(perched.sprite_index) - 4;
+            _x = x,
+            _y = y - sprite_get_yoffset(perched.sprite_index) + sprite_get_bbox_top(perched.sprite_index) - 4;
 
          // Manual Bobbing:
         if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
@@ -521,6 +528,7 @@
 #define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "teassets", "target_in_distance", _disMin, _disMax);
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
+#define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "teassets", "scrPickupIndicator", _text);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
