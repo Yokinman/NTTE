@@ -5231,7 +5231,7 @@
             motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
             image_angle = direction + 135;
 
-            if(place_meeting(x, y, target)){
+            if(place_meeting(x, y, target) || (target == creator && place_meeting(x, y, Portal))){
                  // Effects:
                 with(instance_create(x, y, Dust)) depth = other.depth - 1;
                 sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);

@@ -311,7 +311,7 @@
     pickup_held = false;
 
 #define Parrot_step
-    if(speed > 0 || instance_exists(perched)){
+    if("wading" in self && (speed > 0 || instance_exists(perched))){
         nowade = true;
         wading = 0;
     }
