@@ -19,7 +19,13 @@
     global.option_slct = -1;
     global.option_pop = 0;
     global.option_menu = [
-        {   name : "Water Quality",
+        {
+            name : "Use Shaders",
+            type : opt_toggle,
+            text : "Used for certain visuals#@sShaders may cause the game# to crash on older computers!",
+            varname : "allowShaders"
+            },
+        {   name : "Water Quality :",
             type : opt_title,
             text : "Reduce to help#performance in coast"
             },
@@ -30,7 +36,7 @@
             },
         {   name : "Wading",
             type : opt_slider,
-            text : "Top halves of#swimming objects",
+            text : "Objects in the water",
             varname : "WaterQualityTop"
             }
         ];
@@ -794,26 +800,28 @@
 
                     with(_option){
                          // Click:
-                        if(!clicked){
-                            if(button_pressed(p, "fire")){
-                                clicked = true;
-                                switch(type){
-                                    case opt_slider:
-                                        sound_play(sndSlider);
-                                        break;
-
-                                    default:
-                                        sound_play(sndClick);
-                                        break;
+                        if(type >= 0){
+                            if(!clicked){
+                                if(button_pressed(p, "fire")){
+                                    clicked = true;
+                                    switch(type){
+                                        case opt_slider:
+                                            sound_play(sndSlider);
+                                            break;
+    
+                                        default:
+                                            sound_play(sndClick);
+                                            break;
+                                    }
                                 }
                             }
-                        }
-                        else if(!button_check(p, "fire")){
-                            clicked = false;
-                            switch(type){
-                                case opt_slider:
-                                    sound_play(sndSliderLetGo);
-                                    break;
+                            else if(!button_check(p, "fire")){
+                                clicked = false;
+                                switch(type){
+                                    case opt_slider:
+                                        sound_play(sndSliderLetGo);
+                                        break;
+                                }
                             }
                         }
 
@@ -841,7 +849,7 @@
 
                          // Description on Hover:
                         if("text" in self){
-                            if(!button_check(p, "fire")){
+                            if(!button_check(p, "fire") || type == opt_title){
                                 if(_mx < (game_width / 2) + 32){
                                     if(player_is_local_nonsync(p)){
                                         _tooltip = text;
@@ -874,6 +882,7 @@
         }
 
          // Option Text:
+        var _titleFound = false;
         for(var i = 0; i < array_length(OptionMenu); i++){
             var _option = OptionMenu[i],
                 _selected = (OptionSlct == i);
@@ -881,7 +890,16 @@
             with(_option) if(OptionPop >= appear){
                  // Option Name:
                 var _x = x - 80,
-                    _y = y;
+                    _y = y,
+                    _name = name;
+
+                if(type == opt_title){
+                    _titleFound = true;
+                    draw_set_color(c_white);
+                }
+                else if(_titleFound){
+                    _name = " " + _name;
+                }
 
                 if(_selected){
                     _y--;
@@ -890,7 +908,7 @@
                 else draw_set_color(make_color_rgb(125, 131, 141));
                 if(OptionPop < (appear + 1)) _y++;
 
-                draw_text_shadow(_x, _y, name);
+                draw_text_shadow(_x, _y, _name);
 
                  // Option Specifics:
                 _x += 124;

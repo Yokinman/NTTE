@@ -515,8 +515,9 @@
      // SAVE FILE //
     global.save = {
         option : {
+            "allowShaders"     : true,
             "WaterQualityMain" : 1,
-            "WaterQualityTop" : 1
+            "WaterQualityTop"  : 1
         }
     };
 
@@ -541,89 +542,13 @@
         exit;
     }
 
-     // SHADERS //
-    //trace("can your computer handle shaders? idiot?")
-    global.eye_shader = shader_create(
-        "/// Vertex Shader ///
-
-        struct VertexShaderInput
-        {
-            float4 vPosition : POSITION;
-            float2 vTexcoord : TEXCOORD0;
-        };
-
-        struct VertexShaderOutput
-        {
-            float4 vPosition : SV_POSITION;
-            float2 vTexcoord : TEXCOORD0;
-        };
-
-        uniform float4x4 matrix_world_view_projection;
-
-        VertexShaderOutput main(VertexShaderInput INPUT)
-        {
-            VertexShaderOutput OUT;
-
-            OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
-            OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
-
-            return OUT;
-        }
-        ",
-
-
-        "/// Fragment/Pixel Shader ///
-
-        struct PixelShaderInput
-        {
-            float2 vTexcoord : TEXCOORD0;
-        };
-
-        sampler2D s0;
-
-        float4 main(PixelShaderInput INPUT) : SV_TARGET
-        {
-             // Break Down Pixel's Color:
-            float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
-            float R = round(Color.r * 255.0);
-            float G = round(Color.g * 255.0);
-            float B = round(Color.b * 255.0);
-
-            if(R > G && R > B){
-                if(
-                    (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
-                    (R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-                    (R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-                    (R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
-                    (R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
-                    (R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
-                    (R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
-                    (R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
-                    (R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
-                    (R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
-                    (R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
-                    (R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
-                    (R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
-                    (R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
-                    (R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
-                    (R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
-                    (R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
-                    (R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
-                    (R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
-                ){
-                    return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
-                }
-            }
-
-             // Return Blank Pixel:
-            return float4(0.0, 0.0, 0.0, 0.0);
-        }
-    ");
-
+    global.surfCharm = -1;
+    global.eye_shader = -1;
     global.charm = ds_list_create();
     global.charm_step = noone;
 
 #macro EyeShader global.eye_shader
+#macro surfCharm global.surfCharm
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -776,11 +701,25 @@
 #define charm_draw(_inst)
     instance_destroy();
 
-    shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-    shader_set(EyeShader);
+     // Surface Setup:
+    var _surf = surfCharm,
+        _surfw = game_width,
+        _surfh = game_height,
+        _surfx = view_xview_nonsync,
+        _surfy = view_yview_nonsync;
 
-    with(_inst) if(instance_exists(self)){
-        var _spr = sprite_index,
+    if(!surface_exists(_surf)){
+        _surf = surface_create(_surfw, _surfh)
+        surfCharm = _surf;
+    }
+
+     // Draw Charmed Enemies to Surface:
+    surface_set_target(_surf);
+    draw_clear_alpha(0, 0);
+    with(instances_seen(_inst, 24)){
+        var _x = x - _surfx,
+            _y = y - _surfy,
+            _spr = sprite_index,
             _img = image_index;
 
         if(object_index == TechnoMancer){ // JW help me
@@ -788,15 +727,127 @@
             _img = drawimg;
             if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
                 texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
-                draw_sprite_ext(sprTechnoMancerActivate, 8, x, y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
             }
         }
 
-        texture_set_stage(0, sprite_get_texture(_spr, _img));
-        draw_sprite_ext(_spr, _img, x, y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+    }
+    surface_reset_target();
+
+     // Outlines:
+    var _local = -1;
+    for(var i = 0; i < maxp; i++){
+        if(player_is_local_nonsync(i)){
+            _local = i;
+            break;
+        }
+    }
+    if(player_get_outlines(_local)){
+        d3d_set_fog(1, player_get_color(_local), 0, 0);
+        for(var a = 0; a <= 360; a += 90){
+            var _x = _surfx,
+                _y = _surfy;
+
+            if(a >= 360) d3d_set_fog(0, 0, 0, 0);
+            else{
+                _x += dcos(a);
+                _y -= dsin(a);
+            }
+
+            draw_surface(_surf, _x, _y);
+        }
     }
 
-    shader_reset();
+     // Eye Shader:
+    if(opt.allowShaders){
+        if(global.eye_shader == -1){
+            global.eye_shader = shader_create(
+                "/// Vertex Shader ///
+        
+                struct VertexShaderInput
+                {
+                    float4 vPosition : POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+        
+                struct VertexShaderOutput
+                {
+                    float4 vPosition : SV_POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+        
+                uniform float4x4 matrix_world_view_projection;
+        
+                VertexShaderOutput main(VertexShaderInput INPUT)
+                {
+                    VertexShaderOutput OUT;
+        
+                    OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+                    OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+        
+                    return OUT;
+                }
+                ",
+        
+        
+                "/// Fragment/Pixel Shader ///
+        
+                struct PixelShaderInput
+                {
+                    float2 vTexcoord : TEXCOORD0;
+                };
+        
+                sampler2D s0;
+        
+                float4 main(PixelShaderInput INPUT) : SV_TARGET
+                {
+                     // Break Down Pixel's Color:
+                    float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
+                    float R = round(Color.r * 255.0);
+                    float G = round(Color.g * 255.0);
+                    float B = round(Color.b * 255.0);
+        
+                    if(R > G && R > B){
+                        if(
+                            (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
+                            (R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
+                            (R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
+                            (R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
+                            (R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
+                            (R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
+                            (R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
+                            (R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
+                            (R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
+                            (R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
+                            (R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
+                            (R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
+                            (R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
+                            (R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
+                            (R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
+                            (R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
+                            (R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
+                        ){
+                            return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
+                        }
+                    }
+        
+                     // Return Blank Pixel:
+                    return float4(0.0, 0.0, 0.0, 0.0);
+                }
+            ");
+        }
+
+        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+        shader_set(EyeShader);
+        texture_set_stage(0, surface_get_texture(_surf));
+
+        draw_surface(_surf, _surfx, _surfy);
+
+        shader_reset();
+    }
 
 #define charm_step
     var _charmList = ds_list_to_array(global.charm),
@@ -1195,7 +1246,9 @@
             }
         }
     }
-    script_bind_draw(charm_draw, -3, _charmDraw);
+    if(array_length(_charmDraw) > 0){
+        script_bind_draw(charm_draw, -3, _charmDraw);
+    }
  
 #define scrCharm(_instance, _charm)
     var c = {

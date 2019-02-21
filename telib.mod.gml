@@ -3822,6 +3822,11 @@
 
         surface_reset_target();
 
+         // Fix coast stuff:
+        if("wading" in self && wading != 0 && GameCont.area == "coast"){
+            surface_set_target(mod_variable_get("area", "coast", "surfSwim"));
+        }
+
         d3d_set_fog(1, player_get_color(leader.index), 0, 0);
         for(var a = 0; a <= 360; a += 90){
             var _x = _surfx,
@@ -5276,6 +5281,7 @@
         x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
         y = target.y + (sticky * image_yscale);
         visible = target.visible;
+        if("wading" in target && target.wading != 0) visible = true;
         depth = target.depth - 1;
     }
 

@@ -366,6 +366,9 @@
         if(DebugLag) trace_time("Wading");
 
         if(DebugLag) trace_time();
+        var _charmShader = mod_variable_get("mod", "teassets", "eye_shader"),
+            _canCharmDraw = (opt.allowShaders && _charmShader != -1);
+
         with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
 	        var o = (object_index == Player);
 
@@ -497,7 +500,7 @@
                                     _sy + ((_ly - _sy) / 10),
                                     _ly
                                 ];
-    
+
                         draw_primitive_begin(pr_trianglestrip);
                         draw_set_alpha((sin(degtorad(gunangle)) * 5) - (max(_wh - (sprite_yoffset - 2), 0)));
                         for(var j = 0; j < array_length(_dx); j++){
@@ -506,7 +509,7 @@
                             draw_set_alpha(1);
                         }
                         draw_primitive_end();
-    
+
                         //draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
                     }
                     draw_set_alpha(1);
@@ -514,6 +517,17 @@
 
                  // Self:
                 draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, (_surfSwimx - _surfx) * _surfScaleTop, (_surfSwimy + _z - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 1);
+
+                 // Charmed Enemy Eye:
+                if(_canCharmDraw){
+                    if("charm" in self && charm.charmed){
+                        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+                        shader_set(_charmShader);
+                        texture_set_stage(0, surface_get_texture(_surfSwim));
+                        draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, (_surfSwimx - _surfx) * _surfScaleTop, (_surfSwimy + _z - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 1);
+                        shader_reset();
+                    }
+                }
 
                  // Water Interference Line Thing:
                 d3d_set_fog(1, c_white, 0, 0);
