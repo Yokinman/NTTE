@@ -4079,6 +4079,7 @@
             }
             
              // Effects:
+            wkick += 7;
             with instance_create(x, y, Shell){
                 sprite_index = sprShotShell;
                 motion_set(other.gunangle + 130 * choose(-1, 1) + orandom(20), 5);
@@ -4247,6 +4248,7 @@
                 scrEnemyShoot("VenomFlak", gunangle + orandom(10), 12);
                 
                  // Effects:
+                wkick += 9;
                 sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
                 sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
                 
