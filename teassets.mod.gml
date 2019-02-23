@@ -270,10 +270,12 @@
             PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);
             PetParrotHurt = sprite_add("sprites/pets/Coast/sprPetParrotDodge.png",  3, 12, 12);
 
+             // Octopus:
+            PetOctoIdle = sprite_add("sprites/pets/Trench/sprPetOctoIdle.png", 20, 12, 12);
+
              // CoolGuy:
             PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
             PetCoolGuyWalk = sprite_add("sprites/pets/Pizza/sprPetCoolGuyWalk.png",    6, 12, 12);
-            PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
             
              // Golden Chest Mimic:
             PetMimicIdle = sprite_add("sprites/pets/Mansion/sprPetMimicIdle.png",       16, 16, 16);

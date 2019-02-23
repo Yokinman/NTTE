@@ -2962,15 +2962,19 @@
         if(instance_exists(arc_inst) && point_distance(x, y, arc_inst.x, arc_inst.y) < 100){
              // Start Arcing:
             if(arcing < 1){
-                arcing += 0.15;
+                arcing += 0.15 * current_time_scale;
     
-                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
-                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
-    
-                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
-                    motion_add(random(360), 1);
-                    alarm0 = 8;
+                if(current_frame_active){
+                    var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
+                        _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
+        
+                    with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
+                        motion_add(random(360), 1);
+                        alarm0 = 8;
+                    }
                 }
+
+                 // Arced:
                 if(arcing >= 1){
                     sound_play_pitch(sndLightningHit, 2);
     
@@ -2992,7 +2996,7 @@
              // Arcing:
             else{
                 if(arc_inst.c > 2) elite = 30;
-                with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30))){
+                with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30), true)){
                     image_index = (other.wave * image_speed) mod image_number;
                     image_speed_raw = image_number;
                     hitid = other.arc_inst.hitid;
@@ -4147,8 +4151,7 @@
 
 
  /// HELPER SCRIPTS ///
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)
-    trace_time();
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)
     var _maxDis = point_distance(_x1, _y1, _x2, _y2),
         _lastx = _x1,
         _lasty = _y1,
@@ -4169,11 +4172,11 @@
             _ox = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(m * pi)),
             _oy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(m * pi/2));
 
-        array_push(r, scrLightning(_lastx, _lasty, _ox, _oy, true));
+        array_push(r, scrLightning(_lastx, _lasty, _ox, _oy, _enemy));
         _lastx = _ox;
         _lasty = _oy;
     }
-    array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, true));
+    array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, _enemy));
 
     var _ammo = array_length(r) - 1;
     with(r) ammo = _ammo--;

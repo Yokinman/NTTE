@@ -26,7 +26,6 @@
     spr_idle = spr.PetCoolGuyIdle;
     spr_walk = spr.PetCoolGuyWalk;
     spr_hurt = spr.PetCoolGuyHurt;
-    depth = -2;
 
      // Vars:
     maxspd = 3.5;
@@ -463,6 +462,127 @@
     else draw_self_enemy();
 
 
+#define Octo_create
+     // Visual:
+    spr_idle = spr.PetOctoIdle;
+    spr_walk = spr.PetOctoIdle;
+    spr_hurt = spr.PetOctoIdle;
+
+     // Vars:
+    friction = 0.1;
+    arcing = 0;
+    wave = 0;
+
+#define Octo_step
+    wave += current_time_scale;
+    if(instance_exists(leader)){
+        var _lx = leader.x,
+            _ly = leader.y;
+
+        if(!collision_line(x, y, _lx, _ly, Wall, false, false) && point_distance(x, y, _lx, _ly) < 64 + (48 * skill_get(mut_laser_brain))){
+             // Lightning Arcing Effects:
+            if(arcing < 1){
+                arcing += 0.15 * current_time_scale;
+
+                if(current_frame_active){
+                    var _dis = random(point_distance(x, y, _lx, _ly)),
+                        _dir = point_direction(x, y, _lx, _ly);
+        
+                    with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
+                        if(object_index == LaserCharge){
+                            sprite_index = sprLightning;
+                            image_xscale = random_range(0.5, 2);
+                            image_yscale = random_range(0.5, 2);
+                            image_angle = random(360);
+                        }
+                        motion_add(random(360), 1);
+                        alarm0 = 4 + random(4);
+                    }
+                }
+
+                 // Arced:
+                if(arcing >= 1){
+                    sound_play_pitch(sndLightningHit, 2);
+                }
+            }
+
+             // Lightning Arc:
+            else with(lightning_connect(_lx, _ly, x, y, 8 * sin(wave / 60), false)){
+                image_index = (other.wave * image_speed) mod image_number;
+                image_speed_raw = image_number;
+                team = other.team;
+                creator = other;
+
+                 // Effects:
+                if(random(200) < 1){
+                    with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
+                        motion_add(random(360), 1);
+                    }
+                    with(other){
+                        sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
+                    }
+                }
+            }
+        }
+
+         // Stop Arcing:
+        else{
+            if(arcing > 0){
+                arcing = 0;
+                sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
+
+                repeat(2){
+                    var _dis = random(point_distance(x, y, _lx, _ly)),
+                        _dir = point_direction(x, y, _lx, _ly);
+
+                    with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+                        motion_add(random(360), 1);
+                    }
+                }
+            }
+        }
+    }
+    else arcing = 0;
+
+     // He is bouncy
+    if(array_length(path) <= 0){
+        if(place_meeting(x + hspeed, y + vspeed, Wall)){
+            if(place_meeting(x + hspeed, y, Wall)) hspeed *= -0.5;
+            if(place_meeting(x, y + vspeed, Wall)) vspeed *= -0.5;
+            scrRight(direction);
+        }
+    }
+
+#define Octo_alrm0(_leaderDir, _leaderDis)
+    if(instance_exists(leader)){
+         // Follow Leader Around:
+        if(_leaderDis > 64 || collision_line(x, y, leader.x, leader.y, Wall, false, false)){
+             // Pathfinding:
+            if(array_length(path) > 0){
+                scrWalk(5 + random(5), path_dir + orandom(10));
+            }
+    
+             // Toward Leader:
+            else{
+                scrWalk(5 + random(10), _leaderDir + orandom(20));
+            }
+    
+            return walk + random(10);
+        }
+
+         // Idle Around Leader:
+        else{
+            motion_add(_leaderDir + orandom(60), 1.5 + random(1.5));
+            scrRight(direction);
+            return 30 + random(10);
+        }
+    }
+
+     // Idle Movement:
+    scrWalk(10 + random(5), direction + orandom(60));
+    return walk + 30;
+
+
 #define Prism_create
      // Visual:
     spr_idle = spr.PetPrismIdle;
@@ -514,6 +634,7 @@
 
  /// HELPER SCRIPTS ///
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call("mod", "telib2", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
@@ -529,8 +650,6 @@
 #define target_is_visible()                                                             return  mod_script_call("mod", "teassets", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "teassets", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "teassets", "scrPickupIndicator", _text);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc)                                     return  mod_script_call("mod", "teassets", "lightning_connect", _x1, _y1, _x2, _y2, _arc);
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "teassets", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);
 #define scrCharmTarget()                                                                return  mod_script_call("mod", "teassets", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "teassets", "scrBossHP", _hp);
