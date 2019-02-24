@@ -1,5 +1,5 @@
 #define init
-    global.sprBubbleRifle = sprite_add_weapon("../sprites/weps/sprBubbleRifle.png", 3, 5);
+    global.sprBubbleRifle = sprite_add_weapon("../sprites/weps/sprConch.png", -2, 16);
 
 #define weapon_name return "BUBBLE RIFLE";
 #define weapon_text return "REFRESHING";
@@ -9,7 +9,7 @@
 #define weapon_area             // Spawns naturlly only after unlock
     if !unlock_get(mod_current) return -1;
     return 6;
-    
+
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleRifle;
 
@@ -33,6 +33,14 @@
         }
 
          // Effects:
+         var _dis = 14, _dir = gunangle;
+         with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), BubblePop)){
+             image_index = 1;
+             image_angle = random(360);
+             image_xscale = 0.8;
+             image_yscale = image_xscale;
+             depth = -1;
+         }
         var _pitch = random_range(0.8, 1.2);
         sound_play_pitch(sndOasisCrabAttack,        1.6 * _pitch);
         sound_play_pitch(sndOasisExplosionSmall,    0.7 * _pitch);

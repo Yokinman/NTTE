@@ -2659,6 +2659,7 @@ with(my_projectile) instance_destroy();
 
 // Explode:
 sleep(15)
+view_shake_at(x,y,60)
 var _ang  = random(360);
 repeat(3)
 {
@@ -2681,16 +2682,17 @@ repeat(3)
     hitid = other.hitid;
   }
   _ang +=  120;
+  scrWaterStreak(x,y,_ang,10)
 }
-repeat(6){
-  _ang += 60;
+repeat(5){
+  _ang += 72;
   with(obj_create(x,y,"BubbleBomb")){
       move_contact_solid(_ang, 2);
       motion_add(_ang + orandom(6), 7);
       team = other.team;
       creator = other;
       friction *= 1.2;
-      image_speed *= random_range(.8,1.2);
+      image_speed += (irandom_range(-2,2)/50);
   }
 }
 repeat(3)with(obj_create(x+random_range(-3,3),y+random_range(-3,3),"BubbleBomb")){
@@ -3730,7 +3732,7 @@ with(instance_create(x, y - z, BulletHit)){
 
 
 #define NetNade_step
-    if(alarm0 > 0 && alarm0 < 15) sprite_index = sprGrenadeBlink;
+    if(alarm0 > 0 && alarm0 < 15) sprite_index = spr.NetNadeBlink;
     enemyAlarms(1);
 
 #define NetNade_hit

@@ -8,8 +8,8 @@
 #define weapon_area             // Spawns naturlly only after unlock
     if !unlock_get(mod_current) return -1;
     return 3;
-    
-#define weapon_swap return sndSwapShotgun;
+
+#define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprNetLauncher;
 
 #define weapon_laser_sight

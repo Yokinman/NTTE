@@ -9,7 +9,7 @@
 #define weapon_area             // Spawns naturlly only after unlock
     if !unlock_get(mod_current) return -1;
     return 6;
-    
+
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleShotgun;
 
@@ -30,6 +30,7 @@
             motion_add(other.gunangle + (orandom(12) * other.accuracy), 9 + random(1));
             team = other.team;
             creator = other;
+            image_speed += (irandom_range(-2,2)/50);
         }
     }
 
@@ -47,7 +48,7 @@
     sound_play_pitch(sndOasisExplosionSmall,    0.8 * _pitch);
     sound_play_pitch(sndToxicBoltGas,           0.8 * _pitch);
     sound_play_pitch(sndHyperRifle,             1.5 * _pitch);
-    weapon_post(10, -5, 10);
+    weapon_post(6, -5, 10);
 
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);

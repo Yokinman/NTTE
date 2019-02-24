@@ -33,8 +33,9 @@
         BoneShard = sprite_add("sprites/weps/projectiles/sprBoneShard.png", 1, 3, 2);
 
          // Harpoon:
-        Harpoon = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
-        NetNade = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
+        Harpoon      = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
+        NetNade      = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
+        NetNadeBlink = sprite_add("sprites/weps/projectiles/sprNetNadeBlink.png", 2, 3, 3);
 
          // Bubble Bombs:
     	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
@@ -48,7 +49,7 @@
         	BabyScorpionHurt = sprite_add("sprites/enemies/BabyScorpion/sprBabyScorpionHurt.png", 3, 16, 16);
         	BabyScorpionDead = sprite_add("sprites/enemies/BabyScorpion/sprBabyScorpionDead.png", 6, 16, 16);
         	BabyScorpionFire = sprite_add("sprites/enemies/BabyScorpion/sprBabyScorpionFire.png", 6, 16, 16);
-        	
+
         	 // Golden Baby Scorp:
         	BabyScorpionGoldIdle = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldIdle.png", 4, 16, 16);
         	BabyScorpionGoldWalk = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldWalk.png", 6, 16, 16);
@@ -259,11 +260,11 @@
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
                 }
             }
-            
+
              // Parrot Feather:
             ParrotFeather = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gccEhAKigKoTwAAAF5JREFUGNNjYMADipi4/hOUZEQWXMQi+J+BgYHhwr+fDH3/vjEyMDAwMCFLWkn+Y7jw7yeDARM7XBNcgZXkP4ZpT38zZEmzYtq3iEXwfxET1/87svz/YdagAJwSxAAAEiYfBSYTcvYAAAAASUVORK5CYII=", 1, 4, 4);
         //#endregion
-        
+
         //#region PETS
              // Parrot:
             PetParrotIdle = sprite_add("sprites/pets/Coast/sprPetParrotIdle.png",   6, 12, 12);
@@ -274,19 +275,19 @@
             PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
             PetCoolGuyWalk = sprite_add("sprites/pets/Pizza/sprPetCoolGuyWalk.png",    6, 12, 12);
             PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
-            
+
              // Golden Chest Mimic:
             PetMimicIdle = sprite_add("sprites/pets/Mansion/sprPetMimicIdle.png",       16, 16, 16);
             PetMimicWalk = sprite_add("sprites/pets/Mansion/sprPetMimicWalk.png",       6,  16, 16);
             PetMimicHurt = sprite_add("sprites/pets/Mansion/sprPetMimicHurt.png",       3,  16, 16);
             PetMimicOpen = sprite_add("sprites/pets/Mansion/sprPetMimicOpen.png",       1,  16, 16);
             PetMimicHide = sprite_add("sprites/pets/Mansion/sprPetMimicHide.png",       1,  16, 16);
-            
+
             // Prism:
             PetPrismIdle = sprite_add("sprites/pets/Cursed Caves/sprPetPrismIdle.png", 6, 12, 12);
-            
+
         //#endregion
-        
+
         //#region TRENCH
              // Angler:
             AnglerIdle       = sprite_add("sprites/enemies/Angler/sprAnglerIdle.png",      8, 32, 32);
@@ -379,11 +380,11 @@
             BatYell         = sprite_add("sprites/enemies/Bat/sprBatYell.png",     6, 16, 16);
             BatScreech      = sprite_add("sprites/enemies/Bat/sprBatScreech.png",  8, 48, 48);
             msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
-            
+
              // Bat Boss:
             BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png", 4,  8);
             VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
-            
+
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",    4, 12, 12);
             CatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png",    6, 12, 12);
@@ -446,7 +447,7 @@
                 CouchIdle = sprite_add("sprites/areas/Lair/Props/sprCouchIdle.png", 1, 32, 32);
                 CouchHurt = sprite_add("sprites/areas/Lair/Props/sprCouchHurt.png", 3, 32, 32);
                 CouchDead = sprite_add("sprites/areas/Lair/Props/sprCouchDead.png", 3, 32, 32);
-                
+
                  // Soda Machine:
                 SodaMachineIdle = sprite_add("sprites/areas/Lair/Props/sprSodaMachineIdle.png", 1, 16, 16);
                 SodaMachineHurt = sprite_add("sprites/areas/Lair/Props/sprSodaMachineHurt.png", 3, 16, 16);
@@ -764,42 +765,42 @@
         if(global.eye_shader == -1){
             global.eye_shader = shader_create(
                 "/// Vertex Shader ///
-        
+
                 struct VertexShaderInput
                 {
                     float4 vPosition : POSITION;
                     float2 vTexcoord : TEXCOORD0;
                 };
-        
+
                 struct VertexShaderOutput
                 {
                     float4 vPosition : SV_POSITION;
                     float2 vTexcoord : TEXCOORD0;
                 };
-        
+
                 uniform float4x4 matrix_world_view_projection;
-        
+
                 VertexShaderOutput main(VertexShaderInput INPUT)
                 {
                     VertexShaderOutput OUT;
-        
+
                     OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
                     OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
-        
+
                     return OUT;
                 }
                 ",
-        
-        
+
+
                 "/// Fragment/Pixel Shader ///
-        
+
                 struct PixelShaderInput
                 {
                     float2 vTexcoord : TEXCOORD0;
                 };
-        
+
                 sampler2D s0;
-        
+
                 float4 main(PixelShaderInput INPUT) : SV_TARGET
                 {
                      // Break Down Pixel's Color:
@@ -807,7 +808,7 @@
                     float R = round(Color.r * 255.0);
                     float G = round(Color.g * 255.0);
                     float B = round(Color.b * 255.0);
-        
+
                     if(R > G && R > B){
                         if(
                             (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
@@ -833,7 +834,7 @@
                             return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
                         }
                     }
-        
+
                      // Return Blank Pixel:
                     return float4(0.0, 0.0, 0.0, 0.0);
                 }
@@ -875,7 +876,7 @@
                         with(instance){
                             target = other.target;
                             var t = target;
-    
+
                              // Move Player for Enemy Targeting:
                             var _lastPos = [];
                             with(Player){
@@ -889,7 +890,7 @@
                                     y = choose(0, 20000);
                                 }
                             }
-    
+
                              // Reset Alarms:
                             for(var a = 0; a <= 10; a++){
                                 alarm_set(a, other.alarm[a]);
@@ -901,40 +902,40 @@
                                     case MaggotExplosion:   /// Charm Spawned Maggots
                                         alarm_creator(Maggot, i);
                                         break;
-    
+
                                     case RadMaggotExplosion:   /// Charm Spawned Maggots
                                         alarm_creator(RadMaggot, i);
                                         break;
-    
+
                                     case Necromancer:       /// Match ReviveArea to Necromancer
                                         with(alarm_creator(ReviveArea, i)) alarm0++;
                                         break;
-    
+
                                     case Ratking:           /// Charm Spawned Rats
                                         if(i == 2) alarm_creator(FastRat, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     case ScrapBoss:         /// Charm Spawned Missiles
                                         if(i == 0) alarm_creator(ScrapBossMissile, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     case FrogQueen:         /// Charm Spawned Eggs
                                         if(i == 2) alarm_creator(FrogEgg, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     case FrogEgg:           /// Charm Spawned Ballguys
                                         if(i == 0) alarm_creator(Exploder, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     case HyperCrystal:      /// Charm Spawned Crystals
                                         if(i == 1) alarm_creator(LaserCrystal, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     case TechnoMancer:      /// Charm Spawned Necromancers + Turrets
                                         if(i == 2) with(alarm_creator(NecroReviveArea, i)) alarm0++;
                                         else{
@@ -949,12 +950,12 @@
                                         charm.walk = walk;
                                         walk = 0;
                                         break;
-    
+
                                     case JungleFly:
                                         if(i == 2) alarm_creator(FiredMaggot, i);
                                         else event_perform(ev_alarm, i);
                                         break;
-    
+
                                     default:
                                         event_perform(ev_alarm, i);
                                 }
@@ -975,7 +976,7 @@
                                 if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
                                 alarm_set(a, -1);
                             }
-    
+
                              // Return Players:
                             var i = 0;
                             with(Player){
@@ -1004,7 +1005,7 @@
                                 }
                             }
                         }
-        
+
                          // Player Shooting:
                         /* actually pretty annoying dont use this
                         if(place_meeting(x, y, projectile)){
@@ -1018,7 +1019,7 @@
                             }
                         }
                         */
-    
+
                          // Follow Leader:
                         if(instance_exists(Player)){
                             if(distance_to_object(Player) > 256 || !instance_exists(target) || collision_line(x, y, target.x, target.y, Wall, 0, 0) || point_distance(x, y, target.x, target.y) > 80){
@@ -1046,7 +1047,7 @@
                                 scrCharm(instance_nearest(_x, _y, MaggotExplosion), true).time = _time;
                             }
                             break;
-    
+
                         case RadMaggotChest:
                             if(my_health <= 0){
                                 var _x = x, _y = y;
@@ -1054,7 +1055,7 @@
                                 scrCharm(instance_nearest(_x, _y, RadMaggotExplosion), true).time = _time;
                             }
                             break;
-    
+
                         case RatkingRage:       /// Charm Spawned Rats
                             if(walk > 0 && walk <= current_time_scale){
                                 with(instances_matching(FastRat, "creator", null)) creator = noone;
@@ -1062,7 +1063,7 @@
                                 with(instances_matching(FastRat, "creator", null)) creator = _self;
                             }
                             break;
-    
+
                         case MeleeBandit:
                         case JungleAssassin:    /// Overwrite Movement
                             if(walk > 0){
@@ -1071,25 +1072,25 @@
                             }
                             if(other.walk > 0){
                                 other.walk -= current_time_scale;
-    
+
                                 motion_add(direction, 2);
                                 if(instance_exists(other.target)){
                                     var s = ((object_index == JungleAssassin) ? 1 : 2);
                                     mp_potential_step(other.target.x, other.target.y, s, false);
                                 }
                             }
-    
+
                              // Max Speed:
                             var m = ((object_index == JungleAssassin) ? 4 : 3);
                             if(speed > m) speed = m;
                             break;
-    
+
                         case Sniper:            /// Aim at Target
                             if(other.alarm[2] > 5 && instance_exists(other.target)){
                                 gunangle = point_direction(x, y, other.target.x, other.target.y);
                             }
                             break;
-    
+
                         case ScrapBoss:         /// Override Movement
                             if(walk > 0){
                                 other.walk = walk;
@@ -1097,20 +1098,20 @@
                             }
                             if(other.walk > 0){
                                 other.walk -= current_time_scale;
-        
+
                                 motion_add(direction, 0.5);
                                 if(instance_exists(other.target)){
                                     motion_add(point_direction(x, y, other.target.x, other.target.y), 0.5);
                                 }
-        
+
                                 if(round(other.walk / 10) == other.walk / 10) sound_play(sndBigDogWalk);
-        
+
                                  // Animate:
                                 if(other.walk <= 0) sprite_index = spr_idle;
                                 else sprite_index = spr_walk;
                             }
                             break;
-    
+
                         case ScrapBossMissile:  /// Don't Move Towards Player
                             if(sprite_index != spr_hurt){
                                 if(instance_exists(Player)){
@@ -1125,7 +1126,7 @@
                                 y = yprevious + vspeed;
                             }
                             break;
-    
+
                         case LaserCrystal:
                         case InvLaserCrystal:   /// Charge Particles
                             if(other.alarm[2] > 8 && current_frame_active){
@@ -1137,7 +1138,7 @@
                         case LightningCrystal:  /// Don't Move While Charging
                             if(other.alarm[2] > 0) speed = 0;
                             break;
-    
+
                         case LilHunterFly:      /// Land on Enemies
                             if(sprite_index == sprLilHunterLand && z < -160){
                                 if(instance_exists(other.target)){
@@ -1146,7 +1147,7 @@
                                 }
                             }
                             break;
-    
+
                         case ExploFreak:
                         case RhinoFreak:        /// Don't Move Towards Player
                             if(instance_exists(Player)){
@@ -1157,46 +1158,46 @@
                                 mp_potential_step(other.target.x, other.target.y, 1, false);
                             }
                             break;
-    
+
                         case Necromancer:       /// Charm Revived Freaks
                             with(instances_matching_le(instances_matching(ReviveArea, "creator", _self), "alarm0", 1)){
                                 if(place_meeting(x, y, Corpse)) with(Corpse){
                                     if(place_meeting(x, y, other) && size < 3){
                                         with(instance_create(x, y, Freak)) creator = _self;
-    
+
                                          // Effects:
                                         instance_create(x, y, ReviveFX);
                                         sound_play(sndNecromancerRevive);
-    
+
                                         instance_destroy();
                                     }
                                 }
                                 instance_destroy();
                             }
                             break;
-    
+
                         case TechnoMancer:      /// Charm Revived Necromancers
                             with(instances_matching_le(instances_matching(NecroReviveArea, "creator", _self), "alarm0", 1)){
                                 if(place_meeting(x, y, Corpse)) with(instance_nearest(x, y, Corpse)){
                                     if(place_meeting(x, y, other) && size < 3){
                                         with(instance_create(x, y, Necromancer)) creator = _self;
-    
+
                                          // Effects:
                                         with(instance_create(x, y, ReviveFX)) sprite_index = sprNecroRevive;
                                         sound_play(sndNecromancerRevive);
-    
+
                                         instance_destroy();
                                     }
                                 }
                                 instance_destroy();
                             }
                             break;
-    
+
                         case Shielder:
                         case EliteShielder:     /// Fix Shield Team
                             with(instances_matching(PopoShield, "creator", id)) team = other.team;
                             break;
-    
+
                         case EnemyHorror:       /// Don't Shoot Beam at Player
                             if(instance_exists(other.target)){
                                 gunangle = point_direction(x, y, other.target.x, other.target.y);
@@ -1211,7 +1212,7 @@
                                 y += vspeed;
                             }
                             break;
-    
+
                         case InvSpider:         /// Charm Split Spiders
                             if(my_health <= 0){
                                 with(instances_matching(InvSpider, "creator", null)) creator = noone;
@@ -1219,7 +1220,7 @@
                                 with(instances_matching(InvSpider, "creator", null)) creator = _self;
                             }
                             break;
-    
+
                         case FiredMaggot:       /// Charm Dropped Maggot
                             if(my_health <= 0 || place_meeting(x + hspeed, y + vspeed, Wall)){
                                 with(instances_matching(Maggot, "creator", null)) creator = noone;
@@ -1249,7 +1250,7 @@
     if(array_length(_charmDraw) > 0){
         script_bind_draw(charm_draw, -3, _charmDraw);
     }
- 
+
 #define scrCharm(_instance, _charm)
     var c = {
             "instance"  : _instance,
@@ -1316,7 +1317,7 @@
     with(instance){
         var _x = x,
             _y = y;
-    
+
         if(instance_is(self, enemy)){
             other.target = nearest_instance(_x, _y, instances_matching_ne(enemy, "team", team));
         }
@@ -1485,7 +1486,7 @@
                             _dir = point_direction(x, y, p.x, p.y),
                             _x = x + lengthdir_x(_dis, _dir),
                             _y = y + lengthdir_y(_dis, _dir);
-    
+
                         if(place_free(_x, y)) x = _x;
                         if(place_free(x, _y)) y = _y;
                     }
