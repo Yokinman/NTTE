@@ -484,25 +484,31 @@
             if(arcing < 1){
                 arcing += 0.15 * current_time_scale;
 
+                var _dis = random(point_distance(x, y, _lx, _ly)),
+                    _dir = point_direction(x, y, _lx, _ly);
+
                 if(current_frame_active){
-                    var _dis = random(point_distance(x, y, _lx, _ly)),
-                        _dir = point_direction(x, y, _lx, _ly);
-        
                     with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
                         if(object_index == LaserCharge){
                             sprite_index = sprLightning;
                             image_xscale = random_range(0.5, 2);
                             image_yscale = random_range(0.5, 2);
                             image_angle = random(360);
+                            alarm0 = 4 + random(4);
                         }
                         motion_add(random(360), 1);
-                        alarm0 = 4 + random(4);
                     }
                 }
 
                  // Arced:
                 if(arcing >= 1){
                     sound_play_pitch(sndLightningHit, 2);
+
+                     // Laser Brain FX:
+                    if(skill_get(mut_laser_brain)){
+                        with(instance_create(x, y, LaserBrain)) creator = other;
+                        with(instance_create(_lx, _ly, LaserBrain)) creator = other.leader;
+                    }
                 }
             }
 
@@ -514,7 +520,7 @@
                 creator = other;
 
                  // Effects:
-                if(random(200) < 1){
+                if(current_frame_active && random(200) < 1){
                     with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
                         motion_add(random(360), 1);
                     }
