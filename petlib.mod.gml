@@ -477,17 +477,19 @@
     wave += current_time_scale;
     if(instance_exists(leader)){
         var _lx = leader.x,
-            _ly = leader.y;
+            _ly = leader.y,
+            _leaderDir = point_direction(x, y, _lx, _ly),
+            _leaderDis = point_distance(x, y, _lx, _ly);
 
-        if(!collision_line(x, y, _lx, _ly, Wall, false, false) && point_distance(x, y, _lx, _ly) < 64 + (48 * skill_get(mut_laser_brain))){
+        if(!collision_line(x, y, _lx, _ly, Wall, false, false) && _leaderDis < 64 + (48 * skill_get(mut_laser_brain))){
              // Lightning Arcing Effects:
             if(arcing < 1){
                 arcing += 0.15 * current_time_scale;
 
-                var _dis = random(point_distance(x, y, _lx, _ly)),
-                    _dir = point_direction(x, y, _lx, _ly);
-
                 if(current_frame_active){
+                    var _dis = random(_leaderDis),
+                        _dir = _leaderDir;
+
                     with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
                         if(object_index == LaserCharge){
                             sprite_index = sprLightning;
@@ -506,8 +508,14 @@
 
                      // Laser Brain FX:
                     if(skill_get(mut_laser_brain)){
-                        with(instance_create(x, y, LaserBrain)) creator = other;
-                        with(instance_create(_lx, _ly, LaserBrain)) creator = other.leader;
+                        with(instance_create(x, y, LaserBrain)){
+                            image_angle = _leaderDir + orandom(10);
+                            creator = other;
+                        }
+                        with(instance_create(_lx, _ly, LaserBrain)){
+                            image_angle = _leaderDir + orandom(10) + 180;
+                            creator = other.leader;
+                        }
                     }
                 }
             }
