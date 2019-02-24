@@ -10,13 +10,13 @@
     }*/
      // Trench big decal bubble spawn points:
     global.decalVents = [
-        [2, -14],
-        [15, 8],
-        [1, 0],
-        [-19, 17],
-        [-12, 25],
-        [11, 28],
-        [24, 18]];
+        [  2, -14],
+        [ 15,   8],
+        [  1,   0],
+        [-19,  17],
+        [-12,  25],
+        [ 11,  28],
+        [ 24,  18]];
 
      // Lightweight Object Lists:
     global.poonRope = [];
@@ -3809,8 +3809,8 @@ with(instance_create(x, y - z, BulletHit)){
         else{
              // Sprites:
             spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
-            spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_walk);
-            spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_hurt);
+            spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
+            spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
         }
 
         with(scrPickupIndicator(pet)) mask_index = mskWepPickup;
