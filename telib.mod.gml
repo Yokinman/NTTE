@@ -339,6 +339,7 @@
                     image_yscale = 0;
                     stretch = 1;
                     super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
+                    creator_follow = true;
                 }
                 break;
 
@@ -3517,47 +3518,49 @@ with(instance_create(x, y - z, BulletHit)){
         image_xscale += (charge / 20) * charge_spd * current_time_scale;
         image_yscale = image_xscale;
 
-        if(instance_exists(creator)){
-            x = creator.x;
-            y = creator.y;
-        }
-
-         // Lightning Disc Weaponry:
-        if(instance_is(creator, Player)){
-            direction = creator.gunangle;
-
-            var _big = (charge >= 2.5);
-            if(_big){
-                x += hspeed;
-                y += vspeed;
+        if(creator_follow){
+            if(instance_exists(creator)){
+                x = creator.x;
+                y = creator.y;
             }
+    
+             // Lightning Disc Weaponry:
+            if(instance_is(creator, Player)){
+                direction = creator.gunangle;
 
-             // Attempt to Unstick from Wall:
-            if(place_meeting(x, y, Wall)){
-                if(!_big){
-                    var w = instance_nearest(x, y, Wall),
-                        _dis = 2,
-                        _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
-
-                    while(place_meeting(x, y, w)){
-                        x += lengthdir_x(_dis, _dir);
-                        y += lengthdir_y(_dis, _dir);
+                var _big = (charge >= 2.5);
+                if(_big){
+                    x += hspeed;
+                    y += vspeed;
+                }
+    
+                 // Attempt to Unstick from Wall:
+                if(place_meeting(x, y, Wall)){
+                    if(!_big){
+                        var w = instance_nearest(x, y, Wall),
+                            _dis = 2,
+                            _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
+    
+                        while(place_meeting(x, y, w)){
+                            x += lengthdir_x(_dis, _dir);
+                            y += lengthdir_y(_dis, _dir);
+                        }
+                    }
+    
+                     // Big boy:
+                    else with(Wall) if(place_meeting(x, y, other)){
+                        instance_create(x, y, FloorExplo);
+                        instance_destroy();
                     }
                 }
-
-                 // Big boy:
-                else with(Wall) if(place_meeting(x, y, other)){
-                    instance_create(x, y, FloorExplo);
-                    instance_destroy();
+    
+                if(!_big){
+                    move_contact_solid(direction, speed);
                 }
+    
+                 // Sorry roid man:
+                with(creator) wkick = 5 * (other.image_xscale / other.charge);
             }
-
-            if(!_big){
-                move_contact_solid(direction, speed);
-            }
-
-             // Sorry roid man:
-            with(creator) wkick = 5 * (other.image_xscale / other.charge);
         }
 
          // Stay Still:
@@ -3628,36 +3631,46 @@ with(instance_create(x, y - z, BulletHit)){
                 }
             }
         }
-    }
 
-    // Particle for Ring split anticipation for super rings:
-    if (super != -1 && charge <= 0 && image_xscale < super + .9){
-      if (current_frame_active && random((image_xscale  - super) * 12) < 1){
-        var _ang = random(360);
-        repeat(2) with(instance_create(x + lengthdir_x(image_xscale * 17 + hspeed, _ang), y + lengthdir_y(image_xscale * 17 + vspeed, _ang), LightningSpawn)){
-          image_angle = _ang;
-          image_index = 1;
-          with(instance_create(other.x + lengthdir_x(image_xscale * 17 + hspeed, _ang), other.y + lengthdir_y(image_xscale * 17 + vspeed, _ang), PortalL)){
-            image_angle  = _ang;
-          }
+         // Super Ring Split FX:
+        if (super != -1 && charge <= 0 && image_xscale < super + .9){
+            if (random((image_xscale - super) * 12) < 1){
+                 // Particles:
+                var _ang = random(360);
+                repeat(irandom(2)){
+                    with(instance_create(x + lengthdir_x((image_xscale * 17) + hspeed, _ang), y + lengthdir_y((image_yscale * 17) + vspeed, _ang), LightningSpawn)){
+                        image_angle = _ang;
+                        image_index = 1;
+                        with(instance_create(x, y, PortalL)) image_angle  = _ang;
+                    }
+                }
+                view_shake_at(x, y, 3);
+    
+                 // Sound:
+                var _pitchMod = 1 / (4 * ((image_xscale - super) + .12));
+                    _vol = 0.1 / ((image_xscale - super) + 0.2);
+    
+                if(random(2) < 1){
+                    sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, max(_vol, 0.2));
+                }
+                else sound_play_pitchvol(sndLightningHit, random_range(0.8, 1.2) * _pitchMod, _vol * 2);
+            }
         }
-        view_shake_at(x,y,3);
-        sound_play_pitchvol(sndGammaGutsKill, random_range(1.8,2.5) / ((image_xscale  - super) + .12) / 4,  .2 / ((image_xscale  - super) + .2));
-        sound_play_pitchvol(sndLightningHit,  random_range(.8,1.2)  / ((image_xscale  - super) + .12) / 4,  .4 / ((image_xscale  - super) + .2));
-      }
     }
 
      // Shrink:
     if(charge <= 0){
-
-      // Early split for being super:
-      if(super != -1 && image_xscale <= super){
-        instance_destroy();
-        exit;
-      }
         var s = shrink * current_time_scale;
         image_xscale -= s;
         image_yscale -= s;
+
+         // Super lightring split:
+        if(super != -1 && image_xscale <= super){
+            instance_destroy();
+            exit;
+        }
+
+         // Normal poof:
         if(image_xscale <= 0 || image_yscale <= 0){
             sound_play_hit(sndLightningHit, 0.5);
             instance_create(x, y, LightningHit);
@@ -3696,6 +3709,9 @@ with(instance_create(x, y - z, BulletHit)){
     }
 
 #define LightningDisc_wall
+    var _hprev = hspeed,
+        _vprev = vspeed;
+
     if(image_xscale >= charge && (image_xscale < 2.5 || image_yscale < 2.5)){
          // Bounce:
         if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
@@ -3719,36 +3735,49 @@ with(instance_create(x, y - z, BulletHit)){
             instance_create(x, y, FloorExplo);
             instance_destroy();
         }
+        with(Wall) if(place_meeting(x - _hprev, y - _vprev, other)){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
     }
 
 #define LightningDisc_destroy
-if super != -1
-{
-  sleep(80)
-  view_shake_at(x,y,20)
-  sound_play_pitchvol(sndLightningCannonEnd,.7,.6)
-  sound_play_pitchvol(sndGammaGutsKill,.8,.7)
-  sound_play_pitchvol(sndLightningPistolUpg,.7,.5)
-  sound_play_pitchvol(sndLightningPistol,.7,.8)
-  var _ang = random(360);
-  repeat(5)
-  {
-    with(obj_create(x, y, "LightningDisc"))
+    if(super != -1)
     {
-        motion_add(_ang, 10);
-        image_xscale = 1.2;
-        image_yscale = image_xscale;
-        charge = image_xscale * .95;
-        if(skill_get(mut_laser_brain))
+         // Effects:
+        sleep(80);
+        sound_play_pitchvol(sndLightningPistolUpg, 0.7,               0.4);
+        sound_play_pitchvol(sndLightningPistol,    0.7,               0.6);
+        sound_play_pitchvol(sndGammaGutsKill,      0.5 + random(0.2), 0.7);
+
+         // Disc Split:
+        var _ang = random(360);
+        for(var a = _ang; a < _ang + 360; a += (360 / 5))
         {
-            stretch *= 5;
-            image_speed *= 0.75;
+            with(obj_create(x, y, "LightningDisc"))
+            {
+                motion_add(a, 10);
+                charge = other.image_xscale;
+                if(skill_get(mut_laser_brain)){
+                    charge *= 1.2;
+                    stretch *= 1.2;
+                    image_speed *= 0.75;
+                }
+
+                 // Insta-Charge:
+                image_xscale = charge * 0.9;
+                image_yscale = charge * 0.9;
+
+                team = other.team;
+                creator = other.creator;
+                creator_follow = false;
+            }
+            
+             // Clear Walls:
+            var o = 24;
+            instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), PortalClear);
         }
-        team = other.team;
     }
-    _ang += 72;
-  }
-}
 
 #define LightningDisc_draw
     scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
