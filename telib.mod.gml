@@ -338,6 +338,7 @@
                     image_xscale = 0;
                     image_yscale = 0;
                     stretch = 1;
+                    super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
                 }
                 break;
 
@@ -3629,8 +3630,31 @@ with(instance_create(x, y - z, BulletHit)){
         }
     }
 
+    // Particle for Ring split anticipation for super rings:
+    if (super != -1 && charge <= 0 && image_xscale < super + .9){
+      if (current_frame_active && random((image_xscale  - super) * 12) < 1){
+        var _ang = random(360);
+        repeat(2) with(instance_create(x + lengthdir_x(image_xscale * 17 + hspeed, _ang), y + lengthdir_y(image_xscale * 17 + vspeed, _ang), LightningSpawn)){
+          image_angle = _ang;
+          image_index = 1;
+          with(instance_create(other.x + lengthdir_x(image_xscale * 17 + hspeed, _ang), other.y + lengthdir_y(image_xscale * 17 + vspeed, _ang), PortalL)){
+            image_angle  = _ang;
+          }
+        }
+        view_shake_at(x,y,3);
+        sound_play_pitchvol(sndGammaGutsKill, random_range(1.8,2.5) / ((image_xscale  - super) + .12) / 4,  .2 / ((image_xscale  - super) + .2));
+        sound_play_pitchvol(sndLightningHit,  random_range(.8,1.2)  / ((image_xscale  - super) + .12) / 4,  .4 / ((image_xscale  - super) + .2));
+      }
+    }
+
      // Shrink:
     if(charge <= 0){
+
+      // Early split for being super:
+      if(super != -1 && image_xscale <= super){
+        instance_destroy();
+        exit;
+      }
         var s = shrink * current_time_scale;
         image_xscale -= s;
         image_yscale -= s;
@@ -3696,6 +3720,35 @@ with(instance_create(x, y - z, BulletHit)){
             instance_destroy();
         }
     }
+
+#define LightningDisc_destroy
+if super != -1
+{
+  sleep(80)
+  view_shake_at(x,y,20)
+  sound_play_pitchvol(sndLightningCannonEnd,.7,.6)
+  sound_play_pitchvol(sndGammaGutsKill,.8,.7)
+  sound_play_pitchvol(sndLightningPistolUpg,.7,.5)
+  sound_play_pitchvol(sndLightningPistol,.7,.8)
+  var _ang = random(360);
+  repeat(5)
+  {
+    with(obj_create(x, y, "LightningDisc"))
+    {
+        motion_add(_ang, 10);
+        image_xscale = 1.2;
+        image_yscale = image_xscale;
+        charge = image_xscale * .95;
+        if(skill_get(mut_laser_brain))
+        {
+            stretch *= 5;
+            image_speed *= 0.75;
+        }
+        team = other.team;
+    }
+    _ang += 72;
+  }
+}
 
 #define LightningDisc_draw
     scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);

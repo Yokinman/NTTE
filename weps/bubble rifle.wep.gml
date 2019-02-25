@@ -1,5 +1,5 @@
 #define init
-    global.sprBubbleRifle = sprite_add_weapon("../sprites/weps/sprConch.png", -2, 16);
+    global.sprBubbleRifle = sprite_add_weapon("../sprites/weps/sprBubbleRifle.png", 2, 5);
 
 #define weapon_name return "BUBBLE RIFLE";
 #define weapon_text return "REFRESHING";

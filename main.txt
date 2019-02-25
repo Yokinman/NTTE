@@ -19,8 +19,8 @@
 /loadwep weps/harpoon
 /loadwep weps/netlauncher
 /loadwep weps/bubble rifle
-/loadwep weps/bubble cannon
-/loadwep weps/bubble shotgun
 /loadwep weps/bubble minigun
+/loadwep weps/bubble shotgun
+/loadwep weps/bubble cannon
 /loadwep weps/lightning ring launcher
 /loadwep weps/super lightning ring launcher
