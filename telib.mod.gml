@@ -3523,7 +3523,7 @@ with(instance_create(x, y - z, BulletHit)){
                 x = creator.x;
                 y = creator.y;
             }
-    
+
              // Lightning Disc Weaponry:
             if(instance_is(creator, Player)){
                 direction = creator.gunangle;
@@ -3533,31 +3533,31 @@ with(instance_create(x, y - z, BulletHit)){
                     x += hspeed;
                     y += vspeed;
                 }
-    
+
                  // Attempt to Unstick from Wall:
                 if(place_meeting(x, y, Wall)){
                     if(!_big){
                         var w = instance_nearest(x, y, Wall),
                             _dis = 2,
                             _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
-    
+
                         while(place_meeting(x, y, w)){
                             x += lengthdir_x(_dis, _dir);
                             y += lengthdir_y(_dis, _dir);
                         }
                     }
-    
+
                      // Big boy:
                     else with(Wall) if(place_meeting(x, y, other)){
                         instance_create(x, y, FloorExplo);
                         instance_destroy();
                     }
                 }
-    
+
                 if(!_big){
                     move_contact_solid(direction, speed);
                 }
-    
+
                  // Sorry roid man:
                 with(creator) wkick = 5 * (other.image_xscale / other.charge);
             }
@@ -3645,15 +3645,17 @@ with(instance_create(x, y - z, BulletHit)){
                     }
                 }
                 view_shake_at(x, y, 3);
-    
+
                  // Sound:
                 var _pitchMod = 1 / (4 * ((image_xscale - super) + .12));
                     _vol = 0.1 / ((image_xscale - super) + 0.2);
-    
-                if(random(2) < 1){
-                    sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, max(_vol, 0.2));
-                }
-                else sound_play_pitchvol(sndLightningHit, random_range(0.8, 1.2) * _pitchMod, _vol * 2);
+                    sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, min(_vol, 0.7));
+                    sound_play_pitchvol(sndLightningHit, random_range(0.8, 1.2) * _pitchMod, min(_vol, 0.7)*2);
+
+                // DIsplacement:
+                speed *= .98;
+                y += orandom(3) * _pitchMod;
+                x += orandom(3) * _pitchMod;
             }
         }
     }
@@ -3757,7 +3759,7 @@ with(instance_create(x, y - z, BulletHit)){
             with(obj_create(x, y, "LightningDisc"))
             {
                 motion_add(a, 10);
-                charge = other.image_xscale;
+                charge = other.image_xscale / 1.2;
                 if(skill_get(mut_laser_brain)){
                     charge *= 1.2;
                     stretch *= 1.2;
@@ -3772,7 +3774,7 @@ with(instance_create(x, y - z, BulletHit)){
                 creator = other.creator;
                 creator_follow = false;
             }
-            
+
              // Clear Walls:
             var o = 24;
             instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), PortalClear);
