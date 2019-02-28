@@ -19,10 +19,10 @@
                     switch(other.object_index){
                         case BigWeaponChest:
                         case BigCursedChest:
-                            num = 36; break;
+                            num = 2; break;
                         case GiantWeaponChest:
                         case GiantAmmoChest:
-                            num = 72; break;
+                            num = 3; break;
                     }
                 }
             }
@@ -131,9 +131,10 @@
         until !instance_exists(GenCont);
 
          // Starting Feather Ammo:
-        repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+        repeat(3) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
             target = other;
             creator = other;
+            if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
             speed *= 3;
         }
         
@@ -147,18 +148,36 @@
 
 #define step
      /// ACTIVE : Charm
-    if(feather_load <= 0 || button_pressed(index, "spec")){
-        var n = 3;
-        if((button_check(index, "spec") || usespec > 0) && feather_ammo >= n){
+    if(feather_load <= 0  || usespec > 0 || button_pressed(index, "spec")){
+        var n = 1;
+        if((button_released(index, "spec")) && feather_ammo >= n){
             feather_ammo -= n;
-            feather_load = 3;
+            feather_load = n * 10;
 
              // Shooty Charm Feathers:
             var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-            repeat(n){
+            var c = scrCharm(t, true);
+            c.time += 160 + (skill_get(mut_throne_butt) * 80);
+            
+            repeat(n * 20) {
                 with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
                     creator = other;
                     target = t;
+                    if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
+                }
+            }
+            
+            with(instances_matching([enemy, RadMaggotChest], "", null)) {
+                if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
+                    c = scrCharm(self, true);
+                    c.time += 120 + (skill_get(mut_throne_butt) * 60);
+                    
+                    repeat(n * 5) {
+                        var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
+                        f.creator = other;
+                        f.target = self;
+                        if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
+                    }
                 }
             }
 
@@ -186,6 +205,9 @@
 #define draw
     if(button_check(index, "spec")){
         draw_text_nt(x, y - 32, string(feather_ammo));
+        
+        var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
+        draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
     }
 
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
@@ -194,3 +216,4 @@
 #define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
 #define orandom(n)                                                                      return  mod_script_call("mod", "teassets", "orandom", n);
 #define Pet_create(_x, _y, _pet)                                                        return  mod_script_call("mod", "telib", "Pet_create", _x, _y, _pet);
+#define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "teassets", "scrCharm", _instance, _charm);

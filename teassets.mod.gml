@@ -262,7 +262,8 @@
             }
 
              // Parrot Feather:
-            ParrotFeather = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gccEhAKigKoTwAAAF5JREFUGNNjYMADipi4/hOUZEQWXMQi+J+BgYHhwr+fDH3/vjEyMDAwMCFLWkn+Y7jw7yeDARM7XBNcgZXkP4ZpT38zZEmzYtq3iEXwfxET1/87svz/YdagAJwSxAAAEiYfBSYTcvYAAAAASUVORK5CYII=", 1, 4, 4);
+            ParrotFeather  = sprite_add("sprites/races/Parrot/sprParrotFeather.png",  1, 4, 4);
+            ParrotBFeather = sprite_add("sprites/races/Parrot/sprParrotBFeather.png", 1, 4, 4);
         //#endregion
 
         //#region PETS

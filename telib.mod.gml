@@ -418,7 +418,7 @@
                 with(o){
                      // Vars:
                     creator = noone;
-                    num = 12;
+                    num = 1;
                 }
                 break;
 
@@ -5508,6 +5508,7 @@ with(instance_create(x, y - z, BulletHit)){
              // Fall Off:
             if(stick_time <= 0 || !target.charm.charmed){
                 target = noone;
+                if(random(4) < 1) sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
             }
             else stick_time -= current_time_scale;
         }
@@ -5532,14 +5533,13 @@ with(instance_create(x, y - z, BulletHit)){
                     speed = 0;
 
                      // Charm Enemy:
-                    var c = scrCharm(target, true);
-                    c.time += 30 + (skill_get(mut_throne_butt) * 15);
-                    stick_time = c.time;
+                    with(target) other.stick_time = charm.time - random(charm.time/2);
                 }
 
                  // Player Pickup:
                 else{
                     with(creator) feather_ammo++;
+                    with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
                     instance_destroy();
                 }
             }
@@ -5579,6 +5579,7 @@ with(instance_create(x, y - z, BulletHit)){
                 with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
                     target = other;
                     creator = other;
+                    if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
                 }
             }
         }
