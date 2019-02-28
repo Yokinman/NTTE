@@ -15,8 +15,8 @@
 
 #define weapon_fire
     with(obj_create(x, y, "LightningDisc")){
-        motion_add(other.gunangle, 12);
-        maxspeed = 2;
+        motion_add(other.gunangle, 14);
+        maxspeed = 2.5;
         charge *= 2.5;
         charge_spd /= 2;
         stretch = 1.2;
