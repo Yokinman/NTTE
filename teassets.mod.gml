@@ -530,7 +530,7 @@
         var _path = SavePath;
         wait file_load(_path);
 
-        if(file_exists(_path)){
+        if(file_loaded(_path)){
             var _save = json_decode(string_load(_path));
             if(_save != json_error){
                 for(var i = 0; i < lq_size(_save); i++){
