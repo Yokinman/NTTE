@@ -390,20 +390,24 @@
             VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
 
              // Cat:
-            CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",    4, 12, 12);
-            CatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png",    6, 12, 12);
-            CatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png",    3, 12, 12);
-            CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",    6, 12, 12);
-            CatWeap = sprite_add("sprites/enemies/Cat/sprCatToxer.png",   1,  3,  4);
-            AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",  4, 16, 16);
+            CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
+            CatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png",      6, 12, 12);
+            CatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png",      3, 12, 12);
+            CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",      6, 12, 12);
+            CatSit1 =[sprite_add("sprites/enemies/Cat/sprCatGoSit.png",     3, 12, 12),
+                      sprite_add("sprites/enemies/Cat/sprCatGoSitSide.png", 3, 12, 12)];
+            CatSit2 =[sprite_add("sprites/enemies/Cat/sprCatSit.png",       1, 12, 12),
+                      sprite_add("sprites/enemies/Cat/sprCatSitSide.png",   1, 12, 12)];
+            CatWeap = sprite_add("sprites/enemies/Cat/sprCatToxer.png",     1,  3,  4);
+            AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",    4, 16, 16);
 
              // Cat Boss:
             CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png", 1, 4, 7);
 
              // Door:
-            CatDoor         = sprite_add("sprites/areas/Sewers/props/sprCatDoor.png",       10, 2, 0);
-            msk.CatDoor     = sprite_add("sprites/areas/Sewers/props/mskCatDoor.png",        1, 4, 0);
-            msk.CatDoorLOS  = sprite_add("sprites/areas/Sewers/props/mskCatDoorLOS.png",     1, 4, 0);
+            CatDoor         = sprite_add("sprites/areas/Lair/props/sprCatDoor.png",       10, 2, 0);
+            msk.CatDoor     = sprite_add("sprites/areas/Lair/props/mskCatDoor.png",        1, 4, 0);
+            msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/props/mskCatDoorLOS.png",     1, 4, 0);
             if(fork()){
                 wait 30;
                 sprite_collision_mask(msk.CatDoorLOS, false, 1, 0, 0, 0, 0, 0, 0);
@@ -416,15 +420,16 @@
             PizzaDrainDead = mskNone;
 
              // Manholes:
-            ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png", 1, 0, 0);
-            Manhole = sprite_add("sprites/areas/Sewers/sprManhole.png",12,16,48);
-            BigManhole = sprite_add("sprites/areas/Sewers/sprBigManhole.png",2,0,0);
+            ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);
+            Manhole       = sprite_add("sprites/areas/Lair/sprManhole.png",       12, 16, 48);
+            BigManhole    = sprite_add("sprites/areas/Lair/sprBigManhole.png",     2,  0,  0);
 
              // Furniture:
                  // Rug:
                 Rug = [
                     sprite_add("sprites/areas/Lair/Props/sprRugBot.png", 9, 0, 0),
-                    sprite_add("sprites/areas/Lair/Props/sprRugTop.png", 9, 0, 0)];
+                    sprite_add("sprites/areas/Lair/Props/sprRugTop.png", 9, 0, 0)
+                    ];
 
                  // Table:
                 TableIdle = sprite_add("sprites/areas/Lair/Props/sprTableIdle.png", 1, 16, 16);

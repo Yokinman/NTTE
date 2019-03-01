@@ -462,11 +462,21 @@
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
-    
-    if !place_meeting(x, y, Wall) && random(3) < 2{
-        if random(12) < 1{
-             // Rat packs:
-            repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
+
+     // Rat packs:
+    if(!place_meeting(x, y, Wall) && random(20) < 1){
+        repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
+    }
+
+     // Cats:
+    if(random(10) < 1){
+        with(obj_create(_x, _y, "Cat")){
+             // Spawn Underground:
+            if(random(2) < 1){
+                active = false;
+                cantravel = true;
+                alarm0 = random_range(30, 900);
+            }
         }
     }
 
@@ -482,7 +492,13 @@
     	 // Cat Spawners:
         with(floors) if(instance_exists(self)){
             if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
-                if(random(10) < 1){
+                if(
+                    random(16) < 1 ||
+                    (
+                        random(2) < 1 &&
+                        array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_matching(CustomObject, "name", "CatHole"))) <= 0
+                    )
+                ){
                     obj_create(x + 16, y + 16, "CatHole");
                 }
             }
@@ -492,16 +508,17 @@
      // Important Door Stuff:
     with(instances_matching(CustomHitme, "name", "CatDoor")){
          // Remove Blocking Walls:
-        var _x = floor((x + lengthdir_x(8, image_angle - (90 * image_yscale)) + lengthdir_x(16, image_angle)) / 16) * 16,
-            _y = floor((y + lengthdir_y(8, image_angle - (90 * image_yscale)) + lengthdir_y(16, image_angle)) / 16) * 16;
+        var a = image_angle - (90 * image_yscale),
+            _x = floor((x + lengthdir_x(8, a) + lengthdir_x(16, image_angle)) / 16) * 16,
+            _y = floor((y + lengthdir_y(8, a) + lengthdir_y(16, image_angle)) / 16) * 16;
 
         if(position_meeting(_x, _y, Wall)){
             with(instance_nearest(_x, _y, Wall)) instance_destroy();
         }
 
          // Make sure door isn't placed weirdly:
-        var _x = (floor((x + 16 + lengthdir_x(8, image_angle - (90 * image_yscale))) / 32) * 32) - 16,
-            _y = (floor((y + 16 + lengthdir_y(8, image_angle - (90 * image_yscale))) / 32) * 32) - 16;
+        var _x = (floor((x + 16 + lengthdir_x(8, a)) / 32) * 32) - 16,
+            _y = (floor((y + 16 + lengthdir_y(8, a)) / 32) * 32) - 16;
 
         for(var i = 0; i <= 180; i += 180){
             if(position_meeting(_x + lengthdir_x(32, image_angle - 90 + i), _y + lengthdir_y(32, image_angle - 90 + i), Floor)){
@@ -564,8 +581,8 @@
     }
 
 #define create_enemies(_x, _y, _num)
-    var _e = choose("Cat", "Cat", "Bat");
-    repeat(_num + irandom(GameCont.loops * 2)) obj_create(_x, _y, _e);
+    var _e = choose("Cat", "Bat");
+    repeat(_num + round(random_range(1.5, 2) * GameCont.loops)) obj_create(_x, _y, _e);
 
 #define room_pop
     var o = 32,
@@ -704,7 +721,7 @@
             with obj_create(_x + 16 + orandom(2), _y + 8, "ChairFront")
                 obj_create(x, y - o, "CatLight");
              // Enemies:
-            create_enemies(_x, _y, irandom(1));
+            create_enemies(_x, _y, 1);
             
             break;
         }
@@ -748,7 +765,7 @@
                     }
              // Enemies:
             for (var d = 0; d <= 360; d += 90)
-                create_enemies(_cx + lengthdir_x(80, d), _cy + lengthdir_y(80, d), irandom(1));
+                create_enemies(_cx + lengthdir_x(80, d), _cy + lengthdir_y(80, d), 1 + irandom(1));
                 
             break;
         }
@@ -764,7 +781,7 @@
                 obj_create(x + orandom(2), y + 20 + orandom(2), "NewTable");
                 
              // Enemies:
-            create_enemies(_cx, _y + 16, 3);
+            create_enemies(_cx, _y + 16, 2);
             
             break;  
         }
@@ -809,7 +826,7 @@
                         if random(3) < 2 obj_create(x, y - o, "CatLight");
                     }
              // Enemies:
-            create_enemies(_cx, _cy, 2 + irandom(1));
+            create_enemies(_cx, _cy, 3 + irandom(1));
             break;
         }
 
@@ -854,7 +871,7 @@
                 obj_create(_cx + xx * 40, _cy - o, "CatLight");
             
              // Enemies:
-            create_enemies(_cx, _cy, 1 + irandom(1));
+            create_enemies(_cx, _cy, 1);
             
             break;
         }
@@ -868,7 +885,7 @@
                             instance_delete(id);
                         else instance_create(x, y, NOWALLSHEREPLEASE);
                     }
-        break;
+            break;
         }
 
     }
@@ -1081,6 +1098,8 @@
     
 #define nearest_instance(_x,_y,_instance)
     return mod_script_call("mod","telib","nearest_instance",_x,_y,_instance);
-    
+
 #define orandom(_n)
     return irandom_range(-_n,_n);
+
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call("mod", "teassets", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);

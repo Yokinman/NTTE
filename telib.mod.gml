@@ -1682,11 +1682,15 @@
         			spr_walk = spr.CatWalk;
         			spr_hurt = spr.CatHurt;
         			spr_dead = spr.CatDead;
+        			spr_sit1 = spr.CatSit1[0];
+        			spr_sit2 = spr.CatSit2[0];
+        			spr_sit1_side = spr.CatSit1[1];
+        			spr_sit2_side = spr.CatSit2[1];
         			spr_weap = spr.CatWeap;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
         			sprite_index = spr_idle;
-        			mask_index = mskBandit;
+        			mask_index = mskFreak;
         			depth = -2;
 
                      // Sound:
@@ -1700,11 +1704,15 @@
         			walk = 0;
         			walkspd = 0.8;
         			maxspd = 3;
-        			gunangle = random(360);
         			hole = noone;
-        			direction = gunangle;
         			ammo = 0;
+        			active = true;
         			cantravel = false;
+        			gunangle = random(360);
+        			direction = gunangle;
+        			toxer_loop = -1;
+        			sit = noone;
+        			sit_side = 0;
 
         			 // Alarms:
         			alarm0 = 40 + irandom(20);
@@ -1826,26 +1834,26 @@
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
                      // Visual:
-                    sprite_index = spr.Manhole;
-                    mask_index = mskWepPickup;
-                    image_speed = 0;
-
-                     // Vars:
+                    sprite_index = spr.ManholeBottom;
+                    image_speed = 0.4;
                     depth = 7;
+            
+                     // Vars:
+                    mask_index = mskSuperFlakBullet;
                     fullofrats = true;
-                    cat = noone;
+                    target = noone;
 
+                     // don't mess with the big boy
                     if(place_meeting(x, y, CustomObject)){
-                        with(instances_named(CustomObject, "CatholeBig")){
+                        with(instances_named(CustomObject, "CatHoleBig")){
                             if(place_meeting(x, y, other)) with(other){
                                 instance_destroy();
                                 exit;
                             }
                         }
                     }
-                    with(instance_nearest(x, y, Floor)) if(place_meeting(x, y, other)){
-                        sprite_index = spr.ManholeBottom;
-                    }
+            
+                    CatHoleCover();
                 }
                 break;
 
@@ -4725,132 +4733,228 @@ with(instance_create(x, y - z, BulletHit)){
 
 #define Cat_step
     enemyAlarms(2);
-    enemySprites();
     enemyWalk(walkspd, maxspd);
 
-    if instance_exists(hole) && place_meeting(x,y,hole) || (!array_length_1d(instances_matching(instances_matching(CustomObject,"name","CatHole"),"cat",self)) && !place_meeting(x,y,Floor)){
+     // Animate:
+    if(sprite_index == spr_sit1){
+        if(anim_end) sprite_index = spr_sit2;
+    }
+    else if(sprite_index == spr_sit1_side){
+        if(anim_end) sprite_index = spr_sit2_side;
+    }
+    else if(sprite_index != spr_sit2 && sprite_index != spr_sit2_side){
+        if(speed <= 0) sprite_index = spr_idle;
+        else sprite_index = spr_walk;
+    }
+
+     // Disabled:
+    if(!active){
+        visible = false
         canfly = true;
-        alarm0 = -1;
-        alarm1 = -1;
         x = 0;
         y = 0;
-        var _a = instances_matching(CustomObject,"name","CatHole"),
-            _t = target,
-            _dest = nearest_instance(_t.x,_t.y,_a),
-            _dist = 10000;
+    }
 
-         // Find nearest canhole to player:
-        with(_a){
-            var _mydist = point_distance(x,y,_t.x,_t.y);
-            if _mydist < _dist && !collision_line(x,y,_t.x,_t.y,Wall,0,0){
-                _dist = _mydist;
-                _dest = self;
+     // Off Alert:
+    else if(!cantravel){
+         // chillin'
+        if(!instance_exists(sit) && instance_exists(CustomProp)){
+            var n = instance_nearest(x, y, CustomProp);
+            if(place_meeting(x, y, n)){
+                if("name" in n && (n.name == "ChairFront" || n.name == "Couch")){
+                     // Check if someone else sitting there:
+                    var _canSit = true;
+                    with(instances_named(object_index, name)){
+                        if(sit == n) _canSit = false;
+                    }
+
+                     // Sit:
+                    if(_canSit){
+                        sit = n;
+                        image_index = 0;
+                        if(n.sprite_index == spr.ChairSideIdle){
+                            sprite_index = spr_sit1_side;
+                        }
+                        else sprite_index = spr_sit1;
+                    }
+                }
             }
         }
-        with(hole){
-            image_index = 1;
-            image_speed = 0.4;
-        }
-        hole = noone;
-        with(_dest){
-            alarm0 = 30;
-            cat = other;
+
+         // On Alert:
+        if(instance_exists(target)){
+            if(
+                my_health < maxhealth ||
+                target_is_visible()   ||
+                (target_in_distance(0, 96) && target.reload > 0)
+            ){
+                cantravel = true;
+                sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
+                with(instance_create(x + (10 * right), y - 5, AssassinNotice)){
+                    depth = -7;
+                }
+            }
         }
     }
 
-     // Sound fix
-    if fork(){
-        wait(0) if !instance_exists(self) sound_stop(sndFlamerLoop);
-        exit;
+     // Sitting:
+    if(instance_exists(sit)){
+        speed = 0;
+        x = sit.x;
+        y = sit.y - 3;
+        right = -sit.image_xscale;
+        if(cantravel){
+            sit = noone;
+            sprite_index = spr_idle;
+        }
     }
 
 #define Cat_alrm0
     alarm0 = 20 + irandom(20);
 
-    if (my_health < maxhealth || target_is_visible()) && !cantravel{
-        cantravel = true;
-        instance_create(x + 10 * right, y - 5, AssassinNotice);
-    }
+     // Spraying Toxic Gas:
+    if(ammo > 0){
+        alarm0 = 2;
 
-    if(ammo > 0) {
-        repeat(2) with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)){
-            friction = 0.12;
-            team = 0;
+         // Toxic:
+        repeat(2){
+            with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)){
+                team = 0;
+                friction = 0.12;
+            }
         }
         gunangle += 12;
-        ammo--;
-        if(ammo = 0) {
+
+         // End:
+        if(--ammo <= 0){
             alarm0 = 40;
-            repeat(3) {
-                var _dir = orandom(16);
-                with(instance_create(x, y, AcidStreak)) {
-                    motion_add(other.gunangle + _dir, 3);
+
+             // Effects:
+            repeat(3){
+                with(instance_create(x, y, AcidStreak)){
+                    motion_add(other.gunangle + orandom(16), 3);
                     image_angle = direction;
                 }
             }
-            wkick += 6;
             sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
-            sound_stop(sndFlamerLoop);
-        } else {
-            alarm0 = 2;
-            wkick += 1;
+            sound_stop(toxer_loop);
+            toxer_loop = -1;
+            wkick += 6;
         }
-    } else {
+        else wkick++;
+    }
+
+    else{
         target = instance_nearest(x, y, Player);
-        if(target_is_visible()) {
-            var _targetDir = point_direction(x, y, target.x, target.y);
 
-            if(target_in_distance(0, 140) and random(3) < 1) {
-                scrRight(_targetDir);
-                gunangle = _targetDir - 45;
-                ammo = 10;
-                with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
-                    sprite_index = spr.AcidPuff;
-                    image_angle = other.gunangle;
+         // Normal AI:
+        if(active){
+            if(!instance_exists(sit)){
+                if(target_is_visible()){
+                    var _targetDir = point_direction(x, y, target.x, target.y);
+        
+                     // Start Attack:
+                    if(target_in_distance(0, 140) and random(3) < 1){
+                        scrRight(_targetDir);
+                        gunangle = _targetDir - 45;
+                        alarm0 = 4;
+                        ammo = 10;
+        
+                         // Effects:
+                        var o = 8;
+                        with(instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), BloodGamble)) {
+                            sprite_index = spr.AcidPuff;
+                            image_angle = other.gunangle;
+                        }
+                        sound_play(sndToxicBoltGas);
+                        sound_play(sndEmpty);
+                        toxer_loop = audio_play_sound(sndFlamerLoop, 0, true);
+                        wkick += 4;
+                    }
+        
+                     // Walk Toward Player:
+                    else{
+                        alarm0 = 20 + irandom(20);
+                        scrWalk(20 + irandom(5), _targetDir + orandom(20));
+                        scrRight(gunangle);
+                    }
                 }
-                sound_play(sndToxicBoltGas);
-                sound_play(sndEmpty);
-                sound_loop(sndFlamerLoop);
-                wkick += 4;
-                alarm0 = 4;
-            } else {
-                alarm0 = 20 + irandom(20);
-                scrWalk(20 + irandom(5), _targetDir + orandom(20));
-                scrRight(gunangle);
-            }
-        } else {
-            if instance_exists(hole){
-                 // Move towards nearest cathole
-                alarm0 = 60 + irandom(30);
-                scrWalk(alarm0,point_direction(x,y,hole.x+16,hole.y+16));
-            } else {
-                 // Wander
-                alarm0 = 30 + irandom(20); // 3-4 Seconds
-                scrWalk(20 + irandom(10), irandom(360));
-                scrRight(gunangle);
+        
+                else{
+                     // To the CatHole:
+                    if(cantravel && random(4) < 3){
+                        var _hole = nearest_instance(x, y, instances_named(CustomObject, "CatHole"));
+                        if(instance_exists(_hole)){
+                            alarm0 = 30 + irandom(30);
+                            with(_hole){
+                                 // Open CatHole:
+                                if(
+                                    !instance_exists(target)                    &&
+                                    point_distance(x, y, other.x, other.y) < 48 &&
+                                    CatHoleCover(true).open
+                                ){
+                                    other.alarm0 += 45;
+                                    target = other;
+                                }
+            
+                                 // Walk to CatHole:
+                                else with(other){
+                                    scrWalk(20 + random(20), point_direction(x, y, other.x, other.y));
+                                }
+                            }
+                        }
+                    }
+        
+                     // Wander:
+                    else{
+                        alarm0 = 30 + irandom(20);
+                        scrWalk(20 + irandom(10), direction + orandom(30));
+                        if(random(2) < 1) direction = random(360);
+                    }
+                }
             }
         }
-    }
 
-#define Cat_alrm1
-    if GameCont.area != sewers{
-        alarm1 = -1;
-        exit;
-    }
-    alarm1 = 90 + irandom(60); // 3-5 seconds
-    if cantravel{
-         // Locate nearest cathole:
-        if (!target_is_visible() || !target_in_distance(0,128)) {
-            hole = noone;
-            var _array = instances_matching(CustomObject,"name","CatHole"),
-                _dist = 10000;
+         // Manhole Travel:
+        else{
+            alarm0 = 40 + random(40);
 
-             // Bootleg nearest_instance() to find the nearest visible cathole
-            with(_array) if !collision_line(other.x,other.y,x,y,Wall,0,0) && !instance_exists(cat){
-                var _mydist = point_distance(x,y,other.x,other.y);
-                if _mydist < _dist{
-                    _dist = _mydist;
-                    other.hole = self;
+            var _forceSpawn = (instance_number(enemy) <= array_length(instances_matching(instances_named(object_index, name), "active", false)));
+            with(instances_named(CustomObject, "CatHole")){
+                if(random(instance_number(enemy)) < 3){
+                    if(!CatHoleCover().open){
+                        if(
+                            !instance_exists(other.target) || 
+                            !collision_line(x, y, other.target.x, other.target.y, Wall, false, false)
+                        ){
+                            if(CatHoleCover(true).open){
+                                with(other){
+                                    alarm0 = 15 + random(30);
+                                    active = true;
+                                    visible = true;
+                                    canfly = false;
+                                    x = other.x;
+                                    y = other.y;
+    
+                                     // Move:
+                                    if(instance_exists(target)){
+                                        direction = point_direction(x, y, target.x, target.y) + orandom(50);
+                                    }
+                                    else direction = random(360);
+                                    scrWalk(4 + random(4), direction);
+    
+                                     // Effects:
+                                    sound_play_pitchvol(sndFireballerHurt, 1.4, 0.6);
+                                    repeat(4){
+                                        with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+                                            motion_add(other.direction, 3);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -4858,14 +4962,16 @@ with(instance_create(x, y - z, BulletHit)){
 
 #define Cat_hurt(_hitdmg, _hitvel, _hitdir)
     if(!instance_is(other, ToxicGas)){
-        my_health -= _hitdmg;           // Damage
-        nexthurt = current_frame + 6;   // I-Frames
-        sound_play_hit(snd_hurt, 0.3);  // Hurt Sound
-        motion_add(_hitdir, _hitvel);   // Knockback
-
-         // Hurt Sprite:
-        sprite_index = spr_hurt;
-        image_index = 0;
+        if(active){
+            my_health -= _hitdmg;           // Damage
+            nexthurt = current_frame + 6;   // I-Frames
+            sound_play_hit(snd_hurt, 0.3);  // Hurt Sound
+            motion_add(_hitdir, _hitvel);   // Knockback
+    
+             // Hurt Sprite:
+            sprite_index = spr_hurt;
+            image_index = 0;
+        }
     }
 
      // Toxic immune
@@ -4876,9 +4982,15 @@ with(instance_create(x, y - z, BulletHit)){
 	}
 
 #define Cat_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
+    if(!instance_exists(sit)){
+        if(gunangle >  180) draw_self_enemy();
+        draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+        if(gunangle <= 180) draw_self_enemy();
+    }
+    else draw_self_enemy();
+
+#define Cat_cleanup
+    sound_stop(toxer_loop);
 
 
 #define CatBoss_step
@@ -5363,46 +5475,126 @@ with(instance_create(x, y - z, BulletHit)){
 
 
 #define CatHole_step
-    enemyAlarms(1);
-    if !image_index image_speed = 0;
-    if floor(image_index) == 6 && !place_meeting(x,y,ImpactWrists){
-        instance_create(x,y,ImpactWrists);//repeat(irandom_range(2,4)) with instance_create(x,y,MeleeHitWall) image_angle = irandom(359);
-        CatHole_effects();
-    }
+    if(instance_exists(target)){
+         // Cat Move to Hole:
+        if(CatHoleCover().open){
+            var _x = x,
+                _y = y - 4;
 
-#define CatHole_alrm0
-    if instance_exists(cat){
-        //CatHole_effects();
-         // Players standing on top keep cats in
-        if place_meeting(x,y,Player){
-            with instance_nearest(x,y,Player) motion_add(point_direction(other.x,other.y,x,y),2);
-            alarm0 = 30 + irandom(20);
-            image_index = 6;
-            image_speed = 0.4;
-
-        }
-         // Release cats
-        else{
-            image_index = 1;
-            image_speed = 0.4;
-            var _team = cat.team;
-            with instance_create(x,y,PortalClear) team = _team;
-            with(cat){
-                canfly = false;
-                alarm0 = 10;
-                alarm1 = 90 + irandom(60);
-                x = other.x;
-                y = other.y;
-                hole = noone;
+            with(target){
+                if(point_distance(x, y, _x, _y) > 5){
+                    sprite_index = spr_walk;
+                    motion_add(point_direction(x, y, _x, _y), 1);
+                    scrRight(direction);
+                }
             }
-            cat = noone;
+        }
+
+         // Cat Enter Hole:
+        else{
+            if(place_meeting(x, y, target)){
+                target.active = false;
+
+                 // FX:
+                sound_play_pitch(target.snd_hurt, 1.3 + random(0.2));
+                for(var a = 0; a < 360; a += (360 / 5)){
+                    with(instance_create(target.x, target.y, Dust)){
+                        motion_set(a + orandom(20), 3 + random(1));
+                        depth = other.depth;
+                    }
+                }
+            }
+            target = noone;
         }
     }
-    else cat = noone;
 
-#define CatHole_effects
-    view_shake_at(x,y,10);
-    sound_play_pitchvol(sndHitMetal,0.5,1);
+#define CatHoleCover /// CatHoleCover(?_open = undefined)
+    var _open = argument_count > 0 ? argument[0] : undefined;
+    if(is_undefined(_open)) _open = false;
+
+    var r = noone;
+
+     // Find Cover:
+    with(instances_matching(CustomDraw, "creator", id)){
+        if(script[1] == mod_current && script[2] == "CatHoleCover_draw"){
+            r = id;
+        }
+    }
+
+     // Create New Cover:
+    if(!instance_exists(r)){
+        with(script_bind_draw(CatHoleCover_draw, 0)){
+            sprite_index = spr.Manhole;
+            image_speed = 0;
+            creator = other;
+            open = false;
+            r = id;
+        }
+    }
+
+     // Open:
+    if(_open){
+        with(r) if(image_index <= 0) open = true;
+    }
+
+     // Player Blocking:
+    if(place_meeting(x, y, Player)){
+        r.open = false;
+        r.image_index = 6;
+        with(Player) if(place_meeting(x, y, other)){
+            motion_add(point_direction(other.x, other.y, x, y), 2);
+        }
+    }
+
+    return r;
+
+#define CatHoleCover_draw
+    if(instance_exists(creator)){
+        x = creator.x;
+        y = creator.y;
+
+        var _imgSpeed = creator.image_speed * current_time_scale;
+        if(open){
+            depth = -6;
+
+             // Open:
+            if(image_index <= 0){
+                image_index = _imgSpeed;
+            }
+
+             // Close:
+            else if(image_index >= 6){
+                open = false;
+
+                 // FX:
+                view_shake_at(x, y, 10);
+                instance_create(x, y, ImpactWrists);
+                for(var i = 0; i < maxp; i++){
+                    if(player_is_local_nonsync(i)){
+                        if(point_seen(x, y, i)){
+                            sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else depth = creator.depth - 1;
+
+         // Animate:
+        if(image_index > 0){
+            image_index += _imgSpeed;
+            if(image_index > image_number - 1){
+                image_index = 0;
+            }
+        }
+
+         // Draw Self:
+        with(creator){
+            draw_sprite_ext(other.sprite_index, other.image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+        }
+    }
+    else instance_destroy();
 
 
 #define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
