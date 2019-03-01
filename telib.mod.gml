@@ -290,8 +290,12 @@
                      // Sound:
                     snd_open = sndAmmoChest;
 
-                    on_step = script_bind_step(CustomChest_step, 0, id);
+                    on_step = ["", "", ""];
                     on_open = ["", "", ""];
+
+                    with(script_bind_step(CustomChest_step, 0)){
+                        creator = other;
+                    }
                 }
                 break;
 
@@ -3281,8 +3285,14 @@ with(instance_create(x, y - z, BulletHit)){
     with(MusCont) alarm_set(1, 1);
 
 
-#define CustomChest_step(_inst)
-    if(instance_exists(_inst)) with(_inst){
+#define CustomChest_step()
+    if(instance_exists(creator)) with(creator){
+         // Call Chest Step Event:
+        var e = on_step;
+        if(mod_script_exists(e[0], e[1], e[2])){
+            mod_script_call(e[0], e[1], e[2]);
+        }
+
          // Open Chest:
         var c = [Player, PortalShock];
         for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
