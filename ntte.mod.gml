@@ -725,8 +725,12 @@
     }
 
 #define draw_pause
+     // Reset Stuff:
     if(GameCont.area == "coast"){
         mod_variable_set("area", GameCont.area, "surfReset", true);
+    }
+    with(instances_matching(CustomDraw, "name", "draw_pit")){
+        mod_variable_set("area", "trench", "surf_reset", true);
     }
 
      // Draw Bone Ammo Indicators:

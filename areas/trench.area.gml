@@ -30,13 +30,25 @@
             PitSmall      = sprite_add("../sprites/areas/Trench/Pit/sprPitSmall.png",     1, 3, 3);
             PitSmallTop   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallTop.png",  1, 3, 3);
             PitSmallBot   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallBot.png",  1, 3, 3);
+            
+         // Proto Statue:
+        PStatTrenchIdle   = sprite_add("../sprites/areas/Trench/sprPStatTrenchIdle.png",    1, 40, 40);
+        PStatTrenchHurt   = sprite_add("../sprites/areas/Trench/sprPStatTrenchHurt.png",    3, 40, 40);
+        PStatTrenchLights = sprite_add("../sprites/areas/Trench/sprPStatTrenchLights.png", 40, 40, 40);
     }
             
     //#region SURFACES
-        global.surfw = 2000;
-        global.surfh = 2000;
-        global.surf = [noone, noone];
+        global.surfw = 1000;
+        global.surfh = 1000;
+        global.surfx = 10000;
+        global.surfy = 10000;
+        global.surf = [-1, -1, -1];
         global.surf_reset = false;
+        if(fork()){
+            wait 1;
+            global.surf_reset = true;
+            exit;
+        }
     //#endregion
 
     global.trench_visited = [];
@@ -124,15 +136,16 @@
     TopCont.darkness = true;
 
      // reset surfaces
-    for(var i = 0; i <= 1; i++) if surface_exists(global.surf[i])
-        surface_free(global.surf[i]);
+    for(var i = 0; i < array_length(global.surf); i++){
+        surface_destroy(global.surf[i]);
+    }
     
 #define area_start
      // Floor Setup:
     with(Floor){
         if(styleb){
              // Fix Depth:
-            depth = 8;
+            depth = 9;
 
              // Slippery pits:
             traction = 0.1;
@@ -144,7 +157,7 @@
 
      // Bind pit drawing scripts:
 	if !array_length_1d(instances_matching(CustomDraw, "name", "draw_pit"))
-    	with(script_bind_draw(draw_pit, 7))
+    	with(script_bind_draw(draw_pit, 8.5))
     		name = "draw_pit"
     		
      // Anglers:
@@ -181,13 +194,20 @@
      // Run underwater code
     mod_script_call("mod","ntte","underwater_step");
     
-     // mess with depth -- temporary fix for scorchmarks showing in the pits
+     // Fix scorchmarks showing above pits:
     with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
         trench_fix = true;
-        depth = 7;
+
+        var l = 12;
+        for(var d = 0; d < 360; d += 45){
+            if(floor_at(x + lengthdir_x(l, d), y + lengthdir_y(l, d)).styleb){
+                depth = 9;
+                break;
+            }
+        }
     }
 
-     // Above Pits:
+     // Player Above Pits:
     with(Player){
         var f = floor_at(x, bbox_bottom);
         if(instance_exists(f) && f.styleb){
@@ -235,7 +255,7 @@
             instance_destroy();
         }
     }
-    with(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0)){
+    with(instances_matching_lt(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0), "size", 4)){
         if(instance_exists(enemy) || instance_exists(Portal)){
             if(speed <= 0) pit_check = true;
             var f = floor_at(x, y);
@@ -285,6 +305,7 @@
     var d = random_range(0.001, 0.01) * current_time_scale
     image_xscale -= sign(image_xscale) * d;
     image_yscale -= sign(image_yscale) * d;
+    if(vspeed < 0) vspeed *= 0.9;
     y += 1/3 * current_time_scale;
 
      // Spins:
@@ -381,8 +402,9 @@
     
 #define area_finish
      // reset surfaces
-    for(var i = 0; i <= 1; i++) if surface_exists(global.surf[i])
-        surface_free(global.surf[i]);
+    for(var i = 0; i < array_length(global.surf); i++){
+        surface_destroy(global.surf[i]);
+    }
 
      // Area End:
     if(lastarea = mod_current && subarea >= 3) {
@@ -520,60 +542,91 @@
     
 #define draw_pit
     if(!instance_exists(GenCont)){
-        var _surfx = 10000 - (0.5 * global.surfw),
-            _surfy = 10000 - (0.5 * global.surfh);
+        var _surf = global.surf,
+            _surfw = global.surfw,
+            _surfh = global.surfh,
+            _surfx = global.surfx,
+            _surfy = global.surfy;
 
-         // Pit Walls:
-        if(!surface_exists(global.surf[0]) || global.surf_reset){
-            if(!surface_exists(global.surf[0])){
-                global.surf[0] = surface_create(global.surfw,global.surfh);
+        for(var i = 0; i < array_length(_surf); i++){
+            if(!surface_exists(_surf[i])){
+                _surf[i] = surface_create(_surfw, _surfh);
+                global.surf_reset = true;
             }
-            surface_set_target(global.surf[0]);
+        }
+
+        if(global.surf_reset){
+            global.surf_reset = false;
+
+             // Center Surfaces:
+            _surfx = 0;
+            _surfy = 0;
+            var n = 0;
+            with(instances_matching_ne(Floor, "object_index", FloorExplo)){
+                _surfx += x;
+                _surfy += y;
+                n++;
+            }
+            _surfx /= n;
+            _surfy /= n;
+            _surfx -= _surfw / 2;
+            _surfy -= _surfh / 2;
+            global.surfx = _surfx;
+            global.surfy = _surfy;
+
+             // Pit Walls:
+            surface_set_target(_surf[0]);
             draw_clear_alpha(0, 0);
 
-            var _spr = [spr.PitBot, spr.Pit, spr.PitTop];
+            var _spr = [[spr.PitBot, spr.PitSmallBot], [spr.Pit, spr.PitSmall]];
             for(var i = 0; i < array_length(_spr); i++){
+                 // Normal:
                 with(instances_matching(Floor, "sprite_index", spr.FloorTrench)){
-                    draw_sprite(_spr[i], image_index, x - _surfx, y - _surfy);
+                    draw_sprite(_spr[i, 0], image_index, x - _surfx, y - _surfy);
+                }
+
+                 // Small:
+                with(instances_matching([Wall, FloorExplo], "styleb", false, null)){
+                    draw_sprite(_spr[i, 1], image_index, x - _surfx, y - _surfy);
                 }
             }
-            var _spr = [spr.PitSmallBot, spr.PitSmall, spr.PitSmallTop];
-            for(var i = 0; i < array_length(_spr); i++){
-                with(instances_matching([Wall, FloorExplo], "styleb", false, null)){
-                    draw_sprite(_spr[i], image_index, x - _surfx, y - _surfy);
-                }
+
+             // Pit Wall Tops:
+            surface_set_target(_surf[1]);
+            draw_clear_alpha(0, 0);
+
+            with(instances_matching(Floor, "sprite_index", spr.FloorTrench)){
+                draw_sprite(spr.PitTop, image_index, x - _surfx, y - _surfy);
+            }
+            with(instances_matching([Wall, FloorExplo], "styleb", false, null)){
+                draw_sprite(spr.PitSmallTop, image_index, x - _surfx, y - _surfy);
+            }
+
+             // Pit Mask:
+            surface_set_target(_surf[2]);
+            draw_clear_alpha(0, 0);
+            draw_set_color(c_black);
+
+            with(instances_matching(Floor, "styleb", true)){
+                draw_sprite(sprite_index, image_index, x - _surfx, y - _surfy);
+            }
+
+             // Reset Pit Sink Objects:
+            with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "pit_check", null)){
+                pit_check = null;
             }
 
             surface_reset_target();
         }
 
-         // Pit Mask:
-        if(!surface_exists(global.surf[1]) || global.surf_reset){
-            if(!surface_exists(global.surf[1])){
-                global.surf[1] = surface_create(global.surfw, global.surfh);
-            }
-            surface_set_target(global.surf[1]);
-            draw_clear_alpha(0, 0);
-
-            draw_set_color(c_black);
-            with(instances_matching(Floor, "styleb", true)){
-                draw_sprite(sprite_index, image_index, x - _surfx, y - _surfy);
-            }
-
-            with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "pit_check", null)){
-                pit_check = null;
-            }
-        }
-        global.surf_reset = false;
-
-        surface_set_target(global.surf[1]);
+        /// > > > DRAW YOUR PIT SHIT HERE < < <
+        surface_set_target(_surf[2]);
 
         draw_set_color_write_enable(1, 1, 1, 0);
         draw_set_color(c_black);
-        draw_rectangle(0, 0, global.surfw, global.surfh, 0);
+        draw_rectangle(0, 0, _surfw, _surfh, 0);
         draw_set_color(c_white);
 
-        /// > > > DRAW YOUR PIT SHIT HERE < < <
              // Pit Squid:
             with(instances_matching(CustomEnemy, "name", "PitSquid")){
                 var h = (nexthurt > current_frame + 3),
@@ -610,17 +663,63 @@
                 }
             }
 
+             // Pit Walls:
+            draw_surface(_surf[0], 0, 0);
+
+             // Make Proto Statues Cooler:
+            with(ProtoStatue){
+                if(floor_at(x, bbox_bottom).styleb){
+                    spr_shadow = -1;
+
+                    var _spr = spr.PStatTrenchIdle;
+                    if(sprite_index == spr_hurt) _spr = spr.PStatTrenchHurt;
+                    draw_sprite(_spr,                  image_index, x - _surfx, y - _surfy);
+                    draw_sprite(spr.PStatTrenchLights, anim,        x - _surfx, y - _surfy);
+
+                    // i know but base game doesnt use draw_sprite_ext either
+                }
+            }
+            with(instances_matching(Corpse, "sprite_index", sprPStatDead)){
+                if(floor_at(x, bbox_bottom).styleb){
+                    draw_sprite_ext(spr.PStatTrenchIdle, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+                    if(place_meeting(x, y, Portal)){
+                        var n = instance_nearest(x, y, Portal),
+                            _spr = spr.PStatTrenchLights,
+                            _img = 0;
+
+                        switch(n.sprite_index){
+                            case sprPortalSpawn:
+                            case sprProtoPortal:
+                                _img = (sprite_get_number(_spr) - 1) - 2 + (2 * sin(current_frame / 16));
+                                break;
+
+                            case sprProtoPortalDisappear:
+                                _img = (sprite_get_number(_spr) - 1) * (1 - (n.image_index / n.image_number));
+                                break;
+
+                            default:
+                                _img = 0;
+                        }
+
+                        if(_img > 0){
+                            draw_sprite_ext(_spr, _img, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+                        }
+                    }
+                }
+            }
+
              // Stuff that fell in pit:
             with(instances_named(CustomObject, "PitSink")){
                 draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
             }
 
-            draw_surface(global.surf[0], 0, 0);
+             // Pit Wall Tops:
+            draw_surface(_surf[1], 0, 0);
 
         draw_set_color_write_enable(1, 1, 1, 1);
         surface_reset_target();
 
-        draw_surface(global.surf[1], _surfx, _surfy);
+        draw_surface(_surf[2], _surfx, _surfy);
     }
 
 
