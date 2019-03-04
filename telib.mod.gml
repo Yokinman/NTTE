@@ -668,6 +668,7 @@
         			maxspd = 3;
         			gunangle = random(360);
         			direction = gunangle;
+        			canshoot = false;
         			reload = 0;
 
                      // Alarms:
@@ -1231,7 +1232,7 @@
         			maxhealth = 50;
         			raddrop = 25;
         			meleedamage = 4;
-        			size = 2;
+        			size = 3;
         			walk = 0;
         			walkspd = 0.6;
         			maxspd = 3;

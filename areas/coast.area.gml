@@ -31,7 +31,12 @@
         global.swimInst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
         global.swimInstVisible = [];
         global.seaDepth = 10.1;
-        global.surfReset = true;
+        global.surfReset = false;
+        if(fork()){
+            wait 1;
+            global.surfReset = true;
+            exit;
+        }
     //#endregion
 
 #macro spr global.spr
@@ -324,6 +329,8 @@
             wading = 0;
             wading_clamp = 0;
             wading_sink = 0;
+            wading_z = 0;
+            wading_h = 0;
             if(object_index == Van) wading_clamp = 40;
             if(instance_is(self, Corpse)) wading_sink = 1;
         }
@@ -422,6 +429,9 @@
                     }
                 }
             }
+
+            wading_z = _z;
+            wading_h = _wh;
 
              // Call Draw Event to Surface:
             surface_set_target(_surfSwim);

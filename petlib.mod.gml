@@ -575,12 +575,12 @@
             if(array_length(path) > 0){
                 scrWalk(5 + random(5), path_dir + orandom(10));
             }
-    
+
              // Toward Leader:
             else{
                 scrWalk(5 + random(10), _leaderDir + orandom(20));
             }
-    
+
             return walk + random(10);
         }
 
@@ -595,6 +595,14 @@
      // Idle Movement:
     scrWalk(10 + random(5), direction + orandom(60));
     return walk + 30;
+
+#define Octo_draw
+    draw_self_enemy();
+    
+     // Air Bubble:
+    if(array_length(instances_matching(CustomDraw, "name", "underwater_draw")) <= 0){
+        draw_sprite(sprPlayerBubble, -1, x, y);
+    }
 
 
 #define Prism_create

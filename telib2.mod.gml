@@ -293,69 +293,140 @@
         }
     }
 
-#define Diver_alrm0
-    alarm0 = 60 + irandom(30);
-    target = instance_nearest(x, y, Player);
-    if(target_is_visible()) {
-        var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-
-    	if(target_in_distance(64, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
-    	     // Shoot Harpoon:
-    		if(reload <= 0){
-    		    gunangle = _targetDir;
-    			with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
-    			    if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
-    			}
-                sound_play(sndCrossbow);
-    			reload = 90 + random(30);
-                wkick = 8;
-    		}
-
-    		 // Reposition:
-    		else if(random(2) < 1){
-    		    scrWalk(10, _targetDir + choose(-90, 90) + orandom(10));
-    		    gunangle = _targetDir;
-    		}
-
-    		alarm0 = 20 + random(30);
-    	}
-
-         // Move Away From Target:
-    	else{
-    		alarm0 = 20 + irandom(30);
-    		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
-    		gunangle = _targetDir + orandom(15);
-    	}
-
-    	 // Facing:
-    	scrRight(gunangle);
+     // Pit Collision:
+    var f = floor_at(x + hspeed, y + vspeed);
+    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
+        if(floor_at(x, y).sprite_index != spr.FloorTrenchB){
+            if(place_meeting(x + hspeed, y, f)) hspeed *= -0.8;
+            if(place_meeting(x, y + vspeed, f)) vspeed *= -0.8;
+        }
     }
 
-     // Wander:
-    else scrWalk(30, random(360));
+#define Diver_alrm0
+    alarm0 = 60 + irandom(30);
+
+     // Shooty Harpoony:
+    if(canshoot){
+        canshoot = false;
+
+		with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
+		    //if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
+		}
+        sound_play(sndCrossbow);
+
+        alarm0 = 20 + random(30);
+		reload = 90 + random(30);
+        wkick = 8;
+    }
+    
+    else{
+        target = instance_nearest(x, y, Player);
+
+        if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+
+        	if(target_in_distance(64, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
+        	     // Prepare to Shoot:
+        		if(reload <= 0 && random(2) < 1){
+        		    alarm0 = 12;
+        		    sound_play_pitchvol(sndSniperTarget, 4, 0.8);
+        		    sound_play_pitchvol(sndCrossReload, 0.5, 0.2);
+        		    gunangle = _targetDir;
+        		    canshoot = true;
+        		    wkick = -4;
+        		}
+
+        		 // Reposition:
+        		else{
+        		    alarm0 = 20 + random(30);
+        		    if(random(2) < 1){
+            		    scrWalk(10, _targetDir + choose(-90, 90) + orandom(10));
+            		    gunangle = _targetDir;
+        		    }
+        		}
+        	}
+
+             // Move Away From Target:
+        	else{
+        		alarm0 = 20 + irandom(30);
+        		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
+        		gunangle = _targetDir + orandom(15);
+        	}
+
+        	 // Facing:
+        	scrRight(gunangle);
+        }
+    
+         // Wander:
+        else scrWalk(30, random(360));
+    }
 
 #define Diver_draw
-    var _kick = wkick,
-        _ang = gunangle,
-        _flip = right,
-        _blend = image_blend,
-        _alpha = image_alpha;
-
-     // Bolt:
-    if(reload < 6){
-        var _ox = 6 - (_kick + reload),
-            _oy = -right,
-            _x = x + lengthdir_x(_ox, _ang) + lengthdir_x(_oy, _ang - 90),
-            _y = y + lengthdir_y(_ox, _ang) + lengthdir_y(_oy, _ang - 90);
-    
-        draw_sprite_ext(sprBolt, 1, _x, _y, 1, _flip, _ang, _blend, _alpha);
+    if(gunangle <= 180 || ("wading" in self && wading > 0)){
+        Diver_draw_wep();
     }
 
      // Self:
-    if(gunangle <= 180) draw_weapon(spr_weap, x, y, _ang, 0, _kick, _flip, _blend, _alpha);
     draw_self_enemy();
     with(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) draw_self(); // In tree
-    if(gunangle > 180) draw_weapon(spr_weap, x, y, _ang, 0, _kick, _flip, _blend, _alpha);
+
+     // Laser Sight:
+    if(canshoot){
+        if("wading" in self && wading > 0){
+            script_bind_draw(Diver_draw_laser, depth, id);
+        }
+        else Diver_draw_laser(id);
+    }
+
+    if(gunangle >  180 && ("wading" not in self || wading <= 0)){
+        Diver_draw_wep();
+    }
+
+#define Diver_draw_wep
+     // Bolt:
+    if(reload < 6){
+        var _ox = 6 - (wkick + reload),
+            _oy = -right,
+            _x = x + lengthdir_x(_ox, gunangle) + lengthdir_x(_oy, gunangle - 90),
+            _y = y + lengthdir_y(_ox, gunangle) + lengthdir_y(_oy, gunangle - 90);
+    
+        draw_sprite_ext(sprBolt, 1, _x, _y, 1, right, gunangle, image_blend, image_alpha);
+    }
+
+     // Weapon:
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+
+#define Diver_draw_laser(_inst)
+    with(_inst){
+        draw_set_color(c_white);
+        draw_set_alpha(0.8 / (abs(wkick) + 1));
+    
+        var _x = x - 1,
+            _y = y - 3;
+
+        if("wading" in self && wading > 0){
+            _y += wading_z;
+        }
+
+        var _ang = gunangle,
+            w = 0.5 + random(1),
+            l = draw_lasersight(_x, _y, _ang, 1000 / (abs(wkick * 5) + 1), w);
+
+        draw_set_alpha(draw_get_alpha() / 2);
+        draw_set_blend_mode(choose(bm_add, bm_normal));
+    
+        draw_line_width(
+            _x,
+            _y,
+            l[0] + lengthdir_x(2, _ang),
+            l[1] + lengthdir_y(2, _ang),
+            w + 1 + random(0.5)
+        );
+    
+        draw_set_blend_mode(bm_normal);
+        draw_set_alpha(1);
+    }
+    if(instance_is(self, CustomDraw)) instance_destroy();
 
 #define Diver_death
     pickup_drop(20, 0);
@@ -2770,6 +2841,15 @@
         speed += ((speed * 0.85) - speed) * current_time_scale;
     }
 
+     // Pit Collision:
+    var f = floor_at(x + hspeed, y + vspeed);
+    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
+        if(floor_at(x, y).sprite_index != spr.FloorTrenchB){
+            if(place_meeting(x + hspeed, y, f)) hspeed *= -1;
+            if(place_meeting(x, y + vspeed, f)) vspeed *= -1;
+        }
+    }
+
 #define Angler_draw
     var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
     if(h) d3d_set_fog(1, c_white, 0, 0);
@@ -2849,7 +2929,7 @@
         
              // Move Toward Player:
             if(target_is_visible() && target_in_distance(0, 128)){
-                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y));
+                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y) + orandom(20));
             }
     
              // Wander:
@@ -2875,14 +2955,6 @@
             _y = y;
         }
 
-        if(raddrop > 0){
-            repeat(raddrop) with(instance_create(_x, _y, Rad)){
-                motion_add(random(360), random(5));
-                motion_add(other.direction, other.speed / 4);
-            }
-            raddrop = 0;
-        }
-
          // it is very broke
         with(scrCorpse(direction + orandom(10), speed + random(2))){
             x = _x;
@@ -2891,11 +2963,20 @@
             mask_index = -1;
             size = 2;
         }
-        
+
          // yea...
         with(instance_create(_x, _y, PortalClear)){
             image_xscale = 0.4;
             image_yscale = 0.4;
+        }
+
+         // most important part
+        if(raddrop > 0){
+            repeat(raddrop) with(instance_create(_x, _y, Rad)){
+                motion_add(random(360), random(5));
+                motion_add(other.direction, min(other.speed / 3, 3));
+            }
+            raddrop = 0;
         }
 
          // Effects:
@@ -4194,6 +4275,7 @@
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call("mod", "teassets", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "teassets", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call("mod", "teassets", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "teassets", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call("mod", "teassets", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call("mod", "teassets", "scrEnemyShoot", _object, _dir, _spd);

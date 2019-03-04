@@ -505,6 +505,7 @@
 
      // Call Area Events (Not built into area mods):
     var a = array_find_index(global.area, GameCont.area);
+    if(a < 0 && GameCont.area = 100) a = array_find_index(global.area, GameCont.lastarea);
     if(a >= 0){
         var _area = global.area[a];
 
@@ -1106,9 +1107,9 @@
         if(sprite_index == sprWeaponChestOpen) sprite_index = sprClamChestOpen;
     }
 
-    script_bind_step(underwater_sound, 0);
-    script_bind_draw(underwater_draw, -3);
-    script_bind_end_step(underwater_end_step, 0);
+    with(script_bind_step(underwater_sound, 0)) name = script[2];
+    with(script_bind_draw(underwater_draw, -3)) name = script[2];
+    with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
 
 #define underwater_sound
     instance_destroy();
@@ -1223,8 +1224,8 @@
     }
 
      // Pet Bubbles:
-    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism"), "visible", true)){
-        if(pet != "Octo") draw_sprite(sprPlayerBubble, -1, x, y);
+    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism", "Octo"), "visible", true)){
+        draw_sprite(sprPlayerBubble, -1, x, y);
     }
 
      // Boiling Water:

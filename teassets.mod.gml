@@ -589,6 +589,42 @@
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)
 	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
 
+#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
+    var _sx = _x,
+        _sy = _y,
+        _lx = _sx,
+        _ly = _ly,
+        _md = _maxDistance,
+        d = _md,
+        m = 0; // Minor hitscan increment distance
+
+    while(d > 0){
+         // Major Hitscan Mode (Start at max, go back until no collision line):
+        if(m <= 0){
+            _lx = _sx + lengthdir_x(d, _dir);
+            _ly = _sy + lengthdir_y(d, _dir);
+            d -= sqrt(_md);
+
+             // Enter minor hitscan mode:
+            if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
+                m = 2;
+                d = sqrt(_md);
+            }
+        }
+
+         // Minor Hitscan Mode (Move until collision):
+        else{
+            if(position_meeting(_lx, _ly, Wall)) break;
+            _lx += lengthdir_x(m, _dir);
+            _ly += lengthdir_y(m, _dir);
+            d -= m;
+        }
+    }
+
+    draw_line_width(_sx, _sy, _lx, _ly, _width);
+
+    return [_lx, _ly];
+
 #define scrWalk(_walk, _dir)
     walk = _walk;
     speed = max(speed, friction);
