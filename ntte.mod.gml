@@ -2133,6 +2133,17 @@
         script_bind_draw(charm_draw, -3, _charmDraw);
     }
 
+#define scrCharmTarget()
+    with(instance){
+        var _x = x,
+            _y = y;
+
+        if(instance_is(self, enemy)){
+            other.target = nearest_instance(_x, _y, instances_matching_ne(enemy, "team", team));
+        }
+        else other.target = instance_nearest(_x, _y, enemy);
+    }
+
 #define cleanup
     with(global.charm_step) instance_destroy();
 
@@ -2156,7 +2167,6 @@
 #define target_is_visible()                                                             return  mod_script_call("mod", "telib", "target_is_visible");
 #define z_engine()                                                                              mod_script_call("mod", "telib", "z_engine");
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "telib", "scrCharm", _instance, _charm);
-#define scrCharmTarget()                                                                return  mod_script_call("mod", "telib", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "telib", "scrBossHP", _hp);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);

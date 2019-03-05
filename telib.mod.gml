@@ -161,7 +161,8 @@
                     on_step = ["", "", ""];
                     on_open = ["", "", ""];
 
-                    with(script_bind_step(CustomChest_step, 0)){
+                    with(script_bind_step(0, 0)){
+                        script = script_ref_create_ext("mod", "tegeneral", "CustomChest_step");
                         creator = other;
                     }
                 }
@@ -444,7 +445,7 @@
 
                      // Annoying Fix:
                     if(place_meeting(x, y, PortalShock)){
-                        mod_script_call("mod", "tegeneral", "Bone_destroy");
+                        mod_script_call("mod", "tedesert", "Bone_destroy");
                     }
                 }
                 break;
@@ -575,7 +576,7 @@
 
             case "CoastDecal":
             case "CoastBigDecal":
-                return mod_script_call("mod", "telib2", "CoastDecal_create", _x, _y, (obj_name == "CoastBigDecal"));
+                return mod_script_call("mod", "tecoast", "CoastDecal_create", _x, _y, (obj_name == "CoastBigDecal"));
 
             case "Creature":
         	    o = instance_create(_x, _y, CustomHitme);
@@ -1078,7 +1079,7 @@
                      // Sound:
                     snd_open = sndOasisChest;
 
-                    on_open = script_ref_create_ext("mod", "telib2", "ClamChest_open");
+                    on_open = script_ref_create_ext("mod", "teoasis", "ClamChest_open");
                 }
                 break;
 
@@ -1855,7 +1856,7 @@
                     active : true
                     };
 
-                array_push(global.catLight, o);
+                array_push(mod_variable_get("mod", "tesewers", "catLight"), o);
                 return o;
 
             case "ChairFront":
@@ -1988,7 +1989,10 @@
                     maxhealth = 15;
                     my_health = 15;
 
-                    script_bind_end_step(PizzaTV_end_step, 0, id);
+                    with(script_bind_end_step(0, 0)){
+                        script = script_ref_create_ext("mod", "tesewers", "PizzaTV_end_step");
+                        creator = other;
+                    }
                 }
                 return o;
                 break;
@@ -2018,15 +2022,14 @@
         	case "InvMortar":
         	    o = obj_create(_x, _y, "Mortar");
         	    with(o){
+        	        inv = true;
+
         	        // Visual:
         	       spr_idle = spr.InvMortarIdle;
         	       spr_walk = spr.InvMortarWalk;
         	       spr_fire = spr.InvMortarFire;
         	       spr_hurt = spr.InvMortarHurt;
         	       spr_dead = spr.InvMortarDead;
-        	        // Shh don't tell yokin:
-        	       on_hurt = script_ref_create(InvMortar_hurt);
-        	       on_step = script_ref_create(InvMortar_step);
         	    }
         	    break;
 
@@ -2425,17 +2428,6 @@
         }
     }
     return c;
-
-#define scrCharmTarget()
-    with(instance){
-        var _x = x,
-            _y = y;
-
-        if(instance_is(self, enemy)){
-            other.target = nearest_instance(_x, _y, instances_matching_ne(enemy, "team", team));
-        }
-        else other.target = instance_nearest(_x, _y, enemy);
-    }
 
 #define scrBossHP(_hp)
     var n = 0;

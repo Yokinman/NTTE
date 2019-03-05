@@ -1448,8 +1448,8 @@
         floor_reveal(_path, 2);
 
 
-#define PizzaTV_end_step(_inst)
-    if(instance_exists(_inst)) with(_inst){
+#define PizzaTV_end_step
+    if(instance_exists(creator)) with(creator){
         depth = 0;
 
          // Death without needing a corpse sprite haha:
@@ -1536,7 +1536,6 @@
 #define z_engine()                                                                              mod_script_call("mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "telib", "scrCharm", _instance, _charm);
-#define scrCharmTarget()                                                                return  mod_script_call("mod", "telib", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "telib", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "telib", "scrTopDecal", _x, _y, _area);
@@ -1577,3 +1576,4 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
+#macro sewers "secret"

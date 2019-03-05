@@ -410,7 +410,7 @@
         }
 
          // Repeat sound:
-        else if(random(3) < 1) with(leader){
+        else if(random(4) < 1) with(leader){
             sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
             sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
             return 40 + random(20);
@@ -430,10 +430,12 @@
         image_index = 0;
     
          // Movin'
-        scrWalk(maxspd, point_direction(other.x, other.y, x, y));
-        var o = 6;
-        x += lengthdir_x(o, direction);
-        y += lengthdir_y(o, direction);
+        if(speed <= 0){
+            scrWalk(maxspd, point_direction(other.x, other.y, x, y));
+            var o = 6;
+            x += lengthdir_x(o, direction);
+            y += lengthdir_y(o, direction);
+        }
     }
 
 #define Parrot_draw
@@ -675,7 +677,6 @@
 #define z_engine()                                                                              mod_script_call("mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "telib", "scrCharm", _instance, _charm);
-#define scrCharmTarget()                                                                return  mod_script_call("mod", "telib", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "telib", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "telib", "scrTopDecal", _x, _y, _area);

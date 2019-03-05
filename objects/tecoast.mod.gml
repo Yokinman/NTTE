@@ -12,6 +12,9 @@
 #macro mus global.mus
 #macro sav global.save
 
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+#macro anim_end (image_index > image_number - 1 + image_speed)
+
 
 #define Creature_step
     enemyAlarms(1);
@@ -2554,7 +2557,6 @@
 #define z_engine()                                                                              mod_script_call("mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call("mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "telib", "scrCharm", _instance, _charm);
-#define scrCharmTarget()                                                                return  mod_script_call("mod", "telib", "scrCharmTarget");
 #define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "telib", "scrBossHP", _hp);
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call("mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "telib", "scrTopDecal", _x, _y, _area);
