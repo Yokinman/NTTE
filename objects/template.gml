@@ -1,34 +1,47 @@
+/// Copy-paste and rename this file when you're adding a new object mod
+
+/*  Rules                                                   *\
+ - All code under a #define should be indented one extra so that it stands out
+ - There should be a double space between different object's code
+ - If you add a script to telib:
+     Try to add it to all of the '/// Scripts' sections at the end of an object file if possible
+     *Including the template
+ - If you need to add a standard .mod event to handle code, like '#define draw_dark':
+     Place it between the mod object code section and scripts section
+     Add a '/// Mod Events' comment before that section, like with the scripts section
+     Double space the area between the scripts and mod object code sections
+
+Example Code (Ignore extra space before #define here):
+ #define Bat_step
+    motion_add(direction, 1);
+ 
+ #define Bat_draw
+    draw_self_enemy();
+ 
+ 
+ #define Cat_step
+    my_health = 0;
+
+
+/// Mod Events
+ #define step
+    with(Catobjects) x += 20;
+
+ #define draw_shadows
+    with(Batboys) draw_sprite(shd24, 0, x, y);
+
+
+/// Scripts
+blah blah blah
+
+\*  ^^ Delete this line and all above after copy-pasting ^^ */
 #define init
+    array_push(mod_variable_get("mod", "telib", "objectMods"), mod_current);
+
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
-
-    global.chest_list = [];
-    global.chest_vars = [];
-
-    while(true){
-         // Chests Give Feathers:
-        if(!instance_exists(GenCont)){
-            with(instances_matching(chestprop, "feather_storage", null)){
-                feather_storage = obj_create(x, y, "ParrotChester");
-    
-                 // Vars:
-                with(feather_storage){
-                    creator = other;
-                    switch(other.object_index){
-                        case BigWeaponChest:
-                        case BigCursedChest:
-                            num = 2; break;
-                        case GiantWeaponChest:
-                        case GiantAmmoChest:
-                            num = 3; break;
-                    }
-                }
-            }
-        }
-        wait 1;
-    }
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -36,179 +49,9 @@
 #macro mus global.mus
 #macro sav global.save
 
-#define race_name       return "PARROT";
-#define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_tb_text    return "@rFEATHERS@s LAST LONGER";
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+#macro anim_end (image_index > image_number - 1 + image_speed)
 
-/// Sprites
-#define race_menu_button
-    sprite_index = spr.Parrot[0].Select;
-    image_index = !race_avail();
-
-#define race_portrait(p, _skin)
-    return spr.Parrot[_skin].Portrait;
-
-#define race_mapicon(p, _skin)
-    return spr.Parrot[_skin].Map;
-
-#define race_skin_button(_skin)
-    sprite_index = spr.Parrot[_skin].Loadout;
-    image_index = !race_skin_avail(_skin);
-
-#define race_sprite(_spr)  
-    var b = (("bskin" in self) ? bskin : 0);
-    switch(_spr){
-        case sprMutant1Idle:        return spr.Parrot[b].Idle;
-        case sprMutant1Walk:        return spr.Parrot[b].Walk;
-        case sprMutant1Hurt:        return spr.Parrot[b].Hurt;
-        case sprMutant1Dead:        return spr.Parrot[b].Dead;
-        case sprMutant1GoSit:       return spr.Parrot[b].Hurt;
-        case sprMutant1Sit:         return spr.Parrot[b].Dead;
-        case sprFishMenu:           return spr.Parrot[b].Idle;
-        case sprFishMenuSelected:   return spr.Parrot[b].Walk;
-        case sprFishMenuSelect:     return spr.Parrot[b].Dead;
-        case sprFishMenuDeselect:   return spr.Parrot[b].Hurt;
-    }
-
-/// Lock Status
-#define race_avail
-    return unlock_get("parrot");
-
-#define race_lock
-    return "REACH @1(sprInterfaceIcons)1-1";
-
-/// Skins
-#define race_skins()
-    return 2;
-
-#define race_skin_avail(_skin)
-    if(_skin == 0) return true;
-    return unlock_get("parrot_" + chr(97 + _skin) + "skin");
-
-#define race_skin_name(_skin)
-    if(race_skin_avail(_skin)){
-        return chr(65 + _skin) + " SKIN";
-    }
-    else switch(_skin){
-        case 0: return "EDIT THE SAVE FILE LMAO";
-        case 1: return "COMPLETE THE#AQUATIC ROUTE";
-    }
-
-/// Text Stuff
-#define race_ttip
-    if(GameCont.level >= 10 && random(5) < 1){
-        return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird");
-    }
-    else{
-        return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s");
-    }
-
-#define race_ultra_name
-    switch (argument0) {
-        case 1: return "FLOCK TOGETHER";
-        case 2: return "UNFINISHED";
-        default: return "";
-    }
-    
-#define race_ultra_text
-    switch (argument0) {
-        case 1: return "CORPSES SPAWN @rFEATHERS@s";
-        case 2: return "N/A";
-        default: return "";
-    }
-
-
-#define create
-    feather_ammo = 0;
-    feather_load = 0;
-
-     // Pet thing:
-    parrot_bob = [0, 1, 1, 0];
-
-#define game_start
-    if(fork()){
-        do wait 1;
-        until !instance_exists(GenCont);
-
-         // Starting Feather Ammo:
-        repeat(3) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-            target = other;
-            creator = other;
-            if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
-            speed *= 3;
-        }
-        
-        with(Pet_create(x, y, "Parrot")) {
-            leader = other;
-            array_insert(other.pet, 0, self);
-        }
-        
-        exit;
-    }
-
-#define step
-     /// ACTIVE : Charm
-    if(feather_load <= 0  || usespec > 0 || button_pressed(index, "spec")){
-        var n = 1;
-        if((button_released(index, "spec")) && feather_ammo >= n){
-            feather_ammo -= n;
-            feather_load = n * 10;
-
-             // Shooty Charm Feathers:
-            var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-            var c = scrCharm(t, true);
-            c.time += 160 + (skill_get(mut_throne_butt) * 80);
-            
-            repeat(n * 20) {
-                with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-                    creator = other;
-                    target = t;
-                    if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
-                }
-            }
-            
-            with(instances_matching([enemy, RadMaggotChest], "", null)) {
-                if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
-                    c = scrCharm(self, true);
-                    c.time += 120 + (skill_get(mut_throne_butt) * 60);
-                    
-                    repeat(n * 5) {
-                        var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
-                        f.creator = other;
-                        f.target = self;
-                        if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
-                    }
-                }
-            }
-
-             // Effects:
-            sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
-        }
-    }
-    else feather_load -= current_time_scale;
-
-     /// ULTRA A: Flock Together
-     // probably incredibly busted
-    if(ultra_get(mod_current, 1)) {
-        with(instances_matching(Corpse, "flock_together", null)) {
-            flock_together = 1;
-            // Hacky but me lazy:
-            with(other) {
-                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
-                    target = other;
-                    creator = other;
-                }
-            }
-        }
-    }
-
-#define draw
-    if(button_check(index, "spec")){
-        draw_text_nt(x, y - 32, string(feather_ammo));
-        
-        var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-        draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
-    }
 
 
 /// Scripts

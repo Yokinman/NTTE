@@ -4,210 +4,314 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
-    global.chest_list = [];
-    global.chest_vars = [];
-
-    while(true){
-         // Chests Give Feathers:
-        if(!instance_exists(GenCont)){
-            with(instances_matching(chestprop, "feather_storage", null)){
-                feather_storage = obj_create(x, y, "ParrotChester");
-    
-                 // Vars:
-                with(feather_storage){
-                    creator = other;
-                    switch(other.object_index){
-                        case BigWeaponChest:
-                        case BigCursedChest:
-                            num = 2; break;
-                        case GiantWeaponChest:
-                        case GiantAmmoChest:
-                            num = 3; break;
-                    }
-                }
-            }
-        }
-        wait 1;
-    }
-
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
 
-#define race_name       return "PARROT";
-#define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_tb_text    return "@rFEATHERS@s LAST LONGER";
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+#macro anim_end (image_index > image_number - 1 + image_speed)
 
-/// Sprites
-#define race_menu_button
-    sprite_index = spr.Parrot[0].Select;
-    image_index = !race_avail();
 
-#define race_portrait(p, _skin)
-    return spr.Parrot[_skin].Portrait;
+#define ClamChest_open(_player)
+    var w = ["harpoon", "netlauncher", "bubble rifle", "bubble shotgun", "bubble minigun", "lightning ring launcher", "super lightning ring launcher"],
+        _wep = "";
 
-#define race_mapicon(p, _skin)
-    return spr.Parrot[_skin].Map;
+     // Random Cool Wep:
+    var m = 0;
+    do _wep = w[irandom(array_length(w) - 1)];
+    until (mod_exists("weapon", _wep) || ++m > 200);
 
-#define race_skin_button(_skin)
-    sprite_index = spr.Parrot[_skin].Loadout;
-    image_index = !race_skin_avail(_skin);
-
-#define race_sprite(_spr)  
-    var b = (("bskin" in self) ? bskin : 0);
-    switch(_spr){
-        case sprMutant1Idle:        return spr.Parrot[b].Idle;
-        case sprMutant1Walk:        return spr.Parrot[b].Walk;
-        case sprMutant1Hurt:        return spr.Parrot[b].Hurt;
-        case sprMutant1Dead:        return spr.Parrot[b].Dead;
-        case sprMutant1GoSit:       return spr.Parrot[b].Hurt;
-        case sprMutant1Sit:         return spr.Parrot[b].Dead;
-        case sprFishMenu:           return spr.Parrot[b].Idle;
-        case sprFishMenuSelected:   return spr.Parrot[b].Walk;
-        case sprFishMenuSelect:     return spr.Parrot[b].Dead;
-        case sprFishMenuDeselect:   return spr.Parrot[b].Hurt;
+    if(mod_exists("weapon", _wep)){
+        with(instance_create(x, y, WepPickup)){
+            wep = _wep;
+            ammo = true;
+            
+             // Unlock new weapon:
+            if(!unlock_get(_wep)){
+                unlock_set(_wep, true);
+                sound_play(sndGoldUnlock);
+                scrUnlock(weapon_get_name(_wep), "YOU'LL SEE IT AGAIN", -1, -1);
+            }
+        }
     }
 
-/// Lock Status
-#define race_avail
-    return unlock_get("parrot");
-
-#define race_lock
-    return "REACH @1(sprInterfaceIcons)1-1";
-
-/// Skins
-#define race_skins()
-    return 2;
-
-#define race_skin_avail(_skin)
-    if(_skin == 0) return true;
-    return unlock_get("parrot_" + chr(97 + _skin) + "skin");
-
-#define race_skin_name(_skin)
-    if(race_skin_avail(_skin)){
-        return chr(65 + _skin) + " SKIN";
-    }
-    else switch(_skin){
-        case 0: return "EDIT THE SAVE FILE LMAO";
-        case 1: return "COMPLETE THE#AQUATIC ROUTE";
+     // Angry puffer cause you dont have cool weapons loaded
+    else with(obj_create(x, y, "Puffer")){
+        instance_create(x, y, AssassinNotice);
     }
 
-/// Text Stuff
-#define race_ttip
-    if(GameCont.level >= 10 && random(5) < 1){
-        return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird");
+
+#define Hammerhead_step
+    enemyAlarms(1);
+    if(sprite_index != spr_chrg) enemySprites();
+    enemyWalk(walkspd, maxspd);
+
+     // Swim in a circle:
+    if(rotate != 0){
+        rotate -= clamp(rotate, -1, 1) * current_time_scale;
+        direction += rotate;
+        if(speed > 0) scrRight(direction);
     }
+
+     // Charge:
+    if(charge > 0 || charge_wait > 0){
+        direction += angle_difference(charge_dir + (sin(charge / 5) * 20), direction) / 3;
+        scrRight(direction);
+    }
+    if(charge_wait > 0){
+        charge_wait -= current_time_scale;
+
+        x += orandom(1);
+        y += orandom(1);
+        x -= lengthdir_x(charge_wait / 5, charge_dir);
+        y -= lengthdir_y(charge_wait / 5, charge_dir);
+        sprite_index = choose(spr_hurt, spr_chrg);
+
+         // Start Charge:
+        if(charge_wait <= 0){
+            sound_play_pitch(sndRatkingCharge, 0.4 + random(0.2));
+            view_shake_at(x, y, 15);
+        }
+    }
+    else if(charge > 0){
+        charge -= current_time_scale;
+
+        if(sprite_index != spr_hurt) sprite_index = spr_chrg;
+
+         // Fast Movement:
+        motion_add(direction, 3);
+        scrRight(direction);
+
+         // Break Walls:
+        if(place_meeting(x + hspeed, y + vspeed, Wall)){
+            with(Wall) if(place_meeting(x - other.hspeed, y - other.vspeed, other)){
+                 // Effects:
+                if(random(2) < 1) with(instance_create(x + 8, y + 8, Hammerhead)){
+                    motion_add(random(360), 1);
+                }
+                instance_create(x, y, Smoke);
+                sound_play_pitchvol(sndHammerHeadProc, 0.75, 0.5);
+
+                instance_create(x, y, FloorExplo);
+                instance_destroy();
+            }
+        }
+
+         // Effects:
+        if(current_frame_active){
+            with(instance_create(x + orandom(8), y + 8, Dust)){
+                motion_add(random(360), 1)
+            }
+        }
+        if !(charge mod 5) view_shake_at(x, y, 10);
+
+         // Charge End:
+        if(charge <= 0){
+            sprite_index = spr_idle;
+            sound_play_pitch(sndRatkingChargeEnd, 0.6);
+        }
+    }
+
+#define Hammerhead_alrm0
+    alarm0 = 30 + random(20);
+
+    target = instance_nearest(x, y, Player);
+    if(target_in_distance(0, 256)){
+        var _targetDir = point_direction(x, y, target.x, target.y);
+        if(target_is_visible()){
+             // Close Range Charge:
+            if(target_in_distance(0, 96) && random(4) < 3){
+                charge = 15 + random(10);
+                charge_wait = 15;
+                charge_dir = _targetDir;
+                sound_play_pitchvol(sndHammerHeadEnd, 0.6, 0.25);
+            }
+
+             // Move Towards Target:
+            else{
+                scrWalk(30, _targetDir + orandom(20));
+                rotate = orandom(20);
+            }
+        }
+
+        else{
+             // Charge Through Walls:
+            if(my_health < maxhealth && random(3) < 1){
+                charge = 30;
+                charge_wait = 15;
+                charge_dir = _targetDir;
+                alarm0 = charge + charge_wait + random(10);
+                sound_play_pitchvol(sndHammerHeadEnd, 0.6, 0.25);
+            }
+
+             // Movement:
+            else{
+                rotate = orandom(30);
+                scrWalk(20 + random(10), _targetDir + orandom(90));
+            }
+        }
+    }
+
+     // Passive Movement:
     else{
-        return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s");
+        scrWalk(30, direction);
+        scrRight(direction);
+        rotate = orandom(30);
+        alarm0 += random(walk);
     }
 
-#define race_ultra_name
-    switch (argument0) {
-        case 1: return "FLOCK TOGETHER";
-        case 2: return "UNFINISHED";
-        default: return "";
+    scrRight(direction);
+
+#define Hammerhead_death
+    pickup_drop(30, 8);
+
+
+#define Puffer_step
+    enemyAlarms(1);
+    enemyWalk(walkspd, maxspd);
+
+     // Animate:
+    if(sprite_index != spr_fire){
+        if(sprite_index != spr_chrg) enemySprites();
+
+         // Charged:
+        else if(anim_end) blow = 1;
     }
-    
-#define race_ultra_text
-    switch (argument0) {
-        case 1: return "CORPSES SPAWN @rFEATHERS@s";
-        case 2: return "N/A";
-        default: return "";
-    }
 
+     // Puffering:
+    if(blow > 0){
+        blow -= 0.03 * current_time_scale;
 
-#define create
-    feather_ammo = 0;
-    feather_load = 0;
+         // Blowing:
+        motion_add_ct(direction + (10 * sin(current_frame / 6)), 2);
+        scrRight(direction + 180);
 
-     // Pet thing:
-    parrot_bob = [0, 1, 1, 0];
-
-#define game_start
-    if(fork()){
-        do wait 1;
-        until !instance_exists(GenCont);
-
-         // Starting Feather Ammo:
-        repeat(3) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-            target = other;
-            creator = other;
-            if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
-            speed *= 3;
+         // Effects:
+        if(current_frame_active && random(4) < 3){
+            var l = 8, d = direction + 180;
+            with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bubble)){
+                motion_add(d, 3);
+            }
+            sound_play_pitchvol(sndRoll, 1.2 + random(0.4), 0.6);
         }
-        
-        with(Pet_create(x, y, "Parrot")) {
-            leader = other;
-            array_insert(other.pet, 0, self);
+
+         // Animate:
+        var _sprFire = spr.PufferFire,
+            _blowLvl = clamp(floor(blow * array_length(_sprFire)), 0, array_length(_sprFire) - 1),
+            _back = (direction > 180);
+
+        spr_fire = _sprFire[_blowLvl, _back];
+        sprite_index = spr_fire;
+    }
+    else if(sprite_index == spr_fire) sprite_index = spr_idle;
+
+#define Puffer_alrm0
+    alarm0 = 20 + random(30);
+    target = instance_nearest(x, y, Player);
+
+    if(blow <= 0){
+        if(instance_exists(target)){
+            var _targetDir = point_direction(x, y, target.x, target.y);
+
+             // Puff Time:
+            if(target_is_visible() && target_in_distance(0, 256) && random(2) < 1){
+                alarm0 = 30;
+
+                scrWalk(8, _targetDir);
+                scrRight(direction + 180);
+                sprite_index = spr_chrg;
+                image_index = 0;
+
+                 // Effects:
+                repeat(3) instance_create(x, y, Dust);
+                sound_play_pitch(sndOasisCrabAttack, 0.8);
+                sound_play_pitchvol(sndBouncerBounce, 0.6 + orandom(0.2), 2);
+            }
+
+             // Get Closer:
+            else scrWalk(alarm0, _targetDir + orandom(20));
         }
-        
-        exit;
+
+         // Passive Movement:
+        else scrWalk(10, random(360));
     }
 
-#define step
-     /// ACTIVE : Charm
-    if(feather_load <= 0  || usespec > 0 || button_pressed(index, "spec")){
-        var n = 1;
-        if((button_released(index, "spec")) && feather_ammo >= n){
-            feather_ammo -= n;
-            feather_load = n * 10;
+#define Puffer_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);  // Sound
 
-             // Shooty Charm Feathers:
-            var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-            var c = scrCharm(t, true);
-            c.time += 160 + (skill_get(mut_throne_butt) * 80);
+     // Hurt Sprite:
+    if(sprite_index != spr_fire && sprite_index != spr_chrg){
+        sprite_index = spr_hurt;
+        image_index = 0;
+    }
+
+#define Puffer_draw
+    var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    draw_self_enemy();
+    if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define Puffer_death
+    pickup_drop(30, 0);
+
+     // Powerful Death:
+    var _num = 3;
+    if(blow > 0) _num *= ceil(blow * 4);
+    if(sprite_index == spr_chrg) _num += image_index;
+    if(_num > 3){
+        sound_play_pitch(sndOasisExplosionSmall, 1 + random(0.2));
+        sound_play_pitchvol(sndOasisExplosion, 0.8 + random(0.4), _num / 15);
+    }
+    while(_num-- > 0){
+        with(instance_create(x, y, Bubble)){
+            motion_add(random(360), _num / 2);
+            hspeed += other.hspeed / 3;
+            vspeed += other.vspeed / 3;
+            friction *= 2;
+        }
+    }
+
+
+#define Crack_step
+    if !image_index{
+        if place_meeting(x, y, Player){
+            image_index = 1;
+             // Open effects:
+            // sound_play_pitchvol(sndFlameCannon,     0.8, 0.3);
+            sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
+            sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
+            sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
             
-            repeat(n * 20) {
-                with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-                    creator = other;
-                    target = t;
-                    if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
-                }
-            }
+            sleep(50);
+            view_shake_at(x, y, 20);
             
-            with(instances_matching([enemy, RadMaggotChest], "", null)) {
-                if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
-                    c = scrCharm(self, true);
-                    c.time += 120 + (skill_get(mut_throne_butt) * 60);
-                    
-                    repeat(n * 5) {
-                        var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
-                        f.creator = other;
-                        f.target = self;
-                        if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
-                    }
-                }
-            }
-
-             // Effects:
-            sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
-        }
-    }
-    else feather_load -= current_time_scale;
-
-     /// ULTRA A: Flock Together
-     // probably incredibly busted
-    if(ultra_get(mod_current, 1)) {
-        with(instances_matching(Corpse, "flock_together", null)) {
-            flock_together = 1;
-            // Hacky but me lazy:
-            with(other) {
-                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
-                    target = other;
-                    creator = other;
-                }
+            repeat(5 + irandom(5)) with instance_create(x, y, Debris)
+                motion_set(irandom(359), 3 + random(5));
+                
+            repeat(10 + irandom(10)) with instance_create(x, y, Bubble)
+                motion_set(irandom(359), 1 + random(2));
+                
+             // Portal
+            with instance_create(x, y, Portal){
+                sound_stop(sndPortalOpen);
+                image_alpha = 0;
+                GameCont.area = "trench";
+                GameCont.subarea = 0;
             }
         }
-    }
-
-#define draw
-    if(button_check(index, "spec")){
-        draw_text_nt(x, y - 32, string(feather_ammo));
         
-        var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-        draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
+         // Bubble effects:
+        else if random(4) < 1 * current_time_scale{
+            with instance_create(x, y, Bubble){
+                motion_set(90 + orandom(5), 4 + random(3));
+                friction = 0.2;
+            }
+        }
     }
 
 

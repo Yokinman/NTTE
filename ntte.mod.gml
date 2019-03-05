@@ -51,6 +51,12 @@
         }
     }
 
+     // Charm:
+    global.surfCharm = -1;
+    global.eye_shader = -1;
+    global.charm = ds_list_create();
+    global.charm_step = noone;
+
      // Water Level Sounds:
     global.waterSound = {
         "sndOasisShoot" : [
@@ -290,6 +296,9 @@
 #macro opt_sorter 2
 //#macro opt_other 3
 
+#macro EyeShader global.eye_shader
+#macro surfCharm global.surfCharm
+
 #define game_start
     with(UnlockCont) instance_destroy();
     mod_variable_set("area", "trench", "trench_visited", []);
@@ -351,7 +360,7 @@
              // Spawn Golden Lads:
             with(GoldScorpion){
                 if(random(4) < 1){
-                    repeat(irandom_range(1,3)) obj_create(x, y, "GoldBabyScorpion");
+                    repeat(irandom_range(1,3)) obj_create(x, y, "BabyScorpionGold");
                 }
             }
             
@@ -364,7 +373,7 @@
                     if random(5) < 2 instance_create(x, y, !gold ? Scorpion : GoldScorpion);
                     
                      // Baby scorpions:
-                    else repeat(1 + irandom(2)) obj_create(x, y, !gold ? "BabyScorpion" : "GoldBabyScorpion");
+                    else repeat(1 + irandom(2)) obj_create(x, y, !gold ? "BabyScorpion" : "BabyScorpionGold");
                      
                     instance_delete(id);
                 }
@@ -382,7 +391,7 @@
     	    }
             break;
 
-        case 103: /// MANSIOM
+        case 103: /// MANSIOM  its MANSION idiot, who wrote this
              // Spawn Gold Mimic:
             with(instance_nearest(10016, 10016, GoldChest)){
                 with(Pet_create(x, y, "Mimic")){
@@ -595,6 +604,12 @@
 
      // Fixes weird delay thing:
     script_bind_step(bone_step, 0);
+
+     // Charm Step:
+    if(!instance_exists(global.charm_step)){
+        global.charm_step = script_bind_end_step(charm_step, 0);
+        with(global.charm_step) persistent = true;
+    }
 
 #define begin_step
     instance_destroy();
@@ -993,42 +1008,6 @@
 
     draw_reset_projection();
     draw_set_visible_all(1);
-
-#define decide_wep_gold(_minhard, _maxhard, _nowep)
-    var _list = ds_list_create(),
-        s = weapon_get_list(_list, _minhard, _maxhard);
-
-    ds_list_shuffle(_list);
-
-    for(i = 0; i < s; i++) {
-        var w = ds_list_find_value(_list, i),
-            c = 0;
-
-         // Weapon Exceptions:
-        if(is_array(_nowep) && array_find_index(_nowep, w) >= 0) c = true;
-        if(w == _nowep) c = true;
-
-         // Specific Weapon Spawn Conditions:
-        if(
-            !weapon_get_gold(w)             ||
-            w == wep_golden_nuke_launcher   ||
-            w == wep_golden_disc_gun        ||
-            w == wep_golden_frog_pistol
-        ){
-            c = true;
-        }
-
-        if(c) continue;
-        break;
-    }
-
-    ds_list_destroy(_list);
-
-     // Set Weapon:
-    if(!c) return w;
-
-     // Default:
-    return choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
 
 #define underwater_step /// Call from underwater area step events
      // Lightning:
@@ -1594,87 +1573,625 @@
         else instance_destroy();
     }
 
-#define scrCorpse(_dir, _spd)
-	with(instance_create(x, y, Corpse)){
-		size = other.size;
-		sprite_index = other.spr_dead;
-		mask_index = other.mask_index;
-		image_xscale = other.right * other.image_xscale;
+#define alarm_creator(_object, _alarm)
+  /// Calls alarm event and sets creator on objects that were spawned during it
+    with(instances_matching(_object, "creator", null)) creator = noone;
+    event_perform(ev_alarm, _alarm);
+    var i = instances_matching(_object, "creator", null);
+    with(i) creator = other;
+    return i;
 
-		 // Speedify:
-		direction = _dir;
-		speed = min(_spd + max(0, -other.my_health / 5), 16);
-		if(size > 0) speed /= size;
+#define charm_draw(_inst)
+    instance_destroy();
 
-        return id;
-	}
+     // Surface Setup:
+    var _surf = surfCharm,
+        _surfw = game_width,
+        _surfh = game_height,
+        _surfx = view_xview_nonsync,
+        _surfy = view_yview_nonsync;
 
-#define instance_random(_obj)
-	if(instance_exists(_obj)){
-		var i = instances_matching(_obj, "", undefined);
-		return i[irandom(array_length(i) - 1)];
-	}
-	return noone;
+    if(!surface_exists(_surf)){
+        _surf = surface_create(_surfw, _surfh)
+        surfCharm = _surf;
+    }
 
-#define scrFloorMake(_x, _y, _obj)
-    instance_create(_x, _y, Floor);
-    return instance_create(_x + 16, _y + 16, _obj);
+     // Draw Charmed Enemies to Surface:
+    surface_set_target(_surf);
+    draw_clear_alpha(0, 0);
+    with(instances_seen(_inst, 24)){
+        var _x = x - _surfx,
+            _y = y - _surfy,
+            _spr = sprite_index,
+            _img = image_index;
 
-#define scrFloorFill(_x, _y, _w, _h)
-    _w--;
-    _h--;
-    var o = 32;
+        if(object_index == TechnoMancer){ // JW help me
+            _spr = drawspr;
+            _img = drawimg;
+            if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
+                texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
+                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+            }
+        }
 
-     // Center Around x,y:
-    _x -= floor(_w / 2) * o;
-    _y -= floor(_h / 2) * o;
+        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+    }
+    surface_reset_target();
 
-     // Floors:
-    var r = [];
-    for(var _ox = 0; _ox <= _w; _ox++){
-        for(var _oy = 0; _oy <= _h; _oy++){
-            r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+     // Outlines:
+    var _local = -1;
+    for(var i = 0; i < maxp; i++){
+        if(player_is_local_nonsync(i)){
+            _local = i;
+            break;
         }
     }
-    return r;
+    if(player_get_outlines(_local)){
+        d3d_set_fog(1, player_get_color(_local), 0, 0);
+        for(var a = 0; a <= 360; a += 90){
+            var _x = _surfx,
+                _y = _surfy;
 
-#define scrFloorFillRound(_x, _y, _w, _h)
-    _w--;
-    _h--;
-    var o = 32;
+            if(a >= 360) d3d_set_fog(0, 0, 0, 0);
+            else{
+                _x += dcos(a);
+                _y -= dsin(a);
+            }
 
-     // Center Around x,y:
-    _x -= floor(_w / 2) * o;
-    _y -= floor(_h / 2) * o;
+            draw_surface(_surf, _x, _y);
+        }
+    }
 
-     // Floors:
-    var r = [];
-    for(var _ox = 0; _ox <= _w; _ox++){
-        for(var _oy = 0; _oy <= _h; _oy++){
-            if((_ox != 0 && _ox != _w) || (_oy != 0 && _oy != _h)){ // Don't Make Corner Floors
-                r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+     // Eye Shader:
+    if(opt.allowShaders){
+        if(global.eye_shader == -1){
+            global.eye_shader = shader_create(
+                "/// Vertex Shader ///
+
+                struct VertexShaderInput
+                {
+                    float4 vPosition : POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                struct VertexShaderOutput
+                {
+                    float4 vPosition : SV_POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                uniform float4x4 matrix_world_view_projection;
+
+                VertexShaderOutput main(VertexShaderInput INPUT)
+                {
+                    VertexShaderOutput OUT;
+
+                    OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+                    OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+
+                    return OUT;
+                }
+                ",
+
+
+                "/// Fragment/Pixel Shader ///
+
+                struct PixelShaderInput
+                {
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                sampler2D s0;
+
+                float4 main(PixelShaderInput INPUT) : SV_TARGET
+                {
+                     // Break Down Pixel's Color:
+                    float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
+                    float R = round(Color.r * 255.0);
+                    float G = round(Color.g * 255.0);
+                    float B = round(Color.b * 255.0);
+
+                    if(R > G && R > B){
+                        if(
+                            (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
+                            (R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
+                            (R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
+                            (R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
+                            (R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
+                            (R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
+                            (R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
+                            (R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
+                            (R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
+                            (R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
+                            (R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
+                            (R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
+                            (R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
+                            (R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
+                            (R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
+                            (R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
+                            (R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
+                        ){
+                            return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
+                        }
+                    }
+
+                     // Return Blank Pixel:
+                    return float4(0.0, 0.0, 0.0, 0.0);
+                }
+            ");
+        }
+
+        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+        shader_set(EyeShader);
+        texture_set_stage(0, surface_get_texture(_surf));
+
+        draw_surface(_surf, _surfx, _surfy);
+
+        shader_reset();
+    }
+
+#define charm_step
+    var _charmList = ds_list_to_array(global.charm),
+        _charmDraw = [];
+
+    with(_charmList){
+        if(!instance_exists(instance)) scrCharm(instance, false);
+        else{
+            var _self = instance,
+                _time = time;
+
+             // Target Nearest Enemy:
+            if(!instance_exists(target)) scrCharmTarget();
+
+             // Alarms:
+            for(var i = 0; i <= 10; i++){
+                 // Custom Alarms:
+                if(alarm[i] > 0){
+                    alarm[i] -= current_time_scale;
+                    if(alarm[i] <= 0){
+                        alarm[i] = -1;
+
+                         // Target Nearest Enemy:
+                        scrCharmTarget();
+                        with(instance){
+                            target = other.target;
+                            var t = target;
+
+                             // Move Player for Enemy Targeting:
+                            var _lastPos = [];
+                            with(Player){
+                                array_push(_lastPos, [x, y]);
+                                if(instance_exists(t)){
+                                    x = t.x;
+                                    y = t.y;
+                                }
+                                else{
+                                    x = choose(0, 20000);
+                                    y = choose(0, 20000);
+                                }
+                            }
+
+                             // Reset Alarms:
+                            for(var a = 0; a <= 10; a++){
+                                alarm_set(a, other.alarm[a]);
+                            }
+
+                             // Call Alarm Event:
+                            if(object_index != CustomEnemy){
+                                switch(object_index){
+                                    case MaggotExplosion:   /// Charm Spawned Maggots
+                                        alarm_creator(Maggot, i);
+                                        break;
+
+                                    case RadMaggotExplosion:   /// Charm Spawned Maggots
+                                        alarm_creator(RadMaggot, i);
+                                        break;
+
+                                    case Necromancer:       /// Match ReviveArea to Necromancer
+                                        with(alarm_creator(ReviveArea, i)) alarm0++;
+                                        break;
+
+                                    case Ratking:           /// Charm Spawned Rats
+                                        if(i == 2) alarm_creator(FastRat, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    case ScrapBoss:         /// Charm Spawned Missiles
+                                        if(i == 0) alarm_creator(ScrapBossMissile, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    case FrogQueen:         /// Charm Spawned Eggs
+                                        if(i == 2) alarm_creator(FrogEgg, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    case FrogEgg:           /// Charm Spawned Ballguys
+                                        if(i == 0) alarm_creator(Exploder, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    case HyperCrystal:      /// Charm Spawned Crystals
+                                        if(i == 1) alarm_creator(LaserCrystal, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    case TechnoMancer:      /// Charm Spawned Necromancers + Turrets
+                                        if(i == 2) with(alarm_creator(NecroReviveArea, i)) alarm0++;
+                                        else{
+                                            if(i == 6) alarm_creator(Turret, i);
+                                            else event_perform(ev_alarm, i);
+                                        }
+                                        break;
+
+                                    case MeleeBandit:
+                                    case JungleAssassin:
+                                        event_perform(ev_alarm, i);
+                                        charm.walk = walk;
+                                        walk = 0;
+                                        break;
+
+                                    case JungleFly:
+                                        if(i == 2) alarm_creator(FiredMaggot, i);
+                                        else event_perform(ev_alarm, i);
+                                        break;
+
+                                    default:
+                                        event_perform(ev_alarm, i);
+                                }
+                            }
+                            else{ // Custom Alarm Support
+                                var a = "on_alrm" + string(i);
+                                if(a in self){
+                                    var _scrt = variable_instance_get(id, a);
+                                    if(array_length(_scrt) >= 3){
+                                        with(self) mod_script_call_self(_scrt[0], _scrt[1], _scrt[2]);
+                                    }
+                                }
+                            }
+
+                             // Reset Alarms:
+                            for(var a = 0; a <= 10; a++){
+                                var _alrm = alarm_get(a);
+                                if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
+                                alarm_set(a, -1);
+                            }
+
+                             // Return Players:
+                            var i = 0;
+                            with(Player){
+                                var p = _lastPos[i++];
+                                x = p[0];
+                                y = p[1];
+                            }
+                        }
+                    }
+                }
+                if(!instance_exists(_self)) break;
+            }
+            if(!instance_exists(_self)) scrCharm(_self, false);
+
+            else{
+                with(_self){
+                    target = other.target;
+                    if(instance_is(self, enemy)){
+                         // Contact Damage:
+                        if(place_meeting(x, y, enemy)){
+                            with(instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", _self)){
+                                if(place_meeting(x, y, other)) with(other){
+                                    if(alarm11 > 0) event_perform(ev_alarm, 11);
+                                    event_perform(ev_collision, Player);
+                                    with(other) nexthurt = current_frame;
+                                }
+                            }
+                        }
+
+                         // Player Shooting:
+                        /* actually pretty annoying dont use this
+                        if(place_meeting(x, y, projectile)){
+                            with(instances_matching(projectile, "team", team)){
+                                if(place_meeting(x, y, other)){
+                                    if(instance_exists(creator) && creator.object_index == Player){
+                                        with(other) scrCharm(id, false);
+                                        event_perform(ev_collision, enemy);
+                                    }
+                                }
+                            }
+                        }
+                        */
+
+                         // Follow Leader:
+                        if(instance_exists(Player)){
+                            if(distance_to_object(Player) > 256 || !instance_exists(target) || collision_line(x, y, target.x, target.y, Wall, 0, 0) || point_distance(x, y, target.x, target.y) > 80){
+                                var n = instance_nearest(x, y, Player);
+                                if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
+                                    motion_add(point_direction(x, y, mouse_x[n.index], mouse_y[n.index]), 1);
+                                }
+                                if(distance_to_object(n) > 20){
+                                    motion_add(point_direction(x, y, n.x, n.y), 1);
+                                }
+                            }
+                        }
+
+                         // Make Eyes Green:
+                        if(visible) array_push(_charmDraw, id);
+                    }
+
+                     // Manual Exception Stuff:
+                    switch(object_index){
+                        case BigMaggot:
+                        case MaggotSpawn:       /// Charm Spawned Maggots
+                            if(my_health <= 0){
+                                var _x = x, _y = y;
+                                instance_destroy();
+                                scrCharm(instance_nearest(_x, _y, MaggotExplosion), true).time = _time;
+                            }
+                            break;
+
+                        case RadMaggotChest:
+                            if(my_health <= 0){
+                                var _x = x, _y = y;
+                                instance_destroy();
+                                scrCharm(instance_nearest(_x, _y, RadMaggotExplosion), true).time = _time;
+                            }
+                            break;
+
+                        case RatkingRage:       /// Charm Spawned Rats
+                            if(walk > 0 && walk <= current_time_scale){
+                                with(instances_matching(FastRat, "creator", null)) creator = noone;
+                                instance_destroy();
+                                with(instances_matching(FastRat, "creator", null)) creator = _self;
+                            }
+                            break;
+
+                        case MeleeBandit:
+                        case JungleAssassin:    /// Overwrite Movement
+                            if(walk > 0){
+                                other.walk = walk;
+                                walk = 0;
+                            }
+                            if(other.walk > 0){
+                                other.walk -= current_time_scale;
+
+                                motion_add(direction, 2);
+                                if(instance_exists(other.target)){
+                                    var s = ((object_index == JungleAssassin) ? 1 : 2);
+                                    mp_potential_step(other.target.x, other.target.y, s, false);
+                                }
+                            }
+
+                             // Max Speed:
+                            var m = ((object_index == JungleAssassin) ? 4 : 3);
+                            if(speed > m) speed = m;
+                            break;
+
+                        case Sniper:            /// Aim at Target
+                            if(other.alarm[2] > 5 && instance_exists(other.target)){
+                                gunangle = point_direction(x, y, other.target.x, other.target.y);
+                            }
+                            break;
+
+                        case ScrapBoss:         /// Override Movement
+                            if(walk > 0){
+                                other.walk = walk;
+                                walk = 0;
+                            }
+                            if(other.walk > 0){
+                                other.walk -= current_time_scale;
+
+                                motion_add(direction, 0.5);
+                                if(instance_exists(other.target)){
+                                    motion_add(point_direction(x, y, other.target.x, other.target.y), 0.5);
+                                }
+
+                                if(round(other.walk / 10) == other.walk / 10) sound_play(sndBigDogWalk);
+
+                                 // Animate:
+                                if(other.walk <= 0) sprite_index = spr_idle;
+                                else sprite_index = spr_walk;
+                            }
+                            break;
+
+                        case ScrapBossMissile:  /// Don't Move Towards Player
+                            if(sprite_index != spr_hurt){
+                                if(instance_exists(Player)){
+                                    var n = instance_nearest(x, y, Player);
+                                    motion_add(point_direction(n.x, n.y, x, y), 0.1);
+                                }
+                                if(instance_exists(other.target)){
+                                    motion_add(point_direction(x, y, other.target.x, other.target.y), 0.1);
+                                }
+                                speed = 2;
+                                x = xprevious + hspeed;
+                                y = yprevious + vspeed;
+                            }
+                            break;
+
+                        case LaserCrystal:
+                        case InvLaserCrystal:   /// Charge Particles
+                            if(other.alarm[2] > 8 && current_frame_active){
+                                with(instance_create(x + orandom(48), y + orandom(48), LaserCharge)){
+                                    motion_add(point_direction(x, y, other.x, other.y), 2 + random(1));
+                                    alarm0 = (point_distance(x, y, other.x, other.y) / speed) + 1;
+                                }
+                            }
+                        case LightningCrystal:  /// Don't Move While Charging
+                            if(other.alarm[2] > 0) speed = 0;
+                            break;
+
+                        case LilHunterFly:      /// Land on Enemies
+                            if(sprite_index == sprLilHunterLand && z < -160){
+                                if(instance_exists(other.target)){
+                                    x = other.target.x;
+                                    y = other.target.y;
+                                }
+                            }
+                            break;
+
+                        case ExploFreak:
+                        case RhinoFreak:        /// Don't Move Towards Player
+                            if(instance_exists(Player)){
+                                x -= lengthdir_x(1, direction);
+                                y -= lengthdir_y(1, direction);
+                            }
+                            if(instance_exists(other.target)){
+                                mp_potential_step(other.target.x, other.target.y, 1, false);
+                            }
+                            break;
+
+                        case Necromancer:       /// Charm Revived Freaks
+                            with(instances_matching_le(instances_matching(ReviveArea, "creator", _self), "alarm0", 1)){
+                                if(place_meeting(x, y, Corpse)) with(Corpse){
+                                    if(place_meeting(x, y, other) && size < 3){
+                                        with(instance_create(x, y, Freak)) creator = _self;
+
+                                         // Effects:
+                                        instance_create(x, y, ReviveFX);
+                                        sound_play(sndNecromancerRevive);
+
+                                        instance_destroy();
+                                    }
+                                }
+                                instance_destroy();
+                            }
+                            break;
+
+                        case TechnoMancer:      /// Charm Revived Necromancers
+                            with(instances_matching_le(instances_matching(NecroReviveArea, "creator", _self), "alarm0", 1)){
+                                if(place_meeting(x, y, Corpse)) with(instance_nearest(x, y, Corpse)){
+                                    if(place_meeting(x, y, other) && size < 3){
+                                        with(instance_create(x, y, Necromancer)) creator = _self;
+
+                                         // Effects:
+                                        with(instance_create(x, y, ReviveFX)) sprite_index = sprNecroRevive;
+                                        sound_play(sndNecromancerRevive);
+
+                                        instance_destroy();
+                                    }
+                                }
+                                instance_destroy();
+                            }
+                            break;
+
+                        case Shielder:
+                        case EliteShielder:     /// Fix Shield Team
+                            with(instances_matching(PopoShield, "creator", id)) team = other.team;
+                            break;
+
+                        case EnemyHorror:       /// Don't Shoot Beam at Player
+                            if(instance_exists(other.target)){
+                                gunangle = point_direction(x, y, other.target.x, other.target.y);
+                            }
+                            with(instances_matching(instances_matching(projectile, "creator", _self), "charmed_horror", null)){
+                                charmed_horror = true;
+                                x -= hspeed;
+                                y -= vspeed;
+                                direction = other.gunangle;
+                                image_angle = direction;
+                                x += hspeed;
+                                y += vspeed;
+                            }
+                            break;
+
+                        case InvSpider:         /// Charm Split Spiders
+                            if(my_health <= 0){
+                                with(instances_matching(InvSpider, "creator", null)) creator = noone;
+                                instance_destroy();
+                                with(instances_matching(InvSpider, "creator", null)) creator = _self;
+                            }
+                            break;
+
+                        case FiredMaggot:       /// Charm Dropped Maggot
+                            if(my_health <= 0 || place_meeting(x + hspeed, y + vspeed, Wall)){
+                                with(instances_matching(Maggot, "creator", null)) creator = noone;
+                                instance_destroy();
+                                with(instances_matching(Maggot, "creator", null)) creator = _self;
+                            }
+                            break;
+                    }
+                }
+
+                 // Charm Timer:
+                if(instance_exists(_self) && time > 0){
+                    time -= current_time_scale;
+                    if(time <= 0) scrCharm(_self, false);
+                }
+            }
+        }
+
+         // Charm Spawned Enemies:
+        with(instances_matching(instances_matching(hitme, "creator", instance), "charm", null)){
+            scrCharm(id, true);
+            repeat(_time / 60) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+                target = other;
             }
         }
     }
-    return r;
+    if(array_length(_charmDraw) > 0){
+        script_bind_draw(charm_draw, -3, _charmDraw);
+    }
 
-#define obj_create(_x, _y, _obj)
-    return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+#define cleanup
+    with(global.charm_step) instance_destroy();
 
-#define Pet_create(_x, _y, _pet)
-    return mod_script_call("mod", "telib", "Pet_create", _x, _y, _pet);
 
-#define scrSetPet(_pet)
-    return mod_script_call("mod", "teassets", "scrSetPet", _pet);
-
-#define wep_get(_wep)
-    return mod_script_call("mod", "teassets", "wep_get", _wep);
-
-#define orandom(_n)
-    return irandom_range(-_n,_n);
-
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
-#define race_get_sprite(_race, _sprite)                                                 return  mod_script_call("mod", "teassets", "race_get_sprite", _race, _sprite);
-#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "teassets", "nearest_instance", _x, _y, _instances);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "teassets", "instances_seen", _obj, _ext);
+/// Scripts
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define draw_self_enemy()                                                                       mod_script_call("mod", "telib", "draw_self_enemy");
+#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call("mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call("mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
+#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
+#define scrWalk(_walk, _dir)                                                                    mod_script_call("mod", "telib", "scrWalk", _walk, _dir);
+#define scrRight(_dir)                                                                          mod_script_call("mod", "telib", "scrRight", _dir);
+#define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call("mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
+#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call("mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
+#define enemyAlarms(_maxAlarm)                                                                  mod_script_call("mod", "telib", "enemyAlarms", _maxAlarm);
+#define enemyWalk(_spd, _max)                                                                   mod_script_call("mod", "telib", "enemyWalk", _spd, _max);
+#define enemySprites()                                                                          mod_script_call("mod", "telib", "enemySprites");
+#define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call("mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
+#define scrDefaultDrop()                                                                        mod_script_call("mod", "telib", "scrDefaultDrop");
+#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call("mod", "telib", "target_in_distance", _disMin, _disMax);
+#define target_is_visible()                                                             return  mod_script_call("mod", "telib", "target_is_visible");
+#define z_engine()                                                                              mod_script_call("mod", "telib", "z_engine");
+#define scrCharm(_instance, _charm)                                                     return  mod_script_call("mod", "telib", "scrCharm", _instance, _charm);
+#define scrCharmTarget()                                                                return  mod_script_call("mod", "telib", "scrCharmTarget");
+#define scrBossHP(_hp)                                                                  return  mod_script_call("mod", "telib", "scrBossHP", _hp);
+#define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call("mod", "telib", "scrTopDecal", _x, _y, _area);
+#define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call("mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
+#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call("mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
+#define scrCorpse(_dir, _spd)                                                           return  mod_script_call("mod", "telib", "scrCorpse", _dir, _spd);
+#define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
+#define scrSetPet(_pet)                                                                 return  mod_script_call("mod", "telib", "scrSetPet", _pet);
+#define scrPortalPoof()                                                                 return  mod_script_call("mod", "telib", "scrPortalPoof");
+#define scrPickupPortalize()                                                            return  mod_script_call("mod", "telib", "scrPickupPortalize");
+#define orandom(n)                                                                      return  mod_script_call("mod", "telib", "orandom", n);
+#define floor_ext(_num, _round)                                                         return  mod_script_call("mod", "telib", "floor_ext", _num, _round);
+#define array_count(_array, _value)                                                     return  mod_script_call("mod", "telib", "array_count", _array, _value);
+#define array_flip(_array)                                                              return  mod_script_call("mod", "telib", "array_flip", _array);
+#define instances_named(_object, _name)                                                 return  mod_script_call("mod", "telib", "instances_named", _object, _name);
+#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call("mod", "telib", "nearest_instance", _x, _y, _instances);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
+#define instances_seen(_obj, _ext)                                                      return  mod_script_call("mod", "telib", "instances_seen", _obj, _ext);
+#define instance_random(_obj)                                                           return  mod_script_call("mod", "telib", "instance_random", _obj);
+#define frame_active(_interval)                                                         return  mod_script_call("mod", "telib", "frame_active", _interval);
+#define area_generate(_x, _y, _area)                                                    return  mod_script_call("mod", "telib", "area_generate", _x, _y, _area);
+#define scrFloorWalls()                                                                 return  mod_script_call("mod", "telib", "scrFloorWalls");
+#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call("mod", "telib", "floor_reveal", _floors, _maxTime);
+#define area_border(_y, _area, _color)                                                  return  mod_script_call("mod", "telib", "area_border", _y, _area, _color);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call("mod", "telib", "area_get_sprite", _area, _spr);
+#define floor_at(_x, _y)                                                                return  mod_script_call("mod", "telib", "floor_at", _x, _y);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call("mod", "telib", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);
+#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call("mod", "telib", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
+#define in_range(_num, _lower, _upper)                                                  return  mod_script_call("mod", "telib", "in_range", _num, _lower, _upper);
+#define wep_get(_wep)                                                                   return  mod_script_call("mod", "telib", "wep_get", _wep);
+#define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call("mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define race_get_sprite(_race, _sprite)                                                 return  mod_script_call("mod", "telib", "race_get_sprite", _race, _sprite);
+#define Pet_create(_x, _y, _name)                                                       return  mod_script_call("mod", "telib", "Pet_create", _x, _y, _name);
+#define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call("mod", "telib", "scrFloorMake", _x, _y, _obj);
+#define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call("mod", "telib", "scrFloorFill", _x, _y, _w, _h);
+#define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call("mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "telib", "unlock_set", _unlock, _value);

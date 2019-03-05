@@ -6,10 +6,7 @@
 #define weapon_type return 4;   // Explosive
 #define weapon_cost return 1;   // 1 Ammo
 #define weapon_load return 6;   // 0.2 Seconds
-#define weapon_area             // Spawns naturlly only after unlock
-    if !unlock_get(mod_current) return -1;
-    return 6;
-
+#define weapon_area return (unlock_get(mod_current) ? 6 : -1);
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleRifle;
 
@@ -51,7 +48,8 @@
         wait 2;
     }
 
+
+/// Scripts:
 #define orandom(n)                                                                      return  random_range(-n, n);
-#define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);

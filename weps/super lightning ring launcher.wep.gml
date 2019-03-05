@@ -35,7 +35,8 @@
     sound_play_pitchvol(sndLightningCannon, 1.5, 0.6)
     sound_play_pitchvol(sndLightningCannonUpg, 0.5, 0.4);
 
+
+/// Scripts:
 #define orandom(n)                                                                      return  random_range(-n, n);
-#define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);

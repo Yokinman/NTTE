@@ -1,0 +1,9 @@
+/loadwep crabbone
+/loadwep harpoon
+/loadwep netlauncher
+/loadwep bubble rifle
+/loadwep bubble minigun
+/loadwep bubble shotgun
+/loadwep bubble cannon
+/loadwep lightning ring launcher
+/loadwep super lightning ring launcher

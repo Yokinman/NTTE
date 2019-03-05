@@ -1,26 +1,8 @@
 /loadmod teassets
 /loadmod ntte
 /loadmod telib
-/loadmod telib2
 /loadmod petlib
-
-// Areas \\
-/loadarea areas/coast
-/loadarea areas/oasis
-/loadarea areas/pizza
-/loadarea areas/trench
-/loadarea areas/secret
-
-// Races \\
-/loadrace races/parrot
-
-// Weps \\
-/loadwep weps/crabbone
-/loadwep weps/harpoon
-/loadwep weps/netlauncher
-/loadwep weps/bubble rifle
-/loadwep weps/bubble minigun
-/loadwep weps/bubble shotgun
-/loadwep weps/bubble cannon
-/loadwep weps/lightning ring launcher
-/loadwep weps/super lightning ring launcher
+/load objects
+/load areas
+/load races
+/load weps

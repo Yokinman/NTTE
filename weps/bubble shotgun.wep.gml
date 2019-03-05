@@ -6,10 +6,7 @@
 #define weapon_type return 4;   // Explosive
 #define weapon_cost return 3;   // 3 Ammo
 #define weapon_load return 17;  // 0.6 Seconds
-#define weapon_area             // Spawns naturlly only after unlock
-    if !unlock_get(mod_current) return -1;
-    return 6;
-
+#define weapon_area return (unlock_get(mod_current) ? 6 : -1);
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleShotgun;
 

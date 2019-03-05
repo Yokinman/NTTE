@@ -1,0 +1,5 @@
+/loadarea coast
+/loadarea oasis
+/loadarea pizza
+/loadarea secret
+/loadarea trench

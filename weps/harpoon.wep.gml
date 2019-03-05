@@ -4,10 +4,7 @@
 #define weapon_name return "HARPOON LAUNCHER";
 #define weapon_type return 3;   // Bolt
 #define weapon_load return 2;   // 0.07 Seconds
-#define weapon_area             // Spawns naturlly only after unlock
-    if !unlock_get(mod_current) return -1;
-    return 2;
-    
+#define weapon_area return (unlock_get(mod_current) ? 2 : -1);
 #define weapon_swap return sndSwapBow;
 #define weapon_sprt return global.sprHarpoonLauncher;
 
@@ -49,8 +46,9 @@
         }
     }
 
-#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "telib", "scrHarpoonRope", _link1, _link2);
+
+/// Scripts:
+#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "tegeneral", "scrHarpoonRope", _link1, _link2);
 #define orandom(n)                                                                      return  random_range(-n, n);
-#define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "teassets", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call("mod", "teassets", "unlock_set", _unlock, _value);
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);

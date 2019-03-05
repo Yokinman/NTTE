@@ -83,21 +83,10 @@
         }
     }
 
-#define scrSwap()
-	var _swap = ["wep", "curse", "reload", "wkick", "wepflip", "wepangle", "can_shoot"];
-	for(var i = 0; i < array_length(_swap); i++){
-		var	s = _swap[i],
-			_temp = [variable_instance_get(id, "b" + s), variable_instance_get(id, s)];
 
-		for(var j = 0; j < array_length(_temp); j++) variable_instance_set(id, chr(98 * j) + s, _temp[j]);
-	}
-
-	wepangle = (weapon_is_melee(wep) ? choose(120, -120) : 0);
-	can_shoot = (reload <= 0);
-	clicked = 0;
-
-#define wep_get(_wep)
-    return mod_script_call("mod", "teassets", "wep_get", _wep);
-
-#define obj_create(_x, _y, _obj)
-    return mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+/// Scripts:
+#define orandom(n)                                                                      return  random_range(-n, n);
+#define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
+#define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
+#define wep_get(_wep)                                                                   return mod_script_call("mod", "telib", "wep_get", _wep);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
