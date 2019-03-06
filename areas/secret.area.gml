@@ -2,21 +2,24 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
-    
+    global.save = mod_variable_get("mod", "teassets", "save");
+
      // Sprites:
     with(spr){
          // Floors:
-        FloorLair =         sprite_add("../sprites/areas/Lair/sprFloorLair.png",           4, 0, 0);
-        FloorLairB =        sprite_add("../sprites/areas/Lair/sprFloorLairB.png",          8, 0, 0);
-        FloorLairExplo =    sprite_add("../sprites/areas/Lair/sprFloorLairExplo.png",      4, 1, 1);
+        FloorLair =         sprite_add("../sprites/areas/Lair/sprFloorLair.png",           4, 0,  0);
+        FloorLairB =        sprite_add("../sprites/areas/Lair/sprFloorLairB.png",          8, 0,  0);
+        FloorLairExplo =    sprite_add("../sprites/areas/Lair/sprFloorLairExplo.png",      4, 1,  1);
+
          // Walls:
-        WallLairBot =       sprite_add("../sprites/areas/Lair/sprWallLairBot.png",         4, 0, 0);
-        WallLairOut =       sprite_add("../sprites/areas/Lair/sprWallLairOut.png",         5, sprite_get_xoffset(sprWall2Out), sprite_get_yoffset(sprWall2Out));
-        WallLairTop =       sprite_add("../sprites/areas/Lair/sprWallLairTop.png",         4, 0, 0);
-        WallLairTrans =     sprite_add("../sprites/areas/Lair/sprWallLairTrans.png",       1, 0, 0);
+        WallLairBot =       sprite_add("../sprites/areas/Lair/sprWallLairBot.png",         4, 0,  0);
+        WallLairOut =       sprite_add("../sprites/areas/Lair/sprWallLairOut.png",         5, 4, 12);
+        WallLairTop =       sprite_add("../sprites/areas/Lair/sprWallLairTop.png",         4, 0,  0);
+        WallLairTrans =     sprite_add("../sprites/areas/Lair/sprWallLairTrans.png",       1, 0,  0);
+
          // Misc:
-        DebrisLair =        sprite_add("../sprites/areas/Lair/sprDebrisLair.png",          4, 4, 4);
-        TopDecalLair =      sprite_add("../sprites/areas/Lair/sprTopDecalLair.png",        2, 0, 0);
+        DebrisLair =        sprite_add("../sprites/areas/Lair/sprDebrisLair.png",          4, 4,  4);
+        TopDecalLair =      sprite_add("../sprites/areas/Lair/sprTopDecalLair.png",        2, 0,  0);
     }
 
      // Carpet Surface:
@@ -204,22 +207,28 @@
             }
         }
     }
-    
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
+#macro opt sav.option
+
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro RoomDebug false
 #macro RoomList global.room_list
 #macro RoomType global.room_type
 
-#macro bgrColor make_color_rgb(160, 157, 75)
-#macro shdColor area_get_shadow_color(102)
-
-#define area_music      return mus2;
-#define area_ambience   return amb102;
-#define area_secret     return true;
+#define area_subarea            return 1;
+#define area_next               return 3;
+#define area_music              return mus2;
+#define area_ambience           return amb102;
+#define area_background_color   return make_color_rgb(160, 157, 75);
+#define area_shadow_color       return area_get_shadow_color(102);
+#define area_darkness           return true;
+#define area_secret             return true;
 
 #define area_name(_subarea, _loop)
     return "2-?";
@@ -245,24 +254,20 @@
         case sprDetail1     : return sprDetail2;
     }
 
-#define area_transit
-    global.resetSurf = true;
-    if(RoomDebug) GameCont.area = mod_current;
-    
 #define area_setup
+    goal = 110;
     safespawn = false;
-    TopCont.darkness = true;
 
-    background_color = bgrColor;
-    BackCont.shadcol = shdColor;
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
 
     RoomList = [];
 
     if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
 
-#define area_start
-     // Floor Setup:
-    with(Floor){
+#define area_setup_floor(_explo)
+    if(!_explo){
          // Fix Depth:
         if(styleb) depth = 8;
 
@@ -270,12 +275,31 @@
         material = (styleb ? 6 : 2);
     }
 
+#define area_start
      // Bind scripts:
     if(array_length(instances_matching(CustomDraw, "name", "draw_rugs")) <= 0){
         with(script_bind_draw(draw_rugs, 7)) name = script[2];
     }
 
-#define area_step
+#define area_finish
+    lastarea = area;
+
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+    }
+
+     // Next Subarea: 
+    else subarea++;
+
+#define area_transit
+    global.resetSurf = true;
+    if(RoomDebug) GameCont.area = mod_current;
 
 #define area_effect(_vx, _vy)
     var _x = _vx + random(game_width),
@@ -480,10 +504,6 @@
         }
     }
 
-#define area_pop_props
-    var _x = x + 16,
-        _y = y + 16;
-
 #define area_pop_extras
      // Populate Rooms:
     with(RoomList){
@@ -537,6 +557,8 @@
     with(instances_matching([chestprop, RadChest], "", null)) obj_create(x, y - 32, "CatLight");
     //obj_create(spawn_x, spawn_y - 32, "CatLight");
 
+
+/// Rooms
 #define room_create(_x, _y, _type)
     with({}){
         x = _x;
@@ -1071,18 +1093,6 @@
         draw_reset_projection();
     }
     else instance_destroy();
-
-#define area_finish
-    lastarea = area;
-
-     // Area End:
-    if background_color == bgrColor{
-        area = 3;
-        subarea = 1;
-    }
-
-     // Next Subarea: 
-    else subarea++;
 
 
 /// Scripts

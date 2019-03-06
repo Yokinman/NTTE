@@ -4,15 +4,13 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
-     // SPRITES //
+     // Sprites:
     with(spr){
     	CoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
     	FloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
     	FloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
     	DetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
     }
-
-    global.spawn_enemy = 0;
 
     //#region SURFACES
         global.surfW = 1600;
@@ -38,6 +36,8 @@
             exit;
         }
     //#endregion
+
+    global.spawn_enemy = 0;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -66,12 +66,17 @@
 
 #macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
 
-#define area_music      return mus.Coast;
-#define area_ambience   return amb0b;
-#define area_secret     return true;
+#define area_subarea            return 3;
+#define area_next               return "oasis";
+#define area_music              return mus.Coast;
+#define area_ambience           return amb0b;
+#define area_background_color   return make_color_rgb(27, 118, 184);
+#define area_shadow_color       return c_black;
+#define area_darkness           return false;
+#define area_secret             return true;
 
-#define area_name(sub, loop)
-    return "@1(sprInterfaceIcons)1-" + string(sub);
+#define area_name(_subarea, _loop)
+    return "@1(sprInterfaceIcons)1-" + string(_subarea);
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     var _x = 0.5 + (9 * (_subarea - 1)),
@@ -88,17 +93,27 @@
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
-        case sprFloor1:         return spr.FloorCoast;
-        case sprFloor1B:        return spr.FloorCoastB;
+        case sprFloor1      : return spr.FloorCoast;
+        case sprFloor1B     : return spr.FloorCoastB;
+        case sprFloor1Explo : return sprFloor1Explo;
+
+         // Walls:
+        case sprWall1Trans  : return sprWall1Trans;
+        case sprWall1Bot    : return sprWall1Bot;
+        case sprWall1Out    : return sprWall1Out;
+        case sprWall1Top    : return sprWall1Top;
 
          // Misc:
-    	case sprDetail1:        return spr.DetailCoast;
+        case sprDebris1     : return sprDebris1;
+        case sprDetail1     : return spr.DetailCoast;
     }
 
 #define area_setup
     goal = 100;
-    background_color = bgrColor;
-    BackCont.shadcol = shdColor;
+
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
 
 #define area_start
      // No Walls:
@@ -129,7 +144,7 @@
             ystart = y;
         }
     }
-    
+
      // Spawn Thing:
     if(GameCont.subarea != 3){
         var _forcespawn = false;
@@ -152,9 +167,9 @@
             }
         }
     }
-    
+
      // Anglers:
-    with(RadChest) if random(40) < 1{
+    with(RadChest) if(random(40) < 1){
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
@@ -178,6 +193,22 @@
         draw_clear_alpha(0, 0);
         surface_reset_target();
     }
+
+#define area_finish
+    lastarea = area;
+
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+    }
+
+     // Next Subarea: 
+    else subarea++;
 
 #define area_step
      // No Portals:
@@ -602,17 +633,7 @@
         with(WantRevivePopoFreak) instance_destroy();
     }
 
-     // Bind End Step:
-    script_bind_end_step(end_step, 0);
-
-#define corpse_fix
-    instance_destroy();
-    with(instances_matching(instances_matching_ne(Corpse, "object_index", CorpseActive), "visible_fix", null)){
-        visible_fix = true;
-        if("wading" in self && wading > 0) visible = 0;
-    }
-
-#define end_step
+#define area_end_step
      // Watery Dust:
     with(instances_matching(Dust, "coast_water", null)){
         coast_water = 1;
@@ -671,12 +692,22 @@
 
     with(instances_matching(Floor, "name", "UltraBoltCoastFix")) instance_destroy();
 
-    instance_destroy();
+#define area_effect(_vx, _vy)
+    var _x = _vx + random(game_width),
+        _y = _vy + random(game_height);
+
+     // Wind:
+    var f = instance_nearest(_x, _y, Floor);
+    with(f){
+        instance_create(x + random(32), y + random(32), Wind);
+    }
+
+    return random(60);
 
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
     /// Make Floors:
          // Special - 4x4 to 6x6 Rounded Fills:
@@ -687,51 +718,36 @@
          // Normal - 2x1 Fills:
         else scrFloorFill(_x, _y, 2, 1);
 
-     // Change Direction:
-    var _trn = 0;
-    if(random(7) < 3) _trn = choose(90, -90, 180);
-    direction += _trn;
+	/// Turn:
+        var _trn = 0;
+        if(random(7) < 3){
+            _trn = choose(90, -90, 180);
+        }
+        direction += _trn;
 
-     // Turn Arounds:
-    if(_trn == 180){
-         // Weapon Chests:
-        if(_outOfSpawn) scrFloorMake(_x, _y, WeaponChest);
+    /// Chests & Branching:
+        if(_trn == 180){
+             // Weapon Chests:
+            if(_outOfSpawn) scrFloorMake(_x, _y, WeaponChest);
 
-         // Start New Island:
-        if(random(2) < 1){
-            var d = direction + 180;
-            _x += lengthdir_x(96, d);
-            _y += lengthdir_y(96, d);
-            with(instance_create(_x, _y, FloorMaker)) direction = d + choose(-90, 0, 90);
-            if(_outOfSpawn){
-                instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
+             // Start New Island:
+            if(random(2) < 1){
+                var d = direction + 180;
+                _x += lengthdir_x(96, d);
+                _y += lengthdir_y(96, d);
+                with(instance_create(_x, _y, FloorMaker)) direction = d + choose(-90, 0, 90);
+                if(_outOfSpawn){
+                    instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
+                }
             }
         }
 
-         // ++B Floors
-        else if(!styleb && random(5) < 1){
-            styleb = 1;
+	     // Ammo Chests + End Branch:
+	    var n = instance_number(FloorMaker);
+        if(random(19 + n) > 22){
+            if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
+            instance_destroy();
         }
-    }
-
-     // Ammo Chests (Dead Ends):
-    if(random(19 + instance_number(FloorMaker)) > 22){
-        if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
-        instance_destroy();
-    }
-
-#define area_finish
-     // Area End:
-    if(lastarea = mod_current && subarea >= 3) {
-    	area = "oasis";
-    	subarea = 1;
-    }
-
-     // Next Subarea: 
-    else{
-    	lastarea = area;
-    	subarea++;
-    }
 
 #define area_pop_enemies
     var _x = x + 16,
@@ -825,6 +841,15 @@
      // The new bandits
     with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
         obj_create(x, y, "Diver");
+    }
+
+
+/// Misc
+#define corpse_fix
+    instance_destroy();
+    with(instances_matching(instances_matching_ne(Corpse, "object_index", CorpseActive), "visible_fix", null)){
+        visible_fix = true;
+        if("wading" in self && wading > 0) visible = 0;
     }
 
 #define darksea_draw

@@ -2,24 +2,31 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
+#macro opt sav.option
 
-#macro bgrColor area_get_background_color(101);
-#macro shdColor area_get_shadow_color(101);
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
 
-#define area_music      return mus101;
-#define area_ambience   return amb101;
-#define area_secret     return true;
+#define area_subarea            return 1;
+#define area_next               return [3, 3];
+#define area_music              return mus101;
+#define area_ambience           return amb101;
+#define area_background_color   return area_get_background_color(101);
+#define area_shadow_color       return area_get_shadow_color(101);
+#define area_darkness           return false;
+#define area_secret             return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)2-" + string(_subarea);
-    
+
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     var _x = 27.5,
         _y = -9;
@@ -75,15 +82,16 @@
         case sprDebris1     : return sprDebris101;
         case sprDetail1     : return sprDetail101;
     }
-    
+
 #define area_setup
     goal = 130;
-    background_color = bgrColor;
-    BackCont.shadcol = shdColor;
 
-#define area_start
-     // Floor Setup:
-    with(Floor){
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
+
+#define area_setup_floor(_explo)
+    if(!_explo){
          // Fix Depth:
         if(styleb) depth = 8;
 
@@ -91,6 +99,7 @@
         material = (styleb ? 4 : 1);
     }
 
+#define area_start
      // Coolin Clammin:
     with(WeaponChest){
         obj_create(x, y, "ClamChest");
@@ -103,13 +112,34 @@
         instance_delete(id);
     }
 
+#define area_finish
+    lastarea = area;
+
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+    }
+
+     // Next Subarea: 
+    else subarea++;
+
 #define area_step
      // Run underwater code:
-    mod_script_call("mod","ntte","underwater_step");
+    mod_script_call("mod", "ntte", "underwater_step");
 
      // Spawn cool crack effect:
-    with(Portal) if !array_length_1d(instances_matching(CustomObject,"name","Crack")){
-        with nearest_instance(10000,10000,instances_matching_ne(Floor,"object_index",FloorExplo)) obj_create(x+16,y+16,"Crack");
+    if(instance_exists(Portal)){
+        var _crack = instances_named(CustomObject, "Crack");
+        if(array_length(_crack) <= 0){
+            with(nearest_instance(10000, 10000, instances_matching_ne(Floor, "object_index", FloorExplo))){
+                obj_create(x + 16, y + 16, "Crack");
+            }
+        }
     }
 
 #define area_effect(_vx, _vy)
@@ -137,54 +167,45 @@
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = point_distance(_x,_y,10016,10016) > 48;
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
-     // Normal:
-	instance_create(_x, _y, Floor);
-	
-	 // Special - Diamond:
-	if(random(3) < 1){
-	    var o = 32;
-	    for(var d = 0; d < 360; d += 90){
-	        instance_create(_x + lengthdir_x(o, d), _y + lengthdir_y(o, d), Floor);
-	    }
-	}
+    /// Make Floors:
+         // Normal:
+    	instance_create(_x, _y, Floor);
+    	
+    	 // Special - Diamond:
+    	if(random(3) < 1){
+    	    var o = 32;
+    	    for(var d = 0; d < 360; d += 90){
+    	        instance_create(_x + lengthdir_x(o, d), _y + lengthdir_y(o, d), Floor);
+    	    }
+    	}
 
-     // Turn:
-    var _trn = 0;
-    if(random(4) < 1){
-	    _trn = choose(90, 90, -90, -90, 180);
-    }
-    direction += _trn;
-
-     // Turn Arounds (Weapon Chests):
-    if(_trn == 180 && _outOfSpawn){
-        with(scrFloorMake(_x, _y, WeaponChest)){
-            sprite_index = sprClamChest;
+	/// Turn:
+        var _trn = 0;
+        if(random(4) < 1){
+    	    _trn = choose(90, 90, -90, -90, 180);
         }
-    }
+        direction += _trn;
 
-     // Dead Ends (Ammo Chests):
-	if(random(19 + instance_number(FloorMaker)) > 20){
-		if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
-		instance_destroy();
-	}
+    /// Chests & Branching:
+         // Turn Arounds (Weapon Chests):
+        if(_trn == 180 && _outOfSpawn){
+            with(scrFloorMake(_x, _y, WeaponChest)){
+                sprite_index = sprClamChest;
+            }
+        }
 
-	 // Branch:
-	if(random(5) < 1) instance_create(_x, _y, FloorMaker);
-    
-#define area_finish
-    lastarea = area;
+         // Dead Ends (Ammo Chests):
+        var n = instance_number(FloorMaker);
+    	if(random(19 + n) > 20){
+    		if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
+    		instance_destroy();
+    	}
 
-     // Area End:
-    if(subarea >= 1){
-        area = 3;
-        subarea = 3;
-    }
+    	 // Branch:
+    	if(random(5) < 1) instance_create(_x, _y, FloorMaker);
 
-     // Next Subarea: 
-    else subarea++;
-    
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
@@ -218,39 +239,48 @@
             }
         }
     }
-    
+
 #define area_pop_props
-     // coral
-    if !place_free(x-32,y) && !place_free(x+32,y){
-        for (var _x = -1; _x <= 1; _x += 2)
-            for (var _y = 0; _y <= 1; _y++)
-                if random(10) < 1
-                    with instance_create(x+(1-_x)*16,y+16*_y,Bones){
+     // Coral Wall Decal:
+    if(!place_free(x - 32, y) && !place_free(x + 32, y)){
+        for(var _x = -1; _x <= 1; _x += 2){
+            for(var _y = 0; _y <= 1; _y++){
+                if(random(10) < 1){
+                    with(instance_create(x + ((1 - _x) * 16), y + (16 * _y), Bones)){
                         image_xscale = _x;
                         sprite_index = sprCoral;
                     }
-    }
-    with(Bones) if !place_meeting(x,y,Wall)
-        instance_destroy();
-    if random(14) < 1{
-         // quarter walls
-        if point_distance(x,y,10016,10016) > 100 && !place_meeting(x,y,NOWALLSHEREPLEASE){
-            var _x = x+choose(0,16),
-                _y = y+choose(0,16);
-            if !place_meeting(_x,_y,hitme){
-                instance_create(_x,_y,Wall);
-                instance_create(x,y,NOWALLSHEREPLEASE);
+                }
             }
         }
     }
-    else if random(7) < 1{
-        var _x = x+16+orandom(8),
-            _y = y+16+orandom(8);
-        if styleb{
-            obj_create(_x,_y,choose(WaterMine,WaterMine,OasisBarrel,Anchor));
+    with(Bones) if(!place_meeting(x, y, Wall)){
+        instance_destroy();
+    }
+
+     // Quarter Walls:
+    if(random(14) < 1){
+        if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
+            var _x = x + choose(0, 16),
+                _y = y + choose(0, 16);
+
+            if(!place_meeting(_x, _y, hitme)){
+                instance_create(_x, _y, Wall);
+                instance_create(x, y, NOWALLSHEREPLEASE);
+            }
+        }
+    }
+
+     // Prop Spawns:
+    else if(random(7) < 1){
+        var _x = x + 16 + orandom(8),
+            _y = y + 16 + orandom(8);
+
+        if(styleb){
+            obj_create(_x, _y, choose(WaterMine, WaterMine, OasisBarrel, Anchor));
         }
         else{
-            obj_create(_x,_y,choose(WaterPlant,WaterPlant,OasisBarrel,WaterMine));
+            obj_create(_x, _y, choose(WaterPlant, WaterPlant, OasisBarrel, WaterMine));
         }
     }
 

@@ -2,39 +2,40 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
-     // SPRITES //
+     // Sprites:
     with(spr){
          // Floors:
-        FloorTrench       = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",      4,  0,  0);
-        FloorTrenchB      = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",     4,  2,  2);
-        FloorTrenchExplo  = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png", 5,  1,  1);
+        FloorTrench         = sprite_add("../sprites/areas/Trench/sprFloorTrench.png",          4,  0,  0);
+        FloorTrenchB        = sprite_add("../sprites/areas/Trench/sprFloorTrenchB.png",         4,  2,  2);
+        FloorTrenchExplo    = sprite_add("../sprites/areas/Trench/sprFloorTrenchExplo.png",     5,  1,  1);
 
          // Walls:
-        WallTrenchTrans   = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",  8,  0,  0);
-        WallTrenchBot     = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",    4,  0,  0);
-        WallTrenchOut     = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",    1,  4, 12);
-        WallTrenchTop     = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",    8,  0,  0);
+        WallTrenchTrans     = sprite_add("../sprites/areas/Trench/sprWallTrenchTrans.png",      8,  0,  0);
+        WallTrenchBot       = sprite_add("../sprites/areas/Trench/sprWallTrenchBot.png",        4,  0,  0);
+        WallTrenchOut       = sprite_add("../sprites/areas/Trench/sprWallTrenchOut.png",        1,  4, 12);
+        WallTrenchTop       = sprite_add("../sprites/areas/Trench/sprWallTrenchTop.png",        8,  0,  0);
 
          // Misc:
-        DebrisTrench      = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",     4,  0,  0);
-        DetailTrench      = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",     6,  0,  0);
+        DebrisTrench        = sprite_add("../sprites/areas/Trench/sprDebrisTrench.png",         4,  0,  0);
+        DetailTrench        = sprite_add("../sprites/areas/Trench/sprDetailTrench.png",         6,  0,  0);
 
         /// Pits:
              // Small:
-            Pit       = sprite_add("../sprites/areas/Trench/Pit/sprPit.png",      1, 2, 2);
-            PitTop    = sprite_add("../sprites/areas/Trench/Pit/sprPitTop.png",   1, 2, 2);
-            PitBot    = sprite_add("../sprites/areas/Trench/Pit/sprPitBot.png",   1, 2, 2);
+            Pit             = sprite_add("../sprites/areas/Trench/Pit/sprPit.png",              1,  2,  2);
+            PitTop          = sprite_add("../sprites/areas/Trench/Pit/sprPitTop.png",           1,  2,  2);
+            PitBot          = sprite_add("../sprites/areas/Trench/Pit/sprPitBot.png",           1,  2,  2);
 
              // Large:
-            PitSmall      = sprite_add("../sprites/areas/Trench/Pit/sprPitSmall.png",     1, 3, 3);
-            PitSmallTop   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallTop.png",  1, 3, 3);
-            PitSmallBot   = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallBot.png",  1, 3, 3);
+            PitSmall        = sprite_add("../sprites/areas/Trench/Pit/sprPitSmall.png",         1,  3,  3);
+            PitSmallTop     = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallTop.png",      1,  3,  3);
+            PitSmallBot     = sprite_add("../sprites/areas/Trench/Pit/sprPitSmallBot.png",      1,  3,  3);
             
          // Proto Statue:
-        PStatTrenchIdle   = sprite_add("../sprites/areas/Trench/sprPStatTrenchIdle.png",    1, 40, 40);
-        PStatTrenchHurt   = sprite_add("../sprites/areas/Trench/sprPStatTrenchHurt.png",    3, 40, 40);
-        PStatTrenchLights = sprite_add("../sprites/areas/Trench/sprPStatTrenchLights.png", 40, 40, 40);
+        PStatTrenchIdle     = sprite_add("../sprites/areas/Trench/sprPStatTrenchIdle.png",      1, 40, 40);
+        PStatTrenchHurt     = sprite_add("../sprites/areas/Trench/sprPStatTrenchHurt.png",      3, 40, 40);
+        PStatTrenchLights   = sprite_add("../sprites/areas/Trench/sprPStatTrenchLights.png",   40, 40, 40);
     }
             
     //#region SURFACES
@@ -57,15 +58,21 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
+#macro opt sav.option
 
-#macro bgrColor make_color_rgb(100, 114, 127)
-#macro shdColor c_black
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 #macro TrenchVisited global.trench_visited
 
-#define area_music      return musBoss5;
-#define area_ambience   return amb101;
-#define area_secret     return true;
+#define area_subarea            return 3;
+#define area_next               return 4;
+#define area_music              return musBoss5;
+#define area_ambience           return amb101;
+#define area_background_color   return make_color_rgb(100, 114, 127);
+#define area_shadow_color       return c_black;
+#define area_darkness           return true;
+#define area_secret             return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
@@ -109,7 +116,7 @@
     }
 
     return [_x, _y, (_subarea == 1)];
-    
+
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
@@ -130,19 +137,18 @@
 
 #define area_setup
     goal = 150;
-    safespawn = 2;
-    background_color = bgrColor;
-    BackCont.shadcol = shdColor;
-    TopCont.darkness = true;
+    safespawn += 2;
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
 
-     // reset surfaces
+     // Reset Surfaces:
     for(var i = 0; i < array_length(global.surf); i++){
         surface_destroy(global.surf[i]);
     }
-    
-#define area_start
-     // Floor Setup:
-    with(Floor){
+
+#define area_setup_floor(_explo)
+    if(!_explo){
         if(styleb){
              // Fix Depth:
             depth = 9;
@@ -155,13 +161,14 @@
         material = (styleb ? 0 : 4);
     }
 
+#define area_start
      // Bind pit drawing scripts:
-	if !array_length_1d(instances_matching(CustomDraw, "name", "draw_pit"))
-    	with(script_bind_draw(draw_pit, 8.5))
-    		name = "draw_pit"
-    		
+	if(array_length(instances_matching(CustomDraw, "name", "draw_pit")) <= 0){
+    	with(script_bind_draw(draw_pit, 8.5)) name = script[2];
+	}
+
      // Anglers:
-    with(RadChest) if random(40) < 1{
+    with(RadChest) if(random(40) < 1){
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
@@ -190,9 +197,50 @@
         }
     }
 
+#define area_finish
+    lastarea = area;
+
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+
+         // Cursed Caves:
+        with(Player) if(curse || bcurse){
+            other.area = 104;
+        }
+
+         // who's that bird? \\
+        var _isParrot = false;
+        for(var i = 0; i < maxp; i++){
+            if(player_get_race(i) == "parrot"){
+                _isParrot = true;
+                break;
+            }
+        }
+        if(_isParrot && !unlock_get("parrot_bskin")){
+            unlock_set("parrot_bskin", true); // It's a secret yo
+            with(scrUnlock("PARROT B", "FOR BEATING THE AQUATIC ROUTE", spr.Parrot[1].Portrait, sndRavenScreech)){
+                nam[0] += "-SKIN";
+            }
+        }
+    }
+
+     // Next Subarea: 
+    else subarea++;
+
+     // Reset Surfaces:
+    for(var i = 0; i < array_length(global.surf); i++){
+        surface_destroy(global.surf[i]);
+    }
+
 #define area_step
      // Run underwater code
-    mod_script_call("mod","ntte","underwater_step");
+    mod_script_call("mod", "ntte", "underwater_step");
     
      // Fix scorchmarks showing above pits:
     with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
@@ -266,54 +314,11 @@
         }
     }
 
-     // Lag Helper:
+     // Destroy PitSink Objects, Lag Helper:
     var s = instances_matching(CustomObject, "name", "PitSink"),
         m = array_length(s);
 
     while(m > 80) with(s[--m]) instance_destroy();
-
-#define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
-    with(instance_create(_x, _y, CustomObject)){
-        name = "PitSink";
-
-         // Visual:
-        sprite_index = _spr;
-        image_index = _img;
-        image_xscale = _xsc;
-        image_yscale = _ysc;
-        image_angle = _ang;
-        image_speed = 0;
-        visible = false;
-
-         // Vars:
-        if(_dir == 0) direction = random(360);
-        else direction = _dir;
-        speed = max(_spd, 1);
-        friction = 0.01;
-        rotspeed = _rot;
-
-        on_step = pit_sink_step;
-
-        return id;
-    }
-
-#define pit_sink_step
-     // Blackness Consumes:
-    image_blend = merge_color(image_blend, c_black, 0.05);
-
-     // Shrink into Abyss:
-    var d = random_range(0.001, 0.01) * current_time_scale
-    image_xscale -= sign(image_xscale) * d;
-    image_yscale -= sign(image_yscale) * d;
-    if(vspeed < 0) vspeed *= 0.9;
-    y += 1/3 * current_time_scale;
-
-     // Spins:
-    direction += rotspeed * current_time_scale;
-    image_angle += rotspeed * current_time_scale;
-
-     // He gone:
-    if(abs(image_xscale) < 0.2) instance_destroy();
 
 #define area_effect(_vx, _vy)
     var _x = _vx + random(game_width),
@@ -340,102 +345,85 @@
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = point_distance(_x,_y,10016,10016) > 48;
-     // determine if styleb
-    styleb = false;
-    if array_length_1d(instances_matching(Floor,"sprite_index",spr.FloorTrench)) >= (1-(GameCont.subarea*0.25))*GenCont.goal && _outOfSpawn{
-        styleb = true;
-    }
-     // make floors
-    if random(7) < 1 && _outOfSpawn{
-        var _w = irandom_range(3,5),
-            _h = 8-_w;
-        scrFloorFill(_x,_y,_w,_h);
-    }
-    instance_create(_x,_y,Floor);
-     // turn
-    var _turn = 0;
-    if random(7) < 3
-        _turn = choose(90,-90,180);
-    direction += _turn;
-     // turnarounds
-    if _turn == 180{
-        if _outOfSpawn
-            with scrFloorMake(_x,_y,WeaponChest)
-                sprite_index = sprClamChest;
-    }
-     // dead ends
-    if random(19+instance_number(FloorMaker)) > 22{
-        if _outOfSpawn
-            scrFloorMake(_x,_y,AmmoChest);
-        instance_destroy();
-    }
-    else if random(5) < 1
-        instance_create(_x,_y,FloorMaker);
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
-     // Crown Vault (code taken from u19):
-    with(GenCont) if(instance_number(Floor) > goal){
-        if(GameCont.subarea == 2 && GameCont.vaults < 3){
-            var f = instance_furthest(spawn_x, spawn_y, Floor);
-            if(instance_exists(f)){
-                with(
-                    instance_nearest(
-                        (((f.x * 2) + spawn_x) / 3) + orandom(64),
-                        (((f.y * 2) + spawn_y) / 3) + orandom(64),
-                        Floor
-                    )
-                ){
-                    instance_create(x + 16, y + 16, ProtoStatue);
+     // Making Pits:
+    styleb = false;
+    if(_outOfSpawn){
+        var _floorNum = array_length(instances_matching(Floor, "sprite_index", spr.FloorTrench));
+        if(_floorNum >= (1 - (GameCont.subarea * 0.25)) * GenCont.goal){
+            styleb = true;
+        }
+    }
+
+    /// Make Floors:
+         // Special - Area Fill
+        if(random(7) < 1 && _outOfSpawn){
+            var _w = irandom_range(3,5),
+                _h = 8-_w;
+
+            scrFloorFill(_x,_y,_w,_h);
+        }
+
+         // Normal:
+        instance_create(_x,_y,Floor);
+
+	/// Turn:
+	    var _trn = 0;
+	    if(random(7) < 3){
+            _trn = choose(90, -90, 180);
+        }
+        direction += _trn;
+
+    /// Chests & Branching:
+         // Weapon Chests:
+        if(_outOfSpawn && _trn == 180){
+            with(scrFloorMake(_x, _y, WeaponChest)){
+                sprite_index = sprClamChest;
+            }
+        }
+
+	     // Ammo Chests + End Branch:
+	    var n = instance_number(FloorMaker);
+		if(random(19 + n) > 22){
+			if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
+			instance_destroy();
+		}
+
+		 // Branch:
+		else if(random(5) < 1){
+		    instance_create(_x, _y, FloorMaker);
+		}
+
+    /// Crown Vault:
+        with(GenCont) if(instance_number(Floor) > goal){
+            if(GameCont.subarea == 2 && GameCont.vaults < 3){
+                var f = instance_furthest(spawn_x, spawn_y, Floor);
+                if(instance_exists(f)){
+                    with(
+                        instance_nearest(
+                            (((f.x * 2) + spawn_x) / 3) + orandom(64),
+                            (((f.y * 2) + spawn_y) / 3) + orandom(64),
+                            Floor
+                        )
+                    ){
+                        instance_create(x + 16, y + 16, ProtoStatue);
+                    }
                 }
             }
         }
-    }
-    
-#define area_finish
-     // reset surfaces
-    for(var i = 0; i < array_length(global.surf); i++){
-        surface_destroy(global.surf[i]);
-    }
 
-     // Area End:
-    if(lastarea = mod_current && subarea >= 3) {
-        area = 4; // crystal caves
-    	subarea = 1;
-        
-         // Cursed Caves:
-        with(Player) if(curse || bcurse){
-            other.area = 104;
-        }
-
-         // who's that bird? \\
-        var _isParrot = false;
-        for(var i = 0; i < maxp; i++){
-            if(player_get_race(i) == "parrot"){
-                _isParrot = true;
-                break;
-            }
-        }
-        if(_isParrot && !unlock_get("parrot_bskin")){
-            unlock_set("parrot_bskin", true); // It's a secret yo
-            with(scrUnlock("PARROT B", "FOR BEATING THE AQUATIC ROUTE", spr.Parrot[1].Portrait, sndRavenScreech)){
-                nam[0] += "-SKIN";
-            }
-        }
-    }
-
-     // Next Subarea: 
-    else{
-    	lastarea = area;
-    	subarea++;
-    }
-    
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
     
-    if(GameCont.loops > 0 && random(3) < 1) {
-        if(random(5) < 1) instance_create(_x, _y, FireBaller);
-        else if(random(2) < 1) instance_create(_x, _y, Spider);
+    if(GameCont.loops > 0 && random(3) < 1){
+        if(random(5) < 1){
+            instance_create(_x, _y, FireBaller);
+        }
+        else if(random(2) < 1){
+            instance_create(_x, _y, Spider);
+        }
         /*if(random(9) < 1) {
             if(random(6) < 1) {
                 instance_create(_x, _y, Salamander);
@@ -445,7 +433,8 @@
         } else {
             instance_create(_x, _y, Rat);
         }*/
-    } else {
+    }
+    else{
          // Anglers:
         if(!styleb && random(18) < 1){
             obj_create(_x, _y, "Angler");
@@ -490,24 +479,28 @@
         // Bat
         // Seal
     }
-    
+
 #define area_pop_props
+     // Quarter Walls:
     var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
-    if random(_wallChance) < 1{
-         // quarter walls
-        if point_distance(x,y,10016,10016) > 100 && !place_meeting(x,y,NOWALLSHEREPLEASE){
-            var _x = x+choose(0,16),
-                _y = y+choose(0,16);
-            if !place_meeting(_x,_y,hitme){
-                instance_create(_x,_y,Wall);
-                instance_create(x,y,NOWALLSHEREPLEASE);
+    if(random(_wallChance) < 1){
+        if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
+            var _x = x + choose(0, 16),
+                _y = y + choose(0, 16);
+
+            if(!place_meeting(_x, _y, hitme)){
+                instance_create(_x, _y, Wall);
+                instance_create(x, y, NOWALLSHEREPLEASE);
             }
         }
     }
-    else if random(16) < 1 && !styleb{
-        var _x = x+16+orandom(8),
-            _y = y+16+orandom(8);
-        obj_create(_x,_y,choose("Kelp","Kelp","Vent"));
+
+     // Prop Spawns:
+    else if(random(16) < 1 && !styleb){
+        var _x = x + 16 + orandom(8),
+            _y = y + 16 + orandom(8);
+
+        obj_create(_x, _y, choose("Kelp", "Kelp", "Vent"));
     }
 
      // Top Decals:
@@ -525,12 +518,58 @@
         instance_delete(id);
     }
 
-     // delete stuff
-    with instances_matching(Floor,"styleb",true){
-        with(Detail) if place_meeting(x,y,other)
+     // Delete Details:
+    with(instances_matching(Floor, "styleb", true)){
+        with(Detail) if(place_meeting(x,y,other)){
             instance_destroy();
+        }
     }
-    
+
+
+/// Pit Code:
+#define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
+    with(instance_create(_x, _y, CustomObject)){
+        name = "PitSink";
+
+         // Visual:
+        sprite_index = _spr;
+        image_index = _img;
+        image_xscale = _xsc;
+        image_yscale = _ysc;
+        image_angle = _ang;
+        image_speed = 0;
+        visible = false;
+
+         // Vars:
+        if(_dir == 0) direction = random(360);
+        else direction = _dir;
+        speed = max(_spd, 1);
+        friction = 0.01;
+        rotspeed = _rot;
+
+        on_step = pit_sink_step;
+
+        return id;
+    }
+
+#define pit_sink_step
+     // Blackness Consumes:
+    image_blend = merge_color(image_blend, c_black, 0.05);
+
+     // Shrink into Abyss:
+    var d = random_range(0.001, 0.01) * current_time_scale
+    image_xscale -= sign(image_xscale) * d;
+    image_yscale -= sign(image_yscale) * d;
+    if(vspeed < 0) vspeed *= 0.9;
+    y += 1/3 * current_time_scale;
+
+     // Spins:
+    direction += rotspeed * current_time_scale;
+    image_angle += rotspeed * current_time_scale;
+
+     // He gone:
+    if(abs(image_xscale) < 0.2) instance_destroy();
+
 #define draw_pit
     if(!instance_exists(GenCont)){
         var _surf = global.surf,

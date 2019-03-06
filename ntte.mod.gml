@@ -5,7 +5,7 @@
     global.save = mod_variable_get("mod", "teassets", "save");
 
     global.newLevel = instance_exists(GenCont);
-    global.area = ["secret", "coast", "oasis", "trench", "pizza"];
+    global.area = ["coast", "oasis", "trench", "pizza", "secret"];
     global.effect_timer = 0;
     global.currentMusic = -1;
     global.bones = [];
@@ -518,21 +518,38 @@
     if(a >= 0){
         var _area = global.area[a];
 
+         // Floor Setup:
+        var _scrt = "area_setup_floor";
+        if(mod_script_exists("area", _area, _scrt)){
+            with(instances_matching(Floor, "ntte_setup", null)){
+                ntte_setup = true;
+                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
+            }
+        }
+
         if(!instance_exists(GenCont)){
-             // Step:
+             // Step(s):
             mod_script_call("area", _area, "area_step");
+            if(mod_script_exists("area", _area, "area_begin_step")){
+                script_bind_begin_step(area_step, 0, _area);
+            }
+            if(mod_script_exists("area", _area, "area_end_step")){
+                script_bind_end_step(area_step, 0, _area);
+            }
 
              // Floor FX:
             if(global.effect_timer <= 0){
                 global.effect_timer = random(60);
-                if(mod_script_exists("area", _area, "area_effect")){
+
+                var _scrt = "area_effect";
+                if(mod_script_exists("area", _area, _scrt)){
                      // Pick Random Player's Screen:
                     do var i = irandom(maxp - 1);
                     until player_is_active(i);
                     var _vx = view_xview[i], _vy = view_yview[i];
 
                      // FX:
-                    var t = mod_script_call("area", _area, "area_effect", _vx, _vy);
+                    var t = mod_script_call("area", _area, _scrt, _vx, _vy);
                     if(!is_undefined(t) && t > 0) global.effect_timer = t;
                 }
             }
@@ -543,9 +560,11 @@
          // Music / Ambience:
         if(instance_exists(GenCont) || instance_exists(mutbutton)){
              // Music:
-            var _mus = -1;
-            if(mod_script_exists("area", _area, "area_music")){
-                _mus = mod_script_call("area", _area, "area_music");
+            var _mus = -1,
+                _scrt = "area_music";
+
+            if(mod_script_exists("area", _area, _scrt)){
+                _mus = mod_script_call("area", _area, _scrt);
 
                  // Custom Music:
                 if(_mus >= 300000){
@@ -569,8 +588,9 @@
             }
 
              // Ambience:
-            if(mod_script_exists("area", _area, "area_ambience")){
-                sound_play_ambient(mod_script_call("area", _area, "area_ambience"));
+            var _scrt = "area_ambience";
+            if(mod_script_exists("area", _area, _scrt)){
+                sound_play_ambient(mod_script_call("area", _area, _scrt));
             }
         }
     }
@@ -610,6 +630,25 @@
         global.charm_step = script_bind_end_step(charm_step, 0);
         with(global.charm_step) persistent = true;
     }
+
+#define area_step(_area)
+    var _scrt = "step";
+    switch(object_index){
+        case CustomBeginStep:
+            _scrt = "begin_step";
+            break;
+
+        case CustomEndStep:
+            _scrt = "end_step";
+            break;
+    }
+
+    if(fork()){ // Fork for error handling
+        mod_script_call("area", _area, "area_" + _scrt);
+        exit;
+    }
+
+    instance_destroy();
 
 #define begin_step
     instance_destroy();

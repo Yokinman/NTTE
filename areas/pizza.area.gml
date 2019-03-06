@@ -2,26 +2,36 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
+    global.save = mod_variable_get("mod", "teassets", "save");
 
-    spr.TVHurt = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAJAAAAAgCAYAAAD9jPHNAAAABmJLR0QAdwA5AI6TC/eYAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4goaFCcxcngGgAAAAd1JREFUeNrtms9KAlEUxs+NWUURpLOyCBdB0taYoI0v0Mp6gVm5EZ8l2rTyBapNvUCbIMltuAiKwFaaEEbb28ImFEa91/HOPbf5fiAMemf8PHz3/JmRCAAAAHASYeKiUko580uFEMzjIm3EzUX9Im3zOGAiGdYaMxc0L844myhV/SJt4zA2kiQiOjg8Ulr8+HDPLRtZ0S9smoeRieS+v77QiU+9IQcTWdO/gjYQJAEGAjAQsIeHEIzwd/Ja63tv/dE5ox4is/phoDHu2q9K6yrlIgXVkF7aN5nXjxIGYCAbtK6b0A8DLU5QDaEfBgKmpzA8VJxCSg00e/1zM5CfK1BYa5CfK0wcOzOeQ7/9Jvr28ir22BWg314Jo/zmVuz7vY93J4Kvo79SLkK/JvNqqHINZvp3Dp0eQhqK4b/W71kMDocNMsHa6obWxb++PzOvn9OjDOsT33Zhj/qD7tSyEX3WOW9RqR5Q57mVef2s7gNxmTj6g27sK6JUD6BfY1coOTNhDySjHzCjYRSGM1uSHiKz+j3VzHB8evI3QkbH45PAMpphUxOfiv5llJgs6lfKQIZ2ls4uS7SDod+cfs/mzhqntBtfl38bPcExM0D/EnsgxhMY9DswAQMAAAAp8wP+6CZ1H8F9uwAAAABJRU5ErkJggg==", 3, 24, 16);
+     // Sprites:
+    with(spr){
+        TVHurt = sprite_add("../sprites/areas/Pizza/sprTVHurt.png", 3, 24, 16);
+    }
 
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
+#macro sav global.save
+#macro opt sav.option
 
-#macro bgrColor area_get_background_color(102)
-#macro shdColor area_get_shadow_color(102)
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#define area_music      return mus102;
-#define area_ambience   return amb102;
-#define area_secret     return true;
+#define area_subarea            return 1;
+#define area_next               return 3;
+#define area_music              return mus102;
+#define area_ambience           return amb102;
+#define area_background_color   return area_get_background_color(102);
+#define area_shadow_color       return area_get_shadow_color(102);
+#define area_darkness           return true;
+#define area_secret             return true;
 
 #define area_name(_subarea, _loop)
     return "2-@2(sprSlice:0)";
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx+0.5,-8,1];
+    return [_lastx + 0.5, -8, true];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -44,13 +54,13 @@
 #define area_setup
     goal = 1;
     safespawn = false;
-    background_color = bgrColor;
-    BackCont.shadcol = shdColor;
-    TopCont.darkness = true;
 
-#define area_start
-     // Floor Setup:
-    with(Floor){
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
+
+#define area_setup_floor(_explo)
+    if(!_explo){
          // Pizza Floors:
         if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
             styleb = true;
@@ -64,6 +74,7 @@
         material = (styleb ? 6 : 2);
     }
 
+#define area_start
      // Pizza Chests:
     with(HealthChest){
         sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
@@ -99,12 +110,23 @@
      // Door:
     obj_create(_x + 56, _y - 48, "PizzaDrain");
 
-#define area_step
-    script_bind_end_step(end_step, 0);
+#define area_finish
+    lastarea = area;
 
-#define end_step
-    instance_destroy();
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+    }
 
+     // Next Subarea: 
+    else subarea++;
+
+#define area_end_step
      // Yummy HP:
     with(instances_matching(HPPickup, "sliced", null)){
         sliced = true;
@@ -123,22 +145,10 @@
 
     return random(120);
 
-#define area_finish
-    lastarea = area;
-
-     // Area End:
-    if(subarea >= 1){
-        area = 3;
-        subarea = 1;
-    }
-
-     // Next Subarea: 
-    else subarea++;
-
-
 #define area_make_floor
-    var _x = 10000 - 32;
-        _y = 10000;
+    var _x = 10000 - 32,
+        _y = 10000,
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
     styleb = 0;
     scrFloorFill(_x, _y, 8, 6);
@@ -151,6 +161,7 @@
         _nort = !position_meeting(_x, _y - 16, Floor),
         _sout = !position_meeting(_x, _y + 48, Floor);
 
+     // Corner Walls:
     if(_nort){
         if(_west) instance_create(_x, _y, Wall);
         else if(_east) instance_create(_x + 16, _y, Wall);
@@ -169,9 +180,6 @@
             else instance_create(_x + orandom(8), _y + orandom(4), choose(PizzaBox, HPPickup));
         }
     }
-    
-#define area_pop_extras
-    
 
 
 /// Scripts

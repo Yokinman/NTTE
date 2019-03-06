@@ -1,34 +1,29 @@
-/// Copy-paste and rename this file when you're adding a new object mod
+/// Copy-paste and rename this file when you're adding a new area mod
 
 /*  Rules                                                                                           *\
  - All code under a #define should be indented one extra so that it stands out
- - There should be a double space between different object's code
- - If you add a script to telib:
-     Try to add it to all of the '/// Scripts' sections at the end of an object file if possible
-     *Including the template
- - If you need to add a standard .mod event to handle code, like '#define draw_dark':
-     Place it between the mod object code section and scripts section
-     Add a '/// Mod Events' comment before that section, like with the scripts section
-     Double space the area between that section and the scripts and mod object code sections
+ - Try to keep all #defines in the order of how this template file has them
+ - If you aren't using an event, such as area_begin_step, then remove it
+ - If you need to add a script that doesn't follow the '#define area_' naming:
+     Place it between the general area code section and scripts section
+     Add a '/// Misc' (or whatever you want to call it) comment before that section, like with the scripts section
+     Double space the area between that section and the scripts and general area code sections
 
 Example Code (Ignore extra space before #define here):
- #define Bat_step
-    motion_add(direction, 1);
+ #define area_step
+    script_bind_draw(draw_sea, 0);
+
+ #define area_pop_enemies
+    obj_create(_x, _y, "TrafficCrab");
  
- #define Bat_draw
-    draw_self_enemy();
- 
- 
- #define Cat_step
-    my_health = 0;
+ #define area_pop_props
+    instance_create(_x, _y, Cactus);
 
 
-/// Mod Events
- #define step
-    with(Catobjects) x += 20;
-
- #define draw_shadows
-    with(Batboys) draw_sprite(shd24, 0, x, y);
+/// Misc
+ #define draw_sea
+    instance_destroy();
+    draw_sprite(sprSea, 0, 0, 0);
 
 
 /// Scripts
@@ -41,6 +36,10 @@ blah blah blah
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+     // Sprites:
+    with(spr){
+    }
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -49,8 +48,154 @@ blah blah blah
 #macro opt sav.option
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
 
+#define area_subarea            return 3;
+#define area_next               return [2, 1];
+#define area_music              return mus1;
+#define area_ambience           return amb1;
+#define area_background_color   return make_color_rgb(175, 143, 106);
+#define area_shadow_color       return c_black;
+#define area_darkness           return false;
+#define area_secret             return false;
+
+#define area_name(_subarea, _loop)
+    return "1-" + string(_subarea);
+
+#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
+    return [0, 0, true, true];
+
+#define area_sprite(_spr)
+    switch(_spr){
+         // Floors:
+        case sprFloor1      : return sprFloor1;
+        case sprFloor1B     : return sprFloor1B;
+        case sprFloor1Explo : return sprFloor1Explo;
+
+         // Walls:
+        case sprWall1Trans  : return sprWall1Trans;
+        case sprWall1Bot    : return sprWall1Bot;
+        case sprWall1Out    : return sprWall1Out;
+        case sprWall1Top    : return sprWall1Top;
+
+         // Misc:
+        case sprDebris1     : return sprDebris1;
+        case sprDetail1     : return sprDetail1;
+    }
+
+#define area_setup
+    goal = 110;
+
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
+
+#define area_setup_floor(_explo)
+    if(!_explo){
+         // Fix Depth:
+        if(styleb) depth = 8;
+    
+         // Footsteps:
+        material = (styleb ? 4 : 1);
+    }
+
+#define area_start
+    
+
+#define area_finish
+    lastarea = area;
+
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
+    }
+
+     // Next Subarea: 
+    else subarea++;
+
+#define area_step
+    
+
+#define area_begin_step
+    
+
+#define area_end_step
+    
+
+#define area_effect(_vx, _vy)
+    var _x = _vx + random(game_width),
+        _y = _vy + random(game_height);
+
+     // Wind:
+    var f = instance_nearest(_x, _y, Floor);
+    with(f){
+        instance_create(x + random(32), y + random(32), Wind);
+    }
+
+    return random(60);
+
+#define area_make_floor
+    var _x = x,
+        _y = y,
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
+
+    /// Make Floors:
+         // Special - 2x2 Fill:
+    	if(random(2) < 1) scrFloorFill(_x, _y, 2, 2);
+    
+         // Normal:
+    	else instance_create(_x, _y, Floor);
+
+	/// Turn:
+	    var _trn = 0;
+    	if(random(14) < 5){
+    	    _trn = choose(90, 90, -90, -90, 180);
+        }
+        direction += _trn;
+
+    /// Chests & Branching:
+         // Weapon Chests:
+        if(_outOfSpawn && _trn == 180){
+            scrFloorMake(_x, _y, WeaponChest);
+        }
+
+	     // Ammo Chests + End Branch:
+	    var n = instance_number(FloorMaker);
+		if(random(19 + n) > 20){
+			if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
+			instance_destroy();
+		}
+
+		 // Branch:
+		if(random(8) < 1){
+		    instance_create(_x, _y, FloorMaker);
+		}
+
+#define area_pop_enemies
+    var _x = x + 16,
+        _y = y + 16;
+
+    instance_create(_x, _y, choose(Bandit, Maggot));
+
+#define area_pop_props
+    var _x = x + 16,
+        _y = y + 16;
+
+    if(random(12) < 1){
+        if(random(60) < 1){
+            instance_create(_x, _y, BigSkull);
+        }
+        else instance_create(_x, _y, Cactus);
+    }
+
+#define area_pop_extras
+    with(chestprop){
+        instance_create(x, y, Bandit);
+    }
 
 
 /// Scripts
