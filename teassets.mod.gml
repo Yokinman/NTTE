@@ -511,7 +511,10 @@
      // MUSIC //
     global.mus = {};
     with(global.mus){
+        amb = {};
+
         Placeholder = sound_add("music/musPlaceholder.ogg");
+        amb.Placeholder = sound_add("music/musPlaceholder.ogg");
 
          // Areas:
         Coast   = sound_add("music/musCoast.ogg");

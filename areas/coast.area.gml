@@ -68,7 +68,7 @@
 
 #define area_subarea            return 3;
 #define area_next               return "oasis";
-#define area_music              return mus.Coast;
+#define area_music              return [mus.Coast, 0.5];
 #define area_ambience           return amb0b;
 #define area_background_color   return make_color_rgb(27, 118, 184);
 #define area_shadow_color       return c_black;

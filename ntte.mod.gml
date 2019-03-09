@@ -7,7 +7,10 @@
     global.newLevel = instance_exists(GenCont);
     global.area = ["coast", "oasis", "trench", "pizza", "secret"];
     global.effect_timer = 0;
-    global.currentMusic = -1;
+    global.current = {
+        mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
+        amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
+    };
     global.bones = [];
 
      // Make Custom CampChars for:
@@ -284,6 +287,9 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
+#macro cMusic global.current.mus
+#macro cAmbience global.current.amb
+
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
 
 #macro OptionOpen global.option_open
@@ -559,52 +565,34 @@
 
          // Music / Ambience:
         if(instance_exists(GenCont) || instance_exists(mutbutton)){
-             // Music:
-            var _mus = -1,
-                _scrt = "area_music";
+            var _scrt = ["area_music", "area_ambience"];
+            for(var i = 0; i < lq_size(global.current); i++){
+                var _type = lq_get_key(global.current, i);
+                if(mod_script_exists("area", _area, _scrt[i])){
+                    var s = mod_script_call("area", _area, _scrt[i]);
+                    if(!is_array(s)) s = [s];
 
-            if(mod_script_exists("area", _area, _scrt)){
-                _mus = mod_script_call("area", _area, _scrt);
+                    while(array_length(s) < 3) array_push(s, -1);
+                    if(s[1] == -1) s[1] = 1;
+                    if(s[2] == -1) s[2] = 0;
 
-                 // Custom Music:
-                if(_mus >= 300000){
-                    if(!audio_is_playing(mus.Placeholder)){
-                        sound_play_music(-1);
-                        sound_play_music(mus.Placeholder);
-                    }
+                    sound_play_ntte(_type, s[0], s[1], s[2]);
                 }
-
-                 // Normal Music:
-                else{
-                    sound_play_music(_mus);
-                    _mus = -1;
-                }
-            }
-
-             // Set Custom Music:
-            if(global.currentMusic != _mus){
-                sound_stop(global.currentMusic);
-                global.currentMusic = _mus;
-            }
-
-             // Ambience:
-            var _scrt = "area_ambience";
-            if(mod_script_exists("area", _area, _scrt)){
-                sound_play_ambient(mod_script_call("area", _area, _scrt));
             }
         }
     }
-    else sound_stop(mus.Placeholder);
 
-     // Fix for Custom Music:
-    if(audio_is_playing(mus.Placeholder)){
-        if(!audio_is_playing(global.currentMusic)){
-            sound_loop(global.currentMusic);
+     // Fix for Custom Music/Ambience:
+    for(var i = 0; i < lq_size(global.current); i++){
+        var _type = lq_get_key(global.current, i),
+            c = lq_get_value(global.current, i);
+
+        if(audio_is_playing(c.hold)){
+            if(!audio_is_playing(c.snd)){
+                audio_sound_set_track_position(audio_play_sound(c.snd, 0, true), c.pos);
+            }
         }
-    }
-    else if(global.currentMusic != -1){
-        sound_stop(global.currentMusic);
-        global.currentMusic = -1;
+        else audio_stop_sound(c.snd);
     }
 
     /// Tiny Spiders (New Cocoons):
@@ -629,6 +617,49 @@
     if(!instance_exists(global.charm_step)){
         global.charm_step = script_bind_end_step(charm_step, 0);
         with(global.charm_step) persistent = true;
+    }
+
+#define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
+    var _type = argument[0], _snd = argument[1];
+var _vol = argument_count > 2 ? argument[2] : undefined;
+var _pos = argument_count > 3 ? argument[3] : undefined;
+    if(is_undefined(_vol)) _vol = 1;
+    if(is_undefined(_pos)) _pos = 0;
+
+    var c = lq_get(global.current, _type);
+
+     // Stop Previous Track:
+    if(_snd != c.snd){
+        audio_stop_sound(c.snd);
+    }
+
+     // Set Stuff:
+    c.snd = _snd;
+    c.vol = _vol;
+    c.pos = _pos;
+
+     // Play Track:
+    if(!audio_is_playing(c.hold)){
+        switch(_type){
+            case "mus":
+                sound_play_music(-1);
+                sound_play_music(c.hold);
+                break;
+        
+            case "amb":
+                sound_play_ambient(-1);
+                sound_play_ambient(c.hold);
+                break;
+        }
+    }
+
+#define draw_gui_end
+     // Custom Sound Volume:
+    for(var i = 0; i < array_length(global.current); i++){
+        var c = lq_get_value(global.current, i);
+        if(c.snd != -1){
+            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
+        }
     }
 
 #define area_step(_area)
@@ -771,12 +802,6 @@
     if(instance_exists(LevCont)) d = LevCont.depth;
     if(d != 0) with(global.bones){
         script_bind_draw(ammo_draw_scrt, d - 1, index, primary, ammo, steroids);
-    }
-
-#define draw_gui_end
-     // Custom Music Volume Fix:
-    if(global.currentMusic != -1){
-        sound_volume(global.currentMusic, audio_sound_get_gain(mus.Placeholder));
     }
 
 #define draw_pause
@@ -1314,8 +1339,7 @@
         }
     }
     sound_play(_sound);
-    sound_play_music(_music);
-    sound_stop(global.currentMusic);
+    sound_play_ntte("mus", _music);
     GameCont.subarea = _lastSub; // !!!
 
 #define scrUnlock(_name, _text, _sprite, _sound)
@@ -2185,6 +2209,9 @@
 
 #define cleanup
     with(global.charm_step) instance_destroy();
+    for(var i = 0; i < lq_size(global.current); i++){
+        audio_stop_sound(lq_get_value(global.current, i).snd);
+    }
 
 
 /// Scripts
