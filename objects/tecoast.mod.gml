@@ -18,7 +18,6 @@
 
 
 #define Creature_step
-    enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd,maxspd);
      // Run away when hurt:
@@ -257,7 +256,6 @@
 
 
 #define Diver_step
-    enemyAlarms(2);
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
@@ -432,9 +430,6 @@
         image_angle = point_direction(_x1, _y1, _x2, _y2);
     }
 
-     // Destroy Timer:
-    enemyAlarms(1);
-
 #define DiverHarpoon_alrm0
     instance_destroy();
 
@@ -468,11 +463,6 @@
     image_speed = 0;
     image_index = image_number - 1;
 
-
-#define Gull_step
-    enemyAlarms(2);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
 
 #define Gull_alrm0
     alarm0 = 40 + irandom(30);
@@ -537,7 +527,6 @@
 
 
 #define Palanking_step
-    enemyAlarms(5);
     if(z <= 0) walk = 0;
     enemyWalk(walkspd, maxspd);
 
@@ -1300,7 +1289,6 @@
 
 
 #define Pelican_step
-    enemyAlarms(2);
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
@@ -1413,7 +1401,6 @@
 
 #define Seal_step
     enemyWalk((hold ? 0 : walkspd), maxspd);
-    enemyAlarms(2);
 
      // Slide:
     if(slide > 0){
@@ -1997,7 +1984,6 @@
 
 #define SealHeavy_step
     enemyWalk(walkspd, maxspd);
-    enemyAlarms(1);
 
      // Animate:
     if(sprite_index != spr_spwn) enemySprites();
@@ -2404,7 +2390,6 @@
 
 
 #define TrafficCrab_step
-    enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
@@ -2548,7 +2533,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

@@ -18,7 +18,6 @@
 
 
 #define Bat_step
-    enemyAlarms(1);
     enemyWalk(walkspd, maxspd);
 
      // Walk:
@@ -170,11 +169,6 @@
     //pickup_drop(0, 100);
     pickup_drop(60, 5);
 
-
-#define BatBoss_step
-    enemyAlarms(3);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
 
 #define BatBoss_alrm0
     alarm0 = 20 + irandom(20);
@@ -392,7 +386,6 @@
             motion_set(irandom(359),random_range(2,8));
 
 #define Cat_step
-    enemyAlarms(2);
     enemyWalk(walkspd, maxspd);
 
      // Animate:
@@ -654,7 +647,6 @@
 
 
 #define CatBoss_step
-    enemyAlarms(3);
     enemySprites();
 
     if dash enemyWalk(0.0,  6.5);
@@ -896,8 +888,6 @@
             }
         }
     }
-
-    enemyAlarms(1);
 
 #define CatBossAttack_draw
      // Laser Sights:
@@ -1527,7 +1517,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

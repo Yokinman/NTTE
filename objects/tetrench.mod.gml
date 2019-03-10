@@ -32,7 +32,6 @@
 
 
 #define Angler_step
-    enemyAlarms(1);
     enemyWalk(walkspd, maxspd + (8 * (ammo >= 0 && walk > 0)));
 
      // Animate:
@@ -243,7 +242,6 @@
 
 
 #define Eel_step
-    enemyAlarms(1);
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
@@ -438,12 +436,13 @@
 
 
 #define Jelly_step
-    enemyAlarms(2);
-    if sprite_index != spr_fire
-        enemySprites();
-    var _maxSpd = clamp(0.07*walk*current_time_scale,1,maxspd); // arbitrary values, feel free to fiddle
+    if(sprite_index != spr_fire) enemySprites();
+
+     // Movement:
+    var _maxSpd = clamp(0.07 * walk * current_time_scale, 1, maxspd); // arbitrary values, feel free to fiddle
     enemyWalk(walkspd, _maxSpd);
 
+     // Bouncy Boy:
     if(place_meeting(x + hspeed, y + vspeed, Wall)) {
         move_bounce_solid(false);
         scrRight(direction);
@@ -494,8 +493,6 @@
 
 
 #define PitSquid_step
-    enemyAlarms(2);
-
      // Pit Z Movement:
     if(sink){
          // Quickly Sink:
@@ -994,7 +991,6 @@
     }
     else my_health = maxhealth;
     speed = 0;
-    enemyAlarms(2);
 
 #define Tentacle_hurt(_hitdmg, _hitvel, _hitdir)
     if(sprite_index != mskNone){
@@ -1153,10 +1149,6 @@
 #define Vent_death
     obj_create(x,y,"BubbleExplosion");
 
-#define YetiCrab_step
-    enemyAlarms(1);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
 
 #define YetiCrab_alrm0
     alarm0 = 30 + random(10);
@@ -1419,7 +1411,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

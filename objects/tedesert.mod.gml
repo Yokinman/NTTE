@@ -15,11 +15,6 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
-#define BabyScorpion_step
-    enemyAlarms(2);
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-
 #define BabyScorpion_alrm0
     alarm0 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
@@ -285,8 +280,6 @@
 
 
 #define CoastBoss_step
-    enemyAlarms(3);
-
      // Animate:
     if(
         sprite_index != spr_hurt &&
@@ -824,7 +817,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

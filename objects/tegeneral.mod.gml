@@ -87,8 +87,47 @@
 
         case 2 : // Spawn a bunch of frog eggs:
             repeat(irandom_range(3, 5)){
-                with(instance_create(_x + orandom(24), _y + irandom(16), FrogEgg)){
-                    alarm0 = irandom_range(20, 40);
+                with(instance_create(_x, _y, FrogEgg)){
+                    alarm0 = irandom_range(20, 60);
+
+                     // Space Out Eggs:
+                    var _tries = 50;
+                    do{
+                        x = _x + orandom(24);
+                        y = _y + random(16);
+                        xprevious = x;
+                        yprevious = y;
+                        if(!place_meeting(x, y, FrogEgg)) break;
+                    }
+                    until (_tries-- <= 0);
+                }
+            }
+            break;
+
+        case "pizza": // Pizza time
+            repeat(irandom_range(4, 6)){
+                with(instance_create(_x + orandom(4), _y + orandom(4), HPPickup)){
+                    sprite_index = sprSlice;
+                }
+                with(scrWaterStreak(_x, _y, random(360), 4 + random(4))){
+                    image_blend = c_orange;
+                    image_speed *= random_range(0.5, 1.25);
+                    depth = -3;
+                }
+            }
+            break;
+
+        case "trench": // Boom
+            var _num = 3,
+                _ang = random(360);
+
+            for(var i = 0; i < _num; i++){
+                var l = random_range(8, 24),
+                    d = _ang + (i * (360 / _num));
+
+                with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BubbleBomb")){
+                    image_index = (image_number - 1) - (i + random(1));
+                    team = 0;
                 }
             }
             break;
@@ -529,8 +568,6 @@
         else instance_destroy();
     }
 
-    if(instance_exists(self)) enemyAlarms(1);
-
 #define Harpoon_hit
     if(speed > 0){
         if(projectile_canhit(other)){
@@ -931,8 +968,10 @@
 
 
 #define NetNade_step
-    if(alarm0 > 0 && alarm0 < 15) sprite_index = spr.NetNadeBlink;
-    enemyAlarms(1);
+     // Blink:
+    if(alarm0 > 0 && alarm0 < 15){
+        sprite_index = spr.NetNadeBlink;
+    }
 
 #define NetNade_hit
     if(speed > 0 && projectile_canhit(other)){
@@ -1085,7 +1124,7 @@
 
     var _pickup = pickup_indicator;
 
-    enemyAlarms(1);
+     // Movement:
     enemyWalk(walkspd, maxspd);
 
      // Animate:
@@ -1491,7 +1530,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

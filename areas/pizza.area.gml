@@ -61,12 +61,6 @@
 
 #define area_setup_floor(_explo)
     if(!_explo){
-         // Pizza Floors:
-        if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
-            styleb = true;
-            sprite_index = area_sprite(sprFloor1B);
-        }
-
          // Fix Depth:
         if(styleb) depth = 8;
 
@@ -75,6 +69,14 @@
     }
 
 #define area_start
+     // Pizza Floors:
+    with(Floor){
+        if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
+            styleb = true;
+            sprite_index = area_sprite(sprFloor1B);
+        }
+    }
+
      // Pizza Chests:
     with(HealthChest){
         sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
@@ -192,7 +194,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

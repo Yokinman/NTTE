@@ -2176,8 +2176,15 @@
                  // Defaults:
                 if(!m) with(other){
                     switch(v){
+                        case "on_step":
+                            if(instance_is(self, CustomEnemy)){
+                                on_step = enemy_step_default;
+                            }
+                            break;
+
                         case "on_hurt":
-                            on_hurt = enemyHurt; break;
+                            on_hurt = enemyHurt;
+                            break;
     
                         case "on_death":
                             if(instance_is(self, CustomEnemy)){
@@ -2195,6 +2202,15 @@
             }
         }
 
+         // Override Step:
+        if("on_step" in self){
+            var _objStep = script_ref_create(obj_step);
+            if(!is_array(on_step) || !array_equals(on_step, _objStep)){
+                on_ntte_step = on_step;
+                on_step = _objStep;
+            }
+        }
+
          // Auto-fill HP:
         if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
             if(my_health == 1) my_health = maxhealth;
@@ -2202,6 +2218,33 @@
     }
 
     return o;
+
+#define obj_step
+     // Step:
+    script_ref_call(on_ntte_step);
+
+     // Alarms:
+    for(var i = 0; i < 12; i++){
+        var a = alarm_get(i);
+        if(a > 0){
+             // Decrement Alarm:
+            a -= ceil(current_time_scale);
+            alarm_set(i, a);
+
+             // Call Alarm Event:
+    		if(a <= 0){
+    		    alarm_set(i, -1);
+    		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
+    		    if(!instance_exists(self)) exit;
+    		}
+        }
+    }
+
+#define enemy_step_default
+    if("walk" in self){
+        enemyWalk(walkspd, maxspd);
+    }
+    enemySprites();
 
 
 /// Scripts
@@ -2288,23 +2331,6 @@
     }
 
     return _inst;
-
-#define enemyAlarms(_maxAlarm)
-    for(var i = 0; i < _maxAlarm; i++){
-    	var a = alarm_get(i);
-    	if(a > 0){
-             // Decrement Alarm:
-            a -= ceil(current_time_scale);
-    		alarm_set(i, a);
-
-             // Call Alarm:
-    		if(a <= 0){
-    		    alarm_set(i, -1);
-    		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
-    		    if(!instance_exists(self)) exit;
-    		}
-    	}
-    }
 
 #define enemyWalk(_spd, _max)
     if(walk > 0){

@@ -58,8 +58,6 @@
 
 
 #define Mortar_step
-    enemyAlarms(2);
-
      // Animate:
     if(sprite_index != spr_hurt and sprite_index != spr_fire){
     	if(speed <= 0) sprite_index = spr_idle;
@@ -88,6 +86,7 @@
         }
     }
 
+     // Movement:
     enemyWalk(walkspd, maxspd);
 
 #define Mortar_alrm0
@@ -287,11 +286,6 @@
     }
 
 
-#define Spiderling_step
-    enemyWalk(walkspd, maxspd);
-    enemySprites();
-    enemyAlarms(2);
-
 #define Spiderling_alrm0
     alarm0 = 10 + irandom(10);
     target = instance_nearest(x,y,Player);
@@ -393,7 +387,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);

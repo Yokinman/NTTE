@@ -397,6 +397,17 @@
     	    }
             break;
 
+        case 4: /// CAVES
+             // Spawn Mortars:
+        	with(instances_matching(LaserCrystal, "mortar_check", null, false)){
+        	    mortar_check = true;
+        	    if(random(4) < 1){
+        	        obj_create(x, y, "Mortar");
+        	        instance_delete(self);
+        	    }
+        	}
+            break;
+
         case 103: /// MANSIOM  its MANSION idiot, who wrote this
              // Spawn Gold Mimic:
             with(instance_nearest(10016, 10016, GoldChest)){
@@ -408,6 +419,15 @@
             break;
 
         case 104: /// CURSED CAVES
+             // Spawn Cursed Mortars:
+        	with(instances_matching(InvLaserCrystal, "mortar_check", null, false)){
+        	    mortar_check = true;
+        	    if(random(4) < 1){
+        	        obj_create(x, y, "InvMortar");
+        	        instance_delete(self);
+        	    }
+        	}
+
              // Spawn Prism:
             with(BigCursedChest) {
                 Pet_create(x, y, "Prism");
@@ -444,23 +464,6 @@
             }
             break;
     }
-
-     // Spawn Mortars:
-	with(instances_matching(LaserCrystal, "mortar_check", null, false)){
-	    mortar_check = true;
-	    if(random(4) < 1){
-	        obj_create(x, y, "Mortar");
-	        instance_delete(self);
-	    }
-	}
-	
-     // Spawn Cursed Mortars:
-	with(InvLaserCrystal){
-	    if(random(4) < 1){
-	        obj_create(x, y, "InvMortar");
-	        instance_delete(self);
-	    }
-	}
 	
 	 // Sewer manhole:
 	with(PizzaEntrance){
@@ -1238,6 +1241,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     spr_bubble = sprPlayerBubble;
                     spr_bubble_pop = sprPlayerBubblePop;
                 }
+                break;
+
+            case Salamander:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
                 break;
 
             case Ratking:
@@ -2224,7 +2232,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
 #define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyAlarms(_maxAlarm)                                                                  mod_script_call(   "mod", "telib", "enemyAlarms", _maxAlarm);
 #define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
