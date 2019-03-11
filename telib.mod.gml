@@ -2160,6 +2160,8 @@
         if(string_pos("Custom", object_get_name(o.object_index)) == 1){
             var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10", "alrm11"];
             with(o){
+                var _isEnemy = instance_is(self, CustomEnemy);
+
                 if("name" not in self) name = string(obj_name);
         
                  // Scripts:
@@ -2182,7 +2184,7 @@
                         if(!m) with(other){
                             switch(v){
                                 case "on_step":
-                                    if(instance_is(self, CustomEnemy)){
+                                    if(_isEnemy){
                                         on_step = enemy_step_ntte;
                                     }
                                     break;
@@ -2192,13 +2194,13 @@
                                     break;
 
                                 case "on_death":
-                                    if(instance_is(self, CustomEnemy)){
+                                    if(_isEnemy){
                                         on_death = scrDefaultDrop;
                                     }
                                     break;
         
                                 case "on_draw":
-                                    if(instance_is(self, CustomEnemy)){
+                                    if(_isEnemy){
                                         on_draw = draw_self_enemy;
                                     }
                                     break;
@@ -2225,6 +2227,8 @@
                                         on_step = _objStep;
 
                                          // Setup Custom NTTE Event Vars:
+                                        ntte_alarm_max = 12;
+                                        if(_isEnemy) ntte_alarm_max = 11;
                                         /*var _set = ["anim"];
                                         with(_set){
                                             var n = "on_ntte_" + self;
@@ -2255,9 +2259,10 @@
 #define obj_step
      // Step:
     script_ref_call(on_ntte_step);
+    if(!instance_exists(self)) exit;
 
      // Alarms:
-    for(var i = 0; i < 12; i++){
+    for(var i = 0; i < ntte_alarm_max; i++){
         var a = alarm_get(i);
         if(a > 0){
              // Decrement Alarm:
