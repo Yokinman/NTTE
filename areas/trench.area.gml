@@ -422,22 +422,8 @@
             instance_create(_x, _y, FireBaller);
         }
         else{
-            if(random(2) < 1){
-                instance_create(_x, _y, LaserCrystal);
-            }
-            else{
-                instance_create(_x, _y, Salamander);
-            }
+            instance_create(_x, _y, choose(LaserCrystal, Salamander));
         }
-        /*if(random(9) < 1) {
-            if(random(6) < 1) {
-                instance_create(_x, _y, Salamander);
-            } else {
-                instance_create(_x, _y, Crab);
-            }
-        } else {
-            instance_create(_x, _y, Rat);
-        }*/
     }
     else{
          // Anglers:
@@ -467,22 +453,6 @@
                 obj_create(_x, _y, "Eel");
             }
         }
-        // Laser Crystals
-        // Cursed Spiders
-        // Spiders
-        // Explo Freak
-        // Rhino Freak
-        // Fireballer
-        // Super Fireballer
-        // Bonefish
-        // Hermit Crab
-        // Traffic Crab
-        // Puffers
-        // Hammerhead
-        // Salamander
-        // Sniper
-        // Bat
-        // Seal
     }
 
 #define area_pop_props

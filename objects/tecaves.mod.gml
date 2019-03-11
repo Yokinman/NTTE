@@ -89,8 +89,23 @@
      // Movement:
     enemyWalk(walkspd, maxspd);
 
-#define Mortar_alrm0
-    alarm0 = 80 + irandom(20);
+#define Mortar_draw
+     // Flash White w/ Hurt While Firing:
+    if(
+        sprite_index == spr_fire &&
+        nexthurt > current_frame &&
+        (nexthurt + current_frame) mod (room_speed/10) = 0
+    ){
+        d3d_set_fog(true, c_white, 0, 0);
+        draw_self_enemy();
+        d3d_set_fog(false, c_black, 0, 0);
+    }
+
+     // Normal Self:
+    else draw_self_enemy();
+
+#define Mortar_alrm1
+    alarm1 = 80 + random(20);
     target = instance_nearest(x, y, Player);
 
      // Near Target:
@@ -100,7 +115,7 @@
          // Attack:
         if(random(3) < 1){
             ammo = 4;
-            alarm1 = 26;
+            alarm2 = 26;
             sprite_index = spr_fire;
             sound_play(sndCrystalJuggernaut);
         }
@@ -109,7 +124,7 @@
         else{
             walk = 15 + random(30);
             direction = _targetDir + orandom(15);
-            alarm0 = 40 + irandom(40);
+            alarm1 = 40 + irandom(40);
         }
 
          // Facing:
@@ -119,12 +134,12 @@
      // Passive Movement:
     else{
         walk = 10;
-        alarm0 = 50 + irandom(30);
+        alarm1 = 50 + irandom(30);
         direction = random(360);
         scrRight(direction);
     }
 
-#define Mortar_alrm1
+#define Mortar_alrm2
     if(ammo > 0){
         target = instance_nearest(x, y, Player);
 
@@ -191,7 +206,7 @@
             with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
         }
 
-        alarm1 = 4;
+        alarm2 = 4;
         ammo--;
     }
 
@@ -206,21 +221,6 @@
         sprite_index = spr_hurt;
         image_index = 0;
     }
-
-#define Mortar_draw
-     // Flash White w/ Hurt While Firing:
-    if(
-        sprite_index == spr_fire &&
-        nexthurt > current_frame &&
-        (nexthurt + current_frame) mod (room_speed/10) = 0
-    ){
-        d3d_set_fog(true, c_white, 0, 0);
-        draw_self_enemy();
-        d3d_set_fog(false, c_black, 0, 0);
-    }
-
-     // Normal Self:
-    else draw_self_enemy();
 
 
 #define MortarPlasma_step
@@ -251,19 +251,6 @@
      // Hit:
     if(z <= 0) instance_destroy();
 
-#define MortarPlasma_destroy
-    with(instance_create(x, y, PlasmaImpact)){
-        sprite_index = spr.MortarImpact;
-        team = other.team;
-        creator = other.creator;
-        hitid = other.hitid;
-        damage = 1;
-    }
-
-     // Effects:
-    view_shake_at(x, y, 8);
-    sound_play(sndPlasmaHit);
-
 #define MortarPlasma_draw
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 
@@ -278,6 +265,19 @@
 #define MortarPlasma_wall
     // nada
 
+#define MortarPlasma_destroy
+    with(instance_create(x, y, PlasmaImpact)){
+        sprite_index = spr.MortarImpact;
+        team = other.team;
+        creator = other.creator;
+        hitid = other.hitid;
+        damage = 1;
+    }
+
+     // Effects:
+    view_shake_at(x, y, 8);
+    sound_play(sndPlasmaHit);
+
 
 #define NewCocoon_death
      // Hatch 1-3 Spiders:
@@ -287,18 +287,6 @@
 
 
 #define Spiderling_alrm0
-    alarm0 = 10 + irandom(10);
-    target = instance_nearest(x,y,Player);
-
-     // Move towards player:
-    if(target_is_visible() && target_in_distance(0, 96)){
-        scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
-    }
-
-     // Wander:
-    else scrWalk(12, direction + orandom(20));
-
-#define Spiderling_alrm1
      // Shhh dont tell anybody
     with(instance_create(x, y, Spider)){
         x = other.x;
@@ -334,6 +322,18 @@
     sound_play_pitchvol(sndCocoonBreak, 2 + random(1), 0.8);
 
     instance_delete(id);
+
+#define Spiderling_alrm1
+    alarm1 = 10 + irandom(10);
+    target = instance_nearest(x,y,Player);
+
+     // Move towards player:
+    if(target_is_visible() && target_in_distance(0, 96)){
+        scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
+    }
+
+     // Wander:
+    else scrWalk(12, direction + orandom(20));
 
 
 /// Mod Events:

@@ -499,7 +499,7 @@
             if(random(2) < 1){
                 active = false;
                 cantravel = true;
-                alarm0 = random_range(30, 900);
+                alarm1 = random_range(30, 900);
             }
         }
     }

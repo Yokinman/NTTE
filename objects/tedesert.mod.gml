@@ -15,8 +15,8 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
-#define BabyScorpion_alrm0
-    alarm0 = 50 + irandom(30);
+#define BabyScorpion_alrm1
+    alarm1 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
 
     if(target_is_visible()) {
@@ -38,18 +38,18 @@
 		    motion_add(_targetDir + 180, 3);
             sound_play_pitch(snd_fire, 1.6);
 
-    		alarm0 = 20 + random(30);
+    		alarm1 = 20 + random(30);
     	}
 
          // Move Away From Target:
         else if(target_in_distance(0, 32) > 0) {
-            alarm0 = 20 + irandom(30);
+            alarm1 = 20 + irandom(30);
             scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
         }
 
          // Move Towards Target:
     	else{
-    		alarm0 = 30 + irandom(20);
+    		alarm1 = 30 + irandom(20);
     		scrWalk(20 + random(15), _targetDir + orandom(40));
     		gunangle = _targetDir + orandom(15);
     	}
@@ -455,7 +455,7 @@
          // Un-Dive:
         if(swim <= 0){
             swim = 0;
-            alarm2 = -1;
+            alarm3 = -1;
             image_index = 0;
             sprite_index = spr_rise;
             scrRight(direction);
@@ -698,8 +698,8 @@
 
     if(h) d3d_set_fog(0, 0, 0, 0);
 
-#define CoastBoss_alrm0
-    alarm0 = 30 + random(20);
+#define CoastBoss_alrm1
+    alarm1 = 30 + random(20);
 
     target = instance_nearest(x, y, Player);
 
@@ -710,7 +710,7 @@
              // Move Towards Target:
             if((target_in_distance(0, 64) && random(2) < 1) || random(4) < 1){
                 scrWalk(30 + random(10), _targetDir + orandom(10));
-                alarm0 = walk + random(10);
+                alarm1 = walk + random(10);
             }
 
              // Bubble Blow:
@@ -724,48 +724,48 @@
                 sprite_index = spr_chrg;
                 sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
 
-                alarm1 = 3;
-                alarm0 = -1;
+                alarm2 = 3;
+                alarm1 = -1;
             }
 
             scrRight(_targetDir);
         }
 
          // Dive:
-        else alarm2 = 6;
+        else alarm3 = 6;
     }
 
      // Passive Movement:
     else{
-        alarm0 = 40 + random(20);
+        alarm1 = 40 + random(20);
         scrWalk(20, random(360));
     }
 
-#define CoastBoss_alrm1
+#define CoastBoss_alrm2
      // Fire Bubble Bombs:
     repeat(irandom_range(1, 2)){
         if(ammo > 0){
-            alarm1 = 2;
+            alarm2 = 2;
 
              // Blammo:
             sound_play(sndOasisShoot);
             scrEnemyShoot("BubbleBomb", gunangle + (sin(shot_wave / 4) * 16), 8 + random(4));
-            shot_wave += alarm1;
+            shot_wave += alarm2;
             walk++;
 
              // End:
             if(--ammo <= 0){
-                alarm0 = 60;
+                alarm1 = 60;
             }
         }
     }
 
-#define CoastBoss_alrm2
+#define CoastBoss_alrm3
     target = instance_nearest(x, y, Player);
     swim_target = target;
 
-    alarm2 = 8;
-    alarm0 = alarm2 + 10;
+    alarm3 = 8;
+    alarm1 = alarm3 + 10;
 
     if(sprite_index != spr_dive){
          // Dive:

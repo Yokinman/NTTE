@@ -73,6 +73,64 @@
         draw_set_blend_mode(bm_normal);
     }
 
+#define Angler_alrm1
+    alarm1 = 6 + irandom(6);
+    target = instance_nearest(x, y, Player);
+
+     // Hiding:
+    if(hiding){
+        if(target_is_visible() && target_in_distance(0, 48)){
+            scrAnglerAppear(); // Unhide
+        }
+    }
+
+    else{
+         // Charging:
+        if(ammo > 0){
+            ammo--;
+            alarm1 = 8;
+    
+             // Charge:
+            scrWalk(5, (target_is_visible() ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
+            speed = maxspd + 10;
+    
+             // Effects:
+            sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
+            sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.5);
+            repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Dust)){
+                motion_add(other.direction + 180, random(4));
+            }
+            sprite_index = spr_hurt; // Temporary?
+            image_index = 1;
+        }
+        else if(ammo == 0){
+            ammo = -1;
+            alarm1 = 15;
+
+             // Back up:
+            scrWalk(8, direction + 180);
+            scrRight(direction + 180);
+        }
+
+         // Normal AI:
+        else{
+            alarm1 = 20 + irandom(20);
+
+             // Move Toward Player:
+            if(target_is_visible() && target_in_distance(0, 128)){
+                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y) + orandom(20));
+            }
+
+             // Wander:
+            else scrWalk(20 + irandom(30), direction + orandom(30));
+
+             // Hide:
+            if(!target_in_distance(0, 160)){
+                scrAnglerHide();
+            }
+        }
+    }
+
 #define Angler_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
     motion_add(_hitdir, _hitvel);	// Knockback
@@ -91,65 +149,7 @@
     if(my_health < 30 && random(3) < 2 && ammo < 0){
         walk = 0;
         ammo = 1;
-        alarm0 = 4;
-    }
-
-#define Angler_alrm0
-    alarm0 = 6 + irandom(6);
-    target = instance_nearest(x, y, Player);
-
-     // Hiding:
-    if(hiding){
-        if(target_is_visible() && target_in_distance(0, 48)){
-            scrAnglerAppear(); // Unhide
-        }
-    }
-
-    else{
-         // Charging:
-        if(ammo > 0){
-            ammo--;
-            alarm0 = 8;
-    
-             // Charge:
-            scrWalk(5, (target_is_visible() ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
-            speed = maxspd + 10;
-    
-             // Effects:
-            sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
-            sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.5);
-            repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Dust)){
-                motion_add(other.direction + 180, random(4));
-            }
-            sprite_index = spr_hurt; // Temporary?
-            image_index = 1;
-        }
-        else if(ammo == 0){
-            ammo = -1;
-            alarm0 = 15;
-
-             // Back up:
-            scrWalk(8, direction + 180);
-            scrRight(direction + 180);
-        }
-
-         // Normal AI:
-        else{
-            alarm0 = 20 + irandom(20);
-
-             // Move Toward Player:
-            if(target_is_visible() && target_in_distance(0, 128)){
-                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y) + orandom(20));
-            }
-
-             // Wander:
-            else scrWalk(20 + irandom(30), direction + orandom(30));
-
-             // Hide:
-            if(!target_in_distance(0, 160)){
-                scrAnglerHide();
-            }
-        }
+        alarm1 = 4;
     }
 
 #define Angler_death
@@ -206,7 +206,7 @@
     instance_create(x, y, PortalClear);
 
      // Time 2 Charge
-    alarm0 = 15;
+    alarm1 = 15;
     ammo = 3;
 
      // Effects:
@@ -329,11 +329,20 @@
         }
     }
 
-#define Eel_alrm0
-    alarm0 = 30;
+#define Eel_draw
+    var _spr = sprite_index;
+    if(elite > 0){
+        if(_spr == spr_idle) _spr = spr.EeliteIdle;
+        else if(_spr == spr_walk) _spr = spr.EeliteWalk;
+        else if(_spr == spr_hurt) _spr = spr.EeliteHurt;
+    }
+    draw_sprite_ext(_spr, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+
+#define Eel_alrm1
+    alarm1 = 30;
     target = instance_nearest(x,y,Player);
     if ammo{
-        alarm0 = 3;
+        alarm1 = 3;
         ammo--;
 
         var _dist = irandom(256);
@@ -348,14 +357,14 @@
         if ammo <= 0{
             sound_play(sndLaser);
             with scrEnemyShoot(EnemyLaser, gunangle + orandom(15), 0){
-                    alarm0 = 1;
-                }
+                alarm0 = 1;
+            }
         }
     }
     else{
          // Begin shoot laser
         if false && instance_exists(arc_inst) && arc_inst.c == 3 && random(5) < 1 && target_is_visible() && target_in_distance(0,96){
-            alarm0 = 3;
+            alarm1 = 3;
             ammo = 10;
             gunangle = point_direction(x, y, target.x, target.y);
             sound_play(sndLaserCrystalCharge);
@@ -369,15 +378,6 @@
                 scrWalk(irandom_range(17,30), direction+orandom(30));
         }
     }
-
-#define Eel_draw
-    var _spr = sprite_index;
-    if(elite > 0){
-        if(_spr == spr_idle) _spr = spr.EeliteIdle;
-        else if(_spr == spr_walk) _spr = spr.EeliteWalk;
-        else if(_spr == spr_hurt) _spr = spr.EeliteHurt;
-    }
-    draw_sprite_ext(_spr, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
 #define Eel_death
     if(elite){
@@ -448,12 +448,12 @@
         scrRight(direction);
     }
 
-#define Jelly_alrm0
-    alarm0 = 40 + random(20);
+#define Jelly_alrm1
+    alarm1 = 40 + random(20);
     target = instance_nearest(x, y, Player);
 
      // Always movin':
-    scrWalk(alarm0, direction);
+    scrWalk(alarm1, direction);
 
     if(target_is_visible()){
         var _targetDir = point_direction(x, y, target.x, target.y);
@@ -463,7 +463,7 @@
 
          // Attack:
         if(random(3) < 1 && target_in_distance(32, 256)){
-            alarm0 += 60;
+            alarm1 += 60;
 
              // Shoot lightning disc:
             if(c > 2){
@@ -479,12 +479,12 @@
             sound_play_hit(sndLightningHit, 0.25);
             sound_play_pitch(sndLightningCrystalCharge,0.8);
             sprite_index = spr_fire;
-            alarm1 = 30;
+            alarm2 = 30;
         }
     }
     scrRight(direction);
 
-#define Jelly_alrm1
+#define Jelly_alrm2
     sprite_index = spr_walk;
 
 #define Jelly_death
@@ -669,9 +669,9 @@
                 yoff = y - other.y;
                 dir = d;
                 spd = 6;
-                alarm0 = 5 + random(15);
-                alarm1 += alarm0;
-                move_delay = 50 - alarm0;
+                alarm1 = 5 + random(15);
+                alarm2 += alarm1;
+                move_delay = 50 - alarm1;
                 scrRight(d + 180);
             }
         }
@@ -791,8 +791,8 @@
     }
     mask_index = mskNone;
 
-#define PitSquid_alrm0
-    alarm0 = 30 + random(30);
+#define PitSquid_alrm1
+    alarm1 = 30 + random(30);
 
     target = instance_nearest(x, y, Player);
     if(instance_exists(target)){
@@ -822,13 +822,13 @@
                 sink = true;
                 sink_targetx = target.x;
                 sink_targety = target.y;
-                alarm0 = 60;
+                alarm1 = 60;
             }
         }
     }
 
-#define PitSquid_alrm1
-    alarm1 = 60 + random(30);
+#define PitSquid_alrm2
+    alarm2 = 60 + random(30);
 
     if(pit_height >= 1){
         target = instance_nearest(x, y, Player);
@@ -843,7 +843,7 @@
                 with(target){
                     var f = floor_at(x, y);
                     if(instance_exists(f) && f.styleb){
-                        other.alarm1 = 60 + random(30);
+                        other.alarm2 = 60 + random(30);
                         with(obj_create(x, y, "Tentacle")){
                             alarm0 = 20;
                             team = c.team;
@@ -992,6 +992,31 @@
     else my_health = maxhealth;
     speed = 0;
 
+#define Tentacle_alrm0
+    if(instance_exists(creator) && creator.pit_height < 1){
+        instance_delete(self);
+    }
+
+     // Appear:
+    else{
+        mask_index = mskOldGuardianDeflect;
+        sprite_index = spr_spwn;
+        image_index = 0;
+        canfly = false;
+
+        sound_play_pitchvol(sndBigMaggotUnburrow, 1.5 + random(1), 1)
+    }
+
+#define Tentacle_alrm1
+     // Retract:
+    sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
+    with(instance_create(x, y, CorpseActive)){
+        sprite_index = spr.TentacleDead;
+        size = 0;
+    }
+    
+    instance_destroy();
+
 #define Tentacle_hurt(_hitdmg, _hitvel, _hitdir)
     if(sprite_index != mskNone){
         my_health -= _hitdmg;
@@ -1012,31 +1037,6 @@
         }
         scrRight(_hitdir + 180);
     }
-
-#define Tentacle_alrm0
-    if(instance_exists(creator) && creator.pit_height < 1){
-        instance_delete(self);
-    }
-
-     // Appear:
-    else{
-        mask_index = mskOldGuardianDeflect;
-        sprite_index = spr_spwn;
-        image_index = 0;
-        canfly = false;
-
-        sound_play_pitchvol(sndBigMaggotUnburrow, 1.5 + random(1), 1)
-    }
-
-#define Tentacle_alrm1
-    sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
-
-    with instance_create(x, y, CorpseActive){
-        sprite_index = spr.TentacleDead;
-        size = 0;
-    }
-    
-    instance_destroy();
 
 #define Tentacle_death
     //repeat(2) instance_create(x, y, Dust);
@@ -1150,8 +1150,8 @@
     obj_create(x,y,"BubbleExplosion");
 
 
-#define YetiCrab_alrm0
-    alarm0 = 30 + random(10);
+#define YetiCrab_alrm1
+    alarm1 = 30 + random(10);
     target = instance_nearest(x, y, Player);
 
     if(is_king = 0) { // Is a follower:
@@ -1163,7 +1163,7 @@
 
                  // Follow king in a jittery manner:
                 scrWalk(5, king_dir + orandom(5));
-                alarm0 = 5 + random(5);
+                alarm1 = 5 + random(5);
             }
 
              // Chase player instead:

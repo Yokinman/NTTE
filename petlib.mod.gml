@@ -111,6 +111,13 @@
         scrRight(direction);
     }
 
+#define CoolGuy_draw
+    var _x = x,
+        _y = y;
+
+    if(poop > 0 && poop_delay < 20) _x += sin(current_frame * 5) * 1.5;
+    draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+
 #define CoolGuy_alrm0(_leaderDir, _leaderDis)
      // Follow Leader Around:
     if(instance_exists(leader)){
@@ -136,13 +143,6 @@
 
         return 10 + random(10);
     }
-
-#define CoolGuy_draw
-    var _x = x,
-        _y = y;
-
-    if(poop > 0 && poop_delay < 20) _x += sin(current_frame * 5) * 1.5;
-    draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
 
 #define Mimic_create
@@ -255,6 +255,16 @@
         instance_create(x + orandom(12), y + orandom(12), CaveSparkle);
     }
 
+#define Mimic_draw
+    draw_self_enemy();
+
+     // Wep Depth Fix:
+    if(place_meeting(x, y, WepPickup)){
+        with(WepPickup) if(place_meeting(x, y, other)){
+            event_perform(ev_draw, 0);
+        }
+    }
+
 #define Mimic_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
         if(_leaderDis > 48){
@@ -278,20 +288,6 @@
         sprite_index = spr_hurt;
         image_index = 0;
     }
-
-#define Mimic_draw
-    draw_self_enemy();
-
-     // Wep Depth Fix:
-    if(place_meeting(x, y, WepPickup)){
-        with(WepPickup) if(place_meeting(x, y, other)){
-            event_perform(ev_draw, 0);
-        }
-    }
-
-#define Mimic_draw_indicator(_inst)
-    instance_destroy();
-    with(_inst) draw_sprite(sprEPickup, 0, x, y - 7);
 
 
 #define Parrot_create
@@ -374,6 +370,31 @@
         }
     }
 
+#define Parrot_draw
+     // Perched:
+    if(instance_exists(perched)){
+        var _uvsStart = sprite_get_uvs(perched.sprite_index, 0),
+            _uvsCurrent = sprite_get_uvs(perched.sprite_index, perched.image_index),
+            _x = x,
+            _y = y - sprite_get_yoffset(perched.sprite_index) + sprite_get_bbox_top(perched.sprite_index) - 4;
+
+         // Manual Bobbing:
+        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
+            with(perched){
+                var _bob = parrot_bob;
+                _y += _bob[floor(image_index mod array_length(_bob))];
+            }
+        }
+
+         // Auto Bobbing:
+        else _y += (_uvsCurrent[5] - _uvsStart[5]);
+
+        draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    }
+
+     // Normal:
+    else draw_self_enemy();
+
 #define Parrot_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
          // Fly Toward Pickup:
@@ -437,31 +458,6 @@
             y += lengthdir_y(o, direction);
         }
     }
-
-#define Parrot_draw
-     // Perched:
-    if(instance_exists(perched)){
-        var _uvsStart = sprite_get_uvs(perched.sprite_index, 0),
-            _uvsCurrent = sprite_get_uvs(perched.sprite_index, perched.image_index),
-            _x = x,
-            _y = y - sprite_get_yoffset(perched.sprite_index) + sprite_get_bbox_top(perched.sprite_index) - 4;
-
-         // Manual Bobbing:
-        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
-            with(perched){
-                var _bob = parrot_bob;
-                _y += _bob[floor(image_index mod array_length(_bob))];
-            }
-        }
-
-         // Auto Bobbing:
-        else _y += (_uvsCurrent[5] - _uvsStart[5]);
-
-        draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-    }
-
-     // Normal:
-    else draw_self_enemy();
 
 
 #define Octo_create
@@ -569,6 +565,14 @@
         }
     }
 
+#define Octo_draw
+    draw_self_enemy();
+    
+     // Air Bubble:
+    if(array_length(instances_matching(CustomDraw, "name", "underwater_draw")) <= 0){
+        draw_sprite(sprPlayerBubble, -1, x, y);
+    }
+
 #define Octo_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
          // Follow Leader Around:
@@ -597,14 +601,6 @@
      // Idle Movement:
     scrWalk(10 + random(5), direction + orandom(60));
     return walk + 30;
-
-#define Octo_draw
-    draw_self_enemy();
-    
-     // Air Bubble:
-    if(array_length(instances_matching(CustomDraw, "name", "underwater_draw")) <= 0){
-        draw_sprite(sprPlayerBubble, -1, x, y);
-    }
 
 
 #define Prism_create

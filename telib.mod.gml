@@ -393,7 +393,7 @@
         			direction = gunangle;
 
                      // Alarms:
-        			alarm0 = 40 + irandom(30);
+        			alarm1 = 40 + irandom(30);
         		}
             	break;
 
@@ -537,9 +537,9 @@
         			for(var i = 0; i < (GameCont.loops * 3); i++) fish_train[i] = noone;
 
         			 // Alarms:
-        			alarm0 = 90;
-        			alarm1 = -1;
+        			alarm1 = 90;
         			alarm2 = -1;
+        			alarm3 = -1;
         	    }
         	    break;
         //#endregion
@@ -608,7 +608,7 @@
         			scared = false;
 
         			 // alarms
-        			alarm0 = 30;
+        			alarm1 = 30;
         	    }
         	    break;
 
@@ -644,7 +644,7 @@
         			reload = 0;
 
                      // Alarms:
-        			alarm0 = 90 + irandom(60);
+        			alarm1 = 90 + irandom(60);
         		}
             	break;
 
@@ -694,8 +694,8 @@
         			wepangle = choose(-140, 140);
 
                      // Alarms:
-        			alarm0 = 60 + irandom(60);
-        			alarm1 = -1;
+        			alarm1 = 60 + irandom(60);
+        			alarm2 = -1;
         		}
             	break;
 
@@ -858,7 +858,7 @@
         			wepangle = choose(-140, 140);
 
         			 // Alarms:
-        			alarm0 = 30 + irandom(60);
+        			alarm1 = 30 + irandom(60);
         		}
             	break;
 
@@ -912,7 +912,9 @@
                         shield_draw = true;
                         surfClamShield = -1;
 
-                        alarm0 = 20 + random(20);
+                         // Alarms:
+                        alarm1 = 20 + random(20);
+                        alarm2 = -1;
                     }
                 }
                 break;
@@ -977,7 +979,7 @@
                     anchor_throw = 0;
                     anchor_retract = 0;
 
-                    alarm0 = 40 + random(30);
+                    alarm1 = 40 + random(30);
                 }
                 break;
 
@@ -1048,7 +1050,7 @@
                     ammo = 0;
 
                      // Alarms:
-                    alarm0 = 30 + random(90);
+                    alarm1 = 30 + random(90);
                 }
                 break;
 
@@ -1119,7 +1121,7 @@
         			charge_wait = 0;
 
         			 // Alarms:
-        			alarm0 = 40 + random(20);
+        			alarm1 = 40 + random(20);
         		}
                 break;
 
@@ -1155,7 +1157,7 @@
         			blow = 0;
 
                      // Alarms:
-                    alarm0 = 40 + random(80);
+                    alarm1 = 40 + random(80);
                 }
                 break;
 
@@ -1215,7 +1217,7 @@
                     mod_script_call("mod", "tetrench", "scrAnglerHide");
 
                      // Alarms:
-        			alarm0 = 30 + irandom(30);
+        			alarm1 = 30 + irandom(30);
                 }
                 break;
 
@@ -1260,7 +1262,7 @@
                     ammo = 0;
 
                      // Alarms:
-                    alarm0 = 30;
+                    alarm1 = 30;
                 }
                 break;
 
@@ -1306,7 +1308,7 @@
                     direction = random(360);
 
                      // Alarms:
-                    alarm0 = 40 + irandom(20);
+                    alarm1 = 40 + irandom(20);
 
                      // Always on the move:
                     walk = alarm0;
@@ -1395,7 +1397,8 @@
                     }
 
                      // Alarms:
-                    alarm0 = 90;
+                    alarm1 = 90;
+                    alarm2 = 90;
                 }
                 break;
 
@@ -1523,7 +1526,7 @@
                     direction = random(360);
 
                      // Alarms:
-                    alarm0 = 20 + irandom(10);
+                    alarm1 = 20 + irandom(10);
                 }
                 break;
         //#endregion
@@ -1561,8 +1564,8 @@
         			direction = gunangle;
 
         			 // Alarms:
-        			alarm0 = 60;
-        			alarm1 = 120;
+        			alarm1 = 60;
+        			alarm2 = 120;
                 }
                 break;
 
@@ -1602,9 +1605,9 @@
         			attack = 0;
 
         			 // Alarms:
-        			alarm0 = 60;
-        			alarm1 = 90;
-        			alarm2 = 120;
+        			alarm1 = 60;
+        			alarm2 = 90;
+        			alarm3 = 120;
                 }
                 break;
 
@@ -1689,8 +1692,8 @@
         			sit_side = 0;
 
         			 // Alarms:
-        			alarm0 = 40 + irandom(20);
         			alarm1 = 40 + irandom(20);
+        			alarm2 = 40 + irandom(20);
         		}
         	    break;
 
@@ -1730,7 +1733,7 @@
         			direction = gunangle;
 
         			 // Alarms:
-        			alarm0 = 40 + irandom(20);
+        			alarm1 = 40 + irandom(20);
         		}
         	    break;
 
@@ -2066,8 +2069,8 @@
         			direction = gunangle;
 
                      // Alarms:
-        			alarm0 = 100 + irandom(40);
-        			alarm1 = -1;
+        			alarm1 = 100 + irandom(40);
+        			alarm2 = -1;
         	    }
         	    break;
 
@@ -2135,8 +2138,8 @@
         			direction = irandom(359);
 
                      // Alarms:
-        			alarm0 = 20 + irandom(20);
-        			alarm1 = 300 + random(90);
+        			alarm0 = 300 + random(90);
+        			alarm1 = 20 + random(20);
         	    }
         	    break;
     	//#endregion
@@ -2153,67 +2156,97 @@
     }
 
      /// Auto Assign Things:
-    var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10", "alrm11"];
-    with(o){
-        if("name" not in self) name = string(obj_name);
+    if(instance_exists(o)){
+        if(string_pos("Custom", object_get_name(o.object_index)) == 1){
+            var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10", "alrm11"];
+            with(o){
+                if("name" not in self) name = string(obj_name);
+        
+                 // Scripts:
+                with(_scrt){
+                    var v = "on_" + self;
+                    if(v not in other || is_undefined(variable_instance_get(other, v))){
+                        var s = other.name + "_" + self,
+                            _mod = global.objectMods,
+                            m = false;
+        
+                        for(var i = 0; i < array_length(_mod); i++){
+                            if(mod_script_exists("mod", _mod[i], s)){
+                                variable_instance_set(other, v, ["mod", _mod[i], s]);
+                                m = true;
+                                break;
+                            }
+                        }
 
-         // Scripts:
-        with(_scrt){
-            var v = "on_" + self;
-            if(v not in other || is_undefined(variable_instance_get(other, v))){
-                var s = other.name + "_" + self,
-                    _mod = global.objectMods,
-                    m = false;
+                         // Defaults:
+                        if(!m) with(other){
+                            switch(v){
+                                case "on_step":
+                                    if(instance_is(self, CustomEnemy)){
+                                        on_step = enemy_step_ntte;
+                                    }
+                                    break;
 
-                for(var i = 0; i < array_length(_mod); i++){
-                    if(mod_script_exists("mod", _mod[i], s)){
-                        variable_instance_set(other, v, ["mod", _mod[i], s]);
-                        m = true;
-                        break;
+                                case "on_hurt":
+                                    on_hurt = enemyHurt;
+                                    break;
+
+                                case "on_death":
+                                    if(instance_is(self, CustomEnemy)){
+                                        on_death = scrDefaultDrop;
+                                    }
+                                    break;
+        
+                                case "on_draw":
+                                    if(instance_is(self, CustomEnemy)){
+                                        on_draw = draw_self_enemy;
+                                    }
+                                    break;
+                            }
+                        }
                     }
                 }
+        
+                 // Override Events:
+                var _override = ["step"];
+                with(_override){
+                    var v = "on_" + self;
+                    if(v in other){
+                        var e = variable_instance_get(other, v),
+                            _objStep = script_ref_create(obj_step);
+        
+                        if(!is_array(e) || !array_equals(e, _objStep)){
+                            with(other){
+                                variable_instance_set(id, "on_ntte_" + other, e);
 
-                 // Defaults:
-                if(!m) with(other){
-                    switch(v){
-                        case "on_step":
-                            if(instance_is(self, CustomEnemy)){
-                                on_step = enemy_step_default;
-                            }
-                            break;
+                                 // Override Specifics:
+                                switch(v){
+                                    case "on_step":
+                                        on_step = _objStep;
 
-                        case "on_hurt":
-                            on_hurt = enemyHurt;
-                            break;
-    
-                        case "on_death":
-                            if(instance_is(self, CustomEnemy)){
-                                on_death = scrDefaultDrop;
+                                         // Setup Custom NTTE Event Vars:
+                                        /*var _set = ["anim"];
+                                        with(_set){
+                                            var n = "on_ntte_" + self;
+                                            if(n not in other){
+                                                variable_instance_set(other, n, null);
+                                            }
+                                        }*/
+                                        break;
+
+                                    default:
+                                        variable_instance_set(id, v, []);
+                                }
                             }
-                            break;
-    
-                        case "on_draw":
-                            if(instance_is(self, CustomEnemy)){
-                                on_draw = draw_self_enemy;
-                            }
-                            break;
+                        }
                     }
                 }
+        
+                 // Auto-fill HP:
+                if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
+                    if(my_health == 1) my_health = maxhealth;
+                }
             }
-        }
-
-         // Override Step:
-        if("on_step" in self){
-            var _objStep = script_ref_create(obj_step);
-            if(!is_array(on_step) || !array_equals(on_step, _objStep)){
-                on_ntte_step = on_step;
-                on_step = _objStep;
-            }
-        }
-
-         // Auto-fill HP:
-        if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
-            if(my_health == 1) my_health = maxhealth;
         }
     }
 
@@ -2240,7 +2273,7 @@
         }
     }
 
-#define enemy_step_default
+#define enemy_step_ntte
     if("walk" in self){
         enemyWalk(walkspd, maxspd);
     }
@@ -2325,8 +2358,11 @@
         hitid = other.hitid;
         team = other.team;
         creator = other;
-        if(skill_get(mut_euphoria) && object_index == CustomProjectile){
-            speed *= 0.8;
+
+         // Euphoria:
+        var e = skill_get(mut_euphoria);
+        if(e != 0 && object_index == CustomProjectile){
+            speed *= (0.8 / e);
         }
     }
 

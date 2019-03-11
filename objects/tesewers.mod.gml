@@ -32,8 +32,13 @@
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
     }
 
-#define Bat_alrm0
-    alarm0 = 15 + irandom(20);
+#define Bat_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define Bat_alrm1
+    alarm1 = 15 + irandom(20);
     target = instance_nearest(x, y, Player);
 
     if target_is_visible(){
@@ -48,7 +53,7 @@
         else if target_in_distance(0, 50){
              // Walk away from target:
             scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
-            alarm0 = walk;
+            alarm1 = walk;
         }
 
          // Attack target:
@@ -117,37 +122,15 @@
         scrRight(gunangle);
     }
 
-#define Bat_alrm1
-    alarm1 = 20 + irandom(20);
+#define Bat_alrm2
+    alarm2 = 20 + irandom(20);
 
     if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
-        alarm1 = 40 + irandom(20);
+        alarm2 = 40 + irandom(20);
 
         //sound_play_gun(sndMolesargeHurt, 0, -1);
         scrBatScreech();
     }
-
-#define scrBatScreech
-     // Effects:
-    sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
-    sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
-
-    view_shake_at(x, y, 16);
-    sleep(40);
-
-     // Alert nearest cat:
-    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
-        cantravel = true;
-
-     // Screech:
-    scrEnemyShoot("BatScreech", 0, 0);
-    sprite_index = spr_fire;
-    image_index = 0;
-
-#define Bat_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
 
 #define Bat_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
@@ -169,9 +152,33 @@
     //pickup_drop(0, 100);
     pickup_drop(60, 5);
 
+#define scrBatScreech()
+     // Effects:
+    sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
+    sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
 
-#define BatBoss_alrm0
-    alarm0 = 20 + irandom(20);
+    view_shake_at(x, y, 16);
+    sleep(40);
+
+     // Alert nearest cat:
+    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
+        cantravel = true;
+
+     // Screech:
+    scrEnemyShoot("BatScreech", 0, 0);
+    sprite_index = spr_fire;
+    image_index = 0;
+
+
+#define BatBoss_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+     // draw_text_nt(x, y - 30, string(charge) + "/" + string(max_charge) + "(" + string(charged) + ")");
+
+#define BatBoss_alrm1
+    alarm1 = 20 + irandom(20);
     target = instance_nearest(x, y, Player);
 
     if target_is_visible(){
@@ -236,8 +243,8 @@
         scrRight(gunangle);
     }
 
-#define BatBoss_alrm1
-    // alarm1 = 50 + irandom(50);
+#define BatBoss_alrm2
+    // alarm2 = 50 + irandom(50);
 
     //  // charge up attack
     // if target_is_visible() || charge > 0{
@@ -259,8 +266,8 @@
     //     else{
     //          // fire if charged
     //         if charged{
-    //             alarm0 = 30 + irandom(20);
-    //             alarm1 = 90 + irandom(60);
+    //             alarm1 = 30 + irandom(20);
+    //             alarm2 = 90 + irandom(60);
 
     //             charged = false;
     //             charge = 0;
@@ -298,8 +305,8 @@
     //         }
     //          // finish charging
     //         else{
-    //             alarm0 = 0;
-    //             alarm1 = 35;
+    //             alarm1 = 0;
+    //             alarm2 = 35;
 
     //             charged = true;
 
@@ -321,13 +328,6 @@
     // }
 
 #define BatBoss_alrm2
-
-#define BatBoss_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
-
-     // draw_text_nt(x, y - 30, string(charge) + "/" + string(max_charge) + "(" + string(charged) + ")");
 
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
@@ -365,25 +365,28 @@
     sprite_index = spr_fire;
     image_index = 0;
 
+
 #define BatScreech_step
     while place_meeting(x, y, ToxicGas)
         with instance_nearest(x, y, ToxicGas)
             instance_delete(id);
-
-#define BatScreech_hit
-    with instances_matching_ne(hitme, "team", team)
-        if place_meeting(x, y, other)
-            motion_add(point_direction(other.x, other.y, x, y), 1);
 
 #define BatScreech_draw
     draw_set_blend_mode(bm_add);
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * 0.4);
     draw_set_blend_mode(bm_normal);
 
+#define BatScreech_hit
+    with instances_matching_ne(hitme, "team", team)
+        if place_meeting(x, y, other)
+            motion_add(point_direction(other.x, other.y, x, y), 1);
+
+
 #define Cabinet_death
     repeat(irandom_range(8,16))
         with obj_create(x,y,"Paper")
             motion_set(irandom(359),random_range(2,8));
+
 
 #define Cat_step
     enemyWalk(walkspd, maxspd);
@@ -462,12 +465,20 @@
         }
     }
 
-#define Cat_alrm0
-    alarm0 = 20 + irandom(20);
+#define Cat_draw
+    if(!instance_exists(sit)){
+        if(gunangle >  180) draw_self_enemy();
+        draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+        if(gunangle <= 180) draw_self_enemy();
+    }
+    else draw_self_enemy();
+
+#define Cat_alrm1
+    alarm1 = 20 + irandom(20);
 
      // Spraying Toxic Gas:
     if(ammo > 0){
-        alarm0 = 2;
+        alarm1 = 2;
 
          // Toxic:
         repeat(2){
@@ -480,7 +491,7 @@
 
          // End:
         if(--ammo <= 0){
-            alarm0 = 40;
+            alarm1 = 40;
 
              // Effects:
             repeat(3){
@@ -510,7 +521,7 @@
                     if(target_in_distance(0, 140) and random(3) < 1){
                         scrRight(_targetDir);
                         gunangle = _targetDir - 45;
-                        alarm0 = 4;
+                        alarm1 = 4;
                         ammo = 10;
         
                          // Effects:
@@ -527,7 +538,7 @@
         
                      // Walk Toward Player:
                     else{
-                        alarm0 = 20 + irandom(20);
+                        alarm1 = 20 + irandom(20);
                         scrWalk(20 + irandom(5), _targetDir + orandom(20));
                         scrRight(gunangle);
                     }
@@ -538,7 +549,7 @@
                     if(cantravel && random(4) < 3){
                         var _hole = nearest_instance(x, y, instances_named(CustomObject, "CatHole"));
                         if(instance_exists(_hole)){
-                            alarm0 = 30 + irandom(30);
+                            alarm1 = 30 + irandom(30);
                             with(_hole){
                                  // Open CatHole:
                                 if(
@@ -546,7 +557,7 @@
                                     point_distance(x, y, other.x, other.y) < 48 &&
                                     CatHoleCover(true).open
                                 ){
-                                    other.alarm0 += 45;
+                                    other.alarm1 += 45;
                                     target = other;
                                 }
             
@@ -560,7 +571,7 @@
         
                      // Wander:
                     else{
-                        alarm0 = 30 + irandom(20);
+                        alarm1 = 30 + irandom(20);
                         scrWalk(20 + irandom(10), direction + orandom(30));
                         if(random(2) < 1) direction = random(360);
                     }
@@ -570,7 +581,7 @@
 
          // Manhole Travel:
         else{
-            alarm0 = 40 + random(40);
+            alarm1 = 40 + random(40);
 
             var _forceSpawn = (instance_number(enemy) <= array_length(instances_matching(instances_named(object_index, name), "active", false)));
             with(instances_named(CustomObject, "CatHole")){
@@ -582,7 +593,7 @@
                         ){
                             if(CatHoleCover(true).open){
                                 with(other){
-                                    alarm0 = 15 + random(30);
+                                    alarm1 = 15 + random(30);
                                     active = true;
                                     visible = true;
                                     canfly = false;
@@ -634,14 +645,6 @@
 		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
 	}
 
-#define Cat_draw
-    if(!instance_exists(sit)){
-        if(gunangle >  180) draw_self_enemy();
-        draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-        if(gunangle <= 180) draw_self_enemy();
-    }
-    else draw_self_enemy();
-
 #define Cat_cleanup
     sound_stop(toxer_loop);
 
@@ -652,8 +655,13 @@
     if dash enemyWalk(0.0,  6.5);
     else    enemyWalk(0.8,  3.0);
 
-#define CatBoss_alrm0
-    alarm0 = 20 + irandom(20);
+#define CatBoss_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define CatBoss_alrm1
+    alarm1 = 20 + irandom(20);
     target = instance_nearest(x, y, Player);
 
     if target_is_visible(){
@@ -665,7 +673,7 @@
              // Gas dash:
             if random(4) < 3 && target_in_distance(85, 240){
                 dash = 18;
-                alarm1 = 1;
+                alarm2 = 1;
 
                 sound_play(sndToxicBoltGas);
 
@@ -680,7 +688,7 @@
 
              // Attack:
             else if target_in_distance(0, 240){
-                alarm0 = 40;
+                alarm1 = 40;
                 scrEnemyShoot("CatBossAttack", gunangle, 0);
                 sound_play(sndShotReload);
                 sound_play_pitchvol(sndLilHunterSniper, 2 + random(0.5), 0.5);
@@ -701,10 +709,10 @@
         scrRight(direction);
     }
 
-#define CatBoss_alrm1
+#define CatBoss_alrm2
     if dash > 0{
         dash--;
-        alarm1 = 1;
+        alarm2 = 1;
 
         meleedamage = 3;
 
@@ -765,8 +773,16 @@
 		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
 	}
 
-#define OLDCatBoss_alrm0
-    alarm0 = 20 + random(20);
+#define CatBoss_death
+    sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
+    pickup_drop(100, 20);
+    pickup_drop(60, 0);
+
+     // Hmmmm
+    instance_create(x, y, ToxicDelay);
+
+#define OLDCatBoss_alrm1
+    alarm1 = 20 + random(20);
 
     if(ammo > 0) {
         with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
@@ -775,7 +791,7 @@
         gunangle += 24;
         ammo--;
         if(ammo = 0) {
-            alarm0 = 40;
+            alarm1 = 40;
 
             repeat(3) {
                 var _dir = orandom(16);
@@ -801,7 +817,7 @@
             sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
             sound_stop(sndFlamerLoop);
         } else {
-            alarm0 = 1;
+            alarm1 = 1;
             wkick += 1;
         }
     } else {
@@ -824,32 +840,19 @@
                     sound_loop(sndFlamerLoop);
                     sound_pitch(sndFlamerLoop, random_range(1.8, 1.4));
                     wkick += 4;
-                    alarm0 = 4;
+                    alarm1 = 4;
                 }
             } else {
-                alarm0 = 20 + random(20);
+                alarm1 = 20 + random(20);
                 scrWalk(20 + random(5), _targetDir + orandom(20));
                 scrRight(gunangle);
             }
         } else {
-            alarm0 = 30 + random(20); // 3-4 Seconds
+            alarm1 = 30 + random(20); // 3-4 Seconds
             scrWalk(20 + random(10), random(360));
             scrRight(gunangle);
         }
     }
-
-#define CatBoss_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
-
-#define CatBoss_death
-    sound_stop(sndFlamerLoop); // Stops infinite flamer loop until you leave
-    pickup_drop(100, 20);
-    pickup_drop(60, 0);
-
-     // Hmmmm
-    instance_create(x, y, ToxicDelay);
 
 
 #define CatBossAttack_step
@@ -1044,6 +1047,14 @@
      // Stay Still:
     else speed = 0;
 
+#define CatDoor_draw
+    if(surface_exists(my_surf)){
+        var h = (nexthurt > current_frame + 3);
+        if(h) d3d_set_fog(1, image_blend, 0, 0);
+        draw_surface_ext(my_surf, x - (my_surf_w / 2), y - (my_surf_h / 2), 1, 1, 0, c_white, image_alpha);
+        if(h) d3d_set_fog(0, 0, 0, 0);
+    }
+
 #define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
     motion_add(_hitdir, _hitvel);	// Knockback
@@ -1063,14 +1074,6 @@
         with(partner) if(my_health > other.my_health){
             CatDoor_hurt(_hitdmg, _hitvel, _hitdir);
         }
-    }
-
-#define CatDoor_draw
-    if(surface_exists(my_surf)){
-        var h = (nexthurt > current_frame + 3);
-        if(h) d3d_set_fog(1, image_blend, 0, 0);
-        draw_surface_ext(my_surf, x - (my_surf_w / 2), y - (my_surf_h / 2), 1, 1, 0, c_white, image_alpha);
-        if(h) d3d_set_fog(0, 0, 0, 0);
     }
 
 #define CatDoor_destroy
@@ -1097,6 +1100,15 @@
      // Hit:
     if(z <= 0) instance_destroy();
 
+#define CatGrenade_draw
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
+
+#define CatGrenade_hit
+    // nada
+
+#define CatGrenade_wall
+    // nada
+
 #define CatGrenade_destroy
     with(instance_create(x, y, Explosion)){
         team = other.team;
@@ -1113,15 +1125,6 @@
      // Sound:
     sound_play(sndGrenade);
     sound_play(sndToxicBarrelGas);
-
-#define CatGrenade_draw
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
-
-#define CatGrenade_hit
-    // nada
-
-#define CatGrenade_wall
-    // nada
 
 
 #define CatHole_step
@@ -1285,6 +1288,23 @@
     }
 
 
+#define VenomFlak_step
+     // effects:
+    if random(3) < current_time_scale
+        with instance_create(x, y, Smoke)
+            depth = other.depth + 1;
+
+     // timeout:
+    time -= current_time_scale;
+    if time <= 0
+        instance_destroy();
+
+#define VenomFlak_draw
+    draw_self();
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+    draw_set_blend_mode(bm_normal);
+
 #define VenomFlak_wall
     move_bounce_solid(false);
     speed = min(speed, 8);
@@ -1340,23 +1360,6 @@
             }
         }
     }
-
-#define VenomFlak_step
-     // effects:
-    if random(3) < current_time_scale
-        with instance_create(x, y, Smoke)
-            depth = other.depth + 1;
-
-     // timeout:
-    time -= current_time_scale;
-    if time <= 0
-        instance_destroy();
-
-#define VenomFlak_draw
-    draw_self();
-    draw_set_blend_mode(bm_add);
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-    draw_set_blend_mode(bm_normal);
 
 
 #define PizzaDrain_step

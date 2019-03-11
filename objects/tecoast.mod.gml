@@ -41,8 +41,8 @@
 #define Creature_draw
     draw_self_enemy();
 
-#define Creature_alrm0
-    alarm0 = 30;
+#define Creature_alrm1
+    alarm1 = 30;
     if instance_exists(Player){
          // finds the nearest wading player
         var _p = noone,
@@ -268,7 +268,7 @@
         }
 
         if(reload <= 0){
-            alarm0 = max(alarm0, 30)
+            alarm1 = max(alarm1, 30)
             wkick = -2;
     		sound_play_hit(sndCrossReload, 0.1);
 
@@ -286,65 +286,6 @@
             if(place_meeting(x + hspeed, y, f)) hspeed *= -0.8;
             if(place_meeting(x, y + vspeed, f)) vspeed *= -0.8;
         }
-    }
-
-#define Diver_alrm0
-    alarm0 = 60 + irandom(30);
-
-     // Shooty Harpoony:
-    if(canshoot){
-        canshoot = false;
-
-		with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
-		    //if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
-		}
-        sound_play(sndCrossbow);
-
-        alarm0 = 20 + random(30);
-		reload = 90 + random(30);
-        wkick = 8;
-    }
-    
-    else{
-        target = instance_nearest(x, y, Player);
-
-        if(target_is_visible()) {
-            var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-
-        	if(target_in_distance(64, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
-        	     // Prepare to Shoot:
-        		if(reload <= 0 && random(2) < 1){
-        		    alarm0 = 12;
-        		    sound_play_pitchvol(sndSniperTarget, 4, 0.8);
-        		    sound_play_pitchvol(sndCrossReload, 0.5, 0.2);
-        		    gunangle = _targetDir;
-        		    canshoot = true;
-        		    wkick = -4;
-        		}
-
-        		 // Reposition:
-        		else{
-        		    alarm0 = 20 + random(30);
-        		    if(random(2) < 1){
-            		    scrWalk(10, _targetDir + choose(-90, 90) + orandom(10));
-            		    gunangle = _targetDir;
-        		    }
-        		}
-        	}
-
-             // Move Away From Target:
-        	else{
-        		alarm0 = 20 + irandom(30);
-        		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
-        		gunangle = _targetDir + orandom(15);
-        	}
-
-        	 // Facing:
-        	scrRight(gunangle);
-        }
-    
-         // Wander:
-        else scrWalk(30, random(360));
     }
 
 #define Diver_draw
@@ -367,6 +308,68 @@
     if(gunangle >  180 && ("wading" not in self || wading <= 0)){
         Diver_draw_wep();
     }
+
+#define Diver_alrm1
+    alarm1 = 60 + irandom(30);
+
+     // Shooty Harpoony:
+    if(canshoot){
+        canshoot = false;
+
+		with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
+		    //if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
+		}
+        sound_play(sndCrossbow);
+
+        alarm1 = 20 + random(30);
+		reload = 90 + random(30);
+        wkick = 8;
+    }
+    
+    else{
+        target = instance_nearest(x, y, Player);
+
+        if(target_is_visible()) {
+            var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+
+        	if(target_in_distance(64, 320) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
+        	     // Prepare to Shoot:
+        		if(reload <= 0 && random(2) < 1){
+        		    alarm1 = 12;
+        		    sound_play_pitchvol(sndSniperTarget, 4, 0.8);
+        		    sound_play_pitchvol(sndCrossReload, 0.5, 0.2);
+        		    gunangle = _targetDir;
+        		    canshoot = true;
+        		    wkick = -4;
+        		}
+
+        		 // Reposition:
+        		else{
+        		    alarm1 = 20 + random(30);
+        		    if(random(2) < 1){
+            		    scrWalk(10, _targetDir + choose(-90, 90) + orandom(10));
+            		    gunangle = _targetDir;
+        		    }
+        		}
+        	}
+
+             // Move Away From Target:
+        	else{
+        		alarm1 = 20 + irandom(30);
+        		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
+        		gunangle = _targetDir + orandom(15);
+        	}
+
+        	 // Facing:
+        	scrRight(gunangle);
+        }
+    
+         // Wander:
+        else scrWalk(30, random(360));
+    }
+
+#define Diver_death
+    pickup_drop(20, 0);
 
 #define Diver_draw_wep
      // Bolt:
@@ -414,9 +417,6 @@
     }
     if(instance_is(self, CustomDraw)) instance_destroy();
 
-#define Diver_death
-    pickup_drop(20, 0);
-
 
 #define DiverHarpoon_end_step
      // Trail:
@@ -429,6 +429,10 @@
         image_xscale = point_distance(_x1, _y1, _x2, _y2);
         image_angle = point_direction(_x1, _y1, _x2, _y2);
     }
+
+#define DiverHarpoon_anim
+    image_speed = 0;
+    image_index = image_number - 1;
 
 #define DiverHarpoon_alrm0
     instance_destroy();
@@ -459,13 +463,14 @@
         alarm0 = 30;
     }
 
-#define DiverHarpoon_anim
-    image_speed = 0;
-    image_index = image_number - 1;
 
+#define Gull_draw
+    if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
+    draw_self_enemy();
+    if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 
-#define Gull_alrm0
-    alarm0 = 40 + irandom(30);
+#define Gull_alrm1
+    alarm1 = 40 + irandom(30);
     target = instance_nearest(x, y, Player);
     if(target_is_visible()){
         var _targetDir = point_direction(x, y, target.x, target.y);
@@ -474,14 +479,14 @@
     	if(target_in_distance(10, 480)){
     	     // Attack:
     		if(target_in_distance(10, 60)){
-    			alarm1 = 8;
+    			alarm2 = 8;
     			instance_create(x, y, AssassinNotice);
                 sound_play_pitch(sndRavenScreech, 1.15 + random(0.1));
     		}
 
              // Move Toward Target:
     		else{
-    		    alarm0 = 40 + irandom(10);
+    		    alarm1 = 40 + irandom(10);
         		walk = 20 + irandom(15);
         		direction = _targetDir + orandom(20);
         		gunangle = direction + orandom(15);
@@ -490,7 +495,7 @@
 
          // Move Toward Target:
     	else{
-    		alarm0 = 30 + irandom(10);
+    		alarm1 = 30 + irandom(10);
     		walk = 10 + irandom(20);
     		direction = _targetDir + orandom(20);
     		gunangle = direction + orandom(15);
@@ -508,7 +513,7 @@
     	scrRight(direction);
     }
 
-#define Gull_alrm1
+#define Gull_alrm2
      // Slash:
     gunangle = point_direction(x, y, target.x, target.y) + orandom(10);
     with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 2;
@@ -519,11 +524,6 @@
     motion_add(gunangle, 4);
     sound_play(sndChickenSword);
     scrRight(gunangle);
-
-#define Gull_draw
-    if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
-    draw_self_enemy();
-    if(gunangle > 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 
 
 #define Palanking_step
@@ -792,41 +792,6 @@
         mask_index = mskNone;
     }
 
-#macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
-
-#define seal_exists(_palanking, _inst)
-    return (instance_exists(_palanking) && array_find_index(_palanking.seal, _inst) >= 0);
-
-#define seal_add(_palanking, _inst)
-    with(_palanking){
-         // Generate Hold Positions:
-        if(array_length(seal) != seal_max){
-            seal = array_create(seal_max, noone);
-
-             // Manual Placement:
-            if(seal_max <= 4){
-                seal_x = [33.5, -33.5, 30.5, -30.5];
-                seal_y = [16, 16, 28, 28];
-            }
-
-             // Auto-Placement:
-            else{
-                seal_x = [];
-                var o = 33.5;
-                for(var i = 0; i < seal_max; i++){
-                    var a = ((floor(i / 2) + 1) * (180 / (ceil(seal_max / 2) + 1))) - 90;
-                    seal_x[i] = lengthdir_x(o, a)
-                    seal_y[i] = 16 + (lengthdir_y(o, a) / 2);
-                    o *= -1;
-                }
-            }
-        }
-
-         // Add Seal:
-        var p = max(array_find_index(seal, noone), 0);
-        seal[p] = _inst;
-    }
-
 #define Palanking_end_step
     with(seal) if(instance_exists(self) && hold){
         x = other.x + hold_x;
@@ -837,6 +802,22 @@
         vspeed = other.vspeed;
         depth = other.depth + (0.1 * dsin(point_direction(0, 24, hold_x, hold_y)));
     }
+
+#define Palanking_draw
+    var h = ((nexthurt > current_frame + 3 && active) || (sprite_index == spr_hurt && image_index < 1));
+
+     // Palanquin Bottom:
+    if(z > 4 || place_meeting(x, y, Floor)){
+        if(h) d3d_set_fog(1, c_white, 0, 0);
+        draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+        if(h) d3d_set_fog(0, 0, 0, 0);
+    }
+
+     // Self:
+    h = (h && sprite_index != spr_hurt);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define Palanking_alrm0
     if(intro_pan <= 0 && seal_group <= 0){
@@ -1114,26 +1095,6 @@
      // Effects:
     sound_play(sndHammer);
 
-#define scrSealSpawn(_xstart, _ystart, _dir, _delay)
-    alarm3 = _delay;
-    seal_spawn = seal_max;
-
-     // Find Spawn Location:
-    seal_spawn_x = _xstart;
-    seal_spawn_y = _ystart;
-    var _dis = 40 + random(16);
-    if(instance_exists(Floor)){
-        with(instance_create(_xstart, _ystart, GameObject)){
-            while(distance_to_object(Floor) < _dis + 8 || distance_to_object(prop) < 32){
-                x += lengthdir_x(12, _dir);
-                y += lengthdir_y(12, _dir);
-            }
-            other.seal_spawn_x = x;
-            other.seal_spawn_y = y;
-            instance_destroy();
-        }
-    }
-
 #define Palanking_hurt(_hitdmg, _hitvel, _hitdir)
     nexthurt = current_frame + 6;	// I-Frames
     if(active){
@@ -1172,22 +1133,6 @@
         }
     }
 
-#define Palanking_draw
-    var h = ((nexthurt > current_frame + 3 && active) || (sprite_index == spr_hurt && image_index < 1));
-
-     // Palanquin Bottom:
-    if(z > 4 || place_meeting(x, y, Floor)){
-        if(h) d3d_set_fog(1, c_white, 0, 0);
-        draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-        if(h) d3d_set_fog(0, 0, 0, 0);
-    }
-
-     // Self:
-    h = (h && sprite_index != spr_hurt);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-    if(h) d3d_set_fog(0, 0, 0, 0);
-
 #define Palanking_death
      // Epic Death:
     with(obj_create(x, y, "PalankingDie")){
@@ -1209,10 +1154,72 @@
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);
 
+#macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
+
+#define scrSealSpawn(_xstart, _ystart, _dir, _delay)
+    alarm3 = _delay;
+    seal_spawn = seal_max;
+
+     // Find Spawn Location:
+    seal_spawn_x = _xstart;
+    seal_spawn_y = _ystart;
+    var _dis = 40 + random(16);
+    if(instance_exists(Floor)){
+        with(instance_create(_xstart, _ystart, GameObject)){
+            while(distance_to_object(Floor) < _dis + 8 || distance_to_object(prop) < 32){
+                x += lengthdir_x(12, _dir);
+                y += lengthdir_y(12, _dir);
+            }
+            other.seal_spawn_x = x;
+            other.seal_spawn_y = y;
+            instance_destroy();
+        }
+    }
+
+#define seal_exists(_palanking, _inst)
+    return (instance_exists(_palanking) && array_find_index(_palanking.seal, _inst) >= 0);
+
+#define seal_add(_palanking, _inst)
+    with(_palanking){
+         // Generate Hold Positions:
+        if(array_length(seal) != seal_max){
+            seal = array_create(seal_max, noone);
+
+             // Manual Placement:
+            if(seal_max <= 4){
+                seal_x = [33.5, -33.5, 30.5, -30.5];
+                seal_y = [16, 16, 28, 28];
+            }
+
+             // Auto-Placement:
+            else{
+                seal_x = [];
+                var o = 33.5;
+                for(var i = 0; i < seal_max; i++){
+                    var a = ((floor(i / 2) + 1) * (180 / (ceil(seal_max / 2) + 1))) - 90;
+                    seal_x[i] = lengthdir_x(o, a)
+                    seal_y[i] = 16 + (lengthdir_y(o, a) / 2);
+                    o *= -1;
+                }
+            }
+        }
+
+         // Add Seal:
+        var p = max(array_find_index(seal, noone), 0);
+        seal[p] = _inst;
+    }
+
 
 #define PalankingDie_step
     z_engine();
     if(z <= 0) instance_destroy();
+
+#define PalankingDie_draw
+    var h = (image_index < 1);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    draw_sprite_ext(spr.PalankingBott, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
+    if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define PalankingDie_destroy
     sound_play_pitchvol(sndWallBreakRock, 0.8, 0.8);
@@ -1250,13 +1257,6 @@
      // Pickups:
     repeat(3) pickup_drop(50, 0);
 	scrRadDrop(x, y + 16, raddrop, direction, speed);
-
-#define PalankingDie_draw
-    var h = (image_index < 1);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
-    draw_sprite_ext(spr.PalankingBott, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
-    if(h) d3d_set_fog(0, 0, 0, 0);
 
 
 #define Palm_step
@@ -1304,11 +1304,19 @@
         }
     }
 
-#define Pelican_alrm0
-    alarm0 = 40 + random(20); // 1-2 Seconds
+#define Pelican_draw
+    var _charge = max(alarm2, 0),
+        _angOff = sign(wepangle) * (60 * (_charge / chrg_time));
+
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
+#define Pelican_alrm1
+    alarm1 = 40 + random(20); // 1-2 Seconds
 
      // Flash (About to attack):
-    if(alarm1 >= 0){
+    if(alarm2 >= 0){
         var _dis = 18,
             _ang = gunangle + wepangle;
 
@@ -1324,9 +1332,9 @@
         var _targetDir = point_direction(x, y, target.x, target.y);
 
          // Attack:
-        if(((target_in_distance(0, 128) && random(3) < 2) || random(my_health) < 1) && alarm1 < 0){
-            alarm1 = chrg_time;
-            alarm0 = alarm1 - 10;
+        if(((target_in_distance(0, 128) && random(3) < 2) || random(my_health) < 1) && alarm2 < 0){
+            alarm2 = chrg_time;
+            alarm1 = alarm2 - 10;
 
              // Move away a tiny bit:
             scrWalk(5, _targetDir + 180 + orandom(10));
@@ -1346,12 +1354,12 @@
 
      // Passive Movement:
     else{
-        alarm0 = 90 + random(30); // 3-4 Seconds
+        alarm1 = 90 + random(30); // 3-4 Seconds
         scrWalk(10 + random(5), random(360));
     }
 
-#define Pelican_alrm1
-    alarm0 = 40 + random(20);
+#define Pelican_alrm2
+    alarm1 = 40 + random(20);
 
      // Dash:
     dash = 12;
@@ -1371,14 +1379,6 @@
     sound_play(sndEnergyHammer);
     sound_play_pitch(sndHammer, 0.75);
     sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
-
-#define Pelican_draw
-    var _charge = ((alarm1 > 0) ? alarm1 : 0),
-        _angOff = sign(wepangle) * (60 * (_charge / chrg_time));
-
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
 
 #define Pelican_death
     pickup_drop(80, 0);
@@ -1422,7 +1422,7 @@
     switch(type){
         case seal_hookpole:
              // About to Stab:
-            if(alarm1 > 0) wkick += 2 * current_time_scale;
+            if(alarm2 > 0) wkick += 2 * current_time_scale;
 
              // Decrease wkick Faster:
             else if(wkick < 0){
@@ -1523,7 +1523,7 @@
 
         case seal_blunderbuss:
              // Powder Smoke:
-            if(alarm1 > 0 && current_frame_active){
+            if(alarm2 > 0 && current_frame_active){
                 sound_play(asset_get_index(`sndFootPlaSand${1 + irandom(5)}`));
                 with(instance_create(x, y, Smoke)){
                     motion_set(other.gunangle + (other.right * 120) + orandom(20), 1 + random(1));
@@ -1560,8 +1560,74 @@
 #macro surfClamShieldX x - (surfClamShieldW / 2)
 #macro surfClamShieldY y - (surfClamShieldH / 2)
 
-#define Seal_alrm0
-    alarm0 = 30 + random(30);
+#define Seal_draw
+    var _drawWep = (sprite_index != spr_spwn || image_index > 2);
+
+     // Sliding Visuals:
+    if(slide > 0){
+        var _lastAng = image_angle,
+            _lastY = y;
+
+        image_angle = direction - 90;
+        y += 2;
+    }
+
+     // Item on Back:
+    if(type == seal_shield && _drawWep){
+         // Back Dagger:
+        if(shield){
+            draw_sprite_ext(spr_weap, 0, x + 2 - (8 * right), y - 16, 1, 1, 270 + (right * 25), c_white, image_alpha);
+        }
+
+         // Back Shield:
+        else if(surface_exists(surfClamShield)){
+            var _surfx = surfClamShieldX,
+                _surfy = surfClamShieldY + 16;
+
+            d3d_set_fog(1, c_black, 0, 0);
+            for(var a = 0; a < 360; a += 90){
+                draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
+            }
+            d3d_set_fog(0, 0, 0, 0);
+            draw_surface(surfClamShield, _surfx, _surfy);
+        }
+    }
+
+     // Self Behind:
+    if(gunangle >  180) draw_self_enemy();
+
+    if(_drawWep){
+         // 3D Shield + Auto-Outline:
+        if(type == seal_shield && shield){
+            if(surface_exists(surfClamShield)){
+                var _surfx = surfClamShieldX,
+                    _surfy = surfClamShieldY + 5;
+
+                d3d_set_fog(1, c_black, 0, 0);
+                for(var a = 0; a < 360; a += 90){
+                    draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
+                }
+                d3d_set_fog(0, 0, 0, 0);
+
+                draw_surface(surfClamShield, _surfx, _surfy);
+            }
+        }
+
+         // Weapon:
+        else draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
+    }
+
+     // Self:
+    if(gunangle <= 180) draw_self_enemy();
+
+     // Reset Vars:
+    if(slide > 0){
+        image_angle = _lastAng;
+        y = _lastY;
+    }
+
+#define Seal_alrm1
+    alarm1 = 30 + random(30);
 
     trident_dist = 0;
 
@@ -1572,7 +1638,7 @@
          // Seal Types:
         switch(type){
             case seal_hookpole:
-                alarm0 = 10 + random(15);
+                alarm1 = 10 + random(15);
 
                  // Too Close:
                 if(target_in_distance(0, 20)){
@@ -1583,8 +1649,8 @@
                     if(random(5) < 4){
                          // Attack:
                         if(target_in_distance(0, 70)){
-                            alarm0 = 30;
-                            alarm1 = 10;
+                            alarm1 = 30;
+                            alarm2 = 10;
                             trident_dist = point_distance(x, y, target.x, target.y) - 24;
                         }
 
@@ -1605,14 +1671,14 @@
 
             case seal_shield:
                 if(shield){
-                    alarm0 = 15 + random(5);
+                    alarm1 = 15 + random(5);
                     if(target_in_distance(0, 80) && wkick == 0){
                         scrWalk(4 + random(4), _targetDir + orandom(10));
 
                          // Dagger Time:
                         shield = false;
                         shield_draw = true;
-                        alarm0 = 20;
+                        alarm1 = 20;
 
                          // Swap FX:
                         var o = 8;
@@ -1626,7 +1692,7 @@
 
                  // Sword Stabby Mode:
                 else{
-                    alarm0 = 20 + random(10);
+                    alarm1 = 20 + random(10);
                     if(target_in_distance(0, 120)){
                         scrWalk(5 + random(5), _targetDir + choose(0, 0, 180) + orandom(20));
 
@@ -1671,17 +1737,17 @@
                 if(target_in_distance(0, 80)){
                     direction = _targetDir + 180;
                     slide = 15;
-                    alarm0 = slide + random(10);
+                    alarm1 = slide + random(10);
                 }
 
                  // Good Distance Away:
                 else{
                      // Aim & Ignite Powder:
                     if(target_in_distance(0, 192) && random(3) < 2){
-                        alarm0 = alarm1 + 90;
+                        alarm1 = alarm1 + 90;
 
                         gunangle = _targetDir;
-                        alarm1 = 15;
+                        alarm2 = 15;
 
                          // Effects:
                         sound_play_pitchvol(sndEmpty, 2.5, 0.5);
@@ -1711,7 +1777,7 @@
                         if(point_distance(x, y, target.x, target.y) < 120 || random(array_length(instances_named(object_index, name))) < 2){
                             scrWalk(20 + random(10), _targetDir + 180 + orandom(50));
                             if(random(3) < 1) slide = walk - 5;
-                            alarm0 = walk;
+                            alarm1 = walk;
                         }
                         else{
                             scrWalk(5 + random(5), random(360));
@@ -1749,10 +1815,10 @@
      // Passive Movement:
     else{
         scrWalk(5 + random(20), random(360));
-        alarm0 += walk;
+        alarm1 += walk;
     }
 
-#define Seal_alrm1
+#define Seal_alrm2
     switch(type){
         case seal_hookpole:
              // Hookpole Stabby:
@@ -1823,72 +1889,6 @@
                 }
             }
         }
-    }
-
-#define Seal_draw
-    var _drawWep = (sprite_index != spr_spwn || image_index > 2);
-
-     // Sliding Visuals:
-    if(slide > 0){
-        var _lastAng = image_angle,
-            _lastY = y;
-
-        image_angle = direction - 90;
-        y += 2;
-    }
-
-     // Item on Back:
-    if(type == seal_shield && _drawWep){
-         // Back Dagger:
-        if(shield){
-            draw_sprite_ext(spr_weap, 0, x + 2 - (8 * right), y - 16, 1, 1, 270 + (right * 25), c_white, image_alpha);
-        }
-
-         // Back Shield:
-        else if(surface_exists(surfClamShield)){
-            var _surfx = surfClamShieldX,
-                _surfy = surfClamShieldY + 16;
-
-            d3d_set_fog(1, c_black, 0, 0);
-            for(var a = 0; a < 360; a += 90){
-                draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
-            }
-            d3d_set_fog(0, 0, 0, 0);
-            draw_surface(surfClamShield, _surfx, _surfy);
-        }
-    }
-
-     // Self Behind:
-    if(gunangle >  180) draw_self_enemy();
-
-    if(_drawWep){
-         // 3D Shield + Auto-Outline:
-        if(type == seal_shield && shield){
-            if(surface_exists(surfClamShield)){
-                var _surfx = surfClamShieldX,
-                    _surfy = surfClamShieldY + 5;
-
-                d3d_set_fog(1, c_black, 0, 0);
-                for(var a = 0; a < 360; a += 90){
-                    draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
-                }
-                d3d_set_fog(0, 0, 0, 0);
-
-                draw_surface(surfClamShield, _surfx, _surfy);
-            }
-        }
-
-         // Weapon:
-        else draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
-    }
-
-     // Self:
-    if(gunangle <= 180) draw_self_enemy();
-
-     // Reset Vars:
-    if(slide > 0){
-        image_angle = _lastAng;
-        y = _lastY;
     }
 
 #define Seal_death
@@ -2026,7 +2026,7 @@
         }
 
         else{
-            if(alarm0 < 20) sprite_index = spr_chrg;
+            if(alarm1 < 20) sprite_index = spr_chrg;
 
              // Stop Spinning:
             if(anchor_retract){
@@ -2100,8 +2100,8 @@
                     image_angle += other.my_mine_spin / 3;
 
                      // Starting to Toss:
-                    if(other.alarm0 < 5){
-                        z = sqr(5 - other.alarm0);
+                    if(other.alarm1 < 5){
+                        z = sqr(5 - other.alarm1);
                         zspeed = 0;
                     }
 
@@ -2120,7 +2120,7 @@
                 with(instances_named(CustomHitme, "SealMine")){
                     if(place_meeting(x, y, other)){
                         with(other){
-                            alarm0 = 20;
+                            alarm1 = 20;
                             my_mine = other;
                             my_mine_ang = point_direction(x, y, other.x, other.y);
                             scrRight(my_mine_ang);
@@ -2143,8 +2143,24 @@
         }
     }
 
-#define SealHeavy_alrm0
-    alarm0 = 90 + random(30);
+#define SealHeavy_draw
+    var _drawWep = (sprite_index != spr_spwn || image_index > 2);
+
+     // Back Anchor:
+    if(!anchor_swap && _drawWep){
+        draw_sprite_ext(spr_weap, 0, x + right, y + 6, 1, 1, 90 + (right * 30), image_blend, image_alpha);
+    }
+
+    if(gunangle >  180) draw_self_enemy();
+
+    if(anchor_swap && _drawWep && !instance_exists(anchor)){
+        draw_weapon(spr_weap, x, y, gunangle, 0, wkick, 1, image_blend, image_alpha);
+    }
+
+    if(gunangle <= 180) draw_self_enemy();
+
+#define SealHeavy_alrm1
+    alarm1 = 90 + random(30);
 
     target = instance_nearest(x, y, Player);
 
@@ -2171,7 +2187,7 @@
         if(anchor_spin != 0){
              // Throw Out Anchor:
             if(!instance_exists(anchor)){
-                alarm0 = 60;
+                alarm1 = 60;
                 anchor = scrEnemyShoot("SealAnchor", gunangle, 0);
                 anchor_throw = 8;
                 if(instance_exists(target)) direction = point_direction(x, y, target.x, target.y);
@@ -2185,7 +2201,7 @@
 
              // Retract Anchor:
             else{
-                alarm0 = 120 + random(30);
+                alarm1 = 120 + random(30);
                 anchor_retract = true;
             }
         }
@@ -2200,7 +2216,7 @@
             if(my_mine == noone){
                  // Pick Up Mine:
                 if(distance_to_object(Floor) > 24 && random(4) < 3){
-                    alarm0 = 20;
+                    alarm1 = 20;
                     gunangle = _targetDir;
                     my_mine = obj_create(x, y, "SealMine");
                     my_mine_ang = gunangle;
@@ -2215,7 +2231,7 @@
                 else{
                      // Start Spinning Anchor:
                     if((target_in_distance(0, 180) && random(4) < 3) || target_in_distance(0, 100)){
-                        alarm0 = 45;
+                        alarm1 = 45;
                         gunangle = _targetDir;
                         anchor_spin = choose(-1, 1) * 5;
                         sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
@@ -2227,7 +2243,7 @@
                     }
 
                      // Walk Closer:
-                    else alarm0 = 30 + random(30);
+                    else alarm1 = 30 + random(30);
                     scrWalk(8 + random(16), _targetDir + orandom(30));
                 }
             }
@@ -2235,7 +2251,7 @@
              // Holding Mine:
             else{
                 if(instance_exists(my_mine)){
-                    alarm0 = 20;
+                    alarm1 = 20;
 
                     if(target_in_distance(0, 144)){
                          // Too Close:
@@ -2268,22 +2284,6 @@
          // Passive Movement:
         else scrWalk(5, random(360));
     }
-
-#define SealHeavy_draw
-    var _drawWep = (sprite_index != spr_spwn || image_index > 2);
-
-     // Back Anchor:
-    if(!anchor_swap && _drawWep){
-        draw_sprite_ext(spr_weap, 0, x + right, y + 6, 1, 1, 90 + (right * 30), image_blend, image_alpha);
-    }
-
-    if(gunangle >  180) draw_self_enemy();
-
-    if(anchor_swap && _drawWep && !instance_exists(anchor)){
-        draw_weapon(spr_weap, x, y, gunangle, 0, wkick, 1, image_blend, image_alpha);
-    }
-
-    if(gunangle <= 180) draw_self_enemy();
 
 #define SealHeavy_death
     pickup_drop(50, 0);
@@ -2399,10 +2399,10 @@
         image_index = 0;
     }
 
-#define TrafficCrab_alrm0
+#define TrafficCrab_alrm1
      // Spray Venom:
     if(ammo > 0){
-        alarm0 = 2;
+        alarm1 = 2;
         walk = 1;
 
         sound_play(sndOasisCrabAttack);
@@ -2419,7 +2419,7 @@
 
          // End:
         if(--ammo <= 0){
-            alarm0 = 30 + random(20);
+            alarm1 = 30 + random(20);
             sprite_index = spr_idle;
 
              // Move Towards Player:
@@ -2433,7 +2433,7 @@
 
      // Normal AI:
     else{
-        alarm0 = 35 + random(15);
+        alarm1 = 35 + random(15);
         target = instance_nearest(x, y, Player);
 
         if(target_is_visible()){
@@ -2444,7 +2444,7 @@
             if(target_in_distance(0, _max)){
                 scrWalk(1, _targetDir + (sweep_dir * random(90)));
 
-                alarm0 = 1;
+                alarm1 = 1;
                 ammo = 10;
                 gunangle = _targetDir - (sweep_dir * (sweep_spd * (ammo / 2)));
 
@@ -2480,14 +2480,14 @@
 #define TrafficCrabVenom_step
     if(speed <= 0) instance_destroy();
 
+#define TrafficCrabVenom_anim
+    image_speed = 0;
+    image_index = image_number - 1;
+
 #define TrafficCrabVenom_hit
     if(projectile_canhit_melee(other)){
         projectile_hit_push(other, damage, force);
     }
-
-#define TrafficCrabVenom_anim
-    image_speed = 0;
-    image_index = image_number - 1;
 
 #define TrafficCrabVenom_destroy
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;

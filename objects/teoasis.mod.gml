@@ -114,8 +114,8 @@
         }
     }
 
-#define Hammerhead_alrm0
-    alarm0 = 30 + random(20);
+#define Hammerhead_alrm1
+    alarm1 = 30 + random(20);
 
     target = instance_nearest(x, y, Player);
     if(target_in_distance(0, 256)){
@@ -142,7 +142,7 @@
                 charge = 30;
                 charge_wait = 15;
                 charge_dir = _targetDir;
-                alarm0 = charge + charge_wait + random(10);
+                alarm1 = charge + charge_wait + random(10);
                 sound_play_pitchvol(sndHammerHeadEnd, 0.6, 0.25);
             }
 
@@ -159,7 +159,7 @@
         scrWalk(30, direction);
         scrRight(direction);
         rotate = orandom(30);
-        alarm0 += random(walk);
+        alarm1 += random(walk);
     }
 
     scrRight(direction);
@@ -206,8 +206,14 @@
     }
     else if(sprite_index == spr_fire) sprite_index = spr_idle;
 
-#define Puffer_alrm0
-    alarm0 = 20 + random(30);
+#define Puffer_draw
+    var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+    if(h) d3d_set_fog(1, c_white, 0, 0);
+    draw_self_enemy();
+    if(h) d3d_set_fog(0, 0, 0, 0);
+
+#define Puffer_alrm1
+    alarm1 = 20 + random(30);
     target = instance_nearest(x, y, Player);
 
     if(blow <= 0){
@@ -216,7 +222,7 @@
 
              // Puff Time:
             if(target_is_visible() && target_in_distance(0, 256) && random(2) < 1){
-                alarm0 = 30;
+                alarm1 = 30;
 
                 scrWalk(8, _targetDir);
                 scrRight(direction + 180);
@@ -230,7 +236,7 @@
             }
 
              // Get Closer:
-            else scrWalk(alarm0, _targetDir + orandom(20));
+            else scrWalk(alarm1, _targetDir + orandom(20));
         }
 
          // Passive Movement:
@@ -248,12 +254,6 @@
         sprite_index = spr_hurt;
         image_index = 0;
     }
-
-#define Puffer_draw
-    var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
-    draw_self_enemy();
-    if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define Puffer_death
     pickup_drop(30, 0);

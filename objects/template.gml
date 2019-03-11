@@ -10,6 +10,22 @@
      Place it between the mod object code section and scripts section
      Add a '/// Mod Events' comment before that section, like with the scripts section
      Double space the area between that section and the scripts and mod object code sections
+ - I like to order events generally by when and how often they're called:
+    ~ on_begin_step
+    ~ on_step
+    ~ on_end_step
+    ~ on_draw
+    ~ on_anim
+    ~ on_alrm#
+    ~ on_hit
+    ~ on_wall
+    ~ on_grenade
+    ~ on_projectile
+    ~ on_hurt
+    ~ on_death
+    ~ on_destroy
+    ~ on_cleanup
+    ~ Misc. related scripts
 
 Example Code (Ignore extra space before #define here):
  #define Bat_step
