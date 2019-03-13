@@ -2931,6 +2931,26 @@
     }
     UberCont.opt_shake = s;
 
+#define area_get_subarea(_area)
+    if(is_real(_area)){
+         // Secret Areas:
+        if(_area == 106) return 3;
+        if(_area >= 100) return 1;
+
+         // Transition Area:
+        if((_area % 2) == 1) return 3;
+
+        return 1;
+    }
+
+     // Custom Area:
+    var _scrt = "area_subarea";
+    if(mod_script_exists("area", _area, _scrt)){
+        return mod_script_call("area", _area, _scrt);
+    }
+
+    return 0;
+
 #define scrFloorWalls() /// this is gross but dont blame me it runs faster than a for loop which is important
     if(!position_meeting(x - 16, y - 16, Floor)) instance_create(x - 16, y - 16, Wall);
     if(!position_meeting(x,      y - 16, Floor)) instance_create(x,      y - 16, Wall);
@@ -3335,3 +3355,5 @@
         }
     }
     return r;
+
+#define area_

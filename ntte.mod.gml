@@ -478,13 +478,17 @@
 	}
 
      // Big Decals:
-    var _chance = 1/2;
-    if(is_real(GameCont.area)){
-        if(GameCont.area < 100){
-            _chance /= 2;
-            if(GameCont.area & 1) _chance /= 2;
-        }
-    }
+    var _chance = 1/8;
+	if(area_get_subarea(GameCont.area) <= 1){
+		 // Secret Levels:
+		if(is_real(GameCont.area) && GameCont.area >= 100){
+			_chance = 1/2;
+		}
+
+		 // Transition Levels:
+		else _chance = 1/4;
+	}
+
     if(random(1) < _chance){
         var _tries = 1000;
         while(_tries-- > 0){
@@ -2288,3 +2292,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
+#define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
