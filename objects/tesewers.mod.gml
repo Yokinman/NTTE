@@ -327,7 +327,7 @@
     //     }
     // }
 
-#define BatBoss_alrm2
+#define BatBoss_alrm3
 
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:

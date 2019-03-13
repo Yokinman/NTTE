@@ -247,6 +247,7 @@
                         ["Walk",     6, 12,  12, true],
                         ["Hurt",     3, 12,  12, true],
                         ["Dead",     6, 12,  12, true],
+                        ["Feather",  1,  4,   4, true]
                     ];
 
                 Parrot[i] = {};
@@ -260,10 +261,6 @@
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
                 }
             }
-
-             // Parrot Feather:
-            ParrotFeather  = sprite_add("sprites/races/Parrot/sprParrotFeather.png",  1, 4, 4);
-            ParrotBFeather = sprite_add("sprites/races/Parrot/sprParrotBFeather.png", 1, 4, 4);
         //#endregion
 
         //#region PETS

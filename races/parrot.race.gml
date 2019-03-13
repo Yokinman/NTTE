@@ -56,7 +56,7 @@
     image_index = !race_skin_avail(_skin);
 
 #define race_sprite(_spr)  
-    var b = (("bskin" in self) ? bskin : 0);
+    var b = (("bskin" in self) ? real(bskin) : 0);
     switch(_spr){
         case sprMutant1Idle:        return spr.Parrot[b].Idle;
         case sprMutant1Walk:        return spr.Parrot[b].Walk;
@@ -68,7 +68,9 @@
         case sprFishMenuSelected:   return spr.Parrot[b].Walk;
         case sprFishMenuSelect:     return spr.Parrot[b].Dead;
         case sprFishMenuDeselect:   return spr.Parrot[b].Hurt;
+        case sprChickenFeather:     return spr.Parrot[b].Feather;
     }
+    return mskNone;
 
 /// Lock Status
 #define race_avail
@@ -131,10 +133,10 @@
         until !instance_exists(GenCont);
 
          // Starting Feather Ammo:
-        repeat(3) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+        repeat(40) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
             target = other;
             creator = other;
-            if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
+            bskin = other.bskin;
             speed *= 3;
         }
         
@@ -148,41 +150,94 @@
 
 #define step
      /// ACTIVE : Charm
-    if(feather_load <= 0  || usespec > 0 || button_pressed(index, "spec")){
-        var n = 1;
-        if((button_released(index, "spec")) && feather_ammo >= n){
-            feather_ammo -= n;
-            feather_load = n * 10;
+    if(feather_load <= 0){
+        var n = 20;
+        if(feather_ammo >= n || infammo != 0){
+            var _allFeathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "creator", id),
+                _feathers = instances_matching(_allFeathers, "canhold", true);
 
-             // Shooty Charm Feathers:
-            var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-            var c = scrCharm(t, true);
-            c.time += 160 + (skill_get(mut_throne_butt) * 80);
-            
-            repeat(n * 20) {
-                with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-                    creator = other;
-                    target = t;
-                    if(creator.bskin = 1) sprite_index = spr.ParrotBFeather;
+            if(button_check(index, "spec") || usespec > 0){
+                if(array_length(_feathers) <= 0){
+                    if(infammo == 0) feather_ammo -= n;
+                    feather_load = n / 2;
+        
+                     // Shooty Charm Feathers:
+                    //var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
+
+                    //c.time += 160 + (skill_get(mut_throne_butt) * 80);
+                    if(array_length(_allFeathers) > 0){
+                        with(_allFeathers) if(target != other){
+                            with(target){
+                                scrCharm(id, false);
+                            }
+
+                            stick = false;
+                            target = other;
+                            motion_add(random(360), 4);
+                        }
+                    }
+
+                    else{
+                        repeat(n){
+                            with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
+                                creator = other;
+                                bskin = other.bskin;
+                                array_push(_feathers, id);
+                            }
+                        }
+        
+                         // Effects:
+                        sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
+                    }
+
+                    /*with(instances_matching([enemy, RadMaggotChest], "", null)) {
+                        if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
+                            c = scrCharm(self, true);
+                            c.time += 120 + (skill_get(mut_throne_butt) * 60);
+                            
+                            repeat(n * 5) {
+                                var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
+                                f.target = self;
+                                f.creator = other;
+                                f.bskin = other.bskin;
+                            }
+                        }
+                    }*/
                 }
-            }
-            
-            with(instances_matching([enemy, RadMaggotChest], "", null)) {
-                if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
-                    c = scrCharm(self, true);
-                    c.time += 120 + (skill_get(mut_throne_butt) * 60);
-                    
-                    repeat(n * 5) {
-                        var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
-                        f.creator = other;
-                        f.target = self;
-                        if(f.creator.bskin = 1) sprite_index = spr.ParrotBFeather;
+
+                 // Targeting:
+                var r = 40,
+                    _x = mouse_x[index],
+                    _y = mouse_y[index],
+                    _targ = [],
+                    _featherNum = array_length(_feathers);
+
+                with(instance_rectangle(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest])){
+                    if(point_in_circle(x, y, _x, _y, r)){
+                        array_push(_targ, id);
+                        if(array_length(_targ) >= _featherNum) break;
+                    }
+                }
+
+                if(array_length(_targ) <= 0){
+                    with(_feathers) target = other;
+                }
+                else{
+                    var n = 0;
+                    with(_targ){
+                        var i = 0,
+                            _take = max(ceil(_featherNum / array_length(_targ)), 1);
+
+                        while(n < _featherNum && i < _take){
+                            with(_feathers[n]){
+                                target = other;
+                            }
+                            n++;
+                            i++;
+                        }
                     }
                 }
             }
-
-             // Effects:
-            sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
         }
     }
     else feather_load -= current_time_scale;
@@ -197,18 +252,19 @@
                 with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
                     target = other;
                     creator = other;
+                    bskin = other.bskin;
                 }
             }
         }
     }
 
 #define draw
-    if(button_check(index, "spec")){
+    /*if(button_check(index, "spec")){
         draw_text_nt(x, y - 32, string(feather_ammo));
         
         var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
         draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
-    }
+    }*/
 
 
 /// Scripts

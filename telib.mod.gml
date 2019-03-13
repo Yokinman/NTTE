@@ -252,23 +252,35 @@
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
                      // Visual:
-                    sprite_index = spr.ParrotFeather;
+                    //sprite_index = spr.Parrot[0].Feather;
+                    sprite_index = mskNone;
                     depth = -8;
 
                      // Vars:
                     mask_index = mskLaser;
                     creator = noone;
                     target = noone;
+                    bskin = 0;
                     stick = false;
                     stickx = 0;
                     sticky = 0;
                     stick_time = 30;
                     fall = 30 + random(40);
                     rot = orandom(3);
+                    canhold = true;
 
                      // Push:
                     motion_add(random(360), 4 + random(2));
                     image_angle = direction + 135;
+                    
+                     // Spriterize:
+                    if(fork()){
+                        wait 1;
+                        if(instance_exists(self)){
+                            sprite_index = spr.Parrot[bskin].Feather;
+                        }
+                        exit;
+                    }
                 }
                 break;
 

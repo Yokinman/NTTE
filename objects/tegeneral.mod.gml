@@ -1045,7 +1045,7 @@
                 with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
                     target = other;
                     creator = other;
-                    if(target.bskin = 1) sprite_index = spr.ParrotBFeather;
+                    bskin = other.bskin;
                 }
             }
         }
@@ -1057,6 +1057,7 @@
 #define ParrotFeather_step
     speed *= 0.9;
     if(instance_exists(target)){
+         // On Target:
         if(stick){
              // Fall Off:
             if(stick_time <= 0 || !target.charm.charmed){
@@ -1065,48 +1066,82 @@
             }
             else stick_time -= current_time_scale;
         }
+
+         // Flyin Around:
         else{
-             // Fly Towards Enemy:
-            motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
-            image_angle = direction + 135;
+            if(!canhold || !instance_exists(creator) || (!button_check(creator.index, "spec") && creator.usespec <= 0)){
+                canhold = false;
 
-            if(place_meeting(x, y, target) || (target == creator && place_meeting(x, y, Portal))){
-                 // Effects:
-                with(instance_create(x, y, Dust)) depth = other.depth - 1;
-                sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);
-                sound_play_pitchvol(sndChickenThrow, 1 + orandom(0.3), 0.25);
-                sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3), 0.5);
+                 // Fly Towards Enemy:
+                motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
 
-                 // Stick to & Charm Enemy:
-                if(target != creator){
-                    stick = true;
-                    stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
-                    sticky = random(y - target.y);
-                    image_angle = random(360);
-                    speed = 0;
+                if(place_meeting(x, y, target) || (target == creator && place_meeting(x, y, Portal))){
+                     // Effects:
+                    with(instance_create(x, y, Dust)) depth = other.depth - 1;
+                    sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);
+                    sound_play_pitchvol(sndChickenThrow, 1 + orandom(0.3), 0.25);
+                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3), 0.5);
+    
+                     // Stick to & Charm Enemy:
+                    if(target != creator){
+                        stick = true;
+                        stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
+                        sticky = random(y - target.y);
 
-                     // Charm Enemy:
-                    with(target) other.stick_time = charm.time - random(charm.time/2);
+                        image_angle = random(360);
+                        speed = 0;
+    
+                         // Charm Enemy:
+                        scrCharm(target, true).time = 160 + (skill_get(mut_throne_butt) * 80);
+                        with(target) other.stick_time = charm.time - random(charm.time/2);
+                    }
+    
+                     // Player Pickup:
+                    else{
+                        with(creator) feather_ammo++;
+                        //with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
+                        instance_destroy();
+                    }
                 }
+            }
 
-                 // Player Pickup:
-                else{
-                    with(creator) feather_ammo++;
-                    with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
-                    instance_destroy();
-                }
+             // Orbit Enemy:
+            else{
+                var l = 16,
+                    d = point_direction(target.x, target.y, x, y);
+
+                d += 5 * sign(angle_difference(direction, d));
+
+                var _x = target.x + lengthdir_x(l, d),
+                    _y = target.y + lengthdir_y(l, d);
+
+                motion_add(point_direction(x, y, _x, _y) + orandom(60), 1);
+            }
+
+             // Facing:
+            if(instance_exists(self)){
+                image_angle = direction + 135;
             }
         }
     }
 
-     // Fall to Ground:
     else{
-        with(instance_create(x, y, Feather)){
-            sprite_index = other.sprite_index;
-            image_angle = other.image_angle;
-            image_blend = merge_color(other.image_blend, c_black, 0.5);
+        stick = false;
+
+         // Come to papa:
+        if(stick_time > 0 && instance_exists(creator)){
+            target = creator;
         }
-        instance_destroy();
+
+         // Fall to Ground:
+        else{
+            with(instance_create(x, y, Feather)){
+                sprite_index = other.sprite_index;
+                image_angle = other.image_angle;
+                image_blend = merge_color(other.image_blend, c_black, 0.5);
+            }
+            instance_destroy();
+        }
     }
 
 #define ParrotFeather_end_step

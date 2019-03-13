@@ -1817,6 +1817,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             if(!instance_exists(target)) scrCharmTarget();
 
              // Alarms:
+            with(_self){
+                 // Reset Alarms:
+                for(var a = 0; a <= 10; a++){
+                    var _alrm = alarm_get(a);
+                    if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
+                    alarm_set(a, -1);
+                }
+            }
             for(var i = 0; i <= 10; i++){
                  // Custom Alarms:
                 if(alarm[i] > 0){
@@ -1826,7 +1834,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Target Nearest Enemy:
                         scrCharmTarget();
-                        with(instance){
+                        with(_self){
                             target = other.target;
                             var t = target;
 
@@ -1917,6 +1925,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                 var a = "on_alrm" + string(i);
                                 if(a in self){
                                     var _scrt = variable_instance_get(id, a);
+                                    //script_ref_call(_scrt); DO THIS INSTEAD WHEN YAL FIXES IT !!!
                                     if(array_length(_scrt) >= 3){
                                         with(self) mod_script_call_self(_scrt[0], _scrt[1], _scrt[2]);
                                     }
@@ -1942,6 +1951,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 }
                 if(!instance_exists(_self)) break;
             }
+
             if(!instance_exists(_self)) scrCharm(_self, false);
 
             else{
