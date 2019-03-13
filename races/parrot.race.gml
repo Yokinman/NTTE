@@ -151,12 +151,12 @@
 #define step
      /// ACTIVE : Charm
     if(feather_load <= 0){
-        var n = 20;
-        if(feather_ammo >= n || infammo != 0){
+        if(button_check(index, "spec") || usespec > 0){
             var _allFeathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "creator", id),
-                _feathers = instances_matching(_allFeathers, "canhold", true);
+                _feathers = instances_matching(_allFeathers, "canhold", true),
+                n = 20;
 
-            if(button_check(index, "spec") || usespec > 0){
+            if(feather_ammo >= n || infammo != 0 || array_length(_feathers) > 0){
                 if(array_length(_feathers) <= 0){
                     if(infammo == 0) feather_ammo -= n;
                     feather_load = n / 2;

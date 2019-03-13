@@ -3,9 +3,7 @@
 /*  Rules                                                                                           *\
  - All code under a #define should be indented one extra so that it stands out
  - There should be a double space between different object's code
- - If you add a script to telib:
-     Try to add it to all of the '/// Scripts' sections at the end of an object file if possible
-     *Including the template
+ - If you add a script to telib.mod use nttedev.mod to add it to all mod_script_call blocks
  - If you need to add a standard .mod event to handle code, like '#define draw_dark':
      Place it between the mod object code section and scripts section
      Add a '/// Mod Events' comment before that section, like with the scripts section
