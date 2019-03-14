@@ -464,7 +464,7 @@
      // Visual:
     spr_idle = spr.PetOctoIdle;
     spr_walk = spr.PetOctoIdle;
-    spr_hurt = spr.PetOctoIdle;
+    spr_hurt = spr.PetOctoHurt;
 
      // Vars:
     friction = 0.1;
@@ -602,6 +602,14 @@
     scrWalk(10 + random(5), direction + orandom(60));
     return walk + 30;
 
+#define Octo_hurt
+    sprite_index = spr_hurt;
+    image_index = 0;
+
+     // Movin'
+    scrWalk(10, point_direction(other.x, other.y, x, y));
+    scrRight(direction + 180);
+
 
 #define Prism_create
      // Visual:
@@ -682,7 +690,7 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call(   "mod", "telib", "orandom", n);
+#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
@@ -713,3 +721,6 @@
 #define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
+#define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
+#define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
+#define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);

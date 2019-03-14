@@ -6,14 +6,16 @@
 
          // Top Decals:
         TopDecal = {
-            "trench" : sprite_add("sprites/areas/Trench/sprTopDecalTrench.png", 1, 19, 24)
+            "trench" : sprite_add("sprites/areas/Trench/sprTopDecalTrench.png", 2, 19, 24)
         }
+        TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
 
     	 // Big Decals:
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24),
-    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 1, 32, 24),
+    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 8, 32, 24),
     	    "pizza" : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
+    	    "oasis" : sprite_add("sprites/areas/Oasis/sprOasisBigTopDecal.png",   1, 32, 24),
     	    "trench": sprite_add("sprites/areas/Trench/sprTrenchBigTopDecal.png", 1, 32, 24)
     	}
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
@@ -210,6 +212,12 @@
             BigBubble    = sprite_add("sprites/areas/Oasis/sprBigBubble.png",    1, 24, 24);
             BigBubblePop = sprite_add("sprites/areas/Oasis/sprBigBubblePop.png", 4, 24, 24);
 
+             // Fish Freaks:
+            FishFreakIdle = sprite_add("sprites/areas/Oasis/sprFishFreakIdle.png",  6, 12, 12);
+            FishFreakWalk = sprite_add("sprites/areas/Oasis/sprFishFreakWalk.png",  6, 12, 12);
+            FishFreakHurt = sprite_add("sprites/areas/Oasis/sprFishFreakHurt.png",  3, 12, 12);
+            FishFreakDead = sprite_add("sprites/areas/Oasis/sprFishFreakDead.png", 11, 12, 12);
+
              // Hammerhead:
             HammerheadIdle = sprite_add("sprites/enemies/Hammer/sprHammerheadIdle.png",  6, 24, 24);
             HammerheadHurt = sprite_add("sprites/enemies/Hammer/sprHammerheadHurt.png",  3, 24, 24);
@@ -239,23 +247,26 @@
             Parrot = array_create(2);
             for(var i = 0; i < array_length(Parrot); i++){
                 var _sprt = [
-                        ["Loadout",  2, 16,  16, true],
-                        ["Map",      1, 10,  10, true],
-                        ["Portrait", 1, 20, 221, true],
-                        ["Select",   2,  0,   0, false],
-                        ["Idle",     4, 12,  12, true],
-                        ["Walk",     6, 12,  12, true],
-                        ["Hurt",     3, 12,  12, true],
-                        ["Dead",     6, 12,  12, true],
-                        ["Feather",  1,  4,   4, true]
+                        ["Loadout",       2, 16,  16, true],
+                        ["Map",           1, 10,  10, true],
+                        ["Portrait",      1, 20, 221, true],
+                        ["Select",        2,  0,   0, false],
+                        ["Idle",          4, 12,  12, true],
+                        ["Walk",          6, 12,  12, true],
+                        ["Hurt",          3, 12,  12, true],
+                        ["Dead",          6, 12,  12, true],
+                        ["GoSit",         3, 12,  12, true],
+                        ["Sit",           1, 12,  12, true],
+                        ["MenuSelected", 10, 16,  16, false],
+                        ["Feather",       1,  4,   4, true]
                     ];
 
                 Parrot[i] = {};
                 with(_sprt){
                     var _name = self[0],
-                        _img = self[1],
-                        _x = self[2],
-                        _y = self[3],
+                        _img  = self[1],
+                        _x    = self[2],
+                        _y    = self[3],
                         _hasB = self[4];
 
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
@@ -270,17 +281,18 @@
             PetParrotHurt = sprite_add("sprites/pets/Coast/sprPetParrotDodge.png",  3, 12, 12);
 
              // Octopus:
-            PetOctoIdle = sprite_add("sprites/pets/Trench/sprPetOctoIdle.png", 20, 12, 12);
+            PetOctoIdle = sprite_add("sprites/pets/Trench/sprPetOctoIdle.png",  20, 12, 12);
+            PetOctoHurt = sprite_add("sprites/pets/Trench/sprPetOctoDodge.png",  3, 12, 12);
 
              // CoolGuy:
             PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
             PetCoolGuyWalk = sprite_add("sprites/pets/Pizza/sprPetCoolGuyWalk.png",    6, 12, 12);
-            PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);
+            PetCoolGuyHurt = sprite_add("sprites/pets/Pizza/sprPetCoolGuyDodge.png",   3, 12, 12);
 
              // Golden Chest Mimic:
-            PetMimicIdle = sprite_add("sprites/pets/Mansion/sprPetMimicIdle.png",       16, 16, 16);
+            PetMimicIdle = sprite_add("sprites/pets/Mansion/sprPetMimicIdle.png",      16, 16, 16);
             PetMimicWalk = sprite_add("sprites/pets/Mansion/sprPetMimicWalk.png",       6,  16, 16);
-            PetMimicHurt = sprite_add("sprites/pets/Mansion/sprPetMimicHurt.png",       3,  16, 16);
+            PetMimicHurt = sprite_add("sprites/pets/Mansion/sprPetMimicDodge.png",      3,  16, 16);
             PetMimicOpen = sprite_add("sprites/pets/Mansion/sprPetMimicOpen.png",       1,  16, 16);
             PetMimicHide = sprite_add("sprites/pets/Mansion/sprPetMimicHide.png",       1,  16, 16);
 
@@ -322,6 +334,11 @@
             EeliteIdle = sprite_add("sprites/enemies/Eel/sprEelIdleElite.png", 8, 16, 16);
             EeliteHurt = sprite_add("sprites/enemies/Eel/sprEelHurtElite.png", 3, 16, 16);
             EeliteDead = sprite_add("sprites/enemies/Eel/sprEelDeadElite.png", 9, 16, 16);
+
+             // Eel Skeleton (big fat eel edition):
+            EelSkullIdle = sprite_add("sprites/areas/Trench/Props/sprEelSkeletonIdle.png", 1, 24, 24);
+            EelSkullHurt = sprite_add("sprites/areas/Trench/Props/sprEelSkeletonHurt.png", 3, 24, 24);
+            EelSkullDead = sprite_add("sprites/areas/Trench/Props/sprEelSkeletonDead.png", 6, 24, 24);
 
              // Floor Chunks (Pit Squid):
             FloorTrenchBreak = sprite_add("sprites/areas/Trench/sprFloorTrenchBreak.png", 4, 12, 12);
@@ -383,8 +400,13 @@
             msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
 
              // Bat Boss:
-            BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png", 4,  8);
-            VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png", 2, 12, 12);
+            BatBossIdle     = sprite_add("sprites/enemies/BatBoss/sprBigBatIdle.png",           12, 24, 24);
+            BatBossWalk     = sprite_add("sprites/enemies/BatBoss/sprBigBatWalk.png",            8, 24, 24);
+            BatBossHurt     = sprite_add("sprites/enemies/BatBoss/sprBigBatHurt.png",            3, 24, 24);
+            BatBossDead     = sprite_add("sprites/enemies/BatBoss/sprBigBatDead.png",            6, 24, 24);
+            BatBossYell     = sprite_add("sprites/enemies/BatBoss/sprBigBatYell.png",            6, 24, 24);
+            BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png",        4,  8);
+            VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png",             2, 12, 12);
 
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
@@ -399,10 +421,15 @@
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",    4, 16, 16);
 
              // Cat Boss:
-            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png", 1, 4, 7);
+            CatBossIdle = sprite_add("sprites/enemies/CatBoss/sprBigCatIdle.png",   12, 24, 24);
+            CatBossWalk = sprite_add("sprites/enemies/CatBoss/sprBigCatWalk.png",    6, 24, 24);
+            CatBossHurt = sprite_add("sprites/enemies/CatBoss/sprBigCatHurt.png",    3, 24, 24);
+            CatBossDead = sprite_add("sprites/enemies/CatBoss/sprBigCatDead.png",    6, 24, 24);
+            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",  1,  4,  7);
 
              // Door:
             CatDoor         = sprite_add("sprites/areas/Lair/props/sprCatDoor.png",       10, 2, 0);
+            CatDoorDebris   = sprite_add("sprites/areas/Lair/props/sprCatDoorDebris.png",  4, 4, 4);
             msk.CatDoor     = sprite_add("sprites/areas/Lair/props/mskCatDoor.png",        1, 4, 0);
             msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/props/mskCatDoorLOS.png",     1, 4, 0);
             if(fork()){

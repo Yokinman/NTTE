@@ -1182,7 +1182,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         underwater_sound_check = true;
         if(object_index != CustomEnemy){
             if(snd_hurt != -1) snd_hurt = sndOasisHurt;
-            if(snd_dead != -1) snd_hurt = sndOasisDeath;
+            if(snd_dead != -1) snd_dead = sndOasisDeath;
         }
     }
 
@@ -1212,6 +1212,17 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         else waterbubble = false;
     }
 
+     // Fish Freaks:
+    with(instances_matching(Freak, "fish_freak", null)){
+    	fish_freak = true;
+    	spr_idle = spr.FishFreakIdle;
+    	spr_walk = spr.FishFreakWalk;
+    	spr_hurt = spr.FishFreakHurt;
+    	spr_dead = spr.FishFreakDead;
+    	snd_hurt = sndOasisHurt;
+    	snd_dead = sndOasisDeath;
+    }
+
 #define underwater_draw
     instance_destroy();
 
@@ -1233,7 +1244,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             case EliteShielder:
             case PopoFreak:
             case Necromancer:
-            case Freak:
             case FastRat:
             case Rat:
                 spr_bubble = sprPlayerBubble;
@@ -2263,7 +2273,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call(   "mod", "telib", "orandom", n);
+#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
@@ -2293,3 +2303,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
+#define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
+#define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
+#define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);

@@ -175,7 +175,7 @@
 
      // Fix Props:
     if(instance_exists(Floor) && instance_exists(Player)){
-        with(instances_matching(CustomProp, "name", "Kelp", "Vent")){
+        with(instances_matching(CustomProp, "name", "Kelp", "Vent", "EelSkull")){
             if(floor_at(x, y).styleb){
                 var t = 100;
                 while(t-- > 0){
@@ -472,14 +472,19 @@
 
      // Prop Spawns:
     else if(random(16) < 1 && !styleb){
-        var _x = x + 16 + orandom(8),
-            _y = y + 16 + orandom(8);
+        var _x = x + 16,
+            _y = y + 16;
 
-        obj_create(_x, _y, choose("Kelp", "Kelp", "Vent"));
+    	if(random(10) < 1){
+    		obj_create(_x, _y, "EelSkull");
+    	}
+		else{
+        	obj_create(_x + orandom(8), _y + orandom(8), choose("Kelp", "Kelp", "Vent"));
+		}
     }
 
      // Top Decals:
-    if(random(160) < 1){
+    if(random(80) < 1){
         scrTopDecal(x + 16, y + 16, "trench");
     }
 
@@ -757,7 +762,7 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call(   "mod", "telib", "orandom", n);
+#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
@@ -788,3 +793,6 @@
 #define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
+#define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
+#define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
+#define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);

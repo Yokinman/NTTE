@@ -170,6 +170,9 @@
     image_index = 0;
 
 
+#define BatBoss_step
+	Bat_step();
+
 #define BatBoss_draw
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
@@ -1029,16 +1032,31 @@
 
      // Death:
     if(my_health <= 0){
-        sound_play(snd_dead);
+    	for(var i = 0; i < maxp; i++){
+    		if(player_is_local_nonsync(i) && point_seen(x, y, i)){
+        		sound_play_pitchvol(snd_dead, 0.7 + random(0.3), 1.25);
+        		break;
+    		}
+    	}
 
-        repeat(4) with(instance_create(x, y, Shell)){
-            sprite_index = sprDebris102; // Temporary duh
-            image_index = random(image_number);
-            image_speed = 0;
-            motion_add(other.direction + orandom(20), other.speed);
-        }
-        repeat(4) with(instance_create(x, y, Dust)){
-            motion_add(other.direction + orandom(20), other.speed / 2);
+		 // Chunks:
+        repeat(irandom_range(2, 3)){
+        	var l = random(sprite_height / 2),
+        		d = image_angle - 90;
+
+        	with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Shell)){
+	            sprite_index = spr.CatDoorDebris;
+	            image_index = random(image_number);
+	            image_speed = 0;
+
+	            motion_add(other.direction + orandom(20), clamp(other.speed, 6, 16) * random_range(0.4, 0.8));
+	            friction *= 1.5;
+	        }
+
+            with(instance_create(x, y, Dust)){
+	        	motion_add(other.direction + orandom(20), min(other.speed, 10) / 2);
+	        	depth = 1;
+	    	}
         }
 
         instance_destroy();
@@ -1076,7 +1094,8 @@
         }
     }
 
-#define CatDoor_destroy
+#define CatDoor_cleanup
+	surface_destroy(my_surf);
     instance_delete(my_wall);
 
 
@@ -1539,7 +1558,7 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call(   "mod", "telib", "orandom", n);
+#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
@@ -1571,3 +1590,6 @@
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #macro sewers "secret"
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
+#define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
+#define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
+#define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);

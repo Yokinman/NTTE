@@ -10,7 +10,7 @@
         /* script_set modifies a script if it exists, appends script to end of file if not */
         /* script_remove removes a script if it exists */
 
-        script_set(self, "mod", "telib", "area_get_subarea", ["_area"], "return", "");
+        script_set(self, "mod", "telib", "trace_lag", [], "", "");
         //script_remove(self, "obj_create");
     }
 
@@ -37,10 +37,13 @@
     _new = string_rpad(_new, " ", 88);
     _new += string_rpad(_return, " ", 8);
     _new += string_rpad("mod_script_call" + _callType + "(", " ", 19);
-    _new += '"' + _type + '", "' + _name + '", "' + _scrt + '", ';
-    for(var i = 0; i < array_length(_args); i++){
-        if(i > 0) _new += ", ";
-        _new += _args[i];
+    _new += '"' + _type + '", "' + _name + '", "' + _scrt + '"';
+    if(array_length(_args) > 0){
+        _new += ", ";
+        for(var i = 0; i < array_length(_args); i++){
+            if(i > 0) _new += ", ";
+            _new += _args[i];
+        }
     }
     _new += ");"
 

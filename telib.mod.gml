@@ -29,7 +29,7 @@
             		     // Visual:
             		    sprite_index = lq_get(spr.BigTopDecal, a);
             			image_xscale = choose(-1, 1);
-            			image_speed = 0;
+            			image_speed = 0.4;
             			depth = -8;
 
                          // Vars:
@@ -367,8 +367,12 @@
 
                      // Vars:
                     maxhealth = 4;
+                    size = 1;
                 }
                 break;
+
+            case "scrTopDecal":
+                return scrTopDecal(_x, _y, GameCont.area);
         //#endregion
 
         //#region DESERT
@@ -384,7 +388,6 @@
         			spr_shadow = shd24;
         			spr_shadow_y = -1;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			mask_index = mskBandit;
         			depth = -2;
 
@@ -599,7 +602,6 @@
         	        spr_hurt = spr.CreatureHurt;
         	        spr_bott = spr.CreatureBott;
         	        spr_foam = spr.CreatureFoam;
-        	        sprite_index = spr_idle;
         	        image_speed = 0.4;
         	        depth = -3;
 
@@ -635,7 +637,6 @@
         			spr_weap = spr.HarpoonGun;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			depth = -2;
 
         			 // Sound:
@@ -686,7 +687,6 @@
         			spr_weap = spr.GullSword;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			depth = -2;
 
                      // Sound:
@@ -734,7 +734,6 @@
     			    spr_shadow = mskNone;
                     spr_shadow_y = 24;
         			hitid = [spr_idle, "SEAL KING"];
-        			sprite_index = spr_idle;
     			    depth = -3;
 
                      // Sound:
@@ -818,7 +817,7 @@
                      // Vars:
                     mask_index = mskStreetLight;
                     maxhealth = 30;
-                    size = 1;
+                    size = 2;
                     my_enemy = noone;
                     my_enemy_mask = mskNone;
 
@@ -847,7 +846,6 @@
         			spr_shadow = shd32;
         			spr_shadow_y = 6;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			mask_index = mskRhinoFreak;
         			depth = -2;
 
@@ -1038,7 +1036,6 @@
                     spr_fire = spr.CrabFire;
                     spr_shadow = shd48;
                     hitid = [spr_idle, "Traffic Crab"];
-                    sprite_index = spr_idle;
                     mask_index = mskScorpion;
                     depth = -2;
 
@@ -1109,7 +1106,6 @@
         			spr_shadow = shd48;
         			spr_shadow_y = 2;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			depth = -2;
 
                      // Sound:
@@ -1246,7 +1242,6 @@
                     spr_dead = spr.EelDead[c];
                     spr_tell = spr.EelTell[c];
                     spr_shadow = shd24;
-                    sprite_index = spr_idle;
                     image_index = random(image_number - 1);
                     depth = -2;
 
@@ -1278,6 +1273,24 @@
                 }
                 break;
 
+            case "EelSkull":
+                o = instance_create(_x, _y, CustomProp);
+                with(o){
+                     // Visual:
+                    spr_idle = spr.EelSkullIdle;
+                    spr_hurt = spr.EelSkullHurt;
+                    spr_dead = spr.EelSkullDead;
+
+                     // Sound:
+                    snd_hurt = sndOasisHurt;
+                    snd_dead = sndOasisDeath;
+
+                     // Vars:
+                    maxhealth = 50;
+                    size = 2;
+                }
+                break;
+
             case "InkStain":
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
@@ -1302,7 +1315,6 @@
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
-                    sprite_index = spr_idle;
                     depth = -2;
 
                      // Sound:
@@ -1356,15 +1368,16 @@
                     spr_idle = spr.KelpIdle;
                     spr_hurt = spr.KelpHurt;
                     spr_dead = spr.KelpDead;
-                    sprite_index = spr_idle;
-                    image_speed = 0.2;
+                    image_speed = random_range(0.2, 0.3);
+                    depth = -2;
 
                      // Sounds:
                     snd_hurt = sndOasisHurt;
                     snd_dead = sndOasisDeath;
 
                      // Vars:
-                    depth = -2;
+                    maxhealth = 2;
+                    size = 1;
                 }
                 break;
 
@@ -1494,15 +1507,15 @@
                     spr_hurt = spr.VentHurt;
                     spr_dead = spr.VentDead;
                     spr_shadow = mskNone;
-                    sprite_index = spr_idle;
+                    depth = -2;
 
                      // Sounds
                     snd_hurt = sndOasisHurt;
                     snd_dead = sndOasisExplosionSmall;
 
                      // Vars:
-                    depth = -2;
                     maxhealth = 12;
+                    size = 1;
                 }
                 break;
 
@@ -1518,7 +1531,6 @@
                     spr_shadow = shd24;
                     spr_shadow_y = 6;
                     hitid = [spr_idle, _name];
-                    sprite_index = spr_idle;
                     mask_index = mskFreak;
                     depth = -2;
 
@@ -1585,18 +1597,16 @@
                 var o = instance_create(_x, _y, CustomEnemy);
                 with(o){
                      // Visual:
-                    spr_idle = spr.BatIdle;
-                    spr_walk = spr.BatWalk;
-                    spr_hurt = spr.BatHurt;
-                    spr_dead = spr.BatDead;
-                    spr_fire = spr.BatYell;
+                    spr_idle = spr.BatBossIdle;
+                    spr_walk = spr.BatBossWalk;
+                    spr_hurt = spr.BatBossHurt;
+                    spr_dead = spr.BatBossDead;
+                    spr_fire = spr.BatBossYell;
         			spr_weap = spr.BatBossWeap;
-        			spr_shadow = shd48;
+        			spr_shadow = shd64;
+        			spr_shadow_y = 12;
         			hitid = [spr_idle, "BIG BAT"];
-        			mask_index = mskScorpion;
-        			image_xscale = 1.2;
-        			image_yscale = 1.2;
-        			image_blend = merge_color(c_red, c_white, 0.5);
+        			mask_index = mskBanditBoss;
         			depth = -2;
 
                      // Sound:
@@ -1651,7 +1661,6 @@
                     spr_idle = spr.CabinetIdle;
                     spr_hurt = spr.CabinetHurt;
                     spr_dead = spr.CabinetDead;
-                    sprite_index = spr_idle;
 
                      // Sounds:
                     snd_hurt = sndHitMetal;
@@ -1678,7 +1687,6 @@
         			spr_weap = spr.CatWeap;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			mask_index = mskFreak;
         			depth = -2;
 
@@ -1718,18 +1726,16 @@
         	        col = c_green;
 
                      // Visual:
-        			spr_idle = spr.CatIdle;
-        			spr_walk = spr.CatWalk;
-        			spr_hurt = spr.CatHurt;
-        			spr_dead = spr.CatDead;
+        			spr_idle = spr.CatBossIdle;
+        			spr_walk = spr.CatBossWalk;
+        			spr_hurt = spr.CatBossHurt;
+        			spr_dead = spr.CatBossDead;
         			spr_weap = spr.CatBossWeap;
-        			spr_shadow = shd24;
+        			spr_shadow = shd48;
+        			spr_shadow_y = 3;
         			hitid = [spr_idle, bossname];
-        			sprite_index = spr_idle;
-        			mask_index = mskBandit;
+        			mask_index = mskBanditBoss;
         			depth = -2;
-        			image_xscale *= 1.5;
-        			image_yscale *= 1.5
 
                      // Sound:
         			snd_hurt = sndScorpionHit;
@@ -1785,7 +1791,7 @@
 
                      // Sound:
                     snd_hurt = sndHitMetal;
-                    snd_dead = sndGeneratorBreak;
+                    snd_dead = sndStreetLightBreak;
 
         	         // Vars:
         	        mask_index = msk.CatDoor;
@@ -1881,7 +1887,6 @@
                     spr_idle = spr.ChairFrontIdle;
                     spr_hurt = spr.ChairFrontHurt;
                     spr_dead = spr.ChairDead;
-                    sprite_index = spr_idle;
 
                      // Sounds:
                     snd_hurt = sndHitMetal;
@@ -1899,7 +1904,6 @@
                      // Visual:
                     spr_idle = spr.ChairSideIdle;
                     spr_hurt = spr.ChairSideHurt;
-                    sprite_index = spr_idle;
                 }
                 break;
 
@@ -1910,7 +1914,6 @@
                     spr_idle = spr.CouchIdle;
                     spr_hurt = spr.CouchHurt;
                     spr_dead = spr.CouchDead;
-                    sprite_index = spr_idle;
 
                      // Sounds:
                     snd_hurt = sndHitPlant;
@@ -1944,7 +1947,6 @@
                     spr_hurt = spr.TableHurt;
                     spr_dead = spr.TableDead;
                     spr_shadow = shd32;
-                    sprite_index = spr_idle;
                     depth--;
 
                      // Sounds:
@@ -2023,13 +2025,7 @@
                     friction = 0.4;
                     damage = 6;
                     time = 40;
-
-                    on_step = VenomFlak_step;
-                    on_draw = VenomFlak_draw;
-                    on_destroy = VenomFlak_destroy;
-                    on_wall = VenomFlak_wall;
                 }
-                return o;
                 break;
         //#endregion
 
@@ -2062,7 +2058,6 @@
         			spr_shadow_y = 4;
         			mask_index = mskSpider;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			depth = -4;
 
                      // Sound:
@@ -2133,7 +2128,6 @@
         			spr_shadow_y = 2;
         			mask_index = mskMaggot;
         			hitid = [spr_idle, _name];
-        			sprite_index = spr_idle;
         			depth = -2;
 
                      // Sound:
@@ -2157,11 +2151,11 @@
     	//#endregion
 
     	default:
-    		return [/* GENERAL */ "BigDecal", "BubbleBomb", "SuperBubbleBomb", "BubbleExplosion", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool",
+    		return [/* GENERAL */ "BigDecal", "BubbleBomb", "SuperBubbleBomb", "BubbleExplosion", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool", "scrTopDecal",
     		        /* DESERT  */ "BabyScorpion", "BabyScorpionGold", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss",
     		        /* COAST   */ "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        /* OASIS   */ "ClamChest", "Hammerhead", "Puffer", "Crack",
-    		        /* TRENCH  */ "Angler", "Eel", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
+    		        /* TRENCH  */ "Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
     		        /* SEWERS  */ "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaTV", "VenomFlak",
     		        /* CAVES   */ "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"
     		        ];
@@ -2170,7 +2164,7 @@
      /// Auto Assign Things:
     if(instance_exists(o)){
         if(string_pos("Custom", object_get_name(o.object_index)) == 1){
-            var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10", "alrm11"];
+            var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"];
             with(o){
                 var _isEnemy = instance_is(self, CustomEnemy);
 
@@ -2239,8 +2233,13 @@
                                         on_step = _objStep;
 
                                          // Setup Custom NTTE Event Vars:
-                                        ntte_alarm_max = 12;
-                                        if(_isEnemy) ntte_alarm_max = 11;
+                                        ntte_alarm_max = 0;
+                                        for(var i = 0; i <= 10; i++){
+                                            var a = `on_alrm${i}`;
+                                            if(a in self && variable_instance_get(id, a) != null){
+                                                ntte_alarm_max = i + 1;
+                                            }
+                                        }
                                         /*var _set = ["anim"];
                                         with(_set){
                                             var n = "on_ntte_" + self;
@@ -2262,6 +2261,11 @@
                 if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
                     if(my_health == 1) my_health = maxhealth;
                 }
+
+                 // Auto-spr_idle:
+                if(sprite_index == -1 && "spr_idle" in self && instance_is(self, hitme)){
+                    sprite_index = spr_idle;
+                }
             }
         }
     }
@@ -2269,6 +2273,8 @@
     return o;
 
 #define obj_step
+    //trace_lag_bgn(name);
+
      // Step:
     script_ref_call(on_ntte_step);
     if(!instance_exists(self)) exit;
@@ -2289,6 +2295,13 @@
     		}
         }
     }
+
+    //trace_lag_end(name);
+
+#define step
+    //trace("");
+    //trace("Frame", current_frame, "Lag:")
+    //trace_lag();
 
 #define enemy_step_ntte
     if("walk" in self){
@@ -2543,11 +2556,21 @@
         with(instance_create(_x, _y, TopPot)){
             sprite_index = lq_get(spr.TopDecal, _area);
             image_index = irandom(image_number - 1);
+            image_speed = 0;
 
              // Area-Specifics:
             switch(_area){
                 case "trench":
                     right = choose(-1, 1);
+                    image_index = 0;
+
+                     // Water Mine:
+                    if(random(6) < 1 && distance_to_object(Player) > 128){
+                        image_index = 1;
+                        with(script_bind_step(TopDecalWaterMine_step, 0)){
+                            creator = other;
+                        }
+                    }
                     break;
             }
 
@@ -2555,6 +2578,23 @@
         }
     }
     return noone;
+
+#define TopDecalWaterMine_step
+    if(instance_exists(creator)){
+        x = creator.x;
+        y = creator.y;
+    }
+    else{
+        with(instance_create(x, y, WaterMine)){
+            my_health = 0;
+            spr_dead = spr.TopDecalMine;
+            with(instances_meeting(x, y, Wall)){
+                instance_create(x, y, FloorExplo);
+                instance_destroy();
+            }
+        }
+        instance_destroy();
+    }
 
 #define scrWaterStreak(_x, _y, _dir, _spd)
     with(instance_create(_x, _y, AcidStreak)){
@@ -2726,6 +2766,18 @@
         o = _ext;
 
     return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - o), "bbox_left", _vx + game_width + o), "bbox_bottom", _vy - o), "bbox_top", _vy + game_height + o);
+
+#define instances_meeting(_x, _y, _obj)
+    var _tx = x,
+        _ty = y;
+
+    x = _x;
+    y = _y;
+    var r = instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom);
+    x = _tx;
+    y = _ty;
+
+    return r;
 
 #define instance_random(_obj)
 	if(is_array(_obj) || instance_exists(_obj)){
@@ -3356,4 +3408,39 @@
     }
     return r;
 
-#define area_
+#define trace_lag()
+    if(mod_variable_exists("mod", mod_current, "lag")){
+        for(var i = 0; i < array_length(global.lag); i++){
+            var _name = lq_get_key(global.lag, i),
+                _total = string(lq_get_value(global.lag, i).total),
+                _str = "";
+
+            while(string_length(_total) > 0){
+                var p = string_length(_total) - 3;
+                _str = string_delete(_total, 1, p) + " " + _str;
+                _total = string_copy(_total, 1, p);
+            }
+
+            trace(_name + ":", _str + "us");
+        }
+    }
+    global.lag = {};
+
+#define trace_lag_bgn(_name)
+    _name = string(_name);
+    if(!lq_exists(global.lag, _name)){
+        lq_set(global.lag, _name, {
+            timer : 0,
+            total : 0
+        });
+    }
+    with(lq_get(global.lag, _name)){
+        timer = get_timer_nonsync();
+    }
+
+#define trace_lag_end(_name)
+    var _timer = get_timer_nonsync();
+    with(lq_get(global.lag, string(_name))){
+        total += (_timer - timer);
+        timer = _timer;
+    }
