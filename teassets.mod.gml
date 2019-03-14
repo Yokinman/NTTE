@@ -563,7 +563,7 @@
         var _path = SavePath;
         wait file_load(_path);
 
-        if(file_loaded(_path)){
+        if(file_loaded(_path) && file_exists(_path)){
             var _save = json_decode(string_load(_path));
             if(_save != json_error){
                 for(var i = 0; i < lq_size(_save); i++){
@@ -587,6 +587,13 @@
 #macro opt sav.option
 
 #macro SavePath "save.sav"
+
+#define step
+     // Autosave:
+    with(instances_matching(GameCont, "ntte_autosave", null)){
+        string_save(json_encode(sav), SavePath);
+        ntte_autosave = true;
+    }
 
 #define cleanup
      // Save Save:
