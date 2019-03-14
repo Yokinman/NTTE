@@ -2165,6 +2165,7 @@
     if(instance_exists(o)){
         if(string_pos("Custom", object_get_name(o.object_index)) == 1){
             var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"];
+            if(!instance_is(o, CustomEnemy)) array_push(_scrt, "alrm11");
             with(o){
                 var _isEnemy = instance_is(self, CustomEnemy);
 
