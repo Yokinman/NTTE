@@ -19,10 +19,10 @@
                     switch(other.object_index){
                         case BigWeaponChest:
                         case BigCursedChest:
-                            num = 32; break;
+                            num = 24; break;
                         case GiantWeaponChest:
                         case GiantAmmoChest:
-                            num = 64; break;
+                            num = 72; break;
                     }
                 }
             }
@@ -134,7 +134,7 @@
         until !instance_exists(GenCont);
 
          // Starting Feather Ammo:
-        repeat(16) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+        repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
             target = other;
             creator = other;
             bskin = other.bskin;

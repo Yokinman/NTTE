@@ -1042,7 +1042,7 @@
         var t = instances_matching(Player, "race", "parrot");
         if(array_length(t) > 0 && num > 0){
             with(t) repeat(other.num){
-                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
+                with(obj_create(other.x + orandom(16), other.y + orandom(16), "ParrotFeather")){
                     target = other;
                     creator = other;
                     bskin = other.bskin;
@@ -1136,10 +1136,12 @@
     }
 
     else{
-        stick = false;
+        if(instance_exists(creator) && !stick){
+            target = creator;
+        }
 
          // Come to papa:
-        if(false && stick_time > 0 && instance_exists(creator)){
+        else if(false && stick_time > 0 && instance_exists(creator)){
             target = creator;
             trace(1, id, current_frame);
         }
