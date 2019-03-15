@@ -2468,6 +2468,7 @@
             "instance"  : _instance,
             "charmed"   : false,
             "target"    : noone,
+            "index"		: -1,
             "alarm"     : [],
             "team"      : -1,
             "time"      : 0,
@@ -2502,6 +2503,7 @@
              // Uncharm:
             else{
                 charm.time = 0;
+                charm.index = -1;
                 if("nexthurt" in self){
                 	nexthurt = current_frame + 12;
                 }
