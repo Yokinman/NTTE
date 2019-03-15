@@ -1064,9 +1064,16 @@
             if(stick_time <= 0 || !target.charm.charmed){
                 target = noone;
                 stick_time = 0;
-                if(random(4) < 1) sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
+                if(random(4) < 1){
+                    sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
+                }
             }
-            else stick_time -= current_time_scale;
+            else{
+                var n = instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true);
+                if(n[0] == id){
+                    stick_time -= current_time_scale;
+                }
+            }
         }
 
          // Flyin Around:
@@ -1098,17 +1105,15 @@
                         speed = 0;
 
                          // Charm Enemy:
-                        var a = 40 + (20 * skill_get(mut_throne_butt));
+                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
                         with(scrCharm(target, true)){
-                            index = other.creator.index;
-                            time += a;
+                            if("index" in other.creator){
+                                index = other.creator.index;
+                            }
+                            if(_wasUncharmed || time > 0){
+                                time += max(other.stick_time, 1);
+                            }
                         }
-
-                         // Decay Timer, Only Set First Time:
-                        if(stick_time <= 0){
-                            stick_time = target.charm.time - random(3);
-                        }
-                        else stick_time = max(stick_time - a, 1);
                     }
 
                      // Player Pickup:
@@ -1148,7 +1153,6 @@
          // Come to papa:
         else if(false && stick_time > 0 && instance_exists(creator)){
             target = creator;
-            trace(1, id, current_frame);
         }
 
          // Fall to Ground:

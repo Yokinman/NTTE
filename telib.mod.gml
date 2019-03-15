@@ -264,9 +264,8 @@
                     stick = false;
                     stickx = 0;
                     sticky = 0;
-                    stick_time = 0;
-                    fall = 30 + random(40);
-                    rot = orandom(3);
+                    stick_time_max = 40 + (20 * skill_get(mut_throne_butt));
+                    stick_time = stick_time_max;
                     canhold = true;
 
                      // Push:

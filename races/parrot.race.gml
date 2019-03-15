@@ -160,21 +160,33 @@
          // Shooty Charm Feathers:
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
-            with(_feathers){
+            with(instances_matching(_feathers, "canhold", false)){
+                canhold = true;
+
+                 // Remove Charm Time:
+                if(target != other){
+                    with(target) if("charm" in self && charm.time > 0){
+                        charm.time -= other.stick_time;
+                        if(charm.time <= 0){
+                            scrCharm(id, false);
+                        }
+                    }
+                }
+
+                 // Penalty:
+                if(stick_time < stick_time_max){
+                    stick_time -= 15;
+                }
+
+                 // Unstick:
                 if(stick){
                     stick = false;
                     motion_add(random(360), 4);
                 }
-                if(!canhold){
-                    canhold = true;
-                    other.feather_targ_delay = 3;
-                    array_push(_feathersTargeting, id);
 
-                    if(target != other){
-                        scrCharm(target, false);
-                        target = other;
-                    }
-                }
+                target = other;
+                array_push(_feathersTargeting, id);
+                other.feather_targ_delay = 3;
             }
 
              // Excrete New Feathers:
@@ -212,7 +224,7 @@
                     if(array_length(_targ) >= _featherNum) break;
                 }
             }
-    
+
             if(array_length(_targ) <= 0){
                 with(_feathersTargeting) target = other;
             }
