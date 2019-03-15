@@ -1042,10 +1042,11 @@
         var t = instances_matching(Player, "race", "parrot");
         if(array_length(t) > 0 && num > 0){
             with(t) repeat(other.num){
-                with(obj_create(other.x + orandom(16), other.y + orandom(16), "ParrotFeather")){
+                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
                     target = other;
                     creator = other;
                     bskin = other.bskin;
+                    speed *= 1.25;
                 }
             }
         }
