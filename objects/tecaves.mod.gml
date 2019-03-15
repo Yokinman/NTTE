@@ -271,7 +271,7 @@
         team = other.team;
         creator = other.creator;
         hitid = other.hitid;
-        damage = 1;
+        damage = 2;
     }
 
      // Effects:

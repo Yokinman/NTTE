@@ -1085,24 +1085,28 @@
                 if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
                      // Effects:
                     with(instance_create(x, y, Dust)) depth = other.depth - 1;
-                    sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);
-                    sound_play_pitchvol(sndChickenThrow, 1 + orandom(0.3), 0.25);
-                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3), 0.5);
+                    sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
+                    sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
+                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
 
                      // Stick to & Charm Enemy:
                     if(target != creator){
                         stick = true;
                         stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
                         sticky = random(y - target.y);
-
                         image_angle = random(360);
                         speed = 0;
 
                          // Charm Enemy:
                         var a = 40 + (20 * skill_get(mut_throne_butt));
-                        scrCharm(target, true).time += a;
+                        with(scrCharm(target, true)){
+                            index = other.creator.index;
+                            time += a;
+                        }
+
+                         // Decay Timer, Only Set First Time:
                         if(stick_time <= 0){
-                            with(target) other.stick_time = charm.time - random(6);
+                            stick_time = target.charm.time - random(3);
                         }
                         else stick_time = max(stick_time - a, 1);
                     }
