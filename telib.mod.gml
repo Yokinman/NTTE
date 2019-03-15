@@ -2480,6 +2480,13 @@
                 if("team" in self){
                     charm.team = team;
                     team = 2;
+
+                     // Teamerize Nearby Projectiles:
+        			with(instances_matching(instances_matching(projectile, "creator", id), "team", charm.team)){
+        				if(place_meeting(x, y, other)){
+        					team = other.team;
+        				}
+        			}
                 }
                 for(var i = 0; i <= 10; i++){
                     charm.alarm[i] = alarm_get(i);
@@ -2491,6 +2498,9 @@
              // Uncharm:
             else{
                 charm.time = 0;
+                if("nexthurt" in self){
+                	nexthurt = current_frame + 12;
+                }
                 if("canmelee" in self && canmelee){
                     alarm11 = 30;
                     canmelee = false;
@@ -2499,6 +2509,13 @@
                 	if(fork()){
                 		while(instance_exists(self) && instance_is(self, becomenemy)) wait 0;
                 		if(instance_exists(self)){
+                    		 // Teamerize Nearby Projectiles:
+                			with(instances_matching(instances_matching(projectile, "creator", id), "team", team)){
+                				if(place_meeting(x, y, other)){
+                					team = other.charm.team;
+                				}
+                			}
+
 		                	team = charm.team;
 		                	charm.team = -1;
                 		}
