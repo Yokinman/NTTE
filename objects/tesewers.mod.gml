@@ -1269,6 +1269,60 @@
     else instance_destroy();
 
 
+#define CatHoleBig_step
+    if image_index < 1 image_speed = 0;
+    
+    if canboss with(Portal){
+        instance_destroy();
+        sound_stop(sndPortalOpen);
+    }  
+    
+    if !instance_exists(enemy) && canboss{
+        canboss = false;
+        if fork(){
+            var xx = x + 32,
+                yy = y + 32;
+             // Bump lid:
+            repeat(2){
+                image_index = 1;
+                image_speed = 0.4;
+                wait(30);
+            }
+             // Break free:
+            sprite_index = mskNone;
+            obj_create(xx, yy, "CatBoss");
+            obj_create(xx, yy, "BatBoss");
+            
+            repeat(4 + irandom(4))
+                with instance_create(xx, yy, ScrapBossCorpse){
+                    sprite_index =  spr.ManholeDebrisBig;
+                    image_index =   irandom(image_number);
+                    image_angle =   irandom(359);
+                    motion_set(irandom(359), 4 + random(6));
+                }
+            repeat(8 + irandom(8))
+                with instance_create(xx, yy, Debris){
+                    sprite_index =  spr.ManholeDebrisSmall;
+                    image_index =   irandom(image_number);
+                    team =          1;
+                    motion_set(irandom(359), 6 + random(8));
+                }
+            repeat(12 + irandom(12))
+                with instance_create(xx, yy, Dust){
+                    motion_set(irandom(359), 4 + random(12));
+                }
+                
+            view_shake_at(xx, yy, 20);
+            sleep(20);
+            
+            exit;
+        }
+    }
+    
+#define CatHoleBig_draw
+    draw_sprite(spr_bot, 0, x, y);
+    draw_sprite(sprite_index, image_index, x, y);
+    
 #define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
      // Trapezoid Bit:
     var _x1a = _x - (_w1 / 2),
