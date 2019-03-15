@@ -404,7 +404,7 @@
         if(DebugLag) trace_time("Wading");
 
         if(DebugLag) trace_time();
-        var _charmShader = mod_variable_get("mod", "teassets", "eye_shader"),
+        var _charmShader = mod_variable_get("mod", "ntte", "eye_shader"),
             _canCharmDraw = (opt.allowShaders && _charmShader != -1);
 
         with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
@@ -1201,3 +1201,5 @@
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);

@@ -1299,7 +1299,10 @@
     var _canhole = (!instance_exists(FrogQueen) && !array_length_1d(instances_matching(CustomEnemy,"name","CatBoss")));
     if place_meeting(x,y,Explosion) && !image_index && _canhole{
         image_index = 1;
-        with(GameCont) area = other.toarea;
+        with(GameCont){
+        	area = other.toarea;
+        	subarea = 0;
+        }
         with(enemy) my_health = 0;
          // portal
         with instance_create(x+16,y+16,Portal) image_alpha = 0;
@@ -1593,3 +1596,5 @@
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);

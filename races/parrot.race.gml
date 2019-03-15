@@ -19,10 +19,10 @@
                     switch(other.object_index){
                         case BigWeaponChest:
                         case BigCursedChest:
-                            num = 2; break;
+                            num = 32; break;
                         case GiantWeaponChest:
                         case GiantAmmoChest:
-                            num = 3; break;
+                            num = 64; break;
                     }
                 }
             }
@@ -123,6 +123,7 @@
 #define create
     feather_ammo = 0;
     feather_load = 0;
+    feather_targ_delay = 0;
 
      // Pet thing:
     parrot_bob = [0, 1, 1, 0];
@@ -133,114 +134,105 @@
         until !instance_exists(GenCont);
 
          // Starting Feather Ammo:
-        repeat(40) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+        repeat(16) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
             target = other;
             creator = other;
             bskin = other.bskin;
             speed *= 3;
         }
-        
+
+         // Starter Pet:
         with(Pet_create(x, y, "Parrot")) {
             leader = other;
             array_insert(other.pet, 0, self);
         }
-        
+
         exit;
     }
 
 #define step
      /// ACTIVE : Charm
-    if(feather_load <= 0){
-        if(button_check(index, "spec") || usespec > 0){
-            var _allFeathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "creator", id),
-                _feathers = instances_matching(_allFeathers, "canhold", true),
-                n = 20;
+    if(button_check(index, "spec") || usespec > 0){
+        var _feathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "creator", id),
+            _feathersTargeting = instances_matching(_feathers, "canhold", true),
+            _featherNum = 12;
 
-            if(feather_ammo >= n || infammo != 0 || array_length(_feathers) > 0){
-                if(array_length(_feathers) <= 0){
-                    if(infammo == 0) feather_ammo -= n;
-                    feather_load = n / 2;
-        
-                     // Shooty Charm Feathers:
-                    //var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
+         // Shooty Charm Feathers:
+        if(array_length(_feathersTargeting) < _featherNum){
+             // Retrieve Feathers:
+            with(_feathers){
+                if(target != other) with(target){
+                    scrCharm(id, false);
+                    target = other;
 
-                    //c.time += 160 + (skill_get(mut_throne_butt) * 80);
-                    if(array_length(_allFeathers) > 0){
-                        with(_allFeathers) if(target != other){
-                            with(target){
-                                scrCharm(id, false);
-                            }
+                    other.feather_targ_delay = 6;
+                }
+                if(stick){
+                    stick = false;
+                    motion_add(random(360), 4);
+                }
+                if(!canhold){
+                    canhold = true;
+                    array_push(_feathersTargeting, id);
+                }
+            }
 
-                            stick = false;
+             // Excrete New Feathers:
+            while(array_length(_feathersTargeting) < _featherNum && (feather_ammo > 0 || infammo != 0)){
+                if(infammo == 0) feather_ammo--;
+
+                 // Feathers:
+                with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
+                    creator = other;
+                    target = other;
+                    bskin = other.bskin;
+                    array_push(_feathersTargeting, id);
+                }
+
+                 // Effects:
+                sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
+            }
+        }
+
+         // Targeting:
+        if(feather_targ_delay > 0){
+            feather_targ_delay -= current_time_scale;
+            with(_feathers) target = other;
+        }
+        else{
+            var r = 32,
+                _x = mouse_x[index],
+                _y = mouse_y[index],
+                _targ = [],
+                _featherNum = array_length(_feathersTargeting);
+    
+            with(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest])){
+                if(collision_circle(_x, _y, r, id, true, false)){
+                    array_push(_targ, id);
+                    if(array_length(_targ) >= _featherNum) break;
+                }
+            }
+    
+            if(array_length(_targ) <= 0){
+                with(_feathersTargeting) target = other;
+            }
+            else{
+                var n = 0;
+                with(_targ){
+                    var i = 0,
+                        _take = max(ceil(_featherNum / array_length(_targ)), 1);
+    
+                    while(n < _featherNum && i < _take){
+                        with(_feathersTargeting[n]){
                             target = other;
-                            motion_add(random(360), 4);
                         }
-                    }
-
-                    else{
-                        repeat(n){
-                            with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-                                creator = other;
-                                bskin = other.bskin;
-                                array_push(_feathers, id);
-                            }
-                        }
-        
-                         // Effects:
-                        sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
-                    }
-
-                    /*with(instances_matching([enemy, RadMaggotChest], "", null)) {
-                        if(id != t && point_distance(x, y, t.x, t.y) < (sprite_get_width(t.mask_index) * 1.75)) {
-                            c = scrCharm(self, true);
-                            c.time += 120 + (skill_get(mut_throne_butt) * 60);
-                            
-                            repeat(n * 5) {
-                                var f = obj_create(other.x + orandom(4), other.y + orandom(4), "ParrotFeather"); 
-                                f.target = self;
-                                f.creator = other;
-                                f.bskin = other.bskin;
-                            }
-                        }
-                    }*/
-                }
-
-                 // Targeting:
-                var r = 40,
-                    _x = mouse_x[index],
-                    _y = mouse_y[index],
-                    _targ = [],
-                    _featherNum = array_length(_feathers);
-
-                with(instance_rectangle(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest])){
-                    if(point_in_circle(x, y, _x, _y, r)){
-                        array_push(_targ, id);
-                        if(array_length(_targ) >= _featherNum) break;
-                    }
-                }
-
-                if(array_length(_targ) <= 0){
-                    with(_feathers) target = other;
-                }
-                else{
-                    var n = 0;
-                    with(_targ){
-                        var i = 0,
-                            _take = max(ceil(_featherNum / array_length(_targ)), 1);
-
-                        while(n < _featherNum && i < _take){
-                            with(_feathers[n]){
-                                target = other;
-                            }
-                            n++;
-                            i++;
-                        }
+                        n++;
+                        i++;
                     }
                 }
             }
         }
     }
-    else feather_load -= current_time_scale;
 
      /// ULTRA A: Flock Together
      // probably incredibly busted
@@ -330,3 +322,5 @@
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);

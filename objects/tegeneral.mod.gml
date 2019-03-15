@@ -1062,6 +1062,7 @@
              // Fall Off:
             if(stick_time <= 0 || !target.charm.charmed){
                 target = noone;
+                stick_time = 0;
                 if(random(4) < 1) sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
             }
             else stick_time -= current_time_scale;
@@ -1069,19 +1070,24 @@
 
          // Flyin Around:
         else{
+             // Move w/ Target:
+            //var d = (distance_to_object(target) / 50) + 1;
+            //x += target.hspeed / d;
+            //y += target.vspeed / d;
+
             if(!canhold || !instance_exists(creator) || (!button_check(creator.index, "spec") && creator.usespec <= 0)){
                 canhold = false;
 
                  // Fly Towards Enemy:
                 motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
 
-                if(place_meeting(x, y, target) || (target == creator && place_meeting(x, y, Portal))){
+                if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
                      // Effects:
                     with(instance_create(x, y, Dust)) depth = other.depth - 1;
                     sound_play_pitchvol(sndFlyFire, 2 + random(0.2), 0.25);
                     sound_play_pitchvol(sndChickenThrow, 1 + orandom(0.3), 0.25);
                     sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3), 0.5);
-    
+
                      // Stick to & Charm Enemy:
                     if(target != creator){
                         stick = true;
@@ -1090,12 +1096,16 @@
 
                         image_angle = random(360);
                         speed = 0;
-    
+
                          // Charm Enemy:
-                        scrCharm(target, true).time = 160 + (skill_get(mut_throne_butt) * 80);
-                        with(target) other.stick_time = charm.time - random(charm.time/2);
+                        var n = array_length(instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true));
+                        scrCharm(target, true).time += 40 + (20 * skill_get(mut_throne_butt));//(160 + (80 * skill_get(mut_throne_butt))) / n;
+                        if(stick_time <= 0){
+                            with(target) other.stick_time = charm.time;// - random(charm.time / 2);
+                        }
+                        else stick_time -= 4;
                     }
-    
+
                      // Player Pickup:
                     else{
                         with(creator) feather_ammo++;
@@ -1129,8 +1139,9 @@
         stick = false;
 
          // Come to papa:
-        if(stick_time > 0 && instance_exists(creator)){
+        if(false && stick_time > 0 && instance_exists(creator)){
             target = creator;
+            trace(1, id, current_frame);
         }
 
          // Fall to Ground:
@@ -1152,6 +1163,7 @@
         if("wading" in target && target.wading != 0) visible = true;
         depth = target.depth - 1;
     }
+    else depth = -8;
 
 
 #define Pet_step
@@ -1618,3 +1630,5 @@
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);

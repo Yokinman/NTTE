@@ -264,7 +264,7 @@
                     stick = false;
                     stickx = 0;
                     sticky = 0;
-                    stick_time = 30;
+                    stick_time = 0;
                     fall = 30 + random(40);
                     rot = orandom(3);
                     canhold = true;
@@ -289,7 +289,7 @@
                 with(o){
                      // Vars:
                     creator = noone;
-                    num = 1;
+                    num = 8;
                 }
                 break;
 
@@ -2490,6 +2490,7 @@
 
              // Uncharm:
             else{
+                charm.time = 0;
                 if("canmelee" in self && canmelee){
                     alarm11 = 30;
                     canmelee = false;
@@ -2760,6 +2761,9 @@
 
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)
     return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "x", _x1), "x", _x2), "y", _y1), "y", _y2);
+
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)
+    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1), "bbox_left", _x2), "bbox_bottom", _y1), "bbox_top", _y2);
 
 #define instances_seen(_obj, _ext)
     var _vx = view_xview_nonsync,
