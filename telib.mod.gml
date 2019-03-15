@@ -1856,11 +1856,13 @@
                 o = instance_create(_x, _y, CustomObject);
                 with(o){
                      // Visual:
-                    sprite_index = spr.BigManhole;
+                    spr_bot = spr.BigManholeBot;
+                    spr_top = spr.BigManholeTop;
+                    sprite_index = spr_top;
                     image_speed = 0;
+                    depth = 7;
 
                      // Vars:
-                    depth = 8;
                     canboss = true;
                 }
                 break;
@@ -2024,6 +2026,8 @@
                      // Vars:
                     friction = 0.4;
                     damage = 6;
+                    force = 6;
+                    typ = 1;
                     time = 40;
                 }
                 break;

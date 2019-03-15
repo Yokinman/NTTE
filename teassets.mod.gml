@@ -446,7 +446,11 @@
              // Manholes:
             ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);
             Manhole       = sprite_add("sprites/areas/Lair/sprManhole.png",       12, 16, 48);
-            BigManhole    = sprite_add("sprites/areas/Lair/sprBigManhole.png",     2,  0,  0);
+             // Big one:
+            BigManholeBot       = sprite_add("sprites/areas/Lair/sprBigManholeBot.png",         1,  0,  0);
+            BigManholeTop       = sprite_add("sprites/areas/Lair/sprBigManholeTop.png",         6,  0,  0);
+            ManholeDebrisSmall  = sprite_add("sprites/areas/Lair/sprManholeDebrisSmall.png",    4,  4,  4);
+            ManholeDebrisBig    = sprite_add("sprites/areas/Lair/sprManholeDebrisBig.png",      3,  12, 12);
 
              // Furniture:
                  // Rug:
