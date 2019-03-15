@@ -1098,12 +1098,12 @@
                         speed = 0;
 
                          // Charm Enemy:
-                        var n = array_length(instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true));
-                        scrCharm(target, true).time += 40 + (20 * skill_get(mut_throne_butt));//(160 + (80 * skill_get(mut_throne_butt))) / n;
+                        var a = 40 + (20 * skill_get(mut_throne_butt));
+                        scrCharm(target, true).time += a;
                         if(stick_time <= 0){
-                            with(target) other.stick_time = charm.time;// - random(charm.time / 2);
+                            with(target) other.stick_time = charm.time - random(6);
                         }
-                        else stick_time -= 4;
+                        else stick_time = max(stick_time - a, 1);
                     }
 
                      // Player Pickup:
@@ -1165,7 +1165,10 @@
         if("wading" in target && target.wading != 0) visible = true;
         depth = target.depth - 1;
     }
-    else depth = -8;
+    else{
+        visible = true;
+        depth = -8;
+    }
 
 
 #define Pet_step

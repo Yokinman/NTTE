@@ -161,19 +161,19 @@
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
             with(_feathers){
-                if(target != other) with(target){
-                    scrCharm(id, false);
-                    target = other;
-
-                    other.feather_targ_delay = 6;
-                }
                 if(stick){
                     stick = false;
                     motion_add(random(360), 4);
                 }
                 if(!canhold){
                     canhold = true;
+                    other.feather_targ_delay = 3;
                     array_push(_feathersTargeting, id);
+
+                    if(target != other){
+                        scrCharm(target, false);
+                        target = other;
+                    }
                 }
             }
 

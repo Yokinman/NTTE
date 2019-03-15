@@ -2474,7 +2474,7 @@
     with(_instance){
         if("charm" not in self) charm = c;
 
-        if(_charm != charm.charmed){
+        if(!_charm != !charm.charmed){
              // Charm:
             if(_charm){
                 if("team" in self){
@@ -2496,8 +2496,14 @@
                     canmelee = false;
                 }
                 if(charm.team != -1){
-                    team = charm.team;
-                    charm.team = -1;
+                	if(fork()){
+                		while(instance_exists(self) && instance_is(self, becomenemy)) wait 0;
+                		if(instance_exists(self)){
+		                	team = charm.team;
+		                	charm.team = -1;
+                		}
+                		exit;
+                	}
                 }
                 for(var i = 0; i <= 10; i++) alarm_set(i, charm.alarm[i]);
 
