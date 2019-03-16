@@ -479,7 +479,7 @@
             _leaderDir = point_direction(x, y, _lx, _ly),
             _leaderDis = point_distance(x, y, _lx, _ly);
 
-        if(!collision_line(x, y, _lx, _ly, Wall, false, false) && _leaderDis < 64 + (48 * skill_get(mut_laser_brain))){
+        if(!collision_line(x, y, _lx, _ly, Wall, false, false) && _leaderDis < 80 + (40 * skill_get(mut_laser_brain))){
              // Lightning Arcing Effects:
             if(arcing < 1){
                 arcing += 0.15 * current_time_scale;
@@ -711,3 +711,5 @@
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
+#define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);

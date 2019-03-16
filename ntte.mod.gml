@@ -1844,22 +1844,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 if(alarm[i] > 0){
                     alarm[i] -= current_time_scale;
                     
-                     // Decrease Alarm if Player Firing:
-            		if("ammo" not in _self || _self.ammo <= 0){
-            			var p = player_find(index);
-            			if(
-            				instance_exists(p) &&
-            				(
-            					p.reload > 0 &&
-                				p.reload + (p.reloadspeed * current_time_scale) >= weapon_get_load(p.wep)
-                			)
-                			||
-                			(
-                				button_check(index, "fire") &&
-            					weapon_get_load(p.wep) <= (p.reloadspeed * current_time_scale)
-            				)
-            			){
-            				alarm[i] -= (p.reload + 2);
+                     // Increased Aggro:
+            		if(i == 1){
+            			if("ammo" not in _self || _self.ammo <= 0){
+            				alarm[i] -= current_time_scale;
             			}
             		}
 
@@ -2328,3 +2316,5 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
+#define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);

@@ -1068,9 +1068,14 @@
                     sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
                 }
             }
+
+             // Decrement Timer When First in Queue:
             else{
-                var n = instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true);
-                if(n[0] == id){
+                if(array_length(stick_list) <= 0){
+                    var n = instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true);
+                    with(n) stick_list = n;
+                }
+                if(stick_list[0] == id){
                     stick_time -= current_time_scale;
                 }
             }
@@ -1078,6 +1083,13 @@
 
          // Flyin Around:
         else{
+             // Remove From Stick List:
+            if(array_length(stick_list) > 0){
+                with(stick_list) if(instance_exists(self)){
+                    stick_list = array_delete_value(stick_list, other);
+                }
+            }
+
              // Move w/ Target:
             //var d = (distance_to_object(target) / 50) + 1;
             //x += target.hspeed / d;
@@ -1146,12 +1158,10 @@
     }
 
     else{
-        if(instance_exists(creator) && !stick){
+        /*if(stick_time > 0 && instance_exists(creator)){
             target = creator;
-        }
-
-         // Come to papa:
-        else if(false && stick_time > 0 && instance_exists(creator)){
+        }*/
+        if(!stick && instance_exists(creator)){
             target = creator;
         }
 
@@ -1177,6 +1187,11 @@
     else{
         visible = true;
         depth = -8;
+    }
+
+#define ParrotFeather_cleanup
+    with(stick_list) if(instance_exists(self)){
+        stick_list = array_delete_value(stick_list, other);
     }
 
 
@@ -1646,3 +1661,5 @@
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
+#define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);

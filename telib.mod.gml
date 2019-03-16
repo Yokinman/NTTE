@@ -266,6 +266,7 @@
                     sticky = 0;
                     stick_time_max = 40 + (20 * skill_get(mut_throne_butt));
                     stick_time = stick_time_max;
+                    stick_list = [];
                     canhold = true;
 
                      // Push:
@@ -1240,6 +1241,7 @@
                     spr_hurt = spr.EelHurt[c];
                     spr_dead = spr.EelDead[c];
                     spr_tell = spr.EelTell[c];
+                    hitid = [spr_idle, _name];
                     spr_shadow = shd24;
                     image_index = random(image_number - 1);
                     depth = -2;
@@ -2770,6 +2772,21 @@
         _array[@i] = a[(m - 1) - i];
     }
 
+#define array_delete(_array, _index)
+    var i = _index,
+        _new = array_slice(_array, 0, i);
+
+    array_copy(_new, array_length(_new), _array, i + 1, array_length(_array) - (i + 1))
+
+    return _new;
+
+#define array_delete_value(_array, _value)
+    var a = _array;
+    while(array_find_index(a, _value) >= 0){
+        a = array_delete(a, array_find_index(a, _value));
+    }
+    return a;
+
 #define instances_named(_object, _name)
     return instances_matching(_object, "name", _name);
 
@@ -3159,7 +3176,7 @@
         _lasty = _y1,
         _x = _lastx,
         _y = _lasty,
-        o = min(_maxDis / 8, 10),
+        o = min(_maxDis / 8, 10) + (_enemy ? (1.5 * (array_length(instances_matching_ge(instances_named(CustomEnemy, "Eel"), "arcing", 1)) - 1)) : 0),
         _ox = lengthdir_x(o, _dir),
         _oy = lengthdir_y(o, _dir),
         a = 0,

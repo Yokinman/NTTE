@@ -288,6 +288,13 @@
         }
     }
 
+	 // Laser Sight in Water:
+	if(canshoot){
+		if("wading" in self && wading > 0){
+			script_bind_draw(Diver_draw_laser, depth, id);
+		}
+	}
+
 #define Diver_draw
     if(gunangle <= 180 || ("wading" in self && wading > 0)){
         Diver_draw_wep();
@@ -299,10 +306,9 @@
 
      // Laser Sight:
     if(canshoot){
-        if("wading" in self && wading > 0){
-            script_bind_draw(Diver_draw_laser, depth, id);
+        if("wading" not in self || wading <= 0){
+        	Diver_draw_laser(id);
         }
-        else Diver_draw_laser(id);
     }
 
     if(gunangle >  180 && ("wading" not in self || wading <= 0)){
@@ -439,18 +445,25 @@
 
 #define DiverHarpoon_hit
     var _inst = other;
-    if(speed > 0 && projectile_canhit(_inst) && ("my_enemy" not in other || other.my_enemy != creator)){
+    if(speed > 0 && projectile_canhit(_inst) && ("my_enemy" not in other || other.my_enemy != creator) && current_frame_active){
         var _hp = _inst.my_health;
 
          // Damage:
-        projectile_hit_push(_inst, damage, force);
+         if(damage > 1) damage = 1;
+        projectile_hit(_inst, ceil(damage), force, direction);
+        damage -= 1/4;
 
          // Stick in Player:
-        with(instance_create(x, y, BoltStick)){
-            image_angle = other.image_angle;
-            target = _inst;
+        x -= hspeed * 0.3;
+        y -= vspeed * 0.3;
+        if(damage <= 0){
+        	//sound_play_pitchvol(sndCrossbow, 2 + random(1), 1);
+	        with(instance_create(x, y, BoltStick)){
+	            image_angle = other.image_angle;
+	            target = _inst;
+	        }
+        	instance_destroy();
         }
-        instance_destroy();
     }
 
 #define DiverHarpoon_wall
@@ -2588,3 +2601,5 @@
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
+#define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);

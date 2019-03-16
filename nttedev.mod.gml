@@ -10,7 +10,8 @@
         /* script_set modifies a script if it exists, appends script to end of file if not */
         /* script_remove removes a script if it exists */
 
-        script_set(self, "mod", "telib", "instances_meeting", ["_x", "_y", "_obj"], "return", "");
+        script_set(self, "mod", "telib", "array_delete", ["_array", "_index"], "return", "");
+        script_set(self, "mod", "telib", "array_delete_value", ["_array", "_value"], "return", "");
         //script_remove(self, "obj_create");
     }
 
