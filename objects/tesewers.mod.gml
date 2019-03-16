@@ -1350,18 +1350,25 @@
 
 
 #define Manhole_step
-    var _canhole = (!instance_exists(FrogQueen) && !array_length_1d(instances_matching(CustomEnemy,"name","CatBoss")));
-    if place_meeting(x,y,Explosion) && !image_index && _canhole{
-        image_index = 1;
-        with(GameCont){
-        	area = other.toarea;
-        	subarea = 0;
-        }
-        with(enemy) my_health = 0;
-         // portal
-        with instance_create(x+16,y+16,Portal) image_alpha = 0;
-        sound_stop(sndPortalOpen);
-    }
+	if(image_index == 0 && place_meeting(x, y, Explosion)){
+	    var _canhole = (!instance_exists(FrogQueen) && !array_length(instances_matching(CustomEnemy, "name", "CatBoss")));
+	    if(_canhole){
+	        image_index = 1;
+
+	        with(GameCont){
+	        	area = other.toarea;
+	        	subarea = 0;
+	        }
+	        with(enemy) my_health = 0;
+
+	         // Portal:
+	        with(instance_create(x + 16, y + 16, Portal)){
+	        	image_alpha = 0;
+	        	with(instances_meeting(x, y, [Corpse, ChestOpen, Scorch, ScorchTop])) instance_destroy();
+	        }
+	        sound_stop(sndPortalOpen);
+	    }
+	}
 
 
 #define VenomFlak_step

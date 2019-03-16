@@ -1843,6 +1843,26 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                  // Custom Alarms:
                 if(alarm[i] > 0){
                     alarm[i] -= current_time_scale;
+                    
+                     // Decrease Alarm if Player Firing:
+            		if("ammo" not in _self || _self.ammo <= 0){
+            			var p = player_find(index);
+            			if(
+            				instance_exists(p) &&
+            				(
+            					p.reload > 0 &&
+                				p.reload + (p.reloadspeed * current_time_scale) >= weapon_get_load(p.wep)
+                			)
+                			||
+                			(
+                				button_check(index, "fire") &&
+            					weapon_get_load(p.wep) <= (p.reloadspeed * current_time_scale)
+            				)
+            			){
+            				alarm[i] -= (p.reload + 2);
+            			}
+            		}
+
                     if(alarm[i] <= 0){
                         alarm[i] = -1;
 
@@ -2001,9 +2021,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         if(instance_exists(Player)){
                             if(distance_to_object(Player) > 256 || !instance_exists(target) || collision_line(x, y, target.x, target.y, Wall, 0, 0) || point_distance(x, y, target.x, target.y) > 80){
                                 var n = instance_nearest(x, y, Player);
-                                if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
+                                /*if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
                                     motion_add(point_direction(x, y, mouse_x[n.index], mouse_y[n.index]), 1);
-                                }
+                                }*/
                                 if(distance_to_object(n) > 20){
                                     motion_add(point_direction(x, y, n.x, n.y), 1);
                                 }
@@ -2219,7 +2239,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
          // Charm Spawned Enemies:
         with(instances_matching(instances_matching(hitme, "creator", instance), "charm", null)){
             scrCharm(id, true);
-            repeat(_time / 60) with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
+            repeat(max(_time / 60, 1)) with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
                 target = other;
             }
         }

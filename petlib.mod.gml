@@ -519,22 +519,7 @@
             }
 
              // Lightning Arc:
-            else with(lightning_connect(_lx, _ly, x, y, 8 * sin(wave / 60), false)){
-                image_index = (other.wave * image_speed) mod image_number;
-                image_speed_raw = image_number;
-                team = other.team;
-                creator = other;
-
-                 // Effects:
-                if(current_frame_active && random(200) < 1){
-                    with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
-                        motion_add(random(360), 1);
-                    }
-                    with(other){
-                        sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
-                    }
-                }
-            }
+            else lightning_connect(_lx, _ly, x, y, 8 * sin(wave / 60), false);
         }
 
          // Stop Arcing:

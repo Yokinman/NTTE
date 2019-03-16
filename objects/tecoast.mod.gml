@@ -543,7 +543,7 @@
 
             with(seal[i]){
                 if(hold){
-                    if(sprite_index == spr_spwn){
+                    if(sprite_index == spr_spwn || "hold_x" not in self){
                         hold_x = _x;
                         hold_y = _y;
                     }

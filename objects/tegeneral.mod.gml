@@ -1083,7 +1083,7 @@
             //x += target.hspeed / d;
             //y += target.vspeed / d;
 
-            if(!canhold || !instance_exists(creator) || (!button_check(creator.index, "spec") && creator.usespec <= 0)){
+            if(!canhold || !instance_exists(creator) || !creator.visible || (!button_check(creator.index, "spec") && creator.usespec <= 0)){
                 canhold = false;
 
                  // Fly Towards Enemy:
@@ -1110,7 +1110,7 @@
                             if("index" in other.creator){
                                 index = other.creator.index;
                             }
-                            if(_wasUncharmed || time > 0){
+                            if(_wasUncharmed || time >= 0){
                                 time += max(other.stick_time, 1);
                             }
                         }

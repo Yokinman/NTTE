@@ -245,78 +245,84 @@
     enemySprites();
     enemyWalk(walkspd, maxspd);
 
-    wave += current_time_scale;
-
      // Arc Lightning w/ Jelly:
-    if(!instance_exists(target) || target_in_distance(0, 160)){
-        if(instance_exists(arc_inst) && point_distance(x, y, arc_inst.x, arc_inst.y) < 100){
-             // Start Arcing:
-            if(arcing < 1){
-                arcing += 0.15 * current_time_scale;
-    
-                if(current_frame_active){
-                    var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
-                        _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
-        
-                    with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
-                        motion_add(random(360), 1);
-                        alarm0 = 8;
-                    }
-                }
+    if(
+    	instance_exists(arc_inst)							&&
+    	point_distance(x, y, arc_inst.x, arc_inst.y) < 100	&&
+    	(
+    		!instance_exists(target) ||
+    		target_in_distance(0, 120)
+    	)
+    ){
+         // Start Arcing:
+        if(arcing < 1){
+            arcing += 0.15 * current_time_scale;
 
-                 // Arced:
-                if(arcing >= 1){
-                    sound_play_pitch(sndLightningHit, 2);
-    
-                     // Color:
-                    if(arc_inst.c <= 2){
-                        c = max(arc_inst.c, 0);
-                        spr_idle = spr.EelIdle[c];
-                        spr_walk = spr_idle;
-                        spr_hurt = spr.EelHurt[c];
-                        spr_dead = spr.EelDead[c];
-                        spr_tell = spr.EelTell[c];
-                        if(sprite_index != spr_hurt){
-                            sprite_index = spr_idle;
-                        }
-                    }
+            if(current_frame_active){
+                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
+                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
+
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
+                    motion_add(random(360), 1);
+                    alarm0 = 8;
                 }
             }
-    
-             // Arcing:
-            else{
-                if(arc_inst.c > 2) elite = 30;
-                with(lightning_connect(x, y, arc_inst.x, arc_inst.y, 12 * sin(wave / 30), true)){
-                    image_index = (other.wave * image_speed) mod image_number;
-                    image_speed_raw = image_number;
-                    hitid = other.arc_inst.hitid;
-                    team = other.arc_inst.team;
-                    creator = other.arc_inst;
-    
-                     // Effects:
-                    if(random(100) < 1){
-                        with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
-                            motion_add(random(360), 1);
-                        }
-                        sound_play_hit(sndLightningReload, 0.5);
+
+             // Arced:
+            if(arcing >= 1){
+                sound_play_pitch(sndLightningHit, 2);
+
+                 // Color:
+                if(arc_inst.c <= 2){
+                    c = max(arc_inst.c, 0);
+                    spr_idle = spr.EelIdle[c];
+                    spr_walk = spr_idle;
+                    spr_hurt = spr.EelHurt[c];
+                    spr_dead = spr.EelDead[c];
+                    spr_tell = spr.EelTell[c];
+                    if(sprite_index != spr_hurt){
+                        sprite_index = spr_idle;
                     }
                 }
             }
         }
+
+         // Arcing:
         else{
-            arc_inst = noone;
-            arcing = false;
-
-            if(frame_active(8)){
-                var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
-                if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+			wave += current_time_scale;
+            if(arc_inst.c > 2) elite = 30;
+            with(arc_inst){
+            	lightning_connect(other.x, other.y, x, y, 12 * sin(other.wave / 30), true);
             }
         }
     }
+
+	 // Stop Arcing:
     else{
+    	if(arcing > 0 && instance_exists(arc_inst)){
+    		var _lx = arc_inst.x,
+    			_ly = arc_inst.y;
+
+            repeat(2){
+                var _dis = random(point_distance(x, y, _lx, _ly)),
+                    _dir = point_direction(x, y, _lx, _ly);
+
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+                    motion_add(random(360), 1);
+                }
+            }
+    	}
         arc_inst = noone;
-        arcing = false;
+        arcing = 0;
     }
+    
+	 // Search for New Jelly:
+    if(!instance_exists(arc_inst) && frame_active(8)){
+        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
+        if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+    }
+
+     // Elite Effects:
     if(elite > 0){
         elite -= current_time_scale;
         if(current_frame_active && random(30) < 1){
@@ -339,7 +345,8 @@
     draw_sprite_ext(_spr, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 
 #define Eel_alrm1
-    alarm1 = 30;
+    alarm1 = 30 + random(10);
+
     target = instance_nearest(x,y,Player);
     if ammo{
         alarm1 = 3;

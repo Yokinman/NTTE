@@ -3154,33 +3154,55 @@
 
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)
     var _maxDis = point_distance(_x1, _y1, _x2, _y2),
+        _dir = point_direction(_x1, _y1, _x2, _y2),
         _lastx = _x1,
         _lasty = _y1,
         _x = _lastx,
         _y = _lasty,
-        o = max(_maxDis / 8, 10),
+        o = min(_maxDis / 8, 10),
+        _ox = lengthdir_x(o, _dir),
+        _oy = lengthdir_y(o, _dir),
         a = 0,
-        r = [];
+        r = [],
+        _frame = current_frame;
 
-    while(point_distance(_x, _y, _x2, _y2) > 2 * o){
-        var _dir = point_direction(_x, _y, _x2, _y2);
-        _x += lengthdir_x(o, _dir);
-        _y += lengthdir_y(o, _dir);
+    while(true){
+        _x += _ox;
+        _y += _oy;
 
-        var d = point_distance(_x, _y, _x2, _y2),
-            _off = 4 * sin((d / 8) + (current_frame / 6)),
-            m = d / _maxDis,
-            _ox = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(m * pi)),
-            _oy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(m * pi/2));
+        var	_dis = point_distance(_x, _y, _x2, _y2),
+        	_off = 4 * sin((_dis / 8) + (_frame / 6)),
+            m = (_dis / _maxDis) * pi,
+            _wx = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(m)),
+            _wy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(m / 2));
 
-        array_push(r, scrLightning(_lastx, _lasty, _ox, _oy, _enemy));
-        _lastx = _ox;
-        _lasty = _oy;
+        array_push(r, scrLightning(_lastx, _lasty, _wx, _wy, _enemy));
+
+        _lastx = _wx;
+        _lasty = _wy;
+
+		if(_dis <= 2 * o || !point_seen(_x, _y, -1)) break;
     }
     array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, _enemy));
 
-    var _ammo = array_length(r) - 1;
-    with(r) ammo = _ammo--;
+	var _ammo = array_length(r) - 1;
+	with(r){
+		image_index = ((_frame + _arc) * image_speed) mod image_number;
+		image_speed_raw = (image_number - image_index);
+	    team = other.team;
+	    creator = other;
+	    if("hitid" in other) hitid = other.hitid;
+		ammo = _ammo--;
+	
+		 // Effects:
+	    if(current_frame_active && random(200) < 1){
+	        with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
+	            motion_add(random(360), 1);
+	        }
+			if(_enemy) sound_play_hit(sndLightningReload, 0.5);
+			else sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
+	    }
+	}
 
     return r;
 
