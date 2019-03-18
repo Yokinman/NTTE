@@ -608,11 +608,14 @@
     alarm0 = -1;
     
 #define Prism_step
-    repeat(irandom(4)) instance_create(x + orandom(4), y + orandom(4), Curse);
-    
     if(instance_exists(leader)) {
          // Aimlessly Floats
         scrWalk(1, direction);
+        if(place_meeting(x + hspeed, y + vspeed, Wall)){
+            if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+            if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+            direction += orandom(20);
+        }
         
          // Duplicate Friendly Bullets:
         with(instances_matching(projectile, "team", leader.team)) if(place_meeting(x, y, other) and "prism_duplicate" not in self) {
@@ -643,6 +646,11 @@
             sound_play_pitch(sndCrystalTB, 1.20 + orandom(0.10));
             repeat(irandom_range(4, 8)) instance_create(x + orandom(4), y + orandom(4), Curse);
         }
+    }
+
+     // Effects:
+    if(current_frame_active) repeat(irandom(4)){
+        instance_create(x + orandom(4), y + orandom(4), Curse);
     }
 
 

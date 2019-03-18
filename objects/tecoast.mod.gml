@@ -445,25 +445,15 @@
 
 #define DiverHarpoon_hit
     var _inst = other;
-    if(speed > 0 && projectile_canhit(_inst) && ("my_enemy" not in other || other.my_enemy != creator) && current_frame_active){
-        var _hp = _inst.my_health;
-
-         // Damage:
-         if(damage > 1) damage = 1;
-        projectile_hit(_inst, ceil(damage), force, direction);
-        damage -= 1/4;
+    if(speed > 0 && projectile_canhit(_inst) && ("my_enemy" not in other || other.my_enemy != creator)){
+        projectile_hit(_inst, damage, force, direction);
 
          // Stick in Player:
-        x -= hspeed * 0.3;
-        y -= vspeed * 0.3;
-        if(damage <= 0){
-        	//sound_play_pitchvol(sndCrossbow, 2 + random(1), 1);
-	        with(instance_create(x, y, BoltStick)){
-	            image_angle = other.image_angle;
-	            target = _inst;
-	        }
-        	instance_destroy();
+        with(instance_create(x, y, BoltStick)){
+            image_angle = other.image_angle;
+            target = _inst;
         }
+    	instance_destroy();
     }
 
 #define DiverHarpoon_wall
@@ -806,14 +796,17 @@
     }
 
 #define Palanking_end_step
-    with(seal) if(instance_exists(self) && hold){
-        x = other.x + hold_x;
-        y = other.y + hold_y;
-        xprevious = x;
-        yprevious = y;
-        hspeed = other.hspeed;
-        vspeed = other.vspeed;
-        depth = other.depth + (0.1 * dsin(point_direction(0, 24, hold_x, hold_y)));
+    with(seal) if(instance_exists(self) && hold && "hold_x" in self){
+    	if(mask_index != mskNone){
+	        x = other.x + hold_x;
+	        y = other.y + hold_y;
+	        xprevious = x;
+	        yprevious = y;
+	        hspeed = other.hspeed;
+	        vspeed = other.vspeed;
+	        depth = other.depth + (0.1 * dsin(point_direction(0, 24, hold_x, hold_y)));
+    	}
+    	else hold = false;
     }
 
 #define Palanking_draw
@@ -967,9 +960,9 @@
         scrWalk(60, _targetDir + orandom(30));
 
          // Kingly Slap:
-        if(target_in_distance(0, 80) && random(1) < 1){
+        if(target_in_distance(0, 80) || (target.reload > 0 && random(3) < 1)){
             alarm1 = 60 + random(20);
-            alarm4 = 8;
+            alarm4 = 6;
             gunangle = _targetDir;
             sprite_index = spr_fire;
             image_index = 0;
@@ -1013,20 +1006,15 @@
     if(ground_smash++ < m){
         alarm2 = 5;
 
+		 // Effects:
         view_shake_at(x, y, 40 / ground_smash);
-
         sound_play_pitch(sndOasisExplosion, 1.6 + random(0.4));
         sound_play_pitch(sndWallBreakBrick, 0.6 + random(0.2));
 
         var _dis = (ground_smash * 24);
         for(var a = 0; a < 360; a += (360 / 16)){
              // Ground Smash Slash:
-            with(scrEnemyShootExt(x + lengthdir_x(_dis, a), y + 28 + lengthdir_y(_dis * 0.66, a), EnemySlash, a, 1)){
-                sprite_index = spr.GroundSlash;
-                image_speed = 0.5;
-                mask_index = -1;
-                damage = 10;
-                depth = 0;
+            with(scrEnemyShootExt(x + lengthdir_x(_dis, a), y + 28 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 1)){
                 team = -1;
             }
 
@@ -1044,6 +1032,11 @@
                     motion_add(a, random(5));
                 }
             }
+        }
+
+         // Lose sealboys:
+        for(var i = 0; i < array_length(seal); i++){
+        	seal[i] = noone;
         }
     }
     else ground_smash = 0;
@@ -1095,14 +1088,8 @@
     if(alarm0 > 0) alarm0 += alarm3;
 
 #define Palanking_alrm4
-     // Biggo Slash:
-    with(scrEnemyShootExt(x, y + 16 - z, EnemySlash, gunangle, 7)){
-        sprite_index = spr.PalankingSlash;
-        depth = other.depth - 1;
-        image_speed = 0.3;
-        friction = 0.5;
-        damage = 4;
-    }
+     // Slappin:
+    scrEnemyShootExt(x, y + 16 - z, "PalankingSlash", gunangle, 8);
     motion_add(gunangle, 4);
 
      // Effects:
@@ -1270,6 +1257,78 @@
      // Pickups:
     repeat(3) pickup_drop(50, 0);
 	scrRadDrop(x, y + 16, raddrop, direction, speed);
+
+
+#define PalankingSlash_hit
+	if(projectile_canhit_melee(other)){
+    	projectile_hit_push(other, damage, force);
+
+		 // Mega Smak:
+		if(instance_is(other, Player) || other.size <= 1){
+			var p = other;
+			with(obj_create(p.x, p.y, "PalankingToss")){
+				direction = other.direction + (angle_difference(point_direction(other.x, other.y, p.x, p.y), other.direction) / 3);
+				speed = 4;
+				creator = p;
+				depth = p.depth;
+				mask_index = p.mask_index;
+				spr_shadow_y = p.spr_shadow_y;
+			}
+		}
+
+    	sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
+	}
+
+
+#define PalankingToss_end_step
+    z_engine();
+    if(instance_exists(creator) && (z > 0 || zspeed > 0)){
+        hspeed += (creator.hspeed / 10) * current_time_scale;
+        vspeed += (creator.vspeed / 10) * current_time_scale;
+		speed = clamp(speed, 2, 6);
+        with(creator){
+            x = other.x;
+            y = other.y - other.z;
+            mask_index = mskNone;
+            nowade = true;
+
+             // Visual:
+            depth = -7;
+            spr_shadow_y = other.spr_shadow_y + other.z;
+            var _ang = point_direction(0, 0, other.hspeed, -other.zspeed) - 90;
+            if("angle" in self) angle = _ang;
+            else image_angle = _ang;
+            with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+                coast_water = false;
+                depth = other.depth;
+            }
+        }
+    }
+    else{
+         // Reset Vars & Damage:
+        with(creator){
+            nowade = false;
+            depth = other.depth;
+            mask_index = other.mask_index;
+            spr_shadow_y = other.spr_shadow_y;
+            if("angle" in self) angle = 0;
+            else image_angle = 0;
+
+	        if(place_meeting(x, y, Floor)){
+	            projectile_hit(id, 3);
+	        }
+        }
+
+         // Effects:
+        repeat(10){
+            with(instance_create(x, y, Dust)){
+                motion_add(random(360), 3);
+                motion_add(other.direction, 1);
+            }
+        }
+
+        instance_destroy();
+    }
 
 
 #define Palm_step

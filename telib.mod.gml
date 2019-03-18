@@ -800,6 +800,53 @@
                 }
                 break;
 
+			case "PalankingSlash":
+				o = instance_create(_x, _y, CustomSlash);
+				with(o){
+                     // Visual:
+                    sprite_index = spr.PalankingSlash;
+                    image_speed = 0.3;
+                    depth = -4;
+
+                     // Vars:
+                    mask_index = mskSlash;
+                    friction = 0.5;
+                    damage = 1;
+                    force = 8;
+				}
+				break;
+
+			case "PalankingSlashGround":
+				o = obj_create(_x, _y, "PalankingSlash");
+				with(o){
+					 // Visual:
+                	sprite_index = spr.GroundSlash;
+                	image_speed = 0.5;
+                	depth = 0;
+                	
+                	 // Vars:
+	                mask_index = -1;
+	                damage *= 2;
+				}
+				break;
+
+			case "PalankingToss":
+				o = instance_create(_x, _y, CustomObject);
+				with(o){
+					 // Vars:
+                	friction = 0.1;
+					creator = noone;
+					z = 0;
+					zspeed = 8;
+					zfric = 0.5;
+
+					 // Saved Vars:
+					depth = -2;
+					mask_index = mskPlayer;
+					spr_shadow_y = 0;
+				}
+				break;
+
             case "Palm":
                 o = instance_create(_x, _y, CustomProp);
                 with(o){
@@ -2158,7 +2205,7 @@
     	default:
     		return [/* GENERAL */ "BigDecal", "BubbleBomb", "SuperBubbleBomb", "BubbleExplosion", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool", "scrTopDecal",
     		        /* DESERT  */ "BabyScorpion", "BabyScorpionGold", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss",
-    		        /* COAST   */ "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
+    		        /* COAST   */ "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom",
     		        /* OASIS   */ "ClamChest", "Hammerhead", "Puffer", "Crack",
     		        /* TRENCH  */ "Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab",
     		        /* SEWERS  */ "Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaTV", "VenomFlak",

@@ -123,7 +123,7 @@
             PalankingFoam   = sprite_add("sprites/enemies/Palanking/sprPalankingFoam.png",      1, 40, 24);
             PalankingChunk  = sprite_add("sprites/enemies/Palanking/sprPalankingChunk.png",     5, 16, 16);
             GroundSlash     = sprite_add("sprites/enemies/projectiles/sprGroundSlash.png",      3,  0, 21);
-            PalankingSlash  = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",   3,  0, 24);
+            PalankingSlash  = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",   3,  0, 29);
             msk.Palanking   = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
             if(fork()){
                 wait 30;
