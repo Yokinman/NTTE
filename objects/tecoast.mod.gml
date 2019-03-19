@@ -1260,7 +1260,7 @@
         _dir = (seal_spawn * 90) + orandom(40),
         _x = seal_spawn_x + lengthdir_x(_dis, _dir),
         _y = seal_spawn_y + lengthdir_y(_dis, _dir),
-        o = obj_create(_x, _y, "Seal");
+        o = obj_create(_x, _y, ((random(16) < 1) ? "SealHeavy" : "Seal"));
 
     with(o){
          // Randomize Type:
@@ -1824,59 +1824,50 @@
 
 
 #define Seal_create(_x, _y)
-     // Elite Spawn:
-    if(random(16) < 1){
-        return obj_create(_x, _y, "SealHeavy");
-    }
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_spwn = spr.SealSpwn[0];
+        spr_idle = spr.SealIdle[0];
+        spr_walk = spr.SealWalk[0];
+        spr_hurt = spr.SealHurt[0];
+        spr_dead = spr.SealDead[0];
+        spr_weap = spr.SealWeap[0];
+        spr_shadow = shd24;
+        hitid = [spr_idle, "SEAL"];
+        sprite_index = spr_spwn;
+        depth = -2;
 
-     // Normal Spawn:
-    else{
-        o = instance_create(_x, _y, CustomEnemy);
-        with(o){
-             // Visual:
-            spr_spwn = spr.SealSpwn[0];
-            spr_idle = spr.SealIdle[0];
-            spr_walk = spr.SealWalk[0];
-            spr_hurt = spr.SealHurt[0];
-            spr_dead = spr.SealDead[0];
-            spr_weap = spr.SealWeap[0];
-            spr_shadow = shd24;
-            hitid = [spr_idle, "SEAL"];
-            sprite_index = spr_spwn;
-            depth = -2;
+         // Sound:
+        var _male = irandom(1);
+        snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
+        snd_dead = (_male ? sndFireballerDead : sndFreakDead);
 
-             // Sound:
-            var _male = irandom(1);
-            snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
-            snd_dead = (_male ? sndFireballerDead : sndFreakDead);
+         // Vars:
+        mask_index = mskBandit;
+        maxhealth = 12;
+        raddrop = 1;
+        size = 1;
+        walk = 0;
+        walkspd = 0.8;
+        maxspd = 3.5;
+        type = 0;
+        hold = false;
+        hold_x = 0;
+        hold_y = 0;
+        creator = noone;
+        wepangle = 0;
+        gunangle = random(360);
+        direction = gunangle;
+        slide = 0;
+        scared = false;
+        shield = choose(true, false);
+        shield_ang = gunangle;
+        shield_draw = true;
+        surfClamShield = -1;
 
-             // Vars:
-            mask_index = mskBandit;
-            maxhealth = 12;
-            raddrop = 1;
-            size = 1;
-            walk = 0;
-            walkspd = 0.8;
-            maxspd = 3.5;
-            type = 0;
-            hold = false;
-            hold_x = 0;
-            hold_y = 0;
-            creator = noone;
-            wepangle = 0;
-            gunangle = random(360);
-            direction = gunangle;
-            slide = 0;
-            scared = false;
-            shield = choose(true, false);
-            shield_ang = gunangle;
-            shield_draw = true;
-            surfClamShield = -1;
-
-             // Alarms:
-            alarm1 = 20 + random(20);
-            alarm2 = -1;
-        }
+         // Alarms:
+        alarm1 = 20 + random(20);
+        alarm2 = -1;
 
         return id;
     }
@@ -3191,7 +3182,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
-#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call(   "mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);

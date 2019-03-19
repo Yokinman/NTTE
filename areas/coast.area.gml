@@ -807,8 +807,12 @@
     else if(GameCont.subarea == 3){
         var _seals = instances_matching(CustomEnemy, "name", "Seal");
         if(random(2 * array_length(_seals)) < 1){
-            if(styleb) obj_create(_x, _y, "Seal");
-            else repeat(4) obj_create(_x, _y, "Seal");
+            if(styleb){
+            	obj_create(_x, _y, ((random(16) < 1) ? "SealHeavy" : "Seal"));
+            }
+            else{
+            	repeat(4) obj_create(_x, _y, "Seal");
+            }
         }
     }
 
@@ -993,7 +997,7 @@
     	}
 
          // Rock Decals:
-    	with(instances_matching(CustomHitme, "name", "CoastDecal")){
+    	with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
     	    draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, 1);
     	}
 
@@ -1040,7 +1044,7 @@
     draw_surface_ext(_surfTrans, _surfx, _surfy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
 
      // Submerged Rock Decals:
-    with(instances_matching(CustomHitme, "name", "CoastDecal")){
+    with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
         var h = (nexthurt > current_frame + 3);
         if(h) d3d_set_fog(1, c_white, 0, 0);
         draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
@@ -1173,7 +1177,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
-#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call(   "mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);

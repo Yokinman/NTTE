@@ -21,13 +21,13 @@
     sound_play_pitchvol(sndOasisExplosionSmall, 1.3, 0.4);
 
 #define weapon_fire(_wep)
-    repeat(6){
+    for(var i = 0; i < 6; i++){
         with(obj_create(x,y,"BubbleBomb")){
-            move_contact_solid(other.gunangle, 6);
+            move_contact_solid(other.gunangle, 6 + (i * 8));
             motion_add(other.gunangle + (orandom(12) * other.accuracy), 9 + random(1));
             team = other.team;
             creator = other;
-            image_speed += (irandom_range(-2,2)/50);
+            image_speed += (irandom_range(-2, 2) / 50);
         }
     }
 

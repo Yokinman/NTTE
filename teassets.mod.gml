@@ -428,10 +428,12 @@
             CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",  1,  4,  7);
 
              // Door:
-            CatDoor         = sprite_add("sprites/areas/Lair/props/sprCatDoor.png",       10, 2, 0);
-            CatDoorDebris   = sprite_add("sprites/areas/Lair/props/sprCatDoorDebris.png",  4, 4, 4);
-            msk.CatDoor     = sprite_add("sprites/areas/Lair/props/mskCatDoor.png",        1, 4, 0);
-            msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/props/mskCatDoorLOS.png",     1, 4, 0);
+            CatDoor         = sprite_add("sprites/areas/Lair/Props/sprCatDoor.png",          10, 2, 0);
+            CatDoorDebris   = sprite_add("sprites/areas/Lair/Props/sprCatDoorDebris.png",     4, 4, 4);
+            PizzaDoor       = sprite_add("sprites/areas/Pizza/Props/sprPizzaDoor.png",       10, 2, 0);
+            PizzaDoorDebris = sprite_add("sprites/areas/Pizza/Props/sprPizzaDoorDebris.png",  4, 4, 4);
+            msk.CatDoor     = sprite_add("sprites/areas/Lair/Props/mskCatDoor.png",           1, 4, 0);
+            msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/Props/mskCatDoorLOS.png",        1, 4, 0);
             if(fork()){
                 wait 30;
                 sprite_collision_mask(msk.CatDoorLOS, false, 1, 0, 0, 0, 0, 0, 0);
@@ -439,9 +441,10 @@
             }
 
              // Drain:
-            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/sprPizzaDrain.png",     1, 32, 38);
-            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/sprPizzaDrainHurt.png", 3, 32, 38);
+            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrain.png",     1, 32, 38);
+            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainHurt.png", 3, 32, 38);
             PizzaDrainDead = mskNone;
+            msk.PizzaDrain = sprite_add("sprites/areas/Pizza/Props/mskPizzaDrain.png",     1, 32, 38);
 
              // Manholes:
             ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);
@@ -494,7 +497,7 @@
             Paper = sprite_add("sprites/areas/Lair/Props/sprPaper.png", 3, 5, 6);
 
              // Pizza TV:
-            TVHurt = sprite_add("sprites/areas/Pizza/sprTVHurt.png", 3, 24, 16);
+            TVHurt = sprite_add("sprites/areas/Pizza/Props/sprTVHurt.png", 3, 24, 16);
         //#endregion
 
         //#region CRYSTAL CAVES

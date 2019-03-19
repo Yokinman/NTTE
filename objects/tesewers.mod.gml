@@ -1305,7 +1305,7 @@
         		d = image_angle - 90;
 
         	with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Shell)){
-	            sprite_index = spr.CatDoorDebris;
+	            sprite_index = ((other.sprite_index == spr.PizzaDoor) ? spr.PizzaDoorDebris : spr.CatDoorDebris);
 	            image_index = random(image_number);
 	            image_speed = 0;
 
@@ -1822,8 +1822,7 @@
         snd_dead = sndStatueDead;
 
          // Vars:
-        //mask_index = mskIcon;
-        mask_index = -1;
+        mask_index = msk.PizzaDrain;
         maxhealth = 40;
         team = 0;
         size = 3;
@@ -1832,32 +1831,55 @@
     }
 
 #define PizzaDrain_step
+	 // Manual Collision for Projectiles Hitting Wall:
+	if(place_meeting(x, y, projectile)){
+		with(instances_meeting(x, y, projectile)){
+			if(place_meeting(x, y, other) && place_meeting(x + hspeed, y + vspeed, Wall)){
+				event_perform(ev_collision, hitme);
+			}
+		}
+	}
+
      // Stay Still:
     x = (round(xstart / 16) * 16) - 16;
     y = (round(ystart / 16) * 16);
     speed = 0;
 
-	 // Takeover Walls:
-    if(place_meeting(x, y, Wall)){
-    	with(instance_rectangle(bbox_left, y - 16, bbox_right, y, Wall)){
-    		with(instance_nearest(x + 16, y, Wall)) outindex = 0;
-    		with(instance_nearest(x - 16, y, Wall)) outindex = 0;
-    		instance_create(x, y, InvisiWall);
-    		visible = 0;
-    		topspr = -1;
-    		outspr = -1;
-    		y -= 16;
-    	}
-    }
-    if(place_meeting(x, y, TopSmall)){
-    	with(instances_meeting(x, y, TopSmall)){
-    		instance_delete(id);
-    	}
-    }
+	if(!instance_exists(GenCont)){
+	     // Floorerize:
+	    var _x = x - 16,
+	    	_y = y - 32;
+
+	    if(!position_meeting(_x, _y, Floor)){
+	    	with(instance_create(_x, _y, Floor)){
+	    		sprite_index = area_get_sprite("secret", sprFloor1B);
+	    	}
+	    	for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
+	    		instance_create(bbox_left, _y, FloorExplo);
+	    		instance_create(bbox_right - 16, _y, FloorExplo);
+	    	}
+	    }
+
+		 // Takeover Walls:
+		if(place_meeting(x, y, Wall)){
+			with(instance_nearest(bbox_left - 16, y - 16, Wall)) outindex = 0;
+			with(instance_nearest(bbox_right,	  y - 16, Wall)) outindex = 0;
+		    while(place_meeting(x, y, Wall)){
+		    	with(instances_meeting(x, y, Wall)){
+		    		instance_create(x, y, InvisiWall);
+					sprite_index = sprWall102Trans;
+					visible = true;
+					topspr = -1;
+					outspr = -1;
+					y -= 16;
+		    	}
+		    }
+		}
+	}
 
      // Animate:
-    if(sprite_index != spr_idle){
-        if(anim_end) sprite_index = spr_idle;
+    if(sprite_index != spr_idle && anim_end){
+        sprite_index = spr_idle;
     }
 
      // Break:
@@ -1865,7 +1887,7 @@
         instance_create(x, y, PortalClear);
         other.my_health = 0;
     }
-    with(instance_rectangle(bbox_left - 16, y - 320, bbox_right + 16, y, FloorExplo)){
+    with(instance_rectangle(bbox_left - 16, y - 320, bbox_right + 16, bbox_top - 16, FloorExplo)){
         instance_create(x, y, PortalClear);
         other.my_health = 0;
     }
@@ -1874,7 +1896,6 @@
     if(my_health <= 0) instance_destroy();
 
 #define PizzaDrain_destroy
-    with(instances_meeting(x, y, InvisiWall)) instance_destroy();
     sound_play(snd_dead);
 
 	 // Deleet Portal:
@@ -1888,6 +1909,11 @@
     		}
     		exit;
     	}
+	}
+
+	 // Deleet Stuff:
+	with(instance_rectangle(bbox_left, bbox_top - 16, bbox_right, bbox_bottom, [Wall, TopSmall, InvisiWall])){
+		instance_destroy();
 	}
 
      // Corpse:
@@ -2078,7 +2104,7 @@
 #define draw_shadows
 	 // Fix Pizza Drain Shadows:
 	with(instances_named(CustomHitme, "PizzaDrain")) if(visible){
-		draw_sprite_ext(sprite_index, image_index, x, y - 6, image_xscale, -image_yscale, image_angle, c_white, 1);
+		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 	}
 
 #define draw_dark // Drawing Grays
@@ -2153,7 +2179,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
-#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call(   "mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);

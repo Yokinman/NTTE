@@ -4,8 +4,9 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleBombBig", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "Puffer", "Crack"],
@@ -66,7 +67,7 @@
 #macro objScrt global.objectScrt
 
 #define obj_create(_x, _y, _obj)
-	 // Try to Find Script if Not Set in Object List:
+	 // Search for Create Event if Unstored:
 	if(!lq_exists(objScrt, _obj) && is_string(_obj)){
 		for(var i = 0; i < lq_size(objList); i++){
 			var _modName = lq_get_key(objList, i);
@@ -77,7 +78,7 @@
 					args : [],
 					x : 0,
 					y : 1
-				})
+				});
 			}
 		}
 	}
@@ -101,8 +102,8 @@
 	     /// Auto Assign Things:
 	    if(is_real(o) && instance_exists(o)){
 	        with(o){
-	            if("name" not in self) name = _name;
-	
+	            name = _name;
+
 				var _isCustom = (string_pos("Custom", object_get_name(o.object_index)) == 1),
 					_events = [];
 	
@@ -216,12 +217,12 @@
 	                        }
 	                    }
 	                }
-	
+
 	                 // Auto-fill HP:
 	                if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
 	                    if(my_health == 1) my_health = maxhealth;
 	                }
-	
+
 	                 // Auto-spr_idle:
 	                if(sprite_index == -1 && "spr_idle" in self && instance_is(self, hitme)){
 	                    sprite_index = spr_idle;
@@ -823,7 +824,7 @@
 
     x = _x;
     y = _y;
-    var r = instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom);
+    var r = instances_matching_ne(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom), "id", id);
     x = _tx;
     y = _ty;
 
