@@ -411,6 +411,7 @@
 		 // Effects:
     	sleep(15);
     	view_shake_at(x, y, 60);
+    	sound_play_pitch(sndOasisExplosion, 0.8 + orandom(0.05));
     }
 
     instance_destroy();
