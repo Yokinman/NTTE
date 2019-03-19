@@ -441,35 +441,32 @@
     }
 
 
-#define CustomChest_step()
-    if(instance_exists(creator)) with(creator){
-         // Call Chest Step Event:
-        var e = on_step;
-        if(mod_script_exists(e[0], e[1], e[2])){
-            mod_script_call(e[0], e[1], e[2]);
-        }
-
-         // Open Chest:
-        var c = [Player, PortalShock];
-        for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
-            with(instance_nearest(x, y, c[i])) with(other){
-                 // Call Chest Open Event:
-                var e = on_open;
-                if(mod_script_exists(e[0], e[1], e[2])){
-                    mod_script_call(e[0], e[1], e[2], (i == 0));
-                }
-
-                 // Effects:
-                with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
-                instance_create(x, y, FXChestOpen);
-                sound_play(snd_open);
-
-                instance_destroy();
-            }
-            break;
-        }
+#define CustomChest_step
+     // Call Chest Step Event:
+    var e = on_step;
+    if(mod_script_exists(e[0], e[1], e[2])){
+        mod_script_call(e[0], e[1], e[2]);
     }
-    else instance_destroy();
+
+     // Open Chest:
+    var c = [Player, PortalShock];
+    for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
+        with(instance_nearest(x, y, c[i])) with(other){
+             // Call Chest Open Event:
+            var e = on_open;
+            if(mod_script_exists(e[0], e[1], e[2])){
+                mod_script_call(e[0], e[1], e[2], (i == 0));
+            }
+
+             // Effects:
+            with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
+            instance_create(x, y, FXChestOpen);
+            sound_play(snd_open);
+
+            instance_destroy();
+        }
+        break;
+    }
 
 
 #define Harpoon_end_step
@@ -1663,3 +1660,4 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
+#define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);

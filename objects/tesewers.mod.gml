@@ -1447,15 +1447,27 @@
 
 #define PizzaDrain_step
      // Stay Still:
-    if(instance_exists(target)){
-        x = target.x;
-        y = target.y + 16;
-    }
-    else{
-        x = xstart;
-        y = ystart;
-    }
+    x = (round(xstart / 16) * 16) - 16;
+    y = (round(ystart / 16) * 16);
     speed = 0;
+
+	 // Takeover Walls:
+    if(place_meeting(x, y, Wall)){
+    	with(instance_rectangle(bbox_left, y - 16, bbox_right, y, Wall)){
+    		with(instance_nearest(x + 16, y, Wall)) outindex = 0;
+    		with(instance_nearest(x - 16, y, Wall)) outindex = 0;
+    		instance_create(x, y, InvisiWall);
+    		visible = 0;
+    		topspr = -1;
+    		outspr = -1;
+    		y -= 16;
+    	}
+    }
+    if(place_meeting(x, y, TopSmall)){
+    	with(instances_meeting(x, y, TopSmall)){
+    		instance_delete(id);
+    	}
+    }
 
      // Animate:
     if(sprite_index != spr_idle){
@@ -1463,7 +1475,11 @@
     }
 
      // Break:
-    with(instances_matching_le(instances_matching_ge(instances_matching_lt(FloorExplo, "y", y), "x", x - 16), "x", x)){
+    with(instances_matching_le(FloorExplo, "y", y - 320)){
+        instance_create(x, y, PortalClear);
+        other.my_health = 0;
+    }
+    with(instance_rectangle(bbox_left - 16, y - 320, bbox_right + 16, y, FloorExplo)){
         instance_create(x, y, PortalClear);
         other.my_health = 0;
     }
@@ -1472,8 +1488,21 @@
     if(my_health <= 0) instance_destroy();
 
 #define PizzaDrain_destroy
+    with(instances_meeting(x, y, InvisiWall)) instance_destroy();
     sound_play(snd_dead);
-    scrPortalPoof();
+
+	 // Deleet Portal:
+	if(array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
+    	scrPortalPoof();
+    	if(fork()){
+    		while(instance_exists(Portal)) wait 0;
+    		with(instances_matching(Player, "mask_index", mskNone)){
+	    		mask_index = mskPlayer;
+	    		angle = 0;
+    		}
+    		exit;
+    	}
+	}
 
      // Corpse:
     with(instance_create(x, y, Corpse)){
@@ -1484,7 +1513,7 @@
     }
 
     /// Entrance:
-        var _sx = (floor(x / 32) * 32) - 16,
+        var _sx = (floor(x / 32) * 32),
             _sy = (floor(y / 32) * 32) - 16;
 
          // Borderize Area:
@@ -1501,7 +1530,7 @@
                 array_push(_path, id);
 
                  // Stuff in path fix:
-                with(instance_rectangle(x, y, x + 32, y + 32, [TopSmall, Wall])) instance_destroy();
+                with(instances_meeting(x, y, [TopSmall, Wall])) instance_destroy();
             }
 
             if(!in_range(_sy, _borderY - 160, _borderY + 32)) _dir = 90;
@@ -1515,7 +1544,9 @@
         }
 
          // Generate the Realm:
-        area_generate(_sx, _sy - 32, sewers);
+		if(array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
+        	area_generate(_sx, _sy - 32, sewers);
+		}
 
          // Finish Path:
         with(_path){
@@ -1526,26 +1557,25 @@
 
 
 #define PizzaTV_end_step
-    if(instance_exists(creator)) with(creator){
-        depth = 0;
+	x = xstart;
+	y = ystart;
+    depth = 0; // why must i force depth every frame mmmm
 
-         // Death without needing a corpse sprite haha:
-        if(my_health <= 0){
-            with(instance_create(x, y, Corpse)){
-                sprite_index = other.spr_dead;
-                mask_index = other.mask_index;
-                size = other.size;
-            }
-
-             // Zap:
-            sound_play_pitch(sndPlantPotBreak, 1.6);
-            sound_play_pitchvol(sndLightningHit, 1, 2);
-            repeat(2) instance_create(x, y, PortalL);
-
-            instance_delete(id);
+     // Death without needing a corpse sprite haha:
+    if(my_health <= 0){
+        with(instance_create(x, y, Corpse)){
+            sprite_index = other.spr_dead;
+            mask_index = other.mask_index;
+            size = other.size;
         }
+
+         // Zap:
+        sound_play_pitch(sndPlantPotBreak, 1.6);
+        sound_play_pitchvol(sndLightningHit, 1, 2);
+        repeat(2) instance_create(x, y, PortalL);
+
+        instance_delete(id);
     }
-    else instance_destroy();
 
 
 /// Mod Events
@@ -1555,6 +1585,12 @@
         catlight_reset = true;
         global.catLight = [];
     }
+
+#define draw_shadows
+	 // Fix Pizza Drain Shadows:
+	with(instances_named(CustomHitme, "PizzaDrain")) if(visible){
+		draw_sprite_ext(sprite_index, image_index, x, y - 6, image_xscale, -image_yscale, image_angle, c_white, 1);
+	}
 
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
@@ -1661,3 +1697,4 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
+#define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);

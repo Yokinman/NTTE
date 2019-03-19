@@ -52,7 +52,15 @@
     }
 
 #define area_setup
-    goal = 1;
+    var _den = {
+        cols : 0,
+        rows : 0,
+        cols_max : 8,
+        rows_max : 6
+    };
+    turtle_den = _den;
+
+    goal = (_den.cols_max * _den.rows_max) + 2;
     safespawn = false;
 
     background_color = area_background_color();
@@ -69,48 +77,83 @@
     }
 
 #define area_start
-     // Pizza Floors:
+    instance_delete(instances_matching(Wall, "", null)[0]);
+
+     // So much pizza:
     with(Floor){
         if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
             styleb = true;
             sprite_index = area_sprite(sprFloor1B);
         }
     }
-
-     // Pizza Chests:
     with(HealthChest){
         sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
         spr_dead = sprPizzaChestOpen;
     }
+    with(HPPickup) alarm0 *= 2;
 
-     // Toons Viewer:
-    var _x = 10000,
-        _y = 10000;
+     // Delay because of annoying enemy offsets:
+    if(fork()){
+        wait 1;
 
-    obj_create(_x - 48, _y, "PizzaTV");
+        with(TV){
+             // Squad:
+            var c = [1, 2, 4],
+                a = random(360);
+        
+            for(var i = 0; i < array_length(c); i++){
+                var _dis = 20 + random(4),
+                    _dir = a + (i * (360 / array_length(c))) + orandom(10);
+        
+                with(instance_create(x + lengthdir_x(_dis, _dir), y + 64 + lengthdir_y(_dis, _dir), Turtle)){
+                    snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
+                    scrRight(_dir + 180);
+                }
+            }
 
-     // Turtles:
-    var c = [1, 2, 4],
-        a = random(360);
+             // The man himself:
+            with(instance_create(x - random_range(12, 16), y + orandom(4), Rat)) right = 1;
+    
+             // Hungry Boy:
+            with(instance_random([PizzaBox, HealthChest, HPPickup])){
+                with(instance_create(x + orandom(4), y + orandom(4), Turtle)){
+                    snd_dead = sndTurtleDead3;
+                    right = 1;
+                }
+            }
+        }
+        with(enemy) alarm0 += 30;
 
-    for(var i = 0; i < array_length(c); i++){
-        var _dis = 20 + random(4),
-            _dir = a + (i * (360 / array_length(c))) + orandom(10);
+        exit;
+    }
 
-        with(instance_create(_x - 48 + lengthdir_x(_dis, _dir), _y + 48 + lengthdir_y(_dis, _dir), Turtle)){
-            snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
-            scrRight(_dir + 180);
+     // Spawn Stuff:
+    with(instances_matching(Player, "", null)[0]){
+         // Open Manhole:
+        with(instance_create(x + orandom(8), y + orandom(8), GameObject)){
+            sprite_index = spr.Manhole;
+            image_angle = 180 + (irandom_range(-3, 3) * 10);
+            image_speed = 0;
+            depth = 6;
+        }
+
+         // Door:
+        with(instance_nearest(x, y, Floor)){
+            var p = noone;
+            for(var i = -1; i <= 1; i += 2){
+                with(obj_create(x + 16 - (16 * i), y - 32, "CatDoor")){
+                    image_angle = 90;
+                    image_yscale = i;
+                    y += 3;
+                    
+                     // Link Doors:
+                    partner = p;
+                    with(partner) partner = other;
+                    p = id;
+                }
+            }
         }
     }
-    with(instance_create(_x + 48, _y + random_range(32, 48), Turtle)){
-        snd_dead = sndTurtleDead3;
-        right = 1;
-    }
-    with(instance_create(_x - 80, _y + 16, Rat)) right = 1;
-    with(Turtle) alarm1 += 10;
-
-     // Door:
-    obj_create(_x + 56, _y - 48, "PizzaDrain");
 
 #define area_finish
     lastarea = area;
@@ -148,35 +191,60 @@
     return random(120);
 
 #define area_make_floor
-    var _x = 10000 - 32,
+    var _den = GenCont.turtle_den;
+    if(_den.cols <= 0){
+        x = xstart - 48;
+        instance_create(xstart, ystart - 32, Floor);
+    }
+    if(_den.rows <= 0){
+        y = ystart - 64;
+    }
+    direction = 90;
+    styleb = false;
+
+    instance_create(x, y, Floor);
+   
+     // Important Tiles:
+    switch(`${_den.cols},${_den.rows}`){
+         /// Corner Walls:
+        case "0,0": instance_create(x,      y + 16, Wall);  break;
+        case "0,5": instance_create(x,      y,      Wall);  break;
+        case "7,0": instance_create(x + 16, y + 16, Wall);  break;
+        case "7,5": instance_create(x + 16, y,      Wall);  break;
+
+        case "2,3": /// Toons Viewer
+            obj_create(x, y - 16, "PizzaTV");
+            break;
+
+        case "6,5": /// Sewage Hole
+            obj_create(x, y, "PizzaDrain");
+            break;
+    }
+
+    if(++_den.rows >= _den.rows_max){
+        x += 32;
+        _den.rows = 0;
+        if(++_den.cols >= _den.cols_max){
+            instance_destroy();
+        }
+    }
+    /*var _x = 10000 - 32,
         _y = 10000,
         _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
     styleb = 0;
-    scrFloorFill(_x, _y, 8, 6);
+    scrFloorFill(_x, _y, 8, 6);*/
 
 #define area_pop_props
-    var _x = x,
-        _y = y,
-        _west = !position_meeting(_x - 16, _y, Floor),
-        _east = !position_meeting(_x + 48, _y, Floor),
-        _nort = !position_meeting(_x, _y - 16, Floor),
-        _sout = !position_meeting(_x, _y + 48, Floor);
-
-     // Corner Walls:
-    if(_nort){
-        if(_west) instance_create(_x, _y, Wall);
-        else if(_east) instance_create(_x + 16, _y, Wall);
-    }
-    else if(_sout){
-        if(_west) instance_create(_x, _y + 16, Wall);
-        else if(_east) instance_create(_x + 16, _y + 16, Wall);
-    }
+    var _x = x + 16,
+        _y = y + 16,
+        _west = !position_meeting(x - 16, y, Floor),
+        _east = !position_meeting(x + 48, y, Floor),
+        _nort = !position_meeting(x, y - 16, Floor),
+        _sout = !position_meeting(x, y + 48, Floor);
 
      // Gimme pizza:
-    else if(_east){
-        _x += 16;
-        _y += 16;
+    if(!_nort && !_sout && !_west && _east){
         repeat(irandom_range(1, 4)){
             if(random(3) < 1) instance_create(_x + orandom(4), _y + orandom(4), HealthChest);
             else instance_create(_x + orandom(8), _y + orandom(4), choose(PizzaBox, HPPickup));
@@ -251,3 +319,4 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
+#define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);

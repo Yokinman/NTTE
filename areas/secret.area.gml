@@ -468,13 +468,13 @@
                                 }
                             }
                         }
-    
+
                         _fx += lengthdir_x(1, _dir);
                         _fy += lengthdir_y(1, _dir);
                         if(_fx == _tx && _fy == _ty) break;
                     }
                 }
-    
+
                  // End Level Gen:
                 with(FloorMaker) instance_destroy();
             }
@@ -526,7 +526,7 @@
     }
 
      // Important Door Stuff:
-    with(instances_matching(CustomHitme, "name", "CatDoor")){
+    with(instances_named(CustomHitme, "CatDoor")){
          // Remove Blocking Walls:
         var a = image_angle - (90 * image_yscale),
             _x = floor((x + lengthdir_x(8, a) + lengthdir_x(16, image_angle)) / 16) * 16,
@@ -537,14 +537,15 @@
         }
 
          // Make sure door isn't placed weirdly:
-        var _x = (floor((x + 16 + lengthdir_x(8, a)) / 32) * 32) - 16,
-            _y = (floor((y + 16 + lengthdir_y(8, a)) / 32) * 32) - 16;
-
-        for(var i = 0; i <= 180; i += 180){
-            if(position_meeting(_x + lengthdir_x(32, image_angle - 90 + i), _y + lengthdir_y(32, image_angle - 90 + i), Floor)){
-                instance_delete(id);
-                break;
+        with(instances_at(x, bbox_bottom, Floor)){
+            for(var i = 0; i <= 180; i += 180){
+                var a = other.image_angle - 90 + i;
+                if(position_meeting(x + lengthdir_x(32, a), y + lengthdir_y(32, a), Floor)){
+                    instance_delete(other);
+                    break;
+                }
             }
+            break;
         }
     }
 
@@ -1158,3 +1159,4 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
+#define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);

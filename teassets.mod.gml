@@ -439,8 +439,8 @@
             }
 
              // Drain:
-            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/sprPizzaDrain.png",     1, 24, 38);
-            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/sprPizzaDrainHurt.png", 3, 24, 38);
+            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/sprPizzaDrain.png",     1, 32, 38);
+            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/sprPizzaDrainHurt.png", 3, 32, 38);
             PizzaDrainDead = mskNone;
 
              // Manholes:

@@ -160,11 +160,6 @@
 
                     on_step = ["", "", ""];
                     on_open = ["", "", ""];
-
-                    with(script_bind_step(0, 0)){
-                        script = script_ref_create_ext("mod", "tegeneral", "CustomChest_step");
-                        creator = other;
-                    }
                 }
                 break;
 
@@ -1129,7 +1124,8 @@
 
         //#region OASIS
             case "ClamChest":
-                with(obj_create(_x, _y, "CustomChest")){
+                o = obj_create(_x, _y, "CustomChest");
+                with(o){
                      // Visual:
                     sprite_index = sprClamChest;
                     spr_open = sprClamChestOpen;
@@ -1735,7 +1731,7 @@
         			spr_weap = spr.CatWeap;
         			spr_shadow = shd24;
         			hitid = [spr_idle, _name];
-        			mask_index = mskFreak;
+        			mask_index = mskRat;
         			depth = -2;
 
                      // Sound:
@@ -2030,18 +2026,18 @@
                     spr_shadow = mskNone;
                     image_xscale = choose(-1, 1);
                     image_speed = 0.4;
-                    depth = -7;
+                    depth = -1;
 
                      // Sound:
                     snd_hurt = sndHitMetal;
                     snd_dead = sndStatueDead;
 
                      // Vars:
-                    mask_index = mskIcon;
+                    //mask_index = mskIcon;
+                    mask_index = -1;
                     maxhealth = 40;
                     team = 0;
                     size = 3;
-                    target = instance_nearest(x, y, Wall);
                 }
                 break;
 
@@ -2055,13 +2051,7 @@
                      // Vars:
                     maxhealth = 15;
                     my_health = 15;
-
-                    with(script_bind_end_step(0, 0)){
-                        script = script_ref_create_ext("mod", "tesewers", "PizzaTV_end_step");
-                        creator = other;
-                    }
                 }
-                return o;
                 break;
 
             case "VenomFlak":
@@ -2215,59 +2205,85 @@
 
      /// Auto Assign Things:
     if(instance_exists(o)){
-        if(string_pos("Custom", object_get_name(o.object_index)) == 1){
-            var _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"];
-            if(!instance_is(o, CustomEnemy)) array_push(_scrt, "alrm11");
-            with(o){
-                var _isEnemy = instance_is(self, CustomEnemy);
+        with(o){
+            if("name" not in self) name = string(obj_name);
 
-                if("name" not in self) name = string(obj_name);
-        
-                 // Scripts:
-                with(_scrt){
-                    var v = "on_" + self;
-                    if(v not in other || is_undefined(variable_instance_get(other, v))){
-                        var s = other.name + "_" + self,
-                            _mod = global.objectMods,
-                            m = false;
-        
-                        for(var i = 0; i < array_length(_mod); i++){
-                            if(mod_script_exists("mod", _mod[i], s)){
-                                variable_instance_set(other, v, ["mod", _mod[i], s]);
-                                m = true;
-                                break;
+			var _isCustom = (string_pos("Custom", object_get_name(o.object_index)) == 1),
+				_scrt = [];
+
+			if(_isCustom){
+            	var _isEnemy = instance_is(self, CustomEnemy);
+	            _scrt = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"];
+	            if(!_isEnemy) array_push(_scrt, "alrm11");
+			}
+			else _scrt = ["step", "begin_step", "end_step", "draw"];
+
+             // Scripts:
+            with(_scrt){
+                var v = (_isCustom ? "on_" + self : "ntte_bind_" + self);
+                if(v not in other || is_undefined(variable_instance_get(other, v))){
+                    var s = other.name + "_" + self,
+                        _mod = global.objectMods,
+                        m = false;
+    
+                    for(var i = 0; i < array_length(_mod); i++){
+                        if(mod_script_exists("mod", _mod[i], s)){
+                        	 // Normal Event Set:
+                            if(_isCustom){
+                            	variable_instance_set(other, v, ["mod", _mod[i], s]);
                             }
+
+                             // Auto Script Binding:
+                            else{
+                            	var _bind = noone;
+                            	switch(self){
+                            		case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
+                            		case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
+                            		case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
+                            		case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+                            	}
+                            	if(instance_exists(_bind)){
+                            		_bind.ntte_script = ["mod", _mod[i], s];
+                            		_bind.creator = other;
+                            		variable_instance_set(other, v, _bind);
+                            	}
+                            }
+
+                            m = true;
+                            break;
                         }
+                    }
 
-                         // Defaults:
-                        if(!m) with(other){
-                            switch(v){
-                                case "on_step":
-                                    if(_isEnemy){
-                                        on_step = enemy_step_ntte;
-                                    }
-                                    break;
+                     // Defaults:
+                    if(_isCustom && !m) with(other){
+                        switch(v){
+                            case "on_step":
+                                if(_isEnemy){
+                                    on_step = enemy_step_ntte;
+                                }
+                                break;
 
-                                case "on_hurt":
-                                    on_hurt = enemyHurt;
-                                    break;
+                            case "on_hurt":
+                                on_hurt = enemyHurt;
+                                break;
 
-                                case "on_death":
-                                    if(_isEnemy){
-                                        on_death = scrDefaultDrop;
-                                    }
-                                    break;
-        
-                                case "on_draw":
-                                    if(_isEnemy){
-                                        on_draw = draw_self_enemy;
-                                    }
-                                    break;
-                            }
+                            case "on_death":
+                                if(_isEnemy){
+                                    on_death = scrDefaultDrop;
+                                }
+                                break;
+    
+                            case "on_draw":
+                                if(_isEnemy){
+                                    on_draw = draw_self_enemy;
+                                }
+                                break;
                         }
                     }
                 }
-        
+            }
+
+			if(_isCustom){
                  // Override Events:
                 var _override = ["step"];
                 with(_override){
@@ -2309,7 +2325,7 @@
                         }
                     }
                 }
-        
+
                  // Auto-fill HP:
                 if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
                     if(my_health == 1) my_health = maxhealth;
@@ -2319,7 +2335,7 @@
                 if(sprite_index == -1 && "spr_idle" in self && instance_is(self, hitme)){
                     sprite_index = spr_idle;
                 }
-            }
+			}
         }
     }
 
@@ -2351,6 +2367,14 @@
 
     //trace_lag_end(name);
 
+#define ntte_bind
+	if(instance_exists(creator)){
+		depth = creator.depth;
+		var s = ntte_script;
+		with(creator) mod_script_call(s[0], s[1], s[2]);
+	}
+	else instance_destroy();
+
 #define step
     //trace("");
     //trace("Frame", current_frame, "Lag:")
@@ -2361,6 +2385,22 @@
         enemyWalk(walkspd, maxspd);
     }
     enemySprites();
+
+#define draw_dark // Drawing Grays
+    draw_set_color(c_gray);
+
+	 // Portal Disappearing Visual:
+	with(instances_named(BulletHit, "PortalPoof")){
+		draw_circle(x, y, 120 + random(6), false);
+	}
+
+#define draw_dark_end // Drawing Clear
+    draw_set_color(c_black);
+
+	 // Portal Disappearing Visual:
+	with(instances_named(BulletHit, "PortalPoof")){
+		draw_circle(x, y, 20 + random(8), false);
+	}
 
 
 /// Scripts
@@ -2733,9 +2773,20 @@
 #define scrPortalPoof()
      // Get Rid of Portals (but make it look cool):
     if(instance_exists(Portal)){
-        var _spr = sprite_duplicate(sprPortalDisappear);
-        with(Portal) if(endgame >= 100){
-            mask_index = mskNone;
+        //var _spr = sprite_duplicate(sprPortalDisappear);
+        with(Portal) if(endgame >= 0){
+        	with(instance_create(x, y, BulletHit)){
+        		name = "PortalPoof";
+        		sprite_index = sprPortalDisappear;
+        		image_xscale = other.image_xscale;
+        		image_yscale = other.image_yscale;
+        		image_angle = other.image_angle;
+        		image_blend = other.image_blend;
+        		image_alpha = other.image_alpha;
+        		depth = other.depth;
+        	}
+        	instance_destroy();
+            /*mask_index = mskNone;
             sprite_index = _spr;
             image_index = 0;
             if(fork()){
@@ -2744,7 +2795,7 @@
                     wait 1;
                 }
                 exit;
-            }
+            }*/
         }
     }
 
@@ -2875,6 +2926,9 @@
     y = _ty;
 
     return r;
+
+#define instances_at(_x, _y, _obj)
+    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x), "bbox_left", _x), "bbox_bottom", _y), "bbox_top", _y);
 
 #define instance_random(_obj)
 	if(is_array(_obj) || instance_exists(_obj)){
