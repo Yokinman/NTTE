@@ -17,6 +17,43 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define Bat_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.BatIdle;
+        spr_walk = spr.BatWalk;
+        spr_hurt = spr.BatHurt;
+        spr_dead = spr.BatDead;
+        spr_fire = spr.BatYell;
+		spr_weap = spr.BatWeap;
+		spr_shadow = shd48;
+		hitid = [spr_idle, "BAT"];
+		mask_index = mskScorpion;
+		depth = -2;
+
+         // Sound:
+        snd_hurt = sndSuperFireballerHurt;
+        snd_dead = sndFrogEggDead;
+
+         // Vars:
+		maxhealth = 30;
+		raddrop = 12;
+		size = 2;
+		walk = 0;
+		scream = 0;
+		stress = 20;
+		walkspd = 0.8;
+		maxspd = 2.5;
+		gunangle = random(360);
+		direction = gunangle;
+
+		 // Alarms:
+		alarm1 = 60;
+		alarm2 = 120;
+
+		return id;
+    }
+
 #define Bat_step
     enemyWalk(walkspd, maxspd);
 
@@ -169,6 +206,46 @@
     sprite_index = spr_fire;
     image_index = 0;
 
+
+#define BatBoss_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.BatBossIdle;
+        spr_walk = spr.BatBossWalk;
+        spr_hurt = spr.BatBossHurt;
+        spr_dead = spr.BatBossDead;
+        spr_fire = spr.BatBossYell;
+		spr_weap = spr.BatBossWeap;
+		spr_shadow = shd64;
+		spr_shadow_y = 12;
+		hitid = [spr_idle, "BIG BAT"];
+		mask_index = mskBanditBoss;
+		depth = -2;
+
+         // Sound:
+        snd_hurt = sndSalamanderHurt;
+        snd_dead = sndRatkingCharge;
+
+         // Vars:
+		maxhealth = scrBossHP(100);
+		raddrop = 24;
+		size = 3;
+		walk = 0;
+		scream = 0;
+		stress = 20;
+		walkspd = 0.8;
+		maxspd = 3;
+		gunangle = irandom(359);
+		direction = gunangle;
+		attack = 0;
+
+		 // Alarms:
+		alarm1 = 60;
+		alarm2 = 90;
+		alarm3 = 120;
+
+		return id;
+    }
 
 #define BatBoss_step
 	Bat_step();
@@ -347,7 +424,7 @@
         scrBatBossScreech();
     }
 
-#define scrBatBossScreech
+#define scrBatBossScreech()
      // Effects:
     sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
     sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
@@ -369,6 +446,28 @@
     image_index = 0;
 
 
+#define BatScreech_create(_x, _y)
+    with(instance_create(_x, _y, CustomSlash)){
+         // Visual:
+        sprite_index = spr.BatScreech;
+        mask_index = msk.BatScreech;
+        image_speed = 0.4;
+
+         // Vars:
+        creator = noone;
+        candeflect = false;
+
+	     // Effects:
+	    instance_create(x, y, PortalClear);
+	    repeat(12 + irandom(6)){
+	        with(instance_create(x, y, Dust)){
+	            motion_set(random(360), 4 + random(4));
+	        }
+	    }
+
+	    return id;
+    }
+
 #define BatScreech_step
     while place_meeting(x, y, ToxicGas)
         with instance_nearest(x, y, ToxicGas)
@@ -380,16 +479,84 @@
     draw_set_blend_mode(bm_normal);
 
 #define BatScreech_hit
-    with instances_matching_ne(hitme, "team", team)
-        if place_meeting(x, y, other)
+	 // Push Dudes Away:
+    with(instances_matching_ne(hitme, "team", team)){
+        if(place_meeting(x, y, other)){
             motion_add(point_direction(other.x, other.y, x, y), 1);
+    	}
+	}
 
+
+#define Cabinet_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.CabinetIdle;
+        spr_hurt = spr.CabinetHurt;
+        spr_dead = spr.CabinetDead;
+
+         // Sounds:
+        snd_hurt = sndHitMetal;
+        snd_dead = sndSodaMachineBreak;
+
+         // Vars:
+        maxhealth = 20;
+        size = 1;
+
+        return id;
+    }
 
 #define Cabinet_death
-    repeat(irandom_range(8,16))
-        with obj_create(x,y,"Paper")
-            motion_set(irandom(359),random_range(2,8));
+    repeat(irandom_range(8, 16)){
+        with(obj_create(x, y, "Paper")){
+            motion_set(random(360), random_range(2, 8));
+        }
+    }
 
+
+#define Cat_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.CatIdle;
+		spr_walk = spr.CatWalk;
+		spr_hurt = spr.CatHurt;
+		spr_dead = spr.CatDead;
+		spr_sit1 = spr.CatSit1[0];
+		spr_sit2 = spr.CatSit2[0];
+		spr_sit1_side = spr.CatSit1[1];
+		spr_sit2_side = spr.CatSit2[1];
+		spr_weap = spr.CatWeap;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "CAT"];
+		mask_index = mskRat;
+		depth = -2;
+
+         // Sound:
+		snd_hurt = sndGatorHit;
+		snd_dead = sndSalamanderDead;
+
+		 // Vars:
+		maxhealth = 18;
+		raddrop = 6;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		hole = noone;
+		ammo = 0;
+		active = true;
+		cantravel = false;
+		gunangle = random(360);
+		direction = gunangle;
+		toxer_loop = -1;
+		sit = noone;
+		sit_side = 0;
+
+		 // Alarms:
+		alarm1 = 40 + irandom(20);
+		alarm2 = 40 + irandom(20);
+
+		return id;
+	}
 
 #define Cat_step
     enemyWalk(walkspd, maxspd);
@@ -652,6 +819,44 @@
     sound_stop(toxer_loop);
 
 
+#define CatBoss_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+	     // For Sani's bosshudredux:
+        boss = 1;
+        bossname = "BIG CAT";
+        col = c_green;
+
+         // Visual:
+		spr_idle = spr.CatBossIdle;
+		spr_walk = spr.CatBossWalk;
+		spr_hurt = spr.CatBossHurt;
+		spr_dead = spr.CatBossDead;
+		spr_weap = spr.CatBossWeap;
+		spr_shadow = shd48;
+		spr_shadow_y = 3;
+		hitid = [spr_idle, bossname];
+		mask_index = mskBanditBoss;
+		depth = -2;
+
+         // Sound:
+		snd_hurt = sndScorpionHit;
+		snd_dead = sndSalamanderDead;
+
+		 // Vars:
+		maxhealth = scrBossHP(100);
+		raddrop = 24;
+		size = 3;
+		walk = 0;
+        dash = 0;
+		gunangle = random(360);
+		direction = gunangle;
+
+		 // Alarms:
+		alarm1 = 40 + irandom(20);
+
+		return id;
+	}
+
 #define CatBoss_step
     enemySprites();
 
@@ -858,42 +1063,69 @@
     }
 
 
+#define CatBossAttack_create(_x, _y)
+    o = instance_create(_x, _y, CustomObject);
+    with(o){
+         // Visual:
+        image_blend = c_lime;
+        image_yscale = 1.5;
+		hitid = [spr.CatIdle, "BIG CAT"];
+
+         // Vars:
+        team = 1;
+        creator = noone;
+        fire_line = [];
+        var _off = 30 + (10 * GameCont.loops);
+        repeat(3 + GameCont.loops) array_push(fire_line, {
+            dir : 0,
+            dis : 0,
+            dir_goal : orandom(_off),
+            dis_goal : 1000
+        });
+
+         // Alarms:
+        alarm0 = 30;
+
+        return id;
+    }
+
 #define CatBossAttack_step
-     // Follow Creator:
     if(instance_exists(creator)){
+    	 // Follow Creator:
         var o = 16;
         x = creator.x + lengthdir_x(o, creator.gunangle);
         y = creator.y + lengthdir_y(o, creator.gunangle);
+
+	     // Hitscan Lines:
+	    with(fire_line){
+	        dir += angle_difference(dir_goal, dir) / 7;
+	
+	         // Line Hitscan:
+	        var o = 4,
+	            _dir = dir + other.direction,
+	            _x = 0,
+	            _y = 0,
+	            _ox = lengthdir_x(o, _dir),
+	            _oy = lengthdir_y(o, _dir);
+	
+	        dis = 0;
+	        with(other) while(other.dis < other.dis_goal){
+	            other.dis += o;
+	            _x += _ox;
+	            _y += _oy;
+	            if(position_meeting(x + _x, y + _y, Wall)) break;
+	
+	             // Sparkly Laser:
+	            if(current_frame_active && random(250) < 1){
+	                with(instance_create(x + _x + orandom(4), y + _y + orandom(4), EatRad)){
+	                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
+	                    motion_set(_dir + 180 + orandom(60), 2);
+	                }
+	            }
+	        }
+	    }
     }
-
-     // Hitscan Lines:
-    with(fire_line){
-        dir += angle_difference(dir_goal, dir) / 7;
-
-         // Line Hitscan:
-        var o = 4,
-            _dir = dir + other.direction,
-            _x = 0,
-            _y = 0,
-            _ox = lengthdir_x(o, _dir),
-            _oy = lengthdir_y(o, _dir);
-
-        dis = 0;
-        with(other) while(other.dis < other.dis_goal){
-            other.dis += o;
-            _x += _ox;
-            _y += _oy;
-            if(position_meeting(x + _x, y + _y, Wall)) break;
-
-             // Sparkly Laser:
-            if(current_frame_active && random(250) < 1){
-                with(instance_create(x + _x + orandom(4), y + _y + orandom(4), EatRad)){
-                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
-                    motion_set(_dir + 180 + orandom(60), 2);
-                }
-            }
-        }
-    }
+    else instance_destroy();
 
 #define CatBossAttack_draw
      // Laser Sights:
@@ -954,6 +1186,34 @@
 
     instance_destroy();
 
+
+#define CatDoor_create(_x, _y)
+    with(instance_create(_x, _y, CustomHitme)){
+         // Visual:
+        sprite_index = spr.CatDoor;
+        spr_shadow = mskNone;
+        image_speed = 0;
+        depth = -3 - (y / 20000);
+
+         // Sound:
+        snd_hurt = sndHitMetal;
+        snd_dead = sndStreetLightBreak;
+
+         // Vars:
+        mask_index = msk.CatDoor;
+        maxhealth = 15;
+        size = 2;
+        team = 0;
+        openang = 0;
+        openang_last = openang;
+        my_wall = noone;
+        partner = noone;
+        my_surf = -1;
+        my_surf_w = 32;
+        my_surf_h = 50;
+
+        return id;
+    }
 
 #define CatDoor_step
      // Opening & Closing:
@@ -1099,6 +1359,23 @@
     instance_delete(my_wall);
 
 
+#define CatGrenade_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = sprToxicGrenade;
+        mask_index = mskNone;
+
+         // Vars:
+        z = 1;
+        zspeed = 0;
+        zfric = 0.8;
+        damage = 0;
+        force = 0;
+        right = choose(-1, 1);
+
+        return id;
+    }
+
 #define CatGrenade_step
      // Rise & Fall:
     z_engine();
@@ -1145,6 +1422,34 @@
     sound_play(sndGrenade);
     sound_play(sndToxicBarrelGas);
 
+
+#define CatHole_create(_x, _y)
+    o = instance_create(_x, _y, CustomObject);
+    with(o){
+         // Visual:
+        sprite_index = spr.ManholeBottom;
+        image_speed = 0.4;
+        depth = 7;
+
+         // Vars:
+        mask_index = mskSuperFlakBullet;
+        fullofrats = true;
+        target = noone;
+
+         // don't mess with the big boy
+        if(place_meeting(x, y, CustomObject)){
+            with(instances_named(CustomObject, "CatHoleBig")){
+                if(place_meeting(x, y, other)) with(other){
+                    instance_destroy();
+                    exit;
+                }
+            }
+        }
+
+        CatHoleCover();
+
+        return id;
+    }
 
 #define CatHole_step
     if(instance_exists(target)){
@@ -1269,6 +1574,21 @@
     else instance_destroy();
 
 
+#define CatHoleBig_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        spr_bot = spr.BigManholeBot;
+        spr_top = spr.BigManholeTop;
+        sprite_index = spr_top;
+        image_speed = 0;
+        depth = 7;
+
+         // Vars:
+        canboss = true;
+
+        return id;
+    }
+
 #define CatHoleBig_step
     if image_index < 1 image_speed = 0;
     
@@ -1322,7 +1642,24 @@
 #define CatHoleBig_draw
     draw_sprite(spr_bot, 0, x, y);
     draw_sprite(sprite_index, image_index, x, y);
-    
+
+
+#define CatLight_create(_x, _y)
+    var o = {
+        x : _x,
+        y : _y,
+        w1 : 12,
+        w2 : 32,
+        h1 : 32,
+        h2 : 8,
+        offset : 0,
+        active : true
+        };
+
+    array_push(global.catLight, o);
+
+    return o;
+
 #define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
      // Trapezoid Bit:
     var _x1a = _x - (_w1 / 2),
@@ -1349,6 +1686,68 @@
     draw_primitive_end();
 
 
+#define ChairFront_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.ChairFrontIdle;
+        spr_hurt = spr.ChairFrontHurt;
+        spr_dead = spr.ChairDead;
+
+         // Sounds:
+        snd_hurt = sndHitMetal;
+        snd_dead = sndStreetLightBreak;
+
+         // Vars:
+        maxhealth = 4;
+        size = 1;
+
+        return id;
+    }
+
+
+#define ChairSide_create(_x, _y)
+    with(obj_create(_x, _y, "ChairFront")){
+         // Visual:
+        spr_idle = spr.ChairSideIdle;
+        spr_hurt = spr.ChairSideHurt;
+
+        return id;
+    }
+
+
+#define Couch_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.CouchIdle;
+        spr_hurt = spr.CouchHurt;
+        spr_dead = spr.CouchDead;
+
+         // Sounds:
+        snd_hurt = sndHitPlant;
+        snd_dead = sndWheelPileBreak;
+
+         // Vars:
+        maxhealth = 20;
+        size = 3;
+
+        return id;
+    }
+
+
+#define Manhole_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = sprPizzaEntrance;
+        image_speed = 0;
+        mask_index = mskFloor;
+
+         // Vars:
+        depth = 8;
+        toarea = "pizza"; // go to pizza sewers
+
+        return id;
+    }
+
 #define Manhole_step
 	if(image_index == 0 && place_meeting(x, y, Explosion)){
 	    var _canhole = (!instance_exists(FrogQueen) && !array_length(instances_matching(CustomEnemy, "name", "CatBoss")));
@@ -1371,79 +1770,66 @@
 	}
 
 
-#define VenomFlak_step
-     // effects:
-    if random(3) < current_time_scale
-        with instance_create(x, y, Smoke)
-            depth = other.depth + 1;
+#define NewTable_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.TableIdle;
+        spr_hurt = spr.TableHurt;
+        spr_dead = spr.TableDead;
+        spr_shadow = shd32;
+        depth--;
 
-     // timeout:
-    time -= current_time_scale;
-    if time <= 0
-        instance_destroy();
+         // Sounds:
+        snd_hurt = sndHitMetal;
+        snd_dead = sndHydrantBreak;
 
-#define VenomFlak_draw
-    draw_self();
-    draw_set_blend_mode(bm_add);
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-    draw_set_blend_mode(bm_normal);
+         // Vars:
+        maxhealth = 8;
+        size = 2;
 
-#define VenomFlak_wall
-    move_bounce_solid(false);
-    speed = min(speed, 8);
-
-     // effects:
-    with instance_create(x, y, AcidStreak){
-        motion_set(other.direction, 3);
-        image_angle = direction;
-         // fat splat:
-        image_yscale *= 2;
+        return id;
     }
 
-    sound_play_pitchvol(sndShotgunHitWall, 1.2, 1);
-    sound_play_pitchvol(sndFrogEggHurt, 0.7, 0.2);
 
-#define VenomFlak_destroy
-    instance_create(x, y, PortalClear);
+#define Paper_create(_x, _y)
+    with(instance_create(_x, _y, Feather)){
+    	 // Visual:
+        sprite_index = spr.Paper;
+        image_index = random(image_number);
+        image_speed = 0;
 
-     // effects:
-    for (var i = 0; i <= 360; i += 360 / 20){
-        with instance_create(x, y, Smoke)
-            motion_set(i, 4 + random(4));
+         // Vars:
+        friction = 0.2;
+
+        return id;
     }
 
-    view_shake_at(x, y, 20);
 
-    sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
-    sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
-    sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
+#define PizzaDrain_create(_x, _y)
+    with(instance_create(_x, _y, CustomHitme)){
+         // Visual:
+        spr_idle = spr.PizzaDrainIdle;
+        spr_walk = spr_idle;
+        spr_hurt = spr.PizzaDrainHurt;
+        spr_dead = spr.PizzaDrainDead;
+        spr_shadow = mskNone;
+        image_xscale = choose(-1, 1);
+        image_speed = 0.4;
+        depth = -1;
 
-     // bullets:
-    for (var d = 0; d <= 360; d += 360 / 12){
+         // Sound:
+        snd_hurt = sndHitMetal;
+        snd_dead = sndStatueDead;
 
-         // lines of venom:
-        if (d mod 90) == 0{
-            for (var i = 0; i <= 5; i++){
-                with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2 + i), 2 * i){
-                    move_contact_solid(direction, 4 + 4 * i);
+         // Vars:
+        //mask_index = mskIcon;
+        mask_index = -1;
+        maxhealth = 40;
+        team = 0;
+        size = 3;
 
-                     // effects:
-                    with instance_create(x, y, AcidStreak){
-                        motion_set(other.direction + orandom(4), other.speed * 0.8);
-                        image_angle = direction;
-                    }
-                }
-            }
-        }
-
-         // single venom bullets:
-        else{
-            with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2), 5.8 + random(0.4)){
-                move_contact_solid(direction, 6);
-            }
-        }
+        return id;
     }
-
 
 #define PizzaDrain_step
      // Stay Still:
@@ -1556,6 +1942,19 @@
         floor_reveal(_path, 2);
 
 
+#define PizzaTV_create(_x, _y)
+    with(instance_create(_x, _y, TV)){
+         // Visual:
+        spr_hurt = spr.TVHurt;
+        spr_dead = spr_hurt;
+
+         // Vars:
+        maxhealth = 15;
+        my_health = maxhealth;
+
+	    return id;
+    }
+
 #define PizzaTV_end_step
 	x = xstart;
 	y = ystart;
@@ -1575,6 +1974,96 @@
         repeat(2) instance_create(x, y, PortalL);
 
         instance_delete(id);
+    }
+
+
+#define VenomFlak_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.VenomFlak;
+        image_speed = 0.4;
+
+         // Vars:
+        friction = 0.4;
+        damage = 6;
+        force = 6;
+        typ = 1;
+        time = 40;
+
+        return id;
+    }
+
+#define VenomFlak_step
+     // effects:
+    if random(3) < current_time_scale
+        with instance_create(x, y, Smoke)
+            depth = other.depth + 1;
+
+     // timeout:
+    time -= current_time_scale;
+    if time <= 0
+        instance_destroy();
+
+#define VenomFlak_draw
+    draw_self();
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+    draw_set_blend_mode(bm_normal);
+
+#define VenomFlak_wall
+    move_bounce_solid(false);
+    speed = min(speed, 8);
+
+     // effects:
+    with instance_create(x, y, AcidStreak){
+        motion_set(other.direction, 3);
+        image_angle = direction;
+         // fat splat:
+        image_yscale *= 2;
+    }
+
+    sound_play_pitchvol(sndShotgunHitWall, 1.2, 1);
+    sound_play_pitchvol(sndFrogEggHurt, 0.7, 0.2);
+
+#define VenomFlak_destroy
+    instance_create(x, y, PortalClear);
+
+     // effects:
+    for (var i = 0; i <= 360; i += 360 / 20){
+        with instance_create(x, y, Smoke)
+            motion_set(i, 4 + random(4));
+    }
+
+    view_shake_at(x, y, 20);
+
+    sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
+    sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
+    sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
+
+     // bullets:
+    for (var d = 0; d <= 360; d += 360 / 12){
+
+         // lines of venom:
+        if (d mod 90) == 0{
+            for (var i = 0; i <= 5; i++){
+                with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2 + i), 2 * i){
+                    move_contact_solid(direction, 4 + 4 * i);
+
+                     // effects:
+                    with instance_create(x, y, AcidStreak){
+                        motion_set(other.direction + orandom(4), other.speed * 0.8);
+                        image_angle = direction;
+                    }
+                }
+            }
+        }
+
+         // single venom bullets:
+        else{
+            with scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2), 5.8 + random(0.4)){
+                move_contact_solid(direction, 6);
+            }
+        }
     }
 
 
@@ -1681,7 +2170,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -1698,3 +2186,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

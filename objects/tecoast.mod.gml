@@ -17,67 +17,34 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
-#define Creature_step
-    enemySprites();
-    enemyWalk(walkspd,maxspd);
-     // Run away when hurt:
-    if nexthurt > current_frame && !scared{
-        scared = true;
-        instance_create(x+right*65,y-24,AssassinNotice);
+#define BloomingCactus_create(_x, _y)
+	with(instance_create(_x, _y, Cactus)){
+        var s = irandom(array_length(spr.BloomingCactusIdle) - 1);
+        spr_idle = spr.BloomingCactusIdle[s];
+        spr_hurt = spr.BloomingCactusHurt[s];
+        spr_dead = spr.BloomingCactusDead[s];
+
+        return id;
     }
 
-     // Pushed away from floors:
-    var _f = instance_nearest(x,y,Floor);
-    if point_distance(x,y,_f.x,_f.y) <= 128
-        motion_add_ct(point_direction(_f.x,_f.y,x,y),3);
 
-     // Push Player:
-    if(place_meeting(x, y, Player)){
-        with(Player) if(place_meeting(x, y, other)){
-            motion_add_ct(point_direction(other.x,other.y,x,y), 3);
-        }
-    }
+#define BuriedCar_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.BuriedCarIdle;
+        spr_hurt = spr.BuriedCarHurt;
+        spr_dead = mskNone;
+        spr_shadow = mskNone;
 
-#define Creature_draw
-    draw_self_enemy();
+         // Sound:
+        snd_hurt = sndHitMetal;
 
-#define Creature_alrm1
-    alarm1 = 30;
-    if instance_exists(Player){
-         // finds the nearest wading player
-        var _p = noone,
-            _bigdist = 10000;
-        with(Player) if !collision_line(x,y,other.x,other.y,Floor,0,0){
-            var _distance = point_distance(x,y,other.x,other.y);
-            if _distance < _bigdist{
-                _p = self;
-                _bigdist = _distance;
-            }
-        }
-        if !scared{
-            if instance_exists(_p){
-                 // investigate wading player
-                if point_distance(x,y,_p.x,_p.y) > 128
-                    scrWalk(20+irandom(10),point_direction(x,y,_p.x,_p.y));
-                else if random(4) < 1
-                    instance_create(x+right*65,y-24,HealFX);
-                scrRight(point_direction(x,y,_p.x,_p.y));
-            }
-            else{
-                 // wander
-                scrWalk(20+irandom(10),direction+random(20));
-                scrRight(direction);
-            }
-        }
-        else{
-            if instance_exists(_p)
-                scrWalk(999999999, point_direction(_p.x, _p.y, x, y));
-            else{
-                _p = instance_nearest(x,y,Player);
-                scrWalk(20+irandom(10),point_direction(_p.x, _p.y, x, y));
-            }
-            scrRight(direction);
-        }
+         // Vars:
+        size = 2;
+        maxhealth = 20;
+        my_floor = instance_nearest(x - 16, y - 16, Floor);
+
+        return id;
     }
 
 #define BuriedCar_step
@@ -110,8 +77,6 @@
 
 #define CoastDecal_create(_x, _y, _shell)
     with(instance_create(_x, _y, CustomHitme)){
-        name = "CoastDecal";
-
         shell = _shell;
 
          // Visual:
@@ -146,7 +111,6 @@
         mask_index = (shell ? mskScrapBoss : mskBandit);
         mask_floor = (shell ? mskSalamander : mskAlly);
         maxhealth = (shell ? 100 : 50);
-        my_health = maxhealth;
         size = (shell ? 4 : 3);
         team = 0;
 
@@ -156,9 +120,6 @@
 
          // Doesn't Use Coast Wading System:
         nowade = true;
-
-        on_step = CoastDecal_step;
-        on_hurt = CoastDecal_hurt;
 
         return id;
     }
@@ -254,6 +215,138 @@
         }
     }
 
+
+#define Creature_create(_x, _y)
+    with(instance_create(_x, _y, CustomHitme)){
+         // Visual:
+        spr_idle = spr.CreatureIdle;
+        spr_walk = spr_idle;
+        spr_hurt = spr.CreatureHurt;
+        spr_bott = spr.CreatureBott;
+        spr_foam = spr.CreatureFoam;
+        image_speed = 0.4;
+        depth = -3;
+
+         // Sounds:
+        snd_hurt = sndOasisBossHurt;
+
+         // Vars:
+        mask_index = spr_foam;
+        friction = 0.4;
+        maxhealth = 999999999;
+        size = 8;
+        team = 1;
+        nowade = true;
+        right = choose(-1, 1);
+        walk = 0;
+		walkspd = 1.2;
+		maxspd = 2.6;
+		scared = false;
+
+		 // Alarms:
+		alarm1 = 30;
+
+		return id;
+    }
+
+#define Creature_step
+    enemySprites();
+    enemyWalk(walkspd,maxspd);
+     // Run away when hurt:
+    if nexthurt > current_frame && !scared{
+        scared = true;
+        instance_create(x+right*65,y-24,AssassinNotice);
+    }
+
+     // Pushed away from floors:
+    var _f = instance_nearest(x,y,Floor);
+    if point_distance(x,y,_f.x,_f.y) <= 128
+        motion_add_ct(point_direction(_f.x,_f.y,x,y),3);
+
+     // Push Player:
+    if(place_meeting(x, y, Player)){
+        with(Player) if(place_meeting(x, y, other)){
+            motion_add_ct(point_direction(other.x,other.y,x,y), 3);
+        }
+    }
+
+#define Creature_draw
+    draw_self_enemy();
+
+#define Creature_alrm1
+    alarm1 = 30;
+    if instance_exists(Player){
+         // finds the nearest wading player
+        var _p = noone,
+            _bigdist = 10000;
+        with(Player) if !collision_line(x,y,other.x,other.y,Floor,0,0){
+            var _distance = point_distance(x,y,other.x,other.y);
+            if _distance < _bigdist{
+                _p = self;
+                _bigdist = _distance;
+            }
+        }
+        if !scared{
+            if instance_exists(_p){
+                 // investigate wading player
+                if point_distance(x,y,_p.x,_p.y) > 128
+                    scrWalk(20+irandom(10),point_direction(x,y,_p.x,_p.y));
+                else if random(4) < 1
+                    instance_create(x+right*65,y-24,HealFX);
+                scrRight(point_direction(x,y,_p.x,_p.y));
+            }
+            else{
+                 // wander
+                scrWalk(20+irandom(10),direction+random(20));
+                scrRight(direction);
+            }
+        }
+        else{
+            if instance_exists(_p)
+                scrWalk(999999999, point_direction(_p.x, _p.y, x, y));
+            else{
+                _p = instance_nearest(x,y,Player);
+                scrWalk(20+irandom(10),point_direction(_p.x, _p.y, x, y));
+            }
+            scrRight(direction);
+        }
+    }
+
+
+#define Diver_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.DiverIdle;
+		spr_walk = spr.DiverWalk;
+		spr_hurt = spr.DiverHurt;
+		spr_dead = spr.DiverDead;
+		spr_weap = spr.HarpoonGun;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "DIVER"];
+		depth = -2;
+
+		 // Sound:
+		snd_hurt = sndHitMetal;
+		snd_dead = sndAssassinDie;
+
+		 // Vars:
+		mask_index = mskBandit;
+		maxhealth = 12;
+		raddrop = 4;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		gunangle = random(360);
+		direction = gunangle;
+		canshoot = false;
+		reload = 0;
+
+         // Alarms:
+		alarm1 = 90 + irandom(60);
+
+		return id;
+	}
 
 #define Diver_step
     enemySprites();
@@ -424,6 +517,21 @@
     if(instance_is(self, CustomDraw)) instance_destroy();
 
 
+#define DiverHarpoon_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+	    sprite_index = sprBolt;
+
+         // Vars:
+	    mask_index = mskBolt;
+		creator = noone;
+		damage = 4;
+		force = 8;
+		typ = 2;
+
+		return id;
+	}
+
 #define DiverHarpoon_end_step
      // Trail:
     var _x1 = x,
@@ -466,6 +574,41 @@
         alarm0 = 30;
     }
 
+
+#define Gull_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.GullIdle;
+		spr_walk = spr.GullWalk;
+		spr_hurt = spr.GullHurt;
+		spr_dead = spr.GullDead;
+		spr_weap = spr.GullSword;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "GULL"];
+		depth = -2;
+
+         // Sound:
+        snd_hurt = sndRavenHit;
+        snd_dead = sndAllyDead;
+
+         // Vars:
+		mask_index = mskBandit;
+		maxhealth = 8;
+		raddrop = 3;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3.5;
+		gunangle = random(360);
+		direction = gunangle;
+		wepangle = 140 * choose(-1, 1);
+
+         // Alarms:
+		alarm1 = 60 + irandom(60);
+		alarm2 = -1;
+
+		return id;
+	}
 
 #define Gull_draw
     if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
@@ -528,6 +671,74 @@
     sound_play(sndChickenSword);
     scrRight(gunangle);
 
+
+#define Palanking_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // For Sani's bosshudredux:
+        boss = 1;
+        bossname = "PALANKING";
+        col = c_red;
+
+         // Visual:
+        spr_bott = spr.PalankingBott;
+        spr_taun = spr.PalankingTaunt;
+        spr_call = spr.PalankingCall;
+        spr_idle = spr.PalankingIdle;
+		spr_walk = spr.PalankingWalk;
+		spr_hurt = spr.PalankingHurt;
+		spr_dead = spr.PalankingDead;
+		spr_burp = spr.PalankingBurp;
+		spr_fire = spr.PalankingFire;
+		spr_foam = spr.PalankingFoam;
+	    spr_shadow_hold = shd64B; // Actually a good use for this shadow hell yeah
+	    spr_shadow = mskNone;
+        spr_shadow_y = 24;
+		hitid = [spr_idle, "SEAL KING"];
+	    depth = -3;
+
+         // Sound:
+		snd_hurt = snd.PalankingHurt;
+		snd_dead = snd.PalankingDead;
+
+		 // Vars:
+		mask_index = mskNone;
+		mask_hold = msk.Palanking;
+		maxhealth = scrBossHP(350);
+		raddrop = 80;
+		size = 4;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 2;
+		ammo = 0;
+		canmelee = 0;
+		meleedamage = 4;
+		ground_smash = 0;
+		gunangle = random(360);
+		direction = gunangle;
+		nowade = true;
+		active = false;
+		intro = false;
+		intro_pan = 0;
+		intro_pan_x = x;
+		intro_pan_y = y;
+        seal = [];
+        seal_x = [];
+        seal_y = [];
+        seal_max = 4 + (2 * GameCont.loops);
+        seal_group = 0;
+        seal_spawn = 0;
+        seal_spawn_x = x;
+        seal_spawn_y = y;
+        tauntdelay = 40;
+        phase = -1;
+        z = 0;
+        zspeed = 0;
+        zfric = 1;
+        zgoal = 0;
+        corpse = false;
+
+        return id;
+    }
 
 #define Palanking_step
     if(z <= 0) walk = 0;
@@ -1210,6 +1421,27 @@
     }
 
 
+#define PalankingDie_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.PalankingHurt;
+        spr_dead = spr.PalankingDead;
+        image_speed = 0.4;
+        image_alpha = 0; // Cause customobjects draw themselves even if you have a custom draw event >:(
+	    depth = -3;
+
+	     // Vars:
+	    friction = 0.4
+        size = 3;
+        z = 0;
+        zspeed = 9;
+        zfric = 1;
+        raddrop = 80;
+        snd_dead = snd.PalankingDead;
+
+        return id;
+    }
+
 #define PalankingDie_step
     z_engine();
     if(z <= 0) instance_destroy();
@@ -1259,6 +1491,22 @@
 	scrRadDrop(x, y + 16, raddrop, direction, speed);
 
 
+#define PalankingSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+         // Visual:
+        sprite_index = spr.PalankingSlash;
+        image_speed = 0.3;
+        depth = -4;
+
+         // Vars:
+        mask_index = mskSlash;
+        friction = 0.5;
+        damage = 1;
+        force = 8;
+
+        return id;
+	}
+
 #define PalankingSlash_hit
 	if(projectile_canhit_melee(other)){
     	projectile_hit_push(other, damage, force);
@@ -1279,6 +1527,38 @@
     	sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
 	}
 
+
+#define PalankingSlashGround_create(_x, _y)
+	with(obj_create(_x, _y, "PalankingSlash")){
+		 // Visual:
+    	sprite_index = spr.GroundSlash;
+    	image_speed = 0.5;
+    	depth = 0;
+    	
+    	 // Vars:
+        mask_index = -1;
+        damage *= 2;
+
+        return id;
+	}
+
+
+#define PalankingToss_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+    	friction = 0.1;
+		creator = noone;
+		z = 0;
+		zspeed = 8;
+		zfric = 0.5;
+
+		 // Saved Vars:
+		depth = -2;
+		mask_index = mskPlayer;
+		spr_shadow_y = 0;
+
+		return id;
+	}
 
 #define PalankingToss_end_step
     z_engine();
@@ -1331,6 +1611,40 @@
     }
 
 
+#define Palm_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.PalmIdle;
+        spr_hurt = spr.PalmHurt;
+        spr_dead = spr.PalmDead;
+        spr_shadow = -1;
+        depth = -2 - (y / 20000);
+
+         // Sound:
+        snd_hurt = sndHitRock;
+        snd_dead = sndHitPlant;
+
+         // Vars:
+        mask_index = mskStreetLight;
+        maxhealth = 30;
+        size = 2;
+        my_enemy = noone;
+        my_enemy_mask = mskNone;
+
+         // Fortify:
+        if(random(8) < 1){
+            my_enemy = obj_create(x, y, "Diver");
+            with(my_enemy) depth = -3;
+
+            spr_idle = spr.PalmFortIdle;
+            spr_hurt = spr.PalmFortHurt;
+            snd_dead = sndGeneratorBreak;
+            maxhealth = 40;
+        }
+
+        return id;
+    }
+
 #define Palm_step
     with(my_enemy){
         x = other.x;
@@ -1359,6 +1673,44 @@
         vspeed += 2;
     }
 
+
+#define Pelican_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)) {
+         // Visual:
+		spr_idle = spr.PelicanIdle;
+		spr_walk = spr.PelicanWalk;
+		spr_hurt = spr.PelicanHurt;
+		spr_dead = spr.PelicanDead;
+		spr_weap = spr.PelicanHammer;
+		spr_shadow = shd32;
+		spr_shadow_y = 6;
+		hitid = [spr_idle, "PELICAN"];
+		mask_index = mskRhinoFreak;
+		depth = -2;
+
+         // Sound:
+		snd_hurt = sndGatorHit;
+		snd_dead = sndGatorDie;
+
+		 // Vars:
+		maxhealth = 50;
+		raddrop = 20;
+		size = 2;
+		walk = 0;
+		walkspd = 0.6;
+		maxspd = 3;
+		dash = 0;
+		dash_factor = 1.25;
+		chrg_time = 24; // 0.8 Seconds
+		gunangle = random(360);
+		direction = gunangle;
+		wepangle = choose(-140, 140);
+
+		 // Alarms:
+		alarm1 = 30 + irandom(60);
+
+		return id;
+	}
 
 #define Pelican_step
     enemySprites();
@@ -1470,6 +1822,64 @@
         }
     }
 
+
+#define Seal_create(_x, _y)
+     // Elite Spawn:
+    if(random(16) < 1){
+        return obj_create(_x, _y, "SealHeavy");
+    }
+
+     // Normal Spawn:
+    else{
+        o = instance_create(_x, _y, CustomEnemy);
+        with(o){
+             // Visual:
+            spr_spwn = spr.SealSpwn[0];
+            spr_idle = spr.SealIdle[0];
+            spr_walk = spr.SealWalk[0];
+            spr_hurt = spr.SealHurt[0];
+            spr_dead = spr.SealDead[0];
+            spr_weap = spr.SealWeap[0];
+            spr_shadow = shd24;
+            hitid = [spr_idle, "SEAL"];
+            sprite_index = spr_spwn;
+            depth = -2;
+
+             // Sound:
+            var _male = irandom(1);
+            snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
+            snd_dead = (_male ? sndFireballerDead : sndFreakDead);
+
+             // Vars:
+            mask_index = mskBandit;
+            maxhealth = 12;
+            raddrop = 1;
+            size = 1;
+            walk = 0;
+            walkspd = 0.8;
+            maxspd = 3.5;
+            type = 0;
+            hold = false;
+            hold_x = 0;
+            hold_y = 0;
+            creator = noone;
+            wepangle = 0;
+            gunangle = random(360);
+            direction = gunangle;
+            slide = 0;
+            scared = false;
+            shield = choose(true, false);
+            shield_ang = gunangle;
+            shield_draw = true;
+            surfClamShield = -1;
+
+             // Alarms:
+            alarm1 = 20 + random(20);
+            alarm2 = -1;
+        }
+
+        return id;
+    }
 
 #define Seal_step
     enemyWalk((hold ? 0 : walkspd), maxspd);
@@ -1967,6 +2377,24 @@
     pickup_drop(50, 0);
 
 
+#define SealAnchor_create(_x, _y)
+    with(instance_create(_x, _y, CustomSlash)){
+         // Visual:
+        sprite_index = spr.SealAnchor;
+        image_speed = 0;
+        depth = -2;
+
+         // Vars:
+        mask_index = -1;
+        damage = 4;
+        force = 6;
+        team = 1;
+        last_x = [x, x];
+        last_y = [y, y];
+
+        return id;
+    }
+
 #define SealAnchor_step
     if(instance_exists(creator)){
         x = creator.x + (hspeed * (1 - current_time_scale));
@@ -2053,6 +2481,53 @@
         }
     }
 
+
+#define SealHeavy_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_spwn = spr.SealHeavySpwn;
+        spr_idle = spr.SealHeavyIdle;
+        spr_walk = spr.SealHeavyWalk;
+        spr_hurt = spr.SealHeavyHurt;
+        spr_dead = spr.SealHeavyDead;
+        spr_chrg = spr.SealHeavyTell;
+        spr_weap = spr.SealAnchor;
+        spr_shadow = shd24;
+        hitid = [spr_idle, "HEAVY SEAL"];
+        sprite_index = spr_spwn;
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndJockHurt;
+        snd_dead = sndJockDead;
+
+         // Vars:
+        mask_index = mskBandit;
+        maxhealth = 40;
+        raddrop = 12;
+        size = 2;
+        walk = 0;
+        walkspd = 0.8;
+        maxspd = 3;
+        wepangle = 0;
+        gunangle = random(360);
+        direction = gunangle;
+        my_mine = noone;
+        my_mine_ang = gunangle;
+        my_mine_spin = 0;
+        target_x = x;
+        target_y = y;
+        anchor = noone;
+        anchor_swap = false;
+        anchor_spin = 0;
+        anchor_throw = 0;
+        anchor_retract = 0;
+
+		 // Alarms:
+        alarm1 = 40 + random(30);
+
+        return id;
+    }
 
 #define SealHeavy_step
     enemyWalk(walkspd, maxspd);
@@ -2361,6 +2836,38 @@
     pickup_drop(50, 0);
 
 
+#define SealMine_create(_x, _y)
+    with(instance_create(_x, _y, CustomHitme)){
+         // Visual:
+        spr_idle = spr.SealMine;
+        spr_hurt = spr.SealMineHurt;
+        spr_dead = sprScorchmark;
+        spr_shadow = shd24;
+        hitid = [spr_idle, "WATER MINE"];
+        depth = -5;
+        image_speed = 0.4;
+
+         // Sound:
+        snd_hurt = sndHitMetal;
+
+         // Vars:
+        mask_index = mskNone;
+        friction = 0;
+        maxhealth = 10;
+        creator = noone;
+        canfly = true;
+        size = 2;
+        team = 0;
+        z = 0;
+        zspeed = 0;
+        zfric = 1;
+        right = choose(-1, 1);
+
+        motion_add(random(360), 3);
+
+        return id;
+    }
+
 #define SealMine_step
      // Animate:
     if(sprite_index != spr_hurt || anim_end){
@@ -2461,6 +2968,44 @@
     sound_play_hit(sndFlakExplode, 0.2);
 
 
+#define TrafficCrab_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.CrabIdle;
+        spr_walk = spr.CrabWalk;
+        spr_hurt = spr.CrabHurt;
+        spr_dead = spr.CrabDead;
+        spr_fire = spr.CrabFire;
+        spr_shadow = shd48;
+        hitid = [spr_idle, "TRAFFIC CRAB"];
+        mask_index = mskScorpion;
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndSpiderHurt;
+        snd_dead = sndPlantTBKill;
+        snd_mele = sndGoldScorpionMelee;
+
+         // Vars:
+        maxhealth = 20;
+        raddrop = 10;
+        size = 2;
+        meleedamage = 4;
+        walk = 0;
+        walkspd = 1;
+        maxspd = 2.5;
+		gunangle = random(360);
+		direction = gunangle;
+		sweep_spd = 10;
+        sweep_dir = right;
+        ammo = 0;
+
+         // Alarms:
+        alarm1 = 30 + random(90);
+
+        return id;
+    }
+
 #define TrafficCrab_step
     enemySprites();
     enemyWalk(walkspd, maxspd);
@@ -2548,6 +3093,22 @@
         }
     }
 
+
+#define TrafficCrabVenom_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = sprScorpionBullet;
+        mask_index = mskEnemyBullet1;
+        depth = -3;
+
+         // Vars:
+        friction = 0.75;
+        damage = 2;
+        force = 4;
+        typ = 2;
+
+        return id;
+    }
 
 #define TrafficCrabVenom_step
     if(speed <= 0) instance_destroy();
@@ -2647,7 +3208,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -2663,3 +3223,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

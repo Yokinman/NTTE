@@ -492,6 +492,9 @@
 
              // FX:
             Paper = sprite_add("sprites/areas/Lair/Props/sprPaper.png", 3, 5, 6);
+
+             // Pizza TV:
+            TVHurt = sprite_add("sprites/areas/Pizza/sprTVHurt.png", 3, 24, 16);
         //#endregion
 
         //#region CRYSTAL CAVES

@@ -15,6 +15,21 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define InvMortar_create(_x, _y)
+    with(obj_create(_x, _y, "Mortar")){
+        inv = true;
+
+        // Visual:
+       spr_idle = spr.InvMortarIdle;
+       spr_walk = spr.InvMortarWalk;
+       spr_fire = spr.InvMortarFire;
+       spr_hurt = spr.InvMortarHurt;
+       spr_dead = spr.InvMortarDead;
+       hitid = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"]
+
+       return id;
+    }
+
 #define InvMortar_step
     if random(3) < current_time_scale
         instance_create(x + orandom(8), y + orandom(8), Curse);
@@ -56,6 +71,43 @@
         }
     }
 
+
+#define Mortar_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.MortarIdle;
+		spr_walk = spr.MortarWalk;
+		spr_fire = spr.MortarFire;
+		spr_hurt = spr.MortarHurt;
+		spr_dead = spr.MortarDead;
+		spr_weap = mskNone;
+		spr_shadow = shd48;
+		spr_shadow_y = 4;
+		mask_index = mskSpider;
+		hitid = [spr_idle, "MORTAR"];
+		depth = -4;
+
+         // Sound:
+		snd_hurt = sndLaserCrystalHit;
+		snd_dead = sndLaserCrystalDeath;
+
+		 // Vars:
+		maxhealth = 75;
+		raddrop = 30;
+		size = 3;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 2;
+		ammo = 4;
+		gunangle = random(360);
+		direction = gunangle;
+
+         // Alarms:
+		alarm1 = 100 + irandom(40);
+		alarm2 = -1;
+
+        return id;
+    }
 
 #define Mortar_step
      // Animate:
@@ -223,6 +275,22 @@
     }
 
 
+#define MortarPlasma_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.MortarPlasma;
+        mask_index = mskNone;
+
+         // Vars:
+        z = 1;
+        zspeed = 0;
+        zfric = 0.4; // 0.8
+        damage = 0;
+        force = 0;
+
+        return id;
+    }
+
 #define MortarPlasma_step
      // Rise & Fall:
     z_engine();
@@ -279,12 +347,64 @@
     sound_play(sndPlasmaHit);
 
 
+#define NewCocoon_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+		spr_idle = sprCocoon;
+		spr_hurt = sprCocoonHurt;
+		spr_dead = sprCocoonDead;
+		spr_shadow = shd24;
+
+         // Sound:
+		snd_dead = sndCocoonBreak;
+
+         // Vars:
+		maxhealth = 6;
+		nexthurt = current_frame;
+		size = 1;
+
+		return id;
+	}
+
 #define NewCocoon_death
      // Hatch 1-3 Spiders:
     repeat(irandom_range(1, 3)) {
     	obj_create(x,y,"Spiderling");
     }
 
+
+#define Spiderling_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.SpiderlingIdle;
+		spr_walk = spr.SpiderlingWalk;
+		spr_hurt = spr.SpiderlingHurt;
+		spr_dead = spr.SpiderlingDead;
+		spr_shadow = shd16;
+		spr_shadow_y = 2;
+		mask_index = mskMaggot;
+		hitid = [spr_idle, "SPIDERLING"];
+		depth = -2;
+
+         // Sound:
+		snd_hurt = sndSpiderHurt;
+		snd_dead = sndSpiderDead;
+
+		 // Vars:
+		maxhealth = 4;
+		raddrop = 2;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		direction = random(360);
+
+         // Alarms:
+		alarm0 = 300 + random(90);
+		alarm1 = 20 + random(20);
+
+		return id;
+    }
 
 #define Spiderling_alrm0
      // Shhh dont tell anybody
@@ -429,7 +549,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -445,3 +564,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

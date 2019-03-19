@@ -411,7 +411,7 @@
         case 103: /// MANSIOM  its MANSION idiot, who wrote this
              // Spawn Gold Mimic:
             with(instance_nearest(10016, 10016, GoldChest)){
-                with(Pet_create(x, y, "Mimic")){
+                with(Pet_spawn(x, y, "Mimic")){
                     wep = decide_wep_gold(18, 18 + GameCont.loops, 0);
                 }
                 instance_delete(self);
@@ -430,7 +430,7 @@
 
              // Spawn Prism:
             with(BigCursedChest) {
-                Pet_create(x, y, "Prism");
+                Pet_spawn(x, y, "Prism");
             }
             break;
 
@@ -438,7 +438,7 @@
              // Cool parrot:
             if(GameCont.subarea == 1){
                 with(instances_matching(instances_matching(CustomHitme, "name", "CoastDecal"), "shell", true)){
-                    with(Pet_create(x, y, "Parrot")){
+                    with(Pet_spawn(x, y, "Parrot")){
                         perched = other;
                     }
                 }
@@ -460,7 +460,7 @@
                 do f = instance_random(Floor);
                 until (point_distance(f.x + 16, f.y + 16, p.x, p.y) > 128 || _tries-- <= 0);
 
-                Pet_create(f.x + 16, f.y + 16, "Octo");
+                Pet_spawn(f.x + 16, f.y + 16, "Octo");
             }
             break;
     }
@@ -505,7 +505,7 @@
      // Spawn CoolGuy:
     if(GameCont.area = "pizza") with(TV) {
         var f = instance_nearest(x, y + 48, Floor);
-        Pet_create(x, f.y + 16, "CoolGuy");
+        Pet_spawn(x, f.y + 16, "CoolGuy");
     }
 
      // Visibilize Pets:
@@ -2304,7 +2304,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -2319,3 +2318,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

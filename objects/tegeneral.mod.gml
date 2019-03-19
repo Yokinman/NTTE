@@ -17,10 +17,69 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define BigDecal_create(_x, _y)
+    var a = string(GameCont.area);
+    if(lq_exists(spr.BigTopDecal, a)){
+		with(instance_create(_x, _y, CustomObject)){
+		     // Visual:
+		    sprite_index = lq_get(spr.BigTopDecal, a);
+			image_xscale = choose(-1, 1);
+			image_speed = 0.4;
+			depth = -8;
+
+             // Vars:
+    		mask_index = msk.BigTopDecal;
+    		area = GameCont.area;
+
+             // Avoid Bad Stuff:
+            var _tries = 1000;
+		    while(_tries-- > 0){
+		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor)){
+		            var _dis = 16,
+		                _dir = irandom(3) * 90;
+
+		            x += lengthdir_x(_dis, _dir);
+		            y += lengthdir_y(_dis, _dir);
+		        }
+		        else break;
+		    }
+
+             // TopSmalls:
+    		var _off = 16,
+    		    s = _off * 3;
+
+    		for(var _ox = -s; _ox <= s; _ox += _off){
+    		    for(var _oy = -s; _oy <= s; _oy += _off){
+    		        if(!position_meeting(x + _ox, y + _oy, Floor)){
+    		            if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+    		        }
+    		    }
+    		}
+
+    		 // TopDecals:
+    		var _num = irandom(4),
+    		    _ang = random(360);
+
+    		for(var i = _ang; i < _ang + 360; i += (360 / _num)){
+    		    var _dis = 24 + random(12),
+    		        _dir = i + orandom(30);
+
+                with(scrTopDecal(0, 0, GameCont.area)){
+                    x = other.x + lengthdir_x(_dis * 1.5, _dir);
+                    y = other.y + lengthdir_y(_dis, _dir) + 40;
+                    if(place_meeting(x, y, Floor)) instance_destroy();
+                }
+    		}
+
+    		return id;
+		}
+    }
+    return noone;
+
 #define BigDecal_step
     if(!instance_exists(GenCont)){
          // Area-Specifics:
-        switch(GameCont.area){
+        switch(area){
             case "trench":
                 var _vents = [
                     [  2, -14],
@@ -77,7 +136,7 @@
     var _x = x,
         _y = y + 16;
 
-    switch(GameCont.area){
+    switch(area){
         case 1 : // Spawn a handful of crab bones:
             repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
                 motion_set(irandom(359), random_range(3, 6));
@@ -133,6 +192,27 @@
             break;
     }
 
+
+#define BubbleBomb_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.BubbleBomb;
+        image_speed = 0.5;
+        depth = -2;
+
+         // Vars:
+        mask_index = mskSuperFlakBullet;
+        z = 0;
+        zspeed = -0.5;
+        zfric = -0.02;
+        friction = 0.4;
+        damage = 0;
+        force = 2;
+        typ = 1;
+        my_projectile = noone;
+
+        return id;
+    }
 
 #define BubbleBomb_step
      // Float Up:
@@ -271,7 +351,15 @@
     }
 
 
-#define SuperBubbleBomb_step
+#define BubbleBombBig_create(_x, _y)
+    with(obj_create(_x, _y, "BubbleBomb")){
+        image_xscale = 2;
+        image_yscale = 2;
+
+        return id;
+    }
+
+#define SuperBubbleBomb_step // karm why do u copy paste so much and did u even halve all the indent sizes on purpose wtf
     // Float Up:
     z_engine();
     image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
@@ -400,7 +488,7 @@
         }
         hitid = other.hitid;
       }
-      with(obj_create(x+lengthdir_x(16,_ang+60), y+lengthdir_y(16,_ang+60), "SmallBubbleExplosion")){
+      with(obj_create(x+lengthdir_x(16,_ang+60), y+lengthdir_y(16,_ang+60), "BubbleExplosionSmall")){
         team = other.team;
         var c = other.creator;
         if(instance_exists(c)){
@@ -441,6 +529,61 @@
     }
 
 
+#define BubbleExplosion_create(_x, _y, _small)
+    with(instance_create(_x, _y, (_small ? SmallExplosion : PopoExplosion))){
+        sprite_index = spr.BubbleExplode;
+        mask_index = mskExplosion;
+        hitid = [sprite_index, "BUBBLE EXPLO"];
+        damage = 3;
+        force = 1;
+        alarm0 = -1; // No scorchmark
+
+         // Small:
+        if(_small){
+            image_xscale *= 0.5; // Bad!
+            image_yscale *= 0.5; // Lazy!
+
+             // Sound:
+            sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
+        }
+
+         // Normal:
+        else{
+             // Crown of Explosions:
+            if(GameCont.crown == crwn_death){
+                repeat(choose(2, 3)){
+                    with(obj_create(x, y, "BubbleExplosionSmall")){
+                        team = other.team;
+                    }
+                }
+            }
+
+             // Sound:
+            sound_play_pitch(sndExplosionS, 2);
+            sound_play_pitch(sndOasisExplosion, 1 + random(1));
+        }
+
+        repeat(10) instance_create(_x, _y, Bubble);
+
+        return id;
+    }
+
+
+#define CustomChest_create(_x, _y)
+    with(instance_create(_x, _y, chestprop)){
+         // Visual:
+        sprite_index = sprAmmoChest;
+        spr_open = sprAmmoChestOpen;
+
+         // Sound:
+        snd_open = sndAmmoChest;
+
+        on_step = ["", "", ""];
+        on_open = ["", "", ""];
+
+        return id;
+    }
+
 #define CustomChest_step
      // Call Chest Step Event:
     var e = on_step;
@@ -468,6 +611,27 @@
         break;
     }
 
+
+#define Harpoon_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.Harpoon;
+        image_speed = 0;
+        mask_index = mskBolt;
+
+         // Vars:
+    	creator = noone;
+    	target = noone;
+    	rope = noone;
+    	pull_speed = 0;
+    	canmove = 1;
+    	damage = 3;
+    	force = 8;
+    	typ = 1;
+    	blink = 30;
+
+    	return id;
+    }
 
 #define Harpoon_end_step
      // Trail:
@@ -670,6 +834,34 @@
         global.poonRope = a;
     }
 
+
+#define LightningDisc_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = sprLightning;
+        image_speed = 0.4;
+        depth = -3;
+
+         // Vars:
+        mask_index = mskWepPickup;
+        rotspeed = random_range(10, 20) * choose(-1, 1);
+        rotation = 0;
+        radius = 12;
+        charge = 1;
+        charge_spd = 1;
+        ammo = 10;
+        typ = 0;
+        shrink = 1/160;
+        maxspeed = 2.5;
+        is_enemy = false;
+        image_xscale = 0;
+        image_yscale = 0;
+        stretch = 1;
+        super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
+        creator_follow = true;
+        
+        return id;
+    }
 
 #define LightningDisc_step
     rotation += rotspeed;
@@ -964,6 +1156,41 @@
     }
 
 
+#define LightningDiscEnemy_create(_x, _y)
+    with(obj_create(_x, _y, "LightningDisc")){
+         // Visual:
+        sprite_index = sprEnemyLightning;
+
+         // Vars:
+        is_enemy = true;
+        maxspeed = 2;
+        radius = 16;
+
+        return id;
+    }
+
+
+#define NetNade_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.NetNade;
+        image_speed = 0.4;
+
+         // Vars:
+        mask_index = sprGrenade;
+        friction = 0.4;
+        creator = noone;
+        lasthit = noone;
+        damage = 10;
+        force = 4;
+        typ = 1;
+
+         // Alarms:
+        alarm0 = 60;
+
+        return id;
+    }
+
 #define NetNade_step
      // Blink:
     if(alarm0 > 0 && alarm0 < 15){
@@ -1029,6 +1256,15 @@
     scrHarpoonRope(f, h);
 
 
+#define ParrotChester_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Vars:
+        creator = noone;
+        num = 8;
+
+        return id;
+    }
+
 #define ParrotChester_step
     if(instance_exists(creator)){
         x = creator.x;
@@ -1051,6 +1287,42 @@
         instance_destroy();
     }
 
+
+#define ParrotFeather_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        //sprite_index = spr.Parrot[0].Feather;
+        sprite_index = mskNone;
+        depth = -8;
+
+         // Vars:
+        mask_index = mskLaser;
+        creator = noone;
+        target = noone;
+        bskin = 0;
+        stick = false;
+        stickx = 0;
+        sticky = 0;
+        stick_time_max = 40 + (20 * skill_get(mut_throne_butt));
+        stick_time = stick_time_max;
+        stick_list = [];
+        canhold = true;
+
+         // Push:
+        motion_add(random(360), 4 + random(2));
+        image_angle = direction + 135;
+        
+         // Spriterize:
+        if(fork()){
+            wait 1;
+            if(instance_exists(self)){
+                sprite_index = spr.Parrot[bskin].Feather;
+            }
+            exit;
+        }
+
+        return id;
+    }
 
 #define ParrotFeather_step
     speed *= 0.9;
@@ -1191,6 +1463,49 @@
         stick_list = array_delete_value(stick_list, other);
     }
 
+
+#define Pet_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        spr_idle = spr.PetParrotIdle;
+        spr_walk = spr.PetParrotWalk;
+        spr_hurt = spr.PetParrotHurt;
+        spr_shadow = shd16;
+        spr_shadow_x = 0;
+        spr_shadow_y = 4;
+        mask_index = mskPlayer;
+        image_speed = 0.4;
+        right = choose(1, -1);
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndFrogEggHurt;
+
+         // Vars:
+        pet = "Parrot";
+        leader = noone;
+        can_take = true;
+        can_path = true;
+        path = [];
+        path_dir = 0;
+        team = 2;
+        walk = 0;
+        walkspd = 2;
+        maxspd = 3;
+        friction = 0.4;
+        direction = random(360);
+        pickup_indicator = noone;
+        surf_draw = -1;
+        surf_draw_w = 64;
+        surf_draw_h = 64;
+        //can_tp = true;
+        //tp_distance = 240;
+
+         // Alarms:
+        alarm0 = 20 + random(10);
+
+        return id;
+    }
 
 #define Pet_step
     if(instance_exists(Menu)){ instance_destroy(); exit; }
@@ -1484,6 +1799,24 @@
     }
 
 
+#define PizzaBoxCool_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = sprPizzaBox;
+        spr_hurt = sprPizzaBoxHurt;
+        spr_dead = sprPizzaBoxDead;
+
+         // Sound:
+        snd_hurt = sndHitPlant;
+        snd_dead = sndPizzaBoxBreak;
+
+         // Vars:
+        maxhealth = 4;
+        size = 1;
+
+        return id;
+    }
+
 #define PizzaBoxCool_death
     var _num = choose(1, 2);
 
@@ -1645,7 +1978,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -1661,3 +1993,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

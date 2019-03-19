@@ -15,6 +15,42 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define BabyScorpion_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.BabyScorpionIdle;
+		spr_walk = spr.BabyScorpionWalk;
+		spr_hurt = spr.BabyScorpionHurt;
+		spr_dead = spr.BabyScorpionDead;
+		spr_fire = spr.BabyScorpionFire;
+		spr_shadow = shd24;
+		spr_shadow_y = -1;
+		hitid = [spr_idle, "BABY SCORPION"];
+		mask_index = mskBandit;
+		depth = -2;
+
+		 // Sound:
+		snd_hurt = sndScorpionHit;
+		snd_dead = sndScorpionDie;
+		snd_fire = sndScorpionFireStart;
+
+		 // Vars:
+		gold = false;
+		maxhealth = 7;
+		raddrop = 4;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 2.4;
+		gunangle = random(360);
+		direction = gunangle;
+
+         // Alarms:
+		alarm1 = 40 + irandom(30);
+
+		return id;
+	}
+
 #define BabyScorpion_alrm1
     alarm1 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
@@ -90,6 +126,58 @@
     sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 1.3);
     snd_dead = -1;
 
+
+#define BabyScorpionGold_create(_x, _y)
+    with(obj_create(_x, _y, "BabyScorpion")){
+         // Visual:
+		spr_idle = spr.BabyScorpionGoldIdle;
+		spr_walk = spr.BabyScorpionGoldWalk;
+		spr_hurt = spr.BabyScorpionGoldHurt;
+		spr_dead = spr.BabyScorpionGoldDead;
+		spr_fire = spr.BabyScorpionGoldFire;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "GOLD BABY SCORPION"];
+		sprite_index = spr_idle;
+		mask_index = mskBandit;
+		depth = -2;
+
+		 // Sound:
+		snd_hurt = sndGoldScorpionHurt;
+		snd_dead = sndGoldScorpionDead;
+		snd_fire = sndGoldScorpionFire;
+
+		 // Vars:
+		gold = true;
+		maxhealth = 16;
+		my_health = maxhealth;
+		raddrop = 14;
+
+		return id;
+    }
+
+
+#define Bone_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.Bone;
+        hitid = [sprite_index, "BONE"];
+
+         // Vars:
+        mask_index = mskFlakBullet;
+        friction = 1;
+        damage = 50;
+        force = 1;
+        typ = 1;
+        creator = noone;
+        rotation = 0;
+        rotspeed = (1 / 3) * choose(-1, 1);
+        broken = false;
+
+         // Annoying Fix:
+        if(place_meeting(x, y, PortalShock)) Bone_destroy();
+
+        return id;
+    }
 
 #define Bone_step
      // Spin:
@@ -173,7 +261,7 @@
     sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
 
      // Break:
-    var i = nearest_instance(x, y, instances_matching(CustomProp,"name","CoastBossBecome"));
+    var i = nearest_instance(x, y, instances_named(CustomProp, "CoastBossBecome"));
     if !(instance_exists(i) && point_distance(x, y, i.x, i.y) <= 32){
         broken = true;
         instance_destroy();
@@ -209,6 +297,12 @@
     }
 
 
+#define BoneSpawner_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+    	creator = noone;
+    	return id;
+    }
+
 #define BoneSpawner_step
     if(instance_exists(creator)){
          // Follow Creator:
@@ -231,6 +325,29 @@
         instance_destroy();
     }
 
+
+#define CoastBossBecome_create(_x, _y)
+    with(instance_create(_x, _y, CustomHitme)){
+         // Visual:
+        spr_idle = spr.BigFishBecomeIdle;
+        spr_hurt = spr.BigFishBecomeHurt;
+        spr_dead = sprBigSkullDead;
+        spr_shadow = shd32;
+        image_speed = 0;
+        depth = -1;
+
+         // Sound:
+        snd_hurt = sndHitRock;
+        snd_dead = -1;
+
+         // Vars:
+        mask_index = mskScorpion;
+        maxhealth = 50 + (100 * GameCont.loops);
+        size = 2;
+        part = 0;
+
+        return id;
+    }
 
 #define CoastBossBecome_step
     speed = 0;
@@ -278,6 +395,71 @@
         with(instance_create(x, y, Dust)) motion_add(a, 3);
     }
 
+
+#define CoastBoss_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // For Sani's bosshudredux:
+        boss = 1;
+        bossname = "BIG FISH";
+        col = c_red;
+
+        /// Visual:
+            spr_spwn = spr.BigFishSpwn;
+	        spr_idle = sprBigFishIdle;
+			spr_walk = sprBigFishWalk;
+			spr_hurt = sprBigFishHurt;
+			spr_dead = sprBigFishDead;
+		    spr_weap = mskNone;
+		    spr_shad = shd48;
+			spr_shadow = spr_shad;
+			hitid = [spr_idle, "BIG FISH"];
+			sprite_index = spr_spwn;
+		    depth = -2;
+
+			 // Fire:
+			spr_chrg = sprBigFishFireStart;
+			spr_fire = sprBigFishFire;
+			spr_efir = sprBigFishFireEnd;
+
+			 // Swim:
+			spr_dive = spr.BigFishLeap;
+			spr_rise = spr.BigFishRise;
+
+         // Sound:
+		snd_hurt = sndOasisBossHurt;
+		snd_dead = sndOasisBossDead;
+
+		 // Vars:
+		mask_index = mskBigMaggot;
+		maxhealth = scrBossHP(150);
+		raddrop = 50;
+		size = 3;
+		meleedamage = 3;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		ammo = 4;
+		swim = 0;
+		swim_target = noone;
+		gunangle = random(360);
+		direction = gunangle;
+		intro = false;
+		swim_ang_frnt = direction;
+		swim_ang_back = direction;
+		shot_wave = 0;
+		fish_train = [];
+		fish_swim = [];
+		fish_swim_delay = 0;
+		fish_swim_regen = 0;
+		for(var i = 0; i < (GameCont.loops * 3); i++) fish_train[i] = noone;
+
+		 // Alarms:
+		alarm1 = 90;
+		alarm2 = -1;
+		alarm3 = -1;
+
+		return id;
+    }
 
 #define CoastBoss_step
      // Animate:
@@ -859,7 +1041,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -875,3 +1056,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

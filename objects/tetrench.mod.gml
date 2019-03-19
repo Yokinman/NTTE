@@ -31,6 +31,53 @@
 #macro surfAnglerTrailH 1200
 
 
+#define Angler_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Offset:
+        x = _x - (right * 6);
+        y = _y - 8;
+        xstart = x;
+        ystart = y;
+        xprevious = x;
+        yprevious = y;
+
+         // Visual:
+        spr_idle =      spr.AnglerIdle;
+		spr_walk =      spr.AnglerWalk;
+		spr_hurt =      spr.AnglerHurt;
+		spr_dead =      spr.AnglerDead;
+		spr_appear =    spr.AnglerAppear;
+		// spr_shadow = shd64;
+		// spr_shadow_y = 6;
+		hitid = [spr_idle, "ANGLER"];
+		sprite_index = spr_appear;
+		image_speed = 0.4;
+		depth = -2
+
+         // Sound:
+		snd_hurt = sndFireballerHurt;
+		snd_dead = choose(sndFrogEggDead, sndFrogEggOpen2);
+
+		 // Vars:
+		//mask_index = mskFrogQueen;
+		maxhealth = 50;
+		raddrop = 25;
+		meleedamage = 4;
+		size = 3;
+		walk = 0;
+		walkspd = 0.6;
+		maxspd = 3;
+		hiding = true;
+		ammo = 0;
+
+         // Alarms:
+		alarm1 = 30 + irandom(30);
+
+        scrAnglerHide();
+
+        return id;
+    }
+
 #define Angler_step
     enemyWalk(walkspd, maxspd + (8 * (ammo >= 0 && walk > 0)));
 
@@ -241,6 +288,51 @@
     }
 
 
+#define Eel_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        c = irandom(2);
+        if(c == 0 && GameCont.crown == crwn_guns) c = 1;
+        if(c == 1 && GameCont.crown == crwn_life) c = 0;
+        spr_idle = spr.EelIdle[c];
+        spr_walk = spr_idle;
+        spr_hurt = spr.EelHurt[c];
+        spr_dead = spr.EelDead[c];
+        spr_tell = spr.EelTell[c];
+        hitid = [spr_idle, "EEL"];
+        spr_shadow = shd24;
+        image_index = random(image_number - 1);
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndHitFlesh;
+        snd_dead = sndFastRatDie;
+        snd_mele = sndMaggotBite;
+
+         // Vars:
+        mask_index = mskRat;
+        maxhealth = 12;
+        raddrop = 2;
+        meleedamage = 2;
+        size = 1;
+        walk = 0;
+        walkspd = 1.2;
+        maxspd = 3;
+        pitDepth = 0;
+        direction = random(360);
+        arc_inst = noone;
+        arcing = 0;
+        wave = random(100);
+        gunangle = 0;
+        elite = 0;
+        ammo = 0;
+
+         // Alarms:
+        alarm1 = 30;
+
+        return id;
+    }
+
 #define Eel_step
     enemySprites();
     enemyWalk(walkspd, maxspd);
@@ -443,11 +535,67 @@
     }
 
 
+#define EelSkull_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.EelSkullIdle;
+        spr_hurt = spr.EelSkullHurt;
+        spr_dead = spr.EelSkullDead;
+
+         // Sound:
+        snd_hurt = sndOasisHurt;
+        snd_dead = sndOasisDeath;
+
+         // Vars:
+        maxhealth = 50;
+        size = 2;
+
+        return id;
+    }
+
 #define EelSkull_death
 	for(var a = direction; a < direction + 360; a += (360 / 4)){
         with(instance_create(x, y, Dust)) motion_add(a, 3);
     }
 
+
+#define Jelly_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        c = irandom(2);
+        if(c == 0 && GameCont.crown == crwn_guns) c = 1;
+        if(c == 1 && GameCont.crown == crwn_life) c = 0;
+        spr_charged = spr.JellyIdle[c];
+        spr_idle = spr_charged;
+        spr_walk = spr_charged;
+        spr_hurt = spr.JellyHurt[c];
+        spr_dead = spr.JellyDead[c];
+        spr_fire = (c == 3 ? spr.JellyEliteFire : spr.JellyFire);
+        spr_shadow = shd24;
+        spr_shadow_y = 6;
+        hitid = [spr_idle, "JELLY"];
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndHitFlesh;
+        snd_dead = sndBigMaggotDie;
+
+         // Vars:
+        mask_index = mskLaserCrystal;
+        maxhealth = 52 // (c == 3 ? 72 : 52);
+        raddrop = 16 // (c == 3 ? 38 : 16);
+        size = 2;
+        walk = 0;
+        walkspd = 1;
+        maxspd = 2.6;
+        meleedamage = 4;
+        direction = random(360);
+
+         // Alarms:
+        alarm1 = 40 + irandom(20);
+
+        return id;
+    }
 
 #define Jelly_step
     if(sprite_index != spr_fire) enemySprites();
@@ -505,6 +653,95 @@
     if(c <= 2) pickup_drop(50, 2);
     else pickup_drop(100, 10);
 
+
+#define JellyElite_create(_x, _y)
+    with(obj_create(_x, _y, "Jelly")){
+         // Visual:
+        c = 3;
+        spr_charged = spr.JellyIdle[c]
+        spr_idle = spr_charged;
+        spr_walk = spr_charged;
+        spr_hurt = spr.JellyHurt[c];
+        spr_dead = spr.JellyDead[c];
+        spr_fire = spr.JellyEliteFire;
+
+         // Sound:
+        snd_hurt = sndLightningCrystalHit;
+        snd_dead = sndLightningCrystalDeath;
+
+         // Vars:
+        raddrop *= 2;
+
+        return id;
+    }
+
+
+#define Kelp_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.KelpIdle;
+        spr_hurt = spr.KelpHurt;
+        spr_dead = spr.KelpDead;
+        image_speed = random_range(0.2, 0.3);
+        depth = -2;
+
+         // Sounds:
+        snd_hurt = sndOasisHurt;
+        snd_dead = sndOasisDeath;
+
+         // Vars:
+        maxhealth = 2;
+        size = 1;
+
+        return id;
+    }
+
+
+#define PitSquid_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+
+
+         // Sounds:
+        snd_hurt = sndBallMamaHurt;
+        snd_mele = sndMaggotBite;
+
+         // Vars:
+        friction = 0.01;
+        mask_index = mskNone;
+        meleedamage = 8;
+        maxhealth = scrBossHP(450);
+        raddrop = 1;
+        size = 5;
+        canfly = true;
+        target = noone;
+        bite = false;
+        sink = false;
+        sink_targetx = x;
+        sink_targety = y;
+        pit_height = 1;
+
+         // Eyes:
+        eye = [];
+        eye_angle = random(360);
+        eye_dis_offset = 0;
+        repeat(3){
+            array_push(eye, {
+                x : 0,
+                y : 0,
+                dis : 5,
+                dir : random(360),
+                blink : false,
+                blink_img : 0
+            });
+        }
+
+         // Alarms:
+        alarm1 = 90;
+        alarm2 = 90;
+
+        return id;
+    }
 
 #define PitSquid_step
      // Pit Z Movement:
@@ -885,6 +1122,45 @@
     }
 
 
+#define Tentacle_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_spwn = spr.TentacleSpwn;
+        spr_idle = spr.TentacleIdle;
+        spr_walk = spr.TentacleIdle;
+        spr_hurt = spr.TentacleHurt;
+        spr_dead = spr.TentacleDead;
+        depth = -2 - (y / 20000);
+        hitid = [spr_idle, "PIT SQUID"];
+        sprite_index = mskNone;
+
+         // Sound:
+        snd_hurt = sndHitFlesh;
+        snd_dead = sndMaggotSpawnDie;
+        snd_mele = sndPlantSnare;
+
+         // Vars:
+        mask_index = mskNone;
+        meleedamage = 3;
+        maxhealth = 20;
+        raddrop = 0;
+        size = 3;
+        xoff = 0;
+        yoff = 0;
+        dir = 0;
+        spd = 0;
+        move_delay = 0;
+        creator = noone;
+        canfly = true;
+        kills = 0;
+
+		 // Alarms:
+        alarm0 = 1;
+        alarm1 = 90;
+
+        return id;
+    }
+
 #define Tentacle_step
     if(sprite_index != mskNone){
         if(instance_exists(creator) || creator == noone){
@@ -1056,6 +1332,19 @@
     //repeat(2) instance_create(x, y, Dust);
 
 
+#define TentacleRip_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.TentacleWarn;
+        image_speed = 0.4;
+        depth = 6;
+
+         // Vars:
+        creator = noone;
+
+        return id;
+    }
+
 #define TentacleRip_step
      // Effects:
     if(current_frame_active){
@@ -1094,6 +1383,27 @@
         instance_destroy();
     }
 
+
+#define TrenchFloorChunk_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.FloorTrenchBreak;
+        image_index = irandom(image_number - 1)
+        image_speed = 0;
+        image_alpha = 0;
+        depth = -8;
+
+         // Vars:
+        z = 0;
+        zspeed = 6 + random(4);
+        zfric = 0.3;
+        friction = 0.05;
+        rotspeed = random_range(1, 2) * choose(-1, 1);
+
+        motion_add(random(360), 2 + random(3));
+
+        return id;
+    }
 
 #define TrenchFloorChunk_step
     z_engine();
@@ -1149,6 +1459,26 @@
     }
 
 
+#define Vent_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = spr.VentIdle;
+        spr_hurt = spr.VentHurt;
+        spr_dead = spr.VentDead;
+        spr_shadow = mskNone;
+        depth = -2;
+
+         // Sounds
+        snd_hurt = sndOasisHurt;
+        snd_dead = sndOasisExplosionSmall;
+
+         // Vars:
+        maxhealth = 12;
+        size = 1;
+
+        return id;
+    }
+
 #define Vent_step
     if random(5) < current_time_scale{
         with instance_create(x,y,Bubble){
@@ -1163,6 +1493,41 @@
 #define Vent_death
     obj_create(x,y,"BubbleExplosion");
 
+
+#define YetiCrab_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.YetiCrabIdle;
+        spr_walk = spr.YetiCrabIdle;
+        spr_hurt = spr.YetiCrabIdle;
+        spr_dead = spr.YetiCrabIdle;
+        spr_weap = mskNone;
+        spr_shadow = shd24;
+        spr_shadow_y = 6;
+        hitid = [spr_idle, "YETI CRAB"];
+        mask_index = mskFreak;
+        depth = -2;
+
+         // Sound:
+        snd_hurt = sndScorpionHit;
+        snd_dead = sndScorpionDie;
+
+         // Vars:
+        maxhealth = 12;
+        raddrop = 3;
+        size = 1;
+        walk = 0;
+        walkspd = 1;
+        maxspd = 4;
+        meleedamage = 2;
+        is_king = 0; // Decides leader
+        direction = random(360);
+
+         // Alarms:
+        alarm1 = 20 + irandom(10);
+
+        return id;
+    }
 
 #define YetiCrab_alrm1
     alarm1 = 30 + random(10);
@@ -1467,7 +1832,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -1483,3 +1847,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);

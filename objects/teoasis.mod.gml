@@ -15,6 +15,20 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define ClamChest_create(_x, _y)
+    with(obj_create(_x, _y, "CustomChest")){
+         // Visual:
+        sprite_index = sprClamChest;
+        spr_open = sprClamChestOpen;
+
+         // Sound:
+        snd_open = sndOasisChest;
+
+        on_open = script_ref_create(ClamChest_open);
+
+        return id;
+    }
+
 #define ClamChest_open(_player)
     var w = ["harpoon", "netlauncher", "bubble rifle", "bubble shotgun", "bubble minigun", "lightning ring launcher", "super lightning ring launcher"],
         _wep = "";
@@ -43,6 +57,45 @@
         instance_create(x, y, AssassinNotice);
     }
 
+
+#define HammerHead_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.HammerheadIdle;
+		spr_walk = spr.HammerheadIdle;
+		spr_hurt = spr.HammerheadHurt;
+		spr_dead = spr.HammerheadDead;
+		spr_chrg = spr.HammerheadChrg;
+		spr_shadow = shd48;
+		spr_shadow_y = 2;
+		hitid = [spr_idle, "HAMMERHEAD"];
+		depth = -2;
+
+         // Sound:
+		snd_hurt = sndSalamanderHurt;
+		snd_dead = sndOasisDeath;
+		snd_mele = sndBigBanditMeleeHit;
+
+		 // Vars:
+		mask_index = mskScorpion;
+		maxhealth = 40;
+		raddrop = 12;
+		size = 2;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 4;
+		meleedamage = 4;
+		direction = random(360);
+		rotate = 0;
+		charge = 0;
+		charge_dir = 0;
+		charge_wait = 0;
+
+		 // Alarms:
+		alarm1 = 40 + random(20);
+
+		return id;
+	}
 
 #define Hammerhead_step
     if(sprite_index != spr_chrg) enemySprites();
@@ -168,6 +221,42 @@
     pickup_drop(30, 8);
 
 
+#define Puffer_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.PufferIdle;
+		spr_walk = spr.PufferIdle;
+		spr_hurt = spr.PufferHurt;
+		spr_dead = spr.PufferDead;
+		spr_chrg = spr.PufferChrg;
+		spr_fire = spr.PufferFire[0, 0];
+		spr_shadow = shd16;
+		spr_shadow_y = 7;
+		hitid = [spr_idle, "PUFFER"];
+		depth = -2;
+
+         // Sound:
+        snd_hurt = sndOasisHurt;
+        snd_dead = sndOasisDeath;
+
+         // Vars:
+		mask_index = mskFreak;
+        maxhealth = 10;
+		raddrop = 4;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		meleedamage = 2;
+		direction = random(360);
+		blow = 0;
+
+         // Alarms:
+        alarm1 = 40 + random(80);
+
+        return id;
+    }
+
 #define Puffer_step
     enemyWalk(walkspd, maxspd);
 
@@ -276,6 +365,18 @@
     }
 
 
+#define Crack_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.Crack;
+        image_speed = 0;
+
+         // Vars:
+        mask_index = mskWepPickup;
+
+        return id;
+    }
+
 #define Crack_step
     if !image_index{
         if place_meeting(x, y, Player){
@@ -366,7 +467,6 @@
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define Pet_create(_x, _y, _name)                                                       return  mod_script_call(   "mod", "telib", "Pet_create", _x, _y, _name);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
@@ -382,3 +482,4 @@
 #define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
+#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
