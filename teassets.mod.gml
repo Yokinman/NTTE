@@ -588,6 +588,8 @@
         string_save(json_encode(global.save), _path);
         exit;
     }
+    
+    global.races = ["parrot"];
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -608,7 +610,7 @@
 #define cleanup
      // Save Save:
     string_save(json_encode(sav), SavePath);
-    //  // stop the world from ending:
-    // var a = mod_variable_get("mod", "ntte", "campchar");
-    // for (var i; i < array_length(a); i++)
-    //     with instances_matching(CampChar, "race", a[i]) instance_destroy();
+
+    for (var i; i < array_length(global.races); i++)
+        with instances_matching([CampChar, CharSelect], "race", global.races[i])
+            instance_delete(id);
