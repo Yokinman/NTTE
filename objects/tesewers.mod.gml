@@ -159,15 +159,6 @@
         scrRight(gunangle);
     }
 
-#define Bat_alrm2
-    alarm2 = 20 + irandom(20);
-
-    if random(5) < 1 && target_is_visible() && target_in_distance(0, 240){
-        alarm2 = 40 + irandom(20);
-
-        //sound_play_gun(sndMolesargeHurt, 0, -1);
-        scrBatScreech();
-    }
 
 #define Bat_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
@@ -323,89 +314,6 @@
         scrRight(gunangle);
     }
 
-#define BatBoss_alrm2
-    // alarm2 = 50 + irandom(50);
-
-    //  // charge up attack
-    // if target_is_visible() || charge > 0{
-    //     if charge < max_charge{
-    //         alarm1 = 1;
-
-    //         charge += current_time_scale;
-
-    //          // effects:
-    //         if charge mod 2 == 0{
-    //             sound_play_pitchvol(sndLuckyShotProc, (charge / max_charge) + 1.3, 0.2);
-    //             sound_play_pitchvol(sndPickupDisappear, 0.4, 0.6);
-
-    //             if target_is_visible(){
-    //                 gunangle = point_direction(x, y, target.x, target.y);
-    //             }
-    //         }
-    //     }
-    //     else{
-    //          // fire if charged
-    //         if charged{
-    //             alarm1 = 30 + irandom(20);
-    //             alarm2 = 90 + irandom(60);
-
-    //             charged = false;
-    //             charge = 0;
-
-    //              // fire:
-    //             for (var i = -1; i <= 1; i++){
-    //                 var d = 4,
-    //                     s = 3;
-    //                 for (var ii = 0; ii <= 16; ii++){
-    //                     with scrEnemyShoot("TrafficCrabVenom", gunangle + i * 16 + orandom(2 + ii), s + ii){
-    //                         move_contact_solid(direction, d + d * ii);
-
-    //                          // Effects:
-    //                         with instance_create(x, y, AcidStreak){
-    //                             motion_set(other.direction + orandom(4), other.speed * 0.8);
-    //                             image_angle = direction;
-    //                         }
-
-    //                         if i <= 2
-    //                             with instance_create(x, y, Smoke){
-    //                                 motion_set(other.direction + orandom(8 * ii), 4 - ii);
-    //                             }
-    //                     }
-    //                 }
-    //             }
-
-    //              // effects:
-    //             sound_play_pitchvol(sndHeavyMachinegun, 1, 0.8);
-    //             sound_play_pitchvol(sndSnowTankShoot, 1.4, 0.7);
-    //             sound_play_pitchvol(sndFrogEggHurt, 0.4 + random(0.2), 3.5);
-
-    //             motion_add(gunangle + 180, maxspd);
-    //             view_shake_at(x, y, 20);
-    //             sleep(50);
-    //         }
-    //          // finish charging
-    //         else{
-    //             alarm1 = 0;
-    //             alarm2 = 35;
-
-    //             charged = true;
-
-    //             if target_is_visible(){
-    //                 gunangle = point_direction(x, y, target.x, target.y);
-    //                 scrRight(gunangle);
-    //             }
-
-    //              // effects:
-    //             sound_play_pitchvol(sndCrystalRicochet, 1.4 + random(0.4), 0.8);
-    //             sound_play_pitchvol(sndLightningRifleUpg, 0.8, 0.4);
-
-    //             with instance_create(x, y, ImpactWrists){
-    //                 move_contact_solid(other.gunangle, 8);
-    //                 depth = other.depth - 1;
-    //             }
-    //         }
-    //     }
-    // }
 
 #define BatBoss_alrm3
 
@@ -1584,65 +1492,142 @@
         depth = 7;
 
          // Vars:
-        canboss = true;
-
+        phase = 0;
+        portal_repellant = noone;
+        
         return id;
     }
 
 #define CatHoleBig_step
+     // Animations:
     if image_index < 1 image_speed = 0;
-    
-    if canboss with(Portal){
-        instance_destroy();
-        sound_stop(sndPortalOpen);
-    }  
-    
-    if !instance_exists(enemy) && canboss{
-        canboss = false;
-        if fork(){
-            var xx = x + 32,
-                yy = y + 32;
-             // Bump lid:
-            repeat(2){
-                image_index = 1;
-                image_speed = 0.4;
-                wait(30);
-            }
-             // Break free:
-            sprite_index = mskNone;
-            obj_create(xx, yy, "CatBoss");
-            obj_create(xx, yy, "BatBoss");
-            
-            repeat(4 + irandom(4))
-                with instance_create(xx, yy, ScrapBossCorpse){
-                    sprite_index =  spr.ManholeDebrisBig;
-                    image_index =   irandom(image_number);
-                    image_angle =   irandom(359);
-                    motion_set(irandom(359), 4 + random(6));
-                }
-            repeat(8 + irandom(8))
-                with instance_create(xx, yy, Debris){
-                    sprite_index =  spr.ManholeDebrisSmall;
-                    image_index =   irandom(image_number);
-                    team =          1;
-                    motion_set(irandom(359), 6 + random(8));
-                }
-            repeat(12 + irandom(12))
-                with instance_create(xx, yy, Dust){
-                    motion_set(irandom(359), 4 + random(12));
+    else image_speed = 0.4;
+
+    if phase < 2{
+         // Begin intro:
+        if phase < 1{
+            if instance_exists(Player)
+                if instance_number(enemy) - instance_number(Van) < 1{
+                    alarm0 = 40;
+                    alarm1 = 20;
+                    phase++;
+                    
+                     // keep the portals at bay:
+                    portal_repellant = instance_create(0, 0, CustomEnemy);
+                    with(portal_repellant){
+                        canfly = true;
+                         // anomaly :(
+                        my_health = 1000;
+                    }
                 }
                 
-            view_shake_at(xx, yy, 20);
-            sleep(20);
+                 // Close portals:
+                scrPortalPoof();
+        }
+        
+         // Mid intro:
+        else{
+             // safety measures
+            with instances_matching([WantRevivePopoFreak, Van, IDPDSpawn], "", null)
+                alarm += max(1, current_time_scale);
+                
+             // Camera pan:
+            var s = UberCont.opt_shake;
+            UberCont.opt_shake = 1;
+            for(var i = 0; i < maxp; i++){
+                view_object[i] = id;
+                view_pan_factor[i] = 10000;
+            }
+            UberCont.opt_shake = s;
+        }
+    }
+    
+#define CatHoleBig_alrm0
+    phase++;
+     // Reset camera:
+    for(var i; i < maxp; i++){
+        view_object[i] = player_find(i);
+        view_pan_factor[i] = null;
+    }
+    
+#define CatHoleBig_alrm1
+    alarm1 = 30 + irandom(30);
+    target = instance_nearest(x, y, Player);
+    
+    if instance_exists(target){
+         // Spawn bosses:
+        if phase >= 4{
+            obj_create(x, y, "CatBoss");
+            obj_create(x, y, "BatBoss");
             
-            exit;
+            sprite_index = mskNone;
+            
+            alarm0 = -1;
+            alarm1 = -1;
+            
+            if instance_exists(portal_repellant)
+                with(portal_repellant) instance_delete(id);
+                
+            sleep(60);
+            view_shake_at(x, y, 60);
+                
+            repeat(6 + irandom(6)) with instance_create(x, y, ScrapBossCorpse){
+                sprite_index =  spr.ManholeDebrisSmall;
+                image_index =   irandom(image_number);
+                motion_set(irandom(359), 2 + random(6));
+                x += lengthdir_x(16, direction);
+                y += lengthdir_y(16, direction);
+                size = 0;
+            }
+            repeat(3 + irandom(3)) with instance_create(x, y, ScrapBossCorpse){
+                sprite_index =  spr.ManholeDebrisBig;
+                image_index =   irandom(image_number);
+                image_angle =   irandom(359);
+                motion_set(irandom(359), 4 + random(4));
+                x += lengthdir_x(8, direction);
+                y += lengthdir_y(8, direction);
+                size = 0;
+            }
+            repeat(6 + irandom(12)) with instance_create(x, y, Dust){
+                motion_set(90 + orandom(60), 6 + random(6));
+                x += lengthdir_x(16, direction);
+                y += lengthdir_y(16, direction);
+                friction = 1;
+            }
+            
+            sound_play_pitchvol(sndExplosion, 0.8, 1);
+            sound_play_pitchvol(sndHitMetal, 0.4, 1);
+        }
+        
+         // Increment:
+        else if (target_in_distance(0, 128) && target_is_visible()) || phase < 2{
+            if phase > 1 phase++;
+            
+            image_index = 1;
+            
+            sleep(20);
+            view_shake_at(x, y, 20);
+            
+            repeat(1 + irandom(2)) with instance_create(x, y, Debris){
+                sprite_index =  spr.ManholeDebrisSmall;
+                image_index =   irandom(image_number);
+                motion_set(irandom(359), 4 + random(4));
+                x += lengthdir_x(16, direction);
+                y += lengthdir_y(16, direction);
+            }
+            repeat(4 + irandom(8)) with instance_create(x, y, Dust){
+                motion_set(irandom(359), random(2));
+                x += lengthdir_x(18, direction);
+                y += lengthdir_y(18, direction);
+            }
+            
+            sound_play_pitchvol(sndHitMetal, 0.5 + random(0.2), 1);
         }
     }
     
 #define CatHoleBig_draw
     draw_sprite(spr_bot, 0, x, y);
     draw_sprite(sprite_index, image_index, x, y);
-
 
 #define CatLight_create(_x, _y)
     var o = {
@@ -2128,6 +2113,10 @@
 
      // TV:
     with(TV) draw_circle(x, y, 64 + random(2), 0);
+    
+     // Big Manhole:
+    with instances_named(CustomObject, "CatHoleBig")
+        draw_circle(x, y, 64 + random(2), false);
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
@@ -2142,6 +2131,10 @@
         var o = orandom(1);
         CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
     }
+    
+     // Big Manhole:
+    with instances_named(CustomObject, "CatHoleBig")
+        draw_circle(x, y, 32 + random(2), false);
 
 
 /// Scripts

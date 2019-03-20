@@ -618,7 +618,7 @@
          // IMPORTANT ROOMS
         case "Boss" : {
              // Spawn boss spawner
-            with obj_create(_cx - 32, _cy - 32, "CatHoleBig"){
+            with obj_create(_cx, _cy, "CatHoleBig"){
                 with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
                     obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
             }

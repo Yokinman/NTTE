@@ -450,8 +450,8 @@
             ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);
             Manhole       = sprite_add("sprites/areas/Lair/sprManhole.png",       12, 16, 48);
              // Big one:
-            BigManholeBot       = sprite_add("sprites/areas/Lair/sprBigManholeBot.png",         1,  0,  0);
-            BigManholeTop       = sprite_add("sprites/areas/Lair/sprBigManholeTop.png",         6,  0,  0);
+            BigManholeBot       = sprite_add("sprites/areas/Lair/sprBigManholeBot.png",         1,  32,  32);
+            BigManholeTop       = sprite_add("sprites/areas/Lair/sprBigManholeTop.png",         6,  32,  32);
             ManholeDebrisSmall  = sprite_add("sprites/areas/Lair/sprManholeDebrisSmall.png",    4,  4,  4);
             ManholeDebrisBig    = sprite_add("sprites/areas/Lair/sprManholeDebrisBig.png",      3,  12, 12);
 
@@ -608,3 +608,7 @@
 #define cleanup
      // Save Save:
     string_save(json_encode(sav), SavePath);
+    //  // stop the world from ending:
+    // var a = mod_variable_get("mod", "ntte", "campchar");
+    // for (var i; i < array_length(a); i++)
+    //     with instances_matching(CampChar, "race", a[i]) instance_destroy();
