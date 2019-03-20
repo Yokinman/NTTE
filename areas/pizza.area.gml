@@ -125,12 +125,7 @@
      // Spawn Stuff:
     with(instances_matching(Player, "", null)[0]){
          // Open Manhole:
-        with(instance_create(x + orandom(8), y + orandom(8), GameObject)){
-            sprite_index = spr.Manhole;
-            image_angle = 180 + (irandom_range(-3, 3) * 10);
-            image_speed = 0;
-            depth = 6;
-        }
+        obj_create(x, y, "PizzaManholeCover");
 
          // Door:
         with(instance_nearest(x, y, Floor)){
@@ -149,6 +144,11 @@
                 }
             }
         }
+    }
+        
+     // Light up specific things:
+    with(instances_matching([chestprop, RadChest], "", null)){
+        obj_create(x, y - 32, "CatLight");
     }
 
 #define area_finish

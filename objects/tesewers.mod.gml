@@ -1494,7 +1494,15 @@
          // Vars:
         phase = 0;
         portal_repellant = noone;
-        
+
+         // Cool Light:
+    	with(obj_create(x, y - 48, "CatLight")){
+    		w1 = 16;
+    		w2 = 48;
+    		h1 = 48;
+    		h2 = 24;
+    	}
+
         return id;
     }
 
@@ -1517,7 +1525,7 @@
                     with(portal_repellant){
                         canfly = true;
                          // anomaly :(
-                        my_health = 1000;
+                        my_health = 10000000000000;
                     }
                 }
                 
@@ -1530,7 +1538,7 @@
              // safety measures
             with instances_matching([WantRevivePopoFreak, Van, IDPDSpawn], "", null)
                 alarm += max(1, current_time_scale);
-                
+
              // Camera pan:
             var s = UberCont.opt_shake;
             UberCont.opt_shake = 1;
@@ -1541,9 +1549,30 @@
             UberCont.opt_shake = s;
         }
     }
+
+     // Hole Collision:
+    if(sprite_index == mskNone){
+    	var _dis = 24;
+	    with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, hitme)){
+	    	var	_x = other.x,
+	    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
+	    		_dir = point_direction(_x, _y, x, y);
+	
+	    	if(point_distance(_x, _y, x, y) < _dis){
+	    		if(instance_is(self, Player)){
+		    		x = _x + lengthdir_x(_dis, _dir);
+		    		y = _y + lengthdir_y(_dis, _dir);
+	    		}
+	    		else{
+	    			motion_add(_dir, 1);
+	    		}
+	    	}
+	    }
+    }
     
 #define CatHoleBig_alrm0
     phase++;
+
      // Reset camera:
     for(var i; i < maxp; i++){
         view_object[i] = player_find(i);
@@ -1897,8 +1926,19 @@
 	}
 
 	 // Deleet Stuff:
-	with(instance_rectangle(bbox_left, bbox_top - 16, bbox_right, bbox_bottom, [Wall, TopSmall, InvisiWall])){
-		instance_destroy();
+	var _x1 = bbox_left,
+		_y1 = bbox_top - 16,
+		_x2 = bbox_right,
+		_y2 = bbox_bottom;
+
+	if(fork()){
+		repeat(2){
+			with(instance_rectangle(_x1, _y1, _x2, _y2, [Wall, TopSmall, InvisiWall])){
+				instance_destroy();
+			}
+			wait 0;
+		}
+		exit;
 	}
 
      // Corpse:
@@ -1951,6 +1991,20 @@
             scrFloorWalls();
         }
         floor_reveal(_path, 2);
+
+
+#define PizzaManholeCover_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		sprite_index = spr.Manhole;
+        image_angle = 180 + (irandom_range(-3, 3) * 10);
+        image_speed = 0;
+        depth = 6;
+
+		x += orandom(8);
+		y += orandom(8);
+
+		return id;
+	}
 
 
 #define PizzaTV_create(_x, _y)
@@ -2111,12 +2165,18 @@
         }
     }
 
+	 // Manhole Cover:
+	with(instances_named(CustomObject, "PizzaManholeCover")){
+		draw_circle(xstart, ystart - 16, 40 + random(2), false);
+	}
+
      // TV:
-    with(TV) draw_circle(x, y, 64 + random(2), 0);
+    with(TV) draw_circle(x, y, 64 + random(2), false);
     
      // Big Manhole:
-    with instances_named(CustomObject, "CatHoleBig")
-        draw_circle(x, y, 64 + random(2), false);
+    with(instances_named(CustomObject, "CatHoleBig")){
+        draw_circle(x, y, 192 + random(2), false);
+    }
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
@@ -2126,15 +2186,23 @@
         CatLight_draw(x, y, w1, w2, h1, h2, offset);
     }
 
+	 // Manhole Cover:
+	with(instances_named(CustomObject, "PizzaManholeCover")){
+		var o = 0;
+		if(random(2) < 1) o = orandom(1);
+		CatLight_draw(xstart, ystart - 32, 16, 19, 28, 8, o);
+	}
+
      // TV:
     with(TV){
         var o = orandom(1);
         CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
     }
-    
+
      // Big Manhole:
-    with instances_named(CustomObject, "CatHoleBig")
+    /*with(instances_named(CustomObject, "CatHoleBig")){
         draw_circle(x, y, 32 + random(2), false);
+    }*/
 
 
 /// Scripts

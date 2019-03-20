@@ -555,7 +555,9 @@
     }
         
      // Light up specific things:
-    with(instances_matching([chestprop, RadChest], "", null)) obj_create(x, y - 32, "CatLight");
+    with(instances_matching([chestprop, RadChest], "", null)){
+        obj_create(x, y - 32, "CatLight");
+    }
     //obj_create(spawn_x, spawn_y - 32, "CatLight");
 
 
