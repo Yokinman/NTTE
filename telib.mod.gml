@@ -11,7 +11,7 @@
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "Puffer", "Crack"],
 		"tetrench"	: ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
-	    "tesewers"	: ["Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaTV", "VenomFlak"],
+	    "tesewers"	: ["Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "VenomFlak"],
 	    "tecaves"	: ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"]
     };
 
@@ -67,6 +67,10 @@
 #macro objScrt global.objectScrt
 
 #define obj_create(_x, _y, _obj)
+	if(is_real(_obj) && object_exists(_obj)){
+		return instance_create(_x, _y, _obj);
+	}
+
 	 // Search for Create Event if Unstored:
 	if(!lq_exists(objScrt, _obj) && is_string(_obj)){
 		for(var i = 0; i < lq_size(objList); i++){

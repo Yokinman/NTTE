@@ -176,6 +176,35 @@
             }
             break;
 
+		case "oasis": // They livin in there u kno
+			repeat(4){
+				var _sx = _x + orandom(24),
+					_sy = _y + orandom(16);
+
+				if(random(100) < 1){
+					instance_create(_sx, _sy, Freak);
+				}
+				else{
+					obj_create(_sx, _sy, choose(BoneFish, "Puffer"));
+				}
+
+				with(obj_create(_sx, _sy, choose(WaterPlant, WaterPlant, OasisBarrel))){
+					nexthurt = current_frame + 30;
+
+					 // Space Out:
+					var _tries = 50;
+					while(distance_to_object(prop) < 2 && _tries-- > 0){
+						x = _x + orandom(24);
+						y = _y + orandom(16);
+					}
+				}
+			}
+
+			 // Effects:
+			repeat(20) instance_create(_x + orandom(24), _y + orandom(24), Bubble);
+			sound_play_pitch(sndOasisPortal, 2 + orandom(0.2));
+			break;
+
         case "trench": // Boom
             var _num = 3,
                 _ang = random(360);
