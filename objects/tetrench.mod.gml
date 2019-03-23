@@ -242,6 +242,232 @@
             motion_add(other.direction, 1);
         }
 
+#define ChaserTentacle_create(_x, _y)
+    with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_spwn = spr.TentacleSpwn;
+        spr_idle = spr.TentacleIdle;
+        spr_walk = spr.TentacleIdle;
+        spr_hurt = spr.TentacleHurt;
+        spr_dead = spr.TentacleDead;
+        spr_cntr = spr.TentacleHurt;
+        spr_fire = spr.TentacleHurt;
+        depth = -2 - (y / 20000);
+        hitid = [spr_idle, "PIT SQUID"];
+        sprite_index = spr_spwn;
+        
+         // Sound:
+        snd_hurt = sndHitFlesh;
+        snd_dead = sndMaggotSpawnDie;
+        snd_mele = sndPlantSnare;
+
+         // Vars:
+        mask_index = mskBandit;
+        meleedamage = 3;
+        maxhealth = 40;
+        raddrop = 0;
+        size = 3;
+        creator = noone;
+        canfly = true;
+        kills = 0;
+        walk = 0;
+        walkspd = 1;
+        maxspd = 3.5;
+        minCounter = 0; // grace period before counters are active
+        counterTime = 0;
+        doCounter = false; // tracks if the counter is successful
+        armor = 0.5; // percent damage negated from creator's health
+
+		 // Alarms:
+        alarm0 = 30; // move, start counterattack
+        alarm1 = -1; // execute counterattack
+        alarm2 = -1; // teleport
+
+        return id;
+    }
+    
+#define ChaserTentacle_step
+    enemyWalk(walkspd, maxspd);
+    enemySprites();
+    
+    if place_meeting(x + hspeed, y, Wall) hspeed *= -1;
+    if place_meeting(x, y + vspeed, Wall) vspeed *= -1;
+    
+    depth = -2 - (y / 20000);
+
+#define ChaserTentacle_alrm0
+    alarm0 = 10 + irandom(10);
+    maxspd = 3.5;
+    target = instance_nearest(x, y, Player);
+    
+    if instance_exists(creator) || true{
+        if counterTime > 0{
+             // Decrement counter startup timer:
+            if minCounter > 0{
+                minCounter--;
+            }
+            else{
+                alarm0 = 1;
+                counterTime--;
+                
+                 // End counterattack:
+                if counterTime <= 0{
+                    sound_play_pitchvol(sndOasisChest, 2, 0.5);
+                }
+            }
+        }
+        else{
+            if instance_exists(target){
+                if target_is_visible(){
+                     // Prepare counterattack:
+                    if random(7) < 2{
+                        alarm0 = 1;
+                        minCounter = 1;
+                        counterTime = 15;
+                        
+                        sprite_index = spr_cntr;
+                        
+                         // Effects:
+                        instance_create(x, y, ThrowHit);
+                        
+                         // Sounds:
+                        sound_play_pitchvol(sndCrystalShield, 1.4, 0.6);
+                        sound_play_pitchvol(sndOasisChest, 2, 1);
+                    }
+                    
+                     // Move to player:
+                    else{
+                        scrWalk(8 + irandom(2), point_direction(x, y, target.x, target.y));
+                        scrRight(direction);
+                    }
+                }
+                else{
+                     // Teleport to player:
+                    if random(7) < 2{
+                        alarm2 = 20;
+                        
+                        sprite_index = spr_dead;
+                    }
+                    
+                     // Move aimlessly:
+                    else{
+                        scrWalk(4 + irandom(6), irandom(359));
+                        scrRight(direction);
+                    }
+                }
+            }
+            
+             // Despawn:
+            else{
+                if random(5) < 1{
+                    // code later lol
+                }
+            }
+        }
+    }
+    
+     // Despawn:
+    else{
+        alarm0 = -1;
+        sprite_index = spr_dead;
+    }
+    
+#define ChaserTentacle_alrm1
+    alarm0 = 10;
+    alarm1 = -1;
+    maxspd = 5.5;
+    doCounter = false;
+    target = instance_nearest(x, y, Player);
+    
+    if instance_exists(target){
+        var dir = point_direction(x, y, target.x, target.y);
+        with instance_create(x, y, Slash){
+            team = other.team;
+            creator = other;
+            motion_set(dir, 6);
+            image_angle = direction;
+            image_xscale = 1.2;
+            image_yscale = 0.6;
+        }
+        motion_set(dir, maxspd);
+        scrWalk(alarm0, direction);
+        
+         // Effects:
+        sleep(60);
+        view_shake_max_at(x, y, 30);
+        
+         // Sounds:
+        sound_play_pitchvol(sndCrystalJuggernaut, 1.2, 0.8);
+        sound_play_pitchvol(sndOasisMelee, 1.0, 1.0);
+    }
+    
+#define ChaserTentacle_alrm2
+    alarm0 = 40 + irandom(20);
+    alarm2 = -1;
+    target = instance_nearest(x, y, Player);
+    
+    if instance_exists(target){
+        var tile = noone,
+            dist = 10000;
+        with instances_matching(Floor, "styleb", true){
+            var _x = x + 16,
+                _y = y + 16,
+                _t = other.target,
+                _d = point_distance(_x, _y, _t.x, _t.y);
+            if _d > 64 && _d <= 256 && _d < dist{
+                dist = _d;
+                tile = id;
+            }
+        }
+        if instance_exists(tile){
+            x = tile.x + 16;
+            y = tile.y + 16;
+        }
+    }
+    
+    sprite_index = spr_spwn;
+
+#define ChaserTentacle_hurt(_hitdmg, _hitvel, _hitdir)
+     // Counterattack:
+    if counterTime > 0{
+        if minCounter <= 0{
+            alarm0 = -1;
+            alarm1 = 4;
+            minCounter = 0;
+            counterTime = 0;
+            doCounter = true;
+            
+            sprite_index = spr_fire;
+            
+             // Effects:
+            sleep(20);
+            motion_add(_hitdir, _hitvel);
+            
+             // Sounds:
+            sound_play_pitchvol(sndOasisCrabAttack, 1.2, 1.4);
+        }
+    }
+    
+     // Don't counterattack:
+    else{
+        my_health -= _hitdmg;
+        nexthurt = current_frame + 6;
+        sound_play_hit(snd_hurt, 0.3);
+    
+         // Hurt Papa Squid:
+        with(creator){
+            my_health -= _hitdmg * (1 - armor);
+            nexthurt = current_frame + 6;
+            sound_play_hit(snd_hurt, 0.3);
+        }
+    
+         // Hurt Sprite:
+        if(sprite_index != spr_spwn){
+            sprite_index = spr_hurt;
+            image_index = 0;
+        }
+    }
+    
 #define scrAnglerAppear()
     hiding = false;
 

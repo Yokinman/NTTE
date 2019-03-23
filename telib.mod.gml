@@ -10,7 +10,7 @@
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "Puffer", "Crack"],
-		"tetrench"	: ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
+		"tetrench"	: ["Angler", "ChaserTentacle", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
 	    "tesewers"	: ["Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "VenomFlak"],
 	    "tecaves"	: ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"]
     };
