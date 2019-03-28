@@ -397,7 +397,7 @@
 
 #define BatBoss_alrm1
 	alarm1 = 20 + random(20);
-    with(instances_named(CustomEnemy, "CatBoss")){
+    with(instances_matching_le(instances_named(CustomEnemy, "CatBoss"), "supertime", 0)){
     	alarm1 = 20 + random(20);
     	other.alarm1 += alarm1;
     }
@@ -960,7 +960,7 @@
 		spr_walk = spr.CatBossWalk;
 		spr_hurt = spr.CatBossHurt;
 		spr_dead = spr.CatBossDead;
-		spr_weap = spr.CatBossWeap;
+		spr_weap = [spr.CatBossWeap, spr.CatBossWeapChrg];
 		spr_shadow = shd48;
 		spr_shadow_y = 3;
 		hitid = [spr_idle, bossname];
@@ -980,6 +980,9 @@
 		size = 3;
 		walk = 0;
         dash = 0;
+        super = false;
+        supertime = 0;
+        maxsupertime = 40;
 		gunangle = random(360);
 		direction = gunangle;
 
@@ -994,7 +997,7 @@
     enemySprites();
 	enemyWalk(0.8, ((dash > 0) ? 6.5 : 3.0));
 
-	if("super" in self && super){
+	if(super){
 		if(current_frame_active && random(10) < 1){
 			var l = 12,
 				d = gunangle;
@@ -1013,7 +1016,7 @@
 
 #define CatBoss_draw
     if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    draw_sprite_ext(spr_weap[supertime > 0], (super ? current_frame * image_speed mod 2 : (1 - (supertime / maxsupertime)) * 12), x - lengthdir_x(wkick, gunangle), y - lengthdir_y(wkick, gunangle), 1, right, gunangle, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
 
 #define CatBoss_alrm0
@@ -1030,70 +1033,105 @@
 
 #define CatBoss_alrm1
 	alarm1 = 20 + random(20);
-    with(instances_named(CustomEnemy, "BatBoss")){
-    	alarm1 = 20 + random(20);
-    	other.alarm1 += alarm1;
-    }
-
-    target = instance_nearest(x, y, Player);
-
-    if(instance_exists(target)){
-    	var _tx = target.x,
-    		_ty = target.y,
-        	_targetDir = point_direction(x, y, _tx, _ty);
-
-    	if("super" not in self) super = false;
-    	if(!super && random(10) < 1){
-    		super = true;
-    		sound_play_pitch(sndLaserCannon, 0.8);
-    	}
-
-        else if(random(5) < 4){
-             // Attack:
-            if(random(4) < 3 && (target_in_distance(0, 80) || random(3) < 1) && target_is_visible()){
-				gunangle = _targetDir;
-                var a = scrEnemyShoot("CatBossAttack", gunangle, 0);
-                a.target = target;
-                a.type = super;
-                super = false;
-
-                alarm1 = 10 + a.alarm0;
-
-				 // Effects:
-                sound_play(sndShotReload);
-                sound_play_pitch(sndSnowTankAim, 2.5 + random(0.5));
-                sound_play_pitchvol(sndLilHunterSniper, (a.type ? 0.25 : 1.5) + random(0.5), 0.5);
-                if(a.type) sound_play_pitchvol(sndLaserCannonCharge, 0.4 + orandom(0.1), 0.5);
-            }
-
-             // Gas dash:
-            else if(!target_in_distance(0, 40)){
-            	alarm2 = 1;
-            }
-
-	        gunangle = _targetDir;
-	        scrRight(gunangle);
+	
+	if supertime > 0{
+	     // Mid charge:
+	    alarm1 = 1;
+	    supertime -= 1;
+	    wkick = 6;
+	    gunangle = right ? 320 + orandom(5) : 220 + orandom(5);
+	    view_shake_max_at(x, y, 4);
+	     // Effects:
+	    if random(2) < 1{
+	        var _w = (1 - (supertime / maxsupertime)) * 12,
+	            _h = irandom(8) - 8;
+	        with instance_create(x + lengthdir_x(_w, gunangle) + lengthdir_x(_h, gunangle + 90), y + lengthdir_y(_w, gunangle) + lengthdir_y(_h, gunangle + 90), EatRad){
+	            sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
+	            depth = -3;
+	        }
+	    }
+	     
+	    if supertime <= 0{
+             // End charge:
+	        alarm1 = 20;
+	        super = true;
+	        wkick = -3;
+	        gunangle = right ? 340 : 200;
+	         // Sounds:
+	        sound_play_pitch(sndLaserCannon, 0.8);
+	        sound_play_pitch(sndGunGun, 1.2);
+	        sound_play_pitch(sndStrongSpiritLost, 0.8);
+	         // Effects:
+	        instance_create(x + lengthdir_x(20, gunangle), y + lengthdir_y(20, gunangle), ThrowHit).depth = -3;
+	    }
+	}
+	else{
+        with(instances_named(CustomEnemy, "BatBoss")){
+        	alarm1 = 20 + random(20);
+        	other.alarm1 += alarm1;
         }
-
-         // Circle Target:
-        else{
-            var l = 64,
-                d = point_direction(target.x, target.y, x, y);
-
-            d += 30 * sign(angle_difference(direction, d));
-            scrWalk(15 + random(25), point_direction(x, y, target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d)));
-        }
+    
+        target = instance_nearest(x, y, Player);
+    
+        if(instance_exists(target)){
+        	var _tx = target.x,
+        		_ty = target.y,
+            	_targetDir = point_direction(x, y, _tx, _ty);
+            
+             // Start Charge:
+        	if(!super && random(5) < 1){
+        		alarm1 = 1;
+        		supertime = maxsupertime;
+        		sound_play_pitch(sndLaserCannonCharge, 0.6);
+        		sound_play_pitch(sndTechnomancerActivate, 1.4);
+        	}
+    
+            else{
+                if(random(5) < 4){
+                     // Attack:
+                    if(random(4) < 3 && (target_in_distance(0, 80) || random(3) < 1) && target_is_visible()){
+        				gunangle = _targetDir;
+                        var a = scrEnemyShoot("CatBossAttack", gunangle, 0);
+                        a.target = target;
+                        a.type = super;
+                        super = false;
         
-        gunangle = _targetDir;
-        scrRight(gunangle);
-    }
-
-     // Wander:
-    else{
-        gunangle = direction;
-        scrWalk(15 + irandom(25), direction + orandom(30));
-        scrRight(direction);
-    }
+                        alarm1 = 10 + a.alarm0;
+        
+        				 // Effects:
+                        sound_play(sndShotReload);
+                        sound_play_pitch(sndSnowTankAim, 2.5 + random(0.5));
+                        sound_play_pitchvol(sndLilHunterSniper, (a.type ? 0.25 : 1.5) + random(0.5), 0.5);
+                        if(a.type) sound_play_pitchvol(sndLaserCannonCharge, 0.4 + orandom(0.1), 0.5);
+                    }
+        
+                     // Gas dash:
+                    else if(!target_in_distance(0, 40)){
+                    	alarm2 = 1;
+                    }
+                }
+        
+                 // Circle Target:
+                else{
+                    var l = 64,
+                        d = point_direction(target.x, target.y, x, y);
+        
+                    d += 30 * sign(angle_difference(direction, d));
+                    scrWalk(15 + random(25), point_direction(x, y, target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d)));
+                }
+                
+                gunangle = _targetDir;
+                scrRight(gunangle);
+            }
+        }
+    
+         // Wander:
+        else{
+            gunangle = direction;
+            scrWalk(15 + irandom(25), direction + orandom(30));
+            scrRight(direction);
+        }
+	}
 
 #define CatBoss_alrm2
 	alarm2 = 1;
@@ -1162,7 +1200,7 @@
         scrWalk(16 + random(16), direction + orandom(20));
 	}
 
-    gunangle = _targetDir;
+    gunangle = _targetDir + angle_difference(direction, _targetDir) * 0.5;
     scrRight(gunangle);
 
 #define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)
@@ -1175,6 +1213,28 @@
          // Hurt Sprite:
         sprite_index = spr_hurt;
         image_index = 0;
+        
+         // Break charging:
+        if supertime > 0{
+            alarm1 = 40 + irandom(20);
+            supertime = 0;
+            gunangle = right ? 300 : 240;
+            sleep(100);
+            view_shake_at(x, y, 20);
+            motion_add(_hitdir, 4);
+             // Sounds:
+            sound_play_pitch(sndGunGun, 0.8);
+            sound_play_pitch(sndStrongSpiritLost, 1.2);
+             // Effects:
+            instance_create(x, y, ImpactWrists).depth = -3;
+            
+            raddrop = max(0, raddrop - 2);
+            repeat(2 + irandom(2))
+                with instance_create(x, y, Rad){
+                    motion_set(_hitdir + orandom(30), 4 + random(4));
+                    friction = 0.4;
+                }
+        }
     }
 
      // Toxic immune
@@ -1193,80 +1253,6 @@
 
 #define CatBoss_cleanup
     sound_stop(jetpack_loop);
-
-#define OLDCatBoss_alrm1
-    alarm1 = 20 + random(20);
-
-    if(ammo > 0) {
-        with(scrEnemyShoot(ToxicGas, gunangle + orandom(8), 4)) {
-            friction = 0.2;
-        }
-        gunangle += 24;
-        ammo--;
-        if(ammo = 0) {
-            alarm1 = 40;
-
-            repeat(3) {
-                var _dir = orandom(16);
-                with(instance_create(x, y, AcidStreak)) {
-                    motion_add(other.gunangle + _dir, 3);
-                    image_angle = direction;
-                }
-            }
-
-            target = instance_nearest(x, y, Player);
-            var _targetDir = point_direction(x, y, target.x, target.y);
-
-            with(scrEnemyShootExt(x - (2 * right), y, "CatGrenade", _targetDir, 3)){
-                z += 12;
-                depth = 12;
-                zspeed = (point_distance(x, y - z, other.target.x, other.target.y) / 8) + orandom(1);
-                right = other.right;
-            }
-
-            gunangle = _targetDir;
-            wkick += 6;
-            sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
-            sound_play_pitch(sndToxicLauncher, random_range(0.75, 0.9));
-            sound_stop(sndFlamerLoop);
-        } else {
-            alarm1 = 1;
-            wkick += 1;
-        }
-    } else {
-        target = instance_nearest(x, y, Player);
-        if(target_is_visible()) {
-            var _targetDir = point_direction(x, y, target.x, target.y);
-
-            if(target_in_distance(0, 140) and random(3) < 1) {
-                if(random(3) < 3) {
-                    scrRight(_targetDir);
-                    gunangle = _targetDir - 45;
-                    ammo = 20;
-                    with(instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), BloodGamble)) {
-                        sprite_index = spr.AcidPuff;
-                        image_angle = other.gunangle;
-                    }
-                    sound_play(sndToxicBoltGas);
-                    sound_play(sndEmpty);
-                    var s = sndFlamerLoop;
-                    sound_loop(sndFlamerLoop);
-                    sound_pitch(sndFlamerLoop, random_range(1.8, 1.4));
-                    wkick += 4;
-                    alarm1 = 4;
-                }
-            } else {
-                alarm1 = 20 + random(20);
-                scrWalk(20 + random(5), _targetDir + orandom(20));
-                scrRight(gunangle);
-            }
-        } else {
-            alarm1 = 30 + random(20); // 3-4 Seconds
-            scrWalk(20 + random(10), random(360));
-            scrRight(gunangle);
-        }
-    }
-
 
 #define CatBossAttack_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
@@ -2463,12 +2449,34 @@
 		y = ystart;
 		xprevious = x;
 		yprevious = y;
+		 
+		 // Effects 1:
+		if(random(3) < current_frame_active){
+		    with(instance_create(x, y, AcidStreak)){
+		        depth = -2;
+		        image_angle = irandom(359);
+		        x -= lengthdir_x(24, image_angle);
+		        y -= lengthdir_y(24, image_angle);
+		        if instance_exists(other.creator){
+		            x += other.creator.hspeed;
+		            y += other.creator.vspeed;
+		        }
+		    }
+		}
 	}
-
-     // Effects:
-    if(random(3) < 1 && current_frame_active){
-        with(instance_create(x, y, Smoke)){
-            depth = other.depth + 1;
+	else{
+         // Effects 2:
+        if(random(3) < current_frame_active){
+            with(instance_create(x + orandom(2), y + orandom(2), Smoke)){
+                depth = other.depth + 1;
+            }
+        }
+	}
+	 // Effects 3:
+    if(random(3) < current_frame_active){
+        with(instance_create(x + orandom(6), y + 16 + orandom(6), RecycleGland)){
+            sprite_index = sprDrip; // Drip object is noisy :jwpensive:
+            depth = 0;
         }
     }
 

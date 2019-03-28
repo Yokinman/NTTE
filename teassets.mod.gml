@@ -425,7 +425,8 @@
             CatBossWalk = sprite_add("sprites/enemies/CatBoss/sprBigCatWalk.png",    6, 24, 24);
             CatBossHurt = sprite_add("sprites/enemies/CatBoss/sprBigCatHurt.png",    3, 24, 24);
             CatBossDead = sprite_add("sprites/enemies/CatBoss/sprBigCatDead.png",    6, 24, 24);
-            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",  1,  4,  7);
+            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",  2,  4,  7);
+            CatBossWeapChrg = sprite_add("sprites/enemies/CatBoss/sprCatBossToxerChrg.png", 12, 1, 7);
 
              // Door:
             CatDoor         = sprite_add("sprites/areas/Lair/Props/sprCatDoor.png",          10, 2, 0);
