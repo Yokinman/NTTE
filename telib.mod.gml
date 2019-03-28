@@ -622,6 +622,23 @@
         instance_destroy();
     }
 
+#define scrFX(_x, _y, _motion, _obj)
+	if(!is_array(_x)) _x = [_x, 1];
+	while(array_length(_x) < 2) array_push(_x, 0);
+
+	if(!is_array(_y)) _y = [_y, 1];
+	while(array_length(_y) < 2) array_push(_y, 0);
+
+	if(!is_array(_motion)) _motion = [random(360), _motion];
+	while(array_length(_motion) < 2) array_push(_motion, 0);
+
+	var o = noone;
+	with(obj_create(_x[0] + orandom(_x[1]), _y[0] + orandom(_y[1]), _obj)){
+		motion_add(_motion[0], _motion[1]);
+		o = id;
+	}
+	return o;
+
 #define scrWaterStreak(_x, _y, _dir, _spd)
     with(instance_create(_x, _y, AcidStreak)){
         sprite_index = spr.WaterStreak;
@@ -793,6 +810,14 @@
     return a;
 
 #define instances_named(_object, _name)
+	if(is_array(_name)){
+		var r = [];
+		with(_name){
+			var n = instances_matching(_object, "name", self);
+			array_copy(r, array_length(r), n, 0, array_length(n));
+		}
+		return r;
+	}
     return instances_matching(_object, "name", _name);
 
 #define nearest_instance(_x, _y, _instances)
