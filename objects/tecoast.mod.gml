@@ -704,7 +704,7 @@
 		mask_index = mskNone;
 		mask_hold = msk.Palanking;
 		maxhealth = scrBossHP(350);
-		raddrop = 80;
+		raddrop = 120;
 		size = 4;
 		walk = 0;
 		walkspd = 0.8;
@@ -1154,6 +1154,13 @@
             gravity /= 2;
             coast_water = false;
         }
+        with(instance_create(x, y - z + 2, AcidStreak)){
+            motion_set(other.gunangle + orandom(30), 4 + random(6));
+            hspeed += other.hspeed;
+            vspeed += other.vspeed;
+            image_angle = direction;
+            depth = other.depth - 1;
+        }
 
          // End:
         if(--ammo <= 0){
@@ -1263,6 +1270,10 @@
         o = obj_create(_x, _y, ((random(16) < 1) ? "SealHeavy" : "Seal"));
 
     with(o){
+         // make things fair
+        other.raddrop -= raddrop;
+        raddrop = max(raddrop + other.raddrop, raddrop);
+        
          // Randomize Type:
         if(name == "Seal"){
             var _pick = [];

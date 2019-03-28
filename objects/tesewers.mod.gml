@@ -169,7 +169,7 @@
         stress -= 4;
         nexthurt = current_frame + 5;
 
-        scrBatScreech();
+        scrBatScreech(0.5);
     }
 
 #define Bat_death
@@ -177,7 +177,8 @@
     //pickup_drop(0, 100);
     pickup_drop(60, 5);
 
-#define scrBatScreech()
+#define scrBatScreech /// scrBatScreech(?_scale = undefined)
+    var _scale = argument_count > 0 ? argument[0] : undefined;
      // Effects:
     sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
     sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
@@ -190,7 +191,10 @@
         cantravel = true;
 
      // Screech:
-    scrEnemyShoot("BatScreech", 0, 0);
+    with scrEnemyShoot("BatScreech", 0, 0) if !is_undefined(_scale){
+        image_xscale = _scale;
+        image_yscale = _scale;
+    }
     sprite_index = spr_fire;
     image_index = 0;
 
@@ -466,10 +470,11 @@
         stress -= 4;
         nexthurt = current_frame + 5;
 
-        scrBatBossScreech();
+        scrBatBossScreech(true);
     }
 
-#define scrBatBossScreech()
+#define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
+    var _single = argument_count > 0 ? argument[0] : undefined;
      // Effects:
     sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
     sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
@@ -483,10 +488,14 @@
 
      // Screech:
     scrEnemyShoot("BatScreech", 0, 0);
-    var l = 64;
-    for (var d = 0; d <= 360; d += 360 / 6)
-        scrEnemyShootExt(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0);
-
+    if(is_undefined(_single) || !_single){
+        var l = 56;
+        for (var d = 0; d <= 360; d += 360 / 3)
+            with scrEnemyShootExt(x + lengthdir_x(l, gunangle + d), y + lengthdir_y(l, gunangle + d), "BatScreech", 0, 0){
+                image_xscale = 0.5;
+                image_yscale = 0.5;
+            }
+    }
     sprite_index = spr_fire;
     image_index = 0;
 
@@ -585,6 +594,7 @@
         sprite_index = spr.BatScreech;
         mask_index = msk.BatScreech;
         image_speed = 0.4;
+        depth = -3;
 
          // Vars:
         creator = noone;
@@ -983,6 +993,7 @@
         super = false;
         supertime = 0;
         maxsupertime = 40;
+        superbreakmax = 6; // used in on_hurt to prevent catboss from being locked in the charge animation 
 		gunangle = random(360);
 		direction = gunangle;
 
@@ -1044,7 +1055,7 @@
 	     // Effects:
 	    if random(2) < 1{
 	        var _w = (1 - (supertime / maxsupertime)) * 12,
-	            _h = irandom(8) - 8;
+	            _h = irandom(8) * right;
 	        with instance_create(x + lengthdir_x(_w, gunangle) + lengthdir_x(_h, gunangle + 90), y + lengthdir_y(_w, gunangle) + lengthdir_y(_h, gunangle + 90), EatRad){
 	            sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
 	            depth = -3;
@@ -1082,6 +1093,7 @@
         	if(!super && random(5) < 1){
         		alarm1 = 1;
         		supertime = maxsupertime;
+        		superbreakmax = 6;
         		sound_play_pitch(sndLaserCannonCharge, 0.6);
         		sound_play_pitch(sndTechnomancerActivate, 1.4);
         	}
@@ -1215,25 +1227,37 @@
         image_index = 0;
         
          // Break charging:
-        if supertime > 0{
-            alarm1 = 40 + irandom(20);
-            supertime = 0;
-            gunangle = right ? 300 : 240;
-            sleep(100);
-            view_shake_at(x, y, 20);
-            motion_add(_hitdir, 4);
-             // Sounds:
-            sound_play_pitch(sndGunGun, 0.8);
-            sound_play_pitch(sndStrongSpiritLost, 1.2);
-             // Effects:
-            instance_create(x, y, ImpactWrists).depth = -3;
-            
-            raddrop = max(0, raddrop - 2);
-            repeat(2 + irandom(2))
-                with instance_create(x, y, Rad){
-                    motion_set(_hitdir + orandom(30), 4 + random(4));
-                    friction = 0.4;
+        if supertime > 0 && superbreakmax > 0{
+            supertime += _hitdmg * 4;
+            superbreakmax--;
+            if supertime >= maxsupertime{
+                alarm1 = 40 + irandom(20);
+                supertime = 0;
+                gunangle = right ? 300 : 240;
+                sleep(100);
+                view_shake_at(x, y, 20);
+                motion_add(_hitdir, 4);
+                 // Sounds:
+                sound_play_pitch(sndGunGun, 0.8);
+                sound_play_pitch(sndStrongSpiritLost, 1.2);
+                 // Effects:
+                instance_create(x, y, ImpactWrists).depth = -3;
+                
+                raddrop = max(0, raddrop - 2);
+                if raddrop > 0
+                    repeat(2 + irandom(2))
+                        with instance_create(x, y, Rad){
+                            motion_set(_hitdir + orandom(30), 4 + random(4));
+                            friction = 0.4;
+                        }
+                repeat(3 + irandom(6))
+                    with instance_create(x, y, Smoke)
+                        motion_set(_hitdir + orandom(30), 4 + random(4));
+                with instance_create(x + lengthdir_x(16, gunangle), y + lengthdir_y(16, gunangle), FishA){
+                    image_angle = other.gunangle;
+                    depth = -3;
                 }
+            }
         }
     }
 

@@ -37,13 +37,17 @@
 		 // Vars:
 		gold = false;
 		maxhealth = 7;
+		meleedamage = 5;
+		canmelee = true;
 		raddrop = 4;
 		size = 1;
 		walk = 0;
+		ammo = 0;
 		walkspd = 0.8;
 		maxspd = 2.4;
 		gunangle = random(360);
 		direction = gunangle;
+		venom_sound = noone;
 
          // Alarms:
 		alarm1 = 40 + irandom(30);
@@ -51,47 +55,97 @@
 		return id;
 	}
 
+#define BabyScorpion_step
+    enemyWalk(walkspd, maxspd);
+    
+     // Not Hurt:
+    if(sprite_index != spr_hurt){
+        if(speed <= 0) sprite_index = spr_idle;
+    	else if(sprite_index == spr_idle){
+    	    if(ammo > 0) sprite_index = spr_fire;
+    	    else sprite_index = spr_walk;
+    	}
+    }
+
+     // Hurt:
+    else if(image_index > image_number - 1){
+        sprite_index = spr_idle;
+    }
+
 #define BabyScorpion_alrm1
     alarm1 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
 
-    if(target_is_visible()) {
+    if(target_is_visible()){
         var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-
-    	if(target_in_distance(32, 96) > 0 and random(3) < 2){
-		    gunangle = _targetDir;
-
-		     // Golden poison shot:
-		    if(gold) {
-		        repeat(6) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(30), 5 + random(2));
-		        repeat(4) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 10 + random(4));
-		    }
-
-		     // Normal poison shot:
-		    else {
-		        repeat(2) scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 6 + random(4));
-		    }
-		    motion_add(_targetDir + 180, 3);
-            sound_play_pitch(snd_fire, 1.6);
-
-    		alarm1 = 20 + random(30);
-    	}
-
-         // Move Away From Target:
-        else if(target_in_distance(0, 32) > 0) {
-            alarm1 = 20 + irandom(30);
-            scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
+         // Attack:
+        if ammo > 0{
+            ammo--;
+            alarm1 = 1;
+            
+             // Aim and walk:
+            if random(4) < 1{
+                gunangle = _targetDir;
+                scrWalk(6, gunangle + orandom(10));
+            }
+            
+             // Golden venom shot:
+            if gold{
+                scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(40), 4 + random(4));
+                scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 8 + random(8));
+            }
+            
+             // Normal venom shot:
+            else{
+                if random(2) < 1
+                    scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(20), 6 + random(4));
+            }
+            
+             // Effects:
+            if random(4) < 1
+                with instance_create(x, y, AcidStreak){
+                    motion_set(_targetDir + orandom(24), 2 + random(4));
+                    image_angle = direction;
+                }
+            
+             // End attack:
+            if ammo <= 0{
+                alarm1 = 20 + irandom(20);
+                sound_stop(venom_sound);
+                sound_play_pitchvol(sndSalamanderEndFire, 1.6, 0.4);
+                sprite_index = spr_idle;
+            }
         }
-
-         // Move Towards Target:
-    	else{
-    		alarm1 = 30 + irandom(20);
-    		scrWalk(20 + random(15), _targetDir + orandom(40));
-    		gunangle = _targetDir + orandom(15);
-    	}
-
-    	 // Facing:
-    	scrRight(gunangle);
+        
+         // Normal AI:
+        else{
+             // Start attack:
+        	if(target_in_distance(32, 96) > 0 && random(3) < 2){
+    		    gunangle = _targetDir;
+    		    ammo = 16 + irandom(16);
+    		    alarm1 = 1;
+    
+                sound_play_pitch(snd_fire, 1.6);
+                venom_sound = audio_play_sound(gold ? sndGoldScorpionFire : sndScorpionFire, 10, true);
+                audio_sound_pitch(venom_sound, 1.2);
+        	}
+    
+             // Move Away From Target:
+            else if(target_in_distance(0, 32) > 0){
+                alarm1 = 20 + irandom(30);
+                scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
+            }
+    
+             // Move Towards Target:
+        	else{
+        		alarm1 = 30 + irandom(20);
+        		scrWalk(20 + random(15), _targetDir + orandom(40));
+        		gunangle = _targetDir + orandom(15);
+        	}
+    
+        	 // Facing:
+        	scrRight(gunangle);
+        }
     }
 
      // Wander:
@@ -127,6 +181,9 @@
     snd_dead = -1;
 
 
+#define BabyScorpion_destroy
+    sound_stop(venom_sound);
+    
 #define BabyScorpionGold_create(_x, _y)
     with(obj_create(_x, _y, "BabyScorpion")){
          // Visual:
