@@ -107,6 +107,9 @@
 	    if(is_real(o) && instance_exists(o)){
 	        with(o){
 	            name = _name;
+	            
+	             // made them pink:
+	            image_blend = merge_color(c_white, c_purple, 0.3);
 
 				var _isCustom = (string_pos("Custom", object_get_name(o.object_index)) == 1),
 					_events = [];

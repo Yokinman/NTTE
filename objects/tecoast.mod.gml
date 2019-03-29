@@ -1272,7 +1272,7 @@
     with(o){
          // make things fair
         other.raddrop -= raddrop;
-        raddrop = max(raddrop + other.raddrop, raddrop);
+        raddrop = clamp(raddrop + other.raddrop, 0, raddrop);
         
          // Randomize Type:
         if(name == "Seal"){
