@@ -408,54 +408,56 @@
 
 	if(active){
 	    target = instance_nearest(x, y, Player);
-	    var _targetDir = point_direction(x, y, target.x, target.y);
-
-	    if(target_is_visible() && target_in_distance(0, 240)){
-	         // Move Away:
-	        if(random(3) < 5){
-	            scrWalk(20 + irandom(15), _targetDir + 180 + (irandom_range(25, 45) * right));
-	        }
-
-	         // Screech:
-            if(random(3) < 1){
-            	if(irandom(stress) >= 15){
-	                stress -= 8;
-	                scrBatBossScreech();
-            	}
-	        	else stress += 4;
-            }
-
-	        else{
-	        	 // Flak Time:
-	        	wkick -= 4;
-	        	gunangle = _targetDir;
-				scrEnemyShoot("VenomFlak", gunangle + orandom(10), 12);
-	        }
+	    if instance_exists(target){
+    	    var _targetDir = point_direction(x, y, target.x, target.y);
+    
+    	    if(target_is_visible() && target_in_distance(0, 240)){
+    	         // Move Away:
+    	        if(random(3) < 5){
+    	            scrWalk(20 + irandom(15), _targetDir + 180 + (irandom_range(25, 45) * right));
+    	        }
+    
+    	         // Screech:
+                if(random(3) < 1){
+                	if(irandom(stress) >= 15){
+    	                stress -= 8;
+    	                scrBatBossScreech();
+                	}
+    	        	else stress += 4;
+                }
+    
+    	        else{
+    	        	 // Flak Time:
+    	        	wkick -= 4;
+    	        	gunangle = _targetDir;
+    				scrEnemyShoot("VenomFlak", gunangle + orandom(10), 12);
+    	        }
+    	    }
+    
+    	    else{
+    	         // Follow Cat Boss:
+    	        var c = nearest_instance(x, y, instances_named(CustomEnemy, "CatBoss"));
+    	        if(instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64){
+    	            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
+    	        }
+    
+    			 // Wander:
+    	        else if(random(3) < 2){
+    	            scrWalk(10 + irandom(20), direction + orandom(24));
+    	        }
+    
+    			 // Bat Morph:
+    	        else{
+    				alarm0 = 24;
+    				for(var i = 0; i < 3; i++){
+    					array_push(cloud, { delay: 8 * i });
+    				}
+    	        }
+    	    }
+    
+    	    gunangle = (target_is_visible() ? _targetDir : direction);
+    		scrRight(gunangle);
 	    }
-
-	    else{
-	         // Follow Cat Boss:
-	        var c = nearest_instance(x, y, instances_named(CustomEnemy, "CatBoss"));
-	        if(instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64){
-	            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
-	        }
-
-			 // Wander:
-	        else if(random(3) < 2){
-	            scrWalk(10 + irandom(20), direction + orandom(24));
-	        }
-
-			 // Bat Morph:
-	        else{
-				alarm0 = 24;
-				for(var i = 0; i < 3; i++){
-					array_push(cloud, { delay: 8 * i });
-				}
-	        }
-	    }
-
-	    gunangle = (target_is_visible() ? _targetDir : direction);
-		scrRight(gunangle);
 	}
 
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
