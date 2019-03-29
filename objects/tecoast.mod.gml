@@ -1025,14 +1025,14 @@
 
      // Palanquin Bottom:
     if(z > 4 || place_meeting(x, y, Floor)){
-        if(h) d3d_set_fog(1, c_white, 0, 0);
+        if(h) d3d_set_fog(1, image_blend, 0, 0);
         draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
         if(h) d3d_set_fog(0, 0, 0, 0);
     }
 
      // Self:
     h = (h && sprite_index != spr_hurt);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
+    if(h) d3d_set_fog(1, image_blend, 0, 0);
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     if(h) d3d_set_fog(0, 0, 0, 0);
 
@@ -1459,7 +1459,7 @@
 
 #define PalankingDie_draw
     var h = (image_index < 1);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
+    if(h) d3d_set_fog(1, image_blend, 0, 0);
     draw_sprite_ext(spr.PalankingBott, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
     if(h) d3d_set_fog(0, 0, 0, 0);

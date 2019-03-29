@@ -166,6 +166,11 @@
 
 #define BabyScorpion_death
     scrDefaultDrop();
+    
+    if gold{
+        repeat(4 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", irandom(359), 8 + random(4));
+        repeat(8 + irandom(8)) scrEnemyShoot("TrafficCrabVenom", irandom(359), 4 + random(4));
+    }
 
      // Effects:
     var l = 6,
@@ -894,7 +899,7 @@
         var _cx = x,
             _cy = bbox_bottom;
 
-        if(h) d3d_set_fog(1, c_white, 0, 0);
+        if(h) d3d_set_fog(1, image_blend, 0, 0);
         for(var a = 0; a < 4; a++){
             var _x = _cx,
                 _y = _cy,
@@ -931,7 +936,7 @@
 
      // Normal Self:
     else{
-        if(h && sprite_index != spr_hurt) d3d_set_fog(1, c_white, 0, 0);
+        if(h && sprite_index != spr_hurt) d3d_set_fog(1, image_blend, 0, 0);
         draw_self_enemy();
     }
 

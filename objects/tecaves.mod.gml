@@ -148,7 +148,7 @@
         nexthurt > current_frame &&
         (nexthurt + current_frame) mod (room_speed/10) = 0
     ){
-        d3d_set_fog(true, c_white, 0, 0);
+        d3d_set_fog(true, image_blend, 0, 0);
         draw_self_enemy();
         d3d_set_fog(false, c_black, 0, 0);
     }

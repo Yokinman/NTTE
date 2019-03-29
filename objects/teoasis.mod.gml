@@ -297,7 +297,7 @@
 
 #define Puffer_draw
     var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
+    if(h) d3d_set_fog(1, image_blend, 0, 0);
     draw_self_enemy();
     if(h) d3d_set_fog(0, 0, 0, 0);
 

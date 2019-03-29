@@ -155,6 +155,11 @@
 
              // Slippery pits:
             traction = 0.1;
+            
+             // Get rid of them:
+            if(place_meeting(x, y, Detail))
+                with(Detail) if place_meeting(x, y, other)
+                    instance_destroy();
         }
 
          // Footsteps:
@@ -633,7 +638,7 @@
         surface_set_target(_surf[2]);
 
         draw_set_color_write_enable(1, 1, 1, 0);
-        draw_set_color(c_black);
+        draw_set_color(c_blue);
         draw_rectangle(0, 0, _surfw, _surfh, 0);
         draw_set_color(c_white);
 
@@ -655,7 +660,7 @@
 
                     with(other){
                          // Cornea + Pupil:
-                        if(h) d3d_set_fog(1, c_white, 0, 0);
+                        if(h) d3d_set_fog(1, image_blend, 0, 0);
                         if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
                             draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xscal, _yscal, _angle, _blend, _alpha);
                             draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xscal, _yscal, _angle, _blend, _alpha);

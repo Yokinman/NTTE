@@ -1020,7 +1020,7 @@
 	}
 
      // Bounce:
-    if(dash <= 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
+    if(dash <= 0 && array_length(instances_matching(instances_named(CustomObject, "CatBossAttack"), "creator", id)) <= 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
         if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
         gunangle = direction;

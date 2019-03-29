@@ -109,7 +109,7 @@
 
 #define Angler_draw
     var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
-    if(h) d3d_set_fog(1, c_white, 0, 0);
+    if(h) d3d_set_fog(1, image_blend, 0, 0);
     draw_self_enemy();
     if(h) d3d_set_fog(0, 0, 0, 0);
 
@@ -281,7 +281,7 @@
 		 // Alarms:
         alarm0 = 30; // move, start counterattack
         alarm1 = -1; // execute counterattack
-        alarm2 = -1; // teleport
+        alarm2 = 1; // teleport
 
         return id;
     }
@@ -456,7 +456,7 @@
     
          // Hurt Papa Squid:
         with(creator){
-            my_health -= _hitdmg * (1 - armor);
+            my_health -= _hitdmg;
             nexthurt = current_frame + 6;
             sound_play_hit(snd_hurt, 0.3);
         }
@@ -937,6 +937,7 @@
         mask_index = mskNone;
         meleedamage = 8;
         maxhealth = scrBossHP(450);
+        is_dead = false;
         raddrop = 1;
         size = 5;
         canfly = true;
@@ -987,11 +988,11 @@
     else{
          // Slow Initial Rise:
         if(pit_height < 0.5){
-            pit_height += abs(sin(current_frame / 30)) * 0.01 * current_time_scale;
+            pit_height += abs(sin(current_frame / 30)) * 0.02 * current_time_scale;
 
              // Prepare Bite:
             if(bite <= 0 && pit_height > 0.3){
-                bite = 1.2;
+                bite = 0.6;
             }
         }
 
@@ -1159,6 +1160,12 @@
     if(button_pressed(0, "key9")){
         bite = 1.2;
     }
+    
+     // Die:
+    if(my_health <= 0 && !is_dead){
+        my_health = 1;
+        is_dead = true; // idea is to use this to make death animations before the head disappears
+    }
 
 #define PitSquid_end_step
      // Collisions:
@@ -1204,7 +1211,7 @@
                 image_xscale = _xsc * 1.6;
                 image_yscale = _ysc * 1.6;
                 with(Wall) if(place_meeting(x, y, other)){
-                    instance_create(x, y, FloorExplo);
+                    instance_create(x, y, FloorExplo).depth = 8;
                     instance_destroy();
                 }
             }
@@ -1224,7 +1231,7 @@
                     with(_floors) if(place_meeting(x, y, other)){
                         styleb = true;
                         sprite_index = area_get_sprite(GameCont.area, sprFloor1B);
-                        depth = 8;
+                        depth = 9;
                         material = 0;
                         traction = 0.1;
 
@@ -1257,6 +1264,7 @@
                                 instance_destroy();
                             }
                         }
+                        mod_script_call("area", "trench", "area_setup_floor", false);
                     }
                     mod_variable_set("area", "trench", "surf_reset", true);
                 }
@@ -1299,11 +1307,11 @@
                 sink = true;
                 sink_targetx = target.x;
                 sink_targety = target.y;
-                alarm1 = 60;
+                alarm1 = 20;
             }
         }
     }
-
+    
 #define PitSquid_alrm2
     alarm2 = 60 + random(30);
 
@@ -1314,28 +1322,10 @@
             var _targetDis = point_distance(x, y, target.x, target.y),
                 _targetDir = point_direction(x, y, target.x, target.y);
 
-             // Tentacles:
             if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
-                var c = id;
-                with(target){
-                    var f = floor_at(x, y);
-                    if(instance_exists(f) && f.styleb){
-                        other.alarm2 = 60 + random(30);
-                        with(obj_create(x, y, "Tentacle")){
-                            alarm0 = 20;
-                            team = c.team;
-                            creator = c;
-                        }
-
-                         // Tell:
-                        with(instance_create(x, bbox_bottom - 4, ThrowHit)){
-                            image_alpha = 0.5;
-                            image_speed = 0.4;
-                            image_angle = random(360);
-                            image_xscale = 0.5;
-                            image_yscale = 0.5;
-                        }
-                    }
+                 // Tentacles:
+                if random(3) < 1 && array_length(instances_matching(instances_named(CustomEnemy, "ChaserTentacle"), "creator", id)) < 3{
+                    obj_create(x, y, "ChaserTentacle").creator = id;
                 }
             }
     
@@ -1963,6 +1953,12 @@
     with(instances_matching(CustomProp, "name", "Kelp")){
         draw_circle(x, y, 32 + orandom(1), false);
     }
+    
+     // Pit Squid:
+    with(instances_matching_ge(instances_named(CustomEnemy, "PitSquid"), "pit_height", 1)){
+        with(eye)
+            draw_circle(x, y + 16, ((blink ? 48 : 64) + orandom(1)), false);
+    }
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
@@ -2003,6 +1999,12 @@
      // Elite Eels:
     with(instances_matching_gt(instances_named(CustomEnemy, "Eel"), "elite", 0)){
         draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
+    }
+    
+     // Pit Squid:
+    with(instances_matching_ge(instances_named(CustomEnemy, "PitSquid"), "pit_height", 1)){
+        with(eye) if !blink
+            draw_circle(x, y + 16, 32 + orandom(1), false);
     }
 
 
