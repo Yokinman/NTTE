@@ -638,7 +638,7 @@
         surface_set_target(_surf[2]);
 
         draw_set_color_write_enable(1, 1, 1, 0);
-        draw_set_color(c_blue);
+        draw_set_color(/*c_blue*/c_black);
         draw_rectangle(0, 0, _surfw, _surfh, 0);
         draw_set_color(c_white);
 
