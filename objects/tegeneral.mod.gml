@@ -1768,6 +1768,21 @@
     }
 
 
+#define PortalPrevent_create(_x, _y)
+	with(instances_named(CustomEnemy, "PortalPrevent")){
+		instance_delete(id); // There can only be one
+	}
+
+	return instance_create(_x, _y, CustomEnemy);
+
+#define PortalPrevent_step
+	my_health = 99999;
+	canfly = true;
+
+#define PortalPrevent_death
+	obj_create(x, y, name);
+
+
 /// Mod Events
 #define game_start
     with(instances_named(CustomObject, "Pet")) instance_destroy();

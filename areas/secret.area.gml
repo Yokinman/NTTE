@@ -537,7 +537,7 @@
         }
 
          // Make sure door isn't placed weirdly:
-        with(instances_at(x, bbox_bottom, Floor)){
+        with(instances_at((bbox_left + bbox_right) / 2, bbox_bottom - 5, Floor)){
             for(var i = 0; i <= 180; i += 180){
                 var a = other.image_angle - 90 + i;
                 if(position_meeting(x + lengthdir_x(32, a), y + lengthdir_y(32, a), Floor)){
@@ -558,7 +558,12 @@
     with(instances_matching([chestprop, RadChest], "", null)){
         obj_create(x, y - 32, "CatLight");
     }
-    //obj_create(spawn_x, spawn_y - 32, "CatLight");
+    with(obj_create(spawn_x, spawn_y - 60, "CatLight")){
+		w1 = 24;
+		w2 = 60;
+		h1 = 64;
+		h2 = 16;
+    }
 
 
 /// Rooms
@@ -738,9 +743,15 @@
                     instance_create(x, y, NOWALLSHEREPLEASE);
             with instance_create(_x + 80, _y + 3 * 16, Wall)
                 instance_create(x, y, NOWALLSHEREPLEASE);
+
              // Props:
-            with obj_create(_x + 16 + orandom(2), _y + 8, "ChairFront")
-                obj_create(x, y - o, "CatLight");
+            with(obj_create(_x + 16 + orandom(2), _y + 12, "ChairFront")){
+                with(obj_create(x, y - 28, "CatLight")){
+            		w2 = 18;
+            		h2 = 6;
+                }
+            }
+
              // Enemies:
             create_enemies(_x, _y, 1);
             
@@ -784,9 +795,20 @@
                             instance_delete(id);
                         else instance_create(x, y, NOWALLSHEREPLEASE);
                     }
-             // Enemies:
-            for (var d = 0; d <= 360; d += 90)
-                create_enemies(_cx + lengthdir_x(80, d), _cy + lengthdir_y(80, d), 1 + irandom(1));
+                    
+             // Enemies & Lights:
+            var l = 72;
+            for (var d = 0; d <= 360; d += 90){
+                var _ox = _cx + lengthdir_x(l, d),
+                    _oy = _cy + lengthdir_y(l, d);
+
+                create_enemies(_ox, _oy, 1 + irandom(1));
+
+                 // Lights:
+                with(obj_create(_ox, _oy - 44, "CatLight")){
+            		h1 = 48;
+                }
+            }
                 
             break;
         }
@@ -861,8 +883,10 @@
              // Props:
             with obj_create(_cx + orandom(2), _cy - 38 + orandom(2), "NewTable"){
                 obj_create(x + orandom(4), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
-            for (var xx = -3; xx <= 3; xx += 6)
-                obj_create(_cx + xx * 16, _y + 42 + orandom(2), "Cabinet");
+                for (var xx = -3; xx <= 3; xx += 6)
+                    obj_create(_cx + xx * 16, _y + 42 + orandom(2), "Cabinet");
+                    
+                obj_create(x, y - 30, "CatLight");
             }
              // Enemies:
             create_enemies(_cx, _cy, 1 + irandom(1));

@@ -1589,13 +1589,17 @@
             var _ang = point_direction(0, 0, other.hspeed, -other.zspeed) - 90;
             if("angle" in self) angle = _ang;
             else image_angle = _ang;
-            with(instance_create(x + orandom(4), y + orandom(4), Dust)){
-                coast_water = false;
-                depth = other.depth;
+            if(current_frame_active){
+		        repeat(2) with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+		            coast_water = false;
+		            depth = other.depth;
+		        }
             }
         }
     }
     else{
+        instance_create(x, y, PortalClear);
+
          // Reset Vars & Damage:
         with(creator){
             nowade = false;
@@ -1605,7 +1609,7 @@
             if("angle" in self) angle = 0;
             else image_angle = 0;
 
-	        if(place_meeting(x, y, Floor)){
+	        if(place_meeting(x, y, Floor) || GameCont.area != "coast"){
 	            projectile_hit(id, 3);
 	        }
         }

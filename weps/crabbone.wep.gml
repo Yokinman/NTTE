@@ -58,8 +58,18 @@
             wep = 0;
 
              // Swap:
-            breload = max(3, breload);
             scrSwap();
+
+             // Prevent Shooting Until Trigger Released:
+            if(wep != 0 && fork()){
+                while(instance_exists(self) && canfire && button_check(index, "fire")){
+            		reload = max(2, reload);
+            		can_shoot = 0;
+            		clicked = 0;
+                    wait 0;
+                }
+                exit;
+            }
         }
     }
     else{

@@ -11,7 +11,7 @@
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "Puffer", "Crack"],
 		"tetrench"	: ["Angler", "ChaserTentacle", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
-	    "tesewers"	: ["Bat", "BatBoss", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "VenomFlak"],
+	    "tesewers"	: ["Bat", "BatBoss", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
 	    "tecaves"	: ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"]
     };
 
@@ -253,7 +253,7 @@
 
      // Step:
     script_ref_call(on_ntte_step);
-    if(!instance_exists(self)) exit;
+    if("ntte_alarm_max" not in self) exit;
 
      // Alarms:
     for(var i = 0; i < ntte_alarm_max; i++){
@@ -267,7 +267,7 @@
     		if(a <= 0){
     		    alarm_set(i, -1);
     		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
-    		    if(!instance_exists(self)) exit;
+    			if("ntte_alarm_max" not in self) exit;
     		}
         }
     }
@@ -334,7 +334,7 @@
             d -= sqrt(_md);
 
              // Enter minor hitscan mode:
-            if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
+            if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
                 m = 2;
                 d = sqrt(_md);
             }
@@ -694,9 +694,8 @@
 	can_shoot = (reload <= 0);
 	clicked = 0;
 
-#define scrPortalPoof()
-     // Get Rid of Portals (but make it look cool):
-    if(instance_exists(Portal)){
+#define scrPortalPoof()  // Get Rid of Portals (but make it look cool)
+    if(instance_exists(Portal) && array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
         //var _spr = sprite_duplicate(sprPortalDisappear);
         with(Portal) if(endgame >= 0){
         	with(instance_create(x, y, BulletHit)){
@@ -721,6 +720,14 @@
                 exit;
             }*/
         }
+    	if(fork()){
+    		while(instance_exists(Portal)) wait 0;
+    		with(instances_matching(Player, "mask_index", mskNone)){
+	    		mask_index = mskPlayer;
+	    		angle = 0;
+    		}
+    		exit;
+    	}
     }
 
 #define scrPickupPortalize()

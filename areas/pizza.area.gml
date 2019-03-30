@@ -73,6 +73,7 @@
 
 #define area_start
     instance_delete(instances_matching(Wall, "", null)[0]);
+    obj_create(0, 0, "PortalPrevent");
 
      // So much pizza:
     with(Floor){
@@ -87,39 +88,51 @@
     }
     with(HPPickup) alarm0 *= 2;
 
-     // Delay because of annoying enemy offsets:
-    if(fork()){
-        wait 1;
+     // Turt Squad:
+    with(TV){
+        x += random(32);
+        xstart = x;
 
-        with(TV){
-             // Squad:
-            var c = [1, 2, 4],
-                a = random(360);
-        
-            for(var i = 0; i < array_length(c); i++){
-                var _dis = 20 + random(4),
-                    _dir = a + (i * (360 / array_length(c))) + orandom(10);
-        
-                with(instance_create(x + lengthdir_x(_dis, _dir), y + 64 + lengthdir_y(_dis, _dir), Turtle)){
-                    snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
-                    scrRight(_dir + 180);
-                }
-            }
-
-             // The man himself:
-            with(instance_create(x - random_range(12, 16), y + orandom(4), Rat)) right = 1;
+        var c = [1, 2, 4],
+            a = random(360);
     
-             // Hungry Boy:
-            with(instance_random([PizzaBox, HealthChest, HPPickup])){
-                with(instance_create(x + orandom(4), y + orandom(4), Turtle)){
-                    snd_dead = sndTurtleDead3;
-                    right = 1;
-                }
+        for(var i = 0; i < array_length(c); i++){
+            var _dis = 20 + random(4),
+                _dir = a + (i * (360 / array_length(c))) + orandom(10);
+    
+            with(obj_create(x + lengthdir_x(_dis, _dir), y + 64 + lengthdir_y(_dis, _dir), "TurtleCool")){
+                snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
+                scrRight(_dir + 180);
             }
         }
-        with(enemy) alarm0 += 30;
 
-        exit;
+         // The man himself:
+        with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
+            move_contact_solid(random(180), random_range(12, 64));
+
+             // Visual:
+            spr_idle = sprRatIdle;
+            spr_walk = sprRatWalk;
+            spr_hurt = sprRatHurt;
+            spr_dead = sprRatDead;
+            sprite_index = spr_idle;
+
+             // Sound:
+            snd_hurt = sndRatHit;
+            snd_dead = sndRatDie;
+
+             // Vars:
+            become = Rat;
+            right = 1;
+        }
+
+         // Hungry Boy:
+        with(instance_random([PizzaBox, HealthChest, HPPickup])){
+            with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
+                snd_dead = sndTurtleDead3;
+                right = 1;
+            }
+        }
     }
 
      // Spawn Stuff:
@@ -145,7 +158,7 @@
             }
         }
     }
-        
+
      // Light up specific things:
     with(instances_matching([chestprop, RadChest], "", null)){
         obj_create(x, y - 32, "CatLight");
@@ -168,6 +181,13 @@
     else subarea++;
 
 #define area_end_step
+     // Allow Portal:
+    if(instance_number(enemy) > 1){
+        with(instances_named(CustomEnemy, "PortalPrevent")){
+            instance_delete(id);
+        }
+    }
+
      // Yummy HP:
     with(instances_matching(HPPickup, "sliced", null)){
         sliced = true;
@@ -201,14 +221,15 @@
     instance_create(x, y, Floor);
    
      // Important Tiles:
-    switch(`${_den.cols},${_den.rows}`){
+    var _tile = `${_den.cols},${_den.rows}`;
+    switch(_tile){
          /// Corner Walls:
         case "0,0": instance_create(x,      y + 16, Wall);  break;
         case "0,5": instance_create(x,      y,      Wall);  break;
         case "7,0": instance_create(x + 16, y + 16, Wall);  break;
         case "7,5": instance_create(x + 16, y,      Wall);  break;
 
-        case "2,3": /// Toons Viewer
+        case "3,3": /// Toons Viewer
             obj_create(x, y - 16, "PizzaTV");
             break;
 

@@ -251,7 +251,7 @@
         canfly = true;
 
 		 // hello i am bat:
-        var _bat = instances_named(CustomEnemy, "Bat");
+        var _bat = instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id);
         with(nearest_instance(x, y, _bat)){
         	other.x = x;
         	other.y = y;
@@ -269,6 +269,9 @@
 			for(var i = 0; i < 3; i++){
 				array_push(cloud, { y_add: 1.2, delay: 5 * i });
 			}
+
+			 // Make any remaining bats unkillable:
+        	with(_bat) my_health = 9999;
         }
     }
 
@@ -415,6 +418,14 @@
     	         // Move Away:
     	        if(random(3) < 5){
     	            scrWalk(20 + irandom(15), _targetDir + 180 + (irandom_range(25, 45) * right));
+
+    	             // Bat Morph:
+    	            if(random(8) < 1 && random(maxhealth) > my_health){
+	    				alarm0 = 24;
+	    				for(var i = 0; i < 3; i++){
+	    					array_push(cloud, { delay: 8 * i });
+	    				}
+    	            }
     	        }
     
     	         // Screech:
@@ -460,6 +471,18 @@
 	    }
 	}
 
+	 // More Aggressive Bats:
+	else{
+		with(instances_named(CustomEnemy, "Bat")){
+			alarm1 = ceil(alarm1 / 2);
+			
+			target = instance_nearest(x, y, Player);
+			if(instance_exists(target)){
+				scrWalk(alarm1, point_direction(x, y, target.x, target.y));
+			}
+		}
+	}
+
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
     if !instance_is(other, ToxicGas){
@@ -473,6 +496,16 @@
         nexthurt = current_frame + 5;
 
         scrBatBossScreech(true);
+    }
+
+#define BatBoss_death
+    pickup_drop(100, 50);
+    pickup_drop(60, 0);
+
+     // Buff Partner:
+    with(instances_named(CustomEnemy, "CatBoss")){
+    	maxhealth *= 2;
+    	my_health += 0.5 * maxhealth;
     }
 
 #define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
@@ -567,6 +600,7 @@
 		motion_add(other.direction, 4);
 		nexthurt = current_frame + 12;
 		creator = other.creator;
+		kills = 0;
 
 		 // Aim:
 		if(instance_exists(other.target)){
@@ -1001,7 +1035,7 @@
 
 		 // Alarms:
 		alarm0 = 300 + random(150);
-		alarm1 = 40 + irandom(20);
+		alarm1 = 30 + random(20);
 
 		return id;
 	}
@@ -1020,11 +1054,13 @@
 	}
 
      // Bounce:
-    if(dash <= 0 && array_length(instances_matching(instances_named(CustomObject, "CatBossAttack"), "creator", id)) <= 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
-        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-        gunangle = direction;
-        scrRight(gunangle);
+    if(dash <= 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
+    	if(array_length(instances_matching(instances_named(CustomObject, "CatBossAttack"), "creator", id)) <= 0){
+	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	        gunangle += angle_difference(direction, gunangle) / 2;
+	        scrRight(gunangle);
+    	}
     }
 
 #define CatBoss_draw
@@ -1047,35 +1083,42 @@
 #define CatBoss_alrm1
 	alarm1 = 20 + random(20);
 	
-	if supertime > 0{
-	     // Mid charge:
+	if(supertime > 0){
 	    alarm1 = 1;
 	    supertime -= 1;
+
+	     // Mid charge:
 	    wkick = 6;
 	    gunangle = right ? 320 + orandom(5) : 220 + orandom(5);
-	    view_shake_max_at(x, y, 4);
+
 	     // Effects:
-	    if random(2) < 1{
+	    view_shake_max_at(x, y, 4);
+	    if(random(2) < 1){
 	        var _w = (1 - (supertime / maxsupertime)) * 12,
 	            _h = irandom(8) * right;
-	        with instance_create(x + lengthdir_x(_w, gunangle) + lengthdir_x(_h, gunangle + 90), y + lengthdir_y(_w, gunangle) + lengthdir_y(_h, gunangle + 90), EatRad){
+
+	        with(instance_create(x + lengthdir_x(_w, gunangle) + lengthdir_x(_h, gunangle + 90), y + lengthdir_y(_w, gunangle) + lengthdir_y(_h, gunangle + 90), EatRad)){
 	            sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
 	            depth = -3;
 	        }
 	    }
 	     
-	    if supertime <= 0{
-             // End charge:
-	        alarm1 = 20;
+         // End charge:
+	    if(supertime <= 0){
 	        super = true;
+
+	        alarm1 = 12;
 	        wkick = -3;
 	        gunangle = right ? 340 : 200;
+
 	         // Sounds:
 	        sound_play_pitch(sndLaserCannon, 0.8);
 	        sound_play_pitch(sndGunGun, 1.2);
 	        sound_play_pitch(sndStrongSpiritLost, 0.8);
+
 	         // Effects:
-	        instance_create(x + lengthdir_x(20, gunangle), y + lengthdir_y(20, gunangle), ThrowHit).depth = -3;
+	        var l = 20;
+	        instance_create(x + lengthdir_x(l, gunangle), y + lengthdir_y(l, gunangle), ThrowHit).depth = -3;
 	    }
 	}
 	else{
@@ -1083,19 +1126,21 @@
         	alarm1 = 20 + random(20);
         	other.alarm1 += alarm1;
         }
-    
+
         target = instance_nearest(x, y, Player);
-    
+
         if(instance_exists(target)){
         	var _tx = target.x,
         		_ty = target.y,
             	_targetDir = point_direction(x, y, _tx, _ty);
-            
+
              // Start Charge:
         	if(!super && random(5) < 1){
         		alarm1 = 1;
         		supertime = maxsupertime;
         		superbreakmax = 6;
+
+				 // FX:
         		sound_play_pitch(sndLaserCannonCharge, 0.6);
         		sound_play_pitch(sndTechnomancerActivate, 1.4);
         	}
@@ -1103,7 +1148,7 @@
             else{
                 if(random(5) < 4){
                      // Attack:
-                    if(random(4) < 3 && (target_in_distance(0, 80) || random(3) < 1) && target_is_visible()){
+                    if(random(4) < 3 && (target_in_distance(0, 80) || random(2) < 1) && target_is_visible()){
         				gunangle = _targetDir;
                         var a = scrEnemyShoot("CatBossAttack", gunangle, 0);
                         a.target = target;
@@ -1272,10 +1317,16 @@
 
 #define CatBoss_death
     pickup_drop(100, 20);
-    pickup_drop(60, 0);
+    repeat(2) pickup_drop(60, 0);
 
      // Hmmmm
     instance_create(x, y, ToxicDelay);
+
+     // Buff Partner:
+    with(instances_named(CustomEnemy, "BatBoss")){
+    	maxhealth *= 2;
+    	my_health += 0.5 * maxhealth;
+    }
 
 #define CatBoss_cleanup
     sound_stop(jetpack_loop);
@@ -1302,7 +1353,7 @@
 
 		 // Hitscan Lines:
 		if(fork()){
-			wait 1;
+			wait 0;
 
 		    var _num = (3 + GameCont.loops) * (type ? 2.5 : 1),
 		    	_off = 30 + (12 * GameCont.loops),
@@ -1324,7 +1375,7 @@
     }
 
 #define CatBossAttack_step
-    if(instance_exists(creator)){
+    if(creator == noone || instance_exists(creator)){
     	 // Chargin Up:
 	    with(creator){
 	    	wkick = 5 * (1 - (other.alarm0 / other.alarm0_max));
@@ -1343,39 +1394,61 @@
     	}
 
     	 // Follow Creator:
-        var o = (type ? 28 : 16) - creator.wkick;
-        x = creator.x + lengthdir_x(o, creator.gunangle);
-        y = creator.y + lengthdir_y(o, creator.gunangle);
+        if(instance_exists(creator)){
+    		var o = (type ? 28 : 16) - creator.wkick;
+	        x = creator.x + lengthdir_x(o, creator.gunangle);
+	        y = creator.y + lengthdir_y(o, creator.gunangle);
+        }
 
 	     // Hitscan Lines:
 	    with(fire_line){
 	        dir += (angle_difference(dir_goal, dir) / 7) * current_time_scale;
-	
-	         // Line Hitscan:
-	        var o = 4,
-	            _dir = dir + other.direction,
-	            _x = x,
-	            _y = y,
-	            _ox = lengthdir_x(o, _dir),
-	            _oy = lengthdir_y(o, _dir);
-	
-	        dis = 0;
-	        with(other) while(other.dis < other.dis_goal){
-	            other.dis += o;
-	            _x += _ox;
-	            _y += _oy;
-	            if(position_meeting(x + _x, y + _y, Wall) || !position_meeting(x + _x, y + _y, Floor)){
-	            	break;
-	            }
-	
-	             // Sparkly Laser:
-	            if(current_frame_active && random(250) < 1){
-	                with(instance_create(x + _x + orandom(4), y + _y + orandom(4), EatRad)){
-	                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
-	                    motion_set(_dir + 180 + orandom(60), 2);
-	                }
-	            }
-	        }
+
+			 // Line Hitscan:
+			var _dir = dir + other.direction,
+	            _sx = other.x + x,
+		        _sy = other.y + y,
+		        _lx = _sx,
+		        _ly = _ly,
+		        _md = 1000,
+		        d = _md,
+		        m = 0; // Minor hitscan increment distance
+
+		    with(other) while(d > 0){
+		         // Major Hitscan Mode (Start at max, go back until no collision line):
+		        if(m <= 0){
+		            _lx = _sx + lengthdir_x(d, _dir);
+		            _ly = _sy + lengthdir_y(d, _dir);
+		            d -= sqrt(_md);
+		
+		             // Enter minor hitscan mode:
+		            if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
+		                m = 2;
+		                d = sqrt(_md);
+		            }
+		        }
+
+		         // Minor Hitscan Mode (Move until collision):
+		        else{
+		            if(position_meeting(_lx, _ly, Wall)) break;
+		            _lx += lengthdir_x(m, _dir);
+		            _ly += lengthdir_y(m, _dir);
+		            d -= m;
+		        }
+		    }
+
+			dis = point_distance(_sx, _sy, _lx, _ly);
+
+			 // Effects:
+			if(current_frame_active && random(10) < 1){
+				var l = random(dis),
+					d = dir;
+
+				with(instance_create(_sx + lengthdir_x(l, d) + orandom(4), _sy + lengthdir_y(l, d) + orandom(4), EatRad)){
+                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
+                    motion_set(_dir + 180 + orandom(60), 2);
+				}
+			}
 	    }
     }
     else instance_destroy();
@@ -1434,7 +1507,7 @@
 
              // Instadamage:
             if(type && collision_circle(_lx, _ly, o / 2, hitme, false, false)){
-            	with(instances_matching_ne(hitme, "team", team)) with(other){
+            	with(instances_matching_ne(hitme, "id", creator)) with(other){
 		    		if(projectile_canhit_melee(other)){
             			if(collision_circle(_lx, _ly, o / 2, other, false, false)){
 		    				projectile_hit(other, damage, force, _dir);
@@ -1503,7 +1576,7 @@
 
          // Sound:
         snd_hurt = sndHitMetal;
-        snd_dead = sndStreetLightBreak;
+        snd_dead = sndWallBreakScrap;
 
          // Vars:
         mask_index = msk.CatDoor;
@@ -1600,7 +1673,8 @@
     if(my_health <= 0){
     	for(var i = 0; i < maxp; i++){
     		if(player_is_local_nonsync(i) && point_seen(x, y, i)){
-        		sound_play_pitchvol(snd_dead, 0.7 + random(0.3), 1.25);
+        		sound_play_pitchvol(snd_dead, 1.8 + random(0.2), 0.5);
+        		sound_play_pitchvol(snd_hurt, 0.6 + random(0.2), 1.8);
         		break;
     		}
     	}
@@ -1615,8 +1689,9 @@
 	            image_index = random(image_number);
 	            image_speed = 0;
 
-	            motion_add(other.direction + orandom(20), clamp(other.speed, 6, 16) * random_range(0.4, 0.8));
-	            friction *= 1.5;
+				motion_add(random(360), 2);
+	            motion_add(other.direction + orandom(20), clamp(other.speed, 6, 18) * random_range(0.6, 1));
+	            friction *= 2;
 	        }
 
             with(scrFX(x, y, [direction + orandom(20), min(speed, 10) / 2], Dust)){
@@ -1890,7 +1965,6 @@
 
          // Vars:
         phase = 0;
-        portal_repellant = noone;
 
          // Cool Light:
     	with(obj_create(x, y - 48, "CatLight")){
@@ -1913,17 +1987,10 @@
         if phase < 1{
             if instance_exists(Player)
                 if instance_number(enemy) - instance_number(Van) < 1{
+                    phase++;
                     alarm0 = 40;
                     alarm1 = 20;
-                    phase++;
-                    
-                     // keep the portals at bay:
-                    portal_repellant = instance_create(0, 0, CustomEnemy);
-                    with(portal_repellant){
-                        canfly = true;
-                         // anomaly :(
-                        my_health = 10000000000000;
-                    }
+                    obj_create(0, 0, "PortalPrevent");
                 }
                 
                  // Close portals:
@@ -1950,7 +2017,7 @@
      // Hole Collision:
     if(sprite_index == mskNone){
     	var _dis = 24;
-	    with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, hitme)){
+	    with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [hitme, Corpse])){
 	    	var	_x = other.x,
 	    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
 	    		_dir = point_direction(_x, _y, x, y);
@@ -1981,74 +2048,112 @@
     alarm1 = 30 + irandom(30);
     target = instance_nearest(x, y, Player);
     
-    if instance_exists(target){
-         // Spawn bosses:
-        if phase >= 4{
-            obj_create(x, y, "CatBoss");
-            obj_create(x, y, "BatBoss");
-            
-            sprite_index = mskNone;
-            
+    if(instance_exists(target)){
+         // Release Bosses:
+        if(phase >= 4){
             alarm0 = -1;
             alarm1 = -1;
-            
-            if instance_exists(portal_repellant)
-                with(portal_repellant) instance_delete(id);
-                
-            sleep(60);
-            view_shake_at(x, y, 60);
-                
-            repeat(6 + irandom(6)) with instance_create(x, y, ScrapBossCorpse){
-                sprite_index =  spr.ManholeDebrisSmall;
-                image_index =   irandom(image_number);
-                motion_set(irandom(359), 2 + random(6));
-                x += lengthdir_x(16, direction);
-                y += lengthdir_y(16, direction);
-                size = 0;
-            }
-            repeat(3 + irandom(3)) with instance_create(x, y, ScrapBossCorpse){
-                sprite_index =  spr.ManholeDebrisBig;
-                image_index =   irandom(image_number);
-                image_angle =   irandom(359);
-                motion_set(irandom(359), 4 + random(4));
-                x += lengthdir_x(8, direction);
-                y += lengthdir_y(8, direction);
-                size = 0;
-            }
-            repeat(6 + irandom(12)) with instance_create(x, y, Dust){
+            sprite_index = mskNone;
+
+			 // Bosses:
+            obj_create(x, y, "CatBoss");
+            obj_create(x, y, "BatBoss");
+
+			 // Chunks:
+			with([
+				{	"num" : [6, 12],
+					"spr" : spr.ManholeDebrisSmall,
+					"ang" : 0,
+					"spd" : [2, 8],
+					"off" : 16
+				},
+				{	"num" : [3, 6],
+					"spr" : spr.ManholeDebrisBig,
+					"spd" : [4, 8],
+					"off" : 8,
+					"ang" : 360
+				}
+			]){
+				var d = self;
+				repeat(irandom_range(num[0], num[1])){
+					with(instance_create(other.x, other.y, ScrapBossCorpse)){
+						sprite_index = d.spr;
+						image_index = irandom(image_number - 1);
+						image_angle = random(d.ang);
+						motion_set(random(360), random_range(d.spd[0], d.spd[1]));
+						x += lengthdir_x(d.off, direction);
+						y += lengthdir_y(d.off, direction);
+						size = 0;
+					}
+				}
+			}
+
+			 // Effects:
+			var o = 16;
+            repeat(irandom_range(6, 18)) with instance_create(x, y, Dust){
                 motion_set(90 + orandom(60), 6 + random(6));
-                x += lengthdir_x(16, direction);
-                y += lengthdir_y(16, direction);
+                x += lengthdir_x(o, direction);
+                y += lengthdir_y(o, direction);
                 friction = 1;
             }
-            
             sound_play_pitchvol(sndExplosion, 0.8, 1);
             sound_play_pitchvol(sndHitMetal, 0.4, 1);
+            view_shake_at(x, y, 60);
+            sleep(60);
+
+			 // Allow Portal to Spawn:
+            with(instances_named(CustomEnemy, "PortalPrevent")){
+            	instance_delete(id);
+            }
+
+			 // Launch Player:
+	    	var _dis = 24;
+		    with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, Player)){
+		    	var	_x = other.x,
+		    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
+		    		_dir = point_direction(_x, _y, x, y);
+		
+		    	if(point_distance(_x, _y, x, y) < _dis){
+					with(obj_create(x, y, "PalankingToss")){
+						var f = (point_distance(_x, _y, x, y) / _dis);
+						direction = _dir;
+						speed = 6 * f;
+						zfric = 0.6 + (0.4 * f);
+						zspeed = 12;
+						creator = other;
+						depth = other.depth;
+						mask_index = other.mask_index;
+						spr_shadow_y = other.spr_shadow_y;
+					}
+		    	}
+		    }
         }
         
          // Increment:
-        else if (target_in_distance(0, 128) && target_is_visible()) || phase < 2{
-            if phase > 1 phase++;
-            
+        else if((target_in_distance(0, 128) && target_is_visible()) || phase < 2){
+            if(phase > 1) phase++;
+
             image_index = 1;
-            
-            sleep(20);
-            view_shake_at(x, y, 20);
-            
-            repeat(1 + irandom(2)) with instance_create(x, y, Debris){
+
+			 // Chunks:
+            repeat(irandom_range(1, 3)) with(instance_create(x, y, Debris)){
                 sprite_index =  spr.ManholeDebrisSmall;
                 image_index =   irandom(image_number);
                 motion_set(irandom(359), 4 + random(4));
                 x += lengthdir_x(16, direction);
                 y += lengthdir_y(16, direction);
             }
-            repeat(4 + irandom(8)) with instance_create(x, y, Dust){
-                motion_set(irandom(359), random(2));
-                x += lengthdir_x(18, direction);
-                y += lengthdir_y(18, direction);
+
+			 // Effects:
+            var o = 18;
+            repeat(irandom_range(4, 12)) with(instance_create(x, y, Dust)){
+                motion_set(random(360), random(2));
+                x += lengthdir_x(o, direction);
+                y += lengthdir_y(o, direction);
             }
-            
-            sound_play_pitchvol(sndHitMetal, 0.5 + random(0.2), 1);
+            sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
+            view_shake_at(x, y, 20);
+            sleep(20);
         }
     }
     
@@ -2057,16 +2162,16 @@
     draw_sprite(sprite_index, image_index, x, y);
 
 #define CatLight_create(_x, _y)
-    var o = {
-        x : _x,
-        y : _y,
-        w1 : 12,
-        w2 : 32,
-        h1 : 32,
-        h2 : 8,
-        offset : 0,
-        active : true
-        };
+	var o = {
+		x : _x,
+		y : _y,
+		w1 : 12,
+		w2 : 32,
+		h1 : 32,
+		h2 : 8,
+		offset : 0,
+		active : true
+	};
 
     array_push(global.catLight, o);
 
@@ -2295,6 +2400,9 @@
     }
 
      // Break:
+    if(place_meeting(x, y, Explosion)){
+    	my_health = 0;
+    }
     with(instances_matching_le(FloorExplo, "y", y - 320)){
         instance_create(x, y, PortalClear);
         other.my_health = 0;
@@ -2307,21 +2415,14 @@
      // Death:
     if(my_health <= 0) instance_destroy();
 
+#define PizzaDrain_end_step
+    x = (round(xstart / 16) * 16) - 16;
+    y = (round(ystart / 16) * 16);
+    speed = 0;
+
 #define PizzaDrain_destroy
     sound_play(snd_dead);
-
-	 // Deleet Portal:
-	if(array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
-    	scrPortalPoof();
-    	if(fork()){
-    		while(instance_exists(Portal)) wait 0;
-    		with(instances_matching(Player, "mask_index", mskNone)){
-	    		mask_index = mskPlayer;
-	    		angle = 0;
-    		}
-    		exit;
-    	}
-	}
+	scrPortalPoof();
 
 	 // Deleet Stuff:
 	var _x1 = bbox_left,
@@ -2379,7 +2480,7 @@
         }
 
          // Generate the Realm:
-		if(array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
+		if(!instance_exists(Portal)){
         	area_generate(_sx, _sy - 32, sewers);
 		}
 
@@ -2438,6 +2539,166 @@
 
         instance_delete(id);
     }
+
+
+#define TurtleCool_create(_x, _y)
+	with(instance_create(_x, _y, CustomHitme)){
+		 // Visual:
+		spr_idle = sprTurtleIdle;
+		spr_walk = sprTurtleFire;
+		spr_hurt = sprTurtleHurt;
+		spr_dead = sprTurtleDead;
+		spr_shadow = shd24;
+		image_speed = 0.4;
+		depth = -2;
+
+		 // Sound:
+		snd_hurt = sndTurtleHurt;
+		snd_dead = sndTurtleDead1;
+
+		 // Vars:
+		mask_index = mskBandit;
+		friction = 0.4;
+		maxhealth = 15;
+		size = 4;
+		team = 1;
+		right = choose(-1, 1);
+		patience = random_range(30, 40);
+		notice_delay = random_range(1, 8);
+		notice_max = 80;
+		notice = notice_max;
+		become = Turtle;
+
+		return id;
+	}
+
+#define TurtleCool_step
+	if(!point_seen(x, y, -1) && patience > 0) exit;
+
+	 // Noticable Players:
+	var p = [];
+	with(Player){
+		if(
+			point_seen(other.x, other.y, index) &&
+			!collision_line(x, y, other.x, other.y, Wall, false, false)
+		){
+			array_push(p, id);
+		}
+	}
+
+	 // Notice Player:
+	with(instances_matching_gt(p, "reload", 0)){
+		with(other){
+			notice = max(notice, 8);
+			notice += ((other.reload / 3) + random(3)) * current_time_scale;
+			patience -= current_time_scale;
+		}
+	}
+	with(instances_matching_gt(instances_matching(p, "race", "steroids"), "breload", 0)){
+		with(other){
+			notice = max(notice, 8);
+			notice += (other.breload / 3) * current_time_scale;
+			patience -= current_time_scale;
+		}
+	}
+	var t = nearest_instance(x, y, p);
+	if(instance_exists(t) && notice > 0){
+		if(notice_delay > 0){
+			notice_delay -= current_time_scale;
+
+			 // Initial Notice:
+			if(notice_delay <= 0){
+				instance_create(x, y, SteroidsTB);
+			}
+		}
+
+		 // Face Player:
+		else{
+			notice -= current_time_scale;
+			scrRight(point_direction(x, y, t.x, t.y));
+		}
+	}
+
+	 // Watchin TV:
+	else{
+		var t = instance_nearest(x, y, TV);
+		if(
+			instance_exists(t)					&&
+			point_distance(x, y, t.x, t.y) < 96	&&
+			!collision_line(x, y, t.x, t.y, Wall, false, false)
+		){
+			scrRight(point_direction(x, y, t.x, t.y));
+		}
+	}
+
+	 // Push Collision:
+	if(place_meeting(x, y, hitme)){
+		with(instances_meeting(x, y, hitme)){
+			if(place_meeting(x, y, other)){
+				if(!instance_is(self, prop)){
+					motion_add(point_direction(other.x, other.y, x, y), 1);
+				}
+				with(other){
+					if(instance_is(other, Player)){
+						notice = max(notice, 30);
+						patience -= current_time_scale;
+					}
+					motion_add(point_direction(other.x, other.y, x, y), 1);
+				}
+			}
+		}
+	}
+	speed = min(speed, 2.5);
+
+	 // Wall Collision:
+	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+		if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
+		if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
+	}
+
+	 // Angered:
+	var _angered = false;
+	if(my_health < maxhealth || !instance_exists(TV)){
+		_angered = true;
+	}
+	else{
+		with(instances_matching([Turtle, Rat], "", null)){
+			if(my_health < maxhealth && !collision_line(x, y, other.x, other.y, Wall, false, false)){
+				_angered = true;
+			}
+		}
+		with(instances_matching(Corpse, "sprite_index", sprTurtleDead, sprRatDead)){
+			if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+				_angered = true;
+			}
+		}
+	}
+	if(_angered){
+		with(instances_named(object_index, name)) patience = 0;
+	}
+	if(patience <= 0){
+		var o = (my_health - maxhealth),
+			s = { "x":x, "y":y, "nexthurt":nexthurt, "sprite_index":sprite_index, "image_index":image_index, "snd_dead":snd_dead, "right":right };
+
+		instance_change(become, true);
+
+		my_health += o;
+		for(var i = 0; i < lq_size(s); i++){
+			variable_instance_set(id, lq_get_key(s, i), lq_get_value(s, i));
+		}
+
+		alarm1 = 10 + random(10);
+
+		 // Alert:
+		sound_play_hit(sndTurtleMelee, 0.3);
+		instance_create(x, y, AssassinNotice);
+		if(my_health < maxhealth){
+			if(hspeed != 0) right = -sign(hspeed);
+		}
+	}
+
+#define TurtleCool_draw
+	draw_self_enemy();
 
 
 #define VenomFlak_create(_x, _y)
@@ -2639,8 +2900,8 @@
     with(TV) draw_circle(x, y, 64 + random(2), false);
 
      // Big Bat:
-    with(instances_named(CustomEnemy, "BatBoss")){
-    	if(active) draw_circle(x, y, 64 + random(2), false);
+    with(instances_named(CustomEnemy, ["BatBoss", "CatBoss"])){
+    	if("active" not in self || active) draw_circle(x, y, 64 + random(2), false);
     }
     
      // Big Manhole:
@@ -2670,8 +2931,8 @@
     }
 
      // Big Bat:
-    with(instances_named(CustomEnemy, "BatBoss")){
-    	if(active) draw_circle(x, y, 28 + random(2), false);
+    with(instances_named(CustomEnemy, ["BatBoss", "CatBoss"])){
+    	if("active" not in self || active) draw_circle(x, y, 28 + random(2), false);
     }
 
 #define draw_bloom
