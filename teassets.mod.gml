@@ -100,8 +100,7 @@
         	DiverWalk = sprite_add("sprites/enemies/Diver/sprDiverWalk.png", 6, 12, 12);
         	DiverHurt = sprite_add("sprites/enemies/Diver/sprDiverHurt.png", 3, 12, 12);
         	DiverDead = sprite_add("sprites/enemies/Diver/sprDiverDead.png", 9, 16, 16);
-        	HarpoonGun = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGunDischarged.png", 1, 8, 8);
-        	//HarpoonGunEmpty = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGunDischarged.png", 1, 8, 8);
+        	HarpoonGun = sprite_add("sprites/enemies/Diver/sprDiverHarpoonGun.png", 1, 8, 8);
 
         	 // Gull:
         	GullIdle = sprite_add("sprites/enemies/Gull/sprGullIdle.png", 4, 12, 12);
@@ -122,8 +121,8 @@
             PalankingFire   = sprite_add("sprites/enemies/Palanking/sprPalankingFire.png",     11, 40, 24);
             PalankingFoam   = sprite_add("sprites/enemies/Palanking/sprPalankingFoam.png",      1, 40, 24);
             PalankingChunk  = sprite_add("sprites/enemies/Palanking/sprPalankingChunk.png",     5, 16, 16);
-            GroundSlash     = sprite_add("sprites/enemies/projectiles/sprGroundSlash.png",      3,  0, 21);
-            PalankingSlash  = sprite_add("sprites/enemies/projectiles/sprPalankingSlash.png",   3,  0, 29);
+            GroundSlash     = sprite_add("sprites/enemies/Palanking/sprGroundSlash.png",        3,  0, 21);
+            PalankingSlash  = sprite_add("sprites/enemies/Palanking/sprPalankingSlash.png",     3,  0, 29);
             msk.Palanking   = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
             if(fork()){
                 wait 30;
