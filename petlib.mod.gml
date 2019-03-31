@@ -569,7 +569,7 @@
             else{
                 if(_targetSeen && _leaderDis < 160){
                      // Bite:
-                    if(distance_to_object(target) < 20){
+                    if(distance_to_object(target) < 24){
                         walk = 0;
                         speed = 0;
                         scrRight(point_direction(x, y, target.x, target.y));
@@ -598,10 +598,8 @@
                     }
                 }
 
+                 // Towards Leader:
                 else{
-                    target = instance_nearest(x, y, enemy);
-
-                     // Towards Leader:
                     if(_leaderDis > 48){
                         scrWalk(15 + random(10), _leaderDir + orandom(20));
                     }
@@ -609,6 +607,8 @@
                         scrWalk(8 + random(8), _leaderDir + orandom(90));
                     }
                 }
+
+                target = instance_nearest(x, y, enemy);
             }
         }
 
