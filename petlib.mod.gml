@@ -22,18 +22,15 @@
 
 
 #define CoolGuy_create
-     // Visual:
-    spr_idle = spr.PetCoolGuyIdle;
-    spr_walk = spr.PetCoolGuyWalk;
-    spr_hurt = spr.PetCoolGuyHurt;
-
      // Vars:
     maxspd = 3.5;
-    poop = 0;
+    poop = 1;
     poop_delay = 0;
 
 #define CoolGuy_step
-    if(instance_exists(HPPickup)){
+    if(leader == noone && !instance_exists(leader)) poop_delay = 30;
+
+    else if(instance_exists(HPPickup) && instance_exists(leader)){
         var h = nearest_instance(x, y, instances_matching_ne(HPPickup, "sprite_index", sprSlice));
         if(instance_exists(h)){
             if(!collision_line(x, y, h.x, h.y, Wall, false, false)){
@@ -61,44 +58,58 @@
      // 
     if(poop_delay > 0) poop_delay -= current_time_scale;
     else if(poop > 0){
-
-         // Effects:
-        sound_play_pitchvol(choose(sndFrogGasRelease, sndFrogGasReleaseButt), 1.4 + random(0.2), 0.8);
-        sound_play_pitchvol(sndFrogEggOpen1, 2 + orandom(0.4), 0.5);
-        repeat(5) with(instance_create(x, y, Dust)){
-            hspeed = 2 * -other.right;
-            motion_add(random(360), 1);
+         // Delicious Pizza Juices:
+        repeat(4){
+            with(scrWaterStreak(x + orandom(2), y + 1, random(360), 1)){
+                hspeed = 2 * -other.right;
+                image_angle = direction;
+                image_blend = c_orange;
+                image_xscale = 0.5;
+                image_yscale = image_xscale;
+            }
         }
+        if(poop >= 2){
+            repeat(poop / 2){
+                with(scrFX([x, 4], [y, 4], 1, Dust)){
+                    image_blend = c_orange;
+                    hspeed -= random_range(2, 3) * other.right;
+                }
+            }
+        }
+        sound_play_pitchvol(sndHPPickup,        0.8 + random(0.2), 0.8);
+        sound_play_pitchvol(sndFrogExplode,     1.2 + random(0.8), 0.8);
 
-         // Big Boy:
+         // Determine Pizza Output:
+        var o = "Pizza";
         if(random(poop) > 4 && random(2) < 1){
             poop -= 2;
-            vspeed = -2;
-            with(instance_create(x + orandom(4), y + orandom(4), HealthChest)){
-                sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
-                spr_dead = sprPizzaChestOpen;
-                motion_add(random(360), 1);
-                vspeed += 4;
-            }
+            o = HealthChest;
+            sound_play_pitchvol(sndEnergyHammerUpg, 1.4 + random(0.2), 0.4);
         }
-
-         // Box:
         else if(poop >= 2 && random(3) < 1){
             poop -= 2;
-            vspeed = -2;
-            obj_create(x, y, "PizzaBoxCool");
+            o = "PizzaBoxCool";
+            sound_play_pitchvol(sndEnergyHammerUpg, 1.4 + random(0.2), 0.4);
         }
+        else poop--;
 
-         // Slice:
-        else{
-            poop--;
-            with(instance_create(x + orandom(4), y + orandom(4), HPPickup)){
-                sprite_index = sprSlice;
-                hspeed = 3 * -other.right;
-                vspeed = random(1);
-                num++;
+         // Excrete:
+        with(obj_create(x + orandom(4), y + orandom(4), o)){
+            hspeed = 3 * -other.right;
+            vspeed = orandom(1);
+            switch(o){
+                case "PizzaBoxCool":
+                    x += hspeed;
+                    y += vspeed;
+                    break;
+
+                case HealthChest:
+                    sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
+                    spr_dead = sprPizzaChestOpen;
+                    break;
             }
         }
+        hspeed += min(poop + 1, 4) * right;
 
         poop_delay = 8;
     }
@@ -108,8 +119,8 @@
     if(place_meeting(x + hspeed, y + vspeed, Wall)){
         if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-        scrRight(direction);
     }
+    scrRight(direction);
 
 #define CoolGuy_draw
     var _x = x,
@@ -147,9 +158,6 @@
 
 #define Mimic_create
      // Visual:
-    spr_idle = spr.PetMimicIdle;
-    spr_walk = spr.PetMimicWalk;
-    spr_hurt = spr.PetMimicHurt;
     spr_open = spr.PetMimicOpen;
     spr_hide = spr.PetMimicHide;
     depth = -1;
@@ -284,7 +292,7 @@
     return 30 + irandom(30);
 
 #define Mimic_hurt
-    if(sprite_index != spr_open){
+    if(sprite_index != spr_open && (other.speed > 1 || !instance_is(other, projectile))){
         sprite_index = spr_hurt;
         image_index = 0;
     }
@@ -292,9 +300,6 @@
 
 #define Parrot_create
      // Visual:
-    spr_idle = spr.PetParrotIdle;
-    spr_walk = spr.PetParrotWalk;
-    spr_hurt = spr.PetParrotHurt;
     depth = -3;
 
      // Vars:
@@ -446,7 +451,7 @@
     return (30 + random(30));
 
 #define Parrot_hurt
-    if(instance_exists(leader) && !instance_exists(perched)){
+    if(instance_exists(leader) && !instance_exists(perched) && (other.speed > 1 || !instance_is(other, projectile))){
         sprite_index = spr_hurt;
         image_index = 0;
     
@@ -460,12 +465,197 @@
     }
 
 
-#define Octo_create
+#define Slaughter_create
      // Visual:
-    spr_idle = spr.PetOctoIdle;
-    spr_walk = spr.PetOctoIdle;
-    spr_hurt = spr.PetOctoHurt;
+    spr_dead = spr.PetSlaughterDead;
+    spr_fire = spr.PetSlaughterBite;
 
+     // Sound:
+    snd_hurt = sndAllyHurt;
+    snd_dead = sndFreakDead;
+
+     // Vars:
+    mask_index = mskFrogEgg;
+    maxhealth = 12;
+    my_health = maxhealth;
+    my_corpse = noone;
+    target = noone;
+    nexthurt = 0;
+
+#define Slaughter_anim
+    if(my_health <= 0) sprite_index = spr_hurt;
+    else{
+        if((sprite_index != spr_hurt && sprite_index != spr_fire) || anim_end){
+            if(speed <= 0) sprite_index = spr_idle;
+            else sprite_index = spr_walk;
+        }
+    }
+
+#define Slaughter_step
+    if(instance_exists(GenCont)) my_health = maxhealth;
+    if(my_health > 0){
+         // Destroy Corpse:
+        if(my_corpse != noone){
+            with(my_corpse){
+                repeat(4) scrFX([x, 8], [y, 8], 0, Smoke);
+                instance_destroy();
+            }
+            my_corpse = noone;
+        }
+
+         // Collision:
+        if(place_meeting(x, y, hitme) && sprite_index != spr_fire){
+            with(instances_meeting(x, y, hitme)){
+                if(place_meeting(x, y, other)){
+                    if(size < other.size){
+                        motion_add(point_direction(other.x, other.y, x, y), 1);
+                    }
+                    with(other){
+                        motion_add(point_direction(other.x, other.y, x, y), 1);
+                    }
+                }
+            }
+        }
+    }
+
+     // Ded:
+    else{
+        x += (sin(current_frame / 10) / 3) * current_time_scale;
+        y += (cos(current_frame / 10) / 3) * current_time_scale;
+
+         // Corpse:
+        if(my_corpse == noone){
+            my_corpse = scrCorpse(direction, speed);
+            motion_add(direction + orandom(20), speed * 2);
+
+             // Death Sound:
+            sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 0.8);
+        }
+
+         // Revive:
+        if(place_meeting(x, y, Player)){
+            with(instance_nearest(x, y, Player)){
+                projectile_hit_raw(id, 1, true);
+            }
+            my_health = maxhealth;
+            sprite_index = spr_hurt;
+            image_index = 0;
+
+             // Effects:
+            with(instance_create(x, y, HealFX)) depth = other.depth - 1;
+            sound_play(sndHealthChestBig);
+        }
+    }
+
+#define Slaughter_draw
+    if(my_health > 0) draw_self_enemy();
+
+     // Revive Mode:
+    else draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha * 0.4);
+
+#define Slaughter_alrm0(_leaderDir, _leaderDis)
+    alarm0 = 20 + random(10);
+
+    if(my_health > 0 && sprite_index != spr_fire){
+        if(instance_exists(leader)){
+            var _targetSeen = (instance_exists(target) && !collision_line(x, y, target.x, target.y, Wall, false, false));
+
+             // Pathfinding:
+            if(array_length(path) > 0 && (!_targetSeen || _leaderDis > 96)){
+                scrWalk(4 + random(4), path_dir + orandom(20));
+                return walk;
+            }
+
+            else{
+                if(_targetSeen && _leaderDis < 160){
+                     // Bite:
+                    if(distance_to_object(target) < 20){
+                        walk = 0;
+                        speed = 0;
+                        scrRight(point_direction(x, y, target.x, target.y));
+
+                         // Sharpteeth is powerful:
+                        with(instance_create(0, 0, SharpTeeth)){
+                            creator = other.target;
+                            damage = 6;
+                            alarm0 = 4;
+                            image_xscale = 0; // Hide
+                        }
+
+                         // Visual:
+                        sprite_index = spr_fire;
+                        image_index = 0;
+                        with(instance_create(x, y, RobotEat)){
+                            sprite_index = spr.SlaughterBite;
+                            image_xscale = other.right;
+                            depth = other.depth - 0.1;
+                        }
+                    }
+
+                     // Towards Enemy:
+                    else{
+                        scrWalk(10 + random(10), point_direction(x, y, target.x, target.y));
+                    }
+                }
+
+                else{
+                    target = instance_nearest(x, y, enemy);
+
+                     // Towards Leader:
+                    if(_leaderDis > 48){
+                        scrWalk(15 + random(10), _leaderDir + orandom(20));
+                    }
+                    else{
+                        scrWalk(8 + random(8), _leaderDir + orandom(90));
+                    }
+                }
+            }
+        }
+
+         // Wander:
+        else{
+            scrWalk(8 + random(8), random(360));
+            return 30 + random(10);
+        }
+    }
+
+#define Slaughter_hurt
+    if(my_health > 0){
+         // Create CustomHitme to Receive the Damage:
+        if(instance_exists(leader)){
+            var s = ["x", "y", "speed", "direction", "sprite_index", "image_index", "my_health", "maxhealth", "nexthurt", "team", "spr_idle", "spr_walk", "spr_hurt", "spr_dead", "snd_hurt", "snd_dead"],
+                h = instance_create(x, y, CustomHitme);
+        
+            with(h) on_hurt = enemyHurt;
+        
+             // Transfer Slaughter's Vars:
+            with(s){
+                var _name = self;
+                variable_instance_set(h, _name, variable_instance_get(other, _name, 0));
+            }
+        
+             // Take Damage:
+            with(other) with(h) with(other){
+                event_perform(ev_collision, hitme);
+            }
+        
+             // Set Slaughter's Vars & Destroy CustomHitme:
+            with(s){
+                var _name = self;
+                variable_instance_set(other, _name, variable_instance_get(h, _name, 0));
+            }
+            instance_delete(h);
+        }
+
+         // Eat Projectile:
+        else if(instance_is(other, projectile)){
+            sprite_index = spr_fire;
+            image_index = 3;
+        }
+    }
+
+
+#define Octo_create
      // Vars:
     friction = 0.1;
     arcing = 0;
@@ -588,18 +778,18 @@
     return walk + 30;
 
 #define Octo_hurt
-    sprite_index = spr_hurt;
-    image_index = 0;
-
-     // Movin'
-    scrWalk(10, point_direction(other.x, other.y, x, y));
-    scrRight(direction + 180);
+    if(other.speed > 1 || !instance_is(other, projectile)){
+        sprite_index = spr_hurt;
+        image_index = 0;
+    
+         // Movin'
+        scrWalk(10, point_direction(other.x, other.y, x, y));
+        scrRight(direction + 180);
+    }
 
 
 #define Prism_create
      // Visual:
-    spr_idle = spr.PetPrismIdle;
-    spr_walk = spr.PetPrismIdle;
     depth = -3;
 
      // Vars:

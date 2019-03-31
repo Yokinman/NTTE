@@ -82,6 +82,10 @@
             sprite_index = area_sprite(sprFloor1B);
         }
     }
+    with(PizzaBox){
+        obj_create(x, y, "PizzaBoxCool");
+        instance_delete(id);
+    }
     with(HealthChest){
         sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
         spr_dead = sprPizzaChestOpen;
@@ -189,9 +193,9 @@
     }
 
      // Yummy HP:
-    with(instances_matching(HPPickup, "sliced", null)){
-        sliced = true;
+    with(instances_matching(HPPickup, "sprite_index", sprHP)){
         sprite_index = sprSlice;
+        num++;
     }
 
 #define area_effect(_vx, _vy)

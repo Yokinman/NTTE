@@ -451,6 +451,20 @@
             }
             break;
 
+		case "oasis":
+			 // Fierce boy:
+            if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
+                var f = noone,
+                    p = instance_nearest(10016, 10016, Player),
+                    _tries = 1000;
+
+                do f = instance_random(Floor);
+                until (point_distance(f.x + 16, f.y + 16, p.x, p.y) > 128 || _tries-- <= 0);
+
+                Pet_spawn(f.x + 16, f.y + 16, "Slaughter");
+            }
+			break;
+
         case "trench":
             if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
                 var f = noone,
@@ -1289,7 +1303,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
      // Pet Bubbles:
-    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism", "Octo"), "visible", true)){
+    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism", "Octo", "Slaughter"), "visible", true)){
         draw_sprite(sprPlayerBubble, -1, x, y);
     }
 

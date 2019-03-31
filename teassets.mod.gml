@@ -279,6 +279,14 @@
             PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);
             PetParrotHurt = sprite_add("sprites/pets/Coast/sprPetParrotDodge.png",  3, 12, 12);
 
+             // BabyShark:
+            PetSlaughterIdle = sprite_add("sprites/pets/Oasis/sprPetSlaughterIdle.png",  4, 12, 12);
+            PetSlaughterWalk = sprite_add("sprites/pets/Oasis/sprPetSlaughterWalk.png",  6, 12, 12);
+            PetSlaughterHurt = sprite_add("sprites/pets/Oasis/sprPetSlaughterHurt.png",  3, 12, 12);
+            PetSlaughterDead = sprite_add("sprites/pets/Oasis/sprPetSlaughterDead.png", 10, 24, 24);
+            PetSlaughterBite = sprite_add("sprites/pets/Oasis/sprPetSlaughterBite.png",  6, 12, 12);
+            SlaughterBite    = sprite_add("sprites/pets/Oasis/sprSlaughterBite.png",     6,  8, 12);
+
              // Octopus:
             PetOctoIdle = sprite_add("sprites/pets/Trench/sprPetOctoIdle.png",  20, 12, 12);
             PetOctoHurt = sprite_add("sprites/pets/Trench/sprPetOctoDodge.png",  3, 12, 12);

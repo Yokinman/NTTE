@@ -2322,6 +2322,49 @@
     }
 
 
+#define Pizza_create(_x, _y)
+    with(instance_create(_x, _y, HPPickup)){
+        sprite_index = sprSlice;
+        num++;
+        return id;
+    }
+
+
+#define PizzaBoxCool_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = sprPizzaBox;
+        spr_hurt = sprPizzaBoxHurt;
+        spr_dead = sprPizzaBoxDead;
+
+         // Sound:
+        snd_hurt = sndHitPlant;
+        snd_dead = sndPizzaBoxBreak;
+
+         // Vars:
+        maxhealth = 4;
+        size = 1;
+
+        return id;
+    }
+
+#define PizzaBoxCool_death
+    var _num = choose(1, 2);
+
+     // Big luck:
+    if(random(10) < 1){
+        _num = 4;
+        repeat(5) instance_create(x + orandom(4), y + orandom(4), Dust);
+        sound_play_pitch(snd_dead, 0.6);
+        snd_dead = -1;
+    }
+
+     // +Yum
+    repeat(_num){
+        obj_create(x + orandom(2 * _num), y + orandom(2 * _num), "Pizza");
+    }
+
+
 #define PizzaDrain_create(_x, _y)
     with(instance_create(_x, _y, CustomHitme)){
          // Visual:

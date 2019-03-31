@@ -6,12 +6,12 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PizzaBoxCool"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "Puffer", "Crack"],
 		"tetrench"	: ["Angler", "ChaserTentacle", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
-	    "tesewers"	: ["Bat", "BatBoss", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
+	    "tesewers"	: ["Bat", "BatBoss", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
 	    "tecaves"	: ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling"]
     };
 
@@ -1319,7 +1319,7 @@
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)
      // Auto-Determine Grid Size:
     var _tileSize = 16,
-        _areaWidth = (ceil(abs(_xtarget - _xstart) / _tileSize) * _tileSize) + 320,
+        _areaWidth  = (ceil(abs(_xtarget - _xstart) / _tileSize) * _tileSize) + 320,
         _areaHeight = (ceil(abs(_ytarget - _ystart) / _tileSize) * _tileSize) + 320;
 
     _areaWidth = max(_areaWidth, _areaHeight);
@@ -1336,7 +1336,7 @@
      // Grid Setup:
     var _gridw = ceil(_areaWidth / _tileSize),
         _gridh = ceil(_areaHeight / _tileSize),
-        _gridx = round((((_xstart + _xtarget) / 2) - (_areaWidth / 2)) / _tileSize) * _tileSize,
+        _gridx = round((((_xstart + _xtarget) / 2) - (_areaWidth  / 2)) / _tileSize) * _tileSize,
         _gridy = round((((_ystart + _ytarget) / 2) - (_areaHeight / 2)) / _tileSize) * _tileSize,
         _grid = ds_grid_create(_gridw, _gridh),
         _gridCost = ds_grid_create(_gridw, _gridh);
@@ -1459,18 +1459,15 @@
     with(p){
         pet = _name;
 
+         // Sprites:
+        spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
+        spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
+        spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
+
          // Custom Create Event:
         var _scrt = pet + "_create";
         if(mod_script_exists("mod", "petlib", _scrt)){
             mod_script_call("mod", "petlib", _scrt);
-        }
-
-         // Default:
-        else{
-             // Sprites:
-            spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
-            spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
-            spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
         }
 
         with(scrPickupIndicator(pet)) mask_index = mskWepPickup;

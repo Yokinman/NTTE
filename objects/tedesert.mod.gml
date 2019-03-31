@@ -37,7 +37,7 @@
 		 // Vars:
 		gold = false;
 		maxhealth = 7;
-		meleedamage = 5;
+		meleedamage = 2;
 		canmelee = true;
 		raddrop = 4;
 		size = 1;
@@ -47,7 +47,6 @@
 		maxspd = 2.4;
 		gunangle = random(360);
 		direction = gunangle;
-		venom_sound = noone;
 
          // Alarms:
 		alarm1 = 40 + irandom(30);
@@ -58,94 +57,86 @@
 #define BabyScorpion_step
     enemyWalk(walkspd, maxspd);
     
-     // Not Hurt:
-    if(sprite_index != spr_hurt){
-        if(speed <= 0) sprite_index = spr_idle;
-    	else if(sprite_index == spr_idle){
-    	    if(ammo > 0) sprite_index = spr_fire;
+     // Animate:
+    if(sprite_index != spr_hurt || anim_end){
+		if(ammo > 0) sprite_index = spr_fire;
+        else{
+        	if(speed <= 0) sprite_index = spr_idle;
     	    else sprite_index = spr_walk;
     	}
-    }
-
-     // Hurt:
-    else if(image_index > image_number - 1){
-        sprite_index = spr_idle;
     }
 
 #define BabyScorpion_alrm1
     alarm1 = 50 + irandom(30);
     target = instance_nearest(x, y, Player);
 
-    if(target_is_visible()){
-        var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-         // Attack:
-        if ammo > 0{
-            ammo--;
-            alarm1 = 1;
-            
-             // Aim and walk:
-            if random(4) < 1{
-                gunangle = _targetDir;
-                scrWalk(6, gunangle + orandom(10));
-            }
-            
-             // Golden venom shot:
-            if gold{
-                scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(40), 4 + random(4));
-                scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(10), 8 + random(8));
-            }
-            
-             // Normal venom shot:
-            else{
-                if random(2) < 1
-                    scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(20), 6 + random(4));
-            }
-            
-             // Effects:
-            if random(4) < 1
-                with instance_create(x, y, AcidStreak){
-                    motion_set(_targetDir + orandom(24), 2 + random(4));
-                    image_angle = direction;
-                }
-            
-             // End attack:
-            if ammo <= 0{
-                alarm1 = 20 + irandom(20);
-                sound_stop(venom_sound);
-                sound_play_pitchvol(sndSalamanderEndFire, 1.6, 0.4);
-                sprite_index = spr_idle;
-            }
+     // Attack:
+    if(ammo > 0){
+        ammo--;
+        alarm1 = (gold ? 2 : irandom_range(1, 3));
+
+         // Aim and walk:
+        if(target_is_visible()){
+            gunangle = point_direction(x, y, target.x, target.y);
+        }
+		scrWalk(alarm1 + 3, gunangle + orandom(10));
+        
+         // Golden venom shot:
+        if(gold){
+        	var o = random_range(20, 60);
+        	for(var a = -o; a <= o; a += o){
+            	scrEnemyShoot("TrafficCrabVenom", gunangle + a, ((a == 0) ? 10 : 6) + random(2));
+        	}
         }
         
-         // Normal AI:
+         // Normal venom shot:
         else{
-             // Start attack:
-        	if(target_in_distance(32, 96) > 0 && random(3) < 2){
-    		    gunangle = _targetDir;
-    		    ammo = 16 + irandom(16);
-    		    alarm1 = 1;
-    
-                sound_play_pitch(snd_fire, 1.6);
-                venom_sound = audio_play_sound(gold ? sndGoldScorpionFire : sndScorpionFire, 10, true);
-                audio_sound_pitch(venom_sound, 1.2);
-        	}
-    
-             // Move Away From Target:
-            else if(target_in_distance(0, 32) > 0){
-                alarm1 = 20 + irandom(30);
-                scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
-            }
-    
-             // Move Towards Target:
-        	else{
-        		alarm1 = 30 + irandom(20);
-        		scrWalk(20 + random(15), _targetDir + orandom(40));
-        		gunangle = _targetDir + orandom(15);
-        	}
-    
-        	 // Facing:
-        	scrRight(gunangle);
+			scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(20), 7 + random(4));
         }
+        
+         // Effects:
+        sound_play_pitch(sndScorpionFire, 1.4 + random(0.2));
+        if(random(4) < 1){
+            with(scrFX(x, y, [gunangle + orandom(24), random_range(2, 6)], AcidStreak)){
+                image_angle = direction;
+            }
+    	}
+
+         // End:
+        if(ammo <= 0){
+            alarm1 = 20 + irandom(20);
+            sprite_index = spr_idle;
+            sound_play_pitchvol(sndSalamanderEndFire, 1.6, 0.4);
+        }
+    }
+
+	 // Normal AI:
+    else if(target_is_visible()){
+        var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+
+         // Start attack:
+    	if(target_in_distance(32, 96) > 0 && random(3) < 2){
+		    alarm1 = 1;
+		    ammo = 6 + irandom(2);
+		    gunangle = _targetDir;
+            sound_play_pitch(snd_fire, 1.6);
+    	}
+
+         // Move Away From Target:
+        else if(target_in_distance(0, 32)){
+            alarm1 = 20 + irandom(30);
+            scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
+        }
+
+         // Move Towards Target:
+    	else{
+    		alarm1 = 30 + irandom(20);
+    		scrWalk(20 + random(15), _targetDir + orandom(40));
+    		gunangle = _targetDir + orandom(15);
+    	}
+
+    	 // Facing:
+    	scrRight(gunangle);
     }
 
      // Wander:
@@ -186,9 +177,6 @@
     snd_dead = -1;
 
 
-#define BabyScorpion_destroy
-    sound_stop(venom_sound);
-    
 #define BabyScorpionGold_create(_x, _y)
     with(obj_create(_x, _y, "BabyScorpion")){
          // Visual:
@@ -525,15 +513,8 @@
 
 #define CoastBoss_step
      // Animate:
-    if(
-        sprite_index != spr_hurt &&
-        sprite_index != spr_spwn &&
-        sprite_index != spr_dive &&
-        sprite_index != spr_rise &&
-        sprite_index != spr_efir &&
-        sprite_index != spr_fire &&
-        sprite_index != spr_chrg
-    ){
+    var s = [spr_hurt, spr_spwn, spr_dive, spr_rise, spr_efir, spr_fire, spr_chrg];
+    if(array_find_index(s, sprite_index) < 0){
         if(speed <= 0) sprite_index = spr_idle;
     	else if(sprite_index == spr_idle) sprite_index = spr_walk;
     }
@@ -855,12 +836,17 @@
             }
         }
     }
+
     else{
         my_health -= _hitdmg;           // Damage
         nexthurt = current_frame + 6;	// I-Frames
+        sound_play_hit(snd_hurt, 0.3);	// Sound
 
-         // Sound:
-        sound_play_hit(swim ? sndBigMaggotHit : snd_hurt, 0.3);
+         // Half HP:
+        var h = (maxhealth / 2);
+        if(in_range(my_health, h - _hitdmg, h)){
+        	sound_play(sndOasisBossHalfHP);
+        }
 
          // Knockback:
         if(!swim){
@@ -868,13 +854,8 @@
         }
 
          // Hurt Sprite:
-        if(
-            sprite_index != spr_fire &&
-            sprite_index != spr_chrg &&
-            sprite_index != spr_efir &&
-            sprite_index != spr_dive &&
-            sprite_index != spr_rise
-        ){
+        var s = [spr_fire, spr_chrg, spr_efir, spr_dive, spr_rise];
+        if(array_find_index(s, sprite_index) < 0){
             sprite_index = spr_hurt;
             image_index = 0;
         }
