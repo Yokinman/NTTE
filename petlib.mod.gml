@@ -493,7 +493,6 @@
     }
 
 #define Slaughter_step
-    if(instance_exists(GenCont)) my_health = maxhealth;
     if(my_health > 0){
          // Destroy Corpse:
         if(my_corpse != noone){

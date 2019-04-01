@@ -1551,6 +1551,11 @@
             if(place_meeting(x, y, Portal) || instance_exists(GenCont) || instance_exists(LevCont)){
                 visible = false;
                 repeat(3) instance_create(x, y, Dust);
+                
+                 // Sharkboy thing:
+                if(pet == "Slaughter"){
+                	my_health = maxhealth;
+                }
             }
         }
         else{
@@ -1615,7 +1620,7 @@
 		        }
 	    	}
 	    }
-	
+
 	     // Pet Collision:
 	    if(place_meeting(x, y, object_index)){
 	        with(instances_meeting(x, y, instances_named(object_index, name))){
@@ -1626,7 +1631,7 @@
 	            }
 	        }
 	    }
-	
+
 	     // Wall Collision:
 	    if(place_meeting(x + hspeed, y + vspeed, Wall)){
 	        if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
@@ -1636,7 +1641,7 @@
 
 #define Pet_end_step
      // Wall Collision Part2:
-    if(place_meeting(x, y, Wall)){
+    if(visible && place_meeting(x, y, Wall)){
     	x = xprevious;
     	y = yprevious;
         if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
