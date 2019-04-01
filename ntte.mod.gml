@@ -1,3 +1,4 @@
+//you just got april fooled //
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
