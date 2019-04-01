@@ -247,15 +247,18 @@
          // Don't Get Stuck on Wall:
         mask_index = mskWepPickup;
         if(place_meeting(x, y, Wall)){
-            instance_create(x, y, Dust);
+        	instance_create(x, y, Dust);
 
-            var w = instance_nearest(x, y, Wall),
-                _dir = point_direction(w.x, w.y, x, y);
-
-            while(place_meeting(x, y, w)){
-                x += lengthdir_x(4, _dir);
-                y += lengthdir_y(4, _dir);
-            }
+	        var _tries = 10;
+	        while(place_meeting(x, y, Wall) && _tries-- > 0){
+	            var w = instance_nearest(x, y, Wall),
+	                _dir = point_direction(w.x + 8, w.y + 8, x, y);
+	
+	            while(place_meeting(x, y, w)){
+	                x += lengthdir_x(4, _dir);
+	                y += lengthdir_y(4, _dir);
+	            }
+	        }
         }
 
         instance_destroy();
@@ -1101,3 +1104,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

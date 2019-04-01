@@ -2247,7 +2247,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
     if(array_length(_charmDraw) > 0){
-        script_bind_draw(charm_draw, -3, _charmDraw);
+        script_bind_draw(charm_draw, -2.1, _charmDraw);
     }
 
 #define scrCharmTarget()
@@ -2256,7 +2256,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             _y = y;
 
         if(instance_is(self, enemy)){
-            other.target = nearest_instance(_x, _y, instances_matching_ne(enemy, "team", team));
+            other.target = nearest_instance(_x, _y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "visible", false));
         }
         else other.target = instance_nearest(_x, _y, enemy);
     }
@@ -2334,3 +2334,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

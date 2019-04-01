@@ -10,7 +10,7 @@
         /* script_set modifies a script if it exists, appends script to end of file if not */
         /* script_remove removes a script if it exists */
 
-        script_set(self, "mod", "telib", "scrFX", ["_x", "_y", "_motion", "_obj"], "return", "_nc");
+        script_set(self, "mod", "telib", "array_combine", ["_array1", "_array2"], "return", "");
         
         //script_remove(self, "obj_create");
     }

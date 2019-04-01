@@ -125,26 +125,35 @@
     feather_load = 0;
     feather_targ_delay = 0;
 
-     // Pet thing:
+     // Extra Pet Slot:
+    pet = [noone, noone];
+
+     // Parrot Perch Bobbing:
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
-    if(fork()){
-        do wait 1;
-        until !instance_exists(GenCont);
+    wait 0;
 
-         // Starting Feather Ammo:
-        repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-            target = other;
-            creator = other;
-            bskin = other.bskin;
-            speed *= 3;
-        }
-
-         // Starter Pet:
+     // Starter Pet + Extra Pet Slot:
+    if(instance_exists(self)){
         with(Pet_spawn(x, y, "Parrot")) {
             leader = other;
-            array_insert(other.pet, 0, self);
+            other.pet[0] = id;
+        }
+    }
+
+     // Wait Until Level is Generated:
+    if(fork()){
+        while(instance_exists(GenCont)) wait 0;
+
+         // Starting Feather Ammo:
+        if(instance_exists(self)){
+            repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+                target = other;
+                creator = other;
+                bskin = other.bskin;
+                speed *= 3;
+            }
         }
 
         exit;
@@ -340,3 +349,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

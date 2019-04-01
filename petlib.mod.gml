@@ -476,9 +476,10 @@
 
      // Vars:
     mask_index = mskFrogEgg;
-    maxhealth = 12;
+    maxhealth = 18;
     my_health = maxhealth;
     my_corpse = noone;
+    my_bone = noone;
     target = noone;
     nexthurt = 0;
 
@@ -513,6 +514,87 @@
                     with(other){
                         motion_add(point_direction(other.x, other.y, x, y), 1);
                     }
+                }
+            }
+        }
+
+         // Biting:
+        if(sprite_index == spr_fire){
+            if(image_index < 3){
+                 // Drop Bone:
+                with(my_bone){
+                    hspeed = 3.5 * other.right;
+                    vspeed = orandom(2);
+                    rotspeed = random_range(8, 16) * choose(-1, 1);
+
+                     // Unstick From Wall:
+                    if(place_meeting(x, y, Wall)){
+                        instance_create(x, y, Dust);
+    
+                        var _tries = 10;
+                        while(place_meeting(x, y, Wall) && _tries-- > 0){
+                
+                            var w = instance_nearest(x, y, Wall),
+                                _dir = point_direction(w.x + 8, w.y + 8, other.x, other.y);
+                
+                            while(place_meeting(x, y, w)){
+                                x += lengthdir_x(4, _dir);
+                                y += lengthdir_y(4, _dir);
+                            }
+                            xprevious = x;
+                            yprevious = y;
+                        }
+                    }
+                    instance_create(x, y, Dust);
+                }
+                my_bone = noone;
+            }
+
+             // Bite:
+            else if(image_index < 3 + (image_speed * current_time_scale)){
+                 // Attack Bite:
+                if(instance_is(target, hitme)){
+                    projectile_hit_raw(target, 15, true);
+                }
+    
+                 // Fetch Bone:
+                else if(instance_is(target, WepPickup)){
+                    with(target){
+                        if(wep_get(wep) == "crabbone"){
+                            other.my_bone = id;
+                        }
+                    }
+                    sound_play_pitchvol(sndBloodGamble, 2 + orandom(0.2), 0.6);
+                }
+    
+                 // Effects:
+                sound_play_pitchvol(sndSharpTeeth, 1.5 + orandom(0.2), 0.5)
+            }
+        }
+
+         // Fetching:
+        if(instance_exists(my_bone)){
+            var _x = x + hspeed + (10 * right),
+                _y = y + vspeed + 2;
+
+            with(my_bone){
+                if(point_distance(x, y, _x, _y) > 2){
+                    x += (_x - x) * 0.8;
+                    y += (_y - y) * 0.8;
+                }
+                else{
+                    x = _x;
+                    y = _y;
+                }
+                xprevious = x;
+                yprevious = y;
+                speed = 0;
+                rotation += (angle_difference((10 + (10 * sin((x + y) / 10))) * other.right, rotation) / 2) * current_time_scale;
+
+                 // Portal Takes Bone:
+                var n = instance_nearest(x, y, Portal);
+                if(!visible || (instance_exists(n) && point_distance(x, y, n.x, n.y) < 96)){
+                    other.my_bone = noone;
                 }
             }
         }
@@ -567,20 +649,12 @@
             }
 
             else{
-                if(_targetSeen && _leaderDis < 160){
+                if(_targetSeen && point_distance(leader.x, leader.y, target.x, target.y) < 160 && target != my_bone){
                      // Bite:
-                    if(distance_to_object(target) < 24){
+                    if(distance_to_object(target) < (instance_is(target, WepPickup) ? 2 : 28) && (!instance_is(target, WepPickup) || target.visible)){
                         walk = 0;
                         speed = 0;
                         scrRight(point_direction(x, y, target.x, target.y));
-
-                         // Sharpteeth is powerful:
-                        with(instance_create(0, 0, SharpTeeth)){
-                            creator = other.target;
-                            damage = 6;
-                            alarm0 = 4;
-                            image_xscale = 0; // Hide
-                        }
 
                          // Visual:
                         sprite_index = spr_fire;
@@ -594,7 +668,12 @@
 
                      // Towards Enemy:
                     else{
-                        scrWalk(10 + random(10), point_direction(x, y, target.x, target.y));
+                        scrWalk(15 + random(10), point_direction(x, y, target.x, target.y) + orandom(20));
+
+                         // Fetchin:
+                        if(instance_is(target, WepPickup)){
+                            return 4;
+                        }
                     }
                 }
 
@@ -602,13 +681,38 @@
                 else{
                     if(_leaderDis > 48){
                         scrWalk(15 + random(10), _leaderDir + orandom(20));
+                        if(instance_exists(my_bone)) walk = alarm0;
                     }
-                    else{
+                    else if(!instance_exists(my_bone)){
                         scrWalk(8 + random(8), _leaderDir + orandom(90));
                     }
                 }
 
-                target = instance_nearest(x, y, enemy);
+                 // Targeting:
+                if(sprite_index != spr_fire){
+                    var _canTarget = [];
+                    with(instances_matching_ne(hitme, "team", team)){
+                        if(!instance_is(self, prop) && !collision_line(x, y, target.x, target.y, Wall, false, false)){
+                            array_push(_canTarget, id);
+                        }
+                    }
+                    target = nearest_instance(x, y, _canTarget);
+    
+                     // Fetch:
+                    if(!instance_exists(my_bone)){
+                        if(!instance_exists(target) || collision_line(x, y, target.x, target.y, Wall, false, false)){
+                            var _bones = [];
+                            with(WepPickup) if(visible && wep_get(wep) == "crabbone"){
+                                if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+                                    array_push(_bones, id);
+                                }
+                            }
+                            if(array_length(_bones) > 0){
+                                target = nearest_instance(x, y, _bones);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -793,54 +897,173 @@
     depth = -3;
 
      // Vars:
-    maxspd = 3;
+    mask_index = mskFrogEgg;
+    maxspd = 2.5;
     spawn_loc = [x, y];
     alarm0 = -1;
     
 #define Prism_step
-    if(instance_exists(leader)) {
-         // Aimlessly Floats
-        scrWalk(1, direction);
-        if(place_meeting(x + hspeed, y + vspeed, Wall)){
-            if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-            if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-            direction += orandom(20);
-        }
+    if(instance_exists(leader)){
+        spawn_loc = [x, y];
+
+        scrWalk(1, direction); // Aimlessly floats
         
          // Duplicate Friendly Bullets:
-        with(instances_matching(projectile, "team", leader.team)) if(place_meeting(x, y, other) and "prism_duplicate" not in self) {
-            prism_duplicate = 1;
-            
-             // Duplicate and Adjust:
-            with(instance_copy(false)) { direction += orandom(20); image_angle = direction; }
-            direction += orandom(20);
-            image_angle = direction;
-            
-             // Effects:
-            sound_play_pitch(sndCrystalShield, 1.40 + orandom(0.10));
-            instance_create(x + orandom(4), y + orandom(4), CaveSparkle);
+        with(
+            instances_matching(
+                instance_rectangle_bbox(bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, array_combine(
+                    instances_matching(projectile, "team", leader.team),
+                    instances_matching(instances_matching_ne(projectile, "team", leader.team), "creator", leader)
+                )),
+                "can_prism_duplicate", true, null
+            )
+        ){
+            can_prism_duplicate = false;
+            if("prism_duplicate" not in self){
+                prism_duplicate = false;
+            }
+
+            if(distance_to_object(other) < 8){
+                if(!prism_duplicate && object_index != ThrownWep){
+                    prism_duplicate = true;
+                    other.speed *= 0.5;
+        
+                     // Slice FX:
+                    var _dir = random(360),
+                        o = 6;
+    
+                    for(var _dis = o; _dis >= -o; _dis -= 2){
+                        with(instance_create(other.x + lengthdir_x(_dis, _dir) + orandom(0), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
+                            motion_add(_dir, 1);
+                            image_angle = _dir;
+                            image_xscale = 2;
+                            image_yscale = 1 + (1 * (1 - ((_dis + o) / (o * 2))));
+                            depth = -4;
+                        }
+                    }
+                    instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
+                    sound_play_pitch(sndCrystalShield, 1.4 + orandom(0.1));
+        
+                     // Duplicate:
+                    var _copy = instance_copy(false);
+                    switch(_copy.object_index){
+                        case Laser:
+                            var l = point_distance(xstart, ystart, other.x, other.y),
+                                d = image_angle;
+    
+                            with(_copy){
+                                x = other.xstart + lengthdir_x(l, d);
+                                y = other.ystart + lengthdir_y(l, d);
+                                xstart = x;
+                                ystart = y;
+                                image_angle += orandom(20);
+                                event_perform(ev_alarm, 0);
+                            }
+                            break;
+        
+                        case Lightning:
+                            with(_copy){
+                                image_index = 0;
+                                image_angle += orandom(20);
+                                event_perform(ev_alarm, 0);
+                                with(Lightning) prism_duplicate = true;
+                            }
+                            break;
+        
+                        default:
+                            var _off = random_range(4, 16);
+                            with([id, _copy]){
+                                direction += _off;
+                                image_angle += _off;
+                                _off *= -1;
+                            }
+                    }
+                }
+                else if(speed > 1){
+                    sound_play_pitch(sndCursedReminder, 1.5);
+                }
+            }
         }
-    } else {
+        var _prism = instances_named(object_index, name);
+        with(instances_matching(projectile, "can_prism_duplicate", false)){
+            if(array_length(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16, _prism)) <= 0){
+                can_prism_duplicate = true;
+            }
+        }
+
+         // TP Around Player:
+        var _dis = 96,
+            _x = x,
+            _y = y;
+
+        if(point_distance(_x, _y, leader.x, leader.y) > _dis){
+            var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
+
+            do{
+                x = leader.x + lengthdir_x(_dis, _dir) + orandom(4);
+                y = leader.y + lengthdir_y(_dis, _dir) + orandom(4);
+                _dis -= 4;
+            }
+            until(
+                _dis < -12 ||
+                (
+                    !place_meeting(x, y, Wall) &&
+                    (
+                        place_meeting(x, y, Floor) ||
+                        !place_meeting(leader.x, leader.y, Floor)
+                    )
+                )
+            )
+
+             // Effects:
+            if(!place_meeting(x, y, Wall)){
+                with(instance_create(x, y, ThrowHit)) depth = other.depth - 1;
+                sound_play_pitchvol(sndCrystalTB, 1.2 + orandom(0.1), 0.8);
+            }
+        }
+    }
+    else{
+        x += sin(current_frame / 10) * 0.4 * current_time_scale;
+        y += cos(current_frame / 10) * 0.4 * current_time_scale;
+
          // Jitters Around:
-        if(random(30) < 1) {
+        if(random(30) < 1 && instance_exists(Floor)){
              // Decide Which Floor:
-            var f = instance_nearest(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor);
-            var fx = f.x + (f.sprite_width/2);
-            var fy = f.y + (f.sprite_height/2);
+            var f = instance_nearest(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor),
+                _fx = (f.bbox_left + f.bbox_right) / 2,
+                _fy = (f.bbox_top + f.bbox_bottom) / 2;
             
              // Teleport:
-            x = fx;
-            y = fy;
+            x = _fx;
+            y = _fy;
             
              // Effects:
-            sound_play_pitch(sndCrystalTB, 1.20 + orandom(0.10));
-            repeat(irandom_range(4, 8)) instance_create(x + orandom(4), y + orandom(4), Curse);
+            with(instance_create(x, y, ThrowHit)) depth = other.depth - 1;
+            if(point_seen(x, y, player_find_local_nonsync())){
+                sound_play_pitch(sndCrystalTB, 1.2 + orandom(0.1));
+            }
         }
     }
 
+     // Push:
+	if(place_meeting(x, y, Player)){
+	    with(instances_meeting(x, y, Player)){
+	        if(place_meeting(x, y, other)) with(other){
+	            motion_add(point_direction(other.x, other.y, x, y), 1);
+	        }
+	    }
+	}
+
+     // Bouncin:
+    if(place_meeting(x + hspeed, y + vspeed, Wall)){
+        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+        direction += orandom(20);
+    }
+
      // Effects:
-    if(current_frame_active) repeat(irandom(4)){
-        instance_create(x + orandom(4), y + orandom(4), Curse);
+    if(current_frame_active && random(3) < 1) repeat(irandom(4)){
+        instance_create(x + orandom(8), y + orandom(8), Curse);
     }
 
 
@@ -913,3 +1136,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

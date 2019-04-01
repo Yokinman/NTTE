@@ -1381,8 +1381,21 @@
         x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
         y = target.y + (sticky * image_yscale);
         visible = target.visible;
-        if("wading" in target && target.wading != 0) visible = true;
         depth = target.depth - 1;
+
+		 // Target In Water:
+        if("wading" in target && target.wading != 0){
+        	visible = true;
+        }
+
+		 // Z-Axis Support:
+        if("z" in target){
+        	if(target.object_index == RavenFly || target.object_index == LilHunterFly){
+        		y += target.z;
+        		depth = -7;
+        	}
+        	else y -= target.z;
+        }
     }
     else{
         visible = true;
@@ -1427,6 +1440,7 @@
         friction = 0.4;
         direction = random(360);
         pickup_indicator = noone;
+        my_portalguy = noone;
         surf_draw = -1;
         surf_draw_w = 64;
         surf_draw_h = 64;
@@ -1439,24 +1453,50 @@
         return id;
     }
 
+#define Pet_begin_step
+     // Loading Screen Visual:
+    if((instance_exists(GenCont) || instance_exists(LevCont)) && instance_exists(SpiralCont)){
+    	if(!instance_exists(my_portalguy)){
+    		my_portalguy = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
+    		with(my_portalguy){
+				sprite_index = other.spr_hurt;
+				image_index = 2;
+				turnspeed *= 1.5;
+				dist /= 2;
+
+				if(!in_range(turnspeed, -3, 3)){
+					turnspeed /= 2;
+				}
+				if(in_range(rotspeed, -8, 8)){
+					rotspeed += 8 * sign(rotspeed);
+				}
+    		}
+    	}
+    	with(my_portalguy){
+			image_xscale = 0.85 + (0.15 * sin((-image_angle / 2) / 200));
+			image_yscale = image_xscale;
+			grow = 0;
+    	}
+    }
+
 #define Pet_step
     if(instance_exists(Menu)){ instance_destroy(); exit; }
 
     var _pickup = pickup_indicator;
 
-     // Movement:
-    enemyWalk(walkspd, maxspd);
-
-     // Animate:
-    var _scrt = pet + "_anim";
-    if(mod_script_exists("mod", "petlib", _scrt)){
-         // Custom Animation Event:
-        mod_script_call("mod", "petlib", _scrt);
-    }
-    else enemySprites();
-
-     // Custom Step Event:
     if(visible){
+	     // Movement:
+	    enemyWalk(walkspd, maxspd);
+	
+	     // Animate:
+	    var _scrt = pet + "_anim";
+	    if(mod_script_exists("mod", "petlib", _scrt)){
+	         // Custom Animation Event:
+	        mod_script_call("mod", "petlib", _scrt);
+	    }
+	    else enemySprites();
+
+    	 // Custom Step Event:
         var _scrt = pet + "_step";
         if(mod_script_exists("mod", "petlib", _scrt)){
             mod_script_call("mod", "petlib", _scrt);
@@ -1508,7 +1548,7 @@
 
          // Enter Portal:
         if(visible){
-            if(place_meeting(x, y, Portal) || instance_exists(GenCont)){
+            if(place_meeting(x, y, Portal) || instance_exists(GenCont) || instance_exists(LevCont)){
                 visible = false;
                 repeat(3) instance_create(x, y, Dust);
             }
@@ -1553,44 +1593,52 @@
     }
     with(_pickup) visible = other.can_take;
 
-     // Dodge:
-    if(instance_exists(leader)) team = leader.team;
-    if(sprite_index != spr_hurt){
-    	if(place_meeting(x, y, projectile) || place_meeting(x, y, Explosion) || place_meeting(x, y, PlasmaImpact) || place_meeting(x, y, MeatExplosion)){
-	    	with(instances_matching_ne(instances_meeting(x, y, [projectile, Explosion, PlasmaImpact, MeatExplosion]), "team", team)){
-	            if(place_meeting(x, y, other)) with(other){
-	                 // Custom Dodge Event:
-	                var _scrt = pet + "_hurt";
-	                if(mod_script_exists("mod", "petlib", _scrt)){
-	                    mod_script_call("mod", "petlib", _scrt);
-	                }
+	if(visible){
+	     // Dodge:
+	    if(instance_exists(leader)) team = leader.team;
+	    if(sprite_index != spr_hurt){
+	    	if(place_meeting(x, y, projectile) || place_meeting(x, y, Explosion) || place_meeting(x, y, PlasmaImpact) || place_meeting(x, y, MeatExplosion)){
+		    	with(instances_matching_ne(instances_meeting(x, y, [projectile, Explosion, PlasmaImpact, MeatExplosion]), "team", team)){
+		            if(place_meeting(x, y, other)) with(other){
+		                 // Custom Dodge Event:
+		                var _scrt = pet + "_hurt";
+		                if(mod_script_exists("mod", "petlib", _scrt)){
+		                    mod_script_call("mod", "petlib", _scrt);
+		                }
+		
+		                 // Default:
+		                else if(other.speed > 1 || !instance_is(other, projectile)){
+		                    sprite_index = spr_hurt;
+		                    image_index = 0;
+		                }
+		            }
+		        }
+	    	}
+	    }
 	
-	                 // Default:
-	                else if(other.speed > 1 || !instance_is(other, projectile)){
-	                    sprite_index = spr_hurt;
-	                    image_index = 0;
-	                }
+	     // Pet Collision:
+	    if(place_meeting(x, y, object_index)){
+	        with(instances_meeting(x, y, instances_named(object_index, name))){
+	            if(place_meeting(x, y, other) && visible){
+	                var _dir = point_direction(other.x, other.y, x, y);
+	                motion_add(_dir, 1);
+	                with(other) motion_add(_dir + 180, 1);
 	            }
 	        }
-    	}
-    }
-
-     // Pet Collision:
-    if(place_meeting(x, y, object_index)){
-        with(instances_named(object_index, name)){
-            if(place_meeting(x, y, other)){
-                var _dir = point_direction(other.x, other.y, x, y);
-                motion_add(_dir, 1);
-                with(other) motion_add(_dir + 180, 1);
-            }
-        }
-    }
+	    }
+	
+	     // Wall Collision:
+	    if(place_meeting(x + hspeed, y + vspeed, Wall)){
+	        if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
+	        if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
+	    }
+	}
 
 #define Pet_end_step
-     // Wall Collision:
+     // Wall Collision Part2:
     if(place_meeting(x, y, Wall)){
-        x = xprevious;
-        y = yprevious;
+    	x = xprevious;
+    	y = yprevious;
         if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
         if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
         x += hspeed;
@@ -1904,3 +1952,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

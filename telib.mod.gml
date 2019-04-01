@@ -801,6 +801,11 @@
         _array[@i] = a[(m - 1) - i];
     }
 
+#define array_combine(_array1, _array2)
+	var a = array_clone(_array1);
+	array_copy(a, array_length(a), _array2, 0, array_length(_array2));
+	return a;
+
 #define array_delete(_array, _index)
     var i = _index,
         _new = array_slice(_array, 0, i);

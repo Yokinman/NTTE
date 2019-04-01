@@ -300,7 +300,7 @@
 					_x = other.x + (cos(o) * ((w / 2) * right));
 
 				 // Visual:
-				var d = other.depth + (0.1 * sin(o));
+				var d = other.depth + sin(o);
 				repeat(3) with(scrFX([_x, 4], [_y, 4], 0, Dust)){
 					image_blend = c_black;
 					depth = d;
@@ -3054,3 +3054,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);

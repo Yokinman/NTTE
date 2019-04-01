@@ -703,6 +703,9 @@
                 for (var yy = 1; yy <= 2; yy++)
                     with instance_create(_x + xx * 16, _y + yy * 16, Wall)
                         instance_create(x, y, NOWALLSHEREPLEASE);
+
+			 // Enemies:
+			create_enemies(_cx + choose(-32, 32), _cy, 1);
             break;
         }
             
@@ -712,6 +715,9 @@
                 for (var yy = 2; yy <= 3; yy++)
                     with instance_create(_x + xx * 16, _y + yy * 16, Wall)
                         instance_create(x, y, NOWALLSHEREPLEASE);
+
+			 // Enemies:
+			create_enemies(_cx, _cy + choose(-32, 32), 1);
             break;
         }
             
@@ -930,6 +936,11 @@
                             instance_delete(id);
                         else instance_create(x, y, NOWALLSHEREPLEASE);
                     }
+
+			create_enemies(_cx - 64, _cy - 64, 1);
+			create_enemies(_cx + 64, _cy - 64, 1);
+			create_enemies(_cx - 64, _cy + 64, 1);
+			create_enemies(_cx + 64, _cy + 64, 1);
             break;
         }
 
@@ -1187,3 +1198,4 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
