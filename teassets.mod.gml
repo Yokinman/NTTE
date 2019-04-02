@@ -12,11 +12,13 @@
 
     	 // Big Decals:
     	BigTopDecal = {
-    	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png", 1, 32, 24),
-    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png", 8, 32, 24),
-    	    "pizza" : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",   1, 32, 24),
-    	    "oasis" : sprite_add("sprites/areas/Oasis/sprOasisBigTopDecal.png",   1, 32, 24),
-    	    "trench": sprite_add("sprites/areas/Trench/sprTrenchBigTopDecal.png", 1, 32, 24)
+    	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png",       1, 32, 24),
+    	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png",       8, 32, 24),
+    	    "4"     : sprite_add("sprites/areas/Caves/sprCavesBigTopDecal.png",         1, 32, 24),
+    	    "104"   : sprite_add("sprites/areas/Caves/sprCursedCavesBigTopDecal.png",   1, 32, 24),
+    	    "pizza" : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",         1, 32, 24),
+    	    "oasis" : sprite_add("sprites/areas/Oasis/sprOasisBigTopDecal.png",         1, 32, 24),
+    	    "trench": sprite_add("sprites/areas/Trench/sprTrenchBigTopDecal.png",       1, 32, 24)
     	}
     	msk.BigTopDecal = sprite_add("sprites/areas/Desert/mskBigTopDecal.png", 1, 32, 24);
 
@@ -428,12 +430,12 @@
             AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",    4, 16, 16);
 
              // Cat Boss:
-            CatBossIdle = sprite_add("sprites/enemies/CatBoss/sprBigCatIdle.png",   12, 24, 24);
-            CatBossWalk = sprite_add("sprites/enemies/CatBoss/sprBigCatWalk.png",    6, 24, 24);
-            CatBossHurt = sprite_add("sprites/enemies/CatBoss/sprBigCatHurt.png",    3, 24, 24);
-            CatBossDead = sprite_add("sprites/enemies/CatBoss/sprBigCatDead.png",    6, 24, 24);
-            CatBossWeap = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",  2,  4,  7);
-            CatBossWeapChrg = sprite_add("sprites/enemies/CatBoss/sprCatBossToxerChrg.png", 12, 1, 7);
+            CatBossIdle     = sprite_add("sprites/enemies/CatBoss/sprBigCatIdle.png",       12, 24, 24);
+            CatBossWalk     = sprite_add("sprites/enemies/CatBoss/sprBigCatWalk.png",        6, 24, 24);
+            CatBossHurt     = sprite_add("sprites/enemies/CatBoss/sprBigCatHurt.png",        3, 24, 24);
+            CatBossDead     = sprite_add("sprites/enemies/CatBoss/sprBigCatDead.png",        6, 24, 24);
+            CatBossWeap     = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",      2,  4,  7);
+            CatBossWeapChrg = sprite_add("sprites/enemies/CatBoss/sprCatBossToxerChrg.png", 12,  1,  7);
 
              // Door:
             CatDoor         = sprite_add("sprites/areas/Lair/Props/sprCatDoor.png",          10, 2, 0);

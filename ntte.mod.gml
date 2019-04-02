@@ -1,4 +1,3 @@
-//you just got april fooled //
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -353,9 +352,6 @@
                     until _spawned;
                 }
     		}
-    
-             // Crab Skeletons Drop Bones:
-            with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
             
              // Spawn Baby Scorpions:
             with(Scorpion){
@@ -389,12 +385,14 @@
                 sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
                 sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
             }
+            break;
 
         case 2: /// SEWERS
              // Spawn Cats:
-    	    with(Rat) if(random(8) < 1){
-    	        obj_create(x, y, "Cat");
-    	        instance_delete(self);
+    	    with(ToxicBarrel){
+    	        repeat(irandom_range(2, 3)){
+    	        	obj_create(x, y, "Cat");
+    	        }
     	    }
             break;
 
@@ -479,7 +477,10 @@
             }
             break;
     }
-	
+
+     // Crab Skeletons Drop Bones:
+    with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
+
 	 // Sewer manhole:
 	with(PizzaEntrance){
 	    with obj_create(x,y,"Manhole") toarea = "pizza";

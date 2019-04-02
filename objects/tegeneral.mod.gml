@@ -71,6 +71,19 @@
                 }
     		}
 
+    		 // Specifics:
+    		switch(area){
+    			case 4:
+    			case 104: // Face drill
+    				with(nearest_instance(x - 16, y - 16, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 16), "bbox_bottom", y + 48))){
+    					var _fx = (bbox_left + bbox_right) / 2;
+    					if(_fx != other.x){
+    						other.image_xscale = -sign(_fx - other.x);
+    					}
+    				}
+    				break;
+    		}
+
     		return id;
 		}
     }
@@ -137,14 +150,14 @@
         _y = y + 16;
 
     switch(area){
-        case 1 : // Spawn a handful of crab bones:
+        case 1: // Spawn a handful of crab bones:
             repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
                 motion_set(irandom(359), random_range(3, 6));
                 wep = "crabbone";
             }
             break;
 
-        case 2 : // Spawn a bunch of frog eggs:
+        case 2: // Spawn a bunch of frog eggs:
             repeat(irandom_range(3, 5)){
                 with(instance_create(_x, _y, FrogEgg)){
                     alarm0 = irandom_range(20, 60);
@@ -163,11 +176,60 @@
             }
             break;
 
+		case 4:
+		case 104: // Drill Explosion
+			var _ang = random(360);
+			for(i = 0; i < 2; i++){
+				var _dis = 12 + random(8),
+					_dir = _ang + (i * 180) + orandom(20);
+
+				with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), Grenade)){
+					alarm0 = 1 + (i * 4);
+					mask_index = mskNone;
+					visible = false;
+					repeat(irandom_range(1, 3)) with(instance_create(x + orandom(8), y + orandom(8), MiniNade)){
+						alarm0 = other.alarm0 + random(2);
+						mask_index = mskNone;
+						visible = false;
+					}
+				}
+			}
+
+			 // Wall Crystals:
+			repeat(irandom_range(2, 3)){
+				var e = ((area == 104) ? InvLaserCrystal : LaserCrystal);
+				if(random(3) < 1) e = LightningCrystal;
+
+				with(instance_create(_x, _y, e)){
+					nexthurt = current_frame + 30;
+					my_health += 16;
+
+					 // Space Out:
+                    var _tries = 50;
+                    do{
+                        x = _x + orandom(24);
+                        y = _y + random(16);
+                        xprevious = x;
+                        yprevious = y;
+                        if(!place_meeting(x, y, crystaltype)) break;
+                    }
+                    until (_tries-- <= 0);
+
+					 // Props:
+					repeat(irandom_range(1, 2)){
+						var e = ((other.area == 104) ? InvCrystal : CrystalProp);
+						with(instance_create(x + orandom(12), y + orandom(12), e)){
+							nexthurt = current_frame + 30;
+							my_health += 48;
+						}
+					}
+				}
+			}
+			break;
+
         case "pizza": // Pizza time
             repeat(irandom_range(4, 6)){
-                with(instance_create(_x + orandom(4), _y + orandom(4), HPPickup)){
-                    sprite_index = sprSlice;
-                }
+                obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
                 with(scrWaterStreak(_x, _y, random(360), 4 + random(4))){
                     image_blend = c_orange;
                     image_speed *= random_range(0.5, 1.25);
@@ -1874,6 +1936,11 @@
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+     // Big Decals:
+    with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
+    	draw_circle(x, y, 96, false);
+    }
+
      // Lightning Discs:
     with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
         draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
@@ -1881,6 +1948,11 @@
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+     // Big Decals:
+    with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
+    	draw_circle(x, y, 40, false);
+    }
 
      // Lightning Discs:
     with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){

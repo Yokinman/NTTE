@@ -381,6 +381,7 @@
         mask_index = mskBanditBoss;
         visible = true;
         canfly = false;
+        instance_create(x, y, PortalClear);
 
          // Poof:
         with(instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id)){
@@ -478,7 +479,30 @@
 			
 			target = instance_nearest(x, y, Player);
 			if(instance_exists(target)){
-				scrWalk(alarm1, point_direction(x, y, target.x, target.y));
+				if(target_is_visible() && target_in_distance(0, 128)){
+					scrWalk(alarm1, point_direction(x, y, target.x, target.y));
+				}
+
+				 // Zoom Ovah:
+				else if(random(3) < 1){
+					with(obj_create(x, y + 16, "BatCloud")){
+						target = other.target;
+						target_offdir = random(360);
+						creator = other.creator;
+						direction = 90 + orandom(20);
+						my_health = other.my_health;
+					}
+
+					 // Effects:
+					sound_play_pitchvol(sndBloodHammer, 1.4 + random(0.2), 0.5);
+					repeat(10){
+						with(scrFX([x, 8], y + orandom(8), random(3), Smoke)){
+							image_blend = c_black;
+						}
+					}
+
+					instance_delete(id);
+				}
 			}
 		}
 	}
@@ -601,6 +625,11 @@
 		nexthurt = current_frame + 12;
 		creator = other.creator;
 		kills = 0;
+
+		 // Save HP:
+		if("my_health" in other){
+			my_health = other.my_health;
+		}
 
 		 // Aim:
 		if(instance_exists(other.target)){
@@ -1006,7 +1035,8 @@
 		spr_walk = spr.CatBossWalk;
 		spr_hurt = spr.CatBossHurt;
 		spr_dead = spr.CatBossDead;
-		spr_weap = [spr.CatBossWeap, spr.CatBossWeapChrg];
+		spr_weap = spr.CatBossWeap;
+		spr_weap_chrg = spr.CatBossWeapChrg;
 		spr_shadow = shd48;
 		spr_shadow_y = 3;
 		hitid = [spr_idle, bossname];
@@ -1028,7 +1058,7 @@
         dash = 0;
         super = false;
         supertime = 0;
-        maxsupertime = 40;
+        maxsupertime = 30;
         superbreakmax = 6; // used in on_hurt to prevent catboss from being locked in the charge animation 
 		gunangle = random(360);
 		direction = gunangle;
@@ -1054,7 +1084,7 @@
 	}
 
      // Bounce:
-    if(dash <= 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
+    if(dash <= 0 && walk > 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
     	if(array_length(instances_matching(instances_named(CustomObject, "CatBossAttack"), "creator", id)) <= 0){
 	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
 	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
@@ -1065,7 +1095,17 @@
 
 #define CatBoss_draw
     if(gunangle >  180) draw_self_enemy();
-    draw_sprite_ext(spr_weap[supertime > 0], (super ? current_frame * image_speed mod 2 : (1 - (supertime / maxsupertime)) * 12), x - lengthdir_x(wkick, gunangle), y - lengthdir_y(wkick, gunangle), 1, right, gunangle, image_blend, image_alpha);
+
+	 // Weapon:
+    var _spr = spr_weap,
+    	_img = (super ? (current_frame * image_speed) : 0);
+
+    if(supertime > 0){
+    	_spr = spr_weap_chrg;
+    	_img = sprite_get_number(spr_weap_chrg) * (1 - (supertime / maxsupertime));
+    }
+    draw_sprite_ext(_spr, _img, x - lengthdir_x(wkick, gunangle), y - lengthdir_y(wkick, gunangle), 1, right, gunangle, image_blend, image_alpha);
+
     if(gunangle <= 180) draw_self_enemy();
 
 #define CatBoss_alrm0
@@ -1423,8 +1463,10 @@
 		
 		             // Enter minor hitscan mode:
 		            if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
-		                m = 2;
-		                d = sqrt(_md);
+		            	if(position_meeting(_lx, _ly, Floor)){
+			                m = 2;
+			                d = sqrt(_md);
+		            	}
 		            }
 		        }
 
@@ -1961,7 +2003,7 @@
         spr_top = spr.BigManholeTop;
         sprite_index = spr_top;
         image_speed = 0;
-        depth = 7;
+        depth = 8;
 
          // Vars:
         phase = 0;
@@ -2021,7 +2063,7 @@
 	    	var	_x = other.x,
 	    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
 	    		_dir = point_direction(_x, _y, x, y);
-	
+
 	    	if(point_distance(_x, _y, x, y) < _dis){
 	    		if(instance_is(self, Player)){
 		    		x = _x + lengthdir_x(_dis, _dir);
@@ -2033,8 +2075,17 @@
 	    		}
 	    	}
 	    }
+
+	     // Scorchmarks:
+		var _dis = 36;
+	    with(instances_matching(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [Scorch, ScorchTop]), "bighole_check", null, false)){
+	    	bighole_check = true;
+	    	if(point_distance(other.x, other.y, x, y) < _dis){
+	    		instance_destroy();
+	    	}
+	    }
     }
-    
+
 #define CatHoleBig_alrm0
     phase++;
 
@@ -2386,6 +2437,11 @@
         maxhealth = 40;
         team = 0;
         size = 3;
+
+		 // Cool Floor:
+		with(instance_nearest(_x - 16, _y, Floor)){
+			image_index = 3;
+		}
 
         return id;
     }

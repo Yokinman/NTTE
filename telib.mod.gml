@@ -729,6 +729,9 @@
     		exit;
     	}
     }
+    with(instances_matching_gt(Corpse, "alarm0", 0)){
+    	alarm0 = -1;
+    }
 
 #define scrPickupPortalize()
     var _scrt = "scrPickupPortalize";
