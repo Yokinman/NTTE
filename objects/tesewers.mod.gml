@@ -902,7 +902,7 @@
         
                          // Effects:
                         var o = 8;
-                        with(instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), BloodGamble)) {
+                        with(instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), AcidStreak)) {
                             sprite_index = spr.AcidPuff;
                             image_angle = other.gunangle;
                         }
@@ -2837,13 +2837,14 @@
 		yprevious = y;
 		 
 		 // Effects 1:
-		if(random(3) < current_frame_active){
-		    with(instance_create(x, y, AcidStreak)){
-		        depth = -2;
-		        image_angle = irandom(359);
-		        x -= lengthdir_x(24, image_angle);
-		        y -= lengthdir_y(24, image_angle);
-		        if instance_exists(other.creator){
+		if(random(4) < current_frame_active){
+			var f = 0.6;
+		    with(instance_create(x + (hspeed * f) + orandom(4), y + (vspeed * f) + orandom(4), AcidStreak)){
+		    	sprite_index = spr.AcidPuff;
+		        image_angle = other.direction + orandom(60);
+		    	depth = -2;
+
+		        if(instance_exists(other.creator)){
 		            x += other.creator.hspeed;
 		            y += other.creator.vspeed;
 		        }
@@ -2858,6 +2859,7 @@
             }
         }
 	}
+
 	 // Effects 3:
     if(random(3) < current_frame_active){
         with(instance_create(x + orandom(6), y + 16 + orandom(6), RecycleGland)){
@@ -2884,7 +2886,7 @@
             motion_add(gunangle + 180, maxspd);
 
              // Effects:
-            wkick += 9;
+            wkick = min(wkick + 9, 16);
             sound_play_pitchvol(sndFlakCannon,			0.8,				0.4);
             sound_play_pitchvol(sndCrystalRicochet,		1.4 + random(0.4),	0.8);
             sound_play_pitchvol(sndLightningRifleUpg,	0.8,				0.4);
