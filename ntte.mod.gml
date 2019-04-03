@@ -317,69 +317,75 @@
     			visible = 0;
     			mask_index = mskNone;
     		}
-    
+
     	     // Spawn Sharky Skull on 1-3:
     		with(BigSkull) instance_delete(id);
     		if(instance_exists(Floor)){
         		if(GameCont.subarea == 3){
-        		    var _spawned = false;
+        		    var _spawned = false,
+        		    	_tries = 100;
+
         		    do{
             		    with(instance_random(Floor)){
                             if(point_distance(x, y, 10016, 10016) > 48){
-                                if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
             		                obj_create(x + 16, y + 16, "CoastBossBecome");
             		                _spawned = true;
                                 }
                             }
             		    }
         		    }
-        		    until _spawned;
+        		    until (_spawned || _tries-- <= 0);
         		}
-    
+
                  // Consistently Spawning Crab Skeletons:
                 if(!instance_exists(BonePile)){
-        		    var _spawned = false;
+        		    var _spawned = false,
+        		    	_tries = 100;
+
                     do{
                         with(instance_random(Floor)){
                             if(point_distance(x, y, 10016, 10016) > 48){
-                                if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
                                     instance_create(x + 16, y + 16, BonePile);
             		                _spawned = true;
                                 }
                             }
                         }
                     }
-                    until _spawned;
+        		    until (_spawned || _tries-- <= 0);
                 }
     		}
-            
+
              // Spawn Baby Scorpions:
-            with(Scorpion){
-                if(random(4) < 1){
-                    repeat(irandom_range(1,3)) obj_create(x, y, "BabyScorpion");
-                }
+            with(Scorpion) if(chance(1, 4)){
+                repeat(irandom_range(1, 3)) obj_create(x, y, "BabyScorpion");
             }
-            
-             // Spawn Golden Lads:
-            with(GoldScorpion){
-                if(random(4) < 1){
-                    repeat(irandom_range(1,3)) obj_create(x, y, "BabyScorpionGold");
-                }
+            with(GoldScorpion) if(chance(1, 4)){
+            	repeat(irandom_range(1, 3)) obj_create(x, y, "BabyScorpionGold");
+            }
+            with(MaggotSpawn){
+            	babyscorp_drop = chance(1, 8);
             }
             
              // Rare scorpion desert (EASTER EGG):
-            if random(200) < 1{
-                with(Bandit) if random(5) > 1{
-                    var gold = (random(20) < 1);
+            if((GameCont.subarea > 1 || GameCont.loops > 0) && chance(1, 180)){
+                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
+                    var _gold = chance(1, 20);
                     
                      // Normal scorpion:
-                    if random(5) < 2 instance_create(x, y, !gold ? Scorpion : GoldScorpion);
+                    if(chance(2, 5)){
+                    	instance_create(x, y, (!_gold ? Scorpion : GoldScorpion));
+                    }
                     
                      // Baby scorpions:
-                    else repeat(1 + irandom(2)) obj_create(x, y, !gold ? "BabyScorpion" : "BabyScorpionGold");
+                    else repeat(1 + irandom(2)){
+                    	obj_create(x, y, (!_gold ? "BabyScorpion" : "BabyScorpionGold"));
+                    }
                      
                     instance_delete(id);
                 }
+                with(MaggotSpawn) babyscorp_drop++;
                 
                  // Scary sound:
                 sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
@@ -400,7 +406,7 @@
              // Spawn Mortars:
         	with(instances_matching(LaserCrystal, "mortar_check", null, false)){
         	    mortar_check = true;
-        	    if(random(4) < 1){
+        	    if(chance(1, 4)){
         	        obj_create(x, y, "Mortar");
         	        instance_delete(self);
         	    }
@@ -421,7 +427,7 @@
              // Spawn Cursed Mortars:
         	with(instances_matching(InvLaserCrystal, "mortar_check", null, false)){
         	    mortar_check = true;
-        	    if(random(4) < 1){
+        	    if(chance(1, 4)){
         	        obj_create(x, y, "InvMortar");
         	        instance_delete(self);
         	    }
@@ -505,7 +511,7 @@
 		else _chance = 1/4;
 	}
 
-    if(random(1) < _chance){
+    if(chance(_chance, 1)){
         var _tries = 1000;
         while(_tries-- > 0){
             with(instance_random(TopSmall)){
@@ -618,20 +624,18 @@
         else audio_stop_sound(c.snd);
     }
 
-    /// Tiny Spiders (New Cocoons):
-         // Spider Cocoons:
-        with(Cocoon){ 
-        	obj_create(x, y, "NewCocoon");
-        	instance_delete(id);
-        }
+     // Baby Scorpion Spawn:
+    with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
+    	repeat(babyscorp_drop){
+    		obj_create(x, y, "BabyScorpion");
+    	}
+    }
 
-         // Appropriate Corpses:
-        with(instances_matching(instances_matching_le(Spider, "my_health", 0), "corpse", 0)){
-        	with(scrCorpse(direction, speed)){
-        		image_xscale = other.image_xscale;
-        		image_yscale = other.image_yscale;
-        	}
-        }
+     // Spider Cocoons:
+    with(Cocoon) if(chance(4, 5)){ 
+    	obj_create(x, y, "NewCocoon");
+    	instance_delete(id);
+    }
 
      // Fixes weird delay thing:
     script_bind_step(bone_step, 0);
@@ -1107,13 +1111,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 image_speed = 0.3;
                 image_angle = other.image_angle;
                 image_xscale = other.image_xscale;
-                if(random(8) < 1){
+                if(chance(1, 8)){
                     sound_play_hit(sndLightningHit,0.2);
                     with(instance_create(x, y, GunWarrantEmpty)){
                         image_angle = other.direction;
                     }
                 }
-                else if(random(3) < 1){
+                else if(chance(1, 3)){
                     instance_create(x + orandom(18), y + orandom(18), PortalL);
                 }
             }
@@ -1129,7 +1133,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 image_index = 0;
 
                  // FX:
-                if(random(3) < 1){
+                if(chance(1, 3)){
                     var xx = x,
                         yy = y,
                         vol = 0.4;
@@ -1153,14 +1157,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
 
          // Hot hot hot:
-        else if(current_frame_active && random(100) < 1){
+        else if(chance_ct(1, 100)){
             instance_create(x, y, Bubble);
         }
 
          // Go away ugly smoke:
         if(place_meeting(x, y, Smoke)){
             with(instance_nearest(x, y, Smoke)) instance_destroy();
-            if(random(2) < 1) with(instance_create(x, y, Bubble)){
+            if(chance(1, 2)) with(instance_create(x, y, Bubble)){
                 motion_add(other.direction, other.speed / 2);
             }
         }
@@ -1221,7 +1225,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         instance_create(x, y, Bubble);
     }
     with(instances_matching(BoltTrail, "waterbubble", null)){
-        if(image_xscale != 0 && random(4) < 1){
+        if(image_xscale != 0 && chance(1, 4)){
             waterbubble = true;
             instance_create(x, y, Bubble);
         }
@@ -2023,7 +2027,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Follow Leader:
                         if(instance_exists(Player)){
-                            if(distance_to_object(Player) > 256 || !instance_exists(target) || collision_line(x, y, target.x, target.y, Wall, 0, 0) || point_distance(x, y, target.x, target.y) > 80){
+                            if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
                                 var n = instance_nearest(x, y, Player);
                                 /*if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
                                     motion_add(point_direction(x, y, mouse_x[n.index], mouse_y[n.index]), 1);
@@ -2284,8 +2288,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);

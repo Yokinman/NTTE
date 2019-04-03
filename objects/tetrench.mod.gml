@@ -126,7 +126,7 @@
 
      // Hiding:
     if(hiding){
-        if(target_is_visible() && target_in_distance(0, 48)){
+        if(in_sight(target) && in_distance(target, 48)){
             scrAnglerAppear(); // Unhide
         }
     }
@@ -138,7 +138,7 @@
             alarm1 = 8;
     
              // Charge:
-            scrWalk(5, (target_is_visible() ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
+            scrWalk(5, (in_sight(target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
             speed = maxspd + 10;
     
              // Effects:
@@ -164,7 +164,7 @@
             alarm1 = 20 + irandom(20);
 
              // Move Toward Player:
-            if(target_is_visible() && target_in_distance(0, 128)){
+            if(in_sight(target) && in_distance(target, 128)){
                 scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y) + orandom(20));
             }
 
@@ -172,7 +172,7 @@
             else scrWalk(20 + irandom(30), direction + orandom(30));
 
              // Hide:
-            if(!target_in_distance(0, 160)){
+            if(!in_distance(target, 160)){
                 scrAnglerHide();
             }
         }
@@ -193,7 +193,7 @@
     }
 
      // Emergency:
-    if(my_health < 30 && random(3) < 2 && ammo < 0){
+    if(my_health < 30 && chance(2, 3) && ammo < 0){
         walk = 0;
         ammo = 1;
         alarm1 = 4;
@@ -318,9 +318,9 @@
         }
         else{
             if instance_exists(target){
-                if target_is_visible(){
+                if(in_sight(target)){
                      // Prepare counterattack:
-                    if random(7) < 2{
+                    if(chance(2, 7)){
                         alarm0 = 1;
                         minCounter = 1;
                         counterTime = 15;
@@ -343,7 +343,7 @@
                 }
                 else{
                      // Teleport to player:
-                    if random(7) < 2{
+                    if(chance(2, 7)){
                         alarm2 = 20;
                         
                         sprite_index = spr_dead;
@@ -359,7 +359,7 @@
             
              // Despawn:
             else{
-                if random(5) < 1{
+                if(chance(1, 5)){
                     // code later lol
                 }
             }
@@ -414,6 +414,7 @@
                 _y = y + 16,
                 _t = other.target,
                 _d = point_distance(_x, _y, _t.x, _t.y);
+
             if _d > 64 && _d <= 256 && _d < dist{
                 dist = _d;
                 tile = id;
@@ -564,14 +565,7 @@
     enemyWalk(walkspd, maxspd);
 
      // Arc Lightning w/ Jelly:
-    if(
-    	instance_exists(arc_inst)							&&
-    	point_distance(x, y, arc_inst.x, arc_inst.y) < 100	&&
-    	(
-    		!instance_exists(target) ||
-    		target_in_distance(0, 120)
-    	)
-    ){
+    if(in_distance(arc_inst, 100) && (!instance_exists(target) || in_distance(target, 120))){
          // Start Arcing:
         if(arcing < 1){
             arcing += 0.15 * current_time_scale;
@@ -638,13 +632,13 @@
 	 // Search for New Jelly:
     if(!instance_exists(arc_inst) && frame_active(8)){
         var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
-        if(instance_exists(_inst) && point_distance(x, y, _inst.x, _inst.y) < 100) arc_inst = _inst;
+        if(in_distance(_inst, 100)) arc_inst = _inst;
     }
 
      // Elite Effects:
     if(elite > 0){
         elite -= current_time_scale;
-        if(current_frame_active && random(30) < 1){
+        if(chance_ct(1, 30)){
             instance_create(x, y, PortalL);
         }
         if(elite <= 0){
@@ -676,7 +670,7 @@
             with instance_create(x + lengthdir_x(_dist, gunangle), y + lengthdir_y(_dist, gunangle), LaserCharge){
                 alarm0 = 6;
                 motion_set(irandom(359), 2);
-                if collision_line(x, y, other.x, other.y, Wall, 0, 0) instance_destroy();
+                if(!in_sight(other)) instance_destroy();
             }
 
          // Shoot:
@@ -689,7 +683,7 @@
     }
     else{
          // Begin shoot laser
-        if false && instance_exists(arc_inst) && arc_inst.c == 3 && random(5) < 1 && target_is_visible() && target_in_distance(0,96){
+        if(false && instance_exists(arc_inst) && arc_inst.c == 3 && chance(1, 5) && in_sight(target) && in_distance(target, 96)){
             alarm1 = 3;
             ammo = 10;
             gunangle = point_direction(x, y, target.x, target.y);
@@ -697,11 +691,12 @@
         }
         else{
              // When you walking:
-            if target_is_visible(){
+            if(in_sight(target)){
                 scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y) + orandom(20));
             }
-            else
+            else{
                 scrWalk(irandom_range(17,30), direction+orandom(30));
+            }
         }
     }
 
@@ -724,7 +719,7 @@
      // Type-Pickups:
     else switch(c){
         case 0: // Blue
-            if(random(3) < 2 * pickup_chance_multiplier){
+            if(chance(2 * pickup_chance_multiplier, 3)){
                 instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
 
                  // FX:
@@ -735,7 +730,7 @@
             break;
 
         case 1: // Purple
-            if(random(3) < 2 * pickup_chance_multiplier){
+            if(chance(2 * pickup_chance_multiplier, 3)){
                 instance_create(x + orandom(2), y + orandom(2), HPPickup);
 
                  // FX:
@@ -843,14 +838,14 @@
      // Always movin':
     scrWalk(alarm1, direction);
 
-    if(target_is_visible()){
+    if(in_sight(target)){
         var _targetDir = point_direction(x, y, target.x, target.y);
 
          // Steer towards target:
         motion_add(_targetDir, 0.4);
 
          // Attack:
-        if(random(3) < 1 && target_in_distance(32, 256)){
+        if(chance(1, 3) && in_distance(target, [32, 256])){
             alarm1 += 60;
 
              // Shoot lightning disc:
@@ -1023,9 +1018,9 @@
          // Effects:
         if(current_frame_active){
             view_shake_max_at(x, y, min(speed * 4, 3));
-            if(random(10) < speed){
-                instance_create(x + orandom(40), y + orandom(40), Bubble);
-            }
+        }
+        if(chance_ct(speed, 10)){
+            instance_create(x + orandom(40), y + orandom(40), Bubble);
         }
     }
 
@@ -1033,7 +1028,7 @@
     var	_target = noone,
 		d = 1000000;
 
-	with(Player) if(!collision_line(x, y, other.x, other.y, Wall, 0, 0)){
+	with(Player) if(in_sight(other)){
 		var _dis = point_distance(x, y, other.x, other.y);
 		if(_dis < d){
 			_target = id;
@@ -1075,7 +1070,7 @@
 
                  // End Blink:
                 if(blink_img >= n){
-                    if(random(4) < 1 && instance_exists(Player)){
+                    if(instance_exists(Player) && chance(1, 4)){
                         blink = false;
                     }
                 }
@@ -1085,7 +1080,7 @@
 
                  // New Blink:
                 if(blink_img <= 0){
-                    if(current_frame_active && random(_seen ? 150 : 100) < 1){
+                    if(chance_ct(1, (_seen ? 150 : 100))){
                         blink = true;
                     }
                 }
@@ -1244,7 +1239,7 @@
                                     _dir = point_direction(other.x, other.y, _x, _y),
                                     _spd = 8 - (point_distance(other.x, other.y, _x, _y) / 16);
 
-                                if(random(6) < 1 && object_index != FloorExplo){
+                                if(chance(1, 6) && object_index != FloorExplo){
                                     with(obj_create(_x, _y, "TrenchFloorChunk")){
                                         direction = _dir;
                                         zspeed = _spd;
@@ -1281,18 +1276,17 @@
 
     target = instance_nearest(x, y, Player);
     if(instance_exists(target)){
-        var _targetDis = point_distance(x, y, target.x, target.y),
-            _targetDir = point_direction(x, y, target.x, target.y);
+        var _targetDir = point_direction(x, y, target.x, target.y);
 
-        if(_targetDis > 96 || pit_height < 1 || random(2) < 1){
+        if(!in_distance(target, 96) || pit_height < 1 || chance(1, 2)){
             motion_add(_targetDir, 1);
             sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
             sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
         }
 
-        if(pit_height >= 1 && random(2) < 1){
+        if(pit_height >= 1 && chance(1, 2)){
              // Check LOS to Player:
-            var _targetSeen = (target_is_visible() && target_in_distance(0, 256));
+            var _targetSeen = (in_sight(target) && in_distance(target, 256));
             if(_targetSeen){
                 var f = instances_matching(Floor, "styleb", true);
                 with(f) x -= 10000;
@@ -1324,7 +1318,7 @@
 
             if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
                  // Tentacles:
-                if random(3) < 1 && array_length(instances_matching(instances_named(CustomEnemy, "ChaserTentacle"), "creator", id)) < 3{
+                if(chance(1, 3) && array_length(instances_matching(instances_named(CustomEnemy, "ChaserTentacle"), "creator", id)) < 3){
                     obj_create(x, y, "ChaserTentacle").creator = id;
                 }
             }
@@ -1413,7 +1407,7 @@
                     scrRight(dir + 180);
 
                      // Effects:
-                    if(current_frame_active && random(3) < 1){
+                    if(chance_ct(1, 3)){
                         instance_create(x, y, Dust);
                     }
                 }
@@ -1452,7 +1446,7 @@
                              // Effects:
                             sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
                             sound_play_pitchvol(sndWallBreakRock, 1 + orandom(0.2), 0.3 + random(0.2));
-                            if(object_index != FloorExplo && other.sprite_index == other.spr_spwn && random(2) < 1){
+                            if(object_index != FloorExplo && other.sprite_index == other.spr_spwn && chance(1, 2)){
                                 var _ox = choose(8, 24),
                                     _oy = choose(8, 24),
                                     _dir = point_direction(other.x, other.y, x, y),
@@ -1573,9 +1567,9 @@
                 vspeed = -random_range(1, 3);
             }
         }
-        if(current_frame_active && random(5) < 1){
-            sound_play_pitchvol(sndOasisDeath, random(3), 0.3);
-        }
+	}
+    if(chance_ct(1, 5)){
+        sound_play_pitchvol(sndOasisDeath, random(3), 0.3);
     }
 
      // Launch Tentacles:
@@ -1632,7 +1626,7 @@
     }*/
 
      // Effects:
-    if(current_frame_active && random(10) < 1){
+    if(chance_ct(1, 10)){
         instance_create(x, y - z, Bubble);
     }
 
@@ -1696,7 +1690,7 @@
     }
 
 #define Vent_step
-    if random(5) < current_time_scale{
+    if(chance_ct(1, 5)){
         with instance_create(x,y,Bubble){
             friction = 0.2;
             motion_set(irandom_range(85,95),random_range(4,7));
@@ -1762,7 +1756,7 @@
             }
 
              // Chase player instead:
-            else if(target_is_visible()) {
+            else if(in_sight(target)) {
                 var _targetDir = point_direction(x, y, target.x, target.y);
                 scrRight(_targetDir);
 
@@ -1776,7 +1770,7 @@
             }
         }
          // No leader to follow:
-        else if(target_is_visible()) {
+        else if(in_sight(target)) {
             var _targetDir = point_direction(x, y, target.x, target.y);
 
              // Sad chase :( :
@@ -2022,8 +2016,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

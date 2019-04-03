@@ -430,18 +430,40 @@
 #define scrDefaultDrop
     pickup_drop(16, 0); // Bandit drop-ness
 
-#define target_in_distance(_disMin, _disMax)
-    if(instance_exists(target)){
-        var _dis = point_distance(x, y, target.x, target.y);
-        return (_dis > _disMin && _dis < _disMax);
-    }
-    return 0;
+#define chance(_numer, _denom)
+	return (random(_denom) < _numer);
 
-#define target_is_visible()
-    if(instance_exists(target)){
-        if(!collision_line(x, y, target.x, target.y, Wall, false, false)) return true;
-    }
-    return false;
+#define chance_ct(_numer, _denom)
+	return chance(_numer * current_time_scale, _denom);
+
+#define in_distance(_inst, _dis)
+	if(!instance_exists(_inst)) return false;
+
+	 // If '_inst' is an object, find nearest object:
+	if(object_exists(_inst)){
+		_inst = instance_nearest(x, y, _inst);
+	}
+
+	 // If '_dis' is an array it means [min, max], otherwise 'min = 0' and 'max = _dis':
+	if(!is_array(_dis)) _dis = [0, _dis];
+	else while(array_length(_dis) < 2){
+		array_push(_dis, 0);
+	}
+
+	 // Return if '_inst' is within min and max distances:
+	var d = point_distance(x, y, _inst.x, _inst.y);
+	return (d >= _dis[0] && d <= _dis[1]);
+
+#define in_sight(_inst)
+	if(!instance_exists(_inst)) return false;
+
+	 // If '_inst' is an object, find nearest object:
+	if(object_exists(_inst)){
+		_inst = instance_nearest(x, y, _inst);
+	}
+
+	 // Return if '_inst' is in line of sight:
+	return !collision_line(x, y, _inst.x, _inst.y, Wall, false, false);
 
 #define z_engine()
     z += zspeed * current_time_scale;
@@ -591,7 +613,7 @@
                     image_index = 0;
 
                      // Water Mine:
-                    if(random(6) < 1 && distance_to_object(Player) > 128){
+                    if(chance(1, 6) && distance_to_object(Player) > 128){
                         image_index = 1;
                         with(script_bind_step(TopDecalWaterMine_step, 0)){
                             creator = other;
@@ -767,7 +789,7 @@
 
             with(instances_matching([Rad, BigRad], "speed", 0)){
                 var s = instance_nearest(x, y, ProtoStatue);
-                if(distance_to_object(s) >= _attractDisProto || collision_line(x, y, s.x, s.y, Wall, false, false)){
+                if(distance_to_object(s) >= _attractDisProto || !in_sight(s)){
                     if(distance_to_object(Player) >= _attractDis){
                         var p = instance_nearest(x, y, Player),
                             _dis = 12 * current_time_scale,
@@ -954,7 +976,7 @@
 
          // Spawn Enemies:
         with(_newFloor){
-            if(random(_hard + 10) < _hard){
+            if(chance(_hard, _hard + 10)){
                 if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
                     // (distance to spawn coordinates > 120) check
                     mod_script_call("area", _area, "area_pop_enemies");
@@ -972,7 +994,7 @@
 
               // Crown of Blood:
             if(GameCont.crown = crwn_blood){
-                if(random(_hard + 8) < _hard){
+                if(chance(_hard, _hard + 8)){
                     if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
                         // (distance to spawn coordinates > 120) check
                         mod_script_call("area", _area, "area_pop_enemies");
@@ -1025,7 +1047,7 @@
             var _lowHP = false;
             with(Player) if(my_health < maxhealth / 2) _lowHP = true;
             with(_newChest[2]) if(instance_exists(self)){
-                if((_lowHP && random(2) < 1) || (GameCont.crown == crwn_life && random(3) < 2)){
+                if((_lowHP && chance(1, 2)) || (GameCont.crown == crwn_life && chance(2, 3))){
                     array_push(_newChest[4], instance_create(x, y, HealthChest));
                     instance_destroy();
                     break;
@@ -1034,11 +1056,11 @@
         }
 
          // Mimics:
-        with(_newChest[1]) if(instance_exists(self) && random(11) < 1){
+        with(_newChest[1]) if(instance_exists(self) && chance(1, 11)){
             instance_create(x, y, Mimic);
             instance_delete(id);
         }
-        with(_newChest[4]) if(instance_exists(self) && random(51) < 1){
+        with(_newChest[4]) if(instance_exists(self) && chance(1, 51)){
             instance_create(x, y, SuperMimic);
             instance_delete(id);
         }
@@ -1260,7 +1282,7 @@
 		ammo = _ammo--;
 	
 		 // Effects:
-	    if(current_frame_active && random(200) < 1){
+	    if(chance_ct(1, 200)){
 	        with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){
 	            motion_add(random(360), 1);
 	        }

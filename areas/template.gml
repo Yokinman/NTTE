@@ -145,14 +145,14 @@ blah blah blah
 
     /// Make Floors:
          // Special - 2x2 Fill:
-    	if(random(2) < 1) scrFloorFill(_x, _y, 2, 2);
+    	if(chance(1, 2)) scrFloorFill(_x, _y, 2, 2);
     
          // Normal:
     	else instance_create(_x, _y, Floor);
 
 	/// Turn:
 	    var _trn = 0;
-    	if(random(14) < 5){
+    	if(chance(5, 14)){
     	    _trn = choose(90, 90, -90, -90, 180);
         }
         direction += _trn;
@@ -165,13 +165,13 @@ blah blah blah
 
 	     // Ammo Chests + End Branch:
 	    var n = instance_number(FloorMaker);
-		if(random(19 + n) > 20){
+		if(!chance(20, 19 + n)){
 			if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
 			instance_destroy();
 		}
 
 		 // Branch:
-		if(random(8) < 1){
+		if(chance(1, 8)){
 		    instance_create(_x, _y, FloorMaker);
 		}
 
@@ -185,8 +185,8 @@ blah blah blah
     var _x = x + 16,
         _y = y + 16;
 
-    if(random(12) < 1){
-        if(random(60) < 1){
+    if(chance(1, 12)){
+        if(chance(1, 60)){
             instance_create(_x, _y, BigSkull);
         }
         else instance_create(_x, _y, Cactus);
@@ -212,8 +212,10 @@ blah blah blah
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

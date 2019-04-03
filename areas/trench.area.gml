@@ -173,7 +173,7 @@
 	}
 
      // Anglers:
-    with(RadChest) if(random(40) < 1){
+    with(RadChest) if(chance(1, 40)){
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
@@ -330,12 +330,12 @@
         _y = _vy + random(game_height);
 
      // Player Bubbles:
-    if(random(4) < 1){
+    if(chance(1, 4)){
         with(Player) instance_create(x, y, Bubble);
     }
     
      // Pet Bubbles:
-    if(random(4) < 1){
+    if(chance(1, 4)){
         with instances_matching(CustomObject, "name", "Pet") instance_create(x, y, Bubble);
     }
 
@@ -363,19 +363,19 @@
 
     /// Make Floors:
          // Special - Area Fill
-        if(random(7) < 1 && _outOfSpawn){
-            var _w = irandom_range(3,5),
-                _h = 8-_w;
+        if(chance(1, 7) && _outOfSpawn){
+            var _w = irandom_range(3, 5),
+                _h = 8 - _w;
 
-            scrFloorFill(_x,_y,_w,_h);
+            scrFloorFill(_x, _y, _w, _h);
         }
 
          // Normal:
-        instance_create(_x,_y,Floor);
+        instance_create(_x, _y, Floor);
 
 	/// Turn:
 	    var _trn = 0;
-	    if(random(7) < 3){
+	    if(chance(3, 7)){
             _trn = choose(90, -90, 180);
         }
         direction += _trn;
@@ -390,13 +390,13 @@
 
 	     // Ammo Chests + End Branch:
 	    var n = instance_number(FloorMaker);
-		if(random(19 + n) > 22){
+		if(!chance(22, 19 + n)){
 			if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
 			instance_destroy();
 		}
 
 		 // Branch:
-		else if(random(5) < 1){
+		else if(chance(1, 5)){
 		    instance_create(_x, _y, FloorMaker);
 		}
 
@@ -422,8 +422,8 @@
     var _x = x + 16,
         _y = y + 16;
     
-    if(GameCont.loops > 0 && random(3) < 1){
-        if(random(5) < 1){
+    if(GameCont.loops > 0 && chance(1, 3)){
+        if(chance(1, 5)){
             instance_create(_x, _y, FireBaller);
         }
         else{
@@ -432,15 +432,15 @@
     }
     else{
          // Anglers:
-        if(!styleb && random(18) < 1){
+        if(!styleb && chance(1, 18)){
             obj_create(_x, _y, "Angler");
         }
     
         else{
-            if(random(9) < 1){
+            if(chance(1, 9)){
                  // Elite Jellies:
                 var _eliteChance = 5 * (GameCont.loops + 1);
-                if(random(100) < _eliteChance){
+                if(chance(_eliteChance, 100)){
                     with(obj_create(_x, _y, "JellyElite")){
                         repeat(3) obj_create(x, y, "Eel");
                     }
@@ -454,7 +454,7 @@
             }
     
              // Random Eel Spawns:
-            else if(random(4) < 1){
+            else if(chance(1, 4)){
                 obj_create(_x, _y, "Eel");
             }
         }
@@ -463,7 +463,7 @@
 #define area_pop_props
      // Quarter Walls:
     var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
-    if(random(_wallChance) < 1){
+    if(chance(1, _wallChance)){
         if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
             var _x = x + choose(0, 16),
                 _y = y + choose(0, 16);
@@ -476,11 +476,11 @@
     }
 
      // Prop Spawns:
-    else if(random(16) < 1 && !styleb){
+    else if(chance(1, 16) && !styleb){
         var _x = x + 16,
             _y = y + 16;
 
-    	if(random(10) < 1){
+    	if(chance(1, 10)){
     		obj_create(_x, _y, "EelSkull");
     	}
 		else{
@@ -489,7 +489,7 @@
     }
 
      // Top Decals:
-    if(random(80) < 1){
+    if(chance(1, 80)){
         scrTopDecal(x + 16, y + 16, "trench");
     }
 
@@ -752,8 +752,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

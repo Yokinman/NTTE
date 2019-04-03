@@ -141,7 +141,7 @@
         if(place_meeting(x + hspeed, y + vspeed, Wall)){
             with(Wall) if(place_meeting(x - other.hspeed, y - other.vspeed, other)){
                  // Effects:
-                if(random(2) < 1) with(instance_create(x + 8, y + 8, Hammerhead)){
+                if(chance(1, 2)) with(instance_create(x + 8, y + 8, Hammerhead)){
                     motion_add(random(360), 1);
                 }
                 instance_create(x, y, Smoke);
@@ -171,11 +171,13 @@
     alarm1 = 30 + random(20);
 
     target = instance_nearest(x, y, Player);
-    if(target_in_distance(0, 256)){
+
+    if(in_distance(target, 256)){
         var _targetDir = point_direction(x, y, target.x, target.y);
-        if(target_is_visible()){
+
+        if(in_sight(target)){
              // Close Range Charge:
-            if(target_in_distance(0, 96) && random(4) < 3){
+            if(in_distance(target, 96) && chance(3, 4)){
                 charge = 15 + random(10);
                 charge_wait = 15;
                 charge_dir = _targetDir;
@@ -191,7 +193,7 @@
 
         else{
              // Charge Through Walls:
-            if(my_health < maxhealth && random(3) < 1){
+            if(my_health < maxhealth && chance(1, 3)){
                 charge = 30;
                 charge_wait = 15;
                 charge_dir = _targetDir;
@@ -277,7 +279,7 @@
         scrRight(direction + 180);
 
          // Effects:
-        if(current_frame_active && random(4) < 3){
+        if(chance_ct(3, 4)){
             var l = 8, d = direction + 180;
             with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bubble)){
                 motion_add(d, 3);
@@ -310,7 +312,7 @@
             var _targetDir = point_direction(x, y, target.x, target.y);
 
              // Puff Time:
-            if(target_is_visible() && target_in_distance(0, 256) && random(2) < 1){
+            if(in_sight(target) && in_distance(target, 256) && chance(1, 2)){
                 alarm1 = 30;
 
                 scrWalk(8, _targetDir);
@@ -391,10 +393,10 @@
             view_shake_at(x, y, 20);
             
             repeat(5 + irandom(5)) with instance_create(x, y, Debris)
-                motion_set(irandom(359), 3 + random(5));
+                motion_set(random(360), 3 + random(5));
                 
             repeat(10 + irandom(10)) with instance_create(x, y, Bubble)
-                motion_set(irandom(359), 1 + random(2));
+                motion_set(random(360), 1 + random(2));
                 
              // Portal
             with instance_create(x, y, Portal){
@@ -406,8 +408,8 @@
         }
         
          // Bubble effects:
-        else if random(4) < 1 * current_time_scale{
-            with instance_create(x, y, Bubble){
+        else if(chance_ct(1, 4)){
+            with(instance_create(x, y, Bubble)){
                 motion_set(90 + orandom(5), 4 + random(3));
                 friction = 0.2;
             }
@@ -429,8 +431,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

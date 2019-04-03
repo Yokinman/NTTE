@@ -31,15 +31,16 @@
     }
 
 #define InvMortar_step
-    if random(3) < current_time_scale
+    if(chance_ct(1, 3)){
         instance_create(x + orandom(8), y + orandom(8), Curse);
+    }
 
     Mortar_step();
 
 #define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
     Mortar_hurt(_hitdmg, _hitvel, _hitdir);
 
-    if my_health > 0 && random(1) < _hitdmg / 25{
+    if(my_health > 0 && chance(_hitdmg / 25, 1)){
         var _a = instances_matching([InvLaserCrystal, InvSpider], "", null),
             _n = array_length(_a),
             _x = x,
@@ -99,6 +100,8 @@
 		walkspd = 0.8;
 		maxspd = 2;
 		ammo = 4;
+		target_x = x;
+		target_y = y;
 		gunangle = random(360);
 		direction = gunangle;
 
@@ -126,7 +129,7 @@
     }
 
      // Charging effect:
-    if sprite_index == spr_fire && random(5) < current_time_scale{
+    if(sprite_index == spr_fire && chance_ct(1, 5)){
         var _x = x + 6 * right,
             _y = y - 16,
             _l = irandom_range(16, 24),
@@ -161,13 +164,14 @@
     target = instance_nearest(x, y, Player);
 
      // Near Target:
-    if(target_in_distance(0, 240)){
+    if(in_distance(target, 240)){
         var _targetDir = point_direction(x, y, target.x, target.y);
 
          // Attack:
-        if(random(3) < 1){
-            ammo = 4;
+        if(chance(1, 3)){
             alarm2 = 26;
+	        target_x = target.x;
+	        target_y = target.y;
             sprite_index = spr_fire;
             sound_play(sndCrystalJuggernaut);
         }
@@ -192,13 +196,17 @@
     }
 
 #define Mortar_alrm2
+	target = instance_nearest(x, y, Player);
+
+	 // Start:
+	if(ammo <= 0){
+        target_x = target.x;
+        target_y = target.y;
+        ammo = 4;
+	}
+
     if(ammo > 0){
-        target = instance_nearest(x, y, Player);
-
-        if(target < 0)
-        exit;
-
-        var _targetDir = point_direction(x, y, target.x, target.y) + orandom(6);
+        var _targetDir = point_direction(x, y, target_x, target_y) + orandom(6);
 
          // Sound:
         sound_play(sndCrystalTB);
@@ -211,7 +219,7 @@
         with(scrEnemyShootExt(x + (5 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
             depth = 12;
-            zspeed = ((point_distance(x, y, other.target.x + orandom(16), other.target.y + orandom(16)) - z) * zfric) / (speed * 2);
+            zspeed = ((point_distance(x, y, other.target_x + orandom(16), other.target_y + orandom(16)) - z) * zfric) / (speed * 2);
 
              // Cool particle line
             var _x = x,
@@ -228,7 +236,7 @@
                     image_yscale = random(1.5);
                     image_blend = make_color_rgb(235, 0, 67);
                     depth = -8;
-                    if(random(6) < 1){
+                    if(chance(1, 6)){
                         with(instance_create(x + orandom(8), y + orandom(8), LaserCharge)){
                             motion_add(point_direction(x, y, _x, _y - _z), 1);
                             alarm0 = (point_distance(x, y, _x, _y - _z) / speed) + 1;
@@ -258,8 +266,16 @@
             with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
         }
 
-        alarm2 = 4;
-        ammo--;
+		 // Aim After Target:
+		if(in_sight(target)){
+			var	l = 32,
+				d = point_direction(target_x, target_y, target.x, target.y);
+	
+			target_x += lengthdir_x(l, d);
+			target_y += lengthdir_y(l, d);
+		}
+
+        if(--ammo > 0) alarm2 = 4;
     }
 
 #define Mortar_hurt(_hitdmg, _hitvel, _hitdir)
@@ -309,7 +325,7 @@
     }
 
      // Trail:
-    if(current_frame_active && random(2) < 1){
+    if(chance_ct(1, 2)){
         with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
             sprite_index = spr.MortarTrail;
             depth = other.depth;
@@ -448,7 +464,7 @@
     target = instance_nearest(x,y,Player);
 
      // Move towards player:
-    if(target_is_visible() && target_in_distance(0, 96)){
+    if(in_sight(target) && in_distance(target, 96)){
         scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
     }
 
@@ -511,8 +527,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

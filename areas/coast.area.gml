@@ -127,7 +127,7 @@
         }
     }
     with(TopSmall){
-        if(random(80) < 1) obj_create(x, y, "CoastDecal");
+        if(chance(1, 80)) obj_create(x, y, "CoastDecal");
         instance_destroy();
     }
 
@@ -153,7 +153,7 @@
             if(player_get_alias(i) == "blaac") _forcespawn = true;
         }
 
-        if(random(25) < 1 + GameCont.loops || _forcespawn){
+        if(chance(1 + GameCont.loops, 25) || _forcespawn){
             var _n = 10016,
                 _f = instance_furthest(_n,_n,Floor),
                 _l = 1.75*point_distance(_n,_n,_f.x,_f.y),
@@ -169,7 +169,7 @@
     }
 
      // Anglers:
-    with(RadChest) if(random(40) < 1){
+    with(RadChest) if(chance(1, 40)){
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
@@ -221,12 +221,13 @@
 	}
 
      // Explosion debris splash FX:
-	with(Explosion) if(current_time_scale && random(5) < 1){
-        var _len = irandom_range(24,48),
-            _dir = irandom(359);
-        with instance_create(x+lengthdir_x(_len,_dir),y+lengthdir_y(_len,_dir),RainSplash)
-            if place_meeting(x,y,Floor)
-                instance_destroy();
+	with(Explosion) if(chance_ct(1, 5)){
+        var l = random_range(24, 48),
+            d = random(360);
+
+        with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RainSplash)){
+            if(place_meeting(x, y, Floor)) instance_destroy();
+        }
 	}
 
 	if(instance_exists(Floor)){
@@ -381,7 +382,7 @@
                 wading = _dis;
 
                  // Splashies:
-    		    if(current_frame_active && random(20) < min(speed, 4)){
+    		    if(chance_ct(min(speed, 4), 20)){
     		        with(instance_create(x, y, Dust)){
     		            motion_add(other.direction + orandom(10), 3);
     		        }
@@ -638,7 +639,7 @@
     with(instances_matching(Dust, "coast_water", null)){
         coast_water = 1;
         if(!place_meeting(x, y, Floor)){
-            if(random(instance_number(AcidStreak) + 10) < 1){
+            if(chance(1, 10 + instance_number(AcidStreak))){
                 if(point_seen(x, y, -1)){
                     sound_play_pitch(sndOasisCrabAttack, 0.9 + random(0.2));
                 }
@@ -648,7 +649,7 @@
                 }
             }
             else{
-                if(random(5) < 1 && point_seen(x, y, -1)){
+                if(chance(1, 5) && point_seen(x, y, -1)){
                     sound_play(choose(sndOasisChest, sndOasisMelee));
                 }
                 with(instance_create(x, y, Sweat)){
@@ -683,7 +684,7 @@
         if(!position_meeting(x, y, Floor)){
             sound_play(sndOasisExplosionSmall);
             repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
-                if(random(6) < 1) scrWaterStreak(x, y, random(360), 4);
+                if(chance(1, 6)) scrWaterStreak(x, y, random(360), 4);
                 else instance_create(x, y, Sweat);
             }
             instance_destroy();
@@ -711,7 +712,7 @@
 
     /// Make Floors:
          // Special - 4x4 to 6x6 Rounded Fills:
-        if(random(5) < 1){
+        if(chance(1, 5)){
             scrFloorFillRound(_x, _y, irandom_range(4, 6), irandom_range(4, 6));
         }
 
@@ -720,7 +721,7 @@
 
 	/// Turn:
         var _trn = 0;
-        if(random(7) < 3){
+        if(chance(3, 7)){
             _trn = choose(90, -90, 180);
         }
         direction += _trn;
@@ -731,7 +732,7 @@
             if(_outOfSpawn) scrFloorMake(_x, _y, WeaponChest);
 
              // Start New Island:
-            if(random(2) < 1){
+            if(chance(1, 2)){
                 var d = direction + 180;
                 _x += lengthdir_x(96, d);
                 _y += lengthdir_y(96, d);
@@ -744,7 +745,7 @@
 
 	     // Ammo Chests + End Branch:
 	    var n = instance_number(FloorMaker);
-        if(random(19 + n) > 22){
+        if(!chance(22, 19 + n)){
             if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
             instance_destroy();
         }
@@ -757,9 +758,9 @@
         global.spawn_enemy = 1;
 
          // Loop Spawns:
-        if(GameCont.loops > 0 && random(3) < 1){
+        if(GameCont.loops > 0 && chance(1, 3)){
              // Bushes:
-            if(random(3) < 1){
+            if(chance(1, 3)){
                 with(instance_nearest(x, y, prop)){
                     var _ang = random(360),
                         _num = irandom_range(1, 4);
@@ -781,7 +782,7 @@
         else{
             if(styleb) obj_create(_x, _y, "TrafficCrab");
             else{
-                if(random(18) < GameCont.subarea){
+                if(chance(GameCont.subarea, 18)){
                     obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));
                 }
                 else{
@@ -791,7 +792,7 @@
         }
 
          // TMST:
-        if(GameCont.loops > 0 && random(6) < 1){
+        if(GameCont.loops > 0 && chance(1, 6)){
             var _dir = random(360),
                 _dis = 640 + random(1080);
 
@@ -820,14 +821,14 @@
     var _x = x + 16,
         _y = y + 16;
 
-    if(random(12) < 1){
+    if(chance(1, 12)){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        if(!styleb && random(6) < 1) o = "BuriedCar";
+        if(!styleb && chance(1, 6)) o = "BuriedCar";
         obj_create(_x, _y, o);
     }
 
      // Mine:
-    else if(random(80) < 1){
+    else if(chance(1, 80)){
         with(obj_create(_x + orandom(8), _y + orandom(8), "SealMine")){
              // Move to sea:
             if(!other.styleb){
@@ -1101,14 +1102,14 @@
     
              // Effects:
             for(var i = 0; i < maxp; i++) view_shake[i] += 8;
-            with(Floor) if(random(5) < 1){
+            with(Floor) if(chance(1, 5)){
                 for(var d = 0; d < 360; d += 45){
                     var _x = x + lengthdir_x(32, d),
                         _y = y + lengthdir_y(32, d);
     
                     if(!position_meeting(_x, _y, Floor)){
                         repeat(irandom_range(3, 6)){
-                            if(random(instance_number(AcidStreak) + 6) < 1){
+                            if(chance(1, 6 + instance_number(AcidStreak))){
                                 sound_play_hit(sndOasisCrabAttack, 0.2);
                                 scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
                             }
@@ -1156,8 +1157,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

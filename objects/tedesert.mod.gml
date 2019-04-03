@@ -76,7 +76,7 @@
         alarm1 = (gold ? 2 : irandom_range(1, 3));
 
          // Aim and walk:
-        if(target_is_visible()){
+        if(in_sight(target)){
             gunangle = point_direction(x, y, target.x, target.y);
         }
 		scrWalk(alarm1 + 3, gunangle + orandom(10));
@@ -96,7 +96,7 @@
         
          // Effects:
         sound_play_pitch(sndScorpionFire, 1.4 + random(0.2));
-        if(random(4) < 1){
+        if(chance(1, 4)){
             with(scrFX(x, y, [gunangle + orandom(24), random_range(2, 6)], AcidStreak)){
                 image_angle = direction;
             }
@@ -111,11 +111,11 @@
     }
 
 	 // Normal AI:
-    else if(target_is_visible()){
+    else if(in_sight(target)){
         var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 
          // Start attack:
-    	if(target_in_distance(32, 96) > 0 && random(3) < 2){
+    	if(in_distance(target, [32, 96]) && chance(2, 3)){
 		    alarm1 = 1;
 		    ammo = 6 + irandom(2);
 		    gunangle = _targetDir;
@@ -123,7 +123,7 @@
     	}
 
          // Move Away From Target:
-        else if(target_in_distance(0, 32)){
+        else if(in_distance(target, 32)){
             alarm1 = 20 + irandom(30);
             scrWalk(10 + random(10), _targetDir + 180 + orandom(40));
         }
@@ -315,7 +315,7 @@
 
      // Break:
     var i = nearest_instance(x, y, instances_named(CustomProp, "CoastBossBecome"));
-    if !(instance_exists(i) && point_distance(x, y, i.x, i.y) <= 32){
+    if(!in_distance(i, 32)){
         broken = true;
         instance_destroy();
     }
@@ -590,7 +590,7 @@
             var _x = swim_target.x,
                 _y = swim_target.y;
 
-            if(point_distance(x, y, _x, _y) < 100){
+            if(in_distance(swim_target, 100)){
                 var _dis = 80,
                     _dir = direction + (10 * right);
 
@@ -632,7 +632,7 @@
                 _cy = bbox_bottom;
 
              // Debris:
-            if((place_meeting(x, y, FloorExplo) && random(30) < 1) || random(40) < 1){
+            if((place_meeting(x, y, FloorExplo) && chance(1, 30)) || chance(1, 40)){
                 repeat(irandom(2)){
                     with(instance_create(_cx, _cy, Debris)){
                         speed /= 2;
@@ -664,7 +664,7 @@
                     }
 
                      // Kick up Dust:
-                    if(random(20) < 1){
+                    if(chance(1, 20)){
                         with(instance_create(_x, _y, Dust)){
                             hspeed += other.hspeed / 2;
                             vspeed += other.vspeed / 2;
@@ -677,7 +677,7 @@
             }
 
              // Quakes:
-            if(random(4) < 1) view_shake_at(_cx, _cy, 4);
+            if(chance(1, 4)) view_shake_at(_cx, _cy, 4);
         }
 
          // Un-Dive:
@@ -728,8 +728,8 @@
                     if(!instance_exists(_fish) && fish_swim_regen <= 0){
                         fish_swim_regen = 3;
 
-                        if(random(100) < 1) _fish = obj_create(_leader.x, _leader.y, "Puffer");
-                        else _fish = instance_create(_leader.x, _leader.y, BoneFish);
+                        _fish = obj_create(_leader.x, _leader.y, (chance(1, 100) ? "Puffer" : BoneFish));
+
                         with(_fish){
                             kills = 0;
                             creator = other;
@@ -738,7 +738,7 @@
                             var l = 2,
                                 d = _leader.direction + 180;
 
-                            while(point_distance(x, y, _leader.x, _leader.y) < 24){
+                            while(in_distance(_leader, 24)){
                                 x += lengthdir_x(l, d);
                                 y += lengthdir_y(l, d);
                                 direction = d;
@@ -765,7 +765,7 @@
                         if(other.fish_swim[i]){
                             scrRight(point_direction(x, y, _leader.x, _leader.y));
 
-                            if(random(3) < 1 && speed > 0){
+                            if(speed > 0 && chance(1, 3)){
                                 with(instance_create(x + orandom(6), y + random(8), Sweat)){
                                     direction = other.direction + choose(-120, 120) + orandom(10);
                                     speed = 0.5;
@@ -932,11 +932,11 @@
     target = instance_nearest(x, y, Player);
 
     if(instance_exists(target)){
-        if(target_in_distance(0, 160) && (target.reload <= 0 || random(3) < 2)){
+        if(in_distance(target, 160) && (target.reload <= 0 || chance(2, 3))){
             var _targetDir = point_direction(x, y, target.x, target.y);
 
              // Move Towards Target:
-            if((target_in_distance(0, 64) && random(2) < 1) || random(4) < 1){
+            if((in_distance(target, 64) && chance(1, 2)) || chance(1, 4)){
                 scrWalk(30 + random(10), _targetDir + orandom(10));
                 alarm1 = walk + random(10);
             }
@@ -1049,8 +1049,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

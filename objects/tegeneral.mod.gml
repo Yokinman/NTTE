@@ -51,7 +51,7 @@
     		for(var _ox = -s; _ox <= s; _ox += _off){
     		    for(var _oy = -s; _oy <= s; _oy += _off){
     		        if(!position_meeting(x + _ox, y + _oy, Floor)){
-    		            if(random(2) < 1) instance_create(x + _ox, y + _oy, TopSmall);
+    		            if(chance(1, 2)) instance_create(x + _ox, y + _oy, TopSmall);
     		        }
     		    }
     		}
@@ -106,7 +106,7 @@
 
                 // Trench vent bubbles:
                 for(var i = 0; i < array_length(_vents); i++){
-                    if(random(8) < current_time_scale){
+                    if(chance_ct(1, 8)){
                         var p = _vents[i];
                         with(instance_create(x + p[0], y + p[1], Bubble)){
                             depth = -9;
@@ -195,10 +195,24 @@
 				}
 			}
 
+			 // Sticky Floor:
+			/*for(var _ox = -32; _ox <= 0; _ox += 32){
+				with(instance_rectangle(_x + _ox, _y, _x + _ox + 32, _y + 32, FloorExplo)){
+					instance_destroy();
+				}
+				with(instance_create(_x + _ox, _y, Floor)){
+					sprite_index = ((other.area == 104) ? sprFloor104B : sprFloor4B);
+					styleb = true;
+					traction = 2;
+					material = 5;
+					depth = 8;
+				}
+			}*/
+
 			 // Wall Crystals:
 			repeat(irandom_range(2, 3)){
 				var e = ((area == 104) ? InvLaserCrystal : LaserCrystal);
-				if(random(3) < 1) e = LightningCrystal;
+				if(chance(1, 3)) e = LightningCrystal;
 
 				with(instance_create(_x, _y, e)){
 					nexthurt = current_frame + 30;
@@ -243,7 +257,7 @@
 				var _sx = _x + orandom(24),
 					_sy = _y + orandom(16);
 
-				if(random(100) < 1){
+				if(chance(1, 100)){
 					instance_create(_sx, _sy, Freak);
 				}
 				else{
@@ -347,21 +361,17 @@
 	    }
     }
 
-     // Charged:
-    if(current_frame_active){
-        image_blend = c_white;
-        if(random(image_number - image_index + 8) < 1){
-            image_blend = c_black;
-            var o = image_index / 3;
-            instance_create(x + orandom(o), y + orandom(o), PortalL);
+     // Charge FX:
+    image_blend = c_white;
+    if(chance_ct(1, 8 + (image_number - image_index))){
+        image_blend = c_black;
+        var o = image_index / 3;
+        instance_create(x + orandom(o), y + orandom(o), PortalL);
+    }
+    if(chance_ct(1, 12) && speed <= 0){
+        with(instance_create(x, y - z, BulletHit)){
+        	sprite_index = spr.BubbleCharge;
         }
-
-	     // Bubble charge effect:
-	    if(speed <= 0 && random(12) < 1){
-	        with(instance_create(x, y - z, BulletHit)){
-	        	sprite_index = spr.BubbleCharge;
-	        }
-	    }
     }
 
 #define BubbleBomb_end_step
@@ -447,7 +457,7 @@
 #define BubbleBomb_hit
     if(other.team != 0){
          // Knockback:
-        if(random(2) < 1){
+        if(chance(1, 2)){
             speed *= 0.9;
             with(other) motion_add(other.direction, other.force);
         }
@@ -668,7 +678,7 @@
         }
         else if(instance_exists(Player)){
              // Shine:
-            image_speed = (image_index < 1 ? random(0.04) : 0.4);
+            image_speed = ((image_index < 1) ? random(0.04) : 0.4);
 
              // Attraction:
             var p = instance_nearest(x, y, Player);
@@ -947,7 +957,7 @@
 
          // Random Zapp:
         if(!is_enemy){
-            if(current_frame_active && random(30) < 1){
+            if(chance_ct(1, 30)){
                 with(nearest_instance(x, y, instances_matching_ne(hitme, "team", team, 0))){
                     if(!place_meeting(x, y, other) && distance_to_object(other) < 32){
                         with(other) LightningDisc_hit();
@@ -963,7 +973,7 @@
 
      // Particles:
     if(current_frame_active){
-        if(random(30) < image_xscale || (charge <= 0 && speed > _maxSpd && random(3) < image_xscale)){
+        if(chance(image_xscale, 30) || (charge <= 0 && speed > _maxSpd && chance(image_xscale, 3))){
             var d = random(360),
                 r = random(radius),
                 _x = x + lengthdir_x(r * image_xscale, d),
@@ -980,7 +990,7 @@
 
          // Super Ring Split FX:
         if (super != -1 && charge <= 0 && image_xscale < super + .9){
-            if (random((image_xscale - super) * 12) < 1){
+            if (chance(1, 12 * (image_xscale - super))){
                  // Particles:
                 var _ang = random(360);
                 repeat(irandom(2)){
@@ -1265,16 +1275,18 @@
     }
     else{
          // Feather Pickups:
-        var t = instances_matching(Player, "race", "parrot");
-        if(array_length(t) > 0 && num > 0){
-            with(t) repeat(other.num){
-                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
-                    target = other;
-                    creator = other;
-                    bskin = other.bskin;
-                    speed *= 1.25;
-                }
-            }
+        if(position_meeting(x, y, ChestOpen)){
+	        var t = instances_matching(Player, "race", "parrot");
+	        if(array_length(t) > 0 && num > 0){
+	            with(t) repeat(other.num){
+	                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
+	                    target = other;
+	                    creator = other;
+	                    bskin = other.bskin;
+	                    speed *= 1.25;
+	                }
+	            }
+	        }
         }
 
         instance_destroy();
@@ -1326,7 +1338,7 @@
             if(stick_time <= 0 || !target.charm.charmed){
                 target = noone;
                 stick_time = 0;
-                if(random(4) < 1){
+                if(chance(1, 4)){
                     sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
                 }
             }
@@ -1974,8 +1986,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

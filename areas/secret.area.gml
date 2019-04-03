@@ -340,7 +340,7 @@
                 if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
                     if(type != "Start"){
                         var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
-                        if(random(2) < 1){
+                        if(chance(1, 2)){
                             _dir += choose(-90, -90, 90, 90, 180);
                         }
 
@@ -487,16 +487,21 @@
     var _x = x + 16,
         _y = y + 16;
 
+	 // Loop Spawns:
+	if(GameCont.loops > 0 && chance(1, 4)){
+		if(styleb) instance_create(_x, _y, BecomeTurret);
+		else instance_create(_x, _y, choose(Molesarge, Jock));
+	}
+
      // Rat packs:
-    if(!place_meeting(x, y, Wall) && random(20) < 1){
+    if(!place_meeting(x, y, Wall) && chance(1, 20)){
         repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
     }
 
-     // Cats:
-    if(random(10) < 1){
+     // Spawn Cats Underground:
+    else if(chance(1, 8)){
         with(obj_create(_x, _y, "Cat")){
-             // Spawn Underground:
-            if(random(2) < 1){
+            if(chance(1, 2)){
                 active = false;
                 cantravel = true;
                 alarm1 = random_range(30, 900);
@@ -513,9 +518,9 @@
         with(floors) if(instance_exists(self)){
             if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
                 if(
-                    random(16) < 1 ||
+                    chance(1, 16) ||
                     (
-                        random(2) < 1 &&
+                        chance(1, 2) &&
                         array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_named(CustomObject, "CatHole"))) <= 0
                     )
                 ){
@@ -593,7 +598,7 @@
         }
 
          // Carpet Chance:
-        if(random(1) < carpet) carpeted = true;
+        if(chance(carpet, 1)) carpeted = true;
         else carpeted = false;
 
          // Floor Layout:
@@ -731,7 +736,7 @@
          
         case "Table" : {
             with(obj_create(_cx, _cy,"NewTable")){
-                if(random(5) < 4){
+                if(chance(4, 5)){
                     obj_create(x + orandom(2), y - 18 + orandom(2), "ChairFront");
                 }
                 obj_create(x, y-32, "CatLight");
@@ -868,11 +873,11 @@
                 for (var i = 0; i <= 2; i++)
                     with obj_create(_cx + orandom(2), _cy - 16 + i * o + orandom(2), "NewTable"){
                          // Chairs:
-                        if random(5) < 2 with obj_create(x - 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = -1;
-                        if random(5) < 2 with obj_create(x + 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = 1;
-                        if random(5) < 2 obj_create(x + orandom(2), y - 14 + orandom(2), "ChairFront");
+                        if(chance(2, 5)) with obj_create(x - 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = -1;
+                        if(chance(2, 5)) with obj_create(x + 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = 1;
+                        if(chance(2, 5)) obj_create(x + orandom(2), y - 14 + orandom(2), "ChairFront");
                          // Lights:
-                        if random(3) < 2 obj_create(x, y - o, "CatLight");
+                        if(chance(2, 3)) obj_create(x, y - o, "CatLight");
                     }
              // Enemies:
             create_enemies(_cx, _cy, 3 + irandom(1));
@@ -913,7 +918,7 @@
                  // Tires:
                 repeat(irandom_range(2, 4))
                     with instance_create(_x + 90 + irandom(28), _y + 10 + irandom(86), Tires)
-                        if random(10) < 1{
+                        if(chance(1, 10)){
                             obj_create(x, y, choose("ChairFront","ChairSide"));
                             instance_delete(id);
                         }
@@ -1143,8 +1148,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

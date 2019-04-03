@@ -78,23 +78,24 @@
     alarm1 = 15 + irandom(20);
     target = instance_nearest(x, y, Player);
 
-    if target_is_visible(){
+    if(in_sight(target)){
         gunangle = point_direction(x, y, target.x, target.y);
         scrRight(gunangle);
 
-        if !target_in_distance(0, 75){
+        if(!in_distance(target, 75)){
              // Walk to target:
-            if random(5) < 4
+            if(chance(4, 5)){
                 scrWalk(15 + irandom(20), gunangle + orandom(8));
+            }
         }
-        else if target_in_distance(0, 50){
+        else if(in_distance(target, 50)){
              // Walk away from target:
             scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
             alarm1 = walk;
         }
 
          // Attack target:
-        if random(5) < 2 && target_in_distance(50, 200){
+        if(chance(2, 5) && in_distance(target, [50, 200])){
              // Sounds:
             sound_play_pitchvol(sndRustyRevolver, 0.8, 0.7);
             sound_play_pitchvol(sndSnowTankShoot, 1.2, 0.6);
@@ -142,15 +143,16 @@
         }
     }
     else{
-        var c = nearest_instance(x, y, instances_named(CustomEnemy, ["Cat", "CatBoss", "BatBoss"]));
-
          // Follow nearest ally:
-        if instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64
+        var c = nearest_instance(x, y, instances_named(CustomEnemy, ["Cat", "CatBoss", "BatBoss"]));
+        if(in_sight(c) && !in_distance(c, 64)){
             scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
+        }
 
          // Wander:
-        else if random(3) < 1
+        else if(chance(1, 3)){
             scrWalk(10 + irandom(20), direction + orandom(24));
+        }
 
         gunangle = direction;
         scrRight(gunangle);
@@ -397,7 +399,7 @@
 
 	 // Effects:
 	with(instances_meeting(x, y, Dust)){
-		if(random(3) < 1) with(scrFX(x, y, [point_direction(other.x, other.y, x, y), random_range(1.5, 2)], Smoke)){
+		if(chance(1, 3)) with(scrFX(x, y, [point_direction(other.x, other.y, x, y), random_range(1.5, 2)], Smoke)){
 			image_blend = c_black;
 			depth = -7;
 		}
@@ -415,13 +417,13 @@
 	    if instance_exists(target){
     	    var _targetDir = point_direction(x, y, target.x, target.y);
     
-    	    if(target_is_visible() && target_in_distance(0, 240)){
+    	    if(in_sight(target) && in_distance(target, 240)){
     	         // Move Away:
-    	        if(random(3) < 5){
+    	        if(chance(1, 5)){
     	            scrWalk(20 + irandom(15), _targetDir + 180 + (irandom_range(25, 45) * right));
 
     	             // Bat Morph:
-    	            if(random(8) < 1 && random(maxhealth) > my_health){
+    	            if(chance(1, 8) && !chance(maxhealth, my_health)){
 	    				alarm0 = 24;
 	    				for(var i = 0; i < 3; i++){
 	    					array_push(cloud, { delay: 8 * i });
@@ -430,7 +432,7 @@
     	        }
     
     	         // Screech:
-                if(random(3) < 1){
+                if(chance(1, 3)){
                 	if(irandom(stress) >= 15){
     	                stress -= 8;
     	                scrBatBossScreech();
@@ -449,12 +451,12 @@
     	    else{
     	         // Follow Cat Boss:
     	        var c = nearest_instance(x, y, instances_named(CustomEnemy, "CatBoss"));
-    	        if(instance_exists(c) && !collision_line(x, y, c.x, c.y, Wall, 0, 0) && point_distance(x, y, c.x, c.y) > 64){
+    	        if(in_sight(c) && !in_distance(c, 64)){
     	            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
     	        }
     
     			 // Wander:
-    	        else if(random(3) < 2){
+    	        else if(chance(2, 3)){
     	            scrWalk(10 + irandom(20), direction + orandom(24));
     	        }
     
@@ -467,27 +469,27 @@
     	        }
     	    }
     
-    	    gunangle = (target_is_visible() ? _targetDir : direction);
+    	    gunangle = (in_sight(target) ? _targetDir : direction);
     		scrRight(gunangle);
 	    }
 	}
 
 	 // More Aggressive Bats:
 	else{
-		with(instances_named(CustomEnemy, "Bat")){
+		with(instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id)){
 			alarm1 = ceil(alarm1 / 2);
 			
 			target = instance_nearest(x, y, Player);
+
 			if(instance_exists(target)){
-				if(target_is_visible() && target_in_distance(0, 128)){
+				if(in_sight(target) && in_distance(target, 128)){
 					scrWalk(alarm1, point_direction(x, y, target.x, target.y));
 				}
 
 				 // Zoom Ovah:
-				else if(random(3) < 1){
+				else if(chance(1, 3)){
 					with(obj_create(x, y + 16, "BatCloud")){
 						target = other.target;
-						target_offdir = random(360);
 						creator = other.creator;
 						direction = 90 + orandom(20);
 						my_health = other.my_health;
@@ -564,7 +566,7 @@
 		 // Vars:
 		target = noone;
 		target_offdis = 32;
-		target_offdir = 0;
+		target_offdir = random(360);
 		creator = noone;
 		friction = 0.5;
 		direction = random(360);
@@ -817,8 +819,8 @@
         if(instance_exists(target)){
             if(
                 my_health < maxhealth ||
-                target_is_visible()   ||
-                (target_in_distance(0, 96) && target.reload > 0)
+                in_sight(target)	  ||
+                (in_distance(target, 96) && target.reload > 0)
             ){
                 cantravel = true;
                 sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
@@ -890,11 +892,11 @@
          // Normal AI:
         if(active){
             if(!instance_exists(sit)){
-                if(target_is_visible()){
+                if(in_sight(target)){
                     var _targetDir = point_direction(x, y, target.x, target.y);
         
                      // Start Attack:
-                    if(target_in_distance(0, 140) and random(3) < 1){
+                    if(in_distance(target, 140) && chance(1, 3)){
                         scrRight(_targetDir);
                         gunangle = _targetDir - 45;
                         alarm1 = 4;
@@ -922,15 +924,15 @@
         
                 else{
                      // To the CatHole:
-                    if(cantravel && random(4) < 3){
+                    if(cantravel && chance(3, 4)){
                         var _hole = nearest_instance(x, y, instances_named(CustomObject, "CatHole"));
                         if(instance_exists(_hole)){
                             alarm1 = 30 + irandom(30);
                             with(_hole){
                                  // Open CatHole:
                                 if(
-                                    !instance_exists(target)                    &&
-                                    point_distance(x, y, other.x, other.y) < 48 &&
+                                    !instance_exists(target) &&
+                                    in_distance(other, 48)	 &&
                                     CatHoleCover(true).open
                                 ){
                                     other.alarm1 += 45;
@@ -949,7 +951,7 @@
                     else{
                         alarm1 = 30 + irandom(20);
                         scrWalk(20 + irandom(10), direction + orandom(30));
-                        if(random(2) < 1) direction = random(360);
+                        if(chance(1, 2)) direction = random(360);
                     }
                 }
             }
@@ -961,12 +963,9 @@
 
             var _forceSpawn = (instance_number(enemy) <= array_length(instances_matching(instances_named(object_index, name), "active", false)));
             with(instances_named(CustomObject, "CatHole")){
-                if(random(instance_number(enemy)) < 3){
+                if(chance(3, instance_number(enemy))){
                     if(!CatHoleCover().open){
-                        if(
-                            !instance_exists(other.target) || 
-                            !collision_line(x, y, other.target.x, other.target.y, Wall, false, false)
-                        ){
+                        if(!instance_exists(other.target) || in_sight(other.target)){
                             if(CatHoleCover(true).open){
                                 with(other){
                                     alarm1 = 15 + random(30);
@@ -1074,13 +1073,12 @@
     enemySprites();
 	enemyWalk(0.8, ((dash > 0) ? 6.5 : 3.0));
 
-	if(super){
-		if(current_frame_active && random(10) < 1){
-			var l = 12,
-				d = gunangle;
+	 // Super FX:
+	if(super && chance_ct(1, 10)){
+		var l = 12,
+			d = gunangle;
 
-			instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), PortalL).depth = -3;
-		}
+		instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), PortalL).depth = -3;
 	}
 
      // Bounce:
@@ -1112,7 +1110,7 @@
 	alarm0 = 150;
 
 	 // Underground Cats:
-	if(random(array_length(instances_named(CustomEnemy, "Cat")) + 1) < 1){
+	if(chance(1, 1 + array_length(instances_named(CustomEnemy, "Cat")))){
 		with(obj_create(0, 0, "Cat")){
 			active = false;
 			cantravel = true;
@@ -1133,7 +1131,7 @@
 
 	     // Effects:
 	    view_shake_max_at(x, y, 4);
-	    if(random(2) < 1){
+	    if(chance(1, 2)){
 	        var _w = (1 - (supertime / maxsupertime)) * 12,
 	            _h = irandom(8) * right;
 
@@ -1175,7 +1173,7 @@
             	_targetDir = point_direction(x, y, _tx, _ty);
 
              // Start Charge:
-        	if(!super && random(5) < 1){
+        	if(!super && chance(1, 5)){
         		alarm1 = 1;
         		supertime = maxsupertime;
         		superbreakmax = 6;
@@ -1186,9 +1184,9 @@
         	}
     
             else{
-                if(random(5) < 4){
+                if(chance(4, 5)){
                      // Attack:
-                    if(random(4) < 3 && (target_in_distance(0, 80) || random(2) < 1) && target_is_visible()){
+                    if(chance(3, 4) && in_sight(target) && (in_distance(target, 80) || chance(1, 2))){
         				gunangle = _targetDir;
                         var a = scrEnemyShoot("CatBossAttack", gunangle, 0);
                         a.target = target;
@@ -1205,7 +1203,7 @@
                     }
         
                      // Gas dash:
-                    else if(!target_in_distance(0, 40)){
+                    else if(!in_distance(target, 40)){
                     	alarm2 = 1;
                     }
                 }
@@ -1482,7 +1480,7 @@
 			dis = point_distance(_sx, _sy, _lx, _ly);
 
 			 // Effects:
-			if(current_frame_active && random(10) < 1){
+			if(chance_ct(1, 10)){
 				var l = random(dis),
 					d = dir;
 
@@ -1567,7 +1565,7 @@
                 hitid = other.hitid;
 
 				 // Effects:
-                if(random(2) < 1){
+                if(chance(1, 2)){
                     with(instance_create(x + orandom(8), y + orandom(8), AcidStreak)){
                         motion_add(_dir + orandom(8), 4);
                         image_angle = direction;
@@ -1637,6 +1635,9 @@
     }
 
 #define CatDoor_step
+	x = xstart;
+	y = ystart;
+
      // Opening & Closing:
     var s = 0,
         _open = false;
@@ -1804,7 +1805,7 @@
     depth = max(-z, -12);
 
      // Trail:
-    if(random(2) < 1){
+    if(chance_ct(1, 2)){
         with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
             sprite_index = sprToxicGas;
             image_xscale = 0.25;
@@ -2080,9 +2081,7 @@
 		var _dis = 36;
 	    with(instances_matching(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [Scorch, ScorchTop]), "bighole_check", null, false)){
 	    	bighole_check = true;
-	    	if(point_distance(other.x, other.y, x, y) < _dis){
-	    		instance_destroy();
-	    	}
+	    	if(in_distance(other, _dis)) instance_destroy();
 	    }
     }
 
@@ -2181,7 +2180,7 @@
         }
         
          // Increment:
-        else if((target_in_distance(0, 128) && target_is_visible()) || phase < 2){
+        else if((in_distance(target, 128) && in_sight(target)) || phase < 2){
             if(phase > 1) phase++;
 
             image_index = 1;
@@ -2403,7 +2402,7 @@
     var _num = choose(1, 2);
 
      // Big luck:
-    if(random(10) < 1){
+    if(chance(1, 10)){
         _num = 4;
         repeat(5) instance_create(x + orandom(4), y + orandom(4), Dust);
         sound_play_pitch(snd_dead, 0.6);
@@ -2677,10 +2676,7 @@
 	 // Noticable Players:
 	var p = [];
 	with(Player){
-		if(
-			point_seen(other.x, other.y, index) &&
-			!collision_line(x, y, other.x, other.y, Wall, false, false)
-		){
+		if(point_seen(other.x, other.y, index) && in_sight(other)){
 			array_push(p, id);
 		}
 	}
@@ -2721,11 +2717,7 @@
 	 // Watchin TV:
 	else{
 		var t = instance_nearest(x, y, TV);
-		if(
-			instance_exists(t)					&&
-			point_distance(x, y, t.x, t.y) < 96	&&
-			!collision_line(x, y, t.x, t.y, Wall, false, false)
-		){
+		if(in_sight(t) && in_distance(t, 96)){
 			scrRight(point_direction(x, y, t.x, t.y));
 		}
 	}
@@ -2762,12 +2754,12 @@
 	}
 	else{
 		with(instances_matching([Turtle, Rat], "", null)){
-			if(my_health < maxhealth && !collision_line(x, y, other.x, other.y, Wall, false, false)){
+			if(my_health < maxhealth && in_sight(other)){
 				_angered = true;
 			}
 		}
 		with(instances_matching(Corpse, "sprite_index", sprTurtleDead, sprRatDead)){
-			if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+			if(in_sight(other)){
 				_angered = true;
 			}
 		}
@@ -2837,7 +2829,7 @@
 		yprevious = y;
 		 
 		 // Effects 1:
-		if(random(4) < current_frame_active){
+		if(chance_ct(1, 4)){
 			var f = 0.6;
 		    with(instance_create(x + (hspeed * f) + orandom(4), y + (vspeed * f) + orandom(4), AcidStreak)){
 		    	sprite_index = spr.AcidPuff;
@@ -2853,7 +2845,7 @@
 	}
 	else{
          // Effects 2:
-        if(random(3) < current_frame_active){
+        if(chance_ct(1, 3)){
             with(instance_create(x + orandom(2), y + orandom(2), Smoke)){
                 depth = other.depth + 1;
             }
@@ -2861,7 +2853,7 @@
 	}
 
 	 // Effects 3:
-    if(random(3) < current_frame_active){
+    if(chance_ct(1, 3)){
         with(instance_create(x + orandom(6), y + 16 + orandom(6), RecycleGland)){
             sprite_index = sprDrip; // Drip object is noisy :jwpensive:
             depth = 0;
@@ -2982,7 +2974,7 @@
 
          // Flicker:
         if(current_frame_active){
-            if(random(60) < 1) active = false;
+            if(chance(1, 60)) active = false;
             else active = true;
         }
 
@@ -3021,7 +3013,7 @@
 	 // Manhole Cover:
 	with(instances_named(CustomObject, "PizzaManholeCover")){
 		var o = 0;
-		if(random(2) < 1) o = orandom(1);
+		if(chance(1, 2)) o = orandom(1);
 		CatLight_draw(xstart, ystart - 32, 16, 19, 28, 8, o);
 	}
 
@@ -3056,8 +3048,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);

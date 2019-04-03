@@ -107,7 +107,7 @@
     }
     
      // Anglers:
-    with(RadChest) if random(40) < 1{
+    with(RadChest) if(chance(1, 40)){
         obj_create(x, y, "Angler");
         instance_delete(id);
     }
@@ -147,12 +147,12 @@
         _y = _vy + random(game_height);
 
      // Player Bubbles:
-    if(random(4) < 1){
+    if(chance(1, 4)){
         with(Player) instance_create(x, y, Bubble);
     }
     
      // Pet Bubbles:
-    if(random(4) < 1){
+    if(chance(1, 4)){
         with instances_matching(CustomObject, "name", "Pet") instance_create(x, y, Bubble);
     }
 
@@ -174,7 +174,7 @@
     	instance_create(_x, _y, Floor);
     	
     	 // Special - Diamond:
-    	if(random(3) < 1){
+    	if(chance(1, 3)){
     	    var o = 32;
     	    for(var d = 0; d < 360; d += 90){
     	        instance_create(_x + lengthdir_x(o, d), _y + lengthdir_y(o, d), Floor);
@@ -183,7 +183,7 @@
 
 	/// Turn:
         var _trn = 0;
-        if(random(4) < 1){
+        if(chance(1, 4)){
     	    _trn = choose(90, 90, -90, -90, 180);
         }
         direction += _trn;
@@ -198,23 +198,23 @@
 
          // Dead Ends (Ammo Chests):
         var n = instance_number(FloorMaker);
-    	if(random(19 + n) > 20){
+    	if(!chance(20, 19 + n)){
     		if(_outOfSpawn) scrFloorMake(_x, _y, AmmoChest);
     		instance_destroy();
     	}
 
     	 // Branch:
-    	if(random(5) < 1) instance_create(_x, _y, FloorMaker);
+    	if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
 
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
 
-    if(random(2) < 1){
+    if(chance(1, 2)){
          // Shoals:
-        if(random(2) < 1){
-            if(!styleb && random(4) < 3){
-                if(GameCont.loops > 0 && random(2) < 1){
+        if(chance(1, 2)){
+            if(!styleb && chance(3, 4)){
+                if(GameCont.loops > 0 && chance(1, 2)){
                     repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
                 }
                 repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
@@ -225,14 +225,14 @@
         }
 
         else{
-            if(GameCont.loops > 0 && random(3) < 1) {
+            if(GameCont.loops > 0 && chance(1, 3)) {
                 instance_create(_x, _y, (styleb ? Necromancer : Ratking));
             }
             else{
-                if(random(5) < 1) obj_create(_x, _y, "Diver");
+                if(chance(1, 5)) obj_create(_x, _y, "Diver");
                 else{
                     if(!styleb){
-                        if(random(2) < 1) instance_create(_x, _y, Crab);
+                        if(chance(1, 2)) instance_create(_x, _y, Crab);
                     }
                     else obj_create(_x, _y, "Hammerhead"); 
                 }
@@ -245,7 +245,7 @@
     if(!place_free(x - 32, y) && !place_free(x + 32, y)){
         for(var _x = -1; _x <= 1; _x += 2){
             for(var _y = 0; _y <= 1; _y++){
-                if(random(10) < 1){
+                if(chance(1, 10)){
                     with(instance_create(x + ((1 - _x) * 16), y + (16 * _y), Bones)){
                         image_xscale = _x;
                         sprite_index = sprCoral;
@@ -259,7 +259,7 @@
     }
 
      // Quarter Walls:
-    if(random(14) < 1){
+    if(chance(1, 14)){
         if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
             var _x = x + choose(0, 16),
                 _y = y + choose(0, 16);
@@ -272,7 +272,7 @@
     }
 
      // Prop Spawns:
-    else if(random(7) < 1){
+    else if(chance(1, 7)){
         var _x = x + 16 + orandom(8),
             _y = y + 16 + orandom(8);
 
@@ -305,8 +305,10 @@
 #define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
 #define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define target_in_distance(_disMin, _disMax)                                            return  mod_script_call(   "mod", "telib", "target_in_distance", _disMin, _disMax);
-#define target_is_visible()                                                             return  mod_script_call(   "mod", "telib", "target_is_visible");
+#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
+#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
+#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
+#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
