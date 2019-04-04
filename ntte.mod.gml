@@ -14,7 +14,7 @@
     global.bones = [];
 
      // Make Custom CampChars for:
-    global.campchar = ["parrot", "detonator"];
+    global.campchar = ["parrot"];
 
      // Options Menu:
     global.option_NTTE_splat = 0;
