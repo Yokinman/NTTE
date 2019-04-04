@@ -14,7 +14,7 @@
     global.bones = [];
 
      // Make Custom CampChars for:
-    global.campchar = ["parrot"];
+    global.campchar = ["parrot", "detonator"];
 
      // Options Menu:
     global.option_NTTE_splat = 0;
@@ -738,8 +738,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
          // CampChar Stuff:
         for(var i = 0; i < maxp; i++){
-            if(player_is_local_nonsync(i)){
-                var r = player_get_race(i)
+            //if(player_is_local_nonsync(i)){
+                var r = player_get_race(i);
                 if(array_find_index(global.campchar, r) >= 0){
                     with(instances_matching(CampChar, "race", player_get_race(i))){
                          // Move Camera:
@@ -763,7 +763,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
                     }
                 }
-            }
+            //}
         }
     }
 

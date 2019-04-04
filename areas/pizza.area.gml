@@ -148,7 +148,7 @@
         with(instance_nearest(x, y, Floor)){
             var p = noone;
             for(var i = -1; i <= 1; i += 2){
-                with(obj_create(x + 16 - (16 * i), y - 32, "CatDoor")){
+                with(obj_create(x + 16 - (16 * i), y - 32 + 3, "CatDoor")){
                     sprite_index = spr.PizzaDoor;
                     image_angle = 90;
                     image_yscale = i;

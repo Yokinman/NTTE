@@ -9,6 +9,7 @@
      Add a '/// Mod Events' comment before that section, like with the scripts section
      Double space the area between that section and the scripts and mod object code sections
  - I like to order events generally by when and how often they're called:
+    ~ on_create
     ~ on_begin_step
     ~ on_step
     ~ on_end_step

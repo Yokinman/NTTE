@@ -744,7 +744,7 @@
 		toxer_loop = -1;
 
 		 // Vars:
-		maxhealth = 18;
+		maxhealth = 10;
 		raddrop = 6;
 		size = 1;
 		walk = 0;
@@ -1714,13 +1714,10 @@
 
      // Death:
     if(my_health <= 0){
-    	for(var i = 0; i < maxp; i++){
-    		if(player_is_local_nonsync(i) && point_seen(x, y, i)){
-        		sound_play_pitchvol(snd_dead, 1.8 + random(0.2), 0.5);
-        		sound_play_pitchvol(snd_hurt, 0.6 + random(0.2), 1.8);
-        		break;
-    		}
-    	}
+		if(point_seen(x, y, -1)){
+    		sound_play_pitchvol(snd_dead, 1.8 + random(0.2), 0.5);
+    		sound_play_pitchvol(snd_hurt, 0.6 + random(0.2), 1.8);
+		}
 
 		 // Chunks:
         repeat(irandom_range(2, 3)){
@@ -1969,13 +1966,8 @@
                  // FX:
                 view_shake_at(x, y, 10);
                 instance_create(x, y, ImpactWrists);
-                for(var i = 0; i < maxp; i++){
-                    if(player_is_local_nonsync(i)){
-                        if(point_seen(x, y, i)){
-                            sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
-                        }
-                        break;
-                    }
+                if(point_seen(x, y, -1)){
+                    sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
                 }
             }
         }
@@ -2103,6 +2095,7 @@
         if(phase >= 4){
             alarm0 = -1;
             alarm1 = -1;
+            alarm2 = 8;
             sprite_index = mskNone;
 
 			 // Bosses:
@@ -2206,6 +2199,9 @@
             sleep(20);
         }
     }
+
+#define CatHoleBig_alrm2
+	scrBossIntro("CatBat", sndScorpionFireStart, musBoss2);
     
 #define CatHoleBig_draw
     draw_sprite(spr_bot, 0, x, y);
