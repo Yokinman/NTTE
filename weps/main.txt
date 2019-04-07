@@ -7,3 +7,4 @@
 /loadwep bubble cannon
 /loadwep lightning ring launcher
 /loadwep super lightning ring launcher
+/loadwep tesla coil

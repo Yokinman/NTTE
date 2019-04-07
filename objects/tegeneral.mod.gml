@@ -1874,6 +1874,97 @@
 
 
 /// Mod Events
+#define TeslaCoil_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Vars:
+        creator = noone;
+        key = "fire";
+        num = 3;
+        wave = 0;
+        range = 92;
+        targets = [];
+        
+        return id;
+    }
+    
+#define TeslaCoil_step
+    wave += current_time_scale;
+    var _w = wave;
+    if(instance_exists(creator)){
+        var _i = creator.index;
+         // Create lightning tethers:
+        if(button_check(_i, key) && !((button_pressed(_i, "swap") && creator.canswap && creator.bwep != 0) || (button_pressed(_i, "pick") && creator.canpick && instance_exists(creator.nearwep)))){
+            var _l = 12,
+                _d = creator.gunangle;
+            x = creator.x + lengthdir_x(_l, _d);
+            y = creator.y + lengthdir_y(_l, _d);
+            
+             // Setup LWOs:
+            if(array_length(targets) != num){
+                targets = array_create(num, {});
+                with(targets){
+                    xpos = other.x;
+                    ypos = other.y;
+                }
+            }
+            
+             // Lightning Rails:
+            var _minDist = 0;
+            for(var i; i < num; i++){
+            var _maxDist = 10000,
+                _nearest = noone;
+                
+                 // Select nearest hitme:
+                with(instances_matching_ne(hitme, "team", creator.team)){
+                    var _myDist = point_distance(x, y, other.x, other.y);
+                    if(_myDist > _minDist && _myDist < _maxDist && _myDist <= other.range && in_sight(other)){
+                        _nearest = id;
+                        _maxDist = _myDist;
+                    }
+                }
+                
+                var _x = x,
+                    _y = y,
+                    _r = range;
+                with(targets[i]){
+                     // Set target to selected hitme's location:
+                    if(instance_exists(_nearest)){
+                        xpos = _nearest.x;
+                        ypos = _nearest.y;
+                        _minDist = point_distance(_nearest.x, _nearest.y, other.x, other.y);
+                    }
+                    
+                     // Random rails:
+                    else if(random(8) < current_frame_active){
+                        var _railLen = irandom(_r),
+                            _railDir = irandom(359);
+                        xpos = _x + lengthdir_x(_railLen, _railDir);
+                        ypos = _y + lengthdir_y(_railLen, _railDir);
+                    }
+                    
+                     // Spawn lightning:
+                    with(other.creator) lightning_connect(_x, _y, other.xpos, other.ypos, sin(((other.xpos * other.ypos) + _w) / 60), false);
+                }
+            }
+            
+             // Creator effects:
+            with(creator){
+                weapon_post(3, -5, 0);
+            }
+        }
+        
+         // Destroy:
+        else{
+             // Sounds:
+            sound_play_pitchvol(sndLightningReload, 0.6 + random(0.4), 1);
+            
+            instance_destroy();
+        }
+    }
+    
+     // Destroy:
+    else instance_destroy();
+
 #define game_start
     with(instances_named(CustomObject, "Pet")) instance_destroy();
 

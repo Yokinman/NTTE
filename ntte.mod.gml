@@ -505,7 +505,7 @@
                     p = instance_nearest(10016, 10016, Player),
                     _tries = 1000;
 
-                do f = instance_random(instances_matching(Floor, "sprite_index", spr.TrenchFloorB));
+                do f = instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB));
                 until (point_distance(f.x + 16, f.y + 16, p.x, p.y) > 128 || _tries-- <= 0);
 
                 Pet_spawn(f.x + 16, f.y + 16, "Octo");

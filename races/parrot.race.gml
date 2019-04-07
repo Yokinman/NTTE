@@ -273,7 +273,8 @@
     
      // Throne Butt:
     if(skill_get(mut_throne_butt) > 0){
-        with(instances_matching([AmmoPickup, HPPickup], "", null)) if(!array_length(instances_matching(instances_named(CustomObject, "ParrotChester"), "creator", id))){
+        with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "parrot_tb", undefined)){
+            parrot_tb = true;
             with(obj_create(x, y, "ParrotChester")){
                 creator = other;
                 small = true;
