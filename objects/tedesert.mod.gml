@@ -206,6 +206,26 @@
     }
 
 
+#define BigCactus_create(_x, _y)
+    with(instance_create(_x, _y, Cactus)){
+         // Visual:
+        spr_idle = spr.BigCactusIdle;
+        spr_hurt = spr.BigCactusHurt;
+        spr_dead = spr.BigCactusDead;
+        spr_shadow = shd32;
+        spr_shadow_y = 5;
+        mask_index = mskBigSkull;
+        sprite_index = spr_idle;
+        depth = -1;
+        
+         // Vars:
+        maxhealth = 24;
+        my_health = maxhealth;
+        size = 4;
+        
+        return id;
+    }
+
 #define Bone_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -1023,6 +1043,200 @@
 
 
 /// Mod Events
+#define ScorpionRock_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visuals:
+        spr_idle = spr.ScorpionRockEnemy;
+        spr_hurt = spr.ScorpionRockHurt;
+        spr_dead = spr.ScorpionRockDead;
+        spr_shadow = shd32;
+        spr_shadow_y = -3;
+        sprite_index = spr_idle;
+        
+         // Vars:
+        maxhealth = 32;
+        snd_hurt = sndHitRock;
+        snd_dead = sndPillarBreak;
+        friendly = false;
+        team = 1;
+        
+        return id;    
+    }
+    
+#define ScorpionRock_step
+    if(friendly && spr_idle != spr.ScorpionRockFriend) spr_idle = spr.ScorpionRockFriend;
+     // Image speed:
+    image_speed = 0.4;
+    var _i = image_index;
+    if(sprite_index == spr_idle){
+        if(_i < 1){
+            image_speed = 0.010;
+        }
+        else{
+            if((_i >= 2 && _i < 3) || (_i >= 4 && _i < 5)){
+                image_speed = 0.025;
+            }
+        }
+    }
+    
+#define ScorpionRock_death
+    repeat(3 + irandom(3))
+        with instance_create(x, y, Debris)
+            motion_set(irandom(359), 4 + random(4));
+            
+    if(friendly){
+         // pet time:
+        Pet_spawn(x, y, "Scorpion");
+    }
+    else{
+         // Homeowner:
+        obj_create(x, y, "BabyScorpion");
+         // Light Snack:
+        repeat(3) if(random(2) < 1)
+            instance_create(x, y, Maggot);
+         // Family Friend:
+        if(random(100) < 1)
+            instance_create(x, y, Spider);
+         // Possessions:
+        pickup_drop(60, 10);
+    }
+    
+#define PetVenom_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.VenomFlak;
+        mask_index = mskFlakBullet;
+        image_speed = 0.4;
+        depth = -3;
+
+         // Vars:
+        damage = 2;
+        force = 2;
+        my_charge = 0;
+        maxcharge = 36;
+        charged = false;
+            
+        return id;
+    }
+    
+#define PetVenom_step
+    var _c = (my_charge / maxcharge);
+    if(!charged){
+        if(my_charge < maxcharge){
+            if(instance_exists(creator) && creator.my_health > 0){
+                if(instance_exists(target) && in_sight(target)) direction = point_direction(x, y, target.x, target.y);
+                else target = instance_nearest(x, y, enemy);
+                
+                 // Move:
+                my_charge += current_time_scale;
+                x = creator.x + lengthdir_x(10, direction) + creator.hspeed;
+                y = creator.y + lengthdir_y(6, direction) + creator.vspeed;
+                xprevious = x;
+                yprevious = y;
+                
+                 // Visuals:
+                depth = -3 + (direction < 180);
+                image_angle = direction;
+                
+                 // Creator things:
+                with(creator){
+                    scrRight(other.direction);
+                     // Keep firing:
+                    if(sprite_index != spr_fire && sprite_index != spr_hurt){
+                        sprite_index = spr_fire;
+                        image_index = 0;
+                    }
+                }
+                
+                 // Effects:
+                if(random(4) < current_frame_active){
+                    var _d = irandom(359),
+                        _s = (_c * 0.8) * 0.2
+                    with(instance_create(x - lengthdir_x(24 + (4 * _s), _d), y - lengthdir_y(24 + (4 * _s), _d), AcidStreak)){
+                        motion_set(_d, 2);
+                        image_angle = direction;
+                        depth = other.depth + 1;
+                        image_xscale = 0.8;
+                        image_yscale = 0.8;
+                    }
+                }
+                
+                 // Reach full charge:
+                if(my_charge >= maxcharge){
+                    charged = true;
+                }
+            }
+            
+            else{
+                instance_destroy();
+            }
+        }
+    }
+    else{
+        my_charge -= current_time_scale * (maxcharge / 7);
+         
+        if(my_charge <= 0){
+            instance_destroy();
+        }
+    }
+    
+#define PetVenom_hit
+    if(projectile_canhit_melee(other)){
+        projectile_hit(other, damage, force, direction);
+        sleep(20);
+    }
+    
+#define PetVenom_draw
+    var scale = ((my_charge / maxcharge) * 0.8) + 0.2;
+    
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale, image_yscale * scale, image_angle, image_blend, image_alpha);
+    draw_set_blend_mode(bm_add);
+    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale * 2, image_yscale * scale * 2, image_angle, image_blend, image_alpha * 0.2);
+    draw_set_blend_mode(bm_normal);
+    
+#define PetVenom_destroy
+    var dir = direction,
+        _lv = GameCont.level;
+    if(instance_exists(creator) && creator.my_health > 0) with(creator){
+        sleep(10);
+        view_shake_max_at(x, y, 10 + _lv * 2);
+        
+         // Fire:
+        for(var i = -1; i <= 1; i++){
+             // Middle shot:
+            if(i == 0){
+                repeat(6 + irandom(4) + (2 * _lv)) scrEnemyShoot(EnemyBullet2, dir + orandom(12), 8 + random(6)).force = 12;
+            }
+            
+             // Side shots:
+            else{
+                repeat(4 + irandom(4) + (2 * _lv)) scrEnemyShoot("TrafficCrabVenom", dir + (45 * i) + orandom(16) + (i * irandom(6 * _lv)), 4 + random(10));
+            }
+            
+             // Effects:
+            with(instance_create(x, y, AcidStreak)){
+                motion_set(dir + (45 * i), 4);
+                image_angle = direction;
+                image_xscale = 1.6;
+                image_yscale = 1.0;
+            }
+        }
+        
+         // Sounds:
+        sound_play_pitchvol(sndFlyFire,            1.0 + random(0.4),  1.0);
+        sound_play_pitchvol(sndGoldScorpionFire,   1.6 + random(0.4),  0.8);
+    }
+    else{
+        instance_create(x, y, BulletHit).sprite_index = sprScorpionBulletHit;
+    }
+    
+#define PetVenom_wall
+    if(instance_exists(creator)) with(creator){
+        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+        scrRight(direction);
+    }
+    
 #define draw_shadows
     with(instances_named(CustomEnemy, "CoastBoss")){
         for(var i = 0; i < array_length(fish_train); i++){

@@ -223,6 +223,22 @@
     pickup_drop(30, 8);
 
 
+#define PetBite_create(_x, _y)
+    with(instance_create(_x, _y, CustomSlash)){
+         // Visual:
+        sprite_index =  mskNone;
+        mask_index =    mskWepPickup;
+        
+         // Vars:
+        damage = 8 + (GameCont.level * 3);
+        force = 2;
+        
+        return id;
+    }
+     
+#define PetBite_hit
+    if(projectile_canhit(other)) projectile_hit(other, damage, force, direction);
+
 #define Puffer_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:

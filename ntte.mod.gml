@@ -355,6 +355,35 @@
                     }
         		    until (_spawned || _tries-- <= 0);
                 }
+                
+                 // Spawn scorpion rocks occasionally:
+                if(random(5) < 3){
+                     // This part is irrelevant don't worry:
+                    var _friendChance = 0;
+                    with(instances_matching_le(Player, "my_health", 3)){
+                        if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
+                    }
+                    
+                    var _spawned = false,
+                        _tries = 100;
+                    do{
+                        with(instance_random(Floor)){
+                            if(point_distance(x, y, 10016, 10016) > 48){
+                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+                                    obj_create(x + 16, y + 14, "ScorpionRock").friendly = (random(_friendChance) < 1) * (_friendChance > 0);
+                                    _spawned = true;
+                                }
+                            }
+                        }
+                    }
+                    until(_spawned || _tries-- <= 0);
+                }
+                
+                 // Flavor big cactus:
+                if(random(15) < 1) with(instance_random(Cactus)){
+                    obj_create(x, y, "BigCactus");
+                    instance_delete(id);
+                }
     		}
 
              // Spawn Baby Scorpions:

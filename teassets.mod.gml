@@ -60,6 +60,17 @@
         	BabyScorpionGoldHurt = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldHurt.png", 3, 16, 16);
         	BabyScorpionGoldDead = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldDead.png", 6, 16, 16);
         	BabyScorpionGoldFire = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldFire.png", 6, 16, 16);
+        	
+        	 // Big Cactus:
+        	BigCactusIdle = sprite_add("sprites/areas/Desert/Props/sprBigCactusIdle.png", 1, 16, 16);
+        	BigCactusHurt = sprite_add("sprites/areas/Desert/Props/sprBigCactusHurt.png", 3, 16, 16);
+        	BigCactusDead = sprite_add("sprites/areas/Desert/Props/sprBigCactusDead.png", 4, 16, 16);
+        	
+        	 // Scorpion Rock:
+        	ScorpionRockEnemy   = sprite_add("sprites/areas/Desert/Props/sprScorpionRockEnemy.png",     6, 16, 16);
+        	ScorpionRockFriend  = sprite_add("sprites/areas/Desert/Props/sprScorpionRockFriend.png",    6, 16, 16);
+        	ScorpionRockHurt    = sprite_add("sprites/areas/Desert/Props/sprScorpionRockHurt.png",      3, 16, 16);
+        	ScorpionRockDead    = sprite_add("sprites/areas/Desert/Props/sprScorpionRockDead.png",      6, 16, 16);
         //#endregion
 
         //#region COAST
@@ -276,6 +287,14 @@
         //#endregion
 
         //#region PETS
+             // Scorpion:
+            PetScorpionIdle     = sprite_add("sprites/pets/Desert/sprPetScorpionIdle.png",      4, 16, 16);
+            PetScorpionWalk     = sprite_add("sprites/pets/Desert/sprPetScorpionWalk.png",      6, 16, 16);
+            PetScorpionHurt     = sprite_add("sprites/pets/Desert/sprPetScorpionHurt.png",      3, 16, 16);
+            PetScorpionDead     = sprite_add("sprites/pets/Desert/sprPetScorpionDead.png",      6, 16, 16);
+            PetScorpionFire     = sprite_add("sprites/pets/Desert/sprPetScorpionFire.png",      6, 16, 16);
+            PetScorpionShield   = sprite_add("sprites/pets/Desert/sprPetScorpionShield.png",    6, 16, 16);
+            
              // Parrot:
             PetParrotIdle = sprite_add("sprites/pets/Coast/sprPetParrotIdle.png",   6, 12, 12);
             PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);
