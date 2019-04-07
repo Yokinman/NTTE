@@ -319,7 +319,7 @@
 
         if(fork()){
         	wait 0;
-        	if(big) target = [];
+        	if(instance_exists(self) && big) target = [];
         	exit;
         }
 
