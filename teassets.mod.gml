@@ -311,6 +311,7 @@
              // Octopus:
             PetOctoIdle = sprite_add("sprites/pets/Trench/sprPetOctoIdle.png",  20, 12, 12);
             PetOctoHurt = sprite_add("sprites/pets/Trench/sprPetOctoDodge.png",  3, 12, 12);
+            PetOctoHide = sprite_add("sprites/pets/Trench/sprPetOctoHide.png",  30, 12, 12);
 
              // CoolGuy:
             PetCoolGuyIdle = sprite_add("sprites/pets/Pizza/sprPetCoolGuyIdle.png",    4, 12, 12);

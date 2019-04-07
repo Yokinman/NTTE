@@ -966,20 +966,38 @@
     }
 
 #define Octo_create
+     // Visual:
+    spr_hide = spr.PetOctoHide;
+    
      // Vars:
     friction = 0.1;
     arcing = 0;
     wave = 0;
+    hiding = false;
+    
+#define Octo_anim
+    if((sprite_index != spr_hurt) || anim_end){
+        if(hiding) sprite_index = spr_hide;
+        else{
+            if(speed <= 0) sprite_index = spr_idle;
+            else sprite_index = spr_walk;
+        }
+    }
 
 #define Octo_step
     wave += current_time_scale;
     if(instance_exists(leader)){
+         // Unhide:
+        if(hiding){
+            hiding = false;
+        }
+        
         var _lx = leader.x,
             _ly = leader.y,
             _leaderDir = point_direction(x, y, _lx, _ly),
             _leaderDis = point_distance(x, y, _lx, _ly);
 
-        if(in_sight(leader) && _leaderDis < 80 + (40 * skill_get(mut_laser_brain))){
+        if(in_sight(leader) && _leaderDis < 90 + (45 * skill_get(mut_laser_brain))){
              // Lightning Arcing Effects:
             if(arcing < 1){
                 arcing += 0.15 * current_time_scale;
@@ -1041,21 +1059,45 @@
     }
     else arcing = 0;
 
+    var h = hspeed + (sign(hspeed) * 8) * hiding,
+        v = vspeed + (sign(vspeed) * 8) * hiding;
+
      // He is bouncy
     if(array_length(path) <= 0){
-        if(place_meeting(x + hspeed, y + vspeed, Wall)){
-            if(place_meeting(x + hspeed, y, Wall)) hspeed *= -0.5;
-            if(place_meeting(x, y + vspeed, Wall)) vspeed *= -0.5;
+        if(place_meeting(x + h, y + v, Wall)){
+            if(place_meeting(x + h, y, Wall)) hspeed *= -0.5;
+            if(place_meeting(x, y + v, Wall)) vspeed *= -0.5;
             scrRight(direction);
         }
     }
+    
+    if(hiding){
+         // Animation speed:
+        if(image_index >= 29) image_speed = 0.01;
+        else image_speed = 0.4;
+        
+         // Pit Collision:
+        var f = floor_at(x + h, y + v);
+        if(instance_exists(f) && f.sprite_index != spr.FloorTrenchB){
+             // bounce off big floors:
+            if(floor_at(x, y).sprite_index == spr.FloorTrenchB){
+                if(place_meeting(x + h, y, f)) hspeed *= -1;
+                if(place_meeting(x, y + v, f)) vspeed *= -1;
+            }
+        }
+        
+         // Slower:
+        speed = clamp(speed, 0, 2.6);
+    }
 
 #define Octo_draw
-    draw_self_enemy();
-    
-     // Air Bubble:
-    if(array_length(instances_matching(CustomDraw, "name", "underwater_draw")) <= 0){
-        draw_sprite(sprPlayerBubble, -1, x, y);
+    if(!hiding){
+        draw_self_enemy();
+        
+         // Air Bubble:
+        if(array_length(instances_matching(CustomDraw, "name", "underwater_draw")) <= 0){
+            draw_sprite(sprPlayerBubble, -1, x, y);
+        }
     }
 
 #define Octo_alrm0(_leaderDir, _leaderDis)
@@ -1082,19 +1124,50 @@
             return 30 + random(10);
         }
     }
+        
+    else{
+         // Find trench pit:
+        if(GameCont.area == "trench"){
+            var _n = nearest_instance(x, y, instances_matching(Floor, "styleb", true));
+            if(instance_exists(_n) || (!floor_at(x, y).styleb && hiding)){
+                 // Hide:
+                if(floor_at(x, y).styleb && !hiding){
+                    hiding = true;
+                    
+                    sprite_index = spr_hide;
+                    image_index = 0;
+                    
+                     // Effects:
+                    repeat(4 + irandom(4)) instance_create(x, y, Bubble);
+                }
+                
+                 // Move toward pit:
+                else if(in_sight(_n)){
+                    scrWalk(10 + random(5), point_direction(x, y, _n.x, _n.y));
+                    scrRight(direction);
+                    return walk + random(5);
+                }
+            }
+        }
 
-     // Idle Movement:
-    scrWalk(10 + random(5), direction + orandom(60));
-    return walk + 30;
+         // Idle Movement:
+        instance_create(x, y, Bubble);
+        
+        scrWalk(5 + random(10), direction + orandom(60));
+        if(random(5) < 2) return walk + 45;
+        return walk + 10;
+    }
 
 #define Octo_hurt
-    if(other.speed > 1 || !instance_is(other, projectile)){
-        sprite_index = spr_hurt;
-        image_index = 0;
-    
-         // Movin'
-        scrWalk(10, point_direction(other.x, other.y, x, y));
-        scrRight(direction + 180);
+    if(!hiding){
+        if(other.speed > 1 || !instance_is(other, projectile)){
+            sprite_index = spr_hurt;
+            image_index = 0;
+        
+             // Movin'
+            scrWalk(10, point_direction(other.x, other.y, x, y));
+            scrRight(direction + 180);
+        }
     }
 
 

@@ -677,6 +677,11 @@
                     draw_sprite_ext(spr.PitSquidMaw, ((1 - bite) * sprite_get_number(spr.PitSquidMaw)), x - _surfx, y - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
                 }
             }
+            
+             // Octo pet:
+            with(instances_matching(instances_matching(instances_named(CustomObject, "Pet"), "pet", "Octo"), "hiding", true)){
+                draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, visible);
+            }
 
              // Pit Walls:
             draw_surface(_surf[0], 0, 0);
