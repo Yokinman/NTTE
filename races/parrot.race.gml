@@ -38,7 +38,7 @@
 
 #define race_name       return "PARROT";
 #define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_tb_text    return "@rFEATHERS@s LAST LONGER";
+#define race_tb_text    return "@wPICKUPS @sGIVE @rFEATHERS@s";
 
 /// Sprites
 #define race_menu_button
@@ -267,6 +267,17 @@
                     creator = other;
                     bskin = other.bskin;
                 }
+            }
+        }
+    }
+    
+     // Throne Butt:
+    if(skill_get(mut_throne_butt) > 0){
+        with(instances_matching([AmmoPickup, HPPickup], "", null)) if(!array_length(instances_matching(instances_named(CustomObject, "ParrotChester"), "creator", id))){
+            with(obj_create(x, y, "ParrotChester")){
+                creator = other;
+                small = true;
+                num = ceil(2 * skill_get(mut_throne_butt));
             }
         }
     }

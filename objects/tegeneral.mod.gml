@@ -1263,6 +1263,7 @@
     with(instance_create(_x, _y, CustomObject)){
          // Vars:
         creator = noone;
+        small = false;
         num = 8;
 
         return id;
@@ -1271,11 +1272,11 @@
 #define ParrotChester_step
     if(instance_exists(creator)){
         x = creator.x;
-        y = creator.y;
+        y = creator.y; 
     }
     else{
          // Feather Pickups:
-        if(position_meeting(x, y, ChestOpen)){
+        if(position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
 	        var t = instances_matching(Player, "race", "parrot");
 	        if(array_length(t) > 0 && num > 0){
 	            with(t) repeat(other.num){
@@ -1292,7 +1293,6 @@
         instance_destroy();
     }
 
-
 #define ParrotFeather_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
@@ -1308,7 +1308,7 @@
         stick = false;
         stickx = 0;
         sticky = 0;
-        stick_time_max = 40 + (20 * skill_get(mut_throne_butt));
+        stick_time_max = 40;
         stick_time = stick_time_max;
         stick_list = [];
         canhold = true;
