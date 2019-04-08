@@ -357,7 +357,7 @@
                 }
                 
                  // Spawn scorpion rocks occasionally:
-                if(random(5) < 3){
+                if(chance(3, 5)){
                      // This part is irrelevant don't worry:
                     var _friendChance = 0;
                     with(instances_matching_le(Player, "my_health", 3)){
@@ -366,11 +366,14 @@
                     
                     var _spawned = false,
                         _tries = 100;
+
                     do{
                         with(instance_random(Floor)){
                             if(point_distance(x, y, 10016, 10016) > 48){
                                 if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-                                    obj_create(x + 16, y + 14, "ScorpionRock").friendly = (random(_friendChance) < 1) * (_friendChance > 0);
+                                    with(obj_create(x + 16, y + 14, "ScorpionRock")){
+                                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
+                                    }
                                     _spawned = true;
                                 }
                             }
@@ -380,8 +383,10 @@
                 }
                 
                  // Flavor big cactus:
-                if(random(15) < 1) with(instance_random(Cactus)){
-                    obj_create(x, y, "BigCactus");
+                if(chance(1, 15)) with(instance_random(Cactus)){
+                    with(obj_create(x, y, "BigCactus")){
+                    	depth = -1;
+                    }
                     instance_delete(id);
                 }
     		}

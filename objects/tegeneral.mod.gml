@@ -1873,98 +1873,133 @@
 	obj_create(x, y, name);
 
 
-/// Mod Events
 #define TeslaCoil_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
+    	 // Visual:
+    	sprite_index = sprLightningBall;
+    	image_speed = 0.4 + orandom(0.1);
+    	image_xscale = 0.4;
+    	image_yscale = image_xscale;
+
          // Vars:
         creator = noone;
-        key = "fire";
+        creator_offx = 17;
+        creator_offy = 2;
         num = 3;
-        wave = 0;
-        range = 92;
-        targets = [];
+        wave = random(1000);
+        time = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
+        target = noone;
+        target_x = x;
+        target_y = y;
+        dist_max = 96;
+        spec = false;
+
+		 // Arc Targeting:
+		if(fork()){
+			wait 0;
+			if(instance_exists(self)){
+				 // Find Targetable Enemies:
+				var _maxDist = dist_max,
+		        	_target = [];
+
+		    	if(instance_exists(creator)){
+			        with(instances_matching_ne(hitme, "team", creator.team)){
+			            if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
+			                array_push(_target, id);
+			            }
+			        }
+		    	}
+
+				 // Random Arc:
+				if(array_length(_target) <= 0){
+					var _dis = _maxDist * random_range(0.2, 0.8),
+						_dir = random(360);
+	
+					do{
+						target_x = x + lengthdir_x(_dis, _dir);
+						target_y = y + lengthdir_y(_dis, _dir);
+						_dis -= 4;
+					}
+					until (_dis < 12 || !collision_line(x, y, target_x, target_y, Wall, false, false));
+				}
+
+				 // Enemy Arc:
+				else{
+					target = instance_random(_target);
+					target_x = target.x;
+					target_y = target.y;
+					time *= 1.5;
+				}
+			}
+			exit;
+		}
         
         return id;
     }
-    
+
 #define TeslaCoil_step
     wave += current_time_scale;
-    var _w = wave;
+
     if(instance_exists(creator)){
-        var _i = creator.index;
-         // Create lightning tethers:
-        if(button_check(_i, key) && !((button_pressed(_i, "swap") && creator.canswap && creator.bwep != 0) || (button_pressed(_i, "pick") && creator.canpick && instance_exists(creator.nearwep)))){
-            var _l = 12,
-                _d = creator.gunangle;
-            x = creator.x + lengthdir_x(_l, _d);
-            y = creator.y + lengthdir_y(_l, _d);
-            
-             // Setup LWOs:
-            if(array_length(targets) != num){
-                targets = array_create(num, {});
-                with(targets){
-                    xpos = other.x;
-                    ypos = other.y;
-                }
-            }
-            
-             // Lightning Rails:
-            var _minDist = 0;
-            for(var i; i < num; i++){
-            var _maxDist = 10000,
-                _nearest = noone;
-                
-                 // Select nearest hitme:
-                with(instances_matching_ne(hitme, "team", creator.team)){
-                    var _myDist = point_distance(x, y, other.x, other.y);
-                    if(_myDist > _minDist && _myDist < _maxDist && _myDist <= other.range && in_sight(other)){
-                        _nearest = id;
-                        _maxDist = _myDist;
-                    }
-                }
-                
-                var _x = x,
-                    _y = y,
-                    _r = range;
-                with(targets[i]){
-                     // Set target to selected hitme's location:
-                    if(instance_exists(_nearest)){
-                        xpos = _nearest.x;
-                        ypos = _nearest.y;
-                        _minDist = point_distance(_nearest.x, _nearest.y, other.x, other.y);
-                    }
-                    
-                     // Random rails:
-                    else if(random(8) < current_frame_active){
-                        var _railLen = irandom(_r),
-                            _railDir = irandom(359);
-                        xpos = _x + lengthdir_x(_railLen, _railDir);
-                        ypos = _y + lengthdir_y(_railLen, _railDir);
-                    }
-                    
-                     // Spawn lightning:
-                    with(other.creator) lightning_connect(_x, _y, other.xpos, other.ypos, sin(((other.xpos * other.ypos) + _w) / 60), false);
-                }
-            }
-            
-             // Creator effects:
-            with(creator){
-                weapon_post(3, -5, 0);
-            }
+    	 // Follow Creator:
+		if(instance_exists(creator)){
+	        var _xdis = creator_offx - ((spec ? creator.bwkick : creator.wkick) / 3),
+	            _xdir = creator.gunangle,
+	            _ydis = creator_offy * creator.right,
+	            _ydir = _xdir - 90;
+
+	        x = creator.x + creator.hspeed + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
+	        y = creator.y + creator.vspeed + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
+	        if(spec) y -= 4;
+		}
+
+		 // Targeting:
+		if(instance_exists(target)){
+	        with(target){
+	        	other.target_x = x + orandom(2);
+	        	other.target_y = y + orandom(2);
+	        }
+		}
+		else if(target != noone){
+			target = noone;
+			time = min(time, 8);
+		}
+
+		 // Arc Lightning:
+        var _tx = target_x,
+        	_ty = target_y;
+
+		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
+			with(creator){
+				lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
+			}
+
+			 // Hit FX:
+			if(!place_meeting(_tx, _ty, LightningHit)){
+				with(instance_create(_tx, _ty, LightningHit)){
+					image_speed = 0.2 + random(0.2);
+				}
+			}
+		}
+
+         // Effects:
+        view_shake_max_at(x, y, 3);
+        with(creator){
+        	var k = 3;
+        	if(other.spec) bwkick = max(bwkick, k);
+        	else wkick = max(wkick, k);
         }
         
-         // Destroy:
-        else{
-             // Sounds:
-            sound_play_pitchvol(sndLightningReload, 0.6 + random(0.4), 1);
-            
-            instance_destroy();
+         // Death Timer:
+        if(time > 0){
+        	time -= current_time_scale;
+			if(time <= 0) instance_destroy();
         }
     }
-    
-     // Destroy:
     else instance_destroy();
 
+
+/// Mod Events
 #define game_start
     with(instances_named(CustomObject, "Pet")) instance_destroy();
 
