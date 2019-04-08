@@ -15,25 +15,27 @@
     sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
 
 #define weapon_fire
+    var _roids = (specfiring && (race == "steroids"));
+
     var _xdis, _ydis;
     with(obj_create(x, y, "TeslaCoil")){
         creator = other;
-        spec = other.specfiring;
-        if(spec) creator_offy -= 4; // Steroids
+        roids = _roids;
+        if(roids) creator_offy -= 4;
         
         _xdis = creator_offx;
         _ydis = creator_offy;
     }
 
      // Effects:
-    if(array_length(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "creator", id), "spec", specfiring)) <= 1){
+    if(array_length(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "creator", id), "roids", _roids)) <= 1){
         weapon_post(8, -10, 10);
 
          // Ball Appear FX:
         _ydis *= right;
         with(instance_create(
             x + lengthdir_x(_xdis, gunangle) + lengthdir_x(_ydis, gunangle - 90),
-            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (specfiring ? 4 : 0),
+            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (_roids ? 4 : 0),
             LightningHit
         )){
             motion_add(other.gunangle, 0.5);

@@ -1892,7 +1892,7 @@
         target_x = x;
         target_y = y;
         dist_max = 96;
-        spec = false;
+        roids = false;
 
 		 // Arc Targeting:
 		if(fork()){
@@ -1943,14 +1943,14 @@
     if(instance_exists(creator)){
     	 // Follow Creator:
 		if(instance_exists(creator)){
-	        var _xdis = creator_offx - ((spec ? creator.bwkick : creator.wkick) / 3),
+	        var _xdis = creator_offx - ((roids ? creator.bwkick : creator.wkick) / 3),
 	            _xdir = creator.gunangle,
 	            _ydis = creator_offy * creator.right,
 	            _ydir = _xdir - 90;
 
 	        x = creator.x + creator.hspeed + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
 	        y = creator.y + creator.vspeed + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
-	        if(spec) y -= 4;
+	        if(roids) y -= 4;
 		}
 
 		 // Targeting:
@@ -1986,7 +1986,7 @@
         view_shake_max_at(x, y, 3);
         with(creator){
         	var k = 3;
-        	if(other.spec) bwkick = max(bwkick, k);
+        	if(other.roids) bwkick = max(bwkick, k);
         	else wkick = max(wkick, k);
         }
         
