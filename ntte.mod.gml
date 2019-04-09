@@ -948,7 +948,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
      // NTTE Menu Button:
     if(instance_exists(OptionMenuButton)){
         var _draw = true;
-        with(OptionMenuButton) if(alarm_get(0) >= 0 || alarm_get(1) >= 0) _draw = false;
+        with(OptionMenuButton) if(alarm_get(0) >= 1 || alarm_get(1) >= 1) _draw = false;
         if(_draw){
             var _x = (game_width / 2),
                 _y = (game_height / 2) + 59,
