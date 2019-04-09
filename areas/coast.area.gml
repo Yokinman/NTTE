@@ -78,6 +78,9 @@
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)1-" + string(_subarea);
 
+#define area_text
+	return choose("COWABUNGA", "WAVES CRASH", "SANDY SANCTUARY", "THE WATER CALLS", "SO MUCH GREEN", "ENDLESS BLUE");
+
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     var _x = 0.5 + (9 * (_subarea - 1)),
         _y = -9,
@@ -129,6 +132,16 @@
     with(TopSmall){
         if(chance(1, 80)) obj_create(x, y, "CoastDecal");
         instance_destroy();
+    }
+
+     // Flavor big cactus:
+    if(chance(1, 15)) with(instance_random(Cactus)){
+        with(obj_create(x, y, "BigCactus")){
+        	spr_idle = spr.BigBloomingCactusIdle;
+        	spr_hurt = spr.BigBloomingCactusHurt;
+        	spr_dead = spr.BigBloomingCactusDead;
+        }
+        instance_delete(id);
     }
 
      // Spawn Boss:
@@ -823,7 +836,7 @@
 
     if(chance(1, 12)){
         var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        if(!styleb && chance(1, 6)) o = "BuriedCar";
+        if(!styleb && chance(1, 8)) o = "BuriedCar";
         obj_create(_x, _y, o);
     }
 
@@ -1215,3 +1228,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

@@ -6,7 +6,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "TeslaCoil"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "ReviveNTTE", "TeslaCoil"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "ScorpionRock", "PetVenom"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "TrafficCrabVenom"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
@@ -910,198 +910,200 @@
     return ((current_frame mod _interval) < current_time_scale);
 
 #define area_generate(_sx, _sy, _area)
-    GameCont.area = _area;
-
-     // Store Player Positions:
-    var _px = [], _py = [], _vx = [], _vy = [];
-    with(Player){
-        _px[index] = x;
-        _py[index] = y;
-        _vx[index] = view_xview[index];
-        _vy[index] = view_yview[index];
-    }
-
-     // No Duplicates:
-    with(TopCont) instance_destroy();
-    with(SubTopCont) instance_destroy();
-    with(BackCont) instance_destroy();
-
-     // Exclude These:
-    var _oldFloor = instances_matching(Floor, "", null),
-        _oldChest = [],
-        _chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
-
-    for(var i = 0; i < array_length(_chest); i++){
-        _oldChest[i] = instances_matching(_chest[i], "", null);
-    }
-
-     // Generate Level:
-    with(instance_create(0, 0, GenCont)){
-        var _hard = GameCont.hard;
-        spawn_x = _sx + 16;
-        spawn_y = _sy + 16;
-
-         // FloorMaker Fixes:
-        goal += instance_number(Floor);
-        var _floored = instance_nearest(10000, 10000, Floor);
-        with(FloorMaker){
-            goal = other.goal;
-            if(!position_meeting(x, y, _floored)){
-                with(instance_nearest(x, y, Floor)) instance_destroy();
-            }
-            x = _sx;
-            y = _sy;
-            instance_create(x, y, Floor);
-        }
-
-         // Floor & Chest Gen:
-        while(instance_exists(FloorMaker)){
-            with(FloorMaker) if(instance_exists(self)){
-                event_perform(ev_step, ev_step_normal);
-            }
-        }
-
-         // Find Newly Generated Things:
-        var f = instances_matching(Floor, "", null),
-            _newFloor = array_slice(f, 0, array_length(f) - array_length(_oldFloor)),
-            _newChest = [];
-
-        for(var i = 0; i < array_length(_chest); i++){
-            var c = instances_matching(_chest[i], "", null);
-            _newChest[i] = array_slice(c, 0, array_length(c) - array_length(_oldChest[i]));
-        }
-
-         // Make Walls:
-        with(_newFloor) scrFloorWalls();
-
-         // Spawn Enemies:
-        with(_newFloor){
-            if(chance(_hard, _hard + 10)){
-                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-                    // (distance to spawn coordinates > 120) check
-                    mod_script_call("area", _area, "area_pop_enemies");
-                }
-            }
-        }
-        with(_newFloor){
-             // Minimum Enemy Count:
-            if(instance_number(enemy) < (3 + (_hard / 1.5))){
-                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-                    // (distance to spawn coordinates > 120) check
-                    mod_script_call("area", _area, "area_pop_enemies");
-                }
-            }
-
-              // Crown of Blood:
-            if(GameCont.crown = crwn_blood){
-                if(chance(_hard, _hard + 8)){
-                    if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-                        // (distance to spawn coordinates > 120) check
-                        mod_script_call("area", _area, "area_pop_enemies");
-                    }
-                }
-            }
-
-             // Props:
-            mod_script_call("area", _area, "area_pop_props");
-        }
-
-         // Find # of Chests to Keep:
-        gol = 1;
-        wgol = 0;
-        agol = 0;
-        rgol = 0;
-        if(skill_get(mut_open_mind)){
-            var m = choose(0, 1, 2);
-            switch(m){
-                case 0: wgol++; break;
-                case 1: agol++; break;
-                case 2: rgol++; break;
-            }
-        }
-        mod_script_call("area", _area, "area_pop_chests");
-
-         // Clear Extra Chests:
-        var _extra = [wgol, agol, rgol, rgol, 0];
-        for(var i = 0; i < array_length(_newChest); i++){
-            var n = array_length(_newChest[i]);
-            if(n > 0 && gol + _extra[i] > 0){
-                while(n-- > gol + _extra[i]){
-                    instance_delete(nearest_instance(_sx + random_range(-250, 250), _sy + random_range(-250, 250), _newChest[i]));
-                }
-            }
-        }
-
-         // Crown of Love:
-        if(GameCont.crown = crwn_love){
-            for(var i = 0; i < array_length(_newChest); i++) with(_newChest[i]){
-                if(instance_exists(self)){
-                    instance_create(x, y, AmmoChest);
-                    instance_delete(id);
-                }
-            }
-        }
-
-         // Rad Can -> Health Chest:
-        else{
-            var _lowHP = false;
-            with(Player) if(my_health < maxhealth / 2) _lowHP = true;
-            with(_newChest[2]) if(instance_exists(self)){
-                if((_lowHP && chance(1, 2)) || (GameCont.crown == crwn_life && chance(2, 3))){
-                    array_push(_newChest[4], instance_create(x, y, HealthChest));
-                    instance_destroy();
-                    break;
-                }
-            }
-        }
-
-         // Mimics:
-        with(_newChest[1]) if(instance_exists(self) && chance(1, 11)){
-            instance_create(x, y, Mimic);
-            instance_delete(id);
-        }
-        with(_newChest[4]) if(instance_exists(self) && chance(1, 51)){
-            instance_create(x, y, SuperMimic);
-            instance_delete(id);
-        }
-
-         // Extras:
-        mod_script_call("area", _area, "area_pop_extras");
-
-         // Done + Fix Random Wall Spawn:
-        var _wall = instances_matching(Wall, "", null);
-
-        event_perform(ev_alarm, 1);
-
-        if(instance_number(Wall) > array_length(_wall)){
-            with(Wall.id) instance_delete(id);
-        }
-    }
-
-     // Remove Portal FX:
-    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();
-    repeat(4) with(instance_nearest(10016, 10016, PortalL)) instance_destroy();
-    with(instance_nearest(10016, 10016, PortalClear)) instance_destroy();
-    sound_stop(sndPortalOpen);
-
-     // Reset Player & Camera Pos:
-    var s = UberCont.opt_shake;
-    UberCont.opt_shake = 1;
-    with(Player){
-        sound_stop(snd_wrld);
-
-        x = _px[index];
-        y = _py[index];
-
-        var g = gunangle,
-            _x = _vx[index],
-            _y = _vy[index];
-
-        gunangle = point_direction(0, 0, _x, _y);
-        weapon_post(wkick, point_distance(0, 0, _x, _y), 0);
-        gunangle = g;
-    }
-    UberCont.opt_shake = s;
+	if(is_real(_area) || mod_exists("area", _area)){
+	    GameCont.area = _area;
+	
+	     // Store Player Positions:
+	    var _px = [], _py = [], _vx = [], _vy = [];
+	    with(Player){
+	        _px[index] = x;
+	        _py[index] = y;
+	        _vx[index] = view_xview[index];
+	        _vy[index] = view_yview[index];
+	    }
+	
+	     // No Duplicates:
+	    with(TopCont) instance_destroy();
+	    with(SubTopCont) instance_destroy();
+	    with(BackCont) instance_destroy();
+	
+	     // Exclude These:
+	    var _oldFloor = instances_matching(Floor, "", null),
+	        _oldChest = [],
+	        _chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
+	
+	    for(var i = 0; i < array_length(_chest); i++){
+	        _oldChest[i] = instances_matching(_chest[i], "", null);
+	    }
+	
+	     // Generate Level:
+	    with(instance_create(0, 0, GenCont)){
+	        var _hard = GameCont.hard;
+	        spawn_x = _sx + 16;
+	        spawn_y = _sy + 16;
+	
+	         // FloorMaker Fixes:
+	        goal += instance_number(Floor);
+	        var _floored = instance_nearest(10000, 10000, Floor);
+	        with(FloorMaker){
+	            goal = other.goal;
+	            if(!position_meeting(x, y, _floored)){
+	                with(instance_nearest(x, y, Floor)) instance_destroy();
+	            }
+	            x = _sx;
+	            y = _sy;
+	            instance_create(x, y, Floor);
+	        }
+	
+	         // Floor & Chest Gen:
+	        while(instance_exists(FloorMaker)){
+	            with(FloorMaker) if(instance_exists(self)){
+	                event_perform(ev_step, ev_step_normal);
+	            }
+	        }
+	
+	         // Find Newly Generated Things:
+	        var f = instances_matching(Floor, "", null),
+	            _newFloor = array_slice(f, 0, array_length(f) - array_length(_oldFloor)),
+	            _newChest = [];
+	
+	        for(var i = 0; i < array_length(_chest); i++){
+	            var c = instances_matching(_chest[i], "", null);
+	            _newChest[i] = array_slice(c, 0, array_length(c) - array_length(_oldChest[i]));
+	        }
+	
+	         // Make Walls:
+	        with(_newFloor) scrFloorWalls();
+	
+	         // Spawn Enemies:
+	        with(_newFloor){
+	            if(chance(_hard, _hard + 10)){
+	                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+	                    // (distance to spawn coordinates > 120) check
+	                    mod_script_call("area", _area, "area_pop_enemies");
+	                }
+	            }
+	        }
+	        with(_newFloor){
+	             // Minimum Enemy Count:
+	            if(instance_number(enemy) < (3 + (_hard / 1.5))){
+	                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+	                    // (distance to spawn coordinates > 120) check
+	                    mod_script_call("area", _area, "area_pop_enemies");
+	                }
+	            }
+	
+	              // Crown of Blood:
+	            if(GameCont.crown = crwn_blood){
+	                if(chance(_hard, _hard + 8)){
+	                    if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
+	                        // (distance to spawn coordinates > 120) check
+	                        mod_script_call("area", _area, "area_pop_enemies");
+	                    }
+	                }
+	            }
+	
+	             // Props:
+	            mod_script_call("area", _area, "area_pop_props");
+	        }
+	
+	         // Find # of Chests to Keep:
+	        gol = 1;
+	        wgol = 0;
+	        agol = 0;
+	        rgol = 0;
+	        if(skill_get(mut_open_mind)){
+	            var m = choose(0, 1, 2);
+	            switch(m){
+	                case 0: wgol++; break;
+	                case 1: agol++; break;
+	                case 2: rgol++; break;
+	            }
+	        }
+	        mod_script_call("area", _area, "area_pop_chests");
+	
+	         // Clear Extra Chests:
+	        var _extra = [wgol, agol, rgol, rgol, 0];
+	        for(var i = 0; i < array_length(_newChest); i++){
+	            var n = array_length(_newChest[i]);
+	            if(n > 0 && gol + _extra[i] > 0){
+	                while(n-- > gol + _extra[i]){
+	                    instance_delete(nearest_instance(_sx + random_range(-250, 250), _sy + random_range(-250, 250), _newChest[i]));
+	                }
+	            }
+	        }
+	
+	         // Crown of Love:
+	        if(GameCont.crown = crwn_love){
+	            for(var i = 0; i < array_length(_newChest); i++) with(_newChest[i]){
+	                if(instance_exists(self)){
+	                    instance_create(x, y, AmmoChest);
+	                    instance_delete(id);
+	                }
+	            }
+	        }
+	
+	         // Rad Can -> Health Chest:
+	        else{
+	            var _lowHP = false;
+	            with(Player) if(my_health < maxhealth / 2) _lowHP = true;
+	            with(_newChest[2]) if(instance_exists(self)){
+	                if((_lowHP && chance(1, 2)) || (GameCont.crown == crwn_life && chance(2, 3))){
+	                    array_push(_newChest[4], instance_create(x, y, HealthChest));
+	                    instance_destroy();
+	                    break;
+	                }
+	            }
+	        }
+	
+	         // Mimics:
+	        with(_newChest[1]) if(instance_exists(self) && chance(1, 11)){
+	            instance_create(x, y, Mimic);
+	            instance_delete(id);
+	        }
+	        with(_newChest[4]) if(instance_exists(self) && chance(1, 51)){
+	            instance_create(x, y, SuperMimic);
+	            instance_delete(id);
+	        }
+	
+	         // Extras:
+	        mod_script_call("area", _area, "area_pop_extras");
+	
+	         // Done + Fix Random Wall Spawn:
+	        var _wall = instances_matching(Wall, "", null);
+	
+	        event_perform(ev_alarm, 1);
+	
+	        if(instance_number(Wall) > array_length(_wall)){
+	            with(Wall.id) instance_delete(id);
+	        }
+	    }
+	
+	     // Remove Portal FX:
+	    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();
+	    repeat(4) with(instance_nearest(10016, 10016, PortalL)) instance_destroy();
+	    with(instance_nearest(10016, 10016, PortalClear)) instance_destroy();
+	    sound_stop(sndPortalOpen);
+	
+	     // Reset Player & Camera Pos:
+	    var s = UberCont.opt_shake;
+	    UberCont.opt_shake = 1;
+	    with(Player){
+	        sound_stop(snd_wrld);
+	
+	        x = _px[index];
+	        y = _py[index];
+	
+	        var g = gunangle,
+	            _x = _vx[index],
+	            _y = _vy[index];
+	
+	        gunangle = point_direction(0, 0, _x, _y);
+	        weapon_post(wkick, point_distance(0, 0, _x, _y), 0);
+	        gunangle = g;
+	    }
+	    UberCont.opt_shake = s;
+	}
 
 #define area_get_subarea(_area)
     if(is_real(_area)){
@@ -1583,3 +1585,20 @@
         total += (_timer - timer);
         timer = _timer;
     }
+
+#define player_create(_x, _y, _index)
+    with(instance_create(_x, _y, CustomHitme)){
+        with(instance_create(x, y, Revive)){
+            p = _index;
+            canrevive = true;
+            event_perform(ev_collision, Player);
+            event_perform(ev_alarm, 0);
+        }
+        instance_destroy();
+    }
+    with(player_find(_index)){
+        my_health = maxhealth;
+        sound_stop(snd_hurt);
+        return id;
+    }
+    return noone;

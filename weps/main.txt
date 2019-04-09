@@ -5,6 +5,6 @@
 /loadwep bubble minigun
 /loadwep bubble shotgun
 /loadwep bubble cannon
-/loadwep lightning ring launcher
-/loadwep super lightning ring launcher
+/loadwep lightring launcher
+/loadwep super lightring launcher
 /loadwep tesla coil

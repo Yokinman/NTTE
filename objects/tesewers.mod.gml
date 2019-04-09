@@ -2463,7 +2463,7 @@
 
 	    if(!position_meeting(_x, _y, Floor)){
 	    	with(instance_create(_x, _y, Floor)){
-	    		sprite_index = area_get_sprite("secret", sprFloor1B);
+	    		sprite_index = area_get_sprite("lair", sprFloor1B);
 	    	}
 	    	for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
 	    		instance_create(bbox_left, _y, FloorExplo);
@@ -2575,12 +2575,12 @@
 
          // Generate the Realm:
 		if(!instance_exists(Portal)){
-        	area_generate(_sx, _sy - 32, sewers);
+        	area_generate(_sx, _sy - 32, "lair");
 		}
 
          // Finish Path:
         with(_path){
-            sprite_index = area_get_sprite(sewers, sprFloor1B);
+            sprite_index = area_get_sprite("lair", sprFloor1B);
             scrFloorWalls();
         }
         floor_reveal(_path, 2);
@@ -3090,7 +3090,6 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
 #define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
-#macro sewers "secret"
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
@@ -3103,3 +3102,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

@@ -15,9 +15,9 @@
     sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
 
 #define weapon_fire
-    var _roids = (specfiring && (race == "steroids"));
+    var _roids = (specfiring && (race == "steroids")),
+        _xdis, _ydis;
 
-    var _xdis, _ydis;
     with(obj_create(x, y, "TeslaCoil")){
         creator = other;
         roids = _roids;

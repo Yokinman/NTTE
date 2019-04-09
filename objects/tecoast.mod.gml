@@ -117,6 +117,8 @@
          // Offset:
         x += orandom(10);
         y += orandom(10);
+        xstart = x;
+        ystart = y;
 
          // Doesn't Use Coast Wading System:
         nowade = true;
@@ -136,26 +138,79 @@
 
      // Pushing:
     if(place_meeting(x, y, hitme)){
-        with(instances_matching_lt(hitme, "size", size)){
-            if(place_meeting(x, y, other)){
-                motion_add(point_direction(other.x, other.y, x, y), 1);
-            }
+        with(instances_meeting(x, y, instances_matching_lt(hitme, "size", size))){
+            motion_add(point_direction(other.x, other.y, x, y), 1);
         }
-        if(!shell) with(instances_matching_ge(hitme, "size", size)){
-            if(place_meeting(x, y, other) && object_index != Player){
-                with(other) motion_add(point_direction(other.x, other.y, x, y), 4);
-            }
+        with(instances_meeting(x, y, instances_matching_ge(Player, "size", size))){
+            motion_add(point_direction(other.x, other.y, x, y), 1);
         }
-        with(Player){
-            if(place_meeting(x, y, other)){
-                motion_add(point_direction(other.x, other.y, x, y), 1);
-            }
+
+         // Space Out Decals:
+        with(instances_meeting(x, y, instances_matching_le(instances_named(object_index, name), "size", size))){
+        	var _dir = point_direction(other.x, other.y, x, y),
+        		_dis = 8;
+
+        	do{
+        		x += lengthdir_x(_dis, _dir);
+        		y += lengthdir_y(_dis, _dir);
+        	}
+        	until !place_meeting(x, y, other);
+
+        	xstart = x;
+        	ystart = y;
         }
     }
 
+     // Break:
+    if(my_health <= 0 && sprite_index != spr_dead){
+        sprite_index = spr_dead;
+        
+         // Stop Collision & Projectile Interactions:
+        mask_index = mskNone;
+        team = 2;
+
+         // Can Stand On Corpse:
+        with(instance_create(0, 0, Floor)){
+            x = other.x;
+            y = other.y;
+            visible = 0;
+            mask_index = other.mask_floor;
+        }
+
+         // Weapon Drop:
+        //pickup_drop(0, 100);
+
+         // Visual Stuff:
+        depth += 8;
+        with(instances_matching(BoltStick, "target", id)) instance_destroy();
+
+         // Water Rock Debris:
+        if(!shell){
+            var _ang = random(360);
+            for(var a = _ang; a < _ang + 360; a += 360 / 3){
+                with(instance_create(x, y, MeleeHitWall)) image_angle = a + orandom(10);
+            }
+            repeat(choose(2, 3)){
+                with(instance_create(x + orandom(2), y + orandom(2), Debris)){
+                    motion_set(other.direction + orandom(10), (speed + other.speed) / 2);
+                }
+            }
+        }
+
+         // Break Sound:
+        sound_play_pitch(snd_dead, 1 + random(0.2));
+    }
+
+	 // Stay Still:
+	x = xstart;
+	y = ystart;
+	speed = 0;
+
 #define CoastDecal_hurt(_hitdmg, _hitvel, _hitdir)
+	my_health -= _hitdmg;			// Damage
     nexthurt = current_frame + 6;   // I-Frames
     sound_play_hit(snd_hurt, 0.3);  // Sound
+    motion_add(_hitdir, _hitvel);	// Knockback
 
      // Hurt Sprite:
     sprite_index = spr_hurt;
@@ -169,49 +224,6 @@
         with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Sweat)){
             speed = random(speed);
             direction = _dir;
-        }
-    }
-
-     // Damage:
-    if(my_health > 0){
-        my_health -= _hitdmg;
-
-         // Break:
-        if(my_health <= 0){
-            mask_index = mskNone;
-            sprite_index = spr_dead;
-            team = 2;
-
-             // Can Stand On Corpse:
-            with(instance_create(0, 0, Floor)){
-                x = other.x;
-                y = other.y;
-                visible = 0;
-                mask_index = other.mask_floor;
-            }
-
-             // Weapon Drop:
-            //pickup_drop(0, 100);
-
-             // Visual Stuff:
-            depth = (shell ? 0 : 1);
-            with(instances_matching(BoltStick, "target", id)) instance_destroy();
-
-             // Water Rock Debris:
-            if(!shell){
-                var _ang = random(360);
-                for(var a = _ang; a < _ang + 360; a += 360 / 3){
-                    with(instance_create(x, y, MeleeHitWall)) image_angle = a + orandom(10);
-                }
-                repeat(choose(2, 3)){
-                    with(instance_create(x + orandom(2), y + orandom(2), Debris)){
-                        motion_set(_hitdir + orandom(10), (speed + _hitvel) / 2);
-                    }
-                }
-            }
-
-             // Break Sound:
-            sound_play_pitch(snd_dead, 1 + random(0.2));
         }
     }
 
@@ -3235,3 +3247,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

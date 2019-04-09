@@ -862,6 +862,7 @@
         stretch = 1;
         super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
         creator_follow = true;
+        roids = false;
         
         return id;
     }
@@ -878,6 +879,7 @@
             if(instance_exists(creator)){
                 x = creator.x;
                 y = creator.y;
+                if(roids) y -= 4;
             }
 
              // Lightning Disc Weaponry:
@@ -914,8 +916,12 @@
                     move_contact_solid(direction, speed);
                 }
 
-                 // Sorry roid man:
-                with(creator) wkick = 5 * (other.image_xscale / other.charge);
+                 // Chargin'
+                with(creator){
+                	var k = 5 * (other.image_xscale / other.charge);
+                	if(other.roids) bwkick = k;
+                	else wkick = k;
+                }
             }
         }
 
@@ -941,7 +947,13 @@
 
              // Player Shooting:
             if(instance_is(creator, Player)) with(creator){
+            	var k = wkick;
                 weapon_post(-4, 16, 8);
+            	if(other.roids){
+            		bwkick = wkick;
+            		wkick = k;
+            	}
+
                 with(other) direction += orandom(6) * other.accuracy;
             }
 
@@ -1873,6 +1885,37 @@
 	obj_create(x, y, name);
 
 
+#define ReviveNTTE_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		creator = noone;
+		vars = {};
+		p = -1;
+
+		return id;
+	}
+
+#define ReviveNTTE_step
+	if(instance_exists(creator)){
+		x = creator.x;
+		y = creator.y;
+		p = creator.p;
+	}
+	else{
+		 // Set Vars on Newly Revived Player:
+		if(player_is_active(p)){
+			var _vars = vars;
+			with(nearest_instance(x, y, instances_matching_gt(instances_matching(Player, "p", p), "id", id))){
+				for(var i = 0; i < lq_size(_vars); i++){
+					variable_instance_set(id, lq_get_key(_vars, i), lq_get_value(_vars, i));
+				}
+			}
+		}
+
+		instance_destroy();
+	}
+
+
 #define TeslaCoil_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
     	 // Visual:
@@ -1900,11 +1943,17 @@
 			if(instance_exists(self)){
 				 // Find Targetable Enemies:
 				var _maxDist = dist_max,
-		        	_target = [];
+		        	_target = [],
+		        	_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
 
 		    	if(instance_exists(creator)){
 			        with(instances_matching_ne(hitme, "team", creator.team)){
 			            if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
+			            	if(_teamPriority == null || team > _teamPriority){
+			            		_teamPriority = team;
+			            		target = [];
+			            	}
+
 			                array_push(_target, id);
 			            }
 			        }
@@ -2170,3 +2219,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

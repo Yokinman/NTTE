@@ -121,14 +121,19 @@
 
 
 #define create
+     // Sound:
+    snd_hurt = sndRavenHit;
+    snd_dead = sndRavenDie;
+    if(instance_exists(Menu)) snd_hurt = -1; // Dum CampChar fix
+
+     // Feather Related:
     feather_ammo = 0;
-    feather_load = 0;
     feather_targ_delay = 0;
 
      // Extra Pet Slot:
     pet = [noone, noone];
 
-     // Parrot Perch Bobbing:
+     // Pet Perching:
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
@@ -364,3 +369,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

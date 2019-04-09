@@ -5,7 +5,7 @@
     global.save = mod_variable_get("mod", "teassets", "save");
 
     global.newLevel = instance_exists(GenCont);
-    global.area = ["coast", "oasis", "trench", "pizza", "secret"];
+    global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.effect_timer = 0;
     global.current = {
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
@@ -15,6 +15,7 @@
 
      // Make Custom CampChars for:
     global.campchar = ["parrot"];
+    global.campchar_fix = false;
 
      // Options Menu:
     global.option_NTTE_splat = 0;
@@ -384,9 +385,7 @@
                 
                  // Flavor big cactus:
                 if(chance(1, 15)) with(instance_random(Cactus)){
-                    with(obj_create(x, y, "BigCactus")){
-                    	depth = -1;
-                    }
+                    obj_create(x, y, "BigCactus");
                     instance_delete(id);
                 }
     		}
@@ -545,7 +544,7 @@
 		else _chance = 1/4;
 	}
 
-    if(chance(_chance, 1)){
+    if(chance(_chance, 1) && instance_exists(Player)){
         var _tries = 1000;
         while(_tries-- > 0){
             with(instance_random(TopSmall)){
@@ -568,11 +567,135 @@
     with(instances_matching(CustomObject, "name", "Pet")) visible = true;
 
 #define step
-    script_bind_begin_step(begin_step, 0);
     script_bind_end_step(end_step, 0);
+
+     // Custom CampChars:
+    if(instance_exists(Menu)){
+         // Make Custom CampChars:
+        for(var i = 0; i < array_length(global.campchar); i++){
+            var n = global.campchar[i];
+            if(mod_exists("race", n) && unlock_get(n)){
+                if(array_length(instances_matching(CampChar, "race", n)) <= 0){
+                    with(CampChar_create(64, 48, n)){
+                         // Poof in:
+                        repeat(8) with(instance_create(x, y + 4, Dust)){
+                            motion_add(random(360), 3);
+                            depth = other.depth - 1;
+                        }
+                    }
+                }
+            }
+        }
+
+         // CampChar Stuff:
+        for(var i = 0; i < maxp; i++){
+            var r = player_get_race(i);
+            if(array_find_index(global.campchar, r) >= 0){
+                with(instances_matching(CampChar, "race", player_get_race(i))){
+                     // Pan Camera:
+                    with(instances_matching(CampChar, "num", 17)){
+                    	global.campchar_fix = true;
+
+					    var _shake = UberCont.opt_shake;
+					    UberCont.opt_shake = 1;
+
+						var _x1 = x,
+							_y1 = y,
+							_x2 = other.x,
+							_y2 = other.y,
+			        		_pan = 4;
+
+						with(player_create(_x1, _y1, i)){
+							gunangle = point_direction(_x1, _y1, _x2, _y2);
+							weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1, 0);
+
+							instance_delete(id);
+						}
+
+					    UberCont.opt_shake = _shake;
+						break;
+                    }
+
+                     // Manually Animate:
+                    if(anim_end){
+                        if(sprite_index != spr_menu){
+                            if(sprite_index == spr_to){
+                                sprite_index = spr_menu;
+                            }
+                            else{
+                                sprite_index = spr_to;
+                            }
+                        }
+                        image_index = 0;
+                    }
+                }
+            }
+        }
+    }
+    else if(global.campchar_fix){
+		global.campchar_fix = false;
+
+		 // Save Sounds:
+		var _sndList = [],
+			_sndMax = audio_play_sound(0, 0, 0);
+
+		audio_stop_sound(_sndMax);
+
+		for(var i = max(_sndMax - 1000, 400000); i < _sndMax; i++){
+			if(audio_is_playing(i)){
+				if(audio_sound_length_nonsync(i) < 10){
+					array_push(_sndList, [asset_get_index(audio_get_name(i)), audio_sound_get_gain(i), audio_sound_get_pitch(i), audio_sound_get_track_position_nonsync(i)]);
+				}
+			}
+		}
+
+		 // Restart Game:
+		game_restart();
+		sound_stop(sndRestart);
+
+		 // Resume Sounds:
+		with(_sndList){
+			var s = self,
+				_snd = audio_play_sound(s[0], 0, false);
+
+			audio_sound_gain(_snd, s[1], 0);
+			audio_sound_pitch(_snd, s[2]);
+			audio_sound_set_track_position(_snd, s[3]);
+		}
+    }
 
      // Pet Slots:
     with(instances_matching(Player, "pet", null)) pet = [noone];
+
+	 // Save Stuff in Revive:
+	with(instances_matching_le(Player, "my_health", 0)){
+		if(fork()){
+			var _x = x,
+				_y = y,
+				_save = ["pet", "feather_ammo"],
+				_vars = {};
+
+			with(_save){
+				if(self in other){
+					lq_set(_vars, self, variable_instance_get(other, self));
+				}
+			}
+
+			 // Storing Vars w/ Revive
+			wait 0;
+			if(!instance_exists(self)) with(other){
+				with(nearest_instance(_x, _y, instances_matching(Revive, "ntte_storage", null))){
+					ntte_storage = obj_create(x, y, "ReviveNTTE");
+					with(ntte_storage){
+						creator = other;
+						vars = _vars;
+						p = other.p;
+					}
+				}
+			}
+			exit;
+		}
+	}
 
      // GENERATION CODE //
     if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
@@ -741,65 +864,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
     instance_destroy();
-
-#define begin_step
-    instance_destroy();
-
-     // Custom CampChars:
-    if(instance_exists(Menu)){
-         // Make Custom CampChars:
-        for(var i = 0; i < array_length(global.campchar); i++){
-            var n = global.campchar[i];
-            if(mod_exists("race", n) && unlock_get(n)){
-                if(array_length(instances_matching(CampChar, "race", n)) <= 0){
-                    with(CampChar_create(64, 48, n)){
-                         // Poof in:
-                        repeat(8) with(instance_create(x, y + 4, Dust)){
-                            motion_add(random(360), 3);
-                            depth = other.depth - 1;
-                        }
-                    }
-                }
-            }
-        }
-
-         // Reset Camera:
-        with(instances_matching(instances_matching(CampChar, "num", 17), "move_back", true)){
-            move_back = false;
-            x = xstart;
-            y = ystart;
-        }
-
-         // CampChar Stuff:
-        for(var i = 0; i < maxp; i++){
-            //if(player_is_local_nonsync(i)){
-                var r = player_get_race(i);
-                if(array_find_index(global.campchar, r) >= 0){
-                    with(instances_matching(CampChar, "race", player_get_race(i))){
-                         // Move Camera:
-                        with(instances_matching(CampChar, "num", 17)){
-                            x = other.x;
-                            y = other.y;
-                            move_back = true;
-                        }
-
-                         // Manually Animate:
-                        if(anim_end){
-                            if(sprite_index != spr_menu){
-                                if(sprite_index == spr_to){
-                                    sprite_index = spr_menu;
-                                }
-                                else{
-                                    sprite_index = spr_to;
-                                }
-                            }
-                            image_index = 0;
-                        }
-                    }
-                }
-            //}
-        }
-    }
 
 #define end_step
     instance_destroy();
@@ -2377,3 +2441,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);

@@ -3,14 +3,14 @@
 #define init
     with([
         "ntte.mod.gml", "petlib.mod.gml",
-        "areas/template.gml", "areas/coast.area.gml", "areas/oasis.area.gml", "areas/pizza.area.gml", "areas/secret.area.gml", "areas/trench.area.gml",
+        "areas/template.gml", "areas/coast.area.gml", "areas/oasis.area.gml", "areas/pizza.area.gml", "areas/lair.area.gml", "areas/trench.area.gml",
         "objects/template.gml", "objects/tecaves.mod.gml", "objects/tecoast.mod.gml", "objects/tedesert.mod.gml", "objects/tegeneral.mod.gml", "objects/teoasis.mod.gml", "objects/tesewers.mod.gml", "objects/tetrench.mod.gml",
         "races/parrot.race.gml"
     ]){
         /* script_set modifies a script if it exists, appends script to end of file if not */
         /* script_remove removes a script if it exists */
 
-        script_set(self, "mod", "telib", "array_combine", ["_array1", "_array2"], "return", "");
+        script_set(self, "mod", "telib", "nearest_instance", ["_x", "_y", "_instances"], "return", "");
         
         //script_remove(self, "obj_create");
     }

@@ -213,18 +213,26 @@
         spr_hurt = spr.BigCactusHurt;
         spr_dead = spr.BigCactusDead;
         spr_shadow = shd32;
-        spr_shadow_y = 5;
-        mask_index = mskBigSkull;
-        sprite_index = spr_idle;
-        depth = -1;
-        
+        spr_shadow_y = 4;
+        depth = -1.5;
+
+		 // Sound:
+		snd_dead = sndPlantSnareTrapper;
+
          // Vars:
         maxhealth = 24;
         my_health = maxhealth;
         size = 4;
-        
+
+		 // Spawn Enemies:
+		instance_create(x, y, PortalClear);
+		repeat(choose(2, 3)){
+			obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+		}
+
         return id;
     }
+
 
 #define Bone_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -1321,3 +1329,4 @@
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
