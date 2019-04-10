@@ -448,6 +448,45 @@
         	        instance_delete(self);
         	    }
         	}
+        	
+        	 // Spawn Spider Walls:
+        	if(instance_exists(Wall)){
+        	     // Strays:
+        	    repeat(8 + irandom(4)) with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 48){
+        	        with(obj_create(x, y, "SpiderWall")){
+        	            creator = other;
+        	        }
+        	    }
+        	    
+        	     // Central mass:
+        	    var _spawned = false,
+        	        _tries = 100;
+        	    do{
+        	        with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 128){
+        	             // Spawn Main Wall:
+        	            with(obj_create(x, y, "SpiderWall")){
+        	                creator = other;
+        	                special = true;
+        	            }
+        	            
+        	             // Spawn fake walls:
+        	            with(Wall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(2, 3) && self != other){
+        	                with(obj_create(x, y, "SpiderWall")){
+        	                    creator = other;
+        	                }
+        	            }
+        	            
+        	             // Change TopSmalls:
+        	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(1, 3)){
+        	                sprite_index = spr.SpiderWallTrans;
+        	            }
+        	            
+        	            _spawned = true;
+        	        }
+        	    }
+        	    until(_spawned || _tries <= 0);
+        	} 
+        	 
             break;
 
         case 103: /// MANSIOM  its MANSION idiot, who wrote this

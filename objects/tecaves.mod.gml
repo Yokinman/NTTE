@@ -473,6 +473,41 @@
 
 
 /// Mod Events:
+#define SpiderWall_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+        mask_index = mskWall;
+        
+         // Vars:
+        creator = noone;
+        special = false;
+        
+        return id;
+    }
+    
+#define SpiderWall_step
+    if(!instance_exists(creator)){
+         // Spawn Special Spider:
+        if(special) Pet_spawn(x + 8, y + 8, "Spider");
+        
+         // Spawn Spiderlings:
+        else repeat(1 + irandom(2)) if(chance(3, 5)) obj_create(x + 8, y + 8, "Spiderling");
+        
+        instance_destroy();
+    }
+    
+    else{
+         // Change wall sprites:
+        var _top = (special ? spr.SpiderWallMainTop : spr.SpiderWallFakeTop),
+            _bot = (special ? spr.SpiderWallMainBot : sprWall4Bot);
+            
+        with(creator) if(topspr != _top || sprite_index != _bot){
+            topspr =        _top;
+            sprite_index =  _bot;
+            topindex =      irandom(sprite_get_number(_top) - 1);
+            image_index =   irandom(sprite_get_number(_bot) - 1);
+        }
+    }
+
 #define draw_shadows
     with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
         var _percent = clamp(96 / z, 0.1, 1),
