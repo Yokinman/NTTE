@@ -465,9 +465,9 @@
 
 #define Scorpion_create
      // Visual:
-    spr_dead =      spr.PetScorpionDead;
-    spr_fire =      spr.PetScorpionFire;
-    spr_shield =    spr.PetScorpionShield;
+    spr_dead   = spr.PetScorpionDead;
+    spr_fire   = spr.PetScorpionFire;
+    spr_shield = spr.PetScorpionShield;
     hitid = [spr_idle, "SILVER SCORPION"];
     
      // Sounds:
@@ -527,6 +527,19 @@
         if(my_corpse == noone){
             my_corpse = scrCorpse(direction, speed);
             motion_add(direction + orandom(20), speed * 2);
+
+			 // Explode:
+            var a = random(360);
+            for(var d = a; d < a + 360; d += 360 / 5){
+                 // Effects:
+                with(instance_create(x, y, AcidStreak)){
+                    motion_set(d, 4);
+                    image_angle = direction;
+                }
+                
+                 // Venom:
+                repeat(8 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", d + orandom(12), 8 + random(8));
+            }
 
              // Death Sound:
             sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 0.8);
@@ -631,22 +644,6 @@
             variable_instance_set(other, _name, variable_instance_get(h, _name, 0));
         }
         instance_delete(h);
-        
-         // Explode:
-        if(my_health <= 0){
-            var d = irandom(359);
-            for(var i; i <= 360; i += 360 / 5){
-                
-                 // Effects:
-                with(instance_create(x, y, AcidStreak)){
-                    motion_set(d + i, 4);
-                    image_angle = direction;
-                }
-                
-                 // Venom:
-                repeat(8 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", d + i + orandom(12), 8 + random(8));
-            }
-        }
     }
 
 #define scrPetShield(_hitdmg, _hitvel, _hitdir)
@@ -663,6 +660,7 @@
     audio_sound_pitch(sndCursedPickupDisappear, 0.8 + random(0.4));
     
     instance_create(x, y, ThrowHit).depth = -3;
+
 
 #define Slaughter_create
      // Visual:
@@ -754,8 +752,21 @@
             else if(image_index < 3 + (image_speed * current_time_scale)){
                  // Attack Bite:
                 if(instance_is(target, hitme)){
-                    // projectile_hit_raw(target, 8 + (GameCont.level * 3), true);
-                    scrEnemyShootExt(target.x, target.y, "PetBite", point_direction(x, y, target.x, target.y), 0);
+                	var r = 32;
+                	with(instances_matching_ne(hitme, "team", team, 0)){
+                		var _dmg = 0;
+                		if(other.target == id){
+                			_dmg = 8 + (3 * GameCont.level);
+                		}
+                		else if(collision_circle(other.x, other.y, r, id, false, false)){
+                			_dmg = 8;
+                		}
+
+                		if(_dmg != 0) with(other){
+                			projectile_hit(other, _dmg, 4, point_direction(x, y, other.x, other.y));
+            			}
+                	}
+                    //scrEnemyShootExt(target.x, target.y, "PetBite", point_direction(x, y, target.x, target.y), 0);
                 }
     
                  // Fetch Bone:
@@ -851,7 +862,7 @@
             else{
                 if(in_sight(target) && point_distance(leader.x, leader.y, target.x, target.y) < 160 && target != my_bone){
                      // Bite:
-                    if(distance_to_object(target) < (instance_is(target, WepPickup) ? 2 : 28) && (!instance_is(target, WepPickup) || target.visible)){
+                    if(distance_to_object(target) < (instance_is(target, WepPickup) ? 2 : 32) && (!instance_is(target, WepPickup) || target.visible)){
                         walk = 0;
                         speed = 0;
                         scrRight(point_direction(x, y, target.x, target.y));
@@ -906,6 +917,8 @@
                             target = nearest_instance(x, y, _bones);
                         }
                     }
+
+                    else return 5 + random(10);
                 }
             }
         }
@@ -920,7 +933,8 @@
 #define Slaughter_hurt
     if(my_health > 0){
          // Create CustomHitme to Receive the Damage:
-            var s = ["x", "y", "speed", "direction", "sprite_index", "image_index", "my_health", "maxhealth", "nexthurt", "leader", "team", "spr_idle", "spr_walk", "spr_hurt", "spr_dead", "spr_fire", "snd_hurt", "snd_dead"],
+        if(instance_exists(leader) || (sprite_index != spr_fire && "typ" in other && other.typ == 1)){
+            var s = ["x", "y", "speed", "direction", "sprite_index", "image_index", "my_health", "maxhealth", "nexthurt", "leader", "team", "spr_idle", "spr_walk", "spr_hurt", "spr_dead", "spr_fire", "snd_hurt", "snd_dead", "depth", "right"],
                 h = instance_create(x, y, CustomHitme);
     
             h.on_hurt = (instance_exists(leader) ? scrSlaughterHurt : scrSlaughterEat);
@@ -942,27 +956,66 @@
                 variable_instance_set(other, _name, variable_instance_get(h, _name, 0));
             }
             instance_delete(h);
+        }
+
+		 // Dodge:
+		else if(sprite_index != spr_fire){
+			sprite_index = spr_fire;
+			image_index = 3;
+		}
     }
 
 #define scrSlaughterHurt(_hitdmg, _hitvel, _hitdir)
+     // Revenge:
+    /*if(sprite_index != spr_hurt){
+	    with(other) if("creator" in self && instance_exists(creator)){
+	    	if(!instance_exists(other.leader) || self != other.leader){
+	    		with(creator){
+	    			repeat(4) instance_create(x + orandom(8), y + orandom(8), Bubble);
+			        with(instance_create(x, y, SharpTeeth)){
+			        	sprite_index = sprRobotEat;
+			        	image_xscale = choose(-1, 1);
+			            damage = _hitdmg + 2;
+			            creator = other;
+			            alarm0 = 8;
+			        }
+	    		}
+	    	}
+	    }
+    }*/
+
      // Normal hurt:
     enemyHurt(_hitdmg, _hitvel, _hitdir);
     
-     // revenge:
-    with(instances_matching_ne(other, "creator", undefined)) if(instance_exists(creator) && (!instance_exists(other.leader) || self != other.leader)){
-        with(instance_create(creator.x, creator.y, SharpTeeth)){
-            creator = other.creator;
-            damage = _hitdmg + 2;
-            alarm0 = 16;
-        }
+     // Scared:
+    alarm0 = max(alarm0, 20);
+    scrRight(direction);
+    repeat(ceil(_hitdmg / 4)) with(obj_create(x, y, "BubbleBomb")){
+    	motion_add(90 + (90 * other.right) + orandom(8), 6);
+    	team = other.team;
+
+		 // Toot juice
+		with(scrWaterStreak(x + (4 * other.right), y, direction + orandom(_hitdmg * 8), 4 + random(1))){
+			vspeed += 2;
+			image_xscale = 0.5;
+			image_yscale = 0.5;
+			image_speed *= 0.6;
+		}
     }
-    
+    sound_play_pitchvol(sndFrogExplode, 1.4 + random(0.6), 0.8);
+
 #define scrSlaughterEat(_hitdmg, _hitvel, _hitdir)
-    if(!instance_exists(other) || (array_length(instances_matching_ne(other, "typ", undefined)) && other.typ != 0 && other.typ <= 2)){
+    if(!instance_exists(other) || ("typ" in other && other.typ != 0)){
         scrRight(direction);
         sprite_index = spr_fire;
         image_index = 2;
         walk = 0;
+        with(instance_create(x, y, RobotEat)){
+            sprite_index = spr.SlaughterBite;
+            image_index = other.image_index;
+            image_xscale = other.right;
+            depth = other.depth - 0.1;
+        }
     }
 
 #define Octo_create
@@ -1419,3 +1472,4 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
+#define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);

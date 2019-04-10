@@ -361,6 +361,10 @@
     draw_vertex(_x2b, _y2);
     draw_primitive_end();
 
+#define draw_set_flat(_color)
+	var _bool = (_color >= 0);
+	draw_set_fog(_bool, (_bool ? _color : c_black), 0, 0);
+
 #define scrWalk(_walk, _dir)
     walk = _walk;
     speed = max(speed, friction);
@@ -902,7 +906,9 @@
 #define instance_random(_obj)
 	if(is_array(_obj) || instance_exists(_obj)){
 		var i = instances_matching(_obj, "", undefined);
-		return i[irandom(array_length(i) - 1)];
+		if(array_length(i) > 0){
+			return i[irandom(array_length(i) - 1)];
+		}
 	}
 	return noone;
 

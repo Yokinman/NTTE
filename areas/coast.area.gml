@@ -48,8 +48,8 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#macro surfScale (1/3 + (2/3 * opt.WaterQualityMain))
-#macro surfScaleTop (1/2 + (1/2 * opt.WaterQualityTop))
+#macro surfScale (1/3 + (2/3 * lq_defget(opt, "waterQualityMain", 1)))
+#macro surfScaleTop (1/2 + (1/2 * lq_defget(opt, "waterQualityTop", 1)))
 #macro surfWBot global.surfW * surfScale
 #macro surfHBot global.surfH * surfScale
 #macro surfWTop global.surfW * surfScaleTop
@@ -57,7 +57,7 @@
 #macro surfX global.surfX
 #macro surfY global.surfY
 
-#macro DebugLag 0
+#macro DebugLag false
 #macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
@@ -132,16 +132,6 @@
     with(TopSmall){
         if(chance(1, 80)) obj_create(x, y, "CoastDecal");
         instance_destroy();
-    }
-
-     // Flavor big cactus:
-    if(chance(1, 15)) with(instance_random(Cactus)){
-        with(obj_create(x, y, "BigCactus")){
-        	spr_idle = spr.BigBloomingCactusIdle;
-        	spr_hurt = spr.BigBloomingCactusHurt;
-        	spr_dead = spr.BigBloomingCactusDead;
-        }
-        instance_delete(id);
     }
 
      // Spawn Boss:
@@ -419,7 +409,7 @@
 
         if(DebugLag) trace_time();
         var _charmShader = mod_variable_get("mod", "ntte", "eye_shader"),
-            _canCharmDraw = (opt.allowShaders && _charmShader != -1);
+            _canCharmDraw = (lq_defget(opt, "allowShaders", false) && _charmShader != -1);
 
         with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
 	        var o = (object_index == Player);
@@ -578,7 +568,7 @@
                     if("charm" in self && charm.charmed){
                         shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
                         shader_set(_charmShader);
-                        texture_set_stage(0, surface_get_texture(_surfSwim));
+                        texture_set_stage(0, _tex);
                         draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, (_surfSwimx - _surfx) * _surfScaleTop, (_surfSwimy + _z - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 1);
                         shader_reset();
                     }
@@ -591,7 +581,7 @@
 
              // Draw Bottom:
             surface_set_target(_surfSwimBot);
-            draw_surface_ext(_surfSwim, (_surfSwimx - _surfx) * _surfScale, (_surfSwimy + _z - _surfy) * _surfScale, _surfScale, _surfScale, 0, c_white, (1 - (wading_sink / 120)));
+            draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, (_surfSwimh - t), (_surfSwimx - _surfx) * _surfScale, (_surfSwimy + _z - _surfy + t) * _surfScale, _surfScale, _surfScale, c_white, (1 - (wading_sink / 120)));
             surface_reset_target();
         }
 		if(DebugLag) trace_time("Wading Drawing");
@@ -1229,3 +1219,4 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
+#define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);

@@ -23,25 +23,29 @@
     global.option_slct = -1;
     global.option_pop = 0;
     global.option_menu = [
-        {
-            name : "Use Shaders",
+        {	name : "Use Shaders",
             type : opt_toggle,
             text : "Used for certain visuals#@sShaders may cause the game# to crash on older computers!",
             varname : "allowShaders"
             },
-        {   name : "Water Quality :",
+        {	name : "Pet Outlines",
+        	type : opt_toggle,
+        	text : 'For when "/outlines"#is enabled',
+        	varname : "petOutlines"
+        	},
+        {	name : "Water Quality :",
             type : opt_title,
             text : "Reduce to help#performance in coast"
-            },
-        {   name : "Main",
-            type : opt_slider,
-            text : "Water foam,#underwater visuals,#etc.",
-            varname : "WaterQualityMain"
             },
         {   name : "Wading",
             type : opt_slider,
             text : "Objects in the water",
-            varname : "WaterQualityTop"
+            varname : "waterQualityTop"
+            },
+        {   name : "Main",
+            type : opt_slider,
+            text : "Water foam,#underwater visuals,#etc.",
+            varname : "waterQualityMain"
             }
         ];
 
@@ -382,12 +386,6 @@
                     }
                     until(_spawned || _tries-- <= 0);
                 }
-                
-                 // Flavor big cactus:
-                if(chance(1, 15)) with(instance_random(Cactus)){
-                    obj_create(x, y, "BigCactus");
-                    instance_delete(id);
-                }
     		}
 
              // Spawn Baby Scorpions:
@@ -402,27 +400,33 @@
             }
             
              // Rare scorpion desert (EASTER EGG):
-            if((GameCont.subarea > 1 || GameCont.loops > 0) && chance(1, 180)){
-                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
-                    var _gold = chance(1, 20);
-                    
-                     // Normal scorpion:
-                    if(chance(2, 5)){
-                    	instance_create(x, y, (!_gold ? Scorpion : GoldScorpion));
-                    }
-                    
-                     // Baby scorpions:
-                    else repeat(1 + irandom(2)){
-                    	obj_create(x, y, (!_gold ? "BabyScorpion" : "BabyScorpionGold"));
-                    }
-                     
-                    instance_delete(id);
-                }
-                with(MaggotSpawn) babyscorp_drop++;
-                
-                 // Scary sound:
-                sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
-                sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
+            if(GameCont.subarea > 1 || GameCont.loops > 0){
+            	if(chance(1, 120) || (chance(1, 60) && array_length(instances_matching(instances_named(CustomObject, "Pet"), "pet", "Scorpion")) > 0)){
+	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
+	                    var _gold = chance(1, 5);
+	                    
+	                     // Normal scorpion:
+	                    if(chance(2, 5)){
+	                    	instance_create(x, y, (!_gold ? Scorpion : GoldScorpion));
+	                    }
+	                    
+	                     // Baby scorpions:
+	                    else repeat(1 + irandom(2)){
+	                    	obj_create(x, y, (!_gold ? "BabyScorpion" : "BabyScorpionGold"));
+	                    }
+	                     
+	                    instance_delete(id);
+	                }
+	                with(MaggotSpawn) babyscorp_drop++;
+	                with(Cactus) if(chance(1, 2)){
+	                	obj_create(x, y, "BigCactus");
+	                	instance_delete(id);
+	                }
+	                
+	                 // Scary sound:
+	                sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
+	                sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
+	            }
             }
             break;
 
@@ -515,6 +519,14 @@
                 Pet_spawn(f.x + 16, f.y + 16, "Octo");
             }
             break;
+    }
+
+     // Flavor big cactus:
+    if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
+    	with(instance_random([Cactus, NightCactus])){
+	        obj_create(x, y, "BigCactus");
+	        instance_delete(id);
+    	}
     }
 
      // Crab Skeletons Drop Bones:
@@ -1132,26 +1144,75 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                  // Option Specifics:
                 _x += 124;
                 var _value = lq_get(opt, varname);
-                with(other) switch(other.type){
-                    case opt_toggle:
-                        draw_text_shadow(_x, _y, (_value ? "ON" : "OFF"));
-                        break;
+                with(other){
+                	switch(other.type){
+	                    case opt_toggle:
+	                        draw_text_shadow(_x, _y, (_value ? "ON" : "OFF"));
+	                        break;
+	
+	                    case opt_slider:
+	                        var _dx = _x - 5,
+	                            _dy = _y - 2,
+	                            w = 6 + (100 * _value),
+	                            h = sprite_get_height(sprOptionSlider);
+	
+	                         // Slider:
+	                        draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
+	                        draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);
+	                        draw_sprite(sprSliderEnd,         1,             _dx + w - 2,   _y);
+	
+	                         // Text:
+	                        draw_set_color(c_white);
+	                        draw_text_shadow(_x, _y + 1, string_format(_value * 100, 0, 0) + "%");
+	                        break;
+                	}
+                	switch(_name){
+                		case "Water Quality :": // Water Quality Visual
+                			var	_slct = in_range(OptionSlct, i, i + 2),
+                				_spr = spr.GullIdle,
+                				_img = (current_frame * 0.4),
+                				_scale = [
+                					1/3 + (2/3 * lq_defget(opt, "waterQualityMain", 1)),
+                					1/2 + (1/2 * lq_defget(opt, "waterQualityTop", 1))
+                				],
+                				_sx = _x - 32,
+                				_sy = _y + 12;
 
-                    case opt_slider:
-                        var _dx = _x - 5,
-                            _dy = _y - 2,
-                            w = 6 + (100 * _value),
-                            h = sprite_get_height(sprOptionSlider);
+							for(var s = 0; s < array_length(_scale); s++){
+								var _sw = sprite_get_width(_spr) * _scale[s],
+									_sh = sprite_get_height(_spr) * _scale[s],
+                					_surf = surface_create(_sw, _sh);
 
-                         // Slider:
-                        draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
-                        draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);
-                        draw_sprite(sprSliderEnd,         1,             _dx + w - 2,   _y);
+								 // Quality Visual:
+								surface_set_target(_surf);
+								draw_clear_alpha(0, 0);
 
-                         // Text:
-                        draw_set_color(c_white);
-                        draw_text_shadow(_x, _y + 1, string_format(_value * 100, 0, 0) + "%");
-                        break;
+                				var _dx = (_sw / 2),
+                					_dy = (_sh / 2) - ((2 + sin(current_frame / 10)) * _scale[s]);
+
+								draw_sprite_ext(_spr, _img, _dx, _dy, _scale[s], _scale[s], 0, (_slct ? c_white : c_gray), 1);
+
+								surface_reset_target();
+	    						draw_set_projection(0);
+
+								 // Draw Clipped/Colored Surface:
+								if(s == 0){
+									var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
+									draw_set_flat(_slct ? b : merge_color(b, c_black, 0.5));
+									draw_surface_part_ext(_surf, 0, (_sh / 2), _sw, (_sh / 2), _sx, _sy + ((_sh / 2) / _scale[s]), 1 / _scale[s], 1 / _scale[s], c_white, 1);
+									draw_set_flat(-1);
+								}
+								else{
+									draw_surface_part_ext(_surf, 0, 0, _sw, (_sh / 2) + 1, _sx,	_sy, 1/_scale[s], 1/_scale[s], c_white, 1);
+									draw_set_flat(_slct ? c_white : c_gray);
+									draw_surface_part_ext(_surf, 0,	(_sh / 2), _sw, 1, _sx, _sy + ((_sh / 2) / _scale[s]), 1/_scale[s], 1/_scale[s], c_white, 0.8);
+									draw_set_flat(-1);
+								}
+
+	    						surface_destroy(_surf);
+							}
+                			break;
+                	}
                 }
             }
         }
@@ -2442,3 +2503,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
+#define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);

@@ -45,6 +45,14 @@
     	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
     	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
+    	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
+
+        //#region CAMPFIRE
+             // Big Cactus:
+            BigNightCactusIdle = sprite_add("sprites/areas/Campfire/Props/sprBigNightCactusIdle.png", 1, 16, 16);
+            BigNightCactusHurt = sprite_add("sprites/areas/Campfire/Props/sprBigNightCactusHurt.png", 3, 16, 16);
+            BigNightCactusDead = sprite_add("sprites/areas/Campfire/Props/sprBigNightCactusDead.png", 4, 16, 16);
+        //#endregion
 
         //#region DESERT
              // Baby Scorpion:
@@ -598,8 +606,9 @@
     global.save = {
         option : {
             "allowShaders"     : true,
-            "WaterQualityMain" : 1,
-            "WaterQualityTop"  : 1
+            "petOutlines"      : true,
+            "waterQualityMain" : 1,
+            "waterQualityTop"  : 1
         }
     };
 

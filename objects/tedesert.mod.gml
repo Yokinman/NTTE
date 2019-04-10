@@ -157,22 +157,21 @@
 
 #define BabyScorpion_death
     scrDefaultDrop();
-    
-    if gold{
-        repeat(4 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", irandom(359), 8 + random(4));
-        repeat(8 + irandom(8)) scrEnemyShoot("TrafficCrabVenom", irandom(359), 4 + random(4));
+
+     // Venom Explosion:
+    if(gold){
+        repeat(4 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", random(360), 8 + random(4));
+        repeat(8 + irandom(8)) scrEnemyShoot("TrafficCrabVenom", random(360), 4 + random(4));
     }
 
      // Effects:
-    var l = 6,
-        d = irandom(359);
-
-    for(var i = 0; i < 360; i += 360 / 3){
-        with instance_create(x + lengthdir_x(l, d + i), y + lengthdir_y(l, d + i), AcidStreak){
-            motion_set(d + i, 4);
-            image_angle = direction;
-        }
-    }
+    var l = 6;
+	repeat(gold ? 3 : 2){
+		var d = direction + orandom(60);
+		with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(4)], AcidStreak)){
+			image_angle = direction;
+		}
+	}
     sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 1.3);
     snd_dead = -1;
 
@@ -209,12 +208,27 @@
 #define BigCactus_create(_x, _y)
     with(instance_create(_x, _y, Cactus)){
          // Visual:
-        spr_idle = spr.BigCactusIdle;
-        spr_hurt = spr.BigCactusHurt;
-        spr_dead = spr.BigCactusDead;
         spr_shadow = shd32;
         spr_shadow_y = 4;
         depth = -1.5;
+        switch(GameCont.area){
+        	case 0:
+        		spr_idle = spr.BigNightCactusIdle;
+        		spr_hurt = spr.BigNightCactusHurt;
+        		spr_dead = spr.BigNightCactusDead;
+        		break;
+
+			case "coast":
+        		spr_idle = spr.BigBloomingCactusIdle;
+	        	spr_hurt = spr.BigBloomingCactusHurt;
+	        	spr_dead = spr.BigBloomingCactusDead;
+	        	break;
+
+        	default:
+		        spr_idle = spr.BigCactusIdle;
+		        spr_hurt = spr.BigCactusHurt;
+		        spr_dead = spr.BigCactusDead;
+        }
 
 		 // Sound:
 		snd_dead = sndPlantSnareTrapper;
@@ -226,8 +240,10 @@
 
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
-		repeat(choose(2, 3)){
-			obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+		if(!in_distance(Player, 64)){
+			repeat(choose(2, 3)){
+				obj_create(x + orandom(4), y + orandom(4), ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+			}
 		}
 
         return id;
@@ -1330,3 +1346,4 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
+#define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);

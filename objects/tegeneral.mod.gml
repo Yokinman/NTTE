@@ -319,7 +319,11 @@
 
         if(fork()){
         	wait 0;
-        	if(instance_exists(self) && big) target = [];
+        	if(instance_exists(self) && big){
+        		target = [];
+        		sprite_index = spr.BubbleBombBig;
+        		mask_index = mskExploder;
+        	}
         	exit;
         }
 
@@ -330,34 +334,48 @@
      // Float Up:
     z_engine();
     image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
-    depth = min(depth, -z);
+    depth = max(min(depth, -z), TopCont.depth + 1);
 
-     // Collision:
-    if(place_meeting(x, y, Player)){
-    	with(instances_meeting(x, y, Player)){
-    		with(other){
-            	motion_add(point_direction(other.x, other.y, x, y), 1.5);
-    		}
-        }
-    }
-    if(place_meeting(x, y, projectile)){
-    	 // Baseball:
-        with(instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash])){
-        	if(place_meeting(x, y, other)){
-        		with(other){
-        			direction = other.direction;
-        			speed = 8;
-        		}
-        	}
-        }
-
-         // Bubble Collision:
-	    if(place_meeting(x, y, object_index)){
-	        with(instances_meeting(x, y, instances_named(object_index, name))){
-	            if(place_meeting(x, y, other)){
-	                with(other) motion_add(point_direction(other.x, other.y, x, y), 0.5);
-	            }
+    if(z < 24){
+    	 // Collision:
+	    if(place_meeting(x, y, Player)){
+	    	with(instances_meeting(x, y, Player)){
+	    		with(other){
+	            	motion_add(point_direction(other.x, other.y, x, y), 1.5);
+	    		}
 	        }
+	    }
+	    if(place_meeting(x, y, projectile)){
+	    	 // Baseball:
+	        with(instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash])){
+	        	if(place_meeting(x, y, other)){
+	        		with(other) if(speed < 8){
+	        			direction = other.direction;
+	        			speed = 10;
+	
+	        			sound_play_pitchvol(sndBouncerBounce, (big ? 0.5 : 0.8) + random(0.1), 3);
+	        		}
+	        	}
+	        }
+	
+	         // Bubble Collision:
+		    if(place_meeting(x, y, object_index)){
+		        with(instances_meeting(x, y, instances_matching_ge(instances_named(object_index, name), "big", big))){
+		            if(place_meeting(x, y, other)){
+		                with(other) motion_add(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
+		            }
+		        }
+		    }
+	    }
+
+	     // Bubble Excrete:
+	    if(big && image_index >= 6 && chance_ct(1, 5 + max(z, 0))){
+    		with(obj_create(x + orandom(8), y - 8 - z + orandom(8), "BubbleBomb")){
+    			team = other.team;
+    			creator = other.creator;
+    			hitid = other.hitid;
+    			image_speed *= random_range(0.8, 1);
+    		}
 	    }
     }
 
@@ -376,45 +394,51 @@
 
 #define BubbleBomb_end_step
      // Hold Projectile:
-    var _drag = 2 + (2 * array_length(target)),
+    var _drag = 4 + (4 * array_length(target)),
     	n = 0;
 
-    with(target) if(instance_exists(self)){
-        //speed += friction * current_time_scale;
+    with(target){
+    	if(instance_exists(self)){
+	        //speed += friction * current_time_scale;
 
-    	 // Push Bubble:
-        other.x += (hspeed / _drag) * current_time_scale;
-        other.y += (vspeed / _drag) * current_time_scale;
+	    	 // Push Bubble:
+    		with(other){
+	    		motion_add_ct(other.direction, other.speed / _drag);
+    			if(speed > 2) speed -= 2 * current_time_scale;
+    		}
 
-		 // Float in Bubble:
-		if(!other.big){
-			x = other.x;
-			y = other.y - other.z;
-		}
-		else{
-	        var	l = 2 + ((n * 123) % 8),
-	        	d = (current_frame / (10 + speed)) + direction,
-	        	s = max(0.5 - (n * 0.05), 0.1);
+			 // Float in Bubble:
+			if(!other.big){
+				x = other.x;
+				y = other.y - other.z;
+			}
+			else{
+		        var	l = 2 + ((n * 123) % 8),
+		        	d = (current_frame / (10 + speed)) + direction,
+		        	s = (instance_is(self, hitme) ? max(0.3 - (n * 0.05), 0.1) : 0.5);
+	
+		        x += ((other.x + (l * cos(d))		   ) - x) * s;
+		        y += ((other.y + (l * sin(d)) - other.z) - y) * s;
+			}
 
-	        x += ((other.x + (l * cos(d))		   ) - x) * s;
-	        y += ((other.y + (l * sin(d)) - other.z) - y) * s;
-		}
-		n++;
+			n++;
+    	}
+    	else with(other){
+    		target = array_delete_value(target, other);
+    	}
     }
 
      // Grab Projectile:
-    if(is_array(target) || !instance_exists(target)){
+    if(z < 24 && (is_array(target) || !instance_exists(target))){
     	if(place_meeting(x, y, projectile) || place_meeting(x, y, enemy)){
-	    	var	_maxSize = (big ? 2 : 0),
-	    		_grabbing = [
+	    	var	_maxSize = (big ? 3 : 0),
+	    		_grab = array_combine(
 	    			instances_matching_ne(instances_matching_ne(projectile, "typ", 0), "name", name),
-	    			instances_matching_le(enemy, "size", _maxSize)
-	    		],
-	    		_grab = [];
-
-			for(var i = 0; i < array_length(_grabbing); i++){
-				array_copy(_grab, array_length(_grab), _grabbing[i], 0, array_length(_grabbing[i]));
-			}
+	    			array_combine(
+	    				instances_matching_le(enemy, "size", _maxSize),
+	    				instances_matching(DogGuardian, "size", _maxSize + 1),
+    				)
+	    		);
 
 	        with(instances_meeting(x, y, instances_matching_ne(instances_matching(_grab, "bubble_bombed", null, false), "team", team))){
 	            if(place_meeting(x, y, other)){
@@ -455,9 +479,9 @@
     //draw_sprite_ext(asset_get_index(`sprPortalL${(x mod 5) + 1}`), image_index, x, y - z, image_xscale, image_yscale, image_angle / 3, image_blend, image_alpha);
 
 #define BubbleBomb_hit
-    if(other.team != 0){
+    if(other.team != 0 && z < 24){
          // Knockback:
-        if(chance(1, 2)){
+        if(chance(1, 2) && ("bubble_bombed" not in other || other.bubble_bombed == false)){
             speed *= 0.9;
             with(other) motion_add(other.direction, other.force);
         }
@@ -487,7 +511,7 @@
 	}
 
 	for(var a = _dir; a < _dir + 360; a += (360 / _num)){
-	    with(obj_create(x + lengthdir_x(_dis, a), y + lengthdir_y(_dis, a), "BubbleExplosion")){
+	    with(obj_create(x + lengthdir_x(_dis, a), y - z + lengthdir_y(_dis, a), "BubbleExplosion")){
 	        team = other.team;
 	        var c = other.creator;
 	        if(instance_exists(c)){
@@ -500,14 +524,14 @@
 
 	 // Big Bombage:
     if(big){
-    	repeat(8){
-    		with(obj_create(x + orandom(2), y + orandom(2), "BubbleBomb")){
+    	/*repeat(8){
+    		with(obj_create(x + orandom(2), y - z + orandom(2), "BubbleBomb")){
     			team = other.team;
     			creator = other.creator;
     			hitid = other.hitid;
     			image_speed += random(0.1);
     		}
-    	}
+    	}*/
 
 		 // Effects:
     	sleep(15);
@@ -1740,7 +1764,12 @@
     image_alpha = abs(image_alpha);
 
      // Outline Setup:
-    var _outline = (instance_exists(leader) && player_get_outlines(leader.index) && player_is_local_nonsync(leader.index));
+    var _outline = (
+    	instance_exists(leader)				&&
+    	player_get_outlines(leader.index)	&&
+    	lq_defget(opt, "petOutlines", true)	&&
+    	player_is_local_nonsync(leader.index)
+    );
     if(_outline){
         var _surf = surf_draw,
             _surfw = surf_draw_w,
@@ -2120,6 +2149,16 @@
         draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
     }
 
+    with(instances_matching(instances_named(CustomProjectile, "BubbleBomb"), "big", true)) if(visible){
+    	var	f = min((z / 6) - 4, 6),
+    		w = max(6 + f, 0) + sin((x + y + z) / 8),
+    		h = max(4 + f, 0) + cos((x + y + z) / 8),
+    		_x = x,
+    		_y = y + 6;
+
+        draw_ellipse(_x - w, _y - h, _x + w, _y + h, false);
+    }
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
@@ -2220,3 +2259,4 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
+#define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
