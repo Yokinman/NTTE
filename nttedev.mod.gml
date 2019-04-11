@@ -10,7 +10,7 @@
         /* script_set modifies a script if it exists, appends script to end of file if not */
         /* script_remove removes a script if it exists */
 
-        script_set(self, "mod", "telib", "draw_set_flat", ["_color"], "", "");
+        script_set(self, "mod", "telib", "trace_error", ["_error"], "", "_nc");
         
         //script_remove(self, "obj_create");
     }

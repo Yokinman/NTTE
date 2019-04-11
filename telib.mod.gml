@@ -1608,3 +1608,7 @@
         return id;
     }
     return noone;
+
+#define trace_error(_error)
+	trace(_error);
+	trace_color("Hey, screenshot that ^^^ error and send it to Yokin#1322 on Discord (or another NTTE dev)", c_yellow);

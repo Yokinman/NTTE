@@ -1232,21 +1232,23 @@
 
                          // Effects:
                         sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
-                        for(var _ox = 0; _ox < 32; _ox += 16){
-                            for(var _oy = 0; _oy < 32; _oy += 16){
-                                var _x = x + _ox + 8,
-                                    _y = y + _oy + 8,
-                                    _dir = point_direction(other.x, other.y, _x, _y),
-                                    _spd = 8 - (point_distance(other.x, other.y, _x, _y) / 16);
+                        for(var _x = bbox_left; _x < bbox_right; _x += 16){
+                            for(var _y = bbox_top; _y < bbox_bottom; _y += 16){
+                                var _dir = point_direction(other.x, other.y, _x + 8, _y + 8),
+                                    _spd = 8 - (point_distance(other.x, other.y, _x + 8, _y + 8) / 16);
 
-                                if(chance(1, 6) && object_index != FloorExplo){
-                                    with(obj_create(_x, _y, "TrenchFloorChunk")){
-                                        direction = _dir;
-                                        zspeed = _spd;
-                                        image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
-                                    }
-                                }
-                                else instance_create(_x, _y, Debris);
+								if(chance(2, 3)){
+	                                with(obj_create(_x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
+	                                    zspeed = _spd;
+	                                    direction = _dir;
+	                                	if(other.object_index == FloorExplo || chance(1, 2)){
+	                                		sprite_index = spr.DebrisTrench;
+	                                		zspeed /= 2;
+	                                		zfric /= 2;
+	                                	}
+	                                    //image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
+	                                }
+								}
                             }
                         }
                         /*repeat(sprite_width / 8){
@@ -1452,11 +1454,11 @@
                                     _dir = point_direction(other.x, other.y, x, y),
                                     _spd = other.spd;
 
-                                with(obj_create(x + _ox, y + _oy, "TrenchFloorChunk")){
+                                with(obj_create(x + _ox + orandom(8), y + _oy + orandom(8), "TrenchFloorChunk")){
                                     speed /= 2;
                                     direction = _dir;
                                     zspeed = 3 + random(2);
-                                    image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
+                                    //image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
                                 }
                             }
                             repeat(2){
@@ -1601,14 +1603,20 @@
         image_index = irandom(image_number - 1)
         image_speed = 0;
         image_alpha = 0;
-        depth = -8;
+        depth = -9;
 
          // Vars:
         z = 0;
         zspeed = 6 + random(4);
         zfric = 0.3;
         friction = 0.05;
+        image_angle += orandom(20);
         rotspeed = random_range(1, 2) * choose(-1, 1);
+        rotfriction = 0;
+        if(chance(1, 3)){
+        	rotspeed *= 8;
+        	rotfriction = 1;
+        }
 
         motion_add(random(360), 2 + random(3));
 
@@ -1618,6 +1626,7 @@
 #define TrenchFloorChunk_step
     z_engine();
     image_angle += rotspeed * current_time_scale;
+    rotspeed -= clamp(rotspeed, -rotfriction, rotfriction) * current_time_scale;
 
      // Stay above walls:
     /*depth = clamp(-z / 8, -8, 0);
@@ -1637,7 +1646,7 @@
 
 #define TrenchFloorChunk_destroy
     sound_play_pitchvol(sndOasisExplosionSmall, 0.5 + random(0.3), 0.3 + random(0.1));
-    var n = 3;
+    var _debris = (sprite_index == spr.DebrisTrench);
 
      // Fall into Pit:
     var f = floor_at(x, y);
@@ -1649,23 +1658,34 @@
             direction = other.direction;
             speed = other.speed;
         }
+        if(!_debris) repeat(3){
+        	with(instance_create(x, y, Smoke)){
+        		motion_add(random(360), 2);
+        	}
+        }
     }
 
      // Break on ground:
     else{
         y -= 2;
         sound_play_pitchvol(sndWallBreak, 0.5 + random(0.3), 0.4);
-        repeat(3) with(instance_create(x, y, Debris)){
-            speed = 4 + random(2);
-            if(!place_meeting(x, y, Floor)) depth = -8;
+    	for(var d = direction; d < direction + 360; d += 360 / (_debris ? 1 : 3)){
+    		with(instance_create(x, y, Debris)){
+	    		motion_set(d + orandom(20), other.speed + random(1));
+	    		if(_debris){
+	    			image_angle = other.image_angle;
+	    		}
+	    		else speed += 2 + random(1);
+	            if(!place_meeting(x, y, Floor)) depth = -8;
+	
+				 // Dusty:
+	            with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+					waterbubble = false;
+			        depth = other.depth;
+					motion_add(other.direction, other.speed);
+			    }
+    		}
         }
-        n = 6;
-    }
-
-     // Ground smacky:
-    repeat(n) with(instance_create(x + orandom(4), y + orandom(4), Smoke)){
-        motion_add(point_direction(other.x, other.y, x, y), 2);
-        if(!place_meeting(x, y, Floor)) depth = -8;
     }
 
 
@@ -2076,3 +2096,4 @@
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
+#define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);

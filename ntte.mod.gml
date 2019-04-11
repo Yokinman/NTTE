@@ -1846,14 +1846,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     return i;
 
 #define charm_draw(_inst)
-    instance_destroy();
-
      // Surface Setup:
     var _surf = surfCharm,
         _surfw = game_width,
         _surfh = game_height,
         _surfx = view_xview_nonsync,
-        _surfy = view_yview_nonsync;
+        _surfy = view_yview_nonsync,
+        _cts = current_time_scale;
 
     if(!surface_exists(_surf)){
         _surf = surface_create(_surfw, _surfh)
@@ -1861,26 +1860,42 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
      // Draw Charmed Enemies to Surface:
+    current_time_scale = 0.00001;
     surface_set_target(_surf);
     draw_clear_alpha(0, 0);
-    with(instances_seen(_inst, 24)){
-        var _x = x - _surfx,
-            _y = y - _surfy,
-            _spr = sprite_index,
-            _img = image_index;
-
-        if(object_index == TechnoMancer){ // JW help me
-            _spr = drawspr;
-            _img = drawimg;
-            if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
-                texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
-                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
-            }
-        }
-
-        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+    try{
+	    with(instances_seen(_inst, 24)){
+	        /*var _x = x - _surfx,
+	            _y = y - _surfy,
+	            _spr = sprite_index,
+	            _img = image_index;
+	
+	        if(object_index == TechnoMancer){ // JW help me
+	            _spr = drawspr;
+	            _img = drawimg;
+	            if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
+	                texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
+	                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+	            }
+	        }
+	
+	        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);*/
+	
+			var _x = x,
+				_y = y;
+	
+	    	x -= _surfx;
+	    	y -= _surfy;
+	        event_perform(ev_draw, 0);
+	        x = _x;
+	        y = _y;
+	    }
+    }
+    catch(_error){
+    	trace_error(_error);
     }
     surface_reset_target();
+    current_time_scale = _cts;
 
      // Outlines:
     var _local = -1;
@@ -1995,6 +2010,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
         shader_reset();
     }
+
+    instance_destroy();
 
 #define charm_step
     var _charmList = ds_list_to_array(global.charm),
@@ -2504,3 +2521,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_combine(_array1, _array2)                                                 return  mod_script_call(   "mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
+#define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
