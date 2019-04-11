@@ -308,6 +308,12 @@
             PetScorpionFire     = sprite_add("sprites/pets/Desert/sprPetScorpionFire.png",      6, 16, 16);
             PetScorpionShield   = sprite_add("sprites/pets/Desert/sprPetScorpionShield.png",    6, 16, 16);
             
+             // Spider
+            PetSpiderIdle = sprite_add("sprites/pets/Caves/sprPetSpiderIdle.png",   8, 16, 16);
+            PetSpiderWalk = sprite_add("sprites/pets/Caves/sprPetSpiderWalk.png",   6, 16, 16);
+            PetSpiderHurt = sprite_add("sprites/pets/Caves/sprPetSpiderDodge.png",  3, 16, 16);
+            PetSparkle =    sprite_add("sprites/pets/Caves/sprPetSparkle.png",      5,  8,  8);
+            
              // Parrot:
             PetParrotIdle = sprite_add("sprites/pets/Coast/sprPetParrotIdle.png",   6, 12, 12);
             PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);
@@ -554,7 +560,7 @@
         	MortarImpact  = sprite_add("sprites/enemies/Mortar/sprMortarImpact.png",  7, 16, 16);
         	MortarTrail   = sprite_add("sprites/enemies/Mortar/sprMortarTrail.png",   3,  4,  4);
 
-        	 // Cursed mortar:
+        	 // Cursed Mortar:
         	InvMortarIdle    = sprite_add("sprites/enemies/InvMortar/sprInvMortarIdle.png",    4, 22, 24);
         	InvMortarWalk    = sprite_add("sprites/enemies/InvMortar/sprInvMortarWalk.png",    8, 22, 24);
         	InvMortarFire    = sprite_add("sprites/enemies/InvMortar/sprInvMortarFire.png",   16, 22, 24);
@@ -566,6 +572,13 @@
         	SpiderlingWalk = sprite_add("sprites/enemies/Spiderling/sprSpiderlingWalk.png", 4, 8, 8);
         	SpiderlingHurt = sprite_add("sprites/enemies/Spiderling/sprSpiderlingHurt.png", 3, 8, 8);
         	SpiderlingDead = sprite_add("sprites/enemies/Spiderling/sprSpiderlingDead.png", 7, 8, 8);
+        	
+        	 // Spider Walls:
+        	SpiderWallMainBot   = sprite_add("sprites/areas/Caves/sprSpiderWallMainBot.png",    2, 0, 0);
+        	SpiderWallMainTop   = sprite_add("sprites/areas/Caves/sprSpiderWallMainTop.png",    2, 0, 0);
+        	SpiderWallFakeTop   = sprite_add("sprites/areas/Caves/sprSpiderWallFakeTop.png",    4, 0, 0);
+        	SpiderWallTrans     = sprite_add("sprites/areas/Caves/sprSpiderWallTrans.png",      4, 0, 0);
+        	 
         //#endregion
 
         OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
