@@ -85,7 +85,7 @@
 
 #define race_skin_avail(_skin)
     if(_skin == 0) return true;
-    return unlock_get("parrot_" + chr(97 + _skin) + "skin");
+    return unlock_get("parrot_" + chr(97 + real(_skin)) + "skin");
 
 #define race_skin_name(_skin)
     if(race_skin_avail(_skin)){

@@ -1182,7 +1182,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                  // Option Specifics:
                 _x += 124;
-                var _value = lq_get(opt, varname);
+                var _value = lq_defget(opt, varname, 0);
                 with(other){
                 	switch(other.type){
 	                    case opt_toggle:
@@ -1194,7 +1194,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	                            _dy = _y - 2,
 	                            w = 6 + (100 * _value),
 	                            h = sprite_get_height(sprOptionSlider);
-	
+
 	                         // Slider:
 	                        draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
 	                        draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);

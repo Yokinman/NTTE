@@ -85,13 +85,13 @@
         if(gold){
         	var o = random_range(20, 60);
         	for(var a = -o; a <= o; a += o){
-            	scrEnemyShoot("TrafficCrabVenom", gunangle + a, ((a == 0) ? 10 : 6) + random(2));
+            	scrEnemyShoot("VenomPellet", gunangle + a, ((a == 0) ? 10 : 6) + random(2));
         	}
         }
         
          // Normal venom shot:
         else{
-			scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(20), 7 + random(4));
+			scrEnemyShoot("VenomPellet", gunangle + orandom(20), 7 + random(4));
         }
         
          // Effects:
@@ -160,8 +160,8 @@
 
      // Venom Explosion:
     if(gold){
-        repeat(4 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", random(360), 8 + random(4));
-        repeat(8 + irandom(8)) scrEnemyShoot("TrafficCrabVenom", random(360), 4 + random(4));
+        repeat(4 + irandom(4)) scrEnemyShoot("VenomPellet", random(360), 8 + random(4));
+        repeat(8 + irandom(8)) scrEnemyShoot("VenomPellet", random(360), 4 + random(4));
     }
 
      // Effects:
@@ -1234,7 +1234,7 @@
             
              // Side shots:
             else{
-                repeat(4 + irandom(4) + (2 * _lv)) scrEnemyShoot("TrafficCrabVenom", dir + (45 * i) + orandom(16) + (i * irandom(6 * _lv)), 4 + random(10));
+                repeat(4 + irandom(4) + (2 * _lv)) scrEnemyShoot("VenomPellet", dir + (45 * i) + orandom(16) + (i * irandom(6 * _lv)), 4 + random(10));
             }
             
              // Effects:

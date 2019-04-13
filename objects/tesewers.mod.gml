@@ -105,7 +105,7 @@
             var d = 4,
                 s = 2;
             for (var i = 0; i <= 5; i++){
-                with scrEnemyShoot("TrafficCrabVenom", gunangle + orandom(2 + i), s * i){
+                with scrEnemyShoot("VenomPellet", gunangle + orandom(2 + i), s * i){
                     move_contact_solid(direction, d + d * i);
 
                      // Effects:
@@ -2035,8 +2035,14 @@
          // Mid intro:
         else{
              // safety measures
-            with instances_matching([WantRevivePopoFreak, Van, IDPDSpawn], "", null)
-                alarm += max(1, current_time_scale);
+            if(current_frame_active){
+                with(instances_matching([WantRevivePopoFreak, VanSpawn, IDPDSpawn], "", null)){
+                    for(var i = 0; i <= 1; i++){
+                    	var a = alarm_get(i);
+                    	if(a > 0) alarm_set(i, a + max(1, current_time_scale));
+                    }
+                }
+            }
 
              // Camera pan:
             var s = UberCont.opt_shake;
@@ -2926,7 +2932,7 @@
          // Venom Lines:
         if((d mod 90) == 0){
             for(var i = 0; i <= 5; i++){
-                with(scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2 + i), 2 * i)){
+                with(scrEnemyShoot("VenomPellet", direction + d + orandom(2 + i), 2 * i)){
                     move_contact_solid(direction, 4 + (4 * i));
 
                      // Effects:
@@ -2940,7 +2946,7 @@
 
          // Individual:
         else{
-            with(scrEnemyShoot("TrafficCrabVenom", direction + d + orandom(2), 5.8 + random(0.4))){
+            with(scrEnemyShoot("VenomPellet", direction + d + orandom(2), 5.8 + random(0.4))){
                 move_contact_solid(direction, 6);
             }
         }

@@ -1966,54 +1966,51 @@
         dist_max = 96;
         roids = false;
 
-		 // Arc Targeting:
-		if(fork()){
-			wait 0;
-			if(instance_exists(self)){
-				 // Find Targetable Enemies:
-				var _maxDist = dist_max,
-		        	_target = [],
-		        	_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
-
-		    	if(instance_exists(creator)){
-			        with(instances_matching_ne(hitme, "team", creator.team)){
-			            if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
-			            	if(_teamPriority == null || team > _teamPriority){
-			            		_teamPriority = team;
-			            		target = [];
-			            	}
-
-			                array_push(_target, id);
-			            }
-			        }
-		    	}
-
-				 // Random Arc:
-				if(array_length(_target) <= 0){
-					var _dis = _maxDist * random_range(0.2, 0.8),
-						_dir = random(360);
-	
-					do{
-						target_x = x + lengthdir_x(_dis, _dir);
-						target_y = y + lengthdir_y(_dis, _dir);
-						_dis -= 4;
-					}
-					until (_dis < 12 || !collision_line(x, y, target_x, target_y, Wall, false, false));
-				}
-
-				 // Enemy Arc:
-				else{
-					target = instance_random(_target);
-					target_x = target.x;
-					target_y = target.y;
-					time *= 1.5;
-				}
-			}
-			exit;
-		}
+         // Alarms:
+        alarm0 = 1;
         
         return id;
     }
+
+#define TeslaCoil_alrm0
+	 // Find Targetable Enemies:
+	var _maxDist = dist_max,
+    	_target = [],
+    	_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
+
+	if(instance_exists(creator)){
+        with(instances_matching_ne(instances_matching_ne(hitme, "team", creator.team), "mask_index", mskNone)){
+            if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
+            	if(_teamPriority == null || team > _teamPriority){
+            		_teamPriority = team;
+            		target = [];
+            	}
+
+                array_push(_target, id);
+            }
+        }
+	}
+
+	 // Random Arc:
+	if(array_length(_target) <= 0){
+		var _dis = _maxDist * random_range(0.2, 0.8),
+			_dir = random(360);
+
+		do{
+			target_x = x + lengthdir_x(_dis, _dir);
+			target_y = y + lengthdir_y(_dis, _dir);
+			_dis -= 4;
+		}
+		until (_dis < 12 || !collision_line(x, y, target_x, target_y, Wall, false, false));
+	}
+
+	 // Enemy Arc:
+	else{
+		target = instance_random(_target);
+		target_x = target.x;
+		target_y = target.y;
+		time *= 1.5;
+	}
 
 #define TeslaCoil_step
     wave += current_time_scale;
@@ -2075,6 +2072,74 @@
         }
     }
     else instance_destroy();
+
+
+#define VenomPellet_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = sprScorpionBullet;
+        depth = -3;
+
+         // Vars:
+        mask_index = mskEnemyBullet1;
+        friction = 0.75;
+        damage = 2;
+        force = 4;
+        typ = 2;
+
+        return id;
+    }
+
+#define VenomPellet_step
+    if(speed <= 0) instance_destroy();
+
+#define VenomPellet_anim
+    image_speed = 0;
+    image_index = image_number - 1;
+
+#define VenomPellet_hit
+    if(projectile_canhit_melee(other)){
+        projectile_hit_push(other, damage, force);
+    }
+
+#define VenomPellet_destroy
+    with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
+
+
+#define Test_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+		spr_idle = spr.GullIdle;
+		spr_walk = spr.GullWalk;
+		spr_hurt = spr.GullHurt;
+		spr_dead = spr.GullDead;
+		spr_weap = spr.GullSword;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "GULL"];
+		depth = -2;
+
+         // Sound:
+        snd_hurt = sndSalamanderHurt;
+        snd_dead = sndSalamanderDead;
+
+         // Vars:
+		mask_index = mskSalamander;
+		maxhealth = 8;
+		raddrop = 3;
+		size = 1;
+		walk = 0;
+		walkspd = 0.8;
+		maxspd = 3;
+		gunangle = random(360);
+		direction = gunangle;
+		wepangle = 140 * choose(-1, 1);
+
+         // Alarms:
+		alarm1 = 60 + irandom(60);
+		alarm2 = -1;
+
+		return id;
+	}
 
 
 /// Mod Events

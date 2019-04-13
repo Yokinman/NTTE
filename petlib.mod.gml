@@ -538,7 +538,7 @@
                 }
                 
                  // Venom:
-                repeat(8 + irandom(4)) scrEnemyShoot("TrafficCrabVenom", d + orandom(12), 8 + random(8));
+                repeat(8 + irandom(4)) scrEnemyShoot("VenomPellet", d + orandom(12), 8 + random(8));
             }
 
              // Death Sound:
@@ -1017,6 +1017,7 @@
             depth = other.depth - 0.1;
         }
     }
+
 
 #define Octo_create
      // Visual:

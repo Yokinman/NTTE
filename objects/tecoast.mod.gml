@@ -871,21 +871,22 @@
             }
         }
 
-        else{
+        else if(instance_exists(Player) && intro_pan > 0){
              // Freeze Things:
             if(current_frame_active){
-                with(instances_matching([WantRevivePopoFreak, Van, IDPDSpawn], "", null)){
-                    alarm0 += max(1, current_time_scale);
+                with(instances_matching([WantRevivePopoFreak, VanSpawn, IDPDSpawn], "", null)){
+                    for(var i = 0; i <= 1; i++){
+                    	var a = alarm_get(i);
+                    	if(a > 0) alarm_set(i, a + max(1, current_time_scale));
+                    }
                 }
             }
 
              // Just in case:
             with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")) my_health = 0;
-
-             // Attract Pickups:
-            if(instance_exists(Player) && intro_pan > 0){
-                scrPickupPortalize();
-            }
+            
+        	 // Attract Pickups:
+            scrPickupPortalize();
         }
     }
 
@@ -3050,7 +3051,7 @@
             _y = y + 4;
 
         repeat(choose(2, 3)){
-            scrEnemyShootExt(_x, _y, "TrafficCrabVenom", gunangle + orandom(10), 10 + random(2));
+            scrEnemyShootExt(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
         }
         gunangle += (sweep_dir * sweep_spd);
 
@@ -3113,38 +3114,6 @@
     }
 
 
-#define TrafficCrabVenom_create(_x, _y)
-    with(instance_create(_x, _y, CustomProjectile)){
-         // Visual:
-        sprite_index = sprScorpionBullet;
-        mask_index = mskEnemyBullet1;
-        depth = -3;
-
-         // Vars:
-        friction = 0.75;
-        damage = 2;
-        force = 4;
-        typ = 2;
-
-        return id;
-    }
-
-#define TrafficCrabVenom_step
-    if(speed <= 0) instance_destroy();
-
-#define TrafficCrabVenom_anim
-    image_speed = 0;
-    image_index = image_number - 1;
-
-#define TrafficCrabVenom_hit
-    if(projectile_canhit_melee(other)){
-        projectile_hit_push(other, damage, force);
-    }
-
-#define TrafficCrabVenom_destroy
-    with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
-
-
 /// Mod Events
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
@@ -3170,7 +3139,7 @@
     instance_destroy();
 
 #define draw_bloom
-    with(instances_named(CustomProjectile, "TrafficCrabVenom")){
+    with(instances_named(CustomProjectile, "VenomPellet")){
         draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
     }
 
