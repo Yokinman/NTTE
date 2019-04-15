@@ -8,3 +8,4 @@
 /loadwep lightring launcher
 /loadwep super lightring launcher
 /loadwep tesla coil
+/loadwep quasar rifle

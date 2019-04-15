@@ -47,6 +47,12 @@
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
     	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
 
+         // Quasar Beam:
+        QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
+        QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 16, 16);
+        QuasarBeamEnd   = sprite_add("sprites/weps/projectiles/sprQuasarBeamEnd.png",   2,  0, 16);
+        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   5, 24, 24);
+
         //#region CAMPFIRE
              // Big Cactus:
             BigNightCactusIdle = sprite_add("sprites/areas/Campfire/Props/sprBigNightCactusIdle.png", 1, 16, 16);

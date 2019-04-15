@@ -2561,3 +2561,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
+#define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);

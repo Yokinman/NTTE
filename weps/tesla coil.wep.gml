@@ -2,7 +2,7 @@
     global.sprTeslaCoil = sprite_add_weapon("../sprites/weps/sprTeslaCoil.png", 5, 2);
 
 #define weapon_name return "TESLA COIL";
-#define weapon_text return "SMART LIGHTNING";
+#define weapon_text return "LIMITED POWER";
 #define weapon_auto return true;
 #define weapon_type return 5;
 #define weapon_cost return 2; // could b too much

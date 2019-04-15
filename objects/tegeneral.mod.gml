@@ -1914,6 +1914,238 @@
 	obj_create(x, y, name);
 
 
+#define QuasarBeam_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.QuasarBeam;
+        spr_strt = spr.QuasarBeamStart;
+        spr_stop = spr.QuasarBeamEnd;
+        image_speed = 0.5;
+        depth = -1;
+
+         // Vars:
+        mask_index = mskExploder;
+        image_xscale = 1;
+        image_yscale = image_xscale;
+        creator = noone;
+        roids = false;
+        damage = 12;
+        force = 4;
+        typ = 0;
+        bend = 0;
+        line_seg = [];
+        line_dis = 0;
+        line_dir_goal = 0;
+        offset_dis = 0;      // Offset from Creator Towards image_angle
+        bend_fric = 0.2;     // Multiplicative Friction for Line Bending
+        line_dis_max = 1000; // Max Possible Line Length
+        turn_max = 1;        // Max Rotate Speed
+        turn_factor = 1/8;	 // Rotation Speed Increase Factor
+        shrink = 0.02;       // Subtracted from Line Size
+        shrink_delay = 0;	 // Frames Until Shrink
+
+        return id;
+	}
+
+#define QuasarBeam_step
+    bend -= (bend * bend_fric) * current_time_scale;
+
+     // Shrink:
+    if(shrink_delay <= 0){
+	    var f = shrink * current_time_scale;
+	    image_xscale -= f;
+	    image_yscale -= f;
+    }
+    else{
+    	shrink_delay -= current_time_scale;
+    	if(instance_is(creator, Player)){
+			with(creator){
+				var k = 8;
+				if(other.roids) bwkick = max(bwkick, k);
+				else wkick = max(wkick, k);
+			}
+    	}
+    }
+
+     // Follow Creator:
+    if(instance_exists(creator) && instance_is(creator, Player)){
+        x = creator.x + creator.hspeed + lengthdir_x(offset_dis, image_angle);
+        y = creator.y + creator.vspeed + lengthdir_y(offset_dis, image_angle);
+        if(roids){
+        	y -= 4;
+        	x -= lengthdir_x(4, creator.gunangle - 90);
+        	y -= lengthdir_y(4, creator.gunangle - 90);
+        }
+        xprevious = x;
+        yprevious = y;
+
+		 // Slow Player Aim:
+        if(shrink_delay > 0){
+        	with(creator){
+	        	canaim = false;
+	        	gunangle += (angle_difference(point_direction(x, y, mouse_x[index], mouse_y[index]), gunangle) / 12) * current_time_scale;
+	        	image_angle = gunangle;
+        	}
+        	line_dir_goal = creator.gunangle;
+        }
+        else with(creator) canaim = true;
+    }
+
+     // Rotation:
+    var _turn = clamp(angle_difference(line_dir_goal, image_angle) * turn_factor, -turn_max, turn_max) * current_time_scale;
+    image_angle += _turn;
+    image_angle = (image_angle + 360) % 360;
+    bend -= _turn;
+
+     // Line:
+    var _vx = view_xview_nonsync,
+        _vy = view_yview_nonsync,
+        _lineAdd = 16,
+        _lineWid = 16,
+        _lineDir = image_angle,
+        _lineChange = 10 * _lineAdd * current_time_scale,
+        _dis = _lineAdd * image_xscale,
+        _dir = _lineDir,
+        _lx = x,
+        _ly = y;
+
+    line_seg = [];
+    line_dis += _lineChange;
+    line_dis = clamp(line_dis, 0, line_dis_max);
+
+    while(_dis < line_dis){
+        var _cx = x + lengthdir_x(_dis, _dir),
+            _cy = y + lengthdir_y(_dis, _dir);
+
+	         // Draw Line:
+        if(!collision_line(_lx, _ly, _cx, _cy, Wall, false, false) || array_length(line_seg) <= 0){
+			if(point_in_rectangle(_lx, _ly, _vx, _vy, _vx + game_width, _vy + game_height)){
+				if(array_length(line_seg) <= 0){
+					
+				}
+	        	for(var a = -1; a <= 1; a += 2){
+	                var l = (_lineWid * a) + 6,
+	                    d = point_direction(_lx, _ly, _cx, _cy) - 90,
+	                    _xtex = (_dis / line_dis),
+	                    _ytex = !!a;
+	
+	                array_push(line_seg, {
+	                    x    : _cx,
+	                    y    : _cy,
+	                    xoff : lengthdir_x(l, d),
+	                    yoff : lengthdir_y(l, d),
+	                    xtex : _xtex,
+	                    ytex : _ytex
+	                });
+	            }
+	        }
+        }
+
+         // Wall Collision:
+        else{
+            line_dis -= _lineChange;
+
+             // Effects:
+            if(chance_ct(1, 4)){
+                instance_create(_lx, _ly, Smoke);
+	            with(instance_create(_lx + orandom(8), _ly + orandom(8), BulletHit)){
+	            	sprite_index = spr.QuasarBeamHit;
+	            	image_angle = _dir + 180 + orandom(20);
+	            	depth = other.depth - 1;
+	            }
+            }
+        }
+
+         // Hit Enemies:
+        if(place_meeting(_cx, _cy, hitme)){
+            with(instances_meeting(_cx, _cy, instances_matching_ne(hitme, "team", team))){
+                with(other){
+                	line_dis -= _lineChange * 0.25; // a little spazzy right now
+                	if(projectile_canhit_melee(other)){ // will make it use better system later
+	                	 // Effects:
+			            with(instance_create(other.x + orandom(4), other.y + orandom(4), BulletHit)){
+			            	sprite_index = spr.QuasarBeamHit;
+			            	image_angle = _dir + 180 + orandom(40);
+			            	motion_add(image_angle, 1);
+			            	depth = other.depth - 1;
+			            }
+
+						 // Damage:
+	                    direction = _dir;
+	                    QuasarBeam_hit();
+                	}
+                }
+            }
+        }
+
+        _lx = _cx;
+        _ly = _cy;
+        _dis += _lineAdd;
+        _dir += bend / 5;
+    }
+
+     // Effects:
+    view_shake_max_at(x, y, 4);
+
+     // End:
+    if(image_xscale <= 0 || image_yscale <= 0) instance_destroy();
+
+#define QuasarBeam_draw
+    QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
+
+#define QuasarBeam_hit
+    if(projectile_canhit_melee(other)){ // will make it use better system later
+         // Effects:
+        with(other){
+        	sleep_max(30);
+            repeat(3) instance_create(x, y, Smoke);
+        }
+    
+         // Damage:
+        var _dir = direction;
+        if(place_meeting(x, y, other)){
+            _dir = point_direction(x, y, other.x, other.y);
+        }
+        projectile_hit(other, damage, force, _dir);
+    }
+
+#define QuasarBeam_wall
+    // dust
+
+#define QuasarBeam_cleanup
+	with(creator){
+		canaim = true;
+	}
+
+#define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
+	var _angle = image_angle,
+		_x = x + lengthdir_x(16, _angle),
+		_y = y + lengthdir_y(16, _angle);
+
+    draw_sprite_ext(spr_strt, image_index, x, y, _xscale, _yscale, _angle, image_blend, _alpha);
+
+     // Main Laser:
+    if(array_length(line_seg) > 0){
+	    draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(sprite_index, image_index));
+	    draw_set_alpha(_alpha);
+
+	    with(line_seg){
+	        draw_vertex_texture(x + (xoff * _yscale), y + (yoff * _yscale), xtex, ytex);
+	        if(_x != x || _y != y){
+	        	_angle = point_direction(_x, _y, x, y);
+		    	_x = x;
+		    	_y = y;
+	        }
+	    }
+	
+	    draw_set_alpha(1);
+	    draw_primitive_end();
+    }
+
+     // Laser End:
+    draw_sprite_ext(spr_stop, image_index, _x, _y, _xscale, _yscale, _angle, image_blend, _alpha);
+
+
 #define ReviveNTTE_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
@@ -2205,8 +2437,18 @@
         draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
     }*/
 
+	 // Lightning Discs:
     with(instances_named(CustomProjectile, "LightningDisc")){
-        scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+        if(visible){
+        	scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+        }
+    }
+
+	 // Quasar Beams:
+    with(instances_named(CustomProjectile, "QuasarBeam")){
+        if(visible){
+        	QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, 0.1 * image_alpha);
+        }
     }
 
 #define draw_shadows
@@ -2237,6 +2479,30 @@
         draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
     }
 
+     // Quasar Beams:
+    draw_set_flat(draw_get_color());
+    with(instances_named(CustomProjectile, "QuasarBeam")){
+        var _scale = 5;
+        QuasarBeam_draw_laser(_scale * image_xscale, _scale * image_yscale, 1);
+
+         // Rounded Ends:
+        var _x = x,
+            _y = y,
+            r = ((sprite_height / 2) - 0.5 + (1 * ((image_number - 1) - floor(image_index)))) * _scale;
+
+        draw_circle(_x, _y, r * 2, false);
+
+        if(array_length(line_seg) > 0){
+            with(line_seg[array_length(line_seg) - 1]){
+                _x = x - 1;
+                _y = y - 1;
+            }
+        }
+
+        draw_circle(_x, _y, r, false);
+    }
+    draw_set_flat(-1);
+
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
 
@@ -2249,6 +2515,30 @@
     with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
         draw_circle(x - 1, y - 1, (radius * image_xscale * 1.5) + 4 + orandom(1), false);
     }
+
+	 // Quasar Beams:
+    draw_set_flat(draw_get_color());
+    with(instances_named(CustomProjectile, "QuasarBeam")){
+        var _scale = 2;
+        QuasarBeam_draw_laser(_scale * image_xscale, _scale * image_yscale, 1);
+
+         // Rounded Ends:
+        var _x = x,
+            _y = y,
+            r = ((sprite_height / 2) - 0.5 + (1 * ((image_number - 1) - floor(image_index)))) * _scale;
+
+        draw_circle(_x, _y, r * 2, false);
+
+        if(array_length(line_seg) > 0){
+            with(line_seg[array_length(line_seg) - 1]){
+                _x = x - 1;
+                _y = y - 1;
+            }
+        }
+
+        draw_circle(_x, _y, r, false);
+    }
+    draw_set_flat(-1);
 
 
 /// Scripts
@@ -2326,3 +2616,4 @@
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
+#define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);

@@ -4,9 +4,12 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+	 // sleep_max():
+	global.sleep_max = 0;
+
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "ScorpionRock", "PetVenom"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
@@ -286,6 +289,12 @@
     //trace("");
     //trace("Frame", current_frame, "Lag:")
     //trace_lag();
+    
+     // sleep_max():
+    if(global.sleep_max > 0){
+	    sleep(global.sleep_max);
+	    global.sleep_max = 0;
+    }
 
 #define enemy_step_ntte
     if("walk" in self){
@@ -1612,3 +1621,6 @@
 #define trace_error(_error)
 	trace(_error);
 	trace_color("Hey, screenshot that ^^^ error and send it to Yokin#1322 on Discord (or another NTTE dev)", c_yellow);
+
+#define sleep_max(_milliseconds)
+	global.sleep_max = max(global.sleep_max, _milliseconds);
