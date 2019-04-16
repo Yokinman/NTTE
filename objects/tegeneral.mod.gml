@@ -1924,7 +1924,7 @@
         depth = -1;
 
          // Vars:
-        mask_index = mskExploder;
+        mask_index = msk.QuasarBeam;
         image_xscale = 1;
         image_yscale = image_xscale;
         creator = noone;
@@ -1933,68 +1933,116 @@
         force = 4;
         typ = 0;
         bend = 0;
+        loop_snd = -1;
+        hit_time = 0;
+        hit_list = {};
         line_seg = [];
         line_dis = 0;
         line_dir_goal = 0;
-        offset_dis = 0;      // Offset from Creator Towards image_angle
-        bend_fric = 0.2;     // Multiplicative Friction for Line Bending
-        line_dis_max = 1000; // Max Possible Line Length
-        turn_max = 1;        // Max Rotate Speed
-        turn_factor = 1/8;	 // Rotation Speed Increase Factor
-        shrink = 0.02;       // Subtracted from Line Size
-        shrink_delay = 0;	 // Frames Until Shrink
+        blast_hit = true;
+        offset_dis		= 0;	// Offset from Creator Towards image_angle
+        bend_fric		= 0.4;	// Multiplicative Friction for Line Bending
+        line_dis_max	= 240;	// Max Possible Line Length
+        turn_max		= 8;	// Max Rotate Speed
+        turn_factor		= 1/8;	// Rotation Speed Increase Factor
+        shrink_delay	= 0;	// Frames Until Shrink
+        shrink			= 0.05;	// Subtracted from Line Size
+        scale_goal		= 1;	// Size to Reach When shrink_delay > 0
+        player_aim		= 1;	// gunangle Turning Speed Multiplier (1=No change)
 
         return id;
 	}
 
 #define QuasarBeam_step
-    bend -= (bend * bend_fric) * current_time_scale;
+	hit_time += current_time_scale;
 
      // Shrink:
     if(shrink_delay <= 0){
 	    var f = shrink * current_time_scale;
+	    if(!instance_is(creator, enemy)){
+	    	f *= power(0.7, skill_get(mut_laser_brain));
+	    }
 	    image_xscale -= f;
 	    image_yscale -= f;
     }
     else{
     	shrink_delay -= current_time_scale;
-    	if(instance_is(creator, Player)){
-			with(creator){
-				var k = 8;
+    	if(shrink_delay <= 0 || !instance_exists(creator)){
+    		shrink_delay = -1;
+    	}
+
+		 // Growin:
+		if(abs(scale_goal - image_xscale) > 0.05 || abs(scale_goal - image_yscale) > 0.05){
+			image_xscale += (scale_goal - image_xscale) * 0.4;
+			image_yscale += (scale_goal - image_yscale) * 0.4;
+
+			 // FX:
+			var p = (image_yscale * 0.5);
+			if(image_yscale < 1){
+				sound_play_pitchvol(sndLightningCrystalHit, p - random(0.1), 0.8);
+				sound_play_pitchvol(sndPlasmaHit, p, 0.6);
+			}
+			sound_play_pitchvol(sndEnergySword, image_yscale * 0.4, 0.6);
+		}
+		else{
+			image_xscale = scale_goal;
+			image_yscale = scale_goal;
+		}
+    }
+
+	 // Player Stuff:
+	if(instance_is(creator, Player)){
+		with(creator){
+			 // Kickback:
+			if(other.shrink_delay > 0){
+				var k = 8 * (1 + (max(other.image_xscale - 1, 0)));
 				if(other.roids) bwkick = max(bwkick, k);
 				else wkick = max(wkick, k);
 			}
-    	}
-    }
+			
+			 // Slow Aim:
+			var a = other.player_aim;
+			if(a != 1){
+				var _beams = instances_matching(instances_named(other.object_index, other.name), "creator", id);
+				if(array_length(instances_matching_lt(_beams, "player_aim", a)) <= 0 && instances_matching(_beams, "player_aim", a)[0] == other){
+					var f = min(a / other.image_yscale, 1);
+					if(f != 1 && other.image_yscale > 0){
+			        	canaim = false;
+			        	gunangle += angle_difference(point_direction(x, y, mouse_x[index], mouse_y[index]), gunangle) * f * current_time_scale;
+			        	scrRight(gunangle);
+					}
+					else canaim = true;
+				}
+			}
 
-     // Follow Creator:
-    if(instance_exists(creator) && instance_is(creator, Player)){
-        x = creator.x + creator.hspeed + lengthdir_x(offset_dis, image_angle);
-        y = creator.y + creator.vspeed + lengthdir_y(offset_dis, image_angle);
+        	 // Knockback:
+        	motion_add(gunangle + 180, other.image_yscale / 2.5);
+		}
+
+	     // Follow Player:
+        line_dir_goal = c.gunangle;
+
+    	var o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5),
+    		c = creator;
+
+        x = c.x + c.hspeed + lengthdir_x(o, image_angle);
+        y = c.y + c.vspeed + lengthdir_y(o, image_angle);
         if(roids){
-        	y -= 4;
-        	x -= lengthdir_x(4, creator.gunangle - 90);
-        	y -= lengthdir_y(4, creator.gunangle - 90);
+        	y -= 6;
+        	x -= lengthdir_x(2 * c.right, c.gunangle - 90);
+        	y -= lengthdir_y(2 * c.right, c.gunangle - 90);
         }
         xprevious = x;
         yprevious = y;
-
-		 // Slow Player Aim:
-        if(shrink_delay > 0){
-        	with(creator){
-	        	canaim = false;
-	        	gunangle += (angle_difference(point_direction(x, y, mouse_x[index], mouse_y[index]), gunangle) / 12) * current_time_scale;
-	        	image_angle = gunangle;
-        	}
-        	line_dir_goal = creator.gunangle;
-        }
-        else with(creator) canaim = true;
     }
 
      // Rotation:
     var _turn = clamp(angle_difference(line_dir_goal, image_angle) * turn_factor, -turn_max, turn_max) * current_time_scale;
     image_angle += _turn;
     image_angle = (image_angle + 360) % 360;
+
+	 // Bending:
+    bend -= (bend * bend_fric) * current_time_scale;
     bend -= _turn;
 
      // Line:
@@ -2003,32 +2051,31 @@
         _lineAdd = 16,
         _lineWid = 16,
         _lineDir = image_angle,
-        _lineChange = 10 * _lineAdd * current_time_scale,
-        _dis = _lineAdd * image_xscale,
+        _lineChange = 160 * current_time_scale,
+        _dis = 0,
         _dir = _lineDir,
-        _lx = x,
-        _ly = y;
+        _dirGoal = _lineDir + bend,
+        _cx = x,
+        _cy = y,
+        _lx = _cx - lengthdir_x((sprite_get_width(spr_strt) / 2) * image_xscale, _dir),
+        _ly = _cy - lengthdir_y((sprite_get_width(spr_strt) / 2) * image_xscale, _dir);
 
     line_seg = [];
     line_dis += _lineChange;
     line_dis = clamp(line_dis, 0, line_dis_max);
 
-    while(_dis < line_dis){
-        var _cx = x + lengthdir_x(_dis, _dir),
-            _cy = y + lengthdir_y(_dis, _dir);
+    do{
+    	var _canBlastHit = false;
 
-	         // Draw Line:
-        if(!collision_line(_lx, _ly, _cx, _cy, Wall, false, false) || array_length(line_seg) <= 0){
+	     // Draw Line:
+        if(!collision_line(_lx, _ly, _cx, _cy, Wall, false, false)){
 			if(point_in_rectangle(_lx, _ly, _vx, _vy, _vx + game_width, _vy + game_height)){
-				if(array_length(line_seg) <= 0){
-					
-				}
 	        	for(var a = -1; a <= 1; a += 2){
 	                var l = (_lineWid * a) + 6,
-	                    d = point_direction(_lx, _ly, _cx, _cy) - 90,
+	                    d = _dir - 90,
 	                    _xtex = (_dis / line_dis),
 	                    _ytex = !!a;
-	
+
 	                array_push(line_seg, {
 	                    x    : _cx,
 	                    y    : _cy,
@@ -2044,15 +2091,33 @@
          // Wall Collision:
         else{
             line_dis -= _lineChange;
+        	if(array_length(line_seg) <= 0) line_dis = 0;
+
+            _canBlastHit = true;
 
              // Effects:
-            if(chance_ct(1, 4)){
-                instance_create(_lx, _ly, Smoke);
-	            with(instance_create(_lx + orandom(8), _ly + orandom(8), BulletHit)){
+            if(chance_ct(1, 4) || blast_hit){
+                var _xoff = -12 * image_xscale,
+            		_yoff = 0;
+
+            	if(!blast_hit){
+            		_xoff += orandom(8);
+            		_yoff += orandom(16);
+            	}
+
+	            with(instance_create(
+	            	_lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
+	            	_ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90),
+	            	BulletHit
+	            )){
 	            	sprite_index = spr.QuasarBeamHit;
-	            	image_angle = _dir + 180 + orandom(20);
+	            	image_angle = _dir + 180
+	            	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
+	            	image_xscale = other.image_yscale;
+	            	image_yscale = other.image_yscale;
 	            	depth = other.depth - 1;
 	            }
+                instance_create(_lx, _ly, Smoke);
             }
         }
 
@@ -2060,13 +2125,16 @@
         if(place_meeting(_cx, _cy, hitme)){
             with(instances_meeting(_cx, _cy, instances_matching_ne(hitme, "team", team))){
                 with(other){
-                	line_dis -= _lineChange * 0.25; // a little spazzy right now
-                	if(projectile_canhit_melee(other)){ // will make it use better system later
+                	if(lq_defget(hit_list, string(other), 0) <= hit_time){
+        				_canBlastHit = true;
+
 	                	 // Effects:
-			            with(instance_create(other.x + orandom(4), other.y + orandom(4), BulletHit)){
+			            with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
 			            	sprite_index = spr.QuasarBeamHit;
-			            	image_angle = _dir + 180 + orandom(40);
-			            	motion_add(image_angle, 1);
+			            	motion_add(point_direction(_cx, _cy, x, y), 1);
+			            	image_angle = direction;
+			            	image_xscale = other.image_yscale;
+			            	image_yscale = other.image_yscale;
 			            	depth = other.depth - 1;
 			            }
 
@@ -2074,18 +2142,61 @@
 	                    direction = _dir;
 	                    QuasarBeam_hit();
                 	}
+            		if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
+            			line_dis = _dis;
+            		}
                 }
             }
         }
 
+         // Just in Case:
+        if(place_meeting(_cx, _cy, TopSmall)){
+        	line_dis = _dis;
+        }
+
+         // Effects:
+    	if(chance_ct(1, 10)){
+        	var o = 32 * image_yscale;
+	        with(instance_create(_cx + orandom(o), _cy + orandom(o), PlasmaTrail)){
+	        	sprite_index = spr.QuasarBeamTrail;
+	        	motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
+	        	if(other.image_yscale > 1) depth = other.depth - 1;
+	        }
+    	}
+
+		 // Move:
         _lx = _cx;
         _ly = _cy;
+        _cx += lengthdir_x(_lineAdd, _dir);
+        _cy += lengthdir_y(_lineAdd, _dir);
         _dis += _lineAdd;
-        _dir += bend / 5;
+
+		 // Turn:
+        _dir = clamp(_dir + (bend / 3), _lineDir - 90, _lineDir + 90);
+
+         // Blastin FX:
+		if(blast_hit){
+			if(_canBlastHit || _dis >= line_dis_max){
+				blast_hit = false;
+				/*repeat(8){
+			        with(instance_create(_lx, _ly, PlasmaTrail)){
+			        	motion_add(_dir + 180 + orandom(90), random(8 * other.image_yscale));
+			        	sprite_index = spr.QuasarBeamTrail;
+			        }
+				}*/
+				// insert plasma explo stuff?
+			}
+		}
     }
+    until (_dis >= line_dis);
 
      // Effects:
     view_shake_max_at(x, y, 4);
+    if(!audio_is_playing(loop_snd)){
+    	loop_snd = audio_play_sound(sndNothingBeamLoop, 0, true);
+    }
+    audio_sound_pitch(loop_snd, 0.3 + (0.1 * sin(current_frame / 10)));
+    audio_sound_gain(loop_snd, image_xscale, 0);
 
      // End:
     if(image_xscale <= 0 || image_yscale <= 0) instance_destroy();
@@ -2094,11 +2205,12 @@
     QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
 
 #define QuasarBeam_hit
-    if(projectile_canhit_melee(other)){ // will make it use better system later
+    if(lq_defget(hit_list, string(other), 0) <= hit_time){
          // Effects:
         with(other){
         	sleep_max(30);
             repeat(3) instance_create(x, y, Smoke);
+            if(other.blast_hit) sound_play_hit(sndPlasmaHit, 0.3)
         }
     
          // Damage:
@@ -2106,28 +2218,38 @@
         if(place_meeting(x, y, other)){
             _dir = point_direction(x, y, other.x, other.y);
         }
-        projectile_hit(other, damage, force, _dir);
+        projectile_hit(
+        	other,
+        	ceil((damage + (blast_hit * damage * (1 + skill_get(mut_laser_brain)))) * image_yscale),
+        	(instance_is(other, prop) ? 0 : force),
+        	_dir
+        );
+
+         // Set Custom IFrames:
+        lq_set(hit_list, string(other), hit_time + 6);
     }
 
 #define QuasarBeam_wall
     // dust
 
 #define QuasarBeam_cleanup
-	with(creator){
-		canaim = true;
+	if(player_aim != 1){
+		with(creator) canaim = true;
 	}
+	audio_stop_sound(loop_snd);
 
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
 	var _angle = image_angle,
-		_x = x + lengthdir_x(16, _angle),
-		_y = y + lengthdir_y(16, _angle);
+		_x = x,
+		_y = y;
 
-    draw_sprite_ext(spr_strt, image_index, x, y, _xscale, _yscale, _angle, image_blend, _alpha);
+    draw_sprite_ext(spr_strt, image_index, _x, _y, _xscale, _yscale, _angle, image_blend, _alpha);
 
      // Main Laser:
     if(array_length(line_seg) > 0){
 	    draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(sprite_index, image_index));
 	    draw_set_alpha(_alpha);
+	    draw_set_color(image_blend);
 
 	    with(line_seg){
 	        draw_vertex_texture(x + (xoff * _yscale), y + (yoff * _yscale), xtex, ytex);
@@ -2143,7 +2265,10 @@
     }
 
      // Laser End:
-    draw_sprite_ext(spr_stop, image_index, _x, _y, _xscale, _yscale, _angle, image_blend, _alpha);
+    var o = 16;
+    if(!collision_line(_x, _y, _x - lengthdir_x(o, _angle), _y - lengthdir_y(o, _angle), TopSmall, false, false)){
+    	draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
+    }
 
 
 #define ReviveNTTE_create(_x, _y)
@@ -2447,7 +2572,9 @@
 	 // Quasar Beams:
     with(instances_named(CustomProjectile, "QuasarBeam")){
         if(visible){
-        	QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, 0.1 * image_alpha);
+        	var a = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5));
+        	if(blast_hit) a *= 1.5 / image_yscale;
+        	QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, a * image_alpha);
         }
     }
 
@@ -2482,20 +2609,24 @@
      // Quasar Beams:
     draw_set_flat(draw_get_color());
     with(instances_named(CustomProjectile, "QuasarBeam")){
-        var _scale = 5;
-        QuasarBeam_draw_laser(_scale * image_xscale, _scale * image_yscale, 1);
+        var _scale = 5,
+        	_xscale = _scale * image_xscale,
+        	_yscale = _scale * image_yscale;
+
+        QuasarBeam_draw_laser(_xscale, _yscale, 1);
 
          // Rounded Ends:
         var _x = x,
             _y = y,
-            r = ((sprite_height / 2) - 0.5 + (1 * ((image_number - 1) - floor(image_index)))) * _scale;
+            r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
 
-        draw_circle(_x, _y, r * 2, false);
+        draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
 
         if(array_length(line_seg) > 0){
             with(line_seg[array_length(line_seg) - 1]){
-                _x = x - 1;
-                _y = y - 1;
+            	var a = point_direction(_x, _y, x, y);
+                _x = x - 1 + lengthdir_x(8 * _xscale, a);
+                _y = y - 1 + lengthdir_y(8 * _xscale, a);
             }
         }
 
@@ -2519,20 +2650,24 @@
 	 // Quasar Beams:
     draw_set_flat(draw_get_color());
     with(instances_named(CustomProjectile, "QuasarBeam")){
-        var _scale = 2;
-        QuasarBeam_draw_laser(_scale * image_xscale, _scale * image_yscale, 1);
+        var _scale = 2,
+        	_xscale = _scale * image_xscale,
+        	_yscale = _scale * image_yscale;
+
+        QuasarBeam_draw_laser(_xscale, _yscale, 1);
 
          // Rounded Ends:
         var _x = x,
             _y = y,
-            r = ((sprite_height / 2) - 0.5 + (1 * ((image_number - 1) - floor(image_index)))) * _scale;
+            r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
 
-        draw_circle(_x, _y, r * 2, false);
+        draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
 
         if(array_length(line_seg) > 0){
             with(line_seg[array_length(line_seg) - 1]){
-                _x = x - 1;
-                _y = y - 1;
+            	var a = point_direction(_x, _y, x, y);
+                _x = x - 1 + lengthdir_x(8 * _xscale, a);
+                _y = y - 1 + lengthdir_y(8 * _xscale, a);
             }
         }
 

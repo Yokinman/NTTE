@@ -6,7 +6,7 @@
 #define weapon_type return 5;  // Energy
 #define weapon_cost return 8;  // 8 Ammo
 #define weapon_load return 90; // 3 Seconds
-#define weapon_area return (unlock_get(mod_current) ? 15 : -1);
+#define weapon_area return (unlock_get("trenchWep") ? 13 : -1); // 6-1
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprSuperLightningRingLauncher;
 

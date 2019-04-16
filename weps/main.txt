@@ -1,6 +1,6 @@
 /loadwep crabbone
-/loadwep harpoon
-/loadwep netlauncher
+/loadwep harpoon launcher
+/loadwep net launcher
 /loadwep bubble rifle
 /loadwep bubble minigun
 /loadwep bubble shotgun
@@ -8,4 +8,5 @@
 /loadwep lightring launcher
 /loadwep super lightring launcher
 /loadwep tesla coil
+/loadwep quasar blaster
 /loadwep quasar rifle

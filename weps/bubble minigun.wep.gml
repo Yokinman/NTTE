@@ -3,11 +3,11 @@
 
 #define weapon_name return "BUBBLE MINIGUN";
 #define weapon_text return "SOAP EVERYWHERE";
-#define weapon_type return 4;   // Explosive
-#define weapon_cost return 2;   // 2 Ammo
-#define weapon_load return 3;   // 0.10 Seconds
-#define weapon_auto return 1;   // Automatic
-#define weapon_area return (unlock_get(mod_current) ? 7 : -1);
+#define weapon_auto return true;
+#define weapon_type return 4; // Explosive
+#define weapon_cost return 2; // 2 Ammo
+#define weapon_load return 3; // 0.1 Seconds
+#define weapon_area return (unlock_get("oasisWep") ? 10 : -1); // 5-1
 #define weapon_swap return sndSwapMotorized;
 #define weapon_sprt return global.sprBubbleMinigun;
 

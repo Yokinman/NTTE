@@ -594,7 +594,6 @@
 		 // Transition Levels:
 		else _chance = 1/4;
 	}
-
     if(chance(_chance, 1) && instance_exists(Player)){
         var _tries = 1000;
         while(_tries-- > 0){
@@ -612,6 +611,12 @@
     if(GameCont.area = "pizza") with(TV) {
         var f = instance_nearest(x, y + 48, Floor);
         Pet_spawn(x, f.y + 16, "CoolGuy");
+    }
+
+     // Spider Cocoons:
+    with(Cocoon) if(chance(4, 5)){ 
+    	obj_create(x, y, "NewCocoon");
+    	instance_delete(id);
     }
 
      // Visibilize Pets:
@@ -839,11 +844,32 @@
     	}
     }
 
-     // Spider Cocoons:
-    with(Cocoon) if(chance(4, 5)){ 
-    	obj_create(x, y, "NewCocoon");
-    	instance_delete(id);
-    }
+	 // Weapon Pack Unlocks:
+	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
+		var _packList = {
+			"coast" : ["BEACH GUNS" , "GRAB YOUR FRIENDS"],
+			"oasis" : ["BUBBLE GUNS", "SOAP AND WATER"],
+			"trench": ["TECH GUNS"  , "TERRORS FROM THE DEEP"]
+		};
+
+		for(var i = 0; i < array_length(_packList); i++){
+			var _area = lq_get_key(_packList, i),
+				_pack = lq_get_value(_packList, i),
+				_unlock = _area + "Wep";
+	
+			if(!unlock_get(_unlock)){
+				if(GameCont.area == _area){
+					if(GameCont.subarea >= area_get_subarea(_area)){
+						if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
+	                		unlock_set(_unlock, true);
+	                		sound_play(sndGoldUnlock);
+	                		scrUnlock(_pack[0], _pack[1], -1, -1);
+						}
+					}
+				}
+			}
+		}
+	}
 
      // Fixes weird delay thing:
     script_bind_step(bone_step, 0);

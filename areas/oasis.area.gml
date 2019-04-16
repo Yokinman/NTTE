@@ -104,10 +104,10 @@
 
 #define area_start
      // Coolin Clammin:
-    with(WeaponChest){
+    /*with(WeaponChest){
         obj_create(x, y, "ClamChest");
         instance_delete(id);
-    }
+    }*/
     
      // Anglers:
     with(RadChest) if(chance(1, 40)){

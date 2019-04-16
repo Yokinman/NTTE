@@ -3,10 +3,10 @@
 
 #define weapon_name return "LIGHTRING LAUNCHER";
 #define weapon_text return "JELLY TECHNOLOGY";
-#define weapon_type return 5;   // Energy
-#define weapon_cost return 3;   // 3 Ammo
-#define weapon_load return 37;  // 1.23 Seconds
-#define weapon_area return (unlock_get(mod_current) ? 9 : -1);
+#define weapon_type return 5;  // Energy
+#define weapon_cost return 3;  // 3 Ammo
+#define weapon_load return 37; // 1.23 Seconds
+#define weapon_area return (unlock_get("trenchWep") ? 7 : -1); // 3-2
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprLightningRingLauncher;
 

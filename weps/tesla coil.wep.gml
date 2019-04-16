@@ -4,10 +4,10 @@
 #define weapon_name return "TESLA COIL";
 #define weapon_text return "LIMITED POWER";
 #define weapon_auto return true;
-#define weapon_type return 5;
-#define weapon_cost return 2; // could b too much
-#define weapon_load return 8;
-#define weapon_area return (unlock_get(mod_current) ? 9 : -1);
+#define weapon_type return 5; // Energy
+#define weapon_cost return 2; // 2 Ammo
+#define weapon_load return 8; // 0.27 Seconds
+#define weapon_area return (unlock_get("trenchWep") ? 11 : -1); // 5-2
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprTeslaCoil;
 

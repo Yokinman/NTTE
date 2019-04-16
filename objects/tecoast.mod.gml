@@ -1560,7 +1560,7 @@
     	sprite_index = spr.GroundSlash;
     	image_speed = 0.5;
     	depth = 0;
-    	
+
     	 // Vars:
         mask_index = -1;
         damage *= 2;

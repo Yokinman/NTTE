@@ -3,10 +3,10 @@
 
 #define weapon_name return "BUBBLE CANNON";
 #define weapon_text return "KING OF THE BUBBLES";
-#define weapon_type return 4;   // Explosive
-#define weapon_cost return 4;   // 4 Ammo
-#define weapon_load return 30;  // 1.0 Seconds
-#define weapon_area return (unlock_get(mod_current) ? 7 : -1);
+#define weapon_type return 4;  // Explosive
+#define weapon_cost return 4;  // 4 Ammo
+#define weapon_load return 30; // 1 Second
+#define weapon_area return (unlock_get("oasisWep") ? 11 : -1); // 5-2
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprBubbleCannon;
 

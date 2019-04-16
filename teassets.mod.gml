@@ -49,9 +49,11 @@
 
          // Quasar Beam:
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
-        QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 16, 16);
+        QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 32, 16);
         QuasarBeamEnd   = sprite_add("sprites/weps/projectiles/sprQuasarBeamEnd.png",   2,  0, 16);
         QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   5, 24, 24);
+        QuasarBeamTrail = sprite_add("sprites/weps/projectiles/sprQuasarBeamTrail.png", 3,  4,  4);
+        msk.QuasarBeam  = sprite_add("sprites/weps/projectiles/mskQuasarBeam.png",      1, 32, 16);
 
         //#region CAMPFIRE
              // Big Cactus:
@@ -622,6 +624,7 @@
     }
 
      // SAVE FILE //
+    global.save_auto = false;
     global.save = {
         option : {
             "allowShaders"     : true,
@@ -643,12 +646,14 @@
                     var k = lq_get_key(_save, i);
                     lq_set(global.save, k, lq_get(_save, k));
                 }
+                global.save_auto = true;
                 exit;
             }
         }
 
          // New Save File:
         string_save(json_encode(global.save), _path);
+        global.save_auto = true;
         exit;
     }
     
@@ -665,9 +670,11 @@
 
 #define step
      // Autosave:
-    with(instances_matching(GameCont, "ntte_autosave", null)){
-        string_save(json_encode(sav), SavePath);
-        ntte_autosave = true;
+    if(global.save_auto){
+        with(instances_matching(GameCont, "ntte_autosave", null)){
+            string_save(json_encode(sav), SavePath);
+            ntte_autosave = true;
+        }
     }
 
 #define cleanup
