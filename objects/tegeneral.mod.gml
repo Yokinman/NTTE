@@ -1764,12 +1764,14 @@
     image_alpha = abs(image_alpha);
 
      // Outline Setup:
-    var _outline = (
-    	instance_exists(leader)				&&
-    	player_get_outlines(leader.index)	&&
-    	lq_defget(opt, "petOutlines", true)	&&
-    	player_is_local_nonsync(leader.index)
-    );
+    var	_option = lq_defget(opt, "petOutlines", 2),
+    	_outline = (
+	    	_option > 0								&&
+	    	instance_exists(leader)					&&
+	    	player_is_local_nonsync(leader.index)	&&
+	    	(_option < 2 || player_get_outlines(leader.index))
+    	);
+
     if(_outline){
         var _surf = surf_draw,
             _surfw = surf_draw_w,
@@ -1941,17 +1943,29 @@
         line_dir_goal = 0;
         blast_hit = true;
         offset_dis		= 0;	// Offset from Creator Towards image_angle
-        bend_fric		= 0.4;	// Multiplicative Friction for Line Bending
-        line_dis_max	= 240;	// Max Possible Line Length
+        bend_fric		= 0.3;	// Multiplicative Friction for Line Bending
+        line_dis_max	= 300;	// Max Possible Line Length
         turn_max		= 8;	// Max Rotate Speed
         turn_factor		= 1/8;	// Rotation Speed Increase Factor
         shrink_delay	= 0;	// Frames Until Shrink
         shrink			= 0.05;	// Subtracted from Line Size
         scale_goal		= 1;	// Size to Reach When shrink_delay > 0
         player_aim		= 1;	// gunangle Turning Speed Multiplier (1=No change)
+        hold_x			= null;	// Stay at this X
+        hold_y			= null; // Stay at this Y
+
+		on_end_step = QuasarBeam_quick_fix;
 
         return id;
 	}
+
+#define QuasarBeam_quick_fix
+	var l = line_dis_max;
+	line_dis_max = 0;
+	QuasarBeam_step();
+	line_dis_max = l;
+
+	on_end_step = [];
 
 #define QuasarBeam_step
 	hit_time += current_time_scale;
@@ -1977,12 +1991,14 @@
 			image_yscale += (scale_goal - image_yscale) * 0.4;
 
 			 // FX:
-			var p = (image_yscale * 0.5);
-			if(image_yscale < 1){
-				sound_play_pitchvol(sndLightningCrystalHit, p - random(0.1), 0.8);
-				sound_play_pitchvol(sndPlasmaHit, p, 0.6);
+			if(instance_is(creator, Player)){
+				var p = (image_yscale * 0.5);
+				if(image_yscale < 1){
+					sound_play_pitchvol(sndLightningCrystalHit, p - random(0.1), 0.8);
+					sound_play_pitchvol(sndPlasmaHit, p, 0.6);
+				}
+				sound_play_pitchvol(sndEnergySword, p * 0.8, 0.6);
 			}
-			sound_play_pitchvol(sndEnergySword, image_yscale * 0.4, 0.6);
 		}
 		else{
 			image_xscale = scale_goal;
@@ -2020,21 +2036,27 @@
 		}
 
 	     // Follow Player:
+    	var c = creator;
         line_dir_goal = c.gunangle;
-
-    	var o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5),
-    		c = creator;
-
-        x = c.x + c.hspeed + lengthdir_x(o, image_angle);
-        y = c.y + c.vspeed + lengthdir_y(o, image_angle);
+        hold_x = c.x + c.hspeed;
+        hold_y = c.y + c.vspeed;
         if(roids){
-        	y -= 6;
-        	x -= lengthdir_x(2 * c.right, c.gunangle - 90);
-        	y -= lengthdir_y(2 * c.right, c.gunangle - 90);
+        	hold_y -= 6;
+        	hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
+        	hold_y -= lengthdir_y(2 * c.right, c.gunangle - 90);
         }
-        xprevious = x;
-        yprevious = y;
     }
+
+	 // Stay:
+	var o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5);
+	if(hold_x != null){
+	    x = hold_x + lengthdir_x(o, image_angle);
+	    xprevious = x;
+	}
+	if(hold_y != null){
+	    y = hold_y + lengthdir_y(o, image_angle);
+	    yprevious = y;
+	}
 
      // Rotation:
     var _turn = clamp(angle_difference(line_dir_goal, image_angle) * turn_factor, -turn_max, turn_max) * current_time_scale;
@@ -2048,114 +2070,97 @@
      // Line:
     var _vx = view_xview_nonsync,
         _vy = view_yview_nonsync,
-        _lineAdd = 16,
+        _lineAdd = 1 + max(12, 20 * image_yscale),
         _lineWid = 16,
         _lineDir = image_angle,
-        _lineChange = 160 * current_time_scale,
+        _lineChange = 120 * current_time_scale,
         _dis = 0,
         _dir = _lineDir,
         _dirGoal = _lineDir + bend,
         _cx = x,
         _cy = y,
         _lx = _cx - lengthdir_x((sprite_get_width(spr_strt) / 2) * image_xscale, _dir),
-        _ly = _cy - lengthdir_y((sprite_get_width(spr_strt) / 2) * image_xscale, _dir);
+        _ly = _cy - lengthdir_y((sprite_get_width(spr_strt) / 2) * image_xscale, _dir),
+        _walled = false;
 
     line_seg = [];
     line_dis += _lineChange;
     line_dis = clamp(line_dis, 0, line_dis_max);
 
+	if(collision_line(_lx, _ly, _cx, _cy, TopSmall, false, false)){
+		line_dis = 0;
+	}
+
     do{
     	var _canBlastHit = false;
 
-	     // Draw Line:
-        if(!collision_line(_lx, _ly, _cx, _cy, Wall, false, false)){
-			if(point_in_rectangle(_lx, _ly, _vx, _vy, _vx + game_width, _vy + game_height)){
-	        	for(var a = -1; a <= 1; a += 2){
-	                var l = (_lineWid * a) + 6,
-	                    d = _dir - 90,
-	                    _xtex = (_dis / line_dis),
-	                    _ytex = !!a;
-
-	                array_push(line_seg, {
-	                    x    : _cx,
-	                    y    : _cy,
-	                    xoff : lengthdir_x(l, d),
-	                    yoff : lengthdir_y(l, d),
-	                    xtex : _xtex,
-	                    ytex : _ytex
-	                });
-	            }
-	        }
+        if(!_walled){
+        	if(collision_line(_lx, _ly, _cx, _cy, Wall, false, false)){
+        		_walled = true;
+        	}
+        	else{
+	    		 // Add to Line Draw:
+        		var o = _lineAdd * 2;
+        		if(point_in_rectangle(_lx, _ly, _vx - o, _vy - o, _vx + o + game_width, _vy + o + game_height)){
+	        		for(var a = -1; a <= 1; a += 2){
+		                var l = (_lineWid * a) + 6,
+		                    d = _dir - 90,
+		                    _xtex = (_dis / line_dis),
+		                    _ytex = !!a;
+		
+		                array_push(line_seg, {
+		                    x    : _cx,
+		                    y    : _cy,
+		                    dir  : _dir,
+		                    xoff : lengthdir_x(l, d),
+		                    yoff : lengthdir_y(l, d),
+		                    xtex : _xtex,
+		                    ytex : _ytex
+		                });
+		            }
+        		}
+    		}
         }
 
          // Wall Collision:
         else{
+            _canBlastHit = true;
             line_dis -= _lineChange;
         	if(array_length(line_seg) <= 0) line_dis = 0;
-
-            _canBlastHit = true;
-
-             // Effects:
-            if(chance_ct(1, 4) || blast_hit){
-                var _xoff = -12 * image_xscale,
-            		_yoff = 0;
-
-            	if(!blast_hit){
-            		_xoff += orandom(8);
-            		_yoff += orandom(16);
-            	}
-
-	            with(instance_create(
-	            	_lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
-	            	_ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90),
-	            	BulletHit
-	            )){
-	            	sprite_index = spr.QuasarBeamHit;
-	            	image_angle = _dir + 180
-	            	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
-	            	image_xscale = other.image_yscale;
-	            	image_yscale = other.image_yscale;
-	            	depth = other.depth - 1;
-	            }
-                instance_create(_lx, _ly, Smoke);
-            }
         }
 
          // Hit Enemies:
         if(place_meeting(_cx, _cy, hitme)){
             with(instances_meeting(_cx, _cy, instances_matching_ne(hitme, "team", team))){
-                with(other){
-                	if(lq_defget(hit_list, string(other), 0) <= hit_time){
-        				_canBlastHit = true;
-
-	                	 // Effects:
-			            with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
-			            	sprite_index = spr.QuasarBeamHit;
-			            	motion_add(point_direction(_cx, _cy, x, y), 1);
-			            	image_angle = direction;
-			            	image_xscale = other.image_yscale;
-			            	image_yscale = other.image_yscale;
-			            	depth = other.depth - 1;
-			            }
-
-						 // Damage:
-	                    direction = _dir;
-	                    QuasarBeam_hit();
+                if(place_meeting(x - (_cx - other.x), y - (_cy - other.y), other)){
+                	with(other){
+	                	if(lq_defget(hit_list, string(other), 0) <= hit_time){
+	        				_canBlastHit = true;
+	
+		                	 // Effects:
+				            with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
+				            	sprite_index = spr.QuasarBeamHit;
+				            	motion_add(point_direction(_cx, _cy, x, y), 1);
+				            	image_angle = direction;
+				            	image_xscale = other.image_yscale;
+				            	image_yscale = other.image_yscale;
+				            	depth = other.depth - 1;
+				            }
+	
+							 // Damage:
+		                    direction = _dir;
+		                    QuasarBeam_hit();
+	                	}
+	            		if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
+	            			line_dis = _dis;
+	            		}
                 	}
-            		if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
-            			line_dis = _dis;
-            		}
                 }
             }
         }
 
-         // Just in Case:
-        if(place_meeting(_cx, _cy, TopSmall)){
-        	line_dis = _dis;
-        }
-
          // Effects:
-    	if(chance_ct(1, 10)){
+    	if(chance_ct(1, 160 / _lineAdd)){
         	var o = 32 * image_yscale;
 	        with(instance_create(_cx + orandom(o), _cy + orandom(o), PlasmaTrail)){
 	        	sprite_index = spr.QuasarBeamTrail;
@@ -2172,7 +2177,7 @@
         _dis += _lineAdd;
 
 		 // Turn:
-        _dir = clamp(_dir + (bend / 3), _lineDir - 90, _lineDir + 90);
+        _dir = clamp(_dir + (bend / (48 / _lineAdd)), _lineDir - 90, _lineDir + 90);
 
          // Blastin FX:
 		if(blast_hit){
@@ -2191,7 +2196,28 @@
     until (_dis >= line_dis);
 
      // Effects:
+    if(chance_ct(1, 4)){
+        var _xoff = orandom(12) - ((8 * image_xscale) + _lineAdd),
+    		_yoff = orandom(random(28 * image_yscale));
+
+        with(instance_create(
+        	_lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
+        	_ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90),
+        	BulletHit
+        )){
+        	sprite_index = spr.QuasarBeamHit;
+        	image_angle = _dir + 180
+        	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
+        	image_xscale = other.image_yscale;
+        	image_yscale = other.image_yscale;
+        	depth = other.depth - 1;
+        }
+        instance_create(_lx, _ly, Smoke);
+    }
     view_shake_max_at(x, y, 4);
+    view_shake_max_at(_cx, _cy, 4);
+
+	 // Sound:
     if(!audio_is_playing(loop_snd)){
     	loop_snd = audio_play_sound(sndNothingBeamLoop, 0, true);
     }
@@ -2208,9 +2234,11 @@
     if(lq_defget(hit_list, string(other), 0) <= hit_time){
          // Effects:
         with(other){
-        	sleep_max(30);
             repeat(3) instance_create(x, y, Smoke);
-            if(other.blast_hit) sound_play_hit(sndPlasmaHit, 0.3)
+            if(other.blast_hit){
+        		sleep_max(30);
+            	sound_play_hit(sndPlasmaHit, 0.3)
+            }
         }
     
          // Damage:
@@ -2253,20 +2281,21 @@
 
 	    with(line_seg){
 	        draw_vertex_texture(x + (xoff * _yscale), y + (yoff * _yscale), xtex, ytex);
-	        if(_x != x || _y != y){
-	        	_angle = point_direction(_x, _y, x, y);
-		    	_x = x;
-		    	_y = y;
-	        }
 	    }
-	
+
 	    draw_set_alpha(1);
 	    draw_primitive_end();
+
+	    with(line_seg[array_length(line_seg) - 1]){
+        	_angle = dir;
+	    	_x = x;
+	    	_y = y;
+	    }
     }
 
      // Laser End:
     var o = 16;
-    if(!collision_line(_x, _y, _x - lengthdir_x(o, _angle), _y - lengthdir_y(o, _angle), TopSmall, false, false)){
+    if(!position_meeting(x - lengthdir_x(o, _angle), _y - lengthdir_y(o, _angle), TopSmall)){
     	draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
     }
 
@@ -2463,42 +2492,6 @@
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
 
 
-#define Test_create(_x, _y)
-	with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
-		spr_idle = spr.GullIdle;
-		spr_walk = spr.GullWalk;
-		spr_hurt = spr.GullHurt;
-		spr_dead = spr.GullDead;
-		spr_weap = spr.GullSword;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "GULL"];
-		depth = -2;
-
-         // Sound:
-        snd_hurt = sndSalamanderHurt;
-        snd_dead = sndSalamanderDead;
-
-         // Vars:
-		mask_index = mskSalamander;
-		maxhealth = 8;
-		raddrop = 3;
-		size = 1;
-		walk = 0;
-		walkspd = 0.8;
-		maxspd = 3;
-		gunangle = random(360);
-		direction = gunangle;
-		wepangle = 140 * choose(-1, 1);
-
-         // Alarms:
-		alarm1 = 60 + irandom(60);
-		alarm2 = -1;
-
-		return id;
-	}
-
-
 /// Mod Events
 #define game_start
     with(instances_named(CustomObject, "Pet")) instance_destroy();
@@ -2624,9 +2617,8 @@
 
         if(array_length(line_seg) > 0){
             with(line_seg[array_length(line_seg) - 1]){
-            	var a = point_direction(_x, _y, x, y);
-                _x = x - 1 + lengthdir_x(8 * _xscale, a);
-                _y = y - 1 + lengthdir_y(8 * _xscale, a);
+                _x = x - 1 + lengthdir_x(8 * _xscale, dir);
+                _y = y - 1 + lengthdir_y(8 * _xscale, dir);
             }
         }
 
@@ -2665,9 +2657,8 @@
 
         if(array_length(line_seg) > 0){
             with(line_seg[array_length(line_seg) - 1]){
-            	var a = point_direction(_x, _y, x, y);
-                _x = x - 1 + lengthdir_x(8 * _xscale, a);
-                _y = y - 1 + lengthdir_y(8 * _xscale, a);
+                _x = x - 1 + lengthdir_x(8 * _xscale, dir);
+                _y = y - 1 + lengthdir_y(8 * _xscale, dir);
             }
         }
 
@@ -2677,6 +2668,9 @@
 
 
 /// Scripts
+#define orandom(n)																		return  random_range(-n, n);
+#define chance(_numer, _denom)															return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -2692,8 +2686,6 @@
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
 #define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
 #define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
-#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
-#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
@@ -2707,7 +2699,6 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);

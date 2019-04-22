@@ -23,11 +23,10 @@
         creator = other;
         roids = _roids;
 
-        //turn_max = ;
         shrink_delay = 6;
-        turn_factor = 1/4;
-        //bend_fric = 0.5;
         scale_goal = 0.5;
+        bend_fric = 0.4;
+
         image_xscale *= scale_goal;
         image_yscale *= scale_goal;
     }

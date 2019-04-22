@@ -444,10 +444,10 @@
     pickup_drop(16, 0); // Bandit drop-ness
 
 #define chance(_numer, _denom)
-	return (random(_denom) < _numer);
+	return random(_denom) < _numer;
 
 #define chance_ct(_numer, _denom)
-	return chance(_numer * current_time_scale, _denom);
+	return random(_denom) < (_numer * current_time_scale);
 
 #define in_distance(_inst, _dis)
 	if(!instance_exists(_inst)) return false;

@@ -30,10 +30,7 @@
             creator = other;
 
             player_aim = 1/16;
-
             offset_dis = 16;
-            x += lengthdir_x(offset_dis, image_angle);
-            y += lengthdir_y(offset_dis, image_angle);
 
             _wep.beam = id;
         }

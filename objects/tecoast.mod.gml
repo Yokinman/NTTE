@@ -1553,6 +1553,25 @@
     	sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
 	}
 
+#define PalankingSlash_projectile
+	 // Deflect Projectile, No Team Change:
+	if(team != other.team){
+		with(other){
+			if(typ == 1){
+				direction = other.direction;
+				image_angle = direction;
+		
+				 // Effects:
+				with(instance_create(x, y, Deflect)){
+					image_angle = other.image_angle;
+				}
+			}
+			else if(typ == 2){
+				instance_destroy();
+			}
+		}
+	}
+
 
 #define PalankingSlashGround_create(_x, _y)
 	with(obj_create(_x, _y, "PalankingSlash")){
@@ -3145,6 +3164,9 @@
 
 
 /// Scripts
+#define orandom(n)																		return  random_range(-n, n);
+#define chance(_numer, _denom)															return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -3160,8 +3182,6 @@
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
 #define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
 #define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
-#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
-#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
@@ -3175,7 +3195,6 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);

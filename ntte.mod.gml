@@ -11,6 +11,7 @@
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
     };
+
     global.bones = [];
 
      // Make Custom CampChars for:
@@ -19,23 +20,36 @@
 
      // Options Menu:
     global.option_NTTE_splat = 0;
+    global.option_NTTE_splat_menu = 1;
     global.option_open = false;
     global.option_slct = -1;
     global.option_pop = 0;
     global.option_menu = [
         {	name : "Use Shaders",
             type : opt_toggle,
-            text : "Used for certain visuals#@sShaders may cause the game# to crash on older computers!",
+            text : "Used for certain visuals#@sShaders may cause the game# to @rcrash @son older computers!",
             varname : "allowShaders"
             },
+        {	name : "Reminders",
+        	type : opt_toggle,
+        	text : "@sRemind you to enable#@wboss intros @s& @wmusic",
+        	varname : "remindPlayer"
+        	},
+        {	name : "NTTE Intros",
+        	type : opt_toggle,
+        	pick : ["OFF", "ON", "AUTO"],
+        	text : "@sSet @wAUTO @sto obey the#@wboss intros @soption",
+        	varname : "intros"
+        	},
         {	name : "Pet Outlines",
         	type : opt_toggle,
-        	text : 'For when "/outlines"#is enabled',
+        	pick : ["OFF", "ON", "AUTO"],
+        	text : "@sSet @wAUTO @sto#obey @w/outlines",
         	varname : "petOutlines"
         	},
         {	name : "Water Quality :",
             type : opt_title,
-            text : "Reduce to help#performance in coast"
+            text : `@sAdjust @sfor @wperformance#@sat the @(color:${make_color_rgb(55, 253, 225)})Coast`
             },
         {   name : "Wading",
             type : opt_slider,
@@ -52,6 +66,7 @@
     with(OptionMenu){
         if("name" not in self) name = "";
         if("type" not in self) type = opt_title;
+        if("pick" not in self) pick = ["OFF", "ON"];
         if("varname" not in self) varname = name;
         if("clicked" not in self) clicked = false;
         if(type >= 0 && varname not in opt){
@@ -301,11 +316,11 @@
 #macro OptionMenu global.option_menu
 #macro OptionSlct global.option_slct
 #macro OptionPop  global.option_pop
+#macro OptionX (game_width / 2)
+#macro OptionY (game_height / 2) - 40
 #macro opt_title -1
 #macro opt_toggle 0
 #macro opt_slider 1
-#macro opt_sorter 2
-//#macro opt_other 3
 
 #macro EyeShader global.eye_shader
 #macro surfCharm global.surfCharm
@@ -644,7 +659,7 @@
         }
 
          // CampChar Stuff:
-        for(var i = 0; i < maxp; i++){
+        for(var i = 0; i < maxp; i++) if(player_is_active(i)){
             var r = player_get_race(i);
             if(array_find_index(global.campchar, r) >= 0){
                 with(instances_matching(CampChar, "race", player_get_race(i))){
@@ -1006,6 +1021,111 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         script_bind_draw(ammo_draw_scrt, d - 1, index, primary, ammo, steroids);
     }
 
+#define draw
+	 // NTTE Options at Campfire:
+	if(instance_exists(Menu)){
+    	draw_set_projection(0);
+
+		if(OptionOpen){
+            global.option_NTTE_splat_menu = 2;
+
+	         // Hide Things:
+	        with(Menu){
+	            charsplat = 1;
+	            for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
+	        }
+	        with(CharSelect){
+	            visible = false;
+	            alarm0 = 2;
+	            noinput = 2;
+	        }
+	        with(Loadout){
+	            visible = false;
+	            selected = -1;
+	            introsettle = 1;
+	        }
+	        with(loadbutton) instance_destroy();
+	        with(BackFromCharSelect) noinput = 8;
+	
+	         // Dim Screen:
+	        draw_set_color(c_black);
+	        draw_set_alpha(0.75);
+	        draw_rectangle(0, 0, game_width, game_height, 0);
+	        draw_set_alpha(1);
+
+	         // Leave Options:
+	        for(var i = 0; i < maxp; i++){
+	        	with(BackFromCharSelect){
+	        		if(position_meeting((mouse_x[i] - (view_xview[i] + xstart)) + x, (mouse_y[i] - (view_yview[i] + ystart)) + y, id)){
+		        		if(button_pressed(i, "fire")){
+		        			OptionOpen = false;
+		        			break;
+		        		}
+	        		}
+	        	}
+	        	if(button_pressed(i, "spec")){
+	        		OptionOpen = false;
+	        		break;
+	        	}
+	        }
+	        if(!OptionOpen){
+	        	sound_play(sndClickBack);
+	        	with(Loadout){
+	        		visible = true;
+	        		selected = 0;
+	        	}
+	        }
+		}
+
+		 // Open Options:
+		else{
+			var _hover = false,
+				_x1 = game_width - 39,
+				_y1 = 40,
+				_max = 0;
+
+			 // Offset for Co-op:
+			for(var i = 0; i < array_length(Menu.charx); i++){
+				if(Menu.charx[i] != 0) _max = i;
+			}
+			if(_max >= 2){
+				_x1 -= 138;
+			}
+
+			var _x2 = _x1 + 40,
+				_y2 = _y1 + 24;
+
+			 // Player Clicky:
+			if(!instance_exists(Loadout) || !Loadout.selected){
+				for(var i = 0; i < maxp; i++){
+					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x1, _y1, _x2, _y2)){
+						_hover = true;
+						if(button_pressed(i, "fire")){
+							sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
+							OptionOpen = true;
+							break;
+						}
+					}
+				}
+			}
+
+			 // Button Visual:
+            global.option_NTTE_splat_menu = clamp(global.option_NTTE_splat_menu, 0, sprite_get_number(sprBossNameSplat) - 1);
+			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 16, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
+            global.option_NTTE_splat_menu += current_time_scale;
+
+			draw_set_font(fntM);
+			draw_set_halign(fa_center);
+			draw_set_valign(fa_middle);
+			draw_text_nt(((_x1 + _x2) / 2), _y1 + 8 + _hover, (_hover ? "@w" : "@s") + "NTTE");
+		}
+
+		 // Main Option Drawing:
+		ntte_options(OptionX, OptionY);
+
+		draw_reset_projection();
+	}
+
 #define draw_pause
      // Reset Stuff:
     if(GameCont.area == "coast"){
@@ -1019,68 +1139,80 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     if(instance_exists(PauseButton)) with(global.bones){
         ammo_draw(index, primary, ammo, steroids);
     }
-    
-    draw_set_projection(0);
 
-     // NTTE Menu Button:
-    if(instance_exists(OptionMenuButton)){
-        var _draw = true;
-        with(OptionMenuButton) if(alarm_get(0) >= 1 || alarm_get(1) >= 1) _draw = false;
-        if(_draw){
-            var _x = (game_width / 2),
-                _y = (game_height / 2) + 59,
-                _hover = false;
+     // NTTE Options:
+	draw_set_projection(0);
 
-             // Button Clicking:
-            for(var i = 0; i < maxp; i++){
-                if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x - 57, _y - 12, _x + 57, _y + 12)){
-                    _hover = true;
-                    if(button_pressed(i, "fire")){
-                        global.option_open = true;
-                        with(OptionMenuButton) instance_destroy();
-                        sound_play(sndClick);
-                        break;
-                    }
-                }
-            }
-
-             // Splat:
-            global.option_NTTE_splat += (_hover ? 1 : -1) * current_time_scale;
-            global.option_NTTE_splat = clamp(global.option_NTTE_splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
-            draw_sprite(sprMainMenuSplat, global.option_NTTE_splat, (game_width / 2), _y);
-
-             // Gray Out Other Options:
-            if(global.option_NTTE_splat > 0){
-                var _spr = sprOptionsButtons;
-                for(var j = 0; j < sprite_get_number(_spr); j++){
-                    var _dx = (game_width / 2),
-                        _dy = (game_height / 2) - 36 + (j * 24);
-
-                    draw_sprite_ext(_spr, j, _dx, _dy, 1, 1, 0, make_color_rgb(155, 155, 155), 1);
-                }
-            }
-
-             // Button:
-            draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_rgb(155, 155, 155)), 1);
-        }
+    if(!OptionOpen){
+    	if(instance_exists(OptionMenuButton)){
+	        var _draw = true;
+	        with(OptionMenuButton) if(alarm_get(0) >= 1 || alarm_get(1) >= 1) _draw = false;
+	        if(_draw){
+	            var _x = (game_width / 2),
+	                _y = (game_height / 2) + 59,
+	                _hover = false;
+	
+	             // Button Clicking:
+		        for(var i = 0; i < maxp; i++){
+		            if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x - 57, _y - 12, _x + 57, _y + 12)){
+		                _hover = true;
+		                if(button_pressed(i, "fire")){
+		                    OptionOpen = true;
+		                    with(OptionMenuButton) instance_destroy();
+		                    sound_play(sndClick);
+		                    break;
+		                }
+		            }
+		        }
+	
+	             // Splat:
+	            global.option_NTTE_splat += (_hover ? 1 : -1) * current_time_scale;
+	            global.option_NTTE_splat = clamp(global.option_NTTE_splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
+	            draw_sprite(sprMainMenuSplat, global.option_NTTE_splat, (game_width / 2), _y);
+	
+	             // Gray Out Other Options:
+	            if(global.option_NTTE_splat > 0){
+	                var _spr = sprOptionsButtons;
+	                for(var j = 0; j < sprite_get_number(_spr); j++){
+	                    var _dx = (game_width / 2),
+	                        _dy = (game_height / 2) - 36 + (j * 24);
+	
+	                    draw_sprite_ext(_spr, j, _dx, _dy, 1, 1, 0, make_color_rgb(155, 155, 155), 1);
+	                }
+	            }
+	
+	             // Button:
+	            draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_rgb(155, 155, 155)), 1);
+	        }
+    		else global.option_NTTE_splat = 0;
+    	}
     }
+	else if(instance_exists(menubutton)){
+		OptionOpen = false;
+	}
 
-     // NTTE Options Menu:
-    var _x = (game_width / 2),
-        _y = (game_height / 2) - 40,
-        _tooltip = "";
+	ntte_options(OptionX, OptionY);
 
-    draw_set_font(fntM);
-    draw_set_halign(fa_left);
-    draw_set_valign(fa_middle);
+	draw_reset_projection();
 
+#define ntte_options(_optionsX, _optionsY)
     if(OptionOpen){
         OptionPop++;
+
+	    var _tooltip = "",
+    		_x = _optionsX,
+    		_y = _optionsY;
+	
+	    draw_set_font(fntM);
+	    draw_set_halign(fa_left);
+	    draw_set_valign(fa_middle);
 
          // Option Selecting & Splat:
         for(var i = 0; i < array_length(OptionMenu); i++){
             var _option = OptionMenu[i],
                 _selected = (OptionSlct == i);
+
+			with(_option) appear = (i + 3);
 
              // Select:
             for(var p = 0; p < maxp; p++) if(player_is_active(p)){
@@ -1094,7 +1226,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         OptionSlct = i;
                     }
 
-                    with(_option){
+                    with(_option) if(OptionPop >= appear){
                          // Click:
                         if(type >= 0){
                             if(!clicked){
@@ -1125,7 +1257,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         switch(type){
                             case opt_toggle:
                                 if(button_pressed(p, "fire")){
-                                    lq_set(opt, varname, !lq_get(opt, varname));
+                                    lq_set(opt, varname, (lq_defget(opt, varname, 0) + 1) % array_length(pick));
                                 }
                                 break;
 
@@ -1145,13 +1277,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Description on Hover:
                         if("text" in self){
-                            if(!button_check(p, "fire") || type == opt_title){
+                            //if(!button_check(p, "fire") || type == opt_title){
                                 if(_mx < (game_width / 2) + 32){
                                     if(player_is_local_nonsync(p)){
                                         _tooltip = text;
                                     }
                                 }
-                            }
+                            //}
                         }
                     }
                 }
@@ -1160,7 +1292,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
             with(_option){
                 if("splat" not in self) splat = 0;
-                appear = (i + 3);
                 x = _x;
                 y = _y;
 
@@ -1212,7 +1343,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 with(other){
                 	switch(other.type){
 	                    case opt_toggle:
-	                        draw_text_shadow(_x, _y, (_value ? "ON" : "OFF"));
+	                        draw_text_shadow(_x, _y, other.pick[clamp(_value, 0, array_length(other.pick) - 1)]);
 	                        break;
 	
 	                    case opt_slider:
@@ -1287,15 +1418,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         if(_tooltip != ""){
             draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
         }
-
-        if(instance_exists(menubutton)) OptionOpen = false;
     }
     else{
         OptionPop = false;
         OptionSlct = -1;
+        with(OptionMenu) splat = 0;
     }
-
-    draw_reset_projection();
 
 #define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
     instance_destroy();
@@ -1584,29 +1712,49 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
 #define scrBossIntro(_name, _sound, _music)
-    var _path = "sprites/intros/",
-        _lastSub = GameCont.subarea; // !!!
+	if(!instance_is(self, CustomBeginStep)){
+	    audio_play_sound(_sound, 0, false);
+	    sound_play_ntte("mus", _music);
 
-    if(_name != ""){
-        with(instance_create(0, 0, BanditBoss)){
-            sprite_replace_image(sprBossIntro,          _path + "spr" + _name + "Main.png", 0);
-            sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + _name + "Back.png", 0);
-            sprite_replace_image(sprBossName,           _path + "spr" + _name + "Name.png", 0);
-            event_perform(ev_alarm, 6);
-            sound_stop(sndBigBanditIntro);
-            instance_delete(id);
-            if(fork()){
-                wait 0;
-                sprite_restore(sprBossIntro);
-                sprite_restore(sprBossIntroBackLayer);
-                sprite_restore(sprBossName);
-                exit;
-            }
-        }
-    }
-    sound_play(_sound);
-    sound_play_ntte("mus", _music);
-    GameCont.subarea = _lastSub; // !!!
+		 // BeginStep to fix TopCont.darkness flash
+	    if(fork()){
+	    	wait 0;
+			script_bind_begin_step(scrBossIntro, 0, _name, _sound, _music);
+			exit;
+	    }
+	}
+	else{
+		var _option = lq_defget(opt, "intros", 2),
+			_introLast = UberCont.opt_bossintros;
+
+		if(_option < 2) UberCont.opt_bossintros = _option;
+		if(UberCont.opt_bossintros){
+		    var _path = "sprites/intros/",
+		        _lastSub = GameCont.subarea; // !!!
+	
+		    if(_name != ""){
+		        with(instance_create(0, 0, BanditBoss)){
+		            sprite_replace_image(sprBossIntro,          _path + "spr" + _name + "Main.png", 0);
+		            sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + _name + "Back.png", 0);
+		            sprite_replace_image(sprBossName,           _path + "spr" + _name + "Name.png", 0);
+		            event_perform(ev_alarm, 6);
+		            sound_stop(sndBigBanditIntro);
+		            instance_delete(id);
+		            if(fork()){
+		                wait 0;
+		                sprite_restore(sprBossIntro);
+		                sprite_restore(sprBossIntroBackLayer);
+		                sprite_restore(sprBossName);
+		                exit;
+		            }
+		        }
+		    }
+		    GameCont.subarea = _lastSub; // !!!
+		}
+		UberCont.opt_bossintros = _introLast;
+
+		instance_destroy();
+	}
 
 #define scrUnlock(_name, _text, _sprite, _sound)
      // Make Sure UnlockCont Exists:
@@ -2516,6 +2664,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 
 /// Scripts
+#define orandom(n)																		return  random_range(-n, n);
+#define chance(_numer, _denom)															return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -2531,8 +2682,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
 #define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
 #define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
-#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
-#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
@@ -2544,7 +2693,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);

@@ -921,7 +921,8 @@
 #define PitSquid_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
-
+		spr_maw = spr.PitSquidMaw;
+		hitid = [spr_maw, "PIT SQUID"];
 
          // Sounds:
         snd_hurt = sndBallMamaHurt;
@@ -937,7 +938,7 @@
         size = 5;
         canfly = true;
         target = noone;
-        bite = false;
+        bite = 0;
         sink = false;
         sink_targetx = x;
         sink_targety = y;
@@ -945,8 +946,10 @@
 
          // Eyes:
         eye = [];
-        eye_angle = random(360);
-        eye_dis_offset = 0;
+        eye_dir = random(360);
+        eye_dir_speed = 0;
+        eye_dis = 0;
+        eye_laser = false;
         repeat(3){
             array_push(eye, {
                 x : 0,
@@ -954,7 +957,8 @@
                 dis : 5,
                 dir : random(360),
                 blink : false,
-                blink_img : 0
+                blink_img : 0,
+                my_laser : noone
             });
         }
 
@@ -966,19 +970,26 @@
     }
 
 #define PitSquid_step
+	var _eyeDisGoal = 0;
+
      // Pit Z Movement:
     if(sink){
          // Quickly Sink:
-        pit_height -= 0.075 * current_time_scale;
-        with(eye) blink = true;
+        if(pit_height > 0.5){
+	        pit_height += ((0.5 - pit_height) / 4) * current_time_scale;
+	        with(eye) blink = true;
+	        if(pit_height < 0.55) pit_height = 0.5;
+        }
 
          // Start Rising:
-        if(pit_height <= 0){
+        /*
+        if(pit_height <= 0.5){
             sink = false;
             x = sink_targetx;
             y = sink_targety;
             pit_height = -random_range(0.2, 0.5);
         }
+        */
     }
     else{
          // Slow Initial Rise:
@@ -993,33 +1004,37 @@
 
          // Quickly Rise:
         else if(pit_height < 1){
-            pit_height += 0.1 * current_time_scale;
-
-             // Reached Top of Pit:
-            if(pit_height >= 1){
-                pit_height = 1;
-                view_shake_at(x, y, 30);
-                sound_play(sndOasisExplosion);
-            }
+    		if(bite <= 0) bite = 1;
+        	else if(((1 - bite) * sprite_get_number(spr_maw)) >= 6){
+	            pit_height += 0.1 * current_time_scale;
+	
+	             // Reached Top of Pit:
+	            if(pit_height >= 1){
+	                pit_height = 1;
+	                view_shake_at(x, y, 30);
+	                sound_play(sndOasisExplosion);
+	            }
+        	}
         }
     }
 
      // Sinking/Rising FX:
-    if(in_range(pit_height, 0.5, 0.9) && current_frame_active){
+    if(pit_height > 0.5 && pit_height < 1 && current_frame_active){
         instance_create(x + orandom(32), y + orandom(32), Smoke);
         view_shake_at(x, y, 4);
     }
 
      // Movement:
+    if(eye_laser) speed = 0;
     if(speed > 0){
-        eye_angle += (speed / 3) * current_time_scale;
+        eye_dir_speed += (speed / 10) * current_time_scale;
         direction += sin(current_frame / 20) * current_time_scale;
 
          // Effects:
         if(current_frame_active){
             view_shake_max_at(x, y, min(speed * 4, 3));
         }
-        if(chance_ct(speed, 10)){
+        if(chance_ct(speed, 10 / pit_height)){
             instance_create(x + orandom(40), y + orandom(40), Bubble);
         }
     }
@@ -1036,12 +1051,20 @@
 		}
 	}
 
+	 // Eye Laser Related:
+	if(pit_height < 1) eye_laser = false;
+	else if(eye_laser){
+		eye_dir_speed += 0.1 * current_time_scale;
+	}
+
      // Eyes:
+    eye_dir += eye_dir_speed * current_time_scale;
+    eye_dir_speed -= (eye_dir_speed * 0.1) * current_time_scale;
     for(var i = 0; i < array_length(eye); i++){
-        var _dis = (24 + eye_dis_offset) * max(pit_height, 0),
-            _dir = image_angle + eye_angle + (360 / array_length(eye)) * i,
-            _x = x + lengthdir_x(_dis * image_xscale, _dir),
-            _y = y + lengthdir_y(_dis * image_yscale, _dir),
+        var _dis = (24 + eye_dis) * max(pit_height, 0),
+            _dir = image_angle + eye_dir + (360 / array_length(eye)) * i,
+            _x = x + hspeed + lengthdir_x(_dis * image_xscale, _dir),
+            _y = y + vspeed + lengthdir_y(_dis * image_yscale, _dir),
             f = floor_at(_x, _y - 8);
 
         with(eye[i]){
@@ -1055,45 +1078,76 @@
             }
 
              // Look at Player:
-            var _seen = false;
-            if(_cansee && instance_exists(_target)){
-                _seen = true;
-                dir += angle_difference(point_direction(x, y, _target.x, _target.y), dir) / 2;
-                dis = clamp(point_distance(x, y, _target.x, _target.y) / 6, 0, 5);
+            if(!other.eye_laser && !instance_exists(my_laser)){
+	            var _seen = false;
+	            if(_cansee && instance_exists(_target)){
+	                _seen = true;
+	                dir += angle_difference(point_direction(x, y, _target.x, _target.y), dir) * 0.3 * current_time_scale;
+	                dis += (clamp(point_distance(x, y, _target.x, _target.y) / 6, 0, 5) - dis) * 0.3 * current_time_scale;
+	            }
+	            else dir += sin((current_frame) / 20) * 1.5;
             }
-            else dir += sin((current_frame) / 20) * 1.5;
 
              // Blinking:
             if(blink){
                 var n = sprite_get_number(spr.PitSquidEyelid) - 1;
-                blink_img = min(blink_img + other.image_speed, n);
+                blink_img += other.image_speed * (instance_exists(my_laser) ? 0.5 : 1) * current_time_scale;
 
                  // End Blink:
                 if(blink_img >= n){
+                	blink_img = n;
                     if(instance_exists(Player) && chance(1, 4)){
                         blink = false;
                     }
                 }
             }
+
             else{
                 blink_img = max(blink_img - other.image_speed, 0);
 
-                 // New Blink:
+				 // Eye Lasers:
+				if(other.eye_laser){
+					dis -= dis * 0.1 * current_time_scale;
+
+					if(!instance_exists(my_laser)){
+						with(other){
+							other.my_laser = scrEnemyShootExt(other.x, other.y, "QuasarBeam", _dir, 0);
+						}
+						with(my_laser){
+							image_xscale = 0;
+							image_yscale = 0;
+							scale_goal = 0.8;
+							bend_fric = 0.2;
+						}
+					}
+					with(my_laser) shrink_delay = 4;
+				}
+
+                 // Blink:
                 if(blink_img <= 0){
                     if(chance_ct(1, (_seen ? 150 : 100))){
                         blink = true;
                     }
-                }
+            	}
             }
+
+			 // Lasering:
+			if(instance_exists(my_laser)){
+				_eyeDisGoal = -4;
+	            with(my_laser){
+					hold_x = other.x;
+					hold_y = other.y + 16;
+					line_dir_goal = _dir;
+	            }
+			}
         }
     }
 
      // Bite:
-    var o = 0;
     if(bite > 0){
-        o = 8;
+        _eyeDisGoal = 8;
 
-        var _spr = spr.PitSquidMaw,
+        var _spr = spr_maw,
             _img = ((1 - bite) * sprite_get_number(_spr));
 
          // Finish chomp at top of pit:
@@ -1103,14 +1157,12 @@
 
          // Bite Time:
         if(in_range(_img, 8, 9)){
-            mask_index = _spr;
-            image_index = _img;
-            if(place_meeting(x, y, hitme)){
-                with(instances_matching_ne(hitme, "team", team)){
-                    if(place_meeting(x, y, other)) with(other){
-                        if(projectile_canhit_melee(other)){
-                            projectile_hit_raw(other, meleedamage, true);
-                        }
+            mask_index = mskReviveArea;
+            with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+                if(place_meeting(x, y, other)) with(other){
+                    if(projectile_canhit_melee(other)){
+                        projectile_hit_raw(other, meleedamage, true);
+                        //if("lasthit" in other) other.lasthit = hitid;
                     }
                 }
             }
@@ -1124,17 +1176,19 @@
             }
         }
     }
-    eye_dis_offset += ((o - eye_dis_offset) / 5) * current_time_scale;
 
-    /*if(button_pressed(0, "horn")){
-        scrBossIntro(name, sndBigBanditIntro, musBoss2);
-    }*/
+    eye_dis += ((_eyeDisGoal - eye_dis) / 5) * current_time_scale;
+
+
+    if(button_pressed(0, "key6")){
+        scrBossIntro(name, sndBigDogIntro, musBoss2);
+    }
 
     if(button_pressed(0, "horn")){
         var _num = 8;
         for(var i = 0; i < _num; i++){
             var l = 64,
-                d = (i * (360 / _num)) + eye_angle;
+                d = (i * (360 / _num)) + eye_dir;
 
             with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d) + 20, "Tentacle")){
                 creator = other;
@@ -1149,6 +1203,9 @@
             }
         }
     }
+	if(button_pressed(0, "key7")){
+		eye_laser = !eye_laser;
+	}
     if(button_pressed(0, "key8")){
         sink = true;
     }
@@ -1281,9 +1338,24 @@
         var _targetDir = point_direction(x, y, target.x, target.y);
 
         if(!in_distance(target, 96) || pit_height < 1 || chance(1, 2)){
-            motion_add(_targetDir, 1);
-            sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
-            sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
+        	if(chance(pit_height, 2)){
+	            motion_add(_targetDir, 1);
+	            sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
+	            sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
+        	}
+
+			 // In Pit:
+            if(sink){
+            	alarm1 = 20 + random(10);
+
+            	direction = _targetDir;
+            	speed = max(speed, 2);
+
+            	 // Rise:
+            	if(in_distance(target, 40) || (in_distance(target, 96) && chance(1, 4))){
+            		sink = false;
+            	}
+            }
         }
 
         if(pit_height >= 1 && chance(1, 2)){
@@ -1297,7 +1369,7 @@
                 }
                 with(f) x += 10000;
             }
-    
+
              // Sink into pit:
             if(!_targetSeen){
                 sink = true;
@@ -2023,6 +2095,9 @@
 
 
 /// Scripts
+#define orandom(n)																		return  random_range(-n, n);
+#define chance(_numer, _denom)															return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -2038,8 +2113,6 @@
 #define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
 #define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
 #define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
-#define chance(_numer, _denom)															return	mod_script_call_nc("mod", "telib", "chance", _numer, _denom);
-#define chance_ct(_numer, _denom)														return	mod_script_call_nc("mod", "telib", "chance_ct", _numer, _denom);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
@@ -2053,7 +2126,6 @@
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
 #define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
 #define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define orandom(n)                                                                      return  mod_script_call_nc("mod", "telib", "orandom", n);
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);

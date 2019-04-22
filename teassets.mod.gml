@@ -628,9 +628,11 @@
     global.save = {
         option : {
             "allowShaders"     : true,
-            "petOutlines"      : true,
+            "petOutlines"      : 2,
             "waterQualityMain" : 1,
-            "waterQualityTop"  : 1
+            "waterQualityTop"  : 1,
+            "remindPlayer"     : true,
+            "intros"           : 2
         }
     };
 
@@ -659,6 +661,43 @@
     
     global.races = ["parrot"];
 
+    global.remind = [];
+    if(fork()){
+        wait 2;
+        if(opt.remindPlayer){
+        	global.remind = [
+        	    {   "pos" : [-85, -2],
+        	        "but" : GameMenuButton,
+        	        "txt" : "Turn em on!",
+        	        "rem" : (!UberCont.opt_bossintros && opt.intros >= 2)
+        	        },
+        	    {   "pos" : [-85, 29],
+        	        "but" : AudioMenuButton,
+        	        "txt" : "Pump it up!",
+        	        "rem" : (!UberCont.opt_bossintros)
+        	        }
+        	    ];
+
+        	with(global.remind){
+        	    txt_inst = noone;
+        	    tim = 0;
+        	}
+
+             // Chat Reminder:
+            var _text = "";
+            if(global.remind[0].rem){
+                _text = "enable boss intros and music";
+            }
+            else{
+                _text = "make sure music is on";
+            }
+            if(_text != ""){
+                trace_color("NTTE | For the full experience, " + _text + "!", c_yellow);
+            }
+        }
+        exit;
+    }
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -677,10 +716,93 @@
         }
     }
 
+#define draw_pause
+    draw_set_projection(0);
+
+     // Remind Player:
+    if(lq_defget(opt, "remindPlayer", false)){
+        var d = current_time_scale;
+        with(global.remind){
+            if(rem){
+                var _x = (game_width  / 2),
+                    _y = (game_height / 2) - 40;
+    
+                if(instance_exists(but)){
+                    _x += pos[0];
+                    _y += pos[1];
+    
+                    if(tim > 0){
+                        tim -= d;
+                        d = 0;
+                        if(tim <= 0){
+                            rem = false;
+    
+                            txt_inst = instance_create(_x, _y, PopupText);
+                            with(txt_inst){
+                                text = other.txt;
+                                friction = 0.1;
+                            }
+                        }
+                    }
+                }
+    
+                else{
+                    tim = 20;
+    
+                    if(instance_exists(OptionMenuButton)){
+                        _x -= 38;
+                        switch(but){
+                            case VisualsMenuButton:
+                                _y += 24;
+                                break;
+        
+                            case GameMenuButton:
+                                _y += 48;
+                                break;
+        
+                            case ControlMenuButton:
+                                _x -= 26;
+                                _y += 72;
+                                break;
+                        }
+                    }
+        
+                    else if(instance_exists(PauseButton)){
+                        var b = false;
+                        with(PauseButton) if(alarm_get(0) > 0) b = true;
+                        if(b) break;
+        
+                        _x = game_width - 124;
+                        _y = game_height - 78;
+                    }
+        
+                    else continue;
+                }
+    
+                with(other) draw_sprite(sprNew, 0, _x, _y + sin(current_frame / 10));
+            }
+    
+             // Text:
+            if(instance_exists(txt_inst)){
+                d = 0.5 * current_time_scale;
+    
+                draw_set_font(fntM);
+                draw_set_halign(fa_center);
+                draw_set_valign(fa_top);
+                with(txt_inst) if(visible){
+                    draw_text_nt(x, y, text);
+                }
+            }
+        }
+    }
+
+    draw_reset_projection();
+
 #define cleanup
      // Save Save:
     string_save(json_encode(sav), SavePath);
 
-    for (var i; i < array_length(global.races); i++)
-        with instances_matching([CampChar, CharSelect], "race", global.races[i])
-            instance_delete(id);
+     // No Crash:
+    with(global.races){
+        with(instances_matching([CampChar, CharSelect], "race", self)) instance_delete(id);
+    }
