@@ -1080,7 +1080,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		 // Open Options:
 		else{
 			var _hover = false,
-				_x1 = game_width - 39,
+				_x1 = game_width - 40,
 				_y1 = 40,
 				_max = 0;
 
@@ -1111,13 +1111,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 			 // Button Visual:
             global.option_NTTE_splat_menu = clamp(global.option_NTTE_splat_menu, 0, sprite_get_number(sprBossNameSplat) - 1);
-			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 16, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
+			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 17, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
             global.option_NTTE_splat_menu += current_time_scale;
-
-			draw_set_font(fntM);
-			draw_set_halign(fa_center);
-			draw_set_valign(fa_middle);
-			draw_text_nt(((_x1 + _x2) / 2), _y1 + 8 + _hover, (_hover ? "@w" : "@s") + "NTTE");
+			//draw_set_font(fntM);
+			//draw_set_halign(fa_center);
+			//draw_set_valign(fa_middle);
+			//draw_text_nt(((_x1 + _x2) / 2), _y1 + 8 + _hover, (_hover ? "@w" : "@s") + "NTTE");
+			draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, (_hover ? c_white : c_silver), 1);
 		}
 
 		 // Main Option Drawing:

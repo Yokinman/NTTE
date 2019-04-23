@@ -44,19 +44,20 @@
 		walk = 0;
 		ammo = 0;
 		walkspd = 0.8;
-		maxspd = 2.4;
+		maxspeed = 2.4;
 		gunangle = random(360);
 		direction = gunangle;
 
          // Alarms:
 		alarm1 = 40 + irandom(30);
 
+		 // NTTE:
+		ntte_anim = false;
+
 		return id;
 	}
 
 #define BabyScorpion_step
-    enemyWalk(walkspd, maxspd);
-    
      // Animate:
     if(sprite_index != spr_hurt || anim_end){
 		if(ammo > 0) sprite_index = spr_fire;
@@ -534,7 +535,7 @@
 		meleedamage = 3;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		ammo = 4;
 		swim = 0;
 		swim_target = noone;
@@ -554,6 +555,9 @@
 		alarm1 = 90;
 		alarm2 = -1;
 		alarm3 = -1;
+
+		 // NTTE:
+		ntte_anim = false;
 
 		return id;
     }
@@ -618,9 +622,6 @@
         }
         if(sprite_index != _lstspr) image_index = 0;
     }
-
-     // Movement:
-    enemyWalk(walkspd, maxspd);
 
      // Swimming:
     if(swim > 0){

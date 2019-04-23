@@ -14,6 +14,7 @@
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png",       1, 32, 24),
     	    "2"     : sprite_add("sprites/areas/Sewers/sprSewersBigTopDecal.png",       8, 32, 24),
+    	    "3"     : sprite_add("sprites/areas/Scrapyard/sprScrapyardBigTopDecal.png", 1, 32, 24),
     	    "4"     : sprite_add("sprites/areas/Caves/sprCavesBigTopDecal.png",         1, 32, 24),
     	    "104"   : sprite_add("sprites/areas/Caves/sprCursedCavesBigTopDecal.png",   1, 32, 24),
     	    "pizza" : sprite_add("sprites/areas/Pizza/sprPizzaBigTopDecal.png",         1, 32, 24),
@@ -590,6 +591,7 @@
         //#endregion
 
         OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
+        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 16,  6);
     }
 
      // SOUNDS //

@@ -98,7 +98,7 @@
 		size = 3;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 2;
+		maxspeed = 2;
 		ammo = 4;
 		target_x = x;
 		target_y = y;
@@ -109,18 +109,21 @@
 		alarm1 = 100 + irandom(40);
 		alarm2 = -1;
 
+		 // NTTE:
+		ntte_anim = false;
+
         return id;
     }
 
 #define Mortar_step
      // Animate:
-    if(sprite_index != spr_hurt and sprite_index != spr_fire){
+    if(sprite_index != spr_hurt && sprite_index != spr_fire){
     	if(speed <= 0) sprite_index = spr_idle;
     	else if(sprite_index == spr_idle) sprite_index = spr_walk;
     }
     else{
          // End Hurt Sprite:
-        if(sprite_index = spr_hurt and image_index > 2) sprite_index = spr_idle;
+        if(sprite_index = spr_hurt && image_index > 2) sprite_index = spr_idle;
 
          // End Fire Sprite:
         if(sprite_index = spr_fire && (image_index > sprite_get_number(spr_fire) - 1)){
@@ -140,9 +143,6 @@
             alarm0 = point_distance(x, y, _x, _y) / speed;
         }
     }
-
-     // Movement:
-    enemyWalk(walkspd, maxspd);
 
 #define Mortar_draw
      // Flash White w/ Hurt While Firing:
@@ -412,7 +412,7 @@
 		size = 1;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		direction = random(360);
 
          // Alarms:

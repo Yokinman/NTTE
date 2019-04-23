@@ -65,6 +65,10 @@
     		        _dir = i + orandom(30);
 
                 with(scrTopDecal(0, 0, GameCont.area)){
+                	if(sprite_index == sprTopDecalScrapyard){
+                		image_index = choose(1, 2);
+                	}
+
                     x = other.x + lengthdir_x(_dis * 1.5, _dir);
                     y = other.y + lengthdir_y(_dis, _dir) + 40;
                     if(place_meeting(x, y, Floor)) instance_destroy();
@@ -73,6 +77,37 @@
 
     		 // Specifics:
     		switch(area){
+    			case 3: // Ravens
+    				my_raven = [];
+					repeat(3){
+						with(instance_create(x, y, Raven)){
+							image_index = irandom(image_number - 1);
+
+							var _tries = 100,
+								_x = 0,
+								_y = 0;
+
+							while(_tries-- > 0){
+								_x = random_range(-12, 12);
+								_y = (chance(1, 4) ? -12 : random(16));
+								x = other.x + _x;
+								y = other.y + _y;
+
+								var n = nearest_instance(x, y, instances_matching_ne(Raven, "id", id));
+								if(!instance_exists(n) || point_distance(x, y, n.x, n.y) > 16){
+									break;
+								}
+							}
+
+							array_push(other.my_raven, {
+								inst : id,
+								x : _x,
+								y : _y
+							});
+						}
+					}
+    				break;
+
     			case 4:
     			case 104: // Face drill
     				with(nearest_instance(x - 16, y - 16, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 16), "bbox_bottom", y + 48))){
@@ -93,6 +128,86 @@
     if(!instance_exists(GenCont)){
          // Area-Specifics:
         switch(area){
+        	case 3:
+        		var _ravenNum = array_length(my_raven);
+        		with(my_raven){
+        			var _x = other.x + (x * other.image_xscale),
+        				_y = other.y + y;
+
+        			with(inst){
+	        			x = _x;
+	        			y = _y;
+	        			sprite_index = spr_idle;
+	        			mask_index = mskNone;
+	        			canfly = true;
+	        			wkick = 10000;
+	        			alarm1 = -1;
+
+	        			 // Lookin:
+						if(chance_ct(1, 80)){
+							right = choose(-1, 1);
+							if(instance_exists(Player)){
+								var t = instance_nearest(x, y, Player);
+								scrRight(point_direction(x, y, t.x, t.y));
+							}
+						}
+
+	        			 // Fly to Player:
+	        			if(!instance_is(self, RavenFly) && (chance_ct(1, 100) || instance_number(enemy) <= _ravenNum + 2)){
+							var t = instance_nearest(x, y, Player);
+		        			if(in_distance(t, 128)){
+								scrRight(point_direction(x, y, t.x, t.y));
+
+		        				var _x = t.x,
+		        					_y = t.y;
+
+	        					mask_index = mskBandit;
+								if(place_meeting(_x, _y, Wall)){
+									with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
+				        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
+				        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
+
+				        				var b = false;
+										with(other) if(!place_meeting(_x, _y, Wall)){
+											b = true;
+										}
+										if(b) break;
+									}
+								}
+
+								if(!place_meeting(_x, _y, Wall)){
+			        				instance_change(RavenFly, false);
+			        				targetx = _x;
+			        				targety = _y;
+								}
+								else mask_index = mskNone;
+		        			}
+	        			}
+        			}
+
+        			 // Remove From Nest:
+        			if(instance_is(inst, RavenFly)){
+        				with(inst){
+	        				sprite_index = sprRavenLift;
+	        				image_index = 0;
+
+	        				mask_index = mskBandit;
+        					canfly = false;
+	        				wkick = 4;
+
+	        				 // Effects:
+	        				repeat(6){
+								with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
+									depth = -9;
+								}
+							}
+	        				sound_play(sndRavenLift);
+        				}
+        				other.my_raven = array_delete_value(other.my_raven, self);
+        			}
+        		}
+        		break;
+
             case "trench":
                 var _vents = [
                     [  2, -14],
@@ -125,6 +240,22 @@
     }
 
 #define BigDecal_draw
+     // Nest Ravens:
+    if("my_raven" in self){
+    	var r = [];
+	    with(my_raven) with(inst) array_push(r, [id, depth]);
+	    array_sort_sub(r, 1, false);
+
+	    with(r) with(self[0]){
+	    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, merge_color(image_blend, c_black, 0.2), image_alpha);
+	    }
+    }
+
+	 // Flying Ravens:
+    with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom + 64, RavenFly)){
+    	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+    }
+
      // Bubble Fix:
     if(distance_to_object(Bubble) < 40){
         with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom, Bubble)){
@@ -175,6 +306,52 @@
                 }
             }
             break;
+
+		case 3: // Ravens
+			with(my_raven){
+				with(inst){
+					sound_play(sndRavenScreech);
+
+					mask_index = mskBandit;
+					canfly = false;
+					wkick = 4;
+
+					 // Fly:
+					if(chance(1, 2)){
+						var _tries = 100,
+							_tx = 0,
+							_ty = 0,
+							o = 96;
+
+						while(_tries-- > 0){
+							with(instance_random(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching_ne(Floor, "object_index", FloorExplo)))){
+								_tx = x + 16;
+								_ty = y + 16;
+							}
+							if(!place_meeting(_tx, _ty, Wall)) break;
+							o += 16;
+						}
+
+						if(_tries > 0){
+							sound_play(sndRavenLift);
+							instance_change(RavenFly, false);
+							sprite_index = sprRavenLift;
+							image_index = 0;
+							targetx = _tx;
+							targety = _ty;
+						}
+					}
+
+					 // Don Fly:
+					if(!instance_is(self, RavenFly)){
+						x = _x + orandom(8);
+						y = _y + 8 + orandom(4);
+						xprevious = x;
+						yprevious = y;
+					}
+				}
+			}
+			break;
 
 		case 4:
 		case 104: // Drill Explosion
@@ -1546,7 +1723,7 @@
         size = 1;
         walk = 0;
         walkspd = 2;
-        maxspd = 3;
+        maxspeed = 3;
         friction = 0.4;
         direction = random(360);
         pickup_indicator = noone;
@@ -1559,6 +1736,9 @@
 
          // Alarms:
         alarm0 = 20 + random(10);
+
+		 // NTTE:
+		ntte_walk = false;
 
         return id;
     }
@@ -1596,7 +1776,7 @@
 
     if(visible){
 	     // Movement:
-	    enemyWalk(walkspd, maxspd);
+	    enemyWalk(walkspd, maxspeed);
 	
 	     // Animate:
 	    var _scrt = pet + "_anim";

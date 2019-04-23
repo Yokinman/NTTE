@@ -66,12 +66,16 @@
 		size = 3;
 		walk = 0;
 		walkspd = 0.6;
-		maxspd = 3;
+		maxspeed = 3;
 		hiding = true;
 		ammo = 0;
 
          // Alarms:
 		alarm1 = 30 + irandom(30);
+
+		 // NTTE:
+		ntte_anim = false;
+		ntte_walk = false;
 
         scrAnglerHide();
 
@@ -79,7 +83,7 @@
     }
 
 #define Angler_step
-    enemyWalk(walkspd, maxspd + (8 * (ammo >= 0 && walk > 0)));
+    enemyWalk(walkspd, maxspeed + (8 * (ammo >= 0 && walk > 0)));
 
      // Animate:
     if(hiding){
@@ -93,19 +97,24 @@
         enemySprites();
     }
 
-     // Charging:
-    if(ammo >= 0){
-        speed += ((speed * 0.85) - speed) * current_time_scale;
-    }
-
-     // Pit Collision:
-    var f = floor_at(x + hspeed, y + vspeed);
-    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
-        if(floor_at(x, y).sprite_index != spr.FloorTrenchB){
-            if(place_meeting(x + hspeed, y, f)) hspeed *= -1;
-            if(place_meeting(x, y + vspeed, f)) vspeed *= -1;
-        }
-    }
+	if(!hiding){
+	     // Charging:
+	    if(ammo >= 0){
+	        speed -= (speed * 0.15) * current_time_scale;
+	    }
+	
+	     // Pit Collision:
+		if(speed > 0){
+			var _f1 = floor_at(x + hspeed, y + vspeed);
+			if(instance_exists(_f1) && _f1.sprite_index == spr.FloorTrenchB){
+				var _f2 = floor_at(x, y);
+			    if(!instance_exists(_f2) || _f2.sprite_index != spr.FloorTrenchB){
+			        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
+			        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
+			    }
+			}
+		}
+	}
 
 #define Angler_draw
     var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
@@ -139,7 +148,7 @@
     
              // Charge:
             scrWalk(5, (in_sight(target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40));
-            speed = maxspd + 10;
+            speed = maxspeed + 10;
     
              // Effects:
             sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
@@ -272,7 +281,7 @@
         kills = 0;
         walk = 0;
         walkspd = 1;
-        maxspd = 3.5;
+        maxspeed = 3.5;
         minCounter = 0; // grace period before counters are active
         counterTime = 0;
         doCounter = false; // tracks if the counter is successful
@@ -287,9 +296,6 @@
     }
     
 #define ChaserTentacle_step
-    enemyWalk(walkspd, maxspd);
-    enemySprites();
-    
     if place_meeting(x + hspeed, y, Wall) hspeed *= -1;
     if place_meeting(x, y + vspeed, Wall) vspeed *= -1;
     
@@ -297,7 +303,7 @@
 
 #define ChaserTentacle_alrm0
     alarm0 = 10 + irandom(10);
-    maxspd = 3.5;
+    maxspeed = 3.5;
     target = instance_nearest(x, y, Player);
     
     if instance_exists(creator) || true{
@@ -375,7 +381,7 @@
 #define ChaserTentacle_alrm1
     alarm0 = 10;
     alarm1 = -1;
-    maxspd = 5.5;
+    maxspeed = 5.5;
     doCounter = false;
     target = instance_nearest(x, y, Player);
     
@@ -389,7 +395,7 @@
             image_xscale = 1.2;
             image_yscale = 0.6;
         }
-        motion_set(dir, maxspd);
+        motion_set(dir, maxspeed);
         scrWalk(alarm0, direction);
         
          // Effects:
@@ -544,7 +550,7 @@
         size = 1;
         walk = 0;
         walkspd = 1.2;
-        maxspd = 3;
+        maxspeed = 3;
         pitDepth = 0;
         direction = random(360);
         arc_inst = noone;
@@ -553,6 +559,7 @@
         gunangle = 0;
         elite = 0;
         ammo = 0;
+        canmelee_last = canmelee;
 
          // Alarms:
         alarm1 = 30;
@@ -561,11 +568,15 @@
     }
 
 #define Eel_step
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
+	var _arcDistance = 100,
+		_arcDistanceElite = 150;
+
+	if(instance_exists(arc_inst) && arc_inst.c > 2){
+		_arcDistance = _arcDistanceElite;
+	}
 
      // Arc Lightning w/ Jelly:
-    if(in_distance(arc_inst, 100) && (!instance_exists(target) || in_distance(target, 120))){
+    if(in_distance(arc_inst, _arcDistance) && in_sight(arc_inst) && (!instance_exists(target) || in_distance(target, 120))){
          // Start Arcing:
         if(arcing < 1){
             arcing += 0.15 * current_time_scale;
@@ -612,32 +623,58 @@
 
 	 // Stop Arcing:
     else{
-    	if(arcing > 0 && instance_exists(arc_inst)){
-    		var _lx = arc_inst.x,
-    			_ly = arc_inst.y;
-
-            repeat(2){
-                var _dis = random(point_distance(x, y, _lx, _ly)),
-                    _dir = point_direction(x, y, _lx, _ly);
-
-                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
-                    motion_add(random(360), 1);
-                }
-            }
+    	if(instance_exists(arc_inst)){
+    		arc_inst.arc_num--;
+			if(arcing > 0){
+	    		var _lx = arc_inst.x,
+	    			_ly = arc_inst.y;
+	
+	            repeat(2){
+	                var _dis = random(point_distance(x, y, _lx, _ly)),
+	                    _dir = point_direction(x, y, _lx, _ly);
+	
+	                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+	                    motion_add(random(360), 1);
+	                }
+	            }
+			}
     	}
         arc_inst = noone;
         arcing = 0;
     }
-    
+
 	 // Search for New Jelly:
-    if(!instance_exists(arc_inst) && frame_active(8)){
-        var _inst = nearest_instance(x, y, instances_named(CustomEnemy, "Jelly"));
-        if(in_distance(_inst, 100)) arc_inst = _inst;
+    if(!instance_exists(arc_inst) && (((current_frame + wave) mod 15) < current_time_scale)){
+    	var _inst = nearest_instance(x, y, instances_matching_lt(instances_named(CustomEnemy, "JellyElite"), "arc_num", 5));
+
+        if(!in_distance(_inst, _arcDistanceElite)){
+        	_inst = nearest_instance(x, y, instances_matching_lt(instances_named(CustomEnemy, "Jelly"), "arc_num", 3));
+        }
+
+        if(in_distance(_inst, _arcDistance)){
+        	arc_inst = _inst;
+        	arc_inst.arc_num++;
+        }
     }
 
-     // Elite Effects:
+     // Elite:
     if(elite > 0){
         elite -= current_time_scale;
+
+         // Zappin ?
+        if(canmelee_last && !canmelee){
+			var _dir = random(360);
+    		if(instance_exists(Player)){
+        		var n = instance_nearest(x, y, Player);
+    			_dir = point_direction(x, y, n.x, n.y);
+    		}
+        	with(scrEnemyShoot(EnemyLightning, _dir, 0)){
+	            ammo = 6 + random(2);
+        		event_perform(ev_alarm, 0);
+	        }
+        }
+        
+         // Effects:
         if(chance_ct(1, 30)){
             instance_create(x, y, PortalL);
         }
@@ -647,6 +684,7 @@
             image_index = 0;
         }
     }
+	canmelee_last = canmelee;
 
 #define Eel_draw
     var _spr = sprite_index;
@@ -774,9 +812,22 @@
         return id;
     }
 
+#define EelSkull_step
+	 // Over Pit:
+	var f = floor_at(x, y);
+	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
+		my_health = 0;
+	}
+
 #define EelSkull_death
 	for(var a = direction; a < direction + 360; a += (360 / 4)){
         with(instance_create(x, y, Dust)) motion_add(a, 3);
+    }
+    
+     // Hmmm
+    with(instance_create(x, y + 8, WepPickup)){
+    	wep = "crabbone";
+    	motion_add(random(360), 3);
     }
 
 
@@ -808,12 +859,17 @@
         size = 2;
         walk = 0;
         walkspd = 1;
-        maxspd = 2.6;
+        maxspeed = 2.6;
         meleedamage = 4;
         direction = random(360);
+        arc_num = 0;
 
          // Alarms:
         alarm1 = 40 + irandom(20);
+
+		 // NTTE:
+		ntte_anim = false;
+		ntte_walk = false;
 
         return id;
     }
@@ -822,13 +878,16 @@
     if(sprite_index != spr_fire) enemySprites();
 
      // Movement:
-    var _maxSpd = clamp(0.07 * walk * current_time_scale, 1, maxspd); // arbitrary values, feel free to fiddle
+    var _maxSpd = clamp(0.07 * walk * current_time_scale, 1, maxspeed); // arbitrary values, feel free to fiddle
     enemyWalk(walkspd, _maxSpd);
 
      // Bouncy Boy:
-    if(place_meeting(x + hspeed, y + vspeed, Wall)) {
-        move_bounce_solid(false);
-        scrRight(direction);
+    if(speed > 0){
+	    if(place_meeting(x + hspeed, y + vspeed, Wall)) {
+	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	        scrRight(direction);
+	    }
     }
 
 #define Jelly_alrm1
@@ -916,6 +975,13 @@
 
         return id;
     }
+
+#define Kelp_step
+	 // Over Pit:
+	var f = floor_at(x, y);
+	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
+		my_health = 0;
+	}
 
 
 #define PitSquid_create(_x, _y)
@@ -1722,7 +1788,7 @@
 
      // Fall into Pit:
     var f = floor_at(x, y);
-    if(instance_exists(f) && f.styleb && !place_meeting(x, y, Wall)){
+    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB && !place_meeting(x, y, Wall)){
         with(instance_create(x, y, Debris)){
             sprite_index = other.sprite_index;
             image_index = other.image_index;
@@ -1792,8 +1858,14 @@
         // }
     }
 
+	 // Over Pit:
+	var f = floor_at(x, y);
+	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
+		my_health = 0;
+	}
+
 #define Vent_death
-    obj_create(x,y,"BubbleExplosion");
+    obj_create(x, y, "BubbleExplosion");
 
 
 #define YetiCrab_create(_x, _y)
@@ -1820,7 +1892,7 @@
         size = 1;
         walk = 0;
         walkspd = 1;
-        maxspd = 4;
+        maxspeed = 4;
         meleedamage = 2;
         is_king = 0; // Decides leader
         direction = random(360);

@@ -23,7 +23,7 @@
 
 #define CoolGuy_create
      // Vars:
-    maxspd = 3.5;
+    maxspeed = 3.5;
     poop = 1;
     poop_delay = 0;
 
@@ -113,7 +113,7 @@
     }
 
      // He just keep movin
-    if(poop <= 0 || poop_delay > 10) speed = maxspd;
+    if(poop <= 0 || poop_delay > 10) speed = maxspeed;
     if(place_meeting(x + hspeed, y + vspeed, Wall)){
         if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
@@ -162,7 +162,7 @@
     
      // Vars:
     mask_index = mskFreak;
-    maxspd = 2;
+    maxspeed = 2;
     wep = wep_none;
     ammo = true;
     curse = false;
@@ -301,7 +301,7 @@
     depth = -3;
 
      // Vars:
-    maxspd = 3.5;
+    maxspeed = 3.5;
     perched = noone;
     pickup = noone;
     pickup_x = 0;
@@ -455,7 +455,7 @@
     
          // Movin'
         if(speed <= 0){
-            scrWalk(maxspd, point_direction(other.x, other.y, x, y));
+            scrWalk(maxspeed, point_direction(other.x, other.y, x, y));
             var o = 6;
             x += lengthdir_x(o, direction);
             y += lengthdir_y(o, direction);
@@ -477,7 +477,7 @@
      // Vars:
     mask_index = mskFrogEgg;
     maxhealth = 14;
-    maxspd = 3.6;
+    maxspeed = 3.6;
     my_health = maxhealth;
     my_corpse = noone;
     target = noone;
@@ -675,7 +675,7 @@
      // Vars:
     mask_index = mskFrogEgg;
     maxhealth = 30;
-    maxspd = 3.2;
+    maxspeed = 3.2;
     my_health = maxhealth;
     my_corpse = noone;
     my_bone = noone;
@@ -1127,16 +1127,17 @@
     
     if(hiding){
          // Animation speed:
-        if(image_index >= 29) image_speed = 0.01;
-        else image_speed = 0.4;
+        if(image_index >= 29){
+        	image_index -= 0.975 * image_speed * current_time_scale;
+        }
         
          // Pit Collision:
-        var f = floor_at(x + h, y + v);
-        if(instance_exists(f) && f.sprite_index != spr.FloorTrenchB){
+        var f = [floor_at(x + h, y + v), floor_at(x, y)];
+        if(instance_exists(f[0]) && f[0].sprite_index != spr.FloorTrenchB){
              // bounce off big floors:
-            if(floor_at(x, y).sprite_index == spr.FloorTrenchB){
-                if(place_meeting(x + h, y, f)) hspeed *= -1;
-                if(place_meeting(x, y + v, f)) vspeed *= -1;
+            if(instance_exists(f[1]) && f[1].sprite_index == spr.FloorTrenchB){
+                if(place_meeting(x + h, y, f[0])) hspeed *= -1;
+                if(place_meeting(x, y + v, f[0])) vspeed *= -1;
             }
         }
         
@@ -1182,10 +1183,12 @@
     else{
          // Find trench pit:
         if(GameCont.area == "trench"){
-            var _n = nearest_instance(x, y, instances_matching(Floor, "styleb", true));
-            if(instance_exists(_n) || (!floor_at(x, y).styleb && hiding)){
+            var _n = nearest_instance(x, y, instances_matching(Floor, "styleb", true)),
+            	f = floor_at(x, y);
+
+            if(instance_exists(_n) || !instance_exists(f) || (!f.styleb && hiding)){
                  // Hide:
-                if(floor_at(x, y).styleb && !hiding){
+                if(instance_exists(f) && f.styleb && !hiding){
                     hiding = true;
                     
                     sprite_index = spr_hide;
@@ -1231,7 +1234,7 @@
 
      // Vars:
     mask_index = mskFrogEgg;
-    maxspd = 2.5;
+    maxspeed = 2.5;
     spawn_loc = [x, y];
     alarm0 = -1;
     

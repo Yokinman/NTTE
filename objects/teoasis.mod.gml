@@ -83,7 +83,7 @@
 		size = 2;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 4;
+		maxspeed = 4;
 		meleedamage = 4;
 		direction = random(360);
 		rotate = 0;
@@ -94,12 +94,14 @@
 		 // Alarms:
 		alarm1 = 40 + random(20);
 
+		 // NTTE:
+		ntte_anim = false;
+
 		return id;
 	}
 
 #define Hammerhead_step
     if(sprite_index != spr_chrg) enemySprites();
-    enemyWalk(walkspd, maxspd);
 
      // Swim in a circle:
     if(rotate != 0){
@@ -264,7 +266,7 @@
 		size = 1;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		meleedamage = 2;
 		direction = random(360);
 		blow = 0;
@@ -272,12 +274,13 @@
          // Alarms:
         alarm1 = 40 + random(80);
 
+		 // NTTE:
+		ntte_anim = false;
+
         return id;
     }
 
 #define Puffer_step
-    enemyWalk(walkspd, maxspd);
-
      // Animate:
     if(sprite_index != spr_fire){
         if(sprite_index != spr_chrg) enemySprites();

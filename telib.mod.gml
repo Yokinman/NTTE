@@ -101,7 +101,7 @@
 		_args[s.x] = _x;
 		_args[s.y] = _y;
 
-		array_copy(_scrt, array_length(_scrt), _args, 0, array_length(_args));
+		_scrt = array_combine(_scrt, _args);
 
 		var o = script_ref_call(_scrt);
 		if(is_undefined(o) || o == 0) o = noone;
@@ -113,10 +113,40 @@
 
 				var _isCustom = (string_pos("Custom", object_get_name(o.object_index)) == 1),
 					_events = [];
-	
+
 				if(_isCustom){
 	            	var _isEnemy = instance_is(self, CustomEnemy);
-		            _events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile", "alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"];
+
+		            switch(object_index){
+		            	case CustomObject:
+		            		_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup"];
+		            		break;
+
+						case CustomHitme:
+							_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "cleanup"];
+							break;
+
+						case CustomProp:
+							_events = ["step", "death"];
+							break;
+
+		            	case CustomProjectile:
+		            		_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim"];
+		            		break;
+
+						case CustomSlash:
+							_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim", "grenade", "projectile"];
+							break;
+
+						case CustomEnemy:
+							_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup"];
+							break;
+
+		            	default:
+		            		_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile"];
+		            }
+
+		            _events = array_combine(_events, ["alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"]);
 		            if(!_isEnemy) array_push(_events, "alrm11");
 				}
 				else _events = ["step", "begin_step", "end_step", "draw"];
@@ -156,11 +186,13 @@
 	                     // Defaults:
 	                    else if(_isCustom) with(other){
 	                        switch(v){
-	                            case "on_step":
-	                                if(_isEnemy){
-	                                    on_step = enemy_step_ntte;
-	                                }
-	                                break;
+								/*
+								case "on_step":
+									if(_isEnemy){
+										on_step = enemy_step_ntte;
+									}
+									break;
+								*/
 	
 	                            case "on_hurt":
 	                                on_hurt = enemyHurt;
@@ -181,8 +213,10 @@
 	                    }
 	                }
 	            }
-	
+
 				if(_isCustom){
+					on_create = script_ref_create_ext("mod", mod_current, "obj_create", _x, _y, _obj);
+
 	                 // Override Events:
 	                var _override = ["step"];
 	                with(_override){
@@ -201,13 +235,33 @@
 	                                        on_step = _objStep;
 	
 	                                         // Setup Custom NTTE Event Vars:
+	                                        if("ntte_anim" not in self){
+	                                        	ntte_anim = false;
+	                                        	if(_isEnemy){
+	                                        		ntte_anim = true;
+	                                        	}
+	                                        }
+	                                        if("ntte_walk" not in self){
+	                                        	ntte_walk = false;
+	                                        	if("walk" in self){
+	                                        		ntte_walk = true;
+	                                        		if("walkspd" not in self) walkspd = 0.8;
+	                                        		if("maxspeed" not in self) maxspeed = 3;
+	                                        	}
+	                                        }
 	                                        ntte_alarm_max = 0;
 	                                        for(var i = 0; i <= 10; i++){
 	                                            var a = `on_alrm${i}`;
 	                                            if(a in self && variable_instance_get(id, a) != null){
 	                                                ntte_alarm_max = i + 1;
+	                                                if("ntte_alarm_min" not in self){
+	                                                	ntte_alarm_min = i;
+	                                                }
 	                                            }
 	                                        }
+                                            if("ntte_alarm_min" not in self){
+                                            	ntte_alarm_min = 0;
+                                            }
 	                                        /*var _set = ["anim"];
 	                                        with(_set){
 	                                            var n = "on_ntte_" + self;
@@ -245,36 +299,65 @@
 	else{
 		var _list = [];
 		for(var i = 0; i < lq_size(objList); i++){
-			var _modObjs = lq_get_value(objList, i);
-			array_copy(_list, array_length(_list), _modObjs, 0, array_length(_modObjs));
+			_list = array_combine(_list, lq_get_value(objList, i));
 		}
 		return _list;
 	}
 
 #define obj_step
     //trace_lag_bgn(name);
+	//trace_time();
+
+	 // Animate:
+	if(ntte_anim){
+	     // Not Hurt:
+	    if(sprite_index != spr_hurt){
+	        if(speed <= 0) sprite_index = spr_idle;
+	    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
+	    }
+
+	     // Hurt:
+	    else if(image_index > image_number - 1){
+	        sprite_index = spr_idle;
+	    }
+	}
+
+	 // Movement:
+	if(ntte_walk){
+		if(walk > 0){
+	        motion_add(direction, walkspd);
+	        walk -= current_time_scale;
+	    }
+	    if(speed > maxspeed) speed = maxspeed; // Max Speed
+	}
 
      // Step:
     script_ref_call(on_ntte_step);
     if("ntte_alarm_max" not in self) exit;
 
      // Alarms:
-    for(var i = 0; i < ntte_alarm_max; i++){
-        var a = alarm_get(i);
-        if(a > 0){
-             // Decrement Alarm:
-            a -= ceil(current_time_scale);
-            alarm_set(i, a);
+	var r = (ntte_alarm_max - ntte_alarm_min);
+    if(r > 0){
+	    var i = ntte_alarm_min;
+	    repeat(r){ // repeat() is slightly faster than a for loop here i think- big optimizations
+	        var a = alarm_get(i);
+	        if(a > 0){
+	             // Decrement Alarm:
+	            a -= ceil(current_time_scale);
+	            alarm_set(i, a);
+	
+	             // Call Alarm Event:
+	    		if(a <= 0){
+	    		    alarm_set(i, -1);
+	    		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
+	    			if("ntte_alarm_max" not in self) exit;
+	    		}
+	        }
+	        i++;
+	    }
+	}
 
-             // Call Alarm Event:
-    		if(a <= 0){
-    		    alarm_set(i, -1);
-    		    script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
-    			if("ntte_alarm_max" not in self) exit;
-    		}
-        }
-    }
-
+	//trace_time(name);
     //trace_lag_end(name);
 
 #define ntte_bind
@@ -287,7 +370,7 @@
 
 #define step
     //trace("");
-    //trace("Frame", current_frame, "Lag:")
+	//trace("Frame", current_frame, "Lag:")
     //trace_lag();
     
      // sleep_max():
@@ -295,12 +378,6 @@
 	    sleep(global.sleep_max);
 	    global.sleep_max = 0;
     }
-
-#define enemy_step_ntte
-    if("walk" in self){
-        enemyWalk(walkspd, maxspd);
-    }
-    enemySprites();
 
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
@@ -1244,16 +1321,8 @@
     return mod_script_call("area", _area, "area_sprite", _spr);
 
 #define floor_at(_x, _y)
-    with(instances_matching(instances_matching(Floor, "x", floor(_x / 16) * 16), "y", floor(_y / 16) * 16)){
-        if(position_meeting(_x, _y, self)){
-            return self;
-        }
-    }
-    with(instances_matching(instances_matching(Floor, "x", (floor((_x + 16) / 32) * 32) - 16), "y", (floor((_y + 16) / 32) * 32) - 16)){
-        if(position_meeting(_x, _y, self)){
-            return self;
-        }
-    }
+    with(instances_at(_x, _y, FloorExplo)) return id;
+    with(instances_at(_x, _y, Floor)) return id;
     return noone;
 
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)

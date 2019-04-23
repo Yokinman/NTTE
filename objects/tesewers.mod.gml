@@ -43,7 +43,7 @@
 		scream = 0;
 		stress = 20;
 		walkspd = 0.8;
-		maxspd = 2.5;
+		maxspeed = 2.5;
 		gunangle = random(360);
 		direction = gunangle;
 
@@ -51,22 +51,25 @@
 		alarm1 = 60;
 		alarm2 = 120;
 
+		 // NTTE:
+		ntte_anim = false;
+
 		return id;
     }
 
 #define Bat_step
-    enemyWalk(walkspd, maxspd);
-
-     // Walk:
+     // Animate:
     if((sprite_index != spr_fire && sprite_index != spr_hurt) || anim_end){
         if(speed <= 0) sprite_index = spr_idle;
         else sprite_index = spr_walk;
     }
 
      // Bounce:
-    if(place_meeting(x + hspeed, y + vspeed, Wall)){
-        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+    if(speed > 0){
+	    if(place_meeting(x + hspeed, y + vspeed, Wall)){
+	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	    }
     }
 
 #define Bat_draw
@@ -229,7 +232,7 @@
 		scream = 0;
 		stress = 20;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		gunangle = random(360);
 		direction = gunangle;
 		active = true;
@@ -244,7 +247,7 @@
 
 #define BatBoss_step
 	Bat_step();
-	if(walk <= 0) speed = min(speed, maxspd / 2);
+	if(walk <= 0) speed = min(speed, maxspeed / 2);
 
 	 // Disabled:
     if(!active){
@@ -749,7 +752,7 @@
 		size = 1;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		hole = noone;
 		ammo = 0;
 		active = true;
@@ -763,12 +766,13 @@
 		alarm1 = 40 + irandom(20);
 		alarm2 = 40 + irandom(20);
 
+		 // NTTE:
+		ntte_anim = false;
+
 		return id;
 	}
 
 #define Cat_step
-    enemyWalk(walkspd, maxspd);
-
      // Animate:
     if(sprite_index == spr_sit1){
         if(anim_end) sprite_index = spr_sit2;
@@ -1054,6 +1058,8 @@
 		canmelee = false;
 		size = 3;
 		walk = 0;
+		walkspd = 0.8;
+		maxspeed = 3;
         dash = 0;
         super = false;
         supertime = 0;
@@ -1066,12 +1072,14 @@
 		alarm0 = 300 + random(150);
 		alarm1 = 30 + random(20);
 
+		 // NTTE:
+		ntte_walk = false;
+
 		return id;
 	}
 
 #define CatBoss_step
-    enemySprites();
-	enemyWalk(0.8, ((dash > 0) ? 6.5 : 3.0));
+	enemyWalk(walkspd, maxspeed + (3.5 * (dash > 0)));
 
 	 // Super FX:
 	if(super && chance_ct(1, 10)){
@@ -2877,7 +2885,7 @@
 
 		with(creator){
              // Fire:
-            motion_add(gunangle + 180, maxspd);
+            motion_add(gunangle + 180, maxspeed);
 
              // Effects:
             wkick = min(wkick + 9, 16);

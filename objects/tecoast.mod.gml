@@ -252,18 +252,19 @@
         right = choose(-1, 1);
         walk = 0;
 		walkspd = 1.2;
-		maxspd = 2.6;
+		maxspeed = 2.6;
 		scared = false;
 
 		 // Alarms:
 		alarm1 = 30;
 
+		 // NTTE:
+		ntte_anim = true;
+
 		return id;
     }
 
 #define Creature_step
-    enemySprites();
-    enemyWalk(walkspd,maxspd);
      // Run away when hurt:
     if nexthurt > current_frame && !scared{
         scared = true;
@@ -272,7 +273,8 @@
 
      // Pushed away from floors:
     if(in_distance(Floor, 128)){
-        motion_add_ct(point_direction(_f.x, _f.y, x, y), 3);
+    	var f = instance_nearest(x - 16, y - 16, Floor);
+        motion_add_ct(point_direction(f.x, f.y, x, y), 3);
     }
 
      // Push Player:
@@ -350,7 +352,7 @@
 		size = 1;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3;
+		maxspeed = 3;
 		gunangle = random(360);
 		direction = gunangle;
 		canshoot = false;
@@ -363,9 +365,6 @@
 	}
 
 #define Diver_step
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-
      // Reloading Effects:
     if(reload > 0){
         reload -= current_time_scale;
@@ -374,7 +373,7 @@
             wkick += ((6 - wkick) * 3/5) * current_time_scale;
         }
 
-        if(reload <= 0){
+        else if(reload <= 0){
             alarm1 = max(alarm1, 30)
             wkick = -2;
     		sound_play_hit(sndCrossReload, 0.1);
@@ -387,13 +386,16 @@
     }
 
      // Pit Collision:
-    var f = floor_at(x + hspeed, y + vspeed);
-    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
-        if(floor_at(x, y).sprite_index != spr.FloorTrenchB){
-            if(place_meeting(x + hspeed, y, f)) hspeed *= -0.8;
-            if(place_meeting(x, y + vspeed, f)) vspeed *= -0.8;
-        }
-    }
+	if(speed > 0){
+		var _f1 = floor_at(x + hspeed, y + vspeed);
+		if(instance_exists(_f1) && _f1.sprite_index == spr.FloorTrenchB){
+			var _f2 = floor_at(x, y);
+		    if(!instance_exists(_f2) || _f2.sprite_index != spr.FloorTrenchB){
+		        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
+		        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
+		    }
+		}
+	}
 
 	 // Laser Sight in Water:
 	if(canshoot){
@@ -612,7 +614,7 @@
 		size = 1;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 3.5;
+		maxspeed = 3.5;
 		gunangle = random(360);
 		direction = gunangle;
 		wepangle = 140 * choose(-1, 1);
@@ -722,7 +724,7 @@
 		size = 4;
 		walk = 0;
 		walkspd = 0.8;
-		maxspd = 2;
+		maxspeed = 2;
 		ammo = 0;
 		canmelee = 0;
 		meleedamage = 4;
@@ -751,12 +753,16 @@
         zgoal = 0;
         corpse = false;
 
+		 // NTTE:
+		ntte_anim = false;
+		ntte_walk = false;
+
         return id;
     }
 
 #define Palanking_step
     if(z <= 0) walk = 0;
-    enemyWalk(walkspd, maxspd);
+    enemyWalk(walkspd, maxspeed);
 
      // Seals:
     var _sealNum = (seal_max - array_count(seal, noone)),
@@ -779,11 +785,11 @@
                         _holding[_holdx[i] > 0]++;
                         if(_sealNum > 1){
                             if(hold_x != _x){
-                                hspeed = random(clamp(_x - hold_x, -maxspd, maxspd));
+                                hspeed = random(clamp(_x - hold_x, -maxspeed, maxspeed));
                                 hold_x += hspeed;
                             }
                             if(hold_y != _y){
-                                vspeed = random(clamp(_y - hold_y, -maxspd, maxspd));
+                                vspeed = random(clamp(_y - hold_y, -maxspeed, maxspeed));
                                 hold_y += vspeed;
                             }
                         }
@@ -1381,7 +1387,7 @@
         raddrop = other.raddrop;
         size = other.size;
         z = other.z;
-        speed = min(other.speed, other.maxspd);
+        speed = min(other.speed, other.maxspeed);
         direction = other.direction;
     }
     sound_play_pitchvol(snd.PalankingSwipe, 1, 4);
@@ -1747,7 +1753,7 @@
 		size = 2;
 		walk = 0;
 		walkspd = 0.6;
-		maxspd = 3;
+		maxspeed = 3;
 		dash = 0;
 		dash_factor = 1.25;
 		chrg_time = 24; // 0.8 Seconds
@@ -1762,9 +1768,6 @@
 	}
 
 #define Pelican_step
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-
      // Dash:
     if(dash > 0){
         motion_add(direction, dash * dash_factor);
@@ -1836,7 +1839,7 @@
 
      // Dash:
     dash = 12;
-    motion_set(gunangle, maxspd);
+    motion_set(gunangle, maxspeed);
 
      // Heavy Slash:
     with(scrEnemyShoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
@@ -1898,7 +1901,7 @@
         size = 1;
         walk = 0;
         walkspd = 0.8;
-        maxspd = 3.5;
+        maxspeed = 3.5;
         type = 0;
         hold = false;
         hold_x = 0;
@@ -1918,11 +1921,15 @@
         alarm1 = 20 + random(20);
         alarm2 = -1;
 
+		 // NTTE:
+		ntte_anim = false;
+		ntte_walk = false;
+
         return id;
     }
 
 #define Seal_step
-    enemyWalk((hold ? 0 : walkspd), maxspd);
+    enemyWalk((hold ? 0 : walkspd), maxspeed);
 
      // Slide:
     if(slide > 0){
@@ -2548,7 +2555,7 @@
         size = 2;
         walk = 0;
         walkspd = 0.8;
-        maxspd = 3;
+        maxspeed = 3;
         wepangle = 0;
         gunangle = random(360);
         direction = gunangle;
@@ -2566,12 +2573,13 @@
 		 // Alarms:
         alarm1 = 40 + random(30);
 
+		 // NTTE:
+		ntte_anim = false;
+
         return id;
     }
 
 #define SealHeavy_step
-    enemyWalk(walkspd, maxspd);
-
      // Animate:
     if(sprite_index != spr_spwn) enemySprites();
     else{
@@ -3033,7 +3041,7 @@
         meleedamage = 4;
         walk = 0;
         walkspd = 1;
-        maxspd = 2.5;
+        maxspeed = 2.5;
 		gunangle = random(360);
 		direction = gunangle;
 		sweep_spd = 10;
@@ -3047,9 +3055,6 @@
     }
 
 #define TrafficCrab_step
-    enemySprites();
-    enemyWalk(walkspd, maxspd);
-
      // Attack Sprite:
     if(ammo > 0){
         sprite_index = spr_fire;

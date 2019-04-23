@@ -184,7 +184,8 @@
      // Fix Props:
     if(instance_exists(Floor) && instance_exists(Player)){
         with(instances_matching(CustomProp, "name", "Kelp", "Vent", "EelSkull")){
-            if(floor_at(x, y).styleb){
+        	var f = floor_at(x, y);
+            if(instance_exists(f) && f.styleb){
                 var t = 100;
                 while(t-- > 0){
                     var f = instance_random(instances_matching(Floor, "styleb", false));
@@ -256,7 +257,8 @@
 
         var l = 12;
         for(var d = 0; d < 360; d += 45){
-            if(floor_at(x + lengthdir_x(l, d), y + lengthdir_y(l, d)).styleb){
+        	var f = floor_at(x + lengthdir_x(l, d), y + lengthdir_y(l, d));
+            if(instance_exists(f) && f.styleb){
                 depth = 9;
                 break;
             }
@@ -691,7 +693,8 @@
 
              // Make Proto Statues Cooler:
             with(ProtoStatue){
-                if(floor_at(x, bbox_bottom).styleb){
+            	var f = floor_at(x, bbox_bottom);
+                if(instance_exists(f) && f.styleb){
                     spr_shadow = -1;
 
                     var _spr = spr.PStatTrenchIdle;
@@ -703,7 +706,8 @@
                 }
             }
             with(instances_matching(Corpse, "sprite_index", sprPStatDead)){
-                if(floor_at(x, bbox_bottom).styleb){
+            	var f = floor_at(x, bbox_bottom);
+                if(instance_exists(f) && f.styleb){
                     draw_sprite_ext(spr.PStatTrenchIdle, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
                     if(place_meeting(x, y, Portal)){
                         var n = instance_nearest(x, y, Portal),
