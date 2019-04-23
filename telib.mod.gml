@@ -236,19 +236,15 @@
 	
 	                                         // Setup Custom NTTE Event Vars:
 	                                        if("ntte_anim" not in self){
-	                                        	ntte_anim = false;
-	                                        	if(_isEnemy){
-	                                        		ntte_anim = true;
-	                                        	}
+	                                        	ntte_anim = _isEnemy;
 	                                        }
 	                                        if("ntte_walk" not in self){
-	                                        	ntte_walk = false;
-	                                        	if("walk" in self){
-	                                        		ntte_walk = true;
-	                                        		if("walkspd" not in self) walkspd = 0.8;
-	                                        		if("maxspeed" not in self) maxspeed = 3;
-	                                        	}
+	                                        	ntte_walk = ("walk" in self);
 	                                        }
+                                        	if(ntte_walk){
+                                        		if("walkspd" not in self) walkspd = 0.8;
+                                        		if("maxspeed" not in self) maxspeed = 3;
+                                        	}
 	                                        ntte_alarm_max = 0;
 	                                        for(var i = 0; i <= 10; i++){
 	                                            var a = `on_alrm${i}`;
