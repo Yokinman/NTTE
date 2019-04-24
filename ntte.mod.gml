@@ -1300,6 +1300,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
             with(_option){
                 if("splat" not in self) splat = 0;
+            	if(type == opt_title) _y += 2;
                 x = _x;
                 y = _y;
 
