@@ -630,11 +630,12 @@
     global.save = {
         option : {
             "allowShaders"     : true,
-            "petOutlines"      : 2,
-            "waterQualityMain" : 1,
-            "waterQualityTop"  : 1,
             "remindPlayer"     : true,
-            "intros"           : 2
+            "intros"           : 2,
+            "outlinePets"      : 2,
+            "outlineCharm"     : 2,
+            "waterQualityMain" : 1,
+            "waterQualityTop"  : 1
         }
     };
 

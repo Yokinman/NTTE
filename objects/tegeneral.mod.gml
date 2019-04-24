@@ -1492,13 +1492,31 @@
         if(position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
 	        var t = instances_matching(Player, "race", "parrot");
 	        if(array_length(t) > 0 && num > 0){
-	            with(t) repeat(other.num){
-	                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
-	                    target = other;
-	                    creator = other;
-	                    bskin = other.bskin;
-	                    speed *= 1.25;
-	                }
+	            with(t){
+	            	for(var i = 0; i < other.num; i++){
+		                with(obj_create(other.x, other.y, "ParrotFeather")){
+		                    target = other;
+		                    creator = other;
+		                    bskin = other.bskin;
+	        				canhold = false;
+		                    stick_wait = 3;
+		                }
+	
+		                 // Sound FX:
+		                if(fork()){
+		                	if(other.small){
+		                		wait((i * (6 / other.num)) + irandom(1));
+		                	}
+		                	else if(i < other.num / 2){
+		                		wait(i + irandom(2));
+		                	}
+	
+		                	var s = audio_play_sound(sndBouncerSmg, 0, false);
+		                	audio_sound_gain(s, 0.1 + (0.2 / (i + 1)), 0);
+		                	audio_sound_pitch(s, 3 + random(0.2));
+		                	exit;
+		                }
+	            	}
 	            }
 	        }
         }
@@ -1506,10 +1524,11 @@
         instance_destroy();
     }
 
+
 #define ParrotFeather_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        //sprite_index = spr.Parrot[0].Feather;
+        sprite_index = sprChickenFeather;
         sprite_index = mskNone;
         depth = -8;
 
@@ -1521,9 +1540,10 @@
         stick = false;
         stickx = 0;
         sticky = 0;
-        stick_time_max = 40;
+        stick_time_max = 60;
         stick_time = stick_time_max;
         stick_list = [];
+        stick_wait = 0;
         canhold = true;
 
          // Push:
@@ -1532,7 +1552,7 @@
         
          // Spriterize:
         if(fork()){
-            wait 1;
+            wait 0;
             if(instance_exists(self)){
                 sprite_index = spr.Parrot[bskin].Feather;
             }
@@ -1582,45 +1602,47 @@
             //x += target.hspeed / d;
             //y += target.vspeed / d;
 
-            if(!canhold || !instance_exists(creator) || !creator.visible || (!button_check(creator.index, "spec") && creator.usespec <= 0)){
+            if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(creator.index, "spec") && creator.usespec <= 0))){
                 canhold = false;
 
                  // Fly Towards Enemy:
-                motion_add(point_direction(x, y, target.x, target.y) + orandom(60), 1);
+                motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
 
                 if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
-                     // Effects:
-                    with(instance_create(x, y, Dust)) depth = other.depth - 1;
-                    sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
-                    sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
-                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
-
-                     // Stick to & Charm Enemy:
-                    if(target != creator){
-                        stick = true;
-                        stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
-                        sticky = random(y - target.y);
-                        image_angle = random(360);
-                        speed = 0;
-
-                         // Charm Enemy:
-                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
-                        with(scrCharm(target, true)){
-                            if("index" in other.creator){
-                                index = other.creator.index;
-                            }
-                            if(_wasUncharmed || time >= 0){
-                                time += max(other.stick_time, 1);
-                            }
-                        }
-                    }
-
-                     // Player Pickup:
-                    else{
-                        with(creator) feather_ammo++;
-                        //with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
-                        instance_destroy();
-                    }
+                	//if(stick_wait == 0){
+	                     // Effects:
+	                    with(instance_create(x, y, Dust)) depth = other.depth - 1;
+	                    sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
+	                    sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
+	                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
+	
+	                     // Stick to & Charm Enemy:
+	                    if(target != creator){
+	                        stick = true;
+	                        stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
+	                        sticky = random(y - target.y);
+	                        image_angle = random(360);
+	                        speed = 0;
+	
+	                         // Charm Enemy:
+	                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
+	                        with(scrCharm(target, true)){
+	                            if("index" in other.creator){
+	                                index = other.creator.index;
+	                            }
+	                            if(_wasUncharmed || time >= 0){
+	                                time += max(other.stick_time, 1);
+	                            }
+	                        }
+	                    }
+	
+	                     // Player Pickup:
+	                    else{
+	                        with(creator) feather_ammo++;
+	                        //with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
+	                        instance_destroy();
+	                    }
+                	//}
                 }
             }
 
@@ -1634,11 +1656,16 @@
                 var _x = target.x + lengthdir_x(l, d),
                     _y = target.y + lengthdir_y(l, d);
 
-                motion_add(point_direction(x, y, _x, _y) + orandom(60), 1);
+                motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
             }
 
-             // Facing:
             if(instance_exists(self)){
+            	if(stick_wait > 0){
+            		stick_wait -= current_time_scale;
+            		if(stick_wait <= 0) stick_wait = 0;
+            	}
+
+            	 // Facing:
                 image_angle = direction + 135;
             }
         }
@@ -1728,6 +1755,7 @@
         direction = random(360);
         pickup_indicator = noone;
         my_portalguy = noone;
+        player_push = true;
         surf_draw = -1;
         surf_draw_w = 64;
         surf_draw_h = 64;
@@ -1785,6 +1813,15 @@
 	        mod_script_call("mod", "petlib", _scrt);
 	    }
 	    else enemySprites();
+
+	     // Push:
+		if(player_push && place_meeting(x, y, Player)){
+		    with(instances_meeting(x, y, Player)){
+		        if(place_meeting(x, y, other) && speed > 0) with(other){
+		            motion_add(point_direction(other.x, other.y, x, y), 1);
+		        }
+		    }
+		}
 
     	 // Custom Step Event:
         var _scrt = pet + "_step";
@@ -1900,7 +1937,7 @@
 		                if(mod_script_exists("mod", "petlib", _scrt)){
 		                    mod_script_call("mod", "petlib", _scrt);
 		                }
-		
+
 		                 // Default:
 		                else if(other.speed > 1 || !instance_is(other, projectile)){
 		                    sprite_index = spr_hurt;
@@ -1944,7 +1981,7 @@
     image_alpha = abs(image_alpha);
 
      // Outline Setup:
-    var	_option = lq_defget(opt, "petOutlines", 2),
+    var	_option = lq_defget(opt, "outlinePets", 2),
     	_outline = (
 	    	_option > 0								&&
 	    	instance_exists(leader)					&&

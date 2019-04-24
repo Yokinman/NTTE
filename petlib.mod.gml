@@ -169,6 +169,7 @@
     open = false;
     hush = 0;
     hushtime = 0;
+    player_push = false;
     mimic_pickup = scrPickupIndicator("");
     with(mimic_pickup) mask_index = mskWepPickup;
 
@@ -349,17 +350,19 @@
      // Perching:
     if(instance_exists(perched)){
         can_take = false;
-        if("race" not in perched || perched.race != "horror"){ // Horror is too painful to stand on
+        x = perched.x;
+        y = perched.y;
+        if(
+        	perched.speed > 0									||
+        	instance_exists(pickup)								||
+        	("race" in perched && perched.race == "horror") 	||
+        	("my_health" in perched && perched.my_health <= 0)
+        ){
             x = perched.x;
-            y = perched.y;
-            if(perched.speed > 0 || instance_exists(pickup) || ("my_health" in perched && perched.my_health <= 0)){
-                x = perched.x;
-                y = perched.bbox_top - 8;
-                perched = noone;
-                scrWalk(16, random(360));
-            }
+            y = perched.bbox_top - 8;
+            perched = noone;
+            scrWalk(16, random(360));
         }
-        else perched = noone;
     }
     else if(!instance_exists(leader)){
         can_take = true;
@@ -367,10 +370,12 @@
     
      // Perch on Leader:
     else if(instance_exists(leader)){
-        if(point_distance(x, y, leader.x, leader.bbox_top - 8) < 8 && leader.speed <= 0 && !instance_exists(pickup)){
-            perched = leader;
-            sound_play_pitch(sndBouncerBounce, 1.5 + orandom(0.1));
-        }
+    	if("race" not in leader || leader.race != "horror"){ // Horror is too painful to stand on
+	        if(point_distance(x, y, leader.x, leader.bbox_top - 8) < 8 && leader.speed <= 0 && !instance_exists(pickup)){
+	            perched = leader;
+	            sound_play_pitch(sndBouncerBounce, 1.5 + orandom(0.1));
+	        }
+    	}
     }
 
 #define Parrot_draw
@@ -384,13 +389,22 @@
          // Manual Bobbing:
         if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
             with(perched){
-                var _bob = parrot_bob;
-                _y += _bob[floor(image_index mod array_length(_bob))];
+                var _bob = parrot_bob[floor(image_index mod array_length(parrot_bob))];
+                if(is_array(_bob)){
+                	if(array_length(_bob) > 0) _x += _bob[0];
+                	if(array_length(_bob) > 1) _y += _bob[1];
+                }
+                else _y += _bob;
             }
         }
 
          // Auto Bobbing:
-        else _y += (_uvsCurrent[5] - _uvsStart[5]);
+        else{
+        	if(perched.sprite_index != sprMutant10Idle && perched.sprite_index != sprMutant4Idle){
+        		_x += (_uvsCurrent[4] - _uvsStart[4]) * perched.right;
+        	}
+        	_y += (_uvsCurrent[5] - _uvsStart[5]);
+        }
 
         draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
@@ -1380,15 +1394,6 @@
             }
         }
     }
-
-     // Push:
-	if(place_meeting(x, y, Player)){
-	    with(instances_meeting(x, y, Player)){
-	        if(place_meeting(x, y, other)) with(other){
-	            motion_add(point_direction(other.x, other.y, x, y), 1);
-	        }
-	    }
-	}
 
      // Bouncin:
     if(place_meeting(x + hspeed, y + vspeed, Wall)){

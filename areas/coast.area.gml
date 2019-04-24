@@ -409,7 +409,9 @@
 
         if(DebugLag) trace_time();
         var _charmShader = mod_variable_get("mod", "ntte", "eye_shader"),
-            _canCharmDraw = (lq_defget(opt, "allowShaders", false) && _charmShader != -1);
+            _charmOption = lq_defget(opt, "outlineCharm", 2),
+            _canCharmShader = (lq_defget(opt, "allowShaders", false) && _charmShader != -1),
+            _canCharmOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
 
         with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
 	        var o = (object_index == Player);
@@ -561,22 +563,43 @@
                 }
 
                  // Self:
-                draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, (_surfSwimx - _surfx) * _surfScaleTop, (_surfSwimy + _z - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 1);
+	            var _x = (_surfSwimx - _surfx) * _surfScaleTop,
+	                _y = (_surfSwimy + _z - _surfy) * _surfScaleTop;
+
+                draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
 
                  // Charmed Enemy Eye:
-                if(_canCharmDraw){
-                    if("charm" in self && charm.charmed){
-                        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-                        shader_set(_charmShader);
-                        texture_set_stage(0, _tex);
-                        draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, (_surfSwimx - _surfx) * _surfScaleTop, (_surfSwimy + _z - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 1);
-                        shader_reset();
-                    }
+                if("charm" in self && charm.charmed){
+                     // Outlines:
+				    if(_canCharmOutline){
+				        draw_set_flat(player_get_color(player_find_local_nonsync()));
+				        for(var a = 0; a <= 270; a += 90){
+				        	var _dx = _x,
+				        		_dy = _y;
+				
+				            if(a >= 270) draw_set_flat(-1);
+				            else{
+				                _dx += dcos(a);
+				                _dy -= dsin(a);
+				            }
+
+	                    	draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, _dx, _dy, _surfScaleTop, _surfScaleTop, c_white, 1);
+				        }
+				    }
+
+					 // Eyes:
+                	if(_canCharmShader){
+	                    shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+	                    shader_set(_charmShader);
+	                    texture_set_stage(0, _tex);
+	                    draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
+	                    shader_reset();
+                	}
                 }
 
                  // Water Interference Line Thing:
                 d3d_set_fog(1, c_white, 0, 0);
-                draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, (_surfSwimx - _surfx) * _surfScaleTop, ((_surfSwimy + _z + t) - _surfy) * _surfScaleTop, _surfScaleTop, _surfScaleTop, c_white, 0.8);
+                draw_surface_part_ext(_surfSwim, 0, t, _surfSwimw, 1, _x, _y + (t * _surfScaleTop), _surfScaleTop, _surfScaleTop, c_white, 0.8);
                 d3d_set_fog(0, 0, 0, 0);
 
              // Draw Bottom:

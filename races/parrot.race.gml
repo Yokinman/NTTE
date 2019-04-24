@@ -10,11 +10,11 @@
     while(true){
          // Chests Give Feathers:
         if(!instance_exists(GenCont)){
-            with(instances_matching(chestprop, "feather_storage", null)){
-                feather_storage = obj_create(x, y, "ParrotChester");
+            with(instances_matching(chestprop, "my_feather_storage", null)){
+                my_feather_storage = obj_create(x, y, "ParrotChester");
     
                  // Vars:
-                with(feather_storage){
+                with(my_feather_storage){
                     creator = other;
                     switch(other.object_index){
                         case BigWeaponChest:
@@ -23,6 +23,20 @@
                         case GiantWeaponChest:
                         case GiantAmmoChest:
                             num = 72; break;
+                    }
+                }
+            }
+
+             // Throne Butt : Pickups Give Feathers
+            if(skill_get(mut_throne_butt) > 0){
+                with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "my_feather_storage", null)){
+                    my_feather_storage = obj_create(x, y, "ParrotChester");
+
+                     // Vars:
+                    with(my_feather_storage){
+                        creator = other;
+                        small = true;
+                        num = ceil(2 * skill_get(mut_throne_butt));
                     }
                 }
             }
@@ -118,7 +132,6 @@
         case 2: return "N/A";
         default: return "";
     }
-
 
 #define create
      // Sound:
@@ -272,18 +285,6 @@
                     creator = other;
                     bskin = other.bskin;
                 }
-            }
-        }
-    }
-    
-     // Throne Butt:
-    if(skill_get(mut_throne_butt) > 0){
-        with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "parrot_tb", undefined)){
-            parrot_tb = true;
-            with(obj_create(x, y, "ParrotChester")){
-                creator = other;
-                small = true;
-                num = ceil(2 * skill_get(mut_throne_butt));
             }
         }
     }

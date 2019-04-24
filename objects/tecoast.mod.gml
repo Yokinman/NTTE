@@ -2518,15 +2518,23 @@
     }
 
 #define SealAnchor_projectile
-    if(team != other.team){
-        with(other){
-            if(typ == 1){
-                direction = other.image_angle;
-                image_angle = direction;
-            }
-            else if(typ == 2) instance_destroy()
-        }
-    }
+	 // Deflect Projectile, No Team Change:
+	if(team != other.team){
+		with(other){
+			if(typ == 1){
+				direction = other.direction;
+				image_angle = direction;
+		
+				 // Effects:
+				with(instance_create(x, y, Deflect)){
+					image_angle = other.image_angle;
+				}
+			}
+			else if(typ == 2){
+				instance_destroy();
+			}
+		}
+	}
 
 
 #define SealHeavy_create(_x, _y)

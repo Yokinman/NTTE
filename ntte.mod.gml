@@ -41,11 +41,19 @@
         	text : "@sSet @wAUTO @sto obey the#@wboss intros @soption",
         	varname : "intros"
         	},
-        {	name : "Pet Outlines",
+        {	name : "NTTE Outlines :",
+            type : opt_title,
+        	text : "@sSet @wAUTO @sto#obey @w/outlines"
+            },
+        {	name : "Pets",
         	type : opt_toggle,
         	pick : ["OFF", "ON", "AUTO"],
-        	text : "@sSet @wAUTO @sto#obey @w/outlines",
-        	varname : "petOutlines"
+        	varname : "outlinePets"
+        	},
+        {	name : "Charm",
+        	type : opt_toggle,
+        	pick : ["OFF", "ON", "AUTO"],
+        	varname : "outlineCharm"
         	},
         {	name : "Water Quality :",
             type : opt_title,
@@ -317,7 +325,7 @@
 #macro OptionSlct global.option_slct
 #macro OptionPop  global.option_pop
 #macro OptionX (game_width / 2)
-#macro OptionY (game_height / 2) - 40
+#macro OptionY (game_height / 2) - 60
 #macro opt_title -1
 #macro opt_toggle 0
 #macro opt_slider 1
@@ -2111,27 +2119,24 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     current_time_scale = _cts;
 
      // Outlines:
-    var _local = -1;
-    for(var i = 0; i < maxp; i++){
-        if(player_is_local_nonsync(i)){
-            _local = i;
-            break;
-        }
-    }
-    if(player_get_outlines(_local)){
-        d3d_set_fog(1, player_get_color(_local), 0, 0);
-        for(var a = 0; a <= 360; a += 90){
-            var _x = _surfx,
-                _y = _surfy;
+    var _option = lq_defget(opt, "outlineCharm", 2);
+    if(_option > 0){
+    	var _local = player_find_local_nonsync();
+    	if(_option < 2 || player_get_outlines(_local)){
+	        draw_set_flat(player_get_color(_local));
+	        for(var a = 0; a <= 360; a += 90){
+	            var _x = _surfx,
+	                _y = _surfy;
 
-            if(a >= 360) d3d_set_fog(0, 0, 0, 0);
-            else{
-                _x += dcos(a);
-                _y -= dsin(a);
-            }
+	            if(a >= 360) draw_set_flat(-1);
+	            else{
+	                _x += dcos(a);
+	                _y -= dsin(a);
+	            }
 
-            draw_surface(_surf, _x, _y);
-        }
+	            draw_surface(_surf, _x, _y);
+	        }
+    	}
     }
 
      // Eye Shader:
@@ -2228,13 +2233,79 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 #define charm_step
     var _charmList = ds_list_to_array(global.charm),
-        _charmDraw = [];
+        _charmDraw = [],
+        _charmDrawDepth = 9999;
 
     with(_charmList){
         if(!instance_exists(instance)) scrCharm(instance, false);
         else{
             var _self = instance,
                 _time = time;
+
+			//with(instances_matching(projectile, "creator", _self)){
+				/* Double Damage
+				if("damage_save" not in self) damage_save = damage;
+				damage = damage_save * 2;
+				*/
+
+				/* Triple Shot
+				if("charm_dupe" not in self){
+					charm_dupe = true;
+					for(var _off = -1; _off <= 1; _off += 2){
+						with(instance_copy(false)){
+							var o = 30 * _off * power(0.3, skill_get(mut_eagle_eyes));
+							direction += o;
+							if(speed > 0) image_angle += o;
+						}
+					}
+				}
+				*/
+
+				/* Homing
+				var n = nearest_instance(x, y, instances_matching_ne(hitme, "team", 0, team));
+				if(instance_exists(n)){
+					var a = (image_angle == direction);
+					direction += angle_difference(point_direction(x, y, n.x, n.y), direction) / (7 + random(3));
+					if(a) image_angle = direction;
+				}
+				*/
+			//}
+			
+			with(_self){
+				/* SharpTeeth
+				if("last_my_health" in self){
+					if(my_health < last_my_health){
+						with(instance_create(x, y, SharpTeeth)){
+							damage = 2.5 * (other.last_my_health - other.my_health);
+							alarm0 = 1;
+							creator = nearest_instance(x, y, instances_matching_ne(enemy, "team", other.team));
+						}
+					}
+				}
+				last_my_health = my_health;
+				*/
+
+				/* Immortal
+				if("last_my_health" in self){
+					if(my_health < last_my_health){
+						my_health = last_my_health;
+					}
+				}
+				nexthurt = max(nexthurt, current_frame + 6);
+				last_my_health = my_health;*/
+
+				/* HP Link
+				with(Player){
+					if("last_my_health" in self){
+						if(my_health < last_my_health){
+							projectile_hit_raw(other, 2 * (last_my_health - my_health), false);
+							my_health = last_my_health;
+						}
+					}
+					last_my_health = my_health;
+				}
+				*/
+			}
 
              // Target Nearest Enemy:
             if(!instance_exists(target)) scrCharmTarget();
@@ -2393,9 +2464,16 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         if(place_meeting(x, y, enemy)){
                             with(instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", _self)){
                                 if(place_meeting(x, y, other)) with(other){
-                                    if(alarm11 > 0) event_perform(ev_alarm, 11);
+                                	//meleedamage *= 2;
+                                	//var m = meleedamage;
+
+                                    if(alarm11 > 0 && alarm11 < 24){
+                                    	event_perform(ev_alarm, 11);
+                                    }
                                     event_perform(ev_collision, Player);
                                     with(other) nexthurt = current_frame;
+
+                                    //if(meleedamage == m) meleedamage *= 2;
                                 }
                             }
                         }
@@ -2428,7 +2506,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
 
                          // Make Eyes Green:
-                        if(visible) array_push(_charmDraw, id);
+                        if(visible){
+                        	array_push(_charmDraw, id);
+                        	if(depth < _charmDrawDepth){
+                        		_charmDrawDepth = depth;
+                        	}
+                        }
                     }
 
                      // Manual Exception Stuff:
@@ -2480,7 +2563,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             break;
 
                         case Sniper:            /// Aim at Target
-                            if(other.alarm[2] > 5 && instance_exists(other.target)){
+                            if(other.alarm[2] > 5 && in_sight(other.target)){
                                 gunangle = point_direction(x, y, other.target.x, other.target.y);
                             }
                             break;
@@ -2642,18 +2725,17 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
     if(array_length(_charmDraw) > 0){
-        script_bind_draw(charm_draw, -2.1, _charmDraw);
+        script_bind_draw(charm_draw, _charmDrawDepth - 0.1, _charmDraw);
     }
 
 #define scrCharmTarget()
     with(instance){
         var _x = x,
-            _y = y;
+            _y = y,
+			e = instances_matching_ne(enemy, "mask_index", mskNone, sprVoid);
 
-        if(instance_is(self, enemy)){
-            other.target = nearest_instance(_x, _y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "visible", false));
-        }
-        else other.target = instance_nearest(_x, _y, enemy);
+        if("team" in self) e = instances_matching_ne(e, "team", team);
+		other.target = nearest_instance(_x, _y, e);
     }
 
 #define cleanup
