@@ -28,6 +28,7 @@
         {	name : "Use Shaders",
             type : opt_toggle,
             text : "Used for certain visuals#@sShaders may cause the game# to @rcrash @son older computers!",
+            sync : false,
             varname : "allowShaders"
             },
         {	name : "Reminders",
@@ -48,11 +49,13 @@
         {	name : "Pets",
         	type : opt_toggle,
         	pick : ["OFF", "ON", "AUTO"],
+            sync : false,
         	varname : "outlinePets"
         	},
         {	name : "Charm",
         	type : opt_toggle,
         	pick : ["OFF", "ON", "AUTO"],
+            sync : false,
         	varname : "outlineCharm"
         	},
         {	name : "Water Quality :",
@@ -62,11 +65,13 @@
         {   name : "Wading",
             type : opt_slider,
             text : "Objects in the water",
+            sync : false,
             varname : "waterQualityTop"
             },
         {   name : "Main",
             type : opt_slider,
             text : "Water foam,#underwater visuals,#etc.",
+            sync : false,
             varname : "waterQualityMain"
             }
         ];
@@ -75,6 +80,7 @@
         if("name" not in self) name = "";
         if("type" not in self) type = opt_title;
         if("pick" not in self) pick = ["OFF", "ON"];
+        if("sync" not in self) sync = true;
         if("varname" not in self) varname = name;
         if("clicked" not in self) clicked = false;
         if(type >= 0 && varname not in opt){
@@ -476,9 +482,11 @@
         	if(instance_exists(Wall)){
         	     // Strays:
         	    repeat(8 + irandom(4)) with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 48){
-        	        with(obj_create(x, y, "SpiderWall")){
-        	            creator = other;
-        	        }
+        	    	if(array_length(instances_matching(instances_named(CustomObject, "SpiderWall"), "creator", id)) <= 0){
+	        	        with(obj_create(x, y, "SpiderWall")){
+	        	            creator = other;
+	        	        }
+        	    	}
         	    }
         	    
         	     // Central mass:
@@ -1071,7 +1079,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		        		}
 	        		}
 	        	}
-	        	if(button_pressed(i, "spec")){
+	        	if(button_pressed(i, "spec") || button_pressed(i, "paus")){
 	        		OptionOpen = false;
 	        		break;
 	        	}
@@ -1230,7 +1238,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     _my = mouse_y[p] - _vy;
 
                 if(point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6)){
-                    if(_option.type >= 0){
+                    if(_option.type >= 0 && player_is_local_nonsync(p)){
                         OptionSlct = i;
                     }
 
@@ -1239,7 +1247,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         if(type >= 0){
                             if(!clicked){
                                 if(button_pressed(p, "fire")){
-                                    clicked = true;
+                                    if(player_is_local_nonsync(p)) clicked = true;
                                     switch(type){
                                         case opt_slider:
                                             sound_play(sndSlider);
@@ -1252,7 +1260,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                 }
                             }
                             else if(!button_check(p, "fire")){
-                                clicked = false;
+                                if(player_is_local_nonsync(p)) clicked = false;
                                 switch(type){
                                     case opt_slider:
                                         sound_play(sndSliderLetGo);
@@ -1262,7 +1270,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
 
                          // Option Specifics:
-                        switch(type){
+                        if(sync || player_is_local_nonsync(p)) switch(type){
                             case opt_toggle:
                                 if(button_pressed(p, "fire")){
                                     lq_set(opt, varname, (lq_defget(opt, varname, 0) + 1) % array_length(pick));
@@ -1295,7 +1303,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
                     }
                 }
-                else _option.clicked = false;
+                else if(player_is_local_nonsync(p)){
+                	_option.clicked = false;
+                }
             }
 
             with(_option){
@@ -1424,7 +1434,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
          // Tooltip:
         draw_reset_projection();
-        if(_tooltip != ""){
+        if(instance_exists(Menu)){
+        	script_bind_draw(tooltip_menu, -1002, _tooltip);
+        }
+        else if(_tooltip != ""){
             draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
         }
     }
@@ -1433,6 +1446,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         OptionSlct = -1;
         with(OptionMenu) splat = 0;
     }
+
+#define tooltip_menu(_tooltip)
+	instance_destroy();
+	if(_tooltip != ""){
+		draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
+	}
 
 #define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
     instance_destroy();
@@ -2067,182 +2086,27 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     with(i) creator = other;
     return i;
 
-#define charm_draw(_inst)
-     // Surface Setup:
-    var _surf = surfCharm,
-        _surfw = game_width,
-        _surfh = game_height,
-        _surfx = view_xview_nonsync,
-        _surfy = view_yview_nonsync,
-        _cts = current_time_scale;
+#define scrCharmTarget()
+    with(instance){
+        var _x = x,
+            _y = y,
+			e = instances_matching_ne(enemy, "mask_index", mskNone, sprVoid);
 
-    if(!surface_exists(_surf)){
-        _surf = surface_create(_surfw, _surfh)
-        surfCharm = _surf;
+        if("team" in self) e = instances_matching_ne(e, "team", team);
+		other.target = nearest_instance(_x, _y, e);
     }
-
-     // Draw Charmed Enemies to Surface:
-    current_time_scale = 0.00001;
-    surface_set_target(_surf);
-    draw_clear_alpha(0, 0);
-    try{
-	    with(instances_seen(_inst, 24)){
-	        /*var _x = x - _surfx,
-	            _y = y - _surfy,
-	            _spr = sprite_index,
-	            _img = image_index;
-	
-	        if(object_index == TechnoMancer){ // JW help me
-	            _spr = drawspr;
-	            _img = drawimg;
-	            if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
-	                texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
-	                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
-	            }
-	        }
-	
-	        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);*/
-	
-			var _x = x,
-				_y = y;
-	
-	    	x -= _surfx;
-	    	y -= _surfy;
-	        event_perform(ev_draw, 0);
-	        x = _x;
-	        y = _y;
-	    }
-    }
-    catch(_error){
-    	trace_error(_error);
-    }
-    surface_reset_target();
-    current_time_scale = _cts;
-
-     // Outlines:
-    var _option = lq_defget(opt, "outlineCharm", 2);
-    if(_option > 0){
-    	var _local = player_find_local_nonsync();
-    	if(_option < 2 || player_get_outlines(_local)){
-	        draw_set_flat(player_get_color(_local));
-	        for(var a = 0; a <= 360; a += 90){
-	            var _x = _surfx,
-	                _y = _surfy;
-
-	            if(a >= 360) draw_set_flat(-1);
-	            else{
-	                _x += dcos(a);
-	                _y -= dsin(a);
-	            }
-
-	            draw_surface(_surf, _x, _y);
-	        }
-    	}
-    }
-
-     // Eye Shader:
-    if(opt.allowShaders){
-        if(global.eye_shader == -1){
-            global.eye_shader = shader_create(
-                "/// Vertex Shader ///
-
-                struct VertexShaderInput
-                {
-                    float4 vPosition : POSITION;
-                    float2 vTexcoord : TEXCOORD0;
-                };
-
-                struct VertexShaderOutput
-                {
-                    float4 vPosition : SV_POSITION;
-                    float2 vTexcoord : TEXCOORD0;
-                };
-
-                uniform float4x4 matrix_world_view_projection;
-
-                VertexShaderOutput main(VertexShaderInput INPUT)
-                {
-                    VertexShaderOutput OUT;
-
-                    OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
-                    OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
-
-                    return OUT;
-                }
-                ",
-
-
-                "/// Fragment/Pixel Shader ///
-
-                struct PixelShaderInput
-                {
-                    float2 vTexcoord : TEXCOORD0;
-                };
-
-                sampler2D s0;
-
-                float4 main(PixelShaderInput INPUT) : SV_TARGET
-                {
-                     // Break Down Pixel's Color:
-                    float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
-                    float R = round(Color.r * 255.0);
-                    float G = round(Color.g * 255.0);
-                    float B = round(Color.b * 255.0);
-
-                    if(R > G && R > B){
-                        if(
-                            (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
-                            (R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-                            (R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-                            (R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
-                            (R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
-                            (R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
-                            (R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
-                            (R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
-                            (R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
-                            (R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
-                            (R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
-                            (R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
-                            (R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
-                            (R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
-                            (R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
-                            (R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
-                            (R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
-                            (R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
-                            (R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
-                        ){
-                            return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
-                        }
-                    }
-
-                     // Return Blank Pixel:
-                    return float4(0.0, 0.0, 0.0, 0.0);
-                }
-            ");
-        }
-
-        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-        shader_set(EyeShader);
-        texture_set_stage(0, surface_get_texture(_surf));
-
-        draw_surface(_surf, _surfx, _surfy);
-
-        shader_reset();
-    }
-
-    instance_destroy();
 
 #define charm_step
     var _charmList = ds_list_to_array(global.charm),
-        _charmDraw = [],
-        _charmDrawDepth = 9999;
+        _charmDraw = {};
 
     with(_charmList){
-        if(!instance_exists(instance)) scrCharm(instance, false);
-        else{
-            var _self = instance,
-                _time = time;
+        var _self = instance,
+            _time = time,
+            _index = index;
 
+        if(!instance_exists(_self)) scrCharm(_self, false);
+        else{
 			//with(instances_matching(projectile, "creator", _self)){
 				/* Double Damage
 				if("damage_save" not in self) damage_save = damage;
@@ -2272,7 +2136,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 				*/
 			//}
 			
-			with(_self){
+			//with(_self) if("my_health" in self){
 				/* SharpTeeth
 				if("last_my_health" in self){
 					if(my_health < last_my_health){
@@ -2286,27 +2150,24 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 				last_my_health = my_health;
 				*/
 
-				/* Immortal
-				if("last_my_health" in self){
-					if(my_health < last_my_health){
+				// Immortal
+				/*if("last_my_health" in self){
+					if(my_health < last_my_health && sprite_index == spr_hurt){
 						my_health = last_my_health;
-					}
-				}
-				nexthurt = max(nexthurt, current_frame + 6);
-				last_my_health = my_health;*/
+						sound_stop(snd_hurt);
+						sprite_index = spr_idle;
 
-				/* HP Link
-				with(Player){
-					if("last_my_health" in self){
-						if(my_health < last_my_health){
-							projectile_hit_raw(other, 2 * (last_my_health - my_health), false);
-							my_health = last_my_health;
-						}
+			             // Effects:
+			            sound_play_pitch(sndCrystalPropBreak, 0.7);
+			            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
+			            repeat(5) with(instance_create(x, y, Dust)){
+			                motion_add(random(360), 3);
+			            }
 					}
-					last_my_health = my_health;
 				}
-				*/
-			}
+				last_my_health = my_health;
+				nexthurt = max(nexthurt, current_frame + 2);*/
+			//}
 
              // Target Nearest Enemy:
             if(!instance_exists(target)) scrCharmTarget();
@@ -2497,6 +2358,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         if(instance_exists(Player)){
                             if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
                                 var n = instance_nearest(x, y, Player);
+                                if(instance_exists(player_find(_index))){
+                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
+                                }
+
                                 /*if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
                                     motion_add(point_direction(x, y, mouse_x[n.index], mouse_y[n.index]), 1);
                                 }*/
@@ -2506,12 +2371,19 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             }
                         }
 
-                         // Make Eyes Green:
+                         // Add to Charm Drawing:
                         if(visible){
-                        	array_push(_charmDraw, id);
-                        	if(depth < _charmDrawDepth){
-                        		_charmDrawDepth = depth;
+                        	if(string(_index) not in _charmDraw){
+								lq_set(_charmDraw, string(_index), {
+									inst: [],
+									depth: 9999
+								});
                         	}
+
+                        	var p = lq_get(_charmDraw, string(_index));
+
+                        	array_push(p.inst, id);
+                        	if(depth < p.depth) p.depth = depth;
                         }
                     }
 
@@ -2522,7 +2394,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             if(my_health <= 0){
                                 var _x = x, _y = y;
                                 instance_destroy();
-                                scrCharm(instance_nearest(_x, _y, MaggotExplosion), true).time = _time;
+                                with(scrCharm(instance_nearest(_x, _y, MaggotExplosion), true)){
+                                	time = _time;
+                                	index = _index;
+                                }
                             }
                             break;
 
@@ -2530,7 +2405,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             if(my_health <= 0){
                                 var _x = x, _y = y;
                                 instance_destroy();
-                                scrCharm(instance_nearest(_x, _y, RadMaggotExplosion), true).time = _time;
+                                with(scrCharm(instance_nearest(_x, _y, RadMaggotExplosion), true)){
+                                	time = _time;
+                                	index = _index;
+                                }
                             }
                             break;
 
@@ -2676,6 +2554,24 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             with(instances_matching(PopoShield, "creator", id)) team = other.team;
                             break;
 
+						case Inspector:
+						case EliteInspector:	/// Fix Telekinesis Pull
+							if("charm_control_last" in self && charm_control_last){
+								var _pull = (1 + (object_index == EliteInspector));
+								with(instances_matching(Player, "team", team)){
+									if(point_distance(x, y, xprevious, yprevious) <= speed + _pull + 1){
+										if(point_distance(other.xprevious, other.yprevious, xprevious, yprevious) < 160){
+											if(!place_meeting(xprevious + hspeed, yprevious + vspeed, Wall)){
+												x = xprevious + hspeed;
+												y = yprevious + vspeed;
+											}
+										}
+									}
+								}
+							}
+							charm_control_last = control;
+							break;
+
                         case EnemyHorror:       /// Don't Shoot Beam at Player
                             if(instance_exists(other.target)){
                                 gunangle = point_direction(x, y, other.target.x, other.target.y);
@@ -2718,26 +2614,187 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
 
          // Charm Spawned Enemies:
-        with(instances_matching(instances_matching(hitme, "creator", instance), "charm", null)){
-            scrCharm(id, true);
-            repeat(max(_time / 60, 1)) with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
+        with(instances_matching(instances_matching(hitme, "creator", _self), "charm", null)){
+            scrCharm(id, true).index = _index;
+            repeat(max(_time / 90, 1)) with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
                 target = other;
+            	index = _index;
             }
         }
     }
-    if(array_length(_charmDraw) > 0){
-        script_bind_draw(charm_draw, _charmDrawDepth - 0.1, _charmDraw);
+
+    for(var i = 0; i < lq_size(_charmDraw); i++){
+    	var p = lq_get_value(_charmDraw, i);
+        script_bind_draw(charm_draw, p.depth - 0.1, p.inst, real(lq_get_key(_charmDraw, i)));
     }
 
-#define scrCharmTarget()
-    with(instance){
-        var _x = x,
-            _y = y,
-			e = instances_matching_ne(enemy, "mask_index", mskNone, sprVoid);
+#define charm_draw(_inst, _index)
+	if(_index < 0 || _index >= maxp){
+		_index = player_find_local_nonsync();
+	}
 
-        if("team" in self) e = instances_matching_ne(e, "team", team);
-		other.target = nearest_instance(_x, _y, e);
+     // Surface Setup:
+    var _surf = surfCharm,
+        _surfw = game_width,
+        _surfh = game_height,
+        _surfx = view_xview_nonsync,
+        _surfy = view_yview_nonsync,
+        _cts = current_time_scale;
+
+    if(!surface_exists(_surf)){
+        _surf = surface_create(_surfw, _surfh)
+        surfCharm = _surf;
     }
+
+     // Draw Charmed Enemies to Surface:
+    current_time_scale = 0.00001;
+    surface_set_target(_surf);
+    draw_clear_alpha(0, 0);
+    try{
+	    with(instances_seen(_inst, 24)){
+	        /*var _x = x - _surfx,
+	            _y = y - _surfy,
+	            _spr = sprite_index,
+	            _img = image_index;
+	
+	        if(object_index == TechnoMancer){ // JW help me
+	            _spr = drawspr;
+	            _img = drawimg;
+	            if(_spr == sprTechnoMancerAppear || _spr == sprTechnoMancerFire1 || _spr == sprTechnoMancerFire2 || _spr == sprTechnoMancerDisappear){
+	                texture_set_stage(0, sprite_get_texture(sprTechnoMancerActivate, 8));
+	                draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
+	            }
+	        }
+	
+	        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);*/
+	
+			var _x = x,
+				_y = y;
+	
+	    	x -= _surfx;
+	    	y -= _surfy;
+	        event_perform(ev_draw, 0);
+	        x = _x;
+	        y = _y;
+	    }
+    }
+    catch(_error){
+    	trace_error(_error);
+    }
+    surface_reset_target();
+    current_time_scale = _cts;
+
+     // Outlines:
+    var _option = lq_defget(opt, "outlineCharm", 2);
+    if(_option > 0){
+    	if(_option < 2 || player_get_outlines(_index)){
+	        draw_set_flat(player_get_color(_index));
+	        for(var a = 0; a <= 360; a += 90){
+	            var _x = _surfx,
+	                _y = _surfy;
+
+	            if(a >= 360) draw_set_flat(-1);
+	            else{
+	                _x += dcos(a);
+	                _y -= dsin(a);
+	            }
+
+	            draw_surface(_surf, _x, _y);
+	        }
+    	}
+    }
+
+     // Eye Shader:
+    if(opt.allowShaders){
+        if(global.eye_shader == -1){
+            global.eye_shader = shader_create(
+                "/// Vertex Shader ///
+
+                struct VertexShaderInput
+                {
+                    float4 vPosition : POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                struct VertexShaderOutput
+                {
+                    float4 vPosition : SV_POSITION;
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                uniform float4x4 matrix_world_view_projection;
+
+                VertexShaderOutput main(VertexShaderInput INPUT)
+                {
+                    VertexShaderOutput OUT;
+
+                    OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+                    OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+
+                    return OUT;
+                }
+                ",
+
+
+                "/// Fragment/Pixel Shader ///
+
+                struct PixelShaderInput
+                {
+                    float2 vTexcoord : TEXCOORD0;
+                };
+
+                sampler2D s0;
+
+                float4 main(PixelShaderInput INPUT) : SV_TARGET
+                {
+                     // Break Down Pixel's Color:
+                    float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
+                    float R = round(Color.r * 255.0);
+                    float G = round(Color.g * 255.0);
+                    float B = round(Color.b * 255.0);
+
+                    if(R > G && R > B){
+                        if(
+                            (R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
+                            (R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
+                            (R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
+                            (R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
+                            (R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
+                            (R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
+                            (R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
+                            (R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
+                            (R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
+                            (R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
+                            (R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
+                            (R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
+                            (R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
+                            (R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
+                            (R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
+                            (R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
+                            (R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
+                            (R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
+                        ){
+                            return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
+                        }
+                    }
+
+                     // Return Blank Pixel:
+                    return float4(0.0, 0.0, 0.0, 0.0);
+                }
+            ");
+        }
+
+        shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+        shader_set(EyeShader);
+        texture_set_stage(0, surface_get_texture(_surf));
+
+        draw_surface(_surf, _surfx, _surfy);
+
+        shader_reset();
+    }
+
+    instance_destroy();
 
 #define cleanup
     with(global.charm_step) instance_destroy();

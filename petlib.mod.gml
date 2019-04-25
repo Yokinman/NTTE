@@ -401,7 +401,7 @@
          // Auto Bobbing:
         else{
         	if(perched.sprite_index != sprMutant10Idle && perched.sprite_index != sprMutant4Idle){
-        		_x += (_uvsCurrent[4] - _uvsStart[4]) * perched.right;
+        		_x += (_uvsCurrent[4] - _uvsStart[4]) * (("right" in perched) ? perched.right : 1);
         	}
         	_y += (_uvsCurrent[5] - _uvsStart[5]);
         }
@@ -583,7 +583,8 @@
     
 #define Scorpion_alrm0(_leaderDir, _leaderDis)
     alarm0 = 20 + irandom(10);
-    target = instance_nearest(x, y, enemy);
+
+    target = nearest_instance(x, y, instances_matching_ne(hitme, "team", team, 0));
     
     if(my_health > 0 && sprite_index != spr_shield){
         if(instance_exists(leader)){

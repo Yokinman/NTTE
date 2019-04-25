@@ -134,6 +134,13 @@
         			var _x = other.x + (x * other.image_xscale),
         				_y = other.y + y;
 
+        			 // Fix:
+        			if(instance_is(inst, RavenFly)){
+        				with(inst){
+        					instance_change(Raven, false);
+        				}
+    				}
+
         			with(inst){
 	        			x = _x;
 	        			y = _y;
@@ -153,58 +160,56 @@
 						}
 
 	        			 // Fly to Player:
-	        			if(!instance_is(self, RavenFly) && (chance_ct(1, 100) || instance_number(enemy) <= _ravenNum + 2)){
-							var t = instance_nearest(x, y, Player);
-		        			if(in_distance(t, 128)){
-								scrRight(point_direction(x, y, t.x, t.y));
-
-		        				var _x = t.x,
-		        					_y = t.y;
-
-	        					mask_index = mskBandit;
-								if(place_meeting(_x, _y, Wall)){
-									with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
-				        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
-				        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
-
-				        				var b = false;
-										with(other) if(!place_meeting(_x, _y, Wall)){
-											b = true;
+	        			if(!instance_is(self, RavenFly)){
+	        				if(chance_ct(1, 100) || instance_number(enemy) <= _ravenNum + 2){
+								var t = instance_nearest(x, y, Player);
+			        			if(in_distance(t, 128)){
+									scrRight(point_direction(x, y, t.x, t.y));
+	
+			        				var _x = t.x,
+			        					_y = t.y;
+	
+		        					mask_index = mskBandit;
+									if(place_meeting(_x, _y, Wall)){
+										with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
+					        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
+					        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
+	
+					        				var b = false;
+											with(other) if(!place_meeting(_x, _y, Wall)){
+												b = true;
+											}
+											if(b) break;
 										}
-										if(b) break;
 									}
-								}
+	
+									if(!place_meeting(_x, _y, Wall)){
+				        				instance_change(RavenFly, false);
+				        				sprite_index = sprRavenLift;
+				        				image_index = 0;
+				        				targetx = _x;
+				        				targety = _y;
 
-								if(!place_meeting(_x, _y, Wall)){
-			        				instance_change(RavenFly, false);
-			        				targetx = _x;
-			        				targety = _y;
-								}
-								else mask_index = mskNone;
-		        			}
+				        				mask_index = mskBandit;
+			        					canfly = false;
+				        				wkick = 4;
+			
+				        				 // Effects:
+				        				repeat(6){
+											with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
+												depth = -9;
+											}
+										}
+				        				sound_play(sndRavenLift);
+									}
+									else mask_index = mskNone;
+			        			}
+	        				}
 	        			}
         			}
-
-        			 // Remove From Nest:
-        			if(instance_is(inst, RavenFly)){
-        				with(inst){
-	        				sprite_index = sprRavenLift;
-	        				image_index = 0;
-
-	        				mask_index = mskBandit;
-        					canfly = false;
-	        				wkick = 4;
-
-	        				 // Effects:
-	        				repeat(6){
-								with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
-									depth = -9;
-								}
-							}
-	        				sound_play(sndRavenLift);
-        				}
-        				other.my_raven = array_delete_value(other.my_raven, self);
-        			}
+	        		if(instance_is(inst, RavenFly)){
+	        			other.my_raven = array_delete_value(other.my_raven, self);
+	        		}
         		}
         		break;
 
@@ -1477,7 +1482,7 @@
          // Vars:
         creator = noone;
         small = false;
-        num = 8;
+        num = 6;
 
         return id;
     }
@@ -1489,35 +1494,37 @@
     }
     else{
          // Feather Pickups:
-        if(position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
+        if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
 	        var t = instances_matching(Player, "race", "parrot");
-	        if(array_length(t) > 0 && num > 0){
-	            with(t){
-	            	for(var i = 0; i < other.num; i++){
-		                with(obj_create(other.x, other.y, "ParrotFeather")){
-		                    target = other;
-		                    creator = other;
-		                    bskin = other.bskin;
-	        				canhold = false;
-		                    stick_wait = 3;
-		                }
-	
-		                 // Sound FX:
-		                if(fork()){
-		                	if(other.small){
-		                		wait((i * (6 / other.num)) + irandom(1));
-		                	}
-		                	else if(i < other.num / 2){
-		                		wait(i + irandom(2));
-		                	}
-	
-		                	var s = audio_play_sound(sndBouncerSmg, 0, false);
-		                	audio_sound_gain(s, 0.1 + (0.2 / (i + 1)), 0);
-		                	audio_sound_pitch(s, 3 + random(0.2));
-		                	exit;
-		                }
-	            	}
-	            }
+
+	        if(array_length(t) > 0){
+	        	if(!small || array_find_index(t, instance_nearest(x, y, Player)) >= 0 || place_meeting(x, y, Portal)){
+		            with(t){
+		            	for(var i = 0; i < other.num; i++){
+			                with(obj_create(other.x, other.y, "ParrotFeather")){
+			                    target = other;
+			                    creator = other;
+			                    bskin = other.bskin;
+			                    stick_wait = 3;
+			                }
+		
+			                 // Sound FX:
+			                if(fork()){
+			                	if(other.small){
+			                		wait((i * (6 / other.num)) + irandom(1));
+			                	}
+			                	else if(i < other.num / 2){
+			                		wait(i + irandom(2));
+			                	}
+		
+			                	var s = audio_play_sound(sndBouncerSmg, 0, false);
+			                	audio_sound_gain(s, 0.1 + (0.2 / (i + 1)), 0);
+			                	audio_sound_pitch(s, 3 + random(0.2));
+			                	exit;
+			                }
+		            	}
+		            }
+	        	}
 	        }
         }
 
@@ -1536,6 +1543,7 @@
         mask_index = mskLaser;
         creator = noone;
         target = noone;
+        index = -1;
         bskin = 0;
         stick = false;
         stickx = 0;
@@ -1602,7 +1610,7 @@
             //x += target.hspeed / d;
             //y += target.vspeed / d;
 
-            if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(creator.index, "spec") && creator.usespec <= 0))){
+            if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
                 canhold = false;
 
                  // Fly Towards Enemy:
@@ -1627,9 +1635,7 @@
 	                         // Charm Enemy:
 	                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
 	                        with(scrCharm(target, true)){
-	                            if("index" in other.creator){
-	                                index = other.creator.index;
-	                            }
+	                            index = other.index;
 	                            if(_wasUncharmed || time >= 0){
 	                                time += max(other.stick_time, 1);
 	                            }
@@ -1638,7 +1644,13 @@
 	
 	                     // Player Pickup:
 	                    else{
-	                        with(creator) feather_ammo++;
+	                        with(creator){
+	                        	if("feather_ammo" not in self){
+	                        		feather_ammo = 0;
+	                        		feather_ammo_max = 60;
+	                        	}
+	                        	feather_ammo = min(feather_ammo + 1, feather_ammo_max);
+	                        }
 	                        //with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
 	                        instance_destroy();
 	                    }
@@ -1685,6 +1697,9 @@
                 sprite_index = other.sprite_index;
                 image_angle = other.image_angle;
                 image_blend = merge_color(other.image_blend, c_black, 0.5);
+                if(button_check(other.index, "spec")){
+                	motion_add(other.direction, 3);
+                }
             }
             instance_destroy();
         }
@@ -1879,13 +1894,13 @@
                 visible = false;
                 repeat(3) instance_create(x, y, Dust);
                 
-                 // Sharkboy thing:
-                if(pet == "Slaughter"){
+                 // Healo:
+                if("maxhealth" in self){
                 	my_health = maxhealth;
                 }
             }
         }
-        else{
+        else if(instance_exists(GenCont)){
             x = leader.x + orandom(16);
             y = leader.y + orandom(16);
         }
@@ -1983,10 +1998,10 @@
      // Outline Setup:
     var	_option = lq_defget(opt, "outlinePets", 2),
     	_outline = (
-	    	_option > 0								&&
-	    	instance_exists(leader)					&&
-	    	player_is_local_nonsync(leader.index)	&&
-	    	(_option < 2 || player_get_outlines(leader.index))
+	    	_option > 0												&&
+	    	instance_exists(leader)									&&	
+	    	player_is_local_nonsync(player_find_local_nonsync())	&&
+	    	(_option < 2 || player_get_outlines(player_find_local_nonsync()))
     	);
 
     if(_outline){
@@ -2285,9 +2300,7 @@
     bend -= _turn;
 
      // Line:
-    var _vx = view_xview_nonsync,
-        _vy = view_yview_nonsync,
-        _lineAdd = 1 + max(12, 20 * image_yscale),
+    var _lineAdd = 1 + max(12, 20 * image_yscale),
         _lineWid = 16,
         _lineDir = image_angle,
         _lineChange = 120 * current_time_scale,
@@ -2318,7 +2331,7 @@
         	else{
 	    		 // Add to Line Draw:
         		var o = _lineAdd * 2;
-        		if(point_in_rectangle(_lx, _ly, _vx - o, _vy - o, _vx + o + game_width, _vy + o + game_height)){
+        		if(point_seen_ext(_lx, _ly, o, o, -1)){
 	        		for(var a = -1; a <= 1; a += 2){
 		                var l = (_lineWid * a) + 6,
 		                    d = _dir - 90,

@@ -8,6 +8,8 @@
     global.chest_vars = [];
 
     while(true){
+        with(TopCont) script_bind_draw(draw_gui, depth - 0.01);
+
          // Chests Give Feathers:
         if(!instance_exists(GenCont)){
             with(instances_matching(chestprop, "my_feather_storage", null)){
@@ -19,10 +21,10 @@
                     switch(other.object_index){
                         case BigWeaponChest:
                         case BigCursedChest:
-                            num = 24; break;
+                            num = 18; break;
                         case GiantWeaponChest:
                         case GiantAmmoChest:
-                            num = 72; break;
+                            num = 54; break;
                     }
                 }
             }
@@ -41,6 +43,7 @@
                 }
             }
         }
+
         wait 1;
     }
 
@@ -140,8 +143,13 @@
     if(instance_exists(Menu)) snd_hurt = -1; // Dum CampChar fix
 
      // Feather Related:
+    feather_num = 12;
     feather_ammo = 0;
+    feather_ammo_max = 5 * feather_num;
     feather_targ_delay = 0;
+
+     // :
+    charm_last_my_health = my_health;
 
      // Extra Pet Slot:
     pet = [noone, noone];
@@ -162,7 +170,7 @@
 
      // Wait Until Level is Generated:
     if(fork()){
-        while(instance_exists(GenCont)) wait 0;
+        while(instance_exists(self) && !visible) wait 0;
 
          // Starting Feather Ammo:
         if(instance_exists(self)){
@@ -180,24 +188,23 @@
 #define step
      /// ACTIVE : Charm
     if(button_check(index, "spec") || usespec > 0){
-        var _feathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "creator", id),
-            _feathersTargeting = instances_matching(_feathers, "canhold", true),
-            _featherNum = 12;
+        var _feathers = instances_matching(instances_named(CustomObject, "ParrotFeather"), "index", index),
+            _feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
+            _featherNum = feather_num;
 
          // Shooty Charm Feathers:
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
             with(instances_matching(_feathers, "canhold", false)){
-                canhold = true;
-
                  // Remove Charm Time:
-                if(target != other){
+                if(target != creator){
                     with(target) if("charm" in self && charm.time > 0){
                         charm.time -= other.stick_time;
                         if(charm.time <= 0){
                             scrCharm(id, false);
                         }
                     }
+                    target = creator;
                 }
 
                  // Penalty:
@@ -211,9 +218,12 @@
                     motion_add(random(360), 4);
                 }
 
-                target = other;
-                array_push(_feathersTargeting, id);
-                other.feather_targ_delay = 3;
+                 // Mine now:
+                if(creator == other && array_length(_feathersTargeting) < _featherNum){
+                    canhold = true;
+                    other.feather_targ_delay = 3;
+                    array_push(_feathersTargeting, id);
+                }
             }
 
              // Excrete New Feathers:
@@ -225,6 +235,7 @@
                     creator = other;
                     target = other;
                     bskin = other.bskin;
+                    index = other.index;
                     array_push(_feathersTargeting, id);
                 }
 
@@ -234,44 +245,87 @@
         }
 
          // Targeting:
-        if(feather_targ_delay > 0){
-            feather_targ_delay -= current_time_scale;
-            with(_feathers) target = other;
-        }
-        else{
-            var r = 32,
-                _x = mouse_x[index],
-                _y = mouse_y[index],
-                _targ = [],
-                _featherNum = array_length(_feathersTargeting);
-    
-            with(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest])){
-                if(collision_circle(_x, _y, r, id, true, false)){
-                    array_push(_targ, id);
-                    if(array_length(_targ) >= _featherNum) break;
-                }
-            }
-
-            if(array_length(_targ) <= 0){
-                with(_feathersTargeting) target = other;
+        if(array_length(_feathersTargeting) > 0){
+            if(feather_targ_delay > 0){
+                feather_targ_delay -= current_time_scale;
+                with(_feathers) target = creator;
             }
             else{
-                var n = 0;
-                with(_targ){
-                    var i = 0,
-                        _take = max(ceil(_featherNum / array_length(_targ)), 1);
+                var r = 32,
+                    _x = mouse_x[index],
+                    _y = mouse_y[index],
+                    _targ = [],
+                    _featherNum = array_length(_feathersTargeting);
+        
+                with(instances_matching_ne(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest]), "object_index", Van)){
+                    if(collision_circle(_x, _y, r, id, true, false)){
+                        array_push(_targ, id);
+                        if(array_length(_targ) >= _featherNum) break;
+                    }
+                }
     
-                    while(n < _featherNum && i < _take){
-                        with(_feathersTargeting[n]){
-                            target = other;
+                if(array_length(_targ) <= 0){
+                    with(_feathersTargeting) target = other;
+                }
+                else{
+                    var n = 0;
+                    with(_targ){
+                        var i = 0,
+                            _take = max(ceil(_featherNum / array_length(_targ)), 1);
+        
+                        while(n < _featherNum && i < _take){
+                            with(_feathersTargeting[n]){
+                                target = other;
+                            }
+                            n++;
+                            i++;
                         }
-                        n++;
-                        i++;
                     }
                 }
             }
         }
+        
+         // No Feathers:
+        else if(button_pressed(index, "spec")){
+            sound_play_pitchvol(sndMutant0Cnfm, 3 + orandom(0.2), 0.5);
+        }
     }
+
+     //HP Link
+    if(ultra_get(mod_current, 2)){
+        if(my_health < charm_last_my_health){
+            var _HPList = ds_list_create();
+            with(instances_matching_gt(instances_matching_ne(hitme, "charm", null), "my_health", 0)){
+                if(lq_defget(charm, "index", -1) == other.index){
+                    ds_list_add(_HPList, id);
+                }
+            }
+    
+            if(ds_list_size(_HPList) > 0){
+                ds_list_shuffle(_HPList);
+        
+                while(my_health < charm_last_my_health){
+                    if(ds_list_size(_HPList) > 0){
+                        with(ds_list_to_array(_HPList)){
+                            with(other){
+                                if(my_health < charm_last_my_health){
+                            		my_health++;
+                            		projectile_hit_raw(other, 1, true);
+                            		other.last_my_health = other.my_health;
+                            		if(other.my_health <= 0){
+                            		    ds_list_remove(_HPList, id);
+                            		}
+                                }
+                                else break;
+                            }
+                        }
+                    }
+                    else break;
+                }
+            }
+        }
+    }
+    charm_last_my_health = my_health;
 
      /// ULTRA A: Flock Together
      // probably incredibly busted
@@ -296,6 +350,101 @@
         var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
         draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
     }*/
+
+#define draw_gui
+    instance_destroy();
+    draw_set_projection(0);
+    
+    var _index = player_find_local_nonsync(),
+        _playersActive = 0;
+
+    for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+
+	with(player_find(_index)){
+	    if("charm_hplink_hud" not in self){
+	        charm_hplink_hud = true;
+	        charm_hplink_hud_hp = [my_health, maxhealth];
+	    }
+
+         // Add Up Charmed Ally HP:
+        var _myHealth = 0,
+            _maxHealth = 0,
+            _hpColor = player_get_color(index);
+
+        if(ultra_get(mod_current, 2)){
+            with(instances_matching_gt(instances_matching_ne(hitme, "charm", null), "my_health", 0)){
+                if(lq_defget(charm, "index", -1) == other.index){
+                    _myHealth += my_health;
+                    _maxHealth += maxhealth;
+                    
+                     // Hurt:
+                    if(sprite_index == spr_hurt && image_index < 1){
+                        _hpColor = c_white;
+                    }
+                }
+            }
+        }
+
+        var _goal = [_myHealth, _maxHealth],
+            _goalFactor = 0.2;
+
+    	if(_myHealth != 0) charm_hplink_hud = true;
+
+    	 // No Allies Alive:
+    	else{
+    	    _goal = [my_health, maxhealth];
+    	    _goalFactor = 0.5;
+    	    if(array_equals(charm_hplink_hud_hp, _goal)){
+                charm_hplink_hud = false;
+    	    }
+    	}
+
+         // Draw HP:
+    	if(charm_hplink_hud){
+        	var	_x1 = 22 + ((_playersActive > 1) ? -17 : 0),
+        		_y1 = 7,
+        		_x2 = _x1 + 83,
+        		_y2 = _y1 + 7;
+
+             // Hurt:
+            if(sprite_index == spr_hurt && image_index < 1){
+                _hpColor = c_white;
+            }
+
+    		if(_x1 < _x2){
+    		     // Hide Normal HP:
+    		    draw_set_color(c_black);
+    			draw_rectangle(_x1, _y1, _x2, _y2, 0);
+
+    			 // True HP Filling:
+                draw_set_color(merge_color(_hpColor, c_black, 0.6));
+    			draw_rectangle(_x1, _y1, _x1 + (clamp(min(my_health, maxhealth) / maxhealth, 0, 1) * (_x2 - _x1)), _y2, 0);
+
+                 // Filling:
+                draw_set_color(merge_color(_hpColor, c_white, 0.4));
+    			draw_rectangle(_x1, _y1, _x1 + (clamp(min(charm_hplink_hud_hp[0], charm_hplink_hud_hp[1]) / charm_hplink_hud_hp[1], 0, 1) * (_x2 - _x1)), _y2, 0);
+
+                 // Text:
+    			draw_set_font(fntM);
+    			draw_set_halign(fa_center);
+    			draw_set_valign(fa_top);
+    			draw_text_nt(_x1 + 45, _y1, `${charm_hplink_hud_hp[0]}/${charm_hplink_hud_hp[1]}`);
+    		}
+
+    		 // HP Changes Gradually (Visual Only):
+        	for(var i = 0; i < array_length(_goal); i++){
+                var a = (_goal[i] - charm_hplink_hud_hp[i]) * _goalFactor;
+                charm_hplink_hud_hp[i] += ceil(abs(a)) * sign(a);
+
+                if(abs(_goal[i] - charm_hplink_hud_hp[i]) < 1){
+                    charm_hplink_hud_hp[i] = _goal[i];
+                }
+        	}
+    	}
+    	else charm_hplink_hud_hp = [my_health, maxhealth];
+	}
+
+	draw_reset_projection();
 
 
 /// Scripts

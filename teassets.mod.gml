@@ -710,11 +710,16 @@
 
 #macro SavePath "save.sav"
 
+#define save()
+    if(player_is_local_nonsync(player_find_local_nonsync())){
+        string_save(json_encode(sav), SavePath);
+    }
+
 #define step
      // Autosave:
     if(global.save_auto){
         with(instances_matching(GameCont, "ntte_autosave", null)){
-            string_save(json_encode(sav), SavePath);
+            save();
             ntte_autosave = true;
         }
     }
@@ -802,8 +807,7 @@
     draw_reset_projection();
 
 #define cleanup
-     // Save Save:
-    string_save(json_encode(sav), SavePath);
+    save();
 
      // No Crash:
     with(global.races){

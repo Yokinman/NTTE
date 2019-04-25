@@ -634,8 +634,8 @@
                 for(var i = 0; i <= 10; i++) alarm_set(i, charm.alarm[i]);
 
                  // Effects:
-                sound_play_pitch(sndAssassinGetUp, 0.7);
                 instance_create(x, bbox_top, AssassinNotice);
+                sound_play_pitchvol(sndAssassinGetUp, random_range(1.2, 1.5), 0.5);
                 for(var a = direction; a < direction + 360; a += (360 / 10)){
                     with(instance_create(x, y, Dust)) motion_add(a, 3);
                 }
