@@ -1510,16 +1510,8 @@
 		
 			                 // Sound FX:
 			                if(fork()){
-			                	if(other.small){
-			                		wait((i * (6 / other.num)) + irandom(1));
-			                	}
-			                	else if(i < other.num / 2){
-			                		wait(i + irandom(2));
-			                	}
-		
-			                	var s = audio_play_sound(sndBouncerSmg, 0, false);
-			                	audio_sound_gain(s, 0.1 + (0.2 / (i + 1)), 0);
-			                	audio_sound_pitch(s, 3 + random(0.2));
+			                	wait((i * (4 / other.num)) + irandom(irandom(1)));
+			                	sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
 			                	exit;
 			                }
 		            	}
@@ -1884,6 +1876,27 @@
              // Create path if current one doesn't reach leader:
             if(collision_line(_pathEndX, _pathEndY, _xtarget, _ytarget, Wall, false, false)){
                 path = path_create(x, y, _xtarget, _ytarget);
+
+                 // Shrink Path:
+			    if(array_length(path) > 0){
+			        var _newPath = [],
+		        		_maxSkip = 10,
+						_link = 0;
+
+			        for(var i = 0; i < array_length(path); i++){
+			            if(
+			                i <= 0							||
+			                i >= array_length(path) - 1		||
+			                i - _link >= _maxSkip			||
+			                collision_line(path[i + 1, 0], path[i + 1, 1], path[_link, 0], path[_link, 1], Wall, false, false)
+			            ){
+			                array_push(_newPath, path[i]);
+			                _link = i;
+			            }
+			        }
+
+			        path = _newPath;
+			    }
             }
         }
         else path = [];
@@ -2096,6 +2109,11 @@
             if(_follow < array_length(path)){
                 var _x = path[_follow, 0],
                     _y = path[_follow, 1];
+
+				if(collision_line(x, y, _x, _y, Wall, false, false)){
+					_x = path[_nearest, 0];
+					_y = path[_nearest, 1];
+				}
 
                 path_dir = point_direction(x, y, _x, _y);
             }

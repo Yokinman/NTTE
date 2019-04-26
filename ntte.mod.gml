@@ -2187,9 +2187,17 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     alarm[i] -= current_time_scale;
                     
                      // Increased Aggro:
-            		if(i == 1){
-            			if("ammo" not in _self || _self.ammo <= 0){
-            				alarm[i] -= current_time_scale;
+            		if(i == 1 && alarm[i] > 30){
+            			 // Not Shooting:
+	            		if("ammo" not in _self || _self.ammo <= 0){
+	            			 // Not Boss:
+	            			var _bossList = [BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss];
+	            			if(("boss" not in self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in self && !boss)){
+	            				 // Not Shielding:
+	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
+	            					alarm[i] -= current_time_scale;
+	            				}
+	            			}
             			}
             		}
 
@@ -2329,7 +2337,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                 	//meleedamage *= 2;
                                 	//var m = meleedamage;
 
-                                    if(alarm11 > 0 && alarm11 < 24){
+                                    if(alarm11 > 0 && alarm11 < 26){
                                     	event_perform(ev_alarm, 11);
                                     }
                                     event_perform(ev_collision, Player);
@@ -2356,19 +2364,20 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Follow Leader:
                         if(instance_exists(Player)){
-                            if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
-                                var n = instance_nearest(x, y, Player);
-                                if(instance_exists(player_find(_index))){
-                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
-                                }
-
-                                /*if((meleedamage != 0 && canmelee) || "walk" not in self || walk > 0){
-                                    motion_add(point_direction(x, y, mouse_x[n.index], mouse_y[n.index]), 1);
-                                }*/
-                                if(distance_to_object(n) > 20){
-                                    motion_add(point_direction(x, y, n.x, n.y), 1);
-                                }
-                            }
+                        	if(meleedamage <= 0 || "gunangle" in self || ("walk" in self && walk > 0)){
+	                            if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
+	                            	 // Player to Follow:
+	                                var n = instance_nearest(x, y, Player);
+	                                if(instance_exists(player_find(_index))){
+	                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
+	                                }
+	
+	                                 // Stay in Range:
+	                                if(distance_to_object(n) > 32){
+	                                    motion_add(point_direction(x, y, n.x, n.y), 1);
+	                                }
+	                            }
+                        	}
                         }
 
                          // Add to Charm Drawing:
@@ -2651,7 +2660,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     surface_set_target(_surf);
     draw_clear_alpha(0, 0);
     try{
-	    with(instances_seen(_inst, 24)){
+	    with(instances_seen(instances_matching_ne(_inst, "sprite_index", sprSuperFireBallerFire, sprFireBallerFire), 24)){
 	        /*var _x = x - _surfx,
 	            _y = y - _surfy,
 	            _spr = sprite_index,

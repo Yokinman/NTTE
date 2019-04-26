@@ -690,8 +690,9 @@
 
 #define Palanking_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
+        boss = true;
+        
          // For Sani's bosshudredux:
-        boss = 1;
         bossname = "PALANKING";
         col = c_red;
 
@@ -741,10 +742,7 @@
         seal_x = [];
         seal_y = [];
         seal_max = 4 + (2 * GameCont.loops);
-        seal_group = 0;
-        seal_spawn = 0;
-        seal_spawn_x = x;
-        seal_spawn_y = y;
+        seal_spawn = [];
         tauntdelay = 40;
         phase = -1;
         z = 0;
@@ -871,8 +869,10 @@
         if(alarm0 < 0){
             if(instance_exists(Player)){
                 if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
-                    alarm0 = 30;
-                    phase++;
+                	if(array_length(seal_spawn) <= 0){
+	                    alarm0 = 30;
+	                    phase++;
+                	}
                 }
             }
         }
@@ -1027,6 +1027,61 @@
         mask_index = mskNone;
     }
 
+     // Spawn Seals:
+    with(seal_spawn){
+    	if(num > 0){
+    		if(delay > 0) delay -= current_time_scale;
+    		else{
+    			num--;
+		        delay = max(4 - GameCont.loops, 2) * random_range(1, 2);
+
+			    sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
+
+				 // Seal:
+			    var _dis = 16 + random(24),
+			        _dir = (num * 90) + orandom(40),
+			        _x = x + lengthdir_x(_dis, _dir),
+			        _y = y + lengthdir_y(_dis, _dir),
+			        o = obj_create(_x, _y, (chance(1, 16) ? "SealHeavy" : "Seal"));
+
+				 // Seal Vars:
+				o.creator = other;
+				with(o){
+					creator.raddrop -= raddrop;
+					raddrop = clamp(raddrop + creator.raddrop, 0, raddrop);
+	
+				     // Randomize Type:
+				    if(name == "Seal"){
+				        var _pick = [];
+				        for(var i = 0; i < array_length(seal_chance); i++){
+				            if(seal_chance[i] > 0) repeat(seal_chance[i]){
+				                array_push(_pick, i);
+				            }
+				        }
+				        type = _pick[irandom(array_length(_pick) - 1)];
+
+				         // Set Sprites:
+				        spr_idle = spr.SealIdle[type];
+				        spr_walk = spr.SealWalk[type];
+				        spr_hurt = spr.SealHurt[type];
+				        spr_dead = spr.SealDead[type];
+				        spr_spwn = spr.SealSpwn[type];
+				        spr_weap = spr.SealWeap[type];
+				        sprite_index = spr_spwn;
+				        hitid = [spr_idle, name];
+				    }
+
+					 // Important Stuff:
+					if(creator.active) kills = 0;
+					array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
+				}
+    		}
+    	}
+    	else with(other){
+    		seal_spawn = array_delete_value(seal_spawn, other);
+    	}
+    }
+
 #define Palanking_end_step
     with(seal) if(instance_exists(self) && hold && "hold_x" in self){
     	if(mask_index != mskNone){
@@ -1058,7 +1113,7 @@
     if(h) d3d_set_fog(0, 0, 0, 0);
 
 #define Palanking_alrm0
-    if(intro_pan <= 0 && seal_group <= 0){
+    if(intro_pan <= 0){
         alarm0 = 60;
 
          // Enable Cinematic:
@@ -1068,7 +1123,7 @@
 
          // Call for Seals:
         if(fork()){
-            wait 15;
+            wait 20;
             if(instance_exists(self)){
                 sprite_index = spr_call;
                 image_index = 0;
@@ -1083,24 +1138,43 @@
     else{
         switch(phase){
             case 0: // Wave of Seals:
-                var _groups = 5;
-                if(seal_group < _groups){
-                    seal_group++;
+            	var _delay = 20,
+                	_groups = 5;
 
+            	for(var d = 0; d < 360; d += (360 / _groups)){
                     var _x = 10016,
-                        _y = 10016;
+                        _y = 10016,
+						s = scrSealSpawn(_x, _y, point_direction(_x, _y, x, y) + d, _delay);
 
-                    scrSealSpawn(_x, _y, point_direction(_x, _y, seal_spawn_x, seal_spawn_y) + (360 / _groups), 15);
-                    intro_pan_x = seal_spawn_x;
-                    intro_pan_y = seal_spawn_y;
+					if(d == 0){
+						intro_pan_x = s.x;
+						intro_pan_y = s.y;
+            			intro_pan += _delay + (6 * s.num);
+					}
 
-                    alarm0 = alarm3 + 14;
-                    if(seal_group <= 1) intro_pan += alarm3;
-                }
+					_delay += 15 + random(15);
+            	}
                 break;
 
             case 1:
                 if(!active){
+                	 // Initial Seals:
+                	if(array_count(seal, noone) == array_length(seal)){
+                		var d = random(360),
+                			_delay = 10,
+            				_odis = 32,
+            				_odir = point_direction(10016, 10016, x, y);
+
+                		for(var _dir = d; _dir < d + 360; _dir += (360 / 3)){
+                			var _dis = 64 + random(16);
+
+                			scrSealSpawn(x + lengthdir_x(_odis, _odir) + lengthdir_x(_dis, _dir), y + lengthdir_y(_odis, _odir) + lengthdir_y(_dis, _dir), _dir + 180, _delay);
+
+                			_delay += 10 + random(10);
+                		}
+                	}
+
+					 // Palanquin Holders
                     if(array_length(seal) < seal_max || array_count(seal, noone) > 0){
                          // Seal Plop:
                         //repeat(4) instance_create(other.x + x, other.y + y, Sweat);
@@ -1199,7 +1273,7 @@
         scrWalk(60, _targetDir + orandom(30));
 
          // Kingly Slap:
-        if(in_distance(target, 80) || (target.reload > 0 && chance(1, 3))){
+        if((in_distance(target, 80) && array_length(Seal) > 2) || (target.reload > 0 && chance(1, 3))){
             alarm1 = 60 + random(20);
             alarm4 = 6;
             gunangle = _targetDir;
@@ -1213,12 +1287,16 @@
 
         else{
              // Call for Seals:
-            if(z <= 0 || chance(1, array_length(Seal))){
+            if(chance(3, 4) && (z <= 0 || chance(1, array_length(Seal) / 2))){
+            	alarm1 = 30 + random(10);
+
                 sprite_index = spr_call;
                 image_index = 0;
                 sound_play(snd.PalankingCall);
-                scrSealSpawn(x, y, random(360), 30);
-                alarm1 = alarm3 + random(8);
+
+            	repeat(2){
+            		scrSealSpawn(x, y, random(360), 30 + random(10));
+            	}
             }
 
              // Begin Burp Attack:
@@ -1281,54 +1359,7 @@
     else ground_smash = 0;
 
 #define Palanking_alrm3
-    sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
-
-     // Spawn Seals:
-    var _dis = 16 + random(24),
-        _dir = (seal_spawn * 90) + orandom(40),
-        _x = seal_spawn_x + lengthdir_x(_dis, _dir),
-        _y = seal_spawn_y + lengthdir_y(_dis, _dir),
-        o = obj_create(_x, _y, (chance(1, 16) ? "SealHeavy" : "Seal"));
-
-    with(o){
-         // make things fair
-        other.raddrop -= raddrop;
-        raddrop = clamp(raddrop + other.raddrop, 0, raddrop);
-        
-         // Randomize Type:
-        if(name == "Seal"){
-            var _pick = [];
-            for(var i = 0; i < array_length(seal_chance); i++){
-                if(seal_chance[i] > 0) repeat(seal_chance[i]){
-                    array_push(_pick, i);
-                }
-            }
-            type = _pick[irandom(array_length(_pick) - 1)];
-
-             // Set Sprites:
-            spr_idle = spr.SealIdle[type];
-            spr_walk = spr.SealWalk[type];
-            spr_hurt = spr.SealHurt[type];
-            spr_dead = spr.SealDead[type];
-            spr_spwn = spr.SealSpwn[type];
-            spr_weap = spr.SealWeap[type];
-            sprite_index = spr_spwn;
-            hitid = [spr_idle, name];
-        }
-
-         // Important Stuff:
-        creator = other;
-        if(other.active) kills = 0;
-        array_push(mod_variable_get("area", "coast", "swimInstVisible"), id);
-    }
-
-    if(--seal_spawn > 0){
-        alarm3 = max(4 - GameCont.loops, 2) * random_range(1, 2);
-        if(seal_group <= 1) intro_pan += alarm3;
-    }
-
-     // Continue Intro:
-    if(alarm0 > 0) alarm0 += alarm3;
+	// nonoe
 
 #define Palanking_alrm4
      // Slappin:
@@ -1377,6 +1408,10 @@
     }
 
 #define Palanking_death
+	if(raddrop <= 0){
+		raddrop = 40;
+	}
+
      // Epic Death:
     with(obj_create(x, y, "PalankingDie")){
         spr_dead = other.spr_dead;
@@ -1400,24 +1435,29 @@
 #macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
 
 #define scrSealSpawn(_xstart, _ystart, _dir, _delay)
-    alarm3 = _delay;
-    seal_spawn = seal_max;
+    var s = {
+    	x : _xstart,
+    	y : _ystart,
+    	num : seal_max,
+    	delay : _delay
+    };
+    array_push(seal_spawn, s);
 
      // Find Spawn Location:
-    seal_spawn_x = _xstart;
-    seal_spawn_y = _ystart;
     var _dis = 40 + random(16);
     if(instance_exists(Floor)){
-        with(instance_create(_xstart, _ystart, GameObject)){
+        with(instance_create(s.x, s.y, GameObject)){
             while(distance_to_object(Floor) < _dis + 8 || distance_to_object(prop) < 32){
                 x += lengthdir_x(12, _dir);
                 y += lengthdir_y(12, _dir);
             }
-            other.seal_spawn_x = x;
-            other.seal_spawn_y = y;
+            s.x = x;
+            s.y = y;
             instance_destroy();
         }
     }
+
+    return s;
 
 #define seal_exists(_palanking, _inst)
     return (instance_exists(_palanking) && array_find_index(_palanking.seal, _inst) >= 0);
@@ -1614,8 +1654,10 @@
 #define PalankingToss_end_step
     z_engine();
     if(instance_exists(creator) && (z > 0 || zspeed > 0)){
-        hspeed += (creator.hspeed / 10) * current_time_scale;
-        vspeed += (creator.vspeed / 10) * current_time_scale;
+    	if(instance_is(creator, Player)){
+	        hspeed += (creator.hspeed / 10) * current_time_scale;
+	        vspeed += (creator.vspeed / 10) * current_time_scale;
+    	}
 		speed = clamp(speed, 2, 6);
         with(creator){
             x = other.x;
@@ -2720,8 +2762,8 @@
         else{
             my_mine = noone;
             if(place_meeting(x, y, CustomHitme)){
-                with(instances_named(CustomHitme, "SealMine")){
-                    if(place_meeting(x, y, other)){
+                with(instances_meeting(x, y, instances_named(CustomHitme, "SealMine"))){
+                    if(place_meeting(x, y, other) && array_length(instances_matching(instances_named(other.object_index, other.name), "my_mine", id)) <= 0){
                         with(other){
                             alarm1 = 20;
                             my_mine = other;

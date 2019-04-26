@@ -206,6 +206,12 @@
 
 #define BatBoss_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
+        boss = true;
+        
+         // For Sani's bosshudredux:
+        bossname = "BIG BAT";
+        col = c_green;
+
          // Visual:
         spr_idle = spr.BatBossIdle;
         spr_walk = spr.BatBossWalk;
@@ -532,10 +538,15 @@
     pickup_drop(60, 0);
 
      // Buff Partner:
-    with(instances_named(CustomEnemy, "CatBoss")){
-    	maxhealth *= 2;
-    	my_health += 0.5 * maxhealth;
+    if(array_length(instances_named(CustomEnemy, "CatBoss")) > 0){
+	    with(instances_named(CustomEnemy, "CatBoss")){
+	    	maxhealth *= 2;
+	    	my_health += 0.5 * maxhealth;
+	    }
     }
+    
+     // Boss Win Music:
+    else with(MusCont) alarm_set(1, 1);
 
 #define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
     var _single = argument_count > 0 ? argument[0] : undefined;
@@ -1028,8 +1039,9 @@
 
 #define CatBoss_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
-	     // For Sani's bosshudredux:
-        boss = 1;
+        boss = true;
+        
+         // For Sani's bosshudredux:
         bossname = "BIG CAT";
         col = c_green;
 
@@ -1369,10 +1381,15 @@
     instance_create(x, y, ToxicDelay);
 
      // Buff Partner:
-    with(instances_named(CustomEnemy, "BatBoss")){
-    	maxhealth *= 2;
-    	my_health += 0.5 * maxhealth;
+    if(array_length(instances_named(CustomEnemy, "BatBoss")) > 0){
+	    with(instances_named(CustomEnemy, "BatBoss")){
+	    	maxhealth *= 2;
+	    	my_health += 0.5 * maxhealth;
+	    }
     }
+    
+     // Boss Win Music:
+    else with(MusCont) alarm_set(1, 1);
 
 #define CatBoss_cleanup
     sound_stop(jetpack_loop);

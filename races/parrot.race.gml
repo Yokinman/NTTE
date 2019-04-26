@@ -19,6 +19,7 @@
                 with(my_feather_storage){
                     creator = other;
                     switch(other.object_index){
+                        case IDPDChest:
                         case BigWeaponChest:
                         case BigCursedChest:
                             num = 18; break;
@@ -177,6 +178,7 @@
             repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
                 target = other;
                 creator = other;
+                index = other.index;
                 bskin = other.bskin;
                 speed *= 3;
             }
@@ -209,7 +211,7 @@
 
                  // Penalty:
                 if(stick_time < stick_time_max){
-                    stick_time -= 15;
+                    stick_time -= min(30, stick_time);
                 }
 
                  // Unstick:
@@ -293,9 +295,9 @@
 
      //HP Link
     if(ultra_get(mod_current, 2)){
-        if(my_health < charm_last_my_health){
+        if(my_health != charm_hplink_lock){
             var _HPList = ds_list_create();
-            with(instances_matching_gt(instances_matching_ne(hitme, "charm", null), "my_health", 0)){
+            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
                 if(lq_defget(charm, "index", -1) == other.index){
                     ds_list_add(_HPList, id);
                 }
@@ -303,20 +305,38 @@
     
             if(ds_list_size(_HPList) > 0){
                 ds_list_shuffle(_HPList);
-        
-                while(my_health < charm_last_my_health){
+
+                while(my_health != charm_hplink_lock){
                     if(ds_list_size(_HPList) > 0){
                         with(ds_list_to_array(_HPList)){
                             with(other){
-                                if(my_health < charm_last_my_health){
-                            		my_health++;
-                            		projectile_hit_raw(other, 1, true);
-                            		other.last_my_health = other.my_health;
-                            		if(other.my_health <= 0){
-                            		    ds_list_remove(_HPList, id);
-                            		}
+                                var a = clamp(charm_hplink_lock - my_health, -1, 1);
+                        		my_health += a;
+
+                        		 // Alter Enemy HP:
+                        		if(a > 0){
+                        		     // FX:
+                        		    var o = other;
+                        		    with(instances_meeting(x, y, HealFX)){
+                        		        with(instance_copy(true)){
+                        		            x = o.x;
+                        		            y = o.y;
+                        		        }
+                        		    }
+
+                        		     // Heal:
+                        		    with(o) if(my_health <= maxhealth){
+                        		        my_health = min(my_health + a, maxhealth);
+                        		    }
+                        		}
+                        		else projectile_hit_raw(other, a, true);
+
+                        		if(other.my_health <= 0) ds_list_remove(_HPList, id);
+
+                                if(my_health == charm_hplink_lock){
+                                    my_health = charm_hplink_lock;
+                                    break;
                                 }
-                                else break;
                             }
                         }
                     }
@@ -325,7 +345,7 @@
             }
         }
     }
-    charm_last_my_health = my_health;
+    charm_hplink_lock = my_health;
 
      /// ULTRA A: Flock Together
      // probably incredibly busted
@@ -337,6 +357,7 @@
                 with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
                     target = other;
                     creator = other;
+                    index = other.index;
                     bskin = other.bskin;
                 }
             }
@@ -372,7 +393,7 @@
             _hpColor = player_get_color(index);
 
         if(ultra_get(mod_current, 2)){
-            with(instances_matching_gt(instances_matching_ne(hitme, "charm", null), "my_health", 0)){
+            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
                 if(lq_defget(charm, "index", -1) == other.index){
                     _myHealth += my_health;
                     _maxHealth += maxhealth;

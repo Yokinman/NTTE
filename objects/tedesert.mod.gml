@@ -496,8 +496,9 @@
 
 #define CoastBoss_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
+        boss = true;
+
          // For Sani's bosshudredux:
-        boss = 1;
         bossname = "BIG FISH";
         col = c_red;
 

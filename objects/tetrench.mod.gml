@@ -116,11 +116,16 @@
 		}
 	}
 
+	 // Unhide:
+	else if(speed > 0){
+		scrAnglerAppear();
+	}
+
 #define Angler_draw
     var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
-    if(h) d3d_set_fog(1, image_blend, 0, 0);
+    if(h) draw_set_flat(image_blend);
     draw_self_enemy();
-    if(h) d3d_set_fog(0, 0, 0, 0);
+    if(h) draw_set_flat(-1);
 
      // Canister Bloom:
     if(hiding){
@@ -986,6 +991,12 @@
 
 #define PitSquid_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
+        boss = true;
+        
+         // For Sani's bosshudredux:
+        bossname = "PIT SQUID";
+        col = c_red;
+
          // Visual:
 		spr_maw = spr.PitSquidMaw;
 		hitid = [spr_maw, "PIT SQUID"];
@@ -2024,7 +2035,7 @@
 
      // Draw Trails:
     surface_set_target(_surfTrail);
-    d3d_set_fog(1, c_black, 0, 0);
+    //d3d_set_fog(1, c_black, 0, 0);
     with(instances_matching_ge(instances_matching(CustomEnemy, "name", "Angler"), "ammo", 0)){
         if(visible && sprite_index != spr_appear){
             var _x1 = xprevious,
@@ -2038,23 +2049,31 @@
                 _xscal = image_xscale * right,
                 _yscal = image_yscale,
                 _angle = image_angle,
-                _blend = c_white,
+                _blend = image_blend,
                 _alpha = image_alpha;
+
+        	if(_blend == c_white){
+        		if("charm" in self && lq_defget(charm, "charmed", true)){
+        			draw_set_flat(make_color_rgb(56, 252, 0));
+        		}
+        	}
 
             for(var o = 0; o <= _dis; o++){
                 draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - _surfX, _y1 + lengthdir_y(o, _dir) - _surfY, _xscal, _yscal, _angle, _blend, _alpha);
             }
+
+            draw_set_flat(-1);
         }
     }
-    d3d_set_fog(0, 0, 0, 0);
+    //d3d_set_fog(0, 0, 0, 0);
     surface_reset_target();
 
      // Trail Surface:
-    d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
+    //d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
     draw_set_blend_mode(bm_add);
     draw_surface(_surfTrail, _surfX, _surfY);
     draw_set_blend_mode(bm_normal);
-    d3d_set_fog(0, 0, 0, 0);
+    //d3d_set_fog(0, 0, 0, 0);
 
     instance_destroy();
 
