@@ -56,6 +56,8 @@
 			});
 		}
 	}
+	
+	global.lag = {};
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -301,7 +303,7 @@
 	}
 
 #define obj_step
-    //trace_lag_bgn(name);
+    // trace_lag_bgn(name);
 	//trace_time();
 
 	 // Animate:
@@ -354,7 +356,7 @@
 	}
 
 	//trace_time(name);
-    //trace_lag_end(name);
+    // trace_lag_end(name);
 
 #define ntte_bind
 	if(instance_exists(creator)){

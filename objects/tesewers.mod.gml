@@ -58,6 +58,7 @@
     }
 
 #define Bat_step
+
      // Animate:
     if((sprite_index != spr_fire && sprite_index != spr_hurt) || anim_end){
         if(speed <= 0) sprite_index = spr_idle;
@@ -66,9 +67,9 @@
 
      // Bounce:
     if(speed > 0){
-	    if(place_meeting(x + hspeed, y + vspeed, Wall)){
-	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	    with(instances_meeting(x + hspeed, y + vspeed, Wall)){
+	    	with(instances_meeting(x - other.hspeed, y, other)) hspeed *= -1;
+	    	with(instances_meeting(x, y - other.vspeed, other)) vspeed *= -1;
 	    }
     }
 
@@ -81,7 +82,7 @@
     alarm1 = 15 + irandom(20);
     target = instance_nearest(x, y, Player);
 
-    if(in_sight(target)){
+    if(in_distance(target, 200) && in_sight(target)){
         gunangle = point_direction(x, y, target.x, target.y);
         scrRight(gunangle);
 
@@ -833,9 +834,9 @@
          // On Alert:
         if(instance_exists(target)){
             if(
-                my_health < maxhealth ||
-                in_sight(target)	  ||
-                (in_distance(target, 96) && target.reload > 0)
+                my_health < maxhealth
+                || (in_distance(target, 140) && in_sight(target))
+                || (in_distance(target, 96) && target.reload > 0)
             ){
                 cantravel = true;
                 sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
@@ -907,7 +908,7 @@
          // Normal AI:
         if(active){
             if(!instance_exists(sit)){
-                if(in_sight(target)){
+                if(in_distance(target, 180) && in_sight(target)){
                     var _targetDir = point_direction(x, y, target.x, target.y);
         
                      // Start Attack:
@@ -980,7 +981,7 @@
             with(instances_named(CustomObject, "CatHole")){
                 if(chance(3, instance_number(enemy))){
                     if(!CatHoleCover().open){
-                        if(!instance_exists(other.target) || in_sight(other.target)){
+                        if(!instance_exists(other.target) || in_distance(other.target, 140)){//in_sight(other.target)){
                             if(CatHoleCover(true).open){
                                 with(other){
                                     alarm1 = 15 + random(30);
@@ -1374,8 +1375,11 @@
 	}
 
 #define CatBoss_death
-    pickup_drop(100, 20);
-    repeat(2) pickup_drop(60, 0);
+	 // Garunteed 2 pickups:
+    var n = instance_number(Pickup) + 2;
+    	
+    do pickup_drop(100, 10);
+    until(instance_number(Pickup) >= n);
 
      // Hmmmm
     instance_create(x, y, ToxicDelay);
@@ -1397,7 +1401,6 @@
 #define CatBossAttack_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        image_blend = c_lime;
         image_yscale = 1.5;
 		hitid = [spr.CatIdle, "BIG CAT"];
 
@@ -1507,7 +1510,7 @@
 			 // Effects:
 			if(chance_ct(1, 10)){
 				var l = random(dis),
-					d = dir;
+					d = _dir;
 
 				with(instance_create(_sx + lengthdir_x(l, d) + orandom(4), _sy + lengthdir_y(l, d) + orandom(4), EatRad)){
                     sprite_index = choose(sprEatRadPlut, sprEatBigRad);
@@ -1523,9 +1526,10 @@
     var _cx = x,
         _cy = y,
         _scale1 = image_yscale * (1 + (3 * (1 - (alarm0 / alarm0_max)))),
-        _scale2 = 2 * (image_yscale * 3);
+        _scale2 = 2 * (image_yscale * 3),
+        _colors = [make_color_rgb(133, 249, 26), make_color_rgb(190, 253, 8)];
 
-    draw_set_color(image_blend);
+    draw_set_color(_colors[current_frame % 2]);
 
     with(fire_line){
         var	_x = _cx + x,
@@ -1538,6 +1542,7 @@
         }
 
          // Bloom:
+        /*
         draw_set_blend_mode(bm_add);
         draw_set_alpha(0.1);
         if(other.type){
@@ -1546,6 +1551,7 @@
         draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), _scale2);
         draw_set_alpha(1);
         draw_set_blend_mode(bm_normal);
+        */
     }
 
 #define CatBossAttack_alrm0
@@ -2039,14 +2045,14 @@
 
 #define CatHoleBig_step
      // Animations:
-    if image_index < 1 image_speed = 0;
+    if(image_index < 1) image_speed = 0;
     else image_speed = 0.4;
 
-    if phase < 2{
+    if(phase < 2){
          // Begin intro:
-        if phase < 1{
-            if instance_exists(Player)
-                if instance_number(enemy) - instance_number(Van) < 1{
+        if(phase < 1){
+            if(instance_exists(Player))
+                if(instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) < 1){
                     phase++;
                     alarm0 = 40;
                     alarm1 = 20;
@@ -2278,7 +2284,6 @@
         draw_vertex(_cx + lengthdir_x(_cw, a), _cy + lengthdir_y(_h2, a));
     }
     draw_primitive_end();
-
 
 #define ChairFront_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
