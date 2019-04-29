@@ -67,10 +67,10 @@
 
      // Bounce:
     if(speed > 0){
-	    with(instances_meeting(x + hspeed, y + vspeed, Wall)){
-	    	with(instances_meeting(x - other.hspeed, y, other)) hspeed *= -1;
-	    	with(instances_meeting(x, y - other.vspeed, other)) vspeed *= -1;
-	    }
+    	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+    		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+    		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+    	}
     }
 
 #define Bat_draw
@@ -82,7 +82,7 @@
     alarm1 = 15 + irandom(20);
     target = instance_nearest(x, y, Player);
 
-    if(in_distance(target, 200) && in_sight(target)){
+    if(in_sight(target)){
         gunangle = point_direction(x, y, target.x, target.y);
         scrRight(gunangle);
 
@@ -161,7 +161,7 @@
         gunangle = direction;
         scrRight(gunangle);
     }
-
+	
 
 #define Bat_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
@@ -535,8 +535,16 @@
     }
 
 #define BatBoss_death
-    pickup_drop(100, 50);
-    pickup_drop(60, 0);
+	 // Garunteed 2 pickups:
+    var n = instance_number(Pickup) + 2;
+    	
+    do pickup_drop(100, 0);
+    until(instance_number(Pickup) >= n);
+    
+    with(instance_create(x, y, WeaponChest)){
+    	motion_set(irandom(359), 4);
+    	friction = 0.4;
+    }
 
      // Buff Partner:
     if(array_length(instances_named(CustomEnemy, "CatBoss")) > 0){
@@ -679,22 +687,45 @@
         depth = -3;
 
          // Vars:
+        team = 1;
         creator = noone;
         candeflect = false;
 
 	     // Effects:
-	    instance_create(x, y, PortalClear);
 	    repeat(12 + irandom(6)){
 	        scrFX(x, y, 4 + random(4), Dust);
 	    }
 
 	    return id;
     }
+	
+#define BatScreech_projectile
+	with(other){
+		 // Destroy toxic gas:
+		if(instance_is(id, ToxicGas)){
+	    	with(instance_create(x, y, BulletHit)){
+	    		sprite_index =	sprExploderExplo;
+	    		image_index =	2;
+	    	}
+	        instance_delete(id);
+		}
+		
+		 // Destroy projectiles:
+		else if(team != other.team){
+			if(typ == 1 || typ == 2){
+				 // Effects:
+				repeat(2) with(instance_create(x, y, Dust)){
+					motion_set(other.direction + orandom(8), irandom(min(8, other.speed)));
+					friction = 0.4;
+				}
+				instance_create(x, y, ThrowHit);
+				
+				 // Destroy:
+				instance_destroy();
+			}
+		}
+	}
 
-#define BatScreech_step
-    while place_meeting(x, y, ToxicGas)
-        with instance_nearest(x, y, ToxicGas)
-            instance_delete(id);
 
 #define BatScreech_draw
     draw_set_blend_mode(bm_add);
@@ -908,7 +939,7 @@
          // Normal AI:
         if(active){
             if(!instance_exists(sit)){
-                if(in_distance(target, 180) && in_sight(target)){
+                if(in_sight(target)){
                     var _targetDir = point_direction(x, y, target.x, target.y);
         
                      // Start Attack:
@@ -1375,11 +1406,16 @@
 	}
 
 #define CatBoss_death
-	 // Garunteed 2 pickups:
+	 // Garunteed 2 pickups + ammo chest:
     var n = instance_number(Pickup) + 2;
     	
-    do pickup_drop(100, 10);
+    do pickup_drop(100, 0);
     until(instance_number(Pickup) >= n);
+    
+    with(instance_create(x, y, AmmoChest)){
+    	motion_set(irandom(359), 4);
+    	friction = 0.4;
+    }
 
      // Hmmmm
     instance_create(x, y, ToxicDelay);
@@ -1541,8 +1577,8 @@
         	draw_circle(_x, _y, _scale1, false);
         }
 
+		/*
          // Bloom:
-        /*
         draw_set_blend_mode(bm_add);
         draw_set_alpha(0.1);
         if(other.type){
@@ -2623,6 +2659,8 @@
 
 
 #define PizzaManholeCover_create(_x, _y)
+	repeat(2 + irandom(2)) instance_create(_x + orandom(16), _y + orandom(16), GroundFlame).sprite_index = (chance(1, 3) ? sprGroundFlameBig : sprGroundFlame);
+
 	with(instance_create(_x, _y, CustomObject)){
 		sprite_index = spr.Manhole;
         image_angle = 180 + (irandom_range(-3, 3) * 10);
@@ -2891,6 +2929,19 @@
             depth = 0;
         }
     }
+
+#define VenomFlak_hit
+	if(charging){
+		if(projectile_canhit_melee(other)) projectile_hit(other, 1);
+	}
+	
+	else{
+		if(projectile_canhit(other)){
+			projectile_hit(other, damage, force, direction);
+			
+			instance_destroy();
+		}
+	}
 
 #define VenomFlak_draw
 	if(charging){

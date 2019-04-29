@@ -314,6 +314,52 @@
 
     return 30 + random(20);
 
+#define area_begin_step
+	with(instances_matching(instances_matching(projectile, "hitid", 32), "lair", undefined, false)){
+		lair = true;
+		var p = id;
+		
+		 // Replace bullet:
+		with(instance_create(x, y, EnemyBullet2)){
+			with(["speed", "direction", "image_angle", "creator", "team"]){
+				var o = self;
+				variable_instance_set(other, o, variable_instance_get(p, o));
+			}
+			
+			hitid = [spr.LairTurretIdle, "TURRET"];
+		}
+		 
+		 // Effects:
+		with(instance_create(x, y, AcidStreak)){
+			sprite_index = spr.AcidPuff;
+			image_angle = other.direction + orandom(30);
+			depth = (image_angle < 180 ? -1.9 : -2.1);
+		
+			with(instance_create(x, y, AcidStreak)){
+				image_angle = other.image_angle;
+				motion_set(image_angle, 2 + random(2));
+				depth = other.depth;
+			}
+		}
+		
+		 // Sounds:
+		sound_play_hit(sndFrogEggSpawn3, 0.4);
+		
+		instance_delete(id);
+	}
+	
+	 // Resprite turrets:
+	with(instances_matching(Turret, "lair", undefined, false)){
+		lair = true;
+		
+		 // Resprite:
+		spr_idle = spr.LairTurretIdle;
+		spr_walk = spr.LairTurretIdle;
+		spr_hurt = spr.LairTurretHurt;
+		spr_dead = spr.LairTurretDead;
+		spr_fire = spr.LairTurretFire;
+	}
+	
 #define area_make_floor
     var _x = GenCont.spawn_x - 16,
         _y = GenCont.spawn_y - 16;

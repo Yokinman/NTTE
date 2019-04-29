@@ -503,6 +503,13 @@
             PizzaDrainHurt = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainHurt.png", 3, 32, 38);
             PizzaDrainDead = mskNone;
             msk.PizzaDrain = sprite_add("sprites/areas/Pizza/Props/mskPizzaDrain.png",     1, 32, 38);
+            
+             // Lair turret reskin:
+            LairTurretIdle      = sprite_add("sprites/enemies/LairTurret/sprLairTurretIdle.png",    1,  12, 12);
+            LairTurretHurt      = sprite_add("sprites/enemies/LairTurret/sprLairTurretHurt.png",    3,  12, 12);
+            LairTurretDead      = sprite_add("sprites/enemies/LairTurret/sprLairTurretDead.png",    6,  12, 12);
+            LairTurretFire      = sprite_add("sprites/enemies/LairTurret/sprLairTurretFire.png",    3,  12, 12);
+            LairTurretAppear    = sprite_add("sprites/enemies/LairTurret/sprLairTurretAppear.png",  11, 12, 12);
 
              // Manholes:
             ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);

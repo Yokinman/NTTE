@@ -119,6 +119,9 @@
     TopCont.darkness = area_darkness();
 
 #define area_start
+	 // Remember you were here:
+	with(GameCont) visited_coast = true;
+
      // No Walls:
     with(Wall) instance_destroy();
     with(FloorExplo) instance_destroy();
