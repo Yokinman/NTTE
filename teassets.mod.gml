@@ -52,7 +52,7 @@
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
         QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 32, 16);
         QuasarBeamEnd   = sprite_add("sprites/weps/projectiles/sprQuasarBeamEnd.png",   2,  0, 16);
-        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   5, 24, 24);
+        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   5,  8, 24);
         QuasarBeamTrail = sprite_add("sprites/weps/projectiles/sprQuasarBeamTrail.png", 3,  4,  4);
         msk.QuasarBeam  = sprite_add("sprites/weps/projectiles/mskQuasarBeam.png",      1, 32, 16);
 

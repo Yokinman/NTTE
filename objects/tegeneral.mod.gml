@@ -1540,7 +1540,7 @@
         stick = false;
         stickx = 0;
         sticky = 0;
-        stick_time_max = 60;
+        stick_time_max = 60;// * (1 + ultra_get("parrot", 3));
         stick_time = stick_time_max;
         stick_list = [];
         stick_wait = 0;
@@ -1598,9 +1598,29 @@
             }
 
              // Move w/ Target:
-            //var d = (distance_to_object(target) / 50) + 1;
-            //x += target.hspeed / d;
-            //y += target.vspeed / d;
+            /*if(target != creator){
+	            var d = (distance_to_object(target) / 50) + 1;
+	            x += target.hspeed / d;
+	            y += target.vspeed / d;
+            }*/
+        	if("move_factor" not in self) move_factor = 0;
+
+            if(
+            	instance_exists(target)			&&
+            	distance_to_object(target) > 48 &&
+            	abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
+            ){
+            	move_factor += ((distance_to_object(target) / 128) - move_factor) * 0.3 * current_time_scale;
+            }
+            else{
+            	move_factor -= move_factor * 0.8 * current_time_scale;
+            }
+
+            if(move_factor > 0){
+            	x += hspeed * move_factor * current_time_scale;
+            	y += vspeed * move_factor * current_time_scale;
+            }
+            else move_factor = 0;
 
             if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
                 canhold = false;
@@ -2288,8 +2308,12 @@
 	     // Follow Player:
     	var c = creator;
         line_dir_goal = c.gunangle;
-        hold_x = c.x + c.hspeed;
-        hold_y = c.y + c.vspeed;
+        hold_x = c.x;
+        hold_y = c.y;
+        with(c){
+        	if(!place_meeting(x + hspeed, y, Wall)) other.hold_x += hspeed;
+        	if(!place_meeting(x, y + vspeed, Wall)) other.hold_y += vspeed;
+        }
         if(roids){
         	hold_y -= 6;
         	hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
@@ -2409,12 +2433,14 @@
 
          // Effects:
     	if(chance_ct(1, 160 / _lineAdd)){
-        	var o = 32 * image_yscale;
-	        with(instance_create(_cx + orandom(o), _cy + orandom(o), PlasmaTrail)){
-	        	sprite_index = spr.QuasarBeamTrail;
-	        	motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
-	        	if(other.image_yscale > 1) depth = other.depth - 1;
-	        }
+        	if(position_meeting(_cx, _cy, Floor)){
+        		var o = 32 * image_yscale;
+		        with(instance_create(_cx + orandom(o), _cy + orandom(o), PlasmaTrail)){
+		        	sprite_index = spr.QuasarBeamTrail;
+		        	motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
+		        	if(other.image_yscale > 1) depth = other.depth - 1;
+		        }
+        	}
     	}
 
 		 // Move:
@@ -2445,22 +2471,22 @@
 
      // Effects:
     if(chance_ct(1, 4)){
-        var _xoff = orandom(12) - ((8 * image_xscale) + _lineAdd),
-    		_yoff = orandom(random(28 * image_yscale));
+        var _xoff = orandom(12) - ((12 * image_xscale) + _lineAdd),
+    		_yoff = orandom(random(28 * image_yscale)),
+    		_x = _lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
+    		_y = _ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90);
 
-        with(instance_create(
-        	_lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
-        	_ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90),
-        	BulletHit
-        )){
-        	sprite_index = spr.QuasarBeamHit;
-        	image_angle = _dir + 180
-        	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
-        	image_xscale = other.image_yscale;
-        	image_yscale = other.image_yscale;
-        	depth = other.depth - 1;
-        }
-        instance_create(_lx, _ly, Smoke);
+		if(!position_meeting(_x, _y, TopSmall)){
+	        with(instance_create(_x, _y, BulletHit)){
+	        	sprite_index = spr.QuasarBeamHit;
+	        	image_angle = _dir + 180;
+	        	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
+	        	image_xscale = other.image_yscale;
+	        	image_yscale = other.image_yscale;
+	        	depth = other.depth - 1;
+	        	instance_create(x, y, Smoke);
+	        }
+		}
     }
     view_shake_max_at(x, y, 4);
     view_shake_max_at(_cx, _cy, 4);
@@ -2542,8 +2568,12 @@
     }
 
      // Laser End:
-    var o = 16;
-    if(!position_meeting(x - lengthdir_x(o, _angle), _y - lengthdir_y(o, _angle), TopSmall)){
+    var _x1 = x - lengthdir_x(1,				 _angle),
+    	_y1 = y - lengthdir_y(1,				 _angle),
+    	_x2 = x + lengthdir_x(16 / image_xscale, _angle),
+    	_y2 = y + lengthdir_y(16 / image_yscale, _angle);
+
+    if(!collision_line(_x1, _y1, _x2, _y2, TopSmall, false, false)){
     	draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
     }
 

@@ -200,11 +200,13 @@
             with(instances_matching(_feathers, "canhold", false)){
                  // Remove Charm Time:
                 if(target != creator){
-                    with(target) if("charm" in self && charm.time > 0){
-                        charm.time -= other.stick_time;
-                        if(charm.time <= 0){
-                            scrCharm(id, false);
-                        }
+                    if("charm" in target && (target.charm.time > 0 || creator != other)){
+                    	with(target){
+	                        charm.time -= other.stick_time;
+	                        if(charm.time <= 0){
+	                            scrCharm(id, false);
+	                        }
+                    	}
                     }
                     target = creator;
                 }
@@ -253,7 +255,7 @@
                 with(_feathers) target = creator;
             }
             else{
-                var r = 32,
+                var r = 32,// * (1 + ultra_get("parrot", 3)),
                     _x = mouse_x[index],
                     _y = mouse_y[index],
                     _targ = [],
@@ -365,12 +367,14 @@
     }
 
 #define draw
-    /*if(button_check(index, "spec")){
+    /*
+    if(button_check(index, "spec")){
         draw_text_nt(x, y - 32, string(feather_ammo));
         
         var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
         draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
-    }*/
+    }
+	*/
 
 #define draw_gui
     instance_destroy();
@@ -463,6 +467,68 @@
         	}
     	}
     	else charm_hplink_hud_hp = [my_health, maxhealth];
+    	
+    	 // Test Visual:
+    	/*
+    	if("test_off" not in self) test_off = 0;
+    	if("test_has" not in self) test_has = 20;
+    	if(button_check(index, "spec")){
+	    	test_off += (1 - test_off) * 0.6 * current_time_scale;
+	    }
+	    else test_off -= test_off * 0.3 * current_time_scale;
+
+	    if(test_off != 0){
+	    	var _off = test_off;
+	    	if("test_surf" not in self) test_surf = -1;
+	    	if(!surface_exists(test_surf)){
+	    		test_surf = surface_create(game_width, game_height);
+	    	}
+	    	
+	    	surface_set_target(test_surf);
+	    	draw_clear_alpha(0, 0);
+
+			draw_set_color(c_black);
+			var _x = mouse_x_nonsync,
+				_y = mouse_y_nonsync;
+	    	
+	    	var r = 32,
+	    		_test = false;
+	    	test_has = 32;
+
+            with(instances_matching_ne(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest]), "object_index", Van)){
+                if("test_thing" not in self) test_thing = 0;
+                if(collision_circle(_x, _y, r, id, true, false)){
+                	test_thing += (1 - test_thing) * 0.1 * current_time_scale;
+                }
+            }
+            with(instances_matching_gt(hitme, "test_thing", 0.1)){
+                other.test_has -= (6 * test_thing);
+	    		draw_circle(_x + ((x - _x) * test_thing) - view_xview_nonsync, _y + ((y - _y) * test_thing) - view_yview_nonsync, (4 + sprite_xoffset) * test_thing, false);
+                if(!collision_circle(_x, _y, r, id, true, false)){
+                	test_thing -= test_thing * 0.2 * current_time_scale;
+                }
+            }
+
+	    	//draw_circle(_x - view_xview_nonsync, _y - view_yview_nonsync, test_has + (2 * sin(current_frame / 20)), false);
+	    	
+	    	surface_reset_target();
+	    	
+	    	draw_set_blend_mode_ext(bm_dest_alpha, bm_inv_src_alpha);
+	    	surface_screenshot(test_surf);
+	    	draw_set_blend_mode(bm_normal);
+	    	
+	    	draw_set_flat(_hpColor);
+	    	draw_set_alpha(0.5);
+	    	draw_surface(test_surf, view_xview_nonsync + _off, view_yview_nonsync - (_off * 4));
+	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4) + _off);
+	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4) - _off);
+	    	draw_surface(test_surf, view_xview_nonsync - _off, view_yview_nonsync - (_off * 4));
+	    	draw_set_alpha(1);
+	    	draw_set_flat(-1);
+	    	
+	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4));
+	    }
+	    */
 	}
 
 	draw_reset_projection();

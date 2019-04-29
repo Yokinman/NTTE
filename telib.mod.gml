@@ -644,7 +644,7 @@
         charm.charmed = _charm;
         c = charm;
     }
-    if(!_charm){
+    if(!_charm && ds_list_valid(_charmListRaw)){
         var _charmList = ds_list_to_array(_charmListRaw);
         with(_charmList){
             if(instance == _instance){

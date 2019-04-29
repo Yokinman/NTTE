@@ -331,7 +331,7 @@
 #macro OptionSlct global.option_slct
 #macro OptionPop  global.option_pop
 #macro OptionX (game_width / 2)
-#macro OptionY (game_height / 2) - 60
+#macro OptionY (game_height / 2) - 62
 #macro opt_title -1
 #macro opt_toggle 0
 #macro opt_slider 1
@@ -1455,30 +1455,32 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 #define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
     instance_destroy();
-    ammo_draw(_index, _primary, _ammo, _steroids)
+    ammo_draw(_index, _primary, _ammo, _steroids);
 
 #define ammo_draw(_index, _primary, _ammo, _steroids)
-    var _active = 0;
-    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-
-    draw_set_visible_all(0);
-    draw_set_visible(_index, 1);
-    draw_set_projection(0);
-
-    var _x = (_primary ? 42 : 86),
-        _y = 21;
-
-    if(_active > 1) _x -= 19;
-
-    draw_set_halign(fa_left);
-    draw_set_valign(fa_top);
-    draw_set_color(c_white);
-    if(!_primary && !_steroids) draw_set_color(c_silver);
-
-    draw_text_shadow(_x, _y, string(_ammo));
-
-    draw_reset_projection();
-    draw_set_visible_all(1);
+    if(player_get_show_hud(_index, _index)){
+	    var _active = 0;
+	    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
+	
+	    draw_set_visible_all(0);
+	    draw_set_visible(_index, 1);
+	    draw_set_projection(0);
+	
+	    var _x = (_primary ? 42 : 86),
+	        _y = 21;
+	
+	    if(_active > 1) _x -= 19;
+	
+	    draw_set_halign(fa_left);
+	    draw_set_valign(fa_top);
+	    draw_set_color(c_white);
+	    if(!_primary && !_steroids) draw_set_color(c_silver);
+	
+	    draw_text_shadow(_x, _y, string(_ammo));
+	
+	    draw_reset_projection();
+	    draw_set_visible_all(1);
+    }
 
 #define underwater_step /// Call from underwater area step events
      // Lightning:
@@ -2134,39 +2136,50 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 					if(a) image_angle = direction;
 				}
 				*/
+				
+				/*
+				if("charm_newspeed" not in self){
+					charm_newspeed = true;
+					speed *= 1.25;
+				}*/
 			//}
 			
-			//with(_self) if("my_health" in self){
-				/* SharpTeeth
-				if("last_my_health" in self){
-					if(my_health < last_my_health){
-						with(instance_create(x, y, SharpTeeth)){
-							damage = 2.5 * (other.last_my_health - other.my_health);
-							alarm0 = 1;
-							creator = nearest_instance(x, y, instances_matching_ne(enemy, "team", other.team));
+			//with(_self){
+				//if(in_sight(other.target)){
+					//gunangle += angle_difference(point_direction(x, y, other.target.x + other.target.hspeed, other.target.y + other.target.vspeed), gunangle) / 3;
+				//}
+				//if("my_health" in self){
+					/* SharpTeeth
+					if("last_my_health" in self){
+						if(my_health < last_my_health){
+							with(instance_create(x, y, SharpTeeth)){
+								damage = 2.5 * (other.last_my_health - other.my_health);
+								alarm0 = 1;
+								creator = nearest_instance(x, y, instances_matching_ne(enemy, "team", other.team));
+							}
 						}
 					}
-				}
-				last_my_health = my_health;
-				*/
-
-				// Immortal
-				/*if("last_my_health" in self){
-					if(my_health < last_my_health && sprite_index == spr_hurt){
-						my_health = last_my_health;
-						sound_stop(snd_hurt);
-						sprite_index = spr_idle;
-
-			             // Effects:
-			            sound_play_pitch(sndCrystalPropBreak, 0.7);
-			            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
-			            repeat(5) with(instance_create(x, y, Dust)){
-			                motion_add(random(360), 3);
-			            }
+					last_my_health = my_health;
+					*/
+	
+					// Immortal
+					/*if("last_my_health" in self){
+						if(my_health < last_my_health && sprite_index == spr_hurt){
+							my_health = last_my_health;
+							sound_stop(snd_hurt);
+							sprite_index = spr_idle;
+	
+				             // Effects:
+				            sound_play_pitch(sndCrystalPropBreak, 0.7);
+				            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
+				            repeat(5) with(instance_create(x, y, Dust)){
+				                motion_add(random(360), 3);
+				            }
+						}
 					}
-				}
-				last_my_health = my_health;
-				nexthurt = max(nexthurt, current_frame + 2);*/
+					last_my_health = my_health;
+					nexthurt = max(nexthurt, current_frame + 2);*/
+				//}
 			//}
 
              // Target Nearest Enemy:
@@ -2187,12 +2200,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     alarm[i] -= current_time_scale;
                     
                      // Increased Aggro:
-            		if(i == 1 && alarm[i] > 30){
+            		if(i == 1 && alarm[i] > 15){
             			 // Not Shooting:
 	            		if("ammo" not in _self || _self.ammo <= 0){
 	            			 // Not Boss:
 	            			var _bossList = [BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss];
-	            			if(("boss" not in self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in self && !boss)){
+	            			if(("boss" not in _self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in _self && !_self.boss)){
 	            				 // Not Shielding:
 	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
 	            					alarm[i] -= current_time_scale;
@@ -2365,24 +2378,26 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                          // Follow Leader:
                         if(instance_exists(Player)){
                         	if(meleedamage <= 0 || "gunangle" in self || ("walk" in self && walk > 0)){
-	                            if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
-	                            	 // Player to Follow:
-	                                var n = instance_nearest(x, y, Player);
-	                                if(instance_exists(player_find(_index))){
-	                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
-	                                }
-	
-	                                 // Stay in Range:
-	                                if(distance_to_object(n) > 32){
-	                                    motion_add(point_direction(x, y, n.x, n.y), 1);
-	                                }
-	                            }
+	            				if("ammo" not in self || ammo <= 0){
+		                            if(distance_to_object(Player) > 256 || !instance_exists(target) || !in_sight(target) || !in_distance(target, 80)){
+		                            	 // Player to Follow:
+		                                var n = instance_nearest(x, y, Player);
+		                                if(instance_exists(player_find(_index))){
+		                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
+		                                }
+		
+		                                 // Stay in Range:
+		                                if(distance_to_object(n) > 32){
+		                                    motion_add(point_direction(x, y, n.x, n.y), 1);
+		                                }
+		                            }
+	            				}
                         	}
                         }
 
                          // Add to Charm Drawing:
                         if(visible){
-                        	if(string(_index) not in _charmDraw){
+                        	if(!lq_exists(_charmDraw, string(_index))){
 								lq_set(_charmDraw, string(_index), {
 									inst: [],
 									depth: 9999
@@ -2676,13 +2691,49 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	        }
 	
 	        draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);*/
-	
+
 			var _x = x,
 				_y = y;
 	
 	    	x -= _surfx;
 	    	y -= _surfy;
-	        event_perform(ev_draw, 0);
+
+			switch(object_index){ // literally laser sight exceptions
+				case SnowTank:
+				case GoldSnowTank:
+					var a = ammo;
+					ammo = 0;
+			        event_perform(ev_draw, 0);
+					ammo = a;
+					break;
+
+				case Sniper:
+					var g = gonnafire;
+					gonnafire = false;
+			        event_perform(ev_draw, 0);
+					gonnafire = g;
+					break;
+
+				case CustomEnemy:
+					if("name" in self){
+						switch(name){
+							case "Diver":
+								var c = canshoot;
+								canshoot = false;
+								event_perform(ev_draw, 0);
+								canshoot = c;
+								break;
+	
+							default:
+						        event_perform(ev_draw, 0);
+						}
+						break;
+					}
+
+				default:
+			        event_perform(ev_draw, 0);
+			}
+
 	        x = _x;
 	        y = _y;
 	    }
@@ -2810,6 +2861,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     for(var i = 0; i < lq_size(global.current); i++){
         audio_stop_sound(lq_get_value(global.current, i).snd);
     }
+
+	 // Uncharm yo:
+	with(ds_list_to_array(global.charm)) scrCharm(instance, false);
 
 
 /// Scripts
