@@ -363,7 +363,7 @@
             		    with(instance_random(Floor)){
                             if(point_distance(x, y, 10016, 10016) > 48){
                                 if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-            		                obj_create(x + 16, y + 16, "CoastBossBecome").part = min(variable_instance_get(GameCont, "visited_coast", false) + GameCont.loops, 2);
+            		                obj_create(x + 16, y + 16, "CoastBossBecome")
             		                _spawned = true;
                                 }
                             }

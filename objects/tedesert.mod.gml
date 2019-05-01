@@ -314,30 +314,6 @@
 
 #define Bone_hit
      // Secret:
-    if("name" in other && other.name == "CoastBossBecome"){
-        with(other){
-            part++;
-
-             // Hit:
-            sound_play_hit(snd_hurt, 0.3);
-            sprite_index = spr_hurt;
-            image_index = 0;
-        }
-
-         // Effects:
-        sound_play_hit(sndMutant14Turn, 0.2);
-        repeat(3){
-            instance_create(x + orandom(4), y + orandom(4), Bubble);
-            with(instance_create(x, y, Smoke)){
-                motion_add(random(360), 1);
-                depth = -2;
-            }
-        }
-
-        instance_delete(id);
-        exit;
-    }
-
     if(other.object_index = ScrapBoss) {
         with(other) {
             var c = scrCharm(self, true);
@@ -349,6 +325,7 @@
     }
 
     projectile_hit_push(other, damage, speed * force);
+    if(!instance_exists(self)) exit;
 
      // Bounce Off Enemy:
     direction = point_direction(other.x, other.y, x, y);
@@ -444,6 +421,12 @@
         size = 2;
         part = 0;
 
+		 // Part Bonus:
+		if(variable_instance_get(GameCont, "visited_coast", false)){
+			part = 1;
+		}
+		part = min(part + GameCont.loops, 2);
+
         return id;
     }
 
@@ -455,27 +438,68 @@
     if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
     else sprite_index = spr_idle;
 
-     // Skeleton Rebuilt:
-    if(part >= sprite_get_number(spr_idle) - 1){
-        with(obj_create(x - (image_xscale * 8), y - 6, "CoastBoss")){
-            x = xstart;
-            y = ystart;
-            right = other.image_xscale;
-        }
-        with(WantBoss) instance_destroy();
-        with(BanditBoss) my_health = 0;
-        scrPortalPoof();
+     // Rebuilding Skeleton:
+	if(part > 0){
+		 // Break Walls:
+		var o = 4 * part,
+			_x1 = bbox_left  - o - (o * image_xscale),
+			_y1 = bbox_top,
+			_x2 = bbox_right + o - (o * image_xscale),
+			_y2 = bbox_bottom;
 
-        instance_delete(id);
-    }
+		with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Wall)){
+			instance_create(x, y, FloorExplo);
+			instance_destroy();
+		}
+
+		 // Complete:
+	    if(part >= sprite_get_number(spr_idle) - 1){
+	        with(obj_create(x - (image_xscale * 8), y - 6, "CoastBoss")){
+	            x = xstart;
+	            y = ystart;
+	            right = other.image_xscale;
+	        }
+	        with(WantBoss) instance_destroy();
+	        with(BanditBoss) my_health = 0;
+	        scrPortalPoof();
+	
+	        instance_delete(id);
+	    }
+	}
 
      // Death:
-    else if(my_health <= 0) instance_destroy();
+    if(instance_exists(self) && my_health <= 0){
+    	instance_destroy();
+    }
 
 #define CoastBossBecome_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
     nexthurt = current_frame + 6;	// I-Frames
     sound_play_hit(snd_hurt, 0.3);  // Sound
+    
+     // Secret:
+    if(
+    	(instance_is(other, CustomProjectile) && "name" in other && other.name == "Bone")
+    	||
+    	(instance_is(other, ThrownWep) && wep_get(other.wep) == "crabbone")
+    ){
+    	var _add = (("wep" in other) ? lq_defget(other.wep, "ammo", 1) : 1);
+
+    	part += _add;
+        my_health = max(my_health, maxhealth);
+
+         // Effects:
+        sound_play_hit(sndMutant14Turn, 0.2);
+        repeat(3 * _add){
+            instance_create(other.x + orandom(4), other.y + orandom(4), Bubble);
+            with(instance_create(x - (image_xscale * 8 * part), y, Smoke)){
+                motion_add(random(360), 1);
+                depth = -2;
+            }
+        }
+
+        instance_delete(other);
+    }
 
 #define CoastBossBecome_destroy
     with(instance_create(x, y, Corpse)){

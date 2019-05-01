@@ -1280,41 +1280,30 @@
 #define area_border(_y, _area, _color)
     if(instance_is(self, CustomDraw) && script[2] == "area_border"){
          // Sprite Fixes:
-        var o = instances_matching(Wall, "cat_border_fix", null);
-        if(array_length(o) > 0){
-            var _spr = [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)];
-            with(o){
-                cat_border_fix = true;
-                if(y >= _y){
-                    sprite_index = _spr[0];
-                    topspr = _spr[1];
-                    outspr = _spr[2];
-                }
-            }
-        }
-        var o = instances_matching(TopSmall, "cat_border_fix", null);
-        if(array_length(o) > 0){
-            var _spr = area_get_sprite(_area, sprWall1Trans);
-            with(o){
-                cat_border_fix = true;
-                if(y >= _y) sprite_index = _spr;
-            }
-        }
-        var o = instances_matching(FloorExplo, "cat_border_fix", null);
-        if(array_length(o) > 0){
-            var _spr = area_get_sprite(_area, sprFloor1Explo);
-            with(o){
-                cat_border_fix = true;
-                if(y >= _y) sprite_index = _spr;
-            }
-        }
-        var o = instances_matching(Debris, "cat_border_fix", null);
-        if(array_length(o) > 0){
-            var _spr = area_get_sprite(_area, sprDebris1);
-            with(o){
-                cat_border_fix = true;
-                if(y >= _y) sprite_index = _spr;
-            }
+        with(type){
+        	var _obj = self[0],
+        		_num = self[1],
+        		_spr = self[2];
+
+        	if(_num < 0 || _num != instance_number(_obj)){
+        		if(_num >= 0) self[@1] = instance_number(_obj);
+
+        		with(instances_matching(_obj, "cat_border_fix", null)){
+        			cat_border_fix = true;
+        			if(y >= _y){
+        				switch(_obj){
+        					case Wall:
+        						sprite_index = _spr[0];
+	        					topspr = _spr[1];
+	        					outspr = _spr[2];
+	        					break;
+	        					
+	        				default:
+        						sprite_index = _spr;
+        				}
+        			}
+        		}
+        	}
         }
 
          // Background:
@@ -1324,7 +1313,14 @@
         draw_set_color(_color);
         draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
     }
-    else script_bind_draw(area_border, 10000, _y, _area, _color);
+    else with(script_bind_draw(area_border, 10000, _y, _area, _color)){
+    	type = [
+    		[Wall,		 -1, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
+    		[TopSmall,	  0, area_get_sprite(_area, sprWall1Trans)],
+    		[FloorExplo,  0, area_get_sprite(_area, sprFloor1Explo)],
+    		[Debris,	  0, area_get_sprite(_area, sprDebris1)]
+    	];
+    }
 
 #define area_get_sprite(_area, _spr)
     return mod_script_call("area", _area, "area_sprite", _spr);
