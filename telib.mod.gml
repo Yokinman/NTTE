@@ -71,6 +71,8 @@
 #macro objList global.objectList
 #macro objScrt global.objectScrt
 
+#macro DebugLag false
+
 #define obj_create(_x, _y, _obj)
 	if(is_real(_obj) && object_exists(_obj)){
 		return instance_create(_x, _y, _obj);
@@ -234,8 +236,6 @@
 	                                 // Override Specifics:
 	                                switch(v){
 	                                    case "on_step":
-	                                        on_step = _objStep;
-	
 	                                         // Setup Custom NTTE Event Vars:
 	                                        if("ntte_anim" not in self){
 	                                        	ntte_anim = _isEnemy;
@@ -267,6 +267,11 @@
 	                                                variable_instance_set(other, n, null);
 	                                            }
 	                                        }*/
+	                                        
+	                                         // Set on_step to obj_step if Needed:
+	                                        if(ntte_anim || ntte_walk || ntte_alarm_max > 0 || (DebugLag && array_length(on_step) >= 3)){
+	                                        	on_step = _objStep;
+	                                        }
 	                                        break;
 	
 	                                    default:
@@ -303,8 +308,10 @@
 	}
 
 #define obj_step
-    // trace_lag_bgn(name);
-	//trace_time();
+    if(DebugLag){
+    	//trace_lag_bgn("Objects");
+    	trace_lag_bgn(name);
+    }
 
 	 // Animate:
 	if(ntte_anim){
@@ -355,8 +362,10 @@
 	    }
 	}
 
-	//trace_time(name);
-    // trace_lag_end(name);
+    if(DebugLag){
+	    //trace_lag_end("Objects");
+	    trace_lag_end(name);
+    }
 
 #define ntte_bind
 	if(instance_exists(creator)){
@@ -367,9 +376,11 @@
 	else instance_destroy();
 
 #define step
-    //trace("");
-	//trace("Frame", current_frame, "Lag:")
-    //trace_lag();
+	if(DebugLag){
+	    trace("");
+		trace("Frame", current_frame, "Lag:")
+	    trace_lag();
+	}
     
      // sleep_max():
     if(global.sleep_max > 0){
@@ -1352,7 +1363,7 @@
         _lastx = _wx;
         _lasty = _wy;
 
-		if(_dis <= 2 * o || !point_seen(_x, _y, -1)) break;
+		if(_dis <= 2 * o) break;
     }
     array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, _enemy));
 

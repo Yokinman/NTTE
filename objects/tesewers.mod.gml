@@ -16,7 +16,6 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
-
 #define Bat_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -836,62 +835,45 @@
         y = 0;
     }
 
-     // Off Alert:
-    else if(!cantravel){
-         // chillin'
-        if(!instance_exists(sit) && instance_exists(CustomProp)){
-            var n = instance_nearest(x, y, CustomProp);
-            if(place_meeting(x, y, n)){
-                if("name" in n && (n.name == "ChairFront" || n.name == "Couch")){
-                     // Check if someone else sitting there:
-                    var _canSit = true;
-                    with(instances_named(object_index, name)){
-                        if(sit == n) _canSit = false;
-                    }
+    else{
+    	 // Sitting:
+    	if(!cantravel){
+    		if(instance_exists(sit)){
+		        speed = 0;
+		        x = sit.x;
+		        y = sit.y - 3;
+		        right = -sit.image_xscale;
+    		}
 
-                     // Sit:
-                    if(_canSit){
-                        sit = n;
-                        image_index = 0;
-                        if(n.sprite_index == spr.ChairSideIdle){
-                            sprite_index = spr_sit1_side;
-                        }
-                        else sprite_index = spr_sit1;
-                    }
-                }
-            }
-        }
-
-         // On Alert:
-        if(instance_exists(target)){
-            if(
-                my_health < maxhealth
-                || (in_distance(target, 140) && in_sight(target))
-                || (in_distance(target, 96) && target.reload > 0)
-            ){
-                cantravel = true;
-                sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
-                with(instance_create(x + (10 * right), y - 5, AssassinNotice)){
-                    depth = -7;
-                }
-            }
-        }
-    }
-
-     // Sitting:
-    if(instance_exists(sit)){
-        speed = 0;
-        x = sit.x;
-        y = sit.y - 3;
-        right = -sit.image_xscale;
-        if(cantravel){
+	         // Find Seat:
+	        else{
+	        	sit = noone;
+		        if(place_meeting(x, y, CustomProp)){
+	                with(instances_meeting(x, y, instances_named(CustomProp, ["ChairFront", "ChairSide", "Couch"]))){
+	                	if(place_meeting(x, y, other)) with(other){
+		                    if(array_length(instances_matching(instances_named(object_index, name), "sit", other)) <= 0){
+		                        sit = other;
+		                        image_index = 0;
+		                        if(other.sprite_index == spr.ChairSideIdle){
+		                            sprite_index = spr_sit1_side;
+		                        }
+		                        else sprite_index = spr_sit1;
+		                    }
+	                	}
+	                }
+	            }
+	        }
+    	}
+    	
+    	 // On Alert:
+    	else if(sit != noone){
             sit = noone;
             sprite_index = spr_idle;
-        }
+    	}
     }
 
 #define Cat_draw
-    if(!instance_exists(sit)){
+    if(sit == noone){
         if(gunangle >  180) draw_self_enemy();
         draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
         if(gunangle <= 180) draw_self_enemy();
@@ -938,6 +920,21 @@
 
          // Normal AI:
         if(active){
+        	 // Notice Target:
+            if(
+            	my_health < maxhealth
+            	|| (
+            		in_distance(target, 140) &&
+            		(in_sight(target) || (target.reload > 0 && in_distance(target, 96)))
+            	)
+            ){
+                cantravel = true;
+                sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
+                with(instance_create(x + (10 * right), y - 5, AssassinNotice)){
+                    depth = -7;
+                }
+            }
+
             if(!instance_exists(sit)){
                 if(in_sight(target)){
                     var _targetDir = point_direction(x, y, target.x, target.y);
@@ -1710,23 +1707,15 @@
         _open = false;
 
     if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0 || distance_to_object(CustomObject) <= 0){
-        with(instances_named(CustomObject, "Pet")){
-            if(distance_to_object(other) <= 0){
-                var _sx = lengthdir_x(hspeed, other.image_angle),
-                    _sy = lengthdir_y(vspeed, other.image_angle);
+        with(instances_meeting(x, y, array_combine(
+        	instances_matching_ne(hitme, "team", team),
+        	instances_named(CustomObject, "Pet")
+        ))){
+            var _sx = lengthdir_x(hspeed, other.image_angle),
+                _sy = lengthdir_y(vspeed, other.image_angle);
 
-                s = 3 * (_sx + _sy);
-                _open = true;
-            }
-        }
-        with(instances_matching_ne(hitme, "team", team)){
-            if(distance_to_object(other) <= 0){
-                var _sx = lengthdir_x(hspeed, other.image_angle),
-                    _sy = lengthdir_y(vspeed, other.image_angle);
-
-                s = 3 * (_sx + _sy);
-                _open = true;
-            }
+            s = 3 * (_sx + _sy);
+            _open = true;
         }
     }
     if(_open){
@@ -1765,19 +1754,21 @@
     }
 
      // Draw Self:
-    if(!surface_exists(my_surf) || openang != openang_last){
-        if(!surface_exists(my_surf)) my_surf = surface_create(my_surf_w, my_surf_h);
-        surface_set_target(my_surf);
-        draw_clear_alpha(0, 0);
-
-         // Draw 3D Door:
-        for(var i = 0; i < image_number; i++){
-            draw_sprite_ext(sprite_index, i, (my_surf_w / 2), (my_surf_h / 2) - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), image_blend, 1);
-        }
-
-        surface_reset_target();
+    if(point_seen_ext(x, y, my_surf_w, my_surf_h, -1)){
+	    if(!surface_exists(my_surf) || abs(openang - openang_last) > 0.4){
+	        if(!surface_exists(my_surf)) my_surf = surface_create(my_surf_w, my_surf_h);
+	        surface_set_target(my_surf);
+	        draw_clear_alpha(0, 0);
+	
+	         // Draw 3D Door:
+	        for(var i = 0; i < image_number; i++){
+	            draw_sprite_ext(sprite_index, i, (my_surf_w / 2), (my_surf_h / 2) - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), image_blend, 1);
+	        }
+	
+	        surface_reset_target();
+	    }
+	    openang_last = openang;
     }
-    openang_last = openang;
 
      // Death:
     if(my_health <= 0){
@@ -1815,9 +1806,11 @@
 #define CatDoor_draw
     if(surface_exists(my_surf)){
         var h = (nexthurt > current_frame + 3);
-        if(h) d3d_set_fog(1, image_blend, 0, 0);
+        if(h) draw_set_flat(image_blend);
+
         draw_surface_ext(my_surf, x - (my_surf_w / 2), y - (my_surf_h / 2), 1, 1, 0, c_white, image_alpha);
-        if(h) d3d_set_fog(0, 0, 0, 0);
+
+        if(h) draw_set_flat(-1);
     }
 
 #define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
@@ -1924,13 +1917,9 @@
         target = noone;
 
          // don't mess with the big boy
-        if(place_meeting(x, y, CustomObject)){
-            with(instances_named(CustomObject, "CatHoleBig")){
-                if(place_meeting(x, y, other)) with(other){
-                    instance_destroy();
-                    exit;
-                }
-            }
+        if(array_length(instances_meeting(x, y, instances_named(CustomObject, "CatHoleBig"))) > 0){
+            instance_destroy();
+            return noone;
         }
 
         CatHoleCover();
@@ -2275,10 +2264,11 @@
 
 #define CatHoleBig_alrm2
 	scrBossIntro("CatBat", sndScorpionFireStart, musBoss2);
-    
+
 #define CatHoleBig_draw
     draw_sprite(spr_bot, 0, x, y);
     draw_sprite(sprite_index, image_index, x, y);
+
 
 #define CatLight_create(_x, _y)
 	var o = {
@@ -2297,29 +2287,31 @@
     return o;
 
 #define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
-     // Trapezoid Bit:
-    var _x1a = _x - (_w1 / 2),
-        _x2a = _x1a + _w1,
-        _y1 = _y,
-        _x1b = _x - (_w2 / 2) + _offset,
-        _x2b = _x1b + _w2,
-        _y2 = _y + _h1;
+	if(point_seen_ext(_x, _y, max(_w1, _w2), (_h1 + _h2), player_find_local_nonsync())){
+		var _x1a = _x - (_w1 / 2),
+		    _x2a = _x1a + _w1,
+		    _y1 = _y,
+		    _x1b = _x - (_w2 / 2) + _offset,
+		    _x2b = _x1b + _w2,
+		    _y2 = _y + _h1;
 
-    draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2);
+	    draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2);
+	
+	     // Half Oval Bit:
+	    var _segments = 4,
+	        _cw = _w2 / 2,
+	        _cx = _x1b + _cw,
+	        _cy = _y2;
+	
+	    draw_primitive_begin(pr_trianglefan);
+	    draw_vertex(_cx, _cy);
+	    for(var i = 0; i <= _segments; i++){
+	        var a = (i / _segments) * -180;
+	        draw_vertex(_cx + lengthdir_x(_cw, a), _cy + lengthdir_y(_h2, a));
+	    }
+	    draw_primitive_end();
+	}
 
-     // Half Oval Bit:
-    var _segments = 8,
-        _cw = _w2 / 2,
-        _cx = _x1b + _cw,
-        _cy = _y2;
-
-    draw_primitive_begin(pr_trianglefan);
-    draw_vertex(_cx, _cy);
-    for(var i = 0; i <= _segments; i++){
-        var a = (i / _segments) * -180;
-        draw_vertex(_cx + lengthdir_x(_cw, a), _cy + lengthdir_y(_h2, a));
-    }
-    draw_primitive_end();
 
 #define ChairFront_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
