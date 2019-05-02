@@ -975,13 +975,16 @@
 		            			speed = max(speed - 6, 12);
 
 		            			 // Effects:
+		            			var s = other.size;
 		            			view_shake_at(x, y, 6);
 		            			with(instance_create(other.x, other.y, ThrowHit)){
-		            				image_speed = random_range(0.8, 1);
 		            				motion_add(other.direction + orandom(30), 3);
+		            				image_speed = random_range(0.8, 1);
+		            				image_xscale = 0.5 * (s + 1);
+		            				image_yscale = image_xscale;
 		            			}
 		            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
-		            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.25 * (1 + other.size));
+		            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.3 + (0.2 * s));
 		            		}
 	            		}
 	            	}
