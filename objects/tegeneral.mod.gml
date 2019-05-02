@@ -834,10 +834,11 @@
     	rope = noone;
     	pull_speed = 0;
     	canmove = 1;
-    	damage = 3;
+    	damage = 8;
     	force = 8;
     	typ = 1;
     	blink = 30;
+    	corpses = [];
 
     	return id;
     }
@@ -857,6 +858,35 @@
     }
 
 #define Harpoon_step
+	 // Skewered Corpses:
+	with(corpses){
+		if(instance_exists(self) && speed > 0){
+			if(other.speed > 0){
+				x += (other.x - x) * 0.3 * current_time_scale;
+				y += (other.y - y) * 0.3 * current_time_scale;
+				hspeed = other.hspeed;
+				vspeed = other.vspeed;
+				xprevious = x + hspeed;
+				yprevious = y + vspeed;
+				depth = other.depth - 1;
+				image_speed = 0.4;
+				image_index = 1;
+			}
+			else{
+				depth = 1;
+				var _max = 5;
+				if(speed > _max){
+					speed = _max - random(1);
+					direction += orandom(80);
+				}
+			}
+		}
+		else{
+			if(instance_exists(self)) depth = 1;
+			other.corpses = array_delete_value(other.corpses, self);
+		}
+	}
+
      // Stuck in Target:
     var _targ = target;
     if(instance_exists(_targ)){
@@ -875,11 +905,9 @@
         if(alarm0 < 0){
             image_index = 0;
 
-            var _pickup = 1;
-            with(rope) if(!broken) _pickup = 0;
-            if(_pickup){
+            if(lq_defget(rope, "broken", false)){
                 alarm0 = 200 + random(20);
-                if(GameCont.crown == crwn_haste) alarm0 /= 3;
+                if(crown_current == crwn_haste) alarm0 /= 3;
             }
         }
         else if(instance_exists(Player)){
@@ -888,10 +916,10 @@
 
              // Attraction:
             var p = instance_nearest(x, y, Player);
-            if(point_distance(x, y, p.x, p.y) < (skill_get(mut_plutonium_hunger) ? 100 : 50)){
-                canmove = 0;
+            if(point_distance(x, y, p.x, p.y) < 50 * (1 + skill_get(mut_plutonium_hunger))){
+                canmove = false;
 
-                var _dis = 10,
+                var _dis = 10 * current_time_scale,
                     _dir = point_direction(x, y, p.x, p.y);
 
                 x += lengthdir_x(_dis, _dir);
@@ -903,7 +931,7 @@
                 if(place_meeting(x, y, p) || place_meeting(x, y, Portal)){
                     with(p){
                         ammo[3] = min(ammo[3] + 1, typ_amax[3]);
-                        instance_create(x, y, PopupText).text = "+1 BOLTS";
+                        instance_create(x, y, PopupText).text = `+1 ${typ_name[3]}`;
                         sound_play(sndAmmoPickup);
                     }
                     instance_destroy();
@@ -922,12 +950,42 @@
 
         if(speed > 0){
              // Bolt Marrow:
-            if(skill_get(mut_bolt_marrow)){
-                var n = instance_nearest(x, y, enemy);
-                if(distance_to_object(n) < 16 && !place_meeting(x, y, n)){
-                    direction = point_direction(x, y, n.x, n.y);
-                    image_angle = direction;
+            if(skill_get(mut_bolt_marrow) > 0){
+                var n = nearest_instance(x, y, instances_matching_ne(instances_matching_ne(hitme, "team", team, 0), "mask_index", mskNone, sprVoid));
+                if(distance_to_object(n) < (16 * skill_get(mut_bolt_marrow))){
+                	if(!place_meeting(x, y, n)){
+                		if(in_sight(n)){
+		                    direction = point_direction(x, y, n.x, n.y);
+		                    image_angle = direction;
+                		}
+                	}
                 }
+            }
+
+			 // Skewer Corpses:
+            if(place_meeting(x, y, Corpse)){
+	            with(instances_meeting(x, y, instances_matching_le(instances_matching_ne(instances_matching_gt(Corpse, "speed", 1), "mask_index", -1), "size", 2))){
+	            	if(place_meeting(x, y, other)){
+	            		with(other){
+		            		if(array_find_index(corpses, other) < 0){
+		            			array_push(corpses, other);
+		            			if(hspeed != 0){
+		            				other.image_xscale = -sign(hspeed);
+		            			}
+		            			speed = max(speed - 6, 12);
+
+		            			 // Effects:
+		            			view_shake_at(x, y, 6);
+		            			with(instance_create(other.x, other.y, ThrowHit)){
+		            				image_speed = random_range(0.8, 1);
+		            				motion_add(other.direction + orandom(30), 3);
+		            			}
+		            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
+		            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.25 * (1 + other.size));
+		            		}
+	            		}
+	            	}
+	            }
             }
 
              // Stick in Chests:
@@ -939,21 +997,15 @@
     }
 
 #define Harpoon_hit
-    if(speed > 0){
-        if(projectile_canhit(other)){
-            projectile_hit_push(other, damage, force);
+    if(speed > 0 && projectile_canhit(other)){
+        projectile_hit_push(other, damage, force);
 
-             // Stick in enemies that don't die:
-            if(other.my_health > 0){
-                if(
-                    (instance_is(other, prop) && other.object_index != RadChest)
-                    ||
-                    ("name" in other && name == "CoastDecal")
-                ){
-                    canmove = 0;
-                }
-                scrHarpoonStick(other);
+         // Stick in enemies that don't die:
+        if(other.my_health > 0){
+            if(instance_is(other, prop) && other.object_index != RadChest){
+                canmove = false;
             }
+            scrHarpoonStick(other);
         }
     }
 
@@ -964,7 +1016,7 @@
         sound_play(sndBoltHitWall);
 
          // Stick in Wall:
-        canmove = 0;
+        canmove = false;
         scrHarpoonStick(other);
     }
 
@@ -979,6 +1031,11 @@
 #define Harpoon_destroy
     scrHarpoonUnrope(rope);
 
+#define Harpoon_cleanup
+	with(corpses) if(instance_exists(self)){
+		depth = 1;
+	}
+
 #define draw_rope(_rope)
     with(_rope) if(instance_exists(link1) && instance_exists(link2)){
         var _x1 = link1.x,
@@ -987,6 +1044,10 @@
             _y2 = link2.y,
             _wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
             _col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 45), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+
+		if(break_timer > 0){
+			_wid += (max(1, _wid) - _wid) * min(break_timer / 45, 1);
+		}
 
         draw_set_color(_col);
         draw_line_width(_x1, _y1, _x2, _y2, _wid);
@@ -1000,13 +1061,15 @@
      // Set Rope Vars:
     pull_speed = (("size" in target) ? (2 / target.size) : 2);
     with(rope){
-        harpoon_stuck = 1;
+        harpoon_stuck = true;
 
          // Deteriorate rope if only stuck in unmovable objects:
-        var m = 1;
-        with([link1, link2]) if("canmove" not in self || canmove) m = 0;
+        var m = true;
+        with([link1, link2]) if("canmove" not in self || canmove){
+        	m = false;
+        }
         if(m){
-            deteriorate_timer = 60;
+            deteriorate_timer = 10;
             length = point_distance(link1.x, link1.y, link2.x, link2.y);
         }
     }
@@ -1016,12 +1079,12 @@
         link1 : _link1,
         link2 : _link2,
         length : 0,
-        harpoon_stuck : 0,
+        harpoon_stuck : false,
         break_force : 0,
         break_timer : 90,
         creator : noone,
         deteriorate_timer : -1,
-        broken : 0
+        broken : false
     }
     global.poonRope[array_length(global.poonRope)] = r;
     with([_link1, _link2]) rope[array_length(rope)] = r;
@@ -1030,17 +1093,8 @@
 
 #define scrHarpoonUnrope(_rope)
     with(_rope){
-        broken = 1;
-
-        var i = 0,
-            a = [],
-            _ropeIndex = array_find_index(global.poonRope, self);
-
-        for(var j = 0; j < array_length(global.poonRope); j++){
-            if(j != _ropeIndex) a[i++] = global.poonRope[j];
-        }
-
-        global.poonRope = a;
+        broken = true;
+		global.poonRope = array_delete_value(global.poonRope, self);
     }
 
 
@@ -2776,8 +2830,8 @@
 
 #define step
      // Harpoon Connections:
-    for(var i = 0; i < array_length(global.poonRope); i++){
-        var _rope = global.poonRope[i],
+    with(global.poonRope){
+        var _rope = self,
             _link1 = _rope.link1,
             _link2 = _rope.link2;
 
@@ -2804,9 +2858,11 @@
 
              // Deteriorate Rope:
             var _deteriorate = (_rope.deteriorate_timer == 0);
-            if(_deteriorate) _rope.length *= 0.9;
+            if(_deteriorate){
+            	_rope.length -= _rope.length * 1 * current_time_scale;
+            }
             else if(_rope.deteriorate_timer > 0){
-                _rope.deteriorate_timer -= min(1, _rope.deteriorate_timer);
+                _rope.deteriorate_timer -= min(1, _rope.deteriorate_timer) * current_time_scale;
             }
 
              // Rope Stretching:
@@ -3011,8 +3067,8 @@
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
-#define array_delete(_array, _index)                                                    return  mod_script_call(   "mod", "telib", "array_delete", _array, _index);
-#define array_delete_value(_array, _value)                                              return  mod_script_call(   "mod", "telib", "array_delete_value", _array, _value);
+#define array_delete(_array, _index)                                                    return  mod_script_call_nc("mod", "telib", "array_delete", _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call_nc("mod", "telib", "array_delete_value", _array, _value);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
 #define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
