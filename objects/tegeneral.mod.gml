@@ -2861,11 +2861,9 @@
 
              // Deteriorate Rope:
             var _deteriorate = (_rope.deteriorate_timer == 0);
-            if(_deteriorate){
-            	_rope.length -= _rope.length * 1 * current_time_scale;
-            }
+            if(_deteriorate) _rope.length = 0;
             else if(_rope.deteriorate_timer > 0){
-                _rope.deteriorate_timer -= min(1, _rope.deteriorate_timer) * current_time_scale;
+                _rope.deteriorate_timer -= min(current_time_scale, _rope.deteriorate_timer);
             }
 
              // Rope Stretching:
