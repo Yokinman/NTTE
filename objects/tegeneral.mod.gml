@@ -2882,7 +2882,7 @@
             }
 
              // Draw Rope:
-            script_bind_draw(draw_rope, 0, _rope);
+            script_bind_draw(draw_rope, (collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false) ? -8 : 0), _rope);
         }
         else scrHarpoonUnrope(_rope);
     }
