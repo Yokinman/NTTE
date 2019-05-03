@@ -24,20 +24,20 @@
 
      // Shoot Harpoon:
     with(obj_create(x, y, "Harpoon")){
-        motion_add(other.gunangle + (random_range(-3, 3) * other.accuracy), 22);
+        motion_add(other.gunangle + orandom(3 * other.accuracy), 22);
         image_angle = direction;
         image_yscale = other.right;
         team = other.team;
         creator = other;
 
          // Link Harpoon:
-        if(!instance_exists(_wep.link)){
+        if(!instance_exists(_wep.link) || lq_defget(_wep.rope, "broken", true)){
             rope = scrHarpoonRope(id, other);
             _wep.rope = rope;
             _wep.link = id;
         }
         else{
-            rope[array_length(rope)] = _wep.rope;
+            rope = _wep.rope;
             _wep.rope.link2 = id;
             _wep.link = noone;
             _wep.rope = noone;
