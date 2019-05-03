@@ -540,7 +540,7 @@
     do pickup_drop(100, 0);
     until(instance_number(Pickup) >= n);
     
-    with(instance_create(x, y, WeaponChest)){
+    with(obj_create(x, y, "BatChest")){
     	motion_set(irandom(359), 4);
     	friction = 0.4;
     }
@@ -553,8 +553,14 @@
 	    }
     }
     
-     // Boss Win Music:
-    else with(MusCont) alarm_set(1, 1);
+    
+    else{
+    	 // Add skill to mutation pool:
+    	mod_variable_set("skill", "lairskill", "inNextPool", true);
+    
+    	 // Boss Win Music:
+		with(MusCont) alarm_set(1, 1);
+    }
 
 #define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
     var _single = argument_count > 0 ? argument[0] : undefined;
@@ -582,6 +588,82 @@
     sprite_index = spr_fire;
     image_index = 0;
 
+#define BatChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.BatChest;
+		spr_open = spr.BatChestOpen;
+		
+		 // Sound:
+		snd_open = sndWeaponChest;
+		
+		on_open = script_ref_create(BatChest_open);
+		
+		return id;
+	}
+	
+#define BatChest_open
+	if(instance_is(other, Player)){
+			
+		 // Setup Creator LWO:
+		var _creator = {};
+		with(_creator){
+			x = other.x;
+			y = other.y;
+		}
+		 
+		var _string = "WEAPON#@s",
+			_w = ds_list_create(),
+			_i = weapon_get_list(_w, 0, GameCont.hard + 1);
+		
+		 // Spawn Weapons:
+		if(_i){
+			with(obj_create(x, y, "ChestShop")){
+				wep = ds_list_find_value(_w, irandom(_i - 1));
+				creator = _creator;
+				sprite_index = weapon_get_sprite(wep);
+				motion_set(135, 4);
+				move_contact_solid(direction, 16);
+				
+				scrPickupIndicator(_string + weapon_get_name(wep)).mask_index = mskFrogEgg;
+			}
+			
+			with(obj_create(x, y, "ChestShop")){
+				wep = ds_list_find_value(_w, irandom(_i - 1));
+				creator = _creator;
+				sprite_index = weapon_get_sprite(wep);
+				motion_set(90, 4);
+				move_contact_solid(direction, 16);
+				
+				scrPickupIndicator(_string + weapon_get_name(wep)).mask_index = mskFrogEgg;
+			}
+		}
+		
+		ds_list_clear(_w);
+		_i = weapon_get_list(_w, 0, GameCont.hard + 2);
+		
+		 // Spawn cursed weapon:
+		if(_i) with(obj_create(x, y, "ChestShop")){
+			wep = ds_list_find_value(_w, irandom(_i - 1));
+			creator = _creator;
+			wepcursed = true;
+			sprite_index = weapon_get_sprite(wep);
+			motion_set(45, 4);
+			move_contact_solid(direction, 16);
+			
+			scrPickupIndicator("CURSED " + _string + weapon_get_name(wep)).mask_index = mskFrogEgg;
+		}
+		
+		 // Be free:
+		ds_list_destroy(_w);
+		
+		 // Sounds:
+		sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
+		sound_play_pitchvol(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
+		
+		 // Effects:
+		instance_create(x, y, GunWarrantEmpty);
+	}
 
 #define BatCloud_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -1409,7 +1491,7 @@
     do pickup_drop(100, 0);
     until(instance_number(Pickup) >= n);
     
-    with(instance_create(x, y, AmmoChest)){
+    with(obj_create(x, y, "CatChest")){
     	motion_set(irandom(359), 4);
     	friction = 0.4;
     }
@@ -1425,8 +1507,13 @@
 	    }
     }
     
-     // Boss Win Music:
-    else with(MusCont) alarm_set(1, 1);
+    else{
+    	 // Add skill to mutation pool:
+    	mod_variable_set("skill", "lairskill", "inNextPool", true);
+    
+    	 // Boss Win Music:
+		with(MusCont) alarm_set(1, 1);
+    }
 
 #define CatBoss_cleanup
     sound_stop(jetpack_loop);
@@ -1669,7 +1756,60 @@
 
     instance_destroy();
 
-
+#define CatChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.CatChest;
+		spr_open = spr.CatChestOpen;
+		
+		 // Sound:
+		snd_open = sndAmmoChest;
+		
+		on_open = script_ref_create(CatChest_open);
+		
+		return id;
+	}
+	
+#define CatChest_open
+	if(instance_is(other, Player)){
+		
+		 // Setup creator LWO;
+		var _creator = {};
+		with(_creator){
+			x = other.x;
+			y = other.y;
+		}
+		
+		 // Spawn pickups:
+		with(obj_create(x, y, "ChestShop")){
+			pickup = "ammo";
+			creator = _creator;
+			sprite_index = sprAmmoChest;
+			motion_set(120, 4);
+			move_contact_solid(direction, 16);
+			
+			scrPickupIndicator("AMMO PICKUP#@sRELOAD").mask_index = mskFrogEgg;
+		}
+		
+		with(obj_create(x, y, "ChestShop")){
+			pickup = "infammo";
+			creator = _creator;
+			noshine = true;
+			sprite_index = sprFishA;
+			motion_set(60, 4);
+			move_contact_solid(direction, 16);
+			
+			scrPickupIndicator("INFINITE AMMO#@sFOR A MOMENT").mask_index = mskFrogEgg;
+		}
+		
+		 // Sounds:
+		sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
+		sound_play_pitchvol(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
+		
+		 // Effects:
+		instance_create(x, y, GunWarrantEmpty);
+	}
+	
 #define CatDoor_create(_x, _y)
     with(instance_create(_x, _y, CustomHitme)){
          // Visual:
@@ -2341,6 +2481,114 @@
         return id;
     }
 
+
+#define ChestShop_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = sprAmmo;
+		image_speed = 0.4;
+		image_alpha = -1;
+		mask_index = mskWepPickup;
+		depth = -3;
+		
+		 // Vars:
+		friction = 0.4;
+		creator = noone;
+		time = 0;
+		timeextra = 0;
+		noshine = false;
+		shine_speed = 0.025;
+		pickup_indicator = noone;
+		
+		wep = -1;
+		wepcursed = false;
+		
+		pickup = "";
+		 
+		return id;
+	}
+	
+#define ChestShop_step
+	time += current_time_scale;
+	
+	 // Shine:
+	if(!noshine && image_index < 1) image_index -= image_speed - 0.025;
+	
+	 // Bounce:
+	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	}
+	
+	 // Effects:
+	if(chance_ct(1, 30)){
+		instance_create(x, y, PortalL);
+	}
+	
+	 // Take Item:
+	with(instances_meeting(x, y, Player)) if(button_pressed(index, "pick")){
+		with(other){ 
+			var _x = creator.x,
+				_y = creator.y;
+			
+			 // Weapon shop:
+			if(wep != -1){
+				
+				 // Spawn chosen weapon:
+				with(instance_create(_x, _y, WepPickup)){
+					motion_set(irandom(359), 4);
+					wep = other.wep;
+					curse = other.wepcursed;
+				}
+				
+				 // Sounds:
+				sound_play(weapon_get_swap(wep));
+				sound_play_pitchvol(sndGunGun, 0.8 + random(0.4), 0.6);
+				sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
+				
+				 // Effects:
+				instance_create(_x, _y, GunGun);
+			}
+			
+			 // Pickup shop:
+			else{
+				
+				 // Spawn chosen pickup/grant chosen buff:
+				switch(pickup){
+					case "infammo":
+						with(other){
+							infammo = 90;
+							reload = max(reload, 1);
+						}
+						break;
+						
+					case "ammo":
+						with(other){
+							instance_create(x, y, AmmoPickup).visible = false;
+						}
+						break;
+				}
+			}
+			
+			 // Sounds:
+		    sound_play_pitchvol(sndGammaGutsProc, 1.4, 0.6);
+			 
+			 // Remove other options:
+			with(instances_matching(instances_named(CustomObject, name), "creator", creator)){
+				instance_create(x, y, ThrowHit);
+				
+				instance_destroy();
+			}
+		}
+	}
+	
+#define ChestShop_draw
+	var _alpha = [0.6, 0.8],
+		_color = wepcursed ? make_color_rgb(103, 27, 131) : make_color_rgb(133, 249, 26),
+		_x = x - (sprite_get_width(sprite_index) - sprite_get_xoffset(sprite_index)) / 2,
+		_y = y + sin((time + timeextra) * 0.1) * 2;
+	
+	draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale, image_yscale, image_angle, _color, abs(image_alpha) * _alpha[time * image_speed % 2]);
 
 #define Couch_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){

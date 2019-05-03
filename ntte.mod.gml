@@ -910,6 +910,44 @@
         global.charm_step = script_bind_end_step(charm_step, 0);
         with(global.charm_step) persistent = true;
     }
+    
+     // Lair Skill:
+    var _skill = skill_get("lairskill");
+    if(instance_exists(SkillIcon) && mod_variable_get("skill", "lairskill", "inNextPool") && _skill <= 0){
+    	
+    	mod_variable_set("skill", "lairskill", "inNextPool", false);
+    	
+    	 // Spawn Skill:
+    	with(instances_matching(SkillIcon, "num", instance_number(SkillIcon) - 1)){
+    		skill = "lairskill";
+    		
+    		name = mod_script_call("skill", "lairskill", "skill_name");
+    		text = mod_script_call("skill", "lairskill", "skill_text");
+            
+            mod_script_call("skill", "lairskill", "skill_button");
+    	}
+    }
+    
+    if(_skill > 0){
+    	
+    	 // Spawn Lair Chests:
+	    with(instances_matching(GenCont, "alarm1", 1)){
+	    	with(instances_matching([AmmoChest, WeaponChest], "", null)) if(chance(_skill, 2)){
+	    		
+	    		 // Cat Chest:
+	    		if(instance_is(self, AmmoChest)){
+	    			obj_create(x, y, "CatChest");
+	    			instance_delete(id);
+	    		}
+	    		
+	    		 // Bat Chest:
+	    		if(instance_is(self, WeaponChest)){
+	    			obj_create(x, y, "BatChest");
+	    			instance_delete(id);
+	    		}
+	    	}
+	    }
+    }
 
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
     var _type = argument[0], _snd = argument[1];
