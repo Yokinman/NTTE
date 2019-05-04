@@ -395,7 +395,9 @@
                      // This part is irrelevant don't worry:
                     var _friendChance = 0;
                     with(instances_matching_le(Player, "my_health", 3)){
-                        if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
+                    	if(my_health < maxhealth || my_health <= 1){
+                        	if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
+                    	}
                     }
                     
                     var _spawned = false,

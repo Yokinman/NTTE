@@ -127,13 +127,6 @@
     draw_self_enemy();
     if(h) draw_set_flat(-1);
 
-     // Canister Bloom:
-    if(hiding){
-        draw_set_blend_mode(bm_add);
-        draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-        draw_set_blend_mode(bm_normal);
-    }
-
 #define Angler_alrm1
     alarm1 = 6 + irandom(6);
     target = instance_nearest(x, y, Player);
@@ -2076,6 +2069,12 @@
     //d3d_set_fog(0, 0, 0, 0);
 
     instance_destroy();
+
+#define draw_bloom
+	 // Canister Bloom:
+	with(instances_matching(instances_named(CustomEnemy, "Angler"), "hiding", true)){
+        draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+    }
 
 #define draw_shadows
     with(instances_named(CustomObject, "TrenchFloorChunk")){

@@ -5,8 +5,8 @@
 #define weapon_text return "CATCH OF THE DAY";
 #define weapon_type return 3;  // Bolt
 #define weapon_cost return 10; // 10 Ammo
-#define weapon_load return 20; // 0.67 Seconds
-#define weapon_area return (unlock_get("coastWep") ? 5 : -1); // 2-1
+#define weapon_load return 36; // 1.2 Seconds
+#define weapon_area return (unlock_get("coastWep") ? 6 : -1); // 3-1
 #define weapon_swap return sndSwapExplosive;
 #define weapon_sprt return global.sprNetLauncher;
 
@@ -22,7 +22,7 @@
 
      // Shoot Harpoon:
     with(obj_create(x, y, "NetNade")){
-        motion_add(other.gunangle + (random_range(-5, 5) * other.accuracy), 12);
+        motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
         image_angle = direction;
         team = other.team;
         creator = other;

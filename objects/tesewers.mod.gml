@@ -1559,7 +1559,7 @@
     var _cx = x,
         _cy = y,
         _scale1 = image_yscale * (1 + (3 * (1 - (alarm0 / alarm0_max)))),
-        _scale2 = 2 * (image_yscale * 3),
+        _scale2 = 3 * (image_yscale * 3),
         _colors = [make_color_rgb(133, 249, 26), make_color_rgb(190, 253, 8)];
 
     draw_set_color(_colors[current_frame % 2]);
@@ -1574,17 +1574,17 @@
         	draw_circle(_x, _y, _scale1, false);
         }
 
-		/*
+		
          // Bloom:
         draw_set_blend_mode(bm_add);
-        draw_set_alpha(0.1);
+        draw_set_alpha(0.025);
         if(other.type){
         	draw_circle(_x, _y, _scale2, false);
         }
         draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), _scale2);
         draw_set_alpha(1);
         draw_set_blend_mode(bm_normal);
-        */
+        
     }
 
 #define CatBossAttack_alrm0

@@ -10,9 +10,6 @@
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprQuasarBlaster;
 
-#define weapon_reloaded
-    
-
 #define weapon_fire(_wep)
     var _roids = (specfiring && (race == "steroids")),
         _beams = instances_matching(instances_matching_gt(instances_matching(instances_matching(CustomProjectile, "name", "QuasarBeam"), "creator", id), "shrink_delay", 0), "roids", _roids);
@@ -23,7 +20,7 @@
         creator = other;
         roids = _roids;
 
-        shrink_delay = 6;
+        shrink_delay = 8;
         scale_goal = 0.5;
         bend_fric = 0.4;
 

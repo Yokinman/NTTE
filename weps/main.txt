@@ -10,3 +10,4 @@
 /loadwep tesla coil
 /loadwep quasar blaster
 /loadwep quasar rifle
+/loadwep quasar cannon

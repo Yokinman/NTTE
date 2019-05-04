@@ -6,7 +6,7 @@
 #define weapon_type return 3; // Bolt
 #define weapon_cost return 1; // 1 Ammo
 #define weapon_load return 4; // 0.13 Seconds
-#define weapon_area return (unlock_get("coastWep") ? 3 : -1); // 1-2
+#define weapon_area return (unlock_get("coastWep") ? 4 : -1); // 1-3
 #define weapon_swap return sndSwapBow;
 #define weapon_sprt return global.sprHarpoonLauncher;
 
@@ -32,19 +32,15 @@
 
          // Link Harpoon:
         if(!instance_exists(_wep.link) || lq_defget(_wep.rope, "broken", true)){
-            rope = scrHarpoonRope(id, other);
-            _wep.rope = rope;
+            _wep.rope = scrHarpoonRope(id, other);
             _wep.link = id;
         }
         else{
-            rope = _wep.rope;
+            array_push(rope, _wep.rope);
+            _wep.rope.break_timer = 60;
             _wep.rope.link2 = id;
             _wep.link = noone;
             _wep.rope = noone;
-        }
-        with(rope){
-            break_timer = 90;
-            creator = other.creator;
         }
     }
 

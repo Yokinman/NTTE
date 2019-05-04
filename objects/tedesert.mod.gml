@@ -432,6 +432,8 @@
 
 #define CoastBossBecome_step
     speed = 0;
+    x = xstart;
+    y = ystart;
 
      // Animate:
     image_index = part;
@@ -1092,65 +1094,6 @@
     with(MusCont) alarm_set(1, 1);
 
 
-/// Mod Events
-#define ScorpionRock_create(_x, _y)
-    with(instance_create(_x, _y, CustomProp)){
-         // Visuals:
-        spr_idle = spr.ScorpionRockEnemy;
-        spr_hurt = spr.ScorpionRockHurt;
-        spr_dead = spr.ScorpionRockDead;
-        spr_shadow = shd32;
-        spr_shadow_y = -3;
-        sprite_index = spr_idle;
-        
-         // Vars:
-        maxhealth = 32;
-        snd_hurt = sndHitRock;
-        snd_dead = sndPillarBreak;
-        friendly = false;
-        team = 1;
-        
-        return id;    
-    }
-    
-#define ScorpionRock_step
-    if(friendly && spr_idle != spr.ScorpionRockFriend) spr_idle = spr.ScorpionRockFriend;
-     // Image speed:
-    image_speed = 0.4;
-    var _i = image_index;
-    if(sprite_index == spr_idle){
-        if(_i < 1){
-            image_speed = 0.010;
-        }
-        else{
-            if((_i >= 2 && _i < 3) || (_i >= 4 && _i < 5)){
-                image_speed = 0.025;
-            }
-        }
-    }
-    
-#define ScorpionRock_death
-    repeat(3 + irandom(3))
-        with instance_create(x, y, Debris)
-            motion_set(irandom(359), 4 + random(4));
-            
-    if(friendly){
-         // pet time:
-        Pet_spawn(x, y, "Scorpion");
-    }
-    else{
-         // Homeowner:
-        obj_create(x, y, "BabyScorpion");
-         // Light Snack:
-        repeat(3) if(random(2) < 1)
-            instance_create(x, y, Maggot);
-         // Family Friend:
-        if(random(100) < 1)
-            instance_create(x, y, Spider);
-         // Possessions:
-        pickup_drop(60, 10);
-    }
-    
 #define PetVenom_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -1237,12 +1180,8 @@
     }
     
 #define PetVenom_draw
-    var scale = ((my_charge / maxcharge) * 0.8) + 0.2;
-    
+    var scale = 0.2 + ((my_charge / maxcharge) * 0.8);
     draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale, image_yscale * scale, image_angle, image_blend, image_alpha);
-    draw_set_blend_mode(bm_add);
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale * 2, image_yscale * scale * 2, image_angle, image_blend, image_alpha * 0.2);
-    draw_set_blend_mode(bm_normal);
     
 #define PetVenom_destroy
     var dir = direction,
@@ -1286,7 +1225,84 @@
         if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
         scrRight(direction);
     }
+
+
+#define ScorpionRock_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visuals:
+        spr_idle = spr.ScorpionRockEnemy;
+        spr_hurt = spr.ScorpionRockHurt;
+        spr_dead = spr.ScorpionRockDead;
+        spr_shadow = shd32;
+        spr_shadow_y = -3;
+        sprite_index = spr_idle;
+        
+         // Vars:
+        maxhealth = 32;
+        snd_hurt = sndHitRock;
+        snd_dead = sndPillarBreak;
+        friendly = false;
+        team = 1;
+        
+        if(fork()){
+        	wait 0;
+        	if(instance_exists(self) && friendly){
+        		spr_idle = spr.ScorpionRockFriend;
+        	}
+        	exit;
+        }
+
+        return id;    
+    }
     
+#define ScorpionRock_step
+     // Slow Animation:
+    if(sprite_index == spr_idle){
+    	var _img = image_index - image_speed,
+    		_fac = 0;
+
+        if(_img < 1){
+        	_fac = 0.975;
+        }
+        else{
+            if((_img >= 2 && _img < 3) || (_img >= 4 && _img < 5)){
+            	_fac = 0.9375;
+            }
+        }
+
+        image_index -= image_speed * _fac * current_time_scale;
+    }
+    
+#define ScorpionRock_death
+    repeat(3 + irandom(3))
+        with instance_create(x, y, Debris)
+            motion_set(random(360), 4 + random(4));
+            
+    if(friendly){
+         // pet time:
+        Pet_spawn(x, y, "Scorpion");
+    }
+    else{
+         // Homeowner:
+        obj_create(x, y, "BabyScorpion");
+         // Light Snack:
+        repeat(3) if(random(2) < 1)
+            instance_create(x, y, Maggot);
+         // Family Friend:
+        if(random(100) < 1)
+            instance_create(x, y, Spider);
+         // Possessions:
+        pickup_drop(60, 10);
+    }
+
+
+/// Mod Events
+#define draw_bloom
+    with(instances_named(CustomProjectile, "PetVenom")){
+	    var scale = 0.2 + ((my_charge / maxcharge) * 0.8);
+	    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale * 2, image_yscale * scale * 2, image_angle, image_blend, image_alpha * 0.2);
+    }
+
 #define draw_shadows
     with(instances_named(CustomEnemy, "CoastBoss")){
         for(var i = 0; i < array_length(fish_train); i++){

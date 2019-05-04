@@ -11,9 +11,6 @@
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprQuasarRifle;
 
-#define weapon_reloaded
-    
-
 #define weapon_fire(_wep)
     if(!is_object(_wep)){
         step(true);
@@ -26,6 +23,7 @@
     if(!instance_exists(_wep.beam) || _venuz){
         with(obj_create(x, y, "QuasarBeam")){
             image_angle = other.gunangle + orandom(6 * other.accuracy);
+            image_yscale = 0.6;
             team = other.team;
             creator = other;
 
@@ -47,20 +45,10 @@
         if(image_yscale < 1) scale_goal = 1;
         else{
             var a = 0.25,
-                m = 1 + (a * (1 + skill_get(mut_laser_brain)));
+                m = 1 + (a * (1 + (0.4 * skill_get(mut_laser_brain))));
 
             if(scale_goal < m){
                 scale_goal = min((floor(image_yscale / a) * a) + a, m);
-            }
-        }
-
-         // LB Effect:
-        if(skill_get(mut_laser_brain) != 0 && scale_goal > 1 + a){
-            repeat(6){
-                with(instance_create(x + orandom(32), y + orandom(32), LaserBrain)){
-                    motion_add(point_direction(other.x, other.y, x, y), 1);
-                    image_angle = random(360);
-                }
             }
         }
 
