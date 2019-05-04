@@ -12,7 +12,7 @@
 
 #define weapon_fire(_wep)
     with(obj_create(x, y, "QuasarRing")){
-        motion_add(other.gunangle + orandom(8 * other.accuracy), 4.5);
+        motion_add(other.gunangle + orandom(8 * other.accuracy), 4);
         image_angle = direction;
         image_yscale = 0;
         team = other.team;
