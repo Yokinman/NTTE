@@ -6,3 +6,5 @@
 /load areas
 /load races
 /load weps
+
+/loadskill lairskill/lairskill
