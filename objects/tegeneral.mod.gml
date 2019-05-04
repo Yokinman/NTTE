@@ -2859,6 +2859,8 @@
 		 // Alarms:
 		alarm0 = 10 + random(20);
 
+		instance_create(x, y, PortalClear);
+
 		return id;
 	}
 
