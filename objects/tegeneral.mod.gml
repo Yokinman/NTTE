@@ -3176,7 +3176,7 @@
     }
 
 	 // Quasar Beams:
-    with(instances_named(CustomProjectile, "QuasarBeam")){
+    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
         if(visible){
         	var a = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5));
         	if(blast_hit) a *= 1.5 / image_yscale;
@@ -3242,7 +3242,7 @@
 
      // Quasar Beams:
     draw_set_flat(draw_get_color());
-    with(instances_named(CustomProjectile, "QuasarBeam")){
+    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
         var _scale = 5,
         	_xscale = _scale * image_xscale,
         	_yscale = _scale * image_yscale;
@@ -3287,7 +3287,7 @@
 
 	 // Quasar Beams:
     draw_set_flat(draw_get_color());
-    with(instances_named(CustomProjectile, "QuasarBeam")){
+    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
         var _scale = 2,
         	_xscale = _scale * image_xscale,
         	_yscale = _scale * image_yscale;
