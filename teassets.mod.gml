@@ -10,6 +10,9 @@
         }
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
 
+         // Bat Discs:
+        BatDisc = sprite_add("sprites/weps/projectiles/sprBatDisc.png", 2, 9, 9);
+
     	 // Big Decals:
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png",       1, 32, 24),

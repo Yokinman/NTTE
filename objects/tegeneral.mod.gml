@@ -17,6 +17,153 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define BatDisc_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.BatDisc;
+		mask_index = mskFlakBullet;
+		depth = -3;
+		
+		 // Vars:
+		friction = 0.4;
+		maxspeed = 12;
+		typ = 1;
+		damage = 3;
+		my_lwo = noone;
+		ammo = 1;
+		returning = false;
+		return_to = noone;
+		
+		return id;
+	}
+	
+#define BatDisc_step
+	speed = min(speed, maxspeed);
+	image_angle += 40;
+	image_index = 0;
+	
+	 // Targeting:
+	var a = [];
+	with(["wep", "bwep"]){
+		var i = self,
+			o = other;
+			
+		with(instances_matching([Player, WepPickup, ThrownWep], i, o.my_lwo)){
+			array_push(a, id);
+		}
+	}
+	
+	if(array_length(a)){
+		 // Set return target:
+		return_to = nearest_instance(x, y, a);
+
+		if(current_frame_active){
+			 // Trail:
+			instance_create(x, y, DiscTrail);
+			
+			var m = skill_get(mut_bolt_marrow),
+				e = nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team));
+				
+			if(instance_exists(return_to) && !(m > 0 && in_distance(e, (40 * m)))){
+				 // Seek creator:
+				if(returning){
+					var d = point_direction(x, y, return_to.x, return_to.y);
+					
+					if(!place_meeting(x, y, return_to)){
+						motion_add(d, 0.8);
+					}
+					
+					 // Return disc to gun:
+					else{
+						var _wep = my_lwo,
+							_dir = direction;
+						with(return_to){
+							 // Player specific effects:
+							if(instance_is(id, Player)){
+								with(["", "b"]){
+									var i = self;
+									with(instances_matching(other, i + "wep", _wep))
+										variable_instance_set(id, i + "wkick", abs(angle_difference(gunangle, _dir)) > 90 ? 6 : -6);
+										 // yeah that part is gross i know
+								}
+							}
+							
+							 // General:
+							motion_add(other.direction, 2);
+						}
+						
+						 // Sounds:
+						sound_play_pitchvol(sndDiscgun, 	0.8 + random(0.4), 0.6);
+						sound_play_pitchvol(sndCrossReload, 0.6 + random(0.4), 0.8);
+						view_shake_max_at(x, y, 12);
+						
+						instance_destroy();
+					}
+				}
+				
+				 // Return when slow:
+				else if(speed <= 5){
+					returning = true;
+				}
+			}
+			
+			 // Seek targets:
+			else{
+				var d = point_direction(x, y, e.x, e.y);
+				
+				 // Movement:
+				speed = max(speed - friction, 0);
+				motion_add(d, 1);
+				
+				 // Animation:
+				image_index = 1;
+			}
+		}
+	}
+	
+	 // Destroy if no valid target to return to:
+	else{
+		instance_destroy();
+	}
+	
+#define BatDisc_end_step
+	 // Go through walls:
+    if(returning && place_meeting(x + hspeed, y + vspeed, Wall)){
+        if(place_meeting(x + hspeed, y, Wall)) x += hspeed;
+        if(place_meeting(x, y + vspeed, Wall)) y += vspeed;
+    }
+    
+	 // Unstick:
+	if(x == xprevious && hspeed != 0) x += hspeed;
+	if(y == yprevious && vspeed != 0) y += vspeed;
+	
+#define BatDisc_hit
+	if(projectile_canhit(other)){
+		projectile_hit_raw(other, damage, sndDiscHit);
+		
+		 // Effects:
+		instance_create(x, y, Smoke);
+		
+		sleep_max(20);
+	}
+	
+#define BatDisc_wall
+	if(!returning && instance_exists(return_to)){
+		returning = true;
+		
+		 // Effects:
+		instance_create(x + hspeed, y + vspeed, MeleeHitWall).image_angle = direction;
+		
+		 // Bounce towards creator:
+		direction = point_direction(x, y, return_to.x, return_to.y);
+		
+		 // Sounds:
+		sound_play_hit(sndDiscBounce, 0.4);
+	}
+	
+#define BatDisc_cleanup
+	my_lwo.ammo += ammo;
+	
 #define BigDecal_create(_x, _y)
     var a = string(GameCont.area);
     if(lq_exists(spr.BigTopDecal, a)){
