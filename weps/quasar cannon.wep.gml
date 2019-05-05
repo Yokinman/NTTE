@@ -2,8 +2,7 @@
     global.sprQuasarCannon = sprite_add_weapon("../sprites/weps/sprQuasarCannon.png", 20, 5);
 
 #define weapon_name return "QUASAR CANNON";
-#define weapon_text return "";
-#define weapon_auto return true;
+#define weapon_text return "PULSATING";
 #define weapon_type return 5;	// Energy
 #define weapon_cost return 12;	// 12 Ammo
 #define weapon_load return 159; // 5.3 Seconds
@@ -11,12 +10,9 @@
 #define weapon_swap return sndSwapEnergy;
 #define weapon_sprt return global.sprQuasarCannon;
 
-#define weapon_reloaded
-    
-
 #define weapon_fire(_wep)
     with(obj_create(x, y, "QuasarRing")){
-        motion_add(other.gunangle + orandom(8 * other.accuracy), 4.5);
+        motion_add(other.gunangle + orandom(8 * other.accuracy), 4);
         image_angle = direction;
         image_yscale = 0;
         team = other.team;
