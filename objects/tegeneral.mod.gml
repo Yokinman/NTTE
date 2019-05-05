@@ -33,14 +33,38 @@
 		ammo = 1;
 		returning = false;
 		return_to = noone;
+		can_split = false;
+		key = "";
+		seek = 42;
+		
+		 // Big Bat Disc:
+		if(fork()){
+			wait(0);
+			if(instance_exists(self) && can_split){
+				 // Visual:
+				sprite_index = spr.BatDiscBig;
+				mask_index = mskSuperFlakBullet;
+				
+				 // Vars:
+				damage = 8;
+				ammo *= 7;
+				seek = 64;
+			}
+			exit;
+		}
 		
 		return id;
 	}
 	
 #define BatDisc_step
 	speed = min(speed, maxspeed);
-	image_angle += 40;
-	image_index = 0;
+	image_angle += 40 * current_time_scale;
+	
+	if(instance_exists(creator) && can_split){
+		image_index = 1;
+		if(!button_check(creator.index, key)) can_split = false;
+	}
+	else image_index = 0;
 	
 	 // Targeting:
 	var a = [];
@@ -64,39 +88,67 @@
 			var m = skill_get(mut_bolt_marrow),
 				e = nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team));
 				
-			if(instance_exists(return_to) && !(m > 0 && in_distance(e, (40 * m)))){
+			if(instance_exists(return_to) && !(m > 0 && in_distance(e, (seek * m)))){
 				 // Seek creator:
 				if(returning){
-					var d = point_direction(x, y, return_to.x, return_to.y);
-					
-					if(!place_meeting(x, y, return_to)){
-						motion_add(d, 0.8);
-					}
-					
-					 // Return disc to gun:
-					else{
-						var _wep = my_lwo,
-							_dir = direction;
-						with(return_to){
-							 // Player specific effects:
-							if(instance_is(id, Player)){
-								with(["", "b"]){
-									var i = self;
-									with(instances_matching(other, i + "wep", _wep))
-										variable_instance_set(id, i + "wkick", abs(angle_difference(gunangle, _dir)) > 90 ? 6 : -6);
-										 // yeah that part is gross i know
-								}
-							}
-							
-							 // General:
-							motion_add(other.direction, 2);
+					if(!can_split){
+						var d = point_direction(x, y, return_to.x, return_to.y);
+						
+						if(!place_meeting(x, y, return_to)){
+							motion_add(d, 0.8);
 						}
 						
-						 // Sounds:
-						sound_play_pitchvol(sndDiscgun, 	0.8 + random(0.4), 0.6);
-						sound_play_pitchvol(sndCrossReload, 0.6 + random(0.4), 0.8);
-						view_shake_max_at(x, y, 12);
+						 // Return disc to gun:
+						else{
+							var _wep = my_lwo,
+								_dir = direction;
+							with(return_to){
+								 // Player specific effects:
+								if(instance_is(id, Player)){
+									with(["", "b"]){
+										var i = self;
+										with(instances_matching(other, i + "wep", _wep))
+											variable_instance_set(id, i + "wkick", abs(angle_difference(gunangle, _dir)) > 90 ? 6 : -6);
+											 // yeah that part is gross i know
+									}
+								}
+								
+								 // General:
+								motion_add(other.direction, 2);
+							}
+							
+							 // Sounds:
+							sound_play_pitchvol(sndDiscgun, 	0.8 + random(0.4), 0.6);
+							sound_play_pitchvol(sndCrossReload, 0.6 + random(0.4), 0.8);
+							view_shake_max_at(x, y, 12);
+							
+							instance_destroy();
+						}
+					}
+					
+					 // Cannon split:
+					else if(speed <= 0){
 						
+						 // Projectiles:
+						for(var d = 0; d < 360; d += 360 / 7){
+							with(obj_create(x, y, "BatDisc")){
+								creator = other.creator;
+								my_lwo = other.my_lwo;
+								team = other.team;
+								ammo *= sign(other.ammo);
+								motion_set(other.direction + d, maxspeed);
+							}
+						}
+						
+						 // Effects:
+						view_shake_at(x, y, 20);
+						repeat(7 + irandom(7)) with(instance_create(x, y, Smoke)) motion_set(irandom(359), random(6)); 
+						 
+						 // Sounds:
+						sound_play_pitch(sndClusterLauncher, 0.8 + random(0.4));
+						
+						 // Goodbye:
+						ammo = 0;
 						instance_destroy();
 					}
 				}

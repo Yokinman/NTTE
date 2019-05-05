@@ -1,22 +1,22 @@
 #define init
-    global.sprBatDiscLauncher = sprite_add_weapon("../sprites/weps/sprBatDiscLauncher.png", 6, 5);
+    global.sprBatDiscCannon = sprite_add_weapon("../sprites/weps/sprBatDiscCannon.png", 9, 6);
 
 #macro wepLWO {wep : mod_current, ammo : maxAmmo, buff : muscle}
-#macro maxAmmo (3 + buffAmmo * muscle)
-#macro wepCost 1
-#macro buffAmmo 3
+#macro maxAmmo (14 + buffAmmo * muscle)
+#macro wepCost 7
+#macro buffAmmo 14
 
 #macro muscle skill_get(mut_back_muscle)
 
-#define weapon_name return "BAT DISC LAUNCHER";
-#define weapon_text return "SMARTER THAN YOUR AVERAGE DISC";
-#define weapon_auto return true;
+#define weapon_name return "BAT DISC CANNON";
+#define weapon_text return "BIGGER AND BETTER";
+#define weapon_auto return false;
 #define weapon_type return 0; // None
-#define weapon_load return 8; // 0.26 Seconds
-#define weapon_area return (unlock_get("lairWep") ? 10 : -1); // 5-2
+#define weapon_load return 20; // 0.66 Seconds
+#define weapon_area return (unlock_get("lairWep") ? 13 : -1); // 7-1
 #define weapon_melee return false;
 #define weapon_swap return sndSwapShotgun;
-#define weapon_sprt return lwo_wep_sprt(argument0, lq_defget(argument0, "ammo", maxAmmo), maxAmmo, global.sprBatDiscLauncher);
+#define weapon_sprt return lwo_wep_sprt(argument0, lq_defget(argument0, "ammo", maxAmmo), maxAmmo, global.sprBatDiscCannon);
 
 #define step(_pwep)
      // Back muscle:
@@ -43,26 +43,32 @@
 #define weapon_fire
     if(!is_object(wep)) wep = wepLWO;
     
+    var _key = (specfiring ? "spec" : "fire");
+    
      // Fire:
     if(lwo_wep_ammo(wep, wepCost, (button_pressed(index, "fire") || (button_pressed(index, "spec") && specfiring)))){
          // Projectile:
         with(obj_create(x, y, "BatDisc")){
             projectile_init(other.team, other);
             my_lwo = other.wep;
-            ammo = (other.infammo == 0) * wepCost;
+            can_split = true;
+            key = _key;
             
-            motion_set(other.gunangle + orandom(12) * other.accuracy, maxspeed);
+            if(other.infammo != 0) ammo = 0;
+            
+            motion_set(other.gunangle + orandom(16) * other.accuracy, maxspeed);
         }
         
          // Effects:
-        weapon_post(8, 8, 8);
+        weapon_post(12, 16, 12);
         motion_set(gunangle, -4);
         
-        repeat(3 + irandom(3)) with(instance_create(x, y, Smoke)) motion_set(other.gunangle + orandom(24), random(6));
+        repeat(4 + irandom(4)) with(instance_create(x, y, Smoke)) motion_set(other.gunangle + orandom(32), random(8));
         
          // Sounds:
-        sound_play_pitchvol(sndSuperDiscGun,    0.8 + random(0.4), 0.6);
-        sound_play_pitchvol(sndRocket,          1.0 + random(0.6), 0.8);
+        sound_play_pitchvol(sndSuperDiscGun,    0.6 + random(0.4), 0.6);
+        sound_play_pitchvol(sndNukeFire,        1.0 + random(0.6), 0.8);
+        sound_play_pitchvol(sndEnergyHammerUpg, 0.8 + random(0.4), 0.6);
     }
 
 #define lwo_wep_ammo /// lwo_wep_ammo(_weapon, _cost, ?_emptyFX = undefined)
