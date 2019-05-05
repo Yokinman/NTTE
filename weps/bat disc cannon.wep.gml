@@ -17,6 +17,7 @@
 #define weapon_melee return false;
 #define weapon_swap return sndSwapShotgun;
 #define weapon_sprt return lwo_wep_sprt(argument0, lq_defget(argument0, "ammo", maxAmmo), maxAmmo, global.sprBatDiscCannon);
+#define weapon_chrg return true; // I think this is what defpack uses?
 
 #define step(_pwep)
      // Back muscle:
