@@ -14,6 +14,10 @@
         BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
         BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2,  14, 14);
         BigDiscTrail    = sprite_add("sprites/weps/projectiles/sprBigDiscTrail.png",    3,  12, 12);
+        
+         // Bat Lightning:
+        BatLightning        = sprite_add("sprites/weps/projectiles/sprBatLightning.png",        4,  0,  1);
+        BatLightningHit     = sprite_add("sprites/weps/projectiles/sprBatLightningHit.png",     4, 12, 12);
 
     	 // Big Decals:
     	BigTopDecal = {

@@ -3169,6 +3169,7 @@
         target_y = y;
         dist_max = 96;
         roids = false;
+        bat = false;
 
          // Alarms:
         alarm0 = 1;
@@ -3246,17 +3247,23 @@
 
 		 // Arc Lightning:
         var _tx = target_x,
-        	_ty = target_y;
+        	_ty = target_y,
+        	_bat = bat;
 
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			with(creator){
-				lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
+				with(lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false)) if(_bat){
+					sprite_index = spr.BatLightning;
+				}
 			}
 
 			 // Hit FX:
 			if(!place_meeting(_tx, _ty, LightningHit)){
 				with(instance_create(_tx, _ty, LightningHit)){
 					image_speed = 0.2 + random(0.2);
+					
+					 // Bat Effect:
+					if(_bat) sprite_index = spr.BatLightningHit;
 				}
 			}
 		}
@@ -3277,6 +3284,22 @@
     }
     else instance_destroy();
 
+#define TeslaCoil_end_step
+	if(bat){
+		var c = creator;
+		with(instances_matching_le(target, "my_health", 0)){
+			with(c) if(my_health < maxhealth){
+				my_health = min(my_health + 1, maxhealth);
+				
+				 // Effects:
+				instance_create(x, y, HealFX);
+				
+				 // Sounds:
+				sound_play_pitchvol(sndBloodlustProc, 0.8 + random(0.4), 1.0);
+				sound_play_pitchvol(sndLightningCrystalHit, 0.4 + random(0.4), 1.2);
+			}
+		}
+	}
 
 #define VenomPellet_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
