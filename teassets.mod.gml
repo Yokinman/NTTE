@@ -11,8 +11,9 @@
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
 
          // Bat Discs:
-        BatDisc     = sprite_add("sprites/weps/projectiles/sprBatDisc.png",     2,  9,  9);
-        BatDiscBig  = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",  2,  14, 14);
+        BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
+        BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2,  14, 14);
+        BigDiscTrail    = sprite_add("sprites/weps/projectiles/sprBigDiscTrail.png",    3,  12, 12);
 
     	 // Big Decals:
     	BigTopDecal = {

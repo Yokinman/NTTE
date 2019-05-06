@@ -1009,6 +1009,70 @@
 	}
 	return noone;
 
+#define internalAmmoFire(_weapon, _cost, _emptyFX)
+     // Infinite ammo:
+    if(infammo != 0) return true;
+    
+     // Subtract cost:
+    with(_weapon) if(_cost <= ammo){
+        ammo -= _cost;
+        
+         // Can fire:
+        return true;
+    }
+    
+     // Empty effects:
+    if(_emptyFX){
+        wkick = -3;
+        
+        with(instance_create(x, y, PopupText)){
+            target = other.index;
+            mytext = "EMPTY";
+        }
+        
+        sound_play(sndEmpty);
+    }
+    
+     // Not enough ammo:
+    return false;
+
+#define internalAmmoSprite(_weapon, _ammo, _maxAmmo, _sprite)
+    var a = ["wep", "bwep"],
+        p = player_find(player_find_local_nonsync());
+    
+    if(instance_exists(p)){
+        var _steroids = p.race == "steroids";
+        
+        with(instances_matching(other, "object_index", TopCont, UberCont)){
+            for(var i = 0; i <= 1; i++){
+                if(variable_instance_get(p, a[i]) == _weapon){
+                    var c = "@w",
+                        _xoffset = (i ? 86 : 42),
+                        _yoffset = 21;
+                        
+                     // Determine color:
+                    if(!i || _steroids){
+                        if(_ammo <= ceil(_maxAmmo * 0.2)) c = "@r";
+                    }
+                    else c = "@s";
+                    if(_ammo <= 0) c = "@d";
+                    
+                     // Set projection:
+                    draw_set_halign(fa_left);
+                    draw_set_valign(fa_top);
+                    
+                     // Draw text:
+                    draw_text_nt(view_xview_nonsync + _xoffset, view_yview_nonsync + _yoffset, c + string(_ammo));
+                    
+                    draw_reset_projection();
+                }
+            }
+        }
+    }
+    
+     // Return weapon sprite:
+    return _sprite;
+    
 #define frame_active(_interval)
     return ((current_frame mod _interval) < current_time_scale);
 
