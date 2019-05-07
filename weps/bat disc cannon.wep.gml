@@ -17,7 +17,6 @@
 #define weapon_melee return false;
 #define weapon_swap return sndSwapShotgun;
 #define weapon_sprt return internalAmmoSprite(argument0, lq_defget(argument0, "ammo", maxAmmo), maxAmmo, global.sprBatDiscCannon);
-#define weapon_chrg return true; // I think this is what defpack uses?
 
 #define step(_pwep)
      // Back muscle:
@@ -48,7 +47,6 @@
     if(!is_object(wep)) wep = wepLWO;
     
      // Fire:
-    var _key = (specfiring ? "spec" : "fire");
     if(internalAmmoFire(wep, wepCost, variable_instance_get(id, "bat_clicked", false))){
         
          // Projectile:
@@ -56,7 +54,6 @@
             projectile_init(other.team, other);
             my_lwo = other.wep;
             big = true;
-            key = _key;
             
             if(other.infammo != 0) ammo = 0;
             

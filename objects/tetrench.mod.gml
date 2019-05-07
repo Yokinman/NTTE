@@ -982,6 +982,41 @@
 	}
 
 
+#define PitSpark_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.PitSpark[irandom(4)];
+		image_angle = irandom(359);
+		image_speed = 0.4;
+		depth = 5;
+		
+		 // Vars:
+		mask_index = mskReviveArea;
+		dark = irandom(1);
+		tentacle = {};
+		tentacle_visible = true;
+		with(tentacle){
+			scale = 1;//random_range(1, 1.2);
+			right = choose(-1, 1);
+			rotation = irandom(359);
+			move_dir = irandom(359);
+			move_spd = random(1.6);
+			distance = irandom_range(28, 12) * scale;
+		};
+		
+		return id;
+	}
+	
+#define PitSpark_step
+	 // Movement:
+	if(tentacle_visible) with(tentacle){
+		rotation += right * current_time_scale * 7;
+		distance += move_spd * current_time_scale;
+	}
+
+	 // Goodbye:
+	if(anim_end) instance_destroy();
+	
 #define PitSquid_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
         boss = true;
@@ -1120,6 +1155,22 @@
 			d = _dis;
 		}
 	}
+	
+	 // Particles:
+	var _sparks = instances_matching(CustomObject, "name", "PitSpark"),
+		_pits = instances_matching(Floor, "styleb", true),
+		_floors = instances_matching_ne(Floor, "object_index", FloorExplo),
+		_chance = (array_length(_pits) / array_length(_floors));
+		
+	if(array_length(_sparks) < 3 && chance_ct(_chance, 1)){
+		with(instance_random(_pits)) if(in_distance(other, [96, 256])){
+			if(!array_length(instances_meeting(x, y, _sparks))){
+				with(obj_create(x + 16, y + 16, "PitSpark")){
+					move_dir = point_direction(other.x, other.y, x, y);
+				}
+			}
+		}
+	}
 
 	 // Eye Laser Related:
 	if(pit_height < 1) eye_laser = false;
@@ -1210,6 +1261,13 @@
 					line_dir_goal = _dir;
 	            }
 			}
+			
+			 // Effects:
+			if(chance_ct(!blink, 60)){
+				with(instance_create(x + orandom(12), y + 16 + orandom(12), PortalL)){
+					sprite_index = spr.PitSpark[irandom(4)];
+				}
+	        }
         }
     }
 
@@ -1463,7 +1521,7 @@
             if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
                  // Tentacles:
                 if(chance(1, 3) && array_length(instances_matching(instances_named(CustomEnemy, "ChaserTentacle"), "creator", id)) < 3){
-                    obj_create(x, y, "ChaserTentacle").creator = id;
+                    //obj_create(x, y, "ChaserTentacle").creator = id;
                 }
             }
     

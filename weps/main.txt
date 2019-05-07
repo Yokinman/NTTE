@@ -1,6 +1,7 @@
 /loadwep crabbone
 /loadwep bat disc launcher
 /loadwep bat disc cannon
+/loadwep bat tether
 /loadwep harpoon launcher
 /loadwep net launcher
 /loadwep bubble rifle

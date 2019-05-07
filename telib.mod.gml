@@ -15,7 +15,7 @@
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
-		"tetrench"	: ["Angler", "ChaserTentacle", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
+		"tetrench"	: ["Angler", "ChaserTentacle", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "YetiCrab"],
 	    "tesewers"	: ["Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
 	    "tecaves"	: ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
     };
