@@ -1263,7 +1263,7 @@
 			}
 			
 			 // Effects:
-			if(chance_ct(!blink, 60)){
+			if(other.pit_height >= 1 && chance_ct(!blink, 60)){
 				with(instance_create(x + orandom(12), y + 16 + orandom(12), PortalL)){
 					sprite_index = spr.PitSpark[irandom(4)];
 				}
