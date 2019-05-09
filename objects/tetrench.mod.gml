@@ -97,28 +97,9 @@
         enemySprites();
     }
 
-	if(!hiding){
-	     // Charging:
-	    if(ammo >= 0){
-	        speed -= (speed * 0.15) * current_time_scale;
-	    }
-	
-	     // Pit Collision:
-		if(speed > 0){
-			var _f1 = floor_at(x + hspeed, y + vspeed);
-			if(instance_exists(_f1) && _f1.sprite_index == spr.FloorTrenchB){
-				var _f2 = floor_at(x, y);
-			    if(!instance_exists(_f2) || _f2.sprite_index != spr.FloorTrenchB){
-			        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
-			        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
-			    }
-			}
-		}
-	}
-
-	 // Unhide:
-	else if(speed > 0){
-		scrAnglerAppear();
+	 // Charging:
+	if(!hiding && ammo >= 0){
+		speed -= (speed * 0.15) * current_time_scale;
 	}
 
 #define Angler_draw
@@ -171,16 +152,27 @@
             alarm1 = 20 + irandom(20);
 
              // Move Toward Player:
-            if(in_sight(target) && in_distance(target, 128)){
-                scrWalk(25 + irandom(25), point_direction(x, y, target.y, target.y) + orandom(20));
+            if(in_sight(target) && in_distance(target, 96)){
+                scrWalk(25 + irandom(25), point_direction(x, y, target.x, target.y) + orandom(20));
+                if(chance(1, 2)){
+                	ammo = irandom_range(1, 3);
+                }
             }
 
              // Wander:
-            else scrWalk(20 + irandom(30), direction + orandom(30));
+            else{
+            	 // Go to Nearest Non-Pit Floor:
+        		var f = nearest_instance(x - 8 + (hspeed * 4), y - 8 + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+            	if(instance_exists(f)){
+            		direction = point_direction(x, y, f.x, f.y);
+            	}
 
-             // Hide:
-            if(!in_distance(target, 160)){
-                scrAnglerHide();
+            	scrWalk(20 + irandom(30), direction + orandom(30));
+
+	             // Hide:
+	            if(!in_distance(target, 160) && floor_at(x, y).sprite_index != spr.FloorTrenchB){
+	                scrAnglerHide();
+	            }
             }
         }
     }
@@ -484,7 +476,7 @@
     instance_create(x, y, PortalClear);
 
      // Time 2 Charge
-    alarm1 = 15;
+    alarm1 = 15 + orandom(2);
     ammo = 3;
 
      // Effects:
@@ -494,6 +486,13 @@
         with(instance_create(x + orandom(24), y + orandom(24), Dust)){
             waterbubble = true;
         }
+    }
+    
+     // Call the bros:
+    with(instances_named(object_index, name)){
+    	if(hiding && point_distance(x, y, other.x, other.y) < 64){
+    		if(chance(1, 2)) scrAnglerAppear();
+    	}
     }
 
 #define scrAnglerHide()
@@ -569,77 +568,79 @@
 	var _arcDistance = 100,
 		_arcDistanceElite = 150;
 
-	if(instance_exists(arc_inst) && arc_inst.c > 2){
-		_arcDistance = _arcDistanceElite;
-	}
+	if(arc_inst != noone){
+		if(instance_exists(arc_inst) && arc_inst.c > 2){
+			_arcDistance = _arcDistanceElite;
+		}
 
-     // Arc Lightning w/ Jelly:
-    if(in_distance(arc_inst, _arcDistance) && in_sight(arc_inst) && (!instance_exists(target) || in_distance(target, 120))){
-         // Start Arcing:
-        if(arcing < 1){
-            arcing += 0.15 * current_time_scale;
-
-            if(current_frame_active){
-                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
-                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
-
-                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
-                    motion_add(random(360), 1);
-                    alarm0 = 8;
-                }
-            }
-
-             // Arced:
-            if(arcing >= 1){
-                sound_play_pitch(sndLightningHit, 2);
-
-                 // Color:
-                if(arc_inst.c <= 2){
-                    c = max(arc_inst.c, 0);
-                    spr_idle = spr.EelIdle[c];
-                    spr_walk = spr_idle;
-                    spr_hurt = spr.EelHurt[c];
-                    spr_dead = spr.EelDead[c];
-                    spr_tell = spr.EelTell[c];
-                    if(sprite_index != spr_hurt){
-                        sprite_index = spr_idle;
-                    }
-                    hitid = [spr_idle, string_upper(name)];
-                }
-            }
-        }
-
-         // Arcing:
-        else{
-			wave += current_time_scale;
-            if(arc_inst.c > 2) elite = 30;
-            with(arc_inst){
-            	lightning_connect(other.x, other.y, x, y, 12 * sin(other.wave / 30), true);
-            }
-        }
-    }
-
-	 // Stop Arcing:
-    else{
-    	if(instance_exists(arc_inst)){
-    		arc_inst.arc_num--;
-			if(arcing > 0){
-	    		var _lx = arc_inst.x,
-	    			_ly = arc_inst.y;
+	     // Arc Lightning w/ Jelly:
+	    if(in_distance(arc_inst, _arcDistance) && in_sight(arc_inst) && in_distance(target, 120)){
+	         // Start Arcing:
+	        if(arcing < 1){
+	            arcing += 0.15 * current_time_scale;
 	
-	            repeat(2){
-	                var _dis = random(point_distance(x, y, _lx, _ly)),
-	                    _dir = point_direction(x, y, _lx, _ly);
+	            if(current_frame_active){
+	                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
+	                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
 	
-	                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+	                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
 	                    motion_add(random(360), 1);
+	                    alarm0 = 8;
 	                }
 	            }
-			}
-    	}
-        arc_inst = noone;
-        arcing = 0;
-    }
+	
+	             // Arced:
+	            if(arcing >= 1){
+	                sound_play_pitch(sndLightningHit, 2);
+	
+	                 // Color:
+	                if(arc_inst.c <= 2){
+	                    c = max(arc_inst.c, 0);
+	                    spr_idle = spr.EelIdle[c];
+	                    spr_walk = spr_idle;
+	                    spr_hurt = spr.EelHurt[c];
+	                    spr_dead = spr.EelDead[c];
+	                    spr_tell = spr.EelTell[c];
+	                    if(sprite_index != spr_hurt){
+	                        sprite_index = spr_idle;
+	                    }
+	                    hitid = [spr_idle, string_upper(name)];
+	                }
+	            }
+	        }
+	
+	         // Arcing:
+	        else{
+				wave += current_time_scale;
+	            if(arc_inst.c > 2) elite = 30;
+	            with(arc_inst){
+	            	lightning_connect(other.x, other.y, x, y, 12 * sin(other.wave / 30), true);
+	            }
+	        }
+	    }
+	
+		 // Stop Arcing:
+	    else{
+	    	if(instance_exists(arc_inst)){
+	    		arc_inst.arc_num--;
+				if(arcing > 0){
+		    		var _lx = arc_inst.x,
+		    			_ly = arc_inst.y;
+		
+		            repeat(2){
+		                var _dis = random(point_distance(x, y, _lx, _ly)),
+		                    _dir = point_direction(x, y, _lx, _ly);
+		
+		                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+		                    motion_add(random(360), 1);
+		                }
+		            }
+				}
+	    	}
+	        arc_inst = noone;
+	        arcing = 0;
+	    }
+	}
 
 	 // Search for New Jelly:
     if(!instance_exists(arc_inst) && (((current_frame + wave) mod 15) < current_time_scale)){
@@ -811,11 +812,7 @@
     }
 
 #define EelSkull_step
-	 // Over Pit:
-	var f = floor_at(x, y);
-	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
-		my_health = 0;
-	}
+	Kelp_step();
 
 #define EelSkull_death
 	for(var a = direction; a < direction + 360; a += (360 / 4)){
@@ -976,9 +973,10 @@
 
 #define Kelp_step
 	 // Over Pit:
-	var f = floor_at(x, y);
-	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
-		my_health = 0;
+	if(frame_active(60)){
+		if(floor_at(x, y).sprite_index == spr.FloorTrenchB){
+			my_health = 0;
+		}
 	}
 
 
@@ -1081,6 +1079,9 @@
 	             // Reached Top of Pit:
 	            if(pit_height >= 1){
 	                pit_height = 1;
+	                alarm1 = 30 + random(30);
+	                alarm2 = 30 + random(10);
+	            	with(eye) blink = true;
 	                view_shake_at(x, y, 30);
 	                sound_play(sndOasisExplosion);
 	            }
@@ -1134,23 +1135,16 @@
         var _dis = (24 + eye_dis) * max(pit_height, 0),
             _dir = image_angle + eye_dir + (360 / array_length(eye)) * i,
             _x = x + hspeed + lengthdir_x(_dis * image_xscale, _dir),
-            _y = y + vspeed + lengthdir_y(_dis * image_yscale, _dir),
-            f = floor_at(_x, _y - 8);
+            _y = y + vspeed + lengthdir_y(_dis * image_yscale, _dir);
 
         with(eye[i]){
             x = _x;
             y = _y;
 
-             // Eye Under Floor:
-            var _cansee = false;
-            if(instance_exists(f) && f.styleb){
-                _cansee = true;
-            }
-
              // Look at Player:
             if(!other.eye_laser && !instance_exists(my_laser)){
 	            var _seen = false;
-	            if(_cansee && instance_exists(_target)){
+	            if(instance_exists(_target)){
 	                _seen = true;
 	                dir += angle_difference(point_direction(x, y, _target.x, _target.y), dir) * 0.3 * current_time_scale;
 	                dis += (clamp(point_distance(x, y, _target.x, _target.y) / 6, 0, 5) - dis) * 0.3 * current_time_scale;
@@ -1791,8 +1785,7 @@
     var _debris = (sprite_index == spr.DebrisTrench);
 
      // Fall into Pit:
-    var f = floor_at(x, y);
-    if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB && !place_meeting(x, y, Wall)){
+    if(!place_meeting(x, y, Wall) && floor_at(x, y).sprite_index == spr.FloorTrenchB){
         with(instance_create(x, y, Debris)){
             sprite_index = other.sprite_index;
             image_index = other.image_index;
@@ -1852,10 +1845,11 @@
     }
 
 #define Vent_step
+	 // Effects:
     if(chance_ct(1, 5)){
-        with instance_create(x,y,Bubble){
+        with(instance_create(x, y, Bubble)){
             friction = 0.2;
-            motion_set(irandom_range(85,95),random_range(4,7));
+            motion_set(90 + orandom(5), random_range(4, 7));
         }
         // with instance_create(x,y-8,Smoke){
         //     motion_set(irandom_range(65,115),random_range(10,100));
@@ -1863,9 +1857,10 @@
     }
 
 	 // Over Pit:
-	var f = floor_at(x, y);
-	if(instance_exists(f) && f.sprite_index == spr.FloorTrenchB){
-		my_health = 0;
+	if(frame_active(30)){
+		if(floor_at(x, y).sprite_index == spr.FloorTrenchB){
+			my_health = 0;
+		}
 	}
 
 #define Vent_death
@@ -2088,8 +2083,8 @@
     draw_set_color(c_gray);
 
      // Anglers:
-    d3d_set_fog(1, c_gray, 0, 0);
-    with(instances_matching(CustomEnemy, "name", "Angler")){
+    draw_set_flat(draw_get_color());
+    with(instances_named(CustomEnemy, "Angler")){
         var _img = image_index;
 
         if(sprite_index != spr_appear){
@@ -2102,10 +2097,10 @@
             draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
         }
     }
-    d3d_set_fog(0, 0, 0, 0);
+    draw_set_flat(-1);
 
      // Jellies:
-    with(instances_matching(CustomEnemy, "name", "Jelly")){
+    with(instances_named(CustomEnemy, "Jelly")){
         var o = 0,
             _frame = floor(image_index);
 

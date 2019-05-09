@@ -1229,20 +1229,22 @@
 
 #define ScorpionRock_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
-         // Visuals:
+         // Visual:
         spr_idle = spr.ScorpionRockEnemy;
         spr_hurt = spr.ScorpionRockHurt;
         spr_dead = spr.ScorpionRockDead;
         spr_shadow = shd32;
         spr_shadow_y = -3;
-        sprite_index = spr_idle;
-        
-         // Vars:
-        maxhealth = 32;
+
+         // Sound:
         snd_hurt = sndHitRock;
         snd_dead = sndPillarBreak;
-        friendly = false;
+
+         // Vars:
+        maxhealth = 32;
+        size = 1;
         team = 1;
+        friendly = false;
         
         if(fork()){
         	wait 0;

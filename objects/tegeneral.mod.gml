@@ -162,48 +162,50 @@
 	        			 // Fly to Player:
 	        			if(!instance_is(self, RavenFly)){
 	        				if(chance_ct(1, 100) || instance_number(enemy) <= _ravenNum + 2){
-								var t = instance_nearest(x, y, Player);
-			        			if(in_distance(t, 128)){
-									scrRight(point_direction(x, y, t.x, t.y));
-	
-			        				var _x = t.x,
-			        					_y = t.y;
-	
-		        					mask_index = mskBandit;
-									if(place_meeting(_x, _y, Wall)){
-										with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
-					        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
-					        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
-	
-					        				var b = false;
-											with(other) if(!place_meeting(_x, _y, Wall)){
-												b = true;
-											}
-											if(b) break;
-										}
-									}
-	
-									if(!place_meeting(_x, _y, Wall)){
-				        				instance_change(RavenFly, false);
-				        				sprite_index = sprRavenLift;
-				        				image_index = 0;
-				        				targetx = _x;
-				        				targety = _y;
-
-				        				mask_index = mskBandit;
-			        					canfly = false;
-				        				wkick = 4;
-			
-				        				 // Effects:
-				        				repeat(6){
-											with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
-												depth = -9;
+	        					if(!instance_exists(BecomeScrapBoss) && array_length(array_combine(instances_matching_ne(ScrapBoss, "intro", true), instances_matching_ge(ScrapBoss, "alarm3", 0))) <= 0){ // prevent unholy crash
+									var t = instance_nearest(x, y, Player);
+				        			if(in_distance(t, 128)){
+										scrRight(point_direction(x, y, t.x, t.y));
+		
+				        				var _x = t.x,
+				        					_y = t.y;
+		
+			        					mask_index = mskBandit;
+										if(place_meeting(_x, _y, Wall)){
+											with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
+						        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
+						        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
+		
+						        				var b = false;
+												with(other) if(!place_meeting(_x, _y, Wall)){
+													b = true;
+												}
+												if(b) break;
 											}
 										}
-				        				sound_play(sndRavenLift);
-									}
-									else mask_index = mskNone;
-			        			}
+		
+										if(!place_meeting(_x, _y, Wall)){
+					        				instance_change(RavenFly, false);
+					        				sprite_index = sprRavenLift;
+					        				image_index = 0;
+					        				targetx = _x;
+					        				targety = _y;
+	
+					        				mask_index = mskBandit;
+				        					canfly = false;
+					        				wkick = 4;
+				
+					        				 // Effects:
+					        				repeat(6){
+												with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
+													depth = -9;
+												}
+											}
+					        				sound_play(sndRavenLift);
+										}
+										else mask_index = mskNone;
+				        			}
+		        				}
 	        				}
 	        			}
         			}
@@ -843,20 +845,6 @@
     	return id;
     }
 
-#define Harpoon_end_step
-     // Trail:
-    var _x1 = x,
-        _y1 = y,
-        _x2 = xprevious,
-        _y2 = yprevious;
-
-    with(instance_create(x, y, BoltTrail)){
-        image_yscale = 0.6;
-        image_xscale = point_distance(_x1, _y1, _x2, _y2);
-        image_angle = point_direction(_x1, _y1, _x2, _y2);
-        creator = other.creator;
-    }
-
 #define Harpoon_step
 	 // Skewered Corpses:
 	with(corpses){
@@ -1018,6 +1006,28 @@
         else instance_destroy();
     }
 
+#define Harpoon_end_step
+     // Trail:
+    var _x1 = x,
+        _y1 = y,
+        _x2 = xprevious,
+        _y2 = yprevious;
+
+    with(instance_create(x, y, BoltTrail)){
+        image_yscale = 0.6;
+        image_xscale = point_distance(_x1, _y1, _x2, _y2);
+        image_angle = point_direction(_x1, _y1, _x2, _y2);
+        creator = other.creator;
+    }
+
+#define Harpoon_alrm0
+     // Blinking:
+    if(blink-- > 0){
+        alarm0 = 2;
+        visible = !visible;
+    }
+    else instance_destroy();
+
 #define Harpoon_hit
     if(speed > 0 && projectile_canhit(other)){
         projectile_hit_push(other, damage, force);
@@ -1048,14 +1058,6 @@
         canmove = false;
         scrHarpoonStick(other);
     }
-
-#define Harpoon_alrm0
-     // Blinking:
-    if(blink-- > 0){
-        alarm0 = 2;
-        visible = !visible;
-    }
-    else instance_destroy();
 
 #define Harpoon_destroy
     scrHarpoonUnrope(rope);
@@ -1088,7 +1090,7 @@
     target = _instance;
 
      // Set Rope Vars:
-    pull_speed = (("size" in target) ? (2 / target.size) : 2);
+    pull_speed = (("size" in target) ? (2 / max(target.size, 0.5)) : 2);
     with(rope){
         harpoon_stuck = true;
 
@@ -3114,7 +3116,7 @@
 							array_push(_pullInst, {
 		        				inst : _inst,
 		        				pull : (instance_is(_inst, Player) ? 0.5 : (("pull_speed" in self) ? pull_speed : 2)),
-		        				drag : min(_linkDis / 3, 10 / (("size" in _inst) ? (_inst.size * 2) : 2)),
+		        				drag : min(_linkDis / 3, 10 / (("size" in _inst) ? (max(_inst.size, 0.5) * 2) : 2)),
 		        				dir  : _linkDir + (i * 180)
 		        			});
 						}

@@ -1326,9 +1326,73 @@
     return mod_script_call("area", _area, "area_sprite", _spr);
 
 #define floor_at(_x, _y)
-    with(instances_at(_x, _y, FloorExplo)) return id;
-    with(instances_at(_x, _y, Floor)) return id;
-    return noone;
+	 // Find Floor:
+    with(instances_at(_x, _y, Floor)){
+    	return id;
+    }
+
+	 // Default to LWO Floor:
+    return {
+		x					: _x,
+		y					: _y,
+		xprevious			: _x,
+		yprevious			: _y,
+		xstart				: _x,
+		ystart				: _y,
+		hspeed				: 0,
+		vspeed				: 0,
+		direction			: 0,
+		speed				: 0,
+		friction			: 0,
+		gravity				: 0,
+		gravity_direction	: 270,
+		visible				: true,
+		sprite_index		: -1,
+		sprite_width		: 0,
+		sprite_height		: 0,
+		sprite_xoffset		: 0,
+		sprite_yoffset		: 0,
+		image_number		: 1,
+		image_index			: 0,
+		image_speed			: 0,
+		depth				: 10,
+		image_xscale		: 1,
+		image_yscale		: 1,
+		image_angle			: 0,
+		image_alpha			: 1,
+		image_blend			: c_white,
+		bbox_left			: _x,
+		bbox_right			: _x,
+		bbox_top			: _y,
+		bbox_bottom			: _y,
+		object_index		: Floor,
+		id					: noone,
+		solid				: false,
+		persistent			: false,
+		mask_index			: mskFloor,
+		image_speed_raw		: 0,
+		hspeed_raw			: 0,
+		vspeed_raw			: 0,
+		speed_raw			: 0,
+		friction_raw		: 0,
+		gravity_raw			: 0,
+		alarm0				: -1,
+		alarm1				: -1,
+		alarm2				: -1,
+		alarm3				: -1,
+		alarm4				: -1,
+		alarm5				: -1,
+		alarm6				: -1,
+		alarm7				: -1,
+		alarm8				: -1,
+		alarm9				: -1,
+		alarm10				: -1,
+		alarm11				: -1,
+		styleb				: false,
+		traction			: 0.45,
+		area				: GameCont.area,
+		material			: 0
+	};
 
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)
     var _maxDis = point_distance(_x1, _y1, _x2, _y2),
@@ -1344,7 +1408,7 @@
         r = [],
         _frame = current_frame;
 
-    while(true){
+    do{
         _x += _ox;
         _y += _oy;
 
@@ -1358,11 +1422,12 @@
 
         _lastx = _wx;
         _lasty = _wy;
-
-		if(_dis <= 2 * o) break;
     }
+	until (_dis <= 2 * o);
+
     array_push(r, scrLightning(_lastx, _lasty, _x2, _y2, _enemy));
 
+	 // Set Vars:
 	var _ammo = array_length(r) - 1;
 	with(r){
 		image_index = ((_frame + _arc) * image_speed) mod image_number;
@@ -1371,7 +1436,7 @@
 	    creator = other;
 	    if("hitid" in other) hitid = other.hitid;
 		ammo = _ammo--;
-	
+
 		 // Effects:
 	    if(chance_ct(1, 200)){
 	        with(instance_create(x + random_range(-8, 8), y + random_range(-8, 8), PortalL)){

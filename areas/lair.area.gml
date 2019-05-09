@@ -579,6 +579,15 @@
         }
     }
 
+     // Emergency Enemy Reserves:
+    while(instance_number(enemy) < 24){
+    	with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorLair))){
+    		if(!place_meeting(x, y, Wall)){
+    			create_enemies(x + 16, y + 16, 1);
+    		}
+    	}
+    }
+
      // Important Door Stuff:
     with(instances_named(CustomHitme, "CatDoor")){
          // Remove Blocking Walls:
