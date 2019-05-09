@@ -17,6 +17,259 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define BatDisc_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.BatDisc;
+		mask_index = mskFlakBullet;
+		depth = -3;
+		
+		 // Vars:
+		friction = 0.4;
+		maxspeed = 12;
+		damage = 3;
+		typ = 2;
+		my_lwo = noone;
+		ammo = 1;
+		returning = false;
+		return_to = noone;
+		big = false;
+		key = "";
+		seek = 42;
+		in_wall = false;
+		
+		 // Big Bat Disc:
+		if(fork()){
+			wait(0);
+			if(instance_exists(self) && big){
+				 // Visual:
+				sprite_index = spr.BatDiscBig;
+				mask_index = mskSuperFlakBullet;
+				
+				 // Vars:
+				damage = 8;
+				ammo *= 7;
+				seek = 64;
+				
+				alarm1 = 30;
+			}
+			exit;
+		}
+		
+		return id;
+	}
+	
+#define BatDisc_step
+	speed = min(speed, maxspeed);
+	image_angle += 40 * current_time_scale;
+	
+	image_index = 0;
+	
+	 // Targeting:
+	var a = [];
+	with(["wep", "bwep"]){
+		var i = self,
+			o = other;
+			
+		with(instances_matching([Player, WepPickup, ThrownWep], i, o.my_lwo)){
+			array_push(a, id);
+		}
+	}
+	
+	if(array_length(a)){
+		 // Set return target:
+		return_to = nearest_instance(x, y, a);
+
+		if(current_frame_active){
+			 // Effects:
+			if(in_wall){
+				view_shake_max_at(x, y, 4);
+				
+				 // Dust trail:
+				if(chance(1, 3)) instance_create(x, y, Dust).depth = -9;
+				
+				 // Exit wall:
+				if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+					in_wall = false;
+					
+					 // Effects:
+					var d = direction;
+					
+					with(instance_create(x, y, Debris)) motion_set(d + orandom(40), 4 + random(4));
+					instance_create(x, y, Smoke);
+				}
+			
+				 // Be invisible inside walls:
+				if(place_meeting(x, y, TopSmall) || !place_meeting(x, y, Floor)){
+					visible = false;
+				}
+				else visible = true;
+			}
+			
+			 // Disc trail:
+			else{
+				instance_create(x, y, DiscTrail).sprite_index = (big ? spr.BigDiscTrail : sprDiscTrail);
+			}
+			
+			var m = skill_get(mut_bolt_marrow),
+				e = nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team));
+				
+			if(instance_exists(return_to) && !(in_distance(creator, 160) && in_distance(e, (seek * m)))){
+				 // Seek creator:
+				if(returning){
+					if(!big){
+						var d = point_direction(x, y, return_to.x, return_to.y);
+						
+						if(!place_meeting(x, y, return_to)){
+							var _speed = 1.2;
+							if(in_distance(return_to, 32)){
+								_speed = 2;
+								speed = max(0, speed - 0.8);
+							}
+							
+							motion_add(d, _speed);
+						}
+						
+						 // Return disc to gun:
+						else{
+							var _wep = my_lwo,
+								_dir = direction;
+							with(return_to){
+								 // Player specific effects:
+								if(instance_is(id, Player)){
+									with(["", "b"]){
+										var i = self;
+										with(instances_matching(other, i + "wep", _wep))
+											variable_instance_set(id, i + "wkick", abs(angle_difference(gunangle, _dir)) > 90 ? 6 : -6);
+											 // yeah that part is gross i know
+									}
+								}
+								
+								 // General:
+								motion_add(other.direction, 2);
+							}
+							
+							 // Sounds:
+							sound_play_pitchvol(sndDiscgun, 	0.8 + random(0.4), 0.6);
+							sound_play_pitchvol(sndCrossReload, 0.6 + random(0.4), 0.8);
+							view_shake_max_at(x, y, 12);
+							
+							instance_destroy();
+						}
+					}
+				}
+				
+				 // Return when slow:
+				else if(speed <= 5){
+					returning = true;
+				}
+			}
+			
+			 // Seek targets:
+			else{
+				var d = point_direction(x, y, e.x, e.y);
+				
+				 // Movement:
+				speed = max(speed - friction, 0);
+				motion_add(d, 1);
+				
+				 // Animation:
+				image_index = 1;
+			}
+		}
+	}
+	
+	 // Destroy if no valid target to return to:
+	else{
+		instance_destroy();
+	}
+	
+#define BatDisc_end_step
+	if(current_frame_active){
+		 // Go through walls:
+	    if(returning && place_meeting(x + hspeed, y + vspeed, Wall)){
+	        if(place_meeting(x + hspeed, y, Wall)) x += hspeed;
+	        if(place_meeting(x, y + vspeed, Wall)) y += vspeed;
+	    }
+	    
+		 // Unstick:
+		if(x == xprevious && hspeed != 0) x += hspeed;
+		if(y == yprevious && vspeed != 0) y += vspeed;
+	}
+	
+#define BatDisc_alrm1
+	 // Projectiles:
+	for(var d = 0; d < 360; d += 360 / 7){
+		with(obj_create(x, y, "BatDisc")){
+			creator = other.creator;
+			my_lwo = other.my_lwo;
+			team = other.team;
+			ammo *= sign(other.ammo);
+			motion_set(other.direction + d, maxspeed);
+		}
+	}
+	
+	 // Effects:
+	view_shake_at(x, y, 20);
+	repeat(7 + irandom(7)) with(instance_create(x, y, Smoke)) motion_set(irandom(359), random(6)); 
+	 
+	 // Sounds:
+	sound_play_pitch(sndClusterLauncher, 0.8 + random(0.4));
+	
+	 // Goodbye:
+	ammo = 0;
+	instance_destroy();
+	
+#define BatDisc_hit
+	if(projectile_canhit(other)){
+		projectile_hit_raw(other, damage, sndDiscHit);
+		
+		 // Effects:
+		instance_create(x, y, Smoke);
+		
+		var _big = ((other.size >= 3 && big));
+		
+		view_shake_max_at(x, y, (_big ? 12 : 6));
+		
+		if(other.my_health <= 0){
+			sleep_max(_big ? 48 : 24);
+			view_shake_max_at(x, y, (_big ? 32 : 16))
+		}
+	}
+	
+#define BatDisc_wall
+	if((!returning || big) && instance_exists(return_to)){
+		returning = true;
+		
+		 // Effects:
+		instance_create(x + hspeed, y + vspeed, MeleeHitWall).image_angle = direction;
+		
+		 // Bounce towards creator:
+		direction = point_direction(x, y, return_to.x, return_to.y);
+		
+		 // Sounds:
+		sound_play_hit(sndDiscBounce, 0.4);
+	}
+	
+	else{
+		if(!in_wall){
+			in_wall = true;
+			
+			 // Effects:
+			instance_create(x, y, Smoke);
+			
+			view_shake_max_at(x, y, 8);
+			sleep_max(8);
+			
+			 // Sounds:
+			sound_play_hit(sndPillarBreak, 0.4);
+			sound_play_hit(sndDiscHit, 0.4);
+		}
+	}
+	
+#define BatDisc_cleanup
+	my_lwo.ammo += ammo;
+	
 #define BigDecal_create(_x, _y)
     var a = string(GameCont.area);
     if(lq_exists(spr.BigTopDecal, a)){
@@ -2918,6 +3171,7 @@
         target_y = y;
         dist_max = 96;
         roids = false;
+        bat = false;
 
          // Alarms:
         alarm0 = 1;
@@ -2995,17 +3249,23 @@
 
 		 // Arc Lightning:
         var _tx = target_x,
-        	_ty = target_y;
+        	_ty = target_y,
+        	_bat = bat;
 
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			with(creator){
-				lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
+				with(lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false)) if(_bat){
+					sprite_index = spr.BatLightning;
+				}
 			}
 
 			 // Hit FX:
 			if(!place_meeting(_tx, _ty, LightningHit)){
 				with(instance_create(_tx, _ty, LightningHit)){
 					image_speed = 0.2 + random(0.2);
+					
+					 // Bat Effect:
+					if(_bat) sprite_index = spr.BatLightningHit;
 				}
 			}
 		}
@@ -3026,6 +3286,22 @@
     }
     else instance_destroy();
 
+#define TeslaCoil_end_step
+	if(bat){
+		var c = creator;
+		with(instances_matching_le(target, "my_health", 0)){
+			with(c) if(my_health < maxhealth){
+				my_health = min(my_health + 1, maxhealth);
+				
+				 // Effects:
+				instance_create(x, y, HealFX);
+				
+				 // Sounds:
+				sound_play_pitchvol(sndBloodlustProc, 0.8 + random(0.4), 1.0);
+				sound_play_pitchvol(sndLightningCrystalHit, 0.4 + random(0.4), 1.2);
+			}
+		}
+	}
 
 #define VenomPellet_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){

@@ -50,6 +50,10 @@
             global.surf_reset = true;
             exit;
         }
+        
+        global.sparkSurf = noone;
+        global.sparkSurfW = 60;
+        global.sparkSurfH = 60;
     //#endregion
 
     global.trench_visited = [];
@@ -78,7 +82,7 @@
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
 
 #define area_text
-	return choose("IT'S SO DARK", "SHADOWS CRAWL", "IT'S ELECTRIC", "GLOWING", "BLUB", "SWIM OVER PITS", "UNTOUCHED")
+	return choose("IT'S SO DARK", "SHADOWS CRAWL", "IT'S ELECTRIC", "GLOWING", "BLUB", "SWIM OVER PITS", "UNTOUCHED");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
     var _x = 36.5 + (8.8 * (_subarea - 1)),
@@ -644,10 +648,50 @@
         surface_set_target(_surf[2]);
 
         draw_set_color_write_enable(1, 1, 1, 0);
-        draw_set_color(/*c_blue*/c_black);
+        draw_set_color(/*c_blue*/c_black); // long live blue trench
         draw_rectangle(0, 0, _surfw, _surfh, 0);
         draw_set_color(c_white);
-
+			
+			 // Pit Spark:
+			if(!surface_exists(global.sparkSurf)) global.sparkSurf = surface_create(global.sparkSurfW, global.sparkSurfH);
+			var	_sparkSurfX = global.sparkSurfW / 2,
+				_sparkSurfY = global.sparkSurfH / 2;
+			
+			with(instances_seen(instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true), 40)){
+				for(var i = 0; i <= (1 - dark); i++){
+					var _radius = [[25, 20], [20, 10]],
+						_bright = floor(image_index) % 2;
+						
+					draw_set_color_write_enable(1, 1, 1, 1);
+					surface_set_target(global.sparkSurf);
+					draw_clear_alpha(0, 0);
+					
+					 // Draw mask:
+					draw_set_color(c_black);
+					draw_circle(_sparkSurfX, _sparkSurfY, _radius[i + dark][_bright] + irandom(1), false);
+					draw_set_color(c_white);
+					draw_set_color_write_enable(1, 1, 1, 0);
+					
+					 // Draw tentacle:
+					var t = tentacle;
+					draw_sprite_ext(
+						spr.TentacleWheel, 
+						i, 
+						_sparkSurfX + lengthdir_x(t.distance, t.move_dir), 
+						_sparkSurfY + lengthdir_y(t.distance, t.move_dir), 
+						image_xscale * t.scale * t.right, 
+						image_yscale * t.scale, 
+						t.rotation, 
+						image_blend, 
+						image_alpha
+					);
+					
+					surface_set_target(_surf[2]);
+					
+					draw_surface(global.sparkSurf, x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
+				}
+			}
+			
              // Pit Squid:
             with(instances_seen(instances_named(CustomEnemy, "PitSquid"), 16)){
                 var h = (nexthurt > current_frame + 3),

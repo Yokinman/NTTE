@@ -10,6 +10,15 @@
         }
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
 
+         // Bat Discs:
+        BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
+        BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2,  14, 14);
+        BigDiscTrail    = sprite_add("sprites/weps/projectiles/sprBigDiscTrail.png",    3,  12, 12);
+        
+         // Bat Lightning:
+        BatLightning        = sprite_add("sprites/weps/projectiles/sprBatLightning.png",        4,  0,  1);
+        BatLightningHit     = sprite_add("sprites/weps/projectiles/sprBatLightningHit.png",     4, 12, 12);
+
     	 // Big Decals:
     	BigTopDecal = {
     	    "1"     : sprite_add("sprites/areas/Desert/sprDesertBigTopDecal.png",       1, 32, 24),
@@ -425,15 +434,29 @@
             KelpDead = sprite_add("sprites/areas/Trench/Props/sprKelpDead.png", 8, 16, 22);
 
              // Pit Squid:
-            PitSquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png",   1, 19, 19);
-            PitSquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png",    1, 19, 19);
-            PitSquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png",   3, 19, 19);
-            PitSquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png",     14, 19, 19);
-            TentacleSpwn    = sprite_add("sprites/enemies/Pitsquid/sprTentacleSpwn.png",     6, 20, 28);
-            TentacleIdle    = sprite_add("sprites/enemies/Pitsquid/sprTentacleIdle.png",     8, 20, 28);
-            TentacleHurt    = sprite_add("sprites/enemies/Pitsquid/sprTentacleHurt.png",     3, 20, 28);
-            TentacleDead    = sprite_add("sprites/enemies/Pitsquid/sprTentacleDead.png",     6, 20, 28);
-            TentacleWarn    = sprite_add("sprites/enemies/PitSquid/sprTentacleWarn.png",    15, 12, 12);
+                 // Eyes:
+                PitSquidCornea  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidCornea.png",   1, 19, 19);
+                PitSquidPupil   = sprite_add("sprites/enemies/Pitsquid/sprPitsquidPupil.png",    1, 19, 19);
+                PitSquidEyelid  = sprite_add("sprites/enemies/Pitsquid/sprPitsquidEyelid.png",   3, 19, 19);
+                
+                 // Tentacles:
+                TentacleSpwn    = sprite_add("sprites/enemies/Pitsquid/sprTentacleSpwn.png",     6, 20, 28);
+                TentacleIdle    = sprite_add("sprites/enemies/Pitsquid/sprTentacleIdle.png",     8, 20, 28);
+                TentacleHurt    = sprite_add("sprites/enemies/Pitsquid/sprTentacleHurt.png",     3, 20, 28);
+                TentacleDead    = sprite_add("sprites/enemies/Pitsquid/sprTentacleDead.png",     6, 20, 28);
+                TentacleWarn    = sprite_add("sprites/enemies/PitSquid/sprTentacleWarn.png",    15, 12, 12);
+                
+                PitSquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png",     14, 19, 19);
+                
+                 // Spark:
+                PitSpark = [
+                    sprite_add("sprites/enemies/Pitsquid/Particles/sprPitSpark1.png", 5, 16, 16),
+                    sprite_add("sprites/enemies/Pitsquid/Particles/sprPitSpark2.png", 5, 16, 16),
+                    sprite_add("sprites/enemies/Pitsquid/Particles/sprPitSpark3.png", 5, 16, 16),
+                    sprite_add("sprites/enemies/Pitsquid/Particles/sprPitSpark4.png", 5, 16, 16),
+                    sprite_add("sprites/enemies/Pitsquid/Particles/sprPitSpark5.png", 5, 16, 16),
+                ];
+                TentacleWheel = sprite_add("sprites/enemies/Pitsquid/Particles/sprTentacleWheel.png", 2, 40, 40);
 
              // Vent
             VentIdle = sprite_add("sprites/areas/Trench/Props/sprVentIdle.png", 1, 12, 14);
