@@ -1035,7 +1035,7 @@
         friction = 0.01;
         mask_index = mskNone;
         meleedamage = 8;
-        maxhealth = scrBossHP(450);
+        maxhealth = scrBossHP(280);
         is_dead = false;
         raddrop = 1;
         size = 5;
@@ -1722,18 +1722,24 @@
 	else{
 		speed = 0;
 	}
-	
-	 // Floor Collision:
-	if(speed > 0){
-		var _f1 = floor_at(x + hspeed, y + vspeed);
-		if(instance_exists(_f1) && _f1.sprite_index != spr.FloorTrenchB){
-			var _f2 = floor_at(x, y);
-		    if(!instance_exists(_f2) || _f2.sprite_index == spr.FloorTrenchB){
-		        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
-		        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
-		    }
-		}
-	}
+
+     // Floor Collision:
+    if(place_meeting(x, y, Floor)){
+        var f = noone;
+        with(instances_matching(Floor, "styleb", false)) if(place_meeting(x, y, other)){
+            f = id;
+            break;
+        }
+        if(instance_exists(f)){
+            speed *= 0.8;
+            x = xprevious;
+            y = yprevious;
+            if(place_meeting(x + hspeed, y, f)) hspeed *= -1;
+            if(place_meeting(x, y + vspeed, f)) vspeed *= -1;
+            if(!place_meeting(x + hspeed, y, f)) x += hspeed;
+            if(!place_meeting(x, y + vspeed, f)) y += vspeed;
+        }
+    }
 	
 #define SquidArm_alrm1
 	alarm1 = 20 + random(20);
