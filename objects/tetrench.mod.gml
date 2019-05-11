@@ -1026,7 +1026,7 @@
         col = c_red;
 
          // Visual:
-		spr_maw = spr.PitSquidMaw;
+		spr_maw = spr.PitSquidMawBite;
 		hitid = [spr_maw, "PIT SQUID"];
 
          // Sounds:
@@ -1048,6 +1048,11 @@
         sink_targetx = x;
         sink_targety = y;
         pit_height = 1;
+        spit = 0;
+        volley = 0;
+        last_electroplasma = noone;
+		laser = 0;
+		laser_charge = 0;
 
          // Eyes:
         eye = [];
@@ -1162,7 +1167,7 @@
 		_floors = instances_matching_ne(Floor, "object_index", FloorExplo),
 		_chance = (array_length(_pits) / array_length(_floors));
 		
-	if(array_length(_sparks) < 3 && chance_ct(_chance, 1)){
+	if(array_length(_sparks) < 3 && chance_ct(_chance, 20)){
 		with(instance_random(_pits)) if(in_distance(other, [96, 256])){
 			if(!array_length(instances_meeting(x, y, _sparks))){
 				with(obj_create(x + 16, y + 16, "PitSpark")){
@@ -1271,6 +1276,21 @@
         }
     }
 
+	 // Spit:
+	if(spit > 0){
+		_eyeDisGoal = 8;
+		
+		var _spr = spr.PitSquidMawSpit,
+			_img = ((1 - spit) * sprite_get_number(_spr));
+			
+		if(_img < 6 || volley <= 0){
+			spit -= (image_speed / sprite_get_number(_spr)) * current_time_scale;
+			
+			 // Effects:
+			if(chance_ct(1, 5)) instance_create(x + orandom(4), y + orandom(4) + 16, Bubble);
+		}
+	}
+
      // Bite:
     if(bite > 0){
         _eyeDisGoal = 8;
@@ -1313,7 +1333,7 @@
     }
 
     if(button_pressed(0, "horn")){
-        var _num = 8;
+        var _num = 4;
         for(var i = 0; i < _num; i++){
             var l = 64,
                 d = (i * (360 / _num)) + eye_dir;
@@ -1379,6 +1399,11 @@
                 if(!place_meeting(x + hspeed, y, f)) x += hspeed;
                 if(!place_meeting(x, y + vspeed, f)) y += vspeed;
             }
+        }
+        
+         // Force Tentacle Teleport:
+        with(instances_meeting(x, y, instances_matching(instances_matching(instances_named(CustomEnemy, "SquidArm"), "creator", id), "teleport", false))){
+        	alarm2 = 1;
         }
 
          // Destroy Stuff:
@@ -1506,6 +1531,15 @@
                 alarm1 = 20;
             }
         }
+        
+         // Spawn Tentacles:
+        var t = array_length(instances_matching(instances_named(CustomEnemy, "SquidArm"), "creator", id));
+        if(t < 3 && chance(2, 3)){
+        	with(obj_create(0, 0, "SquidArm")){
+        		creator = other;
+        		alarm2 = 1;
+        	}
+        }
     }
     
 #define PitSquid_alrm2
@@ -1513,26 +1547,477 @@
 
     if(pit_height >= 1){
         target = instance_nearest(x, y, Player);
-
+		
         if(instance_exists(target)){
             var _targetDis = point_distance(x, y, target.x, target.y),
                 _targetDir = point_direction(x, y, target.x, target.y);
-
-            if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
-                 // Tentacles:
-                if(chance(1, 3) && array_length(instances_matching(instances_named(CustomEnemy, "ChaserTentacle"), "creator", id)) < 3){
-                    //obj_create(x, y, "ChaserTentacle").creator = id;
-                }
-            }
-    
-             // Bite Player:
-            else{
-                motion_set(_targetDir, _targetDis / 32);
-                bite = 1.2;
-            }
+        	
+			 // Electroplasma Volley:
+			if(volley > 0){
+				volley--;
+				spit = 0.6;
+				
+				 // Projectile:
+				var _last = last_electroplasma,
+					_angle = _targetDir;
+					
+				with(_last){
+					var d = angle_difference(direction, _angle);
+					_angle = direction - min(abs(d), 40) * sign(d);
+				}
+				
+				with(scrEnemyShootExt(x, y + 16, "ElectroPlasma", _angle + orandom(10), 5)){
+					tethered_to = _last;
+					damage = 1;
+					
+					_last = id;
+				}
+				
+				last_electroplasma = _last;
+				
+				 // Sounds:
+				sound_play_pitch(sndOasisShoot, 		1.1 + random(0.3));
+				sound_play_pitchvol(sndGammaGutsProc,	0.9 + random(0.5), 0.4);
+				
+				 // Effects:
+				instance_create(x + orandom(12), y + orandom(12) + 16, PortalL);
+				 
+				 // End Volley Attack:
+				if(volley <= 0){
+					last_electroplasma = noone;
+					
+					 // Sounds:
+					sound_play_pitchvol(sndOasisDeath, 0.9 + random(0.3), 2.4);
+				}
+				
+				 // Continue Volley Attack:
+				else{
+					alarm2 = 5 + random(2);
+					alarm1 = alarm1 + alarm2;
+				}
+			}
+			
+			else{
+	            if(point_distance(target.x, target.y, x + hspeed, y + vspeed + 16) > 64){
+					
+					 // Half-Health Attack Pattern:
+					if(false && my_health <= maxhealth / 2){
+						/*
+						
+						Thinking about a half health attack pattern where he, instead of the volley attack, does the triple quasar spin
+						(also thinking make him snipe you with smaller quasars when you're over land)
+						
+						*/
+					}
+					
+					 // Begin Volley Attack:
+					else{
+						spit = 1.2;
+						alarm2 = 15;
+						alarm1 = alarm1 + alarm2;
+						
+						volley = 3 + irandom(2);
+						
+						 // Sounds:
+						sound_play_pitchvol(sndOasisHorn, 0.9, 2.4);
+					}
+	            }
+	    
+	             // Bite Player:
+	            else{
+	                motion_set(_targetDir, _targetDis / 32);
+	                bite = 1.2;
+	            }
+			}
         }
     }
+    
+     // Just in Case:
+    else{
+    	volley = 0;
+    }
 
+
+#define SquidArm_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+         // Visual:
+        spr_idle = spr.TentacleIdle;
+        spr_walk = spr.TentacleIdle;
+        spr_hurt = spr.TentacleIdle;
+        spr_dead = spr.TentacleDead;
+        spr_dash = spr.TentacleDash;
+        spr_appear = spr.TentacleSpwn;
+        spr_disappear = spr.TentacleDead;
+        depth = -2 - (y / 20000);
+        hitid = [spr_idle, "PIT SQUID"];
+        sprite_index = spr_appear;
+        
+         // Sound:
+        snd_hurt = sndHitFlesh;
+        snd_dead = sndMaggotSpawnDie;
+        snd_mele = sndPlantSnare;
+
+         // Vars:
+        mask_index = mskBandit;
+        friction = 0.8;
+        maxhealth = 20;
+        raddrop = 0;
+        size = 3;
+        creator = noone;
+        canfly = true;
+        walk = 0;
+        kills = 0;
+        walkspd = 2;
+        maxspeed = 3.5;
+        wave = 0;
+        bomb = 0;
+        
+        teleport = false;
+        teleport_x = x;
+        teleport_y = y;
+        
+        ntte_anim = false;
+        
+        alarm1 = 10;
+	
+		return id;
+	}
+	
+#define SquidArm_step
+	wave += current_time_scale;
+	depth = -2 - (y / 20000);
+	
+	 // Sprites:
+	if(teleport){
+		if(sprite_index == spr_disappear){
+			if(anim_end){
+				image_index -= image_speed;
+			}
+		}
+		else{
+			sprite_index = spr_disappear;
+			image_index = 0;
+			
+			mask_index = mskNone;
+		}
+	}
+	else{
+		if(sprite_index == spr_disappear){
+			sprite_index = spr_appear;
+			image_index = 0;
+		}
+		else if(anim_end){
+			sprite_index = spr_idle;
+			
+			mask_index = mskBandit;
+		}
+	}
+	
+	 // Movement:
+	if(mask_index != mskNone){
+		var _minSpeed = 0.4;
+		speed = max(speed, _minSpeed + friction);
+		
+		if(place_meeting(x + hspeed, y + vspeed, Wall)){
+			if(place_meeting(x + hspeed, y, Wall)) hspeed *= -0.5;
+			if(place_meeting(x, y + vspeed, Wall)) vspeed *= -0.5;
+			scrRight(direction);
+		}
+	}
+	
+	else{
+		speed = 0;
+	}
+	
+	 // Floor Collision:
+	if(speed > 0){
+		var _f1 = floor_at(x + hspeed, y + vspeed);
+		if(instance_exists(_f1) && _f1.sprite_index != spr.FloorTrenchB){
+			var _f2 = floor_at(x, y);
+		    if(!instance_exists(_f2) || _f2.sprite_index == spr.FloorTrenchB){
+		        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
+		        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
+		    }
+		}
+	}
+	
+#define SquidArm_alrm1
+	alarm1 = 20 + random(20);
+	
+	target = instance_nearest(x, y, Player);
+	if(instance_exists(target)){
+		if(in_sight(target)){
+			var _targetDir = point_direction(x, y, target.x, target.y);
+			
+			 // Keep away:
+			if(in_distance(target, 48)){
+				scrWalk(10 + random(10), _targetDir + 180 + orandom(30));
+				alarm1 = walk + random(10);
+				
+				scrRight(direction + 180);
+			}
+			
+			else{
+				 // Get closer:
+				if(!in_distance(target, 96)){
+					scrWalk(10 + random(10), _targetDir + orandom(10));
+					alarm1 = walk + random(5);
+				}
+				
+				else{
+					 // Attack:
+					if(in_sight(target) && chance(2, 7)){
+						alarm2 = 1;
+						bomb = true;
+					}
+					
+					 // Wander Passively:
+					direction += orandom(30);
+					
+					 // Effects:
+					instance_create(x, y, Bubble);
+				}
+				
+				scrRight(direction);
+			}
+		}
+		
+		 // Teleport:
+		else{
+			alarm2 = 1;
+		}
+	}
+	
+#define SquidArm_alrm2
+	alarm2 = 0;
+	
+	 // Effects:
+	repeat(2 + irandom(3)) instance_create(x, y, Bubble);
+	
+	 // Teleport Appear:
+	target = instance_nearest(x, y, Player);
+	if(instance_exists(creator)){
+		if(teleport){
+			if(instance_exists(target)){
+				teleport = false;
+				
+				x = teleport_x;
+				y = teleport_y;
+				
+				 // Sounds:
+				sound_play_pitchvol(sndOasisMelee, 1.0 + random(0.3), 0.6);
+			}
+			
+			else{
+				instance_destroy();
+				exit;
+			}
+		}
+		
+		 // Teleport Disappear:
+		else{
+			teleport = true;
+			alarm2 = 20 + random(20);
+			
+			 // Determine Teleport Coordinates:
+			if(instance_exists(target)){
+				var _target = target,
+					_creator = creator,
+					_allPits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
+				
+				 // Bomb Attack:
+				if(bomb){
+					with(obj_create(x, y, "SquidBomb")){
+						creator =	other;
+						target =	_target;
+						team =		other.team;
+						ammo =		4 + irandom(3);
+						scale =		1;
+						triple =	false;
+						direction =	point_direction(x, y, target.x, target.y);
+						
+						alarm0 = 10;
+						alarm1 += alarm0;
+					}
+					
+					bomb = false;
+				}
+				
+				 // Teleport Closer to Player:
+				else{
+					var _emptyPits = [],
+						_validPits = [];
+					
+					 // Find Clear Pits:
+					with(_allPits) if(!place_meeting(x, y, Wall) && !place_meeting(x, y, FloorExplo)){
+						array_push(_emptyPits, id);
+					}
+					
+					var _nearest = nearest_instance(target.x, target.y, _emptyPits),
+						_minDist = point_distance(target.x, target.y, _nearest.x, _nearest.y);
+						
+					 // Find Pits Near Target:
+					with(_emptyPits) if(in_distance(_target, [32, max(96, _minDist)]) && in_distance(_creator, [60, 180])){
+						array_push(_validPits, id);
+					}
+					
+					 // Teleport to Random Valid Pit:
+					if(array_length(_validPits)){
+						with(instance_random(_validPits)){
+							with(other){
+								teleport_x = other.x + 16;
+								teleport_y = other.y + 16;
+							}
+						}
+					}
+					
+					 // Teleport to a Random Pit:
+					else{
+						with(instance_random(_emptyPits)){
+							with(other){
+								teleport_x = other.x + 16;
+								teleport_y = other.y + 16;
+							}
+						}
+					}
+				}
+			}
+			
+			 // Sounds:
+			sound_play_pitchvol(sndOasisMelee, 0.7 + random(0.3), 1.0);
+		}
+		
+		alarm1 += alarm2;
+	}
+	
+#define SquidArm_draw
+	var h = (nexthurt > current_frame);
+	if(h) d3d_set_fog(true, image_blend, 0, 0);
+	draw_self_enemy();
+	if(h) d3d_set_fog(false, c_white, 0, 0);
+	
+#define SquidArm_hurt(_hitdmg, _hitvel, _hitdir)
+    if(sprite_index != mskNone){
+        my_health -= _hitdmg;
+        nexthurt = current_frame + 6;
+        sound_play_hit(snd_hurt, 0.3);
+    
+         // Hurt Papa Squid:
+        with(creator){
+            my_health -= _hitdmg;
+            nexthurt = current_frame + 6;
+            sound_play_hit(snd_hurt, 0.3);
+        }
+        
+        scrRight(_hitdir + 180);
+    }
+	
+#define SquidBomb_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		
+		 // Vars:
+		mask_index = mskBandit;
+		creator = noone;
+		target = noone;
+		team = 0;
+		ammo = 0;
+		scale = 0.4;
+		triple = true;
+		
+		alarm0 = 3;
+		alarm1 = 20;
+		
+		return id;
+	}
+	
+#define SquidBomb_alrm0
+	var _len = 24,
+		_dir = direction;
+	
+	 // Adjust Direction:
+	if(instance_exists(target) && instance_exists(creator)){
+		var _targetDir = point_direction(x, y, target.x, target.y),
+			_angleDiff = angle_difference(_dir, _targetDir);
+			
+		_dir -= min(abs(_angleDiff), 45) * sign(_angleDiff);
+	}
+	
+	var _x = x + lengthdir_x(_len, _dir),
+		_y = y + lengthdir_y(_len, _dir);
+	
+	if(place_meeting(_x, _y, Floor) && !place_meeting(_x, _y, Wall) && !place_meeting(x, y, FloorExplo) && !in_distance(creator.creator, 40)){
+		with(floor_at(_x, _y)) if(sprite_index == spr.FloorTrenchB) with(other){
+	
+			 // Relocate Creator:
+			with(creator){
+				teleport_x = _x;
+				teleport_y = _y;
+				
+				alarm2 = other.alarm1 + 10;
+				alarm1 = max(alarm1, alarm2);
+			}
+		
+			 // Spawn Next Bomb:
+			if(ammo > 0){
+				with(obj_create(_x, _y, "SquidBomb")){
+					creator =	other.creator;
+					target =	other.target;
+					team =		other.team;
+					ammo =		other.ammo - 1;
+					direction =	_dir;
+				}
+			}
+		}
+	}
+
+	 // Effects:
+	instance_create(x, y, LaserBrain);
+	
+#define SquidBomb_alrm1
+	instance_destroy();
+	
+#define SquidBomb_destroy
+	var l = 8,
+		_projectiles = [],
+		_freeze = UberCont.opt_freeze;
+	
+	 // I think this works:
+	UberCont.opt_freeze = 0;
+	
+	 // Triple Sucker:
+	if(triple){
+		for(var d = 0; d < 360; d += 120){
+			var _x = x + lengthdir_x(l, d + direction),
+				_y = y + lengthdir_y(l, d + direction);
+				
+			array_push(_projectiles, instance_create(_x, _y, PlasmaImpact));
+		}
+	}
+	
+	 // Single Sucker:
+	else{
+		array_push(_projectiles, instance_create(x, y, PlasmaImpact));
+	}
+	
+	with(_projectiles){
+		creator =	other.creator;
+		team =		other.team;
+		damage =	2;
+		direction = other.direction;
+		hitid =		[spr.PitSquidMawBite, "PIT SQUID"];
+		
+		image_xscale = other.scale;
+		image_yscale = other.scale;
+	}
+	
+	 // Effects:
+	repeat(1 + irandom(2)) instance_create(x + orandom(16), y + orandom(16), LaserBrain);
+	
+	 // Sounds:
+	sound_play_hit(sndLightningReload, 0.4);
+	
+	UberCont.opt_freeze = _freeze;
 
 #define Tentacle_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -1567,8 +2052,8 @@
         kills = 0;
 
 		 // Alarms:
-        alarm0 = 1;
-        alarm1 = 90;
+        alarm0 = 1; 	// Appear:
+        alarm1 = 90;	// Disappear:
 
         return id;
     }
@@ -1930,6 +2415,27 @@
     obj_create(x, y, "BubbleExplosion");
 
 
+#define WantPitSquid_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		
+		
+		return id;
+	}
+	
+#define WantPitSquid_step
+
+	 // Be more elaborate later:
+	if(!instance_exists(enemy)){
+		with(instance_random(Player)){
+			with(obj_create(x, y, "PitSquid")){
+				scrBossIntro(name, sndBigDogIntro, musBoss2);
+			}
+		}
+		
+		instance_destroy();
+	}
+
 #define YetiCrab_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -2186,6 +2692,11 @@
      // Kelp:
     with(instances_matching(CustomProp, "name", "Kelp")){
         draw_circle(x, y, 32 + orandom(1), false);
+    }
+    
+     // Squid Arms:
+    with(instances_named(CustomEnemy, "SquidArm")){
+    	draw_circle(x, y - 12, 24 + orandom(1), false);
     }
     
      // Pit Squid:

@@ -1074,6 +1074,102 @@
     }
 
 
+#define ElectroPlasma_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visuals:
+		sprite_index = spr.ElectroPlasma;
+		depth = -4;
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 3;
+		typ = 2;
+		wave = 0;
+		tethered_to = noone;
+		tether_range = 80;
+		
+		on_end_step = ElectroPlasma_setup;
+				
+		return id;
+	}
+	
+#define ElectroPlasma_setup
+	on_end_step = [];
+
+	 // Laser Brain:
+	var _brain = skill_get(mut_laser_brain);
+	if(instance_is(creator, Player)){
+		image_xscale += 0.2 * _brain;
+		image_yscale += 0.2 * _brain;
+		tether_range += 40 * _brain;
+	}
+	
+#define ElectroPlasma_anim
+	image_index = 1;
+	image_speed = 0.4;
+	
+#define ElectroPlasma_step
+	wave += current_time_scale;
+	
+	 // Effects:
+	if(chance_ct(1, 8)) 	instance_create(x + orandom(6), y + orandom(6), PlasmaTrail).sprite_index = spr.ElectroPlasmaTrail;
+	if(chance_ct(1, 24))	instance_create(x + orandom(5), y + orandom(5), PortalL);
+	
+	 // Tether:
+	if(in_distance(tethered_to, tether_range) && in_sight(tethered_to)){
+		var _x1 = x + hspeed,
+			_y1 = y + vspeed,
+			_x2 = tethered_to.x + tethered_to.hspeed,
+			_y2 = tethered_to.y + tethered_to.vspeed;
+			
+		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
+			sprite_index = spr.ElectroPlasmaTether;
+			depth = -3;
+		}
+	}
+	
+	 // Goodbye:
+	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
+	
+#define ElectroPlasma_destroy
+
+	 // Explode:
+	with(scrEnemyShoot(PlasmaImpact, 0, 0)){
+		sprite_index = spr.ElectroPlasmaImpact;
+		image_angle = other.image_angle;
+		mask_index = mskBullet1;
+		if(!instance_is(other, Player)) damage = 2;
+	}
+	
+	 // Effects:
+	repeat(1 + irandom(1)) instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
+	
+	 // Sounds:
+	sound_play_hit(sndPlasmaHit, 0.4);
+	sound_play_hit(sndGammaGutsProc, 0.4);
+	
+#define ElectroPlasma_hit
+	var p = instance_is(other, Player);
+	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
+		projectile_hit(other, damage);
+		
+		 // Effects:
+		sleep_max(10);
+		view_shake_max_at(x, y, 2);
+		
+		 // Slow:
+		x -= hspeed * 0.8;
+		y -= vspeed * 0.8;
+		
+		 // Shrink:
+		image_xscale -= 0.05;
+		image_yscale -= 0.05;
+	}
+	
+#define ElectroPlasma_wall
+	image_xscale -= 0.05;
+	image_yscale -= 0.05;
+
 #define Harpoon_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -3466,6 +3562,11 @@
         }
     }
     
+     // Electroplasma:
+    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+    }
+    
      // Hot Quasar Weapons:
     draw_set_color_write_enable(true, false, false, true);
     with(instances_matching_gt(Player, "reload", 0)){
@@ -3509,6 +3610,11 @@
      // Big Decals:
     with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
     	draw_circle(x, y, 96, false);
+    }
+    
+     // Electroplasma:
+    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    	draw_circle(x, y, 48, false);
     }
 
      // Lightning Discs:
@@ -3554,6 +3660,11 @@
      // Big Decals:
     with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
     	draw_circle(x, y, 40, false);
+    }
+    
+     // Electroplasma:
+    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    	draw_circle(x, y, 24, false);
     }
 
      // Lightning Discs:

@@ -51,7 +51,7 @@
             exit;
         }
         
-        global.sparkSurf = noone;
+        global.sparkSurf = array_create(2, noone);
         global.sparkSurfW = 60;
         global.sparkSurfH = 60;
     //#endregion
@@ -518,6 +518,9 @@
             instance_destroy();
         }
     }
+    
+     // Spawn Pitsquid:
+    if(GameCont.subarea == 3) obj_create(0, 0, "WantPitSquid");
 
 
 /// Pit Code:
@@ -652,7 +655,8 @@
         draw_set_color(c_white);
 			
 			 // Pit Spark:
-			if(!surface_exists(global.sparkSurf)) global.sparkSurf = surface_create(global.sparkSurfW, global.sparkSurfH);
+			if(!surface_exists(global.sparkSurf[0])) global.sparkSurf[0] = surface_create(global.sparkSurfW, global.sparkSurfH);
+			if(!surface_exists(global.sparkSurf[1])) global.sparkSurf[1] = surface_create(global.sparkSurfW, global.sparkSurfH);
 			var	_sparkSurfX = global.sparkSurfW / 2,
 				_sparkSurfY = global.sparkSurfH / 2;
 			
@@ -662,7 +666,7 @@
 						_bright = floor(image_index) % 2;
 						
 					draw_set_color_write_enable(1, 1, 1, 1);
-					surface_set_target(global.sparkSurf);
+					surface_set_target(global.sparkSurf[i]);
 					draw_clear_alpha(0, 0);
 					
 					 // Draw mask:
@@ -684,11 +688,12 @@
 						image_blend, 
 						image_alpha
 					);
-					
-					surface_set_target(_surf[2]);
-					
-					draw_surface(global.sparkSurf, x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
 				}
+				
+				surface_set_target(_surf[2]);
+					
+							draw_surface(global.sparkSurf[0], x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
+				if(!dark)	draw_surface(global.sparkSurf[1], x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
 			}
 			
              // Pit Squid:
@@ -724,6 +729,12 @@
                  // Bite:
                 if(bite > 0 && bite <= 1){
                     draw_sprite_ext(spr_maw, ((1 - bite) * sprite_get_number(spr_maw)), x - _surfx, y - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+                }
+                
+                 // Spit:
+                else if(spit > 0 && spit <= 1){
+                	var _spr = spr.PitSquidMawSpit;
+                	draw_sprite_ext(_spr, ((1 - spit) * sprite_get_number(_spr)), x - _surfx, y - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
                 }
             }
             

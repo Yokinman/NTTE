@@ -8,8 +8,8 @@
 
 #macro muscle skill_get(mut_back_muscle)
 
-#define weapon_name return "BAT DISC LAUNCHER";
-#define weapon_text return "SMARTER THAN YOUR AVERAGE DISC";
+#define weapon_name return "SAWBLADE GUN";
+#define weapon_text return "LIKE DISCS BUT @ySMARTER";
 #define weapon_auto return true;
 #define weapon_type return 0; // None
 #define weapon_load return 8; // 0.26 Seconds

@@ -8,8 +8,8 @@
 
 #macro muscle skill_get(mut_back_muscle)
 
-#define weapon_name return "BAT DISC CANNON";
-#define weapon_text return "BIGGER AND BETTER";
+#define weapon_name return "SAWBLADE CANNON";
+#define weapon_text return "THEY STAND NO CHANCE";
 #define weapon_auto return true;
 #define weapon_type return 0; // None
 #define weapon_load return 20; // 0.66 Seconds

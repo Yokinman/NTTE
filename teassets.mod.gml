@@ -45,6 +45,12 @@
          // Bone:
         Bone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
         BoneShard = sprite_add("sprites/weps/projectiles/sprBoneShard.png", 1, 3, 2);
+        
+         // Electroplasma:
+        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       5,  12, 12);
+        ElectroPlasmaTrail  = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTrail.png",  3,  4,  4);
+        ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7,  12, 12);
+        ElectroPlasmaTether = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTether.png", 4,  0,  1);
 
          // Harpoon:
         Harpoon      = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -61,7 +67,7 @@
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
         QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 32, 16);
         QuasarBeamEnd   = sprite_add("sprites/weps/projectiles/sprQuasarBeamEnd.png",   2,  0, 16);
-        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   5,  8, 24);
+        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   6,  24, 24);
         QuasarBeamTrail = sprite_add("sprites/weps/projectiles/sprQuasarBeamTrail.png", 3,  4,  4);
         msk.QuasarBeam  = sprite_add("sprites/weps/projectiles/mskQuasarBeam.png",      1, 32, 16);
 
@@ -445,8 +451,14 @@
                 TentacleHurt    = sprite_add("sprites/enemies/Pitsquid/sprTentacleHurt.png",     3, 20, 28);
                 TentacleDead    = sprite_add("sprites/enemies/Pitsquid/sprTentacleDead.png",     6, 20, 28);
                 TentacleWarn    = sprite_add("sprites/enemies/PitSquid/sprTentacleWarn.png",    15, 12, 12);
+                TentacleDash    = [
+                    sprite_add("sprites/enemies/Pitsquid/sprTentacleBackwards.png", 2, 20, 20),
+                    sprite_add("sprites/enemies/Pitsquid/sprTentacleForwards.png",  2, 20, 20)
+                ];
                 
-                PitSquidMaw     = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMaw.png",     14, 19, 19);
+                 // Maw:
+                PitSquidMawBite = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMawBite.png", 14, 19, 19);
+                PitSquidMawSpit = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMawSpit.png", 10, 19, 19);
                 
                  // Spark:
                 PitSpark = [

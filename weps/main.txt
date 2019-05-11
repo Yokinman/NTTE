@@ -11,6 +11,8 @@
 /loadwep lightring launcher
 /loadwep super lightring launcher
 /loadwep tesla coil
+/loadwep electroplasma rifle
+/loadwep electroplasma shotgun
 /loadwep quasar blaster
 /loadwep quasar rifle
 /loadwep quasar cannon
