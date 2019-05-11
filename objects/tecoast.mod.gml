@@ -384,18 +384,6 @@
         }
     }
 
-     // Pit Collision:
-	if(speed > 0){
-		var _f1 = floor_at(x + hspeed, y + vspeed);
-		if(instance_exists(_f1) && _f1.sprite_index == spr.FloorTrenchB){
-			var _f2 = floor_at(x, y);
-		    if(!instance_exists(_f2) || _f2.sprite_index != spr.FloorTrenchB){
-		        if(place_meeting(x + hspeed, y, _f1)) hspeed *= -0.8;
-		        if(place_meeting(x, y + vspeed, _f1)) vspeed *= -0.8;
-		    }
-		}
-	}
-
 	 // Laser Sight in Water:
 	if(canshoot){
 		if("wading" in self && wading > 0){
@@ -472,6 +460,14 @@
         		alarm1 = 20 + irandom(30);
         		scrWalk(15 + random(15), _targetDir + 180 + orandom(30));
         		gunangle = _targetDir + orandom(15);
+        	}
+
+        	 // Go to Nearest Non-Pit Floor:
+        	if(array_length(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)) > 0){
+	        	var f = nearest_instance(x - 8 + (hspeed * 4), y - 8 + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+	        	if(!place_meeting(x, y, f) && instance_exists(f)){
+	        		direction = point_direction(x, y, f.x, f.y) + orandom(20);
+	        	}
         	}
 
         	 // Facing:
@@ -740,7 +736,7 @@
         seal = [];
         seal_x = [];
         seal_y = [];
-        seal_max = 4 + (2 * GameCont.loops);
+        seal_max = 4 + GameCont.loops;
         seal_spawn = [];
         tauntdelay = 40;
         phase = -1;
@@ -876,7 +872,7 @@
             }
         }
 
-        else if(instance_exists(Player) && intro_pan > 0){
+        if(instance_exists(Player) && intro_pan > 15){
              // Freeze Things:
             if(current_frame_active){
                 with(instances_matching([WantRevivePopoFreak, VanSpawn, IDPDSpawn], "", null)){
@@ -885,6 +881,13 @@
                     	if(a > 0) alarm_set(i, a + max(1, current_time_scale));
                     }
                 }
+                with(Seal){
+                    var i = 1,
+                		a = alarm_get(i);
+
+                	if(a > 0) alarm_set(i, a + max(1, current_time_scale));
+                }
+                trace(current_frame)
             }
 
              // Just in case:
@@ -1032,7 +1035,7 @@
     		if(delay > 0) delay -= current_time_scale;
     		else{
     			num--;
-		        delay = max(4 - GameCont.loops, 2) * random_range(1, 2);
+		        delay = max(4 - (GameCont.loops * 0.5), 2) * random_range(1, 2);
 
 			    sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
 
@@ -1671,7 +1674,7 @@
             if("angle" in self) angle = _ang;
             else image_angle = _ang;
             if(current_frame_active){
-		        repeat(2) with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+		        with(instance_create(x + orandom(4), y + orandom(4), Dust)){
 		            coast_water = false;
 		            depth = other.depth;
 		        }

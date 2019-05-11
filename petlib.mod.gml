@@ -1147,12 +1147,12 @@
         }
         
          // Pit Collision:
-        var f = [floor_at(x + h, y + v), floor_at(x, y)];
-        if(instance_exists(f[0]) && f[0].sprite_index != spr.FloorTrenchB){
+        var f = floor_at(x + h, y + v);
+        if(instance_exists(f.id) && f.sprite_index != spr.FloorTrenchB){
              // bounce off big floors:
-            if(instance_exists(f[1]) && f[1].sprite_index == spr.FloorTrenchB){
-                if(place_meeting(x + h, y, f[0])) hspeed *= -1;
-                if(place_meeting(x, y + v, f[0])) vspeed *= -1;
+            if(floor_at(x, y).sprite_index == spr.FloorTrenchB){
+                if(place_meeting(x + h, y, f.id)) hspeed *= -1;
+                if(place_meeting(x, y + v, f.id)) vspeed *= -1;
             }
         }
         
@@ -1198,12 +1198,12 @@
     else{
          // Find trench pit:
         if(GameCont.area == "trench"){
-            var _n = nearest_instance(x, y, instances_matching(Floor, "styleb", true)),
+            var _n = nearest_instance(x, y, instances_matching(Floor, "sprite_index", spr.FloorTrenchB)),
             	f = floor_at(x, y);
 
-            if(instance_exists(_n) || !instance_exists(f) || (!f.styleb && hiding)){
+            if(instance_exists(_n) || (f.sprite_index != spr.FloorTrenchB && hiding)){
                  // Hide:
-                if(instance_exists(f) && f.styleb && !hiding){
+                if(f.sprite_index == spr.FloorTrenchB && !hiding){
                     hiding = true;
                     
                     sprite_index = spr_hide;

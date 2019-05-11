@@ -58,7 +58,7 @@
 #macro surfY global.surfY
 
 #macro DebugLag false
-#macro CanLeaveCoast (instance_exists(Portal) || (instance_number(enemy) - instance_number(Van) <= 0))
+#macro CanLeaveCoast (instance_exists(Portal) || ((instance_number(enemy) - instance_number(Van) <= 0) && !instance_exists(becomenemy)))
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #macro bgrColor make_color_rgb(27, 118, 184)
