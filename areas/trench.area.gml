@@ -56,6 +56,9 @@
         global.sparkSurfH = 60;
     //#endregion
 
+	global.pit_grid = ds_grid_create(1250, 1250);
+	mod_variable_set("mod", "tetrench", "pit_grid", global.pit_grid);
+
     global.trench_visited = [];
 
 #macro spr global.spr
@@ -188,7 +191,7 @@
      // Fix Props:
     if(instance_exists(Floor) && instance_exists(Player)){
         with(instances_matching(CustomProp, "name", "Kelp", "Vent", "EelSkull")){
-            if(floor_at(x, y).styleb){
+            if(pit_get(x, y)){
                 var t = 100;
                 while(t-- > 0){
                     var f = instance_random(instances_matching(Floor, "styleb", false));
@@ -262,7 +265,7 @@
         	l = 12;
 
         for(var d = 0; d < 360; d += 45){
-        	if(floor_at(x + lengthdir_x(l, d), y + lengthdir_y(l, d)).styleb){
+        	if(pit_get(x + lengthdir_x(l, d), y + lengthdir_y(l, d))){
                 depth = 9;
             }
             else _kill = false;
@@ -272,12 +275,8 @@
     }
 
      // Player Above Pits:
-	var _checkPit = frame_active(15);
     with(instances_matching_le(Player, "speed", 0)){
-    	if("trench_over_pit" not in self || _checkPit){
-            trench_over_pit = floor_at(x, bbox_bottom).styleb;
-    	}
-        if(trench_over_pit){
+        if(pit_get(x, bbox_bottom)){
              // Check if moving:
             var _moving = false;
             if(canwalk){
@@ -302,12 +301,8 @@
     }
 
      // Floaty Effects Above Pits:
-	var _checkPit = frame_active(120);
     with(instances_matching([WepPickup, chestprop, RadChest], "", null)){
-    	if("trench_over_pit" not in self || speed > 0 || _checkPit){
-            trench_over_pit = floor_at(x, bbox_bottom).styleb;
-    	}
-        if(trench_over_pit){
+        if(pit_get(x, bbox_bottom)){
             var _x = x + cos((current_frame + x + y) / 10) * 0.15,
                 _y = y + sin((current_frame + x + y) / 10) * 0.15;
 
@@ -319,7 +314,7 @@
      // Stuff Falling Into Pits:
     with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "pit_check", null), "speed", 1)){
         if(speed <= 0) pit_check = true;
-        if(floor_at(x, bbox_bottom).styleb){
+        if(pit_get(x, bbox_bottom)){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
             instance_destroy();
         }
@@ -327,7 +322,7 @@
     with(instances_matching_lt(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0), "size", 4)){
         if(instance_exists(enemy) || instance_exists(Portal)){
             if(speed <= 0) pit_check = true;
-            if(floor_at(x, y).styleb){
+            if(pit_get(x, y)){
                 pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
                 instance_destroy();
             }
@@ -593,6 +588,16 @@
         if(global.surf_reset){
             global.surf_reset = false;
 
+             // Reset Pit Grid:
+            ds_grid_clear(global.pit_grid, true);
+            with(instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)){
+            	for(var _x = bbox_left; _x < bbox_right; _x += 16){
+            		for(var _y = bbox_top; _y < bbox_bottom; _y += 16){
+            			pit_set(_x, _y, false);
+            		}
+            	}
+            }
+
              // Center Surfaces:
             _surfx = 0;
             _surfy = 0;
@@ -653,27 +658,31 @@
         draw_set_color_write_enable(1, 1, 1, 0);
         draw_set_color(/*c_blue*/c_black); // long live blue trench
         draw_rectangle(0, 0, _surfw, _surfh, 0);
-        draw_set_color(c_white);
-			
+
 			 // Pit Spark:
-			if(!surface_exists(global.sparkSurf[0])) global.sparkSurf[0] = surface_create(global.sparkSurfW, global.sparkSurfH);
-			if(!surface_exists(global.sparkSurf[1])) global.sparkSurf[1] = surface_create(global.sparkSurfW, global.sparkSurfH);
-			var	_sparkSurfX = global.sparkSurfW / 2,
-				_sparkSurfY = global.sparkSurfH / 2;
-			
-			with(instances_seen(instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true), 40)){
-				for(var i = 0; i <= (1 - dark); i++){
-					var _radius = [[25, 20], [20, 10]],
-						_bright = floor(image_index) % 2;
-						
-					draw_set_color_write_enable(1, 1, 1, 1);
-					surface_set_target(global.sparkSurf[i]);
+			var _sparkSurf = global.sparkSurf,
+				_sparkSurfW = global.sparkSurfW,
+				_sparkSurfH = global.sparkSurfH,
+				_sparkSurfX = _sparkSurfW / 2,
+				_sparkSurfY = _sparkSurfH / 2;
+
+			for(var i = 0; i < array_length(_sparkSurf); i++){
+				if(!surface_exists(_sparkSurf[i])) _sparkSurf[i] = surface_create(_sparkSurfW, _sparkSurfH);
+			}
+
+			draw_set_color(c_black);
+
+			with(instances_seen(instances_matching(instances_named(CustomObject, "PitSpark"), "tentacle_visible", true), 40)){
+				var _radius = [[25, 20], [20, 10]],
+					_bright = (floor(image_index) % 2);
+
+				for(var i = 0; i <= !dark; i++){
+					surface_set_target(_sparkSurf[i]);
 					draw_clear_alpha(0, 0);
-					
+
 					 // Draw mask:
-					draw_set_color(c_black);
+					draw_set_color_write_enable(1, 1, 1, 1);
 					draw_circle(_sparkSurfX, _sparkSurfY, _radius[i + dark][_bright] + irandom(1), false);
-					draw_set_color(c_white);
 					draw_set_color_write_enable(1, 1, 1, 0);
 					
 					 // Draw tentacle:
@@ -686,15 +695,16 @@
 						image_xscale * t.scale * t.right, 
 						image_yscale * t.scale, 
 						t.rotation, 
-						image_blend, 
+						merge_color(c_black, image_blend, (visible ? (image_index / image_number) : ((alarm0 > 3) ? 1 : (((current_frame + x + y) / 2) % 2)))),
 						image_alpha
 					);
 				}
 				
 				surface_set_target(_surf[2]);
-					
-							draw_surface(global.sparkSurf[0], x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
-				if(!dark)	draw_surface(global.sparkSurf[1], x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
+
+				for(var i = 0; i <= !dark; i++){
+					draw_surface(_sparkSurf[i], x - _surfx - _sparkSurfX, y - _surfy - _sparkSurfY);
+				}
 			}
 			
              // Pit Squid:
@@ -709,7 +719,7 @@
                  // Eyes:
                 with(eye){
                     var _x = x - _surfx,
-                        _y = y - _surfy + 16,
+                        _y = y - _surfy,
                         l = dis * max(other.pit_height, 0),
                         d = dir;
 
@@ -749,10 +759,7 @@
 
              // Make Proto Statues Cooler:
             with(ProtoStatue){
-            	if("trench_over_pit" not in self){
-	                trench_over_pit = floor_at(x, bbox_bottom).styleb;
-            	}
-            	if(trench_over_pit){
+            	if(pit_get(x, bbox_bottom)){
                     spr_shadow = -1;
 
                     var _spr = spr.PStatTrenchIdle;
@@ -764,10 +771,7 @@
                 }
             }
             with(instances_matching(Corpse, "sprite_index", sprPStatDead)){
-            	if("trench_over_pit" not in self){
-	                trench_over_pit = floor_at(x, bbox_bottom).styleb;
-            	}
-            	if(trench_over_pit){
+            	if(pit_get(x, bbox_bottom)){
                     draw_sprite_ext(spr.PStatTrenchIdle, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
                     if(place_meeting(x, y, Portal)){
                         var n = instance_nearest(x, y, Portal),
@@ -808,6 +812,12 @@
 
         draw_surface(_surf[2], _surfx, _surfy);
     }
+
+#define pit_get(_x, _y)
+	return global.pit_grid[# _x / 16, _y / 16];
+
+#define pit_set(_x, _y, _bool)
+	global.pit_grid[# _x / 16, _y / 16] = _bool;
 
 
 /// Scripts

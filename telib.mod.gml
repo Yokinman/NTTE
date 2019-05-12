@@ -9,7 +9,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
@@ -486,9 +486,14 @@
         if(_spd <= 0) direction = _dir;
         else motion_add(_dir, _spd);
         image_angle = _dir;
-        hitid = other.hitid;
+        if("hitid" in other) hitid = other.hitid;
         team = other.team;
-        creator = other;
+
+		 // Auto-Creator:
+		creator = other;
+		while("creator" in creator && !instance_is(creator, hitme)){
+			creator = creator.creator;
+		}
 
          // Euphoria:
         var e = skill_get(mut_euphoria);

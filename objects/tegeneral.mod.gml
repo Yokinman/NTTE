@@ -1132,24 +1132,7 @@
 	
 	 // Goodbye:
 	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
-	
-#define ElectroPlasma_destroy
 
-	 // Explode:
-	with(scrEnemyShoot(PlasmaImpact, 0, 0)){
-		sprite_index = spr.ElectroPlasmaImpact;
-		image_angle = other.image_angle;
-		mask_index = mskBullet1;
-		if(!instance_is(other, Player)) damage = 2;
-	}
-	
-	 // Effects:
-	repeat(1 + irandom(1)) instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
-	
-	 // Sounds:
-	sound_play_hit(sndPlasmaHit, 0.4);
-	sound_play_hit(sndGammaGutsProc, 0.4);
-	
 #define ElectroPlasma_hit
 	var p = instance_is(other, Player);
 	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
@@ -1171,6 +1154,32 @@
 #define ElectroPlasma_wall
 	image_xscale -= 0.05;
 	image_yscale -= 0.05;
+	
+#define ElectroPlasma_destroy
+	scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
+
+
+#define ElectroPlasmaImpact_create(_x, _y)
+	with(instance_create(_x, _y, PlasmaImpact)){
+		 // Visual:
+		sprite_index = spr.ElectroPlasmaImpact;
+
+		 // Vars:
+		mask_index = mskBullet1;
+		damage = 2;
+
+		 // Effects:
+		repeat(1 + irandom(1)){
+			instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
+		}
+
+		 // Sounds:
+		sound_play_hit(sndPlasmaHit,	 0.4);
+		sound_play_hit(sndGammaGutsProc, 0.4);
+
+		return id;
+	}
+
 
 #define Harpoon_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -3566,7 +3575,7 @@
     
      // Electroplasma:
     with(instances_named(CustomProjectile, "ElectroPlasma")){
-    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
     
      // Hot Quasar Weapons:
