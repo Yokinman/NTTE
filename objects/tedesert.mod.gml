@@ -241,7 +241,7 @@
 
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
-		if(!in_distance(Player, 64)){
+		if(!in_distance(Player, 96)){
 			repeat(choose(2, 3)){
 				obj_create(x + orandom(4), y + orandom(4), ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
 			}

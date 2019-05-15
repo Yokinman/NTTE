@@ -455,6 +455,7 @@
                     sprite_add("sprites/enemies/Pitsquid/sprTentacleBackwards.png", 2, 20, 20),
                     sprite_add("sprites/enemies/Pitsquid/sprTentacleForwards.png",  2, 20, 20)
                 ];
+                SquidCharge     = sprite_add("sprites/enemies/Pitsquid/Particles/sprSquidCharge.png", 5, 24, 24);
                 
                  // Maw:
                 PitSquidMawBite = sprite_add("sprites/enemies/Pitsquid/sprPitsquidMawBite.png", 14, 19, 19);

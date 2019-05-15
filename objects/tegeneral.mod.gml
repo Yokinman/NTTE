@@ -31,6 +31,7 @@
 		typ = 2;
 		my_lwo = noone;
 		ammo = 1;
+		has_hit = false;
 		returning = false;
 		return_to = noone;
 		big = false;
@@ -121,7 +122,7 @@
 						var d = point_direction(x, y, return_to.x, return_to.y);
 						
 						if(!place_meeting(x, y, return_to)){
-							var _speed = 1.2;
+							var _speed = friction * 2;
 							if(in_distance(return_to, 32)){
 								_speed = 2;
 								speed = max(0, speed - 0.8);
@@ -134,6 +135,7 @@
 						else{
 							var _wep = my_lwo,
 								_dir = direction;
+								
 							with(return_to){
 								 // Player specific effects:
 								if(instance_is(id, Player)){
@@ -224,6 +226,8 @@
 	if(projectile_canhit(other)){
 		projectile_hit_raw(other, damage, sndDiscHit);
 		
+		has_hit = true;
+		
 		 // Effects:
 		instance_create(x, y, Smoke);
 		
@@ -238,7 +242,7 @@
 	}
 	
 #define BatDisc_wall
-	if((!returning || big) && instance_exists(return_to)){
+	if((!returning || big) && !has_hit && instance_exists(return_to)){
 		returning = true;
 		
 		 // Effects:
@@ -1122,12 +1126,21 @@
 		var _x1 = x + hspeed,
 			_y1 = y + vspeed,
 			_x2 = tethered_to.x + tethered_to.hspeed,
-			_y2 = tethered_to.y + tethered_to.vspeed;
+			_y2 = tethered_to.y + tethered_to.vspeed,
+			_d1 = direction,
+			_d2 = tethered_to.direction;
 			
 		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
 			sprite_index = spr.ElectroPlasmaTether;
 			depth = -3;
+		
+			 // Effects:
+			if(chance_ct(1, 16)) with(instance_create(x, y, PlasmaTrail)){
+				sprite_index = spr.ElectroPlasmaTrail;
+				motion_set(lerp(_d1, _d2, random(1)), 1);
+			}
 		}
+		
 	}
 	
 	 // Goodbye:

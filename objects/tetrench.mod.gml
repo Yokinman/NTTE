@@ -1604,6 +1604,7 @@
 				
 				 // Effects:
 				instance_create(x + orandom(8), y + orandom(8) + 16, PortalL);
+				view_shake_max_at(x, y, 5);
 				 
 				 // End Volley Attack:
 				if(ammo <= 0){
@@ -1908,19 +1909,30 @@
 				bomb_delay--;
 				
 				 // Effects:
-				var _depth = depth - 1;
-				repeat(1 + irandom(1)) with(instance_create(irandom_range(bbox_left, bbox_right), irandom_range(bbox_top, bbox_bottom), PlasmaTrail)){
+				var _depth = depth - 1,
+					_yoffset = 8;
+				repeat(1 + irandom(1)) with(instance_create(irandom_range(bbox_left, bbox_right), irandom_range(bbox_top, bbox_bottom) - _yoffset, PlasmaTrail)){
 					depth = _depth;
 					sprite_index = spr.MortarTrail;
 				}
 				
-				var d = irandom(359),
-					l = irandom(64);
+				 // Full charge:
+				if(bomb_delay <= 0){
 					
-				with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), LaserCharge)){
-					depth = _depth;
-					motion_set(d + 180, 3 + random(3));
-					alarm0 = ceil(l / speed);
+					 // Effects:
+					with(instance_create(x, y - _yoffset, ImpactWrists)){
+						depth = _depth;
+						sprite_index = spr.SquidCharge;
+					}
+					repeat(2 + irandom(4)) with(instance_create(x, y - _yoffset, LaserCharge)){
+						depth = _depth;
+						alarm0 = 6 + irandom(6);
+						motion_set(irandom(359), 2 + random(2));
+					}
+					
+					 // Sounds:
+					sound_play_pitch(sndPlasmaReload, 1.8 + random(0.4));
+					sound_play_pitchvol(sndCrystalJuggernaut, 1.3 + random(0.4), 0.5);
 				}
 			}
 			
@@ -2059,24 +2071,21 @@
 	var _x = x + lengthdir_x(_len, _dir),
 		_y = y + lengthdir_y(_len, _dir);
 	
-	if(place_meeting(_x, _y, Floor) && !place_meeting(_x, _y, Wall) && !place_meeting(x, y, FloorExplo)){
-		if(pit_get(_x, _y)){
-
-			 // Relocate Creator:
-			with(creator){
-				teleport_x = _x;
-				teleport_y = _y;
-				
-				alarm2 = other.alarm1 + 10;
-				alarm1 = max(alarm1, alarm2);
-			}
-		
-			 // Spawn Next Bomb:
-			if(ammo > 0){
-				with(scrEnemyShootExt(_x, _y, "SquidBomb", _dir, 0)){
-					target = other.target;
-					ammo = other.ammo - 1;
-				}
+	if(pit_get(_x, _y) && !place_meeting(_x, _y, Wall) && !place_meeting(_x, _y, FloorExplo)){
+		 // Relocate Creator:
+		with(creator){
+			teleport_x = _x;
+			teleport_y = _y;
+			
+			alarm2 = other.alarm1 + 10;
+			alarm1 = max(alarm1, alarm2);
+		}
+	
+		 // Spawn Next Bomb:
+		if(ammo > 0){
+			with(scrEnemyShootExt(_x, _y, "SquidBomb", _dir, 0)){
+				target = other.target;
+				ammo = other.ammo - 1;
 			}
 		}
 	}
@@ -2087,18 +2096,20 @@
 			sprite_index = spr.MortarTrail;
 		}
 	}
-	instance_create(x + orandom(4), y + orandom(4), PortalL);
+	
+	repeat(irandom_range(1, 2)){
+		with(instance_create(x + orandom(6), y + orandom(6), LaserCharge)){
+			motion_set(_dir, 1);
+			alarm0 = 10 + irandom(5);
+		}
+	}
 	
 #define SquidBomb_alrm1
 	instance_destroy();
 	
 #define SquidBomb_destroy
 	var l = 8,
-		_projectiles = [],
-		_freeze = UberCont.opt_freeze;
-	
-	 // I think this works:
-	UberCont.opt_freeze = 0; // what u using this for smash brtohers
+		_projectiles = [];
 	
 	 // Triple Sucker:
 	if(triple){
@@ -2106,40 +2117,42 @@
 			var _x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			array_push(_projectiles, instance_create(_x, _y, PlasmaImpact));
+			array_push(_projectiles, instance_create(_x, _y, CustomProjectile));
 			// scrEnemyShootExt(_x, _y, "ElectroPlasmaImpact", direction, 0);
 		}
 	}
 
 	 // Single Sucker:
 	else{
-		array_push(_projectiles, instance_create(x, y, PlasmaImpact));
+		array_push(_projectiles, instance_create(x, y, CustomProjectile));
 		// scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
 	}
 	
 	with(_projectiles){
+		instance_change(PlasmaImpact, false);
+		
 		creator =	other.creator;
 		team =		other.team;
 		damage =	2;
 		direction = other.direction;
 		hitid =		[spr.PitSquidMawBite, "PIT SQUID"];
 		
+		image_speed = 0.4;
+		
 		sprite_index = spr.MortarImpact;
 		image_xscale = other.scale;
 		image_yscale = other.scale;
+		
+		 // Effects:
+		instance_create(x, y, Smoke).waterbubble = false;
 	}
 	
 	 // Effects:
-	repeat(1 + irandom(2)){
-		instance_create(x + orandom(16), y + orandom(16), PortalL);
-	}
+	view_shake_max_at(x, y, (triple ? 5 : 15));
 	
 	 // Sounds:
 	sound_play_hit(sndEliteShielderFire, 0.6);
 	sound_play_hit(sndOasisExplosionSmall, 0.4);
-	
-	UberCont.opt_freeze = _freeze;
-
 
 #define Tentacle_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){

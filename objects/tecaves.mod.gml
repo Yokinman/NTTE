@@ -485,6 +485,9 @@
     }
     
 #define SpiderWall_step
+	 // Destroy Overlapping Walls:
+	with(instances_at(x, y, instances_matching_ne(instances_matching(instances_named(CustomObject, "SpiderWall"), "special", false), "id", id))) instance_destroy();
+
     if(!instance_exists(creator)){
          // Spawn Special Spider:
         if(special) Pet_spawn(x + 8, y + 8, "Spider");
