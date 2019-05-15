@@ -1054,6 +1054,7 @@
         pit_height = 1;
         spit = 0;
         ammo = 0;
+        volley_angle = 18;
         last_electroplasma = noone;
 		laser = 0;
 		laser_charge = 0;
@@ -1587,7 +1588,7 @@
 					_angle = direction - min(abs(d), 40) * sign(d);
 				}
 				
-				with(scrEnemyShootExt(x, y + 16, "ElectroPlasma", _angle + orandom(10), 5)){
+				with(scrEnemyShootExt(x, y + 16, "ElectroPlasma", _angle + volley_angle + orandom(5), 5)){
 					tethered_to = _last;
 					damage = 1;
 					
@@ -1595,6 +1596,7 @@
 				}
 				
 				last_electroplasma = _last;
+				volley_angle *= -1;
 				
 				 // Sounds:
 				sound_play_pitch(sndOasisShoot, 		1.1 + random(0.3));
@@ -1722,6 +1724,7 @@
         meleedamage = 1;
         wave = 0;
         bomb = 0;
+        bomb_delay = 0;
         
         teleport = false;
         teleport_x = x;
@@ -1847,9 +1850,16 @@
 				
 				else{
 					 // Attack:
-					if(in_sight(target) && chance(2, 7)){
-						alarm2 = 1;
-						bomb = true;
+					if(in_sight(target) && pit_get(target.x, target.y)){
+						if(chance(2, 7)){
+							alarm2 = 1;
+							bomb = true;
+							bomb_delay = 18;
+							
+							 // Sounds:
+							sound_play_pitchvol(sndPlasmaReloadUpg, 0.8 + random(0.3), 0.6);
+							sound_play_pitch(sndOasisPortal, 1.1 + random(0.3));
+						}
 					}
 					
 					 // Wander Passively:
@@ -1871,9 +1881,6 @@
 	
 #define SquidArm_alrm2
 	alarm2 = 0;
-	
-	 // Effects:
-	repeat(2 + irandom(3)) instance_create(x, y, Bubble);
 
 	target = instance_nearest(x, y, Player);
 	if(instance_exists(creator)){
@@ -1895,74 +1902,97 @@
 			}
 		}
 		
-		 // Teleport Disappear:
 		else{
-			teleport = true;
-			alarm2 = 20 + random(20);
-			
-			 // Determine Teleport Coordinates:
-			if(instance_exists(target)){
-				var _target = target,
-					_creator = creator,
-					_allPits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
+			if(bomb_delay > 0){
+				alarm2 = 1;
+				bomb_delay--;
 				
-				 // Bomb Attack:
-				if(bomb){
-					with(scrEnemyShoot("SquidBomb", point_direction(x, y, target.x, target.y), 0)){
-						target = _target;
-						ammo   = 4 + irandom(3);
-						scale  = 1;
-						triple = false;
-						
-						alarm0 = 10;
-						alarm1 += alarm0;
-					}
-					
-					bomb = false;
+				 // Effects:
+				var _depth = depth - 1;
+				repeat(1 + irandom(1)) with(instance_create(irandom_range(bbox_left, bbox_right), irandom_range(bbox_top, bbox_bottom), PlasmaTrail)){
+					depth = _depth;
+					sprite_index = spr.MortarTrail;
 				}
 				
-				 // Teleport Closer to Player:
-				else{
-					var _emptyPits = [],
-						_validPits = [];
+				var d = irandom(359),
+					l = irandom(64);
 					
-					 // Find Clear Pits:
-					with(_allPits) if(!place_meeting(x, y, Wall) && !place_meeting(x, y, FloorExplo)){
-						array_push(_emptyPits, id);
-					}
-					
-					var _nearest = nearest_instance(target.x, target.y, _emptyPits),
-						_minDist = point_distance(target.x, target.y, _nearest.x, _nearest.y);
-						
-					 // Find Pits Near Target:
-					with(_emptyPits) if(in_distance(_target, [32, max(96, _minDist)]) && in_distance(_creator, [60, 180])){
-						array_push(_validPits, id);
-					}
-					
-					 // Teleport to Random Valid Pit:
-					if(array_length(_validPits)){
-						with(instance_random(_validPits)){
-							with(other){
-								teleport_x = other.x + 16;
-								teleport_y = other.y + 16;
-							}
-						}
-					}
-					
-					 // Teleport to a Random Pit:
-					else{
-						with(instance_random(_emptyPits)){
-							with(other){
-								teleport_x = other.x + 16;
-								teleport_y = other.y + 16;
-							}
-						}
-					}
+				with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), LaserCharge)){
+					depth = _depth;
+					motion_set(d + 180, 3 + random(3));
+					alarm0 = ceil(l / speed);
 				}
 			}
 			
-			 // Sounds:
-			sound_play_pitchvol(sndOasisMelee, 0.7 + random(0.3), 1.0);
+			 // Teleport Disappear:
+			else{
+				teleport = true;
+				alarm2 = 20 + random(20);
+				
+				 // Determine Teleport Coordinates:
+				if(instance_exists(target)){
+					var _target = target,
+						_creator = creator,
+						_allPits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
+					
+					 // Bomb Attack:
+					if(bomb){
+						with(scrEnemyShoot("SquidBomb", point_direction(x, y, target.x, target.y), 0)){
+							target = _target;
+							ammo   = 4 + irandom(3);
+							scale  = 1;
+							triple = false;
+							
+							alarm0 = 10;
+							alarm1 += alarm0;
+						}
+						
+						bomb = false;
+					}
+					
+					 // Teleport Closer to Player:
+					else{
+						var _emptyPits = [],
+							_validPits = [];
+						
+						 // Find Clear Pits:
+						with(_allPits) if(!place_meeting(x, y, Wall) && !place_meeting(x, y, FloorExplo)){
+							array_push(_emptyPits, id);
+						}
+						
+						var _nearest = nearest_instance(target.x, target.y, _emptyPits),
+							_minDist = point_distance(target.x, target.y, _nearest.x, _nearest.y);
+							
+						 // Find Pits Near Target:
+						with(_emptyPits) if(in_distance(_target, [32, max(96, _minDist)]) && in_distance(_creator, [60, 180])){
+							array_push(_validPits, id);
+						}
+						
+						 // Teleport to Random Valid Pit:
+						if(array_length(_validPits)){
+							with(instance_random(_validPits)){
+								with(other){
+									teleport_x = other.x + 16;
+									teleport_y = other.y + 16;
+								}
+							}
+						}
+						
+						 // Teleport to a Random Pit:
+						else{
+							with(instance_random(_emptyPits)){
+								with(other){
+									teleport_x = other.x + 16;
+									teleport_y = other.y + 16;
+								}
+							}
+						}
+					}
+				}
+				
+				 // Sounds:
+				sound_play_pitchvol(sndOasisMelee, 0.7 + random(0.3), 1.0);
+			}
 		}
 		
 		alarm1 += alarm2;
@@ -2052,9 +2082,9 @@
 	}
 
 	 // Effects:
-	repeat(irandom_range(4, 8)){
-		with(instance_create(x + orandom(16), y + orandom(16), PlasmaTrail)){
-			sprite_index = spr.ElectroPlasmaTrail;
+	repeat(irandom_range(3, 7)){
+		with(instance_create(x + orandom(12), y + orandom(12), PlasmaTrail)){
+			sprite_index = spr.MortarTrail;
 		}
 	}
 	instance_create(x + orandom(4), y + orandom(4), PortalL);
@@ -2076,18 +2106,17 @@
 			var _x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			//array_push(_projectiles, instance_create(_x, _y, PlasmaImpact));
-			scrEnemyShootExt(_x, _y, "ElectroPlasmaImpact", direction, 0);
+			array_push(_projectiles, instance_create(_x, _y, PlasmaImpact));
+			// scrEnemyShootExt(_x, _y, "ElectroPlasmaImpact", direction, 0);
 		}
 	}
 
 	 // Single Sucker:
 	else{
-		//array_push(_projectiles, instance_create(x, y, PlasmaImpact));
-		scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
+		array_push(_projectiles, instance_create(x, y, PlasmaImpact));
+		// scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
 	}
 	
-	/*
 	with(_projectiles){
 		creator =	other.creator;
 		team =		other.team;
@@ -2095,10 +2124,10 @@
 		direction = other.direction;
 		hitid =		[spr.PitSquidMawBite, "PIT SQUID"];
 		
+		sprite_index = spr.MortarImpact;
 		image_xscale = other.scale;
 		image_yscale = other.scale;
 	}
-	*/
 	
 	 // Effects:
 	repeat(1 + irandom(2)){
@@ -2106,7 +2135,8 @@
 	}
 	
 	 // Sounds:
-	sound_play_hit(sndLightningReload, 0.4);
+	sound_play_hit(sndEliteShielderFire, 0.6);
+	sound_play_hit(sndOasisExplosionSmall, 0.4);
 	
 	UberCont.opt_freeze = _freeze;
 

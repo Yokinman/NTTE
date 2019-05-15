@@ -1086,7 +1086,7 @@
 		mask_index = mskEnemyBullet1;
 		damage = 3;
 		typ = 2;
-		wave = 0;
+		wave = irandom(90);
 		tethered_to = noone;
 		tether_range = 80;
 		
