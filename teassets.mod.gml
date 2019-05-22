@@ -338,6 +338,10 @@
             PetSpiderHurt = sprite_add("sprites/pets/Caves/sprPetSpiderDodge.png",  3, 16, 16);
             PetSparkle =    sprite_add("sprites/pets/Caves/sprPetSparkle.png",      5,  8,  8);
             
+            SpiderTangle            = sprite_add("sprites/pets/Caves/sprSpiderTangle.png",          2,  4,  4);
+            SpiderTangleAppear      = sprite_add("sprites/pets/Caves/sprSpiderTangleAppear.png",    6,  24, 24);
+            SpiderTangleDisappear   = sprite_add("sprites/pets/Caves/sprSpiderTangleDisappear.png", 5,  24, 24);
+            
              // Parrot:
             PetParrotIdle = sprite_add("sprites/pets/Coast/sprPetParrotIdle.png",   6, 12, 12);
             PetParrotWalk = sprite_add("sprites/pets/Coast/sprPetParrotWalk.png",   6, 12, 14);

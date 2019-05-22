@@ -1,5 +1,5 @@
 #define init
-    global.sprElectroPlasmaRifle = sprite_add_weapon("../sprites/weps/sprElectroPlasmaRifle.png", 2, 5);
+    global.sprElectroPlasmaRifle = sprite_add_weapon("../sprites/weps/sprElectroPlasmaRifle.png", 4, 5);
 
 #define weapon_name return "ELECTROPLASMA RIFLE";
 #define weapon_text return "DEEP SEA WEAPONRY";

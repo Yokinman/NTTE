@@ -1034,6 +1034,65 @@
     }
 
 
+#define Spider_create
+	
+#define Spider_alrm0(_leaderDir, _leaderDis)
+	alarm0 = 20 + irandom(20);
+	
+	if(instance_exists(leader)){
+         // Pathfinding:
+        if(array_length(path) > 0){
+            scrWalk(5 + random(5), path_dir + orandom(30));
+            return walk;
+        }
+        
+        else{
+			var _target = noone;
+			
+			 // Find Larget:	
+			with(leader){
+				var _enemies = [];
+				with(enemy) if(in_sight(other) && in_distance(other, 256)){
+					array_push(_enemies, id);
+				}
+				
+				_target = nearest_instance(x, y, _enemies);
+			}
+				
+			var t = array_length(instances_matching(instances_named(CustomProjectile, "SpiderTangle"), "creator", leader));
+			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
+			
+				 // Snare Larget:
+				if(in_sight(_target)){
+					var _targetDir = point_direction(x, y, _target.x, _target.y);
+					
+					with(obj_create(x, y, "SpiderTangle")){
+						creator =	other.leader;
+						team =		other.team;
+						motion_set(_targetDir + orandom(2), 8);
+						image_angle = direction;
+					}
+					
+					 // Effects:
+					motion_add(_targetDir + 180, 2);
+					scrRight(_targetDir);
+				}
+			}
+			
+			else{
+				 // Follow Leader:
+				if(_leaderDis > 64){
+					scrWalk(20 + irandom(10), _leaderDir);
+				}
+				
+				 // Wander:
+				else{
+					scrWalk(10 + irandom(10), direction + orandom(45));
+				}
+			}
+        }
+	}
+
 #define Octo_create
      // Visual:
     spr_hide = spr.PetOctoHide;
