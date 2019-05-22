@@ -23,55 +23,55 @@
     var _wep = variable_instance_get(id, ["bwep", "wep"][_pwep]);
     if(is_object(_wep)){
         if(_wep.buff != muscle){
-            
+
             var _unbuff = round(buffAmmo * _wep.buff)
-            
+
              // Account for preexisting projectiles:
             with(instances_matching(instances_matching(CustomProjectile, "name", "BatDisc"), "my_lwo", _wep)){
                 _unbuff -= ammo;
                 ammo = 0;
-                
+
                 if(_unbuff <= _wep.ammo) break;
             }
-            
+
             _wep.ammo -= _unbuff;
             _wep.buff = muscle;
             _wep.ammo += round(buffAmmo * muscle);
         }
     }
-    
+
      // Set clicked:
     if(button_pressed(index, ["spec", "fire"][_pwep])) bat_clicked = true;
 
 #define weapon_fire(_pwep)
     if(!is_object(wep)) wep = wepLWO;
-    
+
      // Fire:
     if(internalAmmoFire(wep, wepCost, variable_instance_get(id, "bat_clicked", false))){
-        
+
          // Projectile:
         with(obj_create(x, y, "BatDisc")){
             projectile_init(other.team, other);
             my_lwo = other.wep;
             big = true;
-            
+
             if(other.infammo != 0) ammo = 0;
-            
-            motion_set(other.gunangle + orandom(16) * other.accuracy, maxspeed);
+
+            motion_set(other.gunangle + orandom(4) * other.accuracy, maxspeed); // sorry smash but 32° is too much for a cannon
         }
-        
+
          // Effects:
         weapon_post(12, 16, 12);
         motion_set(gunangle, -4);
-        
+
         repeat(4 + irandom(4)) with(instance_create(x, y, Smoke)) motion_set(other.gunangle + orandom(32), random(8));
-        
+
          // Sounds:
         sound_play_pitchvol(sndSuperDiscGun,    0.6 + random(0.4), 0.6);
         sound_play_pitchvol(sndNukeFire,        1.0 + random(0.6), 0.8);
         sound_play_pitchvol(sndEnergyHammerUpg, 0.8 + random(0.4), 0.6);
     }
-    
+
      // Reset clicked:
     bat_clicked = false;
 
