@@ -63,6 +63,10 @@
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
     	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
 
+         // Menu:
+        OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
+        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 16,  6);
+
          // Quasar Beam:
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
         QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 32, 16);
@@ -70,6 +74,9 @@
         QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   6,  24, 24);
         QuasarBeamTrail = sprite_add("sprites/weps/projectiles/sprQuasarBeamTrail.png", 3,  4,  4);
         msk.QuasarBeam  = sprite_add("sprites/weps/projectiles/mskQuasarBeam.png",      1, 32, 16);
+
+         // Small Green Explo:
+        SmallGreenExplosion = sprite_add("sprites/weps/projectiles/sprSmallGreenExplosion.png", 7, 12, 12);
 
         //#region CAMPFIRE
              // Big Cactus:
@@ -643,8 +650,7 @@
         	 
         //#endregion
 
-        OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
-        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 16,  6);
+        MergeWep = {};
     }
 
      // SOUNDS //
@@ -858,6 +864,78 @@
     }
 
     draw_reset_projection();
+
+#define sprite_merge(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+    var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
+    if(lq_exists(spr.MergeWep, _sprName)){
+        return lq_get(spr.MergeWep, _sprName);
+    }
+    else{
+        var _spr = [_stock, _front],
+            _sprW = [],
+            _sprH = [];
+    
+        for(var i = 0; i < array_length(_spr); i++){
+            _sprW[i] = sprite_get_width(_spr[i]);
+            _sprH[i] = sprite_get_height(_spr[i]);
+        }
+    
+        var _surfW = max(_sprW[0], _sprW[1]),
+            _surfH = max(_sprH[0], _sprH[1]),
+            _surf = surface_create(_surfW, _surfH);
+    
+        surface_set_target(_surf);
+        draw_clear_alpha(0, 0);
+    
+        with(other){
+    		for(var b = false; b <= true; b++){
+    			var _dx = 0,
+    				_dy = _surfH / 3;
+    	
+    			for(var i = 0; i <= 1; i++){
+    				var _cut = (ceil(_sprW[i] / 2) + 2) - ceil(_sprW[i] / 8),
+    					l = _cut * i,
+    					w = (i ? _sprW[i] - _cut : _cut),
+    					t = 0,
+    					h = _sprH[i],
+    					_x = _dx,
+    					_y = _dy - sprite_get_yoffset(_spr[i]);
+    
+                    switch(_spr[i]){
+                        case sprAutoShotgun:
+                            _y += 1;
+                            break;
+    
+                        case sprAutoCrossbow:
+                        case sprSuperCrossbow:
+                        case sprGatlingSlugger:
+                            _y -= 1;
+                            break;
+    
+                        case sprToxicBow:
+                            _y -= 2;
+                            break;
+                    }
+    
+    				if(b){
+    					draw_sprite_part_ext(_spr[i], 0, l, t, w, h, _x, _y, 1, 1, c_white, 1);
+    				}
+    				else{
+    					draw_sprite_part_ext(_spr[i], 0, _cut - !i, t, 1, h, _x + (_cut - l) - i, _y, 1, 1, c_black, 1);
+    				}
+    				_dx += _cut;
+    			}
+    		}
+        }
+    
+        surface_reset_target();
+        surface_save(_surf, "merge.png");
+        surface_destroy(_surf);
+    
+        var s = sprite_add_weapon("merge.png", 2, _surfH / 3);
+        lq_set(spr.MergeWep, _sprName, s);
+    	return s;
+    }
 
 #define cleanup
     save();

@@ -1,9 +1,11 @@
+/loadwep merge
 /loadwep crabbone
 /loadwep bat disc launcher
 /loadwep bat disc cannon
 /loadwep bat tether
 /loadwep harpoon launcher
 /loadwep net launcher
+/loadwep trident
 /loadwep bubble rifle
 /loadwep bubble shotgun
 /loadwep bubble minigun

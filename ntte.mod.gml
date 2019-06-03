@@ -1017,6 +1017,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     instance_destroy();
 
      // Convert WepPickups to Pickup Indicators:
+    /*
     with(instances_matching(WepPickup, "convert_pickup_indicator", true)){
         var v = ["creator", "mask_index", "xoff", "yoff"],
             _save = {};
@@ -1028,11 +1029,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         name = "PickupIndicator";
         on_end_step = pickup_indicator_end_step;
     }
+    */
 
      // Make Game Display Pickup Indicators:
     with(instances_matching(Player, "nearwep", noone)){
-        if(place_meeting(x, y, CustomObject)){
-            with(nearest_instance(x, y, instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true))){
+    	var _inst = instances_matching(instances_matching_ne(IceFlower, "pickup_indicator", null), "visible", true);
+    	with(_inst) mask_index = mask;
+        if(place_meeting(x, y, IceFlower)){
+            with(nearest_instance(x, y, instances_meeting(x, y, _inst))){
                 if(place_meeting(x, y, other)){
                     x += xoff;
                     y += yoff;
@@ -1045,6 +1049,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 }
             }
         }
+		with(_inst) mask_index = mskNone;
     }
 
 #define bone_step
@@ -2081,44 +2086,82 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     draw_reset_projection();
 
 #define scrPickupIndicator(_text)
-    with(instance_create(0, 0, WepPickup)){
+    with(instance_create(0, 0, IceFlower)){
+    	pickup_indicator = true;
+
+    	 // Visual:
+        sprite_index = mskNone;
+        spr_idle = mskNone;
+        spr_walk = mskNone;
+        spr_hurt = mskNone;
+        spr_dead = mskNone;
+        spr_shadow = -1;
+
+		 // Sound:
+		snd_hurt = -1;
+		snd_dead = -1;
+
+    	 // Vars:
+        mask_index = mskNone;
+    	mask = mskWepPickup;
         name = _text;
-        type = 0;
         creator = other;
         xoff = 0;
         yoff = 0;
         pick = -1;
-        convert_pickup_indicator = true;
-        mask_index = mskNone;
-        visible = 0;
+
+		 // Bind to End Step:
+		if(array_length(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")) <= 0){
+			with(script_bind_end_step(PickupIndicator_end_step, 0)){
+				name = script[2];
+				inst = [];
+			}
+		}
+		with(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")){
+			inst = array_combine([other], inst); // Cause array_insert is broke af
+		}
 
         return id;
     }
 
-#define pickup_indicator_end_step
-    pick = -1;
-
-     // Follow Creator:
-    var c = creator;
-    if(c != noone){
-        if(instance_exists(c)){
-            x = c.x;
-            y = c.y;
-            persistent = c.persistent;
-            image_index = c.image_index;
-            image_angle = c.image_angle;
-            image_xscale = c.image_xscale;
-            image_yscale = c.image_yscale;
-            if(mask_index == mskNone){
-                mask_index = c.mask_index;
-                if(mask_index == -1) mask_index = c.sprite_index;
-            }
-            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
-                c.pickup_indicator = id;
-            }
-        }
-        else instance_destroy();
-    }
+#define PickupIndicator_end_step
+	if(array_length(inst) > 0){
+		with(inst){
+			if(instance_exists(self)){
+			    pick = -1;
+			    feed = 0;
+			    my_health = 99999;
+			
+			     // Follow Creator:
+			    var c = creator;
+			    if(c != noone){
+			        if(instance_exists(c)){
+			            x = c.x;
+			            y = c.y;
+			            persistent = c.persistent;
+			            image_index = c.image_index;
+			            image_angle = c.image_angle;
+			            image_xscale = c.image_xscale;
+			            image_yscale = c.image_yscale;
+			            if(mask_index != mskNone){
+			            	mask = mask_index;
+			            	mask_index = mskNone;
+			            }
+			            if(mask == mskNone){
+			                mask = c.mask_index;
+			                if(mask == -1) mask = c.sprite_index;
+			            }
+			            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
+			                c.pickup_indicator = id;
+			            }
+			        }
+			        else instance_destroy();
+			    }
+			}
+			else other.inst = array_delete_value(other.inst, self);
+		}
+	}
+	else instance_destroy();
 
 #define alarm_creator(_object, _alarm)
   /// Calls alarm event and sets creator on objects that were spawned during it
@@ -2979,3 +3022,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
+#define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
+#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
+#define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);

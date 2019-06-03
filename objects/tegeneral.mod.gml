@@ -1066,11 +1066,13 @@
              // Call Chest Open Event:
             var e = on_open;
             if(mod_script_exists(e[0], e[1], e[2])){
-                mod_script_call(e[0], e[1], e[2], (i == 0));
+                mod_script_call(e[0], e[1], e[2]);
             }
 
              // Effects:
-            with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
+            if(sprite_exists(spr_open)){
+            	with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
+            }
             instance_create(x, y, FXChestOpen);
             sound_play(snd_open);
 
@@ -1191,6 +1193,315 @@
 		sound_play_hit(sndGammaGutsProc, 0.4);
 
 		return id;
+	}
+
+
+#define FlakBall_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = -1;
+		image_speed = 0;
+
+		 // Vars:
+		mask_index = mskFlakBullet;
+		friction = 0.4;
+		damage = 0;
+		force = 6;
+		rotation = 0;
+		rotspeed = random_range(12, 16) * choose(-1, 1);
+		inst = [];
+		inst_vars = {};
+		flag = [];
+
+		return id;
+	}
+
+#define FlakBall_step
+	image_index += (speed / 12) * current_time_scale;
+
+	 // Create Sprite:
+	if(!sprite_exists(sprite_index)){
+		var	_surfw = 24,
+			_surfh = 24,
+			_num = 2;
+
+		with(inst) if(instance_exists(self)){
+			_surfw = max(_surfw, sprite_width  * 2);
+			_surfh = max(_surfh, sprite_height * 2);
+
+			if(object_index == other.object_index && "name" in self && name == other.name){
+				if(sprite_width == 16) _num = 0;
+			}
+		}
+		_surfw += 8;
+		_surfh += 8;
+
+		if(_num > 0){
+			var _surf = surface_create(_surfw * _num, _surfh);
+
+			 // Draw Sprite:
+			surface_set_target(_surf);
+			draw_clear_alpha(0, 0);
+			for(var i = 0; i < _num; i++){
+				with(inst) if(instance_exists(self)){
+					var	_spr = sprite_index,
+						_img = image_index,
+						_xsc = image_xscale,
+						_ysc = image_yscale,
+						_ang = image_angle,
+						_col = image_blend,
+						_alp = abs(image_alpha),
+						l = (sprite_xoffset - (sprite_width / 2)),
+						_x = (_surfw / 2) + lengthdir_x(l, _ang) + (i * _surfw),
+						_y = (_surfh / 2) + lengthdir_y(l, _ang),
+						_pulse = 1 + min(4 / sprite_get_width(_spr), i * (sprite_get_height(_spr) / 64));
+
+					if(object_index == other.object_index && "name" in self && name == other.name){
+						_img = i;
+						_pulse = 1;
+					}
+
+					else switch(_spr){
+						case sprGrenade:
+						case sprStickyGrenade:
+						case sprBloodGrenade:
+						case sprFlare:
+						case sprPopoNade:
+						case sprToxicGrenade:
+						case sprClusterNade:
+						case sprUltraGrenade:
+							_spr = sprClusterGrenadeBlink;
+							_img = i;
+							break;
+
+						case sprMininade:
+						case sprConfettiBall:
+							_spr = sprGrenadeBlink;
+							_img = i;
+							break;
+
+						case sprHeavyNade:
+							_spr = sprHeavyGrenadeBlink;
+							_img = i;
+							break;
+
+						case sprDisc:
+						case sprGoldDisc:
+							if(i) _spr = sprDiscTrail;
+							break;
+
+						case sprLaser:
+							_spr = sprPlasmaBall;
+							_ysc /= 3;
+							_xsc = _ysc;
+							break;
+
+						case sprPlasmaBall:
+						case sprPlasmaBallBig:
+						case sprPlasmaBallHuge:
+						case sprUltraBullet:
+						case sprUltraShell:
+							_xsc *= 0.8;
+							_ysc *= 0.8;
+							break;
+
+						case sprLightning:
+							_spr = sprLightningBall;
+							_img = (i * 3);
+							_ang = other.image_angle;
+							_xsc /= 2;
+							_ysc /= 2;
+							break;
+
+						case sprTrapFire:
+						case sprWeaponFire:
+							_img = irandom(3);
+							break;
+
+						case sprLightningBall:
+						case sprFlameBall:
+						case sprBloodBall:
+							_img = irandom(image_number - 1);
+							break;
+
+						case sprFireShell:
+							_spr = sprFireBall;
+							_img = 1;
+							break;
+
+						case sprBolt:
+						case sprBoltGold:
+						case sprToxicBolt:
+						case sprHeavyBolt:
+						case sprSplinter:
+						case sprUltraBolt:
+						case sprSeeker:
+							_img = image_number - 1;
+							break;
+
+						case sprScorpionBullet:
+							_ysc *= 2;
+							break;
+					}
+
+					_xsc *= _pulse;
+					_ysc *= _pulse;
+	
+					draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+				}
+			}
+			surface_reset_target();
+
+			 // Add Sprite:
+			surface_save(_surf, "testFlakBallSprite.png");
+			surface_destroy(_surf);
+			sprite_index = sprite_add("testFlakBallSprite.png", _num, _surfw / 2, _surfh / 2);
+		}
+	}
+
+	 // Hold Instances:
+	var _vars = inst_vars;
+	with(inst){
+		if(instance_exists(self) && speed > 0){
+			 // Store Vars:
+			var _id = string(id);
+			if(_id not in _vars){
+				var v = {
+					mask_index	: mask_index,
+					image_index	: image_index,
+					speed		: speed,
+					alarm		: []
+				};
+				for(var i = 0; i < 12; i++){
+					var a = alarm_get(i);
+					if(a > 0){
+						array_push(v.alarm, [i, a + 1]);
+					}
+				}
+				lq_set(_vars, _id, v);
+			}
+
+			 // Hold Vars:
+			var v = lq_get(_vars, _id);
+			image_index = v.image_index;
+			speed = v.speed;
+			var a = v.alarm;
+			for(var i = 0; i < array_length(a); i++){
+				alarm_set(a[i, 0], a[i, 1]);
+			}
+
+			 // Freeze Movement:
+			x = other.x - hspeed_raw;
+			y = other.y - vspeed_raw;
+
+			 // Object-Specific:
+			switch(object_index){
+				case Laser:
+					xstart = x;
+					ystart = y;
+					image_yscale += 0.3 * current_time_scale;
+					break;
+
+				case Bolt:
+				case ToxicBolt:
+				case Splinter:
+				case HeavyBolt:
+				case UltraBolt:
+					x += lengthdir_x(sprite_height / 4, image_angle + other.rotation);
+					y += lengthdir_y(sprite_height / 4, image_angle + other.rotation);
+					break;
+
+				case CustomProjectile:
+					if("name" in self && name == other.name){
+						rotation = other.rotation;
+						image_index = other.image_index;
+					}
+					break;
+			}
+
+			 // Disable:
+			if(mask_index != mskNone){
+				v.mask_index = mask_index;
+				mask_index = mskNone;
+			}
+			image_alpha = -abs(image_alpha);
+		}
+		else other.speed = 0;
+	}
+
+	 // Spin:
+	rotation += rotspeed * current_time_scale;
+	rotspeed -= clamp(rotspeed, -friction, friction) * current_time_scale;
+
+	 // Effects:
+	if(chance_ct(1, 3)){
+		instance_create(x, y, Smoke);
+	}
+
+	 // Explode:
+	if(speed <= 0 || place_meeting(x + hspeed, y + vspeed, Wall)) instance_destroy();
+
+#define FlakBall_draw
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
+
+#define FlakBall_hit
+	with(other){
+		var _hit = 4;
+		with(other.inst) if(instance_exists(self)){
+			if(other.my_health > 0 && (_hit > 0 || (object_index == CustomProjectile && "name" in self && name == "FlakBall"))){
+				event_perform(ev_collision, hitme);
+				if(instance_exists(other)) _hit = 0;
+				else _hit--;
+			}
+		}
+	}
+
+	 // Slow:
+	x -= hspeed_raw / 2;
+	y -= vspeed_raw / 2;
+
+#define FlakBall_destroy
+	 // Activate Projectiles:
+	var _vars = inst_vars;
+	with(inst) if(instance_exists(self)){
+		image_alpha = abs(image_alpha);
+		direction += other.rotation;
+		image_angle = direction;
+		x = other.x;
+		y = other.y;
+
+		var _id = string(id);
+		if(_id in _vars){
+			var v = lq_get(_vars, _id);
+			mask_index = v.mask_index;
+		}
+
+		 // Activate Lasers, Lightning, etc.
+		mod_script_call("weapon", "merge", "proj_post", other.flag);
+
+		 // Object Specific:
+		switch(object_index){
+			case Laser:
+				sound_play_pitch((skill_get(mut_laser_brain) ? sndLaserUpg : sndLaser), 1 + orandom(0.2));
+				break;
+
+			case CustomProjectile:
+				if("name" in self && name == other.name){
+					rotspeed += random_range(12, 16) * choose(-1, 1);
+				}
+				break;
+		}
+	}
+
+	 // Effects:
+	sleep(20);
+	view_shake_at(x, y, (array_length(inst) / 2));
+	sound_play(sndFlakExplode);
+	repeat(6) with(instance_create(x, y, Smoke)){
+		motion_add(random(360), random(3));
+	}
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = sprFlakHit;
 	}
 
 
@@ -3612,6 +3923,36 @@
     	}
     }
     draw_set_color_write_enable(true, true, true, true);
+	
+	 // Flak Ball:
+	with(instances_named(CustomProjectile, "FlakBall")){
+		var _scale = 1.5,
+			_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
+
+		if(array_length(instances_named(inst, name)) > 0){
+			_alpha *= 1.5;
+		}
+
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
+	}
+
+     // GunCont (Laser Cannon):
+	with(instances_named(CustomObject, "GunCont")){
+		if(bloom){
+			var _scr = on_draw;
+			if(array_length(_scr) >= 3){
+				image_xscale *= 2;
+				image_yscale *= 2;
+				image_alpha *= 0.1;
+
+				mod_script_call(_scr[0], _scr[1], _scr[2]);
+	
+				image_xscale /= 2;
+				image_yscale /= 2;
+				image_alpha /= 0.1;
+			}
+		}
+	}
 
 #define draw_shadows
     with(instances_named(CustomObject, "Pet")) if(visible){
@@ -3805,3 +4146,6 @@
 #define draw_set_flat(_color)                                                                   mod_script_call(   "mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
+#define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
+#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
+#define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);

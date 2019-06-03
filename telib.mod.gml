@@ -11,7 +11,7 @@
     global.objectList = {
 		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
@@ -917,6 +917,9 @@
 #define floor_ext(_num, _round)
     return floor(_num / _round) * _round;
 
+#define array_exists(_array, _value)
+    return (array_find_index(_array, _value) >= 0);
+
 #define array_count(_array, _value)
     var c = 0;
     for(var i = 0; i < array_length(_array); i++){
@@ -951,6 +954,38 @@
         a = array_delete(a, array_find_index(a, _value));
     }
     return a;
+
+#define array_clone_deep(_array)
+    var _new = array_clone(_array);
+
+    for(var i = 0; i < array_length(_new); i++){
+        var v = _new[i];
+        if(is_array(v)){
+            _new[i] = array_clone_deep(v);
+        }
+        else if(is_object(v)){
+            _new[i] = lq_clone_deep(v);
+        }
+    }
+
+    return _new;
+
+#define lq_clone_deep(_obj)
+    var _new = lq_clone(_obj);
+
+    for(var i = 0; i < lq_size(_new); i++){
+        var k = lq_get_key(_new, i),
+            v = lq_get_value(_new, i);
+
+        if(is_array(v)){
+            lq_set(_new, k, array_clone_deep(v));
+        }
+        else if(is_object(v)){
+            lq_set(_new, k, lq_clone_deep(v));
+        }
+    }
+
+    return _new;
 
 #define instances_named(_object, _name)
 	if(is_array(_name)){
@@ -1727,7 +1762,7 @@
             mod_script_call("mod", "petlib", _scrt);
         }
 
-        with(scrPickupIndicator(pet)) mask_index = mskWepPickup;
+        scrPickupIndicator(pet);
     }
 
     return p;
