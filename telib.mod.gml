@@ -780,6 +780,7 @@
     }
 
 #define scrRadDrop(_x, _y, _raddrop, _dir, _spd)
+	var _radInst = [];
 	while(_raddrop > 0){
 		var r = (_raddrop > 15);
 		repeat(r ? 1 : _raddrop){
@@ -787,12 +788,14 @@
 			with(instance_create(_x, _y, (r ? BigRad : Rad))){
 				speed = _spd;
 				direction = _dir;
-				motion_add(random(360), random(_raddrop / 2) + 2);
+				motion_add(random(360), random(_raddrop / 2) + 3);
 				speed *= power(0.9, speed);
+				array_push(_radInst, id);
 			}
 		}
 		if(!r) break;
 	}
+	return _radInst;
 
 #define scrCorpse(_dir, _spd)
 	with(instance_create(x, y, Corpse)){

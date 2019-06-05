@@ -65,7 +65,7 @@
 
          // Menu:
         OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
-        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 16,  6);
+        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 20,  9);
 
          // Quasar Beam:
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
@@ -77,6 +77,9 @@
 
          // Small Green Explo:
         SmallGreenExplosion = sprite_add("sprites/weps/projectiles/sprSmallGreenExplosion.png", 7, 12, 12);
+
+         // Bonus Ammo Shell:
+        BonusShell = sprite_add("sprites/misc/sprBonusShell.png", 1, 1, 2);
 
         //#region CAMPFIRE
              // Big Cactus:

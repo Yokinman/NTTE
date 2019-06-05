@@ -1711,7 +1711,6 @@
         	draw_circle(_x, _y, _scale1, false);
         }
 
-		
          // Bloom:
         draw_set_blend_mode(bm_add);
         draw_set_alpha(0.025);
@@ -1842,10 +1841,22 @@
 			creator = _open;
 			array_push(_shop, id);
 		}
-	} // change later \\
-	_shop[0].drop = choose("ammo", "infammo");
-	_shop[1].drop = choose("ammo", "infammo");
-	_shop[2].drop = choose("ammo", "infammo");
+	}
+
+	 // Randomize Items:
+	var _pool = ["ammo", "health", "bonus"];
+	with(Player){
+		switch(race){
+			case "horror":	array_push(_pool, "rads");		break;
+			case "rogue":	array_push(_pool, "rogue");		break;
+			case "parrot":	array_push(_pool, "parrot");	break;
+		}
+	}
+	with(_shop){
+		var i = irandom(array_length(_pool) - 1);
+		drop = _pool[i];
+		_pool = array_delete(_pool, i);
+	}
 
 	 // Effects:
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
@@ -2550,6 +2561,8 @@
 		wave = random(100);
 		type = ChestShop_basic;
 		drop = 0;
+		text = "";
+		desc = "";
 		curse = false;
 
 		 // Alarms:
@@ -2581,7 +2594,7 @@
 			motion_add(d + choose(0, 180), random(0.5));
 			sprite_index = sprLightning;
 			image_blend = other.image_blend;
-			image_alpha = 2 * (l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
+			image_alpha = 1.5 * (l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
 			image_angle = random(360);
 			depth = other.depth - 1;
 		}
@@ -2614,9 +2627,46 @@
 					case ChestShop_basic:
 						switch(drop){
 							case "ammo":
-								with(p){
-									instance_create(x, y, AmmoPickup).visible = false;
+								repeat(2){
+									instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
 								}
+								break;
+
+							case "health":
+								repeat(2){
+									instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
+								}
+								break;
+
+							case "rads":
+								scrRadDrop(_x, _y, 25, random(360), 4);
+								with(creator) depth++; depth--;
+								break;
+
+							case "bonus":
+								with(p){
+									if("ammo_bonus" not in self) ammo_bonus = 0
+									ammo_bonus += 24;
+									ammo_bonus_hold = array_clone(ammo);
+
+									 // FX:
+									with(instance_create(x, y, GunWarrantEmpty)) image_blend = c_aqua;
+									with(instance_create(_x, _y, Debris)){
+										motion_set(point_direction(x, y, other.x, other.y), 3);
+										sprite_index = sprDeskDebris;
+										image_index = 0;
+									}
+								}
+								break;
+
+							case "rogue":
+								with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
+									motion_add(point_direction(x, y, p.x, p.y), 3);
+								}
+								break;
+
+							case "parrot":
+								obj_create(_x, _y, "ParrotChester");
 								break;
 
 							case "infammo":
@@ -2626,6 +2676,11 @@
 								}
 								break;
 						}
+						
+						 // Effects:
+						sound_play_pitchvol(sndGunGun, 1.2 + random(0.4), 0.5);
+						sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
+						instance_create(_x, _y, WepSwap);
 						break;
 
 					case ChestShop_wep:
@@ -2646,6 +2701,9 @@
 						instance_create(_x, _y, GunGun);
 						break;
 				}
+
+				instance_create(p.x, p.y, PopupText).text = text;
+				instance_create(p.x, p.y, PopupText).text = desc;
 
 				 // Sounds:
 			    sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
@@ -2691,13 +2749,21 @@
 		//d += angle_difference(90, d) * (1 - clamp(open_state, 0, 1));
 
 		var	w = point_distance(_sx, _sy, _x, _y) * (open ? _openState : min(_openState * 3, 1)),
-			h = ((sqrt(sqr(sprite_get_width(_spr) * dsin(d)) + sqr(sprite_get_height(_spr) * dcos(d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
-			_x1 = _sx + lengthdir_x(0.5, d),
+			h = ((sqrt(sqr(sprite_get_width(_spr) * dsin(d)) + sqr(sprite_get_height(_spr) * dcos(d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2);
+
+		if(_spr == sprDeskDebris) h /= 2;
+
+		var	_x1 = _sx + lengthdir_x(0.5, d),
 			_y1 = _sy + lengthdir_y(1, d),
 			_x2 = _sx + lengthdir_x(w, d) + lengthdir_x(h / 2, d - 90),
-			_y2 = max(_y + 2, _sy + lengthdir_y(w, d) + lengthdir_y(h / 2, d - 90)),
+			_y2 = _sy + lengthdir_y(w, d) + lengthdir_y(h / 2, d - 90),
 			_x3 = _sx + lengthdir_x(w, d) - lengthdir_x(h / 2, d - 90),
-			_y3 = max(_y + 2, _sy + lengthdir_y(w, d) - lengthdir_y(h / 2, d - 90));
+			_y3 = _sy + lengthdir_y(w, d) - lengthdir_y(h / 2, d - 90);
+
+		if(type == ChestShop_wep){
+			_y2 = max(_y + 2, _y2);
+			_y3 = max(_y + 2, _y3);
+		}
 
 		_x = _sx + lengthdir_x(w, d);
 		_y = _sy + lengthdir_y(w, d);
@@ -2753,19 +2819,55 @@
 		case ChestShop_basic:
 			switch(drop){
 				case "ammo":
-					sprite_index = sprAmmoChest;
-					scrPickupIndicator("AMMO PICKUP#@sRELOAD");
+					sprite_index = sprAmmo;
+					image_blend = c_yellow;
+					text = "AMMO";
+					desc = "2 PICKUPS";
+					break;
+
+				case "health":
+					sprite_index = sprHP;
+					image_blend = c_white;
+					text = "HEALTH";
+					desc = "2 PICKUPS";
+					break;
+
+				case "rads":
+					sprite_index = sprBigRad;
+					image_blend = c_lime;
+					text = "RADS";
+					desc = "RADS";
+					break;
+
+				case "bonus":
+					sprite_index = sprDeskDebris;
+					shine_speed = false;
+					text = "OVERSTOCK";
+					desc = "BONUS AMMO";
+					break;
+
+				case "rogue":
+					sprite_index = sprRogueAmmo;
+					text = "PORTAL STRIKE";
+					desc = "PORTAL STRIKE";
+					break;
+
+				case "parrot":
+					sprite_index = spr.Parrot[0].Feather;
+					image_blend = make_color_rgb(200, 0, 0);
+					text = "FEATHERS";
+					desc = "FEATHERS";
 					break;
 
 				case "infammo":
 					sprite_index = sprFishA;
-					scrPickupIndicator("INFINITE AMMO#@sFOR A MOMENT");
+					text = "INFINITE AMMO";
+					desc = "FOR A MOMENT";
 					shine = false;
 					break;
 
 				default:
 					sprite_index = sprAmmo;
-					scrPickupIndicator("");
 					break;
 			}
 			break;
@@ -2773,11 +2875,12 @@
 		case ChestShop_wep:
 			sprite_index = weapon_get_sprt(drop);
 
-			var _txt = "WEAPON"
-			if(curse) _txt = "CURSED " + _txt;
-			scrPickupIndicator(_txt + "#@s" + weapon_get_name(drop));
+			text = (curse ? "CURSED " : "") + "WEAPON";
+			desc = weapon_get_name(drop);
 			break;
 	}
+
+	scrPickupIndicator(text + "#@s" + desc);
 
 
 #define Couch_create(_x, _y)

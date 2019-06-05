@@ -609,7 +609,7 @@
 	    with obj_create(x,y,"Manhole") toarea = "pizza";
 	    instance_delete(id);
 	}
-	
+
 	 // OG gators:
 	with(Gator){
 	    with instance_create(x,y,GatorSmoke) image_speed = 0.4;
@@ -951,6 +951,65 @@
 	    }
     }
 
+	 // Overstock / Bonus Ammo:
+	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
+		var c = weapon_get_cost(wep),
+			t = weapon_get_type(wep),
+			_auto = weapon_get_auto(wep);
+
+		if(race == "steroids" && _auto >= 0) _auto = true;
+
+		if(canfire && can_shoot){
+			if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked)){
+				if(ammo[t] + ammo_bonus >= c){
+					ammo_bono(c, t);
+				}
+			}
+		}
+	}
+
+#define draw_gui
+    var _active = 0,
+		_ox = 0,
+		_oy = 0;
+
+    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
+    if(_active > 1) _ox -= 19;
+
+	draw_set_font(fntSmall);
+	draw_set_halign(fa_right);
+	draw_set_valign(fa_top);
+	with(instances_matching_gt(instances_matching(Player, "index", player_find_local_nonsync()), "ammo_bonus", 0)){
+		draw_text_nt(66 + _ox, 30 + _oy, `@(color:${c_aqua})+${ammo_bonus}`);
+	}
+
+#define ammo_bono(_cost, _type)
+	_cost = min(ammo_bonus, _cost);
+	ammo_bonus -= _cost;
+	ammo[_type] += _cost;
+
+	 // FX:
+	repeat(_cost) with(instance_create(x, y, WepSwap)){
+		sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+		image_blend = c_aqua;
+		creator = other;
+	}
+	sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
+
+	 // End:
+	if(ammo_bonus <= 0){
+		sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+		sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
+		with(instance_create(x, y, WepSwap)){
+			sprite_index = sprThrowHit;
+			image_xscale = random_range(2/3, 1);
+			image_yscale = image_xscale;
+			image_angle = random(360);
+			image_blend = c_aqua;
+			creator = other;
+		}
+	}
+
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
     var _type = argument[0], _snd = argument[1];
 var _vol = argument_count > 2 ? argument[2] : undefined;
@@ -1052,6 +1111,50 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		with(_inst) mask_index = mskNone;
     }
 
+	 // Overstock / Bonus Ammo Cleanup:
+	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
+		drawempty = false;
+
+		 // Cool Blue Shells:
+		with(instances_matching(Shell, "ammo_bonus_shell", null)){
+			ammo_bonus_shell = false;
+			if(place_meeting(xprevious, yprevious, other)){
+				ammo_bonus_shell = true;
+				sprite_index = spr.BonusShell;
+			}
+		}
+
+		 // Prevent Low Ammo PopupTexts:
+		var t = weapon_get_type(wep),
+			c = weapon_get_cost(wep);
+
+		if(ammo[t] + ammo_bonus >= c && infammo == 0){
+			var o = 10;
+			with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(PopupText, "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
+				if(point_distance(xstart, ystart, other.x, other.y) < o){
+					other.wkick = 0;
+					sound_stop(sndEmpty);
+					instance_destroy();
+				}
+			}
+		}
+	}
+
+	 // Overheal / Bonus HP:
+	with(instances_matching_gt(Player, "my_health_bonus", 0)){
+		if(nexthurt > current_frame){
+			var a = my_health,
+				b = my_health_bonus_hold;
+	
+			if(a < b){
+				var c = min(my_health_bonus, b - a);
+				my_health += c;
+				my_health_bonus -= c;
+			}
+		}
+		my_health_bonus_hold = my_health;
+	}
+
 #define bone_step
     instance_destroy();
 
@@ -1067,7 +1170,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         index : index,
                         primary : !i,
                         steroids : (race == "steroids")
-                        });
+                    });
                 }
             }
         }
@@ -1185,6 +1288,61 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		ntte_options(OptionX, OptionY);
 
 		draw_reset_projection();
+	}
+	
+	with(instances_matching_gt(instances_matching(Player, "index", player_find_local_nonsync()), "my_health_bonus", 0)){
+		//var _x1 = 21,
+		//	_y1 = 16,
+		//	_x2 = _x1 + (85 * min(1, my_health_bonus / maxhealth)),
+		//	_y2 = _y1;
+
+		//draw_set_color(c_black);
+		//draw_rectangle(_x1 - 1, _y1, _x1 + 86, _y2 + 2, false);
+		//draw_set_color(player_get_color(index));
+		//draw_set_blend_mode_ext(bm_inv_dest_color, bm_src_alpha);
+		//draw_rectangle(_x1, _y1, _x2, _y2, false);
+		//draw_set_blend_mode(bm_normal);
+		//draw_text_nt(30 + _ox, 10 + _oy, `@(color:${c_aqua})+${my_health_bonus}`);
+
+		if("my_health_bonus_test" not in self){
+			my_health_bonus_test = [];
+		}
+		var _test = my_health_bonus_test;
+		while(array_length(_test) < my_health_bonus){
+			array_push(_test, {
+				x : x,
+				y : y,
+				image_index : 1
+			});
+		}
+		if(array_length(_test) > my_health_bonus){
+			for(var i = my_health_bonus; i < array_length(_test); i++){
+				with(_test[i]){
+					with(instance_create(x, y, HealFX)){
+						image_index = other.image_index;
+						depth = -8;
+					}
+				}
+			}
+			_test = array_slice(_test, 0, my_health_bonus);
+		}
+		my_health_bonus_test = _test;
+
+		var l = 16,
+			d = current_frame;
+
+		with(my_health_bonus_test){
+			var _x = other.x + lengthdir_x(l, d),
+				_y = other.y + lengthdir_y(l, d) - 4;
+
+			x += (_x - x) * 0.3 * current_time_scale;
+			y += (_y - y) * 0.3 * current_time_scale;
+			d += 360 / other.my_health_bonus;
+			
+			with(other){
+				draw_sprite(sprHealFX, other.image_index, other.x, other.y);
+			}
+		}
 	}
 
 #define draw_pause

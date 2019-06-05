@@ -1356,10 +1356,9 @@
 
 	/*
 	with(instance_create(mouse_x, mouse_y, WepPickup)){
-		wep = { wep : mod_current, base : wep_combine(wepList[wep_plasma_gun - 1], wepList[wep_plasma_rifle - 1]) };
+		wep = { wep : mod_current, base : wep_combine(wepList[wep_toxic_bow - 1], wepList[wep_bazooka - 1]) };
 	}
 	*/
-	wep_combine(wepList[wep_flare_gun - 1], wepList[wep_grenade_launcher - 1]);
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1711,37 +1710,48 @@
         soun = array_combine(_stock.soun, _front.soun);
         with(soun) vol = 2/3;
 
-		 // Name:
-        var	_name = [],
-        	_stockName = string_split(string_upper(_stock.name), " "),
-        	_frontName = string_split(string_upper(_front.name), " "),
-        	_stockSuffixStart = 0,
-        	_stockSuffix = ["RIFLE", "MACHINEGUN", "SMG", "MINIGUN", "SHOTGUN", "LAUNCHER", "CANNON"],
-        	_delete = ["GUN", "PISTOL", "BOW"];
+		/// Name:
+	        var	_stockName = string_split(string_upper(_stock.name), " "),
+	        	_frontName = string_split(string_upper(_front.name), " "),
+	        	_stockSuffixStart = 0,
+	        	_stockSuffix = ["RIFLE", "MACHINEGUN", "SMG", "MINIGUN", "SHOTGUN", "BOW", "LAUNCHER", "BAZOOKA", "CANNON"],
+	        	_delete = ["GUN", "PISTOL"];
 
-		if(array_exists(_stockName, "ASSAULT") || array_exists(_stockName, "ROGUE")){
-			array_push(_delete, "RIFLE");
-		}
-
-		with(_delete){
-			_stockName = array_delete_value(_stockName, self);
-		}
-		with(_stockName){
-			if(array_exists(_stockSuffix, self)) break;
-			array_push(_name, self);
-			_stockSuffixStart++;
-		}
-		if(_stockSuffixStart < array_length(_stockName)){
-			with(_delete){
-				_frontName = array_delete_value(_frontName, self);
+			 // Assault Bazooka > Assault Bazooka Rifle:
+			if(array_exists(_stockName, "ASSAULT") || array_exists(_stockName, "ROGUE")){
+				array_push(_delete, "RIFLE");
 			}
-		}
-		_name = array_combine(_name, _frontName);
-		for(var i = _stockSuffixStart; i < array_length(_stockName); i++){
-			array_push(_name, _stockName[i]);
-		}
 
-		name = array_join(_name, " ");
+			 // Remove Redundant Stock Suffixes:
+			with(_delete){
+				_stockName = array_delete_value(_stockName, self);
+			}
+
+			 // Start Name w/ Pre-Suffix Stock Name:
+			var _name = [];
+			with(_stockName){
+				if(array_exists(_stockSuffix, self)) break;
+				array_push(_name, self);
+				_stockSuffixStart++;
+			}
+
+			 // Remove Redundant Front Suffixes if Suffixes Exist in Stock Name:
+			if(_stockSuffixStart < array_length(_stockName)){
+				with(_delete){
+					_frontName = array_delete_value(_frontName, self);
+				}
+			}
+
+			 // Front Name:
+			_name = array_combine(_name, _frontName);
+
+			 // Add Any Remaining Stock Suffixes:
+			for(var i = _stockSuffixStart; i < array_length(_stockName); i++){
+				array_push(_name, _stockName[i]);
+			}
+
+			 // End:
+			name = array_join(_name, " ");
 
 		/// Loading Tip:
 			if(_front.text != ""){
