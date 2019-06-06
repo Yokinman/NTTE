@@ -310,6 +310,7 @@
                         ["Map",           1, 10,  10, true],
                         ["Portrait",      1, 20, 221, true],
                         ["Select",        2,  0,   0, false],
+                        ["UltraIcon",	  2, 12,  16, false],
                         ["Idle",          4, 12,  12, true],
                         ["Walk",          6, 12,  12, true],
                         ["Hurt",          3, 12,  12, true],
@@ -729,7 +730,7 @@
     global.remind = [];
     if(fork()){
         wait 2;
-        if(opt.remindPlayer){
+        if(lq_defget(opt, "remindPlayer", true)){
         	global.remind = [
         	    {   "pos" : [-85, -2],
         	        "but" : GameMenuButton,

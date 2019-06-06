@@ -73,6 +73,10 @@
     sprite_index = spr.Parrot[_skin].Loadout;
     image_index = !race_skin_avail(_skin);
 
+#define race_ultra_button(_ultra)
+	sprite_index = spr.Parrot[0].UltraIcon;
+	image_index = _ultra - 1;
+
 #define race_sprite(_spr)  
     var b = (("bskin" in self) ? real(bskin) : 0);
     switch(_spr){
