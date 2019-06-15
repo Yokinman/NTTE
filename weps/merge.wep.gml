@@ -44,7 +44,7 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
-    global.wep_list = [];
+    global.wep_list = [wepDefault];
 
 	wep_add([
 		{	"weap" : wep_revolver,
@@ -1354,12 +1354,6 @@
 	flagcont_set("hyper",		proj_hyper);
 	//#endregion
 
-	/*
-	with(instance_create(mouse_x, mouse_y, WepPickup)){
-		wep = { wep : mod_current, base : wep_combine(wepList[wep_toxic_bow - 1], wepList[wep_bazooka - 1]) };
-	}
-	*/
-
 #macro spr global.spr
 #macro msk spr.msk
 //#macro snd global.snd
@@ -1386,7 +1380,7 @@
         "gold" : false,
         "blod" : false,
         "lasr" : false,
-        "proj" : -1,
+        "proj" : { object_index : -1 },
         "sped" : [0, 0],
         "sprd" : 0,
         "fixd" : 0,
@@ -1395,13 +1389,13 @@
         "time" : 0,
         "wait" : 0,
         "move" : 0,
-        "soun" : -1,
+        "soun" : [],
         "kick" : 0,
         "push" : 0,
         "shif" : 0,
         "shak" : 0,
         "flag" : [],
-        "cont" : cont_basic
+        "cont" : script_ref_create(cont_basic)
     }
 
 #macro flagCont global.flagCont
@@ -1476,7 +1470,45 @@
         array_push(wepList, self);
     }
 
-#define wep_combine(_stock, _front)
+#define wep_merge(_stock, _front)
+	var _part = [_stock, _front];
+
+	 // Look for Weapon in the Mergeable Weapon List:
+	for(var i = 0; i < array_length(_part); i++){
+		if(!is_object(w) && fork()){
+			 // Wep ID Search:
+			var w = _part[i];
+			if(is_string(w) && w == string_digits(w)){
+				w = real(w);
+			}
+			if(w != -1) with(wepList){
+				if(weap == w){
+					_part[i] = self;
+					exit;
+				}
+			}
+			
+			 // Name Search:
+			var w = _part[i];
+			if(is_string(w)){
+				w = string_upper(string_trim(_part[i]));
+				with(wepList){
+					var n = string_upper(name);
+					if(n == w || n == _part[i]){
+						_part[i] = self;
+						exit;
+					}
+				}
+			}
+
+			_part[i] = wepDefault;
+			exit;
+		}
+	}
+
+	return { wep : mod_current, base : wep_merge_raw(_part[0], _part[1]) };
+
+#define wep_merge_raw(_stock, _front)
     var _wep = lq_clone_deep(_front);
 
     with(_wep){

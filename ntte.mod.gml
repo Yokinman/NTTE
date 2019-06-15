@@ -1,3 +1,28 @@
+#define chat_command(_cmd, _arg, _ind) /// debug commands
+    switch(_cmd){
+        case "pet":
+            Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
+            return true;
+
+		case "wepmerge":
+			var a = string_split(_arg, "/"),
+				w = wep_none;
+
+			if(array_length(a) >= 2){
+				w = wep_merge(a[0], a[1]);
+			}
+			else{
+				w = wep_merge(a[0], a[0]);
+			}
+
+			with(instance_create(mouse_x[_ind], mouse_y[_ind], WepPickup)){
+				wep = w;
+				ammo = true;
+			}
+			return true;
+    }
+
+
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -11,8 +36,6 @@
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
     };
-
-    global.bones = [];
 
      // Make Custom CampChars for:
     global.campchar = ["parrot"];
@@ -904,9 +927,6 @@
 		}
 	}
 
-     // Fixes weird delay thing:
-    script_bind_step(bone_step, 0);
-
      // Charm Step:
     if(!instance_exists(global.charm_step)){
         global.charm_step = script_bind_end_step(charm_step, 0);
@@ -931,7 +951,6 @@
     }
     
     if(_skill > 0){
-    	
     	 // Spawn Lair Chests:
 	    with(instances_matching(GenCont, "alarm1", 1)){
 	    	with(instances_matching([AmmoChest, WeaponChest], "", null)) if(chance(_skill, 2)){
@@ -968,6 +987,14 @@
 		}
 	}
 
+	 // Separate Bones:
+    with(WepPickup) if(is_object(wep)){
+        if(wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
+            wep.ammo--;
+            with(instance_create(x, y, WepPickup)) wep = "crabbone";
+        }
+    }
+
 #define draw_gui
     var _active = 0,
 		_ox = 0,
@@ -979,9 +1006,60 @@
 	draw_set_font(fntSmall);
 	draw_set_halign(fa_right);
 	draw_set_valign(fa_top);
-	with(instances_matching_gt(instances_matching(Player, "index", player_find_local_nonsync()), "ammo_bonus", 0)){
-		draw_text_nt(66 + _ox, 30 + _oy, `@(color:${c_aqua})+${ammo_bonus}`);
+
+	 // Bonus Ammo HUD:
+	with(instances_matching_gt(Player, "ammo_bonus", 0)){
+		draw_set_projection(2, index);
+
+		 // Subtle Color Wave:
+		var _text = `+${ammo_bonus}`;
+		for(var i = 1; i <= string_length(_text); i++){
+			var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
+			_text = string_insert(a, _text, i);
+			i += string_length(a);
+		}
+
+		draw_text_nt(_ox + 66, _oy + 30 - (_active > 1), _text);
 	}
+
+	 // Bonus HP HUD:
+	with(instances_matching_ne(Player, "my_health_bonus", null)){
+		draw_set_projection(2, index);
+		
+		if("my_health_bonus_hud" not in self){
+			my_health_bonus_hud = 0;
+		}
+
+		my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
+
+		var _x1 = _ox + 106,
+			_y1 = _oy + 5,
+			_x2 = _x1 + (3 * my_health_bonus_hud),
+			_y2 = _y1 + 10;
+
+		if(_x2 > _x1 + 1){
+			draw_set_color(c_black);
+			draw_rectangle(_x1, _y1 - 1, _x2 + 1, _y2 + 2, false); // Shadow
+			draw_set_color(c_white);
+			draw_rectangle(_x1, _y1,	 _x2,	  _y2,	   false); // Outline
+			draw_set_color(c_black);
+			draw_rectangle(_x1, _y1 + 1, _x2 - 1, _y2 - 1, false); // Inset
+
+			 // Filling:
+			if(my_health_bonus > 0){
+				if(sprite_index == spr_hurt && image_index < 1){
+					draw_set_color(c_white);
+				}
+				else{
+					draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+				}
+
+				draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - 1, _y2 - 1, false);
+			}
+		}
+	}
+
+	draw_reset_projection();
 
 #define ammo_bono(_cost, _type)
 	_cost = min(ammo_bonus, _cost);
@@ -989,12 +1067,17 @@
 	ammo[_type] += _cost;
 
 	 // FX:
-	repeat(_cost) with(instance_create(x, y, WepSwap)){
-		sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
-		image_blend = c_aqua;
-		creator = other;
+	if(_cost > 0){
+		repeat(_cost) with(instance_create(x, y, WepSwap)){
+			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+			image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
+			image_speed *= random_range(0.8, 1.2);
+			if(chance(1, _cost) || chance(1, 3)){
+				creator = other;
+			}
+		}
+		sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
 	}
-	sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
 
 	 // End:
 	if(ammo_bonus <= 0){
@@ -1113,28 +1196,30 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 	 // Overstock / Bonus Ammo Cleanup:
 	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
-		drawempty = false;
+		drawempty = 0;
 
-		 // Cool Blue Shells:
-		with(instances_matching(Shell, "ammo_bonus_shell", null)){
-			ammo_bonus_shell = false;
-			if(place_meeting(xprevious, yprevious, other)){
-				ammo_bonus_shell = true;
-				sprite_index = spr.BonusShell;
-			}
-		}
-
-		 // Prevent Low Ammo PopupTexts:
 		var t = weapon_get_type(wep),
 			c = weapon_get_cost(wep);
 
-		if(ammo[t] + ammo_bonus >= c && infammo == 0){
-			var o = 10;
-			with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(PopupText, "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
-				if(point_distance(xstart, ystart, other.x, other.y) < o){
-					other.wkick = 0;
-					sound_stop(sndEmpty);
-					instance_destroy();
+		if(c > 0){
+			 // Cool Blue Shells:
+			with(instances_matching(instances_matching_gt(Shell, "speed", 0), "ammo_bonus_shell", null)){
+				if(place_meeting(xprevious, yprevious, other)){
+					ammo_bonus_shell = true;
+					sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
+					image_blend = merge_color(image_blend, c_blue, random(0.25));
+				}
+			}
+	
+			 // Prevent Low Ammo PopupTexts:
+			if(ammo[t] + ammo_bonus >= c && infammo == 0){
+				var o = 10;
+				with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(instances_matching(PopupText, "target", index), "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
+					if(point_distance(xstart, ystart, other.x, other.y) < o){
+						other.wkick = 0;
+						sound_stop(sndEmpty);
+						instance_destroy();
+					}
 				}
 			}
 		}
@@ -1142,6 +1227,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 	 // Overheal / Bonus HP:
 	with(instances_matching_gt(Player, "my_health_bonus", 0)){
+		drawlowhp = 0;
+
 		if(nexthurt > current_frame){
 			var a = my_health,
 				b = my_health_bonus_hold;
@@ -1150,40 +1237,16 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 				var c = min(my_health_bonus, b - a);
 				my_health += c;
 				my_health_bonus -= c;
+				
+				 // FX:
+				repeat(c) with(instance_create(x, y, Dust)){
+					image_blend = c_aqua;
+					motion_add(other.direction, 3);
+				}
 			}
 		}
 		my_health_bonus_hold = my_health;
 	}
-
-#define bone_step
-    instance_destroy();
-
-     // Reset Bone Ammo Indicator:
-    global.bones = [];
-    with(Player){
-        var _wep = [wep, bwep];
-        for(var i = 0; i < array_length(_wep); i++){
-            if(is_object(_wep[i]) && wep_get(_wep[i]) == "crabbone"){
-                if(_wep[i].ammo > 1){
-                    array_push(global.bones, {
-                        ammo : _wep[i].ammo,
-                        index : index,
-                        primary : !i,
-                        steroids : (race == "steroids")
-                    });
-                }
-            }
-        }
-    }
-
-     // Draw Bone Ammo Indicators:
-    var d = 0;
-    if(instance_exists(TopCont)) d = TopCont.depth;
-    if(instance_exists(GenCont)) d = GenCont.depth;
-    if(instance_exists(LevCont)) d = LevCont.depth;
-    if(d != 0) with(global.bones){
-        script_bind_draw(ammo_draw_scrt, d - 1, index, primary, ammo, steroids);
-    }
 
 #define draw
 	 // NTTE Options at Campfire:
@@ -1289,61 +1352,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 		draw_reset_projection();
 	}
-	
-	with(instances_matching_gt(instances_matching(Player, "index", player_find_local_nonsync()), "my_health_bonus", 0)){
-		//var _x1 = 21,
-		//	_y1 = 16,
-		//	_x2 = _x1 + (85 * min(1, my_health_bonus / maxhealth)),
-		//	_y2 = _y1;
-
-		//draw_set_color(c_black);
-		//draw_rectangle(_x1 - 1, _y1, _x1 + 86, _y2 + 2, false);
-		//draw_set_color(player_get_color(index));
-		//draw_set_blend_mode_ext(bm_inv_dest_color, bm_src_alpha);
-		//draw_rectangle(_x1, _y1, _x2, _y2, false);
-		//draw_set_blend_mode(bm_normal);
-		//draw_text_nt(30 + _ox, 10 + _oy, `@(color:${c_aqua})+${my_health_bonus}`);
-
-		if("my_health_bonus_test" not in self){
-			my_health_bonus_test = [];
-		}
-		var _test = my_health_bonus_test;
-		while(array_length(_test) < my_health_bonus){
-			array_push(_test, {
-				x : x,
-				y : y,
-				image_index : 1
-			});
-		}
-		if(array_length(_test) > my_health_bonus){
-			for(var i = my_health_bonus; i < array_length(_test); i++){
-				with(_test[i]){
-					with(instance_create(x, y, HealFX)){
-						image_index = other.image_index;
-						depth = -8;
-					}
-				}
-			}
-			_test = array_slice(_test, 0, my_health_bonus);
-		}
-		my_health_bonus_test = _test;
-
-		var l = 16,
-			d = current_frame;
-
-		with(my_health_bonus_test){
-			var _x = other.x + lengthdir_x(l, d),
-				_y = other.y + lengthdir_y(l, d) - 4;
-
-			x += (_x - x) * 0.3 * current_time_scale;
-			y += (_y - y) * 0.3 * current_time_scale;
-			d += 360 / other.my_health_bonus;
-			
-			with(other){
-				draw_sprite(sprHealFX, other.image_index, other.x, other.y);
-			}
-		}
-	}
 
 #define draw_pause
      // Reset Stuff:
@@ -1352,11 +1360,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
     with(instances_matching(CustomDraw, "name", "draw_pit")){
         mod_variable_set("area", "trench", "surf_reset", true);
-    }
-
-     // Draw Bone Ammo Indicators:
-    if(instance_exists(PauseButton)) with(global.bones){
-        ammo_draw(index, primary, ammo, steroids);
     }
 
      // NTTE Options:
@@ -1655,35 +1658,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	if(_tooltip != ""){
 		draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
 	}
-
-#define ammo_draw_scrt(_index, _primary, _ammo, _steroids)
-    instance_destroy();
-    ammo_draw(_index, _primary, _ammo, _steroids);
-
-#define ammo_draw(_index, _primary, _ammo, _steroids)
-    if(player_get_show_hud(_index, _index)){
-	    var _active = 0;
-	    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-	
-	    draw_set_visible_all(0);
-	    draw_set_visible(_index, 1);
-	    draw_set_projection(0);
-	
-	    var _x = (_primary ? 42 : 86),
-	        _y = 21;
-	
-	    if(_active > 1) _x -= 19;
-	
-	    draw_set_halign(fa_left);
-	    draw_set_valign(fa_top);
-	    draw_set_color(c_white);
-	    if(!_primary && !_steroids) draw_set_color(c_silver);
-	
-	    draw_text_shadow(_x, _y, string(_ammo));
-	
-	    draw_reset_projection();
-	    draw_set_visible_all(1);
-    }
 
 #define underwater_step /// Call from underwater area step events
      // Lightning:
@@ -3183,3 +3157,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
+#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);

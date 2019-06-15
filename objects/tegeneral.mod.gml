@@ -113,7 +113,7 @@
 			}
 			
 			var m = skill_get(mut_bolt_marrow),
-				e = nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team));
+				e = nearest_instance(x, y, instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0));
 				
 			if(instance_exists(return_to) && !(in_distance(creator, 160) && in_distance(e, (seek * m)))){
 				 // Seek creator:
@@ -270,9 +270,15 @@
 			sound_play_hit(sndDiscHit, 0.4);
 		}
 	}
-	
+
 #define BatDisc_cleanup
-	my_lwo.ammo += ammo;
+	with(my_lwo){
+		ammo += other.ammo;
+		if("amax" in self){
+			ammo = min(ammo, amax);
+		}
+	}
+
 	
 #define BigDecal_create(_x, _y)
     var a = string(GameCont.area);
@@ -1609,7 +1615,10 @@
                 if(place_meeting(x, y, p) || place_meeting(x, y, Portal)){
                     with(p){
                         ammo[3] = min(ammo[3] + 1, typ_amax[3]);
-                        instance_create(x, y, PopupText).text = `+1 ${typ_name[3]}`;
+                        with(instance_create(x, y, PopupText)){
+                        	text = `+1 ${other.typ_name[3]}`;
+                        	target = other.index;
+                        }
                         sound_play(sndAmmoPickup);
                     }
                     instance_destroy();
@@ -3732,6 +3741,249 @@
 		}
 	}
 
+
+#define Trident_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.Trident;
+		//image_speed = 0;
+
+		 // Vars:
+		mask_index = msk.Trident;
+		damage = 24;
+		force = 5;
+		typ = 1;
+		curse = false;
+		curse_return_delay = false;
+		target = noone;
+		grab = false;
+
+		 // Alarms:
+		alarm0 = 15;
+
+		return id;
+	}
+
+#define Trident_step
+	 // Curse FX:
+	if(curse && current_frame_active){
+		instance_create(x + orandom(4), y + orandom(4), Curse);
+	}
+
+	if(speed > 0){
+		 // Bolt Marrow:
+		if(skill_get(mut_bolt_marrow) > 0){
+			var	r = 20 * skill_get(mut_bolt_marrow),
+				n = nearest_instance(x, y, instance_rectangle_bbox(x - r, y - r, x + r, y + r, instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone, sprVoid)));
+
+			if(in_distance(n, r) && in_sight(n)){
+				x = n.x - hspeed;
+				y = n.y - vspeed;
+				if(!place_free(x, y)){
+					xprevious = x;
+					yprevious = y;
+				}
+				sleep(5);
+			}
+		}
+	
+		 // Break Projectiles:
+		with(instances_matching_ne(instances_matching(projectile, "typ", 1, 2), "team", team)){
+			if(distance_to_object(other) <= 8){
+				sleep(2);
+				instance_destroy();
+			}
+		}
+	}
+	else{
+		 // Cursed Harpoon Returns:
+		if(curse && instance_exists(creator)){
+			if(curse_return_delay < 6){
+				 // Movin:
+				var l = max(5, point_distance(x, y, creator.x, creator.y) * 0.1 * current_time_scale) / (curse_return_delay + 1),
+					d = point_direction(x, y, creator.x, creator.y);
+	
+				x += lengthdir_x(l, d);
+				y += lengthdir_y(l, d);
+
+				 // Walled:
+				if(!place_free(x, y)){
+					xprevious = x;
+					yprevious = y;
+					if(visible){
+						visible = false;
+						sound_play_pitch(sndCursedReminder, 1 + orandom(0.3));
+						repeat(4) with(instance_create(x + orandom(8), y + orandom(8), Smoke)){
+							motion_add(d + 180, random(1));
+						}
+					}
+				}
+				else if(place_meeting(x, y, Floor)){
+					if(!visible){
+						visible = true;
+						sound_play_pitch(sndSwapCursed, 1 + orandom(0.3));
+						repeat(4) with(instance_create(x + orandom(8), y + orandom(8), Smoke)){
+							motion_add(d, random(2));
+						}
+					}
+				}
+
+				 // Rotatin:
+				if(in_distance(creator, 40)){
+					d += 180;
+				}
+				image_angle += (angle_difference(d, image_angle) * 0.05 * current_time_scale) / (curse_return_delay + 1);
+				image_angle += orandom(8 * current_time_scale) / (curse_return_delay + 1);
+			}
+			var f = 0.5 * current_time_scale;
+			curse_return_delay -= clamp(curse_return_delay, -f, f);
+
+			 // Grab Weapon:
+			if(place_meeting(x, y, creator) || (creator.mask_index == mskNone && place_meeting(x, y, Portal))){
+				grab = true;
+				instance_destroy();
+			}
+		}
+
+		else instance_destroy();
+	}
+
+#define Trident_end_step
+	 // Trail:
+	if(visible){
+		var _x1 = x,
+		    _y1 = y,
+		    _x2 = xprevious,
+		    _y2 = yprevious;
+	
+		with(instance_create(x, y, BoltTrail)){
+			image_xscale = point_distance(_x1, _y1, _x2, _y2);
+			image_angle = point_direction(_x1, _y1, _x2, _y2);
+			if(other.curse) image_blend = c_purple;
+			creator = other.creator;
+		}
+	}
+
+#define Trident_anim
+	image_speed = 0;
+	image_index = 0;
+
+#define Trident_alrm0
+	friction = 0.5; // Stop movin
+
+#define Trident_hit
+	if(speed > 0 || projectile_canhit_melee(other)){
+		projectile_hit_push(other, damage, force);
+	
+		 // Stick:
+		if(other.my_health > 0){
+			//replacing this interaction for now cause of stabby trident interaction// if(!skill_get(mut_long_arms)){
+			if(!instance_exists(creator) || !skill_get(mut_throne_butt) || player_get_race(creator.race) != "chicken"){
+				sound_play_pitch(sndAssassinAttack, 2);
+				target = other;
+				speed = 0;
+
+				 // Curse Return:
+				if(curse && curse_return_delay <= 0){
+					curse_return_delay = 8 + random(2);
+					mask_index = mskFlakBullet;
+				}
+			}
+		}
+
+		 // Impact:
+		else{
+			x -= hspeed / 3;
+			y -= vspeed / 3;
+		}
+		var f = clamp(other.size, 1, 5);
+		view_shake_at(x, y, 12 * f);
+		sleep(16 * f);
+	}
+
+#define Trident_wall
+	if(speed > 0){
+		speed = 0;
+		move_contact_solid(direction, 16);
+
+		 // Curse Return:
+		if(curse){
+			curse_return_delay = 8 + random(2);
+			mask_index = mskFlakBullet;
+		}
+
+		 // Effects:
+		instance_create(x, y, Debris);
+		sound_play(sndBoltHitWall);
+		sound_play_pitchvol(sndExplosionS, 1.5, 0.7);
+		sound_play_pitchvol(sndBoltHitWall,  1, 0.7);
+	}
+
+#define Trident_destroy
+	 // Hit FX:
+	var l = 18,
+		d = direction,
+		_x = x + lengthdir_x(l, d),
+		_y = y + lengthdir_y(l, d);
+
+	instance_create(_x, _y, BubblePop).image_index = 1;
+	repeat(3) scrFX(
+		_x,
+		_y,
+		[direction + orandom(30), choose(1, 2, 2)],
+		Bubble
+	);
+
+#define Trident_cleanup // pls YAL why did u make portals instance_delete everything
+	 // Return to Player:
+	if(grab) with(creator){
+		 // Decide Weapon Slot to Take:
+		var b = "";
+		if((wep != wep_none && bwep == wep_none) || bcurse < other.curse){
+			b = "b";
+		}
+
+		 // Set Wep:
+		var w = variable_instance_get(self, b + "wep"),
+			c = variable_instance_get(self, b + "curse");
+
+		if(w == wep_none || c < other.curse){
+			variable_instance_set(self, b + "wep",		"trident");
+			variable_instance_set(self, b + "curse",	other.curse);
+			variable_instance_set(self, b + "wkick",	-4);
+			variable_instance_set(self, b + "wepangle",	0);
+
+			 // Force Out Weapon:
+			if(w != wep_none){
+				with(instance_create(x, y, WepPickup)){
+					wep = w;
+					curse = c;
+					motion_add(other.gunangle, 4);
+				}
+			}
+
+			 // Effects:
+			with(instance_create(x, y, WepSwap)) creator = other;
+			sound_play(weapon_get_swap("trident"));
+			sound_play(sndSwapCursed);
+		}
+
+		 // Can't Replace:
+		else with(other){
+			grab = false;
+			Trident_cleanup();
+		}
+	}
+
+	 // Stickable WepPickup:
+	else with(obj_create(x, y, "WepPickupStick")){
+		wep = "trident";
+		curse = other.curse;
+		target = other.target;
+		rotation = other.image_angle;
+	}
+
+
 #define VenomPellet_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -3762,6 +4014,36 @@
 
 #define VenomPellet_destroy
     with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
+
+
+#define WepPickupStick_create(_x, _y)
+	with(instance_create(_x, _y, WepPickup)){
+		target = noone;
+		return id;
+	}
+
+#define WepPickupStick_end_step
+	if(instance_exists(target)){
+		speed = 0;
+		nowade = true;
+
+		 // Stick in Target:
+		var	_odis = 24,
+			_odir = rotation;
+
+		x = target.x - lengthdir_x(_odis, _odir);
+		y = target.y - lengthdir_y(_odis, _odir);
+		if("z" in target){
+			if(target.object_index == RavenFly || target.object_index == LilHunterFly){
+				y += target.z;
+			}
+			else y -= target.z;
+		}
+		visible = target.visible;
+		xprevious = x;
+		yprevious = y;
+	}
+	else nowade = false;
 
 
 /// Mod Events
@@ -4149,3 +4431,4 @@
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
+#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);

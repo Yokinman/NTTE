@@ -78,8 +78,13 @@
          // Small Green Explo:
         SmallGreenExplosion = sprite_add("sprites/weps/projectiles/sprSmallGreenExplosion.png", 7, 12, 12);
 
+         // Trident:
+    	Trident     = sprite_add_weapon("sprites/weps/sprTrident.png",          11, 6);
+    	msk.Trident = sprite_add("sprites/weps/projectiles/mskTrident.png",  1, 11, 6);
+
          // Bonus Ammo Shell:
-        BonusShell = sprite_add("sprites/misc/sprBonusShell.png", 1, 1, 2);
+        BonusShell      = sprite_add("sprites/misc/sprBonusShell.png",      1, 1, 2);
+        BonusShellHeavy = sprite_add("sprites/misc/sprBonusShellHeavy.png", 1, 2, 3);
 
         //#region CAMPFIRE
              // Big Cactus:
@@ -838,7 +843,7 @@
                         }
                     }
         
-                    else if(instance_exists(PauseButton)){
+                    else if(instance_number(PauseButton) > 2){
                         var b = false;
                         with(PauseButton) if(alarm_get(0) > 0) b = true;
                         if(b) break;

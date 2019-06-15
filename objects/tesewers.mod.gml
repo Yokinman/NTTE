@@ -696,7 +696,7 @@
          // Set Weps:
         _shop[0].drop = ((_part[0].weap == -1) ? _part[0] : _part[0].weap);
         _shop[2].drop = ((_part[1].weap == -1) ? _part[1] : _part[1].weap);
-		_shop[1].drop = { wep : "merge", base : mod_script_call("weapon", "merge", "wep_combine", _part[1], _part[0]) };
+		_shop[1].drop = wep_merge(_part[1], _part[0]);
 
 		 // Color:
 		if(curse){
@@ -3739,3 +3739,4 @@
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
+#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);

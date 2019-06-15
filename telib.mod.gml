@@ -1052,69 +1052,72 @@
 	}
 	return noone;
 
-#define internalAmmoFire(_weapon, _cost, _emptyFX)
-     // Infinite ammo:
+#define wepammo_fire(_wep)
+     // Infinite Ammo:
     if(infammo != 0) return true;
     
-     // Subtract cost:
-    with(_weapon) if(_cost <= ammo){
+     // Subtract Cost:
+	var _cost = lq_defget(_wep, "cost", 1);
+    with(_wep) if(ammo >= _cost){
         ammo -= _cost;
-        
-         // Can fire:
+
+         // Can Fire:
         return true;
     }
     
-     // Empty effects:
-    if(_emptyFX){
+     // Not Enough Ammo:
+    reload = 0;
+    if("anam" in _wep){
         wkick = -3;
-        
+        sound_play(sndEmpty);
         with(instance_create(x, y, PopupText)){
             target = other.index;
-            mytext = "EMPTY";
-        }
-        
-        sound_play(sndEmpty);
-    }
-    
-     // Not enough ammo:
-    return false;
-
-#define internalAmmoSprite(_weapon, _ammo, _maxAmmo, _sprite)
-    var a = ["wep", "bwep"],
-        p = player_find(player_find_local_nonsync());
-    
-    if(instance_exists(p)){
-        var _steroids = p.race == "steroids";
-        
-        with(instances_matching(other, "object_index", TopCont, UberCont)){
-            for(var i = 0; i <= 1; i++){
-                if(variable_instance_get(p, a[i]) == _weapon){
-                    var c = "@w",
-                        _xoffset = (i ? 86 : 42),
-                        _yoffset = 21;
-                        
-                     // Determine color:
-                    if(!i || _steroids){
-                        if(_ammo <= ceil(_maxAmmo * 0.2)) c = "@r";
-                    }
-                    else c = "@s";
-                    if(_ammo <= 0) c = "@d";
-                    
-                     // Set projection:
-                    draw_set_halign(fa_left);
-                    draw_set_valign(fa_top);
-                    
-                     // Draw text:
-                    draw_text_nt(view_xview_nonsync + _xoffset, view_yview_nonsync + _yoffset, c + string(_ammo));
-                    
-                    draw_reset_projection();
-                }
+            if(_wep.ammo > 0){
+            	text = "NOT ENOUGH " + _wep.anam;
+            }
+            else{
+            	text = "EMPTY";
             }
         }
     }
-    
-     // Return weapon sprite:
-    return _sprite;
+    return false;
+
+#define wepammo_draw(_wep)
+    if(instance_is(self, Player) && is_object(_wep)){
+		var _ammo = lq_defget(_wep, "ammo", 0);
+		draw_ammo(index, (wep == _wep), _ammo, lq_defget(_wep, "amax", _ammo), (race == "steroids"));
+    }
+
+#define draw_ammo(_index, _primary, _ammo, _ammoMax, _steroids)
+    if(player_get_show_hud(_index, player_find_local_nonsync())){
+    	if(!instance_exists(menubutton) || _index == player_find_local_nonsync()){
+		    var _x = view_xview_nonsync + (_primary ? 42 : 86),
+		        _y = view_yview_nonsync + 21;
+	
+		    var _active = 0;
+		    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
+		    if(_active > 1) _x -= 19;
+	
+			 // Determine Color:
+		    var _col = "w";
+			if(_ammo > 0){
+			    if(_primary || _steroids){
+			    	if(_ammo <= ceil(_ammoMax * 0.2)){
+				    	_col = "r";
+				    }
+			    }
+			    else _col = "s";
+			}
+			else _col = "d";
+	
+			 // !!!
+		    draw_set_halign(fa_left);
+		    draw_set_valign(fa_top);
+		    draw_set_projection(2, _index);
+		    draw_text_nt(_x, _y, "@" + _col + string(_ammo));
+		    draw_reset_projection();
+    	}
+    }
     
 #define frame_active(_interval)
     return ((current_frame mod _interval) < current_time_scale);
@@ -1610,6 +1613,9 @@
 
      // Default:
     return choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
+
+#define wep_merge(_stock, _front)
+	return mod_script_call_nc("weapon", "merge", "wep_merge", _stock, _front);
 
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)
      // Auto-Determine Grid Size:
