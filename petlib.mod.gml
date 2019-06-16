@@ -13,14 +13,6 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
-#define chat_command(_cmd, _arg, _ind)
-    switch(_cmd){
-        case "pet":
-            Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
-            return true;
-    }
-
-
 #define CoolGuy_create
      // Vars:
     maxspeed = 3.5;
@@ -1549,3 +1541,4 @@
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
+#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);

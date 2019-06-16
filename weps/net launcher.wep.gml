@@ -14,12 +14,6 @@
     return false;
 
 #define weapon_fire(_wep)
-     // Effects:
-    weapon_post(6, 8, -20);
-    sound_play(sndGrenade);
-    sound_play_pitch(sndFlakCannon, 1.75 + random(0.25));
-    sound_play_pitch(sndNadeReload, 0.8);
-
      // Shoot Harpoon:
     with(obj_create(x, y, "NetNade")){
         motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
@@ -27,6 +21,12 @@
         team = other.team;
         creator = other;
     }
+
+     // Effects:
+    weapon_post(6, 8, -20);
+    sound_play(sndGrenade);
+    sound_play_pitch(sndFlakCannon, 1.75 + random(0.25));
+    sound_play_pitch(sndNadeReload, 0.8);
 
 
 /// Scripts:

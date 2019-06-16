@@ -1,15 +1,9 @@
 #define init
     global.sprBone = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
 
-     // Global Step:
-    while(true){
-        with(WepPickup) if(is_object(wep)){
-            if(wep_get(wep) == mod_current && lq_defget(wep, "ammo", 1) > 1){
-                wep.ammo--;
-                with(instance_create(x, y, WepPickup)) wep = mod_current;
-            }
-        }
-        wait 1;
+#macro wepLWO {
+        wep  : mod_current,
+        ammo : 1
     }
 
 #define weapon_name return "BONE";
@@ -18,50 +12,88 @@
 #define weapon_load return 6;  // 0.2 Seconds
 #define weapon_area return -1; // Doesn't spawn normally
 #define weapon_swap return sndBloodGamble;
-#define weapon_sprt return global.sprBone;
 
-#define weapon_fire(_wep)
-    if(!is_object(_wep)){
+#define weapon_sprt(w)
+     // Custom Ammo Drawing:
+    if(lq_defget(w, "ammo", 0) > 1){
+        wepammo_draw(w);
+    }
+
+    return global.sprBone;
+
+#define weapon_fire(w)
+    if(!is_object(w)){
         step(true);
-        _wep = wep;
-    }
-    _wep.ammo--;
-
-     // Throw Bone:
-    with(obj_create(x, y, "Bone")){
-        motion_add(other.gunangle, 16);
-        rotation = direction;
-        team = other.team;
-        creator = other;
+        w = wep;
     }
 
-    weapon_post(-10, -4, 4);
-    wepangle *= -1;
+     // Fire:
+    if(wepammo_fire(w)){
+         // Throw Bone:
+        with(obj_create(x, y, "Bone")){
+            motion_add(other.gunangle, 16);
+            rotation = direction;
+            team = other.team;
+            creator = other;
+        }
 
-     // Effects:
-    sound_play(sndChickenThrow);
-    sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
-    with(instance_create(x, y, MeleeHitWall)){
-        motion_add(other.gunangle, 1);
-        image_angle = direction + 180;
+         // Effects:
+        wepangle *= -1;
+        weapon_post(-10, -4, 4);
+        sound_play(sndChickenThrow);
+        sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+        with(instance_create(x, y, MeleeHitWall)){
+            motion_add(other.gunangle, 1);
+            image_angle = direction + 180;
+        }
     }
 
 #define step(_primary)
-    var _throwWep = false,
-        w = { wep : mod_current, ammo : 1 };
+    var b = (_primary ? "" : "b"),
+        w = variable_instance_get(self, b + "wep");
 
-    if(_primary){
-        wkick = min(-5, wkick);
-        if(!is_object(wep)) wep = w;
-        w = wep;
-        if(wep.ammo <= 0){
-            wep = 0;
+     // LWO Setup:
+    if(!is_object(w)){
+        w = wepLWO;
+        variable_instance_set(self, b + "wep", w);
+    }
 
-             // Swap:
+     // Holdin Bone:
+    if(w.ammo > 0){
+         // Extend Bone:
+        variable_instance_set(self, b + "wkick", min(-5, variable_instance_get(self, b + "wkick")));
+
+         // Pickup Bones:
+        if(place_meeting(x, y, WepPickup)){
+            with(instances_meeting(x, y, WepPickup)){
+                if(place_meeting(x, y, other)){
+                    if(wep_get(wep) == mod_current){
+                        w.ammo++;
+                        
+                         // Effects:
+                        with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
+                        sound_play_pitchvol(sndHPPickup, 4, 1);
+                        sound_play_pitch(sndPickupDisappear, 1.2);
+                        sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
+    
+                        instance_destroy();
+                    }
+                }
+            }
+        }
+    }
+
+     // No Bones Left:
+    else{
+        variable_instance_set(self, b + "wep", wep_none);
+        variable_instance_set(self, b + "wkick", 0);
+
+         // Auto Swap to Secondary:
+        if(_primary){
             scrSwap();
 
              // Prevent Shooting Until Trigger Released:
-            if(wep != 0 && fork()){
+            if(wep != wep_none && fork()){
                 while(instance_exists(self) && canfire && button_check(index, "fire")){
             		reload = max(2, reload);
             		can_shoot = 0;
@@ -72,31 +104,14 @@
             }
         }
     }
-    else{
-        bwkick = min(-5, bwkick);
-        if(!is_object(bwep)) bwep = w;
-        w = bwep;
-        if(bwep.ammo <= 0) bwep = 0;
-    }
-
-     // Pickup Bones:
-    if(place_meeting(x, y, WepPickup)){
-        with(WepPickup) if(place_meeting(x, y, other)){
-            if(wep_get(wep) == mod_current){
-                w.ammo++;
-                with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
-                sound_play_pitchvol(sndHPPickup, 4, 1);
-                sound_play_pitch(sndPickupDisappear, 1.2);
-                sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
-                instance_destroy();
-            }
-        }
-    }
 
 
 /// Scripts:
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  mod_script_call("mod", "telib", "obj_create", _x, _y, _obj);
 #define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
-#define wep_get(_wep)                                                                   return mod_script_call("mod", "telib", "wep_get", _wep);
+#define wep_get(_wep)                                                                   return  mod_script_call("mod", "telib", "wep_get", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
+#define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
