@@ -998,80 +998,151 @@
     }
     with(_floor) coast_water = 1;
 
-     // Draw Water Waves Foam Stuff:
-    var _int = 30; // Wave Interval (Starts every X frames)
-    if(!surface_exists(_surfWaves)){
-    	global.surfWaves = surface_create(_surfw, _surfh);
-    	_surfWaves = global.surfWaves;
-        surface_set_target(_surfWaves);
-        draw_clear_alpha(0, 0);
-        surface_reset_target();
-    }
-    if((_wave mod _int) < current_time_scale){
-        surface_set_target(_surfWaves);
-        draw_clear_alpha(0, 0);
+    //todo
+    //add comments
 
-         // Floors:
-    	draw_surface(_surfFloor, 0, 0);
+     //Wavey Foam stuff
+    var _waveSpeed = 11,
+        _waveOutMax = 10,
+        _wavePadding = 2 * _waveOutMax,
+        _waveSurfW = (game_width + _wavePadding) * _surfScale,
+        _waveSurfH = (game_height + _wavePadding) * _surfScale;
 
-         // Palanking:
-        with(instances_matching(CustomEnemy, "name", "Palanking")){
-            if(z <= 4 && !place_meeting(x, y, Floor)){
-                draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
-            }
+    var _waveInt = 110,  //how often it waves, affects wave speed
+        _t = ((_wave mod _waveInt) * (180/_waveInt)) + 180,
+        _iRad = _waveSpeed * dcos(_t),                   //inner radius
+        _oRad = _iRad + min(_waveOutMax - _iRad, _iRad), //outer radius
+        _waveCanDraw = (_oRad > _iRad and _oRad > 0);    //saves gpu time by not drawing when nothing is gonna show up
+
+    if _waveCanDraw {
+        if !surface_exists(_surfWaves){
+            global.surfWaves = surface_create(game_width * _surfScale, game_height * _surfScale);
+            _surfWaves = global.surfWaves;
         }
-
-         // Thing:
-        with(instances_matching(CustomHitme, "name", "Creature")){
-    	    draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, image_blend, 1);
-    	}
-
-         // Rock Decals:
-    	with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
-    	    draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, 1);
-    	}
-
-        surface_reset_target();
-    }
-
-    /// Drawing Wave Foam:
-         // Surface Setup:
-        if(!surface_exists(_surfWavesSub)){
-        	global.surfWavesSub = surface_create(_surfw, _surfh);
-        	_surfWavesSub = global.surfWavesSub;
-            surface_set_target(_surfWavesSub);
-            draw_clear_alpha(0, 0);
-            surface_reset_target();
+        if !surface_exists(_surfWavesSub){
+            global.surfWavesSub = surface_create(_waveSurfW, _waveSurfH);
+            _surfWavesSub = global.surfWavesSub;
         }
+       
+        // Adding things to the initial foam surface
         surface_set_target(_surfWavesSub);
-    
-    	var _sc1 = 0.5, // Scaler 1
-    	    _sc2 = 0.3, // Scaler 2
-    	    _len = 8,   // Wave length (Travels X distance)
-    	    _siz = 5,   // Wave thickness
-            _off = [    // Wave Offsets: !!! Don't edit this !!!
-            	    round((_wave mod _int) * _sc1),
-            	    round(((_wave - (_siz * _sc2 / _sc1)) mod _int) * _sc2)
-            	   ];
+        
+            draw_clear_alpha(0, 0);
+            
+             // Floors: (has additional padding of the surface part)
+            draw_surface_part_ext(_surfFloor, (view_xview_nonsync - _surfx - _waveOutMax) * _surfScale, (view_yview_nonsync - _surfy - _waveOutMax) * _surfScale,
+                                  _waveSurfW, _waveSurfH, -_waveOutMax * _surfScale, -_waveOutMax * _surfScale, 1, 1, c_white, 1);
+             // PalanKing:
+            with instances_matching(CustomEnemy, "name", "Palanking"){
+                if (z <= 4 and !place_meeting(x, y, Floor)){
+                    draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * _surfScale * right, image_yscale * _surfScale, 0, c_white, 1);
+                }
+            }
+            
+             // Thing:
+            with instances_matching(CustomHitme, "name", "Creature"){
+                draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+            }
+            
+             // Rock Decals:
+            with instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig"){
+                draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+            }
+        
+        // Drawing the part the player sees
+        surface_set_target(_surfWaves);
+        
+            draw_clear_alpha(0, 0);
+            
+            for(var a = 45; a < 405; a += 90){
+                draw_surface(_surfWavesSub, lengthdir_x(_oRad * _surfScale, a), lengthdir_y(_oRad * _surfScale, a)); 
+            }
+            
+            draw_set_blend_mode(bm_subtract);
+            for(var a = 45; a < 405; a += 90){
+                draw_surface(_surfWavesSub, lengthdir_x(_iRad * _surfScale, a), lengthdir_y(_iRad * _surfScale, a));
+            }
+        
+            draw_set_blend_mode(bm_normal);
 
-         // Draw Wave Foam:
-    	for(var i = 0; i < array_length(_off); i++){
-    	    if(i > 0) draw_set_blend_mode(bm_subtract);
-    	    if(_off[i] < _len){
-    		    for(var a = 0; a < 360; a += 45){
-    		        var _ox = lengthdir_x(_off[i] * _surfScale, a),
-    		            _oy = lengthdir_y(_off[i] * _surfScale, a);
+        surface_reset_target();
+    }
 
-    		    	draw_surface(_surfWaves, _ox, _oy);
-    		    }
-    	    }
-    	}
-    	draw_set_blend_mode(bm_normal);
+     // Draw Water Waves Foam Stuff:
+    // var _int = 30; // Wave Interval (Starts every X frames)
+    // if(!surface_exists(_surfWaves)){
+    // 	global.surfWaves = surface_create(_surfw, _surfh);
+    // 	_surfWaves = global.surfWaves;
+    //     surface_set_target(_surfWaves);
+    //     draw_clear_alpha(0, 0);
+    //     surface_reset_target();
+    // }
+    // if((_wave mod _int) < current_time_scale){
+    //     surface_set_target(_surfWaves);
+    //     draw_clear_alpha(0, 0);
+
+    //      // Floors:
+    // 	draw_surface(_surfFloor, 0, 0);
+
+    //      // Palanking:
+    //     with(instances_matching(CustomEnemy, "name", "Palanking")){
+    //         if(z <= 4 && !place_meeting(x, y, Floor)){
+    //             draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+    //         }
+    //     }
+
+    //      // Thing:
+    //     with(instances_matching(CustomHitme, "name", "Creature")){
+    // 	    draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, image_blend, 1);
+    // 	}
+
+    //      // Rock Decals:
+    // 	with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
+    // 	    draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, 1);
+    // 	}
+
+    //     surface_reset_target();
+    // }
+
+    // /// Drawing Wave Foam:
+    //      // Surface Setup:
+    //     if(!surface_exists(_surfWavesSub)){
+    //     	global.surfWavesSub = surface_create(_surfw, _surfh);
+    //     	_surfWavesSub = global.surfWavesSub;
+    //         surface_set_target(_surfWavesSub);
+    //         draw_clear_alpha(0, 0);
+    //         surface_reset_target();
+    //     }
+    //     surface_set_target(_surfWavesSub);
     
-    	surface_reset_target();
+    // 	var _sc1 = 0.5, // Scaler 1
+    // 	    _sc2 = 0.3, // Scaler 2
+    // 	    _len = 8,   // Wave length (Travels X distance)
+    // 	    _siz = 5,   // Wave thickness
+    //         _off = [    // Wave Offsets: !!! Don't edit this !!!
+    //         	    round((_wave mod _int) * _sc1),
+    //         	    round(((_wave - (_siz * _sc2 / _sc1)) mod _int) * _sc2)
+    //         	   ];
+
+    //      // Draw Wave Foam:
+    // 	for(var i = 0; i < array_length(_off); i++){
+    // 	    if(i > 0) draw_set_blend_mode(bm_subtract);
+    // 	    if(_off[i] < _len){
+    // 		    for(var a = 0; a < 360; a += 45){
+    // 		        var _ox = lengthdir_x(_off[i] * _surfScale, a),
+    // 		            _oy = lengthdir_y(_off[i] * _surfScale, a);
+
+    // 		    	draw_surface(_surfWaves, _ox, _oy);
+    // 		    }
+    // 	    }
+    // 	}
+    // 	draw_set_blend_mode(bm_normal);
+    
+    // 	surface_reset_target();
 
      // Draw Sea Transition Floor Tiles:
-    draw_surface_ext(_surfTrans, _surfx, _surfy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
+    draw_surface_cropped(_surfTrans, 1/_surfScale, _surfx, _surfy);
+    // draw_surface_part_ext(_surfTrans, (view_xview_nonsync - _surfx) * _surfScale, (view_yview_nonsync - _surfy) * _surfScale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, 1 / _surfScale, 1 / _surfScale, c_white, 1);
 
      // Submerged Rock Decals:
     with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
@@ -1093,7 +1164,7 @@
         }
 
          // Most Swimming Objects:
-        if(surface_exists(_surfSwimBot)) draw_surface_ext(_surfSwimBot, _surfx, _surfy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
+        if(surface_exists(_surfSwimBot)) draw_surface_cropped(_surfSwimBot, 1/_surfScale, _surfx, _surfy);
         else global.surfSwimBot = surface_create(_surfw, _surfh);
 
     d3d_set_fog(0, 0, 0, 0);
@@ -1101,7 +1172,7 @@
      // Draw Sea:
     draw_set_color(background_color);
     draw_set_alpha(0.6);
-    draw_rectangle(0, 0, 20000, 20000, 0);
+    draw_rectangle(view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height, 0);
     draw_set_alpha(1);
 
      // Caustics:
@@ -1110,8 +1181,9 @@
     draw_set_alpha(1);
 
      // Foam:
-    draw_surface_ext(_surfWavesSub, _surfx, _surfy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
-
+    if (_waveCanDraw and surface_exists(_surfWaves)) {
+        draw_surface_ext(_surfWaves, view_xview_nonsync, view_yview_nonsync, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
+    }
      // Flash Ocean w/ Can Leave Level:
     var _flash = false;
     if(CanLeaveCoast && !instance_exists(Portal)){
@@ -1121,7 +1193,7 @@
 
         draw_set_color(c_white);
         draw_set_alpha(_max * (1 - ((flash mod _int) / _lst)));
-        draw_rectangle(0, 0, 20000, 20000, 0);
+        draw_rectangle(view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height, 0);
         draw_set_alpha(1);
 
         if((flash mod _int) < current_time_scale){
@@ -1171,6 +1243,15 @@
     draw_sprite(sprHalo, -1, _x, _y + sin(_wave / 10));
     instance_destroy();
 
+ // Draws only the visible parts of a larger surface, with scaling and offset options
+#define draw_surface_cropped
+/// draw_surface_cropped(_surf, _scale = 1, _xoffset = 0, _yoffset = 0)
+var _surf = argument[0];
+var _scale = argument_count > 1 ? argument[1] : 1;
+var _xoffset = argument_count > 2 ? argument[2] : 0;
+var _yoffset = argument_count > 3 ? argument[3] : 0;
+    draw_surface_part_ext(_surf, (view_xview_nonsync - _xoffset) / _scale, (view_yview_nonsync - _yoffset) / _scale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, _scale, _scale, c_white, 1)
+    
 
 /// Scripts
 #define orandom(n)																		return  random_range(-n, n);
