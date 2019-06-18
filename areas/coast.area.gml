@@ -718,7 +718,7 @@
         }
     }
     if(e > 0 || s > 0){
-        var _vol = max((20 / (distance_to_object(Player) + 1)) * (0.25 + (distance_to_object(Floor) / 50)), 0.15);
+        var _vol = 0.5;
         if(e > 0) sound_play_pitchvol(sndOasisExplosion, 1, e * _vol);
         if(s > 0) sound_play_pitchvol(sndOasisExplosion, 1, s * _vol);
     }
