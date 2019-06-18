@@ -275,16 +275,19 @@
     }
 
      // Prop Spawns:
-    else if(chance(1, 7)){
-        var _x = x + 16 + orandom(8),
-            _y = y + 16 + orandom(8);
+    else if(chance(1, 10)){
+        var _x = x + 16 + orandom(2),
+            _y = y + 16 + orandom(2);
 
-        if(styleb){
-            instance_create(_x, _y, choose(WaterMine, WaterMine, OasisBarrel, Anchor));
-        }
-        else{
-            instance_create(_x, _y, choose(WaterPlant, WaterPlant, OasisBarrel, WaterMine));
-        }
+		if(chance(1, 30)) instance_create(_x, _y, Anchor);
+		else{
+			with(instance_create(_x, _y, choose(WaterMine, WaterMine, WaterPlant, WaterPlant, OasisBarrel))){
+				if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
+					y += 8;
+					yprevious = y;
+				}
+			}
+		}
     }
 
 #define area_pop_extras
@@ -298,7 +301,7 @@
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
-#define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);

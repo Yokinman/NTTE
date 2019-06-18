@@ -174,6 +174,20 @@
         }
     }
 
+     // Spawn Thing Also:
+    if(GameCont.subarea == 2){
+    	if(chance(1, 100)){
+    		var l = random_range(1600, 2400),
+    			d = random(360);
+
+    		with(instance_create(10016 + lengthdir_x(l, d), 10016 + lengthdir_y(l, d), WepPickup)){
+    			wep = "trident";
+    			rotation = 270 + orandom(60);
+    		}
+    		sound_play_pitchvol(sndSwapGold, 0.5 + random(0.1), 1.2);
+    	}
+    }
+
      // Anglers:
     with(RadChest) if(chance(1, 40)){
         obj_create(x, y, "Angler");
@@ -185,6 +199,8 @@
     	with(script_bind_draw(darksea_draw, global.seaDepth)){
     		name = script[2];
     		wave = 0;
+    		wave_dis = 6;
+    		wave_ang = 0;
     		flash = 0;
     	}
 	}
@@ -455,7 +471,7 @@
                 }
     
                  // Sucked Into Abyss:
-                if(CanLeaveCoast && distance_to_object(Portal) <= 0){
+                if(CanLeaveCoast && (mask_index == mskNone && distance_to_object(Portal) < 64)){
                     s.image_xscale = image_xscale;
                     s.image_yscale = image_yscale;
                     s.image_alpha  = image_alpha;
@@ -925,7 +941,11 @@
         _surfx = surfX,
         _surfy = surfY,
         _wave = wave,
-        _floor = instances_matching(instances_matching(Floor, "coast_water", null), "visible", 1);
+        _floor = instances_matching(instances_matching(Floor, "coast_water", null), "visible", 1),
+        _vx = view_xview_nonsync,
+        _vy = view_yview_nonsync,
+        _vw = game_width,
+        _vh = game_height;
 
      // Draw Floor Transition Tile Surface:
     if(array_length(_floor) > 0 || !surface_exists(_surfTrans)){
@@ -998,74 +1018,85 @@
     }
     with(_floor) coast_water = 1;
 
-    //todo
-    //add comments
+     // Wavey Foam stuff:
+    var _waveInt = 40,															// How often waves occur in frames, affects wave speed
+        _waveOutMax = wave_dis,													// Max travel distance
+    	_waveSpeed = _waveOutMax + 0.1,											// Wave speed
+        _iRad = _waveSpeed * cos(((_wave % _waveInt) * (pi / _waveInt)) + pi),  // Inner radius
+        _oRad = _iRad + min(_waveOutMax - _iRad, _iRad),						// Outer radius
+        _waveCanDraw = (_oRad > _iRad && _oRad > 0),							// Saves gpu time by not drawing when nothing is gonna show up
+        _waveSurfW = _vw * _surfScale,
+        _waveSurfH = _vh * _surfScale;
 
-     //Wavey Foam stuff
-    var _waveSpeed = 11,
-        _waveOutMax = 10,
-        _wavePadding = 2 * _waveOutMax,
-        _waveSurfW = (game_width + _wavePadding) * _surfScale,
-        _waveSurfH = (game_height + _wavePadding) * _surfScale;
-
-    var _waveInt = 110,  //how often it waves, affects wave speed
-        _t = ((_wave mod _waveInt) * (180/_waveInt)) + 180,
-        _iRad = _waveSpeed * dcos(_t),                   //inner radius
-        _oRad = _iRad + min(_waveOutMax - _iRad, _iRad), //outer radius
-        _waveCanDraw = (_oRad > _iRad and _oRad > 0);    //saves gpu time by not drawing when nothing is gonna show up
-
-    if _waveCanDraw {
-        if !surface_exists(_surfWaves){
-            global.surfWaves = surface_create(game_width * _surfScale, game_height * _surfScale);
+    if(_waveCanDraw){
+    	 // Surface Setup:
+    	if(surface_exists(_surfWaves)){
+	    	if(surface_get_width(_surfWaves) != _waveSurfW || surface_get_height(_surfWaves) != _waveSurfH){
+	    		surface_destroy(_surfWaves);
+	    		surface_destroy(_surfWavesSub);
+	    	}
+    	}
+        if(!surface_exists(_surfWaves)){
+            global.surfWaves = surface_create(_waveSurfW, _waveSurfH);
             _surfWaves = global.surfWaves;
         }
-        if !surface_exists(_surfWavesSub){
+        if(!surface_exists(_surfWavesSub)){
             global.surfWavesSub = surface_create(_waveSurfW, _waveSurfH);
             _surfWavesSub = global.surfWavesSub;
         }
-       
-        // Adding things to the initial foam surface
+
+         // Adding things to the initial foam surface:
         surface_set_target(_surfWavesSub);
-        
+
             draw_clear_alpha(0, 0);
-            
+
              // Floors: (has additional padding of the surface part)
-            draw_surface_part_ext(_surfFloor, (view_xview_nonsync - _surfx - _waveOutMax) * _surfScale, (view_yview_nonsync - _surfy - _waveOutMax) * _surfScale,
-                                  _waveSurfW, _waveSurfH, -_waveOutMax * _surfScale, -_waveOutMax * _surfScale, 1, 1, c_white, 1);
+            draw_surface_part(
+            	_surfFloor,
+            	(_vx - _surfx - 0) * _surfScale,
+            	(_vy - _surfy - 0) * _surfScale,
+				_waveSurfW,
+				_waveSurfH,
+				_waveOutMax - (_waveOutMax * _surfScale),
+				_waveOutMax - (_waveOutMax * _surfScale)
+			);
+
              // PalanKing:
-            with instances_matching(CustomEnemy, "name", "Palanking"){
-                if (z <= 4 and !place_meeting(x, y, Floor)){
-                    draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * _surfScale * right, image_yscale * _surfScale, 0, c_white, 1);
+            with(instances_named(CustomEnemy, "Palanking")){
+                if(z <= 4 && !place_meeting(x, y, Floor)){
+                    draw_sprite_ext(spr_foam, image_index, (x - hspeed - _vx) * _surfScale, (y - vspeed - _vy) * _surfScale, image_xscale * _surfScale * right, image_yscale * _surfScale, 0, c_white, 1);
                 }
             }
-            
+
              // Thing:
-            with instances_matching(CustomHitme, "name", "Creature"){
-                draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+            with(instances_named(CustomHitme, "Creature")){
+                draw_sprite_ext(spr_foam, image_index, (x - _vx) * _surfScale, (y - _vy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
             }
-            
+
              // Rock Decals:
-            with instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig"){
-                draw_sprite_ext(spr_foam, image_index, (x - view_xview_nonsync) * _surfScale, (y - view_yview_nonsync) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+            with(instances_named(CustomHitme, ["CoastDecal", "CoastDecalBig"])){
+                draw_sprite_ext(spr_foam, image_index, (x - _vx) * _surfScale, (y - _vy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
             }
-        
-        // Drawing the part the player sees
+
+         // Drawing the part the player sees:
         surface_set_target(_surfWaves);
         
             draw_clear_alpha(0, 0);
-            
-            for(var a = 45; a < 405; a += 90){
-                draw_surface(_surfWavesSub, lengthdir_x(_oRad * _surfScale, a), lengthdir_y(_oRad * _surfScale, a)); 
+
+            with([_oRad, _iRad]){
+            	var r = self * _surfScale;
+	            for(var a = other.wave_ang; a < other.wave_ang + 360; a += 45){
+	                draw_surface(_surfWavesSub, lengthdir_x(r, a), lengthdir_y(r, a)); 
+	            }
+            	draw_set_blend_mode(bm_subtract);
             }
-            
-            draw_set_blend_mode(bm_subtract);
-            for(var a = 45; a < 405; a += 90){
-                draw_surface(_surfWavesSub, lengthdir_x(_iRad * _surfScale, a), lengthdir_y(_iRad * _surfScale, a));
-            }
-        
             draw_set_blend_mode(bm_normal);
 
         surface_reset_target();
+    }
+    else{
+    	wave_dis = round(5 + sin(_wave / 200) + random(1));
+    	wave_ang = round(random(90) / 15) * 15;
     }
 
      // Draw Water Waves Foam Stuff:
@@ -1142,7 +1173,7 @@
 
      // Draw Sea Transition Floor Tiles:
     draw_surface_cropped(_surfTrans, 1/_surfScale, _surfx, _surfy);
-    // draw_surface_part_ext(_surfTrans, (view_xview_nonsync - _surfx) * _surfScale, (view_yview_nonsync - _surfy) * _surfScale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, 1 / _surfScale, 1 / _surfScale, c_white, 1);
+    // draw_surface_part_ext(_surfTrans, (_vx - _surfx) * _surfScale, (_vy - _surfy) * _surfScale, _vw, _vh, _vx, _vy, 1 / _surfScale, 1 / _surfScale, c_white, 1);
 
      // Submerged Rock Decals:
     with(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig")){
@@ -1172,7 +1203,7 @@
      // Draw Sea:
     draw_set_color(background_color);
     draw_set_alpha(0.6);
-    draw_rectangle(view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height, 0);
+    draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
     draw_set_alpha(1);
 
      // Caustics:
@@ -1181,9 +1212,10 @@
     draw_set_alpha(1);
 
      // Foam:
-    if (_waveCanDraw and surface_exists(_surfWaves)) {
-        draw_surface_ext(_surfWaves, view_xview_nonsync, view_yview_nonsync, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
+    if(_waveCanDraw && surface_exists(_surfWaves)) {
+        draw_surface_ext(_surfWaves, _vx, _vy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
     }
+
      // Flash Ocean w/ Can Leave Level:
     var _flash = false;
     if(CanLeaveCoast && !instance_exists(Portal)){
@@ -1192,11 +1224,11 @@
             _max = ((flash <= _lst) ? 0.3 : 0.15); // Max flash alpha
 
         draw_set_color(c_white);
-        draw_set_alpha(_max * (1 - ((flash mod _int) / _lst)));
-        draw_rectangle(view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height, 0);
+        draw_set_alpha(_max * (1 - ((flash % _int) / _lst)));
+        draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
         draw_set_alpha(1);
 
-        if((flash mod _int) < current_time_scale){
+        if((flash % _int) < current_time_scale){
              // Sound:
             sound_play_pitchvol(sndOasisHorn, 0.5, 2);
             sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
@@ -1244,12 +1276,12 @@
     instance_destroy();
 
  // Draws only the visible parts of a larger surface, with scaling and offset options
-#define draw_surface_cropped
-/// draw_surface_cropped(_surf, _scale = 1, _xoffset = 0, _yoffset = 0)
-var _surf = argument[0];
+#define draw_surface_cropped /// draw_surface_cropped(_surf, _scale = 1, _xoffset = 0, _yoffset = 0)
+	var _surf = argument[0];
 var _scale = argument_count > 1 ? argument[1] : 1;
 var _xoffset = argument_count > 2 ? argument[2] : 0;
 var _yoffset = argument_count > 3 ? argument[3] : 0;
+
     draw_surface_part_ext(_surf, (view_xview_nonsync - _xoffset) / _scale, (view_yview_nonsync - _yoffset) / _scale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, _scale, _scale, c_white, 1)
     
 
@@ -1257,7 +1289,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
-#define obj_create(_x, _y, _obj)                                                        return  mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj);
+#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
