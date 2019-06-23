@@ -2069,14 +2069,14 @@
         if(instance_exists(self)){
              // Smart Gun:
             if(array_exists(_wep.flag, "smart")){
-                if(array_length(instances_matching(instances_named(CustomBeginStep, "step_smartaim"), "creator", _creator)) <= 0){
+                if(array_length(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)) <= 0){
                     with(script_bind_begin_step(step_smartaim, 0)){
                         name = script[2];
                         creator = _creator;
                         time = 0;
                     }
                 }
-                with(instances_matching(instances_named(CustomBeginStep, "step_smartaim"), "creator", _creator)){
+                with(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)){
                     time = max(_wep.load, lq_get(_wep, "wait") + (_wep.shot * _wep.time));
                     step_smartaim();
                 }
@@ -2456,7 +2456,7 @@
     var _wep = wep;
 
      // Stop Sound Loops:
-    if(array_length(instances_matching(instances_named(object_index, name), "wep", _wep)) <= 1){
+    if(array_length(instances_matching(instances_matching(object_index, "name", name), "wep", _wep)) <= 1){
         with(_wep.soun) if(loop_indx != -1){
             if(loop) sound_play(loop_stop);
             audio_stop_sound(loop_indx);
@@ -2613,7 +2613,7 @@
 
 				if(_bind){
 					 // Bind Main Projectile Controller Step:
-					if(array_length(instances_named(CustomStep, "flagcont_step")) <= 0){
+					if(array_length(instances_matching(CustomStep, "name", "flagcont_step")) <= 0){
 						with(script_bind_step(flagcont_step, 0)){
 							name = script[2];
 							inst = [];
@@ -2621,7 +2621,7 @@
 							scrt = [];
 						}
 					}
-					with(instances_named(CustomStep, "flagcont_step")){
+					with(instances_matching(CustomStep, "name", "flagcont_step")){
 						array_push(inst, other);
 						array_push(vars, _vars);
 						array_push(scrt, _scrt);
@@ -3118,7 +3118,7 @@
 				 // Blinkin:
 				else if(o.time < 15){
 					var d = round(depth / 0.1) * 0.1,
-						c = instances_matching(instances_named(CustomDraw, "proj_explo_draw"), "depth_mark", d);
+						c = instances_matching(instances_matching(CustomDraw, "name", "proj_explo_draw"), "depth_mark", d);
 
 					if(array_length(c) > 0) with(c){
 						if(!array_exists(inst, other)) array_push(inst, other);
@@ -3497,7 +3497,7 @@
 	    		 // Flame Trail:
 	    		if(object_index != Nuke){
 					var d = floor(depth / 0.1) * 0.1,
-						c = instances_matching(instances_named(CustomDraw, "proj_rocket_trail"), "depth_mark", d);
+						c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
 
 					if(array_length(c) > 0) with(c){
 						if(!array_exists(inst, other)){
@@ -3585,7 +3585,7 @@
 		    		 // Flame Trail:
 		    		if(object_index != Rocket){
 						var d = round(depth / 0.1) * 0.1,
-							c = instances_matching(instances_named(CustomDraw, "proj_rocket_trail"), "depth_mark", d);
+							c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
 	
 						if(array_length(c) > 0) with(c){
 							if(!array_exists(inst, other)) array_push(inst, other);
@@ -4127,7 +4127,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

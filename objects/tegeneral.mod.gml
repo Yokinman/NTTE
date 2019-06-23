@@ -4,6 +4,8 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
     global.poonRope = [];
 
 #macro spr global.spr
@@ -12,6 +14,8 @@
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -288,7 +292,7 @@
 		    sprite_index = lq_get(spr.BigTopDecal, a);
 			image_xscale = choose(-1, 1);
 			image_speed = 0.4;
-			depth = -8;
+			depth = -7.01;
 
              // Vars:
     		mask_index = msk.BigTopDecal;
@@ -341,11 +345,8 @@
     		 // Specifics:
     		switch(area){
     			case 3: // Ravens
-    				my_raven = [];
 					repeat(3){
-						with(instance_create(x, y, Raven)){
-							image_index = irandom(image_number - 1);
-
+						with(obj_create(x, y, "NestRaven")){
 							var _tries = 100,
 								_x = 0,
 								_y = 0;
@@ -356,19 +357,18 @@
 								x = other.x + _x;
 								y = other.y + _y;
 
-								var n = nearest_instance(x, y, instances_matching_ne(Raven, "id", id));
+								var n = nearest_instance(x, y, instances_matching_ne(instances_matching(CustomObject, "name", "NestRaven"), "id", id));
 								if(!instance_exists(n) || point_distance(x, y, n.x, n.y) > 16){
 									break;
 								}
 							}
-
-							array_push(other.my_raven, {
-								inst : id,
-								x : _x,
-								y : _y
-							});
 						}
 					}
+
+					var l = 32,
+						d = random(360);
+
+					obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "NestRaven");
     				break;
 
     			case 4:
@@ -391,93 +391,6 @@
     if(!instance_exists(GenCont)){
          // Area-Specifics:
         switch(area){
-        	case 3:
-        		var _ravenNum = array_length(my_raven);
-        		with(my_raven){
-        			var _x = other.x + (x * other.image_xscale),
-        				_y = other.y + y;
-
-        			 // Fix:
-        			if(instance_is(inst, RavenFly)){
-        				with(inst){
-        					instance_change(Raven, false);
-        				}
-    				}
-
-        			with(inst){
-	        			x = _x;
-	        			y = _y;
-	        			sprite_index = spr_idle;
-	        			mask_index = mskNone;
-	        			canfly = true;
-	        			wkick = 10000;
-	        			alarm1 = -1;
-
-	        			 // Lookin:
-						if(chance_ct(1, 80)){
-							right = choose(-1, 1);
-							if(instance_exists(Player)){
-								var t = instance_nearest(x, y, Player);
-								scrRight(point_direction(x, y, t.x, t.y));
-							}
-						}
-
-	        			 // Fly to Player:
-	        			if(!instance_is(self, RavenFly)){
-	        				if(chance_ct(1, 100) || instance_number(enemy) <= _ravenNum + 2){
-	        					if(!instance_exists(BecomeScrapBoss) && array_length(array_combine(instances_matching_ne(ScrapBoss, "intro", true), instances_matching_ge(ScrapBoss, "alarm3", 0))) <= 0){ // prevent unholy crash
-									var t = instance_nearest(x, y, Player);
-				        			if(in_distance(t, 128)){
-										scrRight(point_direction(x, y, t.x, t.y));
-		
-				        				var _x = t.x,
-				        					_y = t.y;
-		
-			        					mask_index = mskBandit;
-										if(place_meeting(_x, _y, Wall)){
-											with(instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor)){
-						        				_x = ((bbox_left + bbox_right) / 2) + orandom(4);
-						        				_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
-		
-						        				var b = false;
-												with(other) if(!place_meeting(_x, _y, Wall)){
-													b = true;
-												}
-												if(b) break;
-											}
-										}
-		
-										if(!place_meeting(_x, _y, Wall)){
-					        				instance_change(RavenFly, false);
-					        				sprite_index = sprRavenLift;
-					        				image_index = 0;
-					        				targetx = _x;
-					        				targety = _y;
-	
-					        				mask_index = mskBandit;
-				        					canfly = false;
-					        				wkick = 4;
-				
-					        				 // Effects:
-					        				repeat(6){
-												with(scrFX([x, 8], y + random(16), 3 + random(1), Dust)){
-													depth = -9;
-												}
-											}
-					        				sound_play(sndRavenLift);
-										}
-										else mask_index = mskNone;
-				        			}
-		        				}
-	        				}
-	        			}
-        			}
-	        		if(instance_is(inst, RavenFly)){
-	        			other.my_raven = array_delete_value(other.my_raven, self);
-	        		}
-        		}
-        		break;
-
             case "trench":
                 var _vents = [
                     [  2, -14],
@@ -510,17 +423,6 @@
     }
 
 #define BigDecal_draw
-     // Nest Ravens:
-    if("my_raven" in self){
-    	var r = [];
-	    with(my_raven) with(inst) array_push(r, [id, depth]);
-	    array_sort_sub(r, 1, false);
-
-	    with(r) with(self[0]){
-	    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, merge_color(image_blend, c_black, 0.2), image_alpha);
-	    }
-    }
-
 	 // Flying Ravens:
     with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom + 64, RavenFly)){
     	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
@@ -578,49 +480,7 @@
             break;
 
 		case 3: // Ravens
-			with(my_raven){
-				with(inst){
-					sound_play(sndRavenScreech);
-
-					mask_index = mskBandit;
-					canfly = false;
-					wkick = 4;
-
-					 // Fly:
-					if(chance(1, 2)){
-						var _tries = 100,
-							_tx = 0,
-							_ty = 0,
-							o = 96;
-
-						while(_tries-- > 0){
-							with(instance_random(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching_ne(Floor, "object_index", FloorExplo)))){
-								_tx = x + 16;
-								_ty = y + 16;
-							}
-							if(!place_meeting(_tx, _ty, Wall)) break;
-							o += 16;
-						}
-
-						if(_tries > 0){
-							sound_play(sndRavenLift);
-							instance_change(RavenFly, false);
-							sprite_index = sprRavenLift;
-							image_index = 0;
-							targetx = _tx;
-							targety = _ty;
-						}
-					}
-
-					 // Don Fly:
-					if(!instance_is(self, RavenFly)){
-						x = _x + orandom(8);
-						y = _y + 8 + orandom(4);
-						xprevious = x;
-						yprevious = y;
-					}
-				}
-			}
+			/// Insert nest bits
 			break;
 
 		case 4:
@@ -807,7 +667,7 @@
 	
 	         // Bubble Collision:
 		    if(place_meeting(x, y, object_index)){
-		        with(instances_meeting(x, y, instances_matching_ge(instances_named(object_index, name), "big", big))){
+		        with(instances_meeting(x, y, instances_matching_ge(instances_matching(object_index, "name", name), "big", big))){
 		            if(place_meeting(x, y, other)){
 		                with(other) motion_add(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
 		            }
@@ -1666,7 +1526,7 @@
 	            		with(other){
 		            		if(array_find_index(corpses, c) < 0){
 								var _canTake = true;
-		            			with(instances_named(object_index, name)){
+		            			with(instances_matching(object_index, "name", name)){
 		            				if(array_find_index(corpses, c) >= 0){
 		            					_canTake = false;
 		            					break;
@@ -2182,6 +2042,207 @@
     }
 
 
+#define NestRaven_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_idle = sprRavenIdle;
+		spr_walk = sprRavenWalk;
+		spr_hurt = sprRavenHurt;
+		spr_dead = sprRavenDead;
+		spr_lift = sprRavenLift;
+		spr_land = sprRavenLand;
+		spr_wing = sprRavenFly;
+		spr_shadow = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = -1;
+		sprite_index = spr_idle;
+		image_index = irandom(image_number - 1);
+		image_speed = 0.4;
+		depth = -8 - (y / 20000);
+
+		 // Vars:
+		mask_index = mskBandit;
+		right = choose(-1, 1);
+		targetx = x;
+		targety = y;
+		z = 0;
+		force_spawn = false;
+
+		 // Alarms:
+		alarm0 = 1;
+		alarm1 = irandom_range(90, 1500);
+
+		return id;
+	}
+
+#define NestRaven_step
+	 // Flight:
+	if(sprite_index = spr_wing){
+		var l = 6 * current_time_scale,
+			d = point_direction(x, y, targetx, targety);
+
+		if(point_distance(x, y, targetx, targety) > l){
+			x += lengthdir_x(l, d);
+			y += lengthdir_y(l, d);
+		}
+
+		 // Land:
+		else{
+			image_index = max(2, image_index);
+			if(anim_end){
+				sprite_index = spr_land;
+				image_index = 0;
+			}
+		}
+	}
+
+	 // Lifting:
+	else if(sprite_index = spr_lift){
+		z += 3 * current_time_scale;
+
+		 // Fly Away:
+		if(anim_end) sprite_index = spr_wing;
+	}
+
+	 // Landing:
+	else if(sprite_index = spr_land){
+		z -= 3 * current_time_scale;
+
+		 // Attempt Landing:
+		if(anim_end || z <= 0){
+			z = 0;
+
+			 // Try Again:
+			if(!place_meeting(x, y, Floor)){
+				alarm1 = 1;
+			}
+
+			 // Landed:
+			else{
+				with(instance_create(x, y, Raven)){
+					x = xstart;
+					y = ystart;
+					alarm1 = 20 + random(10);
+					right = other.right;
+
+					 // Target:
+					var n = instance_nearest(x, y, Player);
+					if(in_sight(n) && sign(right) == sign(n.x - x)){
+						gunangle = point_direction(x, y, n.x, n.y);
+					}
+
+					 // Swappin:
+					var l = 4,
+						d = gunangle;
+
+					instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+					wkick = 4;
+
+					 // Effects:
+					if(point_seen(x, y, -1)) sound_play(sndRavenLand);
+					repeat(6){
+						with(instance_create(x + orandom(8), y + random(16), Dust)){
+							motion_add(random(360), 3 + random(1));
+						}
+					}
+				}
+				instance_destroy();
+			}
+		}
+	}
+
+	 // Emergency Flight:
+	else if(alarm1 > 1){
+		if(instance_number(enemy) <= 2 || (position_meeting(x, bbox_bottom + 8, Floor) && !position_meeting(x, bbox_bottom + 8, Wall))){
+			alarm1 = 1;
+			force_spawn = true;
+		}
+	}
+
+#define NestRaven_draw
+	image_alpha = abs(image_alpha);
+
+	var _blend = image_blend;
+	if(z <= 0) _blend = merge_color(_blend, c_black, 0.2);
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, _blend, image_alpha);
+
+	image_alpha = -image_alpha;
+
+#define NestRaven_alrm0
+	alarm0 = irandom_range(1, 80);
+
+	 // Lookin:
+	if(sprite_index == spr_idle){
+		right = choose(-1, 1);
+		if(instance_exists(Player)){
+			var t = instance_nearest(x, y, Player);
+			scrRight(point_direction(x, y, t.x, t.y));
+		}
+	}
+
+#define NestRaven_alrm1
+	alarm1 = irandom_range(1, 100);
+
+	var t = instance_nearest(x, y, Player);
+	if(force_spawn || in_distance(t, 128)){
+		var _x = x,
+			_y = y;
+
+		 // Search Floors by Player:
+		if(instance_exists(t) && !chance(force_spawn, 2)){
+			scrRight(point_direction(x, y, t.x, t.y));
+			_x = t.x;
+			_y = t.y;
+			if(place_meeting(_x, _y, Wall) || force_spawn){
+				var _inst = instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor);
+				with(_inst){
+					_x = ((bbox_left + bbox_right) / 2) + orandom(4);
+					_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
+	
+					var b = false;
+					with(other){
+						if(!place_meeting(_x, _y, Wall) && chance(1, array_length(_inst))){
+							b = true;
+						}
+					}
+					if(b) break;
+				}
+			}
+		}
+
+		 // Random Nearby Floor:
+		else{
+			alarm = 1;
+
+			var r = 64;
+			with(instance_random(instance_rectangle_bbox(x - r, y - r, x + r, y + r, Floor))){
+				_x = (bbox_left + bbox_right) / 2;
+				_y = (bbox_top + bbox_bottom) / 2;
+			}
+		}
+
+		 // Take Off:
+		if(!place_meeting(_x, _y, Wall)){
+			sprite_index = spr_lift;
+			image_index = 0;
+			depth = floor(depth);
+			alarm1 = -1;
+			targetx = _x;
+			targety = _y;
+
+			 // Effects:
+			if(force_spawn) sound_play(sndRavenScreech);
+			sound_play(sndRavenLift);
+			repeat(6){
+				with(instance_create(x + orandom(8), y + random(16), Dust)){
+					motion_add(random(360), 3 + random(1));
+					depth = other.depth;
+				}
+			}
+		}
+	}
+
+
 #define NetNade_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -2401,7 +2462,7 @@
              // Decrement Timer When First in Queue:
             else{
                 if(array_length(stick_list) <= 0){
-                    var n = instances_matching(instances_matching(instances_named(object_index, name), "target", target), "stick", true);
+                    var n = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "stick", true);
                     with(n) stick_list = n;
                 }
                 if(stick_list[0] == id){
@@ -2667,7 +2728,7 @@
 		if(player_push && place_meeting(x, y, Player)){
 		    with(instances_meeting(x, y, Player)){
 		        if(place_meeting(x, y, other) && speed > 0) with(other){
-		            motion_add(point_direction(other.x, other.y, x, y), 1);
+		            motion_add_ct(point_direction(other.x, other.y, x, y), (instance_exists(leader) ? 1 : 0.6));
 		        }
 		    }
 		}
@@ -2820,7 +2881,7 @@
 
 	     // Pet Collision:
 	    if(place_meeting(x, y, object_index)){
-	        with(instances_meeting(x, y, instances_named(object_index, name))){
+	        with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
 	            if(place_meeting(x, y, other) && visible){
 	                var _dir = point_direction(other.x, other.y, x, y);
 	                motion_add(_dir, 1);
@@ -2994,7 +3055,7 @@
 
 
 #define PortalPrevent_create(_x, _y)
-	with(instances_named(CustomEnemy, "PortalPrevent")){
+	with(instances_matching(CustomEnemy, "name", "PortalPrevent")){
 		instance_delete(id); // There can only be one
 	}
 
@@ -3033,18 +3094,19 @@
         hit_list = {};
         line_seg = [];
         line_dis = 0;
+        line_dir_turn = 0;
         line_dir_goal = null;
         blast_hit = true;
         follow_player	= true;	// Follow Player
         offset_dis		= 0;	// Offset from Creator Towards image_angle
         bend_fric		= 0.3;	// Multiplicative Friction for Line Bending
+        line_dir_fric	= 1/4;	// Multiplicative Friction for line_dir_turn
         line_dis_max	= 300;	// Max Possible Line Length
         turn_max		= 8;	// Max Rotate Speed
         turn_factor		= 1/8;	// Rotation Speed Increase Factor
         shrink_delay	= 0;	// Frames Until Shrink
         shrink			= 0.05;	// Subtracted from Line Size
         scale_goal		= 1;	// Size to Reach When shrink_delay > 0
-        player_aim		= 1;	// gunangle Turning Speed Multiplier (1=No change)
         hold_x			= null;	// Stay at this X
         hold_y			= null; // Stay at this Y
         ring			= false;// Take Ring Form
@@ -3118,32 +3180,38 @@
 	if(follow_player){
 		if(!ring && instance_is(creator, Player)){
 			with(creator){
+				 // Visually Force Player's Gunangle:
+				var _ang = 0,
+					w = (other.roids ? bwep : wep);
+
+				if(string_pos("quasar", string(wep_get(w))) == 1){
+					_ang = angle_difference(other.image_angle, gunangle);
+					with(other){
+						if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)) <= 0){
+							with(script_bind_end_step(QuasarBeam_wepangle, 0)){
+								name = script[2];
+								creator = other.creator;
+								roids = other.roids;
+								angle = 0;
+							}
+						}
+						with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)){
+							angle = _ang;
+						}
+					}
+				}
+
 				 // Kickback:
 				if(other.shrink_delay > 0){
-					var k = 8 * (1 + (max(other.image_xscale - 1, 0)));
+					var k = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30));
 					if(other.roids) bwkick = max(bwkick, k);
 					else wkick = max(wkick, k);
 				}
 
-				 // Slow Aim:
-				var a = other.player_aim;
-				if(a != 1){
-					var _beams = instances_matching(instances_named(other.object_index, other.name), "creator", id);
-					if(array_length(instances_matching_lt(_beams, "player_aim", a)) <= 0 && instances_matching(_beams, "player_aim", a)[0] == other){
-						var f = min(a / other.image_yscale, 1);
-						if(f != 1 && other.image_yscale > 0){
-				        	canaim = false;
-				        	gunangle += angle_difference(point_direction(x, y, mouse_x[index], mouse_y[index]), gunangle) * f * current_time_scale;
-				        	scrRight(gunangle);
-						}
-						else canaim = true;
-					}
-				}
-
 	        	 // Knockback:
-	        	motion_add(gunangle + 180, other.image_yscale / 2.5);
+	        	motion_add(other.image_angle + 180, other.image_yscale / 2.5);
 			}
-	
+
 		     // Follow Player:
 	    	var c = creator;
 	        line_dir_goal = c.gunangle;
@@ -3154,9 +3222,9 @@
 	        	if(!place_meeting(x, y + vspeed, Wall)) other.hold_y += vspeed;
 	        }
 	        if(roids){
-	        	hold_y -= 6;
-	        	hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
-	        	hold_y -= lengthdir_y(2 * c.right, c.gunangle - 90);
+	        	hold_y -= 4;
+	        	//hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
+	        	//hold_y -= lengthdir_y(2 * c.right, c.gunangle - 90);
 	        }
 		}
 		else follow_player = false;
@@ -3174,15 +3242,21 @@
 	}
 
      // Rotation:
+    line_dir_turn -= line_dir_turn * line_dir_fric * current_time_scale;
     if(line_dir_goal != null){
-	    var _turn = clamp(angle_difference(line_dir_goal, image_angle) * turn_factor, -turn_max, turn_max) * current_time_scale;
-	    image_angle += _turn;
-	    image_angle = (image_angle + 360) % 360;
+	    var _turn = angle_difference(line_dir_goal, image_angle);
+		if(abs(_turn) > 90 && abs(line_dir_turn) > 1){
+			_turn = abs(_turn) * sign(line_dir_turn);
+		}
+	    line_dir_turn += _turn * turn_factor * current_time_scale;
     }
+	line_dir_turn = clamp(line_dir_turn, -turn_max, turn_max);
+    image_angle += line_dir_turn * current_time_scale;
+    image_angle = (image_angle + 360) % 360;
 
 	 // Bending:
     bend -= (bend * bend_fric) * current_time_scale;
-    bend -= _turn;
+    bend -= line_dir_turn * current_time_scale;
 
      // Line:
     var _lineAdd = max(12, 20 * image_yscale),
@@ -3213,7 +3287,7 @@
 		 // Movin:
 		motion_add_ct(random(360), 0.2 / (speed + 1));
 		if(place_meeting(x, y, object_index)){
-			with(instances_meeting(x, y, instances_named(object_index, name))){
+			with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
 				if(ring && place_meeting(x, y, other)){
 					var l = 0.5,
 						d = point_direction(other.x, other.y, x, y);
@@ -3479,9 +3553,6 @@
     // dust
 
 #define QuasarBeam_cleanup
-	if(player_aim != 1){
-		with(creator) canaim = true;
-	}
 	audio_stop_sound(loop_snd);
 
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
@@ -3544,6 +3615,22 @@
 	    	draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
 	    }
     }
+
+#define QuasarBeam_wepangle
+	if(instance_exists(creator) && abs(angle) > 1){
+    	with(creator){
+    		if(other.roids){
+    			bwepangle = other.angle;
+    		}
+    		else{
+	    		wepangle = other.angle;
+		    	back = (((((gunangle + wepangle) + 360) % 360) > 180) ? -1 : 1);
+		    	scrRight(gunangle + wepangle);
+    		}
+    	}
+    	angle -= angle * 0.3 * current_time_scale;
+	}
+	else instance_destroy();
 
 
 #define QuasarRing_create(_x, _y)
@@ -3759,7 +3846,7 @@
 
 		 // Vars:
 		mask_index = msk.Trident;
-		damage = 48;
+		damage = 40;
 		force = 5;
 		typ = 1;
 		curse = false;
@@ -4088,6 +4175,10 @@
 					stick_x = lengthdir_x(l, d);
 					stick_y = lengthdir_y(l, d);
 				}
+				
+				 // Bigger Hitbox: 
+				image_xscale *= 2;
+				image_yscale = image_xscale;
 			}
 
 			 // Determination:
@@ -4201,9 +4292,12 @@
 
 /// Mod Events
 #define game_start
-    with(instances_named(CustomObject, "Pet")) instance_destroy();
+	 // Reset Pets:
+    with(instances_matching(CustomObject, "name", "Pet")) instance_destroy();
 
 #define step
+	if(DebugLag) trace_time();
+
      // Harpoon Connections:
     with(global.poonRope){
         var _rope = self,
@@ -4305,20 +4399,32 @@
         else scrHarpoonUnrope(_rope);
     }
 
+	 // Wall Top Shadows:
+	script_bind_draw(draw_shadows_top, object_get_depth(SubTopCont) - 1.1);
+
+	if(DebugLag) trace_time("tegeneral_step");
+
 #define draw_bloom
-    /*with(instances_named(CustomProjectile, "BubbleBomb")){
+	if(DebugLag) trace_time();
+
+    /*with(instances_matching(CustomProjectile, "name", "BubbleBomb")){
         draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
     }*/
 
+	 // Crab Venom:
+    with(instances_matching(CustomProjectile, "name", "VenomPellet")){
+        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+    }
+
 	 // Lightning Discs:
-    with(instances_named(CustomProjectile, "LightningDisc")){
+    with(instances_matching(CustomProjectile, "name", "LightningDisc")){
         if(visible){
         	scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
         }
     }
 
 	 // Quasar Beams:
-    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
         if(visible){
         	var a = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5));
         	if(blast_hit) a *= 1.5 / image_yscale;
@@ -4333,7 +4439,7 @@
     }
     
      // Electroplasma:
-    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
     	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
     
@@ -4360,11 +4466,11 @@
     draw_set_color_write_enable(true, true, true, true);
 	
 	 // Flak Ball:
-	with(instances_named(CustomProjectile, "FlakBall")){
+	with(instances_matching(CustomProjectile, "name", "FlakBall")){
 		var _scale = 1.5,
 			_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
 
-		if(array_length(instances_named(inst, name)) > 0){
+		if(array_length(instances_matching(inst, "name", name)) > 0){
 			_alpha *= 1.5;
 		}
 
@@ -4372,7 +4478,7 @@
 	}
 
      // GunCont (Laser Cannon):
-	with(instances_named(CustomObject, "GunCont")){
+	with(instances_matching(CustomObject, "name", "GunCont")){
 		if(bloom){
 			var _scr = on_draw;
 			if(array_length(_scr) >= 3){
@@ -4389,12 +4495,18 @@
 		}
 	}
 
+	if(DebugLag) trace_time("tegeneral_draw_bloom");
+
 #define draw_shadows
-    with(instances_named(CustomObject, "Pet")) if(visible){
+	if(DebugLag) trace_time();
+
+	 // Pets:
+    with(instances_matching(CustomObject, "name", "Pet")) if(visible){
         draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
     }
 
-    with(instances_matching(instances_named(CustomProjectile, "BubbleBomb"), "big", true)) if(visible){
+	 // Bubble Bombs:
+    with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
     	var	f = min((z / 6) - 4, 6),
     		w = max(6 + f, 0) + sin((x + y + z) / 8),
     		h = max(4 + f, 0) + cos((x + y + z) / 8),
@@ -4404,16 +4516,62 @@
         draw_ellipse(_x - w, _y - h, _x + w, _y + h, false);
     }
 
+	 // Custom RavenFlys:
+	with(instances_matching(CustomObject, "name", "NestRaven")) if(visible){
+		if(sprite_index != spr_idle && position_meeting(x, bbox_bottom + 8, Floor)){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
+
+	if(DebugLag) trace_time("tegeneral_draw_shadows");
+
+#define draw_shadows_top
+	instance_destroy();
+
+	if(DebugLag) trace_time();
+
+	var _inst = instances_matching(CustomObject, "name", "NestRaven");
+	if(instance_exists(BackCont) && array_length(_inst) > 0){
+		var _surf = surface_create(game_width, game_height),
+			_vx = view_xview_nonsync,
+			_vy = view_yview_nonsync;
+
+		 // Draw Shadows to Surface:
+		surface_set_target(_surf);
+		draw_clear_alpha(0, 0);
+
+		with(_inst) if(visible){
+			if(sprite_index == spr_idle || !position_meeting(x, bbox_bottom, Floor) || (z <= 0 && position_meeting(x, bbox_bottom + 8, Wall))){
+				draw_sprite(spr_shadow, 0, x + spr_shadow_x - _vx, y + spr_shadow_y - _vy);
+			}
+		}
+		
+		surface_reset_target();
+
+		 // Draw Surface:
+		draw_set_flat(BackCont.shadcol);
+		draw_set_alpha(BackCont.shadalpha);
+		draw_surface(_surf, _vx, _vy);
+		draw_set_alpha(1);
+		draw_set_flat(-1);
+
+		surface_destroy(_surf);
+	}
+
+	if(DebugLag) trace_time("tegeneral_draw_shadows_top");
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+	if(DebugLag) trace_time();
+
      // Big Decals:
-    with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
+    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)){
     	draw_circle(x, y, 96, false);
     }
     
      // Electroplasma:
-    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
     	draw_circle(x, y, 48, false);
     }
 
@@ -4424,7 +4582,7 @@
 
      // Quasar Beams:
     draw_set_flat(draw_get_color());
-    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
         var _scale = 5,
         	_xscale = _scale * image_xscale,
         	_yscale = _scale * image_yscale;
@@ -4454,16 +4612,20 @@
     }
     draw_set_flat(-1);
 
+	if(DebugLag) trace_time("tegeneral_draw_dark");
+
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
 
+	if(DebugLag) trace_time();
+
      // Big Decals:
-    with(instances_matching(instances_named(CustomObject, "BigDecal"), "area", 4, 104)){
+    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)){
     	draw_circle(x, y, 40, false);
     }
     
      // Electroplasma:
-    with(instances_named(CustomProjectile, "ElectroPlasma")){
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
     	draw_circle(x, y, 24, false);
     }
 
@@ -4474,7 +4636,7 @@
 
 	 // Quasar Beams:
     draw_set_flat(draw_get_color());
-    with(instances_named(CustomProjectile, ["QuasarBeam", "QuasarRing"])){
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
         var _scale = 2,
         	_xscale = _scale * image_xscale,
         	_yscale = _scale * image_yscale;
@@ -4503,6 +4665,8 @@
         }
     }
     draw_set_flat(-1);
+
+	if(DebugLag) trace_time("tegeneral_draw_dark_end");
 
 
 /// Scripts
@@ -4540,7 +4704,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

@@ -280,7 +280,7 @@
 
 #define area_start
      // Bind scripts:
-    if(array_length(instances_named(CustomDraw, "draw_rugs")) <= 0){
+    if(array_length(instances_matching(CustomDraw, "name", "draw_rugs")) <= 0){
         with(script_bind_draw(draw_rugs, 7)) name = script[2];
     }
 
@@ -570,7 +570,7 @@
                     chance(1, 16) ||
                     (
                         chance(1, 2) &&
-                        array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_named(CustomObject, "CatHole"))) <= 0
+                        array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_matching(CustomObject, "name", "CatHole"))) <= 0
                     )
                 ){
                     obj_create(x + 16, y + 16, "CatHole");
@@ -589,7 +589,7 @@
     }
 
      // Important Door Stuff:
-    with(instances_named(CustomHitme, "CatDoor")){
+    with(instances_matching(CustomHitme, "name", "CatDoor")){
          // Remove Blocking Walls:
         var a = image_angle - (90 * image_yscale),
             _x = floor((x + lengthdir_x(8, a) + lengthdir_x(16, image_angle)) / 16) * 16,
@@ -1227,7 +1227,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

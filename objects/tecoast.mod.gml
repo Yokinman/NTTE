@@ -4,6 +4,8 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
     global.newLevel = false;
 
 #macro spr global.spr
@@ -12,6 +14,8 @@
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -146,7 +150,7 @@
         }
 
          // Space Out Decals:
-        with(instances_meeting(x, y, instances_matching_le(instances_named(object_index, name), "size", size))){
+        with(instances_meeting(x, y, instances_matching_le(instances_matching(object_index, "name", name), "size", size))){
         	var _dir = point_direction(other.x, other.y, x, y),
         		_dis = 8;
 
@@ -398,7 +402,7 @@
 
      // Self:
     draw_self_enemy();
-    with(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) draw_self(); // In tree
+    with(instances_matching(instances_matching(CustomProp, "name", "Palm"), "my_enemy", id)) draw_self(); // In tree
 
      // Laser Sight:
     if(canshoot){
@@ -434,7 +438,7 @@
         if(in_sight(target)){
             var _targetDir = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 
-        	if(in_distance(target, [64, 320]) || array_length(instances_matching(instances_named(CustomProp, "Palm"), "my_enemy", id)) > 0){
+        	if(in_distance(target, [64, 320]) || array_length(instances_matching(instances_matching(CustomProp, "name", "Palm"), "my_enemy", id)) > 0){
         	     // Prepare to Shoot:
         		if(reload <= 0 && chance(1, 2)){
         		    alarm1 = 12;
@@ -813,7 +817,7 @@
     if(active){
          // Seals Run Over to Lift:
         if(_sealNum < seal_max){
-            with(instances_named(CustomEnemy, "Seal")){
+            with(instances_matching(CustomEnemy, "name", "Seal")){
                 if(!seal_exists(other, id)){
                     seal_add(other, id);
                     break;
@@ -1077,6 +1081,26 @@
 				        spr_weap = spr.SealWeap[type];
 				        sprite_index = spr_spwn;
 				        hitid = [spr_idle, name];
+
+						 // Launchin:
+						if(GameCont.loops > 0 && chance(1, 2)){
+							with(obj_create(x, y, "PalankingToss")){
+								if(instance_exists(Floor)){
+									var n = instance_nearest(x - 16, y - 16, Floor);
+									direction = point_direction(x, y, n.x + 16, n.y + 16) + orandom(30);
+								}
+								speed = 4 + random(4);
+								creator = other;
+								depth = other.depth;
+								mask_index = other.mask_index;
+								spr_shadow_y = other.spr_shadow_y;
+
+								 // FX:
+								sound_play_pitchvol(sndSlugger, 1.5, 0.6);
+								scrWaterStreak(x, y, point_direction(x, y, x, z) + orandom(30), 2 + random(2));
+								repeat(4) instance_create(x, y, Dust);
+							}
+						}
 				    }
 
 					 // Important Stuff:
@@ -1681,6 +1705,7 @@
 #define PalankingToss_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
+		direction = random(360);
     	friction = 0.1;
 		creator = noone;
 		z = 0;
@@ -1715,7 +1740,7 @@
             var _ang = point_direction(0, 0, other.hspeed, -other.zspeed) - 90;
             if("angle" in self) angle = _ang;
             else image_angle = _ang;
-            if(current_frame_active){
+            if(current_frame_active && instance_is(self, Player)){
 		        with(instance_create(x + orandom(4), y + orandom(4), Dust)){
 		            coast_water = false;
 		            depth = other.depth;
@@ -2210,7 +2235,7 @@
     }
 
      // Self Behind:
-    if(gunangle >  180) draw_self_enemy();
+    if(gunangle > 180) draw_self_enemy();
 
     if(_drawWep){
          // 3D Shield + Auto-Outline:
@@ -2390,7 +2415,7 @@
                 else{
                      // Don't kill me!
                     if(scared){
-                        if(in_distance(target, 120) || chance(2, array_length(instances_named(object_index, name)))){
+                        if(in_distance(target, 120) || chance(2, array_length(instances_matching(object_index, "name", name)))){
                             scrWalk(20 + random(10), _targetDir + 180 + orandom(50));
                             if(chance(1, 3)) slide = walk - 5;
                             alarm1 = walk;
@@ -2497,7 +2522,7 @@
 
      // Alert:
     if(type == seal_none){
-        with(instances_named(object_index, name)){
+        with(instances_matching(object_index, "name", name)){
             if(!scared && type == other.type){
                 if(in_distance(other, 80)){
                     scared = true;
@@ -2807,8 +2832,11 @@
         else{
             my_mine = noone;
             if(place_meeting(x, y, CustomHitme)){
-                with(instances_meeting(x, y, instances_named(CustomHitme, "SealMine"))){
-                    if(place_meeting(x, y, other) && array_length(instances_matching(instances_named(other.object_index, other.name), "my_mine", id)) <= 0){
+                with(instances_meeting(x, y, instances_matching(CustomHitme, "name", "SealMine"))){
+                    if(
+                    	place_meeting(x, y, other) &&
+                    	array_length(instances_matching(instances_matching(other.object_index, "name", other.name), "my_mine", id)) <= 0
+                    ){
                         with(other){
                             alarm1 = 20;
                             my_mine = other;
@@ -3237,18 +3265,26 @@
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+	if(DebugLag) trace_time();
+
      // Divers:
-    with(instances_named(CustomEnemy, "Diver")){
+    with(instances_matching(CustomEnemy, "name", "Diver")){
         draw_circle(x, y, 40 + orandom(1), false);
     }
+
+	if(DebugLag) trace_time("tecoast_draw_dark");
 
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
 
+	if(DebugLag) trace_time();
+
      // Divers:
-    with(instances_named(CustomEnemy, "Diver")){
+    with(instances_matching(CustomEnemy, "name", "Diver")){
         draw_circle(x, y, 16 + orandom(1), false);
     }
+
+	if(DebugLag) trace_time("tecoast_draw_dark_end");
 
 #define draw_palankingplayer(_inst)
     with(_inst){
@@ -3256,11 +3292,6 @@
         visible = false;
     }
     instance_destroy();
-
-#define draw_bloom
-    with(instances_named(CustomProjectile, "VenomPellet")){
-        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
-    }
 
 
 /// Scripts
@@ -3298,7 +3329,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

@@ -4,6 +4,8 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
     global.catLight = [];
 
 #macro spr global.spr
@@ -12,6 +14,8 @@
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -136,7 +140,7 @@
                 scrBatScreech();
 
                  // Fewer mass screeches:
-                with instances_named(CustomEnemy, "Bat"){
+                with(instances_matching(object_index, "name", name)){
                     stress = max(stress - 4, 10);
                 }
             }
@@ -147,7 +151,7 @@
     }
     else{
          // Follow nearest ally:
-        var c = nearest_instance(x, y, instances_named(CustomEnemy, ["Cat", "CatBoss", "BatBoss"]));
+        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
         if(in_sight(c) && !in_distance(c, 64)){
             scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
         }
@@ -192,13 +196,16 @@
     sleep(40);
 
      // Alert nearest cat:
-    with nearest_instance(x, y, instances_named(CustomEnemy, "Cat"))
+    with(nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))){
         cantravel = true;
+	}
 
      // Screech:
-    with scrEnemyShoot("BatScreech", 0, 0) if !is_undefined(_scale){
-        image_xscale = _scale;
-        image_yscale = _scale;
+    with(scrEnemyShoot("BatScreech", 0, 0)){
+    	if(!is_undefined(_scale)){
+	        image_xscale = _scale;
+	        image_yscale = _scale;
+    	}
     }
     sprite_index = spr_fire;
     image_index = 0;
@@ -262,7 +269,7 @@
         canfly = true;
 
 		 // hello i am bat:
-        var _bat = instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id);
+        var _bat = instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id);
         with(nearest_instance(x, y, _bat)){
         	other.x = x;
         	other.y = y;
@@ -274,7 +281,7 @@
         if(
         	array_length(_bat) <= 1		&&
         	array_length(cloud) <= 0	&&
-        	array_length(instances_named(CustomObject, "BatCloud")) <= 0
+        	array_length(instances_matching(CustomObject, "name", "BatCloud")) <= 0
         ){
         	alarm0 = 20;
 			for(var i = 0; i < 3; i++){
@@ -335,7 +342,7 @@
 
 		 // Morphing Back:
 		else{
-			var _bat = instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id);
+			var _bat = instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id);
 			with(_bat){
 				walk = 0;
 				speed = 0;
@@ -395,7 +402,7 @@
         instance_create(x, y, PortalClear);
 
          // Poof:
-        with(instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id)){
+        with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
         	repeat(8) with(scrFX(x, y, 3, Dust)){
         		image_blend = c_black;
         	}
@@ -416,7 +423,7 @@
 
 #define BatBoss_alrm1
 	alarm1 = 20 + random(20);
-    with(instances_matching_le(instances_named(CustomEnemy, "CatBoss"), "supertime", 0)){
+    with(instances_matching_le(instances_matching(CustomEnemy, "name", "CatBoss"), "supertime", 0)){
     	alarm1 = 20 + random(20);
     	other.alarm1 += alarm1;
     }
@@ -459,7 +466,7 @@
     
     	    else{
     	         // Follow Cat Boss:
-    	        var c = nearest_instance(x, y, instances_named(CustomEnemy, "CatBoss"));
+    	        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "CatBoss"));
     	        if(in_sight(c) && !in_distance(c, 64)){
     	            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
     	        }
@@ -485,7 +492,7 @@
 
 	 // More Aggressive Bats:
 	else{
-		with(instances_matching(instances_named(CustomEnemy, "Bat"), "creator", id)){
+		with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
 			alarm1 = ceil(alarm1 / 2);
 			
 			target = instance_nearest(x, y, Player);
@@ -546,8 +553,8 @@
     }
 
      // Buff Partner:
-    if(array_length(instances_named(CustomEnemy, "CatBoss")) > 0){
-	    with(instances_named(CustomEnemy, "CatBoss")){
+    if(array_length(instances_matching(CustomEnemy, "name", "CatBoss")) > 0){
+	    with(instances_matching(CustomEnemy, "name", "CatBoss")){
 	    	maxhealth *= 2;
 	    	my_health += 0.5 * maxhealth;
 	    }
@@ -572,7 +579,7 @@
     sleep(40);
 
      // Alert nearest cat:
-    with nearest_instance(x, y, instances_named(CustomEnemy, "Cat"))
+    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
         cantravel = true;
 
      // Screech:
@@ -981,9 +988,9 @@
 	        else{
 	        	sit = noone;
 		        if(place_meeting(x, y, CustomProp)){
-	                with(instances_meeting(x, y, instances_named(CustomProp, ["ChairFront", "ChairSide", "Couch"]))){
+	                with(instances_meeting(x, y, instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"))){
 	                	if(place_meeting(x, y, other)) with(other){
-		                    if(array_length(instances_matching(instances_named(object_index, name), "sit", other)) <= 0){
+		                    if(array_length(instances_matching(instances_matching(object_index, "name", name), "sit", other)) <= 0){
 		                        sit = other;
 		                        image_index = 0;
 		                        if(other.sprite_index == spr.ChairSideIdle){
@@ -1101,7 +1108,7 @@
                 else{
                      // To the CatHole:
                     if(cantravel && chance(3, 4)){
-                        var _hole = nearest_instance(x, y, instances_named(CustomObject, "CatHole"));
+                        var _hole = nearest_instance(x, y, instances_matching(CustomObject, "name", "CatHole"));
                         if(instance_exists(_hole)){
                             alarm1 = 30 + irandom(30);
                             with(_hole){
@@ -1137,8 +1144,8 @@
         else{
             alarm1 = 40 + random(40);
 
-            var _forceSpawn = (instance_number(enemy) <= array_length(instances_matching(instances_named(object_index, name), "active", false)));
-            with(instances_named(CustomObject, "CatHole")){
+            var _forceSpawn = (instance_number(enemy) <= array_length(instances_matching(instances_matching(object_index, "name", name), "active", false)));
+            with(instances_matching(CustomObject, "name", "CatHole")){
                 if(chance(3, instance_number(enemy))){
                     if(!CatHoleCover().open){
                         if(!instance_exists(other.target) || in_distance(other.target, 140)){//in_sight(other.target)){
@@ -1264,7 +1271,7 @@
 
      // Bounce:
     if(dash <= 0 && walk > 0 && place_meeting(x + hspeed, y + vspeed, Wall)){
-    	if(array_length(instances_matching(instances_named(CustomObject, "CatBossAttack"), "creator", id)) <= 0){
+    	if(array_length(instances_matching(instances_matching(CustomObject, "name", "CatBossAttack"), "creator", id)) <= 0){
 	        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
 	        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
 	        gunangle += angle_difference(direction, gunangle) / 2;
@@ -1291,7 +1298,7 @@
 	alarm0 = 150;
 
 	 // Underground Cats:
-	if(chance(1, 1 + array_length(instances_named(CustomEnemy, "Cat")))){
+	if(chance(1, 1 + array_length(instances_matching(CustomEnemy, "name", "Cat")))){
 		with(obj_create(0, 0, "Cat")){
 			active = false;
 			cantravel = true;
@@ -1341,7 +1348,7 @@
 	    }
 	}
 	else{
-        with(instances_named(CustomEnemy, "BatBoss")){
+        with(instances_matching(CustomEnemy, "name", "BatBoss")){
         	alarm1 = 20 + random(20);
         	other.alarm1 += alarm1;
         }
@@ -1550,8 +1557,8 @@
     instance_create(x, y, ToxicDelay);
 
      // Buff Partner:
-    if(array_length(instances_named(CustomEnemy, "BatBoss")) > 0){
-	    with(instances_named(CustomEnemy, "BatBoss")){
+    if(array_length(instances_matching(CustomEnemy, "name", "BatBoss")) > 0){
+	    with(instances_matching(CustomEnemy, "name", "BatBoss")){
 	    	maxhealth *= 2;
 	    	my_health += 0.5 * maxhealth;
 	    }
@@ -1904,7 +1911,7 @@
     if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0 || distance_to_object(CustomObject) <= 0){
         with(instances_meeting(x, y, array_combine(
         	instances_matching_ne(hitme, "team", team),
-        	instances_named(CustomObject, "Pet")
+        	instances_matching(CustomObject, "name", "Pet")
         ))){
             var _sx = lengthdir_x(hspeed, other.image_angle),
                 _sy = lengthdir_y(vspeed, other.image_angle);
@@ -2112,7 +2119,7 @@
         target = noone;
 
          // don't mess with the big boy
-        if(array_length(instances_meeting(x, y, instances_named(CustomObject, "CatHoleBig"))) > 0){
+        if(array_length(instances_meeting(x, y, instances_matching(CustomObject, "name", "CatHoleBig"))) > 0){
             instance_destroy();
             return noone;
         }
@@ -2402,7 +2409,7 @@
             sleep(60);
 
 			 // Allow Portal to Spawn:
-            with(instances_named(CustomEnemy, "PortalPrevent")){
+            with(instances_matching(CustomEnemy, "name", "PortalPrevent")){
             	instance_delete(id);
             }
 
@@ -2709,7 +2716,7 @@
 			    sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
 
 				 // Remove other options:
-				with(instances_matching(instances_named(object_index, name), "creator", creator)){
+				with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
 					open = false;
 					open_state += random(1/3);
 				}
@@ -2918,7 +2925,7 @@
 
 #define Manhole_step
 	if(image_index == 0 && place_meeting(x, y, Explosion)){
-	    var _canhole = (!instance_exists(FrogQueen) && array_length(instances_named(CustomEnemy, "CatBoss")) <= 0);
+	    var _canhole = (!instance_exists(FrogQueen) && array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0);
 	    if(_canhole){
 	        image_index = 1;
 
@@ -3289,14 +3296,14 @@
 		with(other){
 			notice = max(notice, 8);
 			notice += ((other.reload / 3) + random(3)) * current_time_scale;
-			patience -= current_time_scale;
+			//patience -= current_time_scale;
 		}
 	}
 	with(instances_matching_gt(instances_matching(p, "race", "steroids"), "breload", 0)){
 		with(other){
 			notice = max(notice, 8);
 			notice += (other.breload / 3) * current_time_scale;
-			patience -= current_time_scale;
+			//patience -= current_time_scale;
 		}
 	}
 	var t = nearest_instance(x, y, p);
@@ -3368,7 +3375,7 @@
 		}
 	}
 	if(_angered){
-		with(instances_named(object_index, name)) patience = 0;
+		with(instances_matching(object_index, "name", name)) patience = 0;
 	}
 	if(patience <= 0){
 		var o = (my_health - maxhealth),
@@ -3569,30 +3576,44 @@
 
 /// Mod Events
 #define step
+	if(DebugLag) trace_time();
+
      // Reset Lights:
     with(instances_matching(GenCont, "catlight_reset", null)){
         catlight_reset = true;
         global.catLight = [];
     }
 
+	if(DebugLag) trace_time("tesewers_step");
+
 #define draw
+	if(DebugLag) trace_time();
+
 	 // Cursed Bat Chest:
 	draw_set_blend_mode_ext(bm_src_alpha, bm_one);
-	with(instances_matching(instances_named(chestprop, "BatChest"), "curse", true)){
-		if(visible){
+	with(instances_matching(chestprop, "name", "BatChest")){
+		if(visible && curse){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, make_color_rgb(90, 0, 255), image_alpha);
 		}
 	}
 	draw_set_blend_mode(bm_normal);
 
+	if(DebugLag) trace_time("tesewers_draw");
+
 #define draw_shadows
+	if(DebugLag) trace_time();
+
 	 // Fix Pizza Drain Shadows:
-	with(instances_named(CustomHitme, "PizzaDrain")) if(visible){
+	with(instances_matching(CustomHitme, "name", "PizzaDrain")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 	}
 
+	if(DebugLag) trace_time("tesewers_draw_shadows");
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
+
+	if(DebugLag) trace_time();
 
      // Cat Light:
     with(global.catLight){
@@ -3611,7 +3632,7 @@
     }
 
 	 // Manhole Cover:
-	with(instances_named(CustomObject, "PizzaManholeCover")){
+	with(instances_matching(CustomObject, "name", "PizzaManholeCover")){
 		draw_circle(xstart, ystart - 16, 40 + random(2), false);
 	}
 
@@ -3619,17 +3640,21 @@
     with(TV) draw_circle(x, y, 64 + random(2), false);
 
      // Big Bat:
-    with(instances_named(CustomEnemy, ["BatBoss", "CatBoss"])){
+    with(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss")){
     	if("active" not in self || active) draw_circle(x, y, 64 + random(2), false);
     }
     
      // Big Manhole:
-    with(instances_named(CustomObject, "CatHoleBig")){
+    with(instances_matching(CustomObject, "name", "CatHoleBig")){
         draw_circle(x, y, 192 + random(2), false);
     }
 
+	if(DebugLag) trace_time("tesewers_draw_dark");
+
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+	if(DebugLag) trace_time();
 
      // Cat Light:
     with(global.catLight) if(active){
@@ -3637,7 +3662,7 @@
     }
 
 	 // Manhole Cover:
-	with(instances_named(CustomObject, "PizzaManholeCover")){
+	with(instances_matching(CustomObject, "name", "PizzaManholeCover")){
 		var o = 0;
 		if(chance(1, 2)) o = orandom(1);
 		CatLight_draw(xstart, ystart - 32, 16, 19, 28, 8, o);
@@ -3650,14 +3675,21 @@
     }
 
      // Big Bat:
-    with(instances_named(CustomEnemy, ["BatBoss", "CatBoss"])){
+    with(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss")){
     	if("active" not in self || active) draw_circle(x, y, 28 + random(2), false);
     }
 
+	if(DebugLag) trace_time("tesewers_draw_dark_end");
+
 #define draw_bloom
-    with(instances_named(CustomProjectile, "VenomFlak")){
+	if(DebugLag) trace_time();
+
+	 // Bat Boss Flak:
+    with(instances_matching(CustomProjectile, "name", "VenomFlak")){
         draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
     }
+
+	if(DebugLag) trace_time("tesewers_draw_bloom");
 
 
 /// Scripts
@@ -3695,7 +3727,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

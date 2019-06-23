@@ -152,6 +152,9 @@
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
 
+	 // Enable Oasis Sounds:
+    mod_script_call("mod", "ntte", "underwater_sound", true);
+
      // Reset Surfaces:
     for(var i = 0; i < array_length(global.surf); i++){
         surface_destroy(global.surf[i]);
@@ -251,6 +254,12 @@
      // Reset Surfaces:
     for(var i = 0; i < array_length(global.surf); i++){
         surface_destroy(global.surf[i]);
+    }
+
+#define area_transit
+	 // Disable Underwater Sounds:
+    if(GameCont.area != mod_current && GameCont.area != 100){
+    	mod_script_call("mod", "ntte", "underwater_sound", false);
     }
 
 #define area_step
@@ -672,7 +681,7 @@
 
 			draw_set_color(c_black);
 
-			with(instances_seen(instances_matching(instances_named(CustomObject, "PitSpark"), "tentacle_visible", true), 40)){
+			with(instances_seen(instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true), 40)){
 				var _radius = [[25, 20], [20, 10]],
 					_bright = (floor(image_index) % 2);
 
@@ -708,7 +717,7 @@
 			}
 			
              // Pit Squid:
-            with(instances_seen(instances_named(CustomEnemy, "PitSquid"), 16)){
+            with(instances_seen(instances_matching(CustomEnemy, "name", "PitSquid"), 16)){
                 var h = (nexthurt > current_frame + 3),
                     _xscal = image_xscale * max(pit_height, 0),
                     _yscal = image_yscale * max(pit_height, 0),
@@ -750,7 +759,7 @@
             }
             
              // Octo pet:
-            with(instances_seen(instances_matching(instances_matching(instances_named(CustomObject, "Pet"), "pet", "Octo"), "hiding", true), 0)){
+            with(instances_seen(instances_matching(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Octo"), "hiding", true), 0)){
                 draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, visible);
             }
 
@@ -800,7 +809,7 @@
             }
 
              // Stuff that fell in pit:
-            with(instances_named(CustomObject, "PitSink")){
+            with(instances_matching(CustomObject, "name", "PitSink")){
                 draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
             }
 
@@ -855,7 +864,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

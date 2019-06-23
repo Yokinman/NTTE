@@ -27,7 +27,7 @@
             team = other.team;
             creator = other;
 
-            player_aim = 1/16;
+            turn_factor = 1/100;
             offset_dis = 16;
 
             _wep.beam = id;

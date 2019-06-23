@@ -4,12 +4,15 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
     global.newLevel = false;
 
     global.surfAnglerTrail = -1;
     global.surfAnglerTrailClear = -1;
     global.surfAnglerTrailX = 10000 - (surfAnglerTrailW / 2);
     global.surfAnglerTrailY = 10000 - (surfAnglerTrailH / 2);
+    global.surfAnglerFrame = 0;
 
 	global.pit_grid = mod_variable_get("area", "trench", "pit_grid");
 
@@ -19,6 +22,8 @@
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -31,6 +36,7 @@
 #macro surfAnglerTrailY global.surfAnglerTrailY
 #macro surfAnglerTrailW 1200
 #macro surfAnglerTrailH 1200
+#macro surfAnglerFrame global.surfAnglerFrame
 
 
 #define Angler_create(_x, _y)
@@ -102,6 +108,7 @@
 	 // Charging:
 	if(!hiding && ammo >= 0){
 		speed -= (speed * 0.15) * current_time_scale;
+		surfAnglerFrame = current_frame + 150;
 	}
 
 #define Angler_draw
@@ -491,7 +498,7 @@
     }
     
      // Call the bros:
-    with(instances_named(object_index, name)){
+    with(instances_matching(object_index, "name", name)){
     	if(hiding && point_distance(x, y, other.x, other.y) < 64){
     		if(chance(1, 2)) scrAnglerAppear();
     	}
@@ -646,10 +653,10 @@
 
 	 // Search for New Jelly:
     if(!instance_exists(arc_inst) && (((current_frame + wave) mod 15) < current_time_scale)){
-    	var _inst = nearest_instance(x, y, instances_matching_lt(instances_named(CustomEnemy, "JellyElite"), "arc_num", 5));
+    	var _inst = nearest_instance(x, y, instances_matching_lt(instances_matching(CustomEnemy, "name", "JellyElite"), "arc_num", 5));
 
         if(!in_distance(_inst, _arcDistanceElite)){
-        	_inst = nearest_instance(x, y, instances_matching_lt(instances_named(CustomEnemy, "Jelly"), "arc_num", 3));
+        	_inst = nearest_instance(x, y, instances_matching_lt(instances_matching(CustomEnemy, "name", "Jelly"), "arc_num", 3));
         }
 
         if(in_distance(_inst, _arcDistance)){
@@ -1423,7 +1430,7 @@
 	    }
         
          // Force Tentacle Teleport:
-        with(instances_meeting(x, y, instances_matching(instances_matching(instances_named(CustomEnemy, "SquidArm"), "creator", id), "teleport", false))){
+        with(instances_meeting(x, y, instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "SquidArm"), "creator", id), "teleport", false))){
         	alarm2 = 1;
         }
 
@@ -1555,7 +1562,7 @@
         }
 
          // Spawn Tentacles:
-        var t = array_length(instances_matching(instances_named(CustomEnemy, "SquidArm"), "creator", id));
+        var t = array_length(instances_matching(instances_matching(CustomEnemy, "name", "SquidArm"), "creator", id));
         if(t < 3 || chance(1, 5 + (5 * t))){
         	with(obj_create(0, 0, "SquidArm")){
         		creator = other;
@@ -1666,7 +1673,7 @@
 
 #define PitSquid_alrm3
 	var _pits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB),
-		_sparks = instances_named(CustomObject, "PitSpark");
+		_sparks = instances_matching(CustomObject, "name", "PitSpark");
 
 	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_pits));
 
@@ -2028,7 +2035,7 @@
             nexthurt = current_frame + 6;
             sound_play_hit(snd_hurt, 0.3);
         }
-        with(instances_matching(instances_named(object_index, name), "creator", creator)){
+        with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
         	nexthurt = current_frame + 6;
         }
         
@@ -2667,6 +2674,9 @@
 
 /// Mod Events
 #define step
+	if(DebugLag) trace_time();
+
+	 // level_start:
     if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
     else if(global.newLevel){
         global.newLevel = 0;
@@ -2687,9 +2697,16 @@
         surfAnglerTrailY = _y;
     }
 
-    script_bind_draw(draw_anglertrail, -3);
+	 // Bind Angler Trail Drawing:
+	if(surfAnglerFrame > current_frame){
+    	script_bind_draw(draw_anglertrail, -3);
+	}
+
+	if(DebugLag) trace_time("tetrench_step");
 
 #define draw_anglertrail
+	if(DebugLag) trace_time();
+
     var _surfTrail = surfAnglerTrail,
         _surfClear = surfAnglerClear,
         _surfX = surfAnglerTrailX,
@@ -2766,34 +2783,47 @@
 
     instance_destroy();
 
+	if(DebugLag) trace_time("tetrench_draw_anglertrail");
+
 #define draw_bloom
+	if(DebugLag) trace_time();
+
 	 // Canister Bloom:
-	with(instances_matching(instances_named(CustomEnemy, "Angler"), "hiding", true)) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true)) if(visible){
         draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
 
      // Pit Spark:
-    with(instances_named(CustomObject, "PitSpark")) if(visible){
+    with(instances_matching(CustomObject, "name", "PitSpark")) if(visible){
     	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
     }
-    with(instances_named(PortalL, "PitSquidL")) if(visible){
+    with(instances_matching(PortalL, "name", "PitSquidL")) if(visible){
     	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
 
+	if(DebugLag) trace_time("tetrench_draw_bloom");
+
 #define draw_shadows
-    with(instances_named(CustomObject, "TrenchFloorChunk")){
+	if(DebugLag) trace_time();
+
+	 // Squid-Launched Floor Chunks:
+    with(instances_matching(CustomObject, "name", "TrenchFloorChunk")){
         if(visible && place_meeting(x, y, Floor)){
             var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
             draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
         }
     }
 
+	if(DebugLag) trace_time("tetrench_draw_shadows");
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 
+	if(DebugLag) trace_time();
+
      // Anglers:
     draw_set_flat(draw_get_color());
-    with(instances_named(CustomEnemy, "Angler")){
+    with(instances_matching(CustomEnemy, "name", "Angler")){
         var _img = image_index;
 
         if(sprite_index != spr_appear){
@@ -2809,7 +2839,7 @@
     draw_set_flat(-1);
 
      // Jellies:
-    with(instances_named(CustomEnemy, "Jelly")){
+    with(instances_matching(CustomEnemy, "name", "Jelly")){
         var o = 0,
             _frame = floor(image_index);
 
@@ -2825,7 +2855,7 @@
     }
 
      // Elite Eels:
-    with(instances_matching_gt(instances_named(CustomEnemy, "Eel"), "elite", 0)){
+    with(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0)){
         draw_circle(x, y, 48 + orandom(2), false);
     }
 
@@ -2835,18 +2865,22 @@
     }
     
      // Squid Arms:
-    with(instances_named(CustomEnemy, "SquidArm")){
+    with(instances_matching(CustomEnemy, "name", "SquidArm")){
     	draw_circle(x, y - 12, 24 + orandom(1), false);
     }
     
      // Pit Squid:
-    with(instances_matching_ge(instances_named(CustomEnemy, "PitSquid"), "pit_height", 1)){
+    with(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1)){
         with(eye)
             draw_circle(x, y + 16, ((blink ? 48 : 64) + orandom(1)), false);
     }
 
+	if(DebugLag) trace_time("tetrench_draw_dark");
+
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+	if(DebugLag) trace_time();
 
      // Anglers:
     draw_set_blend_mode(bm_subtract);
@@ -2882,15 +2916,17 @@
     }
 
      // Elite Eels:
-    with(instances_matching_gt(instances_named(CustomEnemy, "Eel"), "elite", 0)){
+    with(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0)){
         draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
     }
     
      // Pit Squid:
-    with(instances_matching_ge(instances_named(CustomEnemy, "PitSquid"), "pit_height", 1)){
+    with(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1)){
         with(eye) if !blink
             draw_circle(x, y + 16, 32 + orandom(1), false);
     }
+
+	if(DebugLag) trace_time("tetrench_draw_dark_end");
 
 
 /// Pits Yo
@@ -2936,7 +2972,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

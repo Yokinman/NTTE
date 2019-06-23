@@ -93,6 +93,9 @@
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
 
+	 // Enable Oasis Sounds:
+    mod_script_call("mod", "ntte", "underwater_sound", true);
+
 #define area_setup_floor(_explo)
     if(!_explo){
          // Fix Depth:
@@ -131,13 +134,19 @@
      // Next Subarea: 
     else subarea++;
 
+#define area_transit
+	 // Disable Underwater Sounds:
+    if(GameCont.area != mod_current && GameCont.area != 100){
+    	mod_script_call("mod", "ntte", "underwater_sound", false);
+    }
+
 #define area_step
      // Run underwater code:
     mod_script_call("mod", "ntte", "underwater_step");
 
      // Spawn cool crack effect:
     if(instance_exists(Portal)){
-        var _crack = instances_named(CustomObject, "Crack");
+        var _crack = instances_matching(CustomObject, "name", "Crack");
         if(array_length(_crack) <= 0){
             with(nearest_instance(10000, 10000, instances_matching_ne(Floor, "object_index", FloorExplo))){
                 obj_create(x + 16, y + 16, "Crack");
@@ -332,7 +341,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

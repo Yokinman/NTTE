@@ -4,12 +4,16 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -472,7 +476,6 @@
     else scrWalk(12, direction + orandom(20));
 
 
-/// Mod Events:
 #define SpiderTangle_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -508,7 +511,7 @@
 	}
 	
 #define SpiderTangle_anim
-	 // :
+	 // Appearing:
 	if(sprite_index == spr_appear){
 		image_index = image_number - 1;
 		image_speed = 0;
@@ -547,7 +550,8 @@
 		 // Sounds:
 		sound_play_pitch(sndPlantSnare, 1.1 + random(0.3));
 	}
-	
+
+
 #define SpiderWall_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
         mask_index = mskWall;
@@ -561,7 +565,7 @@
     
 #define SpiderWall_step
 	 // Destroy Overlapping Walls:
-	with(instances_at(x, y, instances_matching_ne(instances_matching(instances_named(CustomObject, "SpiderWall"), "special", false), "id", id))) instance_destroy();
+	with(instances_at(x, y, instances_matching_ne(instances_matching(instances_matching(CustomObject, "name", "SpiderWall"), "special", false), "id", id))) instance_destroy();
 
     if(!instance_exists(creator)){
          // Spawn Special Spider:
@@ -586,7 +590,12 @@
         }
     }
 
+
+/// Mod Events:
 #define draw_shadows
+	if(DebugLag) trace_time();
+
+	 // Mortar Plasma:
     with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
         var _percent = clamp(96 / z, 0.1, 1),
             _w = ceil(18 * _percent),
@@ -595,8 +604,12 @@
         draw_ellipse(x - _w / 2, y - _h / 2, x + _w / 2, y + _h / 2, false);
     }
 
+	if(DebugLag) trace_time("tecaves_draw_shadows");
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
+
+	if(DebugLag) trace_time();
 
      // Mortar:
     with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")){
@@ -605,13 +618,17 @@
         }
     }
 
-     // Mortar plasma:
+     // Mortar Plasma:
     with(instances_matching(CustomProjectile, "name", "MortarPlasma")){
         draw_circle(x, y - z, 64 + orandom(1), false);
     }
 
+	if(DebugLag) trace_time("tecaves_draw_dark");
+
 #define draw_dark_end // Drawing Clear
     draw_set_color(c_black);
+
+	if(DebugLag) trace_time();
 
      // Mortar:
     with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")){
@@ -620,10 +637,12 @@
         }
     }
 
-     // Mortar plasma:
+     // Mortar Plasma:
     with(instances_matching(CustomProjectile, "name", "MortarPlasma")){
         draw_circle(x, y - z, 32 + orandom(1), false);
     }
+
+	if(DebugLag) trace_time("tecaves_draw_dark_end");
 
 
 /// Scripts
@@ -661,7 +680,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

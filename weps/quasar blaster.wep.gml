@@ -20,6 +20,7 @@
         creator = other;
         roids = _roids;
 
+        turn_factor = 1/10;
         shrink_delay = 8;
         scale_goal = 0.5;
         bend_fric = 0.4;

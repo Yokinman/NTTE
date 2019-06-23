@@ -4,6 +4,8 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
 	 // sleep_max():
 	global.sleep_max = 0;
 
@@ -11,7 +13,7 @@
     global.objectList = {
 		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
-		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
@@ -66,6 +68,9 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
+#macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -73,7 +78,6 @@
 #macro objList global.objectList
 #macro objScrt global.objectScrt
 
-#macro DebugLag false
 
 #define obj_create(_x, _y, _obj)
 	if(is_real(_obj) && object_exists(_obj)){
@@ -394,7 +398,7 @@
     draw_set_color(c_gray);
 
 	 // Portal Disappearing Visual:
-	with(instances_named(BulletHit, "PortalPoof")){
+	with(instances_matching(BulletHit, "name", "PortalPoof")){
 		draw_circle(x, y, 120 + random(6), false);
 	}
 
@@ -402,7 +406,7 @@
     draw_set_color(c_black);
 
 	 // Portal Disappearing Visual:
-	with(instances_named(BulletHit, "PortalPoof")){
+	with(instances_matching(BulletHit, "name", "PortalPoof")){
 		draw_circle(x, y, 20 + random(8), false);
 	}
 
@@ -1513,7 +1517,7 @@
         _lasty = _y1,
         _x = _lastx,
         _y = _lasty,
-        o = min(_maxDis / 8, 10) + (_enemy ? (1.5 * (array_length(instances_matching_ge(instances_named(CustomEnemy, "Eel"), "arcing", 1)) - 1)) : 0),
+        o = min(_maxDis / 8, 10) + (_enemy ? (1.5 * (array_length(instances_matching_ge(instances_matching(CustomEnemy, "name", "Eel"), "arcing", 1)) - 1)) : 0),
         _ox = lengthdir_x(o, _dir),
         _oy = lengthdir_y(o, _dir),
         a = 0,

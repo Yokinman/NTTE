@@ -20,6 +20,49 @@
 				ammo = true;
 			}
 			return true;
+
+		case "debuglag":
+			var _mod = [];
+			if(_arg != ""){
+				var	p = 0;
+				for(var i = 0; i <= string_length(_arg); i++){
+					if(string_char_at(_arg, i) == "."){
+						p = i;
+					}
+				}
+	
+				var	_name = ((p <= 0) ? _arg : string_copy(_arg, 1, p - 1)),
+					_type = ((p <= 0) ? "mod" : string_delete(_arg, 1, p));
+	
+				array_push(_mod, [_type, _name]);
+			}
+			else{
+				DebugLag = !DebugLag;
+				with(["mod", "weapon", "race", "skill", "crown", "area", "skin"]){
+					with(mod_get_names(self)){
+						array_push(_mod, [other, self]);
+					}
+				}
+			}
+
+			with(_mod){
+				var _type = self[0],
+					_name = self[1],
+					_varn = "debug_lag";
+
+				if(mod_variable_exists(_type, _name, _varn)){
+					var _state = ((_arg != "") ? !mod_variable_get(_type, _name, _varn) : DebugLag);
+					if(_state ^^ mod_variable_get(_type, _name, _varn)){
+						mod_variable_set(_type, _name, _varn, _state);
+						trace_color((_state ? "ENABLED" : "DISABLED") + " " + _name + "." + _type, (_state ? c_lime : c_red));
+					}
+				}
+				else if(_arg != ""){
+					trace_color("Cannot debug lag for " + _arg, c_red);
+				}
+			}
+
+			return true;
     }
 
 
@@ -28,6 +71,8 @@
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
+
+    global.debug_lag = false;
 
     global.newLevel = instance_exists(GenCont);
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
@@ -118,6 +163,7 @@
     global.charm_step = noone;
 
      // Water Level Sounds:
+    global.waterSoundActive = false;
     global.waterSound = {
         "sndOasisShoot" : [
             sndBloodLauncher,
@@ -327,12 +373,12 @@
             sndVenuz
             ]
     };
-    for(var i = 0; i < lq_size(global.waterSound); i++){
+    /*for(var i = 0; i < lq_size(global.waterSound); i++){
         var s = lq_get_value(global.waterSound, i);
         for(var j = 0; j < array_length(s); j++){
             s[j] = [s[j], 1];
         }
-    }
+    }*/
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -340,6 +386,8 @@
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -361,6 +409,7 @@
 
 #macro EyeShader global.eye_shader
 #macro surfCharm global.surfCharm
+
 
 #define game_start
     with(UnlockCont) instance_destroy();
@@ -455,7 +504,7 @@
             
              // Rare scorpion desert (EASTER EGG):
             if(GameCont.subarea > 1 || GameCont.loops > 0){
-            	if(chance(1, 120) || (chance(1, 60) && array_length(instances_matching(instances_named(CustomObject, "Pet"), "pet", "Scorpion")) > 0)){
+            	if(chance(1, 120) || (chance(1, 60) && array_length(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Scorpion")) > 0)){
 	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
 	                    var _gold = chance(1, 5);
 	                    
@@ -493,6 +542,41 @@
     	    }
             break;
 
+		case 3: /// SCRAPYARDS
+			 // Raven Zone:
+			if(chance(1, 80)){
+				var _chance = 1 + GameCont.loops;
+				with(Bandit){
+					instance_create(x, y, Raven);
+					instance_delete(id);
+				}
+				with(Wall) if(!place_meeting(x, y, PortalClear)){
+					if(chance(_chance, 20) || position_meeting(x + 8, y + 8, Floor)){
+						obj_create(x + 8 + orandom(4), y - 8 + orandom(4), "NestRaven");
+					}
+				}
+				with(TopSmall){
+					if(chance(_chance, 10)){
+						obj_create(x + 8 + orandom(16), y + orandom(8), "NestRaven");
+					}
+				}
+
+				 // Sound:
+				sound_play_pitchvol(sndRavenDie, 0.5 + orandom(0.1), 0.7);
+				sound_play_pitchvol(sndHalloweenWolf, 1.4 + random(0.1), 0.5);
+				if(fork()){
+					repeat(10){
+						var s = audio_play_sound(choose(sndRavenLift, sndRavenScreech, sndRavenLand), 0, 0);
+						audio_sound_gain(s, random(0.8), 0);
+						audio_sound_pitch(s, 1 + orandom(0.2));
+						var w = irandom(4);
+						if(w > 0) wait w;
+					}
+					exit;
+				}
+			}
+			break;
+
         case 4: /// CAVES
              // Spawn Mortars:
         	with(instances_matching(LaserCrystal, "mortar_check", null, false)){
@@ -507,7 +591,7 @@
         	if(instance_exists(Wall)){
         	     // Strays:
         	    repeat(8 + irandom(4)) with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 48){
-        	    	if(array_length(instances_matching(instances_named(CustomObject, "SpiderWall"), "creator", id)) <= 0){
+        	    	if(array_length(instances_matching(instances_matching(CustomObject, "name", "SpiderWall"), "creator", id)) <= 0){
 	        	        with(obj_create(x, y, "SpiderWall")){
 	        	            creator = other;
 	        	        }
@@ -650,6 +734,9 @@
 		 // Transition Levels:
 		else _chance = 1/4;
 	}
+	if(GameCont.area == 3 && array_length(instances_matching(CustomObject, "name", "NestRaven")) > 0){
+		_chance = 1;
+	}
     if(chance(_chance, 1) && instance_exists(Player)){
         var _tries = 1000;
         while(_tries-- > 0){
@@ -680,6 +767,8 @@
 
 #define step
     script_bind_end_step(end_step, 0);
+
+    if(DebugLag) trace_time();
 
      // Custom CampChars:
     if(instance_exists(Menu)){
@@ -743,6 +832,11 @@
                 }
             }
         }
+
+    	 // (Disable Oasis Sounds):
+    	if(global.waterSoundActive){
+    		underwater_sound(false);
+    	}
     }
     else if(global.campchar_fix){
 		global.campchar_fix = false;
@@ -831,7 +925,7 @@
             }
         }
 
-        if(!instance_exists(GenCont)){
+        if(!instance_exists(GenCont) && !instance_exists(LevCont)){
              // Step(s):
             mod_script_call("area", _area, "area_step");
             if(mod_script_exists("area", _area, "area_begin_step")){
@@ -995,168 +1089,12 @@
         }
     }
 
-#define draw_gui
-    var _active = 0,
-		_ox = 0,
-		_oy = 0;
-
-    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-    if(_active > 1) _ox -= 19;
-
-	draw_set_font(fntSmall);
-	draw_set_halign(fa_right);
-	draw_set_valign(fa_top);
-
-	 // Bonus Ammo HUD:
-	with(instances_matching_gt(Player, "ammo_bonus", 0)){
-		draw_set_projection(2, index);
-
-		 // Subtle Color Wave:
-		var _text = `+${ammo_bonus}`;
-		for(var i = 1; i <= string_length(_text); i++){
-			var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
-			_text = string_insert(a, _text, i);
-			i += string_length(a);
-		}
-
-		draw_text_nt(_ox + 66, _oy + 30 - (_active > 1), _text);
-	}
-
-	 // Bonus HP HUD:
-	with(instances_matching_ne(Player, "my_health_bonus", null)){
-		draw_set_projection(2, index);
-		
-		if("my_health_bonus_hud" not in self){
-			my_health_bonus_hud = 0;
-		}
-
-		my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
-
-		var _x1 = _ox + 106,
-			_y1 = _oy + 5,
-			_x2 = _x1 + (3 * my_health_bonus_hud),
-			_y2 = _y1 + 10;
-
-		if(_x2 > _x1 + 1){
-			draw_set_color(c_black);
-			draw_rectangle(_x1, _y1 - 1, _x2 + 1, _y2 + 2, false); // Shadow
-			draw_set_color(c_white);
-			draw_rectangle(_x1, _y1,	 _x2,	  _y2,	   false); // Outline
-			draw_set_color(c_black);
-			draw_rectangle(_x1, _y1 + 1, _x2 - 1, _y2 - 1, false); // Inset
-
-			 // Filling:
-			if(my_health_bonus > 0){
-				if(sprite_index == spr_hurt && image_index < 1){
-					draw_set_color(c_white);
-				}
-				else{
-					draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
-				}
-
-				draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - 1, _y2 - 1, false);
-			}
-		}
-	}
-
-	draw_reset_projection();
-
-#define ammo_bono(_cost, _type)
-	_cost = min(ammo_bonus, _cost);
-	ammo_bonus -= _cost;
-	ammo[_type] += _cost;
-
-	 // FX:
-	if(_cost > 0){
-		repeat(_cost) with(instance_create(x, y, WepSwap)){
-			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
-			image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
-			image_speed *= random_range(0.8, 1.2);
-			if(chance(1, _cost) || chance(1, 3)){
-				creator = other;
-			}
-		}
-		sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
-	}
-
-	 // End:
-	if(ammo_bonus <= 0){
-		sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-		sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
-		with(instance_create(x, y, WepSwap)){
-			sprite_index = sprThrowHit;
-			image_xscale = random_range(2/3, 1);
-			image_yscale = image_xscale;
-			image_angle = random(360);
-			image_blend = c_aqua;
-			creator = other;
-		}
-	}
-
-#define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
-    var _type = argument[0], _snd = argument[1];
-var _vol = argument_count > 2 ? argument[2] : undefined;
-var _pos = argument_count > 3 ? argument[3] : undefined;
-    if(is_undefined(_vol)) _vol = 1;
-    if(is_undefined(_pos)) _pos = 0;
-
-    var c = lq_get(global.current, _type);
-
-     // Stop Previous Track:
-    if(_snd != c.snd){
-        audio_stop_sound(c.snd);
-    }
-
-     // Set Stuff:
-    c.snd = _snd;
-    c.vol = _vol;
-    c.pos = _pos;
-
-     // Play Track:
-    if(!audio_is_playing(c.hold)){
-        switch(_type){
-            case "mus":
-                sound_play_music(-1);
-                sound_play_music(c.hold);
-                break;
-        
-            case "amb":
-                sound_play_ambient(-1);
-                sound_play_ambient(c.hold);
-                break;
-        }
-    }
-
-#define draw_gui_end
-     // Custom Sound Volume:
-    for(var i = 0; i < array_length(global.current); i++){
-        var c = lq_get_value(global.current, i);
-        if(c.snd != -1){
-            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
-        }
-    }
-
-#define area_step(_area)
-    var _scrt = "step";
-    switch(object_index){
-        case CustomBeginStep:
-            _scrt = "begin_step";
-            break;
-
-        case CustomEndStep:
-            _scrt = "end_step";
-            break;
-    }
-
-    if(fork()){ // Fork for error handling
-        mod_script_call("area", _area, "area_" + _scrt);
-        exit;
-    }
-
-    instance_destroy();
+    if(DebugLag) trace_time("ntte_step");
 
 #define end_step
     instance_destroy();
+    
+    if(DebugLag) trace_time();
 
      // Convert WepPickups to Pickup Indicators:
     /*
@@ -1247,6 +1185,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		}
 		my_health_bonus_hold = my_health;
 	}
+
+    if(DebugLag) trace_time("ntte_end_step");
 
 #define draw
 	 // NTTE Options at Campfire:
@@ -1353,9 +1293,115 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		draw_reset_projection();
 	}
 
+#define draw_gui
+    var _active = 0,
+		_ox = 0,
+		_oy = 0;
+
+    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
+    if(_active > 1) _ox -= 19;
+
+	draw_set_font(fntSmall);
+	draw_set_halign(fa_right);
+	draw_set_valign(fa_top);
+
+	 // Bonus Ammo HUD:
+	with(instances_matching_gt(Player, "ammo_bonus", 0)){
+		draw_set_projection(2, index);
+
+		 // Subtle Color Wave:
+		var _text = `+${ammo_bonus}`;
+		for(var i = 1; i <= string_length(_text); i++){
+			var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
+			_text = string_insert(a, _text, i);
+			i += string_length(a);
+		}
+
+		draw_text_nt(_ox + 66, _oy + 30 - (_active > 1), _text);
+	}
+
+	 // Bonus HP HUD:
+	with(instances_matching_ne(Player, "my_health_bonus", null)){
+		draw_set_projection(2, index);
+		
+		if("my_health_bonus_hud" not in self){
+			my_health_bonus_hud = 0;
+		}
+
+		my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
+
+		var _x1 = _ox + 106,
+			_y1 = _oy + 5,
+			_x2 = _x1 + (3 * my_health_bonus_hud),
+			_y2 = _y1 + 10;
+
+		if(_x2 > _x1 + 1){
+			draw_set_color(c_black);
+			draw_rectangle(_x1, _y1 - 1, _x2 + 1, _y2 + 2, false); // Shadow
+			draw_set_color(c_white);
+			draw_rectangle(_x1, _y1,	 _x2,	  _y2,	   false); // Outline
+			draw_set_color(c_black);
+			draw_rectangle(_x1, _y1 + 1, _x2 - 1, _y2 - 1, false); // Inset
+
+			 // Filling:
+			if(my_health_bonus > 0){
+				if(sprite_index == spr_hurt && image_index < 1){
+					draw_set_color(c_white);
+				}
+				else{
+					draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+				}
+
+				draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - 1, _y2 - 1, false);
+			}
+		}
+	}
+
+	draw_reset_projection();
+
+	 // Coast Indicator:
+	if(instance_exists(Player) && !instance_exists(Portal)){
+		with(instances_matching_gt(instances_matching(CustomDraw, "name", "darksea_draw"), "flash", 0)){
+			var	_ix = indicate_x,
+				_iy = indicate_y;
+
+			if(_ix >= 0 && _iy >= 0){
+				var	_size = 4;
+				_iy += sin(wave / 8);
+
+				 // Drawn to Player:
+				with(player_find(player_find_local_nonsync())){
+					draw_set_alpha((point_distance(x, y, _ix, _iy) - 12) / 80);
+
+					var l = min(point_distance(_ix, _iy, x, y), 16 * min(1, 28 / point_distance(_ix, _iy, x, y))),
+						d = point_direction(_ix, _iy, x, y);
+
+					_ix += lengthdir_x(l, d);
+					_iy += lengthdir_y(l, d);
+				}
+
+				 // Draw:
+				var	_border = 2 + (_size / 2),
+					_x = clamp(_ix - view_xview_nonsync, _border, game_width - _border),
+					_y = clamp(_iy - view_yview_nonsync, _border, game_height - _border),
+					_x1 = _x - (_size / 2),
+					_y1 = _y - (_size / 2),
+					_x2 = _x1 + _size,
+					_y2 = _y1 + _size;
+
+				draw_set_color(c_black);
+				draw_rectangle(_x1, _y1 + 1, _x2, _y2 - 1, false);
+				draw_rectangle(_x1 + 1, _y1, _x2 - 1, _y2, false);
+				draw_set_color(make_color_rgb(150, 100, 200));
+				draw_rectangle(_x1 + 1, _y1 + 1, _x1 + 1 + max(0, _size - 3), _y1 + 1 + max(0, _size - 3), false);
+			}
+		}
+		draw_set_alpha(1);
+	}
+
 #define draw_pause
      // Reset Stuff:
-    if(GameCont.area == "coast"){
+    if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
         mod_variable_set("area", GameCont.area, "surfReset", true);
     }
     with(instances_matching(CustomDraw, "name", "draw_pit")){
@@ -1416,6 +1462,101 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	ntte_options(OptionX, OptionY);
 
 	draw_reset_projection();
+
+
+#define ammo_bono(_cost, _type)
+	_cost = min(ammo_bonus, _cost);
+	ammo_bonus -= _cost;
+	ammo[_type] += _cost;
+
+	 // FX:
+	if(_cost > 0){
+		repeat(_cost) with(instance_create(x, y, WepSwap)){
+			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+			image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
+			image_speed *= random_range(0.8, 1.2);
+			if(chance(1, _cost) || chance(1, 3)){
+				creator = other;
+			}
+		}
+		sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
+	}
+
+	 // End:
+	if(ammo_bonus <= 0){
+		sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+		sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
+		with(instance_create(x, y, WepSwap)){
+			sprite_index = sprThrowHit;
+			image_xscale = random_range(2/3, 1);
+			image_yscale = image_xscale;
+			image_angle = random(360);
+			image_blend = c_aqua;
+			creator = other;
+		}
+	}
+
+#define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
+    var _type = argument[0], _snd = argument[1];
+var _vol = argument_count > 2 ? argument[2] : undefined;
+var _pos = argument_count > 3 ? argument[3] : undefined;
+    if(is_undefined(_vol)) _vol = 1;
+    if(is_undefined(_pos)) _pos = 0;
+
+    var c = lq_get(global.current, _type);
+
+     // Stop Previous Track:
+    if(_snd != c.snd){
+        audio_stop_sound(c.snd);
+    }
+
+     // Set Stuff:
+    c.snd = _snd;
+    c.vol = _vol;
+    c.pos = _pos;
+
+     // Play Track:
+    if(!audio_is_playing(c.hold)){
+        switch(_type){
+            case "mus":
+                sound_play_music(-1);
+                sound_play_music(c.hold);
+                break;
+        
+            case "amb":
+                sound_play_ambient(-1);
+                sound_play_ambient(c.hold);
+                break;
+        }
+    }
+
+#define draw_gui_end
+     // Custom Sound Volume:
+    for(var i = 0; i < array_length(global.current); i++){
+        var c = lq_get_value(global.current, i);
+        if(c.snd != -1){
+            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
+        }
+    }
+
+#define area_step(_area)
+    var _scrt = "step";
+    switch(object_index){
+        case CustomBeginStep:
+            _scrt = "begin_step";
+            break;
+
+        case CustomEndStep:
+            _scrt = "end_step";
+            break;
+    }
+
+    if(fork()){ // Fork for error handling
+        mod_script_call("area", _area, "area_" + _scrt);
+        exit;
+    }
+
+    instance_destroy();
 
 #define ntte_options(_optionsX, _optionsY)
     if(OptionOpen){
@@ -1685,7 +1826,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
      // Flames Boil Water:
-    with instances_matching([Flame, TrapFire], "", null){
+    with(instances_matching([Flame, TrapFire], "", null)){
         if(sprite_index != sprFishBoost){
             if(image_index > 2){
                 sprite_index = sprFishBoost;
@@ -1696,7 +1837,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     var xx = x,
                         yy = y,
                         vol = 0.4;
-                    if fork(){
+
+                    if(fork()){
                         repeat(1 + irandom(3)){
                             instance_create(xx, yy, Bubble);
                             
@@ -1736,27 +1878,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         if(sprite_index == sprWeaponChestOpen) sprite_index = sprClamChestOpen;
     }
 
-    with(script_bind_step(underwater_sound, 0)) name = script[2];
-    with(script_bind_draw(underwater_draw, -3)) name = script[2];
-    with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
-
-#define underwater_sound
-    instance_destroy();
-
-     // Replace Sounds w/ Oasis Sounds:
-    for(var i = 0; i < lq_size(global.waterSound); i++){
-        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
-        with(lq_get_value(global.waterSound, i)){
-            var _snd = self;
-            if(audio_is_playing(_snd[0])){
-                if(_snd[1] < current_frame){
-                    sound_play_pitchvol(_sndOasis, 1, 2);
-                    _snd[1] = current_frame + 1;
-                }
-                sound_stop(_snd[0]);
-            }
-        }
-    }
+     // Watery Enemy Hurt/Death Sounds:
     with(instances_matching(enemy, "underwater_sound_check", null)){
         underwater_sound_check = true;
         if(object_index != CustomEnemy){
@@ -1765,14 +1887,20 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
 
+    //with(script_bind_step(underwater_sound, 0)) name = script[2];
+    with(script_bind_draw(underwater_draw, -3)) name = script[2];
+    with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
+
 #define underwater_end_step
     instance_destroy();
 
      // Just in case - backup sound stopping:
+    /*
     for(var i = 0; i < lq_size(global.waterSound); i++){
         var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
         with(lq_get_value(global.waterSound, i)) sound_stop(self[0]);
     }
+    */
 
      // Bubbles:
     with(instances_matching(Dust, "waterbubble", null)){
@@ -1884,6 +2012,34 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     draw_set_blend_mode(bm_normal);
     d3d_set_fog(0, 0, 0, 0);
 
+#define underwater_sound(_state)
+    //instance_destroy();
+
+    global.waterSoundActive = _state;
+    for(var i = 0; i < lq_size(global.waterSound); i++){
+        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
+        with(lq_get_value(global.waterSound, i)){
+        	var _snd = self;
+        	if(_state) sound_assign(_snd, _sndOasis);
+        	else sound_restore(_snd);
+        }
+    }
+
+    /* // Replace Sounds w/ Oasis Sounds:
+    for(var i = 0; i < lq_size(global.waterSound); i++){
+        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
+        with(lq_get_value(global.waterSound, i)){
+            var _snd = self;
+            if(audio_is_playing(_snd[0])){
+                if(_snd[1] < current_frame){
+                    sound_play_pitchvol(_sndOasis, 1, 2);
+                    _snd[1] = current_frame + 1;
+                }
+                sound_stop(_snd[0]);
+            }
+        }
+    }*/
+
 
 #define CampChar_create(_x, _y, _race)
     _race = race_get_name(_race);
@@ -1920,7 +2076,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 #define scrBossIntro(_name, _sound, _music)
 	if(!instance_is(self, CustomBeginStep)){
-	    audio_play_sound(_sound, 0, false);
+	    sound_play(_sound);
 	    sound_play_ntte("mus", _music);
 
 		 // BeginStep to fix TopCont.darkness flash
@@ -2038,7 +2194,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
     splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
-
 
      // Game Over Splash:
     if(instance_exists(UnlockScreen)) unlock_delay = 1;
@@ -2234,63 +2389,62 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		snd_dead = -1;
 
     	 // Vars:
+		persistent = true;
         mask_index = mskNone;
     	mask = mskWepPickup;
         name = _text;
         creator = other;
         xoff = 0;
         yoff = 0;
+        size = 0;
+        team = 0;
         pick = -1;
+        nowade = true;
 
 		 // Bind to End Step:
 		if(array_length(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")) <= 0){
 			with(script_bind_end_step(PickupIndicator_end_step, 0)){
 				name = script[2];
-				inst = [];
+				persistent = true;
 			}
-		}
-		with(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")){
-			inst = array_combine([other], inst); // Cause array_insert is broke af
 		}
 
         return id;
     }
 
 #define PickupIndicator_end_step
-	if(array_length(inst) > 0){
-		with(inst){
-			if(instance_exists(self)){
-			    pick = -1;
-			    feed = 0;
-			    my_health = 99999;
-			
-			     // Follow Creator:
-			    var c = creator;
-			    if(c != noone){
-			        if(instance_exists(c)){
-			            x = c.x;
-			            y = c.y;
-			            persistent = c.persistent;
-			            image_index = c.image_index;
-			            image_angle = c.image_angle;
-			            image_xscale = c.image_xscale;
-			            image_yscale = c.image_yscale;
-			            if(mask_index != mskNone){
-			            	mask = mask_index;
-			            	mask_index = mskNone;
-			            }
-			            if(mask == mskNone){
-			                mask = c.mask_index;
-			                if(mask == -1) mask = c.sprite_index;
-			            }
-			            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
-			                c.pickup_indicator = id;
-			            }
-			        }
-			        else instance_destroy();
-			    }
-			}
-			else other.inst = array_delete_value(other.inst, self);
+	var _inst = instances_matching(IceFlower, "pickup_indicator", true);
+	if(array_length(_inst) > 0){
+		with(_inst){
+		    pick = -1;
+		    feed = 0;
+		    my_health = 99999;
+		    nexthurt = current_frame + 99999;
+		
+		     // Follow Creator:
+		    var c = creator;
+		    if(c != noone){
+		        if(instance_exists(c)){
+		            x = c.x;
+		            y = c.y;
+		            image_index = c.image_index;
+		            image_angle = c.image_angle;
+		            image_xscale = c.image_xscale;
+		            image_yscale = c.image_yscale;
+		            if(mask_index != mskNone){
+		            	mask = mask_index;
+		            	mask_index = mskNone;
+		            }
+		            if(mask == mskNone){
+		                mask = c.mask_index;
+		                if(mask == -1) mask = c.sprite_index;
+		            }
+		            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
+		                c.pickup_indicator = id;
+		            }
+		        }
+		        else instance_delete(id);
+		    }
 		}
 	}
 	else instance_destroy();
@@ -3080,6 +3234,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	 // Uncharm yo:
 	with(ds_list_to_array(global.charm)) scrCharm(instance, false);
 
+	 // Disable Water Sounds:
+	if(global.waterSoundActive){
+		underwater_sound(false);
+	}
+
 
 /// Scripts
 #define orandom(n)																		return  random_range(-n, n);
@@ -3114,7 +3273,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

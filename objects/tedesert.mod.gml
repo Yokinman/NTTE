@@ -4,12 +4,16 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+    global.debug_lag = false;
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.save
 #macro opt sav.option
+
+#macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
@@ -336,7 +340,7 @@
     sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
 
      // Break:
-    var i = nearest_instance(x, y, instances_named(CustomProp, "CoastBossBecome"));
+    var i = nearest_instance(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"));
     if(!in_distance(i, 32)){
         broken = true;
         instance_destroy();
@@ -396,7 +400,7 @@
             motion_add(random(360), 3);
         }
 
-        //with(instances_named(object_index, name)) instance_destroy();
+        //with(instances_matching(object_index, "name", name)) instance_destroy();
         instance_destroy();
     }
 
@@ -566,9 +570,11 @@
 		maxspeed = 3;
 		ammo = 4;
 		swim = 0;
+		swim_mask = -1;
 		swim_target = noone;
 		gunangle = random(360);
 		direction = gunangle;
+		canfly = true;
 		intro = false;
 		swim_ang_frnt = direction;
 		swim_ang_back = direction;
@@ -629,6 +635,7 @@
                 direction = 90 - (right * 90);
                 swim_ang_frnt = direction;
                 swim_ang_back = direction;
+                depth = 0.1;
                 exit; }
 
             if(sprite_index = spr_hurt || sprite_index == spr_efir){
@@ -654,6 +661,8 @@
      // Swimming:
     if(swim > 0){
         swim -= current_time_scale;
+
+		if(swim_mask != -1) mask_index = swim_mask;
 
          // Jus keep movin:
         if(instance_exists(swim_target)){
@@ -701,8 +710,9 @@
          // Visual:
         spr_shadow = mskNone;
         if(current_frame_active){
+        	image_angle = 0;
             var _cx = x,
-                _cy = bbox_bottom;
+                _cy = y + 7;
 
              // Debris:
             if((place_meeting(x, y, FloorExplo) && chance(1, 30)) || chance(1, 40)){
@@ -733,6 +743,7 @@
                         hspeed += other.hspeed;
                         vspeed += other.vspeed;
                         friction = random(0.5);
+                        depth = other.depth;
                         //image_blend = make_color_rgb(110, 184, 247);
                     }
 
@@ -744,6 +755,7 @@
                             motion_add(_oDir[o] + 180 + (2 * a), other.speed);
                             image_xscale *= .75;
                             image_yscale = image_xscale;
+                            depth = other.depth;
                         }
                     }
                 }
@@ -753,14 +765,47 @@
             if(chance(1, 4)) view_shake_at(_cx, _cy, 4);
         }
 
+         // Manual Collisions:
+        if(place_meeting(x, y, Player)){
+        	with(instances_meeting(x, y, instances_matching_ne(Player, "team", team))){
+        		if(place_meeting(x, y, other)) with(other){
+        			event_perform(ev_collision, Player);
+        		}
+        	}
+        }
+        if(place_meeting(x, y, prop)){
+        	with(instances_meeting(x, y, prop)){
+        		if(place_meeting(x, y, other)) with(other){
+        			event_perform(ev_collision, prop);
+        		}
+        	}
+        }
+
+         // Bolts No:
+        with(instances_matching(BoltStick, "target", id)){
+	        repeat(5) with(instance_create(x, y, Dust)){
+	            motion_add(random(360), 3);
+	        }
+        	instance_destroy();
+        }
+
+		 // Disable Hitbox:
+		if(swim_mask == -1) swim_mask = mask_index;
+		mask_index = mskNone;
+
          // Un-Dive:
         if(swim <= 0){
             swim = 0;
             alarm3 = -1;
-            image_index = 0;
-            sprite_index = spr_rise;
             scrRight(direction);
             speed = 0;
+
+            sprite_index = spr_rise;
+            image_index = 0;
+		    depth = -2;
+
+            mask_index = swim_mask;
+            swim_mask = -1;
 
              // Babbies:
             /*if(GameCont.loops > 0) repeat(GameCont.loops * 3){
@@ -789,7 +834,7 @@
 
         for(var i = 0; i < array_length(fish_train); i++){
             if(_broken){
-                with(fish_train[i]) visible = 1;
+                with(fish_train[i]) visible = true;
                 fish_train[i] = noone;
             }
             else{
@@ -895,25 +940,26 @@
 
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Can't be hurt while swimming:
-    if(swim){
-        with(other) if("typ" in self && typ != 0){
-             // Effects:
-            sound_play_pitch(sndCrystalPropBreak, 0.7);
-            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
-            repeat(5) with(instance_create(x, y, Dust)){
-                motion_add(random(360), 3);
-            }
+    /*if(swim){
+    	if("typ" not in other || other.typ != 0){
+	        sound_play_pitch(sndCrystalPropBreak, 0.7);
+	        sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
+		    with(other) if("typ" in self){
+		        repeat(5) with(instance_create(x, y, Dust)){
+		            motion_add(random(360), 3);
+		        }
+		
+		         // Destroy (1 frame delay to prevent errors):
+		        if(fork()){
+		            wait 0;
+		            if(instance_exists(self)) instance_destroy();
+		            exit;
+		        }
+		    }
+    	}
+    }*/
 
-             // Destroy (1 frame delay to prevent errors):
-            if(fork()){
-                wait 1;
-                if(instance_exists(self)) instance_destroy();
-                exit;
-            }
-        }
-    }
-
-    else{
+    //else{
         my_health -= _hitdmg;           // Damage
         nexthurt = current_frame + 6;	// I-Frames
         sound_play_hit(snd_hurt, 0.3);	// Sound
@@ -925,7 +971,7 @@
         }
 
          // Knockback:
-        if(!swim){
+        if(swim <= 0){
             motion_add(_hitdir, _hitvel);
         }
 
@@ -935,7 +981,7 @@
             sprite_index = spr_hurt;
             image_index = 0;
         }
-    }
+    //}
 
 #define CoastBoss_draw
     var h = (nexthurt > current_frame + 3);
@@ -954,7 +1000,7 @@
 
     if(swim > 0){
         var _cx = x,
-            _cy = bbox_bottom;
+            _cy = y + 7;
 
         if(h) d3d_set_fog(1, image_blend, 0, 0);
         for(var a = 0; a < 4; a++){
@@ -1301,13 +1347,21 @@
 
 /// Mod Events
 #define draw_bloom
-    with(instances_named(CustomProjectile, "PetVenom")){
+	if(DebugLag) trace_time();
+
+	 // Scorp Pet Attack:
+    with(instances_matching(CustomProjectile, "name", "PetVenom")){
 	    var scale = 0.2 + ((my_charge / maxcharge) * 0.8);
 	    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale * 2, image_yscale * scale * 2, image_angle, image_blend, image_alpha * 0.2);
     }
 
+	if(DebugLag) trace_time("tedesert_draw_bloom");
+
 #define draw_shadows
-    with(instances_named(CustomEnemy, "CoastBoss")){
+	if(DebugLag) trace_time();
+
+	 // SharkBoss Loop Train:
+    with(instances_matching(CustomEnemy, "name", "CoastBoss")){
         for(var i = 0; i < array_length(fish_train); i++){
             if(array_length(fish_swim) > i && fish_swim[i]){
                 with(fish_train[i]){
@@ -1316,6 +1370,8 @@
             }
         }
     }
+
+	if(DebugLag) trace_time("tedesert_draw_shadows");
 
 
 /// Scripts
@@ -1353,7 +1409,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);

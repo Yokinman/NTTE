@@ -383,7 +383,7 @@
          // Manual Bobbing:
         if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
             with(perched){
-                var _bob = parrot_bob[floor(image_index mod array_length(parrot_bob))];
+                var _bob = parrot_bob[floor(image_index % array_length(parrot_bob))];
                 if(is_array(_bob)){
                 	if(array_length(_bob) > 0) _x += _bob[0];
                 	if(array_length(_bob) > 1) _y += _bob[1];
@@ -578,7 +578,7 @@
 #define Scorpion_alrm0(_leaderDir, _leaderDis)
     alarm0 = 20 + irandom(10);
 
-    target = nearest_instance(x, y, instances_matching_ne(hitme, "team", team, 0));
+    target = nearest_instance(x, y, instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0));
     
     if(my_health > 0 && sprite_index != spr_shield){
         if(instance_exists(leader)){
@@ -762,7 +762,7 @@
                  // Attack Bite:
                 if(instance_is(target, hitme)){
                 	var r = 32;
-                	with(instances_matching_ne(hitme, "team", team, 0)){
+                	with(instances_matching_ne(hitme, "team", team)){
                 		var _dmg = 0;
                 		if(other.target == id){
                 			_dmg = 8 + (3 * GameCont.level);
@@ -907,7 +907,7 @@
                  // Targeting:
                 if(sprite_index != spr_fire){
                     var _canTarget = [];
-                    with(instances_matching_ne(hitme, "team", team)){
+                    with(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0)){
                         if(!instance_is(self, prop) && in_sight(other)){
                             array_push(_canTarget, id);
                         }
@@ -1053,7 +1053,7 @@
 				_target = nearest_instance(x, y, _enemies);
 			}
 				
-			var t = array_length(instances_matching(instances_named(CustomProjectile, "SpiderTangle"), "creator", leader));
+			var t = array_length(instances_matching(instances_matching(CustomProjectile, "name", "SpiderTangle"), "creator", leader));
 			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
 			
 				 // Snare Larget:
@@ -1388,7 +1388,7 @@
                 }
             }
         }
-        var _prism = instances_named(object_index, name);
+        var _prism = instances_matching(instances_matching(object_index, "name", name), "pet", pet);
         with(instances_matching(projectile, "can_prism_duplicate", false)){
             if(array_length(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16, _prism)) <= 0){
                 can_prism_duplicate = true;
@@ -1497,7 +1497,6 @@
 #define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
 #define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define instances_named(_object, _name)                                                 return  mod_script_call(   "mod", "telib", "instances_named", _object, _name);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
 #define instances_seen(_obj, _ext)                                                      return  mod_script_call(   "mod", "telib", "instances_seen", _obj, _ext);
