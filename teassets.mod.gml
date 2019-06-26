@@ -9,6 +9,7 @@
             "trench" : sprite_add("sprites/areas/Trench/sprTopDecalTrench.png", 2, 19, 24)
         }
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
+        NestDebris = sprite_add("sprites/areas/Scrapyard/sprNestDebris.png", 16, 4, 4);
 
          // Bat Discs:
         BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
@@ -51,6 +52,9 @@
         ElectroPlasmaTrail  = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTrail.png",  3,  4,  4);
         ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7,  12, 12);
         ElectroPlasmaTether = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTether.png", 4,  0,  1);
+
+         // Fly:
+        FlySpin = sprite_add("sprites/misc/sprFlySpin.png", 16, 4, 4);
 
          // Harpoon:
         Harpoon      = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
@@ -107,12 +111,18 @@
         	BabyScorpionGoldHurt = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldHurt.png", 3, 16, 16);
         	BabyScorpionGoldDead = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldDead.png", 6, 16, 16);
         	BabyScorpionGoldFire = sprite_add("sprites/enemies/BabyScorpionGold/sprBabyScorpionGoldFire.png", 6, 16, 16);
-        	
+
         	 // Big Cactus:
         	BigCactusIdle = sprite_add("sprites/areas/Desert/Props/sprBigCactusIdle.png", 1, 16, 16);
         	BigCactusHurt = sprite_add("sprites/areas/Desert/Props/sprBigCactusHurt.png", 3, 16, 16);
         	BigCactusDead = sprite_add("sprites/areas/Desert/Props/sprBigCactusDead.png", 4, 16, 16);
-        	
+
+             // Big Maggot Nest:
+            BigMaggotSpawnIdle = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestIdle.png", 4, 32, 32);
+            BigMaggotSpawnHurt = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestHurt.png", 3, 32, 32);
+            BigMaggotSpawnDead = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestDead.png", 3, 32, 32);
+            BigMaggotSpawnChrg = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestChrg.png", 4, 32, 32);
+
         	 // Scorpion Rock:
         	ScorpionRockEnemy   = sprite_add("sprites/areas/Desert/Props/sprScorpionRockEnemy.png",     6, 16, 16);
         	ScorpionRockFriend  = sprite_add("sprites/areas/Desert/Props/sprScorpionRockFriend.png",    6, 16, 16);
@@ -140,6 +150,18 @@
         	 // Buried Car:
         	BuriedCarIdle = sprite_add("sprites/areas/Coast/Props/sprBuriedCarIdle.png",1,16,16);
         	BuriedCarHurt = sprite_add("sprites/areas/Coast/Props/sprBuriedCarHurt.png",3,16,16);
+
+             // Bush:
+            BloomingBushIdle = sprite_add("sprites/areas/Coast/props/sprBloomingBushIdle.png", 1, 12, 12);
+            BloomingBushHurt = sprite_add("sprites/areas/Coast/props/sprBloomingBushHurt.png", 3, 12, 12);
+            BloomingBushDead = sprite_add("sprites/areas/Coast/props/sprBloomingBushDead.png", 3, 12, 12);
+
+             // Bush Assassin:
+            BloomingAssassinHide = sprite_add("sprites/enemies/BloomingAss/sprBloomingAssassinHide.png", 41, 16, 16);
+            BloomingAssassinIdle = sprite_add("sprites/enemies/BloomingAss/sprBloomingAssassinIdle.png",  6, 16, 16);
+            BloomingAssassinWalk = sprite_add("sprites/enemies/BloomingAss/sprBloomingAssassinWalk.png",  6, 16, 16);
+            BloomingAssassinHurt = sprite_add("sprites/enemies/BloomingAss/sprBloomingAssassinHurt.png",  3, 16, 16);
+            BloomingAssassinDead = sprite_add("sprites/enemies/BloomingAss/sprBloomingAssassinDead.png",  6, 16, 16);
 
              // Decal Big Shell Prop:
     	    ShellIdle = sprite_add("sprites/areas/Coast/Decals/sprShellIdle.png", 1, 32, 32);
@@ -316,6 +338,7 @@
                         ["Portrait",      1, 20, 221, true],
                         ["Select",        2,  0,   0, false],
                         ["UltraIcon",	  2, 12,  16, false],
+                        ["UltraHUDB",	  1,  8,   9, false],
                         ["Idle",          4, 12,  12, true],
                         ["Walk",          6, 12,  12, true],
                         ["Hurt",          3, 12,  12, true],
@@ -717,7 +740,17 @@
             if(_save != json_error){
                 for(var i = 0; i < lq_size(_save); i++){
                     var k = lq_get_key(_save, i);
+
+                     // Defaulterize:
+                    for(var j = 0; j < lq_size(opt); j++){
+                        var _name = lq_get_key(opt, j);
+                        if(!lq_exists(k, _name)){
+                            lq_set(k, _name, lq_get_value(opt, j));
+                        }
+                    }
+
                     lq_set(global.save, k, lq_get(_save, k));
+                    save();
                 }
                 global.save_auto = true;
                 exit;
@@ -734,7 +767,8 @@
 
     global.remind = [];
     if(fork()){
-        wait 2;
+        while(mod_exists("mod", "teloader")) wait 0;
+
         if(lq_defget(opt, "remindPlayer", true)){
         	global.remind = [
         	    {   "pos" : [-85, -2],

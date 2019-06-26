@@ -11,11 +11,11 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	: ["BatDisc", "BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	: ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
-		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
-		"tecoast"	: ["BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
+		"tedesert"	: ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
+		"tecoast"	: ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	: ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
 		"tetrench"	: ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	: ["Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
@@ -60,7 +60,7 @@
 			});
 		}
 	}
-	
+
 	global.lag = {};
 
 #macro spr global.spr
@@ -321,16 +321,18 @@
 
 	 // Animate:
 	if(ntte_anim){
-	     // Not Hurt:
-	    if(sprite_index != spr_hurt){
-	        if(speed <= 0) sprite_index = spr_idle;
-	    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
-	    }
-
-	     // Hurt:
-	    else if(image_index > image_number - 1){
-	        sprite_index = spr_idle;
-	    }
+		if(sprite_index != spr_chrg){
+		     // Not Hurt:
+		    if(sprite_index != spr_hurt){
+		        if(speed <= 0) sprite_index = spr_idle;
+		    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
+		    }
+	
+		     // Hurt:
+		    else if(image_index > image_number - 1){
+		        sprite_index = spr_idle;
+		    }
+		}
 	}
 
 	 // Movement:
@@ -1087,7 +1089,7 @@
     return false;
 
 #define wepammo_draw(_wep)
-    if(instance_is(self, Player) && is_object(_wep)){
+    if(instance_is(self, Player) && instance_is(other, TopCont) && is_object(_wep)){
 		var _ammo = lq_defget(_wep, "ammo", 0);
 		draw_ammo(index, (wep == _wep), _ammo, lq_defget(_wep, "amax", _ammo), (race == "steroids"));
     }
@@ -1797,7 +1799,7 @@
     var r = [];
     for(var _ox = 0; _ox <= _w; _ox++){
         for(var _oy = 0; _oy <= _h; _oy++){
-            r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+            array_push(r, instance_create(_x + (_ox * o), _y + (_oy * o), Floor));
         }
     }
     return r;
@@ -1816,7 +1818,7 @@
     for(var _ox = 0; _ox <= _w; _ox++){
         for(var _oy = 0; _oy <= _h; _oy++){
             if((_ox != 0 && _ox != _w) || (_oy != 0 && _oy != _h)){ // Don't Make Corner Floors
-                r[array_length(r)] = instance_create(_x + (_ox * o), _y + (_oy * o), Floor);
+                array_push(r, instance_create(_x + (_ox * o), _y + (_oy * o), Floor));
             }
         }
     }

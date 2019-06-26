@@ -77,8 +77,11 @@
 	sprite_index = spr.Parrot[0].UltraIcon;
 	image_index = _ultra - 1;
 
+#define race_ultra_icon(_ultra)
+	return lq_get(spr.Parrot[0], "UltraHUD" + chr(64 + _ultra));
+
 #define race_sprite(_spr)  
-    var b = (("bskin" in self) ? real(bskin) : 0);
+    var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
     switch(_spr){
         case sprMutant1Idle:        return spr.Parrot[b].Idle;
         case sprMutant1Walk:        return spr.Parrot[b].Walk;

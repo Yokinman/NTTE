@@ -419,49 +419,166 @@
     switch(GameCont.area){
         case 1: /// DESERT
              // Disable Oasis Skip:
-    		with(instance_create(0, 0, AmmoChest)){
-    			visible = 0;
+    		with(instance_create(0, 0, chestprop)){
+    			visible = false;
     			mask_index = mskNone;
     		}
+
+			 // Big Nests:
+			with(MaggotSpawn) if(chance(1, 10)){
+				obj_create(x, y, "BigMaggotSpawn");
+				instance_delete(id);
+			}
 
     	     // Spawn Sharky Skull on 1-3:
     		with(BigSkull) instance_delete(id);
     		if(instance_exists(Floor)){
         		if(GameCont.subarea == 3){
-        		    var _spawned = false,
-        		    	_tries = 100;
-
-        		    do{
-            		    with(instance_random(Floor)){
-                            if(point_distance(x, y, 10016, 10016) > 48){
-                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-            		                obj_create(x + 16, y + 16, "CoastBossBecome");
-            		                _spawned = true;
-                                }
-                            }
-            		    }
-        		    }
-        		    until (_spawned || _tries-- <= 0);
+        			if(fork()){
+	        		    var _tries = 100;
+	        		    while(_tries-- > 0){
+	            		    with(instance_random(Floor)){
+	                            if(point_distance(x, y, 10016, 10016) > 48){
+	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+	            		                obj_create(x + 16, y + 16, "CoastBossBecome");
+	            		                exit;
+	                                }
+	                            }
+	            		    }
+	        		    }
+	        		    exit;
+        			}
         		}
 
                  // Consistently Spawning Crab Skeletons:
                 if(!instance_exists(BonePile)){
-        		    var _spawned = false,
-        		    	_tries = 100;
-
-                    do{
-                        with(instance_random(Floor)){
-                            if(point_distance(x, y, 10016, 10016) > 48){
-                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-                                    instance_create(x + 16, y + 16, BonePile);
-            		                _spawned = true;
-                                }
-                            }
-                        }
-                    }
-        		    until (_spawned || _tries-- <= 0);
+                	if(fork()){
+	        		    var _tries = 100;
+	                    while(_tries-- > 0){
+	                        with(instance_random(Floor)){
+	                            if(point_distance(x, y, 10016, 10016) > 48){
+	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+	                                    instance_create(x + 16, y + 16, BonePile);
+	            		                exit;
+	                                }
+	                            }
+	                        }
+	                    }
+	        		    exit;
+                	}
                 }
-                
+
+				 // Maggot Park:
+            	if(GameCont.subarea > 1 || GameCont.loops > 0){
+					if(chance(1, 40)){
+						 // Find Origin:
+						var _sx = 10000,
+							_sy = 10000,
+							_potentialFloors = [];
+	
+						with(Floor){
+							if(distance_to_object(Player) > 160){
+								array_push(_potentialFloors, id);
+							}
+						}
+						with(instance_random(_potentialFloors)){
+							_sx = x + (irandom_range(-2, 2) * 32);
+							_sy = y + (irandom_range(-2, 2) * 32);
+						}
+	
+						 // Generate Area:
+						var _floors = [],
+							_ang = random(360);
+	
+						for(var d = _ang; d < _ang + 360; d += (360 / 8)){
+							var l = 0;
+							repeat(5 + GameCont.loops){
+								var _x = (floor((_sx + lengthdir_x(l, d)) / 32) * 32) - 16,
+									_y = (floor((_sy + lengthdir_y(l, d)) / 32) * 32) - 16;
+	
+								for(var _ox = -32; _ox < 32; _ox += 32){
+									for(var _oy = -32; _oy < 32; _oy += 32){
+										with(instance_rectangle(_x + _ox, _y + _oy, _x + _ox + 16, _y + _oy + 16, Floor)){
+											if(!array_exists(_floors, id)) instance_destroy();
+										}
+										with(instance_create(_x + _ox, _y + _oy, Floor)){
+											if(instance_exists(self)) array_push(_floors, id);
+										}
+									}
+								}
+	
+								l += random(32);
+							}
+						}
+	
+						 // Clear Walls:
+						with(_floors){
+							with(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, [Wall, TopSmall, Bones, TopPot])){
+								instance_destroy();
+							}
+						}
+	
+						 // New Walls:
+						with(_floors){
+							scrFloorWalls();
+							if(chance(1, 3)){
+								with(instance_create(x + 16, y + 16, PortalClear)){
+									mask_index = mskPlasmaImpact;
+								}
+							}
+						}
+						with(Wall){
+							for(var _x = x - 16; _x <= x + 16; _x += 16){
+								for(var _y = y - 16; _y <= y + 16; _y += 16){
+									if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
+										instance_create(_x, _y, TopSmall);
+									}
+								}
+							}
+						}
+	
+						 // Nests:
+						var _ang = random(360),
+							r = choose(-1, 1);
+	
+						for(var d = _ang; d < _ang + 360; d += (360 / 3)){
+							var l = random_range(28, 40);
+							with(obj_create(round(_sx + lengthdir_x(l, d)), round(_sy + lengthdir_y(l, d)), "BigMaggotSpawn")){
+								right = r;
+								r *= -1;
+							}
+						}
+						with(_floors){
+							if(!place_meeting(x, y, enemy)){
+								if(chance(2, 3)){
+									with(instance_create(x + 16, y + 16, MaggotSpawn)){
+										x = xstart;
+										y = ystart;
+										move_contact_solid(random(360), random(16));
+										instance_create(x, y, Maggot);
+									}
+								}
+							}
+							else with(instances_meeting(x, y, instances_matching_ne(enemy, "object_index", MaggotSpawn, CustomEnemy, Maggot))){
+								if(!place_meeting(x, y, BigMaggot) && !place_meeting(x, y, JungleFly)){
+									if(GameCont.loops > 0 && chance(1, 2)){
+										instance_create(x, y, JungleFly);
+									}
+									else{
+										instance_create(x, y, BigMaggot);
+									}
+								}
+							}
+						}
+	
+						 // Sound:
+						sound_play_pitchvol(sndBigMaggotBite, 0.4 + random(0.1), 1.5);
+						sound_play_pitchvol(sndBigMaggotBurrow, 0.6, 2);
+						sound_play_pitchvol(sndBigMaggotUnburrow, 0.6, 3);
+						sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
+					}
+            	}
+
                  // Spawn scorpion rocks occasionally:
                 if(chance(3, 5)){
                      // This part is irrelevant don't worry:
@@ -471,25 +588,25 @@
                         	if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
                     	}
                     }
-                    
-                    var _spawned = false,
-                        _tries = 100;
 
-                    do{
-                        with(instance_random(Floor)){
-                            if(point_distance(x, y, 10016, 10016) > 48){
-                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-                                    with(obj_create(x + 16, y + 14, "ScorpionRock")){
-                                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
-                                    }
-                                    _spawned = true;
-                                }
-                            }
-                        }
-                    }
-                    until(_spawned || _tries-- <= 0);
-                }
-    		}
+                    if(fork()){
+	                    var _tries = 100;
+						while(_tries-- > 0){
+	                        with(instance_random(Floor)){
+	                            if(point_distance(x, y, 10016, 10016) > 48){
+	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+	                                    with(obj_create(x + 16, y + 14, "ScorpionRock")){
+	                                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
+	                                    }
+	                                    exit;
+	                                }
+	                            }
+	                        }
+	                    }
+			            exit;
+			        }
+			    }
+			}
 
              // Spawn Baby Scorpions:
             with(Scorpion) if(chance(1, 4)){
@@ -501,10 +618,10 @@
             with(MaggotSpawn){
             	babyscorp_drop = chance(1, 8);
             }
-            
-             // Rare scorpion desert (EASTER EGG):
+
+             // Scorpion Desert:
             if(GameCont.subarea > 1 || GameCont.loops > 0){
-            	if(chance(1, 120) || (chance(1, 60) && array_length(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Scorpion")) > 0)){
+            	if(chance(1, 100) || (chance(1, 50) && array_length(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Scorpion")) > 0)){
 	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
 	                    var _gold = chance(1, 5);
 	                    
@@ -521,6 +638,9 @@
 	                    instance_delete(id);
 	                }
 	                with(MaggotSpawn) babyscorp_drop++;
+	                with(instances_matching(CustomEnemy, "name", "BigMaggotSpawn")){
+	                	if(chance(1, 2)) scorp_drop++;
+	                }
 	                with(Cactus) if(chance(1, 2)){
 	                	obj_create(x, y, "BigCactus");
 	                	instance_delete(id);
@@ -543,22 +663,30 @@
             break;
 
 		case 3: /// SCRAPYARDS
-			 // Raven Zone:
-			if(chance(1, 80)){
-				var _chance = 1 + GameCont.loops;
+			var _event = chance(1, 60),
+				_ravenChance = (_event ? 1 : 0.1) * (1 + GameCont.loops);
+
+			if(!_event && instance_exists(BecomeScrapBoss)){
+				_ravenChance *= 2.5;
+			}
+
+			 // Raven Spectators:
+			with(Wall) if(!place_meeting(x, y, PortalClear)){
+				if(chance(_ravenChance, 20) || (_event && position_meeting(x + 8, y + 8, Floor))){
+					obj_create(x + 8 + orandom(4), y - 8 + orandom(4), "NestRaven");
+				}
+			}
+			with(TopSmall){
+				if(chance(_ravenChance, 10)){
+					obj_create(x + 8 + orandom(16), y + orandom(8), "NestRaven");
+				}
+			}
+
+			 // Raven Arena:
+			if(_event){
 				with(Bandit){
 					instance_create(x, y, Raven);
 					instance_delete(id);
-				}
-				with(Wall) if(!place_meeting(x, y, PortalClear)){
-					if(chance(_chance, 20) || position_meeting(x + 8, y + 8, Floor)){
-						obj_create(x + 8 + orandom(4), y - 8 + orandom(4), "NestRaven");
-					}
-				}
-				with(TopSmall){
-					if(chance(_chance, 10)){
-						obj_create(x + 8 + orandom(16), y + orandom(8), "NestRaven");
-					}
 				}
 
 				 // Sound:
@@ -599,32 +727,33 @@
         	    }
         	    
         	     // Central mass:
-        	    var _spawned = false,
-        	        _tries = 100;
-        	    do{
-        	        with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 128){
-        	             // Spawn Main Wall:
-        	            with(obj_create(x, y, "SpiderWall")){
-        	                creator = other;
-        	                special = true;
-        	            }
-        	            
-        	             // Spawn fake walls:
-        	            with(Wall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(2, 3) && self != other){
-        	                with(obj_create(x, y, "SpiderWall")){
-        	                    creator = other;
-        	                }
-        	            }
-        	            
-        	             // Change TopSmalls:
-        	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(1, 3)){
-        	                sprite_index = spr.SpiderWallTrans;
-        	            }
-        	            
-        	            _spawned = true;
-        	        }
+        	    if(fork()){
+	        	    var _tries = 100;
+	        	    while(_tries-- > 0){
+	        	        with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 128){
+	        	             // Spawn Main Wall:
+	        	            with(obj_create(x, y, "SpiderWall")){
+	        	                creator = other;
+	        	                special = true;
+	        	            }
+	        	            
+	        	             // Spawn fake walls:
+	        	            with(Wall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(2, 3) && self != other){
+	        	                with(obj_create(x, y, "SpiderWall")){
+	        	                    creator = other;
+	        	                }
+	        	            }
+	        	            
+	        	             // Change TopSmalls:
+	        	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(1, 3)){
+	        	                sprite_index = spr.SpiderWallTrans;
+	        	            }
+	
+	        	        	exit;
+	        	        }
+	        	    }
+	        	    exit;
         	    }
-        	    until(_spawned || _tries-- <= 0);
         	} 
         	 
             break;
@@ -1190,7 +1319,7 @@
 
 #define draw
 	 // NTTE Options at Campfire:
-	if(instance_exists(Menu)){
+	if(instance_exists(Menu) && !mod_exists("mod", "teloader")){
     	draw_set_projection(0);
 
 		if(OptionOpen){
@@ -1280,10 +1409,6 @@
             global.option_NTTE_splat_menu = clamp(global.option_NTTE_splat_menu, 0, sprite_get_number(sprBossNameSplat) - 1);
 			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 17, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
             global.option_NTTE_splat_menu += current_time_scale;
-			//draw_set_font(fntM);
-			//draw_set_halign(fa_center);
-			//draw_set_valign(fa_middle);
-			//draw_text_nt(((_x1 + _x2) / 2), _y1 + 8 + _hover, (_hover ? "@w" : "@s") + "NTTE");
 			draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, (_hover ? c_white : c_silver), 1);
 		}
 

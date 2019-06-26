@@ -255,6 +255,184 @@
     }
 
 
+#define BigMaggotSpawn_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.BigMaggotSpawnIdle;
+		spr_walk = spr_idle;
+		spr_hurt = spr.BigMaggotSpawnHurt;
+		spr_dead = spr.BigMaggotSpawnDead;
+		spr_chrg = spr.BigMaggotSpawnChrg;
+		spr_shadow = shd64B;
+		hitid = [spr_idle, "BIG MAGGOT NEST"];
+		depth = -1;
+
+		 // Sound:
+		snd_hurt = sndHitFlesh;
+		snd_dead = sndBigMaggotDie;
+
+		 // Vars:
+		mask_index = mskLast;
+		maxhealth = 60;
+		lsthealth = maxhealth;
+		raddrop = 10;
+		size = 4;
+		loop_snd = -1;
+		scorp_drop = 0;
+
+		 // Alarms:
+		alarm0 = 150;
+
+		 // Flies:
+		var f = [
+			[-18, -14],
+			[  0, -28],
+			[ 26, -16 + orandom(6)]
+		];
+
+		for(var i = 0; i < array_length(f); i++){
+			with(obj_create(x, y, "FlySpin")){
+				target = other;
+				target_x = (f[i, 0] + orandom(2)) * other.right;
+				target_y = (f[i, 1] + orandom(2));
+			}
+		}
+		
+		 // Mags:
+		repeat(irandom_range(3, 6)){
+			instance_create(x, y, Maggot);
+		}
+		
+		 // Clear Walls:
+		with(instance_create(x, y, PortalClear)){
+			mask_index = mskScrapBoss;
+		}
+
+		return id;
+	}
+
+#define BigMaggotSpawn_step
+	x = xstart;
+	y = ystart;
+	speed = 0;
+
+	 // Idle Sound:
+	if(distance_to_object(Player) < 64){
+		if(!audio_is_playing(loop_snd)){
+			loop_snd = sound_play(sndMaggotSpawnIdle);
+		}
+	}
+	else if(loop_snd != -1){
+		sound_stop(loop_snd);
+		loop_snd = -1;
+	}
+
+	 // Animate:
+	if(image_index < 1 && sprite_index == spr_idle){
+		var a = ((loop_snd == -1) ? 0.2 : 0.3);
+		image_index += random(image_speed_raw * a) - image_speed_raw;
+	}
+
+	 // Clear Walls:
+	if(place_meeting(x, y, Wall)){
+		with(instances_meeting(x, y, Wall)){
+			if(place_meeting(x, y, other)){
+				instance_create(x, y, FloorExplo);
+				instance_destroy();
+			}
+		}
+	}
+
+	 // True Maggot Spawn:
+	if(lsthealth > my_health){
+		if(current_frame_active){
+			lsthealth -= 2;
+
+			 // Maggot:
+			var l = (24 + orandom(2)) * image_xscale,
+				d = random_range(200, 340);
+
+			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), Maggot)){
+				x = xstart;
+				y = ystart;
+
+				 // Effects:
+				with(instance_create(x, y, DustOLD)){
+					motion_add(d, 2);
+					depth = other.depth - 1;
+					image_blend = make_color_rgb(170, 70, 60);
+				}
+				var s = audio_play_sound(sndHitFlesh, 0, false);
+				audio_sound_gain(s, min(0.9, random_range(24, 32) / (distance_to_object(Player) + 1)), 0);
+				audio_sound_pitch(s, 1.2 + random(0.2));
+			}
+		}
+
+		 // Stayin Alive:
+		if(my_health <= 1){
+			nexthurt = current_frame + 6;
+			sprite_index = spr_hurt;
+			image_index = 0;
+			alarm0 = 2;
+		}
+	}
+	else{
+		if(lsthealth > 0) lsthealth = my_health;
+		else my_health = lsthealth;
+	}
+
+#define BigMaggotSpawn_alrm0
+	alarm0 = irandom_range(15, 60);
+
+	 // Fallin Apart:
+	if(my_health > 0){
+		target = instance_nearest(x, y, Player);
+		if(my_health <= 1 || distance_to_object(target) < 64 || (chance(1, 3) && in_sight(target))){
+			my_health -= 2;
+		}
+	}
+
+#define BigMaggotSpawn_hurt(_hitdmg, _hitvel, _hitdir)
+	if(my_health > 1){
+		enemyHurt(_hitdmg, _hitvel, _hitdir);
+		my_health = max(1, my_health);
+	}
+	else if(alarm0 > 2) alarm0 = 2;
+
+#define BigMaggotSpawn_death
+	speed /= 5;
+
+	 // Maggots:
+	repeat(2){
+		instance_create(x, y, MaggotExplosion);
+	}
+	repeat(irandom_range(2, 3)){
+		instance_create(x, y, BigMaggot);
+	}
+
+	 // Scrop:
+	if(scorp_drop > 0) repeat(scorp_drop){
+		instance_create(x, y, Scorpion);
+	}
+
+	 // Pickups:
+	if(chance(1, 10)){
+		with(instance_create(x, y, BigWeaponChest)){
+			motion_add(random(360), 2);
+			repeat(12) scrFX(x, y, random_range(4, 6), Dust);
+		}
+		sound_play_pitchvol(sndStatueHurt, 2 + orandom(0.2), 0.8);
+		sound_play_pitchvol(sndChest, 0.6, 1.5);
+	}
+	else{
+		pickup_drop(50, 35);
+		pickup_drop(50, 35);
+	}
+	pickup_drop(100, 0);
+	pickup_drop(100, 0);
+	
+
+
 #define Bone_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:

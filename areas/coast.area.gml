@@ -65,7 +65,7 @@
 #macro surfY global.surfY
 
 #macro DebugLag global.debug_lag
-#macro CanLeaveCoast (instance_exists(Portal) || ((instance_number(enemy) - instance_number(Van) <= 0) && !instance_exists(becomenemy)))
+#macro CanLeaveCoast (array_length(instances_matching_gt(instances_matching(CustomDraw, "name", "darksea_draw"), "flash", 0)) > 0)
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
@@ -210,6 +210,7 @@
 			indicate_x = -1;
 			indicate_y = -1;
     		flash = 0;
+    		heat = 0;
     	}
 	}
     if(array_length(instances_matching(CustomDraw, "name", "swimtop_draw")) <= 0){
@@ -242,7 +243,7 @@
 
 #define area_step
 	 // Water Wading:
-	if(instance_exists(Floor)){
+	if(instance_exists(Floor) && array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
 		 // Setup:
         var _surfx = surfX,
             _surfy = surfY,
@@ -561,6 +562,8 @@
 					while(distance_to_object(Floor) > 120){
 		        		var l = distance_to_object(Floor) / 120,
 		        			d = point_direction(x, y, n.x, n.y);
+
+						if(chance(1, 3)) instance_create(x + orandom(4), y + orandom(4), Dust);
 
 						x += lengthdir_x(l, d);
 						y += lengthdir_y(l, d);
@@ -891,7 +894,7 @@
 
                     for(var a = _ang; a < _ang + 360; a += (360 / _num)){
                         var o = 16 + random(16);
-                        instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), choose(JungleAssassinHide, JungleAssassinHide, Bush));
+                        obj_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), choose("BloomingAssassinHide", "BloomingAssassinHide", "BloomingBush"));
                     }
                 }
             }
@@ -1230,89 +1233,110 @@
         draw_surface_ext(_surfWaves, _vx, _vy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
 	}
 
-     // Flash Ocean w/ Can Leave Level:
-    var _flash = false;
-    if(CanLeaveCoast && !instance_exists(Portal)){
-        var _int = 300, // Flash every X frames
-            _lst = 30,  // Flash lasts X frames
-            _max = ((flash <= _lst) ? 0.3 : 0.15); // Max flash alpha
+     // Stuff w/ Level Over:
+    if(!instance_exists(Portal)){
+	    if(flash > 0 || ((instance_number(enemy) - instance_number(Van) <= 0) && !instance_exists(becomenemy))){
+	    	 // Rogu:
+	    	if(flash > 15 && !heat){
+	    		heat = true;
+	    		if(!instance_exists(WantPopo)){
+		    		for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+		    			instance_create(x, y, WantPopo);
+		    		}
+	    		}
+	    	}
 
-		 // Setup Portal Indicator:
-		var _x = indicate_x,
-			_y = indicate_y;
+			 // Setup Portal Indicator:
+			var _x = indicate_x,
+				_y = indicate_y;
+	
+			if(_x < 0 || _y < 0){
+				with(Player){
+					_x = x;
+					_y = y;
+				}
 
-		if(_x < 0 || _y < 0){
-			with(Player){
-				_x = x;
-				_y = y;
-			}
-
-			var _cx = _x,
-				_cy = _y,
-				_tries = 100,
-				_moveDis = 8,
-				_moveDir = 0;
-
-			with(Floor){
-				_moveDir += point_direction((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, _x, _y);
-			}
-			_moveDir /= instance_number(Floor);
-
-			while(_tries-- > 0){
-				var n = instance_nearest(_x - 16, _y - 16, Floor);
-				if(instance_exists(n)){
-					_cx = (n.bbox_left + n.bbox_right) / 2;
-					_cy = (n.bbox_top + n.bbox_bottom) / 2;
-
-					if(point_distance(_cx, _cy, _x, _y) < 160){
-						_x += lengthdir_x(_moveDis, _moveDir);
-						_y += lengthdir_y(_moveDis, _moveDir);
-					}
-
-					 // End:
-					else{
-						indicate_x = _x;
-						indicate_y = _y;
-						break;
+				var _cx = _x,
+					_cy = _y,
+					_tries = 100,
+					_moveDis = 8,
+					_moveDir = 0;
+	
+				with(Floor){
+					_moveDir += point_direction((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, _x, _y);
+				}
+				_moveDir /= instance_number(Floor);
+	
+				while(_tries-- > 0){
+					var n = instance_nearest(_x - 16, _y - 16, Floor);
+					if(instance_exists(n)){
+						_cx = (n.bbox_left + n.bbox_right) / 2;
+						_cy = (n.bbox_top + n.bbox_bottom) / 2;
+	
+						if(point_distance(_cx, _cy, _x, _y) < 160){
+							_x += lengthdir_x(_moveDis, _moveDir);
+							_y += lengthdir_y(_moveDis, _moveDir);
+						}
+	
+						 // End:
+						else{
+							indicate_x = _x;
+							indicate_y = _y;
+							break;
+						}
 					}
 				}
 			}
+	
+			 // Flash Sea:
+	        var _flashInt = 300, // Flash every X frames
+	            _flashDur = 30,  // Flash lasts X frames
+	            _max = ((flash <= _flashDur) ? 0.3 : 0.15); // Max flash alpha
+	
+	        draw_set_color(c_white);
+	        draw_set_alpha(_max * (1 - ((flash % _flashInt) / _flashDur)));
+	        draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
+	        draw_set_alpha(1);
+	
+	        if((flash % _flashInt) < current_time_scale){
+	             // Sound:
+	            sound_play_pitchvol(sndOasisHorn, 0.5, 2);
+	            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
+	    
+	             // Effects:
+	            for(var i = 0; i < maxp; i++) view_shake[i] += 8;
+	            with(Floor) if(chance(1, 5)){
+	                for(var d = 0; d < 360; d += 45){
+	                    var _x = x + lengthdir_x(32, d),
+	                        _y = y + lengthdir_y(32, d);
+	    
+	                    if(!position_meeting(_x, _y, Floor)){
+	                        repeat(irandom_range(3, 6)){
+	                            if(chance(1, 6 + instance_number(AcidStreak))){
+	                                sound_play_hit(sndOasisCrabAttack, 0.2);
+	                                scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
+	                            }
+	                            else instance_create(_x + random(32), _y + random(32), Sweat);
+	                        }
+	                    }
+	                }
+	            }
+				repeat(3) scrFX(indicate_x, indicate_y, 3, Dust);
+	        }
+	        flash += current_time_scale;
+	    }
+	}
+	else if(instance_exists(WantPopo) || instance_exists(IDPDSpawn)){
+		if(heat == true){
+			heat = 2;
+	    	with(IDPDSpawn){
+	    		if(elite) sound_stop(sndEliteIDPDPortalSpawn);
+	    		else sound_stop(sndIDPDPortalSpawn);
+	    		instance_destroy();
+	    	}
 		}
-
-		 // Flash Sea:
-        draw_set_color(c_white);
-        draw_set_alpha(_max * (1 - ((flash % _int) / _lst)));
-        draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
-        draw_set_alpha(1);
-
-        if((flash % _int) < current_time_scale){
-             // Sound:
-            sound_play_pitchvol(sndOasisHorn, 0.5, 2);
-            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
-    
-             // Effects:
-            for(var i = 0; i < maxp; i++) view_shake[i] += 8;
-            with(Floor) if(chance(1, 5)){
-                for(var d = 0; d < 360; d += 45){
-                    var _x = x + lengthdir_x(32, d),
-                        _y = y + lengthdir_y(32, d);
-    
-                    if(!position_meeting(_x, _y, Floor)){
-                        repeat(irandom_range(3, 6)){
-                            if(chance(1, 6 + instance_number(AcidStreak))){
-                                sound_play_hit(sndOasisCrabAttack, 0.2);
-                                scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
-                            }
-                            else instance_create(_x + random(32), _y + random(32), Sweat);
-                        }
-                    }
-                }
-            }
-			repeat(3) scrFX(indicate_x, indicate_y, 3, Dust);
-        }
-        flash += current_time_scale;
-    }
-    else flash = 0;
+		else if(!heat) heat = true;
+	}
 
     if(DebugLag) trace_time("darksea_draw");
 

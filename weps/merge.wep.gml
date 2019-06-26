@@ -1475,9 +1475,9 @@
 
 	 // Look for Weapon in the Mergeable Weapon List:
 	for(var i = 0; i < array_length(_part); i++){
+		var w = _part[i];
 		if(!is_object(w) && fork()){
 			 // Wep ID Search:
-			var w = _part[i];
 			if(is_string(w) && w == string_digits(w)){
 				w = real(w);
 			}

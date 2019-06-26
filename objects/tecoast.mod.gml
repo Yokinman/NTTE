@@ -21,8 +21,119 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define BloomingAssassin_create(_x, _y)
+	with(instance_create(_x, _y, JungleAssassin)){
+		 // Visual:
+		spr_idle = spr.BloomingAssassinIdle;
+		spr_walk = spr.BloomingAssassinWalk;
+		spr_hurt = spr.BloomingAssassinHurt;
+		spr_dead = spr.BloomingAssassinDead;
+
+		return id;
+	}
+
+
+#define BloomingAssassinHide_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.BloomingAssassinHide;
+		spr_walk = spr.BloomingAssassinHide;
+		spr_hurt = spr.BloomingAssassinHurt;
+		spr_dead = spr.BloomingAssassinDead;
+		spr_shadow = shd24;
+		hitid = [spr.BloomingAssassinIdle, "BLOOMING ASSASSIN"];
+		image_speed = 0.4;
+		depth = 1;
+
+		 // Sound:
+		snd_hurt = sndJungleAssassinHurt;
+		snd_dead = sndJungleAssassinDead;
+
+		 // Vars:
+		maxhealth = 12;
+		raddrop = 10;
+		size = 1;
+
+		 // Alarms:
+		alarm0 = 90 + random(90);
+		alarm1 = random_range(1500, 3000);
+
+		return id;
+	}
+
+#define BloomingAssassinHide_step
+	x = xstart;
+	y = ystart;
+	speed = 0;
+
+	 // Animate:
+	sprite_index = spr_idle;
+	if(image_index < 1){
+		image_index += random(image_speed_raw * 0.05) - image_speed_raw;
+
+		 // Tell Sound:
+		if(image_index >= 1 && point_seen(x, y, -1)){
+			sound_play(sndJungleAssassinPretend);
+		}
+	}
+	
+	 // Player is making bushman uncomfortable:
+	if(place_meeting(x, y, Player)){
+		BloomingAssassinHide_alrm0();
+	}
+
+#define BloomingAssassinHide_hurt(_hitdmg, _hitvel, _hitdir)
+	enemyHurt(_hitdmg, _hitvel / 2, _hitdir);
+	BloomingAssassinHide_alrm1();
+
+#define BloomingAssassinHide_alrm0
+	alarm0 = 30 + random(60);
+
+	 // Become Man:
+	target = instance_nearest(x, y, Player);
+	if(in_distance(target, 32) || (chance(1, 2) && in_distance(target, 128))){
+		alarm1 = min(1, alarm1);
+
+		 // Intimidating:
+		motion_add(point_direction(x, y, target.x, target.y), 4);
+		scrRight(direction);
+	}
+
+#define BloomingAssassinHide_alrm1
+	 // Assassin Time:
+	var _inst = obj_create(x, y, "BloomingAssassin");
+	with(["x", "y", "xstart", "ystart", "xprevious", "yprevious", "hspeed", "vspeed", "friction", "sprite_index", "image_index", "image_speed", "image_xscale", "image_yscale", "image_angle", "image_blend", "image_alpha", "spr_shadow", "spr_shadow_x" "spr_shadow_y", "hitid", "snd_hurt", "snd_dead", "maxhealth", "my_health", "raddrop", "size", "team", "right", "nexthurt", "canmelee", "meleedamage"]){
+		variable_instance_set(_inst, self, variable_instance_get(other, self));
+	}
+
+	 // Effects:
+	repeat(4){
+		with(scrFX(x, y, 1 + random(2), choose(Dust, Feather))){
+			sprite_index = sprLeaf;
+		}
+	}
+
+	instance_delete(id);
+
+#define BloomingAssassinHide_death
+	 // Bonus Rads:
+	scrRadDrop(x, y, raddrop, direction, speed);
+
+
+#define BloomingBush_create(_x, _y)
+	with(instance_create(_x, _y, Bush)){
+		 // Visual:
+		spr_idle = spr.BloomingBushIdle;
+		spr_hurt = spr.BloomingBushHurt;
+		spr_dead = spr.BloomingBushDead;
+
+		return id;
+	}
+
+
 #define BloomingCactus_create(_x, _y)
 	with(instance_create(_x, _y, Cactus)){
+		 // Visual:
         var s = irandom(array_length(spr.BloomingCactusIdle) - 1);
         spr_idle = spr.BloomingCactusIdle[s];
         spr_hurt = spr.BloomingCactusHurt[s];
@@ -1966,6 +2077,10 @@
     sound_play(sndEnergyHammer);
     sound_play_pitch(sndHammer, 0.75);
     sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
+
+#define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
+	if(dash > 0) _hitvel /= 2;
+	enemyHurt(_hitdmg, _hitvel, _hitdir);
 
 #define Pelican_death
     pickup_drop(80, 0);

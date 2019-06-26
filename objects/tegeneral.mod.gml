@@ -287,7 +287,7 @@
 #define BigDecal_create(_x, _y)
     var a = string(GameCont.area);
     if(lq_exists(spr.BigTopDecal, a)){
-		with(instance_create(_x, _y, CustomObject)){
+		with(instance_create(floor(_x / 16) * 16, floor(_y / 16) * 16, CustomObject)){
 		     // Visual:
 		    sprite_index = lq_get(spr.BigTopDecal, a);
 			image_xscale = choose(-1, 1);
@@ -424,9 +424,11 @@
 
 #define BigDecal_draw
 	 // Flying Ravens:
+    /*
     with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom + 64, RavenFly)){
     	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
     }
+    */
 
      // Bubble Fix:
     if(distance_to_object(Bubble) < 40){
@@ -445,6 +447,9 @@
     repeat(irandom_range(9, 18)){
         with(instance_create(x, y, Debris)){
             speed = random_range(6, 12);
+            if(!place_meeting(x + hspeed_raw, y + vspeed_raw, Floor)){
+            	speed /= 3;
+            }
         }
     }
 
@@ -479,8 +484,17 @@
             }
             break;
 
-		case 3: // Ravens
-			/// Insert nest bits
+		case 3: // Nest bits:
+			repeat(irandom_range(12, 14)){
+                with(instance_create(_x + orandom(24), _y + orandom(12) - random(8), Feather)){
+                	motion_add(point_direction(_x, _y, x, y), random(6));
+                    sprite_index = spr.NestDebris;
+                    image_index = irandom(irandom(image_number - 1));
+                    fall /= 1 + (image_index / 8);
+                    image_speed = 0;
+                    depth = -1;
+                }
+			}
 			break;
 
 		case 4:
@@ -1380,6 +1394,33 @@
 	}
 
 
+#define FlySpin_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.FlySpin;
+		image_index = irandom(image_number - 1);
+		image_speed = 0.4 + random(0.1);
+		image_xscale = choose(-1, 1);
+		depth = -8;
+
+		 // Vars:
+		target = noone;
+		target_x = 0;
+		target_y = 0;
+
+		return id;
+	}
+
+#define FlySpin_end_step
+	if(target != noone){
+		if(instance_exists(target)){
+			x = target.x + target_x;
+			y = target.y + target_y;
+		}
+		else instance_destroy();
+	}
+
+
 #define Harpoon_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -1439,8 +1480,8 @@
             var _odis = 16,
                 _odir = image_angle;
 
-            x = _targ.x - lengthdir_x(_odis, _odir);
-            y = _targ.y - lengthdir_y(_odis, _odir);
+            x = _targ.x + _targ.hspeed_raw - lengthdir_x(_odis, _odir);
+            y = _targ.y + _targ.vspeed_raw - lengthdir_y(_odis, _odir);
 	        if("z" in target){
 	        	if(target.object_index == RavenFly || target.object_index == LilHunterFly){
 	        		y += target.z;
@@ -1450,6 +1491,7 @@
             xprevious = x;
             yprevious = y;
             visible = _targ.visible;
+            if("team" in _targ) team = _targ.team;
         }
 
          // Pickup-able:
@@ -1593,7 +1635,7 @@
         projectile_hit_push(other, damage, force);
 
          // Stick in enemies that don't die:
-        if(other.my_health > 0){
+        if(instance_exists(other) && other.my_health > 0){
             if(
             	(instance_is(other, prop) || other.team == 0)	&&
             	!instance_is(other, RadChest)					&&
@@ -4233,7 +4275,7 @@
 		return id;
 	}
 
-#define WepPickupStick_end_step
+#define WepPickupStick_step
 	var t = stick_target;
 	if(instance_exists(t)){
 		speed = 0;
@@ -4244,8 +4286,8 @@
 		var	l = 24,
 			d = rotation;
 
-		x = t.x + stick_x;
-		y = t.y + stick_y;
+		x = t.x + t.hspeed_raw + stick_x;
+		y = t.y + t.vspeed_raw + stick_y;
 		if("z" in t){
 			if(t.object_index == RavenFly || t.object_index == LilHunterFly){
 				y += t.z;
@@ -4265,7 +4307,7 @@
 				_x = x,
 				_y = y;
 
-			wait 2;
+			wait 0;
 			if(!instance_exists(self)){
 				with(t){
 					repeat(3) instance_create(x, y, AllyDamage);
@@ -4399,8 +4441,11 @@
         else scrHarpoonUnrope(_rope);
     }
 
-	 // Wall Top Shadows:
-	script_bind_draw(draw_shadows_top, object_get_depth(SubTopCont) - 1.1);
+	 // Bind Events:
+	script_bind_draw(draw_shadows_top, -7.1);
+	if(array_length(instances_seen(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24)) > 0){
+		script_bind_draw(draw_ravenflys, -9);
+	}
 
 	if(DebugLag) trace_time("tegeneral_step");
 
@@ -4667,6 +4712,12 @@
     draw_set_flat(-1);
 
 	if(DebugLag) trace_time("tegeneral_draw_dark_end");
+
+#define draw_ravenflys
+	instance_destroy();
+	with(RavenFly){
+    	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	}
 
 
 /// Scripts

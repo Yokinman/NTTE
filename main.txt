@@ -1,10 +1,2 @@
-/loadmod teassets
-/loadmod ntte
-/loadmod telib
-/loadmod petlib
-/load objects
-/load areas
-/load races
-/load weps
-
-/loadskill lairskill/lairskill
+/loadmod teloader
+/load main2
