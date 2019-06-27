@@ -4,4 +4,5 @@
 /loadmod teoasis
 /loadmod tetrench
 /loadmod tesewers
+/loadmod tescrapyard
 /loadmod tecaves
