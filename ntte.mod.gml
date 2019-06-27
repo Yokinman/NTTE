@@ -1338,11 +1338,7 @@
 	            for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
 	            sound_stop(sndMenuCharSelect);
 	        }
-	        with(Loadout){
-	            visible = false;
-	            selected = -1;
-	            introsettle = 1;
-	        }
+	        with(Loadout) instance_destroy();
 	        with(loadbutton) instance_destroy();
 	        with(BackFromCharSelect) noinput = 8;
 

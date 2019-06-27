@@ -50,6 +50,8 @@
     while(!mod_sideload()) wait 0;
 
      // Wait for Loading Bar to Appear:
+    sound_play_pitchvol(sndMeleeFlip, 1.4 + random(0.1), 0.25);
+    sound_play_pitchvol(sndHitMetal,  1.4 + random(0.1), 0.25);
     while(global.load_hudy < 0.99) wait 0;
 
      // Load Mods:
@@ -67,7 +69,8 @@
      // Finished:
     trace_color("NTTE | Finished loading!", c_yellow);
     repeat(20 * (game_height / 240)) trace("");
-    sound_play_pitchvol(sndStatueCharge, 1.5, 0.6);
+    sound_play_pitchvol(sndEXPChest, 1.5 + random(0.1), 0.6);
+    sound_play_pitchvol(sndNoSelect, 0.6 + random(0.1), 0.5);
 
      // Wait for Loading Bar to Go Away:
     while(global.load_hudy > 0) wait 0;
@@ -99,7 +102,7 @@
         var _bloom = clamp(global.load_hudb, 0.4, i),
             _xsc = 1 + (0.15 * _bloom),
             _ysc = 1 + (0.5 * _bloom),
-            _alp = ((i <= 0) ? 1 : 0.15 - (0.005 * global.load_hudb));
+            _alp = ((i <= 0) ? 1 : (0.25 - (0.025 * global.load_hudb)));
 
         if(_alp > 0){
             if(i > 0) draw_set_blend_mode(bm_add);
