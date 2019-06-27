@@ -738,20 +738,21 @@
         if(file_loaded(_path) && file_exists(_path)){
             var _save = json_decode(string_load(_path));
             if(_save != json_error){
-                for(var i = 0; i < lq_size(_save); i++){
-                    var k = lq_get_key(_save, i);
-
-                     // Defaulterize:
+                 // Defaulterize Options:
+                if("option" in _save){
                     for(var j = 0; j < lq_size(opt); j++){
                         var _name = lq_get_key(opt, j);
-                        if(!lq_exists(k, _name)){
-                            lq_set(k, _name, lq_get_value(opt, j));
+                        if(_name not in _save.option){
+                            lq_set(_save.option, _name, lq_get_value(opt, j));
                         }
                     }
-
-                    lq_set(global.save, k, lq_get(_save, k));
-                    save();
                 }
+
+                 // Copy Vars From Save File:
+                for(var i = 0; i < lq_size(_save); i++){
+                    lq_set(global.save, lq_get_key(_save, i), lq_get_value(_save, i));
+                }
+
                 global.save_auto = true;
                 exit;
             }
@@ -762,7 +763,7 @@
         global.save_auto = true;
         exit;
     }
-    
+
     global.races = ["parrot"];
 
     global.remind = [];
@@ -981,7 +982,9 @@
     }
 
 #define cleanup
-    save();
+    if(global.save_auto){
+        save();
+    }
 
      // No Crash:
     with(global.races){
