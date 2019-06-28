@@ -764,8 +764,10 @@
         exit;
     }
 
-    global.races = ["parrot"];
+     // Surface Storage:
+    global.surf = [];
 
+     // Reminders:
     global.remind = [];
     if(fork()){
         while(mod_exists("mod", "teloader")) wait 0;
@@ -811,6 +813,8 @@
 #macro sav global.save
 #macro opt sav.option
 
+#macro surfList global.surf
+
 #macro SavePath "save.sav"
 
 #define save()
@@ -818,7 +822,63 @@
         string_save(json_encode(sav), SavePath);
     }
 
+#define surflist_set(_name, _x, _y, _width, _height)
+    var _surf = surflist_get(_name);
+
+    _width  = max(1, _width);
+    _height = max(1, _height);
+
+     // Add to List:
+    if(_surf == noone){
+        _surf = {
+            name    : _name,
+            active  : true,
+            surf    : -1,
+            x       : 0,
+            y       : 0,
+            w       : 0,
+            h       : 0
+        };
+        array_push(surfList, _surf);
+    }
+
+     // Set Vars:
+    with(_surf){
+        x = _x;
+        y = _y;
+        w = _width;
+        h = _height;
+    }
+
+    return _surf;
+
+#define surflist_get(_name)
+    with(surfList) if(name == _name) return self;
+    return noone;
+
 #define step
+     // Surface Setup:
+    with(surfList){
+        if(active){
+             // Create:
+    		if(!surface_exists(surf)){
+    			surf = surface_create(w, h);
+    			if("reset" in self) reset = true;
+    		}
+
+    		 // Resize:
+    		else if(surface_get_width(surf) != w || surface_get_height(surf) != h){
+    			surface_destroy(surf);
+    			surf = surface_create(w, h); // faster than surface_resize bro
+    		}
+        }
+
+         // Not Being Used, Destroy:
+        else if(surface_exists(surf)){
+            surface_destroy(surf);
+        }
+    }
+
      // Autosave:
     if(global.save_auto){
         with(instances_matching(GameCont, "ntte_autosave", null)){
@@ -982,11 +1042,12 @@
     }
 
 #define cleanup
-    if(global.save_auto){
-        save();
-    }
+    if(global.save_auto) save();
+
+     // Clear Surfaces:
+    with(surfList) surface_destroy(surf);
 
      // No Crash:
-    with(global.races){
+    with(["parrot"]){
         with(instances_matching([CampChar, CharSelect], "race", self)) instance_delete(id);
     }

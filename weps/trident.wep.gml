@@ -133,6 +133,7 @@
 						image_angle = direction;
 						image_xscale = 0.5;
 						depth = other.depth - 1;
+						canfix = false;
 						damage = 20;
 
 						 // Secret Shanks:

@@ -39,11 +39,6 @@
         }
     //#endregion
 
-    with(global.swimInst){
-    	if("wading" in self) wading = 0;
-    	
-    }
-
     global.spawn_enemy = 0;
 
 #macro spr global.spr
@@ -1379,7 +1374,7 @@ var _xoffset = argument_count > 2 ? argument[2] : 0;
 var _yoffset = argument_count > 3 ? argument[3] : 0;
 
     draw_surface_part_ext(_surf, (view_xview_nonsync - _xoffset) / _scale, (view_yview_nonsync - _yoffset) / _scale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, _scale, _scale, c_white, 1)
-    
+
 
 /// Scripts
 #define orandom(n)																		return  random_range(-n, n);

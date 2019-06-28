@@ -1242,9 +1242,9 @@
 			surface_reset_target();
 
 			 // Add Sprite:
-			surface_save(_surf, "testFlakBallSprite.png");
+			surface_save(_surf, "mergeFlak.png");
 			surface_destroy(_surf);
-			sprite_index = sprite_add("testFlakBallSprite.png", _num, _surfw / 2, _surfh / 2);
+			sprite_index = sprite_add("mergeFlak.png", _num, _surfw / 2, _surfh / 2);
 		}
 	}
 

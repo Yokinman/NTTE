@@ -1701,12 +1701,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 		 // Arrow Key Selection Change:
         var p = player_find_local_nonsync(),
-        	_move = sign(button_pressed(p, "sout") - button_pressed(p, "nort"));
+        	_moveOption = sign(button_pressed(p, "sout") - button_pressed(p, "nort"));
 
-		if(_move != 0){
+		if(_moveOption != 0){
 			var m = OptionSlct;
 			do{
-				m += _move;
+				m += _moveOption;
 				m = ((m + array_length(OptionMenu)) % array_length(OptionMenu));
 			}
 			until (OptionMenu[m].type >= 0);
@@ -1815,9 +1815,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     if(OptionPop == appear) sound_play_pitch(sndAppear, random_range(0.5, 1.5));
     
                      // Selection Splat:
-                    splat += (_selected ? 1 : -1) * current_time_scale;
-                    splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
-                    if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _x, _y);
+                    if(_moveOption == 0){
+	                    splat += (_selected ? 1 : -1) * current_time_scale;
+	                    splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
+                    }
+					if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _x, _y);
                 }
             }
             _y += 16;
