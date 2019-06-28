@@ -273,7 +273,7 @@
 
 		 // Vars:
 		mask_index = mskLast;
-		maxhealth = 60;
+		maxhealth = 60 + 30 * GameCont.loops;
 		lsthealth = maxhealth;
 		raddrop = 10;
 		size = 4;
@@ -349,19 +349,31 @@
 			lsthealth -= 2;
 
 			 // Maggot:
-			var l = (24 + orandom(2)) * image_xscale,
-				d = random_range(200, 340);
+			var _loop = (GameCont.loops >= 1),
+				l = (24 + orandom(2)) * image_xscale,
+				d = (_loop ? random(360) : random_range(200, 340));
 
-			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), Maggot)){
+			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), (_loop ? FiredMaggot : Maggot))){
 				x = xstart;
 				y = ystart;
 
 				 // Effects:
-				with(instance_create(x, y, DustOLD)){
+				if(_loop){ 
+					with(instance_create(x, y, BloodStreak)){
+						image_angle = d;
+						motion_set(d, 4);
+					}
+					for(var l = 0; l <= 64; l += 8){
+						instance_create(x + lengthdir_x(l, d) + orandom(3), y + lengthdir_y(l, d) + orandom(3), AllyDamage);
+					}
+				}
+				else with(instance_create(x, y, DustOLD)){
 					motion_add(d, 2);
 					depth = other.depth - 1;
 					image_blend = make_color_rgb(170, 70, 60);
 				}
+				
+				 // Sounds:
 				var s = audio_play_sound(sndHitFlesh, 0, false);
 				audio_sound_gain(s, min(0.9, random_range(24, 32) / (distance_to_object(Player) + 1)), 0);
 				audio_sound_pitch(s, 1.2 + random(0.2));
@@ -430,8 +442,6 @@
 	}
 	pickup_drop(100, 0);
 	pickup_drop(100, 0);
-	
-
 
 #define Bone_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -603,6 +613,7 @@
         size = 2;
         part = 0;
         team = 0;
+        pickup_indicator = noone;
 
 		 // Part Bonus:
 		if(variable_instance_get(GameCont, "visited_coast", false)){
@@ -617,6 +628,27 @@
     speed = 0;
     x = xstart;
     y = ystart;
+    
+	 // Pickup Indicator:
+	var _validPlayers = instances_meeting(x, y, instances_matching(Player, "race_id", 14));
+	if(array_length(_validPlayers) > 0){
+		scrPickupIndicator("donate");
+		
+		var _skull = id;
+		with(_validPlayers) if(button_pressed(index, "pick")){
+			
+			projectile_hit(id, 1);
+			lasthit = [sprBigSkull, "generosity"];
+			
+			with(instance_create(x, y, ThrownWep)){
+				wep = "crabbone";
+				projectile_hit(_skull, 0);	
+			}
+		}
+	}
+	else with(pickup_indicator){
+		instance_destroy();
+	}
 
      // Animate:
     image_index = part;

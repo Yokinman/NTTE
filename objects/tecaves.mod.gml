@@ -21,62 +21,25 @@
 
 #define InvMortar_create(_x, _y)
     with(obj_create(_x, _y, "Mortar")){
-        inv = true;
+         // Visual:
+		spr_idle = spr.InvMortarIdle;
+		spr_walk = spr.InvMortarWalk;
+		spr_fire = spr.InvMortarFire;
+		spr_hurt = spr.InvMortarHurt;
+		spr_dead = spr.InvMortarDead;
+		sprite_index = spr_idle;
+		hitid = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"];
+		
+		 // Sounds:
+		snd_hurt = choose(sndBanditHit, sndBigMaggotHit, sndScorpionHit, sndRatHit, sndGatorHit, sndRavenHit, sndSalamanderHurt, sndSniperHit);
+		snd_dead = choose(sndBanditDie, sndBigMaggotDie, sndScorpionDie, sndRatDie, sndGatorDie, sndRavenDie, sndSalamanderDead);
+		  
+		 // Vars:
+		inv = true;  
 
-        // Visual:
-       spr_idle = spr.InvMortarIdle;
-       spr_walk = spr.InvMortarWalk;
-       spr_fire = spr.InvMortarFire;
-       spr_hurt = spr.InvMortarHurt;
-       spr_dead = spr.InvMortarDead;
-       hitid = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"]
-
-       return id;
+    	return id;
     }
-
-#define InvMortar_step
-    if(chance_ct(1, 3)){
-        instance_create(x + orandom(8), y + orandom(8), Curse);
-    }
-
-    Mortar_step();
-
-#define InvMortar_hurt(_hitdmg, _hitvel, _hitdir)
-    Mortar_hurt(_hitdmg, _hitvel, _hitdir);
-
-    if(my_health > 0 && chance(_hitdmg / 25, 1)){
-        var _a = instances_matching([InvLaserCrystal, InvSpider], "", null),
-            _n = array_length(_a),
-            _x = x,
-            _y = y;
-
-         // Swap places with another dude:
-        if _n{
-            with(_a[irandom(_n-1)]){
-                other.x = x;
-                other.y = y;
-                x = _x;
-                y = _y;
-                nexthurt = current_frame + 6;
-
-                 // Unstick from walls by annihilating them:
-                with instance_create(x, y, PortalClear)
-                    mask_index = other.mask_index;
-
-                 // Effects:
-                sprite_index = spr_hurt;
-                image_index = 0;
-                sleep(15);
-                view_shake_at(x, y, 12);
-            }
-
-             // Unstick from walls by annihilating them:
-            with instance_create(x, y, PortalClear)
-                mask_index = other.mask_index;
-        }
-    }
-
-
+    
 #define Mortar_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -108,6 +71,7 @@
 		target_y = y;
 		gunangle = random(360);
 		direction = gunangle;
+		inv = false;
 
          // Alarms:
 		alarm1 = 100 + irandom(40);
@@ -146,6 +110,11 @@
             motion_set(_d + 180, random_range(1,2));
             alarm0 = point_distance(x, y, _x, _y) / speed;
         }
+    }
+    
+     // Curse Particles:
+    if(inv){
+		if(chance_ct(1, 3)) instance_create(x + orandom(8), y + orandom(8), Curse);
     }
 
 #define Mortar_draw
@@ -292,8 +261,35 @@
     if(sprite_index != spr_fire){
         sprite_index = spr_hurt;
         image_index = 0;
+    
+	     // Cursed Mortar Behavior:
+	    if(inv && my_health > 0 && chance(_hitdmg / 25, 1)){
+	        var _enemies = instances_matching_ne(enemy, "name", name),
+	        	_x = x,
+	        	_y = y;
+	
+	         // Swap places with another dude:
+	        if(array_length(_enemies) > 0){
+	            with(instance_random(_enemies)){
+	                other.x = x;
+	                other.y = y;
+	                x = _x;
+	                y = _y;
+	
+	                 // Unstick from walls by annihilating them:
+	                instance_create(x, y, PortalClear).mask_index = mask_index;
+	
+	                 // Effects:
+					nexthurt = current_frame + 6;
+	                sprite_index = spr_hurt;
+	                image_index = 0;
+	            }
+	
+	             // Unstick from walls by annihilating them:
+	            instance_create(x, y, PortalClear).mask_index = mask_index;
+	        }
+	    }
     }
-
 
 #define MortarPlasma_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -428,7 +424,8 @@
 
 #define Spiderling_alrm0
      // Shhh dont tell anybody
-    with(instance_create(x, y, Spider)){
+    var _obj = ((GameCont.area == 104) ? InvSpider : Spider);
+    with(instance_create(x, y, _obj)){
         x = other.x;
         y = other.y;
         right = other.right;

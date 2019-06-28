@@ -893,6 +893,51 @@
 
      // Visibilize Pets:
     with(instances_matching(CustomObject, "name", "Pet")) visible = true;
+    
+     // Backpack Setpieces:
+    var _canBackpack = chance(1 + 2 * skill_get(mut_last_wish), 12),
+    	_validArea = !(GameCont.area == 106 || (GameCont.area == 7 && GameCont.subarea == 3)),
+    	_forceSpawn = (GameCont.area == 0);
+    	
+    if(instance_exists(Floor) && GameCont.hard > 2 && ((_canBackpack && _validArea) || _forceSpawn)){
+    	var _potentialFloors = [];
+    	with(instances_matching_ne(Floor, "object_index", FloorExplo)) if(distance_to_object(Player) > 80){
+    		array_push(_potentialFloors, id);
+    	}
+    	
+    	if(fork()){
+	    	var _floor = noone,
+	    		_tries = 100;
+	    		
+    		while(_tries-- > 0){
+    			with(instance_random(_potentialFloors)){
+    				if(!array_length(instances_meeting(x, y, instances_matching([hitme, chestprop], "", null)))){
+    					_floor = id;
+    					_tries = 0;
+    				}
+    			}
+    		}
+    		
+    		with(_floor){
+    			obj_create(x + 16 + orandom(4), y + 10, "Backpack");
+    			
+    			 // Flavor Corpse:
+    			with(instance_create(x + 16 + orandom(8), y + 16 + irandom(8), CorpseActive)){
+    				image_xscale = choose(-1, 1);
+    				sprite_index = sprMutant14Dead;
+    				image_index = image_number - 1;
+    				
+    				 // Bone:
+	    			with(instance_create(x - 8 * image_xscale, y + 8, WepPickup)){
+	    				wep = "crabbone";
+	    			}
+    			}
+    			
+    			instance_create(x, y, PortalClear).mask_index = mask_index;
+    		}
+    		exit;
+    	}
+    }
 
 #define step
     script_bind_end_step(end_step, 0);
@@ -1176,7 +1221,7 @@
     if(_skill > 0){
     	 // Spawn Lair Chests:
 	    with(instances_matching(GenCont, "alarm1", 1)){
-	    	with(instances_matching([AmmoChest, WeaponChest], "", null)) if(chance(_skill, 2)){
+	    	with(instances_matching_ne([WeaponChest, AmmoChest], "object_index", BigWeaponChest, GiantWeaponChest, GiantAmmoChest)) if(chance(_skill, 2)){
 	    		
 	    		 // Cat Chest:
 	    		if(instance_is(self, AmmoChest)){
@@ -1216,6 +1261,60 @@
             wep.ammo--;
             with(instance_create(x, y, WepPickup)) wep = "crabbone";
         }
+    }
+    
+     // Scramble Cursed Caves Weapons:
+    if(GameCont.area == 104) with(instances_matching(instances_matching(WepPickup, "roll", true), "scrambled", undefined)){
+    	scrambled = true;
+    	
+		 // Determine Weapons:
+		var _pickList = [],
+			_hardMin = 0,
+			_hardMax = GameCont.hard;
+	
+		with(mod_variable_get("weapon", "merge", "wep_list")){
+	        var _add = true;
+	        if(mele || gold || area < _hardMin || area > _hardMax){
+	        	_add = false;
+	        }
+	        else switch(weap){
+				case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
+	            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
+	            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
+	            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
+	            
+	             // Bad:
+	            case wep_jackhammer:
+	            case wep_flamethrower:
+	            case wep_dragon:
+	            	_add = false;
+	            	break;
+	        }
+	
+	        if(_add) array_push(_pickList, self);
+		}
+		if(array_length(_pickList) >= 2){
+	        var _part = array_create(array_length(_pickList)),
+	        	_tries = 100;
+	
+	        while(_tries-- > 0){
+	            for(var i = 0; i < array_length(_part); i++){
+	            	while(_part[i] == 0){
+	                    var w = _pickList[irandom_range(0, array_length(_pickList) - 1)];
+	                    if(array_find_index(_part, w) < 0){
+	                    	_part[i] = w;
+	                    }
+	            	}
+	            }
+	            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
+	            	break;
+	            }
+	        }
+		
+			 // Set Wep:
+			curse = 1;
+			wep = wep_merge(_part[0], _part[1]);
+		}
     }
 
     if(DebugLag) trace_time("ntte_step");
