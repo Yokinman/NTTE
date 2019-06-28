@@ -278,12 +278,6 @@
         material = (styleb ? 6 : 2);
     }
 
-#define area_start
-     // Bind scripts:
-    if(array_length(instances_matching(CustomDraw, "name", "draw_rugs")) <= 0){
-        with(script_bind_draw(draw_rugs, 7)) name = script[2];
-    }
-
 #define area_finish
     lastarea = area;
 
@@ -618,7 +612,7 @@
     }
         
      // Light up specific things:
-    with(instances_matching([chestprop, RadChest], "", null)){
+    with(instances_matching_ne([chestprop, RadChest], "name", "Backpack")){
         obj_create(x, y - 32, "CatLight");
     }
     with(obj_create(spawn_x, spawn_y - 60, "CatLight")){
@@ -686,6 +680,14 @@
 
     switch(type){
          // IMPORTANT ROOMS
+        case "Start" : {
+        	with(instance_create(_cx, _cy, Detail)){
+        		sprite_index = spr.Rug;
+        	}
+        	
+        	break;
+        }
+         
         case "Boss" : {
              // Spawn boss spawner
             with obj_create(_cx, _cy, "CatHoleBig"){

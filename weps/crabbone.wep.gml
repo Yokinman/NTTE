@@ -10,8 +10,20 @@
 #define weapon_text return "BONE THE FISH";
 #define weapon_type return 0;  // Melee
 #define weapon_load return 6;  // 0.2 Seconds
-#define weapon_area return -1; // Doesn't spawn normally
 #define weapon_swap return sndBloodGamble;
+
+#define weapon_area
+     // Drops naturally if a player is already carrying bones:
+    with(Player) with(["wep", "bwep"]){
+        var w = variable_instance_get(other, self);
+        
+        if(lq_defget(w, "wep", w) == mod_current){
+            return 4;
+        }
+    }
+    
+     // If not, it don't:
+    return -1;
 
 #define weapon_sprt(w)
      // Custom Ammo Drawing:
@@ -102,6 +114,20 @@
                 }
                 exit;
             }
+        }
+    }
+    
+     // Bro don't look here:
+    if(w.ammo >= 10){
+        variable_instance_set(id, b + "wep", "scythe");
+        
+         // Sounds:
+        sound_play(sndMutant14Turn);
+        
+         // Effects:
+        with(instance_create(x, y, PopupText)){
+            mytext = "bone scythe!";
+            target = other.index;
         }
     }
 

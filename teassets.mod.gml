@@ -10,7 +10,13 @@
         }
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
         NestDebris = sprite_add("sprites/areas/Scrapyard/sprNestDebris.png", 16, 4, 4);
-
+        
+         // Backpack:
+        Backpack            = sprite_add_weapon("sprites/misc/sprBackpack.png",             8,  7);
+        BackpackOpen        = sprite_add("sprites/misc/sprBackpackOpen.png",            1,  8,  7);
+        BackpackCursed      = sprite_add_weapon("sprites/misc/sprBackpackCursed.png",       8,  7);
+        BackpackCursedOpen  = sprite_add("sprites/misc/sprBackpackCursedOpen.png",      1,  8,  7);
+        
          // Bat Discs:
         BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
         BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2,  14, 14);
@@ -122,7 +128,7 @@
             BigMaggotSpawnHurt = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestHurt.png", 3, 32, 32);
             BigMaggotSpawnDead = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestDead.png", 3, 32, 32);
             BigMaggotSpawnChrg = sprite_add("sprites/enemies/BigMaggotNest/sprBigMaggotNestChrg.png", 4, 32, 32);
-
+            
         	 // Scorpion Rock:
         	ScorpionRockEnemy   = sprite_add("sprites/areas/Desert/Props/sprScorpionRockEnemy.png",     6, 16, 16);
         	ScorpionRockFriend  = sprite_add("sprites/areas/Desert/Props/sprScorpionRockFriend.png",    6, 16, 16);
@@ -607,10 +613,7 @@
 
              // Furniture:
                  // Rug:
-                Rug = [
-                    sprite_add("sprites/areas/Lair/Props/sprRugBot.png", 9, 0, 0),
-                    sprite_add("sprites/areas/Lair/Props/sprRugTop.png", 9, 0, 0)
-                    ];
+                Rug = sprite_add("sprites/areas/Lair/Props/sprRug.png", 1, 26, 26);
 
                  // Table:
                 TableIdle = sprite_add("sprites/areas/Lair/Props/sprTableIdle.png", 1, 16, 16);

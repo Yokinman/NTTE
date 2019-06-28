@@ -21,6 +21,109 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define Backpack_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		spr_open = spr.BackpackOpen;
+		sprite_index = spr.Backpack;
+		spr_shadow_y = 2;
+		spr_shadow = shd16;
+		
+		 // Sounds:
+		snd_open = sndMoneyPileBreak;
+		
+		 // Vars:
+		switch(crown_current){
+			case crwn_none:		curse = false;			break;
+			case crwn_curses:	curse = chance(2, 3);	break;
+			default:			curse = chance(1, 7);
+		}
+		
+		 // Events:
+		on_open = script_ref_create(Backpack_open);
+		
+		script_bind_end_step(Backpack_setup, 0, id);
+		script_bind_step(Backpack_step, 0, id);
+		
+		return id;
+	}
+	
+#define Backpack_setup(_inst)
+	 // Change Sprites to Cursed:
+	with(_inst) if(curse){
+		spr_open = spr.BackpackCursedOpen;
+		sprite_index = spr.BackpackCursed;
+	}
+
+	 // Goodbye:
+	instance_destroy();
+	
+#define Backpack_step(_inst)
+	 // Curse FX:
+	if(instance_exists(_inst)){
+		with(_inst) if(curse && chance_ct(1, 20)){
+			instance_create(x + orandom(7), y + orandom(7), Curse);
+		}
+	}
+	
+	 // Goodbye:
+	else instance_destroy();
+
+#define Backpack_open
+	 // Determine Weapons:
+	var _pickList = [],
+		_hardMin = 0,
+		_hardMax = GameCont.hard;
+
+	with(mod_variable_get("weapon", "merge", "wep_list")){
+        var _add = true;
+        if(mele || gold || area < _hardMin || area > _hardMax){
+        	_add = false;
+        }
+        else switch(weap){
+			case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
+            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
+            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
+            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
+            
+             // Bad:
+            case wep_jackhammer:
+            case wep_flamethrower:
+            case wep_dragon:
+            	_add = false;
+            	break;
+        }
+
+        if(_add) array_push(_pickList, self);
+	}
+	if(array_length(_pickList) >= 2){
+        var _part = array_create(array_length(_pickList)),
+        	_tries = 100;
+
+        while(_tries-- > 0){
+            for(var i = 0; i < array_length(_part); i++){
+            	while(_part[i] == 0){
+                    var w = _pickList[irandom_range(0, array_length(_pickList) - 1)];
+                    if(array_find_index(_part, w) < 0){
+                    	_part[i] = w;
+                    }
+            	}
+            }
+            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
+            	break;
+            }
+        }
+	
+		 // Spawn Weapon:
+		with(instance_create(x, y, WepPickup)){
+			wep = wep_merge(_part[0], _part[1]);
+			curse = other.curse;
+		}
+		
+		 // Effects:
+		instance_create(x, y, Dust);
+	}
+
 #define BatDisc_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
