@@ -395,12 +395,9 @@
             surface_set_target(_surfSwim);
             draw_clear_alpha(0, 0);
 
-            var _x = x, _y = y,
-            	l = min(speed_raw, point_distance(x, y, wading_xprevious, wading_yprevious)),
-            	d = direction;
-
-            x += lengthdir_x(l, d) - _surfSwimx;
-            y += lengthdir_y(l, d) - _surfSwimy;
+            var _x = x, _y = y;
+            x -= _surfSwimx;
+            y -= _surfSwimy;
             if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
             else draw_self();
             x = _x;
@@ -416,6 +413,15 @@
                 }
             }
 
+			 // Offset:
+            var	l = min(speed_raw, point_distance(x, y, wading_xprevious, wading_yprevious)),
+            	d = direction,
+            	_ox = lengthdir_x(l, d),
+            	_oy = lengthdir_y(l, d);
+
+            _surfSwimx += _ox;
+            _surfSwimy += _oy;
+
             /// Draw Top:
                 var _yoff = _surfSwimh - ((_surfSwimh / 2) - (sprite_height - sprite_yoffset)),
                     t = _yoff - _wh;
@@ -429,8 +435,8 @@
                     var w = [wep];
                     if(race == "steroids") w = [wep, bwep];
                     for(var i = 0; i < array_length(w); i++) if(weapon_get_laser_sight(w[i])){
-                        var _sx = x,
-                            _sy = y + _z - (i * 4),
+                        var _sx = x + _ox,
+                            _sy = y + _oy + _z - (i * 4),
                             _lx = _sx,
                             _ly = _sy,
                             _md = 1000, // Max Distance
@@ -487,7 +493,7 @@
                 }
 
                  // Self:
-	            var _x = (_surfSwimx - _surfx) * _surfScaleTop,
+	            var	_x = (_surfSwimx - _surfx) * _surfScaleTop,
 	                _y = (_surfSwimy + _z - _surfy) * _surfScaleTop;
 
                 draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimw, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
@@ -1358,7 +1364,7 @@
 	}
 
 #define draw_spiritfix(_inst)
-    with(instances_matching_gt(Player, "wading", 0)){
+    with(instances_matching_gt(_inst, "wading", 0)){
         if(canspirit){
     		draw_sprite(sprHalo, -1, x, y + sin(wave / 10));
         }

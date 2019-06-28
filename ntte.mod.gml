@@ -88,7 +88,7 @@
 
      // Options Menu:
     global.option_NTTE_splat = 0;
-    global.option_NTTE_splat_menu = 1;
+    global.option_NTTE_splat_menu = 0;
     global.option_open = false;
     global.option_slct = -1;
     global.option_pop = 0;
@@ -147,7 +147,13 @@
     with(OptionMenu){
         if("name" not in self) name = "";
         if("type" not in self) type = opt_title;
-        if("pick" not in self) pick = ["OFF", "ON"];
+        if("pick" not in self){
+        	switch(type){
+        		case opt_toggle:	pick = ["OFF", "ON"];	break;
+        		case opt_slider:	pick = [0, 1];			break;
+        		default:			pick = [];				break;
+        	}
+        }
         if("sync" not in self) sync = true;
         if("varname" not in self) varname = name;
         if("clicked" not in self) clicked = false;
@@ -1418,7 +1424,7 @@
 
 #define draw
 	 // NTTE Options at Campfire:
-	if(instance_exists(Menu) && !mod_exists("mod", "teloader")){
+	if(instance_exists(Menu)){
     	draw_set_projection(0);
 
 		if(OptionOpen){
@@ -1426,22 +1432,15 @@
 
 	         // Hide Things:
 	        with(Menu){
+	        	mode = 0;
 	            charsplat = 1;
 	            for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
+	            sound_stop(sndMenuCharSelect);
 	        }
-	        with(CharSelect){
-	            visible = false;
-	            alarm0 = 2;
-	            noinput = 2;
-	        }
-	        with(Loadout){
-	            visible = false;
-	            selected = -1;
-	            introsettle = 1;
-	        }
+	        with(Loadout) instance_destroy();
 	        with(loadbutton) instance_destroy();
 	        with(BackFromCharSelect) noinput = 8;
-	
+
 	         // Dim Screen:
 	        draw_set_color(c_black);
 	        draw_set_alpha(0.75);
@@ -1463,12 +1462,15 @@
 	        		break;
 	        	}
 	        }
-	        if(!OptionOpen){
+	        if(!OptionOpen || mod_exists("mod", "teloader")){
+	        	OptionOpen = false;
 	        	sound_play(sndClickBack);
-	        	with(Loadout){
-	        		visible = true;
-	        		selected = 0;
+	        	with(Menu){
+	        		event_perform(ev_step, ev_step_end);
+	        		sound_stop(sndMenuCharSelect);
+	        		with(CharSelect) alarm0 = 2;
 	        	}
+	        	with(Loadout) selected = 0;
 	        }
 		}
 
@@ -1507,8 +1509,10 @@
 			 // Button Visual:
             global.option_NTTE_splat_menu = clamp(global.option_NTTE_splat_menu, 0, sprite_get_number(sprBossNameSplat) - 1);
 			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 17, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
-            global.option_NTTE_splat_menu += current_time_scale;
-			draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, (_hover ? c_white : c_silver), 1);
+            global.option_NTTE_splat_menu += current_time_scale * (mod_exists("mod", "teloader") ? -1 : 1);
+			if(global.option_NTTE_splat_menu > 0){
+				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, (_hover ? c_white : c_silver), 1);
+			}
 		}
 
 		 // Main Option Drawing:
@@ -1794,6 +1798,20 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	    draw_set_halign(fa_left);
 	    draw_set_valign(fa_middle);
 
+		 // Arrow Key Selection Change:
+        var p = player_find_local_nonsync(),
+        	_move = sign(button_pressed(p, "sout") - button_pressed(p, "nort"));
+
+		if(_move != 0){
+			var m = OptionSlct;
+			do{
+				m += _move;
+				m = ((m + array_length(OptionMenu)) % array_length(OptionMenu));
+			}
+			until (OptionMenu[m].type >= 0);
+			OptionSlct = m;
+		}
+
          // Option Selecting & Splat:
         for(var i = 0; i < array_length(OptionMenu); i++){
             var _option = OptionMenu[i],
@@ -1806,22 +1824,28 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 var _vx = view_xview[p],
                     _vy = view_yview[p],
                     _mx = mouse_x[p] - _vx,
-                    _my = mouse_y[p] - _vy;
+                    _my = mouse_y[p] - _vy,
+                    _hover = point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6);
 
-                if(point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6)){
+                if(_hover || _selected){
                     if(_option.type >= 0 && player_is_local_nonsync(p)){
                         OptionSlct = i;
                     }
 
                     with(_option) if(OptionPop >= appear){
+                        var _click = button_pressed(p, "fire"),
+                        	_confirm = ((_click && _hover) || button_pressed(p, "okay"));
+
                          // Click:
                         if(type >= 0){
                             if(!clicked){
-                                if(button_pressed(p, "fire")){
-                                    if(player_is_local_nonsync(p)) clicked = true;
+                                if(_confirm){
+                                    if(button_pressed(p, "fire")){
+                                    	if(player_is_local_nonsync(p)) clicked = true;
+                                    }
                                     switch(type){
                                         case opt_slider:
-                                            sound_play(sndSlider);
+                                            if(_click) sound_play(sndSlider);
                                             break;
     
                                         default:
@@ -1843,27 +1867,27 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                          // Option Specifics:
                         if(sync || player_is_local_nonsync(p)) switch(type){
                             case opt_toggle:
-                                if(button_pressed(p, "fire")){
+                                if(_confirm){
                                     lq_set(opt, varname, (lq_defget(opt, varname, 0) + 1) % array_length(pick));
                                 }
                                 break;
 
                             case opt_slider:
-                                if(button_check(p, "fire") && clicked){
+                                if(_hover && button_check(p, "fire") && clicked){
                                     var _slider = clamp(round(_mx - (_x + 40)) / 100, 0, 1);
                                     lq_set(opt, varname, _slider);
                                 }
                                 else{
-                                    var _adjust = 0.1 * (button_pressed(p, "east") - button_pressed(p, "west"));
+                                    var _adjust = 0.1 * sign(button_pressed(p, "east") - button_pressed(p, "west"));
                                     if(_adjust != 0){
-                                        lq_set(opt, varname, clamp(lq_get(opt, varname) + _adjust, 0, 2));
+                                        lq_set(opt, varname, clamp(lq_get(opt, varname) + _adjust, pick[0], pick[1]));
                                     }
                                 }
                                 break;
                         }
 
                          // Description on Hover:
-                        if("text" in self){
+                        if(_hover && "text" in self){
                             //if(!button_check(p, "fire") || type == opt_title){
                                 if(_mx < (game_width / 2) + 32){
                                     if(player_is_local_nonsync(p)){
