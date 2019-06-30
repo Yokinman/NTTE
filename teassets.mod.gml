@@ -10,17 +10,17 @@
         }
         TopDecalMine = sprite_add("sprites/areas/Trench/sprTopDecalMine.png", 12, 12, 36);
         NestDebris = sprite_add("sprites/areas/Scrapyard/sprNestDebris.png", 16, 4, 4);
-        
+
          // Backpack:
-        Backpack            = sprite_add_weapon("sprites/misc/sprBackpack.png",             8,  7);
-        BackpackOpen        = sprite_add("sprites/misc/sprBackpackOpen.png",            1,  8,  7);
-        BackpackCursed      = sprite_add_weapon("sprites/misc/sprBackpackCursed.png",       8,  7);
-        BackpackCursedOpen  = sprite_add("sprites/misc/sprBackpackCursedOpen.png",      1,  8,  7);
+        Backpack            = sprite_add("sprites/chests/sprBackpack.png",            1, 8, 8);
+        BackpackOpen        = sprite_add("sprites/chests/sprBackpackOpen.png",        1, 8, 8);
+        BackpackCursed      = sprite_add("sprites/chests/sprBackpackCursed.png",      1, 8, 8);
+        BackpackCursedOpen  = sprite_add("sprites/chests/sprBackpackCursedOpen.png",  1, 8, 8);
         
          // Bat Discs:
         BatDisc         = sprite_add("sprites/weps/projectiles/sprBatDisc.png",         2,  9,  9);
-        BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2,  14, 14);
-        BigDiscTrail    = sprite_add("sprites/weps/projectiles/sprBigDiscTrail.png",    3,  12, 12);
+        BatDiscBig      = sprite_add("sprites/weps/projectiles/sprBatDiscBig.png",      2, 14, 14);
+        BigDiscTrail    = sprite_add("sprites/weps/projectiles/sprBigDiscTrail.png",    3, 12, 12);
         
          // Bat Lightning:
         BatLightning        = sprite_add("sprites/weps/projectiles/sprBatLightning.png",        4,  0,  1);
@@ -549,9 +549,10 @@
             BatBossYell     = sprite_add("sprites/enemies/BatBoss/sprBigBatYell.png",            6, 24, 24);
             BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png",        4,  8);
             VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png",             2, 12, 12);
-            
-            BatChest        = sprite_add_weapon("sprites/enemies/BatBoss/sprBatChest.png",           9,  7);
-            BatChestOpen    = sprite_add("sprites/enemies/BatBoss/sprBatChestOpen.png",          1,  9,  7);
+
+             // Bat Chest:
+            BatChest     = sprite_add("sprites/chests/sprBatChest.png",     1, 10, 10);
+            BatChestOpen = sprite_add("sprites/chests/sprBatChestOpen.png", 1, 10, 10);
 
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
@@ -573,8 +574,9 @@
             CatBossWeap     = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",          2,  4,  7);
             CatBossWeapChrg = sprite_add("sprites/enemies/CatBoss/sprCatBossToxerChrg.png",     12,  1,  7);
             
-            CatChest        = sprite_add_weapon("sprites/enemies/CatBoss/sprCatChest.png",           9,  7);
-            CatChestOpen    = sprite_add("sprites/enemies/CatBoss/sprCatChestOpen.png",          1,  9,  7);
+             // Cat Chest:
+            CatChest     = sprite_add("sprites/chests/sprCatChest.png",     1, 10, 10);
+            CatChestOpen = sprite_add("sprites/chests/sprCatChestOpen.png", 1, 10, 10);
 
              // Door:
             CatDoor         = sprite_add("sprites/areas/Lair/Props/sprCatDoor.png",          10, 2, 0);
@@ -686,6 +688,26 @@
         //#endregion
 
         MergeWep = {};
+        
+         // Semi-Manual Shine:
+        Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
+        Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
+        Shine20 = sprite_add("sprites/chests/sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
+        Shine24 = sprite_add("sprites/chests/sprShine24.png", 7, 12, 12); // Big Chests
+        Shine64 = sprite_add("sprites/chests/sprShine64.png", 7, 32, 32); // Giant Chests (YV)
+        with(other) if(fork()){
+            wait 30;
+
+             // Backpack:
+            spr.Backpack       = sprite_shine(spr.Backpack,       spr.Shine16);
+            spr.BackpackCursed = sprite_shine(spr.BackpackCursed, spr.Shine16);
+
+             // Cat/Bat Chests:
+            spr.BatChest = sprite_shine(spr.BatChest, spr.Shine20);
+            spr.CatChest = sprite_shine(spr.CatChest, spr.Shine20);
+
+            exit;
+        }
     }
 
      // SOUNDS //
@@ -972,6 +994,45 @@
 
     draw_reset_projection();
 
+#define sprite_shine(_spr, _sprShine)
+	var _img = sprite_get_number(_spr);
+	if(_img <= 1) _img = sprite_get_number(_sprShine);
+
+	var _ox = sprite_get_xoffset(_spr),
+	    _oy = sprite_get_yoffset(_spr),
+	    _surfw = sprite_get_width(_spr),
+		_surfh = sprite_get_height(_spr),
+		_surf = surface_create(_surfw * _img, _surfh);
+
+	surface_set_target(_surf);
+	draw_clear_alpha(0, 0);
+
+	for(var i = 0; i < _img; i++){
+		var _x = (_surfw * i),
+			_y = 0;
+
+		draw_sprite(_spr, i, _x + _ox, _y + _oy);
+
+		 // Overlay Shine:
+		var _shineSiz = max(_surfw, _surfh),
+		    _shineImg = i,
+		    s = 2;
+
+        if(i >= s){
+            _shineImg = lerp(s, sprite_get_number(_sprShine), (i - s) / (_img - s));
+        }
+
+		draw_set_color_write_enable(true, true, true, false);
+		draw_sprite_stretched(_sprShine, _shineImg, _x, _y, _shineSiz, _shineSiz);
+		draw_set_color_write_enable(true, true, true, true);
+	}
+
+	surface_reset_target();
+	surface_save(_surf, "sprShine.png");
+	surface_destroy(_surf);
+
+	return sprite_add("sprShine.png", _img, _ox, _oy);
+
 #define sprite_merge(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
     var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
     if(lq_exists(spr.MergeWep, _sprName)){
@@ -981,16 +1042,16 @@
         var _spr = [_stock, _front],
             _sprW = [],
             _sprH = [];
-    
+
         for(var i = 0; i < array_length(_spr); i++){
             _sprW[i] = sprite_get_width(_spr[i]);
             _sprH[i] = sprite_get_height(_spr[i]);
         }
-    
+
         var _surfW = max(_sprW[0], _sprW[1]),
             _surfH = max(_sprH[0], _sprH[1]),
             _surf = surface_create(_surfW, _surfH);
-    
+
         surface_set_target(_surf);
         draw_clear_alpha(0, 0);
     
@@ -1036,10 +1097,10 @@
         }
     
         surface_reset_target();
-        surface_save(_surf, "merge.png");
+        surface_save(_surf, "sprMerge.png");
         surface_destroy(_surf);
     
-        var s = sprite_add_weapon("merge.png", 2, _surfH / 3);
+        var s = sprite_add_weapon("sprMerge.png", 2, _surfH / 3);
         lq_set(spr.MergeWep, _sprName, s);
     	return s;
     }

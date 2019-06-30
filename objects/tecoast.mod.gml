@@ -2340,11 +2340,12 @@
             var _surfx = surfClamShieldX,
                 _surfy = surfClamShieldY + 16;
 
-            d3d_set_fog(1, c_black, 0, 0);
+            d3d_set_fog(true, c_black, 0, 0);
             for(var a = 0; a < 360; a += 90){
-                draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
+                draw_surface(surfClamShield, _surfx + dcos(a), _surfy + dsin(a));
             }
-            d3d_set_fog(0, 0, 0, 0);
+            d3d_set_fog(false, 0, 0, 0);
+
             draw_surface(surfClamShield, _surfx, _surfy);
         }
     }
@@ -2359,11 +2360,11 @@
                 var _surfx = surfClamShieldX,
                     _surfy = surfClamShieldY + 5;
 
-                d3d_set_fog(1, c_black, 0, 0);
+                d3d_set_fog(true, c_black, 0, 0);
                 for(var a = 0; a < 360; a += 90){
-                    draw_surface(surfClamShield, _surfx + lengthdir_x(1, a), _surfy + lengthdir_y(1, a));
+                	draw_surface(surfClamShield, _surfx + dcos(a), _surfy + dsin(a));
                 }
-                d3d_set_fog(0, 0, 0, 0);
+                d3d_set_fog(false, 0, 0, 0);
 
                 draw_surface(surfClamShield, _surfx, _surfy);
             }
@@ -2649,6 +2650,9 @@
 
 #define Seal_death
     pickup_drop(50, 0);
+
+#define Seal_cleanup
+	surface_destroy(surfClamShield);
 
 
 #define SealAnchor_create(_x, _y)
@@ -3414,6 +3418,8 @@
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
@@ -3488,3 +3494,4 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);

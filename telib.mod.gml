@@ -1624,6 +1624,9 @@
 #define wep_merge(_stock, _front)
 	return mod_script_call_nc("weapon", "merge", "wep_merge", _stock, _front);
 
+#define wep_merge_decide(_hardMin, _hardMax)
+	return mod_script_call_nc("weapon", "merge", "wep_merge_decide", _hardMin, _hardMax);
+
 #define path_create(_xstart, _ystart, _xtarget, _ytarget)
      // Auto-Determine Grid Size:
     var _tileSize = 16,

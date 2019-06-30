@@ -81,16 +81,37 @@
                 if(place_meeting(x, y, other)){
                     if(wep_get(wep) == mod_current){
                         w.ammo++;
-                        
+
                          // Effects:
                         with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
                         sound_play_pitchvol(sndHPPickup, 4, 1);
                         sound_play_pitch(sndPickupDisappear, 1.2);
                         sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
-    
+
                         instance_destroy();
                     }
                 }
+            }
+        }
+
+         // Bro don't look here:
+        if(w.ammo >= 10){
+            variable_instance_set(id, b + "wep", "scythe");
+            
+             // Sounds:
+            sound_play_pitchvol(sndCursedChest, 1.5 + random(0.5), 0.5);
+            sound_play_pitchvol(sndMutant14Turn, 1.2 + random(0.2), 0.5);
+            
+             // Effects:
+            repeat(4){
+                with(instance_create(x, y, Dust)){
+                    motion_add(other.gunangle + other.wepangle, 3);
+                    depth = other.depth - 1;
+                }
+            }
+            with(instance_create(x, y, PopupText)){
+                mytext = "bone scythe!";
+                target = other.index;
             }
         }
     }
@@ -114,20 +135,6 @@
                 }
                 exit;
             }
-        }
-    }
-    
-     // Bro don't look here:
-    if(w.ammo >= 10){
-        variable_instance_set(id, b + "wep", "scythe");
-        
-         // Sounds:
-        sound_play(sndMutant14Turn);
-        
-         // Effects:
-        with(instance_create(x, y, PopupText)){
-            mytext = "bone scythe!";
-            target = other.index;
         }
     }
 

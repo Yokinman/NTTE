@@ -1508,6 +1508,54 @@
 
 	return { wep : mod_current, base : wep_merge_raw(_part[0], _part[1]) };
 
+#define wep_merge_decide(_hardMin, _hardMax)
+	var _pickList = [];
+	with(mod_variable_get("weapon", "merge", "wep_list")){
+        var _add = true;
+        if(mele || gold || area < _hardMin || area > _hardMax){
+        	_add = false;
+        }
+        else switch(weap){
+			case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
+            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
+            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
+            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
+
+             // Bad:
+            case wep_jackhammer:
+            case wep_flamethrower:
+            case wep_dragon:
+            	_add = false;
+            	break;
+        }
+
+        if(_add) array_push(_pickList, self);
+	}
+
+	 // Randomly Select Weps from List:
+	if(array_length(_pickList) >= 2){
+        var _part = array_create(2),
+        	_tries = 100;
+
+        while(_tries-- > 0){
+            for(var i = 0; i < array_length(_part); i++){
+            	while(_part[i] == 0){
+                    var w = _pickList[irandom(array_length(_pickList) - 1)];
+                    if(array_find_index(_part, w) < 0){
+                    	_part[i] = w;
+                    }
+            	}
+            }
+            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
+            	break;
+            }
+        }
+
+		return _part;
+	}
+
+	return [];
+
 #define wep_merge_raw(_stock, _front)
     var _wep = lq_clone_deep(_front);
 
@@ -1681,14 +1729,19 @@
 		load = max(1, round(load));
 
          // Ammo Cost:
-		cost = 0;
 		var _projCost = _frontProjCostRaw;
-        if(_front.type == 1){
-        	cost = _frontProjCostRaw * amnt * shot;
-        }
-        else repeat(amnt * shot){
-			cost += _projCost;
-			_projCost *= 1 - (0.1 * sqrt(_projCost));
+		if(_front.type == 1){ // Bullet Mode
+			cost = _projCost * amnt * shot;
+		}
+		else if(_projCost == 1){ // Basic Mode
+	        cost = min(_projCost * amnt * shot, sqrt(16 * amnt * shot));
+		}
+		else{ // Drop-Off Mode
+			cost = 0;
+			repeat(amnt * shot){
+				cost += _projCost;
+				_projCost *= 1 - (0.1 * sqrt(_projCost));
+			}
 		}
     	if(_stock.type == 1){ // Pop Rifle-type stuff
     		cost += min(0, _stock.cost - (min(_stock.amnt, _stock.cost) * _stock.shot));
@@ -1983,9 +2036,9 @@
 		//- Flare,			flame trail
 		//- Laser,			burst shots fire instantly and hitscan with increasing distance
 		//- Lightning,		follows a lightning-like path
-		//?- Plasma,			no friction until hit a wall? plasma explosion?
-		//? Plasma Cannon,	kind of flak but without friction???
-		//? Devastator,		??? mayb what jsburg said with the destory projectile thing u know
+		//-?Plasma,			no friction until hit a wall? plasma explosion?
+		// ?Plasma Cannon,	kind of flak but without friction???
+		// ?Devastator,		??? mayb what jsburg said with the destory projectile thing u know
 		//- Ultra Crossbow,	can break limited walls
 		//- Ultra Nader,	attract enemies
 		//- Flame,			create flame on destruction (flameshell)
@@ -3730,16 +3783,18 @@
 					with(instance_create(x + orandom(4), y + orandom(4), Flame)){
 						hspeed = other.hspeed / 6;
 						vspeed = other.vspeed / 6;
-						motion_add(random(360), random(other.amnt / 4));
+						if(other.amnt > 3){
+							motion_add(random(360), 2 + random((other.amnt * 0.2) / max(1, other.amnt / 20)));
+						}
 						team = other.team;
 						if(distance_to_object(Explosion) <= 0){
-							speed += 4;
+							speed += random(4);
 						}
 					}
 				}
 				if(amnt > 3){
 					with(instance_create(x, y, GameObject)){
-						sound_play_hit(choose(sndToxicBoltGas, sndBurn), 0.4);
+						sound_play_hit(sndFlareExplode, 0.4);
 						instance_destroy();
 					}
 				}
@@ -4097,6 +4152,8 @@
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);

@@ -358,23 +358,17 @@
 				y = ystart;
 
 				 // Effects:
-				if(_loop){ 
-					with(instance_create(x, y, BloodStreak)){
-						image_angle = d;
-						motion_set(d, 4);
+				for(var i = 0; i <= (4 * _loop); i += 2){
+					with(instance_create(x, y, DustOLD)){
+						motion_add(d + orandom(10), 2 + i);
+						depth = other.depth - 1;
+						image_blend = make_color_rgb(170, 70, 60);
+						image_speed /= max(1, (i / 2.5));
 					}
-					for(var l = 0; l <= 64; l += 8){
-						instance_create(x + lengthdir_x(l, d) + orandom(3), y + lengthdir_y(l, d) + orandom(3), AllyDamage);
-					}
-				}
-				else with(instance_create(x, y, DustOLD)){
-					motion_add(d, 2);
-					depth = other.depth - 1;
-					image_blend = make_color_rgb(170, 70, 60);
 				}
 				
 				 // Sounds:
-				var s = audio_play_sound(sndHitFlesh, 0, false);
+				var s = audio_play_sound((_loop ? sndFlyFire : sndHitFlesh), 0, false);
 				audio_sound_gain(s, min(0.9, random_range(24, 32) / (distance_to_object(Player) + 1)), 0);
 				audio_sound_pitch(s, 1.2 + random(0.2));
 			}
@@ -442,6 +436,7 @@
 	}
 	pickup_drop(100, 0);
 	pickup_drop(100, 0);
+
 
 #define Bone_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -629,22 +624,27 @@
     x = xstart;
     y = ystart;
     
-	 // Pickup Indicator:
-	var _validPlayers = instances_meeting(x, y, instances_matching(Player, "race_id", 14));
-	if(array_length(_validPlayers) > 0){
-		scrPickupIndicator("donate");
-		
-		var _skull = id;
-		with(_validPlayers) if(button_pressed(index, "pick")){
-			
+	 // Boneman Feature:
+	var _canpick = [];
+	with(instances_matching(Player, "race", "skeleton")) array_push(_canpick, index);
+	if(array_length(_canpick) > 0){
+		if(!instance_exists(pickup_indicator)){
+			scrPickupIndicator("DONATE");
+		}
+
+		 // Feed:
+		else with(player_find(pickup_indicator.pick)){
 			projectile_hit(id, 1);
-			lasthit = [sprBigSkull, "generosity"];
-			
-			with(instance_create(x, y, ThrownWep)){
-				wep = "crabbone";
-				projectile_hit(_skull, 0);	
+			lasthit = [sprBone, "GENEROSITY"];
+
+			with(other){
+				with(obj_create(x, y, "Bone")){
+					projectile_hit(other, damage);
+				}
 			}
 		}
+
+		with(pickup_indicator) whitelist = _canpick;
 	}
 	else with(pickup_indicator){
 		instance_destroy();
@@ -1589,6 +1589,8 @@
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
@@ -1663,3 +1665,4 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);

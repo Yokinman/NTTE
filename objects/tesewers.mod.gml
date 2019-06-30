@@ -657,53 +657,12 @@
 	}
 
 	 // Determine Weapons:
-	var _pickList = [],
-		_hardMin = 0,
-		_hardMax = GameCont.hard + (curse ? 2 : 0);
-
-	with(mod_variable_get("weapon", "merge", "wep_list")){
-        var _add = true;
-        if(mele || gold || area < _hardMin || area > _hardMax){
-        	_add = false;
-        }
-        else switch(weap){
-			case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
-            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
-            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
-            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
-            
-             // Bad:
-            case wep_jackhammer:
-            case wep_flamethrower:
-            case wep_dragon:
-            	_add = false;
-            	break;
-        }
-
-        if(_add) array_push(_pickList, self);
-	}
-	if(array_length(_pickList) >= 2){
-        var _part = array_create(array_length(_pickList)),
-        	_tries = 100;
-
-        while(_tries-- > 0){
-            for(var i = 0; i < array_length(_part); i++){
-            	while(_part[i] == 0){
-                    var w = _pickList[irandom_range(0, array_length(_pickList) - 1)];
-                    if(array_find_index(_part, w) < 0){
-                    	_part[i] = w;
-                    }
-            	}
-            }
-            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
-            	break;
-            }
-        }
-
+	var _part = wep_merge_decide(0, GameCont.hard + (curse ? 2 : 0));
+	if(array_length(_part) >= 2){
          // Set Weps:
-        _shop[0].drop = ((_part[0].weap == -1) ? _part[0] : _part[0].weap);
-        _shop[2].drop = ((_part[1].weap == -1) ? _part[1] : _part[1].weap);
-		_shop[1].drop = wep_merge(_part[1], _part[0]);
+        _shop[2].drop = ((_part[0].weap == -1) ? _part[0] : _part[0].weap);
+        _shop[0].drop = ((_part[1].weap == -1) ? _part[1] : _part[1].weap);
+		_shop[1].drop = wep_merge(_part[0], _part[1]);
 
 		 // Color:
 		if(curse){
@@ -3697,6 +3656,8 @@
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
@@ -3771,3 +3732,4 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);

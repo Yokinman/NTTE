@@ -901,48 +901,39 @@
     with(instances_matching(CustomObject, "name", "Pet")) visible = true;
     
      // Backpack Setpieces:
-    var _canBackpack = chance(1 + 2 * skill_get(mut_last_wish), 12),
+    var _canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
     	_validArea = !(GameCont.area == 106 || (GameCont.area == 7 && GameCont.subarea == 3)),
     	_forceSpawn = (GameCont.area == 0);
-    	
-    if(instance_exists(Floor) && GameCont.hard > 2 && ((_canBackpack && _validArea) || _forceSpawn)){
-    	var _potentialFloors = [];
-    	with(instances_matching_ne(Floor, "object_index", FloorExplo)) if(distance_to_object(Player) > 80){
-    		array_push(_potentialFloors, id);
-    	}
-    	
-    	if(fork()){
-	    	var _floor = noone,
-	    		_tries = 100;
-	    		
-    		while(_tries-- > 0){
-    			with(instance_random(_potentialFloors)){
-    				if(!array_length(instances_meeting(x, y, instances_matching([hitme, chestprop], "", null)))){
-    					_floor = id;
-    					_tries = 0;
-    				}
-    			}
-    		}
-    		
-    		with(_floor){
-    			obj_create(x + 16 + orandom(4), y + 10, "Backpack");
-    			
-    			 // Flavor Corpse:
-    			with(instance_create(x + 16 + orandom(8), y + 16 + irandom(8), CorpseActive)){
-    				image_xscale = choose(-1, 1);
-    				sprite_index = sprMutant14Dead;
-    				image_index = image_number - 1;
-    				
-    				 // Bone:
-	    			with(instance_create(x - 8 * image_xscale, y + 8, WepPickup)){
-	    				wep = "crabbone";
-	    			}
-    			}
-    			
-    			instance_create(x, y, PortalClear).mask_index = mask_index;
-    		}
-    		exit;
-    	}
+
+    if(GameCont.hard > 2 && ((_canBackpack && _validArea) || _forceSpawn)){
+		 // Compile Potential Floors:
+		var _potentialFloors = [];
+		with(instances_matching_ne(Floor, "object_index", FloorExplo)){
+			if(distance_to_object(Player) > 80){
+				if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
+					array_push(_potentialFloors, id);
+				}
+			}
+		}
+
+		 // Backpack:
+		with(instance_random(_potentialFloors)){
+			obj_create(x + 16 + orandom(4), y + 10, "Backpack");
+
+			 // Flavor Corpse:
+			with(instance_create(x + 16 + orandom(8), y + 16 + irandom(8), CorpseActive)){
+				image_xscale = choose(-1, 1);
+				sprite_index = sprMutant14Dead;
+				image_index = image_number - 1;
+
+				 // Bone:
+				with(instance_create(x - 8 * image_xscale, y + 8, WepPickup)){
+					wep = "crabbone";
+				}
+			}
+
+			instance_create(x + 16, y + 16, PortalClear);
+		}
     }
 
 #define step
@@ -1262,165 +1253,138 @@
 	}
 
 	 // Separate Bones:
-    with(WepPickup) if(is_object(wep)){
-        if(wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
+    with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
+    	if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
             wep.ammo--;
             with(instance_create(x, y, WepPickup)) wep = "crabbone";
         }
-    }
-    
-     // Scramble Cursed Caves Weapons:
-    if(GameCont.area == 104) with(instances_matching(instances_matching(WepPickup, "roll", true), "scrambled", undefined)){
-    	scrambled = true;
-    	
-		 // Determine Weapons:
-		var _pickList = [],
-			_hardMin = 0,
-			_hardMax = GameCont.hard;
-	
-		with(mod_variable_get("weapon", "merge", "wep_list")){
-	        var _add = true;
-	        if(mele || gold || area < _hardMin || area > _hardMax){
-	        	_add = false;
-	        }
-	        else switch(weap){
-				case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
-	            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
-	            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
-	            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
-	            
-	             // Bad:
-	            case wep_jackhammer:
-	            case wep_flamethrower:
-	            case wep_dragon:
-	            	_add = false;
-	            	break;
-	        }
-	
-	        if(_add) array_push(_pickList, self);
-		}
-		if(array_length(_pickList) >= 2){
-	        var _part = array_create(array_length(_pickList)),
-	        	_tries = 100;
-	
-	        while(_tries-- > 0){
-	            for(var i = 0; i < array_length(_part); i++){
-	            	while(_part[i] == 0){
-	                    var w = _pickList[irandom_range(0, array_length(_pickList) - 1)];
-	                    if(array_find_index(_part, w) < 0){
-	                    	_part[i] = w;
-	                    }
-	            	}
-	            }
-	            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
-	            	break;
-	            }
-	        }
-		
-			 // Set Wep:
-			curse = 1;
-			wep = wep_merge(_part[0], _part[1]);
-		}
+        else crabbone_splitcheck = true;
     }
 
     if(DebugLag) trace_time("ntte_step");
 
 #define end_step
-    instance_destroy();
-    
-    if(DebugLag) trace_time();
+	if(DebugLag) trace_time();
 
-     // Convert WepPickups to Pickup Indicators:
-    /*
-    with(instances_matching(WepPickup, "convert_pickup_indicator", true)){
-        var v = ["creator", "mask_index", "xoff", "yoff"],
-            _save = {};
+	try{
+	     // Scramble Cursed Caves Weapons:
+	    if(GameCont.area == 104){
+	    	with(instances_matching(WepPickup, "scrambled", null)){
+		    	scrambled = false;
+				if(roll && wep_get(wep) != "merge"){
+					//if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
+						scrambled = true;
+						curse = max(1, curse);
 
-        with(v) lq_set(_save, self, variable_instance_get(other, self));
-        instance_change(CustomObject, true);
-        with(v) variable_instance_set(other, self, lq_get(_save, self));
-
-        name = "PickupIndicator";
-        on_end_step = pickup_indicator_end_step;
-    }
-    */
-
-     // Make Game Display Pickup Indicators:
-    with(instances_matching(Player, "nearwep", noone)){
-    	var _inst = instances_matching(instances_matching_ne(IceFlower, "pickup_indicator", null), "visible", true);
-    	with(_inst) mask_index = mask;
-        if(place_meeting(x, y, IceFlower)){
-            with(nearest_instance(x, y, instances_meeting(x, y, _inst))){
-                if(place_meeting(x, y, other)){
-                    x += xoff;
-                    y += yoff;
-                    with(other){
-                        nearwep = other;
-                        if(canpick && button_pressed(index, "pick")){
-                            other.pick = index;
-                        }
-                    }
-                }
-            }
-        }
-		with(_inst) mask_index = mskNone;
-    }
-
-	 // Overstock / Bonus Ammo Cleanup:
-	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
-		drawempty = 0;
-
-		var t = weapon_get_type(wep),
-			c = weapon_get_cost(wep);
-
-		if(c > 0){
-			 // Cool Blue Shells:
-			with(instances_matching(instances_matching_gt(Shell, "speed", 0), "ammo_bonus_shell", null)){
-				if(place_meeting(xprevious, yprevious, other)){
-					ammo_bonus_shell = true;
-					sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
-					image_blend = merge_color(image_blend, c_blue, random(0.25));
+						var _part = wep_merge_decide(0, GameCont.hard + 2);
+						if(array_length(_part) >= 2){
+							wep = wep_merge(_part[0], _part[1]);
+						}
+					//}
 				}
-			}
+	    	}
+	    }
+
+	     // Make Game Display Pickup Indicators:
+	    var _player = instances_matching(Player, "nearwep", noone);
+	    if(array_length(_player) > 0){
+	    	var _inst = instances_matching(instances_matching_ne(IceFlower, "pickup_indicator", null), "visible", true);
+	    	with(_inst) mask_index = mask;
 	
-			 // Prevent Low Ammo PopupTexts:
-			if(ammo[t] + ammo_bonus >= c && infammo == 0){
-				var o = 10;
-				with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(instances_matching(PopupText, "target", index), "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
-					if(point_distance(xstart, ystart, other.x, other.y) < o){
-						other.wkick = 0;
-						sound_stop(sndEmpty);
-						instance_destroy();
+		    with(_player){
+		        if(place_meeting(x, y, IceFlower)){
+		        	var _nearest = noone,
+		        		_maxDis = 100000;
+	
+		        	with(instances_meeting(x, y, _inst)){
+		        		if(array_length(whitelist) <= 0 || array_exists(whitelist, other.index)){
+		        			var _dis = point_distance(x, y, other.x, other.y);
+		        			if(_dis < _maxDis){
+		        				_maxDis = _dis;
+		        				_nearest = id;
+		        			}
+		        		}
+		        	}
+	
+		            with(_nearest){
+		                if(place_meeting(x, y, other)){
+		                    x += xoff;
+		                    y += yoff;
+		                    with(other){
+		                        nearwep = other;
+		                        if(canpick && button_pressed(index, "pick")){
+		                            other.pick = index;
+		                        }
+		                    }
+		                }
+		            }
+		        }
+		    }
+	
+			with(_inst) mask_index = mskNone;
+	    }
+
+		 // Overstock / Bonus Ammo Cleanup:
+		with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
+			drawempty = 0;
+	
+			var t = weapon_get_type(wep),
+				c = weapon_get_cost(wep);
+	
+			if(c > 0){
+				 // Cool Blue Shells:
+				with(instances_matching(instances_matching_gt(Shell, "speed", 0), "ammo_bonus_shell", null)){
+					if(place_meeting(xprevious, yprevious, other)){
+						ammo_bonus_shell = true;
+						sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
+						image_blend = merge_color(image_blend, c_blue, random(0.25));
+					}
+				}
+		
+				 // Prevent Low Ammo PopupTexts:
+				if(ammo[t] + ammo_bonus >= c && infammo == 0){
+					var o = 10;
+					with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(instances_matching(PopupText, "target", index), "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
+						if(point_distance(xstart, ystart, other.x, other.y) < o){
+							other.wkick = 0;
+							sound_stop(sndEmpty);
+							instance_destroy();
+						}
 					}
 				}
 			}
 		}
-	}
 
-	 // Overheal / Bonus HP:
-	with(instances_matching_gt(Player, "my_health_bonus", 0)){
-		drawlowhp = 0;
-
-		if(nexthurt > current_frame){
-			var a = my_health,
-				b = my_health_bonus_hold;
+		 // Overheal / Bonus HP:
+		with(instances_matching_gt(Player, "my_health_bonus", 0)){
+			drawlowhp = 0;
 	
-			if(a < b){
-				var c = min(my_health_bonus, b - a);
-				my_health += c;
-				my_health_bonus -= c;
-				
-				 // FX:
-				repeat(c) with(instance_create(x, y, Dust)){
-					image_blend = c_aqua;
-					motion_add(other.direction, 3);
+			if(nexthurt > current_frame){
+				var a = my_health,
+					b = my_health_bonus_hold;
+		
+				if(a < b){
+					var c = min(my_health_bonus, b - a);
+					my_health += c;
+					my_health_bonus -= c;
+					
+					 // FX:
+					repeat(c) with(instance_create(x, y, Dust)){
+						image_blend = c_aqua;
+						motion_add(other.direction, 3);
+					}
 				}
 			}
+			my_health_bonus_hold = my_health;
 		}
-		my_health_bonus_hold = my_health;
-	}
+    }
+    catch(_error){
+    	trace_error(_error);
+    }
 
-    if(DebugLag) trace_time("ntte_end_step");
+	if(DebugLag) trace_time("ntte_end_step");
+
+    instance_destroy();
 
 #define draw
 	 // NTTE Options at Campfire:
@@ -2650,6 +2614,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         team = 0;
         pick = -1;
         nowade = true;
+        whitelist = [];
 
 		 // Bind to End Step:
 		if(array_length(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")) <= 0){
@@ -3495,6 +3460,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
@@ -3566,3 +3533,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);

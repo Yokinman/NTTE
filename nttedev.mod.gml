@@ -4,11 +4,11 @@
     with([
         "ntte.mod.gml", "petlib.mod.gml",
         "areas/template.gml", "areas/coast.area.gml", "areas/oasis.area.gml", "areas/pizza.area.gml", "areas/lair.area.gml", "areas/trench.area.gml",
-        "objects/template.gml", "objects/tecaves.mod.gml", "objects/tecoast.mod.gml", "objects/tedesert.mod.gml", "objects/tegeneral.mod.gml", "objects/teoasis.mod.gml", "objects/tescrapyard.mod.gml". "objects/tesewers.mod.gml", "objects/tetrench.mod.gml",
+        "objects/template.gml", "objects/tecaves.mod.gml", "objects/tecoast.mod.gml", "objects/tedesert.mod.gml", "objects/tegeneral.mod.gml", "objects/teoasis.mod.gml", "objects/tescrapyard.mod.gml", "objects/tesewers.mod.gml", "objects/tetrench.mod.gml",
         "races/parrot.race.gml",
         "weps/merge.wep.gml"
     ]){
-        script_set(self, "mod", "telib", "array_exists", ["_array", "_value"], "return", "_nc");
+        script_set(self, "mod", "telib", "wep_merge_decide", ["_hardMin", "_hardMax"], "return", "");
         
         //script_remove(self, "obj_create");
     }

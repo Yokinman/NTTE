@@ -6,6 +6,9 @@
 
     global.debug_lag = false;
 
+	global.surfShadowTop = surflist_set("surfShadowTop", 0, 0, game_width, game_height);
+	global.surfPet = surflist_set("surfPet", 0, 0, 64, 64);
+
     global.poonRope = [];
 
 #macro spr global.spr
@@ -20,6 +23,9 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
+#macro surfShadowTop global.surfShadowTop
+#macro surfPet global.surfPet
+
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -28,101 +34,53 @@
 		sprite_index = spr.Backpack;
 		spr_shadow_y = 2;
 		spr_shadow = shd16;
-		
+
 		 // Sounds:
-		snd_open = sndMoneyPileBreak;
-		
+		snd_open = choose(sndMenuASkin, sndMenuBSkin);
+
 		 // Vars:
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
 			case crwn_curses:	curse = chance(2, 3);	break;
 			default:			curse = chance(1, 7);
 		}
-		
+
+		 // Cursed:
+		if(curse){
+			spr_open = spr.BackpackCursedOpen;
+			sprite_index = spr.BackpackCursed;
+		}
+
 		 // Events:
 		on_open = script_ref_create(Backpack_open);
-		
-		script_bind_end_step(Backpack_setup, 0, id);
-		script_bind_step(Backpack_step, 0, id);
-		
+		on_step = script_ref_create(Backpack_step);
+
 		return id;
 	}
 	
-#define Backpack_setup(_inst)
-	 // Change Sprites to Cursed:
-	with(_inst) if(curse){
-		spr_open = spr.BackpackCursedOpen;
-		sprite_index = spr.BackpackCursed;
-	}
-
-	 // Goodbye:
-	instance_destroy();
-	
-#define Backpack_step(_inst)
+#define Backpack_step
 	 // Curse FX:
-	if(instance_exists(_inst)){
-		with(_inst) if(curse && chance_ct(1, 20)){
-			instance_create(x + orandom(7), y + orandom(7), Curse);
-		}
+	if(chance_ct(curse, 20)){
+		instance_create(x + orandom(8), y + orandom(8), Curse);
 	}
-	
-	 // Goodbye:
-	else instance_destroy();
 
 #define Backpack_open
-	 // Determine Weapons:
-	var _pickList = [],
-		_hardMin = 0,
-		_hardMax = GameCont.hard;
+	if(curse) sound_play(sndCursedChest);
 
-	with(mod_variable_get("weapon", "merge", "wep_list")){
-        var _add = true;
-        if(mele || gold || area < _hardMin || area > _hardMax){
-        	_add = false;
-        }
-        else switch(weap){
-			case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
-            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
-            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
-            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
-            
-             // Bad:
-            case wep_jackhammer:
-            case wep_flamethrower:
-            case wep_dragon:
-            	_add = false;
-            	break;
-        }
-
-        if(_add) array_push(_pickList, self);
-	}
-	if(array_length(_pickList) >= 2){
-        var _part = array_create(array_length(_pickList)),
-        	_tries = 100;
-
-        while(_tries-- > 0){
-            for(var i = 0; i < array_length(_part); i++){
-            	while(_part[i] == 0){
-                    var w = _pickList[irandom_range(0, array_length(_pickList) - 1)];
-                    if(array_find_index(_part, w) < 0){
-                    	_part[i] = w;
-                    }
-            	}
-            }
-            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
-            	break;
-            }
-        }
-	
-		 // Spawn Weapon:
+	 // Merged Weapon:
+	var _part = wep_merge_decide(0, GameCont.hard + (curse ? 2 : 0));
+	if(array_length(_part) >= 2){
 		with(instance_create(x, y, WepPickup)){
 			wep = wep_merge(_part[0], _part[1]);
 			curse = other.curse;
+			ammo = true;
+			roll = true;
 		}
 		
 		 // Effects:
 		instance_create(x, y, Dust);
 	}
+
 
 #define BatDisc_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1345,9 +1303,9 @@
 			surface_reset_target();
 
 			 // Add Sprite:
-			surface_save(_surf, "mergeFlak.png");
+			surface_save(_surf, "sprMergeFlak.png");
 			surface_destroy(_surf);
-			sprite_index = sprite_add("mergeFlak.png", _num, _surfw / 2, _surfh / 2);
+			sprite_index = sprite_add("sprMergeFlak.png", _num, _surfw / 2, _surfh / 2);
 		}
 	}
 
@@ -2811,9 +2769,6 @@
         pickup_indicator = noone;
         my_portalguy = noone;
         player_push = true;
-        surf_draw = -1;
-        surf_draw_w = 64;
-        surf_draw_h = 64;
         //can_tp = true;
         //tp_distance = 240;
 
@@ -3057,31 +3012,22 @@
     image_alpha = abs(image_alpha);
 
      // Outline Setup:
-    var	_option = lq_defget(opt, "outlinePets", 2),
-    	_outline = (
-	    	_option > 0												&&
-	    	instance_exists(leader)									&&	
-	    	player_is_local_nonsync(player_find_local_nonsync())	&&
-	    	(_option < 2 || player_get_outlines(player_find_local_nonsync()))
-    	);
-
+    var _outline = (
+    	instance_exists(leader)									&&
+    	surface_exists(surfPet.surf)							&&
+    	player_is_local_nonsync(player_find_local_nonsync())
+	);
     if(_outline){
-        var _surf = surf_draw,
-            _surfw = surf_draw_w,
-            _surfh = surf_draw_h,
-            _surfx = x - (_surfw / 2),
-            _surfy = y - (_surfh / 2);
+    	with(surfPet){
+            x = other.x - (w / 2);
+            y = other.y - (h / 2);
 
-        if(!surface_exists(_surf)){
-            _surf = surface_create(_surfw, _surfh)
-            surf_draw = _surf;
-        }
+	        surface_set_target(surf);
+	        draw_clear_alpha(0, 0);
 
-        surface_set_target(_surf);
-        draw_clear_alpha(0, 0);
-
-        x -= _surfx;
-        y -= _surfy;
+	        other.x -= x;
+	        other.y -= y;
+    	}
     }
 
      // Custom Draw Event:
@@ -3095,28 +3041,32 @@
 
      // Draw Outline:
     if(_outline){
-        x += _surfx;
-        y += _surfy;
+		with(surfPet){
+			other.x += x;
+			other.y += y;
 
-        surface_reset_target();
+			surface_reset_target();
 
-         // Fix coast stuff:
-        if("wading" in self && wading != 0 && GameCont.area == "coast"){
-            surface_set_target(mod_variable_get("area", "coast", "surfSwim"));
-        }
+			 // Fix coast stuff:
+			if("wading" in other && other.wading > 0){
+				//with(surflist_get("surfSwim")) if(surface_exists(surf)) surface_set_target(surf);
+				surface_set_target(mod_variable_get("area", "coast", "surfSwim"));
+			}
+			
+			 // Outline:
+			d3d_set_fog(true, player_get_color(other.leader.index), 0, 0);
+			for(var a = 0; a <= 360; a += 90){
+				var _x = x,
+				    _y = y;
 
-        d3d_set_fog(1, player_get_color(leader.index), 0, 0);
-        for(var a = 0; a <= 360; a += 90){
-            var _x = _surfx,
-                _y = _surfy;
+				if(a >= 360) d3d_set_fog(false, 0, 0, 0);
+				else{
+					_x += dcos(a);
+					_y -= dsin(a);
+				}
 
-            if(a >= 360) d3d_set_fog(0, 0, 0, 0);
-            else{
-                _x += dcos(a);
-                _y -= dsin(a);
-            }
-
-            draw_surface(_surf, _x, _y);
+				draw_surface(surf, _x, _y);
+	        }
         }
     }
 
@@ -4544,6 +4494,17 @@
         else scrHarpoonUnrope(_rope);
     }
 
+	 // Enable/Disable Pet Outline Surface:
+    with(surfPet){
+    	active = false;
+		if(array_length(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "leader", noone)) > 0){
+	    	var	_option = lq_defget(opt, "outlinePets", 2);
+	    	if(_option > 0 && (_option < 2 || player_get_outlines(player_find_local_nonsync()))){
+	    		active = true;
+	    	}
+		}
+    }
+
 	 // Bind Events:
 	script_bind_draw(draw_shadows_top, -7.1);
 	if(array_length(instances_seen(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24)) > 0){
@@ -4678,32 +4639,38 @@
 
 	if(DebugLag) trace_time();
 
-	var _inst = instances_matching(CustomObject, "name", "NestRaven");
-	if(instance_exists(BackCont) && array_length(_inst) > 0){
-		var _surf = surface_create(game_width, game_height),
-			_vx = view_xview_nonsync,
-			_vy = view_yview_nonsync;
+	with(surfShadowTop){
+		x = view_xview_nonsync;
+		y = view_yview_nonsync;
+		w = game_width;
+		h = game_height;
 
-		 // Draw Shadows to Surface:
-		surface_set_target(_surf);
-		draw_clear_alpha(0, 0);
+		var _inst = instances_matching(CustomObject, "name", "NestRaven");
 
-		with(_inst) if(visible){
-			if(sprite_index == spr_idle || !position_meeting(x, bbox_bottom, Floor) || (z <= 0 && position_meeting(x, bbox_bottom + 8, Wall))){
-				draw_sprite(spr_shadow, 0, x + spr_shadow_x - _vx, y + spr_shadow_y - _vy);
+		if(instance_exists(BackCont) && array_length(_inst) > 0){
+			active = true;
+			if(surface_exists(surf)){
+				 // Draw Shadows to Surface:
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+
+				with(_inst) if(visible){
+					if(sprite_index == spr_idle || !position_meeting(x, bbox_bottom, Floor) || (z <= 0 && position_meeting(x, bbox_bottom + 8, Wall))){
+						draw_sprite(spr_shadow, 0, x + spr_shadow_x - other.x, y + spr_shadow_y - other.y);
+					}
+				}
+
+				surface_reset_target();
+
+				 // Draw Surface:
+				draw_set_flat(BackCont.shadcol);
+				draw_set_alpha(BackCont.shadalpha);
+				draw_surface(surf, x, y);
+				draw_set_alpha(1);
+				draw_set_flat(-1);
 			}
 		}
-		
-		surface_reset_target();
-
-		 // Draw Surface:
-		draw_set_flat(BackCont.shadcol);
-		draw_set_alpha(BackCont.shadalpha);
-		draw_surface(_surf, _vx, _vy);
-		draw_set_alpha(1);
-		draw_set_flat(-1);
-
-		surface_destroy(_surf);
+		else active = false;
 	}
 
 	if(DebugLag) trace_time("tegeneral_draw_shadows_top");
@@ -4828,6 +4795,8 @@
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
+#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
@@ -4902,3 +4871,4 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
