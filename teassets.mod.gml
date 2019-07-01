@@ -689,7 +689,7 @@
 
         MergeWep = {};
         
-         // Semi-Manual Shine:
+         // Semi-Manual Shine (sprite_add_weapon is wack with taller sprites):
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
         Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
         Shine20 = sprite_add("sprites/chests/sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
@@ -882,37 +882,38 @@
     return noone;
 
 #define step
-     // Surface Setup:
-    with(surfList){
-        if(active){
-             // Create:
-    		if(!surface_exists(surf)){
-    			surf = surface_create(w, h);
-    			if("reset" in self) reset = true;
-    		}
+	 // Surface Setup:
+	with(surfList){
+		 // Create/Resize:
+		if(active){
+			if(!surface_exists(surf) || surface_get_width(surf) != w || surface_get_height(surf) != h){
+				surface_destroy(surf);
+				surf = surface_create(w, h);
+				if("reset" in self) reset = true;
+			}
+		}
 
-    		 // Resize:
-    		else if(surface_get_width(surf) != w || surface_get_height(surf) != h){
-    			surface_destroy(surf);
-    			surf = surface_create(w, h); // faster than surface_resize bro
-    		}
-        }
+		 // Not Being Used, Destroy:
+		else if(surface_exists(surf)){
+			surface_destroy(surf);
+		}
+	}
 
-         // Not Being Used, Destroy:
-        else if(surface_exists(surf)){
-            surface_destroy(surf);
-        }
-    }
-
-     // Autosave:
-    if(global.save_auto){
-        with(instances_matching(GameCont, "ntte_autosave", null)){
-            save();
-            ntte_autosave = true;
-        }
-    }
+	 // Autosave:
+	if(global.save_auto){
+		with(instances_matching(GameCont, "ntte_autosave", null)){
+			save();
+			ntte_autosave = true;
+		}
+	}
 
 #define draw_pause
+	 // Reset Surfaces:
+	with(surfList) if(active && "reset" in self){
+		reset = true;
+	}
+
+
     draw_set_projection(0);
 
      // Remind Player:
