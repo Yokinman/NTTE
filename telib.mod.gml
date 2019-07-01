@@ -1397,6 +1397,8 @@
     }
 
 #define area_border(_y, _area, _color)
+	if(DebugLag) trace_time();
+
     if(instance_is(self, CustomDraw) && script[2] == "area_border"){
          // Sprite Fixes:
         with(type){
@@ -1440,6 +1442,8 @@
     		[Debris,	  0, area_get_sprite(_area, sprDebris1)]
     	];
     }
+
+    if(DebugLag) trace_time("area_border");
 
 #define area_get_sprite(_area, _spr)
     return mod_script_call("area", _area, "area_sprite", _spr);
