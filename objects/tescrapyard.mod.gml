@@ -34,12 +34,15 @@
 		snd_mele = sndDiscHit;
 
 		 // Vars:
+		hitid = [spr_idle, "SAWBLADE TRAP"];
 		mask_index = mskShield;
+		friction = 0.2;
 		maxhealth = 30;
 		meleedamage = 2;
 		canmelee = true;
 		raddrop = 0;
 		size = 3;
+		team = 1;
 		side = choose(-1, 1);
 		walled = false;
 		spd = 4;
@@ -87,42 +90,71 @@
 	 // Spin:
 	image_angle += 4 * spd * side * current_time_scale;
 
-	 // Effects:
-	if(chance_ct(1, 1)){
-		var l = spd,
-			d = dir;
-
-		instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), (chance(1, 30) ? Debris : Dust));
+	if(instance_exists(Portal)){
+		spd = max(spd - friction * current_time_scale, 0);
 	}
 
-	 // Crappy sound:
-	var _pit = 0.8 + (sin(current_frame / 10) * 0.1),
-		_vol = min(0.25, 1.5 / (distance_to_object(Player) + 1))
-
-	sound_stop(loop_snd);
-	if(_vol > 0.01){
-		loop_snd = audio_play_sound(sndSwapBow, 0, false);
-		sound_pitch(loop_snd, _pit);
-		sound_volume(loop_snd, _vol);
-	}
-
-	 // Contact Damage:
-	var _mask = mask_index;
-	mask_index = mskWepPickup;
-	if(canmelee && place_meeting(x, y, hitme)){
-		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
-			if(place_meeting(x, y, other)){
-				with(other) if(projectile_canhit_melee(other)){
-					projectile_hit_raw(other, meleedamage, true);
-					sound_play(snd_mele);
+	if(spd > 1){
+		 // Crappy sound:
+		var _pit = 0.8 + (sin(current_frame / 10) * 0.1),
+			_vol = min(0.25, 1.5 / (distance_to_object(Player) + 1))
+	
+		sound_stop(loop_snd);
+		if(_vol > 0.01){
+			loop_snd = audio_play_sound(sndDiscBounce, 0, false);
+			sound_pitch(loop_snd, _pit);
+			sound_volume(loop_snd, _vol);
+		}
+	
+		 // Effects:
+		var _x = x + lengthdir_x(16, dir),
+			_y = y + lengthdir_y(16, dir);
+		if(walled && chance_ct(2, 3)) with(instance_create(_x, _y, BulletHit)){
+			sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);	
+			image_yscale = random_range(1, 2);
+			image_angle = other.dir + random_range(15, 60);
+		}
+		
+		if(chance_ct(1, 2)) with(instance_create(x, y, chance(1, 30) ? Debris : Dust)){
+			if(instance_is(id, Debris)) if(_vol > 0.01){
+				view_shake_max_at(x, y, 6);
+				
+				 // Sounds:
+				sound_play_pitchvol(sndPillarBreak, 0.8 + random(0.4), _vol);
+			}
+		}
+	
+		 // Contact Damage:
+		var _mask = mask_index;
+		mask_index = mskWepPickup;
+		if(canmelee && place_meeting(x, y, hitme)){
+			with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(hitme, "team", team), "object_index", CarVenus, CarVenusFixed))){
+				if(place_meeting(x, y, other)){
+					with(other) if(projectile_canhit_melee(other)){
+						projectile_hit_raw(other, meleedamage, true);
+						sound_play(snd_mele);
+					}
 				}
 			}
 		}
+		mask_index = _mask;
 	}
-	mask_index = _mask;
 
 	 // Die:
-	if(my_health <= 0) instance_destroy();
+	if(my_health <= 0){
+		
+		instance_create(x, y, Explosion);
+		repeat(3) instance_create(x, y, SmallExplosion);
+		
+		 // Effects:
+		repeat(3) instance_create(x + orandom(16), y + orandom(16), GroundFlame);
+		repeat(3 + irandom(4)) instance_create(x, y, Debris).sprite_index = spr.SawTrapDebris;
+		
+		 // Sounds:
+		sound_play_hit(snd_dead, 0.3);
+		 
+		instance_destroy();
+	}
 
 #define SawTrap_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
@@ -135,7 +167,6 @@
 
 #define SawTrap_cleanup
 	sound_stop(loop_snd);
-
 
 #define Tunneler_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){

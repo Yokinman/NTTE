@@ -670,6 +670,12 @@
             break;
 
 		case 3: /// SCRAPYARDS
+			 // Sawblade Traps:
+			with(Raven) if(distance_to_object(Player) > 128 && chance(1, 12)){
+				obj_create(x, y, "SawTrap");
+				instance_delete(id);
+			}
+		
 			var _event = chance(1, 60),
 				_ravenChance = (_event ? 1 : 0.1) * (1 + GameCont.loops);
 

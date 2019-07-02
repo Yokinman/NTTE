@@ -657,8 +657,9 @@
 
 		//#region SCRAPYARD
 			 // Saw Trap:
-			SawTrap		= sprite_add("sprites/enemies/SawTrap/sprSawTrap.png",		1, 20, 20);
-			SawTrapHurt = sprite_add("sprites/enemies/SawTrap/sprSawTrapHurt.png",	3, 20, 20);
+			SawTrap			= sprite_add("sprites/enemies/SawTrap/sprSawTrap.png",			1, 20, 20);
+			SawTrapHurt 	= sprite_add("sprites/enemies/SawTrap/sprSawTrapHurt.png",		3, 20, 20);
+			SawTrapDebris	= sprite_add("sprites/enemies/SawTrap/sprSawTrapDebris.png",	4,	8,	8);
 		//#endregion
 
         //#region CRYSTAL CAVES
