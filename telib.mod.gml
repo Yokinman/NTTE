@@ -19,7 +19,7 @@
 		"teoasis"	  : ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
 		"tetrench"	  : ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TurtleCool", "VenomFlak"],
-	    "tescrapyard" : ["Tunneler"],
+	    "tescrapyard" : ["SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderTangle", "SpiderWall"]
     };
 
@@ -249,6 +249,9 @@
 	                                        }
 	                                        if("ntte_walk" not in self){
 	                                        	ntte_walk = ("walk" in self);
+	                                        }
+	                                        if(ntte_anim){
+	                                        	if("spr_chrg" not in self) spr_chrg = -1;
 	                                        }
                                         	if(ntte_walk){
                                         		if("walkspd" not in self) walkspd = 0.8;

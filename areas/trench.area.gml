@@ -310,28 +310,31 @@
     }
 
      // Player Above Pits:
-    with(instances_matching_le(Player, "speed", 0)){
-        if(pit_get(x, bbox_bottom)){
-             // Check if moving:
-            var _moving = false;
-            if(canwalk){
-                var _moveKey = ["nort", "sout", "east", "west"];
-                for(var i = 0; i < array_length(_moveKey); i++){
-                    if(button_check(index, _moveKey[i])){
-                        _moving = true;
-                        break;
-                    }
-                }
-            }
+    with(Player){
+    	var _pit = pit_get(x, bbox_bottom);
 
-             // do a spin:
-            if(!_moving){
-                var _x = x + cos(wave / 10) * 0.25 * right,
-                    _y = y + sin(wave / 10) * 0.25 * right;
+         // Do a spin:
+    	if(speed < maxspeed - friction){
+    		if(_pit){
+	            var _x = x + cos(wave / 10) * 0.25 * right,
+	                _y = y + sin(wave / 10) * 0.25 * right;
+	
+	            if(!place_meeting(_x, y, Wall)) x = _x;
+	            if(!place_meeting(x, _y, Wall)) y = _y;
+    		}
+        }
 
-                if(!place_meeting(_x, y, Wall)) x = _x;
-                if(!place_meeting(x, _y, Wall)) y = _y;
-            }
+         // Pit Transition FX:
+        if(speed > 0 && _pit != pit_get(x - hspeed_raw, bbox_bottom - vspeed_raw)){
+        	repeat(3) with(instance_create(x, y, Smoke)){
+        		motion_add(other.direction, other.speed / (_pit ? 2 : 3));
+        		if(!_pit) sprite_index = sprDust;
+        	}
+        	sound_play_pitchvol(
+        		asset_get_index("sndFootPlaRock" + choose("1", "3", "4", "5", "6")),
+        		0.5 + orandom(0.1),
+        		(_pit ? 0.8 : 0.5)
+        	);
         }
     }
 
@@ -525,13 +528,16 @@
      // Prop Spawns:
     else if(chance(1, 16) && !styleb){
         var _x = x + 16,
-            _y = y + 16;
+            _y = y + 16,
+        	_outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
-    	if(chance(1, 10)){
-    		obj_create(_x, _y, "EelSkull");
-    	}
-		else{
-        	obj_create(_x + orandom(8), _y + orandom(8), choose("Kelp", "Kelp", "Vent"));
+		if(_outOfSpawn){
+	    	if(chance(1, 10)){
+	    		obj_create(_x, _y, "EelSkull");
+	    	}
+			else{
+	        	obj_create(_x + orandom(8), _y + orandom(8), choose("Kelp", "Kelp", "Vent"));
+			}
 		}
     }
 

@@ -193,9 +193,10 @@ blah blah blah
 
 #define area_pop_props
     var _x = x + 16,
-        _y = y + 16;
+        _y = y + 16,
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
-    if(chance(1, 12)){
+    if(_outOfSpawn && chance(1, 12)){
         if(chance(1, 60)){
             instance_create(_x, _y, BigSkull);
         }

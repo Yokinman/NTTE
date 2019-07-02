@@ -294,14 +294,17 @@
      // Prop Spawns:
     else if(chance(1, 10)){
         var _x = x + 16 + orandom(2),
-            _y = y + 16 + orandom(2);
+            _y = y + 16 + orandom(2),
+        	_outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
-		if(chance(1, 30)) instance_create(_x, _y, Anchor);
-		else{
-			with(instance_create(_x, _y, choose(WaterMine, WaterMine, WaterPlant, WaterPlant, OasisBarrel))){
-				if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
-					y += 8;
-					yprevious = y;
+		if(_outOfSpawn){
+			if(chance(1, 30)) instance_create(_x, _y, Anchor);
+			else{
+				with(instance_create(_x, _y, choose(WaterMine, WaterMine, WaterPlant, WaterPlant, OasisBarrel))){
+					if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
+						y += 8;
+						yprevious = y;
+					}
 				}
 			}
 		}

@@ -27,6 +27,12 @@
     	inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
 	    inst_visible = [];
     }
+    with([surfTrans, surfFloor]){
+    	border = 32;
+    }
+    with([surfWaves, surfWavesSub]){
+    	border = 8;
+    }
 
     global.seaDepth = 10.1;
 
@@ -963,12 +969,15 @@
 
 #define area_pop_props
     var _x = x + 16,
-        _y = y + 16;
+        _y = y + 16,
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
 
     if(chance(1, 12)){
-        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-        if(!styleb && chance(1, 8)) o = "BuriedCar";
-        obj_create(_x, _y, o);
+    	if(_outOfSpawn){
+	        var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
+	        if(!styleb && chance(1, 8)) o = "BuriedCar";
+	        obj_create(_x, _y, o);
+    	}
     }
 
      // Mine:
@@ -988,9 +997,31 @@
 
 #define area_pop_extras
      // The new bandits
-    with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
-        obj_create(x, y, "Diver");
-    }
+	with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+		obj_create(x, y, "Diver");
+	}
+
+	 // Underwater Details:
+	with(Floor) if(chance(1, 3)){
+		for(var a = 0; a < 360; a += 45){
+			var	_x = (bbox_left + bbox_right) / 2,
+				_y = (bbox_top + bbox_bottom) / 2;
+
+			if(chance(1, 2) && !position_meeting(_x + lengthdir_x(sprite_get_width(mask_index), a), _y + lengthdir_y(sprite_get_height(mask_index), a), Floor)){
+				var l = random_range(32, 44),
+					d = a + orandom(20);
+
+				_x += lengthdir_x(l, d);
+				_y += lengthdir_y(l, d);
+
+				if(!position_meeting(_x, _y, Floor)){
+					with(instance_create(_x, _y, Detail)){
+						depth = ceil(global.seaDepth);
+					}
+				}
+			}
+		}
+	}
 
 
 /// Misc
@@ -1011,32 +1042,53 @@
 		_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_vw = game_width,
-		_vh = game_height,
-		_x = floor(_vx / _vw) * _vw,
-		_y = floor(_vy / _vh) * _vh;
+		_vh = game_height;
 
 	with([surfTrans, surfFloor]){
-		if(_x != x || _y != y){
+		var	_x = (floor(_vx / _vw) * _vw) - border,
+			_y = (floor(_vy / _vh) * _vh) - border;
+
+		if(x != _x || y != _y){
 			x = _x;
 			y = _y;
 			reset = true;
 		}
-		w = _vw * 2 * _surfScale;
-		h = _vh * 2 * _surfScale;
+		w = (_vw + border) * 2 * _surfScale;
+		h = (_vh + border) * 2 * _surfScale;
 	}
 	with([surfWaves, surfWavesSub]){
-		x = _vx;
-		y = _vy;
-		w = _vw * _surfScale;
-		h = _vh * _surfScale;
+		x = _vx - border;
+		y = _vy - border;
+		w = (_vw + (border * 2)) * _surfScale;
+		h = (_vh + (border * 2)) * _surfScale;
 	}
 
     var _wave = wave,
         _floor = instances_matching(instances_matching(Floor, "coast_water", null), "visible", true);
 
 	if(array_length(_floor) > 0){
-		with([surfTrans, surfFloor]) reset = true;
+		with(surfFloor) reset = true;
 		with(_floor) coast_water = true;
+	}
+
+     // Draw Floors to Surface:
+	with(surfFloor) if(surface_exists(surf)){
+		if(reset){
+			reset = false;
+			with(surfTrans) reset = true;
+
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+
+			 // Draw Floors in White:
+			with(instance_rectangle_bbox(x, y, x + (w / _surfScale), y + (h / _surfScale), instances_matching(Floor, "visible", true))){
+				var _spr = sprite_index;
+				if(_spr == spr.FloorCoastB) _spr = spr.FloorCoast;
+				draw_sprite_ext(_spr, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+			}
+
+			surface_reset_target();
+		}
 	}
 
 	 // Underwater Transition Tile Surface:
@@ -1047,79 +1099,56 @@
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 
-			var _spr = spr.FloorCoast,
-				_sprNum = sprite_get_number(_spr),
-				_sprDetail = spr.DetailCoast,
-				_sprDetailNum = sprite_get_number(_spr),
-				_ext = 64,
-				_detailList = [];
+			 // Main Drawing:
+			var _dis = 32;
+			with(surfFloor) if(surface_exists(surf)){
+				var _x = x - other.x,
+					_y = y - other.y;
 
-			with(instance_rectangle(x - _ext, y - _ext, x + _ext + (w / _surfScale), y + _ext + (h / _surfScale), instances_matching(Floor, "visible", true))){
+				draw_surface(surf, _x, _y);
+				for(var a = 0; a < 360; a += 45){
+					var	_ox = lengthdir_x(_dis, a) * _surfScale,
+						_oy = lengthdir_y(_dis, a) * _surfScale;
+
+					draw_surface(surf, _x + _ox, _y + _oy);
+				}
+			}
+
+			 // Fill in Gaps (Cardinal Directions Only):
+			var	_spr = spr.FloorCoast,
+				_sprNum = sprite_get_number(_spr);
+
+			with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis + (w / _surfScale), y + _dis + (h / _surfScale), instances_matching(Floor, "visible", true))){
 				var	_x = x - other.x,
 					_y = y - other.y;
 
-				for(var a = 0; a < 360; a += 45){
-					var	_ox = lengthdir_x(32, a),
-						_oy = lengthdir_y(32, a);
+				for(var a = 0; a < 360; a += 90){
+					var	_ox = lengthdir_x(_dis, a),
+						_oy = lengthdir_y(_dis, a);
 
-					 // Fill in Gaps (Cardinal Directions Only):
-					var f = 1;
-					if((a / 90) == round(a / 90)){
-						for(var i = 1; i <= 10; i++){
-							if(!position_meeting(x + (_ox * i), y + (_oy * i), Floor)) f++;
-							else break;
-						}
-						if(f > 5) f = 1;
-					}
+					for(var f = 1; f <= 5; f++){
+						if(place_meeting(x + (_ox * f), y + (_oy * f), Floor)){
+							for(var i = 2; i <= f; i++){
+								var	_dx = _x + (_ox * i),
+									_dy = _y + (_oy * i),
+									_img = floor((_dx + other.x + _dy + other.y) / 32) % _sprNum;
 
-					 // Draw:
-					for(var i = 1; i <= f; i++){
-						var	_dx = _x + (_ox * i),
-							_dy = _y + (_oy * i),
-							_img = floor((_dx + other.x + _dy + other.y) / 32) % _sprNum;
-
-						draw_sprite_ext(_spr, _img, _dx * _surfScale, _dy * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-
-						if(i <= 1 && _img == 0){
-							array_push(_detailList, {
-								x : _dx + 8 + (id % 8),
-								y : _dy + 16,
-								img : (id % _sprDetailNum)
-							});
+								draw_sprite_ext(_spr, _img, _dx * _surfScale, _dy * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							}
+							break;
 						}
 					}
 				}
 			}
 
 			 // Details:
-			with(_detailList) with(other){
-				draw_sprite_ext(_sprDetail, other.img, other.x * _surfScale, other.y * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+			with(instances_matching(instances_matching_le(instances_matching_ge(Detail, "depth", global.seaDepth), "depth", ceil(global.seaDepth)), "visible", true)){
+				draw_sprite_ext(sprite_index, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
-
+	
 			surface_reset_target();
     	}
     }
-
-     // Draw Floors to Surface:
-	with(surfFloor) if(surface_exists(surf)){
-		if(reset){
-			reset = false;
-
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-
-			 // Draw Floors in White:
-			draw_set_flat(c_white);
-			with(instances_matching(Floor, "visible", true)){
-				var _spr = sprite_index;
-				if(_spr == spr.FloorCoastB) _spr = spr.FloorCoast;
-				draw_sprite_ext(_spr, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
-			}
-			draw_set_flat(-1);
-
-			surface_reset_target();
-		}
-	}
 
      // Wavey Foam stuff:
     var _waveInt = 40,															// How often waves occur in frames, affects wave speed
@@ -1138,6 +1167,8 @@
 
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
+
+			draw_set_flat(c_white);
 
 			 // Floors:
 			with(surfFloor) if(surface_exists(surf)){
@@ -1160,6 +1191,8 @@
 			with(instances_matching(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
+
+			draw_set_flat(-1);
 		}
 
 		 // Animate Foam (Part player sees):
@@ -1171,7 +1204,7 @@
 				var r = self * _surfScale;
 				with(surfWavesSub) if(surface_exists(surf)){
 					for(var a = _waveAng; a < _waveAng + 360; a += 45){
-						draw_surface(surf, lengthdir_x(r, a), lengthdir_y(r, a)); 
+						draw_surface(surf, lengthdir_x(r, a) - (border * _surfScale), lengthdir_y(r, a) - (border * _surfScale)); 
 					}
 				}
 				draw_set_blend_mode(bm_subtract);

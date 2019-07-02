@@ -3576,7 +3576,7 @@
 
      // Cat Light:
     with(global.catLight){
-        offset = random_range(-1, 1);
+        offset = orandom(1);
 
          // Flicker:
         if(current_frame_active){

@@ -655,6 +655,12 @@
             TVHurt = sprite_add("sprites/areas/Pizza/Props/sprTVHurt.png", 3, 24, 16);
         //#endregion
 
+		//#region SCRAPYARD
+			 // Saw Trap:
+			SawTrap		= sprite_add("sprites/enemies/SawTrap/sprSawTrap.png",		1, 20, 20);
+			SawTrapHurt = sprite_add("sprites/enemies/SawTrap/sprSawTrapHurt.png",	3, 20, 20);
+		//#endregion
+
         //#region CRYSTAL CAVES
         	 // Mortar:
         	MortarIdle    = sprite_add("sprites/enemies/Mortar/sprMortarIdle.png",    4, 22, 24);

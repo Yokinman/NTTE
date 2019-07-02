@@ -3163,10 +3163,7 @@
 			}
 			if(o.time > 0){
 				o.time -= current_time_scale;
-				if(o.time <= 0){
-					proj_explo(proj_destroy, o);
-					return true;
-				}
+				if(o.time <= 0) instance_destroy();
 	
 				 // Blinkin:
 				else if(o.time < 15){

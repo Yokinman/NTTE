@@ -4,6 +4,8 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.save = mod_variable_get("mod", "teassets", "save");
 
+	global.debug_lag = false;
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -11,8 +13,128 @@
 #macro sav global.save
 #macro opt sav.option
 
+#macro DebugLag global.debug_lag
+
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
+
+
+#define SawTrap_create(_x, _y)
+	with(instance_create(_x, _y, CustomHitme)){
+		 // Visual:
+		spr_idle = spr.SawTrap;
+		spr_walk = spr.SawTrap;
+		spr_hurt = spr.SawTrapHurt;
+		image_speed = 0.4;
+		depth = 0;
+
+		 // Sound:
+		snd_hurt = sndHitMetal;
+		snd_dead = sndHitMetal;
+		snd_mele = sndDiscHit;
+
+		 // Vars:
+		mask_index = mskShield;
+		maxhealth = 30;
+		meleedamage = 2;
+		canmelee = true;
+		raddrop = 0;
+		size = 3;
+		side = choose(-1, 1);
+		walled = false;
+		spd = 4;
+		dir = random(360);
+		loop_snd = -1;
+
+		return id;
+	}
+
+#define SawTrap_step
+	speed = 0;
+
+	 // Stick to Wall:
+	var _x = x,
+		_y = y,
+		_dis = 8,
+		_dir = dir + (90 * side),
+		_walled = position_meeting(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), Wall);
+
+	if(!_walled && walled){
+		dir += 90 * side;
+	}
+	walled = _walled;
+
+	 // Movement/Wall Collision:
+	var l = spd * current_time_scale,
+		d = dir;
+
+	if(!position_meeting(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), Wall)){
+		x += lengthdir_x(l, d);
+		y += lengthdir_y(l, d);
+		x = round(x);
+		y = round(y);
+	}
+	else{
+		dir -= 90 * side;
+		dir = round(dir / 90) * 90;
+	}
+
+	 // Animate:
+	if(sprite_index == spr_hurt && anim_end){
+		sprite_index = spr_idle;
+	}
+
+	 // Spin:
+	image_angle += 4 * spd * side * current_time_scale;
+
+	 // Effects:
+	if(chance_ct(1, 1)){
+		var l = spd,
+			d = dir;
+
+		instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), (chance(1, 30) ? Debris : Dust));
+	}
+
+	 // Crappy sound:
+	var _pit = 0.8 + (sin(current_frame / 10) * 0.1),
+		_vol = min(0.25, 1.5 / (distance_to_object(Player) + 1))
+
+	sound_stop(loop_snd);
+	if(_vol > 0.01){
+		loop_snd = audio_play_sound(sndSwapBow, 0, false);
+		sound_pitch(loop_snd, _pit);
+		sound_volume(loop_snd, _vol);
+	}
+
+	 // Contact Damage:
+	var _mask = mask_index;
+	mask_index = mskWepPickup;
+	if(canmelee && place_meeting(x, y, hitme)){
+		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+			if(place_meeting(x, y, other)){
+				with(other) if(projectile_canhit_melee(other)){
+					projectile_hit_raw(other, meleedamage, true);
+					sound_play(snd_mele);
+				}
+			}
+		}
+	}
+	mask_index = _mask;
+
+	 // Die:
+	if(my_health <= 0) instance_destroy();
+
+#define SawTrap_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;			// Damage
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);	// Sound
+
+     // Hurt Sprite:
+    sprite_index = spr_hurt;
+    image_index = 0;
+
+#define SawTrap_cleanup
+	sound_stop(loop_snd);
 
 
 #define Tunneler_create(_x, _y)
@@ -158,7 +280,8 @@
     canfly = _tf;
     if(_tf = 1) mask_index = mskBanditBoss; 
     else mask_index = mskBandit;
-    
+
+
 /// Scripts
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
