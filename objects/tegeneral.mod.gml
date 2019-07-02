@@ -4414,7 +4414,7 @@
             		with(_pullLink[i]){
             			var _inst = noone;
 		                if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
-		                    if(canmove){
+		                    if(canmove && !instance_is(target, becomenemy)){
 		                    	_inst = target;
 		                    }
 		                }

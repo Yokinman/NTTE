@@ -25,26 +25,39 @@
 		spr_idle = spr.SawTrap;
 		spr_walk = spr.SawTrap;
 		spr_hurt = spr.SawTrapHurt;
+		hitid = [spr_idle, "SAWBLADE TRAP"];
 		image_speed = 0.4;
 		depth = 0;
 
 		 // Sound:
 		snd_hurt = sndHitMetal;
-		snd_dead = sndHitMetal;
+		snd_dead = sndHydrantBreak;
 		snd_mele = sndDiscHit;
 
 		 // Vars:
 		mask_index = mskShield;
+		friction = 0.2;
 		maxhealth = 30;
 		meleedamage = 2;
 		canmelee = true;
 		raddrop = 0;
 		size = 3;
-		side = choose(-1, 1);
+		team = 1;
 		walled = false;
-		spd = 4;
+		side = choose(-1, 1);
+		maxspeed = 3;
+		spd = 0;
 		dir = random(360);
+		active = false;
 		loop_snd = -1;
+
+		if(instance_exists(Wall)){
+			var n = instance_nearest(x - 8, y - 8, Wall);
+			dir = point_direction(x, y, n.x + 8, n.y + 8);
+		}
+
+		 // Alarms:
+		alarm0 = random_range(30, 60);
 
 		return id;
 	}
@@ -52,12 +65,17 @@
 #define SawTrap_step
 	speed = 0;
 
+	 // Start/Stop:
+	if(instance_exists(Portal)) active = false;
+	var _goal = (active * maxspeed);
+	spd += (_goal - spd) * friction * current_time_scale;
+
 	 // Stick to Wall:
 	var _x = x,
 		_y = y,
-		_dis = 8,
-		_dir = dir + (90 * side),
-		_walled = position_meeting(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), Wall);
+		_sideDis = 8,
+		_sideDir = dir + (90 * side),
+		_walled = collision_circle(_x + lengthdir_x(_sideDis, _sideDir), _y + lengthdir_y(_sideDis, _sideDir), 1, Wall, false, false);
 
 	if(!_walled && walled){
 		dir += 90 * side;
@@ -68,16 +86,16 @@
 	var l = spd * current_time_scale,
 		d = dir;
 
-	if(!position_meeting(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), Wall)){
+	if(!collision_circle(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), 1, Wall, false, false)){
 		x += lengthdir_x(l, d);
 		y += lengthdir_y(l, d);
 		x = round(x);
 		y = round(y);
 	}
-	else{
-		dir -= 90 * side;
-		dir = round(dir / 90) * 90;
-	}
+	else dir -= 90 * side;
+
+	dir = round(dir / 90) * 90;
+	dir = (dir + 360) % 360;
 
 	 // Animate:
 	if(sprite_index == spr_hurt && anim_end){
@@ -88,41 +106,94 @@
 	image_angle += 4 * spd * side * current_time_scale;
 
 	 // Effects:
-	if(chance_ct(1, 1)){
-		var l = spd,
-			d = dir;
+	if(spd > 1 && point_seen(x, y, -1)){
+		if(chance_ct(1, 2)){
+			var l = random(12),
+				d = dir,
+				_debris = (walled && chance(1, 30)),
+				_x = x + lengthdir_x(l, d),
+				_y = y + lengthdir_y(l, d) - 2;
+	
+			instance_create(_x, _y, (_debris ? Debris : Dust));
+			if(_debris){
+				sound_play_pitchvol(sndWallBreak, 2, 0.2);
+				view_shake_max_at(x, y, random_range(2, 6));
+			}
+		}
+		if(walled && chance_ct(2, 3)){
+			var	l = random_range(12, 16),
+				d = dir,
+				_x = x + lengthdir_x(l, d) + orandom(2),
+				_y = y + lengthdir_y(l, d) - random(2);
 
-		instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), (chance(1, 30) ? Debris : Dust));
+			with(instance_create(_x, _y, BulletHit)){
+				sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
+				image_angle = d + random_range(15, 60);
+				image_yscale = random_range(1, 1.5);
+				if(!place_meeting(x, y, Wall)) instance_destroy();
+			}
+		}
 	}
 
-	 // Crappy sound:
-	var _pit = 0.8 + (sin(current_frame / 10) * 0.1),
-		_vol = min(0.25, 1.5 / (distance_to_object(Player) + 1))
+	 // Sound:
+	var _pit = (1 + (0.05 * sin(current_frame / 8))) * (spd / maxspeed),
+		_vol = min(2, 80 / (distance_to_object(Player) + 1)) * (spd / maxspeed);
 
-	sound_stop(loop_snd);
-	if(_vol > 0.01){
-		loop_snd = audio_play_sound(sndSwapBow, 0, false);
-		sound_pitch(loop_snd, _pit);
-		sound_volume(loop_snd, _vol);
+	if(!audio_is_playing(loop_snd) && active){
+		loop_snd = audio_play_sound(snd.SawTrap, 0, false);
 	}
+	sound_pitch(loop_snd, _pit);
+	sound_volume(loop_snd, _vol);
 
-	 // Contact Damage:
-	var _mask = mask_index;
-	mask_index = mskWepPickup;
-	if(canmelee && place_meeting(x, y, hitme)){
-		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
-			if(place_meeting(x, y, other)){
-				with(other) if(projectile_canhit_melee(other)){
-					projectile_hit_raw(other, meleedamage, true);
-					sound_play(snd_mele);
+	 // Hitme Collision:
+	var _scale = 0.55;
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	if(place_meeting(x, y, hitme)){
+		with(instances_meeting(x, y, hitme)){
+			if(place_meeting(x, y, other) && in_sight(other)){
+				if(!instance_is(self, prop) || size <= 1){
+					 // Push:
+					if(size < other.size || instance_is(self, Player)){
+						motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
+					}
+	
+					 // Contact Damage:
+					with(other) if(active && canmelee && projectile_canhit_melee(other)){
+						projectile_hit_raw(other, meleedamage, true);
+	
+						 // Effects:
+						sound_play_pitchvol(snd_mele, 0.7 + random(0.2), 1);
+					}
 				}
 			}
 		}
 	}
-	mask_index = _mask;
+	image_xscale /= _scale;
+	image_yscale /= _scale;
 
 	 // Die:
-	if(my_health <= 0) instance_destroy();
+	if(my_health <= 0 || place_meeting(x, y, PortalShock)){
+		 // Explo:
+		instance_create(x, y, Explosion);
+		repeat(3) instance_create(x, y, SmallExplosion);
+
+		 // Effects:
+		repeat(3) instance_create(x + orandom(16), y + orandom(16), GroundFlame);
+		repeat(3 + irandom(3)) instance_create(x, y, Debris).sprite_index = spr.SawTrapDebris;
+
+		 // Sounds:
+		sound_play(sndExplosion);
+		sound_play_pitch(snd_dead, 1 + orandom(0.2));
+
+		 // Pickups:
+		pickup_drop(50, 0);
+
+		instance_destroy();
+	}
+
+#define SawTrap_alrm0
+	active = true;
 
 #define SawTrap_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
@@ -132,6 +203,13 @@
      // Hurt Sprite:
     sprite_index = spr_hurt;
     image_index = 0;
+
+     // Push:
+    if(active) spd /= 2;
+    else{
+    	spd = _hitvel / 4;
+    	dir = _hitdir;
+    }
 
 #define SawTrap_cleanup
 	sound_stop(loop_snd);
