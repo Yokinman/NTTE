@@ -268,6 +268,8 @@
 	 // Projectiles:
 	for(var d = 0; d < 360; d += 360 / 7){
 		with(obj_create(x, y, "BatDisc")){
+			visible = other.visible;
+			in_wall = other.in_wall;
 			creator = other.creator;
 			my_lwo = other.my_lwo;
 			team = other.team;
