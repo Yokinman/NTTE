@@ -43,7 +43,8 @@
         ["weps/electroplasma shotgun.wep.gml",      1],
         ["weps/quasar blaster.wep.gml",             1],
         ["weps/quasar rifle.wep.gml",               1],
-        ["weps/quasar cannon.wep.gml",              1]
+        ["weps/quasar cannon.wep.gml",              1],
+        ["crowns/crime.crown.gml",                  1]
     ];
 
      // Wait for /allowmod:

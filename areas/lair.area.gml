@@ -284,6 +284,9 @@
 
 #define area_finish
     lastarea = area;
+    
+     // Remember you were here:
+    with(GameCont) visited_lair = true;
 
      // Area End:
     if(subarea >= area_subarea()){

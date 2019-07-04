@@ -47,6 +47,7 @@
             rotation = direction;
             team = other.team;
             creator = other;
+            broken = (other.infammo != 0);
         }
 
          // Effects:

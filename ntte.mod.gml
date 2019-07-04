@@ -942,12 +942,33 @@
 			instance_create(x + 16, y + 16, PortalClear);
 		}
     }
+    
+     // Lair Chests:
+    var _crownCrime = (crown_current == "crime");
+    if(variable_instance_get(GameCont, "visited_lair", false) || _crownCrime){
+		
+		 // Cat Chests:
+		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
+			if(_crownCrime ? chance(2, 3) : chance(1, 5)){
+				obj_create(x, y, "CatChest");
+				instance_delete(id);
+			}
+		}
+		
+		 // Bat Chests:
+		with(instances_matching_ne(WeaponChest, "object_index", BigWeaponChest, BigCursedChest, GiantWeaponChest)){
+			if(_crownCrime ? chance(2, 3) : chance(1, 5)){
+				obj_create(x, y, "BatChest");
+				instance_delete(id);
+			}
+		}
+    }
 
 #define step
     script_bind_end_step(end_step, 0);
 
     if(DebugLag) trace_time();
-
+    
      // Custom CampChars:
     if(instance_exists(Menu)){
          // Make Custom CampChars:
@@ -1174,24 +1195,30 @@
 
 	 // Weapon Pack Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		var _packList = {
-			"coast" : ["BEACH GUNS" , "GRAB YOUR FRIENDS"],
-			"oasis" : ["BUBBLE GUNS", "SOAP AND WATER"],
-			"trench": ["TECH GUNS"  , "TERRORS FROM THE DEEP"]
-		};
-
-		for(var i = 0; i < array_length(_packList); i++){
-			var _area = lq_get_key(_packList, i),
-				_pack = lq_get_value(_packList, i),
-				_unlock = _area + "Wep";
+		if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){
+			var _packList = {
+				"coast" : ["BEACH GUNS" ,	"GRAB YOUR FRIENDS"],
+				"oasis" : ["BUBBLE GUNS",	"SOAP AND WATER"],
+				"trench": ["TECH GUNS"  ,	"TERRORS FROM THE DEEP"],
+				"lair"	: ["SAWBLADE GUNS", "DEVICES OF TORTURE"]
+			};
 	
-			if(!unlock_get(_unlock)){
-				if(GameCont.area == _area){
-					if(GameCont.subarea >= area_get_subarea(_area)){
-						if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
-	                		unlock_set(_unlock, true);
-	                		sound_play(sndGoldUnlock);
-	                		scrUnlock(_pack[0], _pack[1], -1, -1);
+			for(var i = 0; i < array_length(_packList); i++){
+				var _area = lq_get_key(_packList, i),
+					_pack = lq_get_value(_packList, i),
+					_unlock = _area + "Wep";
+		
+				if(!unlock_get(_unlock)){
+					if(GameCont.area == _area){
+						if(GameCont.subarea >= area_get_subarea(_area)){
+							if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
+		                		unlock_set(_unlock, true);
+		                		sound_play(sndGoldUnlock);
+		                		scrUnlock(_pack[0], _pack[1], -1, -1);
+		                		
+		                		 // Crown Popup:
+		                		if(_area == "lair") scrUnlock("CROWN OF CRIME", "STOLEN FROM THIEVES", -1, -1);
+							}
 						}
 					}
 				}
@@ -1203,43 +1230,6 @@
     if(!instance_exists(global.charm_step)){
         global.charm_step = script_bind_end_step(charm_step, 0);
         with(global.charm_step) persistent = true;
-    }
-    
-     // Lair Skill:
-    var _skill = skill_get("lairskill");
-    if(instance_exists(SkillIcon) && mod_variable_get("skill", "lairskill", "inNextPool") && _skill <= 0){
-    	
-    	mod_variable_set("skill", "lairskill", "inNextPool", false);
-    	
-    	 // Spawn Skill:
-    	with(instances_matching(SkillIcon, "num", instance_number(SkillIcon) - 1)){
-    		skill = "lairskill";
-    		
-    		name = mod_script_call("skill", "lairskill", "skill_name");
-    		text = mod_script_call("skill", "lairskill", "skill_text");
-            
-            mod_script_call("skill", "lairskill", "skill_button");
-    	}
-    }
-    
-    if(_skill > 0){
-    	 // Spawn Lair Chests:
-	    with(instances_matching(GenCont, "alarm1", 1)){
-	    	with(instances_matching_ne([WeaponChest, AmmoChest], "object_index", BigWeaponChest, GiantWeaponChest, GiantAmmoChest)) if(chance(_skill, 2)){
-	    		
-	    		 // Cat Chest:
-	    		if(instance_is(self, AmmoChest)){
-	    			obj_create(x, y, "CatChest");
-	    			instance_delete(id);
-	    		}
-	    		
-	    		 // Bat Chest:
-	    		if(instance_is(self, WeaponChest)){
-	    			obj_create(x, y, "BatChest");
-	    			instance_delete(id);
-	    		}
-	    	}
-	    }
     }
 
 	 // Overstock / Bonus Ammo:

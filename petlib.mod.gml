@@ -1346,7 +1346,7 @@
                         }
                     }
                     instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
-                    sound_play_pitch(sndCrystalShield, 1.4 + orandom(0.1));
+                    // sound_play_pitch(sndCrystalShield, 1.4 + orandom(0.1));
         
                      // Duplicate:
                     var _copy = instance_copy(false);

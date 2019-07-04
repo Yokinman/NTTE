@@ -38,7 +38,7 @@
 		mask_index = mskShield;
 		friction = 0.2;
 		maxhealth = 30;
-		meleedamage = 2;
+		meleedamage = 3;
 		canmelee = true;
 		raddrop = 0;
 		size = 3;
@@ -124,12 +124,14 @@
 			var	l = random_range(12, 16),
 				d = dir,
 				_x = x + lengthdir_x(l, d) + orandom(2),
-				_y = y + lengthdir_y(l, d) - random(2);
+				_y = y + lengthdir_y(l, d) - random(2),
+				_inv = side * -1;
 
 			with(instance_create(_x, _y, BulletHit)){
 				sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
-				image_angle = d + random_range(15, 60);
-				image_yscale = random_range(1, 1.5);
+				image_angle = d + random_range(15, 60) * _inv;
+				image_yscale = random_range(1, 1.5) * _inv;
+				
 				if(!place_meeting(x, y, Wall)) instance_destroy();
 			}
 		}

@@ -560,14 +560,8 @@
 	    }
     }
     
-    
-    else{
-    	 // Add skill to mutation pool:
-    	mod_variable_set("skill", "lairskill", "inNextPool", true);
-    
-    	 // Boss Win Music:
-		with(MusCont) alarm_set(1, 1);
-    }
+	 // Boss Win Music:
+    else with(MusCont) alarm_set(1, 1);
 
 #define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
     var _single = argument_count > 0 ? argument[0] : undefined;
@@ -679,7 +673,12 @@
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
 	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	repeat(6) scrFX(x, y, 3, Dust);
-
+	
+	 // Crown Time:
+	with(instances_matching(Crown, "ntte_crown", "crime")){
+		enemy_time = 30;
+		enemies += (1 + GameCont.loops) + irandom(2);
+	}
 
 #define BatCloud_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -1523,13 +1522,8 @@
 	    }
     }
     
-    else{
-    	 // Add skill to mutation pool:
-    	mod_variable_set("skill", "lairskill", "inNextPool", true);
-    
-    	 // Boss Win Music:
-		with(MusCont) alarm_set(1, 1);
-    }
+     // Boss Win Music:
+    else with(MusCont) alarm_set(1, 1);
 
 #define CatBoss_cleanup
     sound_stop(jetpack_loop);
@@ -1829,7 +1823,12 @@
 	//sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
 	repeat(6) scrFX(x, y, 3, Dust);
-
+	
+	 // Crown Time:
+	with(instances_matching(Crown, "ntte_crown", "crime")){
+		enemy_time = 30;
+		enemies += (1 + GameCont.loops) + irandom(2);
+	}
 	
 #define CatDoor_create(_x, _y)
     with(instance_create(_x, _y, CustomHitme)){
@@ -2903,7 +2902,6 @@
 	    }
 	}
 
-
 #define NewTable_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
          // Visual:
@@ -3208,6 +3206,136 @@
     }
 
 
+#define TopEnemy_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_idle = sprBuffGatorIdle;
+		spr_walk = sprBuffGatorWalk;
+		spr_weap = sprBuffGatorFlakCannon;
+		sprite_index = spr_idle;
+		spr_shadow = shd24;
+		image_speed = 0.4;
+		image_alpha = -1;
+		depth = -10;
+		
+		 // Vars:
+		mask_index = mskPlayer;
+		fall = false;
+		z = 8;
+		zspeed = 6;
+		zfric = 0.8;
+		walk = 0;
+		right = 1;
+		gunangle = 0;
+		walkspd = 0.8;
+		maxspeed = 4;
+		
+		alarm1 = 10;
+		
+		 // Events:
+		on_end_step = script_ref_create(TopEnemy_setup);
+		
+		return id;
+	}
+	
+#define TopEnemy_setup
+	on_end_step = [];
+	
+	 // Land:
+	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+		instance_destroy();
+	}
+	
+#define TopEnemy_step
+	 // Animate:
+	if(speed > 0){
+		if(sprite_index != spr_walk){
+			sprite_index = spr_walk;
+			image_index = 0;
+		}
+	}
+	else if(sprite_index != spr_idle){
+		sprite_index = spr_idle;
+		image_index = 0;
+	}
+
+	 // No Escape:
+	with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
+	if(instance_exists(Portal)) scrPortalPoof();
+	
+	if(fall){
+		 // Bouncy:
+		if(place_meeting(x + hspeed, y + vspeed, Wall)){
+			if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+			if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+			
+			scrRight(direction);
+			gunangle = direction;
+			
+			 // Unstick:
+			if(place_meeting(x, y, Wall)){
+				x = xprevious;
+				y = yprevious;
+			}
+		}
+	}
+	
+	 // Gravity:
+	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+		fall = true;
+		z_engine();
+		
+		 // Effects:
+		if(chance_ct(2, 3)) instance_create(x, y - z, Dust).depth = depth + 1;
+		
+		if(z <= 0){
+			instance_destroy();
+		}
+	}
+	
+	 // Walltop:
+	else{
+		if(speed > 0 && chance_ct(1, 5)) instance_create(x, y -z, Dust).depth = depth + 1;
+	}
+	
+#define TopEnemy_destroy
+	var o = instance_create(x, y, BuffGator);
+	with(["direction", "speed", "walk", "right", "gunangle"]){
+		var n = self;
+		variable_instance_set(o, n, variable_instance_get(other, n));
+	}
+	
+	 // Not today, Walls:
+	instance_create(x, y, PortalClear).mask_index = o.mask_index;
+	
+	 // Effects:
+	repeat(8 + irandom(8)) with(instance_create(x, y, Dust)) motion_set(random(360), 3 + random(3));
+	view_shake_max_at(x, y, 6);
+	sleep(12);
+	
+#define TopEnemy_alrm1
+	alarm1 = 10 + random(20);
+	var _target = instance_nearest(x, y, Player);
+	
+	if(instance_exists(_target)){
+		var _targetDir = point_direction(x, y, _target.x, _target.y);
+		scrWalk(alarm1, _targetDir);
+		
+		scrRight(direction);
+		gunangle = direction;
+	}
+	
+#define TopEnemy_draw
+	var b = (spr_weap != mskNone && gunangle >= 0 && gunangle < 180),
+		a = image_alpha;
+	
+	image_alpha = abs(image_alpha);
+	if(!b)	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	draw_weapon(spr_weap, x, y - z, gunangle, 0, 0, right, image_blend, image_alpha);
+	if(b)	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	image_alpha = a;
+		
+	
 #define TurtleCool_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -3566,6 +3694,11 @@
 	with(instances_matching(CustomHitme, "name", "PizzaDrain")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 	}
+	
+	 // Top Enemy:
+	with(instances_matching(instances_matching(CustomObject, "name", "TopEnemy"), "fall", true)){
+		draw_sprite(spr_shadow, 0, x, y);
+	}
 
 	if(DebugLag) trace_time("tesewers_draw_shadows");
 
@@ -3646,6 +3779,11 @@
 	 // Bat Boss Flak:
     with(instances_matching(CustomProjectile, "name", "VenomFlak")){
         draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    }
+    
+     // Lair Rad Chest:
+    with(instances_matching(CustomProp, "name", "LairRadChest")){
+    	draw_sprite_ext(sprRadChestGlow, 0, x, y - 3, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
 
 	if(DebugLag) trace_time("tesewers_draw_bloom");
