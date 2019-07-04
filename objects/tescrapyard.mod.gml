@@ -363,6 +363,12 @@
 
 
 /// Scripts
+#define draw_shadows
+	 // Saw Traps:
+	with(instances_matching(CustomHitme, "name", "SawTrap")){
+		draw_sprite_ext(sprite_index, image_index, x, y + 7, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
+	}
+	
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
