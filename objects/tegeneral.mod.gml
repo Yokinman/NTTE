@@ -4646,7 +4646,7 @@
 		w = game_width;
 		h = game_height;
 
-		var _inst = instances_matching(CustomObject, "name", "NestRaven");
+		var _inst = instances_matching(CustomObject, "name", "NestRaven", "TopEnemy");
 
 		if(instance_exists(BackCont) && array_length(_inst) > 0){
 			active = true;
@@ -4657,7 +4657,12 @@
 
 				with(_inst) if(visible){
 					if(sprite_index == spr_idle || !position_meeting(x, bbox_bottom, Floor) || (z <= 0 && position_meeting(x, bbox_bottom + 8, Wall))){
-						draw_sprite(spr_shadow, 0, x + spr_shadow_x - other.x, y + spr_shadow_y - other.y);
+						var _x = x + spr_shadow_x,
+							_y = y + spr_shadow_y;
+
+						if(name != "NestRaven") _y -= 8;
+
+						draw_sprite(spr_shadow, 0, _x - other.x, _y - other.y);
 					}
 				}
 

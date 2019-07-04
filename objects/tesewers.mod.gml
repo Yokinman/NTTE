@@ -3214,6 +3214,8 @@
 		spr_weap = sprBuffGatorFlakCannon;
 		sprite_index = spr_idle;
 		spr_shadow = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = 0;
 		image_speed = 0.4;
 		image_alpha = -1;
 		depth = -10;
@@ -3697,7 +3699,7 @@
 	
 	 // Top Enemy:
 	with(instances_matching(instances_matching(CustomObject, "name", "TopEnemy"), "fall", true)){
-		draw_sprite(spr_shadow, 0, x, y);
+		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 	}
 
 	if(DebugLag) trace_time("tesewers_draw_shadows");
