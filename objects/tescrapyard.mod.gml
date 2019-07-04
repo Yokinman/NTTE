@@ -50,6 +50,7 @@
 		dir = random(360);
 		active = false;
 		loop_snd = -1;
+		sawtrap_hit = false;
 
 		if(instance_exists(Wall)){
 			var n = instance_nearest(x - 8, y - 8, Wall);
@@ -143,12 +144,16 @@
 
 	if(!audio_is_playing(loop_snd) && active){
 		loop_snd = audio_play_sound(snd.SawTrap, 0, false);
+		audio_sound_set_track_position(loop_snd, random(audio_sound_length_nonsync(loop_snd)));
+		audio_sound_gain(loop_snd, _vol, 0);
 	}
-	sound_pitch(loop_snd, _pit);
-	sound_volume(loop_snd, _vol);
+	audio_sound_pitch(loop_snd, _pit);
+	audio_sound_gain(loop_snd, _vol, 0);
 
 	 // Hitme Collision:
-	var _scale = 0.55;
+	var _scale = 0.55,
+		_sawtrapHit = false;
+
 	image_xscale *= _scale;
 	image_yscale *= _scale;
 	if(place_meeting(x, y, hitme)){
@@ -168,11 +173,25 @@
 						sound_play_pitchvol(snd_mele, 0.7 + random(0.2), 1);
 					}
 				}
+
+				 // Epic FX:
+				if(instance_is(self, other.object_index) && "name" in self && name == other.name && side != other.side){
+					_sawtrapHit = true;
+					if(!sawtrap_hit || chance_ct(1, 30)){
+						sound_play_pitchvol(sndDiscBounce, 0.6 + random(0.2), _vol / 2);
+						with(instance_create(x, y, MeleeHitWall)){
+							motion_add(other.dir - random(120 * other.side), random(1));
+							image_angle = direction + 180;
+						}
+						spd = 0;
+					}
+				}
 			}
 		}
 	}
 	image_xscale /= _scale;
 	image_yscale /= _scale;
+	sawtrap_hit = _sawtrapHit;
 
 	 // Die:
 	if(my_health <= 0 || place_meeting(x, y, PortalShock)){
