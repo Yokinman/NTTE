@@ -38,7 +38,7 @@
 		mask_index = mskShield;
 		friction = 0.2;
 		maxhealth = 30;
-		meleedamage = 3;
+		meleedamage = 4;
 		canmelee = true;
 		raddrop = 0;
 		size = 3;
@@ -156,7 +156,7 @@
 			if(place_meeting(x, y, other) && in_sight(other)){
 				if(!instance_is(self, prop) || size <= 1){
 					 // Push:
-					if(size < other.size || instance_is(self, Player)){
+					if(!instance_is(self, prop) && (size < other.size || instance_is(self, Player))){
 						motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
 					}
 	
@@ -362,13 +362,15 @@
     else mask_index = mskBandit;
 
 
-/// Scripts
+/// Mod Events
 #define draw_shadows
 	 // Saw Traps:
 	with(instances_matching(CustomHitme, "name", "SawTrap")){
-		draw_sprite_ext(sprite_index, image_index, x, y + 7, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
+		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
 	}
-	
+
+
+/// Scripts
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
