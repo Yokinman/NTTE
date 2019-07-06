@@ -2,7 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.save = mod_variable_get("mod", "teassets", "save");
+    global.sav = mod_variable_get("mod", "teassets", "sav");
 
     global.chest_list = [];
     global.chest_vars = [];
@@ -52,7 +52,8 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-#macro sav global.save
+#macro sav global.sav
+#macro opt sav.option
 
 #define race_name       return "PARROT";
 #define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
@@ -64,7 +65,7 @@
     image_index = !race_avail();
 
 #define race_portrait(p, _skin)
-    return spr.Parrot[_skin].Portrait;
+	return spr.Parrot[_skin].Portrait;
 
 #define race_mapicon(p, _skin)
     return spr.Parrot[_skin].Map;
@@ -105,12 +106,28 @@
     return "REACH @1(sprInterfaceIcons)1-1";
 
 /// Skins
-#define race_skins()
-    return 2;
+#define race_skins
+	var _playersActive = 0;
+	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	if(_playersActive <= 1){
+    	return 2;
+	}
+	else{ // Fix co-op bugginess
+		var n = 1;
+		while(unlock_get("parrot" + chr(65 + n))) n++;
+		return n;
+	}
 
 #define race_skin_avail(_skin)
-    if(_skin == 0) return true;
-    return unlock_get("parrot_" + chr(97 + real(_skin)) + "skin");
+	var _playersActive = 0;
+	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	if(_playersActive <= 1){
+		if(_skin == 0) return true;
+    	return unlock_get("parrot" + chr(65 + real(_skin)));
+	}
+	else{ // Fix co-op bugginess
+		return true;
+	}
 
 #define race_skin_name(_skin)
     if(race_skin_avail(_skin)){
@@ -599,14 +616,14 @@
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
-#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc("mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc("mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc("mod", "telib", "array_delete_value", _array, _value);

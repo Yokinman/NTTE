@@ -2,7 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.save = mod_variable_get("mod", "teassets", "save");
+    global.sav = mod_variable_get("mod", "teassets", "sav");
 
     global.debug_lag = false;
 
@@ -68,7 +68,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-#macro sav global.save
+#macro sav global.sav
 #macro opt sav.option
 
 #macro DebugLag global.debug_lag

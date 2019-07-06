@@ -63,6 +63,31 @@
 			}
 
 			return true;
+
+		case "unlockall":
+		case "unlockreset":
+			var _unlock = (_cmd == "unlockall");
+
+			unlock_set("parrot",	_unlock);
+			unlock_set("parrotB",	_unlock);
+			unlock_set("coastWep",	_unlock);
+			unlock_set("oasisWep",	_unlock);
+			unlock_set("trenchWep",	_unlock);
+			unlock_set("lairWep",	_unlock);
+			unlock_set("lairCrown",	_unlock);
+
+			scrUnlock("", "@wEVERYTHING " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "unlocktoggle":
+			var _unlock = !unlock_get(_arg);
+
+			unlock_set(_arg, _unlock);
+
+			scrUnlock("", "@w" + _arg + " " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
     }
 
 
@@ -70,23 +95,31 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.save = mod_variable_get("mod", "teassets", "save");
+    global.sav = mod_variable_get("mod", "teassets", "sav");
+
+	global.area = mod_variable_get("mod", "teassets", "area");
+	global.race = mod_variable_get("mod", "teassets", "race");
 
     global.debug_lag = false;
 
+	 // level_start():
     global.newLevel = instance_exists(GenCont);
-    global.area = ["coast", "oasis", "trench", "pizza", "lair"];
+
+	 // Custom Area Effects:
     global.effect_timer = 0;
+
+	 // Fix for custom music/ambience:
     global.current = {
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
     };
 
-     // Make Custom CampChars for:
-    global.campchar = ["parrot"];
+	 // For mega hacky fix:
     global.campchar_fix = false;
 
      // Options Menu:
+    global.mouse_x_previous = array_create(maxp);
+    global.mouse_y_previous = array_create(maxp);
     global.option_NTTE_splat = 0;
     global.option_NTTE_splat_menu = 0;
     global.option_open = false;
@@ -390,8 +423,11 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-#macro sav global.save
+#macro sav global.sav
 #macro opt sav.option
+
+#macro areaList global.area
+#macro raceList global.race
 
 #macro DebugLag global.debug_lag
 
@@ -971,12 +1007,13 @@
     
      // Custom CampChars:
     if(instance_exists(Menu)){
-         // Make Custom CampChars:
-        for(var i = 0; i < array_length(global.campchar); i++){
-            var n = global.campchar[i];
-            if(mod_exists("race", n) && unlock_get(n)){
-                if(array_length(instances_matching(CampChar, "race", n)) <= 0){
-                    with(CampChar_create(64, 48, n)){
+        with(raceList){
+            var _name = self;
+
+        	 // Create Custom CampChars:
+            if(mod_exists("race", _name) && unlock_get(_name)){
+                if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
+                    with(CampChar_create(64, 48, _name)){
                          // Poof in:
                         repeat(8) with(instance_create(x, y + 4, Dust)){
                             motion_add(random(360), 3);
@@ -985,35 +1022,45 @@
                     }
                 }
             }
+
+             // race_avail Fix:
+            if(mod_script_exists("race", _name, "race_avail") && !mod_script_call_nc("race", _name, "race_avail")){
+	            with(instances_matching(CharSelect, "race", _name)){
+	            	noinput = 9;
+	            }
+            }
         }
 
-         // CampChar Stuff:
+         // CampChar Management:
+        var _playersLocal = 0;
+        for(var i = 0; i < maxp; i++) _playersLocal += player_is_local_nonsync(i);
         for(var i = 0; i < maxp; i++) if(player_is_active(i)){
             var r = player_get_race(i);
-            if(array_find_index(global.campchar, r) >= 0){
+            if(array_find_index(raceList, r) >= 0){
                 with(instances_matching(CampChar, "race", player_get_race(i))){
                      // Pan Camera:
-                    with(instances_matching(CampChar, "num", 17)){
-                    	global.campchar_fix = true;
-
-					    var _shake = UberCont.opt_shake;
-					    UberCont.opt_shake = 1;
-
-						var _x1 = x,
-							_y1 = y,
-							_x2 = other.x,
-							_y2 = other.y,
-			        		_pan = 4;
-
-						with(player_create(_x1, _y1, i)){
-							gunangle = point_direction(_x1, _y1, _x2, _y2);
-							weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1, 0);
-
-							instance_delete(id);
-						}
-
-					    UberCont.opt_shake = _shake;
-						break;
+                    if(_playersLocal <= 1){
+	                    with(instances_matching(CampChar, "num", 17)){
+	                    	global.campchar_fix = true;
+	
+						    var _shake = UberCont.opt_shake;
+						    UberCont.opt_shake = 1;
+	
+							var _x1 = x,
+								_y1 = y,
+								_x2 = other.x,
+								_y2 = other.y,
+				        		_pan = 4;
+	
+							with(player_create(_x1, _y1, i)){
+								gunangle = point_direction(_x1, _y1, _x2, _y2);
+								weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1, 0);
+								instance_delete(id);
+							}
+	
+						    UberCont.opt_shake = _shake;
+							break;
+	                    }
                     }
 
                      // Manually Animate:
@@ -1110,10 +1157,10 @@
     }
 
      // Call Area Events (Not built into area mods):
-    var a = array_find_index(global.area, GameCont.area);
-    if(a < 0 && GameCont.area = 100) a = array_find_index(global.area, GameCont.lastarea);
+    var a = array_find_index(areaList, GameCont.area);
+    if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
     if(a >= 0){
-        var _area = global.area[a];
+        var _area = areaList[a];
 
          // Floor Setup:
         var _scrt = "area_setup_floor";
@@ -1193,37 +1240,37 @@
     	}
     }
 
-	 // Weapon Pack Unlocks:
+	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){
+		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){
 			var _packList = {
-				"coast" : ["BEACH GUNS" ,	"GRAB YOUR FRIENDS"],
-				"oasis" : ["BUBBLE GUNS",	"SOAP AND WATER"],
-				"trench": ["TECH GUNS"  ,	"TERRORS FROM THE DEEP"],
-				"lair"	: ["SAWBLADE GUNS", "DEVICES OF TORTURE"]
+				"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
+				"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
+				"trench" : [["TECH GUNS"  		, "TERRORS FROM THE DEEP"	, "Wep"		]],
+				"lair"	 : [["SAWBLADE GUNS"	, "DEVICES OF TORTURE"		, "Wep"		],
+							["CROWN OF CRIME"	, "STOLEN FROM THIEVES"		, "Crown"	]]
 			};
-	
+
 			for(var i = 0; i < array_length(_packList); i++){
-				var _area = lq_get_key(_packList, i),
-					_pack = lq_get_value(_packList, i),
-					_unlock = _area + "Wep";
-		
-				if(!unlock_get(_unlock)){
-					if(GameCont.area == _area){
-						if(GameCont.subarea >= area_get_subarea(_area)){
-							if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
-		                		unlock_set(_unlock, true);
-		                		sound_play(sndGoldUnlock);
-		                		scrUnlock(_pack[0], _pack[1], -1, -1);
-		                		
-		                		 // Crown Popup:
-		                		if(_area == "lair") scrUnlock("CROWN OF CRIME", "STOLEN FROM THIEVES", -1, -1);
+				var _area = lq_get_key(_packList, i);
+				if(GameCont.area == _area){
+					with(lq_get_value(_packList, i)){
+						var	_pack = self,
+							_unlock = _area + _pack[2];
+
+						if(!unlock_get(_unlock)){
+							if(GameCont.subarea >= area_get_subarea(_area)){
+								if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
+			                		unlock_set(_unlock, true);
+			                		sound_play(sndGoldUnlock);
+			                		scrUnlock(_pack[0], _pack[1], -1, -1);
+								}
 							}
 						}
 					}
 				}
 			}
-		}
+		//}
 	}
 
      // Charm Step:
@@ -1287,12 +1334,12 @@
 	    if(array_length(_player) > 0){
 	    	var _inst = instances_matching(instances_matching_ne(IceFlower, "pickup_indicator", null), "visible", true);
 	    	with(_inst) mask_index = mask;
-	
+
 		    with(_player){
 		        if(place_meeting(x, y, IceFlower)){
 		        	var _nearest = noone,
 		        		_maxDis = 100000;
-	
+
 		        	with(instances_meeting(x, y, _inst)){
 		        		if(array_length(whitelist) <= 0 || array_exists(whitelist, other.index)){
 		        			var _dis = point_distance(x, y, other.x, other.y);
@@ -1302,7 +1349,7 @@
 		        			}
 		        		}
 		        	}
-	
+
 		            with(_nearest){
 		                if(place_meeting(x, y, other)){
 		                    x += xoff;
@@ -1317,7 +1364,7 @@
 		            }
 		        }
 		    }
-	
+
 			with(_inst) mask_index = mskNone;
 	    }
 
@@ -1400,7 +1447,7 @@
 	        }
 	        with(Loadout) instance_destroy();
 	        with(loadbutton) instance_destroy();
-	        with(BackFromCharSelect) noinput = 8;
+	        with(BackFromCharSelect) noinput = 9;
 
 	         // Dim Screen:
 	        draw_set_color(c_black);
@@ -1447,7 +1494,8 @@
 				if(Menu.charx[i] != 0) _max = i;
 			}
 			if(_max >= 2){
-				_x1 -= 138;
+				_x1 = (game_width / 2) - 20;
+				_y1 += 2;
 			}
 
 			var _x2 = _x1 + 40,
@@ -1720,6 +1768,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
 
+	 // For Options Menu:
+	for(var i = 0; i < maxp; i++){
+		global.mouse_x_previous[i] = mouse_x[i];
+		global.mouse_y_previous[i] = mouse_y[i];
+	}
+
 #define area_step(_area)
     var _scrt = "step";
     switch(object_index){
@@ -1782,7 +1836,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                 if(_hover || _selected){
                     if(_option.type >= 0 && player_is_local_nonsync(p)){
-                        OptionSlct = i;
+                    	if(!_hover || mouse_x[p] != global.mouse_x_previous[p] || mouse_y[p] != global.mouse_y_previous[p]){
+                        	OptionSlct = i;
+                    	}
                     }
 
                     with(_option) if(OptionPop >= appear){
@@ -1843,7 +1899,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         if(_hover && "text" in self){
                             //if(!button_check(p, "fire") || type == opt_title){
                                 if(_mx < (game_width / 2) + 32){
-                                    if(player_is_local_nonsync(p)){
+                                    if(player_find_local_nonsync() == p){
                                         _tooltip = text;
                                     }
                                 }
@@ -2562,12 +2618,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             draw_set_valign(fa_bottom);
 
              // Title:
-            var t = _nam + " UNLOCKED";
-            draw_text_nt(_tx, _ty, t);
+            var t = "";
+            if(_nam != ""){
+	            t = _nam + " UNLOCKED";
+	            draw_text_nt(_tx, _ty, t);
+            }
 
              // Description:
             if(splash_texty <= 0){
-                _ty += string_height(t);
+                _ty += max(string_height("A"), string_height(t));
                 draw_text_nt(_tx, _ty, "@s" + _txt);
             }
         }
@@ -3506,13 +3565,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
-#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc("mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc("mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc("mod", "telib", "array_delete_value", _array, _value);

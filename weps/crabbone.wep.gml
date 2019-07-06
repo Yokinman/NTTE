@@ -140,12 +140,12 @@
     }
 
 
-/// Scripts:
+/// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
-#define wep_get(_wep)                                                                   return  mod_script_call("mod", "telib", "wep_get", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
-#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
+#define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
+#define wep_get(_wep)                                                                   return  mod_script_call("mod", "telib", "wep_get", _wep);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call("mod", "telib", "instances_meeting", _x, _y, _obj);

@@ -50,7 +50,7 @@
      // Wait for /allowmod:
     while(!mod_sideload()) wait 0;
 
-     // Wait for Loading Bar to Appear:
+     // Loading Bar Appear:
     sound_play_pitchvol(sndMeleeFlip, 1.4 + random(0.1), 0.25);
     sound_play_pitchvol(sndHitMetal,  1.4 + random(0.1), 0.25);
     while(global.load_hudy < 0.99) wait 0;
@@ -68,15 +68,11 @@
     }
 
      // Finished:
-    trace_color("NTTE | Finished loading!", c_yellow);
-    repeat(20 * (game_height / 240)) trace("");
     sound_play_pitchvol(sndEXPChest, 1.5 + random(0.1), 0.6);
     sound_play_pitchvol(sndNoSelect, 0.6 + random(0.1), 0.5);
-
-     // Wait for Loading Bar to Go Away:
     while(global.load_hudy > 0) wait 0;
-
-     // Unload teloader.mod:
+    trace_color("NTTE | Finished loading!", c_yellow);
+    repeat(20 * (game_height / 240)) trace("");
     mod_loadtext("main3.txt");
 
 #define draw_gui

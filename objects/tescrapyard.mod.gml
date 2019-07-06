@@ -2,7 +2,7 @@
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.save = mod_variable_get("mod", "teassets", "save");
+    global.sav = mod_variable_get("mod", "teassets", "sav");
 
 	global.debug_lag = false;
 
@@ -10,7 +10,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-#macro sav global.save
+#macro sav global.sav
 #macro opt sav.option
 
 #macro DebugLag global.debug_lag
@@ -142,13 +142,12 @@
 	var _pit = (1 + (0.05 * sin(current_frame / 8))) * (spd / maxspeed),
 		_vol = min(2, 80 / (distance_to_object(Player) + 1)) * (spd / maxspeed);
 
-	if(!audio_is_playing(loop_snd) && active){
+	if(active && !audio_is_playing(loop_snd)){
 		loop_snd = audio_play_sound(snd.SawTrap, 0, false);
 		audio_sound_set_track_position(loop_snd, random(audio_sound_length_nonsync(loop_snd)));
-		audio_sound_gain(loop_snd, _vol, 0);
 	}
-	audio_sound_pitch(loop_snd, _pit);
 	audio_sound_gain(loop_snd, _vol, 0);
+	audio_sound_pitch(loop_snd, _pit);
 
 	 // Hitme Collision:
 	var _scale = 0.55,
@@ -175,15 +174,17 @@
 				}
 
 				 // Epic FX:
-				if(instance_is(self, other.object_index) && "name" in self && name == other.name && side != other.side){
-					_sawtrapHit = true;
-					if(!sawtrap_hit || chance_ct(1, 30)){
-						sound_play_pitchvol(sndDiscBounce, 0.6 + random(0.2), _vol / 2);
-						with(instance_create(x, y, MeleeHitWall)){
-							motion_add(other.dir - random(120 * other.side), random(1));
-							image_angle = direction + 180;
+				if(instance_is(self, other.object_index) && "name" in self && name == other.name){
+					if(active && side != other.side){
+						_sawtrapHit = true;
+						if(!sawtrap_hit || chance_ct(1, 30)){
+							sound_play_pitchvol(sndDiscBounce, 0.6 + random(0.2), _vol / 2);
+							with(instance_create(x, y, MeleeHitWall)){
+								motion_add(other.dir - random(120 * other.side), random(1));
+								image_angle = direction + 180;
+							}
+							spd = 0;
 						}
-						spd = 0;
 					}
 				}
 			}
@@ -447,14 +448,14 @@
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call(   "mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
 #define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
-#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call(   "mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc("mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc("mod", "telib", "array_delete", _array, _index);
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc("mod", "telib", "array_delete_value", _array, _value);

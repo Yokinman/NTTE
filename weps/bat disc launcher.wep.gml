@@ -79,7 +79,7 @@
     }
 
 
-/// Scripts:
+/// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);

@@ -750,8 +750,8 @@
     }
 
      // SAVE FILE //
-    global.save_auto = false;
-    global.save = {
+    global.sav_auto = false;
+    global.sav = {
         option : {
             "allowShaders"     : true,
             "remindPlayer"     : true,
@@ -765,7 +765,7 @@
 
     if(fork()){
          // Load Existing Save:
-        var _path = SavePath;
+        var _path = savPath;
         wait file_load(_path);
 
         if(file_loaded(_path) && file_exists(_path)){
@@ -783,22 +783,26 @@
 
                  // Copy Vars From Save File:
                 for(var i = 0; i < lq_size(_save); i++){
-                    lq_set(global.save, lq_get_key(_save, i), lq_get_value(_save, i));
+                    lq_set(global.sav, lq_get_key(_save, i), lq_get_value(_save, i));
                 }
 
-                global.save_auto = true;
+                global.sav_auto = true;
                 exit;
             }
         }
 
          // New Save File:
-        string_save(json_encode(global.save), _path);
-        global.save_auto = true;
+        string_save(json_encode(global.sav), _path);
+        global.sav_auto = true;
         exit;
     }
 
      // Surface Storage:
     global.surf = [];
+
+	 // Mod Lists:
+    global.area = ["coast", "oasis", "trench", "pizza", "lair"];
+    global.race = ["parrot"];
 
      // Reminders:
     global.remind = [];
@@ -843,16 +847,19 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus global.mus
-#macro sav global.save
+#macro sav global.sav
 #macro opt sav.option
+
+#macro areaList global.area
+#macro raceList global.race
 
 #macro surfList global.surf
 
-#macro SavePath "save.sav"
+#macro savPath "save.sav"
 
 #define save()
     if(player_is_local_nonsync(player_find_local_nonsync())){
-        string_save(json_encode(sav), SavePath);
+        string_save(json_encode(sav), savPath);
     }
 
 #define surflist_set(_name, _x, _y, _width, _height)
@@ -908,7 +915,7 @@
 	}
 
 	 // Autosave:
-	if(global.save_auto){
+	if(global.sav_auto){
 		with(instances_matching(GameCont, "ntte_autosave", null)){
 			save();
 			ntte_autosave = true;
@@ -1115,12 +1122,12 @@
     }
 
 #define cleanup
-    if(global.save_auto) save();
+    if(global.sav_auto) save();
 
      // Clear Surfaces:
     with(surfList) surface_destroy(surf);
 
      // No Crash:
-    with(["parrot"]){
+    with(global.race){
         with(instances_matching([CampChar, CharSelect], "race", self)) instance_delete(id);
     }
