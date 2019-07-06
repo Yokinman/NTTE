@@ -837,6 +837,119 @@
 	}
 
 
+#define BoneGator_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.BoneGatorIdle;
+		spr_walk = spr.BoneGatorWalk;
+		spr_hurt = spr.BoneGatorHurt;
+		spr_dead = spr.BoneGatorDead;
+		spr_weap = sprNadeShotgun;
+		sprite_index = spr_idle;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "BOUNTY HUTNER"];
+		
+		 // Sounds:
+		snd_hurt = sndBuffGatorHit;
+		snd_dead = sndBuffGatorDie;
+		
+		 // Vars:
+		mask_index = mskBandit;
+		maxhealth = 24;
+		raddrop = 6;
+		size = 2;
+		walk = 0;
+		walkspd = 0.8;
+		maxspeed = 3.6;
+		gunangle = random(360);
+		alarm1 = 30;
+		alarm2 = -1;
+		
+		return id;
+	}
+	
+#define BoneGator_step
+	 // 
+	
+#define BoneGator_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+    
+#define BoneGator_alrm1
+	alarm1 = 20 + random(20);
+	target = instance_nearest(x, y, Player);
+	
+	if(in_sight(target)){
+		var _targetDir = point_direction(x, y, target.x, target.y);
+		if(in_distance(target, 96)){
+			 // Retreat:
+			if(in_distance(target, 48) && chance(2, 3)){
+				scrWalk(20 + random(30), _targetDir + orandom(30) + 180);
+			}
+			
+			 // Attack:
+			else{
+				alarm1 += random(20);
+				alarm2 = 5;
+				
+				 // Warning:
+				instance_create(x, y, AssassinNotice);
+			}
+			
+			scrRight(_targetDir);
+			gunangle = _targetDir;
+		}
+		
+		 // Chase:
+		else{
+			scrWalk(20 + random(30), _targetDir + orandom(10));
+			
+			scrRight(direction);
+			gunangle = direction;
+		}
+	}
+	
+	 // Wander:
+	else if(chance(1, 3)){
+		alarm1 += random(10);
+		scrWalk(20 + random(20), direction + orandom(40));
+		
+		scrRight(direction);
+		gunangle = direction;
+	}
+	
+#define BoneGator_alrm2
+	alarm2 = -1;
+	
+	var o = 12;
+	for(var d = -2; d <= 2; d++) scrEnemyShoot(MiniNade, gunangle + (d * o), 7 + random(3));
+	
+	 // Effects:
+	wkick = 8;
+	sound_play_hit(sndGrenadeShotgun, 0.3);
+	
+#define BoneGator_hurt(_hitdmg, _hitvel, _hitdir)
+	if(!instance_is(other, Explosion)){
+		my_health -= _hitdmg;
+		nexthurt = current_frame + 6;
+	}
+	
+	 // Boiling Veins:
+	else sound_play_hit(sndBurn, 0.3);
+	
+	sound_play_hit(snd_hurt, 0.3);
+	motion_add(_hitdir, _hitvel);
+	
+	 // Hurt Sprite:
+	sprite_index = spr_hurt;
+	image_index = 0;
+	
+#define BoneGator_death
+	 // Explodin':
+	instance_create(x, y, Explosion);
+	repeat(3 + irandom(3)) instance_create(x, y, SmallExplosion);
+	
 #define Cabinet_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
          // Visual:

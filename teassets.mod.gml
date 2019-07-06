@@ -553,6 +553,12 @@
              // Bat Chest:
             BatChest     = sprite_add("sprites/chests/sprBatChest.png",     1, 10, 10);
             BatChestOpen = sprite_add("sprites/chests/sprBatChestOpen.png", 1, 10, 10);
+            
+             // Bone Gator:
+            BoneGatorIdle = sprite_add("sprites/enemies/BoneGator/sprBoneGatorIdle.png", 8, 12, 12);
+            BoneGatorWalk = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWalk.png", 6, 12, 12);
+            BoneGatorHurt = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHurt.png", 3, 12, 12);
+            BoneGatorDead = sprite_add("sprites/enemies/BoneGator/sprBoneGatorDead.png", 6, 12, 12);
 
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
