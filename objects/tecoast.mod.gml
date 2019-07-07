@@ -76,7 +76,7 @@
 			sound_play(sndJungleAssassinPretend);
 		}
 	}
-	
+
 	 // Player is making bushman uncomfortable:
 	if(place_meeting(x, y, Player)){
 		BloomingAssassinHide_alrm0();
@@ -279,7 +279,7 @@
      // Break:
     if(my_health <= 0 && sprite_index != spr_dead){
         sprite_index = spr_dead;
-        
+
          // Stop Collision & Projectile Interactions:
         mask_index = mskNone;
         team = 2;
@@ -542,7 +542,7 @@
 		reload = 90 + random(30);
         wkick = 8;
     }
-    
+
     else{
         target = instance_nearest(x, y, Player);
 
@@ -588,7 +588,7 @@
         	 // Facing:
         	scrRight(gunangle);
         }
-    
+
          // Wander:
         else scrWalk(30, random(360));
     }
@@ -603,7 +603,7 @@
             _oy = -right,
             _x = x + lengthdir_x(_ox, gunangle) + lengthdir_x(_oy, gunangle - 90),
             _y = y + lengthdir_y(_ox, gunangle) + lengthdir_y(_oy, gunangle - 90);
-    
+
         draw_sprite_ext(sprBolt, 1, _x, _y, 1, right, gunangle, image_blend, image_alpha);
     }
 
@@ -614,7 +614,7 @@
     with(_inst){
         draw_set_color(c_white);
         draw_set_alpha(0.8 / (abs(wkick) + 1));
-    
+
         var _x = x - 1,
             _y = y - 3;
 
@@ -628,7 +628,7 @@
 
         draw_set_alpha(draw_get_alpha() / 2);
         draw_set_blend_mode(choose(bm_add, bm_normal));
-    
+
         draw_line_width(
             _x,
             _y,
@@ -636,7 +636,7 @@
             l[1] + lengthdir_y(2, _ang),
             w + 1 + random(0.5)
         );
-    
+
         draw_set_blend_mode(bm_normal);
         draw_set_alpha(1);
     }
@@ -801,7 +801,7 @@
 #define Palanking_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
         boss = true;
-        
+
          // For Sani's bosshudredux:
         bossname = "PALANKING";
         col = c_red;
@@ -1013,7 +1013,7 @@
 
              // Just in case:
             with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")) my_health = 0;
-            
+
         	 // Attract Pickups:
             scrPickupPortalize();
         }
@@ -1172,7 +1172,7 @@
 				with(o){
 					creator.raddrop -= raddrop;
 					raddrop = clamp(raddrop + creator.raddrop, 0, raddrop);
-	
+
 				     // Randomize Type:
 				    if(name == "Seal"){
 				        var _pick = [];
@@ -1763,7 +1763,7 @@
     	projectile_hit_push(other, damage, force);
 
 		 // Mega Smak:
-		if(instance_is(other, Player) || other.size <= 1){
+		if(instance_is(other, Player) || other.size <= 1 || "smack_all" in self){
 			var p = other;
 			with(obj_create(p.x, p.y, "PalankingToss")){
 				direction = other.direction + (angle_difference(point_direction(other.x, other.y, p.x, p.y), other.direction) / 3);
@@ -1786,7 +1786,7 @@
 			if(typ == 1){
 				direction = other.direction;
 				image_angle = direction;
-		
+
 				 // Effects:
 				with(instance_create(x, y, Deflect)){
 					image_angle = other.image_angle;
@@ -2755,7 +2755,7 @@
 			if(typ == 1){
 				direction = other.direction;
 				image_angle = direction;
-		
+
 				 // Effects:
 				with(instance_create(x, y, Deflect)){
 					image_angle = other.image_angle;
