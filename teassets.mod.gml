@@ -378,10 +378,11 @@
             PetScorpionShield   = sprite_add("sprites/pets/Desert/sprPetScorpionShield.png",    6, 16, 16);
             
              // Spider
-            PetSpiderIdle = sprite_add("sprites/pets/Caves/sprPetSpiderIdle.png",   8, 16, 16);
-            PetSpiderWalk = sprite_add("sprites/pets/Caves/sprPetSpiderWalk.png",   6, 16, 16);
-            PetSpiderHurt = sprite_add("sprites/pets/Caves/sprPetSpiderDodge.png",  3, 16, 16);
-            PetSparkle =    sprite_add("sprites/pets/Caves/sprPetSparkle.png",      5,  8,  8);
+            PetSpiderIdle = sprite_add("sprites/pets/Caves/sprPetSpiderIdle.png",	8, 16, 16);
+            PetSpiderWalk = sprite_add("sprites/pets/Caves/sprPetSpiderWalk.png",	6, 16, 16);
+            PetSpiderHurt = sprite_add("sprites/pets/Caves/sprPetSpiderDodge.png",	3, 16, 16);
+            PetSpiderWeb  = sprite_add("sprites/pets/Caves/sprPetSpiderWeb.png",	1,  0,  0);
+            PetSparkle    = sprite_add("sprites/pets/Caves/sprPetSparkle.png",		5,  8,  8);
             
             SpiderTangle            = sprite_add("sprites/pets/Caves/sprSpiderTangle.png",          2,  4,  4);
             SpiderTangleAppear      = sprite_add("sprites/pets/Caves/sprSpiderTangleAppear.png",    6,  24, 24);

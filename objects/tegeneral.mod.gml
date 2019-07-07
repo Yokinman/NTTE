@@ -3155,10 +3155,14 @@
 		instance_delete(id); // There can only be one
 	}
 
-	return instance_create(_x, _y, CustomEnemy);
+	with(instance_create(_x, _y, CustomEnemy)){
+		PortalPrevent_step();
+		return id;
+	}
 
 #define PortalPrevent_step
-	my_health = 99999;
+	if(instance_number(enemy) <= 1) my_health = 99999;
+	else my_health = 1;
 	canfly = true;
 
 #define PortalPrevent_death

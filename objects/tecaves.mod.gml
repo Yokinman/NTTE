@@ -174,8 +174,10 @@
 
 	 // Start:
 	if(ammo <= 0){
-        target_x = target.x;
-        target_y = target.y;
+		if(instance_exists(target)){
+	        target_x = target.x;
+	        target_y = target.y;
+		}
         ammo = 4;
 	}
 

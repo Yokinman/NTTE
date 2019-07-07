@@ -4,6 +4,11 @@
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.sav = mod_variable_get("mod", "teassets", "sav");
 
+	global.debug_lag = false;
+
+	global.surfWeb = surflist_set("Web", 0, 0, game_width, game_height);
+    global.web_frame = 0;
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -11,8 +16,13 @@
 #macro sav global.sav
 #macro opt sav.option
 
+#macro DebugLag global.debug_lag
+
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
+
+#macro surfWeb global.surfWeb
+
 
 #define CoolGuy_create
      // Vars:
@@ -626,9 +636,6 @@
         }
     }
     
-#define Scoprion_alrm1
-    trace(argument0, argument1);
-    
 #define Scorpion_hurt
     if(my_health > 0){
          // Create CustomHitme to Receive the Damage:
@@ -1030,18 +1037,56 @@
 
 
 #define Spider_create
-	
+    web_list = [];
+    web_list_x1 = 1000000;
+    web_list_y1 = 1000000;
+    web_list_x2 = 0;
+    web_list_y2 = 0;
+	web_add_l = 8;
+	web_add_side = choose(-90, 90);
+	web_add_d = direction + web_add_side;
+	web_timer_max = 9;
+    web_timer = web_timer_max;
+
+#define Spider_step
+	 // Lay Webs:
+	web_addx = x;
+	web_addy = y;
+	if(instance_exists(leader)){
+		if(web_timer > 0){
+			if(speed > 0) web_timer -= current_time_scale;
+			if(web_timer <= 0){
+				web_timer = web_timer_max;
+
+				Spider_web_add(
+					x + lengthdir_x(web_add_l, web_add_d),
+					bbox_bottom + lengthdir_y(web_add_l, web_add_d)
+				);
+
+				web_add_l = 8 + orandom(2);
+				web_add_d = direction + web_add_side + orandom(20);
+				web_add_side *= -1;
+			}
+		}
+	}
+	else web_timer = web_timer_max;
+
 #define Spider_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 20 + irandom(20);
-	
+
 	if(instance_exists(leader)){
          // Pathfinding:
         if(array_length(path) > 0){
-            scrWalk(5 + random(5), path_dir + orandom(30));
+            scrWalk(5 + random(5), path_dir + orandom(20));
             return walk;
         }
-        
+
+         // Move Towards Leader:
         else{
+        	scrWalk(20, _leaderDir + orandom(30));
+        	if(_leaderDis > 160) return walk;
+
+        	/*
 			var _target = noone;
 			
 			 // Find Larget:	
@@ -1085,8 +1130,41 @@
 					scrWalk(10 + irandom(10), direction + orandom(45));
 				}
 			}
+			*/
         }
 	}
+
+	 // Wander:
+	else{
+        scrWalk(5 + random(5), random(360));
+	}
+
+#define Spider_web_add(_x, _y)
+	array_push(web_list, {
+		x : _x,
+		y : _y,
+		frame : global.web_frame + 150
+	});
+
+    web_list_x1 = min(_x, web_list_x1);
+    web_list_y1 = min(_y, web_list_y1);
+    web_list_x2 = max(_x, web_list_x2);
+    web_list_y2 = max(_y, web_list_y2);
+
+#define Spider_web_delete(_index)
+	web_list = array_delete(web_list, _index);
+
+    web_list_x1 = 1000000;
+    web_list_y1 = 1000000;
+    web_list_x2 = 0;
+    web_list_y2 = 0;
+    with(web_list){
+        other.web_list_x1 = min(x, other.web_list_x1);
+        other.web_list_y1 = min(y, other.web_list_y1);
+        other.web_list_x2 = max(x, other.web_list_x2);
+        other.web_list_y2 = max(y, other.web_list_y2);
+    }
+
 
 #define Octo_create
      // Visual:
@@ -1461,6 +1539,152 @@
     if(chance_ct(1, 3)) repeat(irandom(4)){
         instance_create(x + orandom(8), y + orandom(8), Curse);
     }
+
+
+/// Mod Events
+#define step
+	if(DebugLag) trace_time();
+
+	var _inst = instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Spider");
+	if(array_length(_inst) > 0){
+		with(surfWeb){
+			active = true;
+	        x = view_xview_nonsync;
+	        y = view_yview_nonsync;
+		    w = game_width;
+		    h = game_height;
+
+			 // Bind Events:
+			if(!instance_exists(GenCont) && surface_exists(surf)){
+				script_bind_end_step(web_end_step, 0, _inst);
+				script_bind_draw(web_draw, 5);
+			}
+	
+			 // Reset Webs:
+			else with(_inst){
+				web_list = [];
+				web_timer = web_timer_max;
+			}
+		}
+	}
+	else with(surfWeb) active = false;
+
+	if(DebugLag) trace_time("petlib_step");
+
+#define web_end_step(_inst)
+	if(DebugLag) trace_time();
+
+	with(surfWeb){
+		if(surface_exists(surf)){
+			var	_surfx = x,
+				_surfy = y,
+				_slowInst = [];
+
+		    surface_set_target(surf);
+		    draw_clear_alpha(0, 0);
+			draw_set_color(c_black);
+
+		    with(_inst) if(instance_exists(self)){
+
+			    var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
+					_x1, _x2, _x3,
+					_y1, _y2, _y3,
+					_vertexNum = 0;
+
+				draw_primitive_begin(pr_trianglestrip);
+
+			    with(web_list){
+			        _x3 = _x2;
+			        _y3 = _y2;
+			        _x2 = _x1;
+			        _y2 = _y1;
+			        _x1 = x;
+			        _y1 = y;
+
+					 // Drawing Web Mask:
+				    draw_vertex(x - _surfx, y - _surfy);
+
+					 // Slow Enemies:
+			        if(_vertexNum++ >= 2){
+			            with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
+			            	_webInst,
+			            	"bbox_right",	min(_x1, _x2, _x3)),
+			            	"bbox_left",	min(_y1, _y2, _y3)),
+			            	"bbox_bottom",	max(_x1, _x2, _x3)),
+			            	"bbox_top",		max(_y1, _y2, _y3))
+			            ){
+			                //if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
+								if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
+			                    	array_push(_slowInst, id);
+								}
+			                	_webInst = array_delete_value(_webInst, id);
+			                //}
+			            }
+			        }
+
+					 // Dissipate:
+			        if(frame < global.web_frame){
+			        	var _x = x,
+			        		_y = y;
+
+						if(_vertexNum + 1 < array_length(other.web_list)){
+							with(other.web_list[_vertexNum + 1]){
+								_x = x;
+								_y = y;
+							}
+						}
+
+						x = lerp(x, _x, 0.2);
+						y = lerp(y, _y, 0.2);
+
+						if(point_distance(_x, _y, x, y) < 1){
+			            	with(other) Spider_web_delete(--_vertexNum);
+						}
+			        }
+			    }
+
+				 // Finish Web Mask:
+				if(instance_exists(leader)){
+				    var l = web_add_l * (1 - (web_timer / web_timer_max)),
+				    	d = web_add_d;
+	
+					draw_vertex(x + lengthdir_x(l, d) - _surfx, bbox_bottom + lengthdir_y(l, d) - _surfy);
+				}
+				draw_primitive_end();
+			}
+
+			 // Draw Web Sprite Over Web Mask:
+		    draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
+		    draw_rectangle(0, 0, w, h, false);
+		    with(other) draw_sprite_tiled(spr.PetSpiderWeb, 0, 0 - _surfx, 0 - _surfy);
+		    draw_set_blend_mode(bm_normal);
+
+			surface_reset_target();
+
+			 // Slow Enemies on Web:
+			with(_slowInst){
+				x = lerp(xprevious, x, 1/3);
+				y = lerp(yprevious, y, 1/3);
+			}
+		}
+	}
+
+	global.web_frame += current_time_scale;
+
+	if(DebugLag) trace_time("petlib_web_end_step");
+
+	instance_destroy();
+
+#define web_draw
+    instance_destroy();
+
+	 // Drawing Web Surface:
+	with(surfWeb) if(surface_exists(surf)){
+		draw_set_flat(make_color_rgb(50, 41, 71));
+	    draw_surface(surf, x, y + 1);
+	    draw_set_flat(-1);
+	    draw_surface(surf, x, y);
+	}
 
 
 /// Scripts

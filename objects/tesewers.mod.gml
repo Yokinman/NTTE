@@ -2458,7 +2458,7 @@
 	    draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2);
 	
 	     // Half Oval Bit:
-	    var _segments = 4,
+	    var _segments = floor(_h2 / 2),
 	        _cw = _w2 / 2,
 	        _cx = _x1b + _cw,
 	        _cy = _y2;
