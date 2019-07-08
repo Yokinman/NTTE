@@ -682,6 +682,285 @@
     }
 
 
+#define BoneArrow_create(_x, _y)
+	var _shotgunShoulders	= skill_get(mut_shotgun_shoulders),
+		_boltMarrow 		= skill_get(mut_bolt_marrow);
+		
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.BoneArrow;
+		
+		 // Vars:
+		mask_index = mskBolt;
+		friction = 0.6;
+		damage = 14;
+		force = 8;
+		typ = 2;
+		damage_falloff = current_frame + 2;
+		wallbounce = 4 * _shotgunShoulders;
+		alarm1 = (_boltMarrow > 0 ? 5 : 0);
+		
+		return id;	
+	}
+	
+#define BoneArrow_step
+	 // Particles:
+	if(chance_ct(1, 7)) scrBoneDust(x, y);
+
+	 // Destroy:
+	if(speed <= 3){
+		with(instance_create(x, y, Dust)) motion_set(other.direction, other.speed);
+		instance_destroy();
+	}
+	
+#define BoneArrow_end_step
+	 // Trail:
+	var l = point_distance(x + hspeed, y + vspeed, xprevious, yprevious) / 2,
+		d = point_direction(x + hspeed, y + vspeed, xprevious, yprevious);
+		
+	with(instance_create(x, y, BoltTrail)){
+		image_xscale = l;
+		image_angle = d;
+	}
+	
+#define BoneArrow_alrm1
+	alarm1 = 5;
+
+	 // Seeking:
+	var _seekDist = 42 * skill_get(mut_bolt_marrow);;
+	with(nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team))) if(point_distance(x, y, other.x, other.y) <= _seekDist){
+		other.x = x;
+		other.y = y;
+	}
+	
+	 // Live to seek another frame:
+	else alarm1 = 1;
+	
+#define BoneArrow_wall
+	 // Effects:
+	instance_create(x + hspeed, y + vspeed, Dust);
+	
+	 // Bounce:
+	speed *= 0.8;
+	if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+	if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	image_angle = direction;
+	
+	 // Shotgun Shoulders:
+	var _skill = skill_get(mut_shotgun_shoulders);
+	speed = min(speed + wallbounce, 18);
+	wallbounce *= 0.9;
+	
+	 // Sounds:
+	if(speed > 4) sound_play_hit(sndShotgunHitWall, 0.4);
+	
+#define BoneArrow_hit
+	if(projectile_canhit_melee(other)){
+		var _damage = damage + ((damage_falloff > current_frame) * 2);
+		projectile_hit(other, _damage, force, direction);
+		
+		 // Drop Bone Pickups:
+		if(other.my_health <= 0) scrBonePickupDrop(other);
+	}
+	
+#define BonePickup_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.BonePickup[irandom(3)];
+		image_angle = random(360);
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = mskRad;
+		friction = 0.2;
+		big = false;
+		num = 1;
+		blink = 30;
+		alarm1 = ((crown_current == crwn_haste) ? 50 + random(10) : 150 + random(30));
+		
+		 // Events:
+		on_end_step = BonePickup_setup;
+		
+		return id;
+	}
+	
+#define BonePickup_setup
+	on_end_step = [];
+	
+	 // Become Big:
+	if(big){
+		sprite_index = spr.BonePickupBig[irandom(1)];
+		num = 10;
+	}
+	
+#define BonePickup_step
+	 // Animate:
+	if(image_index < 1) image_index -= image_speed - 0.025;
+	
+	 // Wall Collision:
+	if(place_meeting(x, y, Wall)){
+		if(place_meeting(xprevious + hspeed, yprevious, Wall)) hspeed *= -1;
+		if(place_meeting(xprevious, yprevious + vspeed, Wall)) vspeed *= -1;
+	}
+	
+	 // Player Interaction:
+	if(instance_exists(Player)){
+		
+		 // Find Players:
+		var a = [];
+		with(["wep", "bwep"]){
+			var o = self;
+			with(Player) if(lq_get(variable_instance_get(id, o), "wep") == "scythe"){
+				array_push(a, id);
+			}
+		}
+		
+		if(array_length(a) > 0){
+			var p = nearest_instance(x, y, a),
+				r = 96 + (64 * skill_get(mut_plutonium_hunger));
+				
+			 // Get Got:
+			if(place_meeting(x, y, p)){
+				var _pickup = id;
+				with(["wep", "bwep"]){
+					var o = self;
+					with(p){
+						var w = variable_instance_get(id, o);
+						if(lq_get(w, "wep") == "scythe"){
+							 // Add Ammo:
+							with(w){
+								ammo = min(ammo + _pickup.num, amax);
+							}
+							
+							 // Destroy:
+							with(_pickup){
+								
+								 // Effects:
+								instance_create(x, y, Dust);
+								sound_play_hit(sndRadPickup, 0.3);
+								
+								 // Goodbye:
+								instance_destroy();
+								exit;
+							}
+						}
+					}
+				}
+			}
+			
+			 // Move to Player:
+			if(speed <= 0 && (point_distance(x, y, p.x, p.y) <= r || instance_exists(Portal))){
+				move_contact_solid(point_direction(x, y, p.x, p.y), 12);
+			}
+		}
+		
+		 // Eyes Active:
+		with(instances_matching(Player, "race", "eyes")) if(canspec && button_check(index, "spec")){
+			with(other) if(point_distance(x, y, other.x, other.y) <= 200){
+				move_contact_solid(point_direction(x, y, other.x, other.y), 1);
+			}
+		}
+	}
+	
+#define BonePickup_alrm1
+	alarm1 = 2;
+	image_alpha *= -1;
+	
+	if(blink-- <= 0){
+		instance_create(x, y, Dust);
+		instance_destroy();
+	}
+	
+#define scrBonePickupDrop(_inst)
+	with(_inst) if(my_health <= 0){
+		var _raddrop = variable_instance_get(_inst, "raddrop", 0),
+			d = (size >= 2) ? 2.6 : 1.8,
+			n = max((maxhealth / d) - _raddrop, 0);
+			
+		if(n > 0){
+			 // Big Pickups:
+			var _numLarge = floor(n div 10);
+			if(_numLarge) repeat(_numLarge) with(obj_create(x, y, "BonePickup")){
+				big = true;
+				
+				motion_set(random(360), 3 + random(1));
+			}
+			 // Small Pickups:
+			var _numSmall = ceil(n mod 10);
+			if(_numSmall) repeat(_numSmall) with(obj_create(x, y, "BonePickup")){
+				
+				motion_set(random(360), 3 + random(1));
+			}
+		}
+	}
+	
+#define scrBoneDust(_x, _y)
+	var c = [
+		make_color_rgb(208, 197, 180),
+		make_color_rgb(157, 133, 098),
+		make_color_rgb(111, 082, 043)
+	];
+	
+	 // Create the guy aready:
+	with(instance_create(_x, _y, Sweat)){
+		image_blend = c[irandom(2)];
+		return id;
+	}
+	
+#define BoneSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.BoneSlashLight;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = msk.BoneSlashLight;
+		damage = 24;
+		force = 8;
+		heavy = false;
+		wall = false;
+		
+		 // Events:
+		on_end_step = BoneSlash_setup;
+		
+		return id;
+	}
+	
+#define BoneSlash_setup
+	on_end_step = [];
+	
+	 // Become Heavy Slash:
+	if(heavy){
+		 // Visual:
+		sprite_index = spr.BoneSlashHeavy;
+		
+		 // Vars:
+		mask_index = msk.BoneSlashHeavy;
+		damage = 32;
+		force = 12;
+	}
+	
+	repeat(3){
+		var c = sign(image_yscale),
+			l = (heavy ? 24 : 16) + orandom(2),
+			d = direction - (random_range(30, 120) * c);
+		with(scrBoneDust(x + lengthdir_x(l, d), y + lengthdir_y(l, d))) motion_set(d - (random_range(90, 120) * c), 1 + random(2));
+	}
+	
+#define BoneSlash_hit
+	if(projectile_canhit_melee(other) && other.my_health > 0){
+		projectile_hit(other, damage, force, direction);
+		
+		 // Drop Pickups:
+		if(other.my_health <= 0) scrBonePickupDrop(other);
+	}
+	
+#define BoneSlash_wall
+	if(!wall){
+		wall = true;
+		speed = 0;
+	}
+	
 #define BubbleBomb_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:

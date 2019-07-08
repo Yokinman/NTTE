@@ -545,9 +545,27 @@
 
      // Darn:
     if(broken){
-        sound_play_pitch(sndHitRock, 1.4 + random(0.2));
-        repeat(2) with(instance_create(x, y, Shell)){
+    	sound_play_pitch(sndHitRock, 1.4 + random(0.2));
+    	
+    	var p = false;
+    	with(["wep", "bwep"]){
+    		var o = self;
+    		with(Player) if(wep_get(variable_instance_get(id, o)) == "scythe"){
+    			p = true;
+    		}
+    	}
+    	
+    	 // For u yokin:
+    	if(p){
+    		repeat(2) with(obj_create(x, y, "BonePickup")){
+    			sprite_index = spr.BoneShard;
+    			motion_add(random(360), 2);
+    		}
+    	}
+    	
+    	else repeat(2) with(instance_create(x, y, Shell)){
             sprite_index = spr.BoneShard;
+            image_speed = 0;
             motion_add(random(360), 2);
         }
     }

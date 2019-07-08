@@ -999,6 +999,54 @@
 			}
 		}
     }
+    
+     // Treasure Chests:
+    if(chance(0, 1)){
+    	var _x, _y,
+    		o = 32;
+    	with(instance_furthest(10000, 10000, Floor)){
+    		var l = ((GameCont.area == "coast") ? 200 : 160),
+    			d = point_direction(10000, 10000, x, y);
+    			
+    		_x = round((x + lengthdir_x(l, d)) / o) * o + 16;
+    		_y = round((y + lengthdir_y(l, d)) / o) * o + 16;
+    	}
+    	
+    	switch(GameCont.area){
+    		 // Coast Island Chest:
+    		 // spawns alone at sea, requires you to think smart in order to reach it
+    		case "coast":
+    			obj_create(_x + 16, _y + 16, "SunkenChest");
+    			
+    			break;
+    			
+    		 // Oasis Cove Chest:
+    		 // spawns in a sealed-off cove, you don't have to think that smart for this one
+    		case "oasis":
+    			var _floors = [instance_create(_x, _y, Floor)];
+    			for(var d = 0; d < 360; d += 90) array_push(_floors, instance_create(_x + lengthdir_x(o, d), _y + lengthdir_y(o, d), Floor));
+    			obj_create(_x + 16, _y + 16, "SunkenChest");
+    			
+    			with(_floors){
+    				 // Visual:
+    				styleb = true;
+    				sprite_index = sprFloor101B;
+    				
+    				scrFloorWalls();
+    			}
+				with(Wall){
+					for(var _x = x - 16; _x <= x + 16; _x += 16){
+						for(var _y = y - 16; _y <= y + 16; _y += 16){
+							if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
+								instance_create(_x, _y, TopSmall);
+							}
+						}
+					}
+				}
+    		
+    			break;
+    	}
+    }
 
 #define step
     script_bind_end_step(end_step, 0);

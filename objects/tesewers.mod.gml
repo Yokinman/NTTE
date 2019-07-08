@@ -1925,6 +1925,12 @@
 			case "parrot":	array_push(_pool, "parrot");	break;
 		}
 	}
+	with(["wep", "bwep"]){
+		var w = self;
+		with(Player) if(wep_get(variable_instance_get(id, w)) == "scythe"){
+			array_push(_pool, "bones");
+		}
+	}
 	with(_shop){
 		var i = irandom(array_length(_pool) - 1);
 		drop = _pool[i];
@@ -2753,6 +2759,16 @@
 									reload = max(reload, 1);
 								}
 								break;
+								
+							case "bones":
+								repeat(2) with(obj_create(_x, _y, "BonePickup")){
+									big = true;
+									motion_set(random(360), 3 + random(1));
+								}
+								repeat(10) with(obj_create(_x, _y, "BonePickup"))
+									motion_set(random(360), 3 + random(1));
+									
+								break;
 						}
 						
 						 // Effects:
@@ -2942,6 +2958,13 @@
 					text = "INFINITE AMMO";
 					desc = "FOR A MOMENT";
 					shine = false;
+					break;
+					
+				case "bones":
+					sprite_index = spr.BonePickupBig[0];
+					image_blend = c_yellow;
+					text = "BONES";
+					desc = "BONES";
 					break;
 
 				default:

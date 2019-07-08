@@ -570,7 +570,7 @@
 		if(DebugLag) trace_time();
 		var _inst = [enemy, chestprop];
 		if(!instance_exists(Portal)) array_push(_inst, Pickup);
-		_inst = array_combine(instances_matching(_inst, "", null), instances_matching(CustomObject, "name", "Pet"));
+		_inst = array_combine(instances_matching_ne(_inst, "name", "SunkenChest"), instances_matching(CustomObject, "name", "Pet"));
         with(instances_matching_ge(_inst, "wading", 80)){
             var n = instance_nearest(x - 16, y - 16, Floor);
     		motion_add(point_direction(x, y, n.x, n.y), 4);

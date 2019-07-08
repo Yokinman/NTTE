@@ -403,11 +403,10 @@
     }
 
 #define Crack_step
-    if !image_index{
-        if place_meeting(x, y, Player){
+    if(image_index < 1){
+        if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion) || place_meeting(x, y, PortalShock)){
             image_index = 1;
              // Open effects:
-            // sound_play_pitchvol(sndFlameCannon,     0.8, 0.3);
             sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
             sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
             sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
@@ -415,14 +414,14 @@
             sleep(50);
             view_shake_at(x, y, 20);
             
-            repeat(5 + irandom(5)) with instance_create(x, y, Debris)
+            repeat(5 + irandom(5)) with(instance_create(x, y, Debris))
                 motion_set(random(360), 3 + random(5));
                 
-            repeat(10 + irandom(10)) with instance_create(x, y, Bubble)
+            repeat(10 + irandom(10)) with(instance_create(x, y, Bubble))
                 motion_set(random(360), 1 + random(2));
                 
              // Portal
-            with instance_create(x, y, Portal){
+            with(instance_create(x, y, Portal)){
                 sound_stop(sndPortalOpen);
                 image_alpha = 0;
                 GameCont.area = "trench";
