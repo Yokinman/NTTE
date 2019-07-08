@@ -190,6 +190,7 @@
         with(Pet_spawn(x, y, "Parrot")) {
             leader = other;
             other.pet[0] = id;
+            visible = false;
         }
     }
 

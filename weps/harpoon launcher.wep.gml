@@ -5,7 +5,7 @@
 #define weapon_text return "REEL IT IN";
 #define weapon_type return 3; // Bolt
 #define weapon_cost return 1; // 1 Ammo
-#define weapon_load return 4; // 0.13 Seconds
+#define weapon_load return 5; // 0.17 Seconds
 #define weapon_area return (unlock_get("coastWep") ? 4 : -1); // 1-3
 #define weapon_swap return sndSwapBow;
 #define weapon_sprt return global.sprHarpoonLauncher;

@@ -3096,7 +3096,7 @@
     if(visible){
 	     // Movement:
 	    enemyWalk(walkspd, maxspeed);
-	
+
 	     // Animate:
 	    var _scrt = pet + "_anim";
 	    if(mod_script_exists("mod", "petlib", _scrt)){
@@ -3206,6 +3206,12 @@
      // No Owner:
     else{
         persistent = false;
+
+		 // Leader Died or Something:
+		if(leader != noone){
+			leader = noone;
+			can_take = true;
+		}
 
          // Looking for a home:
         if(instance_exists(Player) && can_take && instance_exists(_pickup)){
@@ -4056,6 +4062,19 @@
 			with(nearest_instance(x, y, instances_matching_gt(instances_matching(Player, "p", p), "id", id))){
 				for(var i = 0; i < lq_size(_vars); i++){
 					variable_instance_set(id, lq_get_key(_vars, i), lq_get_value(_vars, i));
+				}
+
+				 // Grab Back Pet:
+				if("pet" in self){
+					with(pet) if(instance_exists(self) && !instance_exists(leader)){
+	                    leader = other;
+	                    
+	                     // FX:
+	                    with(instance_create(x, y, HealFX)){
+	                    	depth = other.depth - 1;
+	                    }
+	                    sound_play_pitch(sndHealthChestBig, 1.2 + random(0.1));
+					}
 				}
 			}
 		}

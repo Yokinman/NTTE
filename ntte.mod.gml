@@ -1090,19 +1090,19 @@
                     if(_playersLocal <= 1){
 	                    with(instances_matching(CampChar, "num", 17)){
 	                    	global.campchar_fix = true;
-	
+
 						    var _shake = UberCont.opt_shake;
 						    UberCont.opt_shake = 1;
-	
+
 							var _x1 = x,
 								_y1 = y,
 								_x2 = other.x,
 								_y2 = other.y,
 				        		_pan = 4;
-	
+
 							with(player_create(_x1, _y1, i)){
 								gunangle = point_direction(_x1, _y1, _x2, _y2);
-								weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1, 0);
+								weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1 * current_time_scale, 0);
 								instance_delete(id);
 							}
 	

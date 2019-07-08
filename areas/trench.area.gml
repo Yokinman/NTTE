@@ -56,11 +56,6 @@
 	mod_variable_set("mod", "tetrench", "pit_grid", global.pit_grid);
 	with(Floor) trenchpit_check = null;
 
-	 // Reset Pit Sink Objects:
-	with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "pit_check", null)){
-	    pit_check = null;
-	}
-
 	 // For Pause Screen Map:
     global.trench_visited = [];
 
@@ -295,11 +290,8 @@
     			pit_set(_x, _y, true);
     		}
     	}
-	    with([surfPit, surfPitWallBot, surfPitWallTop]){
-	    	reset = true;
-	    }
     }
-    
+
      // Fix scorchmarks showing above pits:
     with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
         trench_fix = true;
@@ -358,16 +350,16 @@
     }
 
      // Stuff Falling Into Pits:
-    with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "pit_check", null), "speed", 1)){
-        if(speed <= 0) pit_check = true;
+    with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "trenchpit_check", null), "speed", 1)){
+        if(speed <= 0) trenchpit_check = true;
         if(pit_get(x, bbox_bottom)){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
             instance_destroy();
         }
     }
-    with(instances_matching_lt(instances_matching(instances_matching(Corpse, "pit_check", null), "image_speed", 0), "size", 4)){
+    with(instances_matching_lt(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "size", 4)){
         if(instance_exists(enemy) || instance_exists(Portal)){
-            if(speed <= 0) pit_check = true;
+            if(speed <= 0) trenchpit_check = true;
             if(pit_get(x, y)){
                 pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
                 instance_destroy();
@@ -856,6 +848,16 @@
 
 #define pit_set(_x, _y, _bool)
 	global.pit_grid[# _x / 16, _y / 16] = _bool;
+
+	 // Reset Pit Surfaces:
+    with([surfPit, surfPitWallBot, surfPitWallTop]){
+    	reset = true;
+    }
+
+	 // Reset Pit Sink Checks:
+	with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "trenchpit_check", null)){
+	    trenchpit_check = null;
+	}
 
 
 /// Scripts
