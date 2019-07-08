@@ -2952,7 +2952,7 @@
 	return global.pit_grid[# _x / 16, _y / 16];
 
 #define pit_set(_x, _y, _bool)
-	global.pit_grid[# _x / 16, _y / 16] = _bool;
+	mod_script_call_nc("area", "trench", "pit_set", _x, _y, _bool);
 
 
 /// Scripts

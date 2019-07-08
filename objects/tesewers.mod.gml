@@ -1289,6 +1289,8 @@
 		spr_walk = spr.CatBossWalk;
 		spr_hurt = spr.CatBossHurt;
 		spr_dead = spr.CatBossDead;
+		spr_chrg = spr.CatBossChrg;
+		spr_fire = spr.CatBossFire;
 		spr_weap = spr.CatBossWeap;
 		spr_weap_chrg = spr.CatBossWeapChrg;
 		spr_shadow = shd48;
@@ -1331,6 +1333,23 @@
 
 #define CatBoss_step
 	enemyWalk(walkspd, maxspeed + (3.5 * (dash > 0)));
+
+	 // Boutta Dash:
+	if(sprite_index == spr_chrg){
+		walk = 0;
+		speed = 0;
+
+		 // Gassy:
+		repeat(2) if(chance_ct(1, 3)){
+			with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
+				depth = other.depth;
+				image_blend = merge_color(image_blend, c_lime, random(0.1));
+				motion_add(random(360), 1);
+				motion_add(other.gunangle + 180 + orandom(40), random_range(2, 4));
+				image_angle = direction;
+			}
+		}
+	}
 
 	 // Super FX:
 	if(super && chance_ct(1, 10)){
@@ -1463,7 +1482,13 @@
         
                      // Gas dash:
                     else if(!in_distance(target, 40)){
-                    	alarm2 = 1;
+                    	alarm2 = 15;
+                    	alarm1 += alarm2;
+                    	sprite_index = spr_chrg;
+                    	
+                    	 // Effects:
+                    	repeat(16) scrFX(x, y, random(5), Dust);
+                    	sound_play_pitchvol(sndBigBanditMeleeStart, 0.7 + random(0.2), 1.2);
                     }
                 }
         
@@ -1504,6 +1529,7 @@
         dash = 16 + random(8);
 		canmelee = true;
 		direction = gunangle + (random_range(40, 60) * choose(-1, 1));
+		sprite_index = spr_fire;
 
 		 // Effects:
         sleep(26);
@@ -1520,6 +1546,7 @@
      // Wall break:
     if(place_meeting(x + hspeed, y + vspeed, Wall)){
         with(instances_meeting(x + hspeed, y + vspeed, Wall)){
+        	view_shake_at(x, y, 3);
         	instance_create(x, y, FloorExplo);
         	instance_destroy();
         }
@@ -1546,6 +1573,7 @@
 		alarm2 = -1;
         alarm11 = -1;
         canmelee = false;
+        sprite_index = spr_walk;
 
         sound_play(sndFlamerStop);
         sound_stop(jetpack_loop);
@@ -1556,7 +1584,7 @@
         scrWalk(16 + random(16), direction + orandom(20));
 	}
 
-    gunangle = _targetDir + angle_difference(direction, _targetDir) * 0.5;
+    gunangle += angle_difference(_targetDir + angle_difference(direction, _targetDir) * 0.5, gunangle) * 0.5 * current_time_scale;
     scrRight(gunangle);
 
 #define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)

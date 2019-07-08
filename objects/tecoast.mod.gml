@@ -191,7 +191,7 @@
 
 
 #define CoastDecal_create(_x, _y, _shell)
-    with(instance_create(_x, _y, CustomHitme)){
+    with(instance_create(_x, _y, CustomProp)){
         shell = _shell;
 
          // Visual:
@@ -211,9 +211,7 @@
             spr_bott = spr.RockBott[type];
             spr_foam = spr.RockFoam[type];
         }
-        spr_walk = spr_idle;
         image_xscale = choose(-1, 1);
-        image_speed = 0.4;
         spr_shadow = mskNone;
         depth = (shell ? -2 : 0) + (-y / 20000);
 
@@ -222,12 +220,9 @@
         snd_dead = (shell ? sndHyperCrystalHurt : sndWallBreakRock);
 
          // Vars:
-        friction = 3;
         mask_index = (shell ? mskScrapBoss : mskBandit);
-        mask_floor = (shell ? mskSalamander : mskAlly);
         maxhealth = (shell ? 100 : 50);
         size = (shell ? 4 : 3);
-        team = 0;
 
          // Offset:
         x += orandom(10);
@@ -242,25 +237,8 @@
     }
 
 #define CoastDecal_step
-     // Animate:
-    if(anim_end){
-        if(sprite_index != spr_dead) sprite_index = spr_idle;
-        else{
-            image_speed = 0;
-            image_index = image_number - 1;
-        }
-    }
-
-     // Pushing:
+     // Space Out Decals:
     if(place_meeting(x, y, hitme)){
-        with(instances_meeting(x, y, instances_matching_lt(hitme, "size", size))){
-            motion_add(point_direction(other.x, other.y, x, y), 1);
-        }
-        with(instances_meeting(x, y, instances_matching_ge(Player, "size", size))){
-            motion_add(point_direction(other.x, other.y, x, y), 1);
-        }
-
-         // Space Out Decals:
         with(instances_meeting(x, y, instances_matching_le(instances_matching(object_index, "name", name), "size", size))){
         	var _dir = point_direction(other.x, other.y, x, y),
         		_dis = 8;
@@ -276,70 +254,64 @@
         }
     }
 
-     // Break:
-    if(my_health <= 0 && sprite_index != spr_dead){
-        sprite_index = spr_dead;
-
-         // Stop Collision & Projectile Interactions:
-        mask_index = mskNone;
-        team = 2;
-
-         // Can Stand On Corpse:
-        with(instance_create(0, 0, Floor)){
-            x = other.x;
-            y = other.y;
-            visible = 0;
-            mask_index = other.mask_floor;
+#define CoastDecal_death
+     // Water Rock Debris:
+    if(!shell){
+        var _ang = random(360);
+        for(var a = _ang; a < _ang + 360; a += 360 / 3){
+            with(instance_create(x, y, MeleeHitWall)) image_angle = a + orandom(10);
         }
-
-         // Weapon Drop:
-        //pickup_drop(0, 100);
-
-         // Visual Stuff:
-        depth += 8;
-        with(instances_matching(BoltStick, "target", id)) instance_destroy();
-
-         // Water Rock Debris:
-        if(!shell){
-            var _ang = random(360);
-            for(var a = _ang; a < _ang + 360; a += 360 / 3){
-                with(instance_create(x, y, MeleeHitWall)) image_angle = a + orandom(10);
-            }
-            repeat(choose(2, 3)){
-                with(instance_create(x + orandom(2), y + orandom(2), Debris)){
-                    motion_set(other.direction + orandom(10), (speed + other.speed) / 2);
-                }
+        repeat(choose(2, 3)){
+            with(instance_create(x + orandom(2), y + orandom(2), Debris)){
+                motion_set(other.direction + orandom(10), (speed + other.speed) / 2);
             }
         }
-
-         // Break Sound:
-        sound_play_pitch(snd_dead, 1 + random(0.2));
     }
 
-	 // Stay Still:
-	x = xstart;
-	y = ystart;
-	speed = 0;
-
-#define CoastDecal_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;			// Damage
-    nexthurt = current_frame + 6;   // I-Frames
-    sound_play_hit(snd_hurt, 0.3);  // Sound
-
-     // Hurt Sprite:
-    sprite_index = spr_hurt;
-    image_index = 0;
-
-     // Splashy FX:
-    repeat(1 + (_hitdmg / 5)){
-        var _dis = (shell ? 24 : 8),
-            _dir = _hitdir + 180 + orandom(30);
-
-        with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Sweat)){
-            speed = random(speed);
-            direction = _dir;
-        }
+     // Special Corpse:
+    with(obj_create(x, y, "CoastDecalCorpse")){
+    	sprite_index = other.spr_dead;
+    	spr_bott = other.spr_bott;
+    	spr_foam = other.spr_foam;
+    	image_xscale = other.image_xscale;
+    	if(other.shell){
+        	depth -= 2;
+			mask_index = mskSalamander;
+    	}
     }
+    spr_dead = -1;
+
+
+#define CoastDecalCorpse_create(_x, _y)
+	with(instance_create(0, 0, Floor)){
+		x = _x;
+		y = _y;
+
+		 // Visual:
+        sprite_index = spr.RockDead[0];
+        spr_bott = spr.RockBott[0];
+        spr_foam = spr.RockFoam[0];
+        depth = 8 + (-y / 20000);
+        image_speed = 0.4;
+        image_index = 0;
+		visible = false;
+
+         // Vars:
+		mask_index = mskAlly;
+		material = 2;
+
+		return id;
+	}
+
+#define CoastDecalCorpse_draw
+	 // Animate:
+	if(image_speed != 0 && anim_end){
+		image_speed = 0;
+		image_index = image_number - 1;
+	}
+
+	 // Draw Self:
+	draw_self();
 
 
 #define Creature_create(_x, _y)
@@ -1440,7 +1412,7 @@
 
         else{
              // Call for Seals:
-            if(z <= 0 || (chance(3, 4) && chance(1, array_length(Seal) / 2))){
+            if((z <= 0 || (chance(3, 4) && chance(1, array_length(Seal) / 2))) && array_length(Seal) <= seal_max * 4){
             	alarm1 = 30 + random(10);
 
                 sprite_index = spr_call;

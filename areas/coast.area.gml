@@ -1127,7 +1127,7 @@
 						_oy = lengthdir_y(_dis, a);
 
 					for(var f = 1; f <= 5; f++){
-						if(place_meeting(x + (_ox * f), y + (_oy * f), Floor)){
+						if(position_meeting(x + (_ox * f), y + (_oy * f), Floor)){
 							for(var i = 2; i <= f; i++){
 								var	_dx = _x + (_ox * i),
 									_dy = _y + (_oy * i),
@@ -1188,7 +1188,10 @@
             }
 
 			 // Rock Decals:
-			with(instances_matching(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
+			with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
+				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+			}
+			with(instances_matching(instances_matching(Floor, "name", "CoastDecalCorpse"), "visible", false)){
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
 
@@ -1226,11 +1229,14 @@
 	}
 
 	 // Submerged Rock Decals:
-	with(instances_matching(instances_matching(CustomHitme, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
+	with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
 		var _hurt = (nexthurt > current_frame + 3);
 		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		if(_hurt) draw_set_fog(false, 0, 0, 0);
+	}
+	with(instances_matching(instances_matching(Floor, "name", "CoastDecalCorpse"), "visible", false)){
+		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	}
 
 	 // Bottom Halves of Things:
