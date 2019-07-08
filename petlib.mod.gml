@@ -7,7 +7,6 @@
 	global.debug_lag = false;
 
 	global.surfWeb = surflist_set("Web", 0, 0, game_width, game_height);
-    global.web_frame = 0;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1047,6 +1046,7 @@
 	web_add_d = direction + web_add_side;
 	web_timer_max = 9;
     web_timer = web_timer_max;
+    web_frame = 0;
 
 #define Spider_step
 	 // Lay Webs:
@@ -1143,7 +1143,8 @@
 	array_push(web_list, {
 		x : _x,
 		y : _y,
-		frame : global.web_frame + 150
+		frame : other.web_frame + 120,
+		wading : (GameCont.area == "coast" && !position_meeting(_x, _y, Floor))
 	});
 
     web_list_x1 = min(_x, web_list_x1);
@@ -1557,19 +1558,38 @@
 			 // Bind Events:
 			if(!instance_exists(GenCont) && surface_exists(surf)){
 				script_bind_end_step(web_end_step, 0, _inst);
-				script_bind_draw(web_draw, 5);
+				script_bind_draw(web_draw,		5);
+				script_bind_draw(web_draw_post,	0);
 			}
 	
 			 // Reset Webs:
 			else with(_inst){
 				web_list = [];
 				web_timer = web_timer_max;
+			    web_list_x1 = 1000000;
+			    web_list_y1 = 1000000;
+			    web_list_x2 = 0;
+			    web_list_y2 = 0;
 			}
 		}
 	}
 	else with(surfWeb) active = false;
 
 	if(DebugLag) trace_time("petlib_step");
+
+#define web_draw_post
+	instance_destroy();
+
+	 // Web Bloom:
+	with(surfWeb){
+		if(surface_exists(surf)){
+			draw_set_alpha(1/3);
+			draw_set_blend_mode(bm_add);
+			draw_surface(surf, x, y);
+			draw_set_blend_mode(bm_normal);
+			draw_set_alpha(1);
+		}
+	}
 
 #define web_end_step(_inst)
 	if(DebugLag) trace_time();
@@ -1585,6 +1605,7 @@
 			draw_set_color(c_black);
 
 		    with(_inst) if(instance_exists(self)){
+				web_frame += current_time_scale;
 
 			    var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
 					_x1, _x2, _x3,
@@ -1609,8 +1630,8 @@
 			            with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
 			            	_webInst,
 			            	"bbox_right",	min(_x1, _x2, _x3)),
-			            	"bbox_left",	min(_y1, _y2, _y3)),
-			            	"bbox_bottom",	max(_x1, _x2, _x3)),
+			            	"bbox_left",	max(_x1, _x2, _x3)),
+			            	"bbox_bottom",	min(_y1, _y2, _y3)),
 			            	"bbox_top",		max(_y1, _y2, _y3))
 			            ){
 			                //if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
@@ -1623,7 +1644,8 @@
 			        }
 
 					 // Dissipate:
-			        if(frame < global.web_frame){
+			        if(frame < other.web_frame){
+			        	 // Shrink Towards Next Point:
 			        	var _x = x,
 			        		_y = y;
 
@@ -1637,10 +1659,27 @@
 						x = lerp(x, _x, 0.2);
 						y = lerp(y, _y, 0.2);
 
+						 // Particles:
+						if(chance_ct(1, 20)){
+							with(instance_create(x, y, Feather)){
+								sprite_index = sprBoltTrail;
+								image_blend = make_color_rgb(random_range(210, 240), random_range(168, 217), random_range(210, 240));
+								speed *= 0.5;
+							}
+						}
+
+						 // Delete:
 						if(point_distance(_x, _y, x, y) < 1){
 			            	with(other) Spider_web_delete(--_vertexNum);
 						}
 			        }
+
+			         // In Coast Water:
+					else if(wading){
+						var o = sin((current_frame + frame) / 10) * current_time_scale;
+						x += o * 0.1;
+						y += o * 0.15;
+					}
 			    }
 
 				 // Finish Web Mask:
@@ -1668,8 +1707,6 @@
 			}
 		}
 	}
-
-	global.web_frame += current_time_scale;
 
 	if(DebugLag) trace_time("petlib_web_end_step");
 

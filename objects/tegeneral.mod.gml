@@ -11,6 +11,8 @@
 
     global.poonRope = [];
 
+    global.pickup_custom = [];
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -861,7 +863,7 @@
 			}
 		}
 	}
-	
+
 #define BonePickup_alrm1
 	alarm1 = 2;
 	image_alpha *= -1;
@@ -906,7 +908,8 @@
 		image_blend = c[irandom(2)];
 		return id;
 	}
-	
+
+
 #define BoneSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
@@ -960,7 +963,8 @@
 		wall = true;
 		speed = 0;
 	}
-	
+
+
 #define BubbleBomb_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -1277,6 +1281,7 @@
          // Sound:
         snd_open = sndAmmoChest;
 
+		 // Events:
         on_step = ["", "", ""];
         on_open = ["", "", ""];
 
@@ -1310,6 +1315,112 @@
             instance_destroy();
         }
         break;
+    }
+
+
+#define CustomPickup_create(_x, _y)
+    with(instance_create(_x, _y, Pickup)){
+         // Visual:
+        sprite_index = sprAmmo;
+        spr_open = sprSmallChestPickup;
+        spr_fade = sprSmallChestFade;
+        image_speed = 0.4;
+        shine = 0.04;
+
+         // Sound:
+        snd_open = sndAmmoPickup;
+        snd_fade = sndPickupDisappear;
+
+         // Vars:
+        mask_index = mskPickup;
+        friction = 0.2;
+        attract = 40 + (30 * skill_get(mut_plutonium_hunger));
+        attract_speed = 6;
+		time = 200 + random(30);
+        blink = 30;
+
+		 // Events:
+        on_step = ["", "", ""];
+        on_open = ["", "", ""];
+        on_fade = ["", "", ""];
+
+        return id;
+    }
+
+#define CustomPickup_step
+	array_push(global.pickup_custom, id); // For step event management
+
+     // Call Chest Step Event:
+    var e = on_step;
+    if(mod_script_exists(e[0], e[1], e[2])){
+        mod_script_call(e[0], e[1], e[2]);
+    }
+
+     // Animate:
+    if(image_index < 1 && shine > 0){
+		image_index += random(shine) - image_speed_raw;
+    }
+
+     // Attraction:
+    var p = instance_nearest(x, y, Player);
+    if(point_distance(x, y, p.x, p.y) < attract || instance_exists(Portal)){
+        var l = attract_speed * current_time_scale,
+            d = point_direction(x, y, p.x, p.y),
+            _x = x + lengthdir_x(l, d),
+            _y = y + lengthdir_y(l, d);
+
+        if(place_free(_x, y)) x = _x;
+        if(place_free(x, _y)) y = _y;
+    }
+
+	 // Pickup Collision:
+	if(place_meeting(x, y, Pickup)){
+		with(instances_meeting(x, y, instances_matching(Pickup, "mask_index", mskPickup))){
+			if(place_meeting(x, y, other)){
+				if(object_index == AmmoPickup || object_index == HPPickup || object_index == RoguePickup){
+					motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(10), 0.8);
+				}
+				with(other){
+					motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(10), 0.8);
+				}
+			}
+		}
+	}
+
+     // Wall Collision:
+    if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+    	if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+    	if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
+    }
+
+     // Fading:
+    if(time > 0){
+    	time -= ((time > 2 && crown_current == crwn_haste) ? 3 : 1) * current_time_scale;
+		if(time <= 0){
+			 // Blink:
+			if(blink >= 0){
+				time = 2;
+				blink--;
+				visible = !visible;
+			}
+	
+			 // Fade:
+	    	else{
+	    		 // Call Fade Event:
+	            var e = on_fade;
+	            if(mod_script_exists(e[0], e[1], e[2])){
+	                mod_script_call(e[0], e[1], e[2]);
+	            }
+	
+	    		 // Effects:
+	            if(sprite_exists(spr_fade)){
+	            	with(instance_create(x, y, SmallChestFade)) sprite_index = other.spr_fade;
+	            }
+	            sound_play_hit(snd_fade, 0.1);
+	
+				instance_destroy();
+			}
+		}
     }
 
 
@@ -4815,6 +4926,51 @@
 	if(array_length(instances_seen(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24)) > 0){
 		script_bind_draw(draw_ravenflys, -9);
 	}
+
+	 // Eyes Custom Pickup Attraction:
+    with(instances_matching(Player, "race", "eyes")){
+    	if(canspec && button_check(index, "spec")){
+    		var _vx = view_xview[index],
+    			_vy = view_yview[index];
+
+    		with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
+    			if(instance_exists(self)){
+	    			var	l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
+	    				d = point_direction(x, y, other.x, other.y),
+	    				_x = x + lengthdir_x(l, d),
+	    				_y = y + lengthdir_y(l, d);
+	
+			        if(place_free(_x, y)) x = _x;
+			        if(place_free(x, _y)) y = _y;
+    			}
+    		}
+    	}
+    }
+
+	 // Grabbing Custom Pickups:
+    with(instances_matching([Player, Portal], "", null)){
+        if(place_meeting(x, y, Pickup)){
+        	with(instances_meeting(x, y, global.pickup_custom)){
+        		if(instance_exists(self) && place_meeting(x, y, other)){
+		             // Call Open Event:
+		            var e = on_open;
+		            if(mod_script_exists(e[0], e[1], e[2])){
+		                mod_script_call(e[0], e[1], e[2]);
+		            }
+
+		             // Effects:
+		            if(sprite_exists(spr_open)){
+		            	with(instance_create(x, y, SmallChestPickup)) sprite_index = other.spr_open;
+		            }
+		            sound_play(snd_open);
+		
+		            instance_destroy();
+        		}
+        	}
+        }
+    }
+
+    global.pickup_custom = [];
 
 	if(DebugLag) trace_time("tegeneral_step");
 

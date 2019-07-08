@@ -566,15 +566,23 @@
         }
 		if(DebugLag) trace_time("coast_area_step Wading Sink");
 
-         // Push Back to Shore:
+         // Push Stuff to Shore:
 		if(DebugLag) trace_time();
-		var _inst = [enemy, chestprop];
+		var _inst = [enemy];
 		if(!instance_exists(Portal)) array_push(_inst, Pickup);
-		_inst = array_combine(instances_matching_ne(_inst, "name", "SunkenChest"), instances_matching(CustomObject, "name", "Pet"));
+		_inst = array_combine(
+			instances_matching(_inst, "", null),
+			array_combine(
+			instances_matching_ne(chestprop, "name", "SunkenChest"),
+			instances_matching(CustomObject, "name", "Pet")
+			)
+		);
         with(instances_matching_ge(_inst, "wading", 80)){
             var n = instance_nearest(x - 16, y - 16, Floor);
     		motion_add(point_direction(x, y, n.x, n.y), 4);
         }
+        
+         // Push Player to Shore
         if(!CanLeaveCoast || instance_exists(Portal)){
         	with(instances_matching_ge(Player, "wading", 80)){
 	        	if(visible && distance_to_object(Portal) > 0){

@@ -1582,7 +1582,9 @@
 			_stockProjCost = _stockProjCostRaw,
 			_frontProjCost = _frontProjCostRaw,
             _stockAmnt = _stock.amnt,
-            _frontAmnt = _front.amnt;
+            _frontAmnt = _front.amnt,
+            _stockSped = array_clone(_stock.sped),
+            _frontSped = array_clone(_front.sped);
 
 		switch(_stockObjRaw){
 			case Disc:
@@ -1622,25 +1624,33 @@
 		if(_stock.type == 1){
 			if(_frontProjCostRaw < _stockProjCostRaw / 2) _stockProjCost /= 2;
 			else _stockProjCost /= 3;
+
+			 // Slower:
+			if(_stock.type != _front.type || _frontSped[1] < _stockSped[1]){
+				_stockSped[0] *= 2/3;
+				_stockSped[1] *= 2/3;
+			}
 		}
 		if(_front.type == 1){
+			_frontProjCost = max(1, _frontProjCost);
 			if(_stockProjCostRaw < _frontProjCostRaw / 2) _frontProjCost /= 2;
 			else _frontProjCost /= 3;
 		}
 
          // Speed:
-        if(_stock.sped[0] == _stock.sped[1]){
+        if(_stockSped[0] == _stockSped[1]){
         	sped = [
-        		lerp(_stock.sped[0], _front.sped[0], 1/2),
-        		lerp(_stock.sped[1], _front.sped[1], 1/2)
+        		lerp(_stockSped[0], _frontSped[0], 1/2),
+        		lerp(_stockSped[1], _frontSped[1], 1/2)
         	];
         }
         else{
         	sped = [
-            	lerp(_stock.sped[0], _front.sped[0], 1/5),
-            	lerp(_stock.sped[1], _front.sped[1], 4/5)
+            	lerp(_stockSped[0], _frontSped[0], 1/5),
+            	lerp(_stockSped[1], _frontSped[1], 4/5)
             ];
         }
+        array_sort(sped, true);
 
 		/// Projectile Amount:
 			 // Determine Fraction of Stock Projectiles to Keep:
@@ -2013,6 +2023,10 @@
 			case UltraBolt:
 				array_push(flag, "ultrabow");
 				break;
+
+			case Devastator:
+				sped[0] /= 2;
+				break;
         }
         switch(_frontObjRaw){
         	case Disc:
@@ -2038,7 +2052,7 @@
 		//- Lightning,		follows a lightning-like path
 		//-?Plasma,			no friction until hit a wall? plasma explosion?
 		// ?Plasma Cannon,	kind of flak but without friction???
-		// ?Devastator,		??? mayb what jsburg said with the destory projectile thing u know
+		//- Devastator,		shoots a lot of projectiles with highly variable speed
 		//- Ultra Crossbow,	can break limited walls
 		//- Ultra Nader,	attract enemies
 		//- Flame,			create flame on destruction (flameshell)

@@ -912,7 +912,7 @@
 		 // Transition Levels:
 		else _chance = 1/4;
 	}
-	if(GameCont.area == 3 && array_length(instances_matching(CustomObject, "name", "NestRaven")) > 0){
+	if(GameCont.area == 3 && array_length(instances_matching(CustomObject, "name", "NestRaven")) > 24){
 		_chance = 1;
 	}
     if(chance(_chance, 1) && instance_exists(Player)){
@@ -1004,10 +1004,11 @@
     if(chance(0, 1)){
     	var _x, _y,
     		o = 32;
+
     	with(instance_furthest(10000, 10000, Floor)){
     		var l = ((GameCont.area == "coast") ? 200 : 160),
     			d = point_direction(10000, 10000, x, y);
-    			
+
     		_x = round((x + lengthdir_x(l, d)) / o) * o + 16;
     		_y = round((y + lengthdir_y(l, d)) / o) * o + 16;
     	}

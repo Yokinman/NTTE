@@ -11,7 +11,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["Backpack", "BatDisc", "BigDecal", "BoneArrow", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["Backpack", "BatDisc", "BigDecal", "BoneArrow", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	  : ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
@@ -179,21 +179,29 @@
 
                              // Auto Script Binding:
                             else{
-                            	var _bind = noone;
-                            	switch(self){
-                            		case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
-                            		case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
-                            		case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
-                            		case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+                            	var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
+                            	if(array_length(_bind) <= 0 || self == "draw"){
+                            		switch(self){
+	                            		case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
+	                            		case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
+	                            		case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
+	                            		case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+	                            	}
+	                            	if(instance_exists(_bind)){
+	                            		with(_bind){
+	                            			name = "NTTEBind_" + other;
+		                            		inst_list = [];
+	                            			persistent = true;
+	                            		}
+	                            		variable_instance_set(other, v, _bind);
+	                            	}
                             	}
-                            	if(instance_exists(_bind)){
-                            		_bind.ntte_script = [_modType, _modName, _modScrt];
-                            		_bind.creator = other;
-                            		variable_instance_set(other, v, _bind);
+                            	with(_bind){
+                            		array_push(inst_list, { "inst" : o, "script" : [_modType, _modName, _modScrt] });
                             	}
                             }
                         }
-	
+
 	                     // Defaults:
 	                    else if(_isCustom) with(other){
 	                        switch(v){
@@ -380,10 +388,21 @@
     }
 
 #define ntte_bind
-	if(instance_exists(creator)){
-		depth = creator.depth;
-		var s = ntte_script;
-		with(creator) mod_script_call(s[0], s[1], s[2]);
+	if(array_length(inst_list) > 0){
+		if(DebugLag) trace_time();
+
+		with(inst_list){
+			if(instance_exists(inst)){
+				if(other.object_index == CustomDraw) other.depth = inst.depth;
+
+				 // Call Bound Script:
+				var s = script;
+				with(inst) mod_script_call(s[0], s[1], s[2]);
+			}
+			else other.inst_list = array_delete_value(other.inst_list, self);
+		}
+
+		if(DebugLag) trace_time(name);
 	}
 	else instance_destroy();
 
