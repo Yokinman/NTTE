@@ -24,7 +24,6 @@
 	global.surfSwimTop	= surflist_set("CoastSwimTop",	0, 0, 0, 0);
 	with([surfTrans, surfFloor]) reset = true;
     with(surfSwim){
-    	inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, AmmoPickup, HPPickup, Crown, Grenade, hitme];
 	    inst_visible = [];
     }
     with([surfTrans, surfFloor]){
@@ -233,7 +232,7 @@
     else subarea++;
 
 #define area_transit
-	with(instances_matching_ne(surfSwim.inst, "wading", null)){
+	with(instances_matching_ne(instances_matching(GameObject, "persistent", true), "wading", null)){
 		wading = 0;
 	}
 
@@ -261,8 +260,10 @@
 				_vh = game_height,
 				_x = floor(_vx / _vw) * _vw,
 				_y = floor(_vy / _vh) * _vh,
-				_inst = array_combine(inst, instances_matching(CustomObject, "name", "Pet"));
+				_inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme];
 
+			_inst = array_combine(_inst, instances_matching(CustomObject, "name", "Pet"));
+			_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
 			_inst = instances_matching(instances_matching(instances_matching_lt(_inst, "depth", global.seaDepth), "visible", true), "nowade", null, false);
 
 			with(instances_matching(_inst, "wading", null)){

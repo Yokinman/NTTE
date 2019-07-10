@@ -32,14 +32,17 @@
 
              // Throne Butt : Pickups Give Feathers
             if(skill_get(mut_throne_butt) > 0){
-                with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "my_feather_storage", null)){
-                    my_feather_storage = obj_create(x, y, "ParrotChester");
-
-                     // Vars:
-                    with(my_feather_storage){
-                        creator = other;
-                        small = true;
-                        num = ceil(2 * skill_get(mut_throne_butt));
+                with(instances_matching(Pickup, "my_feather_storage", null)){
+                    my_feather_storage = noone;
+                    if(mask_index == mskPickup){
+	                    my_feather_storage = obj_create(x, y, "ParrotChester");
+	
+	                     // Vars:
+	                    with(my_feather_storage){
+	                        creator = other;
+	                        small = true;
+	                        num = ceil(2 * skill_get(mut_throne_butt));
+	                    }
                     }
                 }
             }

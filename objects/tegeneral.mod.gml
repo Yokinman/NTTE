@@ -764,115 +764,84 @@
 		 // Drop Bone Pickups:
 		if(other.my_health <= 0) scrBonePickupDrop(other);
 	}
-	
-#define BonePickup_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
+
+
+#define BoneBigPickup_create(_x, _y)
+	with(obj_create(_x, _y, "BonePickup")){
 		 // Visual:
-		sprite_index = spr.BonePickup[irandom(3)];
-		image_angle = random(360);
-		image_speed = 0.4;
+		sprite_index = spr.BonePickupBig[irandom(array_length(spr.BonePickupBig) - 1)];
 		
 		 // Vars:
-		mask_index = mskRad;
-		friction = 0.2;
-		big = false;
-		num = 1;
-		blink = 30;
-		alarm1 = ((crown_current == crwn_haste) ? 50 + random(10) : 150 + random(30));
-		
-		 // Events:
-		on_end_step = BonePickup_setup;
-		
+		mask_index = mskBigRad;
+		num = 10;
+
 		return id;
 	}
-	
-#define BonePickup_setup
-	on_end_step = [];
-	
-	 // Become Big:
-	if(big){
-		sprite_index = spr.BonePickupBig[irandom(1)];
-		num = 10;
+
+
+#define BonePickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){ 
+		 // Visual:
+		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
+		image_index = random(image_number - 1);
+		image_angle = random(360);
+        spr_open = -1;
+        spr_fade = -1;
+
+		 // Sound:
+		snd_open = sndRadPickup;
+		snd_fade = -1;
+
+		 // Vars:
+		mask_index = mskRad;
+		time = 150 + random(30);
+        pull_dis = 80 + (60 * skill_get(mut_plutonium_hunger));
+        pull_spd = 12;
+		num = 1;
+
+		 // Events:
+		on_pull = script_ref_create(BonePickup_pull);
+		on_open = script_ref_create(BonePickup_open);
+		on_fade = script_ref_create(BonePickup_fade);
+
+		return id;
 	}
-	
-#define BonePickup_step
-	 // Animate:
-	if(image_index < 1) image_index -= image_speed - 0.025;
-	
-	 // Wall Collision:
-	if(place_meeting(x, y, Wall)){
-		if(place_meeting(xprevious + hspeed, yprevious, Wall)) hspeed *= -1;
-		if(place_meeting(xprevious, yprevious + vspeed, Wall)) vspeed *= -1;
+
+#define BonePickup_pull
+	if(speed <= 0 && (wep_get(other.wep) == "scythe" || wep_get(other.bwep) == "scythe")){
+		return true;
 	}
-	
-	 // Player Interaction:
-	if(instance_exists(Player)){
-		
-		 // Find Players:
-		var a = [];
+	return false;
+
+#define BonePickup_open
+	 // Determine Handouts:
+	var _inst = other;
+	if(instance_is(other, Player)){
+		if(wep_get(other.wep) != "scythe" && wep_get(other.bwep) != "scythe"){
+			return true; // Can't be picked up
+		}
+	}
+	else _inst = Player;
+
+	 // Give Ammo:
+	var _num = num;
+	with(_inst){
 		with(["wep", "bwep"]){
-			var o = self;
-			with(Player) if(lq_get(variable_instance_get(id, o), "wep") == "scythe"){
-				array_push(a, id);
-			}
-		}
-		
-		if(array_length(a) > 0){
-			var p = nearest_instance(x, y, a),
-				r = 96 + (64 * skill_get(mut_plutonium_hunger));
-				
-			 // Get Got:
-			if(place_meeting(x, y, p)){
-				var _pickup = id;
-				with(["wep", "bwep"]){
-					var o = self;
-					with(p){
-						var w = variable_instance_get(id, o);
-						if(lq_get(w, "wep") == "scythe"){
-							 // Add Ammo:
-							with(w){
-								ammo = min(ammo + _pickup.num, amax);
-							}
-							
-							 // Destroy:
-							with(_pickup){
-								
-								 // Effects:
-								instance_create(x, y, Dust);
-								sound_play_hit(sndRadPickup, 0.3);
-								
-								 // Goodbye:
-								instance_destroy();
-								exit;
-							}
-						}
-					}
+			var w = variable_instance_get(other, self);
+			if(wep_get(w) == "scythe" && "ammo" in w){
+				if(w.ammo < w.amax){
+					w.ammo = min(w.ammo + _num, w.amax);
+					break;
 				}
-			}
-			
-			 // Move to Player:
-			if(speed <= 0 && (point_distance(x, y, p.x, p.y) <= r || instance_exists(Portal))){
-				move_contact_solid(point_direction(x, y, p.x, p.y), 12);
-			}
-		}
-		
-		 // Eyes Active:
-		with(instances_matching(Player, "race", "eyes")) if(canspec && button_check(index, "spec")){
-			with(other) if(point_distance(x, y, other.x, other.y) <= 200){
-				move_contact_solid(point_direction(x, y, other.x, other.y), 1);
 			}
 		}
 	}
 
-#define BonePickup_alrm1
-	alarm1 = 2;
-	image_alpha *= -1;
-	
-	if(blink-- <= 0){
-		instance_create(x, y, Dust);
-		instance_destroy();
-	}
-	
+	instance_create(x, y, Dust);
+
+#define BonePickup_fade
+	instance_create(x, y, Dust);
+
 #define scrBonePickupDrop(_inst)
 	with(_inst) if(my_health <= 0){
 		var _raddrop = variable_instance_get(_inst, "raddrop", 0),
@@ -882,16 +851,18 @@
 		if(n > 0){
 			 // Big Pickups:
 			var _numLarge = floor(n div 10);
-			if(_numLarge) repeat(_numLarge) with(obj_create(x, y, "BonePickup")){
-				big = true;
-				
-				motion_set(random(360), 3 + random(1));
+			if(_numLarge > 0) repeat(_numLarge){
+				with(obj_create(x, y, "BoneBigPickup")){
+					motion_set(random(360), 3 + random(1));
+				}
 			}
+
 			 // Small Pickups:
 			var _numSmall = ceil(n mod 10);
-			if(_numSmall) repeat(_numSmall) with(obj_create(x, y, "BonePickup")){
-				
-				motion_set(random(360), 3 + random(1));
+			if(_numSmall > 0) repeat(_numSmall){
+				with(obj_create(x, y, "BonePickup")){
+					motion_set(random(360), 3 + random(1));
+				}
 			}
 		}
 	}
@@ -905,7 +876,7 @@
 	
 	 // Create the guy aready:
 	with(instance_create(_x, _y, Sweat)){
-		image_blend = c[irandom(2)];
+		image_blend = c[irandom(array_length(c) - 1)];
 		return id;
 	}
 
@@ -915,14 +886,14 @@
 		 // Visual:
 		sprite_index = spr.BoneSlashLight;
 		image_speed = 0.4;
-		
+
 		 // Vars:
 		mask_index = msk.BoneSlashLight;
 		damage = 24;
 		force = 8;
 		heavy = false;
 		wall = false;
-		
+
 		 // Events:
 		on_end_step = BoneSlash_setup;
 		
@@ -1334,18 +1305,22 @@
          // Vars:
         mask_index = mskPickup;
         friction = 0.2;
-        attract = 40 + (30 * skill_get(mut_plutonium_hunger));
-        attract_speed = 6;
-		time = 200 + random(30);
         blink = 30;
+		time = 200 + random(30);
+        pull_dis = 40 + (30 * skill_get(mut_plutonium_hunger));
+        pull_spd = 6;
 
 		 // Events:
         on_step = ["", "", ""];
+        on_pull = ["", "", ""];
         on_open = ["", "", ""];
         on_fade = ["", "", ""];
 
         return id;
     }
+
+#define CustomPickup_pull
+	return true;
 
 #define CustomPickup_step
 	array_push(global.pickup_custom, id); // For step event management
@@ -1361,11 +1336,29 @@
 		image_index += random(shine) - image_speed_raw;
     }
 
+     // Find Nearest Attractable Player:
+    var _nearest = noone,
+    	_disMax = (instance_exists(Portal) ? 1000000 : pull_dis),
+    	e = on_pull;
+
+	if(!mod_script_exists(e[0], e[1], e[2])){
+		e = script_ref_create(CustomPickup_pull);
+	}
+
+    with(Player){
+    	var _dis = point_distance(x, y, other.x, other.y);
+    	if(_dis < _disMax){
+	    	with(other) if(mod_script_call(e[0], e[1], e[2])){
+	    		_disMax = _dis;
+	    		_nearest = other;
+	    	}
+    	}
+    }
+
      // Attraction:
-    var p = instance_nearest(x, y, Player);
-    if(point_distance(x, y, p.x, p.y) < attract || instance_exists(Portal)){
-        var l = attract_speed * current_time_scale,
-            d = point_direction(x, y, p.x, p.y),
+    if(_nearest != noone){
+        var l = pull_spd * current_time_scale,
+            d = point_direction(x, y, _nearest.x, _nearest.y),
             _x = x + lengthdir_x(l, d),
             _y = y + lengthdir_y(l, d);
 
@@ -1374,7 +1367,7 @@
     }
 
 	 // Pickup Collision:
-	if(place_meeting(x, y, Pickup)){
+	if(mask_index == mskPickup && place_meeting(x, y, Pickup)){
 		with(instances_meeting(x, y, instances_matching(Pickup, "mask_index", mskPickup))){
 			if(place_meeting(x, y, other)){
 				if(object_index == AmmoPickup || object_index == HPPickup || object_index == RoguePickup){
@@ -1879,9 +1872,9 @@
          // Visual:
         sprite_index = spr.Harpoon;
         image_speed = 0;
-        mask_index = mskBolt;
 
          // Vars:
+        mask_index = mskBolt;
     	creator = noone;
     	target = noone;
     	rope = [];
@@ -2188,6 +2181,18 @@
         broken = true;
 		global.poonRope = array_delete_value(global.poonRope, self);
     }
+
+
+#define HarpoonPickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+        sprite_index = spr.Harpoon;
+
+		 // Vars:
+		mask_index = mskBigRad;
+
+		return id;
+	}
 
 
 #define LightningDisc_create(_x, _y)
@@ -4952,19 +4957,16 @@
         if(place_meeting(x, y, Pickup)){
         	with(instances_meeting(x, y, global.pickup_custom)){
         		if(instance_exists(self) && place_meeting(x, y, other)){
-		             // Call Open Event:
 		            var e = on_open;
-		            if(mod_script_exists(e[0], e[1], e[2])){
-		                mod_script_call(e[0], e[1], e[2]);
+		            if(!mod_script_exists(e[0], e[1], e[2]) || !mod_script_call(e[0], e[1], e[2])){
+			             // Effects:
+			            if(sprite_exists(spr_open)){
+			            	with(instance_create(x, y, SmallChestPickup)) sprite_index = other.spr_open;
+			            }
+			            sound_play(snd_open);
+			
+			            instance_destroy();
 		            }
-
-		             // Effects:
-		            if(sprite_exists(spr_open)){
-		            	with(instance_create(x, y, SmallChestPickup)) sprite_index = other.spr_open;
-		            }
-		            sound_play(snd_open);
-		
-		            instance_destroy();
         		}
         	}
         }

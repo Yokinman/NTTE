@@ -427,7 +427,7 @@
         }
         else{
             pickup_held = false;
-            var _pickup = nearest_instance(x, y, instances_matching(Pickup, "object_index", AmmoPickup, HPPickup, RoguePickup))
+            var _pickup = nearest_instance(x, y, instances_matching(Pickup, "mask_index", mskPickup));
             if(instance_exists(_pickup)){
                 if(in_sight(_pickup)){
                     pickup = _pickup;
