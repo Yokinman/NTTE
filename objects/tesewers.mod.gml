@@ -1057,7 +1057,10 @@
 
 	         // Find Seat:
 	        else{
-	        	sit = noone;
+	        	if(sit != noone){
+	        		sit = noone;
+	        		sprite_index = spr_idle;
+	        	}
 		        if(place_meeting(x, y, CustomProp)){
 	                with(instances_meeting(x, y, instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"))){
 	                	if(place_meeting(x, y, other)) with(other){
@@ -2428,9 +2431,9 @@
 
 	    	if(point_distance(_x, _y, x, y) < _dis){
 	    		if(instance_is(self, Player)){
+		    		direction += angle_difference(point_direction(_x, _y, x, y), direction) / 12;
 		    		x = _x + lengthdir_x(_dis, _dir);
 		    		y = _y + lengthdir_y(_dis, _dir);
-		    		direction += angle_difference(point_direction(xprevious, yprevious, x, y), direction) / 8;
 	    		}
 	    		else{
 	    			motion_add(_dir, 1);
@@ -2862,7 +2865,7 @@
 		_x = x,
 		_y = y;
 
-	/// Projector Beam:
+	 // Projector Beam:
 	if(instance_exists(creator)){
 		var	_sx = creator.x,
 			_sy = creator.y,
@@ -3248,8 +3251,18 @@
     speed = 0;
 
 #define PizzaDrain_destroy
-    sound_play(snd_dead);
 	scrPortalPoof();
+
+	 // Sound:
+    sound_play_pitch(snd_dead, 1 - random(0.3));
+    with(instance_nearest(x, y, Player)){
+    	sound_play_pitchvol(snd_chst, 1, 0.9);
+    }
+
+	 // Turt:
+	with(instances_matching(CustomHitme, "name", "TurtleCool")){
+		notice_delay = max(1, notice_delay);
+	}
 
 	 // Deleet Stuff:
 	var _x1 = bbox_left,
@@ -3273,6 +3286,11 @@
         mask_index = other.mask_index;
         image_xscale = other.image_xscale;
         size = other.size;
+    }
+    repeat(6){
+    	with(instance_create(x + orandom(8), y + orandom(8), Debris)){
+    		direction += angle_difference(90, direction) / 4;
+    	}
     }
 
     /// Entrance:
@@ -3320,7 +3338,13 @@
 
 
 #define PizzaManholeCover_create(_x, _y)
-	repeat(2 + irandom(2)) instance_create(_x + orandom(16), _y + orandom(16), GroundFlame).sprite_index = (chance(1, 3) ? sprGroundFlameBig : sprGroundFlame);
+	repeat(2 + irandom(2)){
+		with(instance_create(_x + orandom(20), _y + orandom(20), GroundFlame)){
+			sprite_index = (chance(1, 3) ? sprGroundFlameBig : sprGroundFlame);
+			alarm0 = random(alarm0);
+			image_blend = c_ltgray;
+		}
+	}
 
 	with(instance_create(_x, _y, CustomObject)){
 		sprite_index = spr.Manhole;
@@ -3962,6 +3986,8 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
 #define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
+#define shadlist_set(_name, _vertex, _fragment)											return	mod_script_call_nc("mod", "teassets", "shadlist_set", _name, _vertex, _fragment);
+#define shadlist_get(_name)																return	mod_script_call_nc("mod", "teassets", "shadlist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);

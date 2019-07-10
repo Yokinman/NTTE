@@ -1407,7 +1407,12 @@
 	
 	    		 // Effects:
 	            if(sprite_exists(spr_fade)){
-	            	with(instance_create(x, y, SmallChestFade)) sprite_index = other.spr_fade;
+	            	with(instance_create(x, y, SmallChestFade)){
+	            		sprite_index = other.spr_fade;
+	            		image_xscale = other.image_xscale;
+	            		image_yscale = other.image_yscale;
+	            		image_angle = other.image_angle;
+	            	}
 	            }
 	            sound_play_hit(snd_fade, 0.1);
 	
@@ -1877,14 +1882,12 @@
         mask_index = mskBolt;
     	creator = noone;
     	target = noone;
-    	rope = [];
-    	pull_speed = 0;
-    	canmove = 1;
     	damage = 8;
     	force = 8;
     	typ = 1;
-    	blink = 30;
+    	rope = [];
     	corpses = [];
+    	pickup = false;
 
     	return id;
     }
@@ -1919,72 +1922,8 @@
 		}
 	}
 
-     // Stuck in Target:
-    var _targ = target;
-    if(instance_exists(_targ)){
-        if(canmove){
-            var _odis = 16,
-                _odir = image_angle;
-
-            x = _targ.x + _targ.hspeed_raw - lengthdir_x(_odis, _odir);
-            y = _targ.y + _targ.vspeed_raw - lengthdir_y(_odis, _odir);
-	        if("z" in target){
-	        	if(target.object_index == RavenFly || target.object_index == LilHunterFly){
-	        		y += target.z;
-	        	}
-	        	else y -= target.z;
-	        }
-            xprevious = x;
-            yprevious = y;
-            visible = _targ.visible;
-            if("team" in _targ) team = _targ.team;
-        }
-
-         // Pickup-able:
-        if(alarm0 < 0){
-            image_index = 0;
-
-			var b = true;
-            with(rope) if(!broken) b = false;
-            if(b){
-                alarm0 = 200 + random(20);
-                if(crown_current == crwn_haste) alarm0 /= 3;
-            }
-        }
-        else if(instance_exists(Player)){
-             // Shine:
-            image_speed = ((image_index < 1) ? random(0.04) : 0.4);
-
-             // Attraction:
-            var p = instance_nearest(x, y, Player);
-            if(point_distance(x, y, p.x, p.y) < 50 * (1 + skill_get(mut_plutonium_hunger))){
-                canmove = false;
-
-                var _dis = 10 * current_time_scale,
-                    _dir = point_direction(x, y, p.x, p.y);
-
-                x += lengthdir_x(_dis, _dir);
-                y += lengthdir_y(_dis, _dir);
-                xprevious = x;
-                yprevious = y;
-
-                 // Pick Up Bolt Ammo:
-                if(place_meeting(x, y, p) || place_meeting(x, y, Portal)){
-                    with(p){
-                        ammo[3] = min(ammo[3] + 1, typ_amax[3]);
-                        with(instance_create(x, y, PopupText)){
-                        	text = `+1 ${other.typ_name[3]}`;
-                        	target = other.index;
-                        }
-                        sound_play(sndAmmoPickup);
-                    }
-                    instance_destroy();
-                }
-            }
-        }
-    }
-
-    else{
+	 // Movin:
+	if(speed > 0){
          // Rope Length:
         with(rope) if(!harpoon_stuck){
             if(instance_exists(link1) && instance_exists(link2)){
@@ -1992,89 +1931,92 @@
             }
         }
 
-        if(speed > 0){
-             // Bolt Marrow:
-            if(skill_get(mut_bolt_marrow) > 0){
-                var n = nearest_instance(x, y, instances_matching_ne(instances_matching_ne(hitme, "team", team, 0), "mask_index", mskNone, sprVoid));
-                if(distance_to_object(n) < (16 * skill_get(mut_bolt_marrow))){
-                	if(!place_meeting(x, y, n)){
-                		if(in_sight(n)){
-		                    direction = point_direction(x, y, n.x, n.y);
-		                    image_angle = direction;
-                		}
-                	}
-                }
+         // Bolt Marrow:
+        if(skill_get(mut_bolt_marrow) > 0){
+            var n = nearest_instance(x, y, instances_matching_ne(instances_matching_ne(hitme, "team", team, 0), "mask_index", mskNone, sprVoid));
+            if(distance_to_object(n) < (16 * skill_get(mut_bolt_marrow))){
+            	if(!place_meeting(x, y, n)){
+            		if(in_sight(n)){
+	                    direction = point_direction(x, y, n.x, n.y);
+	                    image_angle = direction;
+            		}
+            	}
             }
-
-			 // Skewer Corpses:
-            if(place_meeting(x, y, Corpse)){
-	            with(instances_meeting(x, y, instances_matching_le(instances_matching_ne(instances_matching_gt(Corpse, "speed", 1), "mask_index", -1), "size", 3))){
-	            	if(place_meeting(x, y, other)){
-	            		var c = id;
-	            		with(other){
-		            		if(array_find_index(corpses, c) < 0){
-								var _canTake = true;
-		            			with(instances_matching(object_index, "name", name)){
-		            				if(array_find_index(corpses, c) >= 0){
-		            					_canTake = false;
-		            					break;
-		            				}
-		            			}
-
-								if(_canTake){
-									 // Skewer:
-			            			array_push(corpses, c);
-			            			if(hspeed != 0){
-			            				c.image_xscale = -sign(hspeed);
-			            			}
-			            			speed = max(speed - (3 * (1 + c.size)), 12);
-	
-			            			 // Effects:
-			            			view_shake_at(x, y, 6);
-			            			with(instance_create(c.x, c.y, ThrowHit)){
-			            				motion_add(other.direction + orandom(30), 3);
-			            				image_speed = random_range(0.8, 1);
-			            				image_xscale = min(0.5 * (c.size + 1), 1);
-			            				image_yscale = image_xscale;
-			            			}
-			            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
-			            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.3 + (0.2 * c.size));
-								}
-		            		}
-	            		}
-	            	}
-	            }
-            }
-
-             // Stick in Chests:
-            var c = instance_nearest(x, y, chestprop);
-            if(place_meeting(x, y, c)) scrHarpoonStick(c);
         }
 
-        else instance_destroy();
-    }
+		 // Skewer Corpses:
+        if(place_meeting(x, y, Corpse)){
+            with(instances_meeting(x, y, instances_matching_le(instances_matching_ne(instances_matching_gt(Corpse, "speed", 1), "mask_index", -1), "size", 3))){
+            	if(place_meeting(x, y, other)){
+            		var c = id;
+            		with(other){
+	            		if(array_find_index(corpses, c) < 0){
+							var _canTake = true;
+	            			with(instances_matching(object_index, "name", name)){
+	            				if(array_find_index(corpses, c) >= 0){
+	            					_canTake = false;
+	            					break;
+	            				}
+	            			}
+
+							if(_canTake){
+								 // Skewer:
+		            			array_push(corpses, c);
+		            			if(hspeed != 0){
+		            				c.image_xscale = -sign(hspeed);
+		            			}
+		            			speed = max(speed - (3 * (1 + c.size)), 12);
+
+		            			 // Effects:
+		            			view_shake_at(x, y, 6);
+		            			with(instance_create(c.x, c.y, ThrowHit)){
+		            				motion_add(other.direction + orandom(30), 3);
+		            				image_speed = random_range(0.8, 1);
+		            				image_xscale = min(0.5 * (c.size + 1), 1);
+		            				image_yscale = image_xscale;
+		            			}
+		            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
+		            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.3 + (0.2 * c.size));
+							}
+	            		}
+            		}
+            	}
+            }
+        }
+
+         // Stick in Chests:
+        if(place_meeting(x, y, chestprop)){
+        	target = instance_nearest(x, y, chestprop);
+        	instance_destroy();
+        	exit;
+        }
+	}
+	else if(pickup){
+		instance_destroy();
+		exit;
+	}
+
+	 // Can we have a typ variable for portalshocks or something:
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, PortalShock)){
+		pickup = true;
+		instance_destroy();
+	}
 
 #define Harpoon_end_step
      // Trail:
-    var _x1 = x,
-        _y1 = y,
-        _x2 = xprevious,
-        _y2 = yprevious;
-
-    with(instance_create(x, y, BoltTrail)){
-        image_yscale = 0.6;
-        image_xscale = point_distance(_x1, _y1, _x2, _y2);
-        image_angle = point_direction(_x1, _y1, _x2, _y2);
-        creator = other.creator;
+    if(speed > 0){
+	    var _x1 = x,
+	        _y1 = y,
+	        _x2 = xprevious,
+	        _y2 = yprevious;
+	
+	    with(instance_create(x, y, BoltTrail)){
+	        image_yscale = 0.6;
+	        image_xscale = point_distance(_x1, _y1, _x2, _y2);
+	        image_angle = point_direction(_x1, _y1, _x2, _y2);
+	        creator = other.creator;
+	    }
     }
-
-#define Harpoon_alrm0
-     // Blinking:
-    if(blink-- > 0){
-        alarm0 = 2;
-        visible = !visible;
-    }
-    else instance_destroy();
 
 #define Harpoon_hit
     if(speed > 0 && projectile_canhit(other)){
@@ -2082,17 +2024,8 @@
 
          // Stick in enemies that don't die:
         if(instance_exists(other) && other.my_health > 0){
-            if(
-            	(instance_is(other, prop) || other.team == 0)	&&
-            	!instance_is(other, RadChest)					&&
-            	!instance_is(other, Car)						&&
-            	!instance_is(other, CarVenus)					&&
-            	!instance_is(other, CarVenusFixed)
-            ){
-                canmove = false;
-            }
-            team = other.team;
-            scrHarpoonStick(other);
+        	target = other;
+        	instance_destroy();
         }
     }
 
@@ -2101,14 +2034,72 @@
         move_contact_solid(direction, 16);
         instance_create(x, y, Dust);
         sound_play(sndBoltHitWall);
+        speed = 0;
 
-         // Stick in Wall:
-        canmove = false;
-        scrHarpoonStick(other);
+         // Deteriorate Rope if Both Harpoons Stuck:
+        with(rope){
+        	if(harpoon_stuck && array_length(instances_matching_ne([link1, link2], "object_index", CustomProjectile)) <= 0){
+        		broken = -1;
+        	}
+        	harpoon_stuck = true;
+        }
     }
 
 #define Harpoon_destroy
-    scrHarpoonUnrope(rope);
+	 // Pickup:
+	if(pickup){
+		with(obj_create(x, y, "HarpoonPickup")){
+			motion_add(other.direction, other.speed / 2);
+			image_angle = other.image_angle;
+			image_yscale = other.image_yscale;
+			target = other.target;
+		}
+	}
+
+	 // Stick in Object:
+	else if(instance_exists(target)){
+		var _harpoon = id;
+	    with(obj_create(x, y, "HarpoonStick")){
+	    	image_angle = other.image_angle;
+	    	image_yscale = other.image_yscale;
+		    target = other.target;
+		    rope = other.rope;
+
+			 // Pull Speed:
+		    if("size" in target){
+		    	pull_speed /= max(target.size, 0.5);
+		        if(
+		        	(instance_is(target, prop) || target.team == 0)	&&
+		        	!instance_is(target, RadChest)					&&
+		        	!instance_is(target, Car)						&&
+		        	!instance_is(target, CarVenus)					&&
+		        	!instance_is(target, CarVenusFixed)
+		        ){
+		            pull_speed = 0;
+		        }
+		    }
+
+			 // Rope Stuff:
+		    with(rope){
+				if(link1 == _harpoon) link1 = other;
+				if(link2 == _harpoon) link2 = other;
+		        harpoon_stuck = true;
+
+		         // Attached to Same Thing:
+		        if(instance_is(link1, BoltStick) && instance_is(link2, BoltStick)){
+		        	if(link1.target == link2.target){
+		        		with([link1, link2]) pull_speed = 0;
+		        	}
+		        }
+
+		         // Deteriorate Rope if Doing Nothing:
+		        if(array_length(instances_matching_gt([link1, link2], "pull_speed", 0)) <= 0){
+		            broken = -1;
+		            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+		        }
+		    }
+	    }
+	}
 
 #define Harpoon_cleanup
 	with(corpses) if(instance_exists(self)){
@@ -2133,26 +2124,6 @@
         draw_line_width(_x1, _y1, _x2, _y2, _wid);
     }
 
-#define scrHarpoonStick(_instance) /// Called from Harpoon
-    speed = 0;
-    target = _instance;
-
-     // Set Rope Vars:
-    pull_speed = (("size" in target) ? (2 / max(target.size, 0.5)) : 2);
-    with(rope){
-        harpoon_stuck = true;
-
-         // Deteriorate rope if only stuck in unmovable objects:
-        var m = true;
-        with([link1, link2]) if("canmove" not in self || canmove){
-        	m = false;
-        }
-        if(m){
-            broken = -1;
-            length = point_distance(link1.x, link1.y, link2.x, link2.y);
-        }
-    }
-
 #define scrHarpoonRope(_link1, _link2)
     var r = {
         link1 : _link1,
@@ -2164,9 +2135,11 @@
         creator : noone,
         broken : false
     }
-    global.poonRope[array_length(global.poonRope)] = r;
+
+    array_push(global.poonRope, r);
+
     with([_link1, _link2]){
-    	if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
+    	if("rope" in self){
 			array_push(rope, r);
 			if(!instance_exists(creator) && "creator" in self){
 				r.creator = creator;
@@ -2180,6 +2153,21 @@
     with(_rope){
         broken = true;
 		global.poonRope = array_delete_value(global.poonRope, self);
+
+    	 // Turn Harpoons Into Pickups:
+    	with([link1, link2]) if("name" in self){
+    		if(object_index == CustomProjectile && name == "Harpoon"){
+    			pickup = true;
+    		}
+    		else if(object_index == BoltStick && name == "HarpoonStick"){
+	    		with(obj_create(x, y, "HarpoonPickup")){
+	    			image_angle = other.image_angle;
+	    			image_yscale = other.image_yscale;
+	    			target = other.target;
+	    		}
+	    		instance_destroy();
+    		}
+    	}
     }
 
 
@@ -2187,9 +2175,84 @@
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
         sprite_index = spr.Harpoon;
+        image_index = 1;
+        spr_open = spr.HarpoonOpen;
+        spr_fade = spr.HarpoonFade;
 
 		 // Vars:
 		mask_index = mskBigRad;
+		friction = 0.4;
+		pull_spd = 8;
+		target = noone;
+		num = 1;
+
+		 // Events:
+		on_step = script_ref_create(HarpoonPickup_step);
+		on_pull = script_ref_create(HarpoonPickup_pull);
+		on_open = script_ref_create(HarpoonPickup_open);
+
+		return id;
+	}
+
+#define HarpoonPickup_step
+	 // Stuck in Target:
+    if(instance_exists(target)){
+        var _odis = 16,
+            _odir = image_angle;
+
+        x = target.x + target.hspeed_raw - lengthdir_x(_odis, _odir);
+        y = target.y + target.vspeed_raw - lengthdir_y(_odis, _odir);
+        if("z" in target){
+        	if(target.object_index == RavenFly || target.object_index == LilHunterFly){
+        		y += target.z;
+        	}
+        	else y -= target.z;
+        }
+        xprevious = x;
+        yprevious = y;
+
+        if(!target.visible) target = noone;
+    }
+
+#define HarpoonPickup_pull
+	if(instance_exists(target)){ // Stop Sticking
+		if(place_meeting(x, y, Wall)){
+			x = target.x;
+			y = target.y;
+			xprevious = x;
+			yprevious = y;
+		}
+		target = noone;
+	}
+	return (speed <= 0);
+
+#define HarpoonPickup_open
+	 // +1 Bolt Ammo:
+	var _inst = noone,
+		_type = 3,
+		_num = num;
+
+	if(instance_is(other, Player)) _inst = other;
+	else _inst = Player;
+
+	with(_inst){
+        ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
+        with(instance_create(x, y, PopupText)){
+        	text = `+${_num} ${other.typ_name[_type]}`;
+        	target = other.index;
+        }
+	}
+
+
+#define HarpoonStick_create(_x, _y)
+	with(instance_create(_x, _y, BoltStick)){
+		 // Visual:
+		sprite_index = spr.Harpoon;
+		image_index = 0;
+
+		 // Vars:
+		pull_speed = 2;
+		rope = [];
 
 		return id;
 	}
@@ -2208,7 +2271,7 @@
         rotation = 0;
         radius = 12;
         charge = 1;
-        charge_spd = 1;
+        charge_spd = 2;
         ammo = 10;
         typ = 0;
         shrink = 1/160;
@@ -2229,7 +2292,13 @@
 
      // Charge Up:
     if(image_xscale < charge){
-        image_xscale += (charge / 20) * charge_spd * current_time_scale;
+    	var s = charge_spd;
+    	if(instance_is(creator, Player)) with(creator){
+    		s *= reloadspeed;
+    		s *= 1 + ((1 - (my_health / maxhealth)) * skill_get(mut_stress));
+    	}
+
+        image_xscale += (charge / 20) * s * current_time_scale;
         image_yscale = image_xscale;
 
         if(creator_follow){
@@ -2408,9 +2477,11 @@
 #define LightningDisc_hit
     if(projectile_canhit_melee(other)){
          // Slow:
-        x -= hspeed;
-        y -= vspeed;
-        direction = point_direction(x, y, other.x, other.y) + orandom(10);
+        if(image_xscale >= charge){
+	        x -= hspeed;
+	        y -= vspeed;
+	        direction = point_direction(x, y, other.x, other.y) + orandom(10);
+        }
 
          // Electricity Field:
         var _tx = other.x,
@@ -2537,6 +2608,7 @@
         is_enemy = true;
         maxspeed = 2;
         radius = 16;
+        charge_spd = 1;
 
         return id;
     }
@@ -4831,36 +4903,31 @@
             		_pullInst = [];
 
             	for(var i = 0; i < array_length(_pullLink); i++){
-            		with(_pullLink[i]){
+            		with(_pullLink[i]) if(!instance_is(self, projectile)){
             			var _inst = noone;
-		                if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
-		                    if(canmove && !instance_is(target, becomenemy)){
+            			
+            			 // Rope Attached to Harpoon:
+		                if(instance_is(self, BoltStick)){
+		                    if(pull_speed != 0 && !instance_is(target, becomenemy)){
 		                    	_inst = target;
 		                    }
 		                }
-		                else if(
-			            	(!instance_is(self, prop) && team != 0)	||
-			            	instance_is(self, RadChest)				||
-			            	instance_is(self, Car)					||
-			            	instance_is(self, CarVenus)				||
-			            	instance_is(self, CarVenusFixed)
-				        ){
-		                	_inst = id;
+		                
+		                 // Rope Directly Attached:
+		                else if(_link1 != _link2){
+		                	if(
+				            	(!instance_is(self, prop) && team != 0)	||
+				            	instance_is(self, RadChest)				||
+				            	instance_is(self, Car)					||
+				            	instance_is(self, CarVenus)				||
+				            	instance_is(self, CarVenusFixed)
+					        ){
+			                	_inst = id;
+			                }
 		                }
 
-						 // If both ends of rope linked to same thing, no pull:
-						var c = false;
-						with(_pullInst) if(inst == _inst){
-							c = true;
-							break;
-						}
-						if(c){
-							_pullInst = [];
-							break;
-						}
-
 						 // Add to Pull List:
-						else if(instance_exists(_inst)){
+						if(instance_exists(_inst)){
 							array_push(_pullInst, {
 		        				inst : _inst,
 		        				pull : (instance_is(_inst, Player) ? 0.5 : (("pull_speed" in self) ? pull_speed : 2)),
@@ -4886,21 +4953,17 @@
             	}
             }
 
+             // Draw Rope:
+            script_bind_draw(draw_rope, (collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false) ? -8 : 0), _rope);
+
              // Rope Stretching:
             with(_rope){
                 break_force = max(_linkDis, 0);
 
                  // Break:
-                if(break_timer <= 0 || break_force > 300){
+                if(break_timer <= 0 || break_force > 1000){
 	                if(break_force > 100 || (_rope.broken < 0 && _length <= 1)){
-	                    if(_rope.broken < 0){
-	                    	with([_link1, _link2]){
-	                    		if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
-	                    			image_index = 1;
-	                    		}
-	                    	}
-	                    }
-	                    else{
+	                    if(_rope.broken >= 0){
 	                    	sound_play_pitch(sndHammerHeadEnd, 2);
 	                    }
 	                    scrHarpoonUnrope(_rope);
@@ -4908,11 +4971,22 @@
                 }
                 else break_timer -= current_time_scale;
             }
-
-             // Draw Rope:
-            script_bind_draw(draw_rope, (collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false) ? -8 : 0), _rope);
         }
         else scrHarpoonUnrope(_rope);
+    }
+
+     // Lightring Trigger Fingers Interaction:
+    if(skill_get(mut_trigger_fingers) > 0){
+    	var n = array_length(instances_matching_le(enemy, "my_health", 0));
+    	if(n > 0){
+    		with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc"), "is_enemy", false)){
+    			if(image_xscale < charge){
+    				image_xscale *= (n / 0.6) * skill_get(mut_trigger_fingers);
+    				image_xscale = min(image_xscale, charge);
+    				image_yscale = image_xscale;
+    			}
+    		}
+    	}
     }
 
 	 // Enable/Disable Pet Outline Surface:
@@ -4939,7 +5013,8 @@
     			_vy = view_yview[index];
 
     		with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
-    			if(instance_exists(self)){
+			    var e = on_pull;
+				if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
 	    			var	l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
 	    				d = point_direction(x, y, other.x, other.y),
 	    				_x = x + lengthdir_x(l, d),
@@ -4947,7 +5022,7 @@
 	
 			        if(place_free(_x, y)) x = _x;
 			        if(place_free(x, _y)) y = _y;
-    			}
+				}
     		}
     	}
     }
@@ -4961,7 +5036,12 @@
 		            if(!mod_script_exists(e[0], e[1], e[2]) || !mod_script_call(e[0], e[1], e[2])){
 			             // Effects:
 			            if(sprite_exists(spr_open)){
-			            	with(instance_create(x, y, SmallChestPickup)) sprite_index = other.spr_open;
+			            	with(instance_create(x, y, SmallChestPickup)){
+			            		sprite_index = other.spr_open;
+			            		image_xscale = other.image_xscale;
+			            		image_yscale = other.image_yscale;
+			            		image_angle = other.image_angle;
+			            	}
 			            }
 			            sound_play(snd_open);
 			
@@ -5265,6 +5345,8 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
 #define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
+#define shadlist_set(_name, _vertex, _fragment)											return	mod_script_call_nc("mod", "teassets", "shadlist_set", _name, _vertex, _fragment);
+#define shadlist_get(_name)																return	mod_script_call_nc("mod", "teassets", "shadlist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);

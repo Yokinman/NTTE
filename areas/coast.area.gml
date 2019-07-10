@@ -126,7 +126,11 @@
 	switch(GameCont.subarea){
 	    case 1: // Shell
 	        with(instance_random(TopSmall)){
-	            obj_create(x, y, "CoastBigDecal");
+	            with(obj_create(x, y, "CoastBigDecal")){
+                	with(Pet_spawn(x, y, "Parrot")){
+	                    perched = other;
+                	}
+                }
 	        }
 	        break;
 
@@ -208,6 +212,12 @@
 	if(array_length(instances_matching(CustomDraw, "name", "swimtop_draw")) <= 0){
 		with(script_bind_draw(swimtop_draw, -1)) name = script[2];
 	}
+
+     // who's that bird? \\
+    if(!unlock_get("parrot")){
+        unlock_set("parrot", true); // It's a secret yo
+        scrUnlock("PARROT", "FOR REACHING COAST", spr.Parrot[0].Portrait, sndRavenScreech);
+    }
 
 	 // Reset Surfaces:
 	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
@@ -335,10 +345,9 @@
 			 // Water Wading Drawing:
 			if(DebugLag) trace_time();
 
-			var _charmShader = mod_variable_get("mod", "ntte", "eye_shader"),
+			var _charmShader = lq_defget(shadlist_get("Charm"), "shad", -1),
 				_charmOption = lq_defget(opt, "outlineCharm", 2),
-				_canCharmShader = (lq_defget(opt, "allowShaders", false) && _charmShader != -1),
-				_canCharmOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
+				_charmCanOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
 
 			with(other){
 				with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
@@ -511,13 +520,13 @@
 							 // Charmed Enemy Eye:
 							if("charm" in self && charm.charmed){
 								 // Outlines:
-								if(_canCharmOutline){
+								if(_charmCanOutline){
 									draw_set_fog(true, player_get_color(player_find_local_nonsync()), 0, 0);
-									for(var a = 0; a <= 270; a += 90){
+									for(var a = 0; a <= 360; a += 90){
 										var _dx = _x,
 											_dy = _y;
 
-										if(a >= 270) draw_set_fog(false, 0, 0, 0);
+										if(a >= 360) draw_set_fog(false, 0, 0, 0);
 										else{
 											_dx += dcos(a);
 											_dy -= dsin(a);
@@ -528,7 +537,7 @@
 								}
 
 								 // Eyes:
-								if(_canCharmShader){
+								if(_charmShader != -1){
 									shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
 									shader_set(_charmShader);
 									texture_set_stage(0, _tex);
@@ -1437,6 +1446,8 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
 #define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
+#define shadlist_set(_name, _vertex, _fragment)											return	mod_script_call_nc("mod", "teassets", "shadlist_set", _name, _vertex, _fragment);
+#define shadlist_get(_name)																return	mod_script_call_nc("mod", "teassets", "shadlist_get", _name);
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);

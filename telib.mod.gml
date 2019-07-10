@@ -11,7 +11,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["Backpack", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "HarpoonPickup", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["Backpack", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	  : ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],

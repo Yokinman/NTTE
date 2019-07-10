@@ -50,46 +50,57 @@
     	BigFishSwimBack     = sprite_add("sprites/enemies/CoastBoss/sprBigFishSwimBack.png",  11,  5,  1);
 
          // Bone:
-        Bone = sprite_add("sprites/weps/sprBone.png", 1, 6, 6);
-        BoneShard = sprite_add_weapon("sprites/weps/projectiles/sprBoneShard.png", 3, 2);
-        
-        BoneSlashLight = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAYAAADtwH1UAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAABYklEQVRoQ+2V623DMAyEvU+26QaZIEN0jI7RFfo/I6U9gBcIiuz6IfMc+D6ASBRLonlHKYMxpie3j8sDEUOjwkYcAJpgI4RA/K/Pq01QYhPE0ACbIMQmiDmSAadtABrgUyDCp0AMir7/fB/ChNMaAHwKRJQG4CTYgGQgPA0ANiARFIuuB/y0AYmg2BobkAivnRIbkAQK5bVD1H/CyH0aA1rdbwOSTiCS1N0PYEpMSQfvhPynMKDV/UBZPA2IoYzdNRgTX3n9UHxlA4AU8VtXD1B1H8VX5S/Z1YAp8VXdX4qvyJ8CC5wCz2N6GkcTv/s7sLixrifZ4pfCI95SfL58DJ+Uhf0nPJ639pjDGtFq4RFrxe9lGvbZtFdd0Bwo/NYisJ5546cXyjl19MgfX1eB9Vv3eFIWVnc+xhSdEcu6MCVyK7oVHSwRcsnc1bSKRsTjXUFxrdyI3Qv/gwK3IqbMYBh+AfBNJzJzO849AAAAAElFTkSuQmCC", 3, 16, 16);
-        BoneSlashHeavy = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAR+SURBVHhe7ZjhldQwDIQP2qEbOqACiqAMyqAF/lMSMHka3px2nN27+C5y0PfevNiJrZWc0d7CU9M0TdM0TTOFr58//b6nWNo018CZfKQPH56eifcjVHm0lpXybiaTjPARikfPSOtu5Boiti4B8v3+7cum1XJvXgGN+1dD04+QvTfqRmjKM+vFIo5TbgIotiwBamATdCM0u6jxVd0EzX+DGp9yDQDFlvKgBhj/188fl2mC1fMvhx4oxhBMrmOn2FKSXNPVmgA1xLCZAQ2BKwWT8+rEPVVhfrjmBljdQKwpps1RcKBqGEiNrsZXbZuLkmvSJsCVz1alG2AyahYKJufViXuqwvxwhWGANsK2aFFYU0ybo+BA1TCQGl2Nr9o2F0VrYgNc5a8Acu8GmIiahWOaXMdZ3FMR1sExTA/YAKsbCPlXPv/lULNQNHk2vmrbXBStCYZhA/DK5yuC/KGYNkeBGdQwEE2u4yzuqQjrwJjG51+C/hnUPEPNwrGaXE2ftQUoiNbkGgD3+Hw1kHc3wETULBzT4Dp22gIURGvKDQBWbgCwev6lULNwTIPr2GkLUBCtiQ2gdAM0/1CzcEyD69hpC1AQrck1wAr/DtjLrxtgIjSLigbXsVOEKAfrwLgboNmFZlHR4Dp2ihDlYB0YX60BcL8bYCI4yCxndqcIUQ6tpRug2QUHmeXM7hQhyqG16P/+kJUbAOa/QgOUyB9JODmzO0WYcmgtjm6A92OUZ4n8kYSTM7tThCkH64BRHCsYyOXHmroBJoEkspzRnbA2wpRCa9lrgFheFne+rKkbYBJIIsuZ3QlrI0wptBb3+x+s2gA0fzfABJCAkzO7U4Qph9biWOX3f84R8xUbYMTp+fOQs5zZnSJMOVgHTOJYtQHU/FDcLk3pc+Yhq5zRnbA2wpRCa7nSzx/M1fz5eVVGeZ6ePxJwcmZ3ijDlYB0wyYjqDcAaYrqh5ofy84rs5Xh6/jzkLGd2pwhTDtYx+vZf8ecPxrkB4lFZcg3K6P67weSynNGdIkw5WAcMMqK6eVhDTDfU+FB+XpG9HE/Pn4ec5czuFGHKgRpgkBErfvtn80PxqCx7Z3z6+fOAs5zRnSJMOVjH6KcPqG4e1sBxNj7E51XZy+/03JGAkzO6U4QpCeq4gvmpbHwI92N5OZh3TG+YkvsREzLBrGzykSLMIfASYzgV1HF180OxvBzMO6Y37D17MTTko0GZnJMafE8RagozXyZqQKyrmJ9n4xTLS8G8Y3rDveevRs05+hDed9L99xThpnL0xbIO7B+Bpngr4/DzY/oqGIN1jHT0cxyzco/pDXx+9HPuks2qH5yV1z6i+Jg3I7/suG1hHVw7+tan8bE2tr4JzIeK25a8ljXc0724R2AuMR3CdY+sf8naqTjzHlGEfTfcy3eCuc82fia/9JFyLXvC+gj/5miOcetF6P4jcabhDP2oIsSpZDOMDA9oeuj0g/8LDaD5P6oK5mEOr1WEqYUzuiqWlcWZBSp96IGaY0+xvBQuT6dY3jRN0zQv4unpD836hGaxFIBmAAAAAElFTkSuQmCC", 4, 24, 24);
-        msk.BoneSlashLight = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAYAAADtwH1UAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAGASURBVGhD7dFRjsMgDEXRrmwW3gXMtlI1kiPn9ZYKAbY/+DhRQsDPwOM4ji7Pv/+jRefPRpmezq8OBwlttkXXj6KMFl1fFQ56tLkeWq8X1eyh9arBwTfazAit/wvVGKH1q8BB2sAMmvMNrZ1Bcyr4GKDGZ9I8RWtm0rxstw9qeAWf6dHcFTQ30+2Dml3BZ3o0dwXNzXS9UKMrWW6V/CzXCzW5kuVWyc9yPqjBCNYE/Ytg+ZnOBzUXwZqgfxEsP1Pa5qvQA4m2LwAOJdK+ADiUSPsC4FAi7QuAQ4m0LwAOJdK+ADiUSPsC4FAinQ9qLII1Qf8iWH6m80HNRbAm6F8Ey890vVCDK1lulfws1ws1uZLlVsnPcvugRlfwmR7NXUFzM90+qNkVfKZHc1fQ3EwfA9TwTJqnaM1MmpcNB6nxGTTnG1o7g+ZUgINvtIERWv8XqjFC61eBgx5tpofW60U1e2i9anCQ0OZadP0oymjR9VXhYAtt1tP5s1Gmp/NrOx4vZApP/xGn6f0AAAAASUVORK5CYII=", 3, 16, 16);
-        msk.BoneSlashHeavy = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAROSURBVHhe7dZpkts6DIXRXlkWngVkW07kKnShbz4OGigCtH4ctwUOuGTkeu/r9Xpd4vevP689dP1slLFG189GGWt0/afCYi+62CN037tQliN037tQliN030+CxRa6xCton1Go9xW0zyjU+wra5xNgsYQubQTtexXqNYL2vQr1GkH7rgyLhC5qJO1/FvUYSfufRT1G0v6rwqJHl3MnzbMX7XknzbMX7XknzbMaLBq6kBk0Vy/aawbN1Yv2mkFzrQSLG7qImTRfC+0xk+ZroT1m0nyrwCJdQASas4TWRqA5S2htBJpzBVikw0egOUtobQSas4TWRqA5V/BfgQ4eieZVtCYSzatoTSSaN7sfD3TgiHxmj+ZGpLkNzY1Ic2f244EOG5HP7NHciDS3obkRae7Mvr/QQSOz3E/+OTR/Vt9f6JCRWe4n/xyaP6v3Bx0wAzsEjWWwSv7M3h90uAzsEDSWwSr5M3t/0OFavv4tpfoIpV52CBob6aqz+/x33ifZ+hsaJ5Y/s8Mvz53/YLNfDjUiz8wzau89WfSFyub5ARxwNg+tj3TGPVn0hcrm+QEccDYPrY90xj1Z9IXK5vQPYPtraE5pvPXs2ZjtU1qrY/asdaLjtWf7vv01Nubn0HipTnrn0piv2Xfbh+Z7rXFPX6hsTv0A9KL8M11ibZzmm22sNr81XquZ1nr/vH1vjfsxrdG46pljevrpnNIaqtfoC5XNpf8L5Gutcf9Mc73WXq3xWs2z8dJfQ/tQzfPjrbmbnjmmlac1Xqu16AuVzdAfAKH5Wlc07mut8VrNs/HSX0P70BxVmltCawmN+1prvFZr0Rcqm1v/C6BsTmvukV69Nc/GS38N7eNrR8ZbamuO9DuSgegLlc3UH8CmZ942R+e1evXWVK1Pb432qI33qK3p6Udz/HOp1qIvVDbDfgD2rPy4zdGasjmlfUp7+PmlOUrn0bqe2vZsauO+5tl4a57RuX6Nr/k5qlSv0Rcqm8M/gKscufTHPiPvWF+obKb+AJ6X/x7PD6Ds/UEHu8PZfxg7BI1lcFf+UT8Ay5/Z+4MOl4EdgsYyWCV/Zu8POlwGdggay2CV/Jl9f6EDRma5n/xzaP6svr/QISOz3E/+OTR/Vj8e6KAR+cwezY1IcxuaG5HmzuzHAx02Ip/Zo7kRaW5DcyPS3Jn9V6ADR6J5Fa2JRPMqWhOJ5s0Oi3TwCDRnCa2NQHOW0NoINOcKsEiHj0BzltDaCDRnCa2NQHOuAIsbuoCZNF8L7TGT5muhPWbSfKvAoqGLmEFz9aK9ZtBcvWivGTTXSrDo0YXcSfPsRXveSfPsRXveSfOsBouELmck7X8W9RhJ+59FPUbS/qvCYgld1Aja9yrUawTtexXqNYL2XRkWW+jSrqB9RqHeV9A+o1DvK2ifT4DFXnSJR+i+d6EsR+i+d6EsR+i+nwSLR9DF1uj62Shjja6fjTLW6PrP9Pr6C5+Rb6OQmuF3AAAAAElFTkSuQmCC", 4, 24, 24);
-		if(fork()){
-			wait(30);
-			sprite_collision_mask(msk.BoneSlashLight, true, 0, 0, 0, 0, 0, 0, 0);
-			sprite_collision_mask(msk.BoneSlashHeavy, true, 0, 0, 0, 0, 0, 0, 0);
-			exit;
-		}
-		
-		BoneArrow = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAABMAAAAFCAYAAACn39dKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAAZ0lEQVQoU2MAgr8w/P//fxQ+OgbJwzAOMYa/5w5v+g/CIHZ+kPb/2c2JYHzh6Ja/MAwSB8nDMIgPEgeyweJgw2C2wAwAYVwaYRjdMhAbqA5iEBVcBnQT2CyEApgrcWGQPAxjiv1nAACo/b0vixgvpAAAAABJRU5ErkJggg==", 1, 10, 2);
-		
+        Bone		= sprite_add(		"sprites/weps/sprBone.png",					 1, 6, 6);
+        BoneShard	= sprite_add_weapon("sprites/weps/projectiles/sprBoneShard.png",	3, 2);
+
+        var b = [
+        	"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"
+        ];
+
+        BoneSlashLight		= sprite_add_base64(b[0], 3, 16, 16);
+        msk.BoneSlashLight	= sprite_add_base64(b[1], 3, 16, 16);
+
+        BoneSlashHeavy		= sprite_add_base64(b[2], 4, 24, 24);
+        msk.BoneSlashHeavy	= sprite_add_base64(b[3], 4, 24, 24);
+
+		BoneArrow			= sprite_add_base64(b[4], 1, 10,  2);
+
 		BonePickup = [
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAAQUlEQVQoU2P4//8/XoxVEBmDwF8Yxqng3OFN/0EYphCGwQqgqv7Obk78D8IwxSA2VCFuE6AYwUG2G4YxBFDxfwYAoKuZYk7YrIsAAAAASUVORK5CYII=", 4, 4),
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAARUlEQVQoU2P4//8/XgwhGBj+ImOsCmY3J/4/d3gTGCMrQqgECoIkQQpBGKYIQwG6KXBJZJ0wjKIAWRAZM5w/shkP3swAAGvPlqy/zwT1AAAAAElFTkSuQmCC", 4, 4),
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAAO0lEQVQoU2P4//8/XoxVEBlDCAaGvzCMzEdRMLs58T8Iw9hwBTCBc4c3wTG6AjAHG4ZbgQ9jFUTg/wwAxpmbl9On9mEAAAAASUVORK5CYII=", 4, 4),
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAAAZElEQVQoU2P4//8/AxD8BWFGRgYmEAdEg8TBcjAF5w5v+s/IyAjigBSDaagcw9/ZzYn/QQpANAyjKABJ5gdpgzFMIV4FQDGgHNQNIAUwRTCFUEUQE5BUgt2C4QZkBcgYIv6fAQD/m4N26RwgXAAAAABJRU5ErkJggg==", 4, 4)
+			sprite_add_weapon_base64(b[5],	4, 4),
+			sprite_add_weapon_base64(b[6],	4, 4),
+			sprite_add_weapon_base64(b[7],	4, 4),
+			sprite_add_weapon_base64(b[8],	4, 4)
 		];
 		BonePickupBig = [
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAACoSURBVDhPpY/LEQIxDEO99dANHVABRVAGXdACdzpiAtqZl9HagfA5aOIo0vNutNb+0tD8RkNzWaJJM0/aXAidT4cexjvud+8BXtRJQfPtelnFu4MKQMWIuOvUHWVIAUh6oEjBi3rjy+hsANqcN7oAaAZSAB70rfIB6ywAPn8G8HIB8AsKA/JZmZeAbjwhgBB3FVHPM2QB0mYHlFw2snzrT4CZhubnavEA1xSH+1XfiYIAAAAASUVORK5CYII=", 8, 8),
-			sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAACnSURBVDhPpZHRDcIwDAXTedimGzABQzAGW7BC/1kpcIir3NhAER+nqI7f5Ultvfe/KIe/UA5hmlqX03xoFeyloBC8LddVUAnZS6Gw9BRczsf1G74KCABhJeKdkiRQAgQUIhLvPwpsoCgSW7C/CUZY5sVQObVIAl8x4It8x7NsoMQFUMJpaHcDiBIF8Jjl3+gljDOlBkvBO17BjTiSBiO2GOdSDvfT2x2/aFQ/+hpFzgAAAABJRU5ErkJggg==", 8, 8)
+			sprite_add_weapon_base64(b[9],	8, 8),
+			sprite_add_weapon_base64(b[10],	8, 8)
 		];
         
          // Electroplasma:
-        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       5,  12, 12);
+        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       5, 12, 12);
         ElectroPlasmaTrail  = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTrail.png",  3,  4,  4);
-        ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7,  12, 12);
+        ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7, 12, 12);
         ElectroPlasmaTether = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTether.png", 4,  0,  1);
 
          // Fly:
         FlySpin = sprite_add("sprites/misc/sprFlySpin.png", 16, 4, 4);
 
          // Harpoon:
-        Harpoon      = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png", 4, 3);
-        NetNade      = sprite_add("sprites/weps/projectiles/sprNetNade.png", 1, 3, 3);
-        NetNadeBlink = sprite_add("sprites/weps/projectiles/sprNetNadeBlink.png", 2, 3, 3);
+        Harpoon      = sprite_add_weapon("sprites/weps/projectiles/sprHarpoon.png",	   4, 3);
+        HarpoonOpen  = sprite_add("sprites/weps/projectiles/sprHarpoonOpen.png",	5, 4, 3);
+        HarpoonFade  = sprite_add("sprites/weps/projectiles/sprHarpoonFade.png",	5, 7, 3);
+        NetNade      = sprite_add("sprites/weps/projectiles/sprNetNade.png",		1, 3, 3);
+        NetNadeBlink = sprite_add("sprites/weps/projectiles/sprNetNadeBlink.png",	2, 3, 3);
 
          // Bubble Bombs:
     	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
@@ -241,11 +252,6 @@
             GroundSlash     = sprite_add("sprites/enemies/Palanking/sprGroundSlash.png",        3,  0, 21);
             PalankingSlash  = sprite_add("sprites/enemies/Palanking/sprPalankingSlash.png",     3,  0, 29);
             msk.Palanking   = sprite_add("sprites/enemies/Palanking/mskPalanking.png",          1, 40, 24);
-            if(fork()){
-                wait 30;
-                sprite_collision_mask(msk.Palanking, false, 0, 0, 0, 0, 0, 0, 0);
-                exit;
-            }
 
              // Palm:
         	PalmIdle      = sprite_add("sprites/areas/Coast/Props/sprPalm.png",         1, 24, 40);
@@ -622,16 +628,11 @@
             PizzaDoorDebris = sprite_add("sprites/areas/Pizza/Props/sprPizzaDoorDebris.png",  4, 4, 4);
             msk.CatDoor     = sprite_add("sprites/areas/Lair/Props/mskCatDoor.png",           1, 4, 0);
             msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/Props/mskCatDoorLOS.png",        1, 4, 0);
-            if(fork()){
-                wait 30;
-                sprite_collision_mask(msk.CatDoorLOS, false, 1, 0, 0, 0, 0, 0, 0);
-                exit;
-            }
 
              // Drain:
             PizzaDrainIdle = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrain.png",     1, 32, 38);
             PizzaDrainHurt = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainHurt.png", 3, 32, 38);
-            PizzaDrainDead = mskNone;
+            PizzaDrainDead = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainDead.png", 5, 32, 38);
             msk.PizzaDrain = sprite_add("sprites/areas/Pizza/Props/mskPizzaDrain.png",     1, 32, 38);
             
              // Lair turret reskin:
@@ -733,25 +734,36 @@
 
         MergeWep = {};
         
-         // Semi-Manual Shine (sprite_add_weapon is wack with taller sprites):
+         // Shine Overlays:
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
         Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
         Shine20 = sprite_add("sprites/chests/sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
         Shine24 = sprite_add("sprites/chests/sprShine24.png", 7, 12, 12); // Big Chests
         Shine64 = sprite_add("sprites/chests/sprShine64.png", 7, 32, 32); // Giant Chests (YV)
+
+         // Post-Sprite Loading:
         with(other) if(fork()){
             wait 30;
 
-             // Backpack:
-            spr.Backpack       = sprite_shine(spr.Backpack,       spr.Shine16);
-            spr.BackpackCursed = sprite_shine(spr.BackpackCursed, spr.Shine16);
+			 // Advanced Hitboxes:
+			with(msk){
+				sprite_collision_mask(BoneSlashLight,	true,  0, 0, 0, 0, 0, 0, 0);
+				sprite_collision_mask(BoneSlashHeavy,	true,  0, 0, 0, 0, 0, 0, 0);
+	            sprite_collision_mask(Palanking,		false, 0, 0, 0, 0, 0, 0, 0);
+	            sprite_collision_mask(CatDoorLOS,		false, 1, 0, 0, 0, 0, 0, 0);
+			}
 
-             // Cat/Bat Chests:
-            spr.BatChest = sprite_shine(spr.BatChest, spr.Shine20);
-            spr.CatChest = sprite_shine(spr.CatChest, spr.Shine20);
-            
-             // Sunken Chest:
-            spr.SunkenChest = sprite_shine(spr.SunkenChest, spr.Shine24);
+        	/// Semi-Manual Shine (sprite_add_weapon is wack with taller sprites):
+	             // Backpack:
+	            spr.Backpack       = sprite_shine(spr.Backpack,       spr.Shine16);
+	            spr.BackpackCursed = sprite_shine(spr.BackpackCursed, spr.Shine16);
+	
+	             // Cat/Bat Chests:
+	            spr.BatChest = sprite_shine(spr.BatChest, spr.Shine20);
+	            spr.CatChest = sprite_shine(spr.CatChest, spr.Shine20);
+	            
+	             // Sunken Chest:
+	            spr.SunkenChest = sprite_shine(spr.SunkenChest, spr.Shine24);
 
             exit;
         }
@@ -840,6 +852,9 @@
      // Surface Storage:
     global.surf = [];
 
+     // Shader Storage:
+    global.shad = [];
+
 	 // Mod Lists:
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot"];
@@ -894,6 +909,7 @@
 #macro raceList global.race
 
 #macro surfList global.surf
+#macro shadList global.shad
 
 #macro savPath "save.sav"
 
@@ -936,6 +952,31 @@
     with(surfList) if(name == _name) return self;
     return noone;
 
+#define shadlist_set(_name, _vertex, _fragment)
+	var _shad = shadlist_get(_name);
+
+	if(_shad == noone){
+		_shad = {
+			name : _name,
+			shad : -1,
+			vert : "",
+			frag : ""
+		};
+		array_push(shadList, _shad);
+	}
+
+	with(_shad){
+		shad = -1;
+		vert = _vertex;
+		frag = _fragment;
+	}
+
+	return _shad;
+
+#define shadlist_get(_name)
+    with(shadList) if(name == _name) return self;
+    return noone;
+
 #define step
 	 // Surface Setup:
 	with(surfList){
@@ -951,6 +992,23 @@
 		 // Not Being Used, Destroy:
 		else if(surface_exists(surf)){
 			surface_destroy(surf);
+		}
+	}
+
+	 // Shader Setup:
+	if(lq_defget(opt, "allowShaders", true)){
+		if(!instance_exists(Menu)){
+			with(shadList){
+				if(shad == -1){
+					shad = shader_create(vert, frag);
+				}
+			}
+		}
+	}
+	else with(shadList){
+		if(shad != -1){
+			shader_destroy(shad);
+			shad = -1;
 		}
 	}
 
@@ -1164,8 +1222,9 @@
 #define cleanup
     if(global.sav_auto) save();
 
-     // Clear Surfaces:
-    with(surfList) surface_destroy(surf);
+     // Clear Surfaces/Shaders:
+    with(surfList) if(surf != -1) surface_destroy(surf);
+    with(shadList) if(shad != -1) shader_destroy(shad);
 
      // No Crash:
     with(global.race){

@@ -3,6 +3,7 @@
 
 #define weapon_name return "LIGHTRING LAUNCHER";
 #define weapon_text return "JELLY TECHNOLOGY";
+#define weapon_auto return true;
 #define weapon_type return 5;  // Energy
 #define weapon_cost return 3;  // 3 Ammo
 #define weapon_load return 37; // 1.23 Seconds

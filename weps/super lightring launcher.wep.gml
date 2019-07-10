@@ -3,6 +3,7 @@
 
 #define weapon_name return "SUPER LIGHTRING LAUNCHER";
 #define weapon_text return "EYE OF THE STORM";
+#define weapon_auto return true;
 #define weapon_type return 5;  // Energy
 #define weapon_cost return 8;  // 8 Ammo
 #define weapon_load return 90; // 3 Seconds

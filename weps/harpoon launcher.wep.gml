@@ -13,7 +13,7 @@
 #define weapon_fire(_wep)
      // Pack into Lightweight Object:
     if(!is_object(wep)){
-        wep = { wep : _wep, link : noone, rope : noone };
+        wep = { wep : _wep, rope : noone };
         _wep = wep;
     }
 
@@ -31,15 +31,13 @@
         creator = other;
 
          // Link Harpoon:
-        if(!instance_exists(_wep.link) || lq_defget(_wep.rope, "broken", true)){
+        if(!instance_exists(lq_defget(_wep.rope, "link1", noone)) || lq_defget(_wep.rope, "broken", true)){
             _wep.rope = scrHarpoonRope(id, other);
-            _wep.link = id;
         }
         else{
             array_push(rope, _wep.rope);
             _wep.rope.break_timer = 60;
             _wep.rope.link2 = id;
-            _wep.link = noone;
             _wep.rope = noone;
         }
     }
