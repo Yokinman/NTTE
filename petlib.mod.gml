@@ -1036,6 +1036,7 @@
 
 
 #define Spider_create
+	maxspeed = 3.6;
     web_list = [];
     web_list_x1 = 1000000;
     web_list_y1 = 1000000;
@@ -1662,8 +1663,9 @@
 						 // Particles:
 						if(chance_ct(1, 20)){
 							with(instance_create(x, y, Feather)){
-								sprite_index = sprBoltTrail;
-								image_blend = make_color_rgb(random_range(210, 240), random_range(168, 217), random_range(210, 240));
+								sprite_index = spr.PetSpiderWebBits;
+								image_index = irandom(image_number - 1);
+								image_speed = 0;
 								speed *= 0.5;
 							}
 						}

@@ -49,6 +49,7 @@
 		maxspeed = 2.5;
 		gunangle = random(360);
 		direction = gunangle;
+		canfire = false;
 
 		 // Alarms:
 		alarm1 = 60;
@@ -85,84 +86,97 @@
     alarm1 = 15 + irandom(20);
     target = instance_nearest(x, y, Player);
 
-    if(in_sight(target)){
-        gunangle = point_direction(x, y, target.x, target.y);
-        scrRight(gunangle);
+	if(canfire){
+         // Sounds:
+        sound_play_pitchvol(sndRustyRevolver, 0.8, 0.7);
+        sound_play_pitchvol(sndSnowTankShoot, 1.2, 0.6);
+        sound_play_pitchvol(sndFrogEggHurt, 1 + random(0.4), 3.5);
 
-        if(!in_distance(target, 75)){
-             // Walk to target:
-            if(chance(4, 5)){
-                scrWalk(15 + irandom(20), gunangle + orandom(8));
-            }
-        }
-        else if(in_distance(target, 50)){
-             // Walk away from target:
-            scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
-            alarm1 = walk;
-        }
+         // Bullets:
+        var d = 4,
+            s = 2;
+        for (var i = 0; i <= 5; i++){
+            with scrEnemyShoot("VenomPellet", gunangle + orandom(2 + i), s * i){
+                move_contact_solid(direction, d + d * i);
 
-         // Attack target:
-        if(chance(2, 5) && in_distance(target, [50, 200])){
-             // Sounds:
-            sound_play_pitchvol(sndRustyRevolver, 0.8, 0.7);
-            sound_play_pitchvol(sndSnowTankShoot, 1.2, 0.6);
-            sound_play_pitchvol(sndFrogEggHurt, 1 + random(0.4), 3.5);
+                 // Effects:
+                with(scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak)){
+                	image_angle = direction;
+                }
 
-             // Bullets:
-            var d = 4,
-                s = 2;
-            for (var i = 0; i <= 5; i++){
-                with scrEnemyShoot("VenomPellet", gunangle + orandom(2 + i), s * i){
-                    move_contact_solid(direction, d + d * i);
-
-                     // Effects:
-                    with(scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak)){
-                    	image_angle = direction;
-                    }
-
-                    if(i <= 2){
-                    	scrFX(x, y, [direction + orandom(8 * i), (4 - i)], Smoke);
-                    }
+                if(i <= 2){
+                	scrFX(x, y, [direction + orandom(8 * i), (4 - i)], Smoke);
                 }
             }
-
-             // Effects:
-            wkick += 7;
-            with(scrFX(x, y, [gunangle + (130 * choose(-1, 1)) + orandom(20),  5], Shell)){
-                sprite_index = sprShotShell;
-            }
         }
 
-         // Screech:
-        else{
-            if irandom(stress) >= 15{
-                stress -= 8;
-                scrBatScreech();
-
-                 // Fewer mass screeches:
-                with(instances_matching(object_index, "name", name)){
-                    stress = max(stress - 4, 10);
-                }
-            }
-
-             // Build up stress:
-            else stress += 4;
+         // Effects:
+        wkick += 7;
+        with(scrFX(x, y, [gunangle + (130 * choose(-1, 1)) + orandom(20),  5], Shell)){
+            sprite_index = sprShotShell;
         }
-    }
+        
+        canfire = false;
+	}
+	
     else{
-         // Follow nearest ally:
-        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
-        if(in_sight(c) && !in_distance(c, 64)){
-            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
-        }
-
-         // Wander:
-        else if(chance(1, 3)){
-            scrWalk(10 + irandom(20), direction + orandom(24));
-        }
-
-        gunangle = direction;
-        scrRight(gunangle);
+    	if(in_sight(target)){
+	        gunangle = point_direction(x, y, target.x, target.y);
+	        scrRight(gunangle);
+	
+	        if(!in_distance(target, 75)){
+	             // Walk to target:
+	            if(chance(4, 5)){
+	                scrWalk(15 + irandom(20), gunangle + orandom(8));
+	            }
+	        }
+	        else if(in_distance(target, 50)){
+	             // Walk away from target:
+	            scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
+	            alarm1 = walk;
+	        }
+	
+	         // Attack target:
+	        if(chance(2, 5) && in_distance(target, [50, 200])){
+				alarm1 = 7;
+				canfire = true;
+				instance_create(x + (4 * right), y, AssassinNotice);
+				
+				 // Sounds:
+				sound_play_hit(sndShotReload, 0.2);
+	        }
+	
+	         // Screech:
+	        else{
+	            if irandom(stress) >= 15{
+	                stress -= 8;
+	                scrBatScreech();
+	
+	                 // Fewer mass screeches:
+	                with(instances_matching(object_index, "name", name)){
+	                    stress = max(stress - 4, 10);
+	                }
+	            }
+	
+	             // Build up stress:
+	            else stress += 4;
+	        }
+	    }
+	    else{
+	         // Follow nearest ally:
+	        var c = nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
+	        if(in_sight(c) && !in_distance(c, 64)){
+	            scrWalk(15 + irandom(20), point_direction(x, y, c.x, c.y) + orandom(8));
+	        }
+	
+	         // Wander:
+	        else if(chance(1, 3)){
+	            scrWalk(10 + irandom(20), direction + orandom(24));
+	        }
+	
+	        gunangle = direction;
+	        scrRight(gunangle);
+	    }
     }
 	
 
@@ -677,7 +691,7 @@
 	 // Crown Time:
 	with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
-		enemies += (1 + GameCont.loops) + irandom(2);
+		enemies += (1 + GameCont.loops) + irandom(3);
 	}
 
 #define BatCloud_create(_x, _y)
@@ -863,7 +877,7 @@
 		maxspeed = 3.6;
 		gunangle = random(360);
 		alarm1 = 30;
-		alarm2 = -1;
+		canfire = false;
 		
 		return id;
 	}
@@ -880,54 +894,60 @@
 	alarm1 = 20 + random(20);
 	target = instance_nearest(x, y, Player);
 	
-	if(in_sight(target)){
-		var _targetDir = point_direction(x, y, target.x, target.y);
-		if(in_distance(target, 96)){
-			 // Retreat:
-			if(in_distance(target, 48) && chance(2, 3)){
-				scrWalk(20 + random(30), _targetDir + orandom(30) + 180);
-			}
-			
-			 // Attack:
-			else{
-				alarm1 += random(20);
-				alarm2 = 5;
+	 // Fire:
+	if(canfire){
+		var o = 11;
+		for(var d = -2; d <= 2; d++) scrEnemyShoot(MiniNade, gunangle + (d * o), 6 + random(3));
+		canfire = false;
+		
+		 // Effects:
+		wkick = 8;
+		motion_add(gunangle + 180, 2);
+		sound_play_hit(sndGrenadeShotgun, 0.3);
+		
+	}
+	
+	 // Normal Behavior:
+	else{
+		if(in_sight(target)){
+			var _targetDir = point_direction(x, y, target.x, target.y);
+			if(in_distance(target, 96)){
+				 // Retreat:
+				if(in_distance(target, 48) && chance(2, 3)){
+					scrWalk(20 + random(30), _targetDir + orandom(30) + 180);
+				}
 				
-				 // Warning:
-				instance_create(x, y, AssassinNotice);
+				 // Attack:
+				else{
+					alarm1 = 10;
+					canfire = true;
+					
+					 // Warning:
+					instance_create(x, y, AssassinNotice);
+				}
+				
+				scrRight(_targetDir);
+				gunangle = _targetDir;
 			}
 			
-			scrRight(_targetDir);
-			gunangle = _targetDir;
+			 // Chase:
+			else{
+				scrWalk(20 + random(30), _targetDir + orandom(10));
+				
+				scrRight(direction);
+				gunangle = direction;
+			}
 		}
 		
-		 // Chase:
-		else{
-			scrWalk(20 + random(30), _targetDir + orandom(10));
+		 // Wander:
+		else if(chance(1, 3)){
+			alarm1 += random(10);
+			scrWalk(20 + random(20), direction + orandom(40));
 			
 			scrRight(direction);
 			gunangle = direction;
 		}
 	}
-	
-	 // Wander:
-	else if(chance(1, 3)){
-		alarm1 += random(10);
-		scrWalk(20 + random(20), direction + orandom(40));
-		
-		scrRight(direction);
-		gunangle = direction;
-	}
-	
-#define BoneGator_alrm2
-	alarm2 = -1;
-	
-	var o = 12;
-	for(var d = -2; d <= 2; d++) scrEnemyShoot(MiniNade, gunangle + (d * o), 7 + random(3));
-	
-	 // Effects:
-	wkick = 8;
-	sound_play_hit(sndGrenadeShotgun, 0.3);
 	
 #define BoneGator_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!instance_is(other, Explosion)){
@@ -1142,10 +1162,6 @@
             	)
             ){
                 cantravel = true;
-                sound_play_pitchvol(sndFireballerFire, 1.5 + random(0.2), 0.5);
-                with(instance_create(x + (10 * right), y - 5, AssassinNotice)){
-                    depth = -7;
-                }
             }
 
             if(!instance_exists(sit)){
@@ -1977,7 +1993,7 @@
 	 // Crown Time:
 	with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
-		enemies += (1 + GameCont.loops) + irandom(2);
+		enemies += (1 + GameCont.loops) + irandom(3);
 	}
 	
 #define CatDoor_create(_x, _y)
@@ -3397,10 +3413,6 @@
 #define TopEnemy_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_idle = sprBuffGatorIdle;
-		spr_walk = sprBuffGatorWalk;
-		spr_weap = sprBuffGatorFlakCannon;
-		sprite_index = spr_idle;
 		spr_shadow = shd24;
 		spr_shadow_x = 0;
 		spr_shadow_y = 0;
@@ -3418,18 +3430,39 @@
 		right = 1;
 		gunangle = 0;
 		walkspd = 0.8;
-		maxspeed = 4;
-		
+		maxspeed = random_range(3.6, 4);
+		obj_info = {};
+		obj_name = "";
+		setup = false;
 		alarm1 = 10;
 		
 		 // Events:
 		on_end_step = script_ref_create(TopEnemy_setup);
+		
+		 // Default Values:
+		obj_name = Bandit;
+		with(obj_info){
+			spr_idle = sprBanditIdle;
+			spr_walk = sprBanditWalk;
+			spr_weap = sprBanditGun;
+		}
 		
 		return id;
 	}
 	
 #define TopEnemy_setup
 	on_end_step = [];
+	setup = true;
+	
+	 // Close Portals:
+	if(instance_exists(Portal)) scrPortalPoof();
+	
+	 // Setup Sprites:
+	for(var i = 0; i < lq_size(obj_info); i++){
+		var v = lq_get_key(obj_info, i);
+		variable_instance_set(id, v, lq_get(obj_info, v));
+	}
+	sprite_index = spr_idle;
 	
 	 // Land:
 	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
@@ -3437,6 +3470,9 @@
 	}
 	
 #define TopEnemy_step
+	if(!setup) TopEnemy_setup();
+	if(!instance_exists(self)) exit;
+
 	 // Animate:
 	if(speed > 0){
 		if(sprite_index != spr_walk){
@@ -3448,10 +3484,14 @@
 		sprite_index = spr_idle;
 		image_index = 0;
 	}
+	
+	 // Collide:
+	with(instances_meeting(x, y, instances_matching_ne(instances_matching(CustomObject, "name", name), "id", id))){
+		motion_add(point_direction(other.x, other.y, x, y), walkspd);
+	}
 
 	 // No Escape:
 	with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
-	if(instance_exists(Portal)) scrPortalPoof();
 	
 	if(fall){
 		 // Bouncy:
@@ -3472,15 +3512,15 @@
 	
 	 // Gravity:
 	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
-		fall = true;
-		z_engine();
+		if(!fall){
+			fall = true;
+			sound_play_hit(sndAssassinAttack, 0.4);
+		}
 		
-		 // Effects:
+		z_engine();
 		if(chance_ct(2, 3)) instance_create(x, y - z, Dust).depth = depth + 1;
 		
-		if(z <= 0){
-			instance_destroy();
-		}
+		if(z <= 0) instance_destroy();
 	}
 	
 	 // Walltop:
@@ -3489,7 +3529,18 @@
 	}
 	
 #define TopEnemy_destroy
-	var o = instance_create(x, y, BuffGator);
+	var o = noone;
+	if(is_real(obj_name)) o = instance_create(x, y, obj_name);
+	else o = obj_create(x, y, obj_name);
+	if(!instance_exists(o)) exit;
+	
+	 // Transfer Visuals:
+	for(var i = 0; i < lq_size(obj_info); i++){
+		var v = lq_get_key(obj_info, i);
+		variable_instance_set(o, v, lq_get(obj_info, v));
+	}
+	
+	 // Transfer Variables:
 	with(["direction", "speed", "walk", "right", "gunangle"]){
 		var n = self;
 		variable_instance_set(o, n, variable_instance_get(other, n));
@@ -3499,9 +3550,15 @@
 	instance_create(x, y, PortalClear).mask_index = o.mask_index;
 	
 	 // Effects:
-	repeat(8 + irandom(8)) with(instance_create(x, y, Dust)) motion_set(random(360), 3 + random(3));
+	repeat(8 + irandom(8)){
+		var _obj = (chance(1, 8) ? Debris : Dust);
+		with(instance_create(x, y, Dust)) motion_set(random(360), 3 + random(3));
+	}
 	view_shake_max_at(x, y, 6);
 	sleep(12);
+	
+	 // Sounds:
+	sound_play_hit(sndAssassinHit, 0.4);
 	
 #define TopEnemy_alrm1
 	alarm1 = 10 + random(20);
