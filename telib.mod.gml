@@ -20,7 +20,7 @@
 		"tetrench"	  : ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "BoneGator", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["SawTrap", "Tunneler"],
-	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderTangle", "SpiderWall"]
+	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
     };
 
 	 // Auto Create Event Script References:

@@ -43,20 +43,22 @@
             special : true
         },
         "Boss" : {
-            w : 10,
-            h : 10,
+            w : 12,
+            h : 12,
             special : true,
             layout : [
-                [0,0,0,L,L,L,L,0,0,0],
-                [0,0,0,L,L,L,L,0,0,0],
-                [0,0,L,L,L,L,L,L,0,0],
-                [L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L],
-                [0,0,L,L,L,L,L,L,0,0],
-                [0,0,0,L,L,L,L,0,0,0],
-                [0,0,0,L,L,L,L,0,0,0]
+            	[0,0,0,L,L,L,L,L,L,0,0,0],
+                [0,0,0,L,L,L,L,L,L,0,0,0],
+                [0,0,L,L,L,L,L,L,L,L,0,0],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [L,L,L,L,L,L,L,L,L,L,L,L],
+                [0,0,L,L,L,L,L,L,L,L,0,0],
+                [0,0,0,L,L,L,L,L,L,0,0,0],
+                [0,0,0,L,L,L,L,L,L,0,0,0]
                 ]
         },
 
@@ -227,7 +229,7 @@
 
 #define area_subarea            return 1;
 #define area_next               return 3;
-#define area_music              return mus2;
+#define area_music              return [mus.Lair, 0.3];
 #define area_ambience           return amb102;
 #define area_background_color   return make_color_rgb(160, 157, 75);
 #define area_shadow_color       return area_get_shadow_color(102);
@@ -272,6 +274,9 @@
     RoomList = [];
 
     if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
+    
+     // Force Music Transition:
+    mod_variable_set("mod", "ntte", "musTrans", true);
 
 #define area_setup_floor(_explo)
     if(!_explo){
@@ -692,8 +697,11 @@
     switch(type){
          // IMPORTANT ROOMS
         case "Start" : {
-        	with(instance_create(_cx, _cy, Detail)){
+        	with(instance_create(_cx, _cy, CustomObject)){
         		sprite_index = spr.Rug;
+        		image_speed = 0;
+        		image_index = irandom(image_number - 1);
+        		depth = 8;
         	}
         	
         	break;
@@ -716,7 +724,7 @@
             var _chest = [RadChest,AmmoChest,WeaponChest],
                 _d = irandom(3);
             for (var _i = 0; _i <= 2; _i++)
-                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(144,(_i+_d)*90), _cy + lengthdir_y(144,(_i+_d)*90),_chest[_i]);
+                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(176,(_i+_d)*90), _cy + lengthdir_y(176,(_i+_d)*90),_chest[_i]);
 
             break;
         }

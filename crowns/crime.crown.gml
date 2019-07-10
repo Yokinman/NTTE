@@ -25,35 +25,6 @@
 #define crown_take
 	sound_play(sndCrownLove);
 	
-#define step
-	 // Crown Step:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
-		 // Watch where you're going bro:
-		if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
-		
-		 // Spawn Enemies:
-		if(enemies > 0){
-			enemy_time -= current_time_scale;
-			scrPortalPoof();
-			
-			if(enemy_time <= 0){
-				var f = instance_furthest(x, y, Floor),
-					l = irandom_range(360, 420),
-					d = point_direction(f.x, f.y, x, y);
-				
-				while(enemies > 0){
-					enemies -= 1;
-					obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy");
-				}
-				
-				 // Effects:
-				with(instance_create(x + lengthdir_x(8, d), y + lengthdir_y(8, d), AssassinNotice)) motion_set(d, 1);
-				sound_play(sndIDPDNadeAlmost);
-			}
-		}
-	}
-
-
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;

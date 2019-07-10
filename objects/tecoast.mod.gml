@@ -3259,6 +3259,7 @@
         spr_hurt = spr.CrabHurt;
         spr_dead = spr.CrabDead;
         spr_fire = spr.CrabFire;
+        spr_hide = spr.CrabHide;
         spr_shadow = shd48;
         hitid = [spr_idle, "TRAFFIC CRAB"];
         mask_index = mskScorpion;
@@ -3270,6 +3271,7 @@
         snd_mele = sndGoldScorpionMelee;
 
          // Vars:
+        active = chance(1, 8);
         maxhealth = 20;
         raddrop = 10;
         size = 2;
@@ -3282,6 +3284,7 @@
 		sweep_spd = 10;
         sweep_dir = right;
         ammo = 0;
+        ntte_anim = false;
 
          // Alarms:
         alarm1 = 30 + random(90);
@@ -3290,74 +3293,125 @@
     }
 
 #define TrafficCrab_step
-     // Attack Sprite:
+	 // Inactive:
+	canmelee = active;
+	if(!active){
+		speed = 0;
+		x = xstart;
+		y = ystart;
+		image_index -= image_speed;
+	}
+	
+	 // Animate:
     if(ammo > 0){
         sprite_index = spr_fire;
         image_index = 0;
     }
+    
+    else if(sprite_index == spr_idle || anim_end){
+		if(!active)	sprite_index = spr_hide;
+		
+		else{
+			if(speed > 0){
+				if(sprite_index != spr_walk){
+					sprite_index = spr_walk;
+					image_index = 0;
+				}
+			}
+			else if(sprite_index != spr_idle){
+				sprite_index = spr_idle;
+				image_index = 0;
+			}
+		}
+	}
 
 #define TrafficCrab_alrm1
-     // Spray Venom:
-    if(ammo > 0){
-        alarm1 = 2;
-        walk = 1;
+	if(active){
 
-        sound_play(sndOasisCrabAttack);
-        sound_play_pitchvol(sndFlyFire, 2 + random(1), 0.5);
-
-         // Venom:
-        var _x = x + (right * (4 + (sweep_dir * 10))),
-            _y = y + 4;
-
-        repeat(choose(2, 3)){
-            scrEnemyShootExt(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
-        }
-        gunangle += (sweep_dir * sweep_spd);
-
-         // End:
-        if(--ammo <= 0){
-            alarm1 = 30 + random(20);
-            sprite_index = spr_idle;
-
-             // Move Towards Player:
-            var _dir = (instance_exists(target) ? point_direction(x, y, target.x, target.y) : random(360));
-            scrWalk(15, _dir);
-
-             // Switch Claws:
-            sweep_dir *= -1;
-        }
-    }
-
-     // Normal AI:
-    else{
-        alarm1 = 35 + random(15);
-        target = instance_nearest(x, y, Player);
-
-        if(in_sight(target)){
-            var _targetDir = point_direction(x, y, target.x, target.y);
-
-             // Attack:
-            if(in_distance(target, 128)){
-                scrWalk(1, _targetDir + (sweep_dir * random(90)));
-
-                alarm1 = 1;
-                ammo = 10;
-                gunangle = _targetDir - (sweep_dir * (sweep_spd * (ammo / 2)));
-
-                sound_play_pitch(sndScorpionFireStart, 0.8);
-                sound_play_pitch(sndGoldScorpionFire, 1.5);
-            }
-
-             // Move Towards Player:
-            else scrWalk(30, _targetDir + (random_range(20, 40) * choose(-1, 1)));
-
-             // Facing:
-            scrRight(_targetDir);
-        }
-
-         // Passive Movement:
-        else scrWalk(10, random(360));
-    }
+	     // Spray Venom:
+	    if(ammo > 0){
+	        alarm1 = 2;
+	        walk = 1;
+	
+	        sound_play(sndOasisCrabAttack);
+	        sound_play_pitchvol(sndFlyFire, 2 + random(1), 0.5);
+	
+	         // Venom:
+	        var _x = x + (right * (4 + (sweep_dir * 10))),
+	            _y = y + 4;
+	
+	        repeat(choose(2, 3)){
+	            scrEnemyShootExt(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
+	        }
+	        gunangle += (sweep_dir * sweep_spd);
+	
+	         // End:
+	        if(--ammo <= 0){
+	            alarm1 = 30 + random(20);
+	            sprite_index = spr_idle;
+	
+	             // Move Towards Player:
+	            var _dir = (instance_exists(target) ? point_direction(x, y, target.x, target.y) : random(360));
+	            scrWalk(15, _dir);
+	
+	             // Switch Claws:
+	            sweep_dir *= -1;
+	        }
+	    }
+	
+	     // Normal AI:
+	    else{
+	        alarm1 = 35 + random(15);
+	        target = instance_nearest(x, y, Player);
+	
+	        if(in_sight(target)){
+	            var _targetDir = point_direction(x, y, target.x, target.y);
+	
+	             // Attack:
+	            if(in_distance(target, 128)){
+	                scrWalk(1, _targetDir + (sweep_dir * random(90)));
+	
+	                alarm1 = 1;
+	                ammo = 10;
+	                gunangle = _targetDir - (sweep_dir * (sweep_spd * (ammo / 2)));
+	
+	                sound_play_pitch(sndScorpionFireStart, 0.8);
+	                sound_play_pitch(sndGoldScorpionFire, 1.5);
+	            }
+	
+	             // Move Towards Player:
+	            else scrWalk(30, _targetDir + (random_range(20, 40) * choose(-1, 1)));
+	
+	             // Facing:
+	            scrRight(_targetDir);
+	        }
+	
+	         // Passive Movement:
+	        else scrWalk(10, random(360));
+	    }
+	}
+	
+	 // Just be a prop bro:
+	else{
+		alarm1 = 30 + random(30);
+		target = instance_nearest(x, y, Player);
+		
+		 // Awaken:
+		if(in_distance(target, 96) && (chance(1, 3) || instance_number(enemy) <= 1)){
+			active = true;
+			
+			 // Effects:
+			sound_play_hit(sndPlantSnareTB, 0.2);
+			sound_play_hit(sndScorpionFire, 0.2);
+			instance_create(x + (6 * right), y, AssassinNotice);
+		}
+	}
+	
+#define TrafficCrab_hurt(_hitdmg, _hitvel, _hitdir)
+	enemyHurt(_hitdmg, _hitvel, _hitdir);
+	
+	 // Awaken Bro:
+	active = true;
 
 #define TrafficCrab_death
     pickup_drop(10, 10);

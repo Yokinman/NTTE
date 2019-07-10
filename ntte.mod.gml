@@ -109,6 +109,7 @@
     global.effect_timer = 0;
 
 	 // Fix for custom music/ambience:
+	global.musTrans = false;
     global.current = {
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
@@ -1251,7 +1252,8 @@
         else global.effect_timer = 0;
 
          // Music / Ambience:
-        if(instance_exists(GenCont) || instance_exists(mutbutton)){
+        if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
+        	global.musTrans = false;
             var _scrt = ["area_music", "area_ambience"];
             for(var i = 0; i < lq_size(global.current); i++){
                 var _type = lq_get_key(global.current, i);
@@ -1341,6 +1343,69 @@
 				if(ammo[t] + ammo_bonus >= c){
 					ammo_bono(c, t);
 				}
+			}
+		}
+	}
+	
+	 // Crown of Crime:
+	with(instances_matching(Crown, "ntte_crown", "crime")){
+		 // Watch where you're going bro:
+		if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
+		
+		 // Spawn Enemies:
+		if(enemies > 0){
+			enemy_time -= current_time_scale;
+			scrPortalPoof();
+			
+			if(enemy_time <= 0){
+				var f = instance_furthest(x, y, Floor),
+					l = irandom_range(360, 420),
+					d = point_direction(f.x, f.y, x, y);
+					
+				 // Weighted Pool:
+				var _enemyPool = [];
+				repeat(4) array_push(_enemyPool, "Gator");
+				repeat(2) array_push(_enemyPool, "BuffGator");
+				repeat(1) array_push(_enemyPool, "BoneGator");
+				
+				while(enemies > 0){
+					enemies -= 1;
+					with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy")){
+						 // Determine Enemy Type:
+						switch(_enemyPool[irandom(array_length(_enemyPool) - 1)]){
+							case "Gator":
+								obj_name = Gator;
+								with(obj_info){
+									spr_idle = sprGatorIdle;
+									spr_walk = sprGatorWalk;
+									spr_weap = sprGatorShotgun;
+								}
+								break;
+								
+							case "BuffGator":
+								obj_name = BuffGator;
+								with(obj_info){
+									spr_idle = sprBuffGatorIdle;
+									spr_walk = sprBuffGatorWalk;
+									spr_weap = sprBuffGatorFlakCannon;
+								}
+								break;
+							
+							case "BoneGator":
+								obj_name = "BoneGator";
+								with(obj_info){
+									spr_idle = spr.BoneGatorIdle;
+									spr_walk = spr.BoneGatorWalk;
+									spr_weap = sprNadeShotgun;
+								}
+								break;
+						}
+					}
+				}
+				
+				 // Effects:
+				with(instance_create(x + lengthdir_x(12, d), y + lengthdir_y(12, d), AssassinNotice)) motion_set(d, 1);
+				sound_play_pitch(sndIDPDNadeAlmost, 0.8);
 			}
 		}
 	}
