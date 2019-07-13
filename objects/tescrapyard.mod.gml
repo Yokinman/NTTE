@@ -121,20 +121,22 @@
 				view_shake_max_at(x, y, random_range(2, 6));
 			}
 		}
-		if(walled && chance_ct(2, 3)){
+		if(walled){
 			var	l = random_range(12, 16),
 				d = dir,
 				_x = x + lengthdir_x(l, d) + orandom(2),
 				_y = y + lengthdir_y(l, d) - random(2),
 				_inv = side * -1;
-
-			with(instance_create(_x, _y, BulletHit)){
-				sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
-				image_angle = d + random_range(15, 60) * _inv;
-				image_yscale = random_range(1, 1.5) * _inv;
-				
-				if(!place_meeting(x, y, Wall)) instance_destroy();
+			if(chance_ct(2, 3)){
+				with(instance_create(_x, _y, BulletHit)){
+					sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
+					image_angle = d + random_range(15, 60) * _inv;
+					image_yscale = random_range(1, 1.5) * _inv;
+					
+					if(!place_meeting(x, y, Wall)) instance_destroy();
+				}
 			}
+			if(chance_ct(1, 4)) scrFX([_x, 3], [_y, 3], [d + (random_range(45, 90) * _inv), random(2)], Sweat).image_blend = make_color_rgb(255, 222, 056);
 		}
 	}
 

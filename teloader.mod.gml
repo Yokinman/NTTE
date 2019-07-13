@@ -36,6 +36,7 @@
         ["weps/bubble shotgun.wep.gml",             1],
         ["weps/bubble minigun.wep.gml",             1],
         ["weps/bubble cannon.wep.gml",              1],
+        ["weps/hyper bubbler.wep.gml",              1],
         ["weps/lightring launcher.wep.gml",         1],
         ["weps/super lightring launcher.wep.gml",   1],
         ["weps/tesla coil.wep.gml",                 1],
