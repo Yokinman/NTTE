@@ -87,7 +87,7 @@
 		];
         
          // Electroplasma:
-        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       5, 12, 12);
+        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       7, 12, 12);
         ElectroPlasmaTrail  = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTrail.png",  3,  4,  4);
         ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7, 12, 12);
         ElectroPlasmaTether = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTether.png", 4,  0,  1);

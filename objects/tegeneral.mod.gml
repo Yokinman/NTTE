@@ -71,7 +71,7 @@
 	if(curse) sound_play(sndCursedChest);
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
-	 // Merged Weapon:
+	 // Merged Weapon:	
 	var _part = wep_merge_decide(0, GameCont.hard + (curse ? 2 : 0));
 	if(array_length(_part) >= 2){
 		with(instance_create(x, y, WepPickup)){
@@ -152,7 +152,20 @@
 		if("curse" in self) curse = other.curse;
 		if("cursed" in self) cursed = other.curse; // Bro why do ammo pickups be inconsistent
 	}
-
+	
+	 // Restore Strong Spirit:
+	with(other) if(instance_is(id, Player) && skill_get(mut_strong_spirit) && !canspirit){
+		var i = index;
+			
+		canspirit = true;
+		GameCont.canspirit[i] = false;
+		with(instance_create(x, y, StrongSpirit)){
+			sprite_index = sprStrongSpiritRefill;
+			creator = i;
+		}
+		
+		sound_play(sndStrongSpiritGain);
+	}
 
 #define BatDisc_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1587,8 +1600,8 @@
 	}
 	
 #define ElectroPlasma_wall
-	image_xscale -= 0.05;
-	image_yscale -= 0.05;
+	image_xscale -= 0.03;
+	image_yscale -= 0.03;
 	
 #define ElectroPlasma_destroy
 	scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
