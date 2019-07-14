@@ -108,9 +108,13 @@
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
     	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
 
+		 // LoadoutCrown System:
+    	CrownRandomLoadout	= sprite_add("sprites/crowns/Random/sprCrownRandomLoadout.png", 2, 16, 16);
+    	ClockParts			= sprite_add("sprites/crowns/sprClockParts.png",				2,  1, 1);
+
          // Menu:
-        OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
-        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 20,  9);
+        OptionNTTE			= sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
+        MenuNTTE			= sprite_add("sprites/menu/sprMenuNTTE.png",   1, 20,  9);
 
          // Quasar Beam:
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
@@ -857,6 +861,7 @@
 	 // Mod Lists:
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot"];
+    global.crwn = ["crime"];
 
      // Reminders:
     global.remind = [];
@@ -999,7 +1004,14 @@
 		if(!instance_exists(Menu)){
 			with(shadList){
 				if(shad == -1){
-					shad = shader_create(vert, frag);
+					try{
+						shad = shader_create(vert, frag);
+					}
+					catch(_error){
+						trace(shad);
+						trace(_error);
+						shad = -1;
+					}
 				}
 			}
 		}

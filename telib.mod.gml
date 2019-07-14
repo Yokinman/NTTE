@@ -967,6 +967,8 @@
         _array[@i] = a[(m - 1) - i];
     }
 
+    return _array;
+
 #define array_combine(_array1, _array2)
 	var a = array_clone(_array1);
 	array_copy(a, array_length(a), _array2, 0, array_length(_array2));
@@ -1345,6 +1347,9 @@
 	        gunangle = g;
 	    }
 	    UberCont.opt_shake = s;
+
+	     // Force Music Transition:
+	    mod_variable_set("mod", "ntte", "musTrans", true);
 	}
 
 #define area_get_subarea(_area)

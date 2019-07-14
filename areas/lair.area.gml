@@ -229,7 +229,7 @@
 
 #define area_subarea            return 1;
 #define area_next               return 3;
-#define area_music              return [mus.Lair, 0.3];
+#define area_music              return [mus.Lair, 0.4];
 #define area_ambience           return amb102;
 #define area_background_color   return make_color_rgb(160, 157, 75);
 #define area_shadow_color       return area_get_shadow_color(102);
@@ -274,9 +274,6 @@
     RoomList = [];
 
     if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
-    
-     // Force Music Transition:
-    mod_variable_set("mod", "ntte", "musTrans", true);
 
 #define area_setup_floor(_explo)
     if(!_explo){

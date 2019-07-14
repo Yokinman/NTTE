@@ -280,6 +280,14 @@
     	}
     }
     spr_dead = -1;
+    
+     // Dum Fix:
+    with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Parrot"), "perched", id)){
+	    var _scrt = pet + "_step";
+	    if(mod_script_exists("mod", "petlib", _scrt)){
+	        mod_script_call("mod", "petlib", _scrt);
+	    }
+    }
 
 
 #define CoastDecalCorpse_create(_x, _y)
