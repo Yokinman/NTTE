@@ -2258,6 +2258,58 @@
 	}
 
 
+#define HyperBubble_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Vars:
+		mask_index = mskNone;
+		hits = 3;
+		damage = 12;
+		force = 24;
+		
+		return id;
+	}
+	
+#define HyperBubble_end_step
+	mask_index = mskBullet1;
+	var _dist = 100,
+		_proj = [];
+		
+	 // Muzzle Explosion:
+	array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+		
+	while(!place_meeting(x, y, Wall) && _dist > 0 && hits > 0){
+		_dist--;
+		x += lengthdir_x(8, direction);
+		y += lengthdir_y(8, direction);
+		
+		 // Effects:
+		if(chance(1, 3)) scrFX([x, 4], [y, 4], [direction + orandom(4), 6 + random(4)], Bubble).friction = 0.2;
+		if(chance(2, 3)) scrFX([x, 2], [y, 2], [direction + orandom(4), 2 + random(2)], Smoke);
+		
+		 // Explosion:
+		var e = instances_meeting(x, y, instances_matching_gt(instances_matching_ne([Player, hitme], "team", team), "my_health", 0));
+		if(array_length(e) > 0 && hits > 0){
+			hits--;
+			array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+			
+			 // Deal Impact Damage:
+			for(var i = 0; i < array_length(e); i++) projectile_hit(e[i], damage, force, direction);
+		}
+	}
+	
+	 // End Explosion:
+	array_push(_proj, obj_create(x, y, "BubbleExplosion"));
+	if(hits > 0) repeat(hits) array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+	
+	 // Your Properties, Madam:
+	with(_proj){
+		creator = other.creator;
+		team	= other.team;
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
 #define LightningDisc_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
