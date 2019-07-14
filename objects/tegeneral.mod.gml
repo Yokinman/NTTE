@@ -41,6 +41,7 @@
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
 
 		 // Vars:
+		raddrop = 8;
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
 			case crwn_curses:	curse = chance(2, 3);	break;
@@ -68,6 +69,7 @@
 
 #define Backpack_open
 	if(curse) sound_play(sndCursedChest);
+	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
 	 // Merged Weapon:
 	var _part = wep_merge_decide(0, GameCont.hard + (curse ? 2 : 0));
@@ -78,9 +80,77 @@
 			ammo = true;
 			roll = true;
 		}
-		
-		 // Effects:
-		instance_create(x, y, Dust);
+	}
+	
+	 // Pickups:
+	var _ang = random(360);
+	for(var d = _ang; d < _ang + 360; d += (360 / 2)){
+		with(obj_create(x, y, "BackpackPickup")){
+			direction = d;
+			curse = other.curse;
+			if(curse && object == AmmoPickup){
+				sprite_index = sprCursedAmmo;
+			}
+		}
+	}
+	
+	 // Rads:
+	repeat(raddrop){
+		with(instance_create(x, y, Rad)){
+			motion_add(random(360), random_range(3, 5));
+		}
+	}
+
+
+#define BackpackPickup_create(_x, _y)
+	instance_create(_x, _y, Dust);
+	with(instance_create(_x, _y, CustomObject)){
+		 // Determine Pickup:
+		object = choose(AmmoPickup, HPPickup);
+		switch(crown_current){
+			case crwn_life: object = AmmoPickup; break;
+			case crwn_guns: object = HPPickup;	 break;
+		}
+
+		 // Visual:
+		sprite_index = object_get_sprite(object);
+		image_speed = 0;
+		depth = -3;
+
+		 // Vars:
+		mask_index = mskPickup;
+        z = 0;
+        zspeed = random_range(2, 4);
+        zfric = 0.7;
+        curse = false;
+		direction = random(360);
+		speed = random_range(1, 3); // factor in crowns
+
+		return id;
+	}
+
+#define BackpackPickup_step
+	 // Collision:
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
+	}
+
+	z_engine();
+	if(z <= 0) instance_destroy();
+
+#define BackpackPickup_draw
+	image_alpha = abs(image_alpha);
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	image_alpha = -image_alpha;
+
+#define BackpackPickup_destroy
+	with(instance_create(x, y - z, object)){
+		sprite_index = other.sprite_index;
+		direction = other.direction;
+		speed = other.speed;
+		if("curse" in self) curse = other.curse;
+		if("cursed" in self) cursed = other.curse; // Bro why do ammo pickups be inconsistent
 	}
 
 
@@ -1270,6 +1340,16 @@
     var c = [Player, PortalShock];
     for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
         with(instance_nearest(x, y, c[i])) with(other){
+             // Hatred:
+            if(crown_current == crwn_hatred){
+            	repeat(16) with(instance_create(x, y, Rad)){
+            		motion_add(random(360), random_range(2, 6));
+            	}
+	            if(instance_is(other, Player)){
+	            	projectile_hit_raw(other, 1, true);
+	            }
+            }
+
              // Call Chest Open Event:
             var e = on_open;
             if(mod_script_exists(e[0], e[1], e[2])){
@@ -1284,8 +1364,8 @@
             sound_play(snd_open);
 
             instance_destroy();
+            exit;
         }
-        break;
     }
 
 
@@ -5474,3 +5554,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

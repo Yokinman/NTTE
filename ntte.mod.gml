@@ -91,6 +91,9 @@
 	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime"];
 	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
 	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
+	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
+	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
+
 
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -3739,45 +3742,47 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 			_surfx = -60 - (w / 2),
 			_surfy = -39 - (h / 2);
 
-	    if(_crown.slct != crwn_none) with(Loadout){
+	    with(Loadout){
 	        _surfy += (introsettle - (introsettle > 0));
 			if(position_meeting(mouse_x[p], mouse_y[p], self)){
 				_surfx--;
 				_surfy--;
 			}
 
-			with(surfCrownHideScreen) if(surface_exists(surf)){
-				x = other.x - game_width;
-				y = other.y - (game_height - 36);
-				w = game_width;
-				h = game_height;
+			if(_crown.slct != crwn_none){
+				with(surfCrownHideScreen) if(surface_exists(surf)){
+					x = other.x - game_width;
+					y = other.y - (game_height - 36);
+					w = game_width;
+					h = game_height;
+	
+					 // Capture Screen:
+			        surface_set_target(surf);
+			        draw_clear(c_black);
+			        draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
+			        surface_screenshot(surf);
+			        draw_set_blend_mode(bm_normal);
+	
+					with(other){
+			        	surface_set_target(_surf);
+			        	draw_clear_alpha(0, 0);
+	
+						 // Draw Mask of What to Hide (The Currently Selected Crown):
+						draw_set_fog(true, c_black, 0, 0);
+				        draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
+						draw_set_fog(false, 0, 0, 0);
+	
+						 // Lay Screen + Loadout Sprite Over Mask:
+			        	draw_set_color_write_enable(true, true, true, false);
+			        	draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
+			        	draw_sprite(sprLoadoutSplat, image_index, -_surfx, -_surfy);
+			        	if(selected == true) draw_sprite(sprLoadoutOpen, openanim, -_surfx, -_surfy);
+			        	draw_set_color_write_enable(true, true, true, true);
+					}
+		        }
 
-				 // Capture Screen:
-		        surface_set_target(surf);
-		        draw_clear(c_black);
-		        draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
-		        surface_screenshot(surf);
-		        draw_set_blend_mode(bm_normal);
-
-				with(other){
-		        	surface_set_target(_surf);
-		        	draw_clear_alpha(0, 0);
-
-					 // Draw Mask of What to Hide (The Currently Selected Crown):
-					draw_set_fog(true, c_black, 0, 0);
-			        draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
-					draw_set_fog(false, 0, 0, 0);
-
-					 // Lay Screen + Loadout Sprite Over Mask:
-		        	draw_set_color_write_enable(true, true, true, false);
-		        	draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
-		        	draw_sprite(sprLoadoutSplat, image_index, -_surfx, -_surfy);
-		        	if(selected == true) draw_sprite(sprLoadoutOpen, openanim, -_surfx, -_surfy);
-		        	draw_set_color_write_enable(true, true, true, true);
-				}
-	        }
-
-	        surface_reset_target();
+	        	surface_reset_target();
+			}
 	    }
 
 	    x = _surfx;
@@ -4278,3 +4283,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

@@ -1978,6 +1978,23 @@
 			array_push(_pool, "bones");
 		}
 	}
+	switch(crown_current){
+		case crwn_life:
+			while(true){
+				var i = array_find_index(_pool, "ammo");
+				if(i >= 0) _pool[i] = "health";
+				else break;
+			}
+			break;
+
+		case crwn_guns:
+			while(true){
+				var i = array_find_index(_pool, "health");
+				if(i >= 0) _pool[i] = "ammo";
+				else break;
+			}
+			break;
+	}
 	with(_shop){
 		var i = irandom(array_length(_pool) - 1);
 		drop = _pool[i];
@@ -2413,7 +2430,7 @@
                  // Close portals:
                 scrPortalPoof();
         }
-        
+
          // Mid intro:
         else{
              // safety measures
@@ -2445,7 +2462,7 @@
 	    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
 	    		_dir = point_direction(_x, _y, x, y);
 
-	    	if(point_distance(_x, _y, x, y) < _dis){
+	    	if(point_distance(_x, _y, x, y) < _dis && mask_index != mskNone){
 	    		if(instance_is(self, Player)){
 		    		direction += angle_difference(point_direction(_x, _y, x, y), direction) / 12;
 		    		x = _x + lengthdir_x(_dis, _dir);
@@ -2462,6 +2479,38 @@
 	    with(instances_matching(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [Scorch, ScorchTop]), "bighole_check", null, false)){
 	    	bighole_check = true;
 	    	if(in_distance(other, _dis)) instance_destroy();
+	    }
+
+	     // Grab Portal:
+	    if(instance_exists(Portal)){
+	    	with(instance_nearest(x, y, Portal)){
+	    		with(instances_matching(instances_matching(PortalShock, "x", x), "y", y)) instance_destroy();
+	    		x = other.x;
+	    		y = other.y;
+	    		if(image_alpha > 0){
+		    		image_alpha = 0;
+		    		mask_index = mskReviveArea;
+
+		    		 // Fix Particles:
+		    		repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
+	    				x = other.x;
+	    				y = other.y;
+		    		}
+
+		    		 // Remove Light:
+		    		with(global.catLight){
+		    			if(point_distance(x, y, other.x, other.y) < 64){
+		    				global.catLight = array_delete_value(global.catLight, self);
+		    			}
+		    		}
+	    		}
+
+				 // Pushin Chests:
+	    		with(chestprop) if(distance_to_point(other.x, other.y + 12) < 112){
+	    			direction = point_direction(other.x, other.y, x, y);
+	    			speed = max(256 / point_distance(other.x, other.y, x, y), speed);
+	    		}
+	    	}
 	    }
     }
 
@@ -4120,3 +4169,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

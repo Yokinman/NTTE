@@ -5,7 +5,7 @@
 	global.sprCrownCrimeLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
 
 #define crown_name	return "CROWN OF CRIME";
-#define crown_text	return "FIND SMUGGLED GOODS#A PRICE ON YOUR HEAD";
+#define crown_text	return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip	return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
 #define crown_avail	return unlock_get("lairCrown");
 

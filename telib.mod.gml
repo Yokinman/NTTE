@@ -11,7 +11,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["Backpack", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "HyperBubble", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["Backpack", "BackpackPickup", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "HyperBubble", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	  : ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
@@ -973,6 +973,19 @@
 	var a = array_clone(_array1);
 	array_copy(a, array_length(a), _array2, 0, array_length(_array2));
 	return a;
+
+#define array_shuffle(_array)
+	var _size = array_length(_array),
+		j, t;
+
+	for(var i = 0; i < _size; i++){
+	    j = irandom_range(i, _size - 1);
+	    if(i != j){
+	        t = _array[i];
+	        _array[@i] = _array[j];
+	        _array[@j] = t;
+	    }
+	}
 
 #define array_delete(_array, _index)
     var i = _index,
