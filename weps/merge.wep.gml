@@ -1560,6 +1560,8 @@
     var _wep = lq_clone_deep(_front);
 
     with(_wep){
+    	stock = _stock.weap;
+    	front = _front.weap;
         weap = -1;
         swap = _front.swap;
         area = -1;

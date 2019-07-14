@@ -1485,7 +1485,7 @@
 
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){
+		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
 			var _packList = {
 				"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
 				"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
@@ -1741,6 +1741,57 @@
     }
     catch(_error){
     	trace_error(_error);
+    }
+    
+     // Merged Wep Pickup Indicator:
+    with(instances_matching(WepPickup, "mergewep_indicator", undefined)){
+    	mergewep_indicator = true;
+    	
+    	if(wep_get(wep) == "merge"){
+	    	if(is_undefined(lq_get(wep, "pickup_text"))){
+	    		// trace_time();
+	    		
+		    	var _string = weapon_get_name(wep.base.stock) + " + " + weapon_get_name(wep.base.front),
+		    		_strLen = string_length(_string),
+		    		_fontH = 4,
+		    		_fontV = 6,
+					_surf = surface_create((_strLen * _fontH) + 4, _fontV + 40);
+					
+				surface_set_target(_surf);
+				
+				var _x = [0, (_strLen * _fontH) + 3],
+					_y = [36, _fontV + 37];
+					
+				 // Make a rectangle:
+				draw_set_color(make_color_rgb(75, 85, 92));
+				draw_rectangle(_x[0], _y[0], _x[1], _y[1], false);
+				draw_set_color(c_white);
+				
+				 // Cut out corners:
+				draw_set_blend_mode(bm_subtract);
+				draw_point(_x[0], _y[0]);
+				draw_point(_x[0], _y[1]);
+				draw_point(_x[1], _y[1]);
+				draw_point(_x[1], _y[0]);
+				draw_set_blend_mode(bm_normal);
+				
+				 // Put the text on top:
+				draw_set_font(fntSmall);
+				draw_text_nt(2, 37, _string);
+				draw_set_font(fntM);
+				
+				surface_reset_target();
+				surface_save(_surf, "sprMergeText.png");
+				surface_destroy(_surf);
+				
+				 // All done:
+				lq_set(wep, "pickup_text", sprite_add("sprMergeText.png", 1, (_strLen * _fontH) / 2, _fontV / 2));
+				
+				// trace_time("text sprite generation");
+	    	}
+	    		
+	    	name = "@0(" + string(wep.pickup_text) + ")#" + name + "#" + string_repeat(" ", (sprite_get_xoffset(wep.pickup_text) / 4) + 1);
+    	}
     }
 
 	if(DebugLag) trace_time("ntte_end_step");

@@ -1,5 +1,5 @@
 #define init
-    global.sprElectroPlasmaShotgun = sprite_add_weapon("../sprites/weps/sprElectroPlasmaShotgun.png", 9, 8);
+    global.sprElectroPlasmaShotgun = sprite_add_weapon("../sprites/weps/sprElectroPlasmaShotgun.png", 2, 6);
 
 #define weapon_name return "ELECTROPLASMA SHOTGUN";
 #define weapon_text return "WHERE'S THE PEANUT BUTTER";

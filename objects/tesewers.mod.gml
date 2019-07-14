@@ -689,7 +689,7 @@
 	repeat(6) scrFX(x, y, 3, Dust);
 	
 	 // Crown Time:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
+	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
 		enemies += (1 + GameCont.loops) + irandom(3);
 	}
@@ -1991,7 +1991,7 @@
 	repeat(6) scrFX(x, y, 3, Dust);
 	
 	 // Crown Time:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
+	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
 		enemies += (1 + GameCont.loops) + irandom(3);
 	}
@@ -2403,7 +2403,7 @@
          // Begin intro:
         if(phase < 1){
             if(instance_exists(Player))
-                if(instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) < 1){
+                if(instance_number(CorpseActive) + instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) <= 0){
                     phase++;
                     alarm0 = 40;
                     alarm1 = 20;
@@ -3465,7 +3465,7 @@
 	sprite_index = spr_idle;
 	
 	 // Land:
-	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+	if((place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)) || GameCont.area == "coast"){
 		instance_destroy();
 	}
 	
@@ -3484,6 +3484,7 @@
 		sprite_index = spr_idle;
 		image_index = 0;
 	}
+	depth = -10 - (y / 20000);
 	
 	 // Collide:
 	with(instances_meeting(x, y, instances_matching_ne(instances_matching(CustomObject, "name", name), "id", id))){
