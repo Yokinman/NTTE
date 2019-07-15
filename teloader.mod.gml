@@ -94,6 +94,12 @@
         _spr = global.sprLoad,
         _load = (global.load / array_length(global.list));
 
+    draw_set_fog(true, c_black, 0, 0);
+    draw_sprite(_spr, 0, _x + 1, _y);
+    draw_sprite(_spr, 0, _x - 1, _y);
+    draw_sprite(_spr, 0, _x + 1, _y + 1);
+    draw_sprite(_spr, 0, _x - 1, _y + 1);
+    draw_set_fog(false, 0, 0, 0);
     draw_sprite(_spr, 0, _x, _y);
 
     for(var i = 0; i <= 1; i++){

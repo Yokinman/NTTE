@@ -1901,7 +1901,7 @@
 			with(_swap) other.text = string_replace_all(other.text, self, n);
 
          // Sprite:
-        sprt = mod_script_call("mod", "teassets", "sprite_merge", _stock.sprt, _front.sprt);
+        sprt = mod_script_call("mod", "teassets", "wep_merge_sprite", _stock.sprt, _front.sprt);
 
          // Flags:
         flag = array_combine(_stock.flag, _front.flag);

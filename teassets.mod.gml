@@ -734,8 +734,10 @@
         	 
         //#endregion
 
+		 // Merged Weapon Sprite Storage:
         MergeWep = {};
-        
+        MergeWepText = {};
+
          // Shine Overlays:
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
         Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
@@ -1158,7 +1160,7 @@
 
 	return sprite_add("sprShine.png", _img, _ox, _oy);
 
-#define sprite_merge(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+#define wep_merge_sprite(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
     var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
     if(lq_exists(spr.MergeWep, _sprName)){
         return lq_get(spr.MergeWep, _sprName);
@@ -1228,6 +1230,49 @@
         var s = sprite_add_weapon("sprMerge.png", 2, _surfH / 3);
         lq_set(spr.MergeWep, _sprName, s);
     	return s;
+    }
+
+#define wep_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
+    var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
+    if(lq_exists(spr.MergeWepText, _sprName)){
+        return lq_get(spr.MergeWepText, _sprName);
+    }
+    else{
+		draw_set_font(fntSmall);
+		draw_set_halign(fa_center);
+		draw_set_valign(fa_middle);
+
+		var _text = weapon_get_name(_stock) + " + " + weapon_get_name(_front),
+			_topSpace = 2,
+			_surfw = string_width(_text) + 4,
+			_surfh = string_height(_text) + 2 + _topSpace,
+			_surf = surface_create(_surfw, _surfh);
+
+		surface_set_target(_surf);
+		draw_clear_alpha(0, 0);
+
+		 // Background:
+		var _x1 = -1,
+			_y1 = -1,
+			_x2 = _x1 + _surfw,
+			_y2 = _y1 + _surfh;
+
+	    draw_set_alpha(0.8);
+		draw_set_color(c_black);
+		draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
+		draw_set_alpha(1);
+
+		 // Text:
+		draw_text_nt(floor(_surfw / 2), floor((_surfh + _topSpace) / 2), _text);
+
+		 // Save Sprite:
+		surface_reset_target();
+		surface_save(_surf, "sprMergeText.png");
+		surface_destroy(_surf);
+		var s = sprite_add("sprMergeText.png", 1, (_surfw / 2), (_surfh / 2));
+        lq_set(spr.MergeWepText, _sprName, s);
+
+		return s;
     }
 
 #define cleanup

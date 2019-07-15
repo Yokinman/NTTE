@@ -101,6 +101,20 @@
 		}
 	}
 
+	 // Restore Strong Spirit:
+	with(other) if(instance_is(id, Player) && skill_get(mut_strong_spirit) && !canspirit){
+		var i = index;
+			
+		canspirit = true;
+		GameCont.canspirit[i] = false;
+		with(instance_create(x, y, StrongSpirit)){
+			sprite_index = sprStrongSpiritRefill;
+			creator = i;
+		}
+		
+		sound_play(sndStrongSpiritGain);
+	}
+
 
 #define BackpackPickup_create(_x, _y)
 	instance_create(_x, _y, Dust);
@@ -152,20 +166,7 @@
 		if("curse" in self) curse = other.curse;
 		if("cursed" in self) cursed = other.curse; // Bro why do ammo pickups be inconsistent
 	}
-	
-	 // Restore Strong Spirit:
-	with(other) if(instance_is(id, Player) && skill_get(mut_strong_spirit) && !canspirit){
-		var i = index;
-			
-		canspirit = true;
-		GameCont.canspirit[i] = false;
-		with(instance_create(x, y, StrongSpirit)){
-			sprite_index = sprStrongSpiritRefill;
-			creator = i;
-		}
-		
-		sound_play(sndStrongSpiritGain);
-	}
+
 
 #define BatDisc_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){

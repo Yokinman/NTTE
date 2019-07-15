@@ -213,6 +213,9 @@
         }
     }
 
+	 // For Merged Weapon PopupText Fix:
+	global.wepMergeName = [];
+
      // Charm:
     global.surfCharm = surflist_set("Charm", 0, 0, game_width, game_height);
     global.shadCharm = shadlist_set("Charm", 
@@ -1747,53 +1750,28 @@
     }
     
      // Merged Wep Pickup Indicator:
-    with(instances_matching(WepPickup, "mergewep_indicator", undefined)){
+    with(instances_matching(WepPickup, "mergewep_indicator", null)){
     	mergewep_indicator = true;
-    	
-    	if(wep_get(wep) == "merge"){
-	    	if(is_undefined(lq_get(wep, "pickup_text"))){
-	    		// trace_time();
-	    		
-		    	var _string = weapon_get_name(wep.base.stock) + " + " + weapon_get_name(wep.base.front),
-		    		_strLen = string_length(_string),
-		    		_fontH = 4,
-		    		_fontV = 6,
-					_surf = surface_create((_strLen * _fontH) + 4, _fontV + 40);
-					
-				surface_set_target(_surf);
-				
-				var _x = [0, (_strLen * _fontH) + 3],
-					_y = [36, _fontV + 37];
-					
-				 // Make a rectangle:
-				draw_set_color(make_color_rgb(75, 85, 92));
-				draw_rectangle(_x[0], _y[0], _x[1], _y[1], false);
-				draw_set_color(c_white);
-				
-				 // Cut out corners:
-				draw_set_blend_mode(bm_subtract);
-				draw_point(_x[0], _y[0]);
-				draw_point(_x[0], _y[1]);
-				draw_point(_x[1], _y[1]);
-				draw_point(_x[1], _y[0]);
-				draw_set_blend_mode(bm_normal);
-				
-				 // Put the text on top:
-				draw_set_font(fntSmall);
-				draw_text_nt(2, 37, _string);
-				draw_set_font(fntM);
-				
-				surface_reset_target();
-				surface_save(_surf, "sprMergeText.png");
-				surface_destroy(_surf);
-				
-				 // All done:
-				lq_set(wep, "pickup_text", sprite_add("sprMergeText.png", 1, (_strLen * _fontH) / 2, _fontV / 2));
-				
-				// trace_time("text sprite generation");
-	    	}
-	    		
-	    	name = "@0(" + string(wep.pickup_text) + ")#" + name + "#" + string_repeat(" ", (sprite_get_xoffset(wep.pickup_text) / 4) + 1);
+
+    	if(wep_get(wep) == "merge" && is_object(wep)){
+    		if("stock" in wep.base && "front" in wep.base){
+    			var n = name;
+		    	name += `#@(${mod_script_call("mod", "teassets", "wep_merge_subtext", wep.base.stock, wep.base.front)})`;
+		    	array_push(global.wepMergeName, [id, name, n]);
+    		}
+    	}
+    }
+    with(global.wepMergeName){
+    	var _inst = self[0],
+    		_text = self[1],
+    		_orig = self[2];
+
+		with(instances_matching(PopupText, "text", _text + "!")){
+			text = _orig + "!";
+		}
+
+    	if(!instance_exists(_inst)){
+    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
     	}
     }
 
@@ -3193,10 +3171,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             for(var i = 0; i <= 10; i++){
                  // Custom Alarms:
                 if(alarm[i] > 0){
-                	var s = current_time_scale;
+                	var s = 1;
                     
                      // Increased Aggro:
-            		if(i == 1 && alarm[i] > 8){
+            		if(i == 1){
             			 // Not Shooting:
 	            		if("ammo" not in _self || _self.ammo <= 0){
 	            			 // Not Boss:
@@ -3204,13 +3182,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	            			if(("boss" not in _self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in _self && !_self.boss)){
 	            				 // Not Shielding:
 	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
-	            					alarm[i] -= 1 + current_time_scale;
+	            					s *= 3;
 	            				}
 	            			}
             			}
             		}
 
-					alarm[i] -= s;
+					alarm[i] -= s * current_time_scale;
                     if(alarm[i] <= 0){
                         alarm[i] = -1;
 
@@ -3335,6 +3313,91 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             }
 
             if(!instance_exists(_self)) scrCharm(_self, false);
+
+/*
+alarm[1] = 10 + random(5);
+
+if(!instance_exists(target)) target = -1;
+if(target = -1){
+	if(instance_exists(enemy)) target = instance_nearest(x, y, enemy);
+}
+
+if(target > 0){
+	//GOT A TARGET
+	if(collision_line(x, y, target.x, target.y, Wall, 0, 0) < 0 && point_distance(x, y, target.x, target.y) < 120){
+		if(random(5) < 4){
+			//FIRE
+			snd_play(sndEnemyFire)
+			
+			gunangle = point_direction(x,y,target.x,target.y)
+			wkick = 4
+			with instance_create(x,y,AllyBullet)
+			{
+				motion_add(other.gunangle+random(20)-10,4)
+				image_angle = direction
+				team = other.team
+			}
+			if instance_exists(Player)
+			{
+				if Player.skill_got[5] = 1
+				alarm[1] = 5
+				else
+				alarm[1] = 10
+			}
+		}
+		else
+		{
+			//DONT FIRE
+			direction = point_direction(x,y,target.x,target.y)+random(180)-90
+			speed = 0.5
+			
+			if instance_exists(Player) and random(4) < 3
+			{
+				motion_add(point_direction(x,y,mouse_x,mouse_y),0.8)
+				motion_add(point_direction(x,y,Player.x,Player.y),1)
+			}
+			
+			walk = 10+random(10)
+			gunangle = point_direction(x,y,target.x,target.y)
+		}
+		
+		if target.x < x
+		right = -1
+		else if target.x > x
+		right = 1
+	}
+	else if random(4) < 3
+	{
+		//CANT SEE TARGET
+		motion_add(random(360),0.4)
+		if instance_exists(Player)
+		{
+			motion_add(point_direction(x,y,mouse_x,mouse_y),0.8)
+			motion_add(point_direction(x,y,Player.x,Player.y),1)
+		}
+		walk = 10+random(10)
+		alarm[1] = walk+2
+		gunangle = direction
+		if hspeed > 0
+		right = 1
+		else if hspeed < 0
+		right = -1
+	}
+}
+else if random(10) < 1
+{
+	//GOT NO TARGET
+	motion_add(random(360),0.4)
+	walk = 20+random(10)
+	alarm[1] = walk+5
+	gunangle = direction
+	if hspeed > 0
+	right = 1
+	else if hspeed < 0
+	right = -1
+}
+*/
+
 
             else{
                 with(_self){
