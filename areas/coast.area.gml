@@ -182,6 +182,17 @@
                 _d = 180+point_direction(_n,_n,_f.x,_f.y);
 
             obj_create(_n + lengthdir_x(_l,_d), _n + lengthdir_y(_l,_d), "Creature");
+            
+            var _tries = 100,
+            	_spawned = false;
+            while(_tries > 0 && !_spawned){
+            	_tries--;
+            	with(instance_random(Floor)) if(point_distance(x, y, 10000, 10000) > 200){
+            		instance_create(x + 16, y + 16, Gator);
+            		_spawned = true;
+            	}
+            }
+            
             if(fork()){
                 wait(30);
                 sound_play_pitchvol(sndOasisBossFire,0.75,0.25);

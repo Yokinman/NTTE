@@ -120,7 +120,10 @@
 	instance_create(_x, _y, Dust);
 	with(instance_create(_x, _y, CustomObject)){
 		 // Determine Pickup:
-		object = choose(AmmoPickup, HPPickup);
+		var _choices = [AmmoPickup, HPPickup];
+		if(array_length(instances_matching(Player, "race", "rogue")) > 0) array_push(_choices, RoguePickup);
+		
+		object = _choices[irandom(array_length(_choices) - 1)];
 		switch(crown_current){
 			case crwn_life: object = AmmoPickup; break;
 			case crwn_guns: object = HPPickup;	 break;
