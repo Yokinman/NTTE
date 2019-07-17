@@ -1735,7 +1735,7 @@
     	projectile_hit_push(other, damage, force);
 
 		 // Mega Smak:
-		if(instance_is(other, Player) || other.size <= 1 || "smack_all" in self){
+		if(instance_is(other, Player) || other.size <= 1){
 			var p = other;
 			with(obj_create(p.x, p.y, "PalankingToss")){
 				direction = other.direction + (angle_difference(point_direction(other.x, other.y, p.x, p.y), other.direction) / 3);
@@ -3235,22 +3235,22 @@
 		 // Visual:
 		spr_open = spr.SunkenChestOpen;
 		sprite_index = spr.SunkenChest;
-		
+
 		 // Sounds:
 		snd_open = sndMenuGoldwep;
-		
+
 		 // Events:
 		on_open = script_ref_create(SunkenChest_open);
-		
+
 		return id;
 	}
-	
+
 #define SunkenChest_open
 	 // Unlocks:
 	var _areas = ["coast", "oasis"];
 	for(var i = 0; i < array_length(_areas); i++) if(GameCont.area == _areas[i])
 		scrUnlock("part " + string(i + 1) + "/2", "it would be cool", -1, -1);
-	
+
 #define TrafficCrab_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -3301,16 +3301,16 @@
 		y = ystart;
 		image_index -= image_speed;
 	}
-	
+
 	 // Animate:
     if(ammo > 0){
         sprite_index = spr_fire;
         image_index = 0;
     }
-    
+
     else if(sprite_index == spr_idle || anim_end){
 		if(!active)	sprite_index = spr_hide;
-		
+
 		else{
 			if(speed > 0){
 				if(sprite_index != spr_walk){
@@ -3332,84 +3332,84 @@
 	    if(ammo > 0){
 	        alarm1 = 2;
 	        walk = 1;
-	
+
 	        sound_play(sndOasisCrabAttack);
 	        sound_play_pitchvol(sndFlyFire, 2 + random(1), 0.5);
-	
+
 	         // Venom:
 	        var _x = x + (right * (4 + (sweep_dir * 10))),
 	            _y = y + 4;
-	
+
 	        repeat(choose(2, 3)){
 	            scrEnemyShootExt(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
 	        }
 	        gunangle += (sweep_dir * sweep_spd);
-	
+
 	         // End:
 	        if(--ammo <= 0){
 	            alarm1 = 30 + random(20);
 	            sprite_index = spr_idle;
-	
+
 	             // Move Towards Player:
 	            var _dir = (instance_exists(target) ? point_direction(x, y, target.x, target.y) : random(360));
 	            scrWalk(15, _dir);
-	
+
 	             // Switch Claws:
 	            sweep_dir *= -1;
 	        }
 	    }
-	
+
 	     // Normal AI:
 	    else{
 	        alarm1 = 35 + random(15);
 	        target = instance_nearest(x, y, Player);
-	
+
 	        if(in_sight(target)){
 	            var _targetDir = point_direction(x, y, target.x, target.y);
-	
+
 	             // Attack:
 	            if(in_distance(target, 128)){
 	                scrWalk(1, _targetDir + (sweep_dir * random(90)));
-	
+
 	                alarm1 = 1;
 	                ammo = 10;
 	                gunangle = _targetDir - (sweep_dir * (sweep_spd * (ammo / 2)));
-	
+
 	                sound_play_pitch(sndScorpionFireStart, 0.8);
 	                sound_play_pitch(sndGoldScorpionFire, 1.5);
 	            }
-	
+
 	             // Move Towards Player:
 	            else scrWalk(30, _targetDir + (random_range(20, 40) * choose(-1, 1)));
-	
+
 	             // Facing:
 	            scrRight(_targetDir);
 	        }
-	
+
 	         // Passive Movement:
 	        else scrWalk(10, random(360));
 	    }
 	}
-	
+
 	 // Just be a prop bro:
 	else{
 		alarm1 = 30 + random(30);
 		target = instance_nearest(x, y, Player);
-		
+
 		 // Awaken:
 		if(in_distance(target, 96) && (chance(1, 3) || instance_number(enemy) <= 1)){
 			active = true;
-			
+
 			 // Effects:
 			sound_play_hit(sndPlantSnareTB, 0.2);
 			sound_play_hit(sndScorpionFire, 0.2);
 			instance_create(x + (6 * right), y, AssassinNotice);
 		}
 	}
-	
+
 #define TrafficCrab_hurt(_hitdmg, _hitvel, _hitdir)
 	enemyHurt(_hitdmg, _hitvel, _hitdir);
-	
+
 	 // Awaken Bro:
 	active = true;
 
