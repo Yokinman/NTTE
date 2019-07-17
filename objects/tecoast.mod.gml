@@ -280,6 +280,14 @@
     	}
     }
     spr_dead = -1;
+    
+     // Dum Fix:
+    with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Parrot"), "perched", id)){
+	    var _scrt = pet + "_step";
+	    if(mod_script_exists("mod", "petlib", _scrt)){
+	        mod_script_call("mod", "petlib", _scrt);
+	    }
+    }
 
 
 #define CoastDecalCorpse_create(_x, _y)
@@ -443,9 +451,10 @@
 		direction = gunangle;
 		canshoot = false;
 		reload = 0;
+		laser = 0;
 
          // Alarms:
-		alarm1 = 90 + irandom(60);
+		alarm1 = 90 + irandom(90);
 
 		return id;
 	}
@@ -471,8 +480,9 @@
         }
     }
 
-	 // Laser Sight in Water:
-	if(canshoot){
+	 // Laser Sight:
+	laser += (canshoot - laser) * 0.3 * current_time_scale;
+	if(laser > 0){ // In water
 		if("wading" in self && wading > 0){
 			script_bind_draw(Diver_draw_laser, depth, id);
 		}
@@ -488,7 +498,7 @@
     with(instances_matching(instances_matching(CustomProp, "name", "Palm"), "my_enemy", id)) draw_self(); // In tree
 
      // Laser Sight:
-    if(canshoot){
+    if(laser > 0){
         if("wading" not in self || wading <= 0){
         	Diver_draw_laser(id);
         }
@@ -505,7 +515,7 @@
     if(canshoot){
         canshoot = false;
 
-		with(scrEnemyShoot("DiverHarpoon", gunangle, 12)){
+		with(scrEnemyShoot("DiverHarpoon", gunangle, 14)){
 		    //if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
 		}
         sound_play(sndCrossbow);
@@ -585,7 +595,7 @@
 #define Diver_draw_laser(_inst)
     with(_inst){
         draw_set_color(c_white);
-        draw_set_alpha(0.8 / (abs(wkick) + 1));
+        draw_set_alpha(0.8 * laser);
 
         var _x = x - 1,
             _y = y - 3;
@@ -595,18 +605,18 @@
         }
 
         var _ang = gunangle,
-            w = 0.5 + random(1),
-            l = draw_lasersight(_x, _y, _ang, 1000 / (abs(wkick * 5) + 1), w);
+            w = (1 + random(0.5)) * laser,
+            l = draw_lasersight(_x, _y, _ang, 1000 * laser, w);
 
-        draw_set_alpha(draw_get_alpha() / 2);
-        draw_set_blend_mode(choose(bm_add, bm_normal));
+        draw_set_alpha(draw_get_alpha() * 0.2);
+        draw_set_blend_mode(bm_add);
 
         draw_line_width(
             _x,
             _y,
             l[0] + lengthdir_x(2, _ang),
             l[1] + lengthdir_y(2, _ang),
-            w + 1 + random(0.5)
+            w * 2
         );
 
         draw_set_blend_mode(bm_normal);
@@ -3544,3 +3554,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

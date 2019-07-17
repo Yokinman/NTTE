@@ -87,7 +87,7 @@
 		];
         
          // Electroplasma:
-        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       5, 12, 12);
+        ElectroPlasma       = sprite_add("sprites/weps/projectiles/sprElectroPlasma.png",       7, 12, 12);
         ElectroPlasmaTrail  = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTrail.png",  3,  4,  4);
         ElectroPlasmaImpact = sprite_add("sprites/weps/projectiles/sprElectroPlasmaImpact.png", 7, 12, 12);
         ElectroPlasmaTether = sprite_add("sprites/weps/projectiles/sprElectroPlasmaTether.png", 4,  0,  1);
@@ -108,9 +108,13 @@
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
     	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
 
+		 // LoadoutCrown System:
+    	CrownRandomLoadout	= sprite_add("sprites/crowns/Random/sprCrownRandomLoadout.png", 2, 16, 16);
+    	ClockParts			= sprite_add("sprites/crowns/sprClockParts.png",				2,  1, 1);
+
          // Menu:
-        OptionNTTE = sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
-        MenuNTTE   = sprite_add("sprites/menu/sprMenuNTTE.png",   1, 20,  9);
+        OptionNTTE			= sprite_add("sprites/menu/sprOptionNTTE.png", 1, 32, 12);
+        MenuNTTE			= sprite_add("sprites/menu/sprMenuNTTE.png",   1, 20,  9);
 
          // Quasar Beam:
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
@@ -401,6 +405,9 @@
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
                 }
             }
+            AllyBullet3		= sprite_add("sprites/races/Parrot/sprAllyBullet3.png",		2, 8, 8);
+            AllyBullet4		= sprite_add("sprites/races/Parrot/sprAllyBullet4.png",		2, 6, 8);
+            AllyFlakBullet	= sprite_add("sprites/races/Parrot/sprAllyFlakBullet.png",	2, 8, 8);
         //#endregion
 
         //#region PETS
@@ -564,6 +571,18 @@
         //#endregion
 
         //#region SEWERS
+        	 // Albino Gator:
+        	AlbinoGatorIdle = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorIdle.png", 8, 16, 16);
+        	AlbinoGatorWalk = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorWalk.png", 6, 16, 16);
+        	AlbinoGatorHurt = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorHurt.png", 3, 16, 16);
+        	AlbinoGatorDead = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorDead.png", 6, 16, 16);
+        	
+        	 // Baby Gator:
+        	BabyGatorIdle = sprite_add("sprites/enemies/BabyGator/sprBabyGatorIdle.png", 6, 12, 12);
+        	BabyGatorWalk = sprite_add("sprites/enemies/BabyGator/sprBabyGatorWalk.png", 6, 12, 12);
+        	BabyGatorHurt = sprite_add("sprites/enemies/BabyGator/sprBabyGatorHurt.png", 3, 12, 12);
+        	BabyGatorDead = sprite_add("sprites/enemies/BabyGator/sprBabyGatorDead.png", 7, 12, 12);
+        	
              // Bat:
             BatWeap         = sprite_add_weapon("sprites/enemies/Bat/sprBatWeap.png", 2,  6);
             BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",    24, 16, 16);
@@ -592,6 +611,10 @@
             BoneGatorWalk = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWalk.png", 6, 12, 12);
             BoneGatorHurt = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHurt.png", 3, 12, 12);
             BoneGatorDead = sprite_add("sprites/enemies/BoneGator/sprBoneGatorDead.png", 6, 12, 12);
+            BoneGatorHeal = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHeal.png", 7, 8,	8);
+            BoneGatorWeap = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWeap.png", 1, 2,	3);
+            
+            FlameSpark = sprite_add("sprites/enemies/BoneGator/sprFlameSpark.png", 7, 1, 1);
 
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
@@ -730,8 +753,10 @@
         	 
         //#endregion
 
+		 // Merged Weapon Sprite Storage:
         MergeWep = {};
-        
+        MergeWepText = {};
+
          // Shine Overlays:
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
         Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
@@ -857,6 +882,7 @@
 	 // Mod Lists:
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot"];
+    global.crwn = ["crime"];
 
      // Reminders:
     global.remind = [];
@@ -999,7 +1025,14 @@
 		if(!instance_exists(Menu)){
 			with(shadList){
 				if(shad == -1){
-					shad = shader_create(vert, frag);
+					try{
+						shad = shader_create(vert, frag);
+					}
+					catch(_error){
+						trace(shad);
+						trace(_error);
+						shad = -1;
+					}
 				}
 			}
 		}
@@ -1146,7 +1179,7 @@
 
 	return sprite_add("sprShine.png", _img, _ox, _oy);
 
-#define sprite_merge(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+#define wep_merge_sprite(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
     var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
     if(lq_exists(spr.MergeWep, _sprName)){
         return lq_get(spr.MergeWep, _sprName);
@@ -1216,6 +1249,49 @@
         var s = sprite_add_weapon("sprMerge.png", 2, _surfH / 3);
         lq_set(spr.MergeWep, _sprName, s);
     	return s;
+    }
+
+#define wep_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
+    var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
+    if(lq_exists(spr.MergeWepText, _sprName)){
+        return lq_get(spr.MergeWepText, _sprName);
+    }
+    else{
+		draw_set_font(fntSmall);
+		draw_set_halign(fa_center);
+		draw_set_valign(fa_middle);
+
+		var _text = weapon_get_name(_stock) + " + " + weapon_get_name(_front),
+			_topSpace = 2,
+			_surfw = string_width(_text) + 4,
+			_surfh = string_height(_text) + 2 + _topSpace,
+			_surf = surface_create(_surfw, _surfh);
+
+		surface_set_target(_surf);
+		draw_clear_alpha(0, 0);
+
+		 // Background:
+		var _x1 = -1,
+			_y1 = -1,
+			_x2 = _x1 + _surfw,
+			_y2 = _y1 + _surfh;
+
+	    draw_set_alpha(0.8);
+		draw_set_color(c_black);
+		draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
+		draw_set_alpha(1);
+
+		 // Text:
+		draw_text_nt(floor(_surfw / 2), floor((_surfh + _topSpace) / 2), _text);
+
+		 // Save Sprite:
+		surface_reset_target();
+		surface_save(_surf, "sprMergeText.png");
+		surface_destroy(_surf);
+		var s = sprite_add("sprMergeText.png", 1, (_surfw / 2), (_surfh / 2));
+        lq_set(spr.MergeWepText, _sprName, s);
+
+		return s;
     }
 
 #define cleanup

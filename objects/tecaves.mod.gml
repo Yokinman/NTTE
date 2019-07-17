@@ -395,6 +395,17 @@
     repeat(irandom_range(1, 3)) {
     	obj_create(x,y,"Spiderling");
     }
+    var d = random(360);
+    for(var i = 0; i < 360; i += (360 / 5)){
+    	with(scrFX(x, y, [(d + i), 1.5], Feather)){
+    		sprite_index = spr.PetSpiderWebBits;
+    		image_blend = make_color_rgb(165, 165, 165);
+			image_angle = orandom(30);
+			image_index = irandom(image_number - 1);
+			image_speed = 0;
+			rot /= 2;
+    	}
+    }
 
 
 #define Spiderling_create(_x, _y)
@@ -658,3 +669,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

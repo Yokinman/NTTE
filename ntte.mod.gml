@@ -88,9 +88,12 @@
 
 
 #define init
-	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown"];
+	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime"];
 	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
 	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
+	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
+	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
+
 
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -99,6 +102,7 @@
 
 	global.area = mod_variable_get("mod", "teassets", "area");
 	global.race = mod_variable_get("mod", "teassets", "race");
+	global.crwn = mod_variable_get("mod", "teassets", "crwn");
 
     global.debug_lag = false;
 
@@ -114,6 +118,19 @@
         mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
     };
+
+	 // Loadout Crown System:
+    global.loadout_crown = {
+        size : [],
+        race : {},
+        camp : crwn_none
+    }
+    if(instance_exists(LoadoutCrown)){
+	    with(loadbutton) instance_destroy();
+	    with(Loadout) selected = false;
+    }
+    global.surfCrownHide	   = surflist_set("CrownHide",		 0, 0, 32, 32);
+    global.surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
 
 	 // For mega hacky fix:
     global.campchar_fix = false;
@@ -196,11 +213,13 @@
         }
     }
 
+	 // For Merged Weapon PopupText Fix:
+	global.wepMergeName = [];
+
      // Charm:
     global.surfCharm = surflist_set("Charm", 0, 0, game_width, game_height);
     global.shadCharm = shadlist_set("Charm", 
 		/* Vertex Shader */"
-
 		struct VertexShaderInput
 		{
 			float4 vPosition : POSITION;
@@ -227,7 +246,6 @@
 		",
 
 		/* Fragment/Pixel Shader */"
-
 		struct PixelShaderInput
 		{
 			float2 vTexcoord : TEXCOORD0;
@@ -275,7 +293,6 @@
 		"
 	);
     global.charm = ds_list_create();
-    global.charm_step = noone;
 
      // Water Level Sounds:
     global.waterSoundActive = false;
@@ -504,17 +521,20 @@
 
 #macro areaList global.area
 #macro raceList global.race
+#macro crwnList global.crwn
 
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
-#macro surfCharm global.surfCharm
+#macro surfCrownHide		global.surfCrownHide
+#macro surfCrownHideScreen	global.surfCrownHideScreen
+#macro surfCharm			global.surfCharm
 
 #macro shadCharm global.shadCharm
 
-#macro cMusic global.current.mus
+#macro cMusic	 global.current.mus
 #macro cAmbience global.current.amb
 
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
@@ -529,13 +549,82 @@
 #macro opt_toggle 0
 #macro opt_slider 1
 
+#macro crownPlayer player_find_local_nonsync()
+#macro crownSize global.loadout_crown.size
+#macro crownRace global.loadout_crown.race
+#macro crownCamp global.loadout_crown.camp
+#macro crownIconW 28
+#macro crownIconH 28
+#macro crownPath "crownCompare/"
+#macro crownPathD ""
+#macro crownPathA "A"
+#macro crownPathB "B"
+
 
 #define game_start
     with(UnlockCont) instance_destroy();
     mod_variable_set("area", "trench", "trench_visited", []);
 
+     // Special Loadout Crown Selected:
+    sprite_restore(sprClockParts);
+
+    var p = crownPlayer,
+        _crown = lq_get(crownRace, player_get_race_fix(p));
+
+    if(!is_undefined(_crown)){
+    	if(_crown.custom.slct != -1 && crown_current == _crown.slct && _crown.custom.slct != _crown.slct){
+	    	switch(_crown.custom.slct){
+	        	case crwn_random:
+	        		 // Get Unlocked Crowns:
+	        		var _list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+	        		with(_crown.icon) if(locked){
+	        			_list = array_delete_value(_list, crwn);
+	        		}
+
+					 // Add Modded Crowns:
+					var _scrt = "crown_menu_avail";
+	        		with(mod_get_names("crown")){
+	        			if(!mod_script_exists("crown", self, _scrt) || mod_script_call("crown", self, _scrt)){
+	        				array_push(_list, self);
+	        			}
+	        		}
+
+					 // Pick Random Crown:
+		            var m = ((array_length(_list) > 0) ? _list[irandom(array_length(_list) - 1)] : crwn_none);
+		            if(m != crown_current){
+		                crown_current = m;
+
+		                 // Destiny Fix:
+		                if(crown_current == crwn_destiny){
+		                    GameCont.skillpoints--;
+		                }
+		            }
+		            break;
+
+	        	default:
+	        		crown_current = _crown.custom.slct;
+	        }
+
+	         // Death Fix:
+	        if(_crown.slct == crwn_death){
+	            with(Player) my_health = maxhealth;
+	        }
+    	}
+    }
+
 #define level_start // game_start but every level
     switch(GameCont.area){
+    	case 0: /// CAMPFIRE
+    		 // Unlock Custom Crowns:
+    		if(array_exists(crwnList, crown_current)){
+    			var _unlock = "crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1);
+    			if(!unlock_get(_unlock)){
+    				unlock_set(_unlock, true);
+    				scrUnlock(crown_get_name(crown_current) + "@s", "FOR @wEVERYONE", -1, -1);
+    			}
+    		}
+    		break;
+
         case 1: /// DESERT
              // Disable Oasis Skip:
     		with(instance_create(0, 0, chestprop)){
@@ -840,6 +929,12 @@
         	    }
         	}
         	
+        	 // Spawn Lightning Crystals:
+        	with(LaserCrystal) if(GameCont.loops <= 0 && chance(1, 20)){
+        		instance_create(x, y, LightningCrystal);
+        		instance_delete(id);
+        	}
+        	
         	 // Spawn Spider Walls:
         	if(instance_exists(Wall)){
         	     // Strays:
@@ -924,12 +1019,6 @@
 	 // Sewer manhole:
 	with(PizzaEntrance){
 	    with obj_create(x,y,"Manhole") toarea = "pizza";
-	    instance_delete(id);
-	}
-
-	 // OG gators:
-	with(Gator){
-	    with instance_create(x,y,GatorSmoke) image_speed = 0.4;
 	    instance_delete(id);
 	}
 
@@ -1083,11 +1172,13 @@
 
 #define step
     script_bind_end_step(end_step, 0);
+    script_bind_end_step(charm_step, 0);
 
     if(DebugLag) trace_time();
-    
-     // Custom CampChars:
+
+     // Character Selection Menu:
     if(instance_exists(Menu)){
+    	 // Custom Character Stuff:
         with(raceList){
             var _name = self;
 
@@ -1160,41 +1251,117 @@
             }
         }
 
-    	 // (Disable Oasis Sounds):
+		 // Loadout Crowns:
+    	with([surfCrownHide, surfCrownHideScreen]) active = true;
+		with(Menu){
+            with(Loadout) if(selected == false && openanim > 0){
+            	openanim = 0; // Bro they actually forgot to reset this when the loadout is closed
+            }
+
+	    	 // Bind Drawing:
+		    script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 0.0001);
+		    if(instance_exists(Loadout)){
+		    	script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
+		    }
+
+			 // Crown Thing:
+			if("NTTE_crown_check" not in self){
+				NTTE_crown_check = true;
+	    		if(crownCamp != crwn_none){
+					var _inst = instance_create(0, 0, Crown);
+					with(_inst){
+						alarm0 = -1;
+						event_perform(ev_alarm, 0);
+	
+						 // Place by Last Played Character:
+						with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
+							other.x = x + (random_range(12, 24) * choose(-1, 1));
+							other.y = y + orandom(8);
+						}
+	
+						 // Visual Setup:
+						var c = crownCamp;
+						if(is_string(c)){
+							mod_script_call("crown", c, "crown_object");
+						}
+						else if(is_real(c)){
+							spr_idle = asset_get_index(`sprCrown${c}Idle`);
+							spr_walk = asset_get_index(`sprCrown${c}Walk`);
+						}
+						depth = -2 - (y / 10000);
+					}
+	
+					 // Delete:
+					if(fork()){
+						wait 5;
+						with(instances_matching_ne(Crown, "id", _inst)){
+							instance_destroy();
+						}
+						exit;
+	    			}
+				}
+			}
+
+	    	 // Initialize Crown Selection:
+	    	var _mods = mod_get_names("race");
+		    for(var i = 0; i <= 16 + array_length(_mods); i++){
+		        var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
+		        if(_race not in crownRace){
+		        	lq_set(crownRace, _race, {
+		        		icon : [],
+		        		slct : crwn_none,
+		        		custom : {
+		        			icon : [],
+		        			slct : -1
+		        		}
+		        	});
+		        }
+		    }
+	    }
+
+    	 // Disable Oasis Sounds:
     	if(global.waterSoundActive){
     		underwater_sound(false);
     	}
     }
-    else if(global.campchar_fix){
-		global.campchar_fix = false;
+    else{
+    	with([surfCrownHide, surfCrownHideScreen]) active = false;
 
-		 // Save Sounds:
-		var _sndList = [],
-			_sndMax = audio_play_sound(0, 0, 0);
-
-		audio_stop_sound(_sndMax);
-
-		for(var i = max(_sndMax - 1000, 400000); i < _sndMax; i++){
-			if(audio_is_playing(i)){
-				if(audio_sound_length_nonsync(i) < 10){
-					array_push(_sndList, [asset_get_index(audio_get_name(i)), audio_sound_get_gain(i), audio_sound_get_pitch(i), audio_sound_get_track_position_nonsync(i)]);
+    	 // Hacky shit:
+    	if(global.campchar_fix){
+			global.campchar_fix = false;
+	
+			 // Save Sounds:
+			var _sndList = [],
+				_sndMax = audio_play_sound(0, 0, 0);
+	
+			audio_stop_sound(_sndMax);
+	
+			for(var i = max(_sndMax - 1000, 400000); i < _sndMax; i++){
+				if(audio_is_playing(i)){
+					if(audio_sound_length_nonsync(i) < 10){
+						array_push(_sndList, [asset_get_index(audio_get_name(i)), audio_sound_get_gain(i), audio_sound_get_pitch(i), audio_sound_get_track_position_nonsync(i)]);
+					}
 				}
 			}
-		}
+	
+			 // Restart Game:
+			game_restart();
+			sound_stop(sndRestart);
+	
+			 // Resume Sounds:
+			with(_sndList){
+				var s = self,
+					_snd = audio_play_sound(s[0], 0, false);
+	
+				audio_sound_gain(_snd, s[1], 0);
+				audio_sound_pitch(_snd, s[2]);
+				audio_sound_set_track_position(_snd, s[3]);
+			}
+    	}
 
-		 // Restart Game:
-		game_restart();
-		sound_stop(sndRestart);
-
-		 // Resume Sounds:
-		with(_sndList){
-			var s = self,
-				_snd = audio_play_sound(s[0], 0, false);
-
-			audio_sound_gain(_snd, s[1], 0);
-			audio_sound_pitch(_snd, s[2]);
-			audio_sound_set_track_position(_snd, s[3]);
-		}
+		 // For CharSelection Crown Boy:
+	    else crownCamp = crown_current;
     }
 
      // Pet Slots:
@@ -1324,7 +1491,7 @@
 
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){
+		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
 			var _packList = {
 				"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
 				"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
@@ -1355,11 +1522,16 @@
 		//}
 	}
 
-     // Charm Step:
-    if(!instance_exists(global.charm_step)){
-        global.charm_step = script_bind_end_step(charm_step, 0);
-        with(global.charm_step) persistent = true;
-    }
+	 // Game Win Crown Unlock:
+	with(SitDown) if(place_meeting(x, y, Player)){
+		if(array_exists(crwnList, crown_current)){
+			var _unlock = "crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1);
+			if(!unlock_get(_unlock)){
+				unlock_set(_unlock, true);
+				scrUnlock(crown_get_name(crown_current) + "@s", "FOR @wEVERYONE", -1, -1);
+			}
+		}
+	}
 
 	 // Overstock / Bonus Ammo:
 	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
@@ -1395,9 +1567,13 @@
 					
 				 // Weighted Pool:
 				var _enemyPool = [];
-				repeat(4) array_push(_enemyPool, "Gator");
-				repeat(2) array_push(_enemyPool, "BuffGator");
-				repeat(1) array_push(_enemyPool, "BoneGator");
+					repeat(5) array_push(_enemyPool, "Gator");
+					repeat(3) array_push(_enemyPool, "Buff Gator");
+					repeat(2) array_push(_enemyPool, "Bone Gator");
+					repeat(2) array_push(_enemyPool, "Baby Gator");
+				
+				if(GameCont.hard > 5)
+					repeat(1) array_push(_enemyPool, "Albino Gator");
 				
 				while(enemies > 0){
 					enemies -= 1;
@@ -1413,7 +1589,7 @@
 								}
 								break;
 								
-							case "BuffGator":
+							case "Buff Gator":
 								obj_name = BuffGator;
 								with(obj_info){
 									spr_idle = sprBuffGatorIdle;
@@ -1422,14 +1598,64 @@
 								}
 								break;
 							
-							case "BoneGator":
+							case "Bone Gator":
 								obj_name = "BoneGator";
 								with(obj_info){
 									spr_idle = spr.BoneGatorIdle;
 									spr_walk = spr.BoneGatorWalk;
-									spr_weap = sprNadeShotgun;
+									spr_weap = spr.BoneGatorWeap;
 								}
 								break;
+								
+							case "Baby Gator":
+								obj_name = "BabyGator";
+								with(obj_info){
+									spr_idle = spr.BabyGatorIdle;
+									spr_walk = spr.BabyGatorWalk;
+									spr_weap = sprRevolver;
+									spr_shadow = shd16;
+									spr_shadow_y = 0;
+								}
+								
+								 // Babies Stick Together:
+								var n = 2 + irandom(1 + GameCont.loops);
+								repeat(n) instance_copy(false);
+								break;
+								
+							case "Albino Gator":
+								obj_name = "AlbinoGator";
+								with(obj_info){
+									spr_idle = spr.AlbinoGatorIdle;
+									spr_walk = spr.AlbinoGatorWalk;
+									spr_weap = sprBazooka;
+								}
+								break;
+								
+							 //#region I Dunno:
+								
+							case "Rat Horde": // maybe?
+								obj_name = FastRat;
+								with(obj_info){
+									spr_idle = sprFastRatIdle;
+									spr_walk = sprFastRatWalk;
+								}
+								
+								 // The Horde:
+								var n = 3 + irandom(3 + GameCont.loops);
+								repeat(n) instance_copy(false);
+								
+								 // Large and in Charge:
+								with(obj_create(x, y, "TopEnemy")){
+									obj_name = Ratking;
+									with(obj_info){
+										spr_idle = sprRatkingRageWait;
+										spr_walk = sprRatkingRageAttack;
+										spr_shadow = shd48;
+									}
+								}
+								break;
+								
+							 //#endregion
 						}
 					}
 				}
@@ -1570,6 +1796,31 @@
     catch(_error){
     	trace_error(_error);
     }
+    
+     // Merged Wep Pickup Indicator:
+    with(instances_matching(WepPickup, "mergewep_indicator", null)){
+    	mergewep_indicator = true;
+
+    	if(wep_get(wep) == "merge" && is_object(wep)){
+    		if("stock" in wep.base && "front" in wep.base){
+    			var n = name;
+		    	name += `#@(${mod_script_call("mod", "teassets", "wep_merge_subtext", wep.base.stock, wep.base.front)})`;
+		    	array_push(global.wepMergeName, { inst:id, name:name, orig:n });
+    		}
+    	}
+    }
+    var _pop = instances_matching(PopupText, "mergewep_indicator", null);
+    if(array_length(_pop) > 0){
+	    with(global.wepMergeName){
+			with(instances_matching(_pop, "text", name + "!")){
+				text = other.orig + "!";
+			}
+	    	if(!instance_exists(inst)){
+	    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
+	    	}
+	    }
+    	with(_pop) mergewep_indicator = true;
+    }
 
 	if(DebugLag) trace_time("ntte_end_step");
 
@@ -1618,12 +1869,19 @@
 	        if(!OptionOpen || mod_exists("mod", "teloader")){
 	        	OptionOpen = false;
 	        	sound_play(sndClickBack);
+
+	        	 // Reset Menu:
 	        	with(Menu){
 	        		event_perform(ev_step, ev_step_end);
 	        		sound_stop(sndMenuCharSelect);
 	        		with(CharSelect) alarm0 = 2;
 	        	}
 	        	with(Loadout) selected = 0;
+
+	        	 // Tiny Fix:
+        		with(instance_create(0, 0, CustomDraw)){
+        			loadout_behind();
+        		}
 	        }
 		}
 
@@ -2521,6 +2779,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             unlock_delay_continue = 0;
             splash_sprit = sprUnlockPopupSplat;
             splash_image = 0;
+            splash_delay = 0;
             splash_index = -1;
             splash_texty = 0;
             splash_timer = 0;
@@ -2539,11 +2798,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         spr : _sprite,
         img : 0,
         snd : _sound
-        };
+	};
 
     with(UnlockCont){
+        if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
+        	splash_delay = 40;
+        }
         array_push(unlock, u);
     }
+
     return u;
 
 #define unlock_step
@@ -2553,29 +2816,32 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
      // Animate Corner Popup:
-    var _img = 0;
-    if(instance_exists(Player)){
-        if(splash_timer > 0){
-            splash_timer -= current_time_scale;
-    
-            _img = sprite_get_number(splash_sprit) - 1;
-    
-             // Text Offset:
-            if(splash_image >= _img && splash_texty > 0){
-                splash_texty -= current_time_scale;
-            }
-        }
-        else{
-            splash_texty = 2;
-    
-             // Splash Next Unlock:
-            if(splash_index < array_length(unlock) - 1){
-                splash_index++;
-                splash_timer = splash_timer_max;
-            }
-        }
-    }
-    splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
+    if(splash_delay > 0) splash_delay -= current_time_scale;
+    else{
+	    var _img = 0;
+	    if(instance_exists(Player)){
+	        if(splash_timer > 0){
+	            splash_timer -= current_time_scale;
+	    
+	            _img = sprite_get_number(splash_sprit) - 1;
+	    
+	             // Text Offset:
+	            if(splash_image >= _img && splash_texty > 0){
+	                splash_texty -= current_time_scale;
+	            }
+	        }
+	        else{
+	            splash_texty = 2;
+	    
+	             // Splash Next Unlock:
+	            if(splash_index < array_length(unlock) - 1){
+	                splash_index++;
+	                splash_timer = splash_timer_max;
+	            }
+	        }
+	    }
+	    splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
+	}
 
      // Game Over Splash:
     if(instance_exists(UnlockScreen)) unlock_delay = 1;
@@ -2949,40 +3215,48 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     alarm_set(a, -1);
                 }
             }
-            for(var i = 0; i <= 10; i++){
-                 // Custom Alarms:
-                if(alarm[i] > 0){
-                	var s = current_time_scale;
-                    
+            for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
+                if(alarm[_alarmNum] > 0){
+                	var _alarmSpeed = 1;
+
                      // Increased Aggro:
-            		if(i == 1 && alarm[i] > 8){
+            		if(_alarmNum == 1){
             			 // Not Shooting:
-	            		if("ammo" not in _self || _self.ammo <= 0){
+	            		if(("ammo" not in _self || _self.ammo <= 0) && alarm[2] < 0){
 	            			 // Not Boss:
 	            			var _bossList = [BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss];
 	            			if(("boss" not in _self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in _self && !_self.boss)){
 	            				 // Not Shielding:
 	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
-	            					alarm[i] -= 1 + current_time_scale;
+	            					_alarmSpeed *= 1 + (alarm[_alarmNum] / 10);
 	            				}
 	            			}
             			}
             		}
 
-					alarm[i] -= s;
-                    if(alarm[i] <= 0){
-                        alarm[i] = -1;
+					alarm[_alarmNum] -= _alarmSpeed * current_time_scale;
+                    if(alarm[_alarmNum] <= 0){
+                        alarm[_alarmNum] = -1;
 
-                         // Target Nearest Enemy:
                         scrCharmTarget();
+
                         with(_self){
                             target = other.target;
-                            var t = target;
+
+                            var t = target,
+                        		_lastWalk = (("walk" in self) ? walk : null),
+                        		_lastRight = (("right" in self) ? right : null),
+                        		_lastGunangle = (("gunangle" in self) ? gunangle : null),
+                        		_lastSpeed = speed,
+                        		_lastDirection = direction,
+                        		_projectileMinID = instance_create(0, 0, GameObject);
+
+							instance_delete(_projectileMinID);
 
                              // Move Player for Enemy Targeting:
                             var _lastPos = [];
                             with(Player){
-                                array_push(_lastPos, [x, y]);
+                                array_push(_lastPos, [id, x, y]);
                                 if(instance_exists(t)){
                                     x = t.x;
                                     y = t.y;
@@ -3002,68 +3276,68 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             if(object_index != CustomEnemy){
                                 switch(object_index){
                                     case MaggotExplosion:   /// Charm Spawned Maggots
-                                        alarm_creator(Maggot, i);
+                                        alarm_creator(Maggot, _alarmNum);
                                         break;
 
                                     case RadMaggotExplosion:   /// Charm Spawned Maggots
-                                        alarm_creator(RadMaggot, i);
+                                        alarm_creator(RadMaggot, _alarmNum);
                                         break;
 
                                     case Necromancer:       /// Match ReviveArea to Necromancer
-                                        with(alarm_creator(ReviveArea, i)) alarm0++;
+                                        with(alarm_creator(ReviveArea, _alarmNum)) alarm0++;
                                         break;
 
                                     case Ratking:           /// Charm Spawned Rats
-                                        if(i == 2) alarm_creator(FastRat, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FastRat, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case ScrapBoss:         /// Charm Spawned Missiles
-                                        if(i == 0) alarm_creator(ScrapBossMissile, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 0) alarm_creator(ScrapBossMissile, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case FrogQueen:         /// Charm Spawned Eggs
-                                        if(i == 2) alarm_creator(FrogEgg, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FrogEgg, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case FrogEgg:           /// Charm Spawned Ballguys
-                                        if(i == 0) alarm_creator(Exploder, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 0) alarm_creator(Exploder, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case HyperCrystal:      /// Charm Spawned Crystals
-                                        if(i == 1) alarm_creator(LaserCrystal, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 1) alarm_creator(LaserCrystal, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case TechnoMancer:      /// Charm Spawned Necromancers + Turrets
-                                        if(i == 2) with(alarm_creator(NecroReviveArea, i)) alarm0++;
+                                        if(_alarmNum == 2) with(alarm_creator(NecroReviveArea, _alarmNum)) alarm0++;
                                         else{
-                                            if(i == 6) alarm_creator(Turret, i);
-                                            else event_perform(ev_alarm, i);
+                                            if(_alarmNum == 6) alarm_creator(Turret, _alarmNum);
+                                            else event_perform(ev_alarm, _alarmNum);
                                         }
                                         break;
 
                                     case MeleeBandit:
                                     case JungleAssassin:
-                                        event_perform(ev_alarm, i);
+                                        event_perform(ev_alarm, _alarmNum);
                                         charm.walk = walk;
                                         walk = 0;
                                         break;
 
                                     case JungleFly:
-                                        if(i == 2) alarm_creator(FiredMaggot, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FiredMaggot, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     default:
-                                        event_perform(ev_alarm, i);
+                                        event_perform(ev_alarm, _alarmNum);
                                 }
                             }
                             else{ // Custom Alarm Support
-                                var a = "on_alrm" + string(i);
+                                var a = "on_alrm" + string(_alarmNum);
                                 if(a in self){
                                     var _scrt = variable_instance_get(id, a);
                                     //script_ref_call(_scrt); DO THIS INSTEAD WHEN YAL FIXES IT !!!
@@ -3076,21 +3350,81 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                              // Reset Alarms:
                             for(var a = 0; a <= 10; a++){
                                 var _alrm = alarm_get(a);
-                                if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
+                                if(_alrm > 0) other.alarm[a] = _alrm;
                                 alarm_set(a, -1);
                             }
 
+		                     // Ally-ify Projectiles:
+		                    with(instances_matching_gt(instances_matching(projectile, "creator", id), "id", _projectileMinID)){
+		                    	switch(sprite_index){
+		                    		case sprEnemyBullet1:
+		                    			if(instance_is(self, EnemyBullet1)){
+			                    			instance_change(AllyBullet, false);
+		                    			}
+			                    		sprite_index = sprAllyBullet;
+		                    			break;
+
+									case sprEBullet3:
+		                    			if(instance_is(self, EnemyBullet3)){
+			                    			instance_change(Bullet2, false);
+											bonus = false;
+		                    			}
+			                    		sprite_index = spr.AllyBullet3;
+										break;
+
+		                    		case sprEnemyBullet4:
+		                    			if(instance_is(self, EnemyBullet4)){
+			                    			instance_change(AllyBullet, false);
+		                    			}
+			                    		sprite_index = spr.AllyBullet4;
+		                    			break;
+
+									case sprEnemyLaser:
+										if(instance_is(self, EnemyLaser)){
+		                    				instance_change(Laser, false);
+										}
+										sprite_index = sprLaser;
+										break;
+
+									case sprEFlak:
+										if(instance_is(self, EFlakBullet)){
+											var _inst = obj_create(x, y, "AllyFlakBullet");
+											with(variable_instance_get_names(id)){
+												if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "sprite_index"], self)){
+													variable_instance_set(_inst, self, variable_instance_get(other, self));
+												}
+											}
+											instance_delete(id);
+										}
+										break;
+		                    	}
+		                    }
+
+                    		 // :
+		                    if(_alarmNum == 1 && chance(_alarmSpeed - 1, _alarmSpeed)){
+	            				if(("ammo" not in self || ammo <= 0) && other.alarm[2] < 0){
+	            					if(array_length(instances_matching(projectile, "creator", id)) <= 0){
+				                    	if(_lastWalk != null) walk = _lastWalk;
+				                    	if(_lastRight != null) right = _lastRight;
+				                    	if(_lastGunangle != null) gunangle = _lastGunangle;
+				            			speed = _lastSpeed;
+				            			direction = _lastDirection;
+	            					}
+	            				}
+		                    }
+
                              // Return Players:
-                            var i = 0;
-                            with(Player){
-                                var p = _lastPos[i++];
-                                x = p[0];
-                                y = p[1];
+                            with(_lastPos){
+                            	with(self[0]){
+                            		x = other[1];
+                            		y = other[2];
+                            	}
                             }
                         }
+
+                		if(!instance_exists(_self)) break;
                     }
                 }
-                if(!instance_exists(_self)) break;
             }
 
             if(!instance_exists(_self)) scrCharm(_self, false);
@@ -3141,7 +3475,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		                                if(instance_exists(player_find(_index))){
 		                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
 		                                }
-		
+
 		                                 // Stay in Range:
 		                                if(distance_to_object(n) > 32){
 		                                    motion_add(point_direction(x, y, n.x, n.y), 1);
@@ -3383,6 +3717,17 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             }
                             break;
                     }
+
+                	 // FX:
+                	if(chance_ct(1, 200)){
+                		with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
+                			sprite_index = sprHealFX;
+                			motion_add(other.direction, 1);
+                			speed /= 2;
+                			image_xscale *= random_range(2/3, 1);
+                			image_yscale = image_xscale;
+                		}
+                	}
                 }
 
                  // Charm Timer:
@@ -3411,6 +3756,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		with(surfCharm) active = true;
 	}
 	else with(surfCharm) active = false;
+
+	instance_destroy();
 
 #define charm_draw(_inst, _index)
 	if(_index < 0 || _index >= maxp){
@@ -3539,8 +3886,465 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 	instance_destroy();
 
+#define loadout_behind
+    instance_destroy();
+
+    var p = crownPlayer,
+        _crown = lq_get(crownRace, player_get_race_fix(p));
+
+	if(is_undefined(_crown)) exit;
+
+	with(surfCrownHide) if(surface_exists(surf)){
+		var	_surf = surf,
+			_surfx = -60 - (w / 2),
+			_surfy = -39 - (h / 2);
+
+	    with(Loadout){
+	        _surfy += (introsettle - (introsettle > 0));
+			if(position_meeting(mouse_x[p], mouse_y[p], self)){
+				_surfx--;
+				_surfy--;
+			}
+
+			if(_crown.slct != crwn_none){
+				with(surfCrownHideScreen) if(surface_exists(surf)){
+					x = other.x - game_width;
+					y = other.y - (game_height - 36);
+					w = game_width;
+					h = game_height;
+	
+					 // Capture Screen:
+			        surface_set_target(surf);
+			        draw_clear(c_black);
+			        draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
+			        surface_screenshot(surf);
+			        draw_set_blend_mode(bm_normal);
+	
+					with(other){
+			        	surface_set_target(_surf);
+			        	draw_clear_alpha(0, 0);
+	
+						 // Draw Mask of What to Hide (The Currently Selected Crown):
+						draw_set_fog(true, c_black, 0, 0);
+				        draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
+						draw_set_fog(false, 0, 0, 0);
+	
+						 // Lay Screen + Loadout Sprite Over Mask:
+			        	draw_set_color_write_enable(true, true, true, false);
+			        	draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
+			        	draw_sprite(sprLoadoutSplat, image_index, -_surfx, -_surfy);
+			        	if(selected == true) draw_sprite(sprLoadoutOpen, openanim, -_surfx, -_surfy);
+			        	draw_set_color_write_enable(true, true, true, true);
+					}
+		        }
+
+	        	surface_reset_target();
+			}
+	    }
+
+	    x = _surfx;
+	    y = _surfy;
+	}
+
+#define draw_crown
+    var p = crownPlayer,
+		_crown = lq_get(crownRace, player_get_race_fix(p)),
+        _vx = view_xview_nonsync,
+        _vy = view_yview_nonsync,
+        _mx = mouse_x[p],
+        _my = mouse_y[p],
+        _surfScreen = -1,
+        _surfCrown = -1,
+        _w = 20,
+        _h = 20,
+        _cx = game_width - 102,
+        _cy = 75;
+
+	if(is_undefined(_crown)){
+		instance_destroy();
+		exit;
+	}
+
+    for(var i = 0; i < array_length(_crown.icon); i++){
+        var _icon = _crown.icon[i];
+        if(instance_exists(_icon.inst)) with(_icon){
+            x = _vx + _cx + (dix * crownIconW);
+            y = _vy + _cy + (diy * crownIconH);
+
+            if(!visible){
+                addy = 2;
+
+                 // Initial Crown Reading:
+                with(inst) if(alarm_get(0) == 0) with(other){
+                    visible = true;
+
+                     // Capture Screen:
+                    if(!surface_exists(_surfScreen)){
+                        _surfScreen = surface_create(game_width, game_height);
+
+                        surface_set_target(_surfScreen);
+                        draw_clear(c_black);
+                        surface_reset_target();
+        
+                        draw_set_blend_mode_ext(bm_one, bm_one);
+                        surface_screenshot(_surfScreen);
+                        draw_set_blend_mode(bm_normal);
+                    }
+                    
+                     // Capture Crown Icon from Screen Capture:
+                    if(!surface_exists(_surfCrown)){
+                        _surfCrown = surface_create(_w, _h);
+                    }
+                    surface_set_target(_surfCrown);
+                    draw_clear_alpha(0, 0);
+                    draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
+                    surface_reset_target();
+    
+                     // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State:
+                    var f = crownPath + string(crwn) + crownPathD;
+                    surface_save(_surfCrown, f);
+                    surface_destroy(_surfCrown);
+                    file_load(f);
+                    if(fork()){
+                        wait 0;
+                        var _size = file_size(f);
+                        locked = (_size == crownSize[crwn].lock);
+                        if(_size == crownSize[crwn].slct){
+                            _crown.slct = crwn;
+                        }
+                        exit;
+                    }
+                }
+            }
+            else addy = 0;
+        }
+        else with(Loadout) if(selected == true){
+        	_crown.icon = [];
+        	_crown.custom.icon = [];
+            sprite_restore(sprClockParts);
+        }
+    }
+
+     // Manually Keep Track of Crown's Status:
+    with(_crown.icon) if(visible){ 
+        blnd = c_gray;
+
+        with(other) if(instance_exists(other.inst)) with(other){
+        	if(position_meeting(_mx, _my, inst)){
+	             // Select:
+	            if(!locked && button_pressed(p, "fire")){
+	                if(_crown.custom.slct != -1 && crwn == _crown.slct){
+	                    sound_play(sndMenuCrown);
+	                }
+	                _crown.slct = crwn;
+	                _crown.custom.slct = -1;
+	            }
+	
+	             // Hovering Over Button:
+	            if(crwn != _crown.slct || _crown.custom.slct != -1){
+	                addy--;
+	                blnd = merge_color(c_gray, c_white, 0.6);
+	            }
+	        }
+	
+	         // Selected:
+	        if(crwn == _crown.slct && _crown.custom.slct == -1){
+	            addy -= 2;
+	            blnd = c_white;
+	        }
+        }
+    }
+
+     // Crown Loadout Setup:
+    if(instance_exists(LoadoutCrown)){
+        if(array_length(_crown.icon) <= 0){
+            var _crownList = array_flip(instances_matching(LoadoutCrown, "", null)),
+                _col = 2,  // crwn_none column
+                _row = -1; // crwn_none row
+
+            for(var i = 0; i < array_length(_crownList); i++){
+                array_push(_crown.icon, {
+                    inst : _crownList[i],
+                    crwn : (i + 1),
+                    locked : false,
+                    x    : 0,
+                    y    : 0,
+                    dix  : _col,
+                    diy  : _row,
+                    addy : 2,
+                    blnd : c_gray,
+                    visible : false
+                });
+
+                 // Determine Position on Screen:
+                _col++;
+                if((i % 4) == 0){
+                    _col = 0;
+                    _row++;
+                }
+
+                 // Delay Crowns:
+                with(_crownList[i]){
+                	alarm_set(0, 4 - floor((i - 1) / 4));
+                }
+            }
+
+             // Another Hacky Fix:
+            sprite_replace_base64(sprClockParts, "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==", 1);
+        }
+
+         // Generate Comparison Sizes:
+        if(array_length(crownSize) <= 0){
+            var _x = _w / 2,
+                _y = _h / 2,
+                _surf = surface_create(_w, _h);
+
+            surface_set_target(_surf);
+
+            for(var i = 0; i <= 13; i++){
+                var a = crownPath + string(i) + crownPathA,
+                    b = crownPath + string(i) + crownPathB;
+
+                 // Selected:
+                draw_clear(c_black);
+                draw_sprite(sprLoadoutCrown, i, _x, _y - 2);
+                surface_save(_surf, a);
+
+                 // Locked:
+                draw_clear(c_black);
+                draw_sprite_ext(sprLockedLoadoutCrown, i, _x, _y, 1, 1, 0, c_gray, 1);
+                surface_save(_surf, b);
+
+                 // Store Sizes:
+                var _size = { slct:0, lock:0 };
+                array_push(crownSize, _size);
+                file_load(a);
+                file_load(b);
+                if(fork()){
+                    wait 0;
+                    _size.slct = file_size(a);
+                    _size.lock = file_size(b);
+                    exit;
+                }
+            }
+
+            surface_reset_target();
+            surface_destroy(_surf);
+        }
+
+         // Adding Custom Crowns:
+        if(array_length(_crown.custom.icon) <= 0){
+            with(array_combine(crwnList, [crwn_random])){
+                with({
+                    crwn : self,
+                    locked : false,
+                    x    : 0,
+                    y    : 0,
+                    dix  : 0,
+                    diy  : 0,
+                    addy : 2,
+                    blnd : c_gray,
+                    hover : false,
+                    alarm0 : 6,
+                    visible : false,
+                    sprite_index : sprLoadoutCrown,
+                    image_index  : 0
+                }){
+                	 // Modded:
+                    if(is_string(crwn)){
+                    	var _scrt = "crown_menu_avail";
+                        locked = (mod_script_exists("crown", crwn, _scrt) && !mod_script_call_nc("crown", crwn, _scrt));
+
+						var _scrt = "crown_menu_button";
+                        if(mod_script_exists("crown", crwn, _scrt)){
+                            with(instance_create(0, 0, GameObject)){
+                                for(var i = 0; i < lq_size(other); i++){
+                                    variable_instance_set(id, lq_get_key(other, i), lq_get_value(other, i));
+                                }
+                                mod_script_call("crown", crwn, _scrt);
+                                for(var i = 0; i < lq_size(other); i++){
+                                    lq_set(other, lq_get_key(other, i), variable_instance_get(id, lq_get_key(other, i)));
+                                }
+                                instance_delete(id);
+                            }
+                            array_push(_crown.custom.icon, self);
+                        }
+                    }
+
+                     // Other:
+                    else{
+                        switch(crwn){
+                            case crwn_random:
+                                dix = 1;
+                                diy = -1;
+                                sprite_index = spr.CrownRandomLoadout;
+                                break;
+                        }
+                        array_push(_crown.custom.icon, self);
+                    }
+                }
+            }
+        }
+
+         // Dull Normal Crown Selection:
+        if(_crown.custom.slct != -1){
+            with(_crown.icon) if(visible && crwn == _crown.slct){
+                draw_sprite_ext((locked ? sprLockedLoadoutCrown : sprLoadoutCrown), real(crwn), x, y + addy, 1, 1, 0, blnd, 1);
+            }
+        }
+
+         // Haste Fix:
+        with(_crown.icon) if(visible && crwn == crwn_haste && !locked){
+            if("time" not in self) time = current_frame / 12;
+
+            if(crwn == _crown.slct && _crown.custom.slct == -1){
+                time += current_time_scale / 12;
+            }
+
+            draw_sprite_ext(spr.ClockParts, 0, x - 2, y - 1 + addy, 1, 1, time, blnd, 1);
+            draw_sprite_ext(spr.ClockParts, 0, x - 2, y - 1 + addy, 1, 1, time * 12, blnd, 1);
+            draw_sprite_ext(spr.ClockParts, 1, x - 2, y - 1 + addy, 1, 1, 0, blnd, 1);
+        }
+
+         // Custom Crown Icons:
+        with(_crown.custom.icon){
+            x = _vx + _cx + (dix * crownIconW);
+            y = _vy + _cy + (diy * crownIconH);
+            blnd = c_gray;
+            addy = 0;
+
+             // Locked:
+            if(_crown.custom.slct == crwn && locked){
+                _crown.custom.slct = -1;
+            }
+
+             // Appear:
+            if(alarm0 > 0){
+                addy = 2;
+                alarm0 -= current_time_scale;
+                if(alarm0 <= 0) visible = true;
+            }
+
+            if(visible){
+                 // Hovering:
+                if(point_in_rectangle(_mx, _my, x - 10, y - 10, x + 10, y + 10)){
+                     // Sound:
+                    if(!hover) sound_play(sndHover);
+                    hover = min(hover + 1, 2);
+
+                     // Select:
+                    if(!locked && button_pressed(p, "fire") && _crown.custom.slct != crwn){
+                        _crown.custom.slct = crwn;
+                        sound_play(sndMenuCrown);
+                    }
+
+                     // Highlight:
+                    if(crwn != _crown.custom.slct){
+                        addy--;
+                        blnd = merge_color(c_gray, c_white, 0.6);
+                    }
+                }
+                else hover = false;
+
+                 // Selected:
+                if(crwn == _crown.custom.slct){
+                    addy -= 2;
+                    blnd = c_white;
+                }
+
+                 // Draw:
+                with(other) draw_sprite_ext(other.sprite_index, other.image_index, other.x, other.y + other.addy, 1, 1, 0, other.blnd, 1);
+            }
+        }
+
+         // Custom Crown Tooltip:
+        with(_crown.custom.icon) if(visible && hover){
+            draw_set_font(fntM);
+
+            var _text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn)),
+                _x = x,
+                _y = max(y - 5, _vy + 24 + string_height(_text)/*can only draw over YAL's header in draw_gui_end and draw_tooltip breaks there so*/) - hover;
+
+            draw_tooltip(_x, _y, _text);
+        }
+    }
+	else crownSize = [];
+
+     // Drawing Custom Crown on Collapsed Loadout:
+    if(_crown.custom.slct != -1){
+    	with(surfCrownHide) if(surface_exists(surf)){
+            with(Loadout) if(visible && (selected == false || openanim < 3)){
+            	var _x = x + other.x,
+            		_y = y + other.y;
+
+                 // Hide Normal Crown:
+                if(_crown.slct != crwn_none){
+					draw_surface(other.surf, _x, _y);
+                }
+
+                 // Draw Custom:
+                with(_crown.custom.icon) if(crwn == _crown.custom.slct){
+                	with(other) draw_sprite(other.sprite_index, other.image_index, _x + 16, _y + 16);
+                }
+            }
+    	}
+    }
+
+    instance_destroy();
+
+#define player_get_race_fix(p) /// Used for custom crown loadout
+	var _race = player_get_race(p);
+
+	 // Fix 1 Frame Delay Thing:
+	var _raceChange = (button_pressed(p, "east") - button_pressed(p, "west"));
+	if(_raceChange != 0){
+		var _new = _race;
+
+		with(instances_matching(CharSelect, "race", _race)){
+			var _slct = instances_matching_ne(instances_matching_ne(CharSelect, "id", id), "race", 16/*=Locked in game logic??*/),
+				_inst = _slct;
+
+			if(_raceChange > 0){
+				_inst = instances_matching_gt(_slct, "xstart", xstart);
+			}
+			else{
+				_inst = instances_matching_lt(_slct, "xstart", xstart);
+			}
+
+			 // Find Next CharSelect:
+			if(array_length(_inst) > 0){
+				var _min = 0;
+				with(_inst){
+					var _x = (xstart - other.xstart);
+					if(_min <= 0 || abs(_x) < _min){
+						_min = abs(_x);
+						_new = race;
+					}
+				}
+			}
+
+			 // Looping to Farthest CharSelect:
+			else{
+				var _max = 0;
+				with(_slct){
+					var _x = (xstart - other.xstart);
+					if(_max <= 0 || abs(_x) > _max){
+						_max = abs(_x);
+						_new = race;
+					}
+				}
+			}
+		}
+
+		_race = _new;
+	}
+
+	return _race;
+
 #define cleanup
-    with(global.charm_step) instance_destroy();
+    sprite_restore(sprClockParts);
+
+     // Stop Area Music/Ambience:
     for(var i = 0; i < lq_size(global.current); i++){
         audio_stop_sound(lq_get_value(global.current, i).snd);
     }
@@ -3635,3 +4439,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

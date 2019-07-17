@@ -1489,9 +1489,21 @@
 			}
 			
 			 // Name Search:
-			var w = _part[i];
+			w = _part[i];
 			if(is_string(w)){
-				w = string_upper(string_trim(_part[i]));
+				w = string_upper(string_trim(w));
+
+				 // Normal:
+				with(wepList){
+					var n = string_upper(name);
+					if(n == w || n == _part[i]){
+						_part[i] = self;
+						exit;
+					}
+				}
+
+				 // Search w/ Underscores -> Spaces:
+				w = string_replace_all(w, "_", " ");
 				with(wepList){
 					var n = string_upper(name);
 					if(n == w || n == _part[i]){
@@ -1533,38 +1545,35 @@
 	}
 
 	 // Randomly Select Weps from List:
-	if(array_length(_pickList) >= 2){
-        var _part = array_create(2),
-        	_tries = 100;
+	var m = array_length(_pickList),
+		_part = [];
 
-        while(_tries-- > 0){
-            for(var i = 0; i < array_length(_part); i++){
-            	while(_part[i] == 0){
-                    var w = _pickList[irandom(array_length(_pickList) - 1)];
-                    if(array_find_index(_part, w) < 0){
-                    	_part[i] = w;
-                    }
-            	}
-            }
-            if(ceil((_part[0].area + _part[1].area) * 2/3) < _hardMax){
-            	break;
-            }
-        }
+	array_shuffle(_pickList);
 
-		return _part;
+	for(var i = 0; i < m; i++){
+		for(var j = i + 1; j < m; j++){
+			_part = [_pickList[i], _pickList[j]];
+
+			 // Difficulty Check:
+            if(1 + max(1, _part[0].area) + max(1, _part[1].area) <= _hardMax){
+            	return _part;
+            }
+		}
 	}
 
-	return [];
+	return _part;
 
 #define wep_merge_raw(_stock, _front)
     var _wep = lq_clone_deep(_front);
 
     with(_wep){
+    	stock = _stock.weap;
+    	front = _front.weap;
         weap = -1;
         swap = _front.swap;
         area = -1;
         type = _front.type;
-        auto = (_stock.auto || (_front.auto && _front.load <= 9));
+        auto = (_stock.auto || (_front.auto && _front.load < 10));
         mele = (_stock.mele || _front.mele);
         gold = (_stock.gold || _front.gold);
         blod = (_stock.blod || _front.blod);
@@ -1620,7 +1629,9 @@
 		}
 		switch(_frontObjRaw){
 			case Laser:
-				if(_stockObjRaw != Laser) _frontProjCost /= 2;
+				if(_stockObjRaw != Laser && _stockObjRaw != Disc){
+					_frontProjCost /= 2;
+				}
 				break;
 		}
 
@@ -1890,7 +1901,7 @@
 			with(_swap) other.text = string_replace_all(other.text, self, n);
 
          // Sprite:
-        sprt = mod_script_call("mod", "teassets", "sprite_merge", _stock.sprt, _front.sprt);
+        sprt = mod_script_call("mod", "teassets", "wep_merge_sprite", _stock.sprt, _front.sprt);
 
          // Flags:
         flag = array_combine(_stock.flag, _front.flag);
@@ -1915,10 +1926,9 @@
         		if(_frontObj != Laser){
         			array_push(flag, "laser");
         			if(_stock.shot <= 1){
-        				time = max(time - 1, 0);
-
+        				time = 0;
         				var n = min(_front.amnt, _front.cost);
-        				shot = amnt / n;
+        				shot = max(shot, amnt / n);
         				amnt = n;
         			}
         		}
@@ -2935,7 +2945,7 @@
 			o.last = noone;
 			o.lastx = x;
 			o.lasty = y;
-			o.ammo = (60 / (speed + 1)) * random_range(1, 1.5);
+			o.ammo = max(6, speed / 2);
 
 			 // Start FX:
 			with(instance_create(x, y, LightningSpawn)){
@@ -4244,3 +4254,4 @@
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

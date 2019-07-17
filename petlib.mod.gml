@@ -495,7 +495,7 @@
      // Vars:
     mask_index = mskFrogEgg;
     maxhealth = 14;
-    maxspeed = 3.6;
+    maxspeed = 3.4;
     my_health = maxhealth;
     my_corpse = noone;
     target = noone;
@@ -1418,7 +1418,7 @@
                         o = 6;
     
                     for(var _dis = o; _dis >= -o; _dis -= 2){
-                        with(instance_create(other.x + lengthdir_x(_dis, _dir) + orandom(0), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
+                        with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
                             motion_add(_dir, 1);
                             image_angle = _dir;
                             image_xscale = 2;
@@ -1661,12 +1661,15 @@
 						y = lerp(y, _y, 0.2);
 
 						 // Particles:
-						if(chance_ct(1, 20)){
+						if(chance_ct((player_get_alias(0) != "Yokin"), 24)){
 							with(instance_create(x, y, Feather)){
 								sprite_index = spr.PetSpiderWebBits;
+								image_angle = orandom(30);
 								image_index = irandom(image_number - 1);
 								image_speed = 0;
 								speed *= 0.5;
+								rot /= 2;
+								alarm0 = random(alarm0);
 							}
 						}
 
@@ -1810,3 +1813,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);

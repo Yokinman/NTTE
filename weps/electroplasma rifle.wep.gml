@@ -1,5 +1,5 @@
 #define init
-    global.sprElectroPlasmaRifle = sprite_add_weapon("../sprites/weps/sprElectroPlasmaRifle.png", 4, 5);
+    global.sprElectroPlasmaRifle = sprite_add_weapon("../sprites/weps/sprElectroPlasmaRifle.png", 1, 5);
 
 #define weapon_name return "ELECTROPLASMA RIFLE";
 #define weapon_text return "DEEP SEA WEAPONRY";
@@ -16,6 +16,7 @@
 
 #define weapon_fire
     if("last_electroplasma" not in self) last_electroplasma = noone;
+    if("electroplasma_side" not in self) electroplasma_side = 1;
     
      // Sounds:
     var _brain = (skill_get(mut_laser_brain) > 0);
@@ -24,21 +25,23 @@
     
      // Burst Fire:
     var _num = 3;
-    for(var i = 0; i < _num; i++){
+    repeat(_num) if(instance_exists(self)){
         var _last = last_electroplasma;
         
          // Projectile:
+        var d = gunangle + (((17 * electroplasma_side) + orandom(7)) * accuracy);
         with(obj_create(x, y, "ElectroPlasma")){
             team =          other.team;
             creator =       other;
             tethered_to =   _last;
-            motion_set(other.gunangle + orandom(30) * other.accuracy, 4 + random(0.4));
+            motion_set(d, 4 + random(0.4));
             image_angle =   direction;
             
             _last =         id;
         }
         
         last_electroplasma = _last;
+        electroplasma_side *= -1;
         
          // Effects:
         weapon_post(6, 3, 0);

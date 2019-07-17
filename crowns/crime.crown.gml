@@ -1,15 +1,25 @@
 #define init
-	global.sprCrownCrimeIcon = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",	1,	12, 16);
-	global.sprCrownCrimeIdle = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	20, 8,	8);
-	global.sprCrownCrimeWalk = sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",	6,	8,	8);
+	global.sprCrownCrimeIcon	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",		1, 12, 16);
+	global.sprCrownCrimeIdle	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
+	global.sprCrownCrimeWalk	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
+	global.sprCrownCrimeLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
 
 #define crown_name	return "CROWN OF CRIME";
-#define crown_text	return "FIND SMUGGLED GOODS#A PRICE ON YOUR HEAD";
+#define crown_text	return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip	return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
 #define crown_avail	return unlock_get("lairCrown");
 
 #define crown_button
 	sprite_index = global.sprCrownCrimeIcon;
+
+#define crown_menu_button
+    sprite_index = global.sprCrownCrimeLoadout;
+    image_index = !crown_menu_avail();
+    dix = 0;
+    diy = -1;
+
+#define crown_menu_avail
+	return unlock_get("crownCrime");
 
 #define crown_object
 	 // Visual:
@@ -23,7 +33,7 @@
 	enemies = 0;
 
 #define crown_take
-	sound_play(sndCrownLove);
+	if(instance_exists(CrownIcon)) sound_play(sndCrownLove);
 	
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);

@@ -20,6 +20,177 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
+#define AlbinoGator_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.AlbinoGatorIdle;
+		spr_walk = spr.AlbinoGatorWalk;
+		spr_hurt = spr.AlbinoGatorHurt;
+		spr_dead = spr.AlbinoGatorDead;
+		spr_weap = sprAutoCrossbow;
+		sprite_index = spr_idle;
+		hitid = [spr_idle, "ALBINO GATOR"];
+		spr_shadow = shd24;
+		depth = -2;
+		
+		 // Sounds:
+		snd_hurt = sndBuffGatorHit;
+		snd_dead = sndBuffGatorDie;
+		
+		 // Vars:
+		maxhealth = 45;
+		raddrop = 8;
+		size = 4;
+		walk = 0;
+		walkspd = 1.2;
+		maxspeed = 3.6;
+		gunangle = random(360);
+		direction = gunangle;
+		ammo = 0;
+		wave = 0;
+		alarm1 = 30;
+		
+		return id;
+	}
+	
+#define AlbinoGator_step
+	wave += current_time_scale;
+	
+#define AlbinoGator_alrm1
+	alarm1 = 30 + random(30);
+	target = instance_nearest(x, y, Player);
+	
+	 // Attack:
+	if(ammo > 0){
+		alarm1 = 4;
+		ammo--;
+		wkick = 8;
+		
+		scrFX(x, y, [gunangle + orandom(30), random(6)], Confetti);
+	}
+	
+	else{
+		if(in_sight(target)){
+			gunangle = point_direction(x, y, target.x, target.y);
+			
+			 // Begin Attack:
+			if(in_distance(target, 130) && chance(3, 4)){
+				alarm1 = 20;
+				ammo = 5;
+				
+				instance_create(x, y, AssassinNotice);
+			}
+			
+			 // Approach Target:
+			else{
+				scrWalk(40 + random(20), gunangle + orandom(15));
+			}
+			
+			scrRight(gunangle);
+		}
+		
+		 // Wander:
+		else{
+			scrWalk(20 + random(40), direction + orandom(30));
+			gunangle = direction;
+			scrRight(gunangle);
+		}
+	}
+	
+#define AlbinoGator_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+    
+    draw_sprite(sprHalo, 0, x, (y - 3) + sin(wave * 0.1));
+    
+#define AlbinoGator_death
+	pickup_drop(80, 0);
+	pickup_drop(80, 0);
+	
+#define BabyGator_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.BabyGatorIdle;
+		spr_walk = spr.BabyGatorWalk;
+		spr_hurt = spr.BabyGatorHurt;
+		spr_dead = spr.BabyGatorDead;
+		spr_weap = sprRevolver;
+		sprite_index = spr_idle;
+		hitid = [spr_idle, "BABY GATOR"];
+		spr_shadow = shd16;
+		spr_shadow_y = 1;
+		depth = -2;
+		
+		 // Sounds:
+		snd_hurt = sndHitFlesh;
+		snd_dead = sndGatorDie;
+		
+		 // Vars:
+		mask_index = mskMaggot;
+		maxhealth = 8;
+		raddrop = 2;
+		size = 1;
+		walk = 0;
+		walkspd = 1.2;
+		maxspeed = 3.4;
+		gunangle = random(360);
+		direction = gunangle;
+		alarm1 = 30;
+		
+		return id;
+	}
+	
+#define BabyGator_step
+	 // Bounce:
+	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+		
+		gunangle = direction;
+		scrRight(gunangle);
+	}
+	
+#define BabyGator_alrm1
+	alarm1 = 30 + random(60);
+	target = instance_nearest(x, y, Player);
+	
+	if(in_sight(target) && in_distance(target, 160)){
+		gunangle = point_direction(x, y, target.x, target.y);
+		
+		 // Attack:
+		if(chance(1, 2)){
+			wkick = 6;
+	
+			var l = 8,
+				d = gunangle + orandom(12),
+				_x = x + lengthdir_x(l, d),
+				_y = y + lengthdir_y(l, d);
+			
+			scrEnemyShootExt(_x, _y, LHBouncer, d, 3);
+			scrFX(_x, _y, [d, 2], Smoke);
+			
+			sound_play_hit(sndBouncerSmg, 0.2);
+			motion_add(gunangle + 180, 2);
+		}
+		
+		else if(chance(1, 3)){
+			scrWalk(30 + random(40), random(360));
+		}
+	}
+	
+	else{
+		scrWalk(40 + random(30), direction + orandom(60));
+		gunangle = direction;
+	}
+	
+	scrRight(gunangle);
+	
+#define BabyGator_draw
+    if(gunangle >  180) draw_self_enemy();
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_self_enemy();
+
 #define Bat_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -689,7 +860,7 @@
 	repeat(6) scrFX(x, y, 3, Dust);
 
 	 // Crown Time:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
+	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
 		enemies += (1 + GameCont.loops) + irandom(3);
 	}
@@ -858,15 +1029,15 @@
 		spr_walk = spr.BoneGatorWalk;
 		spr_hurt = spr.BoneGatorHurt;
 		spr_dead = spr.BoneGatorDead;
-		spr_weap = sprNadeShotgun;
+		spr_weap = spr.BoneGatorWeap;
 		sprite_index = spr_idle;
 		spr_shadow = shd24;
-		hitid = [spr_idle, "BOUNTY HUTNER"];
-
+		hitid = [spr_idle, "BONE GATOR"];
+		
 		 // Sounds:
-		snd_hurt = sndBuffGatorHit;
-		snd_dead = sndBuffGatorDie;
-
+		snd_hurt = sndGatorHit;
+		snd_dead = sndGatorDie;
+		
 		 // Vars:
 		mask_index = mskBandit;
 		maxhealth = 24;
@@ -877,14 +1048,12 @@
 		maxspeed = 3.6;
 		gunangle = random(360);
 		alarm1 = 30;
-		canfire = false;
-
+		ammo = 0;
+		nextheal = 0;
+		
 		return id;
 	}
-
-#define BoneGator_step
-	 //
-
+	
 #define BoneGator_draw
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
@@ -895,52 +1064,96 @@
 	target = instance_nearest(x, y, Player);
 
 	 // Fire:
-	if(canfire){
-		var o = 11;
-		for(var d = -2; d <= 2; d++) scrEnemyShoot(MiniNade, gunangle + (d * o), 6 + random(3));
-		canfire = false;
-
-		 // Effects:
-		wkick = 8;
-		motion_add(gunangle + 180, 2);
-		sound_play_hit(sndGrenadeShotgun, 0.3);
-
+	if(ammo > 0){
+		alarm1 = 4;
+		ammo--;
+		
+		 // Move Gun:
+		if(instance_exists(target)){
+			var _targetDir = point_direction(x, y, target.x, target.y),
+				_dir = angle_difference(gunangle, _targetDir);
+			gunangle -= (min(abs(_dir), 20) * sign(_dir)) + orandom(5);
+			scrRight(gunangle);
+		}
+		
+		var _x = x + lengthdir_x(6, gunangle),
+			_y = y + lengthdir_y(6, gunangle);
+		
+		 // Cluster Nade Final Shot: 
+		if(ammo <= 0){
+			alarm1 = 20;
+			
+			scrEnemyShootExt(_x, _y, Grenade, gunangle, 9).alarm0 = 10 + random(10);
+			
+			 // Effects:
+			wkick = 12;
+			view_shake_max_at(x, y, 12);
+			
+			motion_add(gunangle + 180, 4);
+			sound_play_pitch(sndGrenadeShotgun, 0.8 + random(0.4));
+			sound_play_pitch(sndFlamerStop, 0.8 + random(0.4));
+		}
+		
+		 // Mini Nade Shots:
+		else{
+			scrEnemyShootExt(_x, _y, MiniNade, gunangle, 7 + random(2));
+			
+			 // Effects:
+			wkick = 6;
+			view_shake_max_at(x, y, 6);
+			
+			motion_add(gunangle + 180, 1);
+			sound_play_pitch(sndGrenadeRifle, 0.8 + random(0.4));
+		}
+		
+		 // Shared Effects:
+		scrEnemyShootExt(_x, _y, TrapFire, gunangle, random(1)).image_speed = 0.4;
+		repeat(1 + irandom(2)) with(scrFlameSpark(_x, _y)) motion_set(other.gunangle + orandom(30), random(5));
+		repeat(1 + irandom(2)) scrFX(_x, _y, [gunangle, random(4)], Smoke);
 	}
 
 	 // Normal Behavior:
 	else{
 		if(in_sight(target)){
-			var _targetDir = point_direction(x, y, target.x, target.y);
-			if(in_distance(target, 96)){
-				 // Retreat:
-				if(in_distance(target, 48) && chance(2, 3)){
-					scrWalk(20 + random(30), _targetDir + orandom(30) + 180);
-				}
-
+			var _targetDis = point_distance(x, y, target.x, target.y);
+			if(_targetDis <= 160){
+				gunangle = point_direction(x, y, target.x, target.y);
+				scrRight(gunangle);
+				
 				 // Attack:
-				else{
-					alarm1 = 10;
-					canfire = true;
-
+				if(_targetDis <= 90 && chance(2, 3)){
+					alarm1 = 12;
+					ammo = 6;
+					
 					 // Warning:
 					instance_create(x, y, AssassinNotice);
+					sound_play_pitch(sndDragonStart, 0.8 + random(0.4));
 				}
-
-				scrRight(_targetDir);
-				gunangle = _targetDir;
+				
+				else{
+					 // Retreat:
+					if(_targetDis <= 30){
+						scrWalk(20 + random(30), (gunangle + 180) + orandom(30));
+					}
+					
+					 // Advance:
+					else{
+						scrWalk(30 + random(20), gunangle + orandom(30))
+					}
+				}
 			}
 
 			 // Chase:
 			else{
-				scrWalk(20 + random(30), _targetDir + orandom(10));
-
+				scrWalk(20 + random(30), random(360));
+				
 				scrRight(direction);
 				gunangle = direction;
 			}
 		}
 
 		 // Wander:
-		else if(chance(1, 3)){
+		else if(chance(2, 5)){
 			alarm1 += random(10);
 			scrWalk(20 + random(20), direction + orandom(40));
 
@@ -953,23 +1166,52 @@
 	if(!instance_is(other, Explosion)){
 		my_health -= _hitdmg;
 		nexthurt = current_frame + 6;
+	
+		sound_play_hit(snd_hurt, 0.3);
+		motion_add(_hitdir, _hitvel);
+		
+		 // Hurt Sprite:
+		sprite_index = spr_hurt;
+		image_index = 0;
 	}
 
 	 // Boiling Veins:
-	else sound_play_hit(sndBurn, 0.3);
-
-	sound_play_hit(snd_hurt, 0.3);
-	motion_add(_hitdir, _hitvel);
-
-	 // Hurt Sprite:
-	sprite_index = spr_hurt;
-	image_index = 0;
-
+	else if(nextheal <= current_frame){
+		my_health = min(my_health + 12, maxhealth);
+		nextheal = current_frame + 8;
+		
+		instance_create(x, y, HealFX).sprite_index = spr.BoneGatorHeal;
+		sound_play_hit(sndBurn, 0.2);
+	}
+	
 #define BoneGator_death
 	 // Explodin':
 	instance_create(x, y, Explosion);
-	repeat(3 + irandom(3)) instance_create(x, y, SmallExplosion);
-
+	repeat(1 + irandom(2)) instance_create(x, y, SmallExplosion);
+	
+	var l = 12
+	for(var d = 0; d < 360; d += (360 / 20)){
+		var _x = x + lengthdir_x(l, d),
+			_y = y + lengthdir_y(l, d);
+		if(position_meeting(_x, _y, Floor)) scrEnemyShootExt(_x, _y, TrapFire, d + random_range(60, 90), random(2));
+		with(scrFlameSpark(_x, _y)) motion_add(d + random_range(30, 90), random(5));
+	}
+	view_shake_at(x, y, 20);
+	
+	scrDefaultDrop();
+	if(chance(1, 40)) instance_create(x, y, WepPickup).wep = "crabbone";
+	
+#define scrFlameSpark(_x, _y)
+	with(instance_create(_x, _y, Sweat)){
+		name = "FlameSpark";
+		
+		sprite_index = spr.FlameSpark;
+		image_speed = 0.4;
+		image_index = 0;
+		
+		return id;
+	}
+	
 #define Cabinet_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
          // Visual:
@@ -1978,6 +2220,23 @@
 			array_push(_pool, "bones");
 		}
 	}
+	switch(crown_current){
+		case crwn_life:
+			while(true){
+				var i = array_find_index(_pool, "ammo");
+				if(i >= 0) _pool[i] = "health";
+				else break;
+			}
+			break;
+
+		case crwn_guns:
+			while(true){
+				var i = array_find_index(_pool, "health");
+				if(i >= 0) _pool[i] = "ammo";
+				else break;
+			}
+			break;
+	}
 	with(_shop){
 		var i = irandom(array_length(_pool) - 1);
 		drop = _pool[i];
@@ -1991,7 +2250,7 @@
 	repeat(6) scrFX(x, y, 3, Dust);
 
 	 // Crown Time:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
+	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
 		enemy_time = 30;
 		enemies += (1 + GameCont.loops) + irandom(3);
 	}
@@ -2403,7 +2662,7 @@
          // Begin intro:
         if(phase < 1){
             if(instance_exists(Player))
-                if(instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) < 1){
+                if(instance_number(CorpseActive) + instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) <= 0){
                     phase++;
                     alarm0 = 40;
                     alarm1 = 20;
@@ -2445,7 +2704,7 @@
 	    		_y = other.y - (sprite_get_bbox_bottom(sprite_index) - sprite_yoffset),
 	    		_dir = point_direction(_x, _y, x, y);
 
-	    	if(point_distance(_x, _y, x, y) < _dis){
+	    	if(point_distance(_x, _y, x, y) < _dis && mask_index != mskNone){
 	    		if(instance_is(self, Player)){
 		    		direction += angle_difference(point_direction(_x, _y, x, y), direction) / 12;
 		    		x = _x + lengthdir_x(_dis, _dir);
@@ -2462,6 +2721,38 @@
 	    with(instances_matching(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [Scorch, ScorchTop]), "bighole_check", null, false)){
 	    	bighole_check = true;
 	    	if(in_distance(other, _dis)) instance_destroy();
+	    }
+
+	     // Grab Portal:
+	    if(instance_exists(Portal)){
+	    	with(instance_nearest(x, y, Portal)){
+	    		with(instances_matching(instances_matching(PortalShock, "x", x), "y", y)) instance_destroy();
+	    		x = other.x;
+	    		y = other.y;
+	    		if(image_alpha > 0){
+		    		image_alpha = 0;
+		    		mask_index = mskReviveArea;
+
+		    		 // Fix Particles:
+		    		repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
+	    				x = other.x;
+	    				y = other.y;
+		    		}
+
+		    		 // Remove Light:
+		    		with(global.catLight){
+		    			if(point_distance(x, y, other.x, other.y) < 64){
+		    				global.catLight = array_delete_value(global.catLight, self);
+		    			}
+		    		}
+	    		}
+
+				 // Pushin Chests:
+	    		with(chestprop) if(distance_to_point(other.x, other.y + 12) < 112){
+	    			direction = point_direction(other.x, other.y, x, y);
+	    			speed = max(256 / point_distance(other.x, other.y, x, y), speed);
+	    		}
+	    	}
 	    }
     }
 
@@ -3465,7 +3756,7 @@
 	sprite_index = spr_idle;
 
 	 // Land:
-	if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+	if((place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)) || GameCont.area == "coast"){
 		instance_destroy();
 	}
 
@@ -3484,7 +3775,8 @@
 		sprite_index = spr_idle;
 		image_index = 0;
 	}
-
+	depth = -10 - (y / 20000);
+	
 	 // Collide:
 	with(instances_meeting(x, y, instances_matching_ne(instances_matching(CustomObject, "name", name), "id", id))){
 		motion_add(point_direction(other.x, other.y, x, y), walkspd);
@@ -4037,6 +4329,11 @@
     with(instances_matching(CustomProp, "name", "LairRadChest")){
     	draw_sprite_ext(sprRadChestGlow, 0, x, y - 3, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
+    
+     // Flame Spark:
+    with(instances_matching(Sweat, "name", "FlameSpark")){
+    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
+    }
 
 	if(DebugLag) trace_time("tesewers_draw_bloom");
 
@@ -4125,3 +4422,4 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
