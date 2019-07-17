@@ -929,6 +929,12 @@
         	    }
         	}
         	
+        	 // Spawn Lightning Crystals:
+        	with(LaserCrystal) if(GameCont.loops <= 0 && chance(1, 20)){
+        		instance_create(x, y, LightningCrystal);
+        		instance_delete(id);
+        	}
+        	
         	 // Spawn Spider Walls:
         	if(instance_exists(Wall)){
         	     // Strays:
@@ -1013,12 +1019,6 @@
 	 // Sewer manhole:
 	with(PizzaEntrance){
 	    with obj_create(x,y,"Manhole") toarea = "pizza";
-	    instance_delete(id);
-	}
-
-	 // OG gators:
-	with(Gator){
-	    with instance_create(x,y,GatorSmoke) image_speed = 0.4;
 	    instance_delete(id);
 	}
 
@@ -1567,9 +1567,13 @@
 					
 				 // Weighted Pool:
 				var _enemyPool = [];
-				repeat(4) array_push(_enemyPool, "Gator");
-				repeat(2) array_push(_enemyPool, "BuffGator");
-				repeat(1) array_push(_enemyPool, "BoneGator");
+					repeat(5) array_push(_enemyPool, "Gator");
+					repeat(3) array_push(_enemyPool, "Buff Gator");
+					repeat(2) array_push(_enemyPool, "Bone Gator");
+					repeat(2) array_push(_enemyPool, "Baby Gator");
+				
+				if(GameCont.hard > 5)
+					repeat(1) array_push(_enemyPool, "Albino Gator");
 				
 				while(enemies > 0){
 					enemies -= 1;
@@ -1585,7 +1589,7 @@
 								}
 								break;
 								
-							case "BuffGator":
+							case "Buff Gator":
 								obj_name = BuffGator;
 								with(obj_info){
 									spr_idle = sprBuffGatorIdle;
@@ -1594,14 +1598,64 @@
 								}
 								break;
 							
-							case "BoneGator":
+							case "Bone Gator":
 								obj_name = "BoneGator";
 								with(obj_info){
 									spr_idle = spr.BoneGatorIdle;
 									spr_walk = spr.BoneGatorWalk;
-									spr_weap = sprNadeShotgun;
+									spr_weap = spr.BoneGatorWeap;
 								}
 								break;
+								
+							case "Baby Gator":
+								obj_name = "BabyGator";
+								with(obj_info){
+									spr_idle = spr.BabyGatorIdle;
+									spr_walk = spr.BabyGatorWalk;
+									spr_weap = sprRevolver;
+									spr_shadow = shd16;
+									spr_shadow_y = 0;
+								}
+								
+								 // Babies Stick Together:
+								var n = 2 + irandom(1 + GameCont.loops);
+								repeat(n) instance_copy(false);
+								break;
+								
+							case "Albino Gator":
+								obj_name = "AlbinoGator";
+								with(obj_info){
+									spr_idle = spr.AlbinoGatorIdle;
+									spr_walk = spr.AlbinoGatorWalk;
+									spr_weap = sprBazooka;
+								}
+								break;
+								
+							 //#region I Dunno:
+								
+							case "Rat Horde": // maybe?
+								obj_name = FastRat;
+								with(obj_info){
+									spr_idle = sprFastRatIdle;
+									spr_walk = sprFastRatWalk;
+								}
+								
+								 // The Horde:
+								var n = 3 + irandom(3 + GameCont.loops);
+								repeat(n) instance_copy(false);
+								
+								 // Large and in Charge:
+								with(obj_create(x, y, "TopEnemy")){
+									obj_name = Ratking;
+									with(obj_info){
+										spr_idle = sprRatkingRageWait;
+										spr_walk = sprRatkingRageAttack;
+										spr_shadow = shd48;
+									}
+								}
+								break;
+								
+							 //#endregion
 						}
 					}
 				}

@@ -571,6 +571,18 @@
         //#endregion
 
         //#region SEWERS
+        	 // Albino Gator:
+        	AlbinoGatorIdle = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorIdle.png", 8, 16, 16);
+        	AlbinoGatorWalk = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorWalk.png", 6, 16, 16);
+        	AlbinoGatorHurt = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorHurt.png", 3, 16, 16);
+        	AlbinoGatorDead = sprite_add("sprites/enemies/AlbinoGator/sprAlbinoGatorDead.png", 6, 16, 16);
+        	
+        	 // Baby Gator:
+        	BabyGatorIdle = sprite_add("sprites/enemies/BabyGator/sprBabyGatorIdle.png", 6, 12, 12);
+        	BabyGatorWalk = sprite_add("sprites/enemies/BabyGator/sprBabyGatorWalk.png", 6, 12, 12);
+        	BabyGatorHurt = sprite_add("sprites/enemies/BabyGator/sprBabyGatorHurt.png", 3, 12, 12);
+        	BabyGatorDead = sprite_add("sprites/enemies/BabyGator/sprBabyGatorDead.png", 7, 12, 12);
+        	
              // Bat:
             BatWeap         = sprite_add_weapon("sprites/enemies/Bat/sprBatWeap.png", 2,  6);
             BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",    24, 16, 16);
@@ -599,6 +611,10 @@
             BoneGatorWalk = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWalk.png", 6, 12, 12);
             BoneGatorHurt = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHurt.png", 3, 12, 12);
             BoneGatorDead = sprite_add("sprites/enemies/BoneGator/sprBoneGatorDead.png", 6, 12, 12);
+            BoneGatorHeal = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHeal.png", 7, 8,	8);
+            BoneGatorWeap = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWeap.png", 1, 2,	3);
+            
+            FlameSpark = sprite_add("sprites/enemies/BoneGator/sprFlameSpark.png", 7, 1, 1);
 
              // Cat:
             CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
