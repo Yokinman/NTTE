@@ -293,7 +293,6 @@
 		"
 	);
     global.charm = ds_list_create();
-    global.charm_step = noone;
 
      // Water Level Sounds:
     global.waterSoundActive = false;
@@ -1173,6 +1172,7 @@
 
 #define step
     script_bind_end_step(end_step, 0);
+    script_bind_end_step(charm_step, 0);
 
     if(DebugLag) trace_time();
 
@@ -1533,12 +1533,6 @@
 		}
 	}
 
-     // Charm Step:
-    if(!instance_exists(global.charm_step)){
-        global.charm_step = script_bind_end_step(charm_step, 0);
-        with(global.charm_step) persistent = true;
-    }
-
 	 // Overstock / Bonus Ammo:
 	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
 		var c = weapon_get_cost(wep),
@@ -1757,22 +1751,21 @@
     		if("stock" in wep.base && "front" in wep.base){
     			var n = name;
 		    	name += `#@(${mod_script_call("mod", "teassets", "wep_merge_subtext", wep.base.stock, wep.base.front)})`;
-		    	array_push(global.wepMergeName, [id, name, n]);
+		    	array_push(global.wepMergeName, { inst:id, name:name, orig:n });
     		}
     	}
     }
-    with(global.wepMergeName){
-    	var _inst = self[0],
-    		_text = self[1],
-    		_orig = self[2];
-
-		with(instances_matching(PopupText, "text", _text + "!")){
-			text = _orig + "!";
-		}
-
-    	if(!instance_exists(_inst)){
-    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
-    	}
+    var _pop = instances_matching(PopupText, "mergewep_indicator", null);
+    if(array_length(_pop) > 0){
+	    with(global.wepMergeName){
+			with(instances_matching(_pop, "text", name + "!")){
+				text = other.orig + "!";
+			}
+	    	if(!instance_exists(inst)){
+	    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
+	    	}
+	    }
+    	with(_pop) mergewep_indicator = true;
     }
 
 	if(DebugLag) trace_time("ntte_end_step");
@@ -3168,40 +3161,48 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     alarm_set(a, -1);
                 }
             }
-            for(var i = 0; i <= 10; i++){
-                 // Custom Alarms:
-                if(alarm[i] > 0){
-                	var s = 1;
-                    
+            for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
+                if(alarm[_alarmNum] > 0){
+                	var _alarmSpeed = 1;
+
                      // Increased Aggro:
-            		if(i == 1){
+            		if(_alarmNum == 1){
             			 // Not Shooting:
-	            		if("ammo" not in _self || _self.ammo <= 0){
+	            		if(("ammo" not in _self || _self.ammo <= 0) && alarm[2] < 0){
 	            			 // Not Boss:
 	            			var _bossList = [BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss];
 	            			if(("boss" not in _self && array_find_index(_bossList, _self.object_index) < 0) || ("boss" in _self && !_self.boss)){
 	            				 // Not Shielding:
 	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
-	            					s *= 3;
+	            					_alarmSpeed *= 1 + (alarm[_alarmNum] / 10);
 	            				}
 	            			}
             			}
             		}
 
-					alarm[i] -= s * current_time_scale;
-                    if(alarm[i] <= 0){
-                        alarm[i] = -1;
+					alarm[_alarmNum] -= _alarmSpeed * current_time_scale;
+                    if(alarm[_alarmNum] <= 0){
+                        alarm[_alarmNum] = -1;
 
-                         // Target Nearest Enemy:
                         scrCharmTarget();
+
                         with(_self){
                             target = other.target;
-                            var t = target;
+
+                            var t = target,
+                        		_lastWalk = (("walk" in self) ? walk : null),
+                        		_lastRight = (("right" in self) ? right : null),
+                        		_lastGunangle = (("gunangle" in self) ? gunangle : null),
+                        		_lastSpeed = speed,
+                        		_lastDirection = direction,
+                        		_projectileMinID = instance_create(0, 0, GameObject);
+
+							instance_delete(_projectileMinID);
 
                              // Move Player for Enemy Targeting:
                             var _lastPos = [];
                             with(Player){
-                                array_push(_lastPos, [x, y]);
+                                array_push(_lastPos, [id, x, y]);
                                 if(instance_exists(t)){
                                     x = t.x;
                                     y = t.y;
@@ -3221,68 +3222,68 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             if(object_index != CustomEnemy){
                                 switch(object_index){
                                     case MaggotExplosion:   /// Charm Spawned Maggots
-                                        alarm_creator(Maggot, i);
+                                        alarm_creator(Maggot, _alarmNum);
                                         break;
 
                                     case RadMaggotExplosion:   /// Charm Spawned Maggots
-                                        alarm_creator(RadMaggot, i);
+                                        alarm_creator(RadMaggot, _alarmNum);
                                         break;
 
                                     case Necromancer:       /// Match ReviveArea to Necromancer
-                                        with(alarm_creator(ReviveArea, i)) alarm0++;
+                                        with(alarm_creator(ReviveArea, _alarmNum)) alarm0++;
                                         break;
 
                                     case Ratking:           /// Charm Spawned Rats
-                                        if(i == 2) alarm_creator(FastRat, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FastRat, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case ScrapBoss:         /// Charm Spawned Missiles
-                                        if(i == 0) alarm_creator(ScrapBossMissile, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 0) alarm_creator(ScrapBossMissile, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case FrogQueen:         /// Charm Spawned Eggs
-                                        if(i == 2) alarm_creator(FrogEgg, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FrogEgg, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case FrogEgg:           /// Charm Spawned Ballguys
-                                        if(i == 0) alarm_creator(Exploder, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 0) alarm_creator(Exploder, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case HyperCrystal:      /// Charm Spawned Crystals
-                                        if(i == 1) alarm_creator(LaserCrystal, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 1) alarm_creator(LaserCrystal, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     case TechnoMancer:      /// Charm Spawned Necromancers + Turrets
-                                        if(i == 2) with(alarm_creator(NecroReviveArea, i)) alarm0++;
+                                        if(_alarmNum == 2) with(alarm_creator(NecroReviveArea, _alarmNum)) alarm0++;
                                         else{
-                                            if(i == 6) alarm_creator(Turret, i);
-                                            else event_perform(ev_alarm, i);
+                                            if(_alarmNum == 6) alarm_creator(Turret, _alarmNum);
+                                            else event_perform(ev_alarm, _alarmNum);
                                         }
                                         break;
 
                                     case MeleeBandit:
                                     case JungleAssassin:
-                                        event_perform(ev_alarm, i);
+                                        event_perform(ev_alarm, _alarmNum);
                                         charm.walk = walk;
                                         walk = 0;
                                         break;
 
                                     case JungleFly:
-                                        if(i == 2) alarm_creator(FiredMaggot, i);
-                                        else event_perform(ev_alarm, i);
+                                        if(_alarmNum == 2) alarm_creator(FiredMaggot, _alarmNum);
+                                        else event_perform(ev_alarm, _alarmNum);
                                         break;
 
                                     default:
-                                        event_perform(ev_alarm, i);
+                                        event_perform(ev_alarm, _alarmNum);
                                 }
                             }
                             else{ // Custom Alarm Support
-                                var a = "on_alrm" + string(i);
+                                var a = "on_alrm" + string(_alarmNum);
                                 if(a in self){
                                     var _scrt = variable_instance_get(id, a);
                                     //script_ref_call(_scrt); DO THIS INSTEAD WHEN YAL FIXES IT !!!
@@ -3295,109 +3296,84 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                              // Reset Alarms:
                             for(var a = 0; a <= 10; a++){
                                 var _alrm = alarm_get(a);
-                                if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
+                                if(_alrm > 0) other.alarm[a] = _alrm;
                                 alarm_set(a, -1);
                             }
 
+		                     // Ally-ify Projectiles:
+		                    with(instances_matching_gt(instances_matching(projectile, "creator", id), "id", _projectileMinID)){
+		                    	switch(sprite_index){
+		                    		case sprEnemyBullet1:
+		                    			if(instance_is(self, EnemyBullet1)){
+			                    			instance_change(AllyBullet, false);
+		                    			}
+			                    		sprite_index = sprAllyBullet;
+		                    			break;
+
+									case sprEBullet3:
+		                    			if(instance_is(self, EnemyBullet3)){
+			                    			instance_change(Bullet2, false);
+											bonus = false;
+		                    			}
+			                    		sprite_index = spr.AllyBullet3;
+										break;
+
+		                    		case sprEnemyBullet4:
+		                    			if(instance_is(self, EnemyBullet4)){
+			                    			instance_change(AllyBullet, false);
+		                    			}
+			                    		sprite_index = spr.AllyBullet4;
+		                    			break;
+
+									case sprEnemyLaser:
+										if(instance_is(self, EnemyLaser)){
+		                    				instance_change(Laser, false);
+										}
+										sprite_index = sprLaser;
+										break;
+
+									case sprEFlak:
+										if(instance_is(self, EFlakBullet)){
+											var _inst = obj_create(x, y, "AllyFlakBullet");
+											with(variable_instance_get_names(id)){
+												if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "sprite_index"], self)){
+													variable_instance_set(_inst, self, variable_instance_get(other, self));
+												}
+											}
+											instance_delete(id);
+										}
+										break;
+		                    	}
+		                    }
+
+                    		 // :
+		                    if(_alarmNum == 1 && chance(_alarmSpeed - 1, _alarmSpeed)){
+	            				if(("ammo" not in self || ammo <= 0) && other.alarm[2] < 0){
+	            					if(array_length(instances_matching(projectile, "creator", id)) <= 0){
+				                    	if(_lastWalk != null) walk = _lastWalk;
+				                    	if(_lastRight != null) right = _lastRight;
+				                    	if(_lastGunangle != null) gunangle = _lastGunangle;
+				            			speed = _lastSpeed;
+				            			direction = _lastDirection;
+	            					}
+	            				}
+		                    }
+
                              // Return Players:
-                            var i = 0;
-                            with(Player){
-                                var p = _lastPos[i++];
-                                x = p[0];
-                                y = p[1];
+                            with(_lastPos){
+                            	with(self[0]){
+                            		x = other[1];
+                            		y = other[2];
+                            	}
                             }
                         }
+
+                		if(!instance_exists(_self)) break;
                     }
                 }
-                if(!instance_exists(_self)) break;
             }
 
             if(!instance_exists(_self)) scrCharm(_self, false);
-
-/*
-alarm[1] = 10 + random(5);
-
-if(!instance_exists(target)) target = -1;
-if(target = -1){
-	if(instance_exists(enemy)) target = instance_nearest(x, y, enemy);
-}
-
-if(target > 0){
-	//GOT A TARGET
-	if(collision_line(x, y, target.x, target.y, Wall, 0, 0) < 0 && point_distance(x, y, target.x, target.y) < 120){
-		if(random(5) < 4){
-			//FIRE
-			snd_play(sndEnemyFire)
-			
-			gunangle = point_direction(x,y,target.x,target.y)
-			wkick = 4
-			with instance_create(x,y,AllyBullet)
-			{
-				motion_add(other.gunangle+random(20)-10,4)
-				image_angle = direction
-				team = other.team
-			}
-			if instance_exists(Player)
-			{
-				if Player.skill_got[5] = 1
-				alarm[1] = 5
-				else
-				alarm[1] = 10
-			}
-		}
-		else
-		{
-			//DONT FIRE
-			direction = point_direction(x,y,target.x,target.y)+random(180)-90
-			speed = 0.5
-			
-			if instance_exists(Player) and random(4) < 3
-			{
-				motion_add(point_direction(x,y,mouse_x,mouse_y),0.8)
-				motion_add(point_direction(x,y,Player.x,Player.y),1)
-			}
-			
-			walk = 10+random(10)
-			gunangle = point_direction(x,y,target.x,target.y)
-		}
-		
-		if target.x < x
-		right = -1
-		else if target.x > x
-		right = 1
-	}
-	else if random(4) < 3
-	{
-		//CANT SEE TARGET
-		motion_add(random(360),0.4)
-		if instance_exists(Player)
-		{
-			motion_add(point_direction(x,y,mouse_x,mouse_y),0.8)
-			motion_add(point_direction(x,y,Player.x,Player.y),1)
-		}
-		walk = 10+random(10)
-		alarm[1] = walk+2
-		gunangle = direction
-		if hspeed > 0
-		right = 1
-		else if hspeed < 0
-		right = -1
-	}
-}
-else if random(10) < 1
-{
-	//GOT NO TARGET
-	motion_add(random(360),0.4)
-	walk = 20+random(10)
-	alarm[1] = walk+5
-	gunangle = direction
-	if hspeed > 0
-	right = 1
-	else if hspeed < 0
-	right = -1
-}
-*/
-
 
             else{
                 with(_self){
@@ -3445,7 +3421,7 @@ else if random(10) < 1
 		                                if(instance_exists(player_find(_index))){
 		                                	n = nearest_instance(x, y, instances_matching(Player, "index", _index));
 		                                }
-		
+
 		                                 // Stay in Range:
 		                                if(distance_to_object(n) > 32){
 		                                    motion_add(point_direction(x, y, n.x, n.y), 1);
@@ -3687,6 +3663,17 @@ else if random(10) < 1
                             }
                             break;
                     }
+
+                	 // FX:
+                	if(chance_ct(1, 200)){
+                		with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
+                			sprite_index = sprHealFX;
+                			motion_add(other.direction, 1);
+                			speed /= 2;
+                			image_xscale *= random_range(2/3, 1);
+                			image_yscale = image_xscale;
+                		}
+                	}
                 }
 
                  // Charm Timer:
@@ -3715,6 +3702,8 @@ else if random(10) < 1
 		with(surfCharm) active = true;
 	}
 	else with(surfCharm) active = false;
+
+	instance_destroy();
 
 #define charm_draw(_inst, _index)
 	if(_index < 0 || _index >= maxp){
@@ -4299,7 +4288,6 @@ else if random(10) < 1
 	return _race;
 
 #define cleanup
-    with(global.charm_step) instance_destroy();
     sprite_restore(sprClockParts);
 
      // Stop Area Music/Ambience:

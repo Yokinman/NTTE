@@ -29,6 +29,65 @@
 #macro surfPet global.surfPet
 
 
+#define AllyFlakBullet_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.AllyFlakBullet;
+		hitid = [sprite_index, "ALLY FLAK BULLET"];
+
+		 // Vars:
+		mask_index = mskFlakBullet;
+		friction = 0.3;
+		damage = 4;
+		force = 6;
+		ammo = 10;
+		typ = 1;
+
+		return id;
+	}
+
+#define AllyFlakBullet_step
+	 // Trail:
+	if(chance_ct(1, 3)){
+		with(instance_create(x, y, Smoke)){
+			motion_add(random(360), random(2));
+		}
+	}
+
+	 // Animate:
+	image_speed = speed / 12;
+
+	 // End:
+	if(speed <= 0 || place_meeting(x, y, Explosion)){
+		instance_destroy()
+	}
+
+#define AllyFlakBullet_destroy
+	repeat(ammo){
+		with(instance_create(x, y, Bullet2)){
+			sprite_index = spr.AllyBullet3;
+			motion_add(random(360), random_range(9, 12));
+			image_angle = direction;
+			bonus = false;
+			team = other.team;
+			hitid = other.hitid;
+			creator = other.creator;
+		}
+	}
+
+	 // Effects:
+	sound_play_pitch(sndFlakExplode, 1 + orandom(0.1));
+	view_shake_at(x, y, 8);
+	repeat(6){
+		with(instance_create(x, y, Smoke)){
+			motion_add(random(360), random(3));
+		}
+	}
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = sprFlakHit;
+	}
+
+
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -5208,6 +5267,11 @@
     /*with(instances_matching(CustomProjectile, "name", "BubbleBomb")){
         draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
     }*/
+
+	 // Charmed Gator Flak:
+    with(instances_matching(CustomProjectile, "name", "AllyFlakBullet")){
+        draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+    }
 
 	 // Crab Venom:
     with(instances_matching(CustomProjectile, "name", "VenomPellet")){
