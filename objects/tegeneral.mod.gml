@@ -1274,7 +1274,6 @@
 
 #define BubbleBomb_draw
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-    //draw_sprite_ext(asset_get_index(`sprPortalL${(x mod 5) + 1}`), image_index, x, y - z, image_xscale, image_yscale, image_angle / 3, image_blend, image_alpha);
 
 #define BubbleBomb_hit
     if(other.team != 0 && z < 24){
