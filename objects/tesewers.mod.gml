@@ -128,20 +128,71 @@
 		
 		 // Vars:
 		mask_index = mskMaggot;
-		maxhealth = 8;
+		maxhealth = 12;
 		raddrop = 2;
 		size = 1;
 		walk = 0;
+		z = 0;
+		maxz = 12;
+		zspeed = 0;
+		zfric = 0.4;
+		zbounce = 0;
+		kick_invul = (current_frame + 30);
 		walkspd = 1.2;
 		maxspeed = 3.4;
 		gunangle = random(360);
 		direction = gunangle;
 		alarm1 = 30;
+		ntte_walk = false;
 		
 		return id;
 	}
 	
 #define BabyGator_step
+	 // Kickable:
+	if(current_frame >= kick_invul && z <= 0 && place_meeting(x, y, Player)){
+		with(instances_meeting(x, y, instances_matching_ne(Player, "team", team))) if(place_meeting(x, y, other)){
+			projectile_hit(other, 3, speed, direction);
+			
+			 // Effects:
+			sound_play_hit_big(sndImpWristKill, 0.3);
+			
+			instance_create(x, y, ImpactWrists);
+			scrWaterStreak(x, y, direction, 4);
+			
+			view_shake_at(x, y, 20);
+			sleep(20);
+		}
+	} 
+	
+	 // Ya boy z axis:
+	if(z > 0 || zspeed > 0){
+		z_engine();
+		
+		if(z <= 0 && zbounce){
+			projectile_hit_raw(id, 1, true);
+			
+			 // Effects:
+			sound_play_hit(sndImpWristHit, 0.3);
+			instance_create(x, y, ThrowHit);
+			view_shake_at(x, y, 10);
+			
+			zspeed = (1.6 * zbounce);
+			zbounce = 0;
+		}
+	}
+	else if(z < 0) z = 0;
+	
+	 // Movin:
+	if(z > 0){
+		motion_add(direction, abs(zspeed));
+		speed = min(speed, maxspeed);
+		alarm1 += max(1, current_time_scale);
+	}
+	else{
+		enemyWalk(walk, maxspeed);
+	}
+
 	 // Bounce:
 	if(place_meeting(x + hspeed, y + vspeed, Wall)){
 		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
@@ -187,9 +238,21 @@
 	scrRight(gunangle);
 	
 #define BabyGator_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
+	var _angle = image_angle + ((right * (current_frame * current_time_scale) * 12) * (z > 0));
+    if(gunangle >  180) draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, _angle, image_blend, image_alpha);
+    draw_weapon(spr_weap, x, y - z, gunangle, 0, wkick, right, image_blend, image_alpha);
+    if(gunangle <= 180) draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, _angle, image_blend, image_alpha);
+
+#define BabyGator_hurt(_hitdmg, _hitvel, _hitdir)
+	 // Hurt:
+	enemyHurt(_hitdmg, _hitvel, _hitdir);
+	
+	 // Kick:
+	zspeed = 3;
+	zbounce = 1;
+	
+	 // Effects:
+	scrFX(x, (y - z), [_hitdir, 1], Smoke);
 
 #define Bat_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -4178,7 +4241,7 @@
     for(var d = 0; d < 360; d += (360 / 12)){
          // Venom Lines:
         if((d mod 90) == 0){
-            for(var i = 0; i <= 5; i++){
+            for(var i = 0; i <= 4; i++){
                 with(scrEnemyShoot("VenomPellet", direction + d + orandom(2 + i), 2 * i)){
                     move_contact_solid(direction, 4 + (4 * i));
 

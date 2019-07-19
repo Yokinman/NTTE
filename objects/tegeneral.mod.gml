@@ -847,9 +847,6 @@
 	if(projectile_canhit_melee(other)){
 		var _damage = damage + ((damage_falloff > current_frame) * 2);
 		projectile_hit(other, _damage, force, direction);
-		
-		 // Drop Bone Pickups:
-		if(other.my_health <= 0) scrBonePickupDrop(other);
 	}
 
 
@@ -928,31 +925,6 @@
 
 #define BonePickup_fade
 	instance_create(x, y, Dust);
-
-#define scrBonePickupDrop(_inst)
-	with(_inst) if(my_health <= 0){
-		var _raddrop = variable_instance_get(_inst, "raddrop", 0),
-			d = (size >= 2) ? 2.6 : 1.8,
-			n = max((maxhealth / d) - _raddrop, 0);
-			
-		if(n > 0){
-			 // Big Pickups:
-			var _numLarge = floor(n div 10);
-			if(_numLarge > 0) repeat(_numLarge){
-				with(obj_create(x, y, "BoneBigPickup")){
-					motion_set(random(360), 3 + random(1));
-				}
-			}
-
-			 // Small Pickups:
-			var _numSmall = ceil(n mod 10);
-			if(_numSmall > 0) repeat(_numSmall){
-				with(obj_create(x, y, "BonePickup")){
-					motion_set(random(360), 3 + random(1));
-				}
-			}
-		}
-	}
 	
 #define scrBoneDust(_x, _y)
 	var c = [
@@ -980,6 +952,7 @@
 		force = 8;
 		heavy = false;
 		wall = false;
+		rotspd = 0;
 
 		 // Events:
 		on_end_step = BoneSlash_setup;
@@ -1008,20 +981,20 @@
 		with(scrBoneDust(x + lengthdir_x(l, d), y + lengthdir_y(l, d))) motion_set(d - (random_range(90, 120) * c), 1 + random(2));
 	}
 	
+#define BoneSlash_step
+	 // Brotate:
+	image_angle += (rotspd * current_time_scale);
+	
 #define BoneSlash_hit
 	if(projectile_canhit_melee(other) && other.my_health > 0){
 		projectile_hit(other, damage, force, direction);
-		
-		 // Drop Pickups:
-		if(other.my_health <= 0) scrBonePickupDrop(other);
 	}
 	
 #define BoneSlash_wall
 	if(!wall){
 		wall = true;
-		speed = 0;
+		friction = 0.4;
 	}
-
 
 #define BubbleBomb_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -1041,16 +1014,7 @@
         typ = 1;
         big = 0;
         target = noone;
-
-        if(fork()){
-        	wait 0;
-        	if(instance_exists(self) && big){
-        		target = [];
-        		sprite_index = spr.BubbleBombBig;
-        		mask_index = mskExploder;
-        	}
-        	exit;
-        }
+        setup = false;
 
         return id;
     }
@@ -1116,8 +1080,45 @@
         	sprite_index = spr.BubbleCharge;
         }
     }
+    
+     // Effects:
+    /*if(chance_ct(2, (3 + speed))){
+    	var l = random_range(24, 32),
+    		d = random(360),
+    		_bubbles = instances_matching_ne(instances_matching(CustomProjectile, "name", name), "id", id),
+       		_canSpawn = true;
+    		
+    	with(_bubbles) if(_canSpawn && point_distance(x, y, other.x + lengthdir_x(l, d), other.y + lengthdir_y(l, d)) <= l){
+    		_canSpawn = false;
+    	}
+    		
+    	if(_canSpawn){
+	    	with(scrFX([x + lengthdir_x(l, d), 2], [(y - z) + lengthdir_y(l, d), 2], [d + 90, random(1)], BulletHit)){
+	    		sprite_index = sprBubble;
+	    		image_blend = c_black;
+	    		depth = -3;
+	    	}
+    	}
+    }*/
 
 #define BubbleBomb_end_step
+	 // Setup:
+	if(!setup){
+		setup = true;
+		
+		 // Become Big:
+		if(big){
+			sprite_index = spr.BubbleBombBig;
+			mask_index = mskExploder;
+			target = [];
+		}
+		
+		 // Become Enemy Bubble:
+		else if(team == 1){
+			sprite_index = spr.BubbleBombEnemy;
+		}
+	}
+
      // Hold Projectile:
     var _drag = 4 + (4 * array_length(target)),
     	n = 0;
@@ -5208,9 +5209,12 @@
 #define draw_bloom
 	if(DebugLag) trace_time();
 
-    /*with(instances_matching(CustomProjectile, "name", "BubbleBomb")){
-        draw_sprite_ext(sprite_index, image_index, x, y - z, 1.5 * image_xscale, 1.5 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-    }*/
+	// draw_set_alpha(0.1);
+ //   with(instances_matching(CustomProjectile, "name", "BubbleBomb")){
+ //       var r = ((image_index / 2) + (image_xscale + image_yscale));
+ //       draw_circle((x - 1), (y - 1) - z, r, false);
+ //   }
+ //   draw_set_alpha(1);
 
 	 // Crab Venom:
     with(instances_matching(CustomProjectile, "name", "VenomPellet")){

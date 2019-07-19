@@ -81,18 +81,20 @@
 		case 0:
 			var _skill = skill_get(mut_long_arms),
 				_heavy = (++w.combo % 3 == 0),
-				l = 8 + (16 * _skill),
+				_flip = sign(wepangle),
+				l = 12 + (8 * _skill),
 				d = gunangle + (accuracy * orandom(4));
 				
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
-				image_yscale = sign(other.wepangle);
+				image_yscale = _flip;
 				
 				creator = other;
 				team	= other.team;
 				heavy	= _heavy;
+				rotspd	= (-7 * _flip);
 				
 				direction	= d;
-				speed		= 2 + (3 * _skill);
+				speed		= 3 + (3.6 * _skill);
 				image_angle = direction;
 			}
 			

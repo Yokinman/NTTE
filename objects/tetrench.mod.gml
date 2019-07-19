@@ -563,7 +563,7 @@
         canmelee_last = canmelee;
 
          // Alarms:
-        alarm1 = 30;
+        alarm1 = 60 + random(90);
 
         return id;
     }
@@ -795,7 +795,6 @@
             }
             break;
     }
-
 
 #define EelSkull_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
@@ -2587,6 +2586,154 @@
     obj_create(x, y, "BubbleExplosion");
 
 
+#define WantEel_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		sprite = spr.WantEel;
+		
+		 // Vars:
+		xpos = x;
+		ypos = y;
+		x = 0;
+		y = 0;
+		mask_index = mskNone;
+		mask = mskRat;
+		maxhealth = 12;
+		active = false;
+		canfly = true;
+		walk = 0;
+		walkspd = 0.6;
+		maxspeed = 2.4;
+		pit_height = 0;
+		alarm1 = 30;
+		alarm2 = -1;
+		
+		return id;	
+	}
+	
+#define WantEel_step
+	if(active){
+		
+		 // Effects:
+		if(chance_ct(1, 30)) with(obj_create(xpos + orandom(6), ypos + orandom(6), "PitSpark")) tentacle_visible = false;
+		
+	     // Bounce:
+	    mask_index = mask;
+	    if(place_meeting(xpos + hspeed, ypos + vspeed, Wall)){
+	    	if(place_meeting(xpos + hspeed, ypos, Wall)) hspeed *= -1;
+	    	if(place_meeting(xpos, ypos + vspeed, Wall)) vspeed *= -1;
+	    	
+	    	scrRight(direction);
+	    }
+	    mask_index = mskNone;
+	    
+		 // Rise From Pits:
+		if(active){
+			pit_height += (0.02 * current_time_scale);
+			if(pit_height >= 1){
+				 // Become Eel:
+				with(obj_create(xpos, ypos, "Eel")){
+					
+					direction	= other.direction;
+					speed		= other.speed;
+					right		= other.right;
+					walk		= other.walk;
+					alarm1		= 30;
+				}
+				
+				 // Effects:
+				repeat(3 + irandom(4)) instance_create(xpos, ypos, Bubble);
+				repeat(1 + irandom(2)) instance_create(xpos, ypos, PortalL);
+				
+				instance_delete(id);
+			}
+		}
+	}
+	
+#define WantEel_end_step
+	xpos += hspeed;
+	ypos += vspeed;
+
+	if(active){
+		
+	     // Floor Collision:
+	    mask_index = mask;
+	    if(pit_get(xpos, ypos)){
+			var f = instances_meeting(xpos, ypos, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+			if(array_length(f) > 0){
+		        xpos -= hspeed;
+		        ypos -= vspeed;
+		
+		        if(array_length(instances_meeting(xpos + hspeed, ypos, f)) > 0) hspeed *= -1;
+		        if(array_length(instances_meeting(xpos, ypos + vspeed, f)) > 0) vspeed *= -1;
+		        speed *= 0.5;
+		
+		        xpos += hspeed;
+		        ypos += vspeed;
+		        
+		        scrRight(direction);
+			}
+	    }
+	    mask_index = mskNone;
+	}
+	
+#define WantEel_alrm1
+	alarm1 = 20 + random(20);
+	target = instance_nearest(xpos, ypos, Player);
+	
+	 // Activate:
+	if(!active){
+		var _numEels = array_length(instances_matching(CustomEnemy, "name", "Eel"));
+		if((chance(1, 3) || _numEels <= 1) && (_numEels + array_length(instances_matching(instances_matching(CustomEnemy, "name", name), "active", true))) <= (6 + (4 * GameCont.loops))){
+			if(instance_exists(target)){
+				var _tries = 10,
+					_floor = noone,
+					f = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
+					
+				while(_tries > 0 && !instance_exists(_floor)){
+					with(instance_random(f)) if(!place_meeting(x, y, FloorExplo) && !place_meeting(x, y, Wall) && in_distance(other.target, 160)){
+						_floor = id;
+					}
+					_tries--;
+				}
+				
+				 // Become Active:
+				if(instance_exists(_floor)){
+					xpos = _floor.x + 16;
+					ypos = _floor.y + 16;
+					active = true;
+					alarm2 = 30;
+				}
+			}
+		}
+		
+		else{
+			alarm1 = 30 + random(60);
+		}
+	}
+	
+	if(active){
+		if(in_sight(target)){
+			 // Move Around:
+			var _targetDir = point_direction(xpos, ypos, target.x, target.y);
+			scrWalk(20 + random(40), _targetDir + orandom(30));
+		}
+		
+		 // Wander:
+		else{
+			scrWalk(20 + random(40), random(360));
+		}
+		
+		scrRight(direction);
+	}
+	
+#define WantEel_alrm2
+	alarm2 = -1;
+	target = instance_nearest(xpos, ypos, Player);
+	
+	 // Watch Out:
+	if(in_distance(target, 96)) instance_create(xpos, ypos, AssassinNotice);
+	
 #define WantPitSquid_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
