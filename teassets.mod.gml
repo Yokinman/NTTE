@@ -406,6 +406,9 @@
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
                 }
             }
+            AllyBullet3		= sprite_add("sprites/races/Parrot/sprAllyBullet3.png",		2, 8, 8);
+            AllyBullet4		= sprite_add("sprites/races/Parrot/sprAllyBullet4.png",		2, 6, 8);
+            AllyFlakBullet	= sprite_add("sprites/races/Parrot/sprAllyFlakBullet.png",	2, 8, 8);
         //#endregion
 
         //#region PETS
