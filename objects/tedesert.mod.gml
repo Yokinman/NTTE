@@ -356,6 +356,7 @@
 			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), (_loop ? FiredMaggot : Maggot))){
 				x = xstart;
 				y = ystart;
+				creator = other;
 
 				 // Effects:
 				for(var i = 0; i <= (4 * _loop); i += 2){
@@ -410,10 +411,14 @@
 
 	 // Maggots:
 	repeat(2){
-		instance_create(x, y, MaggotExplosion);
+		with(instance_create(x, y, MaggotExplosion)){
+			creator = other;
+		}
 	}
 	repeat(irandom_range(2, 3)){
-		instance_create(x, y, BigMaggot);
+		with(instance_create(x, y, BigMaggot)){
+			creator = other;
+		}
 	}
 
 	 // Scrop:

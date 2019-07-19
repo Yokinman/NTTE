@@ -961,6 +961,7 @@
 
      // Pre-Intro Stuff:
     else{
+    	my_health = maxhealth;
         x = xstart;
         y = ystart;
 
