@@ -103,10 +103,11 @@
         NetNadeBlink = sprite_add("sprites/weps/projectiles/sprNetNadeBlink.png",	2, 3, 3);
 
          // Bubble Bombs:
-    	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",     30,  8,  8);
-    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",   9, 24, 24);
-    	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png",   12, 12, 12);
-    	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",     46, 16, 16);
+    	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",   	30, 12, 12);
+    	BubbleBombEnemy = sprite_add("sprites/enemies/projectiles/sprBubbleBombEnemy.png",	30, 12, 12);
+    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",	9,	24, 24);
+    	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png", 	12, 12, 12);
+    	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",   	46, 16, 16);
 
 		 // LoadoutCrown System:
     	CrownRandomLoadout	= sprite_add("sprites/crowns/Random/sprCrownRandomLoadout.png", 2, 16, 16);
@@ -476,25 +477,27 @@
 
              // Eel (0 = blue, 1 = purple, 2 = green):
             EelIdle = [
-                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",           8, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",         8, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",          8, 16, 16)];
+                sprite_add("sprites/enemies/Eel/sprEelIdleBlue.png",        	8,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelIdlePurple.png",      	8,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelIdleGreen.png",       	8,	16, 16)];
             EelHurt = [
-                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",           3, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",         3, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",          3, 16, 16)];
+                sprite_add("sprites/enemies/Eel/sprEelHurtBlue.png",        	3,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtPurple.png",      	3,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelHurtGreen.png",       	3,	16, 16)];
             EelDead = [
-                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",           9, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",         9, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",          9, 16, 16)];
+                sprite_add("sprites/enemies/Eel/sprEelDeadBlue.png",        	9,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadPurple.png",      	9,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelDeadGreen.png",       	9,	16, 16)];
             EelTell = [
-                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",           8, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",         8, 16, 16),
-                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",          8, 16, 16)];
+                sprite_add("sprites/enemies/Eel/sprEelTellBlue.png",        	8,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelTellPurple.png",      	8,	16, 16),
+                sprite_add("sprites/enemies/Eel/sprEelTellGreen.png",       	8,	16, 16)];
 
-            EeliteIdle = sprite_add("sprites/enemies/Eel/sprEelIdleElite.png", 8, 16, 16);
-            EeliteHurt = sprite_add("sprites/enemies/Eel/sprEelHurtElite.png", 3, 16, 16);
-            EeliteDead = sprite_add("sprites/enemies/Eel/sprEelDeadElite.png", 9, 16, 16);
+            EeliteIdle = sprite_add("sprites/enemies/Eel/sprEelIdleElite.png",	8,	16, 16);
+            EeliteHurt = sprite_add("sprites/enemies/Eel/sprEelHurtElite.png",	3,	16, 16);
+            EeliteDead = sprite_add("sprites/enemies/Eel/sprEelDeadElite.png",	9,	16, 16);
+            
+            WantEel = sprite_add("sprites/enemies/Eel/sprWantEel.png",			16, 16, 16);
 
              // Eel Skeleton (big fat eel edition):
             EelSkullIdle = sprite_add("sprites/areas/Trench/Props/sprEelSkeletonIdle.png", 1, 24, 24);

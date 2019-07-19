@@ -577,7 +577,17 @@
     
      // Spawn Pitsquid:
     if(GameCont.subarea == 3) obj_create(0, 0, "WantPitSquid");
-
+    
+     // Got too many eels, bro? No problem:
+	with(instances_matching(CustomEnemy, "name", "Eel")) if(array_length(instances_matching(CustomEnemy, "name", "Eel")) > (8 + (4 * GameCont.loops))){
+		obj_create(0, 0, "WantEel");
+		instance_delete(id);
+	}
+	
+	 // Eel Party Event:
+	if(GameCont.subarea != 3 && chance((1 + GameCont.loops), 25)){
+		repeat(20 + irandom(10)) obj_create(0, 0, "WantEel");
+	}
 
 /// Pit Code:
 #define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
@@ -792,6 +802,11 @@
 				 // Pit Walls:
 				with(surfPitWallBot) if(surface_exists(surf)){
 					draw_surface(surf, x - other.x, y - other.y);
+				}
+				
+				 // WantEel:
+				with(instances_matching(instances_matching(CustomEnemy, "name", "WantEel"), "active", true)){
+					draw_sprite_ext(sprite, (current_frame * current_time_scale * image_speed) % 16, (xpos - _surfx), (ypos - _surfy) + (12 * (1 - pit_height)), ((image_xscale * pit_height) * right), (image_yscale * pit_height), image_angle, image_blend, visible);
 				}
 
 				 // Make Proto Statues Cooler:
