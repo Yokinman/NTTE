@@ -1575,8 +1575,10 @@
 				var _enemyPool = [];
 					repeat(5) array_push(_enemyPool, "Gator");
 					repeat(3) array_push(_enemyPool, "Buff Gator");
-					repeat(2) array_push(_enemyPool, "Bone Gator");
 					repeat(2) array_push(_enemyPool, "Baby Gator");
+					
+				if(GameCont.hard > 2)
+					repeat(2) array_push(_enemyPool, "Bone Gator");
 				
 				if(GameCont.hard > 5)
 					repeat(1) array_push(_enemyPool, "Albino Gator");

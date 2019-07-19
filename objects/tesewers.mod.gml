@@ -29,6 +29,8 @@
 		spr_dead = spr.AlbinoGatorDead;
 		spr_weap = sprAutoCrossbow;
 		sprite_index = spr_idle;
+		spr_halo = sprHalo;
+		halo_index = 0;
 		hitid = [spr_idle, "ALBINO GATOR"];
 		spr_shadow = shd24;
 		depth = -2;
@@ -39,7 +41,7 @@
 		
 		 // Vars:
 		maxhealth = 45;
-		raddrop = 8;
+		raddrop = 7;
 		size = 4;
 		walk = 0;
 		walkspd = 1.2;
@@ -48,7 +50,16 @@
 		direction = gunangle;
 		ammo = 0;
 		wave = 0;
+		canspirit = true;
+		maxspirit = 15;
+		spirit_regen = 10;
+		spirit = maxspirit;
+		spirit_hurt = current_frame;
+		aim_factor = 0;
+		
+		 // Alarms:
 		alarm1 = 30;
+		alarm2 = spirit_regen;
 		
 		return id;
 	}
@@ -56,17 +67,54 @@
 #define AlbinoGator_step
 	wave += current_time_scale;
 	
+	 // Halo Animation:
+	var _haloNumber = sprite_get_number(spr_halo);
+	halo_index = ((halo_index + image_speed) % _haloNumber);
+	if(halo_index > (_haloNumber - 1) + image_speed){
+		if(spr_halo == sprStrongSpirit){
+			spr_halo = mskNone;
+		}
+		if(spr_halo == sprStrongSpiritRefill){
+			spr_halo = sprHalo;
+		}
+	}
+	
+	 // Aiming:
+	var _rate = (0.1 * current_time_scale);
+	if(ammo > 0){
+		if(aim_factor < 1){
+			aim_factor = min(aim_factor + _rate, 1);
+		}
+	}
+	else if(aim_factor > 0){
+		aim_factor = max(aim_factor - _rate, 0);
+	}
+	
 #define AlbinoGator_alrm1
-	alarm1 = 30 + random(30);
+	alarm1 = 20 + random(30);
 	target = instance_nearest(x, y, Player);
 	
 	 // Attack:
 	if(ammo > 0){
-		alarm1 = 4;
+		alarm1 = 1;
 		ammo--;
-		wkick = 8;
 		
-		scrFX(x, y, [gunangle + orandom(30), random(6)], Confetti);
+		var _boltSpeed = 16,
+			_targetDir = point_direction(x, y, target.x, target.y);
+		
+		var _angleDif = angle_difference(gunangle, _targetDir);
+		gunangle -= min(abs(_angleDif), (2.6 * aim_factor)) * sign(_angleDif);
+		scrRight(gunangle);
+		
+		if(ammo <= 0){
+			alarm1 = 30;
+			if(in_sight(target)){
+				scrEnemyShoot(Bolt, gunangle, _boltSpeed);
+				sound_play_hit(sndCrossbow, 0.2);
+				
+				wkick = 8;
+			}
+		}
 	}
 	
 	else{
@@ -74,15 +122,14 @@
 			gunangle = point_direction(x, y, target.x, target.y);
 			
 			 // Begin Attack:
-			if(in_distance(target, 130) && chance(3, 4)){
-				alarm1 = 20;
-				ammo = 5;
-				
-				instance_create(x, y, AssassinNotice);
+			if(in_distance(target, 200) && chance(2, 3)){
+				alarm1 = 1;
+				ammo = 30;
+				sound_play_hit(sndCrossReload, 0.2);
 			}
 			
-			 // Approach Target:
 			else{
+				 // Approach Target:
 				scrWalk(40 + random(20), gunangle + orandom(15));
 			}
 			
@@ -97,12 +144,81 @@
 		}
 	}
 	
+#define AlbinoGator_alrm2
+	alarm2 = spirit_regen;
+	
+	if(spirit < maxspirit){
+		spirit += 1;
+		if(spirit >= maxspirit && !canspirit){
+			canspirit = true;
+			
+			spr_halo = sprStrongSpiritRefill;
+			halo_index = 0;
+			
+			 // Sounds:
+			sound_play_hit(sndStrongSpiritGain, 0.2);
+		}
+	}
+
 #define AlbinoGator_draw
-    if(gunangle >  180) draw_self_enemy();
-    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-    if(gunangle <= 180) draw_self_enemy();
+	var h = (nexthurt > (current_frame + 3) && sprite_index != spr_hurt),
+		b = (gunangle > 180);
+		
+     // Laser Sight:
+    if(aim_factor > 0){
+	    draw_set_color(make_color_rgb(252, 56, 0));
+	    draw_lasersight(x, y, gunangle, 1000, aim_factor);
+	    draw_set_color(c_white);
+    }
+		
+	 // Body and Gun:
+	if(h)	d3d_set_fog(true, image_blend, 0, 0);
+    if(b)	draw_self_enemy();
     
-    draw_sprite(sprHalo, 0, x, (y - 3) + sin(wave * 0.1));
+    draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+    
+    if(!b)	draw_self_enemy();
+    if(h)	d3d_set_fog(false, c_white, 0, 0);
+    
+     // Halo:
+    draw_sprite(spr_halo, halo_index, x, (y - 3) + sin(wave * 0.1));
+    
+#define AlbinoGator_hurt(_hitdmg, _hitvel, _hitdir)
+	spirit = max(spirit - _hitdmg, 0);
+	nexthurt = (current_frame + 6);
+	
+	if(spirit_hurt <= current_frame){
+		if(canspirit){
+			if(spirit <= 0){
+				canspirit = false;
+				spirit_hurt = (current_frame + 6);
+				
+				spr_halo = sprStrongSpirit;
+				halo_index = 0;
+				
+				 // Effects:
+				sound_play_hit(sndStrongSpiritLost, 0.2);
+			}
+			else{
+				 // Effects:
+				sound_play_hit(sndSwapGold, 0.4);
+				sound_play_hit(sndCrystalJuggernaut, 0.2);
+				with(instance_create(x + (5 * right), y - 5, ThrowHit)){
+					image_blend = make_color_rgb(252, 56, 0);
+					depth = (other.depth - 1);
+				}
+			}
+		}
+		
+		 // Take Damage:
+		else{
+			my_health -= _hitdmg;
+			motion_add(_hitdir, _hitvel);
+			sound_play_hit(snd_hurt, 0.3);
+			sprite_index = spr_hurt;
+			image_index = 0;
+		}
+	}
     
 #define AlbinoGator_death
 	pickup_drop(80, 0);
@@ -253,6 +369,10 @@
 	
 	 // Effects:
 	scrFX(x, (y - z), [_hitdir, 1], Smoke);
+	
+#define BabyGator_death
+	sound_play_pitch(snd_hurt, 1.3 + random(0.3));
+	snd_hurt = -1;
 
 #define Bat_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){

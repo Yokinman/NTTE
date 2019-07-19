@@ -96,8 +96,12 @@
         }
 
          // Bro don't look here:
-        if(w.ammo >= 10){
+        if(w.ammo >= 10 && !unlock_get("boneScythe")){
             variable_instance_set(id, b + "wep", "scythe");
+            
+             // Unlock me bro:
+            unlock_set("boneScythe", true);
+            scrUnlock("BONE SCYTHE", "@yPRESS E@s TO CHANGE MODES", -1, -1);
             
              // Sounds:
             sound_play_pitchvol(sndCursedChest, 1.5 + random(0.5), 0.5);
@@ -144,6 +148,8 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
 #define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
