@@ -186,29 +186,31 @@
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
-    wait 0;
-
-     // Starter Pet + Extra Pet Slot:
-    if(instance_exists(self)){
-        with(Pet_spawn(x, y, "Parrot")) {
-            leader = other;
-            other.pet[0] = id;
-            visible = false;
-        }
-    }
-
-     // Wait Until Level is Generated:
     if(fork()){
+	    wait 0;
+
+	     // Starter Pet + Extra Pet Slot:
+	    if(instance_exists(self)){
+	        with(Pet_spawn(x, y, "Parrot")) {
+	            leader = other;
+	            other.pet[0] = id;
+	            visible = false;
+	        }
+	    }
+
+	     // Wait Until Level is Generated:
         while(instance_exists(self) && !visible) wait 0;
 
          // Starting Feather Ammo:
         if(instance_exists(self)){
-            repeat(12) with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-                target = other;
-                creator = other;
-                index = other.index;
-                bskin = other.bskin;
-                speed *= 3;
+            repeat(feather_num){
+            	with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+	                target = other;
+	                creator = other;
+	                index = other.index;
+	                bskin = other.bskin;
+	                speed *= 3;
+            	}
             }
         }
 
@@ -222,11 +224,10 @@
             _feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
             _featherNum = feather_num;
 
-         // Shooty Charm Feathers:
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
             with(instances_matching(_feathers, "canhold", false)){
-                 // Remove Charm Time:
+				 // Remove Charm Time:
                 if(target != creator){
                     if("charm" in target && (target.charm.time > 0 || creator != other)){
                     	with(target){
@@ -237,11 +238,6 @@
                     	}
                     }
                     target = creator;
-                }
-
-                 // Penalty:
-                if(stick_time < stick_time_max){
-                    stick_time -= min(30, stick_time);
                 }
 
                  // Unstick:
@@ -288,14 +284,16 @@
                     _y = mouse_y[index],
                     _targ = [],
                     _featherNum = array_length(_feathersTargeting);
-        
-                with(instances_matching_ne(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest]), "object_index", Van)){
+
+				 // Gather All Potential Targets:
+                with(instances_matching_lt(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
                     if(collision_circle(_x, _y, r, id, true, false)){
                         array_push(_targ, id);
                         if(array_length(_targ) >= _featherNum) break;
                     }
                 }
-    
+
+				 // Spread Feathers Out Evenly:
                 if(array_length(_targ) <= 0){
                     with(_feathersTargeting) target = other;
                 }

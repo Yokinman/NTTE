@@ -62,7 +62,7 @@
     }
 
 
-#define HammerHead_create(_x, _y)
+#define Hammerhead_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
 		spr_idle = spr.HammerheadIdle;
@@ -98,15 +98,10 @@
 		 // Alarms:
 		alarm1 = 40 + random(20);
 
-		 // NTTE:
-		ntte_anim = false;
-
 		return id;
 	}
 
 #define Hammerhead_step
-    if(sprite_index != spr_chrg) enemySprites();
-
      // Swim in a circle:
     if(rotate != 0){
         rotate -= clamp(rotate, -1, 1) * current_time_scale;

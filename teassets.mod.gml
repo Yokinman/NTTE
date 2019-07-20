@@ -105,7 +105,7 @@
          // Bubble Bombs:
     	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",   	30, 12, 12);
     	BubbleBombEnemy = sprite_add("sprites/enemies/projectiles/sprBubbleBombEnemy.png",	30, 12, 12);
-    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",	9,	24, 24);
+    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",	 9,	24, 24);
     	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png", 	12, 12, 12);
     	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",   	46, 16, 16);
 
@@ -121,7 +121,7 @@
         QuasarBeam      = sprite_add("sprites/weps/projectiles/sprQuasarBeam.png",      2,  0, 10);
         QuasarBeamStart = sprite_add("sprites/weps/projectiles/sprQuasarBeamStart.png", 2, 32, 16);
         QuasarBeamEnd   = sprite_add("sprites/weps/projectiles/sprQuasarBeamEnd.png",   2,  0, 16);
-        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   6,  24, 24);
+        QuasarBeamHit   = sprite_add("sprites/weps/projectiles/sprQuasarBeamHit.png",   6, 24, 24);
         QuasarBeamTrail = sprite_add("sprites/weps/projectiles/sprQuasarBeamTrail.png", 3,  4,  4);
         msk.QuasarBeam  = sprite_add("sprites/weps/projectiles/mskQuasarBeam.png",      1, 32, 16);
 
@@ -406,9 +406,10 @@
                     lq_set(other.Parrot[i], _name, sprite_add("sprites/races/Parrot/sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + ".png", _img, _x, _y));
                 }
             }
-            AllyBullet3		= sprite_add("sprites/races/Parrot/sprAllyBullet3.png",		2, 8, 8);
-            AllyBullet4		= sprite_add("sprites/races/Parrot/sprAllyBullet4.png",		2, 6, 8);
-            AllyFlakBullet	= sprite_add("sprites/races/Parrot/sprAllyFlakBullet.png",	2, 8, 8);
+            AllyBullet4			= sprite_add("sprites/races/Parrot/sprAllyBullet4.png",			2,  6,  8);
+            AllyFlakBullet		= sprite_add("sprites/races/Parrot/sprAllyFlakBullet.png",		2,  8,  8);
+            AllyReviveArea		= sprite_add("sprites/races/Parrot/sprAllyReviveArea.png",		4, 35, 45);
+            AllyNecroReviveArea	= sprite_add("sprites/races/Parrot/sprAllyNecroReviveArea.png",	4, 17, 20);
         //#endregion
 
         //#region PETS

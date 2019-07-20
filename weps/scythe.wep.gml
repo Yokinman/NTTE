@@ -54,7 +54,7 @@
 #define weapon_type return 0; // Melee
 #define weapon_melee return scrWepModeInfo(argument0, "is_melee");
 
-#define weapon_area return -1; // Doesn't Spawn Normally
+#define weapon_area return (unlock_get("boneScythe") ? 13 : -1); // Doesn't Spawn Normally
 #define weapon_swap return sndBloodGamble;
 #define weapon_sprt(w)
 	wepammo_draw(w);
@@ -188,3 +188,4 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
+#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);

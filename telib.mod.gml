@@ -617,14 +617,17 @@
 
 #define scrCharm(_instance, _charm)
     var c = {
-            "instance"  : _instance,
-            "charmed"   : false,
-            "target"    : noone,
-            "index"		: -1,
-            "alarm"     : [],
-            "team"      : -1,
-            "time"      : 0,
-            "walk"      : 0
+            "instance"	: _instance,
+            "charmed"	: false,
+            "target"	: noone,
+            "alarm"		: [],
+            "index"		: -1,		// Player who charmed
+            "team"		: -1,		// Original team before charming
+            "time"		: 0,		// Charm duration in frames
+            "time_speed": 1,		// Charm duration decrement speed
+            "walk"		: 0,		// For overwriting movement on certain dudes (Assassin, big dog)
+            "boss"		: false,	// Instance is a boss
+            "kill"		: false 	// Kill when uncharmed (For dudes who were spawned by charmed dudes)
         },
         _charmListRaw = mod_variable_get("mod", "ntte", "charm");
 
@@ -634,6 +637,7 @@
         if(!_charm != !charm.charmed){
              // Charm:
             if(_charm){
+            	 // Frienderize Team:
                 if("team" in self){
                     charm.team = team;
                     team = 2;
@@ -642,27 +646,58 @@
         			with(instances_matching(instances_matching(projectile, "creator", id), "team", charm.team)){
         				if(place_meeting(x, y, other)){
         					team = other.team;
+                			charm_allyize(true);
         				}
         			}
                 }
+
+                 // Setup Custom Alarms:
                 for(var i = 0; i <= 10; i++){
-                    charm.alarm[i] = alarm_get(i);
+                	var a = alarm_get(i);
+                	if(a == 0) a = 1;
+
+                    charm.alarm[i] = a;
                     alarm_set(i, -1);
                 }
+
+				 // Boss Check:
+				charm.boss = (("boss" in self && boss) || array_find_index([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) >= 0);
+
+				 // Charm Duration Speed:
+				charm.time_speed = (charm.boss ? 2 : 1);
+
+                 // Necromancer Charm:
+                switch(sprite_index){
+                	case sprReviveArea:
+                		sprite_index = spr.AllyReviveArea;
+                		break;
+
+					case sprNecroReviveArea:
+						sprite_index = spr.AllyNecroReviveArea;
+						break;
+                }
+
                 ds_list_add(_charmListRaw, charm);
             }
 
              // Uncharm:
             else{
+            	target = noone;
                 charm.time = 0;
                 charm.index = -1;
+
+                 // I-Frames:
                 if("nexthurt" in self){
                 	nexthurt = current_frame + 12;
                 }
+
+                 // Delay Contact Damage:
                 if("canmelee" in self && canmelee){
                     alarm11 = 30;
                     canmelee = false;
                 }
+
+				 // Reset Team:
                 if(charm.team != -1){
                 	if(fork()){
                 		while(instance_exists(self) && instance_is(self, becomenemy)) wait 0;
@@ -671,6 +706,7 @@
                 			with(instances_matching(instances_matching(projectile, "creator", id), "team", team)){
                 				if(place_meeting(x, y, other)){
                 					team = other.charm.team;
+                					charm_allyize(false);
                 				}
                 			}
 
@@ -680,12 +716,26 @@
                 		exit;
                 	}
                 }
-                for(var i = 0; i <= 10; i++) alarm_set(i, charm.alarm[i]);
+
+                 // Reset Alarms:
+                for(var i = 0; i <= 10; i++){
+                	var a = floor(charm.alarm[i]);
+                	if(a == 0) a = 1;
+
+                	alarm_set(i, a);
+                	charm.alarm[i] = -1;
+                }
+                
+                 // Kill:
+                if(charm.kill){
+                	my_health = 0;
+                	sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
+                }
 
                  // Effects:
-                instance_create(x, bbox_top, AssassinNotice);
+                else instance_create(x, bbox_top, AssassinNotice);
                 sound_play_pitchvol(sndAssassinGetUp, random_range(1.2, 1.5), 0.5);
-                for(var a = direction; a < direction + 360; a += (360 / 10)){
+                for(var a = direction; a < direction + 360; a += (360 / (max(size, 0.5) * 10))){
                     with(instance_create(x, y, Dust)) motion_add(a, 3);
                 }
             }
@@ -703,6 +753,111 @@
         }
     }
     return c;
+
+#define charm_allyize(_bool)
+	if(_bool){
+		switch(sprite_index){
+			case sprEnemyBullet1:
+				if(instance_is(self, EnemyBullet1)){
+	    			instance_change(AllyBullet, false);
+				}
+	    		sprite_index = sprAllyBullet;
+				break;
+	
+			case sprEBullet3:
+				if(instance_is(self, EnemyBullet3)){
+	    			instance_change(Bullet2, false);
+	    			bonus = false;
+				}
+	    		sprite_index = sprBullet2;
+				break;
+	
+			case sprEnemyBullet4:
+				if(instance_is(self, EnemyBullet4)){
+	    			instance_change(AllyBullet, false);
+				}
+	    		sprite_index = spr.AllyBullet4;
+				break;
+	
+			case sprLHBouncer:
+				if(instance_is(self, LHBouncer)){
+	    			instance_change(BouncerBullet, false);
+				}
+	    		sprite_index = sprBouncerBullet;
+				break;
+	
+			case sprEFlak:
+				if(instance_is(self, EFlakBullet)){
+					var _inst = obj_create(x, y, "AllyFlakBullet");
+					with(variable_instance_get_names(id)){
+						if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "sprite_index"], self)){
+							variable_instance_set(_inst, self, variable_instance_get(other, self));
+						}
+					}
+					instance_delete(id);
+				}
+				break;
+	
+			case sprEnemyLaser:
+				if(!instance_is(self, EnemyLaser)){
+					sprite_index = sprLaser;
+				}
+				break;
+	
+			case sprEnemyLightning:
+				sprite_index = sprLightning;
+				break;
+		}
+	}
+	else{
+		switch(sprite_index){
+			case sprAllyBullet:
+				if(instance_is(self, AllyBullet)){
+	    			instance_change(EnemyBullet1, false);
+				}
+	    		sprite_index = sprEnemyBullet1;
+				break;
+	
+			case sprBullet2:
+				if(instance_is(self, Bullet2)){
+	    			instance_change(EnemyBullet3, false);
+	    			bonus = false;
+				}
+	    		sprite_index = sprEBullet3;
+				break;
+	
+			case sprBouncerBullet:
+				if(instance_is(self, BouncerBullet)){
+	    			instance_change(LHBouncer, false);
+				}
+	    		sprite_index = sprLHBouncer;
+				break;
+	
+			case sprLaser:
+				if(!instance_is(self, EnemyLaser)){
+					sprite_index = sprEnemyLaser;
+				}
+				break;
+	
+			case sprLightning:
+				sprite_index = sprEnemyLightning;
+				break;
+
+			default:
+				if(sprite_index == spr.AllyBullet4){
+					if(instance_is(self, AllyBullet)){
+		    			instance_change(EnemyBullet4, false);
+					}
+		    		sprite_index = sprEnemyBullet4;
+				}
+
+				else if(sprite_index == spr.AllyFlakBullet){
+					if(instance_is(self, CustomProjectile) && "name" in self && name == "AllyFlakBullet"){
+						sprite_index = sprEFlak;
+					}
+				}
+		}
+	}
 
 #define scrBossHP(_hp)
     var n = 0;

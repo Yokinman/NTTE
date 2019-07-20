@@ -33,7 +33,7 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.AllyFlakBullet;
-		hitid = [sprite_index, "ALLY FLAK BULLET"];
+		hitid = [sprite_index, "ALLY FLAK"];
 
 		 // Vars:
 		mask_index = mskFlakBullet;
@@ -64,11 +64,14 @@
 
 #define AllyFlakBullet_destroy
 	repeat(ammo){
-		with(instance_create(x, y, Bullet2)){
+		with(instance_create(x, y, EnemyBullet3)){
+			instance_change(Bullet2, false);
 			sprite_index = spr.AllyBullet3;
+			bonus = false;
+
 			motion_add(random(360), random_range(9, 12));
 			image_angle = direction;
-			bonus = false;
+
 			team = other.team;
 			hitid = other.hitid;
 			creator = other.creator;
@@ -84,7 +87,8 @@
 		}
 	}
 	with(instance_create(x, y, BulletHit)){
-		sprite_index = sprFlakHit;
+		if(other.sprite_index == sprEFlak) sprite_index = sprEFlakHit;
+		else sprite_index = sprFlakHit;
 	}
 
 
@@ -1270,7 +1274,6 @@
 
 #define BubbleBomb_draw
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-    //draw_sprite_ext(asset_get_index(`sprPortalL${(x mod 5) + 1}`), image_index, x, y - z, image_xscale, image_yscale, image_angle / 3, image_blend, image_alpha);
 
 #define BubbleBomb_hit
     if(other.team != 0 && z < 24){
@@ -2421,36 +2424,49 @@
 		mask_index = mskNone;
 		hits = 3;
 		damage = 12;
-		force = 24;
+		force = 12;
 		
 		return id;
 	}
 	
 #define HyperBubble_end_step
 	mask_index = mskBullet1;
+
 	var _dist = 100,
-		_proj = [];
+		_proj = [],
+		_dis = 8,
+		_dir = direction,
+		_mx = lengthdir_x(_dis, _dir),
+		_my = lengthdir_y(_dis, _dir);
 		
 	 // Muzzle Explosion:
 	array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
-		
-	while(!place_meeting(x, y, Wall) && _dist > 0 && hits > 0){
-		_dist--;
-		x += lengthdir_x(8, direction);
-		y += lengthdir_y(8, direction);
+
+	 // Hitscan:
+	while(_dist-- > 0 && hits > 0 && !place_meeting(x, y, Wall)){
+		x += _mx;
+		y += _my;
 		
 		 // Effects:
-		if(chance(1, 3)) scrFX([x, 4], [y, 4], [direction + orandom(4), 6 + random(4)], Bubble).friction = 0.2;
-		if(chance(2, 3)) scrFX([x, 2], [y, 2], [direction + orandom(4), 2 + random(2)], Smoke);
+		if(chance(1, 3)) scrFX([x, 4], [y, 4], [_dir + orandom(4), 6 + random(4)], Bubble).friction = 0.2;
+		if(chance(2, 3)) scrFX([x, 2], [y, 2], [_dir + orandom(4), 2 + random(2)], Smoke);
 		
 		 // Explosion:
-		var e = instances_meeting(x, y, instances_matching_gt(instances_matching_ne([Player, hitme], "team", team), "my_health", 0));
-		if(array_length(e) > 0 && hits > 0){
-			hits--;
-			array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
-			
-			 // Deal Impact Damage:
-			for(var i = 0; i < array_length(e); i++) projectile_hit(e[i], damage, force, direction);
+		var e = instances_meeting(x, y, instances_matching_gt(instances_matching_ne(hitme, "team", team), "my_health", 0));
+		if(array_length(e) > 0){
+			var _hit = false;
+			with(e) if(place_meeting(x, y, other)){
+				if(!_hit){
+					_hit = true;
+					with(other){
+						hits--;
+						array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+					}
+				}
+
+				 // Impact Damage:
+				projectile_hit(id, other.damage, other.force, _dir);
+			}
 		}
 	}
 	
@@ -2466,7 +2482,8 @@
 	
 	 // Goodbye:
 	instance_destroy();
-	
+
+
 #define LightningDisc_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -3168,6 +3185,7 @@
 			                with(obj_create(other.x, other.y, "ParrotFeather")){
 			                    target = other;
 			                    creator = other;
+			                    index = other.index;
 			                    bskin = other.bskin;
 			                    stick_wait = 3;
 			                }
@@ -3191,8 +3209,8 @@
 #define ParrotFeather_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        sprite_index = sprChickenFeather;
         sprite_index = mskNone;
+        image_blend_fade = c_gray;
         depth = -8;
 
          // Vars:
@@ -3208,7 +3226,8 @@
         stick_time = stick_time_max;
         stick_list = [];
         stick_wait = 0;
-        canhold = true;
+        canhold = false;
+        move_factor = 0;
 
          // Push:
         motion_add(random(360), 4 + random(2));
@@ -3227,50 +3246,35 @@
     }
 
 #define ParrotFeather_step
-    speed *= 0.9;
-    if(instance_exists(target)){
-         // On Target:
+    speed -= speed_raw * 0.1;
+
+     // Timer:
+    if(stick_time > 0){
+    	 // Generate Queue:
         if(stick){
-             // Fall Off:
-            if(stick_time <= 0 || !target.charm.charmed){
-                target = noone;
-                stick_time = 0;
-                if(chance(1, 4)){
-                    sound_play_pitch(sndAssassinPretend, 1.70 + orandom(0.04));
-                }
-            }
-
-             // Decrement Timer When First in Queue:
-            else{
-                if(array_length(stick_list) <= 0){
-                    var n = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "stick", true);
-                    with(n) stick_list = n;
-                }
-                if(stick_list[0] == id){
-                    stick_time -= current_time_scale;
-                }
-            }
+        	if(array_length(stick_list) <= 0){
+	            var n = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
+	            with(n) stick_list = n;
+        	}
         }
+        else stick_list = [];
 
-         // Flyin Around:
-        else{
-             // Remove From Stick List:
-            if(array_length(stick_list) > 0){
-                with(stick_list) if(instance_exists(self)){
-                    stick_list = array_delete_value(stick_list, other);
-                }
-            }
+         // Decrement When First in Queue:
+        if(
+        	(stick && array_find_index(stick_list, id) == 0)
+        	||
+        	(!stick && stick_time < stick_time_max)
+        ){
+            stick_time -= lq_defget(variable_instance_get(target, "charm", 0), "time_speed", 1) * current_time_scale;
+        }
+    }
 
-             // Move w/ Target:
-            /*if(target != creator){
-	            var d = (distance_to_object(target) / 50) + 1;
-	            x += target.hspeed / d;
-	            y += target.vspeed / d;
-            }*/
-        	if("move_factor" not in self) move_factor = 0;
+    if(stick_time > 0 && instance_exists(target) && (!stick || ("charm" in target && lq_defget(target.charm, "charmed", true)))){
+        if(!stick){
+        	stick_list = [];
 
+             // Reach Target Faster:
             if(
-            	instance_exists(target)			&&
             	distance_to_object(target) > 48 &&
             	abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
             ){
@@ -3279,13 +3283,11 @@
             else{
             	move_factor -= move_factor * 0.8 * current_time_scale;
             }
+			move_factor = max(0, move_factor);
+        	x += hspeed_raw * move_factor;
+        	y += vspeed_raw * move_factor;
 
-            if(move_factor > 0){
-            	x += hspeed * move_factor * current_time_scale;
-            	y += vspeed * move_factor * current_time_scale;
-            }
-            else move_factor = 0;
-
+			 // Reaching Target:
             if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
                 canhold = false;
 
@@ -3293,44 +3295,42 @@
                 motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
 
                 if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
-                	//if(stick_wait == 0){
-	                     // Effects:
-	                    with(instance_create(x, y, Dust)) depth = other.depth - 1;
-	                    sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
-	                    sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
-	                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
-	
-	                     // Stick to & Charm Enemy:
-	                    if(target != creator){
-	                        stick = true;
-	                        stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
-	                        sticky = random(y - target.y);
-	                        image_angle = random(360);
-	                        speed = 0;
-	
-	                         // Charm Enemy:
-	                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
-	                        with(scrCharm(target, true)){
-	                            index = other.index;
-	                            if(_wasUncharmed || time >= 0){
-	                                time += max(other.stick_time, 1);
-	                            }
-	                        }
-	                    }
-	
-	                     // Player Pickup:
-	                    else{
-	                        with(creator){
-	                        	if("feather_ammo" not in self){
-	                        		feather_ammo = 0;
-	                        		feather_ammo_max = 60;
-	                        	}
-	                        	feather_ammo = min(feather_ammo + 1, feather_ammo_max);
-	                        }
-	                        //with(instance_create(creator.x, creator.y, PopupText)) mytext = "+@rFEATHER@w";
-	                        instance_destroy();
-	                    }
-                	//}
+                     // Effects:
+                    with(instance_create(x, y, Dust)) depth = other.depth - 1;
+                    sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
+                    sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
+                    sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
+
+                     // Stick to & Charm Enemy:
+                    if(target != creator){
+                        stick = true;
+                        stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
+                        sticky = random(y - target.y);
+                        image_angle = random(360);
+                        speed = 0;
+
+                         // Charm Enemy:
+                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
+                        with(scrCharm(target, true)){
+                            index = other.index;
+                            if(_wasUncharmed || time >= 0){
+                                time += max(other.stick_time, 1);
+                            }
+                        }
+                    }
+
+                     // Player Pickup:
+                    else{
+                        with(creator){
+                        	if("feather_ammo" not in self){
+                        		feather_ammo = 0;
+                        		feather_ammo_max = 60;
+                        	}
+                        	feather_ammo = min(feather_ammo + 1, feather_ammo_max);
+                        }
+                        instance_delete(id);
+                        exit;
+                    }
                 }
             }
 
@@ -3347,38 +3347,25 @@
                 motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
             }
 
-            if(instance_exists(self)){
-            	if(stick_wait > 0){
-            		stick_wait -= current_time_scale;
-            		if(stick_wait <= 0) stick_wait = 0;
-            	}
+			 // Stick Delay:
+        	if(stick_wait > 0){
+        		stick_wait -= current_time_scale;
+        		if(stick_wait <= 0) stick_wait = 0;
+        	}
 
-            	 // Facing:
-                image_angle = direction + 135;
-            }
+        	 // Facing:
+            image_angle = direction + 135;
         }
     }
 
     else{
-        /*if(stick_time > 0 && instance_exists(creator)){
-            target = creator;
-        }*/
-        if(!stick && instance_exists(creator)){
+         // Travel to Creator:
+        if(!stick && stick_time > 0 && instance_exists(creator)){
             target = creator;
         }
 
-         // Fall to Ground:
-        else{
-            with(instance_create(x, y, Feather)){
-                sprite_index = other.sprite_index;
-                image_angle = other.image_angle;
-                image_blend = merge_color(other.image_blend, c_black, 0.5);
-                if(button_check(other.index, "spec")){
-                	motion_add(other.direction, 3);
-                }
-            }
-            instance_destroy();
-        }
+         // End:
+        else instance_destroy();
     }
 
 #define ParrotFeather_end_step
@@ -3405,6 +3392,31 @@
     else{
         visible = true;
         depth = -8;
+    }
+
+#define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
+	var _col = image_blend;
+	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
+	draw_self();
+	image_blend = _col;
+
+#define ParrotFeather_destroy
+	 // Fall to Ground:
+    with(instance_create(x, y, Feather)){
+        sprite_index = other.sprite_index;
+        image_angle = other.image_angle;
+        image_blend = other.image_blend_fade;
+        depth = ((!position_meeting(x, y, Floor) && !in_sight(other.creator)) ? -7 : 0);
+    }
+
+	 // Sound:
+    sound_play_pitchvol(sndMoneyPileBreak, 1.5 + random(1.5), random(0.4));
+    if("charm" in target){
+    	sound_play_pitchvol(
+    		sndAssassinPretend,
+    		1.5 + random(1.5),
+    		(stick_time_max / max(stick_time_max, lq_defget(target.charm, "time", 0)))
+    	);
     }
 
 #define ParrotFeather_cleanup
