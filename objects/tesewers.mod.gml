@@ -113,7 +113,7 @@
 		if(ammo <= 0){
 			alarm1 = 30;
 			if(in_sight(target)){
-				scrEnemyShoot("AlbinoBolt", gunangle, 16);
+				scrEnemyShoot(Bolt, gunangle, 16);
 				
 				sound_play_hit(sndCrossbow, 0.2);
 				motion_set(gunangle + 180, 3);
