@@ -92,7 +92,7 @@
 
 
 #define init
-	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime"];
+	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime", "boneScythe"];
 	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
 	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
 	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
@@ -1557,120 +1557,122 @@
 	}
 	
 	 // Crown of Crime:
-	with(instances_matching(Crown, "ntte_crown", "crime")){
-		 // Watch where you're going bro:
-		if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
-		
-		 // Spawn Enemies:
-		if(enemies > 0){
-			enemy_time -= current_time_scale;
-			scrPortalPoof();
+	if(!(GameCont.area == 7 && GameCont.area == 3)){
+		with(instances_matching(Crown, "ntte_crown", "crime")){
+			 // Watch where you're going bro:
+			if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
 			
-			if(enemy_time <= 0){
-				var f = instance_furthest(x, y, Floor),
-					l = irandom_range(360, 420),
-					d = point_direction(f.x, f.y, x, y);
-					
-				 // Weighted Pool:
-				var _enemyPool = [];
-					repeat(5) array_push(_enemyPool, "Gator");
-					repeat(3) array_push(_enemyPool, "Buff Gator");
-					repeat(2) array_push(_enemyPool, "Baby Gator");
-					
-				if(GameCont.hard > 2)
-					repeat(2) array_push(_enemyPool, "Bone Gator");
+			 // Spawn Enemies:
+			if(enemies > 0){
+				enemy_time -= current_time_scale;
+				scrPortalPoof();
 				
-				if(GameCont.hard > 5)
-					repeat(1) array_push(_enemyPool, "Albino Gator");
-				
-				while(enemies > 0){
-					enemies -= 1;
-					with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy")){
-						 // Determine Enemy Type:
-						switch(_enemyPool[irandom(array_length(_enemyPool) - 1)]){
-							case "Gator":
-								obj_name = Gator;
-								with(obj_info){
-									spr_idle = sprGatorIdle;
-									spr_walk = sprGatorWalk;
-									spr_weap = sprGatorShotgun;
-								}
-								break;
-								
-							case "Buff Gator":
-								obj_name = BuffGator;
-								with(obj_info){
-									spr_idle = sprBuffGatorIdle;
-									spr_walk = sprBuffGatorWalk;
-									spr_weap = sprBuffGatorFlakCannon;
-								}
-								break;
-							
-							case "Bone Gator":
-								obj_name = "BoneGator";
-								with(obj_info){
-									spr_idle = spr.BoneGatorIdle;
-									spr_walk = spr.BoneGatorWalk;
-									spr_weap = spr.BoneGatorWeap;
-								}
-								break;
-								
-							case "Baby Gator":
-								obj_name = "BabyGator";
-								with(obj_info){
-									spr_idle = spr.BabyGatorIdle;
-									spr_walk = spr.BabyGatorWalk;
-									spr_weap = sprRevolver;
-									spr_shadow = shd16;
-									spr_shadow_y = 0;
-								}
-								
-								 // Babies Stick Together:
-								var n = 2 + irandom(1 + GameCont.loops);
-								repeat(n) instance_copy(false);
-								break;
-								
-							case "Albino Gator":
-								obj_name = "AlbinoGator";
-								with(obj_info){
-									spr_idle = spr.AlbinoGatorIdle;
-									spr_walk = spr.AlbinoGatorWalk;
-									spr_weap = sprBazooka;
-								}
-								break;
-								
-							 //#region I Dunno:
-								
-							case "Rat Horde": // maybe?
-								obj_name = FastRat;
-								with(obj_info){
-									spr_idle = sprFastRatIdle;
-									spr_walk = sprFastRatWalk;
-								}
-								
-								 // The Horde:
-								var n = 3 + irandom(3 + GameCont.loops);
-								repeat(n) instance_copy(false);
-								
-								 // Large and in Charge:
-								with(obj_create(x, y, "TopEnemy")){
-									obj_name = Ratking;
+				if(enemy_time <= 0){
+					var f = instance_furthest(x, y, Floor),
+						l = irandom_range(360, 420),
+						d = point_direction(f.x, f.y, x, y);
+						
+					 // Weighted Pool:
+					var _enemyPool = [];
+						repeat(5) array_push(_enemyPool, "Gator");
+						repeat(3) array_push(_enemyPool, "Buff Gator");
+						repeat(2) array_push(_enemyPool, "Baby Gator");
+						
+					if(GameCont.hard > 2)
+						repeat(2) array_push(_enemyPool, "Bone Gator");
+					
+					if(GameCont.hard > 5)
+						repeat(1) array_push(_enemyPool, "Albino Gator");
+					
+					while(enemies > 0){
+						enemies -= 1;
+						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy")){
+							 // Determine Enemy Type:
+							switch(_enemyPool[irandom(array_length(_enemyPool) - 1)]){
+								case "Gator":
+									obj_name = Gator;
 									with(obj_info){
-										spr_idle = sprRatkingRageWait;
-										spr_walk = sprRatkingRageAttack;
-										spr_shadow = shd48;
+										spr_idle = sprGatorIdle;
+										spr_walk = sprGatorWalk;
+										spr_weap = sprGatorShotgun;
 									}
-								}
-								break;
+									break;
+									
+								case "Buff Gator":
+									obj_name = BuffGator;
+									with(obj_info){
+										spr_idle = sprBuffGatorIdle;
+										spr_walk = sprBuffGatorWalk;
+										spr_weap = sprBuffGatorFlakCannon;
+									}
+									break;
 								
-							 //#endregion
+								case "Bone Gator":
+									obj_name = "BoneGator";
+									with(obj_info){
+										spr_idle = spr.BoneGatorIdle;
+										spr_walk = spr.BoneGatorWalk;
+										spr_weap = spr.BoneGatorWeap;
+									}
+									break;
+									
+								case "Baby Gator":
+									obj_name = "BabyGator";
+									with(obj_info){
+										spr_idle = spr.BabyGatorIdle;
+										spr_walk = spr.BabyGatorWalk;
+										spr_weap = sprRevolver;
+										spr_shadow = shd16;
+										spr_shadow_y = 0;
+									}
+									
+									 // Babies Stick Together:
+									var n = 2 + irandom(1 + GameCont.loops);
+									repeat(n) instance_copy(false);
+									break;
+									
+								case "Albino Gator":
+									obj_name = "AlbinoGator";
+									with(obj_info){
+										spr_idle = spr.AlbinoGatorIdle;
+										spr_walk = spr.AlbinoGatorWalk;
+										spr_weap = sprAutoCrossbow;
+									}
+									break;
+									
+								 //#region I Dunno:
+									
+								case "Rat Horde": // maybe?
+									obj_name = FastRat;
+									with(obj_info){
+										spr_idle = sprFastRatIdle;
+										spr_walk = sprFastRatWalk;
+									}
+									
+									 // The Horde:
+									var n = 3 + irandom(3 + GameCont.loops);
+									repeat(n) instance_copy(false);
+									
+									 // Large and in Charge:
+									with(obj_create(x, y, "TopEnemy")){
+										obj_name = Ratking;
+										with(obj_info){
+											spr_idle = sprRatkingRageWait;
+											spr_walk = sprRatkingRageAttack;
+											spr_shadow = shd48;
+										}
+									}
+									break;
+									
+								 //#endregion
+							}
 						}
 					}
+					
+					 // Effects:
+					with(instance_create(x + lengthdir_x(12, d), y + lengthdir_y(12, d), AssassinNotice)) motion_set(d, 1);
+					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
 				}
-				
-				 // Effects:
-				with(instance_create(x + lengthdir_x(12, d), y + lengthdir_y(12, d), AssassinNotice)) motion_set(d, 1);
-				sound_play_pitch(sndIDPDNadeAlmost, 0.8);
 			}
 		}
 	}
@@ -1869,6 +1871,26 @@
 	    	}
 	    }
     	with(_pop) mergewep_indicator = true;
+    }
+    
+     // No Cheaters (bro just play the mod):
+    with(["wep", "bwep"]){
+    	var o = self;
+    	
+    	with(Player){
+    		var w = wep_get(variable_instance_get(id, o));
+    		
+    		if(is_string(w) && mod_exists("weapon", w) && mod_script_exists("weapon", w, "weapon_unlocked") && !mod_script_call("weapon", w, "weapon_unlocked")){
+    			
+    			variable_instance_set(id, o, wep_none);
+    			if(o == "wep" && bwep != wep_none) scrSwap();
+    			
+    			 // Effects:
+    			sound_play(sndCrownRandom);
+    			view_shake_at(x, y, 20);
+    			instance_create(x, y, GunWarrantEmpty);
+    		}
+    	}
     }
 
 	if(DebugLag) trace_time("ntte_end_step");

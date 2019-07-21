@@ -867,8 +867,8 @@
 	
 #define BoneArrow_end_step
 	 // Trail:
-	var l = point_distance(x + hspeed, y + vspeed, xprevious, yprevious) / 2,
-		d = point_direction(x + hspeed, y + vspeed, xprevious, yprevious);
+	var l = point_distance(x, y, xprevious, yprevious),
+		d = point_direction(x, y, xprevious, yprevious);
 		
 	with(instance_create(x, y, BoltTrail)){
 		image_xscale = l;

@@ -50,11 +50,12 @@
 		direction = gunangle;
 		ammo = 0;
 		wave = 0;
-		canspirit = true;
-		maxspirit = 15;
-		spirit_regen = 10;
-		spirit = maxspirit;
-		spirit_hurt = current_frame;
+		canspirit = true;														// canspirit:		Has spirit or not
+		maxspirit = 15; 														// maxspirit:		Threshold for spirit regain
+		spirit_bonus = GameCont.hard;											// spirit_bonus:	Bonus spirit gained on spirit regain
+		spirit_regen = 10;														// spirit_regen:	Alarm interval for spirit regain
+		spirit = (maxspirit + spirit_bonus); 									// spirit:			Current spirit number
+		spirit_hurt = current_frame;											// spirit_hurt:		Spirit loss iframe cutoff
 		aim_factor = 0;
 		
 		 // Alarms:
@@ -99,18 +100,23 @@
 		alarm1 = 1;
 		ammo--;
 		
-		var _boltSpeed = 16,
-			_targetDir = point_direction(x, y, target.x, target.y);
+		 // Can't Aim if you Can't See:
+		if(instance_exists(target)){
+			var	_targetDir = point_direction(x, y, target.x, target.y),
+				_angleDif = angle_difference(gunangle, _targetDir);
+				
+			gunangle = ((gunangle - (min(abs(_angleDif), (2.4 * aim_factor)) * sign(_angleDif)) + 360) % 360);
+			scrRight(gunangle);
+		}
 		
-		var _angleDif = angle_difference(gunangle, _targetDir);
-		gunangle -= min(abs(_angleDif), (2.6 * aim_factor)) * sign(_angleDif);
-		scrRight(gunangle);
-		
+		 // Fire:
 		if(ammo <= 0){
 			alarm1 = 30;
 			if(in_sight(target)){
-				scrEnemyShoot(Bolt, gunangle, _boltSpeed);
+				scrEnemyShoot("AlbinoBolt", gunangle, 16);
+				
 				sound_play_hit(sndCrossbow, 0.2);
+				motion_set(gunangle + 180, 3);
 				
 				wkick = 8;
 			}
@@ -151,6 +157,7 @@
 		spirit += 1;
 		if(spirit >= maxspirit && !canspirit){
 			canspirit = true;
+			spirit = (maxspirit + spirit_bonus);
 			
 			spr_halo = sprStrongSpiritRefill;
 			halo_index = 0;
@@ -172,7 +179,7 @@
     }
 		
 	 // Body and Gun:
-	if(h)	d3d_set_fog(true, image_blend, 0, 0);
+	if(h)	d3d_set_fog(true, c_black, 0, 0);
     if(b)	draw_self_enemy();
     
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
@@ -189,6 +196,7 @@
 	
 	if(spirit_hurt <= current_frame){
 		if(canspirit){
+			 // Spirit Break:
 			if(spirit <= 0){
 				canspirit = false;
 				spirit_hurt = (current_frame + 6);
@@ -196,18 +204,19 @@
 				spr_halo = sprStrongSpirit;
 				halo_index = 0;
 				
-				 // Effects:
 				sound_play_hit(sndStrongSpiritLost, 0.2);
+				sound_play_hit(sndSuperFireballerFire, 0.2);
 			}
+			
+			 // Spirit Damage Sounds:
 			else{
-				 // Effects:
-				sound_play_hit(sndSwapGold, 0.4);
-				sound_play_hit(sndCrystalJuggernaut, 0.2);
-				with(instance_create(x + (5 * right), y - 5, ThrowHit)){
-					image_blend = make_color_rgb(252, 56, 0);
-					depth = (other.depth - 1);
-				}
+				sound_play_hit(sndCursedPickup, 0.2);
+				sound_play_hit(sndFireballerFire, 0.2);
 			}
+			
+			 // Effects:
+			instance_create(x + (5 * right), y - 5, ThrowHit).depth = (depth - 1);
+			motion_add(_hitdir, (_hitvel / 4));
 		}
 		
 		 // Take Damage:
@@ -925,6 +934,9 @@
 	    with(instances_matching(CustomEnemy, "name", "CatBoss")){
 	    	maxhealth *= 2;
 	    	my_health += 0.5 * maxhealth;
+	    	
+	    	 // Effects:
+	    	instance_create(x, y, HealFX).sprite_index = sprFrogHeal;
 	    }
     }
     
@@ -2104,6 +2116,9 @@
 	    with(instances_matching(CustomEnemy, "name", "BatBoss")){
 	    	maxhealth *= 2;
 	    	my_health += 0.5 * maxhealth;
+	    	
+	    	 // Effects:
+	    	instance_create(x, y, HealFX).sprite_index = sprFrogHeal;
 	    }
     }
     
@@ -4233,7 +4248,8 @@
 
 #define VenomFlak_step
 	if(charging){
-		speed += friction;
+		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0);
+		speed += ((friction + (0.3 * _angry)) * current_time_scale);
 
 		 // Follow Creator:
 		if(instance_exists(creator)){

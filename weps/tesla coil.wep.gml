@@ -1,15 +1,19 @@
 #define init
-    global.sprTeslaCoil = sprite_add_weapon("../sprites/weps/sprTeslaCoil.png", 5, 2);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprTeslaCoil.png", 5, 2);
+    global.sprWepLocked = global.sprWep;
+    wait(30) global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
 
-#define weapon_name return "TESLA COIL";
+#define weapon_unlocked return unlock_get("trenchWep");
+
+#define weapon_name return (weapon_unlocked() ? "TESLA COIL" : "LOCKED");
 #define weapon_text return "LIMITED POWER";
 #define weapon_auto return true;
 #define weapon_type return 5; // Energy
 #define weapon_cost return 2; // 2 Ammo
 #define weapon_load return 8; // 0.27 Seconds
-#define weapon_area return (unlock_get("trenchWep") ? 11 : -1); // 5-2
+#define weapon_area return (weapon_unlocked() ? 11 : -1); // 5-2
 #define weapon_swap return sndSwapEnergy;
-#define weapon_sprt return global.sprTeslaCoil;
+#define weapon_sprt return (weapon_unlocked() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_reloaded
     sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
@@ -60,3 +64,4 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);

@@ -1,15 +1,19 @@
 #define init
-    global.sprQuasarRifle = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
+    global.sprWepLocked = global.sprWep;
+    wait(30) global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
 
-#define weapon_name return "QUASAR RIFLE";
+#define weapon_unlocked return unlock_get("trenchWep");
+
+#define weapon_name return (weapon_unlocked() ? "QUASAR RIFLE" : "LOCKED");
 #define weapon_text return "BLINDING LIGHT";
 #define weapon_auto return true;
 #define weapon_type return 5;  // Energy
 #define weapon_cost return 10; // 10 Ammo
 #define weapon_load return 60; // 2 Seconds
-#define weapon_area return (unlock_get("trenchWep") ? 16 : -1); // 7-3
+#define weapon_area return (weapon_unlocked() ? 16 : -1); // 7-3
 #define weapon_swap return sndSwapEnergy;
-#define weapon_sprt return global.sprQuasarRifle;
+#define weapon_sprt return (weapon_unlocked() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(_wep)
     if(!is_object(_wep)){
@@ -79,3 +83,4 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);

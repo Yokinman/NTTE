@@ -1,5 +1,9 @@
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
+    
+    global.sprWep = spr.Trident;
+    global.sprWepLocked = global.sprWep;
+    wait(30) global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
 
 #macro spr global.spr
 
@@ -12,17 +16,19 @@
 	primary  : true,
 	visible  : true
 	}
+	
+#define weapon_unlocked return unlock_get("coastWep");
 
-#define weapon_name			return "TRIDENT";
+#define weapon_name			return (weapon_unlocked() ? "TRIDENT" : "LOCKED");
 #define weapon_text			return "SCEPTER OF THE @bSEA";
 #define weapon_type			return 0;  // Melee
 #define weapon_load			return 14; // 0.47 Seconds (Stab Length)
-#define weapon_area			return (unlock_get("coastWep") ? 7 : -1); // 3-2
+#define weapon_area			return (weapon_unlocked() ? 7 : -1); // 3-2
 #define weapon_auto			return true;
 #define weapon_melee		return false;
 #define weapon_chrg			return true;
 #define weapon_swap(w)		return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
-#define weapon_sprt(w)		return (lq_defget(w, "visible", true) ? spr.Trident  : mskNone);
+#define weapon_sprt(w)		return (lq_defget(w, "visible", true) ? (weapon_unlocked() ? global.sprWep : global.sprWepLocked) : mskNone);
 
 #define weapon_fire(w)
 	if(!is_object(w)){
@@ -198,3 +204,4 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
 #define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
 #define frame_active(_interval)                                                         return  mod_script_call("mod", "telib", "frame_active", _interval);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);

@@ -1,5 +1,7 @@
 #define init
-    global.sprBatDiscCannon = sprite_add_weapon("../sprites/weps/sprBatDiscCannon.png", 13, 6);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprBatDiscCannon.png", 13, 6);
+    global.sprWepLocked = global.sprWep;
+    wait(30) global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
 
 #macro wepLWO {
         wep : mod_current,
@@ -10,11 +12,13 @@
         buff : false
     }
 
-#define weapon_name     return "SAWBLADE CANNON";
+#define weapon_unlocked return unlock_get("lairWep");
+
+#define weapon_name     return (weapon_unlocked() ? "SAWBLADE CANNON" : "LOCKED");
 #define weapon_text     return "THEY STAND NO CHANCE";
 #define weapon_type     return 0;  // None
 #define weapon_load     return 20; // 0.66 Seconds
-#define weapon_area     return (unlock_get("lairWep") ? 13 : -1); // 7-1
+#define weapon_area     return (weapon_unlocked() ? 13 : -1); // 7-1
 #define weapon_melee    return false;
 #define weapon_swap     return sndSwapShotgun;
 
@@ -24,7 +28,7 @@
 
 #define weapon_sprt(w)
     wepammo_draw(w); // Custom Ammo Drawing
-    return global.sprBatDiscCannon;
+    return (weapon_unlocked() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(w)
     if(!is_object(w)){
@@ -87,3 +91,4 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);

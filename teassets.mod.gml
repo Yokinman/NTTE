@@ -760,6 +760,9 @@
 		 // Merged Weapon Sprite Storage:
         MergeWep = {};
         MergeWepText = {};
+        
+         // Locked Wep Sprites:
+        LockedWep = {};
 
          // Shine Overlays:
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
@@ -1297,6 +1300,35 @@
 
 		return s;
     }
+    
+#define wep_locked_sprite(_wepName, _wepSprite, _w, _h)
+	if(lq_exists(spr.LockedWep, _wepName)){
+		return lq_get(spr.LockedWep, _wepName);
+	}
+	
+	else{
+		var _surfW =  sprite_get_width(_wepSprite) + 2,
+			_surfH = sprite_get_height(_wepSprite) + 2,
+			_surf = surface_create(_surfW, _surfH),
+			_x = sprite_get_xoffset(_wepSprite) + 1,
+			_y = sprite_get_yoffset(_wepSprite) + 1;
+			
+		surface_set_target(_surf);
+		
+		d3d_set_fog(true, c_white, 0, 0);
+		for(var d = 0; d < 360; d += 90)
+			draw_sprite(_wepSprite, 0, _x + lengthdir_x(1, d), _y + lengthdir_y(1, d));
+		d3d_set_fog(true, c_black, 0, 0);
+		draw_sprite(_wepSprite, 0, _x, _y);
+		
+		d3d_set_fog(false, c_white, 0, 0);
+		surface_reset_target();
+		surface_save(_surf, "sprLockedWep.png");
+		
+		var s = sprite_add_weapon("sprLockedWep.png", _x, _y);
+		lq_set(spr.LockedWep, _wepName, s);
+		return s;
+	}
 
 #define cleanup
     if(global.sav_auto) save();
