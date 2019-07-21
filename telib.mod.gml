@@ -735,7 +735,8 @@
                  // Effects:
                 else instance_create(x, bbox_top, AssassinNotice);
                 sound_play_pitchvol(sndAssassinGetUp, random_range(1.2, 1.5), 0.5);
-                for(var a = direction; a < direction + 360; a += (360 / (max(size, 0.5) * 10))){
+                var _num = (max((("size" in self) ? size : 0), 0.5) * 10);
+                for(var a = direction; a < direction + 360; a += (360 / _num)){
                     with(instance_create(x, y, Dust)) motion_add(a, 3);
                 }
             }

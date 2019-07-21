@@ -5,6 +5,14 @@
 	
 	global.sprScytheHud = sprite_add_weapon_base64("iVBORw0KGgoAAAANSUhEUgAAABoAAAAWCAYAAADeiIy1AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xNzNun2MAAAEbSURBVEhLtZPRjcIwEEQj2qEbOqACiqAMugA6IPwSGkLGs2Ks8cYJip1EejL27s6zpbsuhLAq8fuA0bk/qIWCy/mIzbSIjVr8B2cABZMiHIL3814lUsHpsE/gTPPwmQSwQcNKoAegn7MeitnLQTv0xVI4UIH247eCPL54FMSiBgDs9cY+bOivqGc9cc4yLJ8iJ0wBOujlCsV6AZynXJUoGgIw/HrYrbO/LKy81NDfDO6zPg2fAwMeX9PXUMy+UWANCNNwvoqrXaQ0uITft4tkL1IhasXhJciX/nc2EREVUbKpCOvmIqKiuI/luGjzGqiIr7Fz39iKiiixc21qBcF4hX+N1bSxFYq8xGq6aYUiL7GaP2gBgpIkhNB9AX8lwdEEbipzAAAAAElFTkSuQmCC", 10, 7);
 	
+	global.sprWep = global.sprScythe;
+	global.sprWepLocked = global.sprWep;
+    if(fork()){
+    	wait(30);
+    	global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
+    	exit;
+    }
+	
 	 // Mode Info:
 	global.wepModes = [
 		{
@@ -43,21 +51,24 @@
 	var _index = lq_defget(_wep, "mode", 0);
 	return lq_defget(wepModes[_index], _name, false);
 
-#define weapon_name return scrWepModeInfo(argument0, "name");
-#define weapon_text return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
+#define weapon_unlocked return unlock_get("boneScythe");
 
-#define weapon_load return scrWepModeInfo(argument0, "load");
+#define weapon_name 	return (weapon_unlocked() ? scrWepModeInfo(argument0, "name") : "LOCKED");
+#define weapon_text 	return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
+#define weapon_load 	return scrWepModeInfo(argument0, "load");
+#define weapon_type 	return 0; // Melee
+#define weapon_melee	return scrWepModeInfo(argument0, "is_melee");
+#define weapon_area 	return (weapon_unlocked() ? 18 : -1); // 1-2 L1
+#define weapon_swap 	return sndBloodGamble;
+
 #define weapon_auto(w)
 	if(infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1))) return true;
 	return -1;
 
-#define weapon_type return 0; // Melee
-#define weapon_melee return scrWepModeInfo(argument0, "is_melee");
-
-#define weapon_area return (unlock_get("boneScythe") ? 13 : -1); // Doesn't Spawn Normally
-#define weapon_swap return sndBloodGamble;
 #define weapon_sprt(w)
 	wepammo_draw(w);
+	
+	if(!weapon_unlocked()) return global.sprWepLocked;
 	
 	 // Hud Sprite:
 	var _sprtHud = scrWepModeInfo(w, "sprt_hud");
@@ -77,12 +88,12 @@
 
 	 // Mode Specific:
 	switch(w.mode){
-		 //#region SCYTHE:
+		//#region SCYTHE:
 		case 0:
 			var _skill = skill_get(mut_long_arms),
 				_heavy = (++w.combo % 3 == 0),
 				_flip = sign(wepangle),
-				l = 12 + (8 * _skill),
+				l = 10 + (10 * _skill),
 				d = gunangle + (accuracy * orandom(4));
 				
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
@@ -91,10 +102,10 @@
 				creator = other;
 				team	= other.team;
 				heavy	= _heavy;
-				rotspd	= (-7 * _flip);
+				rotspd	= (-3 * _flip);
 				
 				direction	= d;
-				speed		= 3 + (3.6 * _skill);
+				speed		= 2.5 + (2 * _skill);
 				image_angle = direction;
 			}
 			
@@ -107,15 +118,16 @@
 			wkick = 5;
 			if(_heavy) sleep(12);
 		
-		break;
-		 //#endregion
+			break;
+		//#endregion
 		 
-		 //#region SHOTBOW:
+		//#region SHOTBOW:
 		case 1:
 			if(wepammo_fire(w)){
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(12)),
 					o = 20 * accuracy;
+
 				for(var i = -1; i <= 1; i++){
 					with(obj_create(x, y, "BoneArrow")){
 						creator = other;
@@ -135,8 +147,8 @@
 				sleep(4);
 			}
 		
-		 //#endregion
-		break;
+			break;
+		//#endregion
 	}
 
 #define step(_primary)
@@ -153,12 +165,10 @@
     with(w){
         var _muscle = skill_get(mut_back_muscle);
         if(buff != _muscle){
+            var _amaxRaw = (amax / (1 + (0.8 * buff)));
             buff = _muscle;
-            if(_muscle) amax = 99;
-            else{
-            	amax = 55;
-            	ammo = min(ammo, amax);
-            }
+            amax = (_amaxRaw * (1 + (0.8 * buff)));
+            ammo += (amax - _amaxRaw);
         }
     }
     
@@ -189,3 +199,4 @@
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);

@@ -1,14 +1,18 @@
 #define init
-    global.sprHyperBubbler = sprite_add_weapon("../sprites/weps/sprHyperBubbler.png", 8, 4);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprHyperBubbler.png", 8, 4);
+    global.sprWepLocked = global.sprWep;
+    wait(30) global.sprWepLocked = wep_locked_sprite(mod_current, global.sprWep);
 
-#define weapon_name return "HYPER BUBBLER";
+#define weapon_unlocked return unlock_get("oasisWep");
+
+#define weapon_name return (weapon_unlocked() ? "HYPER BUBBLER" : "LOCKED");
 #define weapon_text return "POWER WASHER";
 #define weapon_type return 4; // Explosive
 #define weapon_cost return 4; // 4 Ammo
 #define weapon_load return 7; // 0.43 Seconds
-#define weapon_area return (unlock_get("oasisWep") ? 15 : -1); // 7-2
+#define weapon_area return (weapon_unlocked() ? 15 : -1); // 7-2
 #define weapon_swap return sndSwapExplosive;
-#define weapon_sprt return global.sprHyperBubbler;
+#define weapon_sprt return (weapon_unlocked() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(_wep)
      // Muzzle Explosion:
@@ -34,3 +38,4 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_locked_sprite(_wepName, _wepSprite)                                         return  mod_script_call("mod", "teassets", "wep_locked_sprite", _wepName, _wepSprite);
