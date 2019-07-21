@@ -1230,7 +1230,16 @@
 								_y2 = other.y,
 				        		_pan = 4;
 
-							with(player_create(_x1, _y1, i)){
+						    with(instance_create(_x1, _y1, CustomHitme)){
+						        with(instance_create(x, y, Revive)){
+						            p = i;
+						            canrevive = true;
+						            event_perform(ev_collision, Player);
+						            instance_destroy();
+						        }
+						        instance_destroy();
+						    }
+							with(player_find(i)){
 								gunangle = point_direction(_x1, _y1, _x2, _y2);
 								weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1 * current_time_scale, 0);
 								instance_delete(id);
@@ -3183,6 +3192,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
 #define charm_step
+	if(DebugLag) trace_time();
+
     var _charmList = ds_list_to_array(global.charm),
         _charmDraw = {},
         _charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
@@ -3190,7 +3201,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     with(_charmList){
         var _self = instance,
             _time = time,
-            _index = index;
+            _index = index,
+            _targetCrash = (!instance_exists(Player) && instance_is(_self, Grunt)); // References player-specific vars in its alarm event, causing a crash
 
         if(!instance_exists(_self)) scrCharm(_self, false);
         else{
@@ -3271,153 +3283,174 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             if(!instance_exists(target)) scrCharmTarget();
 
              // Alarms:
-            with(_self){
-                 // Reset Alarms:
-                for(var a = 0; a <= 10; a++){
+            var	_alarm = alarm,
+            	_alarmMax = 0;
+
+            with(_self){ // Reset Alarms
+				for(var a = 0; a <= 10; a++){
                     var _alrm = alarm_get(a);
-                    if(_alrm > 0) other.alarm[a] = _alrm + current_time_scale;
-                    alarm_set(a, -1);
-                }
-            }
-            for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
-                if(alarm[_alarmNum] > 0){
-                	var _alarmSpeed = 1;
-
-                     // Increased Aggro:
-            		if(_alarmNum == 1){
-            			 // Not Boss:
-            			if(!boss){
-	            			 // Not Shooting:
-		            		if(("ammo" not in _self || _self.ammo <= 0) && alarm[2] < 0){
-	            				 // Not Shielding:
-	            				if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
-	            					_alarmSpeed *= 1 + (alarm[_alarmNum] / 10);
-	            				}
-	            			}
-            			}
-            		}
-
-					alarm[_alarmNum] -= _alarmSpeed * current_time_scale;
-                    if(alarm[_alarmNum] <= 0){
-                        alarm[_alarmNum] = -1;
-
-                        scrCharmTarget();
-
-                        with(_self){
-                        	var	_lastWalk = (("walk" in self) ? walk : null),
-                        		_lastRight = (("right" in self) ? right : null),
-                        		_lastGunangle = (("gunangle" in self) ? gunangle : null),
-                        		_lastSpeed = speed,
-                        		_lastDirection = direction,
-                        		_minID = instance_create(0, 0, GameObject);
-
+                    if(_alrm > 0){
+                    	alarm_set(a, -1);
+                    	_alarm[a] = _alrm;
+                    	_alarmMax = a;
+                    }
+                    else if(_alarm[a] > 0){
+                    	_alarmMax = a;
+                    }
+				}
+			}
+			for(var _alarmNum = 0; _alarmNum <= _alarmMax; _alarmNum++){
+				if(_alarm[_alarmNum] > 0){
+					var _alarmSpeed = 1;
+	
+					 // Increased Aggro:
+					if(_alarmNum == 1){
+						 // Not Boss:
+						if(!boss){
+							 // Not Shooting:
+							if(("ammo" not in _self || _self.ammo <= 0) && _alarm[2] < 0){
+								 // Not Shielding:
+								if(array_length(instances_matching(PopoShield, "creator", _self)) <= 0){
+									_alarmSpeed *= 1 + (_alarm[_alarmNum] / 10);
+								}
+							}
+						}
+					}
+	
+					_alarm[_alarmNum] -= _alarmSpeed * current_time_scale;
+	                if(_alarm[_alarmNum] <= 0){
+	                    _alarm[_alarmNum] = -1;
+	
+						scrCharmTarget();
+	
+	                    with(_self){
+							var	_lastWalk = (("walk" in self) ? walk : null),
+								_lastRight = (("right" in self) ? right : null),
+								_lastGunangle = (("gunangle" in self) ? gunangle : null),
+								_lastSpeed = speed,
+								_lastDirection = direction,
+								_minID = instance_create(0, 0, GameObject);
+	
 							instance_delete(_minID);
+	
+							 // Targeting:
+							var _lastPos = [];
+							if("target" in self){
+								if(!_targetCrash){
+									target = other.target;
+								}
 
-                        	 // Targeting:
-	                        var _lastPos = [];
-                        	if("target" in self){
-	                            target = other.target;
+								 // Move Players to Target:
+								with(Player){
+									array_push(_lastPos, [id, x, y]);
+									if(instance_exists(other.target)){
+										x = other.target.x;
+										y = other.target.y;
+									}
+									else{
+										x = choose(0, 20000);
+										y = choose(0, 20000);
+									}
+								}
+							}
 
-	                             // Move Players to Target:
-	                            with(Player){
-	                                array_push(_lastPos, [id, x, y]);
-	                                if(instance_exists(other.target)){
-	                                    x = other.target.x;
-	                                    y = other.target.y;
-	                                }
-	                                else{
-	                                    x = choose(0, 20000);
-	                                    y = choose(0, 20000);
+	                         // Reset Alarms:
+	                        for(var a = 0; a <= 10; a++){
+	                            alarm_set(a, _alarm[a]);
+	                        }
+
+	                         // Call Alarm Event:
+	                        if(object_index != CustomEnemy){
+								event_perform(ev_alarm, _alarmNum);
+	                        }
+	                        else{ // Custom Alarm Support
+	                            var a = "on_alrm" + string(_alarmNum);
+	                            if(a in self){
+	                                var _scrt = variable_instance_get(id, a);
+	                                //script_ref_call(_scrt); DO THIS INSTEAD WHEN YAL FIXES IT !?! he might not but oh well
+	                                if(array_length(_scrt) >= 3){
+	                                    with(self) mod_script_call_self(_scrt[0], _scrt[1], _scrt[2]);
 	                                }
 	                            }
-                        	}
-
-                             // Reset Alarms:
-                            for(var a = 0; a <= 10; a++){
-                                alarm_set(a, other.alarm[a]);
-                            }
-
-                             // Call Alarm Event:
-                            if(object_index != CustomEnemy){
-								event_perform(ev_alarm, _alarmNum);
-                            }
-                            else{ // Custom Alarm Support
-                                var a = "on_alrm" + string(_alarmNum);
-                                if(a in self){
-                                    var _scrt = variable_instance_get(id, a);
-                                    //script_ref_call(_scrt); DO THIS INSTEAD WHEN YAL FIXES IT !?! he might not but oh well
-                                    if(array_length(_scrt) >= 3){
-                                        with(self) mod_script_call_self(_scrt[0], _scrt[1], _scrt[2]);
-                                    }
-                                }
-                            }
-
+	                        }
+	
 							 // Set Creator:
-                            with(instances_matching(instances_matching_gt(_charmObject, "id", _minID), "creator", null, noone)){
-                            	creator = other;
-                            }
-
+	                        with(instances_matching(instances_matching_gt(_charmObject, "id", _minID), "creator", null, noone)){
+	                        	creator = other;
+	                        }
+	
 		                     // Ally-ify Projectiles:
-                            with(instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone)){
+	                        with(instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone)){
 		                    	mod_script_call("mod", "telib", "charm_allyize", true);
 		                    }
-
-                            if(instance_exists(self)){
-	                        	 // Reset Alarms:
-	                            for(var a = 0; a <= 10; a++){
-	                                var _alrm = alarm_get(a);
-	                                if(_alrm > 0) other.alarm[a] = _alrm;
-	                                alarm_set(a, -1);
+	
+	                        if(!instance_exists(self)) break;
+	
+	                    	 // Reset Alarms:
+	                        for(var a = 0; a <= 10; a++){
+	                            var _alrm = alarm_get(a);
+	                            if(_alrm > 0){
+	                            	alarm_set(a, -1);
+	                            	_alarm[a] = _alrm;
+	                            	_alarmMax = a;
 	                            }
+	                            else if(_alarm[a] > 0){
+	                            	_alarmMax = a;
+	                            }
+	                        }
+	
+							 // Reset Certain Movement Vars With Increased Alarm Speed:
+							if(_alarmNum == 1 && chance(_alarmSpeed - 1, _alarmSpeed)){
+								if(("ammo" not in self || ammo <= 0) && _alarm[2] < 0){
+									if(array_length(instances_matching(projectile, "creator", id)) <= 0){
+										if(_lastWalk != null) walk = _lastWalk;
+										if(_lastRight != null) right = _lastRight;
+										if(_lastGunangle != null) gunangle = _lastGunangle;
+										speed = _lastSpeed;
+										direction = _lastDirection;
+									}
+								}
+							}
 
-	                    		 // Reset Certain Movement Vars With Increased Alarm Speed:
-			                    if(_alarmNum == 1 && chance(_alarmSpeed - 1, _alarmSpeed)){
-		            				if(("ammo" not in self || ammo <= 0) && other.alarm[2] < 0){
-		            					if(array_length(instances_matching(projectile, "creator", id)) <= 0){
-					                    	if(_lastWalk != null) walk = _lastWalk;
-					                    	if(_lastRight != null) right = _lastRight;
-					                    	if(_lastGunangle != null) gunangle = _lastGunangle;
-					            			speed = _lastSpeed;
-					            			direction = _lastDirection;
-		            					}
-		            				}
-			                    }
-                            }
+							 // Return Moved Players:
+							with(_lastPos){
+								with(self[0]){
+									x = other[1];
+									y = other[2];
+								}
+							}
+						}
+					}
+				}
+			}
 
-                             // Return Moved Players:
-                            with(_lastPos){
-                            	with(self[0]){
-                            		x = other[1];
-                            		y = other[2];
-                            	}
-                            }
-                        }
-
-                		if(!instance_exists(_self)) break;
-                    }
-                }
-            }
-
-            if(!instance_exists(_self)) scrCharm(_self, false);
+			if(!instance_exists(_self)) scrCharm(_self, false);
 
             else{
                 with(_self){
-                    target = other.target;
+					target = other.target;
+
                     if(instance_is(self, enemy)){
                          // Contact Damage:
                         if(place_meeting(x, y, enemy)){
-                            with(instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", _self)){
+                            with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", _self))){
                                 if(place_meeting(x, y, other)) with(other){
-                                	//meleedamage *= 2;
-                                	//var m = meleedamage;
+                                	 // Disable Freeze Frames:
+                                	var f = UberCont.opt_freeze;
+                                	UberCont.opt_freeze = 0;
 
+                                	 // Speed Up 'canmelee' Reset:
                                     if(alarm11 > 0 && alarm11 < 26){
                                     	event_perform(ev_alarm, 11);
                                     }
+
+									 // Collision:
                                     event_perform(ev_collision, Player);
+
+                                     // No I-Frames:
                                     with(other) nexthurt = current_frame;
 
-                                    //if(meleedamage == m) meleedamage *= 2;
+                                	UberCont.opt_freeze = f;
                                 }
                             }
                         }
@@ -3518,7 +3551,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             break;
 
                         case Sniper:            /// Aim at Target
-                            if(other.alarm[2] > 5 && in_sight(other.target)){
+                            if(_alarm[2] > 5 && in_sight(other.target)){
                                 gunangle = point_direction(x, y, other.target.x, other.target.y);
                             }
                             break;
@@ -3561,9 +3594,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                         case LaserCrystal:
                         case InvLaserCrystal:   /// Charge Particles
-                            if(other.alarm[2] > 0){
+                            if(_alarm[2] > 0){
                             	speed = 0;
-                            	if(other.alarm[2] > 8 && current_frame_active){
+                            	if(_alarm[2] > 8 && current_frame_active){
 	                                with(instance_create(x + orandom(48), y + orandom(48), LaserCharge)){
 	                                    motion_add(point_direction(x, y, other.x, other.y), 2 + random(1));
 	                                    alarm0 = (point_distance(x, y, other.x, other.y) / speed) + 1;
@@ -3573,7 +3606,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             break;
 
                         case LightningCrystal:  /// Ally-ify Lightning
-                            if(other.alarm[2] > 0) speed = 0;
+                            if(_alarm[2] > 0) speed = 0;
                             with(instances_matching(EnemyLightning, "charmally_check", null)){
                             	charmally_check = true;
                             	if(sprite_index == sprEnemyLightning){
@@ -3647,16 +3680,21 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                             break;
                     }
 
-                	 // FX:
-                	if(instance_exists(self) && chance_ct(1, 200)){
-                		with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
-                			sprite_index = sprHealFX;
-                			motion_add(other.direction, 1);
-                			speed /= 2;
-                			image_xscale *= random_range(2/3, 1);
-                			image_yscale = image_xscale;
-                		}
-                	}
+					if(instance_exists(self)){
+	                	 // <3
+	                	if(random(200) < current_time_scale){
+	                		with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
+	                			sprite_index = sprHealFX;
+	                			motion_add(other.direction, 1);
+	                			speed /= 2;
+	                			image_xscale *= random_range(2/3, 1);
+	                			image_yscale = image_xscale;
+	                		}
+	                	}
+
+	                     // Prevent Crashes:
+	                    if(_targetCrash) target = noone;
+	            	}
                 }
 
                  // Charm Timer:
@@ -3697,6 +3735,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		with(surfCharm) active = true;
 	}
 	else with(surfCharm) active = false;
+
+	if(DebugLag) trace_time("ntte_charm_step " + string(array_length(_charmList)));
 
 	instance_destroy();
 

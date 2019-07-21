@@ -53,19 +53,18 @@
 
 #define weapon_unlocked return unlock_get("boneScythe");
 
-#define weapon_name return (weapon_unlocked() ? scrWepModeInfo(argument0, "name") : "LOCKED");
-#define weapon_text return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
+#define weapon_name 	return (weapon_unlocked() ? scrWepModeInfo(argument0, "name") : "LOCKED");
+#define weapon_text 	return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
+#define weapon_load 	return scrWepModeInfo(argument0, "load");
+#define weapon_type 	return 0; // Melee
+#define weapon_melee	return scrWepModeInfo(argument0, "is_melee");
+#define weapon_area 	return (weapon_unlocked() ? 18 : -1); // 1-2 L1
+#define weapon_swap 	return sndBloodGamble;
 
-#define weapon_load return scrWepModeInfo(argument0, "load");
 #define weapon_auto(w)
 	if(infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1))) return true;
 	return -1;
 
-#define weapon_type return 0; // Melee
-#define weapon_melee return scrWepModeInfo(argument0, "is_melee");
-
-#define weapon_area return (weapon_unlocked() ? 18 : -1); // 1-2 L1
-#define weapon_swap return sndBloodGamble;
 #define weapon_sprt(w)
 	wepammo_draw(w);
 	
@@ -89,12 +88,12 @@
 
 	 // Mode Specific:
 	switch(w.mode){
-		 //#region SCYTHE:
+		//#region SCYTHE:
 		case 0:
 			var _skill = skill_get(mut_long_arms),
 				_heavy = (++w.combo % 3 == 0),
 				_flip = sign(wepangle),
-				l = 12 + (8 * _skill),
+				l = 10 + (10 * _skill),
 				d = gunangle + (accuracy * orandom(4));
 				
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
@@ -103,10 +102,10 @@
 				creator = other;
 				team	= other.team;
 				heavy	= _heavy;
-				rotspd	= (-7 * _flip);
+				rotspd	= (-3 * _flip);
 				
 				direction	= d;
-				speed		= 3 + (3.6 * _skill);
+				speed		= 2.5 + (2 * _skill);
 				image_angle = direction;
 			}
 			
@@ -119,15 +118,16 @@
 			wkick = 5;
 			if(_heavy) sleep(12);
 		
-		break;
-		 //#endregion
+			break;
+		//#endregion
 		 
-		 //#region SHOTBOW:
+		//#region SHOTBOW:
 		case 1:
 			if(wepammo_fire(w)){
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(12)),
 					o = 20 * accuracy;
+
 				for(var i = -1; i <= 1; i++){
 					with(obj_create(x, y, "BoneArrow")){
 						creator = other;
@@ -147,8 +147,8 @@
 				sleep(4);
 			}
 		
-		 //#endregion
-		break;
+			break;
+		//#endregion
 	}
 
 #define step(_primary)
@@ -165,12 +165,10 @@
     with(w){
         var _muscle = skill_get(mut_back_muscle);
         if(buff != _muscle){
+            var _amaxRaw = (amax / (1 + (0.8 * buff)));
             buff = _muscle;
-            if(_muscle) amax = 99;
-            else{
-            	amax = 55;
-            	ammo = min(ammo, amax);
-            }
+            amax = (_amaxRaw * (1 + (0.8 * buff)));
+            ammo += (amax - _amaxRaw);
         }
     }
     

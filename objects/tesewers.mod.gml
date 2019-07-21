@@ -240,7 +240,7 @@
 		spr_walk = spr.BabyGatorWalk;
 		spr_hurt = spr.BabyGatorHurt;
 		spr_dead = spr.BabyGatorDead;
-		spr_weap = sprRevolver;
+		spr_weap = sprMolefishGun;
 		sprite_index = spr_idle;
 		hitid = [spr_idle, "BABY GATOR"];
 		spr_shadow = shd16;
@@ -255,21 +255,25 @@
 		mask_index = mskMaggot;
 		maxhealth = 12;
 		raddrop = 2;
-		size = 1;
+		size = 0;
 		walk = 0;
 		z = 0;
 		maxz = 12;
 		zspeed = 0;
-		zfric = 0.4;
+		zfric = 0.5;
 		zbounce = 0;
 		kick_invul = (current_frame + 30);
 		walkspd = 1.2;
 		maxspeed = 3.4;
 		gunangle = random(360);
 		direction = gunangle;
+
+		 // Alarms:
 		alarm1 = 30;
+
+		 // NTTE:
 		ntte_walk = false;
-		
+
 		return id;
 	}
 	
@@ -293,6 +297,7 @@
 	 // Ya boy z axis:
 	if(z > 0 || zspeed > 0){
 		z_engine();
+		z = min(14, z);
 		
 		if(z <= 0 && zbounce){
 			projectile_hit_raw(id, 1, true);
@@ -369,12 +374,14 @@
     if(gunangle <= 180) draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, _angle, image_blend, image_alpha);
 
 #define BabyGator_hurt(_hitdmg, _hitvel, _hitdir)
+	 // Kick:
+	if(speed > 0){
+		zspeed = 3;
+		zbounce = 1;
+	}
+
 	 // Hurt:
 	enemyHurt(_hitdmg, _hitvel, _hitdir);
-	
-	 // Kick:
-	zspeed = 3;
-	zbounce = 1;
 	
 	 // Effects:
 	scrFX(x, (y - z), [_hitdir, 1], Smoke);
@@ -382,6 +389,16 @@
 #define BabyGator_death
 	sound_play_pitch(snd_hurt, 1.3 + random(0.3));
 	snd_hurt = -1;
+	
+	 // Pickups:
+	pickup_drop(20, 0);
+
+	 // Height Corpse:
+	if(place_free(x, y - (z / 2))){
+		y -= z / 2;
+		vspeed += z / 5;
+		speed /= max(1, z / 10);
+	}
 
 #define Bat_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){

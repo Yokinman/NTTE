@@ -103,11 +103,11 @@
         NetNadeBlink = sprite_add("sprites/weps/projectiles/sprNetNadeBlink.png",	2, 3, 3);
 
          // Bubble Bombs:
-    	BubbleBomb      = sprite_add("sprites/enemies/projectiles/sprBubbleBomb.png",   	30, 12, 12);
-    	BubbleBombEnemy = sprite_add("sprites/enemies/projectiles/sprBubbleBombEnemy.png",	30, 12, 12);
-    	BubbleExplode   = sprite_add("sprites/enemies/projectiles/sprBubbleExplode.png",	 9,	24, 24);
-    	BubbleCharge    = sprite_add("sprites/enemies/projectiles/sprBubbleCharge.png", 	12, 12, 12);
-    	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",   	46, 16, 16);
+    	BubbleBomb      = sprite_add("sprites/weps/projectiles/sprBubbleBomb.png",   		30, 12, 12);
+    	BubbleBombEnemy = sprite_add("sprites/enemies/CoastBoss/sprBubbleBombEnemy.png",	30, 12, 12);
+    	BubbleExplode   = sprite_add("sprites/weps/projectiles/sprBubbleExplode.png",		 9,	24, 24);
+    	BubbleCharge    = sprite_add("sprites/weps/projectiles/sprBubbleCharge.png", 		12, 12, 12);
+    	BubbleBombBig   = sprite_add("sprites/weps/projectiles/sprBubbleBombBig.png",		46, 16, 16);
 
 		 // LoadoutCrown System:
     	CrownRandomLoadout	= sprite_add("sprites/crowns/Random/sprCrownRandomLoadout.png", 2, 16, 16);

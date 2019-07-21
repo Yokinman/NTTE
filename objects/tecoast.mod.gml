@@ -3261,7 +3261,8 @@
 	var _areas = ["coast", "oasis"];
 	for(var i = 0; i < array_length(_areas); i++) if(GameCont.area == _areas[i])
 		scrUnlock("part " + string(i + 1) + "/2", "it would be cool", -1, -1);
-	
+
+
 #define TrafficCrab_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -3295,22 +3296,27 @@
 		sweep_spd = 10;
         sweep_dir = right;
         ammo = 0;
-        ntte_anim = false;
 
          // Alarms:
         alarm1 = 30 + random(90);
+
+         // NTTE:
+        ntte_anim = false;
 
         return id;
     }
 
 #define TrafficCrab_step
 	 // Inactive:
-	canmelee = active;
 	if(!active){
 		speed = 0;
 		x = xstart;
 		y = ystart;
 		image_index -= image_speed;
+
+		 // Disable Melee:
+		canmelee = false;
+		alarm11 = 30;
 	}
 	
 	 // Animate:
@@ -3337,8 +3343,9 @@
 	}
 
 #define TrafficCrab_alrm1
-	if(active){
+	target = instance_nearest(x, y, Player);
 
+	if(active){
 	     // Spray Venom:
 	    if(ammo > 0){
 	        alarm1 = 2;
@@ -3369,11 +3376,10 @@
 	            sweep_dir *= -1;
 	        }
 	    }
-	
+
 	     // Normal AI:
 	    else{
 	        alarm1 = 35 + random(15);
-	        target = instance_nearest(x, y, Player);
 	
 	        if(in_sight(target)){
 	            var _targetDir = point_direction(x, y, target.x, target.y);
@@ -3404,11 +3410,10 @@
 	
 	 // Just be a prop bro:
 	else{
-		alarm1 = 30 + random(30);
-		target = instance_nearest(x, y, Player);
-		
+		alarm1 = 20;
+
 		 // Awaken:
-		if(in_distance(target, 96) && (chance(1, 3) || instance_number(enemy) <= 1)){
+		if(in_distance(target, 80) || chance(1, instance_number(enemy))){
 			active = true;
 			
 			 // Effects:
