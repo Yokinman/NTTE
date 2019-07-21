@@ -58,31 +58,21 @@
 #macro sav global.sav
 #macro opt sav.option
 
-#define race_name       return "PARROT";
-#define race_text       return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
-#define race_tb_text    return "@wPICKUPS @sGIVE @rFEATHERS@s";
 
-/// Sprites
-#define race_menu_button
-    sprite_index = spr.Parrot[0].Select;
-    image_index = !race_avail();
+/// General
+#define race_name
+	return "PARROT";
 
-#define race_portrait(p, _skin)
-	return spr.Parrot[_skin].Portrait;
+#define race_text
+	return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
 
-#define race_mapicon(p, _skin)
-    return spr.Parrot[_skin].Map;
-
-#define race_skin_button(_skin)
-    sprite_index = spr.Parrot[_skin].Loadout;
-    image_index = !race_skin_avail(_skin);
-
-#define race_ultra_button(_ultra)
-	sprite_index = spr.Parrot[0].UltraIcon;
-	image_index = _ultra - 1;
-
-#define race_ultra_icon(_ultra)
-	return lq_get(spr.Parrot[0], "UltraHUD" + chr(64 + _ultra));
+#define race_ttip
+    if(GameCont.level >= 10 && chance(1, 5)){
+        return choose("MIGRATION FORMATION", "CHARMED, I'M SURE", "ADVENTURING PARTY", "FREE AS A BIRD");
+    }
+    else{
+        return choose("HITCHHIKER", "BIRDBRAIN", "PARROT IS AN EXPERT TRAVELER", "WIND UNDER MY WINGS", "PARROT LIKES CAMPING", "MACAW WORKS TOO", "CHESTS GIVE YOU @rFEATHERS@s");
+    }
 
 #define race_sprite(_spr)  
     var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
@@ -101,12 +91,49 @@
     }
     return mskNone;
 
+#define race_sound(_snd)
+	switch(_snd){
+		case sndMutant1Wrld: return sndMutant9Wrld;
+		case sndMutant1Hurt: return sndRavenHit;
+		case sndMutant1Dead: return sndRavenDie;
+		case sndMutant1LowA: return sndMutant9LowA;
+		case sndMutant1LowH: return sndMutant9LowH;
+		case sndMutant1Chst: return sndMutant9Chst;
+		case sndMutant1Valt: return sndMutant9Valt;
+		case sndMutant1Crwn: return sndMutant9Crwn;
+		case sndMutant1Spch: return sndMutant9Spch;
+		case sndMutant1IDPD: return sndMutant9IDPD;
+		case sndMutant1Cptn: return sndMutant9Cptn;
+		case sndMutant1Thrn: return sndMutant9Thrn;
+	}
+	return -1;
+
+
 /// Lock Status
 #define race_avail
     return unlock_get("parrot");
 
 #define race_lock
     return "REACH @1(sprInterfaceIcons)1-1";
+
+
+/// Menu
+#define race_menu_select
+	return sndRavenScreech;
+
+#define race_menu_confirm
+	return sndRavenScreech;
+
+#define race_menu_button
+    sprite_index = spr.Parrot[0].Select;
+    image_index = !race_avail();
+
+#define race_portrait(p, _skin)
+	return spr.Parrot[_skin].Portrait;
+
+#define race_mapicon(p, _skin)
+    return spr.Parrot[_skin].Map;
+
 
 /// Skins
 #define race_skins
@@ -141,43 +168,88 @@
         case 1: return "COMPLETE THE#AQUATIC ROUTE";
     }
 
-/// Text Stuff
-#define race_ttip
-    if(GameCont.level >= 10 && chance(1, 5)){
-        return choose("migration formation", "charmed, i'm sure", "adventuring party", "free as a bird");
-    }
-    else{
-        return choose("hitchhiker", "birdbrain", "parrot is an expert traveler", "wind under my wings", "parrot likes camping", "macaw works too", "chests give you @rfeathers@s");
-    }
+#define race_skin_button(_skin)
+    sprite_index = spr.Parrot[_skin].Loadout;
+    image_index = !race_skin_avail(_skin);
 
-#define race_ultra_name
-    switch (argument0) {
-        case 1: return "FLOCK TOGETHER";
-        case 2: return "UNFINISHED";
-        default: return "";
+
+/// Throne Butt
+#define race_tb_text
+	return "@wPICKUPS @sGIVE @rFEATHERS@s";
+
+
+/// Ultras
+#macro ultFeath 1
+#macro ultShare 2
+
+#define race_ultra_name(_ultra)
+    switch(_ultra){
+        case ultFeath: return "BIRDS OF A FEATHER";
+        case ultShare: return "FLOCK TOGETHER";
     }
+    return "";
     
-#define race_ultra_text
-    switch (argument0) {
-        case 1: return "CORPSES SPAWN @rFEATHERS@s";
-        case 2: return "N/A";
-        default: return "";
+#define race_ultra_text(_ultra)
+    switch(_ultra){
+        case ultFeath: return "INCREASED @rFEATHER @sOUTPUT";
+        case ultShare: return "@wFEATHERED @sENEMIES#SHARE @rHEALTH @sWITH YOU";
     }
+    return "";
+
+#define race_ultra_button(_ultra)
+	sprite_index = spr.Parrot[0].UltraIcon;
+	image_index = _ultra - 1; // why are ultras 1-based bro
+
+#define race_ultra_icon(_ultra)
+	return lq_get(spr.Parrot[0], "UltraHUD" + chr(64 + _ultra));
+
+#define race_ultra_take(_ultra, _state)
+	switch(_ultra){
+		case ultFeath:
+			with(instances_matching(Player, "race", mod_current)){
+				feather_ammo = feather_ammo_max;
+			}
+			break;
+
+		case ultShare:
+			break;
+	}
+
+	 // Ultra Sound:
+	if(_state && instance_exists(EGSkillIcon)){
+		switch(_ultra){
+			case ultFeath:
+				// insert sound
+				break;
+
+			case ultShare:
+				// insert sound
+				break;
+		}
+	}
+
 
 #define create
      // Sound:
-    snd_hurt = sndRavenHit;
-    snd_dead = sndRavenDie;
-    if(instance_exists(Menu)) snd_hurt = -1; // Dum CampChar fix
+    snd_wrld = race_sound(sndMutant1Wrld);
+	snd_hurt = race_sound(sndMutant1Hurt);
+	snd_dead = race_sound(sndMutant1Dead);
+	snd_lowa = race_sound(sndMutant1LowA);
+	snd_lowh = race_sound(sndMutant1LowH);
+	snd_chst = race_sound(sndMutant1Chst);
+	snd_valt = race_sound(sndMutant1Valt);
+	snd_crwn = race_sound(sndMutant1Crwn);
+	snd_spch = race_sound(sndMutant1Spch);
+	snd_idpd = race_sound(sndMutant1IDPD);
+	snd_cptn = race_sound(sndMutant1Cptn);
+	snd_thrn = race_sound(sndMutant1Thrn);
+	footkind = 2; // Pla
 
      // Feather Related:
     feather_num = 12;
     feather_ammo = 0;
     feather_ammo_max = 5 * feather_num;
     feather_targ_delay = 0;
-
-     // :
-    charm_last_my_health = my_health;
 
      // Extra Pet Slot:
     pet = [noone, noone];
@@ -222,14 +294,14 @@
     if(button_check(index, "spec") || usespec > 0){
         var _feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
             _feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
-            _featherNum = feather_num;
+            _featherNum = ceil(feather_num * (1 + (2 * ultra_get(mod_current, ultFeath))));
 
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
             with(instances_matching(_feathers, "canhold", false)){
 				 // Remove Charm Time:
                 if(target != creator){
-                    if("charm" in target && (target.charm.time > 0 || creator != other)){
+                    if("charm" in target && (lq_defget(target.charm, "time", 0) > 0 || creator != other)){
                     	with(target){
 	                        charm.time -= other.stick_time;
 	                        if(charm.time <= 0){
@@ -248,7 +320,6 @@
 
                  // Mine now:
                 if(creator == other && array_length(_feathersTargeting) < _featherNum){
-                    canhold = true;
                     other.feather_targ_delay = 3;
                     array_push(_feathersTargeting, id);
                 }
@@ -274,44 +345,50 @@
 
          // Targeting:
         if(array_length(_feathersTargeting) > 0){
-            if(feather_targ_delay > 0){
-                feather_targ_delay -= current_time_scale;
-                with(_feathers) target = creator;
-            }
-            else{
-                var r = 32,// * (1 + ultra_get("parrot", 3)),
-                    _x = mouse_x[index],
-                    _y = mouse_y[index],
-                    _targ = [],
-                    _featherNum = array_length(_feathersTargeting);
+        	with(_feathersTargeting) canhold = true;
+
+            if(feather_targ_delay <= 0){
+                var _targ = [],
+                    _targX = mouse_x[index],
+                    _targY = mouse_y[index],
+                	_targRadius = 32 * (1 + ultra_get(mod_current, ultFeath)),
+                    _featherMax = array_length(_feathersTargeting);
 
 				 // Gather All Potential Targets:
-                with(instances_matching_lt(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
-                    if(collision_circle(_x, _y, r, id, true, false)){
+                with(instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
+                    if(collision_circle(_targX, _targY, _targRadius, id, true, false)){
                         array_push(_targ, id);
-                        if(array_length(_targ) >= _featherNum) break;
+                        if(array_length(_targ) >= _featherMax) break;
                     }
                 }
 
 				 // Spread Feathers Out Evenly:
-                if(array_length(_targ) <= 0){
-                    with(_feathersTargeting) target = other;
-                }
-                else{
-                    var n = 0;
+                if(array_length(_targ) > 0){
+                    var _featherNum = 0,
+                    	_spreadMax = max(1, ceil(_featherMax / array_length(_targ)));
+
                     with(_targ){
-                        var i = 0,
-                            _take = max(ceil(_featherNum / array_length(_targ)), 1);
-        
-                        while(n < _featherNum && i < _take){
-                            with(_feathersTargeting[n]){
+                        var _spreadNum = 0;
+                        while(_featherNum < _featherMax && _spreadNum < _spreadMax){
+                            with(_feathersTargeting[_featherNum]){
                                 target = other;
                             }
-                            n++;
-                            i++;
+                            _featherNum++;
+                            _spreadNum++;
                         }
                     }
                 }
+
+				 // Nothing to Target, Return to Parrot:
+                else{
+                    with(_feathersTargeting) target = other;
+                }
+            }
+
+			 // Minor targeting delay so you can just click to return feathers:
+            else{
+                feather_targ_delay -= current_time_scale;
+                with(_feathers) target = creator;
             }
         }
         
@@ -321,8 +398,8 @@
         }
     }
 
-     //HP Link
-    if(ultra_get(mod_current, 2)){
+     // HP Link
+    if(ultra_get(mod_current, ultShare)){
         if(my_health != charm_hplink_lock){
             var _HPList = ds_list_create();
             with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
@@ -330,7 +407,7 @@
                     ds_list_add(_HPList, id);
                 }
             }
-    
+
             if(ds_list_size(_HPList) > 0){
                 ds_list_shuffle(_HPList);
 
@@ -377,6 +454,7 @@
 
      /// ULTRA A: Flock Together
      // probably incredibly busted
+    /*
     if(ultra_get(mod_current, 1)) {
         with(instances_matching(Corpse, "flock_together", null)) {
             flock_together = 1;
@@ -391,6 +469,7 @@
             }
         }
     }
+    */
 
 #define draw
     /*
@@ -405,7 +484,7 @@
 #define draw_gui
     instance_destroy();
     draw_set_projection(0);
-    
+
     var _index = player_find_local_nonsync(),
         _playersActive = 0;
 
@@ -422,7 +501,7 @@
             _maxHealth = 0,
             _hpColor = player_get_color(index);
 
-        if(ultra_get(mod_current, 2)){
+        if(ultra_get(mod_current, ultShare)){
             with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
                 if(lq_defget(charm, "index", -1) == other.index){
                     _myHealth += my_health;

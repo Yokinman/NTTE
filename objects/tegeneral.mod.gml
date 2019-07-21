@@ -1011,10 +1011,11 @@
 
 		 // Vars:
 		mask_index = msk.BoneSlashLight;
+		friction = 0.1;
 		damage = 24;
 		force = 8;
 		heavy = false;
-		wall = false;
+		walled = false;
 		rotspd = 0;
 
 		 // Events:
@@ -1054,9 +1055,17 @@
 	}
 	
 #define BoneSlash_wall
-	if(!wall){
-		wall = true;
+	if(!walled){
+		walled = true;
 		friction = 0.4;
+
+		 // Hit Wall FX:
+		var w = instance_nearest(x - 8, y - 8, other.object_index);
+		with(instance_create(w.x + 8, w.y + 8, MeleeHitWall)){
+			image_angle = other.image_angle;
+			image_blend = choose(c_white, make_color_rgb(208, 197, 180), make_color_rgb(157, 133, 098), make_color_rgb(111, 082, 043));
+		}
+		sound_play_pitchvol(sndMeleeWall, 2 + orandom(0.3), 1);
 	}
 
 #define BubbleBomb_create(_x, _y)
@@ -3237,7 +3246,16 @@
         if(fork()){
             wait 0;
             if(instance_exists(self)){
-                sprite_index = spr.Parrot[bskin].Feather;
+            	sprite_index = sprChickenFeather;
+            	if(is_string(bskin)){
+            		sprite_index = sprite_skin(bskin, sprite_index);
+            	}
+            	else if(instance_exists(creator) && is_string(creator.race)){
+            		sprite_index = mod_script_call("race", creator.race, "race_sprite", sprite_index);
+            	}
+                if(sprite_index == sprChickenFeather){
+                	sprite_index = spr.Parrot[0].Feather;
+                }
             }
             exit;
         }
@@ -3326,7 +3344,7 @@
                         		feather_ammo = 0;
                         		feather_ammo_max = 60;
                         	}
-                        	feather_ammo = min(feather_ammo + 1, feather_ammo_max);
+                        	feather_ammo = min(feather_ammo + 1, feather_ammo_max * (1 + skill_get(mut_back_muscle)));
                         }
                         instance_delete(id);
                         exit;
