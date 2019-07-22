@@ -2976,8 +2976,8 @@
 
      // Reset camera:
     for(var i; i < maxp; i++){
-        view_object[i] = player_find(i);
-        view_pan_factor[i] = null;
+        if(view_object[i] == id) view_object[i] = noone;
+        if(view_pan_factor[i] == 10000) view_pan_factor[i] = null;
     }
     
 #define CatHoleBig_alrm1
@@ -4634,3 +4634,4 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
+#define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);

@@ -138,9 +138,6 @@
     global.surfCrownHide	   = surflist_set("CrownHide",		 0, 0, 32, 32);
     global.surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
 
-	 // For mega hacky fix:
-    global.campchar_fix = false;
-
      // Options Menu:
     global.mouse_x_previous = array_create(maxp);
     global.mouse_y_previous = array_create(maxp);
@@ -1219,33 +1216,18 @@
                      // Pan Camera:
                     if(_playersLocal <= 1){
 	                    with(instances_matching(CampChar, "num", 17)){
-	                    	global.campchar_fix = true;
-
-						    var _shake = UberCont.opt_shake;
-						    UberCont.opt_shake = 1;
-
 							var _x1 = x,
 								_y1 = y,
 								_x2 = other.x,
 								_y2 = other.y,
 				        		_pan = 4;
 
-						    with(instance_create(_x1, _y1, CustomHitme)){
-						        with(instance_create(x, y, Revive)){
-						            p = i;
-						            canrevive = true;
-						            event_perform(ev_collision, Player);
-						            instance_destroy();
-						        }
-						        instance_destroy();
-						    }
-							with(player_find(i)){
-								gunangle = point_direction(_x1, _y1, _x2, _y2);
-								weapon_post(0, point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1 * current_time_scale, 0);
-								instance_delete(id);
-							}
-	
-						    UberCont.opt_shake = _shake;
+							view_shift(
+								i,
+								point_direction(_x1, _y1, _x2, _y2),
+								point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1 * current_time_scale
+							);
+
 							break;
 	                    }
                     }
@@ -1342,41 +1324,8 @@
     else{
     	with([surfCrownHide, surfCrownHideScreen]) active = false;
 
-    	 // Hacky shit:
-    	if(global.campchar_fix){
-			global.campchar_fix = false;
-	
-			 // Save Sounds:
-			var _sndList = [],
-				_sndMax = audio_play_sound(0, 0, 0);
-	
-			audio_stop_sound(_sndMax);
-	
-			for(var i = max(_sndMax - 1000, 400000); i < _sndMax; i++){
-				if(audio_is_playing(i)){
-					if(audio_sound_length_nonsync(i) < 10){
-						array_push(_sndList, [asset_get_index(audio_get_name(i)), audio_sound_get_gain(i), audio_sound_get_pitch(i), audio_sound_get_track_position_nonsync(i)]);
-					}
-				}
-			}
-	
-			 // Restart Game:
-			game_restart();
-			sound_stop(sndRestart);
-	
-			 // Resume Sounds:
-			with(_sndList){
-				var s = self,
-					_snd = audio_play_sound(s[0], 0, false);
-	
-				audio_sound_gain(_snd, s[1], 0);
-				audio_sound_pitch(_snd, s[2]);
-				audio_sound_set_track_position(_snd, s[3]);
-			}
-    	}
-
 		 // For CharSelection Crown Boy:
-	    else crownCamp = crown_current;
+	    crownCamp = crown_current;
     }
 
      // Pet Slots:
@@ -4421,3 +4370,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
+#define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);

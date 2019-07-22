@@ -896,6 +896,9 @@
     if(fork()){
         while(mod_exists("mod", "teloader")) wait 0;
 
+	    trace_color("NTTE | Finished loading!", c_yellow);
+	    repeat(20 * (game_height / 240)) trace("");
+
         if(lq_defget(opt, "remindPlayer", true)){
         	global.remind = [
         	    {   "pos" : [-85, -2],
