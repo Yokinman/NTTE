@@ -113,7 +113,7 @@
 		if(ammo <= 0){
 			alarm1 = 30;
 			if(in_sight(target)){
-				scrEnemyShoot("AlbinoBolt", gunangle, 16);
+				scrEnemyShoot("DiverHarpoon", gunangle, 16);
 				
 				sound_play_hit(sndCrossbow, 0.2);
 				motion_set(gunangle + 180, 3);
@@ -950,10 +950,10 @@
     if(array_length(instances_matching(CustomEnemy, "name", "CatBoss")) > 0){
 	    with(instances_matching(CustomEnemy, "name", "CatBoss")){
 	    	maxhealth *= 2;
-	    	my_health += 0.5 * maxhealth;
+	    	my_health += 0.25 * maxhealth;
 	    	
 	    	 // Effects:
-	    	instance_create(x, y, HealFX).sprite_index = sprFrogHeal;
+	    	repeat(5) scrFX(other.x, other.y, [random(360), 8], "BossHealFX").target = id;
 	    }
     }
 
@@ -1422,6 +1422,74 @@
 		image_index = 0;
 		
 		return id;
+	}
+	
+#define BossHealFX_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		image_blend = make_color_rgb(133, 249, 26);
+		image_speed = 0.4;
+		depth = -12;
+		
+		 // Vars:
+		mask_index = mskRad;
+		target = noone;
+		seek_speed = 0;
+		
+		return id;
+	}
+	
+#define BossHealFX_step
+	if(!instance_exists(target)){
+		instance_destroy();
+		exit;
+	}
+
+	 // Effects:
+	if(chance_ct(1, 6)) with(scrFX([x, 2], [y, 2], 0, EatRad)){
+		sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
+		depth = -13;
+	}
+
+	 // Seek Target:
+	if(!place_meeting(x, y, target)){
+		motion_add(point_direction(x, y, target.x, target.y), seek_speed);
+		speed = min(speed, 16);
+		seek_speed += (0.2 * current_time_scale);
+	}
+	
+	 // Collide:
+	else{
+		sound_play_hit(sndHealthChestBig, 0.4);
+		sound_play_hit(sndToxicBoltGas, 0.2);
+		
+		with(scrFX(x, y, [direction + 180, 6], AcidStreak)) image_angle = direction;
+		scrFX(x, y, [direction, 1], AcidStreak).sprite_index = spr.AcidPuff;
+		
+		repeat(2 + irandom(2)) with(scrFX([x, 8], [(y - 16), 8], 0, EatRad)){
+			sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
+			depth = -13;
+		}
+		with(instance_create(x, y, HealFX)){
+			sprite_index = spr.BossHealFX;
+			depth = -12;
+		}
+		
+		instance_destroy();
+	}
+	
+#define BossHealFX_end_step
+	 // Trail:
+	var l = point_distance(x, y, xprevious, yprevious),
+		d = point_direction(x, y, xprevious, yprevious);
+		
+	with(instance_create(x, y, BoltTrail)){
+		image_blend = other.image_blend;
+		depth		= other.depth;
+		
+		image_yscale = 1.4;
+		image_xscale = l;
+		image_angle = d;
 	}
 	
 #define Cabinet_create(_x, _y)
@@ -2132,10 +2200,10 @@
     if(array_length(instances_matching(CustomEnemy, "name", "BatBoss")) > 0){
 	    with(instances_matching(CustomEnemy, "name", "BatBoss")){
 	    	maxhealth *= 2;
-	    	my_health += 0.5 * maxhealth;
+	    	my_health += 0.25 * maxhealth;
 	    	
 	    	 // Effects:
-	    	instance_create(x, y, HealFX).sprite_index = sprFrogHeal;
+	    	repeat(5) scrFX(other.x, other.y, [random(360), 8], "BossHealFX").target = id;
 	    }
     }
 

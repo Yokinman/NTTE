@@ -642,6 +642,9 @@
             CatBossWeap     = sprite_add("sprites/enemies/CatBoss/sprCatBossToxer.png",		 2,  4,  7);
             CatBossWeapChrg = sprite_add("sprites/enemies/CatBoss/sprCatBossToxerChrg.png",	12,  1,  7);
             
+             // Boss Heal FX:
+            BossHealFX = sprite_add("sprites/enemies/CatBoss/sprBossHealFX.png", 10, 9, 9);
+            
              // Cat Chest:
             CatChest     = sprite_add("sprites/chests/sprCatChest.png",     1, 10, 10);
             CatChestOpen = sprite_add("sprites/chests/sprCatChestOpen.png", 1, 10, 10);
