@@ -3867,7 +3867,7 @@
 		instance_delete(id); // There can only be one
 	}
 
-	with(instance_create(_x, _y, CustomEnemy)){
+	with(instance_create(0, 0, CustomEnemy)){
 		PortalPrevent_step();
 		return id;
 	}
@@ -3878,7 +3878,7 @@
 	canfly = true;
 
 #define PortalPrevent_death
-	obj_create(x, y, name);
+	obj_create(0, 0, name);
 
 
 #define QuasarBeam_create(_x, _y)
