@@ -1423,11 +1423,14 @@
 		
 		return id;
 	}
-	
+
+
 #define BossHealFX_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		image_blend = make_color_rgb(133, 249, 26);
+		image_xscale = 1.2;
+		image_yscale = image_xscale;
 		image_speed = 0.4;
 		depth = -12;
 		
@@ -1435,6 +1438,7 @@
 		mask_index = mskRad;
 		target = noone;
 		seek_speed = 0;
+		wave = random(100);
 		
 		return id;
 	}
@@ -1451,17 +1455,21 @@
 		depth = -13;
 	}
 
+	 // Wavy:
+	wave += current_time_scale;
+	image_yscale += 0.5 * sin(wave * 2) * current_time_scale;
+
 	 // Seek Target:
-	if(!place_meeting(x, y, target)){
-		motion_add(point_direction(x, y, target.x, target.y), seek_speed);
+	if(distance_to_object(target) > 12){
+		motion_add_ct(point_direction(x, y, target.x, target.y), seek_speed);
 		speed = min(speed, 16);
 		seek_speed += (0.2 * current_time_scale);
 	}
 	
 	 // Collide:
-	else{
+	else if(chance_ct(1, 3)){
 		sound_play_hit(sndHealthChestBig, 0.4);
-		sound_play_hit(sndToxicBoltGas, 0.2);
+		sound_play_pitchvol(sndToxicBarrelGas, 1.8 + random(0.6), 0.4 + random(0.4));
 		
 		with(scrFX(x, y, [direction + 180, 6], AcidStreak)) image_angle = direction;
 		scrFX(x, y, [direction, 1], AcidStreak).sprite_index = spr.AcidPuff;
@@ -1472,6 +1480,7 @@
 		}
 		with(instance_create(x, y, HealFX)){
 			sprite_index = spr.BossHealFX;
+			image_speed = 0.5 + random(0.1);
 			depth = -12;
 		}
 		
@@ -1484,14 +1493,18 @@
 		d = point_direction(x, y, xprevious, yprevious);
 		
 	with(instance_create(x, y, BoltTrail)){
+		depth = other.depth;
 		image_blend = other.image_blend;
-		depth		= other.depth;
-		
-		image_yscale = 1.4;
+		image_yscale = other.image_yscale;
 		image_xscale = l;
 		image_angle = d;
 	}
-	
+
+#define BossHealFX_draw
+	draw_set_color(image_blend);
+	draw_circle(x - 1, y - 1, image_yscale, false);
+
+
 #define Cabinet_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
          // Visual:
@@ -2944,7 +2957,7 @@
     if(phase < 2){
          // Begin intro:
         if(phase < 1){
-            if(instance_exists(Player))
+            if(instance_exists(Player)){
                 if(instance_number(CorpseActive) + instance_number(enemy) - instance_number(Van) + array_length(instances_matching_ne(projectile, "team", 2)) <= 0){
                     phase++;
                     alarm0 = 40;
@@ -2954,6 +2967,7 @@
                 
                  // Close portals:
                 scrPortalPoof();
+            }
         }
 
          // Mid intro:
@@ -2969,13 +2983,10 @@
             }
 
              // Camera pan:
-            var s = UberCont.opt_shake;
-            UberCont.opt_shake = 1;
             for(var i = 0; i < maxp; i++){
                 view_object[i] = id;
                 view_pan_factor[i] = 10000;
             }
-            UberCont.opt_shake = s;
         }
     }
 
@@ -3135,7 +3146,7 @@
         }
         
          // Increment:
-        else if((in_distance(target, 128) && in_sight(target)) || phase < 2){
+        else if((in_distance(target, 180) && in_sight(target)) || phase < 2){
             if(phase > 1) phase++;
 
             image_index = 1;

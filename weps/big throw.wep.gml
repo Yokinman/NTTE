@@ -1,15 +1,17 @@
 #define init
-    global.sprCopyCat = sprite_add_weapon("../sprites/weps/sprCopyCat.png", 6, 3);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprCopyCat.png", 6, 3);
+    global.sprWepLocked = mskNone;
 
-#define weapon_name  return "BIG THROW";
-#define weapon_text  return "BLAST 'EM AWAY";
-#define weapon_type  return 0;  // Melee
-#define weapon_cost  return 0;  // No Ammo
-#define weapon_load  return 20; // 1 Second
-#define weapon_area  return 0;
-#define weapon_swap  return sndSwapEnergy;
-#define weapon_sprt  return global.sprCopyCat;
-#define weapon_melee return 0;
+#define weapon_name     return (weapon_avail() ? "BIG THROW" : "LOCKED");
+#define weapon_text     return "BLAST 'EM AWAY";
+#define weapon_type     return 0;  // Melee
+#define weapon_cost     return 0;  // No Ammo
+#define weapon_load     return 20; // 0.67 Seconds
+#define weapon_area     return (weapon_avail() ? 0 : -1);
+#define weapon_swap     return sndSwapEnergy;
+#define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_melee    return false;
+#define weapon_avail    return unlock_get("lairWep");
 
 #define weapon_reloaded
     sound_play(sndMeleeFlip);

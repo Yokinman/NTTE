@@ -3873,6 +3873,8 @@
 	}
 
 #define PortalPrevent_step
+	x = 0;
+	y = 0;
 	if(instance_number(enemy) <= 1) my_health = 99999;
 	else my_health = 1;
 	canfly = true;

@@ -109,6 +109,7 @@
 	global.area = mod_variable_get("mod", "teassets", "area");
 	global.race = mod_variable_get("mod", "teassets", "race");
 	global.crwn = mod_variable_get("mod", "teassets", "crwn");
+	global.weps = mod_variable_get("mod", "teassets", "weps");
 
     global.debug_lag = false;
 
@@ -525,6 +526,7 @@
 #macro areaList global.area
 #macro raceList global.race
 #macro crwnList global.crwn
+#macro wepsList global.weps
 
 #macro DebugLag global.debug_lag
 
@@ -1648,6 +1650,7 @@
     var _canDrop = false;
     with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
     	_canDrop = true;
+    	break;
     }
     if(_canDrop) with(instances_matching_le(enemy, "my_health", 0)){
 		var _raddrop = variable_instance_get(id, "raddrop", 0),
@@ -1832,24 +1835,28 @@
     }
     
      // No Cheaters (bro just play the mod):
-    with(["wep", "bwep"]){
-    	var o = self;
-    	
-    	with(Player){
-    		var w = wep_get(variable_instance_get(id, o));
-    		
-    		if(is_string(w) && mod_exists("weapon", w) && mod_script_exists("weapon", w, "weapon_unlocked") && !mod_script_call("weapon", w, "weapon_unlocked")){
-    			
-    			variable_instance_set(id, o, wep_none);
-    			if(o == "wep" && bwep != wep_none) scrSwap();
-    			
-    			 // Effects:
-    			sound_play(sndCrownRandom);
-    			view_shake_at(x, y, 20);
-    			instance_create(x, y, GunWarrantEmpty);
-    		}
-    	}
-    }
+	with(Player){
+		var w = 0;
+		with([wep_get(wep), wep_get(bwep)]){
+			var _wep = self;
+			with(other){
+				if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && !mod_script_call("weapon", _wep, "weapon_avail")){
+					variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
+					var a = choose(-120, 120);
+					variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
+					
+					 // Effects:
+					sound_play(sndCrownRandom);
+					view_shake_at(x, y, 20);
+					instance_create(x, y, GunWarrantEmpty);
+					repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
+						depth = other.depth - 1;
+					}
+				}
+			}
+			w++;
+		}
+	}
 
 	if(DebugLag) trace_time("ntte_end_step");
 

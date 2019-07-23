@@ -1,5 +1,5 @@
 #define init
-    global.sprBone = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
 
 #macro wepLWO {
         wep  : mod_current,
@@ -31,7 +31,7 @@
         wepammo_draw(w);
     }
 
-    return global.sprBone;
+    return global.sprWep;
 
 #define weapon_fire(w)
     if(!is_object(w)){
