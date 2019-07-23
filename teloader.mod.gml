@@ -5,26 +5,31 @@
     global.load = 0;
     global.load_hudy = 0;
     global.load_hudb = 0;
+
+    var _coop = -1;
+    for(var i = 0; i < maxp; i++) _coop += player_is_active(i);
+    _coop *= 2;
+
     global.list = [ // [mod, delay]
-        ["teassets.mod.gml",                        5],
-        ["ntte.mod.gml",                            1],
-        ["telib.mod.gml",                           1],
-        ["petlib.mod.gml",                          1],
-        ["objects/tegeneral.mod.gml",               0],
-        ["objects/tedesert.mod.gml",                0],
-        ["objects/tecoast.mod.gml",                 1],
-        ["objects/teoasis.mod.gml",                 0],
-        ["objects/tetrench.mod.gml",                0],
-        ["objects/tesewers.mod.gml",                1],
-        ["objects/tescrapyard.mod.gml",             0],
-        ["objects/tecaves.mod.gml",                 2],
-        ["areas/coast.area.gml",                    1],
-        ["areas/oasis.area.gml",                    1],
-        ["areas/pizza.area.gml",                    1],
-        ["areas/lair.area.gml",                     1],
-        ["areas/trench.area.gml",                   1],
-        ["races/parrot.race.gml",                   1],
-        ["weps/merge.wep.gml",                      1],
+        ["teassets.mod.gml",                        5 + _coop],
+        ["ntte.mod.gml",                            1 + _coop],
+        ["telib.mod.gml",                           1 + _coop],
+        ["petlib.mod.gml",                          1 + _coop],
+        ["objects/tegeneral.mod.gml",               0 + _coop],
+        ["objects/tedesert.mod.gml",                0 + _coop],
+        ["objects/tecoast.mod.gml",                 1 + _coop],
+        ["objects/teoasis.mod.gml",                 0 + _coop],
+        ["objects/tetrench.mod.gml",                0 + _coop],
+        ["objects/tesewers.mod.gml",                1 + _coop],
+        ["objects/tescrapyard.mod.gml",             0 + _coop],
+        ["objects/tecaves.mod.gml",                 2 + _coop],
+        ["areas/coast.area.gml",                    1 + _coop],
+        ["areas/oasis.area.gml",                    1 + _coop],
+        ["areas/pizza.area.gml",                    1 + _coop],
+        ["areas/lair.area.gml",                     1 + _coop],
+        ["areas/trench.area.gml",                   1 + _coop],
+        ["races/parrot.race.gml",                   1 + _coop],
+        ["weps/merge.wep.gml",                      1 + _coop],
         ["weps/crabbone.wep.gml",                   1],
         ["weps/scythe.wep.gml",                     1],
         ["weps/bat disc launcher.wep.gml",          1],
@@ -72,8 +77,6 @@
     sound_play_pitchvol(sndEXPChest, 1.5 + random(0.1), 0.6);
     sound_play_pitchvol(sndNoSelect, 0.6 + random(0.1), 0.5);
     while(global.load_hudy > 0) wait 0;
-    trace_color("NTTE | Finished loading!", c_yellow);
-    repeat(20 * (game_height / 240)) trace("");
     mod_loadtext("main3.txt");
 
 #define draw_gui

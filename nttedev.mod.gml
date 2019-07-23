@@ -8,7 +8,7 @@
         "races/parrot.race.gml",
         "weps/merge.wep.gml"
     ]){
-        script_set(self, "mod", "telib", "array_shuffle", ["_array"], "return", "_nc");
+        script_set(self, "mod", "telib", "view_shift", ["_index, _dir, _pan"], "", "_nc");
         
         //script_remove(self, "obj_create");
     }

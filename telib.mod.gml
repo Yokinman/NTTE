@@ -2088,3 +2088,21 @@
 
 #define sleep_max(_milliseconds)
 	global.sleep_max = max(global.sleep_max, _milliseconds);
+
+#define view_shift(_index, _dir, _pan)
+    var _shake = UberCont.opt_shake;
+    UberCont.opt_shake = 1;
+
+	with(instance_create(0, 0, Revive)){
+		try{
+			p = _index;
+			instance_change(Player, false);
+			gunangle = _dir;
+			weapon_post(0, _pan, 0);
+		}
+		catch(_error) trace(_error);
+
+		instance_delete(id);
+	}
+
+    UberCont.opt_shake = _shake;

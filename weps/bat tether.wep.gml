@@ -1,5 +1,6 @@
 #define init
-    global.sprBatTether = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
+    global.sprWep = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
+    global.sprWepLocked = mskNone;
 
 #macro wepLWO {
         wep : mod_current,
@@ -9,13 +10,14 @@
         buff : false
     }
 
-#define weapon_name     return "VAMPIRE";
+#define weapon_name     return (weapon_avail() ? "VAMPIRE" : "LOCKED");
 #define weapon_text     return "HEMOELECTRICITY";
 #define weapon_type     return 0; // None
 #define weapon_load     return 5; // 0.16 Seconds
-#define weapon_area     return (unlock_get("lairWep") ? 10 : -1); // 5-2
+#define weapon_area     return (weapon_avail() ? 10 : -1); // 5-2
 #define weapon_melee    return false;
 #define weapon_swap     return sndSwapEnergy;
+#define weapon_avail    return unlock_get("lairWep");
 
 #define weapon_auto(w)
     if(is_object(w) && w.ammo < w.cost) return -1;
@@ -23,7 +25,7 @@
 
 #define weapon_sprt(w)
     wepammo_draw(w); // Custom Ammo Drawing
-    return global.sprBatTether;
+    return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(w)
     if(!is_object(w)){
@@ -49,7 +51,7 @@
             wep.ammo = wep.amax * (1 + skill_get(mut_back_muscle));
             
             projectile_hit_raw(id, 1, false);
-            lasthit = [global.sprBatTether, "PLAYING GOD"];
+            lasthit = [global.sprWep, "PLAYING GOD"];
             
              // Hurt:
             if(my_health > 0){

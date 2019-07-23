@@ -763,9 +763,6 @@
 		 // Merged Weapon Sprite Storage:
         MergeWep = {};
         MergeWepText = {};
-        
-         // Locked Wep Sprites:
-        LockedWep = {};
 
          // Shine Overlays:
         Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
@@ -893,11 +890,15 @@
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot"];
     global.crwn = ["crime"];
+    global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 
      // Reminders:
     global.remind = [];
     if(fork()){
         while(mod_exists("mod", "teloader")) wait 0;
+
+	    trace_color("NTTE | Finished loading!", c_yellow);
+	    repeat(20 * (game_height / 240)) trace("");
 
         if(lq_defget(opt, "remindPlayer", true)){
         	global.remind = [
@@ -942,6 +943,8 @@
 
 #macro areaList global.area
 #macro raceList global.race
+#macro crwnList global.crwn
+#macro wepsList global.weps
 
 #macro surfList global.surf
 #macro shadList global.shad
@@ -1051,6 +1054,17 @@
 		if(shad != -1){
 			shader_destroy(shad);
 			shad = -1;
+		}
+	}
+
+	 // Locked Weapon Spriterize:
+	with(wepsList){
+		var _name = self;
+		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
+			var _spr = mod_variable_get("weapon", _name, "sprWep");
+			if(sprite_get_number(_spr) != 1 || sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
+				with(other) mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
+			}
 		}
 	}
 
@@ -1303,35 +1317,32 @@
 
 		return s;
     }
-    
-#define wep_locked_sprite(_wepName, _wepSprite, _w, _h)
-	if(lq_exists(spr.LockedWep, _wepName)){
-		return lq_get(spr.LockedWep, _wepName);
+
+#define wep_locked_sprite(_sprite)
+	var _surfW = sprite_get_width(_sprite) + 2,
+		_surfH = sprite_get_height(_sprite) + 2,
+		_surf = surface_create(_surfW, _surfH),
+		_x = sprite_get_xoffset(_sprite) + 1,
+		_y = sprite_get_yoffset(_sprite) + 1;
+		
+	surface_set_target(_surf);
+
+	 // Outline:
+	d3d_set_fog(true, c_white, 0, 0);
+	for(var d = 0; d < 360; d += 90){
+		draw_sprite(_sprite, 0, _x + dcos(d), _y + dsin(d));
 	}
-	
-	else{
-		var _surfW =  sprite_get_width(_wepSprite) + 2,
-			_surfH = sprite_get_height(_wepSprite) + 2,
-			_surf = surface_create(_surfW, _surfH),
-			_x = sprite_get_xoffset(_wepSprite) + 1,
-			_y = sprite_get_yoffset(_wepSprite) + 1;
-			
-		surface_set_target(_surf);
-		
-		d3d_set_fog(true, c_white, 0, 0);
-		for(var d = 0; d < 360; d += 90)
-			draw_sprite(_wepSprite, 0, _x + lengthdir_x(1, d), _y + lengthdir_y(1, d));
-		d3d_set_fog(true, c_black, 0, 0);
-		draw_sprite(_wepSprite, 0, _x, _y);
-		
-		d3d_set_fog(false, c_white, 0, 0);
-		surface_reset_target();
-		surface_save(_surf, "sprLockedWep.png");
-		
-		var s = sprite_add_weapon("sprLockedWep.png", _x, _y);
-		lq_set(spr.LockedWep, _wepName, s);
-		return s;
-	}
+
+	 // Main:
+	d3d_set_fog(true, c_black, 0, 0);
+	draw_sprite(_sprite, 0, _x, _y);
+	d3d_set_fog(false, 0, 0, 0);
+
+	 // Save Sprite:
+	surface_reset_target();
+	surface_save(_surf, "sprLockedWep.png");
+	surface_destroy(_surf);
+	return sprite_add_weapon("sprLockedWep.png", _x, _y);
 
 #define cleanup
     if(global.sav_auto) save();
