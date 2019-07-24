@@ -66,7 +66,7 @@
 	repeat(ammo){
 		with(instance_create(x, y, EnemyBullet3)){
 			instance_change(Bullet2, false);
-			sprite_index = spr.AllyBullet3;
+			sprite_index = sprBullet2;
 			bonus = false;
 
 			motion_add(random(360), random_range(9, 12));

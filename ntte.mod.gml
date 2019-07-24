@@ -1500,7 +1500,7 @@
 	}
 
 	 // Overstock / Bonus Ammo:
-	with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
+	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true)){
 		var c = weapon_get_cost(wep),
 			t = weapon_get_type(wep),
 			_auto = weapon_get_auto(wep);
@@ -2166,8 +2166,8 @@
 
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
     var _type = argument[0], _snd = argument[1];
-var _vol = argument_count > 2 ? argument[2] : undefined;
-var _pos = argument_count > 3 ? argument[3] : undefined;
+var _vol; if (argument_count > 2) _vol = argument[2]; else _vol = undefined;
+var _pos; if (argument_count > 3) _pos = argument[3]; else _pos = undefined;
     if(is_undefined(_vol)) _vol = 1;
     if(is_undefined(_pos)) _pos = 0;
 
