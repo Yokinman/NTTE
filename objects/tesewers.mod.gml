@@ -518,7 +518,7 @@
 	
 	         // Attack target:
 	        if(chance(2, 5) && in_distance(target, [50, 200])){
-				alarm1 = 7;
+				alarm1 = 10;
 				canfire = true;
 				instance_create(x + (4 * right), y, AssassinNotice);
 				
@@ -1070,12 +1070,6 @@
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
 	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	repeat(6) scrFX(x, y, 3, Dust);
-	
-	 // Crown Time:
-	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
-		enemy_time = 30;
-		enemies += (1 + GameCont.loops) + irandom(3);
-	}
 
 #define BatCloud_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -1660,6 +1654,7 @@
             with(scrEnemyShoot(ToxicGas, gunangle + orandom(6), 4)){
                 team = 0;
                 friction = 0.12;
+                cat_toxic = true;
             }
         }
         gunangle += 12;
@@ -2108,9 +2103,10 @@
 
      // Gas:
     repeat(3 + irandom(3)){
-        with(scrEnemyShoot(ToxicGas, direction + 180 + orandom(4), 1 + random(2))){
+        with(scrEnemyShoot(ToxicGas, direction + 180 + orandom(4), 2 + random(1))){
             friction = 0.16;
             team = 0;
+            cat_toxic = true;
         }
     }
 
@@ -2544,12 +2540,6 @@
 	//sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
 	repeat(6) scrFX(x, y, 3, Dust);
-	
-	 // Crown Time:
-	if(!instance_is(other, PortalShock)) with(instances_matching(Crown, "ntte_crown", "crime")){
-		enemy_time = 30;
-		enemies += (1 + GameCont.loops) + irandom(3);
-	}
 	
 #define CatDoor_create(_x, _y)
     with(instance_create(_x, _y, CustomHitme)){
@@ -3362,7 +3352,7 @@
 							case "bonus":
 								with(p){
 									if("ammo_bonus" not in self) ammo_bonus = 0
-									ammo_bonus += 24;
+									ammo_bonus += 32;
 									ammo_bonus_hold = array_clone(ammo);
 
 									 // FX:
@@ -3440,6 +3430,12 @@
 					open_state += random(1/3);
 				}
 				open_state = 3/4;
+				
+				 // Crown Time:
+				with(instances_matching(Crown, "ntte_crown", "crime")){
+					enemy_time = 30;
+					enemies += (1 + GameCont.loops) + irandom(3);
+				}
 			}
 		}
 	}
@@ -3608,7 +3604,7 @@
 		case ChestShop_wep:
 			sprite_index = weapon_get_sprt(drop);
 
-			text = (curse ? "CURSED " : "") + "WEAPON";
+			text = (wep_get(drop) == "merge" ? "MERGE " : "") + (curse ? "CURSED " : "") + "WEAPON";
 			desc = weapon_get_name(drop);
 			break;
 	}

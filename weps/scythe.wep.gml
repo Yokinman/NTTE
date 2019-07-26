@@ -26,6 +26,12 @@
 			sprt : global.sprShotbow,
 			cost : 5,
 			load : 18 // 0.6 Seconds
+		},
+		{
+			name : "bone slugbow",
+			sprt : sprHeavyCrossbow,
+			cost : 5,
+			load : 15 // 0.5 Seconds
 		}
 	];
 	global.numModes = array_length(wepModes);
@@ -144,6 +150,25 @@
 				sleep(4);
 			}
 		
+			break;
+		//#endregion
+		
+		//#region SLUGBOW
+		case 2:
+			if(wepammo_fire(w)){
+				 // Projectile:
+				var d = gunangle + (accuracy * orandom(4));
+				with(obj_create(x, y, "BoneArrow")){
+					creator = other;
+					team	= other.team;
+					big		= true;
+					
+					direction	= d;
+					speed		= 16;
+					image_angle = direction;
+				}
+			}
+			
 			break;
 		//#endregion
 	}

@@ -275,7 +275,7 @@
 		mask_index = mskLast;
 		maxhealth = 60 + 30 * GameCont.loops;
 		lsthealth = maxhealth;
-		raddrop = 10;
+		raddrop = 6;
 		size = 4;
 		loop_snd = -1;
 		scorp_drop = 0;
@@ -357,6 +357,7 @@
 				x = xstart;
 				y = ystart;
 				creator = other;
+				raddrop = chance(1, 3);
 
 				 // Effects:
 				for(var i = 0; i <= (4 * _loop); i += 2){
@@ -418,6 +419,7 @@
 	repeat(irandom_range(2, 3)){
 		with(instance_create(x, y, BigMaggot)){
 			creator = other;
+			raddrop = 4;
 		}
 	}
 
@@ -627,7 +629,7 @@
 
          // Vars:
         mask_index = mskScorpion;
-        maxhealth = 50 + (100 * GameCont.loops);
+        maxhealth = 100 * (1 + GameCont.loops);
         size = 2;
         part = 0;
         team = 0;

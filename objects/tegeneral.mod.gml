@@ -104,7 +104,7 @@
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
 
 		 // Vars:
-		raddrop = 8;
+		raddrop = 8 + array_length(instances_matching(Player, "race", "melting"));
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
 			case crwn_curses:	curse = chance(2, 3);	break;
@@ -135,19 +135,23 @@
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
 	 // Merged Weapon:	
-	var _part = wep_merge_decide(0, GameCont.hard + (curse ? 2 : 0));
+	var _refinedTaste = (ultra_get("robot", 1) * 4),
+		_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (curse ? 2 : 0));
 	if(array_length(_part) >= 2){
-		with(instance_create(x, y, WepPickup)){
-			wep = wep_merge(_part[0], _part[1]);
-			curse = other.curse;
-			ammo = true;
-			roll = true;
+		repeat(1 + ultra_get("steroids", 1)){
+			with(instance_create(x, y, WepPickup)){
+				wep = wep_merge(_part[0], _part[1]);
+				curse = other.curse;
+				ammo = true;
+				roll = true;
+			}
 		}
 	}
 	
 	 // Pickups:
-	var _ang = random(360);
-	for(var d = _ang; d < _ang + 360; d += (360 / 2)){
+	var _ang = random(360),
+		_num = 2 + ceil(skill_get(mut_rabbit_paw));
+	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
 		with(obj_create(x, y, "BackpackPickup")){
 			direction = d;
 			curse = other.curse;
@@ -183,10 +187,29 @@
 	instance_create(_x, _y, Dust);
 	with(instance_create(_x, _y, CustomObject)){
 		 // Determine Pickup:
-		var _choices = [AmmoPickup, HPPickup];
-		if(array_length(instances_matching(Player, "race", "rogue")) > 0) array_push(_choices, RoguePickup);
+		var _objMin = instance_create(0, 0, GameObject),
+			_pickup = AmmoPickup;
+		instance_delete(_objMin);
 		
-		object = _choices[irandom(array_length(_choices) - 1)];
+		pickup_drop(999, 0);
+		with(instances_matching_gt(Pickup, "id", _objMin)){
+			_pickup = object_index;
+			instance_delete(id);
+		}
+		with(instances_matching_gt([AmmoChest, FishA], "id", _objMin)){
+			_pickup = AmmoChest;
+			instance_delete(id);
+		}
+		
+		 // Portal Strikes:
+		if(array_length(instances_matching(Player, "race", "rogue")) >= 1 && chance(1, 3))
+			_pickup = RoguePickup;
+		
+		 // wtf this isnt a pickup:
+		if(chance(1, 20))
+			_pickup = Bandit;
+		
+		object = _pickup;
 		switch(crown_current){
 			case crwn_life: object = AmmoPickup; break;
 			case crwn_guns: object = HPPickup;	 break;
@@ -851,6 +874,9 @@
 		damage_falloff = current_frame + 2;
 		wallbounce = 4 * _shotgunShoulders;
 		alarm1 = (_boltMarrow > 0 ? 5 : 0);
+		seekdist = 40;
+		setup = false;
+		big = false;
 		
 		return id;	
 	}
@@ -866,6 +892,22 @@
 	}
 	
 #define BoneArrow_end_step
+	 // Setup:
+	if(!setup){
+		setup = true;
+		
+		 // Bigify:
+		if(big){
+			 // Visual:
+			sprite_index = sprHeavyBolt;
+			
+			 // Vars:
+			friction = 0;
+			damage = 32;
+			seekdist = 16;
+		}
+	}
+
 	 // Trail:
 	var l = point_distance(x, y, xprevious, yprevious),
 		d = point_direction(x, y, xprevious, yprevious);
@@ -879,7 +921,7 @@
 	alarm1 = 5;
 
 	 // Seeking:
-	var _seekDist = 42 * skill_get(mut_bolt_marrow);;
+	var _seekDist = seekdist * skill_get(mut_bolt_marrow);;
 	with(nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team))) if(point_distance(x, y, other.x, other.y) <= _seekDist){
 		other.x = x;
 		other.y = y;
@@ -889,6 +931,12 @@
 	else alarm1 = 1;
 	
 #define BoneArrow_wall
+	if(big){
+		friction = 0.8;
+		sleep(10);
+		view_shake_at(x, y, 10);
+	}
+
 	 // Effects:
 	instance_create(x + hspeed, y + vspeed, Dust);
 	
@@ -911,7 +959,6 @@
 		var _damage = damage + ((damage_falloff > current_frame) * 2);
 		projectile_hit(other, _damage, force, direction);
 	}
-
 
 #define BoneBigPickup_create(_x, _y)
 	with(obj_create(_x, _y, "BonePickup")){
@@ -1052,6 +1099,31 @@
 #define BoneSlash_hit
 	if(projectile_canhit_melee(other) && other.my_health > 0){
 		projectile_hit(other, damage, force, direction);
+		
+	     // Bone Pickup Drops:
+	    with(other) if(my_health <= 0){
+			var _raddrop = variable_instance_get(id, "raddrop", 0),
+				d = (size >= 2) ? 2.6 : 1.8,
+				n = max((maxhealth / d) - _raddrop, 0);
+				
+			if(n > 0){
+				 // Big Pickups:
+				var _numLarge = floor(n div 10);
+				if(_numLarge > 0) repeat(_numLarge){
+					with(obj_create(x, y, "BoneBigPickup")){
+						motion_set(random(360), 3 + random(1));
+					}
+				}
+	
+				 // Small Pickups:
+				var _numSmall = ceil(n mod 10);
+				if(_numSmall > 0) repeat(_numSmall){
+					with(obj_create(x, y, "BonePickup")){
+						motion_set(random(360), 3 + random(1));
+					}
+				}
+			}
+	    }
 	}
 	
 #define BoneSlash_wall

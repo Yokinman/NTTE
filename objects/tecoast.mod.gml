@@ -1423,7 +1423,7 @@
 
         else{
              // Call for Seals:
-            if((z <= 0 || (chance(3, 4) && chance(1, array_length(Seal) / 2))) && array_length(Seal) <= seal_max * 4){
+            if(chance(2 + (z <= 0), 4) && chance(1, array_length(Seal) / 3) && array_length(Seal) <= seal_max * 4){
             	alarm1 = 30 + random(10);
 
                 sprite_index = spr_call;
@@ -1735,7 +1735,7 @@
          // Vars:
         mask_index = mskSlash;
         friction = 0.5;
-        damage = 2;
+        damage = 3;
         force = 8;
 
         return id;
@@ -1855,7 +1855,7 @@
             else image_angle = 0;
 
 	        if(place_meeting(x, y, Floor) || GameCont.area != "coast"){
-	            projectile_hit(id, 3);
+	            projectile_hit(id, 1);
 	        }
         }
 
@@ -2125,6 +2125,7 @@
         shield_ang = gunangle;
         shield_draw = true;
         surfClamShield = -1;
+        next_attack = (current_frame + 30)
 
          // Alarms:
         alarm1 = 20 + random(20);
@@ -2292,7 +2293,7 @@
 #macro seal_hookpole 1
 #macro seal_shield 2
 #macro seal_blunderbuss 3
-#macro seal_chance [0, 6, 3, 4]
+#macro seal_chance [0, 7, 3, 5]
 
 #macro surfClamShieldW 100
 #macro surfClamShieldH 100
@@ -2373,7 +2374,8 @@
 
     target = instance_nearest(x, y, Player);
     if(in_sight(target)){
-        var _targetDir = point_direction(x, y, target.x, target.y);
+        var _targetDir = point_direction(x, y, target.x, target.y),
+        	_canAttack = (next_attack <= current_frame);
 
          // Seal Types:
         switch(type){
@@ -2388,7 +2390,7 @@
                 else{
                     if(chance(4, 5)){
                          // Attack:
-                        if(in_distance(target, 70)){
+                        if(_canAttack && in_distance(target, 70)){
                             alarm1 = 30;
                             alarm2 = 10;
                             trident_dist = point_distance(x, y, target.x, target.y) - 24;
@@ -2436,7 +2438,7 @@
                     if(in_distance(target, 120)){
                         scrWalk(5 + random(5), _targetDir + choose(0, 0, 180) + orandom(20));
 
-                        if(in_distance(target, 80)){
+                        if(_canAttack && in_distance(target, 80)){
                              // Stabby:
                             gunangle = _targetDir;
                             with(scrEnemyShoot(Shank, gunangle, 3)) damage = 2;
@@ -2483,7 +2485,7 @@
                  // Good Distance Away:
                 else{
                      // Aim & Ignite Powder:
-                    if(in_distance(target, 192) && chance(2, 3)){
+                    if(_canAttack && in_distance(target, 192) && chance(2, 3)){
                         alarm1 = alarm1 + 90;
 
                         gunangle = _targetDir;
@@ -3312,7 +3314,7 @@
 		speed = 0;
 		x = xstart;
 		y = ystart;
-		image_index -= image_speed;
+		image_index = 0;
 
 		 // Disable Melee:
 		canmelee = false;

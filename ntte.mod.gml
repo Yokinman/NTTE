@@ -1636,6 +1636,18 @@
 			}
 		}
 	}
+	
+	 // Cat:
+	with(instances_matching_le(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.4)){
+		var _scale = 0.75;
+		with(scrFX(x, y, [direction, speed], BulletHit)){
+			sprite_index = sprExploderExplo;
+			image_xscale = _scale;
+			image_yscale = _scale;
+			image_index = 2;
+		}
+		instance_destroy();
+	}
 
 	 // Separate Bones:
     with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
@@ -1644,36 +1656,6 @@
             with(instance_create(x, y, WepPickup)) wep = "crabbone";
         }
         else crabbone_splitcheck = true;
-    }
-    
-     // Bone Pickup Drops:
-    var _canDrop = false;
-    with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-    	_canDrop = true;
-    	break;
-    }
-    if(_canDrop) with(instances_matching_le(enemy, "my_health", 0)){
-		var _raddrop = variable_instance_get(id, "raddrop", 0),
-			d = (size >= 2) ? 2.6 : 1.8,
-			n = max((maxhealth / d) - _raddrop, 0);
-			
-		if(n > 0){
-			 // Big Pickups:
-			var _numLarge = floor(n div 10);
-			if(_numLarge > 0) repeat(_numLarge){
-				with(obj_create(x, y, "BoneBigPickup")){
-					motion_set(random(360), 3 + random(1));
-				}
-			}
-
-			 // Small Pickups:
-			var _numSmall = ceil(n mod 10);
-			if(_numSmall > 0) repeat(_numSmall){
-				with(obj_create(x, y, "BonePickup")){
-					motion_set(random(360), 3 + random(1));
-				}
-			}
-		}
     }
 
     if(DebugLag) trace_time("ntte_step");
