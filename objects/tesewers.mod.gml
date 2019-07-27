@@ -3400,7 +3400,7 @@
 						break;
 
 					case ChestShop_wep:
-						with(instance_create(_x, _y, WepPickup)){
+						repeat(1 + ceil(ultra_get("steroids", 1))) with(instance_create(_x, _y, WepPickup)){
 							motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
 							wep = other.drop;
 							curse = other.curse;

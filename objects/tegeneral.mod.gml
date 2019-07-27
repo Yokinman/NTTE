@@ -134,16 +134,39 @@
 	if(curse) sound_play(sndCursedChest);
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
-	 // Merged Weapon:	
-	var _refinedTaste = (ultra_get("robot", 1) * 4),
-		_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (curse ? 2 : 0));
-	if(array_length(_part) >= 2){
-		repeat(1 + ultra_get("steroids", 1)){
-			with(instance_create(x, y, WepPickup)){
-				wep = wep_merge(_part[0], _part[1]);
-				curse = other.curse;
-				ammo = true;
-				roll = true;
+	 // DefPack Integration:	
+	if(mod_exists("mod", "defpack tools") && chance(1, 5)){
+		with(instance_create(x, y, WepPickup)){
+		    var _jsGrub = [
+		    	"lightning blue lifting drink(tm)",
+		    	"extra double triple coffee",
+		    	"expresso",
+		    	"saltshake",
+		    	"munitions mist",
+		    	"vinegar",
+		    	"guardian juice",
+		    	"stopwatch"]; // a beautiful mistake
+		    	
+			if(skill_get(mut_boiling_veins) > 0)								array_push(_jsGrub, "sunset mayo");
+			if(array_length(instances_matching(Player, "notoxic", false)) > 0)	array_push(_jsGrub, "frog milk");
+			
+            wep = _jsGrub[irandom(array_length(_jsGrub)-1)];
+            roll = true;
+		}
+	}
+	
+	 // Merged Weapon:
+	else{
+		var _refinedTaste = (ultra_get("robot", 1) * 4),
+			_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (curse ? 2 : 0));
+		if(array_length(_part) >= 2){
+			repeat(1 + ultra_get("steroids", 1)){
+				with(instance_create(x, y, WepPickup)){
+					wep = wep_merge(_part[0], _part[1]);
+					curse = other.curse;
+					ammo = true;
+					roll = true;
+				}
 			}
 		}
 	}
@@ -3551,6 +3574,10 @@
         player_push = true;
         //can_tp = true;
         //tp_distance = 240;
+        
+         // Scripts:
+        mod_type = "mod";
+        mod_name = "petlib";
 
          // Alarms:
         alarm0 = 20 + random(10);
@@ -3598,9 +3625,9 @@
 
 	     // Animate:
 	    var _scrt = pet + "_anim";
-	    if(mod_script_exists("mod", "petlib", _scrt)){
+	    if(mod_script_exists(mod_type, mod_name, _scrt)){
 	         // Custom Animation Event:
-	        mod_script_call("mod", "petlib", _scrt);
+	        mod_script_call(mod_type, mod_name, _scrt);
 	    }
 	    else enemySprites();
 
@@ -3615,8 +3642,8 @@
 
     	 // Custom Step Event:
         var _scrt = pet + "_step";
-        if(mod_script_exists("mod", "petlib", _scrt)){
-            mod_script_call("mod", "petlib", _scrt);
+        if(mod_script_exists(mod_type, mod_name, _scrt)){
+            mod_script_call(mod_type, mod_name, _scrt);
         }
     }
 
@@ -3751,8 +3778,8 @@
 		            if(place_meeting(x, y, other)) with(other){
 		                 // Custom Dodge Event:
 		                var _scrt = pet + "_hurt";
-		                if(mod_script_exists("mod", "petlib", _scrt)){
-		                    mod_script_call("mod", "petlib", _scrt);
+		                if(mod_script_exists(mod_type, mod_name, _scrt)){
+		                    mod_script_call(mod_type, mod_name, _scrt);
 		                }
 
 		                 // Default:
@@ -3818,8 +3845,8 @@
 
      // Custom Draw Event:
     var _scrt = pet + "_draw";
-    if(mod_script_exists("mod", "petlib", _scrt)){
-        mod_script_call("mod", "petlib", _scrt);
+    if(mod_script_exists(mod_type, mod_name, _scrt)){
+        mod_script_call(mod_type, mod_name, _scrt);
     }
 
      // Default:
@@ -3904,8 +3931,8 @@
 
          // Custom Alarm Event:
         var _scrt = pet + "_alrm0";
-        if(mod_script_exists("mod", "petlib", _scrt)){
-            var a = mod_script_call("mod", "petlib", _scrt, _leaderDir, _leaderDis);
+        if(mod_script_exists(mod_type, mod_name, _scrt)){
+            var a = mod_script_call(mod_type, mod_name, _scrt, _leaderDir, _leaderDis);
             if(is_real(a) && a > 0) alarm0 = a;
         }
 

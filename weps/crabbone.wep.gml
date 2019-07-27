@@ -7,8 +7,14 @@
     }
 
 #define weapon_name return "BONE";
-#define weapon_text return "BONE THE FISH";
-#define weapon_type return 0;  // Melee
+#define weapon_text return "BONE THE FISH"; // yokin no
+#define weapon_type(w)
+     // Return Other Weapon's Ammo Type:
+    if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
+        with(other) return weapon_get_type((w == wep) ? bwep : wep);
+    }
+    return 0; // Melee
+    
 #define weapon_load return 6;  // 0.2 Seconds
 #define weapon_swap return sndBloodGamble;
 
