@@ -407,6 +407,7 @@
                     _done = false;
                 }
             }
+            y = min(0 - floor(h / 2), y);
         }
         
          // Special Rooms:

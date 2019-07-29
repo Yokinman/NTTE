@@ -104,11 +104,14 @@
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
 
 		 // Vars:
-		raddrop = 8 + array_length(instances_matching(Player, "race", "melting"));
+		raddrop = 8;
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
 			case crwn_curses:	curse = chance(2, 3);	break;
 			default:			curse = chance(1, 7);
+		}
+		for(var i = 0; i < maxp; i++){
+			raddrop += (player_get_race(i) == "melting");
 		}
 
 		 // Cursed:
@@ -135,8 +138,10 @@
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
 	 // Merged Weapon:	
-	var _refinedTaste = (ultra_get("robot", 1) * 4),
-		_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (curse ? 2 : 0));
+	var _hardMin = (ultra_get("robot", 1) * 4),
+		_hardMax = max(_hardMin, GameCont.hard) + (curse ? 2 : 0),
+		_part = wep_merge_decide(_hardMin, _hardMax);
+
 	if(array_length(_part) >= 2){
 		repeat(1 + ultra_get("steroids", 1)){
 			with(instance_create(x, y, WepPickup)){
@@ -151,6 +156,7 @@
 	 // Pickups:
 	var _ang = random(360),
 		_num = 2 + ceil(skill_get(mut_rabbit_paw));
+
 	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
 		with(obj_create(x, y, "BackpackPickup")){
 			direction = d;
@@ -188,46 +194,55 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Determine Pickup:
 		var _objMin = instance_create(0, 0, GameObject),
-			_pickup = AmmoPickup;
+			_obj = AmmoPickup,
+			_spr = sprAmmo,
+			_msk = mskPickup;
+
 		instance_delete(_objMin);
-		
-		pickup_drop(999, 0);
-		with(instances_matching_gt(Pickup, "id", _objMin)){
-			_pickup = object_index;
+		pickup_drop(10000, 0);
+		with(instances_matching_gt([Pickup, chestprop], "id", _objMin)){
+			_obj = object_index;
+			_spr = sprite_index;
+			_msk = mask_index;
+
+			if(instance_is(self, AmmoPickup)){
+				 // Portal Strikes:
+				for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+					if(chance(1, 5)){
+						_obj = RoguePickup;
+						_spr = sprRogueAmmo;
+					}
+					break;
+				}
+
+				 // Fix Cursed Ammo:
+				if(cursed) _spr = sprAmmo;
+			}
+
 			instance_delete(id);
 		}
-		with(instances_matching_gt([AmmoChest, FishA], "id", _objMin)){
-			_pickup = AmmoChest;
-			instance_delete(id);
-		}
-		
-		 // Portal Strikes:
-		if(array_length(instances_matching(Player, "race", "rogue")) >= 1 && chance(1, 3))
-			_pickup = RoguePickup;
-		
+
 		 // wtf this isnt a pickup:
-		if(chance(1, 20))
-			_pickup = Bandit;
-		
-		object = _pickup;
-		switch(crown_current){
-			case crwn_life: object = AmmoPickup; break;
-			case crwn_guns: object = HPPickup;	 break;
+		if(chance(1, 40)){
+			_obj = Bandit;
+			_spr = sprBanditHurt;
+			_msk = mskBandit;
 		}
 
 		 // Visual:
-		sprite_index = object_get_sprite(object);
-		image_speed = 0;
+		sprite_index = _spr;
+		image_speed = 0.4;
 		depth = -3;
 
 		 // Vars:
-		mask_index = mskPickup;
+		object = _obj;
+		mask_index = _msk;
         z = 0;
         zspeed = random_range(2, 4);
         zfric = 0.7;
         curse = false;
 		direction = random(360);
-		speed = random_range(1, 3); // factor in crowns
+		speed = random_range(1, 3);
 
 		return id;
 	}

@@ -1327,29 +1327,32 @@
 	    GameCont.area = _area;
 	
 	     // Store Player Positions:
-	    var _px = [], _py = [], _vx = [], _vy = [];
+	    var _playerPos = [];
 	    with(Player){
-	        _px[index] = x;
-	        _py[index] = y;
-	        _vx[index] = view_xview[index];
-	        _vy[index] = view_yview[index];
+	    	array_push(_playerPos, {
+	    		inst : id,
+	    		x : x,
+	    		y : y
+	    	});
+	    }
+
+	     // Remember View:
+	    var _viewPos = [];
+	    for(var i = 0; i < maxp; i++){
+	    	_viewPos[i] = [view_xview[i], view_yview[i]];
 	    }
 	
 	     // No Duplicates:
 	    with(TopCont) instance_destroy();
 	    with(SubTopCont) instance_destroy();
 	    with(BackCont) instance_destroy();
-	
-	     // Exclude These:
-	    var _oldFloor = instances_matching(Floor, "", null),
-	        _oldChest = [],
-	        _chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
-	
-	    for(var i = 0; i < array_length(_chest); i++){
-	        _oldChest[i] = instances_matching(_chest[i], "", null);
-	    }
-	
+
 	     // Generate Level:
+	    var _minID = instance_create(0, 0, GameObject),
+	    	_chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
+
+		instance_delete(_minID);
+
 	    with(instance_create(0, 0, GenCont)){
 	        var _hard = GameCont.hard;
 	        spawn_x = _sx + 16;
@@ -1376,13 +1379,11 @@
 	        }
 	
 	         // Find Newly Generated Things:
-	        var f = instances_matching(Floor, "", null),
-	            _newFloor = array_slice(f, 0, array_length(f) - array_length(_oldFloor)),
+	        var _newFloor = instances_matching_gt(Floor, "id", _minID),
 	            _newChest = [];
 	
 	        for(var i = 0; i < array_length(_chest); i++){
-	            var c = instances_matching(_chest[i], "", null);
-	            _newChest[i] = array_slice(c, 0, array_length(c) - array_length(_oldChest[i]));
+	            _newChest[i] = instances_matching_gt(_chest[i], "id", _minID);
 	        }
 	
 	         // Make Walls:
@@ -1481,41 +1482,31 @@
 	
 	         // Extras:
 	        mod_script_call("area", _area, "area_pop_extras");
-	
+
 	         // Done + Fix Random Wall Spawn:
-	        var _wall = instances_matching(Wall, "", null);
-	
+	        var n = instance_number(Wall);
 	        event_perform(ev_alarm, 1);
-	
-	        if(instance_number(Wall) > array_length(_wall)){
-	            with(Wall.id) instance_delete(id);
-	        }
+	        if(instance_number(Wall) > n) instance_delete(Wall.id);
 	    }
-	
+
 	     // Remove Portal FX:
 	    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();
 	    repeat(4) with(instance_nearest(10016, 10016, PortalL)) instance_destroy();
 	    with(instance_nearest(10016, 10016, PortalClear)) instance_destroy();
 	    sound_stop(sndPortalOpen);
-	
+
 	     // Reset Player & Camera Pos:
-	    var s = UberCont.opt_shake;
-	    UberCont.opt_shake = 1;
-	    with(Player){
-	        sound_stop(snd_wrld);
-	
-	        x = _px[index];
-	        y = _py[index];
-	
-	        var g = gunangle,
-	            _x = _vx[index],
-	            _y = _vy[index];
-	
-	        gunangle = point_direction(0, 0, _x, _y);
-	        weapon_post(wkick, point_distance(0, 0, _x, _y), 0);
-	        gunangle = g;
+	    with(Player) sound_stop(snd_wrld);
+	    with(_playerPos) with(inst){
+    		x = other.x;
+    		y = other.y;
 	    }
-	    UberCont.opt_shake = s;
+	    for(var i = 0; i < array_length(_viewPos); i++){
+	    	var _vx = _viewPos[i, 0],
+	    		_vy = _viewPos[i, 1];
+
+	    	view_shift(i, point_direction(0, 0, _vx, _vy), point_distance(0, 0, _vx, _vy));
+	    }
 
 	     // Force Music Transition:
 	    mod_variable_set("mod", "ntte", "musTrans", true);
@@ -1541,19 +1532,21 @@
 
     return 0;
 
-#define scrFloorWalls() /// this is gross but dont blame me it runs faster than a for loop which is important
-    if(!position_meeting(x - 16, y - 16, Floor)) instance_create(x - 16, y - 16, Wall);
-    if(!position_meeting(x,      y - 16, Floor)) instance_create(x,      y - 16, Wall);
-    if(!position_meeting(x + 16, y - 16, Floor)) instance_create(x + 16, y - 16, Wall);
-    if(!position_meeting(x + 32, y - 16, Floor)) instance_create(x + 32, y - 16, Wall);
-    if(!position_meeting(x + 32, y,      Floor)) instance_create(x + 32, y,      Wall);
-    if(!position_meeting(x + 32, y + 16, Floor)) instance_create(x + 32, y + 16, Wall);
-    if(!position_meeting(x - 16, y,      Floor)) instance_create(x - 16, y,      Wall);
-    if(!position_meeting(x - 16, y + 16, Floor)) instance_create(x - 16, y + 16, Wall);
-    if(!position_meeting(x - 16, y + 32, Floor)) instance_create(x - 16, y + 32, Wall);
-    if(!position_meeting(x,      y + 32, Floor)) instance_create(x,      y + 32, Wall);
-    if(!position_meeting(x + 16, y + 32, Floor)) instance_create(x + 16, y + 32, Wall);
-    if(!position_meeting(x + 32, y + 32, Floor)) instance_create(x + 32, y + 32, Wall);
+#define scrFloorWalls()
+	var	_x1 = bbox_left - 16,
+		_y1 = bbox_top - 16,
+		_x2 = bbox_right + 1,
+		_y2 = bbox_bottom + 1;
+
+	for(var _x = _x1; _x <= _x2; _x += 16){
+		for(var _y = _y1; _y <= _y2; _y += 16){
+			if(_x == _x1 || _y == _y1 || _x == _x2 || _y == _y2){
+				if(!position_meeting(_x, _y, Floor)){
+					instance_create(_x, _y, Wall);
+				}
+			}
+		}
+	}
 
 #define floor_reveal(_floors, _maxTime)
     if(instance_is(self, CustomDraw) && script[2] == "floor_reveal"){
@@ -1595,32 +1588,57 @@
 #define area_border(_y, _area, _color)
 	if(DebugLag) trace_time();
 
-    if(instance_is(self, CustomDraw) && script[2] == "area_border"){
+    if(instance_is(self, CustomScript) && script[2] == "area_border"){
+    	 // Cave-In:
+    	if(area_cavein && array_length(instances_matching_lt(Player, "y", _y)) > 0){
+			area_cavein = false;
+	    	with(instances_matching_gt(GameObject, "y", _y)){
+	    		if(persistent) y = _y;
+	    		else instance_delete(id);
+	    	}
+	    	with(instances_matching_gt(Floor, "bbox_bottom", _y)){
+	    		scrFloorWalls();
+	    	}
+	    	with(instances_matching_gt(Wall, "bbox_bottom", _y)){
+	    		instance_create(x - 16,	y - 16,	Top);
+	    		instance_create(x - 16,	y,		Top);
+	    		instance_create(x,		y - 16,	Top);
+	    		instance_create(x,		y,		Top);
+	    	}
+	    	
+	    	// look for disconnected floorexplos on the xaxis and connect them
+    	}
+
          // Sprite Fixes:
+        var _fix = false;
         with(type){
         	var _obj = self[0],
-        		_num = self[1],
-        		_spr = self[2];
+        		_num = self[1];
 
         	if(_num < 0 || _num != instance_number(_obj)){
-        		if(_num >= 0) self[@1] = instance_number(_obj);
-
-        		with(instances_matching(_obj, "cat_border_fix", null)){
-        			cat_border_fix = true;
-        			if(y >= _y){
-        				switch(_obj){
-        					case Wall:
-        						sprite_index = _spr[0];
-	        					topspr = _spr[1];
-	        					outspr = _spr[2];
-	        					break;
-	        					
-	        				default:
-        						sprite_index = _spr;
-        				}
-        			}
-        		}
+        		_fix = true;
+        		self[@1] = instance_number(_obj);
         	}
+        }
+		if(_fix) with(type){
+        	var _obj = self[0],
+        		_spr = self[2];
+
+    		with(instances_matching(_obj, "cat_border_fix", null)){
+    			cat_border_fix = true;
+    			if(y >= _y){
+    				switch(_obj){
+    					case Wall:
+    						sprite_index = _spr[0];
+        					topspr = _spr[1];
+        					outspr = _spr[2];
+        					break;
+
+        				default:
+    						sprite_index = _spr;
+    				}
+    			}
+    		}
         }
 
          // Background:
@@ -1631,12 +1649,15 @@
         draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
     }
     else with(script_bind_draw(area_border, 10000, _y, _area, _color)){
+    	area_cavein = true;
     	type = [
-    		[Wall,		 -1, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
-    		[TopSmall,	  0, area_get_sprite(_area, sprWall1Trans)],
-    		[FloorExplo,  0, area_get_sprite(_area, sprFloor1Explo)],
-    		[Debris,	  0, area_get_sprite(_area, sprDebris1)]
+    		[Wall,		 0, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
+    		[TopSmall,	 0, area_get_sprite(_area, sprWall1Trans)],
+    		[FloorExplo, 0, area_get_sprite(_area, sprFloor1Explo)],
+    		[Debris,	 0, area_get_sprite(_area, sprDebris1)]
     	];
+
+    	return id;
     }
 
     if(DebugLag) trace_time("area_border");

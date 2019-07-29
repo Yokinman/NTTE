@@ -1629,8 +1629,9 @@
 		}
 		switch(_frontObjRaw){
 			case Laser:
-				if(_stockObjRaw != Laser && _stockObjRaw != Disc){
+				if(_stockObjRaw != Disc){
 					_frontProjCost /= 2;
+					if(_stockObjRaw == Laser) _stockProjCost /= 2;
 				}
 				break;
 		}
@@ -1736,21 +1737,37 @@
 		 // Initial Delay:
         lq_set(self, "wait", max(lq_get(_stock, "wait"), lq_get(_front, "wait")));
 
-         // Spread:
-        fixd = (((_front.fixd + _stock.fixd) * (_stock.amnt + _front.amnt)) / amnt);
+         // Fixed Spread:
+        if(_front.amnt <= 1 && _stockObj == _frontObj){ // Average Mode
+        	fixd = (_stock.fixd + _front.fixd) / 2;
+        }
+        else{ // Scale Mode
+        	fixd = ((_front.fixd + _stock.fixd) * (_stock.amnt + _front.amnt)) / amnt;
+        }
+
+         // Normal Spread:
         sprd = lerp(_stock.sprd, _front.sprd, 0.2);
 
 		 // Reload:
-		load = 0;
-		var a = _front.load / (_front.amnt * _front.shot * min(_frontProjCostRaw, 1));
-		repeat(amnt * shot * min(_frontProjCostRaw, 1)){
-			load += a;
-			a *= 1 - (0.05 * min(a, 10));
+		if(_stock.load < 10 && _front.load < 10){ // Fast Mode
+			load = ((_stock.load + _front.load) / 3) * ((1 + max(0, (amnt * max(1, shot / 2)) - _stock.amnt)) / _front.amnt);
 		}
-		if(load < _stock.load || load < _front.load){
-			load += (_front.shot - 1) * time;
+		else{ // Normal Mode
+			load = 0;
+			var a = _front.load / (_front.amnt * _front.shot * min(_frontProjCostRaw, 1));
+			repeat(amnt * shot * min(_frontProjCostRaw, 1)){
+				load += a;
+				a *= 1 - (0.05 * min(a, 10));
+			}
+
+			 // Burst Weapon Nerf:
+			if(load < _stock.load || load < _front.load){
+				load += (_front.shot - 1) * time;
+			}
+
+			 // Fast Stock:
+			load *= min(1, (_stock.load * ((_stock.type != 1) ? 0.5 : 1)) / min(_front.load, 10));
 		}
-		load *= min(1, _stock.load / min(_front.load, 9));
 		load = max(1, round(load));
 
          // Ammo Cost:
@@ -1758,7 +1775,7 @@
 		if(_front.type == 1){ // Bullet Mode
 			cost = _projCost * amnt * shot;
 		}
-		else if(_projCost == 1){ // Basic Mode
+		else if(_frontProjCost == 1){ // Basic Mode
 	        cost = min(_projCost * amnt * shot, sqrt(16 * amnt * shot));
 		}
 		else{ // Drop-Off Mode
@@ -1988,14 +2005,17 @@
 					}
 
 					 // Extra Ammo Cost:
-					var	a = min(1, _stockProjCostRaw) * min(1, 5 / _frontProjCostRaw),
-						c = 0;
+					cost += round(
+						power(
+							(amnt * shot) / (_frontProjCostRaw * 2),
+							max(1, _frontProjCostRaw) / 3
+						)
+						*
+						max(1, _stockProjCostRaw)
+					);
 
-					repeat(amnt * min(_frontProjCost, 1)){
-						c += a;
-						a *= 0.5;
-					}
-					cost += round(c);
+					 // Extra Reload:
+					load += round((amnt * shot * (1 + _frontProjCostRaw)) / 2);
 				}
 				break;
 
@@ -3026,7 +3046,7 @@
 				return true;
 			}
 
-			o.minspeed = speed / 2;
+			o.minspeed = max(0, speed - 1);
 			break;
 
 		case proj_step:
@@ -3034,7 +3054,9 @@
 				if(friction_raw > 0 && !place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 					speed += friction_raw;
 				}
-				if(chance_ct(1, 24 / speed)){
+
+				 // Trail:
+				if(chance_ct(speed, 48)){
 					instance_create(x + orandom(sprite_height / 4), y + orandom(sprite_height / 4), PlasmaTrail);
 				}
 			}
@@ -3332,7 +3354,7 @@
 #define proj_explosmall(_event, o)
 	if(proj_explo(_event, o)) return true;
 	if(_event == proj_create){
-		o.type = max(o.type - 1, 0);
+		//o.type = max(o.type - 1, 0);
 		o.time *= random_range(0.5, 1);
 	}
 

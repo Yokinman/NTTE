@@ -1637,16 +1637,9 @@
 		}
 	}
 	
-	 // Cat:
-	with(instances_matching_le(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.4)){
-		var _scale = 0.75;
-		with(scrFX(x, y, [direction, speed], BulletHit)){
-			sprite_index = sprExploderExplo;
-			image_xscale = _scale;
-			image_yscale = _scale;
-			image_index = 2;
-		}
-		instance_destroy();
+	 // Dissipate Cat Gas Faster:
+	with(instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1)){
+		growspeed -= random(0.002 * current_time_scale);
 	}
 
 	 // Separate Bones:
@@ -2148,8 +2141,8 @@
 
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
     var _type = argument[0], _snd = argument[1];
-var _vol; if (argument_count > 2) _vol = argument[2]; else _vol = undefined;
-var _pos; if (argument_count > 3) _pos = argument[3]; else _pos = undefined;
+var _vol = argument_count > 2 ? argument[2] : undefined;
+var _pos = argument_count > 3 ? argument[3] : undefined;
     if(is_undefined(_vol)) _vol = 1;
     if(is_undefined(_pos)) _pos = 0;
 
@@ -3461,9 +3454,9 @@ var _pos; if (argument_count > 3) _pos = argument[3]; else _pos = undefined;
                                 var _minID = instance_create(0, 0, GameObject);
                                 instance_delete(_minID);
                                 instance_destroy();
-	                            with(instances_matching_gt(_charmObject, "id", _minID)){
-	                            	creator = other;
-	                            }
+								with(instances_matching_gt(_charmObject, "id", _minID)){
+									creator = other;
+								}
                             }
                             break;
 

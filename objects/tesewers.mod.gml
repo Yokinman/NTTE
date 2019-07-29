@@ -3400,21 +3400,23 @@
 						break;
 
 					case ChestShop_wep:
-						with(instance_create(_x, _y, WepPickup)){
-							motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
-							wep = other.drop;
-							curse = other.curse;
-							ammo = true;
-							roll = true;
-						}
+						repeat(1 + ultra_get("steroids", 1)){
+							with(instance_create(_x, _y, WepPickup)){
+								motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
+								wep = other.drop;
+								curse = other.curse;
+								ammo = true;
+								roll = true;
+							}
 
-						 // Sounds:
-						sound_play(weapon_get_swap(drop));
-						sound_play_pitchvol(sndGunGun, 0.8 + random(0.4), 0.6);
-						sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
-				
-						 // Effects:
-						instance_create(_x, _y, GunGun);
+							 // Sounds:
+							sound_play(weapon_get_swap(drop));
+							sound_play_pitchvol(sndGunGun, 0.8 + random(0.4), 0.6);
+							sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
+					
+							 // Effects:
+							instance_create(_x, _y, GunGun);
+						}
 						break;
 				}
 
@@ -3604,7 +3606,7 @@
 		case ChestShop_wep:
 			sprite_index = weapon_get_sprt(drop);
 
-			text = (wep_get(drop) == "merge" ? "MERGE " : "") + (curse ? "CURSED " : "") + "WEAPON";
+			text = (wep_get(drop) == "merge" ? "MERGED " : "") + (curse ? "CURSED " : "") + "WEAPON";
 			desc = weapon_get_name(drop);
 			break;
 	}

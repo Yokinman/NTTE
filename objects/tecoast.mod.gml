@@ -1423,7 +1423,7 @@
 
         else{
              // Call for Seals:
-            if(chance(2 + (z <= 0), 4) && chance(1, array_length(Seal) / 3) && array_length(Seal) <= seal_max * 4){
+            if(chance(1 + (z <= 0), 2) && chance(1, array_length(Seal) / 2) && array_length(Seal) <= seal_max * 4){
             	alarm1 = 30 + random(10);
 
                 sprite_index = spr_call;
