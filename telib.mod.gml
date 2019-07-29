@@ -1987,9 +1987,25 @@
     return -1;
 
 #define Pet_spawn(_x, _y, _name)
+	 // Search petlib files for pets:
+	var _mod = "";
+	with(mod_get_names("mod")) if(_mod == ""){
+		var o = self,
+			a = string_split(o, ".");
+			
+		if(a[array_length(a) - 1] == "petlib"){
+			if(mod_script_exists("mod", o, _name + "_create")){
+				
+				_mod = o;
+			}
+		}
+	}
+
+	 // Create the brand new pet:
     var p = obj_create(_x, _y, "Pet");
     with(p){
         pet = _name;
+        mod_name = _mod;
 
          // Sprites:
         spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
@@ -1997,9 +2013,9 @@
         spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
 
          // Custom Create Event:
-        var _scrt = pet + "_create";
-        if(mod_script_exists("mod", "petlib", _scrt)){
-            mod_script_call("mod", "petlib", _scrt);
+    	var _scrt = pet + "_create";
+        if(mod_script_exists(mod_type, mod_name, _scrt)){
+            mod_script_call(mod_type, mod_name, _scrt);
         }
 
         scrPickupIndicator(pet);
