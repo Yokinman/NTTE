@@ -628,6 +628,7 @@
          // Sound:
         snd_hurt = sndSalamanderHurt;
         snd_dead = sndRatkingCharge;
+		snd_lowh = sndLilHunterHalfHP;
 
          // Vars:
         friction = 0.01;
@@ -921,9 +922,15 @@
 
 #define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
      // Get hurt:
-    if !instance_is(other, ToxicGas){
+    if(!instance_is(other, ToxicGas)){
         stress += _hitdmg;
         enemyHurt(_hitdmg, _hitvel, _hitdir);
+
+         // Half HP:
+        var h = (maxhealth / 2);
+        if(in_range(my_health, h - _hitdmg, h)){
+        	sound_play(snd_lowh);
+        }
     }
 
      // Screech:
@@ -1851,6 +1858,7 @@
          // Sound:
 		snd_hurt = sndScorpionHit;
 		snd_dead = sndSalamanderDead;
+		snd_lowh = sndBigBanditHalfHP;
 		jetpack_loop = -1;
 
 		 // Vars:
@@ -2147,7 +2155,13 @@
          // Hurt Sprite:
         sprite_index = spr_hurt;
         image_index = 0;
-        
+
+         // Half HP:
+        var h = (maxhealth / 2);
+        if(in_range(my_health, h - _hitdmg, h)){
+        	sound_play(snd_lowh);
+        }
+
          // Break charging:
         if supertime > 0 && superbreakmax > 0{
             supertime += _hitdmg * 4;

@@ -793,6 +793,7 @@
          // Sound:
 		snd_hurt = sndOasisBossHurt;
 		snd_dead = sndOasisBossDead;
+		snd_lowh = sndOasisBossHalfHP;
 
 		 // Vars:
 		mask_index = mskBigMaggot;
@@ -1203,7 +1204,7 @@
          // Half HP:
         var h = (maxhealth / 2);
         if(in_range(my_health, h - _hitdmg, h)){
-        	sound_play(sndOasisBossHalfHP);
+        	sound_play(snd_lowh);
         }
 
          // Knockback:

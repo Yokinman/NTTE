@@ -1249,6 +1249,7 @@
          // Sounds:
         snd_hurt = sndBallMamaHurt;
         snd_mele = sndMaggotBite;
+        snd_lowh = sndBigDogHalfHP;
 
          // Vars:
         posx = x;
@@ -1918,6 +1919,17 @@
 		}
 	}
 
+#define PitSquid_hurt(_hitdmg, _hitvel, _hitdir)
+    my_health -= _hitdmg;
+    nexthurt = current_frame + 6;
+    sound_play_hit(snd_hurt, 0.3);
+
+     // Half HP:
+    var h = (maxhealth / 2);
+    if(in_range(my_health, h - _hitdmg, h)){
+    	sound_play(snd_lowh);
+    }
+
 #define PitSquid_death
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);
@@ -2273,10 +2285,8 @@
         sound_play_hit(snd_hurt, 0.3);
     
          // Hurt Papa Squid:
-        with(creator){
-            my_health -= _hitdmg;
-            nexthurt = current_frame + 6;
-            sound_play_hit(snd_hurt, 0.3);
+        with(other) with(other.creator){
+        	PitSquid_hurt(_hitdmg, _hitvel, _hitdir);
         }
         with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
         	nexthurt = current_frame + 6;
