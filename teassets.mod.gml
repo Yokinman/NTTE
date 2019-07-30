@@ -384,6 +384,7 @@
                         ["Portrait",      1, 20, 221, true],
                         ["Select",        2,  0,   0, false],
                         ["UltraIcon",	  2, 12,  16, false],
+                        ["UltraHUDA",	  1,  8,   9, false],
                         ["UltraHUDB",	  1,  8,   9, false],
                         ["Idle",          4, 12,  12, true],
                         ["Walk",          6, 12,  12, true],
@@ -588,49 +589,49 @@
         	BabyGatorDead = sprite_add("sprites/enemies/BabyGator/sprBabyGatorDead.png", 7, 12, 12);
         	
              // Bat:
-            BatWeap         = sprite_add_weapon("sprites/enemies/Bat/sprBatWeap.png", 2,  6);
-            BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",    24, 16, 16);
-            BatWalk         = sprite_add("sprites/enemies/Bat/sprBatWalk.png",    12, 16, 16);
-            BatHurt         = sprite_add("sprites/enemies/Bat/sprBatHurt.png",     3, 16, 16);
-            BatDead         = sprite_add("sprites/enemies/Bat/sprBatDead.png",     6, 16, 16);
-            BatYell         = sprite_add("sprites/enemies/Bat/sprBatYell.png",     6, 16, 16);
-            BatScreech      = sprite_add("sprites/enemies/Bat/sprBatScreech.png",  8, 48, 48);
-            msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",  8, 48, 48);
+            BatWeap         = sprite_add_weapon("sprites/enemies/Bat/sprBatWeap.png",		 2,  6);
+            BatIdle         = sprite_add("sprites/enemies/Bat/sprBatIdle.png",			24, 16, 16);
+            BatWalk         = sprite_add("sprites/enemies/Bat/sprBatWalk.png",			12, 16, 16);
+            BatHurt         = sprite_add("sprites/enemies/Bat/sprBatHurt.png",			 3, 16, 16);
+            BatDead         = sprite_add("sprites/enemies/Bat/sprBatDead.png",			 6, 16, 16);
+            BatYell         = sprite_add("sprites/enemies/Bat/sprBatYell.png",			 6, 16, 16);
+            BatScreech      = sprite_add("sprites/enemies/Bat/sprBatScreech.png",		 8, 48, 48);
+            msk.BatScreech  = sprite_add("sprites/enemies/Bat/mskBatScreech.png",		 8, 48, 48);
 
              // Bat Boss:
-            BatBossIdle     = sprite_add("sprites/enemies/BatBoss/sprBigBatIdle.png",           12, 24, 24);
-            BatBossWalk     = sprite_add("sprites/enemies/BatBoss/sprBigBatWalk.png",            8, 24, 24);
-            BatBossHurt     = sprite_add("sprites/enemies/BatBoss/sprBigBatHurt.png",            3, 24, 24);
-            BatBossDead     = sprite_add("sprites/enemies/BatBoss/sprBigBatDead.png",            6, 24, 24);
-            BatBossYell     = sprite_add("sprites/enemies/BatBoss/sprBigBatYell.png",            6, 24, 24);
-            BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png",        4,  8);
-            VenomFlak       = sprite_add("sprites/enemies/BatBoss/sprVenomFlak.png",             2, 12, 12);
+            BatBossIdle     = sprite_add(		"sprites/enemies/BatBoss/sprBigBatIdle.png",   12, 24, 24);
+            BatBossWalk     = sprite_add(		"sprites/enemies/BatBoss/sprBigBatWalk.png",	8, 24, 24);
+            BatBossHurt     = sprite_add(		"sprites/enemies/BatBoss/sprBigBatHurt.png",	3, 24, 24);
+            BatBossDead     = sprite_add(		"sprites/enemies/BatBoss/sprBigBatDead.png",	6, 24, 24);
+            BatBossYell     = sprite_add(		"sprites/enemies/BatBoss/sprBigBatYell.png",	6, 24, 24);
+            BatBossWeap     = sprite_add_weapon("sprites/enemies/BatBoss/sprBatBossWeap.png",		4,  8);
+            VenomFlak       = sprite_add(		"sprites/enemies/BatBoss/sprVenomFlak.png",		2, 12, 12);
 
              // Bat Chest:
             BatChest     = sprite_add("sprites/chests/sprBatChest.png",     1, 10, 10);
             BatChestOpen = sprite_add("sprites/chests/sprBatChestOpen.png", 1, 10, 10);
             
              // Bone Gator:
-            BoneGatorIdle = sprite_add("sprites/enemies/BoneGator/sprBoneGatorIdle.png", 8, 12, 12);
-            BoneGatorWalk = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWalk.png", 6, 12, 12);
-            BoneGatorHurt = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHurt.png", 3, 12, 12);
-            BoneGatorDead = sprite_add("sprites/enemies/BoneGator/sprBoneGatorDead.png", 6, 12, 12);
-            BoneGatorHeal = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHeal.png", 7, 8,	8);
-            BoneGatorWeap = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWeap.png", 1, 2,	3);
+            BoneGatorIdle = sprite_add("sprites/enemies/BoneGator/sprBoneGatorIdle.png",	8, 12, 12);
+            BoneGatorWalk = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWalk.png",	6, 12, 12);
+            BoneGatorHurt = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHurt.png",	3, 12, 12);
+            BoneGatorDead = sprite_add("sprites/enemies/BoneGator/sprBoneGatorDead.png",	6, 12, 12);
+            BoneGatorHeal = sprite_add("sprites/enemies/BoneGator/sprBoneGatorHeal.png",	7,  8,  8);
+            BoneGatorWeap = sprite_add("sprites/enemies/BoneGator/sprBoneGatorWeap.png",	1,  2,  3);
             
             FlameSpark = sprite_add("sprites/enemies/BoneGator/sprFlameSpark.png", 7, 1, 1);
 
              // Cat:
-            CatIdle = sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
-            CatWalk = sprite_add("sprites/enemies/Cat/sprCatWalk.png",      6, 12, 12);
-            CatHurt = sprite_add("sprites/enemies/Cat/sprCatHurt.png",      3, 12, 12);
-            CatDead = sprite_add("sprites/enemies/Cat/sprCatDead.png",      6, 12, 12);
-            CatSit1 =[sprite_add("sprites/enemies/Cat/sprCatGoSit.png",     3, 12, 12),
-                      sprite_add("sprites/enemies/Cat/sprCatGoSitSide.png", 3, 12, 12)];
-            CatSit2 =[sprite_add("sprites/enemies/Cat/sprCatSit.png",       1, 12, 12),
-                      sprite_add("sprites/enemies/Cat/sprCatSitSide.png",   1, 12, 12)];
-            CatWeap = sprite_add("sprites/enemies/Cat/sprCatToxer.png",     1,  3,  4);
-            AcidPuff = sprite_add("sprites/enemies/Cat/sprAcidPuff.png",    4, 16, 16);
+            CatIdle		= sprite_add("sprites/enemies/Cat/sprCatIdle.png",      4, 12, 12);
+            CatWalk		= sprite_add("sprites/enemies/Cat/sprCatWalk.png",      6, 12, 12);
+            CatHurt		= sprite_add("sprites/enemies/Cat/sprCatHurt.png",      3, 12, 12);
+            CatDead		= sprite_add("sprites/enemies/Cat/sprCatDead.png",      6, 12, 12);
+            CatSit1		=[sprite_add("sprites/enemies/Cat/sprCatGoSit.png",     3, 12, 12),
+						  sprite_add("sprites/enemies/Cat/sprCatGoSitSide.png", 3, 12, 12)];
+            CatSit2		=[sprite_add("sprites/enemies/Cat/sprCatSit.png",       1, 12, 12),
+						  sprite_add("sprites/enemies/Cat/sprCatSitSide.png",   1, 12, 12)];
+            CatWeap		= sprite_add("sprites/enemies/Cat/sprCatToxer.png",     1,  3,  4);
+            AcidPuff	= sprite_add("sprites/enemies/Cat/sprAcidPuff.png",		4, 16, 16);
 
              // Cat Boss:
             CatBossIdle     = sprite_add("sprites/enemies/CatBoss/sprBigCatIdle.png",		12, 24, 24);
@@ -658,26 +659,27 @@
             msk.CatDoorLOS  = sprite_add("sprites/areas/Lair/Props/mskCatDoorLOS.png",        1, 4, 0);
 
              // Drain:
-            PizzaDrainIdle = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrain.png",     1, 32, 38);
-            PizzaDrainHurt = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainHurt.png", 3, 32, 38);
-            PizzaDrainDead = sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainDead.png", 5, 32, 38);
-            msk.PizzaDrain = sprite_add("sprites/areas/Pizza/Props/mskPizzaDrain.png",     1, 32, 38);
-            
+            PizzaDrainIdle	= sprite_add("sprites/areas/Pizza/Props/sprPizzaDrain.png",     1, 32, 38);
+            PizzaDrainHurt	= sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainHurt.png", 3, 32, 38);
+            PizzaDrainDead	= sprite_add("sprites/areas/Pizza/Props/sprPizzaDrainDead.png", 5, 32, 38);
+            msk.PizzaDrain	= sprite_add("sprites/areas/Pizza/Props/mskPizzaDrain.png",     1, 32, 38);
+            PizzaRubble		= sprite_add("sprites/areas/Pizza/Props/sprPizzaRubble.png",	1,  0,  0);
+
              // Lair turret reskin:
-            LairTurretIdle      = sprite_add("sprites/enemies/LairTurret/sprLairTurretIdle.png",    1,  12, 12);
-            LairTurretHurt      = sprite_add("sprites/enemies/LairTurret/sprLairTurretHurt.png",    3,  12, 12);
-            LairTurretDead      = sprite_add("sprites/enemies/LairTurret/sprLairTurretDead.png",    6,  12, 12);
-            LairTurretFire      = sprite_add("sprites/enemies/LairTurret/sprLairTurretFire.png",    3,  12, 12);
-            LairTurretAppear    = sprite_add("sprites/enemies/LairTurret/sprLairTurretAppear.png",  11, 12, 12);
+            LairTurretIdle      = sprite_add("sprites/enemies/LairTurret/sprLairTurretIdle.png",    1, 12, 12);
+            LairTurretHurt      = sprite_add("sprites/enemies/LairTurret/sprLairTurretHurt.png",    3, 12, 12);
+            LairTurretDead      = sprite_add("sprites/enemies/LairTurret/sprLairTurretDead.png",    6, 12, 12);
+            LairTurretFire      = sprite_add("sprites/enemies/LairTurret/sprLairTurretFire.png",    3, 12, 12);
+            LairTurretAppear    = sprite_add("sprites/enemies/LairTurret/sprLairTurretAppear.png", 11, 12, 12);
 
              // Manholes:
             ManholeBottom = sprite_add("sprites/areas/Lair/sprManholeBottom.png",  1, 16, 48);
             Manhole       = sprite_add("sprites/areas/Lair/sprManhole.png",       12, 16, 48);
              // Big one:
-            BigManholeBot       = sprite_add("sprites/areas/Lair/sprBigManholeBot.png",         1,  32,  32);
-            BigManholeTop       = sprite_add("sprites/areas/Lair/sprBigManholeTop.png",         6,  32,  32);
+            BigManholeBot       = sprite_add("sprites/areas/Lair/sprBigManholeBot.png",         1, 32, 32);
+            BigManholeTop       = sprite_add("sprites/areas/Lair/sprBigManholeTop.png",         6, 32, 32);
             ManholeDebrisSmall  = sprite_add("sprites/areas/Lair/sprManholeDebrisSmall.png",    4,  4,  4);
-            ManholeDebrisBig    = sprite_add("sprites/areas/Lair/sprManholeDebrisBig.png",      3,  12, 12);
+            ManholeDebrisBig    = sprite_add("sprites/areas/Lair/sprManholeDebrisBig.png",      3, 12, 12);
 
              // Furniture:
                  // Rug:

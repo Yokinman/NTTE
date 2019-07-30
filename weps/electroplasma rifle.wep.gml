@@ -33,13 +33,14 @@
          // Projectile:
         var d = gunangle + (((17 * electroplasma_side) + orandom(7)) * accuracy);
         with(obj_create(x, y, "ElectroPlasma")){
-            team =          other.team;
-            creator =       other;
-            tethered_to =   _last;
             motion_set(d, 4 + random(0.4));
-            image_angle =   direction;
-            
-            _last =         id;
+            image_angle = direction;
+            team = other.team;
+            creator = other;
+
+             // Tether Together:
+            tether_inst = _last;
+            _last = id;
         }
         
         last_electroplasma = _last;

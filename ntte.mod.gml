@@ -116,7 +116,8 @@
 	 // level_start():
     global.newLevel = instance_exists(GenCont);
 
-	 // Custom Area Effects:
+	 // Area Stuff:
+	global.setup_floor_num = 0;
     global.effect_timer = 0;
 
 	 // Fix for custom music/ambience:
@@ -1364,7 +1365,10 @@
 	}
 
      // GENERATION CODE //
-    if(instance_exists(GenCont) || instance_exists(Menu)) global.newLevel = 1;
+    if(instance_exists(GenCont) || instance_exists(Menu)){
+    	global.setup_floor_num = 0;
+    	global.newLevel = 1;
+    }
     else if(global.newLevel){
         global.newLevel = 0;
         level_start();
@@ -1377,12 +1381,16 @@
         var _area = areaList[a];
 
          // Floor Setup:
-        var _scrt = "area_setup_floor";
+        var	_scrt = "area_setup_floor";
         if(mod_script_exists("area", _area, _scrt)){
-            with(instances_matching(Floor, "ntte_setup", null)){
-                ntte_setup = true;
-                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
-            }
+	        var _num = instance_number(Floor);
+	        if(global.setup_floor_num != _num){
+	        	global.setup_floor_num = _num;
+	            with(instances_matching(Floor, "ntte_setup", null)){
+	                ntte_setup = true;
+	                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
+	            }
+	        }
         }
 
         if(!instance_exists(GenCont) && !instance_exists(LevCont)){
@@ -1457,35 +1465,35 @@
 
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
-			var _packList = {
-				"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
-				"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
-				"trench" : [["TECH GUNS"  		, "TERRORS FROM THE DEEP"	, "Wep"		]],
-				"lair"	 : [["SAWBLADE GUNS"	, "DEVICES OF TORTURE"		, "Wep"		],
-							["CROWN OF CRIME"	, "STOLEN FROM THIEVES"		, "Crown"	]]
-			};
+		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
+			//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
+				var _packList = {
+					"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
+					"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
+					"trench" : [["TECH GUNS"  		, "TERRORS FROM THE DEEP"	, "Wep"		]],
+					"lair"	 : [["SAWBLADE GUNS"	, "DEVICES OF TORTURE"		, "Wep"		],
+								["CROWN OF CRIME"	, "STOLEN FROM THIEVES"		, "Crown"	]]
+				};
 
-			for(var i = 0; i < array_length(_packList); i++){
-				var _area = lq_get_key(_packList, i);
-				if(GameCont.area == _area){
-					with(lq_get_value(_packList, i)){
-						var	_pack = self,
-							_unlock = _area + _pack[2];
+				for(var i = 0; i < array_length(_packList); i++){
+					var _area = lq_get_key(_packList, i);
+					if(GameCont.area == _area){
+						if(GameCont.subarea >= area_get_subarea(_area)){
+							with(lq_get_value(_packList, i)){
+								var	_pack = self,
+									_unlock = _area + _pack[2];
 
-						if(!unlock_get(_unlock)){
-							if(GameCont.subarea >= area_get_subarea(_area)){
-								if(!instance_exists(enemy) && !instance_exists(CorpseActive)){
-			                		unlock_set(_unlock, true);
-			                		sound_play(sndGoldUnlock);
-			                		scrUnlock(_pack[0], _pack[1], -1, -1);
+								if(!unlock_get(_unlock)){
+									unlock_set(_unlock, true);
+									sound_play(sndGoldUnlock);
+									scrUnlock(_pack[0], _pack[1], -1, -1);
 								}
 							}
 						}
 					}
 				}
-			}
-		//}
+			//}
+		}
 	}
 
 	 // Game Win Crown Unlock:

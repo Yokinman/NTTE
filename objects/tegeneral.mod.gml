@@ -1100,21 +1100,19 @@
 		heavy = false;
 		walled = false;
 		rotspd = 0;
+		setup = true;
 
-		 // Events:
-		on_end_step = BoneSlash_setup;
-		
 		return id;
 	}
-	
+
 #define BoneSlash_setup
-	on_end_step = [];
-	
+	setup = false;
+
 	 // Become Heavy Slash:
 	if(heavy){
 		 // Visual:
 		sprite_index = spr.BoneSlashHeavy;
-		
+
 		 // Vars:
 		mask_index = msk.BoneSlashHeavy;
 		damage = 32;
@@ -1125,14 +1123,22 @@
 		var c = sign(image_yscale),
 			l = (heavy ? 24 : 16) + orandom(2),
 			d = direction - (random_range(30, 120) * c);
-		with(scrBoneDust(x + lengthdir_x(l, d), y + lengthdir_y(l, d))) motion_set(d - (random_range(90, 120) * c), 1 + random(2));
+
+		with(scrBoneDust(x + lengthdir_x(l, d), y + lengthdir_y(l, d))){
+			motion_set(d - (random_range(90, 120) * c), 1 + random(2));
+		}
 	}
-	
+
+#define BoneSlash_end_step
+	if(setup) BoneSlash_setup();
+
 #define BoneSlash_step
 	 // Brotate:
 	image_angle += (rotspd * current_time_scale);
 	
 #define BoneSlash_hit
+	if(setup) BoneSlash_setup();
+
 	if(projectile_canhit_melee(other) && other.my_health > 0){
 		projectile_hit(other, damage, force, direction);
 		
@@ -1161,7 +1167,7 @@
 			}
 	    }
 	}
-	
+
 #define BoneSlash_wall
 	if(!walled){
 		walled = true;
@@ -1175,6 +1181,7 @@
 		}
 		sound_play_pitchvol(sndMeleeWall, 2 + orandom(0.3), 1);
 	}
+
 
 #define BubbleBomb_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -1697,120 +1704,6 @@
 			}
 		}
     }
-
-
-#define ElectroPlasma_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visuals:
-		sprite_index = spr.ElectroPlasma;
-		depth = -4;
-		
-		 // Vars:
-		mask_index = mskEnemyBullet1;
-		damage = 3;
-		typ = 2;
-		wave = irandom(90);
-		tethered_to = noone;
-		tether_range = 80;
-		
-		on_end_step = ElectroPlasma_setup;
-				
-		return id;
-	}
-	
-#define ElectroPlasma_setup
-	on_end_step = [];
-
-	 // Laser Brain:
-	var _brain = skill_get(mut_laser_brain);
-	if(instance_is(creator, Player)){
-		image_xscale += 0.2 * _brain;
-		image_yscale += 0.2 * _brain;
-		tether_range += 40 * _brain;
-	}
-	
-#define ElectroPlasma_anim
-	image_index = 1;
-	image_speed = 0.4;
-	
-#define ElectroPlasma_step
-	wave += current_time_scale;
-	
-	 // Effects:
-	if(chance_ct(1, 8)) 	instance_create(x + orandom(6), y + orandom(6), PlasmaTrail).sprite_index = spr.ElectroPlasmaTrail;
-	if(chance_ct(1, 24))	instance_create(x + orandom(5), y + orandom(5), PortalL);
-	
-	 // Tether:
-	if(in_distance(tethered_to, tether_range) && in_sight(tethered_to)){
-		var _x1 = x + hspeed,
-			_y1 = y + vspeed,
-			_x2 = tethered_to.x + tethered_to.hspeed,
-			_y2 = tethered_to.y + tethered_to.vspeed,
-			_d1 = direction,
-			_d2 = tethered_to.direction;
-			
-		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
-			sprite_index = spr.ElectroPlasmaTether;
-			depth = -3;
-		
-			 // Effects:
-			if(chance_ct(1, 16)) with(instance_create(x, y, PlasmaTrail)){
-				sprite_index = spr.ElectroPlasmaTrail;
-				motion_set(lerp(_d1, _d2, random(1)), 1);
-			}
-		}
-		
-	}
-	
-	 // Goodbye:
-	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
-
-#define ElectroPlasma_hit
-	var p = instance_is(other, Player);
-	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
-		projectile_hit(other, damage);
-		
-		 // Effects:
-		sleep_max(10);
-		view_shake_max_at(x, y, 2);
-		
-		 // Slow:
-		x -= hspeed * 0.8;
-		y -= vspeed * 0.8;
-		
-		 // Shrink:
-		image_xscale -= 0.05;
-		image_yscale -= 0.05;
-	}
-	
-#define ElectroPlasma_wall
-	image_xscale -= 0.03;
-	image_yscale -= 0.03;
-	
-#define ElectroPlasma_destroy
-	scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
-
-
-#define ElectroPlasmaImpact_create(_x, _y)
-	with(instance_create(_x, _y, PlasmaImpact)){
-		 // Visual:
-		sprite_index = spr.ElectroPlasmaImpact;
-
-		 // Vars:
-		mask_index = mskBullet1;
-		damage = 2;
-
-		 // Effects:
-		repeat(1 + irandom(1)){
-			instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
-		}
-
-		 // Sounds:
-		sound_play_hit(sndPlasmaHit,	 0.4);
-		sound_play_hit(sndGammaGutsProc, 0.4);
-
-		return id;
-	}
 
 
 #define FlakBall_create(_x, _y)

@@ -3913,7 +3913,7 @@
                 with(instances_meeting(x, y, [TopSmall, Wall])) instance_destroy();
             }
 
-            if(!in_range(_sy, _borderY - 160, _borderY + 32)) _dir = 90;
+            if(!in_range(_sy, _borderY - 160, _borderY - 32)) _dir = 90;
             else{
                 _dir += choose(0, 0, 0, 0, -90, 90);
                 if(((_dir + 360) mod 360) == 270) _dir = 90;
@@ -4016,11 +4016,8 @@
 		maxspeed = random_range(3.6, 4);
 		obj_info = {};
 		obj_name = "";
-		setup = false;
+		setup = true;
 		alarm1 = 10;
-		
-		 // Events:
-		on_end_step = script_ref_create(TopEnemy_setup);
 		
 		 // Default Values:
 		obj_name = Bandit;
@@ -4029,14 +4026,13 @@
 			spr_walk = sprBanditWalk;
 			spr_weap = sprBanditGun;
 		}
-		
+
 		return id;
 	}
 	
 #define TopEnemy_setup
-	on_end_step = [];
-	setup = true;
-	
+	setup = false;
+
 	 // Close Portals:
 	if(instance_exists(Portal)) scrPortalPoof();
 	
@@ -4053,8 +4049,10 @@
 	}
 	
 #define TopEnemy_step
-	if(!setup) TopEnemy_setup();
-	if(!instance_exists(self)) exit;
+	if(setup){
+		TopEnemy_setup();
+		if(!instance_exists(self)) exit;
+	}
 
 	 // Animate:
 	if(speed > 0){

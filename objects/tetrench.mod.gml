@@ -830,6 +830,218 @@
     }
 
 
+#define ElectroPlasma_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visuals:
+		sprite_index = spr.ElectroPlasma;
+		image_speed = 0.4;
+		image_index = 1 - image_speed;
+		depth = -4;
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 3;
+		force = 3;
+		typ = 2;
+		wave = irandom(90);
+		tether = 0;
+		tether_x = x;
+		tether_y = y;
+		tether_inst = noone;
+		tether_range = 80;
+		setup = true;
+
+		return id;
+	}
+	
+#define ElectroPlasma_setup
+	setup = false;
+
+	 // Not Tethered:
+	if(tether == 0 && tether_inst == noone){
+		tether = -1;
+	}
+
+	 // Laser Brain:
+	if(instance_is(creator, Player)){
+		var _brain = skill_get(mut_laser_brain);
+		image_xscale += 0.15 * _brain;
+		image_yscale += 0.15 * _brain;
+		tether_range += 40 * _brain;
+	}
+
+#define ElectroPlasma_anim
+	image_index = 1;
+
+#define ElectroPlasma_step
+	wave += current_time_scale;
+
+	if(setup) ElectroPlasma_setup();
+
+	 // Tether:
+	if(tether >= 0){
+		if(instance_exists(tether_inst)){
+			tether_x = tether_inst.x + tether_inst.hspeed_raw;
+			tether_y = tether_inst.y + tether_inst.vspeed_raw;
+		}
+	
+		var _x1 = x + hspeed_raw,
+			_y1 = y + vspeed_raw,
+			_x2 = tether_x,
+			_y2 = tether_y;
+	
+		if(
+			(tether_inst == noone || instance_exists(tether_inst))
+			&&
+			point_distance(_x1, _y1, _x2, _y2) < tether_range
+			&&
+			!collision_line(_x1, _y1, _x2, _y2, Wall, false, false)
+		){
+			 // Initialize Tether:
+	        if(tether < 1){
+	            tether += 0.2 * current_time_scale;
+	
+	            if(current_frame_active){
+	                var _dis = random(point_distance(_x1, _y1, _x2, _y2)),
+	                    _dir = point_direction(_x1, _y1, _x2, _y2);
+	
+	                with(instance_create(_x1 + lengthdir_x(_dis, _dir), _y1 + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
+	                    if(object_index == LaserCharge){
+	                        sprite_index = spr.ElectroPlasmaTether;
+	                        image_angle = random(360);
+	                        alarm0 = 4 + random(4);
+	                    }
+	                    motion_add(random(360), 1);
+	                }
+	            }
+	
+	             // Tethered:
+	            if(tether >= 1){
+	                sound_play_pitch(sndLightningHit, 2);
+	
+	                 // Laser Brain FX:
+	                if(skill_get(mut_laser_brain)){
+	                    with(instance_create(_x1, _y1, LaserBrain)){
+	                        image_angle = _dir + orandom(10);
+	                        creator = other.creator;
+	                    }
+	                    with(instance_create(_x2, _y2, LaserBrain)){
+	                        image_angle = _dir + orandom(10) + 180;
+	                        creator = other.creator;
+	                    }
+	                }
+	            }
+	        }
+	
+			 // Tethering:
+	        else{
+				var	_d1 = direction,
+					_d2 = direction;
+	
+				if(instance_exists(tether_inst)){
+					_d2 = tether_inst.direction;
+				}
+	
+				with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
+					sprite_index = spr.ElectroPlasmaTether;
+					depth = -3;
+				
+					 // Effects:
+					if(chance_ct(1, 16)) with(instance_create(x, y, PlasmaTrail)){
+						sprite_index = spr.ElectroPlasmaTrail;
+						motion_set(lerp(_d1, _d2, random(1)), 1);
+					}
+				}
+	        }
+		}
+	
+		 // Untether FX:
+	    else ElectroPlasma_untether();
+	}
+
+	 // Trail:
+	if(chance_ct(1, 8)){
+		with(instance_create(x + orandom(6), y + orandom(6), PlasmaTrail)){
+			sprite_index = spr.ElectroPlasmaTrail;
+		}
+	}
+	
+	 // Goodbye:
+	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
+
+#define ElectroPlasma_hit
+	if(setup) ElectroPlasma_setup();
+
+	var p = instance_is(other, Player);
+	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
+		projectile_hit(other, damage);
+		
+		 // Effects:
+		sleep_max(10);
+		view_shake_max_at(x, y, 2);
+		
+		 // Slow:
+		x -= hspeed * 0.8;
+		y -= vspeed * 0.8;
+		
+		 // Shrink:
+		image_xscale -= 0.05;
+		image_yscale -= 0.05;
+	}
+
+#define ElectroPlasma_wall
+	image_xscale -= 0.03;
+	image_yscale -= 0.03;
+
+#define ElectroPlasma_destroy
+	scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
+	ElectroPlasma_untether();
+
+#define ElectroPlasma_untether
+	if(tether > 0){
+        tether = 0;
+        sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
+
+		var _x1 = x + hspeed_raw,
+			_y1 = y + vspeed_raw,
+			_x2 = tether_x,
+			_y2 = tether_y;
+
+		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
+			instance_change(BoltTrail, true);
+			with(other) if(!place_meeting(_x1, _y1, Wall) && !place_meeting(_x2, _y2, Wall)){
+				other.direction = direction;
+				other.speed = max(0, speed - 1);
+			}
+			sprite_index = spr.ElectroPlasmaTether;
+			image_yscale -= random(0.4);
+			depth = -3;
+		}
+    }
+
+
+#define ElectroPlasmaImpact_create(_x, _y)
+	with(instance_create(_x, _y, PlasmaImpact)){
+		 // Visual:
+		sprite_index = spr.ElectroPlasmaImpact;
+
+		 // Vars:
+		mask_index = mskBullet1;
+		damage = 2;
+
+		 // Effects:
+		repeat(1 + irandom(1)){
+			instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
+		}
+
+		 // Sounds:
+		sound_play_hit(sndPlasmaHit,	 0.4);
+		sound_play_hit(sndGammaGutsProc, 0.4);
+
+		return id;
+	}
+
+
 #define Jelly_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -1607,9 +1819,9 @@
 				}
 				
 				with(scrEnemyShootExt(posx, posy + 16, "ElectroPlasma", _angle + volley_angle + orandom(5), 5)){
-					tethered_to = _last;
+					tether_inst = _last;
 					damage = 1;
-					
+
 					_last = id;
 				}
 				

@@ -1,4 +1,6 @@
 #define init
+	with(Loadout) instance_destroy();
+
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
@@ -634,6 +636,9 @@
 	}
 
 	draw_reset_projection();
+
+#define cleanup
+	with(Loadout) instance_destroy();
 
 
 /// Scripts

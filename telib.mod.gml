@@ -11,13 +11,13 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "Backpack", "BackpackPickup", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "ElectroPlasma", "ElectroPlasmaImpact", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "HyperBubble", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "Backpack", "BackpackPickup", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "HyperBubble", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tegeneral"	  : ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "SunkenChest", "TrafficCrab"],
 		"teoasis"	  : ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
-		"tetrench"	  : ["Angler", "Eel", "EelSkull", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
+		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
@@ -1011,7 +1011,7 @@
 	clicked = 0;
 
 #define scrPortalPoof()  // Get Rid of Portals (but make it look cool)
-    if(instance_exists(Portal) && array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
+    if(instance_exists(Portal) && array_length(instances_matching(Portal, "type", 2)) <= 0 && array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
         //var _spr = sprite_duplicate(sprPortalDisappear);
         with(Portal) if(endgame >= 0){
         	with(instance_create(x, y, BulletHit)){
@@ -1589,28 +1589,87 @@
 	if(DebugLag) trace_time();
 
     if(instance_is(self, CustomScript) && script[2] == "area_border"){
+        var _fix = false;
+
     	 // Cave-In:
-    	if(area_cavein && array_length(instances_matching_lt(Player, "y", _y)) > 0){
-			area_cavein = false;
-	    	with(instances_matching_gt(GameObject, "y", _y)){
-	    		if(persistent) y = _y;
-	    		else instance_delete(id);
-	    	}
-	    	with(instances_matching_gt(Floor, "bbox_bottom", _y)){
-	    		scrFloorWalls();
-	    	}
-	    	with(instances_matching_gt(Wall, "bbox_bottom", _y)){
-	    		instance_create(x - 16,	y - 16,	Top);
-	    		instance_create(x - 16,	y,		Top);
-	    		instance_create(x,		y - 16,	Top);
-	    		instance_create(x,		y,		Top);
-	    	}
-	    	
+    	if(cavein){
+		    _fix = true;
+    		if(cavein_dis > 0){
+	    		cavein_dis = max(0, cavein_dis - (random(12) * current_time_scale));
+
+	    		 // Debris:
+				var _floor = instances_matching_gt(Floor, "bbox_bottom", _y);
+				with(_floor) if(point_seen_ext((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, 16, 16, -1)){
+					var n = 2 * array_length(instances_matching_gt(Floor, "y", y));
+					if(chance_ct(1, n)){
+						with(instance_create(choose(bbox_left + 4, bbox_right - 4), choose(bbox_top + 4, bbox_bottom - 4), Debris)){
+							motion_set(90 + orandom(90), 4 + random(4));
+						}
+					}
+				}
+
+				 // Caving Level In:
+				if(cavein_dis < 400){
+					script_bind_step(area_border_cavein, 0, _y + cavein_dis);
+
+					 // Effects:
+					with(instances_matching_gt(_floor, "bbox_bottom", _y + cavein_dis)){
+						with(instance_create(random_range(bbox_left - 16, bbox_right + 16), bbox_bottom - 4, Dust)){
+							image_xscale *= 2;
+							image_yscale *= 2;
+							depth = -9;
+							vspeed -= 5;
+							sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
+						}
+					}
+	    		}
+
+				 // Screenshake:
+				for(var i = 0; i < maxp; i++){
+					view_shake[i] = max(view_shake[i], 5);
+					with(instance_exists(view_object[i]) ? view_object[i] : player_find(i)){
+						view_shake_max_at(x, _y + other.cavein_dis, 20);
+					}
+				}
+    		}
+
+			 // Finished Caving In:
+			else{
+				cavein = -1;
+
+				 // Wallerize:
+				with(instances_matching_gt(Floor, "bbox_bottom", _y)){
+					scrFloorWalls();
+				}
+				with(instances_matching_gt(Wall, "bbox_bottom", _y)){
+					instance_create(x - 16,	y - 16,	Top);
+					instance_create(x - 16,	y,		Top);
+					instance_create(x,		y - 16,	Top);
+					instance_create(x,		y,		Top);
+				}
+				
+				 // Rubble:
+				with(instances_matching(instances_matching_gt(Floor, "bbox_bottom", _y), "object_index", Floor)){
+					with(instance_create(x, _y, Detail)){
+						sprite_index = spr.PizzaRubble;
+						image_xscale = 1;
+						depth = -9;
+					}
+					instance_create(x, _y + 8, InvisiWall);
+					instance_create(x + 16, _y + 8, InvisiWall);
+				}
+			}
+
 	    	// look for disconnected floorexplos on the xaxis and connect them
+    	}
+    	else if(cavein == false){
+    		 // Start Cave In:
+    		if(array_length(instances_matching_lt(Player, "y", _y)) > 0){
+    			cavein = true;
+    		}
     	}
 
          // Sprite Fixes:
-        var _fix = false;
         with(type){
         	var _obj = self[0],
         		_num = self[1];
@@ -1649,7 +1708,9 @@
         draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
     }
     else with(script_bind_draw(area_border, 10000, _y, _area, _color)){
-    	area_cavein = true;
+    	cavein = false;
+    	cavein_dis = 800;
+
     	type = [
     		[Wall,		 0, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
     		[TopSmall,	 0, area_get_sprite(_area, sprWall1Trans)],
@@ -1661,6 +1722,18 @@
     }
 
     if(DebugLag) trace_time("area_border");
+
+#define area_border_cavein(_y)
+	instance_destroy();
+
+	 // Delete:
+	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y), "object_index", Dust)){
+		if(persistent) y = _y;
+		else instance_delete(id);
+	}
+
+	 // Hide Wall Shadows:
+	with(instances_matching_gt(Wall, "bbox_bottom", _y - 16)) outspr = -1;
 
 #define area_get_sprite(_area, _spr)
     return mod_script_call("area", _area, "area_sprite", _spr);
@@ -1995,7 +2068,6 @@
 			
 		if(a[array_length(a) - 1] == "petlib"){
 			if(mod_script_exists("mod", o, _name + "_create")){
-				
 				_mod = o;
 			}
 		}
@@ -2008,9 +2080,11 @@
         mod_name = _mod;
 
          // Sprites:
-        spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
-        spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
-        spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
+        if(mod_type == "mod" && mod_name == "petlib"){
+	        spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
+	        spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
+	        spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
+        }
 
          // Custom Create Event:
     	var _scrt = pet + "_create";

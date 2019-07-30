@@ -16,6 +16,8 @@
     sound_play(sndLightningReload);
 
 #define weapon_fire
+    if("last_electroplasma" not in self) last_electroplasma = noone;
+
      // Sounds:
     var _brain = (skill_get(mut_laser_brain) > 0);
     if(_brain)  sound_play_gun(sndLightningShotgunUpg,  0.4, 0.6);
@@ -27,19 +29,19 @@
     motion_add(gunangle, -4);
     
      // Spread Fire:
-    var _last = noone,
+    var _last = last_electroplasma,
         _num = 5;
+
     for(var i = floor(_num / 2) * -1; i <= floor(_num / 2); i++){
-        
-         // Projectile:
         with(obj_create(x, y, "ElectroPlasma")){
-            team =          other.team;
-            creator =       other;
-            tethered_to =   _last;
             motion_set(other.gunangle + (20 * i) + (orandom(6) * other.accuracy), 4 + random(0.8));
-            image_angle =   direction;
-            
-            _last =         id;
+            image_angle = direction;
+            team = other.team;
+            creator = other;
+
+             // Tether Together:
+            tether_inst = _last;
+            _last = id;
         }
     }
 

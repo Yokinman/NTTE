@@ -460,7 +460,7 @@
 						with(other){
 							 // Manually Draw Laser Sights:
 							if(o && canscope){
-								draw_set_color(c_red);
+								draw_set_color(make_color_rgb(250, 54, 0));
 
 								var _wep = [wep];
 								if(race == "steroids") _wep = [wep, bwep];
