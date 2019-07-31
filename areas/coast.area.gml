@@ -72,7 +72,7 @@
 #define area_secret             return true;
 
 #define area_name(_subarea, _loop)
-    return "@1(sprInterfaceIcons)1-" + string(_subarea);
+    return "@1(sprInterfaceIcons)1-" + string((_subarea <= 0) ? "?" : _subarea);
 
 #define area_text
 	return choose("COWABUNGA", "WAVES CRASH", "SANDY SANCTUARY", "THE WATER CALLS", "SO MUCH GREEN", "ENDLESS BLUE");

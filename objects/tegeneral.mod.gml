@@ -935,20 +935,20 @@
 
     if(z < 24){
     	 // Collision:
-	    if(place_meeting(x, y, Player)){
+	    if(place_meeting(x, y - z, Player)){
 	    	with(instances_meeting(x, y, Player)){
 	    		with(other){
 	            	motion_add(point_direction(other.x, other.y, x, y), 1.5);
 	    		}
 	        }
 	    }
-	    if(place_meeting(x, y, projectile)){
+	    if(place_meeting(x, y - z, projectile)){
 	    	 // Baseball:
 	        with(instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash])){
 	        	if(place_meeting(x, y, other)){
 	        		with(other) if(speed < 8){
 	        			direction = other.direction;
-	        			speed = 10;
+	        			speed = max(0, 10 - (4 * array_length(target)))
 	
 	        			sound_play_pitchvol(sndBouncerBounce, (big ? 0.5 : 0.8) + random(0.1), 3);
 	        		}
@@ -1028,17 +1028,15 @@
 	}
 
      // Hold Projectile:
-    var _drag = 4 + (4 * array_length(target)),
-    	n = 0;
-
+    var n = 0;
     with(target){
     	if(instance_exists(self)){
 	        //speed += friction * current_time_scale;
 
 	    	 // Push Bubble:
-    		with(other){
-	    		motion_add_ct(other.direction, other.speed / _drag);
-    			if(speed > 2) speed -= 2 * current_time_scale;
+    		if(instance_is(self, hitme)) with(other){
+    			x += (other.hspeed_raw * other.size) / 6;
+    			y += (other.vspeed_raw * other.size) / 6;
     		}
 
 			 // Float in Bubble:
@@ -1057,13 +1055,13 @@
 
 			n++;
     	}
-    	else with(other){
+    	else with(other) if(is_array(target)){
     		target = array_delete_value(target, other);
     	}
     }
 
      // Grab Projectile:
-	if(place_meeting(x, y, projectile) || place_meeting(x, y, enemy)){
+	if(place_meeting(x, y - z, projectile) || place_meeting(x, y - z, enemy)){
 		 // Poppable:
 		var _meeting = instances_meeting(x, y - z, instances_matching_ne([Flame, Bolt, Splinter, HeavyBolt, UltraBolt], "team", team));
 		if(_meeting){
@@ -1079,6 +1077,7 @@
     	if(z < 24){
 	    	if(is_array(target) || !instance_exists(target)){
 		    	var	_maxSize = (big ? 3 : 0),
+    				_drag = 4 + (4 * array_length(target)),
 		    		_grab = array_combine(
 		    			instances_matching_ne(instances_matching_ne(projectile, "typ", 0), "name", name),
 		    			array_combine(
@@ -1086,27 +1085,28 @@
 		    				instances_matching(DogGuardian, "size", _maxSize + 1),
 	    				)
 		    		);
-	
-		        with(instances_meeting(x, y, instances_matching_ne(instances_matching(_grab, "bubble_bombed", null, false), "team", team))){
-		            if(place_meeting(x, y, other)){
+
+		        with(instances_meeting(x, y - z, instances_matching_ne(instances_matching(_grab, "bubble_bombed", null, false), "team", team))){
+		            if(place_meeting(x, y + other.z, other)){
 	                    bubble_bombed = true;
-	
+
 	                    if(is_array(other.target)) array_push(other.target, id);
 	                    else other.target = id;
-	
+
 	                    with(other){
 	                    	if(!big){
-		                        x = other.x;
-		                        y = other.y + z;
+		                        x = lerp(x, other.x,	 0.5);
+		                        y = lerp(y, other.y + z, 0.5);
+		                        friction = max(0.3, friction);
+		                        motion_add(other.direction, other.speed / 2);
+	                    	}
+	                    	if(instance_is(other, hitme)){
+	                    		speed *= 0.8;
 	                    	}
 	
-	                        var f = 1;
-	                        if("force" in other) f = other.force;
-	                        motion_add(other.direction, min(other.speed / sqrt(_drag + 2), f));
-	
 	                         // Effects:
-	                        instance_create(x, y, Dust);
-	                        repeat(4) instance_create(x, y, Bubble);
+	                        instance_create(x, y - z, Dust);
+	                        repeat(4) instance_create(x, y - z, Bubble);
 	                        sound_play(sndOasisHurt);
 	                    }
 	
@@ -1180,6 +1180,11 @@
     	view_shake_at(x, y, 60);
     	sound_play_pitch(sndOasisExplosion, 0.8 + orandom(0.05));
     }
+
+	 // Make Sure Projectile Dies:
+	with(target) if(instance_is(self, projectile)){
+		instance_destroy();
+	}
 
     instance_destroy();
 

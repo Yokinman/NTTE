@@ -808,6 +808,7 @@
          // Sound:
 		snd_hurt = snd.PalankingHurt;
 		snd_dead = snd.PalankingDead;
+		snd_lowh = sndRocket;
 
 		 // Vars:
 		mask_index = mskNone;
@@ -1527,6 +1528,17 @@
 
          // Sound:
         sound_play_hit(sndHitWall, 0.3);
+    }
+
+     // Half HP:
+    var h = (maxhealth / 2);
+    if(in_range(my_health, h - _hitdmg, h)){
+    	if(snd_lowh == sndRocket) sound_play_pitch(snd_lowh, 0.5);
+    	else sound_play(snd_lowh);
+
+    	 // Extra FX:
+    	view_shake_at(x, y, 30);
+    	repeat(5) instance_create(x, y - z + 16, Debris);
     }
 
      // Effects:
