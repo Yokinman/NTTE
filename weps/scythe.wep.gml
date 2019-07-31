@@ -65,7 +65,7 @@
 #define weapon_swap 	return sndBloodGamble;
 
 #define weapon_auto(w)
-	if(infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1))) return true;
+	if(instance_is(self, Player) && (infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1)))) return true;
 	return -1;
 
 #define weapon_sprt(w)

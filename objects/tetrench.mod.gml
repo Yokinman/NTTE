@@ -1191,6 +1191,360 @@
 	 // Over Pit:
 	if(pit_get(x, y)) my_health = 0;
 
+#define LightningDisc_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = sprLightning;
+        image_speed = 0.4;
+        depth = -3;
+
+         // Vars:
+        mask_index = mskWepPickup;
+        rotspeed = random_range(10, 20) * choose(-1, 1);
+        rotation = 0;
+        radius = 12;
+        charge = 1;
+        charge_spd = 2;
+        ammo = 10;
+        typ = 0;
+        shrink = 1/160;
+        maxspeed = 2.5;
+        is_enemy = false;
+        image_xscale = 0;
+        image_yscale = 0;
+        stretch = 1;
+        super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
+        creator_follow = true;
+        roids = false;
+        
+        return id;
+    }
+
+#define LightningDisc_step
+    rotation += rotspeed;
+
+     // Charge Up:
+    if(image_xscale < charge){
+    	var s = charge_spd;
+    	if(instance_is(creator, Player)) with(creator){
+    		s *= reloadspeed;
+    		s *= 1 + ((1 - (my_health / maxhealth)) * skill_get(mut_stress));
+    	}
+
+        image_xscale += (charge / 20) * s * current_time_scale;
+        image_yscale = image_xscale;
+
+        if(creator_follow){
+            if(instance_exists(creator)){
+                x = creator.x;
+                y = creator.y;
+                if(roids) y -= 4;
+            }
+
+             // Lightning Disc Weaponry:
+            if(instance_is(creator, Player)){
+                direction = creator.gunangle;
+
+                var _big = (charge >= 2.5);
+                if(_big){
+                    x += hspeed;
+                    y += vspeed;
+                }
+
+                 // Attempt to Unstick from Wall:
+                if(place_meeting(x, y, Wall)){
+                    if(!_big){
+                        var w = instance_nearest(x, y, Wall),
+                            _dis = 2,
+                            _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
+
+                        while(place_meeting(x, y, w)){
+                            x += lengthdir_x(_dis, _dir);
+                            y += lengthdir_y(_dis, _dir);
+                        }
+                    }
+
+                     // Big boy:
+                    else with(Wall) if(place_meeting(x, y, other)){
+                        instance_create(x, y, FloorExplo);
+                        instance_destroy();
+                    }
+                }
+
+                if(!_big){
+                    move_contact_solid(direction, speed);
+                }
+
+                 // Chargin'
+                with(creator){
+                	var k = 5 * (other.image_xscale / other.charge);
+                	if(other.roids) bwkick = k;
+                	else wkick = k;
+                }
+            }
+        }
+
+         // Stay Still:
+        xprevious = x;
+        yprevious = y;
+        x -= hspeed * current_time_scale;
+        y -= vspeed * current_time_scale;
+
+         // Effects:
+        sound_play_pitch(sndLightningHit, (image_xscale / charge));
+        if(!is_enemy) sound_play_pitch(sndPlasmaReload, (image_xscale / charge) * 3);
+    }
+    else{
+        if(charge > 0){
+             // Just in case:
+            if(place_meeting(x, y, Wall)){
+                with(Wall) if(place_meeting(x, y, other)){
+                    instance_create(x, y, FloorExplo);
+                    instance_destroy();
+                }
+            }
+
+             // Player Shooting:
+            if(instance_is(creator, Player)) with(creator){
+            	var k = wkick;
+                weapon_post(-4, 16, 8);
+            	if(other.roids){
+            		bwkick = wkick;
+            		wkick = k;
+            	}
+
+                with(other) direction += orandom(6) * other.accuracy;
+            }
+
+             // Effects:
+            sound_play_pitch(sndLightningCannonEnd, (3 + random(1)) / charge);
+            with(instance_create(x, y, GunWarrantEmpty)) image_angle = other.direction;
+            if(!is_enemy && skill_get(mut_laser_brain)){
+                sound_play_pitch(sndLightningPistolUpg, 0.8);
+            }
+
+            charge = 0;
+        }
+
+         // Random Zapp:
+        if(!is_enemy){
+            if(chance_ct(1, 30)){
+                with(nearest_instance(x, y, instances_matching_ne(hitme, "team", team, 0))){
+                    if(!place_meeting(x, y, other) && distance_to_object(other) < 32){
+                        with(other) LightningDisc_hit();
+                    }
+                }
+            }
+        }
+    }
+
+     // Slow:
+    var _maxSpd = maxspeed;
+    if(charge <= 0 && speed > _maxSpd) speed -= current_time_scale;
+
+     // Particles:
+    if(current_frame_active){
+        if(chance(image_xscale, 30) || (charge <= 0 && speed > _maxSpd && chance(image_xscale, 3))){
+            var d = random(360),
+                r = random(radius),
+                _x = x + lengthdir_x(r * image_xscale, d),
+                _y = y + lengthdir_y(r * image_yscale, d);
+
+            with(instance_create(_x, _y, PortalL)){
+                motion_add(random(360), 1);
+                if(other.charge <= 0){
+                    hspeed += other.hspeed;
+                    vspeed += other.vspeed;
+                }
+            }
+        }
+
+         // Super Ring Split FX:
+        if (super != -1 && charge <= 0 && image_xscale < super + .9){
+            if (chance(1, 12 * (image_xscale - super))){
+                 // Particles:
+                var _ang = random(360);
+                repeat(irandom(2)){
+                    with(instance_create(x + lengthdir_x((image_xscale * 17) + hspeed, _ang), y + lengthdir_y((image_yscale * 17) + vspeed, _ang), LightningSpawn)){
+                        image_angle = _ang;
+                        image_index = 1;
+                        with(instance_create(x, y, PortalL)) image_angle  = _ang;
+                    }
+                }
+                view_shake_at(x, y, 3);
+
+                 // Sound:
+                var _pitchMod = 1 / (4 * ((image_xscale - super) + .12));
+                    _vol = 0.1 / ((image_xscale - super) + 0.2);
+                    sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, min(_vol, 0.7));
+                    sound_play_pitchvol(sndLightningHit, random_range(0.8, 1.2) * _pitchMod, min(_vol, 0.7)*2);
+
+                // DIsplacement:
+                speed *= .98;
+                y += orandom(3) * _pitchMod;
+                x += orandom(3) * _pitchMod;
+            }
+        }
+    }
+
+     // Shrink:
+    if(charge <= 0){
+        var s = shrink * current_time_scale;
+        image_xscale -= s;
+        image_yscale -= s;
+
+         // Super lightring split:
+        if(super != -1 && image_xscale <= super){
+            instance_destroy();
+            exit;
+        }
+
+         // Normal poof:
+        if(image_xscale <= 0 || image_yscale <= 0){
+            sound_play_hit(sndLightningHit, 0.5);
+            instance_create(x, y, LightningHit);
+            instance_destroy();
+        }
+    }
+
+#define LightningDisc_hit
+    if(projectile_canhit_melee(other)){
+         // Slow:
+        if(image_xscale >= charge){
+	        x -= hspeed;
+	        y -= vspeed;
+	        direction = point_direction(x, y, other.x, other.y) + orandom(10);
+        }
+
+         // Electricity Field:
+        var _tx = other.x,
+            _ty = other.y,
+            d = random(360),
+            r = radius,
+            _x = x + lengthdir_x(r * image_xscale, d),
+            _y = y + lengthdir_y(r * image_yscale, d);
+
+        with(instance_create(_x, _y, (is_enemy ? EnemyLightning : Lightning))){
+            ammo = other.image_xscale + random(other.image_xscale * 2);
+            direction = point_direction(x, y, _tx, _ty) + orandom(12);
+            image_angle = direction;
+            team = other.team;
+            hitid = other.hitid;
+            creator = other.creator;
+            event_perform(ev_alarm, 0);
+        }
+
+         // Effects:
+        with(other) instance_create(x, y, Smoke);
+        sound_play(sndLightningHit);
+    }
+
+#define LightningDisc_wall
+    var _hprev = hspeed,
+        _vprev = vspeed;
+
+    if(image_xscale >= charge && (image_xscale < 2.5 || image_yscale < 2.5)){
+         // Bounce:
+        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+
+        with(other){
+             // Bounce Effect:
+            var _x = x + 8,
+                _y = y + 8,
+                _dis = 8,
+                _dir = point_direction(_x, _y, other.x, other.y);
+
+            instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), PortalL);
+            sound_play_hit(sndLightningHit, 0.2);
+        }
+    }
+
+     // Too powerful to b contained:
+    if(image_xscale > 1.2 || image_yscale > 1.2){
+        with(other){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
+        with(Wall) if(place_meeting(x - _hprev, y - _vprev, other)){
+            instance_create(x, y, FloorExplo);
+            instance_destroy();
+        }
+    }
+
+#define LightningDisc_destroy
+    if(super != -1)
+    {
+         // Effects:
+        sleep(80);
+        sound_play_pitchvol(sndLightningPistolUpg, 0.7,               0.4);
+        sound_play_pitchvol(sndLightningPistol,    0.7,               0.6);
+        sound_play_pitchvol(sndGammaGutsKill,      0.5 + random(0.2), 0.7);
+
+         // Disc Split:
+        var _ang = random(360);
+        for(var a = _ang; a < _ang + 360; a += (360 / 5))
+        {
+            with(obj_create(x, y, "LightningDisc"))
+            {
+                motion_add(a, 10);
+                charge = other.image_xscale / 1.2;
+                if(skill_get(mut_laser_brain)){
+                    charge *= 1.2;
+                    stretch *= 1.2;
+                    image_speed *= 0.75;
+                }
+
+                 // Insta-Charge:
+                image_xscale = charge * 0.9;
+                image_yscale = charge * 0.9;
+
+                team = other.team;
+                creator = other.creator;
+                creator_follow = false;
+            }
+
+             // Clear Walls:
+            var o = 24;
+            instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), PortalClear);
+        }
+    }
+
+#define LightningDisc_draw
+    scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
+
+#define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
+    var _off = (360 / _num),
+        _ysc = _stretch * (0.5 + random(1));
+
+    for(var d = _angle; d < _angle + 360; d += _off){
+        var _ro = random(2),
+            _rx = (_radius * _xscale) + _ro,
+            _ry = (_radius * _yscale) + _ro,
+            _x1 = _x + lengthdir_x(_rx, d),
+            _y1 = _y + lengthdir_y(_ry, d),
+            _x2 = _x + lengthdir_x(_rx, d + _off),
+            _y2 = _y + lengthdir_y(_ry, d + _off),
+            _xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
+            _ang = point_direction(_x1, _y1, _x2, _y2);
+
+        draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
+    }
+
+
+#define LightningDiscEnemy_create(_x, _y)
+    with(obj_create(_x, _y, "LightningDisc")){
+         // Visual:
+        sprite_index = sprEnemyLightning;
+
+         // Vars:
+        is_enemy = true;
+        maxspeed = 2;
+        radius = 16;
+        charge_spd = 1;
+
+        return id;
+    }
 
 #define PitSpark_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -2404,267 +2758,589 @@
 	sound_play_hit(sndEliteShielderFire, 0.6);
 	sound_play_hit(sndOasisExplosionSmall, 0.4);
 
-
-#define Tentacle_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
+#define QuasarBeam_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
-        spr_spwn = spr.TentacleSpwn;
-        spr_idle = spr.TentacleIdle;
-        spr_walk = spr.TentacleIdle;
-        spr_hurt = spr.TentacleHurt;
-        spr_dead = spr.TentacleDead;
-        depth = -2 - (y / 20000);
-        hitid = [spr_idle, "PIT SQUID"];
-        sprite_index = mskNone;
-
-         // Sound:
-        snd_hurt = sndHitFlesh;
-        snd_dead = sndMaggotSpawnDie;
-        snd_mele = sndPlantSnare;
+        sprite_index = spr.QuasarBeam;
+        spr_strt = spr.QuasarBeamStart;
+        spr_stop = spr.QuasarBeamEnd;
+        image_speed = 0.5;
+        depth = -1.5;
 
          // Vars:
-        mask_index = mskNone;
-        meleedamage = 3;
-        maxhealth = 20;
-        raddrop = 0;
-        size = 3;
-        xoff = 0;
-        yoff = 0;
-        dir = 0;
-        spd = 0;
-        move_delay = 0;
+        friction = 0.02;
+        mask_index = msk.QuasarBeam;
+        image_xscale = 1;
+        image_yscale = image_xscale;
         creator = noone;
-        canfly = true;
-        kills = 0;
+        roids = false;
+        damage = 12;
+        force = 4;
+        typ = 0;
+        bend = 0;
+        loop_snd = -1;
+        hit_time = 0;
+        hit_list = {};
+        line_seg = [];
+        line_dis = 0;
+        line_dir_turn = 0;
+        line_dir_goal = null;
+        blast_hit = true;
+        follow_player	= true;	// Follow Player
+        offset_dis		= 0;	// Offset from Creator Towards image_angle
+        bend_fric		= 0.3;	// Multiplicative Friction for Line Bending
+        line_dir_fric	= 1/4;	// Multiplicative Friction for line_dir_turn
+        line_dis_max	= 300;	// Max Possible Line Length
+        turn_max		= 8;	// Max Rotate Speed
+        turn_factor		= 1/8;	// Rotation Speed Increase Factor
+        shrink_delay	= 0;	// Frames Until Shrink
+        shrink			= 0.05;	// Subtracted from Line Size
+        scale_goal		= 1;	// Size to Reach When shrink_delay > 0
+        hold_x			= null;	// Stay at this X
+        hold_y			= null; // Stay at this Y
+        ring			= false;// Take Ring Form
+        ring_size		= 1;	// Scale of ring, multiplier cause I don't wanna figure out the epic math
+        ring_lasers		= [];
+        wave = random(100);
 
-		 // Alarms:
-        alarm0 = 1; 	// Appear:
-        alarm1 = 90;	// Disappear:
+		on_end_step = QuasarBeam_quick_fix;
 
         return id;
-    }
-
-#define Tentacle_step
-    if(sprite_index != mskNone){
-        if(instance_exists(creator) || creator == noone){
-             // Animate:
-            if(sprite_index != spr_idle){
-                if((sprite_index != spr_hurt && sprite_index != spr_spwn) || anim_end){
-                    sprite_index = spr_idle;
-                }
-            }
-
-             // Keep w/ Pit Squid:
-            if(spd != 0){
-                if(instance_exists(creator)){
-                    x = creator.x + xoff;
-                    y = creator.y + yoff;
-                }
-                else{
-                    x = xstart + xoff;
-                    y = ystart + yoff;
-                }
-                if(move_delay <= 0){
-                    xoff += lengthdir_x(spd, dir) * current_time_scale;
-                    yoff += lengthdir_y(spd, dir) * current_time_scale;
-                    spd -= clamp(spd, -friction, friction) * current_time_scale;
-                    if(spd <= 0) with(creator){
-                        motion_add(point_direction(x, y, other.x, other.y), 0.4 * current_time_scale);
-                    }
-
-                     // Animate:
-                    if(sprite_index != spr_hurt){
-                        sprite_index = spr_hurt;
-                        image_index = 1;
-                    }
-                    scrRight(dir + 180);
-
-                     // Effects:
-                    if(chance_ct(1, 3)){
-                        instance_create(x, y, Dust);
-                    }
-                }
-                else{
-                    move_delay -= current_time_scale;
-                    if(move_delay <= 0){
-                        sound_play_pitchvol(sndFastRatSpawn, 0.6 + random(0.2), 3);
-                    }
-                }
-    
-                 // Clear Walls:
-                if(place_meeting(x, y, Wall)){
-                    with(Wall) if(place_meeting(x, y, other)){
-                        instance_create(x, y, FloorExplo);
-                        instance_destroy();
-                    }
-                }
-    
-                 // Clear Floors:
-                if(place_meeting(x, y, Floor)){
-                    var _floors = instances_matching(Floor, "styleb", false),
-                        f = noone;
-        
-                    with(_floors) if(place_meeting(x, y, other)){
-                        f = id;
-                        break;
-                    }
-                    if(instance_exists(f)){
-                        with(_floors) if(place_meeting(x, y, other)){
-                            styleb = true;
-                            sprite_index = area_get_sprite(GameCont.area, sprFloor1B);
-                            depth = 8;
-                            material = 0;
-                            traction = 0.1;
-    
-                             // Effects:
-                            sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
-                            sound_play_pitchvol(sndWallBreakRock, 1 + orandom(0.2), 0.3 + random(0.2));
-                            if(object_index != FloorExplo && other.sprite_index == other.spr_spwn && chance(1, 2)){
-                                var _ox = choose(8, 24),
-                                    _oy = choose(8, 24),
-                                    _dir = point_direction(other.x, other.y, x, y),
-                                    _spd = other.spd;
-
-                                with(obj_create(x + _ox + orandom(8), y + _oy + orandom(8), "TrenchFloorChunk")){
-                                    speed /= 2;
-                                    direction = _dir;
-                                    zspeed = 3 + random(2);
-                                    //image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
-                                }
-                            }
-                            repeat(2){
-                                instance_create(x + random(sprite_width), y + random(sprite_height), Debris);
-                            }
-                            /*repeat(sprite_width / 8){
-                                instance_create(x + random(32), y + random(32), Debris);
-                            }*/
-    
-                             // TopSmall Fix:
-                            if(place_meeting(x, y, TopSmall)){
-                                with(TopSmall) if(place_meeting(x, y, other)){
-                                    instance_destroy();
-                                }
-                            }
-                        }
-                        mod_variable_set("area", "trench", "surf_reset", true);
-                    }
-                }
-            }
-    
-             // Retract:
-            else if(alarm1 > 1 && instance_exists(creator)){
-                if(point_distance(x, y, creator.x + creator.hspeed, creator.y + creator.vspeed + 16) < 64 || creator.pit_height < 1){
-                    alarm1 = 1;
-                }
-            }
-        }
-        else if(sprite_index != spr_spwn || anim_end){
-            my_health = 0;
-        }
-    }
-    else my_health = maxhealth;
-    speed = 0;
-
-#define Tentacle_alrm0
-    if(instance_exists(creator) && creator.pit_height < 1){
-        instance_delete(self);
-    }
-
-     // Appear:
-    else{
-        mask_index = mskOldGuardianDeflect;
-        sprite_index = spr_spwn;
-        image_index = 0;
-        canfly = false;
-
-        sound_play_pitchvol(sndBigMaggotUnburrow, 1.5 + random(1), 1)
-    }
-
-#define Tentacle_alrm1
-     // Retract:
-    sound_play_pitchvol(sndBigMaggotBurrow, 2 + orandom(0.2), 0.6);
-    with(instance_create(x, y, CorpseActive)){
-        sprite_index = spr.TentacleDead;
-        size = 0;
-    }
-    
-    instance_destroy();
-
-#define Tentacle_hurt(_hitdmg, _hitvel, _hitdir)
-    if(sprite_index != mskNone){
-        my_health -= _hitdmg;
-        nexthurt = current_frame + 6;
-        sound_play_hit(snd_hurt, 0.3);
-    
-         // Hurt Papa Squid:
-        with(creator){
-            my_health -= _hitdmg;
-            nexthurt = current_frame + 6;
-            sound_play_hit(snd_hurt, 0.3);
-        }
-    
-         // Hurt Sprite:
-        if(sprite_index != spr_spwn){
-            sprite_index = spr_hurt;
-            image_index = 0;
-        }
-        scrRight(_hitdir + 180);
-    }
-
-#define Tentacle_death
-    //repeat(2) instance_create(x, y, Dust);
-
-
-#define TentacleRip_create(_x, _y)
-    with(instance_create(_x, _y, CustomObject)){
-         // Visual:
-        sprite_index = spr.TentacleWarn;
-        image_speed = 0.4;
-        depth = 6;
-
-         // Vars:
-        creator = noone;
-
-        return id;
-    }
-
-#define TentacleRip_step
-     // Effects:
-    if(current_frame_active){
-        view_shake_max_at(x, y, 3);
-        if(frame_active(12)){
-            with(instance_create(x + orandom(6), y - 4 + orandom(6), Smoke)){
-                image_xscale *= 0.5;
-                image_yscale *= 0.5;
-                hspeed *= 0.5;
-                vspeed = -random_range(1, 3);
-            }
-        }
 	}
-    if(chance_ct(1, 5)){
-        sound_play_pitchvol(sndOasisDeath, random(3), 0.3);
+
+#define QuasarBeam_quick_fix
+	on_end_step = [];
+
+	var l = line_dis_max;
+	line_dis_max = 0;
+	QuasarBeam_step();
+	if(instance_exists(self)) line_dis_max = l;
+
+#define QuasarBeam_step
+	wave += current_time_scale;
+	hit_time += current_time_scale;
+
+     // Shrink:
+    if(shrink_delay <= 0){
+	    var f = shrink * current_time_scale;
+	    /*if(!instance_is(creator, enemy)){
+	    	f *= power(0.7, skill_get(mut_laser_brain));
+	    }*/
+	    image_xscale -= f;
+	    image_yscale -= f;
+    }
+    else{
+    	var f = current_time_scale;
+	    /*if(ring && !instance_is(creator, enemy)){
+	    	f *= power(0.7, skill_get(mut_laser_brain));
+	    }*/
+    	shrink_delay -= f;
+
+    	if(shrink_delay <= 0 || (follow_player && !instance_exists(creator))){
+    		shrink_delay = -1;
+    	}
+
+		 // Growin:
+		var _goal = scale_goal;
+		if(!instance_is(creator, enemy)){
+			_goal *= power(1.2, skill_get(mut_laser_brain));
+		}
+		if(abs(_goal - image_xscale) > 0.05 || abs(_goal - image_yscale) > 0.05){
+			image_xscale += (_goal - image_xscale) * 0.4;
+			image_yscale += (_goal - image_yscale) * 0.4;
+
+			 // FX:
+			if(instance_is(creator, Player)){
+				var p = (image_yscale * 0.5);
+				if(image_yscale < 1){
+					sound_play_pitchvol(sndLightningCrystalHit, p - random(0.1), 0.8);
+					sound_play_pitchvol(sndPlasmaHit, p, 0.6);
+				}
+				sound_play_pitchvol(sndEnergySword, p * 0.8, 0.6);
+			}
+		}
+		else{
+			image_xscale = _goal;
+			image_yscale = _goal;
+		}
     }
 
-     // Launch Tentacles:
-    if(anim_end){
-        for(var i = 0; i < 360; i += (360 / 8)){
-            with(obj_create(x + lengthdir_x(12, i), y + lengthdir_y(12, i), "Tentacle")){
-                dir = i;
-                spd = 6;
-                move_delay = 10;
+	 // Player Stuff:
+	if(follow_player){
+		if(!ring && instance_is(creator, Player)){
+			with(creator){
+				 // Visually Force Player's Gunangle:
+				var _ang = 0,
+					w = (other.roids ? bwep : wep);
+
+				if(string_pos("quasar", string(wep_get(w))) == 1){
+					_ang = angle_difference(other.image_angle, gunangle);
+					with(other){
+						if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)) <= 0){
+							with(script_bind_end_step(QuasarBeam_wepangle, 0)){
+								name = script[2];
+								creator = other.creator;
+								roids = other.roids;
+								angle = 0;
+							}
+						}
+						with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)){
+							angle = _ang;
+						}
+					}
+				}
+
+				 // Kickback:
+				if(other.shrink_delay > 0){
+					var k = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30));
+					if(other.roids) bwkick = max(bwkick, k);
+					else wkick = max(wkick, k);
+				}
+
+	        	 // Knockback:
+	        	motion_add(other.image_angle + 180, other.image_yscale / 2.5);
+			}
+
+		     // Follow Player:
+	    	var c = creator;
+	        line_dir_goal = c.gunangle;
+	        hold_x = c.x;
+	        hold_y = c.y;
+	        with(c){
+	        	if(!place_meeting(x + hspeed, y, Wall)) other.hold_x += hspeed;
+	        	if(!place_meeting(x, y + vspeed, Wall)) other.hold_y += vspeed;
+	        }
+	        if(roids){
+	        	hold_y -= 4;
+	        	//hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
+	        	//hold_y -= lengthdir_y(2 * c.right, c.gunangle - 90);
+	        }
+		}
+		else follow_player = false;
+    }
+
+	 // Stay:
+	var o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5);
+	if(hold_x != null){
+	    x = hold_x + lengthdir_x(o, image_angle);
+	    xprevious = x;
+	}
+	if(hold_y != null){
+	    y = hold_y + lengthdir_y(o, image_angle);
+	    yprevious = y;
+	}
+
+     // Rotation:
+    line_dir_turn -= line_dir_turn * line_dir_fric * current_time_scale;
+    if(line_dir_goal != null){
+	    var _turn = angle_difference(line_dir_goal, image_angle);
+		if(abs(_turn) > 90 && abs(line_dir_turn) > 1){
+			_turn = abs(_turn) * sign(line_dir_turn);
+		}
+	    line_dir_turn += _turn * turn_factor * current_time_scale;
+    }
+	line_dir_turn = clamp(line_dir_turn, -turn_max, turn_max);
+    image_angle += line_dir_turn * current_time_scale;
+    image_angle = (image_angle + 360) % 360;
+
+	 // Bending:
+    bend -= (bend * bend_fric) * current_time_scale;
+    bend -= line_dir_turn * current_time_scale;
+
+     // Line:
+    var _lineAdd = max(12, 20 * image_yscale),
+        _lineWid = 16,
+        _lineDir = image_angle,
+        _lineChange = (instance_is(creator, Player) ? 120 : 40) * current_time_scale,
+        _dis = 0,
+        _dir = _lineDir,
+        _dirGoal = _lineDir + bend,
+        _cx = x,
+        _cy = y,
+		_lx = _cx,
+        _ly = _cy,
+        _walled = false;
+
+	if(ring){
+		_lineAdd = 24 * ring_size;
+
+		 // Offset Ring Center:
+		var _xoff = -_lineAdd / 2,
+			_yoff = 57 * ring_size;
+
+		_cx += lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90);
+		_cy += lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90);
+		_lx = _cx;
+		_ly = _cy;
+
+		 // Movin:
+		motion_add_ct(random(360), 0.2 / (speed + 1));
+		if(place_meeting(x, y, object_index)){
+			with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
+				if(ring && place_meeting(x, y, other)){
+					var l = 0.5,
+						d = point_direction(other.x, other.y, x, y);
+
+					x += lengthdir_x(l, d);
+					y += lengthdir_y(l, d);
+					motion_add_ct(d, 0.03);
+				}
+			}
+		}
+
+		 // Position Beams:
+		var o = _yoff + (6 * other.image_yscale),
+			t = 4 * current_time_scale,
+			_x = x + hspeed,
+			_y = y + vspeed,
+			n = 0;
+
+		with(ring_lasers){
+			if(instance_exists(self)){
+				hold_x = _x + lengthdir_x(o, image_angle);
+				hold_y = _y + lengthdir_y(o, image_angle);
+				line_dir_goal += t * sin((wave / 30) + array_length(ring_lasers) + n);
+				n++;
+			}
+			else other.ring_lasers = array_delete_value(other.ring_lasers, self);
+		}
+	}
+	else{
+		var o = (sprite_get_width(spr_strt) / 2) * image_xscale;
+		_lx -= lengthdir_x(o, _dir);
+		_ly -= lengthdir_y(o, _dir);
+	}
+
+    line_seg = [];
+    line_dis += _lineChange;
+    line_dis = clamp(line_dis, 0, line_dis_max);
+	if(collision_line(_lx, _ly, _cx, _cy, TopSmall, false, false)){
+		line_dis = 0;
+	}
+
+    if(_lineAdd > 0) while(true){
+        if(!_walled){
+        	if(!ring && collision_line(_lx, _ly, _cx, _cy, Wall, false, false)){
+        		_walled = true;
+        	}
+        	else{
+	    		 // Add to Line Draw:
+        		var o = _lineAdd * 2;
+        		if(point_seen_ext(_lx, _ly, o, o, -1)){
+	        		for(var a = -1; a <= 1; a += 2){
+		                var l = (_lineWid * a) + 6,
+		                    d = _dir - 90,
+		                    _x = _cx,
+		                    _y = _cy,
+		                    _xtex = (_dis / line_dis),
+		                    _ytex = !!a;
+
+						if(ring){
+							var o = (2 + (2 * ring_size * image_yscale)) / max(shrink_delay / 20, 1);
+							_x += lengthdir_x(o, d) * dcos((_dir *  2) + (wave * 4));
+							_y += lengthdir_y(o, d) * dsin((_dir * 10) + (wave * 4));
+						}
+
+		                array_push(line_seg, {
+		                    x    : _x,
+		                    y    : _y,
+		                    dir  : _dir,
+		                    xoff : lengthdir_x(l, d),
+		                    yoff : lengthdir_y(l, d),
+		                    xtex : _xtex,
+		                    ytex : _ytex
+		                });
+		            }
+        		}
+    		}
+        }
+
+         // Wall Collision:
+        else{
+            blast_hit = false;
+            line_dis -= _lineChange;
+        	if(array_length(line_seg) <= 0) line_dis = 0;
+        }
+        if(ring && place_meeting(_cx, _cy, Wall)){
+            speed *= 0.96;
+        	with(instances_meeting(_cx, _cy, Wall)){
+                if(place_meeting(x - (_cx - other.x), y - (_cy - other.y), other)){
+	        		instance_create(x, y, FloorExplo);
+	        		instance_destroy();
+                }
+        	}
+        }
+
+         // Hit Enemies:
+        if(place_meeting(_cx, _cy, hitme)){
+            with(instances_meeting(_cx, _cy, instances_matching_ne(hitme, "team", team))){
+                if(place_meeting(x - (_cx - other.x), y - (_cy - other.y), other)){
+                	with(other){
+	                	if(lq_defget(hit_list, string(other), 0) <= hit_time){
+		                	 // Effects:
+				            with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
+				            	sprite_index = spr.QuasarBeamHit;
+				            	motion_add(point_direction(_cx, _cy, x, y), 1);
+				            	image_angle = direction;
+				            	image_xscale = other.image_yscale;
+				            	image_yscale = other.image_yscale;
+				            	depth = other.depth - 1;
+				            }
+	
+							 // Damage:
+		                    if(!ring) direction = _dir;
+		                    QuasarBeam_hit();
+	                	}
+	            		if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
+	            			line_dis = _dis;
+	            		}
+	        			blast_hit = false;
+                	}
+                }
             }
         }
 
          // Effects:
-        view_shake_at(x, y, 30);
-        sound_play_hit(sndWallBreak, 0.3);
-        sound_play_pitchvol(sndWallBreakCrystal, 2.5, 0.6);
-        repeat(6) with(instance_create(x, y, Smoke)){
-            motion_add(random(360), 4);
+    	if(chance_ct(1, 160 / _lineAdd)){
+        	if(position_meeting(_cx, _cy, Floor)){
+        		var o = 32 * image_yscale;
+		        with(instance_create(_cx + orandom(o), _cy + orandom(o), PlasmaTrail)){
+		        	sprite_index = spr.QuasarBeamTrail;
+		        	motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
+		        	if(other.image_yscale > 1) depth = other.depth - 1;
+		        }
+        	}
+    	}
+
+		 // Move:
+        _lx = _cx;
+        _ly = _cy;
+        _cx += lengthdir_x(_lineAdd, _dir);
+        _cy += lengthdir_y(_lineAdd, _dir);
+        _dis += _lineAdd;
+
+		 // Turn:
+		if(ring){
+			_dir += (_lineAdd / ring_size);
+    	}
+        else{
+        	_dir = clamp(_dir + (bend / (48 / _lineAdd)), _lineDir - 90, _lineDir + 90);
         }
 
-        instance_destroy();
+		 // End:
+		if((!ring && _dis >= line_dis) || (ring && abs(_dir - _lineDir) > 360)){
+			blast_hit = false;
+			if(ring && array_length(line_seg) > 0){
+				array_push(line_seg, line_seg[0]);
+				array_push(line_seg, line_seg[1]);
+			}
+			break;
+		}
     }
+
+     // Effects:
+    if(!ring){
+	    if(chance_ct(1, 4)){
+	        var _xoff = orandom(12) - ((12 * image_xscale) + _lineAdd),
+	    		_yoff = orandom(random(28 * image_yscale)),
+	    		_x = _lx + lengthdir_x(_xoff, _dir) + lengthdir_x(_yoff, _dir - 90),
+	    		_y = _ly + lengthdir_y(_xoff, _dir) + lengthdir_y(_yoff, _dir - 90);
+	
+			if(!position_meeting(_x, _y, TopSmall)){
+		        with(instance_create(_x, _y, BulletHit)){
+		        	sprite_index = spr.QuasarBeamHit;
+		        	image_angle = _dir + 180;
+		        	image_angle += random(angle_difference(point_direction(_lx, _ly, x, y), image_angle));
+		        	image_xscale = other.image_yscale;
+		        	image_yscale = other.image_yscale;
+		        	depth = other.depth - 1;
+		        	instance_create(x, y, Smoke);
+		        }
+			}
+	    }
+	    view_shake_max_at(_cx, _cy, 4);
+    }
+	view_shake_max_at(x, y, 4);
+
+	 // Sound:
+    if(!audio_is_playing(loop_snd)){
+    	loop_snd = audio_play_sound(sndNothingBeamLoop, 0, true);
+    }
+    audio_sound_pitch(loop_snd, 0.3 + (0.1 * sin(current_frame / 10)));
+    audio_sound_gain(loop_snd, image_xscale, 0);
+
+     // End:
+    if(image_xscale <= 0 || image_yscale <= 0) instance_destroy();
+
+#define QuasarBeam_draw
+    QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
+
+	 // Visually Connect Laser to Quasar Ring:
+	if(ring){
+		with(ring_lasers) if(instance_exists(self)){
+	    	draw_set_alpha(image_alpha);
+	    	draw_set_color(image_blend);
+	    	draw_circle(x - 1, y - 1, 6 * image_yscale, false);
+		}
+		with(ring_lasers) if(instance_exists(self)){
+	    	QuasarBeam_draw();
+		}
+	    draw_set_alpha(1);
+	}
+
+#define QuasarBeam_alrm0
+	alarm0 = random_range(4, 16);
+
+	 // Laser:
+	with(obj_create(x, y, "QuasarBeam")){
+		image_angle = random(360);
+        team = other.team;
+        creator = other.creator;
+
+        spr_strt = -1;
+        follow_player = false;
+        line_dir_goal = image_angle + random(orandom(180));
+        shrink_delay = min(other.shrink_delay, random_range(10, 120));
+        scale_goal = other.scale_goal - random(0.6);
+        image_xscale = 0;
+        image_yscale = 0;
+        visible = false;
+
+        array_push(other.ring_lasers, id);
+	}
+
+#define QuasarBeam_hit
+    if(lq_defget(hit_list, string(other), 0) <= hit_time){
+		speed *= 1 - (0.05 * other.size);
+
+         // Effects:
+        with(other){
+            repeat(3) instance_create(x, y, Smoke);
+            if(other.blast_hit){
+        		sleep_max(30);
+            	sound_play_hit(sndPlasmaHit, 0.3)
+            }
+        }
+    
+         // Damage:
+        var _dir = direction;
+        if(place_meeting(x, y, other) || ring){
+            _dir = point_direction(x, y, other.x, other.y);
+        }
+        projectile_hit(
+        	other,
+        	ceil((damage + (blast_hit * damage * (1 + skill_get(mut_laser_brain)))) * image_yscale),
+        	(instance_is(other, prop) ? 0 : force),
+        	_dir
+        );
+
+         // Set Custom IFrames:
+        lq_set(hit_list, string(other), hit_time + (ring ? 3 : 6));
+    }
+
+#define QuasarBeam_wall
+    // dust
+
+#define QuasarBeam_cleanup
+	audio_stop_sound(loop_snd);
+
+#define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
+	var _angle = image_angle,
+		_x = x,
+		_y = y;
+
+	 // Beam Start:
+	if(spr_strt != -1){
+		draw_sprite_ext(spr_strt, image_index, _x, _y, _xscale, _yscale, _angle, image_blend, _alpha);
+	}
+
+	 // Quasar Ring Core:
+	if(ring){
+		draw_set_alpha((_alpha < 1) ? (_alpha / 2) : _alpha);
+		draw_set_color(image_blend);
+
+		var o = 0;
+		repeat(2){
+			draw_circle(
+				_x - 1 + (o * cos(wave / 8)),
+				_y - 1 + (o * sin(wave / 8)),
+				((18 * ring_size) + floor(image_index)) * _xscale,
+				false
+			);
+			o = (2 * _xscale * cos(wave / 13)) / max(shrink_delay / 20, 1);
+		}
+
+		draw_set_alpha(1);
+	}
+
+     // Main Laser:
+    if(array_length(line_seg) > 0){
+	    draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(sprite_index, image_index));
+	    draw_set_alpha(_alpha);
+	    draw_set_color(image_blend);
+
+	    with(line_seg){
+	        draw_vertex_texture(x + other.hspeed + (xoff * _yscale), y + other.vspeed + (yoff * _yscale), xtex, ytex);
+	    }
+
+	    draw_set_alpha(1);
+	    draw_primitive_end();
+
+    	with(line_seg[array_length(line_seg) - 1]){
+        	_angle = dir;
+	    	_x = x;
+	    	_y = y;
+	    }
+    }
+
+     // Laser End:
+    if(spr_stop != -1){
+	    var _x1 = x - lengthdir_x(1,				 _angle),
+	    	_y1 = y - lengthdir_y(1,				 _angle),
+	    	_x2 = x + lengthdir_x(16 / image_xscale, _angle),
+	    	_y2 = y + lengthdir_y(16 / image_yscale, _angle);
+	
+	    if(!collision_line(_x1, _y1, _x2, _y2, TopSmall, false, false)){
+	    	draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
+	    }
+    }
+
+#define QuasarBeam_wepangle
+	if(instance_exists(creator) && abs(angle) > 1){
+    	with(creator){
+    		if(other.roids){
+    			bwepangle = other.angle;
+    		}
+    		else{
+	    		wepangle = other.angle;
+		    	back = (((((gunangle + wepangle) + 360) % 360) > 180) ? -1 : 1);
+		    	scrRight(gunangle + wepangle);
+    		}
+    	}
+    	angle -= angle * 0.3 * current_time_scale;
+	}
+	else instance_destroy();
+
+
+#define QuasarRing_create(_x, _y)
+	with(obj_create(_x, _y, "QuasarBeam")){
+		 // Visual:
+		spr_strt = -1;
+		spr_stop = -1;
+
+		 // Vars:
+		mask_index = mskExploder;
+        shrink_delay = 120;
+		ring = true;
+		force = 1;
+
+		 // Alarms:
+		alarm0 = 10 + random(20);
+
+		instance_create(x, y, PortalClear);
+
+		return id;
+	}
 
 
 #define TrenchFloorChunk_create(_x, _y)
@@ -3074,6 +3750,20 @@
 	if(_active) script_bind_draw(draw_anglertrail, -3);
 	surfAnglerTrail.active = _active;
 	surfAnglerClear.active = _active;
+	
+     // Lightring Trigger Fingers Interaction:
+    if(skill_get(mut_trigger_fingers) > 0){
+    	var n = array_length(instances_matching_le(enemy, "my_health", 0));
+    	if(n > 0){
+    		with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc"), "is_enemy", false)){
+    			if(image_xscale < charge){
+    				image_xscale *= (n / 0.6) * skill_get(mut_trigger_fingers);
+    				image_xscale = min(image_xscale, charge);
+    				image_yscale = image_xscale;
+    			}
+    		}
+    	}
+    }
 
 	if(DebugLag) trace_time("tetrench_step");
 
@@ -3169,6 +3859,55 @@
 	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true)) if(visible){
         draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
     }
+    
+	 // Lightning Discs:
+    with(instances_matching(CustomProjectile, "name", "LightningDisc")){
+        if(visible){
+        	scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+        }
+    }
+    
+	 // Quasar Beams:
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
+        if(visible){
+        	var a = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5));
+        	if(blast_hit) a *= 1.5 / image_yscale;
+        	QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, a * image_alpha);
+
+        	if(ring){
+        		with(ring_lasers) if(instance_exists(self) && !visible){
+        			QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, a * image_alpha);
+        		}
+        	}
+        }
+    }
+    
+     // Electroplasma:
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
+    	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+    }
+    
+     // Hot Quasar Weapons:
+    draw_set_color_write_enable(true, false, false, true);
+    with(instances_matching_gt(Player, "reload", 0)){
+    	if(array_find_index(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(wep)) >= 0){
+    		var l = -2,
+    			d = gunangle - 90,
+    			_alpha = image_alpha * (reload / weapon_get_load(wep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
+
+    		draw_weapon(weapon_get_sprt(wep), x + lengthdir_x(l, d), y + lengthdir_y(l, d), gunangle, wepangle, wkick, right, image_blend, _alpha);
+    	}
+    }
+    with(instances_matching_gt(instances_matching(Player, "race", "steroids"), "breload", 0)){ // hey JW why couldnt u make weapons arrays why couldnt you pleas e
+    	if(array_find_index(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(bwep)) >= 0){
+    		var l = -4,
+    			d = gunangle - 90,
+    			_alpha = image_alpha * (breload / weapon_get_load(bwep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
+
+    		draw_weapon(weapon_get_sprt(bwep), x + lengthdir_x(l, d), y + lengthdir_y(l, d) - 2, gunangle, wepangle, bwkick, -right, image_blend, _alpha);
+    	}
+    }
+    draw_set_color_write_enable(true, true, true, true);
 
      // Pit Spark:
     with(instances_matching(CustomObject, "name", "PitSpark")) if(visible){
@@ -3197,6 +3936,16 @@
     draw_set_color(c_gray);
 
 	if(DebugLag) trace_time();
+	
+     // Electroplasma:
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
+    	draw_circle(x, y, 48, false);
+    }
+
+     // Lightning Discs:
+    with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
+        draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
+    }
 
      // Anglers:
     draw_set_flat(draw_get_color());
@@ -3251,6 +4000,38 @@
         with(eye)
             draw_circle(x, y + 16, ((blink ? 48 : 64) + orandom(1)), false);
     }
+    
+     // Quasar Beams:
+    draw_set_flat(draw_get_color());
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
+        var _scale = 5,
+        	_xscale = _scale * image_xscale,
+        	_yscale = _scale * image_yscale;
+
+        if(!ring){
+	        QuasarBeam_draw_laser(_xscale, _yscale, 1);
+	
+	         // Rounded Ends:
+	        var _x = x,
+	            _y = y,
+	            r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
+	
+	        draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
+	
+	        if(array_length(line_seg) > 0){
+	            with(line_seg[array_length(line_seg) - 1]){
+	                _x = x - 1 + lengthdir_x(8 * _xscale, dir);
+	                _y = y - 1 + lengthdir_y(8 * _xscale, dir);
+	            }
+	        }
+	
+	        draw_circle(_x, _y, r, false);
+        }
+        else{
+        	draw_circle(x, y, (280 * ring_size) + random(4), false);
+        }
+    }
+    draw_set_flat(-1);
 
 	if(DebugLag) trace_time("tetrench_draw_dark");
 
@@ -3258,6 +4039,16 @@
     draw_set_color(c_black);
 
 	if(DebugLag) trace_time();
+	
+     // Electroplasma:
+    with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
+    	draw_circle(x, y, 24, false);
+    }
+
+     // Lightning Discs:
+    with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")){
+        draw_circle(x - 1, y - 1, (radius * image_xscale * 1.5) + 4 + orandom(1), false);
+    }
 
      // Anglers:
     draw_set_blend_mode(bm_subtract);
@@ -3302,6 +4093,38 @@
         with(eye) if !blink
             draw_circle(x, y + 16, 32 + orandom(1), false);
     }
+    
+	 // Quasar Beams:
+    draw_set_flat(draw_get_color());
+    with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
+        var _scale = 2,
+        	_xscale = _scale * image_xscale,
+        	_yscale = _scale * image_yscale;
+
+        if(!ring){
+        	QuasarBeam_draw_laser(_xscale, _yscale, 1);
+	
+	         // Rounded Ends:
+	        var _x = x,
+	            _y = y,
+	            r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
+	
+	        draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
+	
+	        if(array_length(line_seg) > 0){
+	            with(line_seg[array_length(line_seg) - 1]){
+	                _x = x - 1 + lengthdir_x(8 * _xscale, dir);
+	                _y = y - 1 + lengthdir_y(8 * _xscale, dir);
+	            }
+	        }
+	
+	        draw_circle(_x, _y, r, false);
+        }
+        else{
+        	draw_circle(x, y, (120 * ring_size) + random(4), false);
+        }
+    }
+    draw_set_flat(-1);
 
 	if(DebugLag) trace_time("tetrench_draw_dark_end");
 

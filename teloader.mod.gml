@@ -16,6 +16,7 @@
         ["telib.mod.gml",                           1 + _coop],
         ["petlib.mod.gml",                          1 + _coop],
         ["objects/tegeneral.mod.gml",               0 + _coop],
+        ["objects/tepickups.mod.gml",               0 + _coop],
         ["objects/tedesert.mod.gml",                0 + _coop],
         ["objects/tecoast.mod.gml",                 1 + _coop],
         ["objects/teoasis.mod.gml",                 0 + _coop],

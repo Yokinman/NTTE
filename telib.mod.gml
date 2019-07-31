@@ -11,15 +11,14 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "Backpack", "BackpackPickup", "BatDisc", "BigDecal", "BoneArrow", "BoneBigPickup", "BonePickup", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "CustomPickup", "FlySpin", "Harpoon", "HarpoonPickup", "HarpoonStick", "HyperBubble", "LightningDisc", "LightningDiscEnemy", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
-		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
-		"tegeneral"	  : ["BigDecal", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CustomChest", "FlakBall", "Harpoon", "LightningDisc", "LightningDiscEnemy", "NestRaven", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "QuasarBeam", "QuasarRing", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "SpiritPickup", "SunkenChest"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
-		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "SunkenChest", "TrafficCrab"],
+		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	  : ["ClamChest", "Hammerhead", "PetBite", "Puffer", "Crack"],
-		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "Tentacle", "TentacleRip", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
-	    "tesewers"	  : ["AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatChest", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatChest", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "ChestShop", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
-	    "tescrapyard" : ["SawTrap", "Tunneler"],
+		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "QuasarBeam", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
+	    "tesewers"	  : ["AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "Pizza", "PizzaBoxCool", "PizzaDrain", "PizzaManholeCover", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
+	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
     };
 

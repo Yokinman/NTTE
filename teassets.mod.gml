@@ -132,6 +132,14 @@
     	Trident     = sprite_add_weapon("sprites/weps/sprTrident.png",          11, 6);
     	msk.Trident = sprite_add("sprites/weps/projectiles/mskTrident.png",  1, 11, 6);
 
+		 // Overstock/Overheal Pickup:
+		OverstockPickup = sprite_add("sprites/chests/sprOverstockPickup.png",	1,	5,	5);
+		OverhealPickup	= sprite_add("sprites/chests/sprOverhealPickup.png",	1,	5,	5);
+		OverstockFX 	= sprite_add("sprites/misc/sprOverstockFX.png", 		13, 4,	12);
+		
+		 // Spirit Pickup:
+		SpiritPickup = sprite_add("sprites/chests/sprSpiritPickup.png", 1, 5, 5);
+
          // Bonus Ammo Shell:
         BonusShell      = sprite_add("sprites/misc/sprBonusShell.png",      1, 1, 2);
         BonusShellHeavy = sprite_add("sprites/misc/sprBonusShellHeavy.png", 1, 2, 3);
@@ -796,6 +804,13 @@
 	            
 	             // Sunken Chest:
 	            spr.SunkenChest = sprite_shine(spr.SunkenChest, spr.Shine24);
+	            
+	             // Overheal + Overstock Pickups:
+	            spr.OverhealPickup	= sprite_shine(spr.OverhealPickup,	spr.Shine10);
+	            spr.OverstockPickup = sprite_shine(spr.OverstockPickup, spr.Shine10);
+	            
+	             // Spirit Pickup:
+	            spr.SpiritPickup = sprite_shine(spr.SpiritPickup, spr.Shine10);
 
             exit;
         }

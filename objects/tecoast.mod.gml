@@ -3243,28 +3243,6 @@
     sound_play_hit(sndFlakExplode, 0.2);
 
 
-#define SunkenChest_create(_x, _y)
-	with(obj_create(_x, _y, "CustomChest")){
-		 // Visual:
-		spr_open = spr.SunkenChestOpen;
-		sprite_index = spr.SunkenChest;
-		
-		 // Sounds:
-		snd_open = sndMenuGoldwep;
-		
-		 // Events:
-		on_open = script_ref_create(SunkenChest_open);
-		
-		return id;
-	}
-	
-#define SunkenChest_open
-	 // Unlocks:
-	var _areas = ["coast", "oasis"];
-	for(var i = 0; i < array_length(_areas); i++) if(GameCont.area == _areas[i])
-		scrUnlock("part " + string(i + 1) + "/2", "it would be cool", -1, -1);
-
-
 #define TrafficCrab_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:

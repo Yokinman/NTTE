@@ -220,6 +220,10 @@
 
 	 // For Merged Weapon PopupText Fix:
 	global.wepMergeName = [];
+	
+	 // Max Special Pickups Per Level:
+	global.specialPickupsMax = 2;
+	global.specialPickups = global.specialPickupsMax;
 
      // Charm:
     global.surfCharm = surflist_set("Charm", 0, 0, game_width, game_height);
@@ -1175,6 +1179,9 @@
     			break;
     	}
     }
+    
+     // More:
+    global.specialPickups = global.specialPickupsMax;
 
 #define step
     script_bind_end_step(end_step, 0);
@@ -1838,6 +1845,31 @@
 				}
 			}
 			w++;
+		}
+	}
+	
+	 // Overheal, Overstock, and Spirit Pickups:
+	with(instances_matching([AmmoPickup, HPPickup], "canbonus", undefined)){
+		canbonus = false;
+		
+		if(global.specialPickups > 0){
+			
+			 // Spirit Pickups:
+			var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
+			if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
+				obj_create(x, y, "SpiritPickup");
+				instance_delete(id);
+				
+				global.specialPickups--;
+			}
+			
+			 // Overheal/Overstock Pickups:
+			else if(GameCont.hard > 3 && chance(1, 50)){
+				obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
+				instance_delete(id);
+				
+				global.specialPickups--;
+			}
 		}
 	}
 
