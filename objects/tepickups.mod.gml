@@ -126,6 +126,7 @@
 	 // Restore Strong Spirit:
 	if(instance_is(other, Player)) scrRestoreSpirit(other);
 
+
 #define BackpackPickup_create(_x, _y)
 	instance_create(_x, _y, Dust);
 	with(instance_create(_x, _y, CustomObject)){
@@ -201,17 +202,17 @@
 
 #define BackpackPickup_destroy
 	with(instance_create(x, y - z, object)){
+		xstart = other.xstart;
+		ystart = other.ystart;
 		sprite_index = other.sprite_index;
 		direction = other.direction;
 		speed = other.speed;
 		if("curse" in self) curse = other.curse;
 		if("cursed" in self) cursed = other.curse; // Bro why do ammo pickups be inconsistent
-	    canbonus = false; // Bro I feel u
+	    bonuspickup_spawn = false; // Bro I feel u
 	}
 
 
-
-/// Scripts
 #define BatChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -220,7 +221,7 @@
 		
 		 // Sound:
 		snd_open = sndWeaponChest;
-		
+
 		 // Cursed:
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
@@ -296,6 +297,7 @@
 	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	repeat(6) scrFX(x, y, 3, Dust);
 
+
 #define BoneBigPickup_create(_x, _y)
 	with(obj_create(_x, _y, "BonePickup")){
 		 // Visual:
@@ -327,7 +329,6 @@
 		time = 150 + random(30);
         pull_dis = 80 + (60 * skill_get(mut_plutonium_hunger));
         pull_spd = 12;
-		num = 1;
 
 		 // Events:
 		on_pull = script_ref_create(BonePickup_pull);
@@ -371,7 +372,8 @@
 
 #define BonePickup_fade
 	instance_create(x, y, Dust);
-	
+
+
 #define CatChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -452,9 +454,11 @@
 	//sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
 	repeat(6) scrFX(x, y, 3, Dust);
-	
+
+
 #macro ChestShop_basic	0
 #macro ChestShop_wep	1
+
 #define ChestShop_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -535,7 +539,7 @@
 
 				if(instance_exists(creator)){
 					_x = creator.x;
-					_y = creator.y;
+					_y = creator.y - 4;
 				}
 
 				switch(type){
@@ -543,13 +547,13 @@
 						switch(drop){
 							case "ammo":
 								repeat(2){
-									instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup).canbonus = false;
+									instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
 								}
 								break;
 
 							case "health":
 								repeat(2){
-									instance_create(_x + orandom(2), _y + orandom(2), HPPickup).canbonus = false;
+									instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
 								}
 								break;
 
@@ -586,13 +590,12 @@
 								break;
 								
 							case "bones":
-								repeat(2) with(obj_create(_x, _y, "BonePickup")){
-									big = true;
+								repeat(2) with(obj_create(_x, _y, "BoneBigPickup")){
 									motion_set(random(360), 3 + random(1));
 								}
-								repeat(10) with(obj_create(_x, _y, "BonePickup"))
+								repeat(10) with(obj_create(_x, _y, "BonePickup")){
 									motion_set(random(360), 3 + random(1));
-									
+								}
 								break;
 						}
 						
@@ -676,11 +679,8 @@
 		//d += angle_difference(90, d) * (1 - clamp(open_state, 0, 1));
 
 		var	w = point_distance(_sx, _sy, _x, _y) * (open ? _openState : min(_openState * 3, 1)),
-			h = ((sqrt(sqr(sprite_get_width(_spr) * dsin(d)) + sqr(sprite_get_height(_spr) * dcos(d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2);
-
-		if(_spr == sprDeskDebris) h /= 2;
-
-		var	_x1 = _sx + lengthdir_x(0.5, d),
+			h = ((sqrt(sqr(sprite_get_width(_spr) * dsin(d)) + sqr(sprite_get_height(_spr) * dcos(d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
+			_x1 = _sx + lengthdir_x(0.5, d),
 			_y1 = _sy + lengthdir_y(1, d),
 			_x2 = _sx + lengthdir_x(w, d) + lengthdir_x(h / 2, d - 90),
 			_y2 = _sy + lengthdir_y(w, d) + lengthdir_y(h / 2, d - 90),
@@ -814,12 +814,49 @@
 		case ChestShop_wep:
 			sprite_index = weapon_get_sprt(drop);
 
-			text = ((curse ? "CURSED " : "") + wep_get(drop) == "merge" ? "MERGED " : "") + "WEAPON";
+			text = (curse ? "CURSED " : "") + ((wep_get(drop) == "merge") ? "MERGED " : "") + "WEAPON";
 			desc = weapon_get_name(drop);
 			break;
 	}
 
 	scrPickupIndicator(text + "#@s" + desc);
+
+
+#define CursedAmmoChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = sprAmmoChest;
+		spr_open = sprAmmoChestOpen;
+		image_blend = merge_color(c_white, c_purple, 0.7);
+
+		 // Sound:
+		snd_open = sndAmmoChest;
+
+		on_open = script_ref_create(CursedAmmoChest_open);
+		
+		return id;
+	}
+
+#define CursedAmmoChest_open
+	sound_play(sndCursedChest);
+	instance_create(x, y, PortalClear);
+	repeat(10){
+		with(obj_create(x + orandom(4), y + orandom(4), "BackpackPickup")){
+			sprite_index = sprCursedAmmo;
+			mask_index = mskPickup;
+			object = AmmoPickup;
+			curse = true;
+
+			var s = random_range(1.5, 2);
+			speed *= s;
+			zspeed *= s - 0.5;
+
+			with(instance_create(x, y, Curse)){
+				depth = other.depth - 1;
+				motion_add(other.direction, random(s));
+			}
+		}
+	}
 
 
 #define CustomChest_create(_x, _y)
@@ -899,7 +936,6 @@
         pull_dis = 40 + (30 * skill_get(mut_plutonium_hunger));
         pull_spd = 6;
         num = 1;
-        setup = false;
 
 		 // Events:
         on_step = ["", "", ""];
@@ -915,10 +951,6 @@
 
 #define CustomPickup_step
 	array_push(global.pickup_custom, id); // For step event management
-	if(!setup && crown_current == crwn_haste){
-	    setup = true;
-	    time *= (2/3);
-	}
 
      // Call Chest Step Event:
     var e = on_step;
@@ -1016,6 +1048,7 @@
 		}
     }
 
+
 #define HarpoonPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -1029,7 +1062,6 @@
 		friction = 0.4;
 		pull_spd = 8;
 		target = noone;
-		num = 1;
 
 		 // Events:
 		on_step = script_ref_create(HarpoonPickup_step);
@@ -1096,32 +1128,61 @@
 		sprite_index = spr.OverhealPickup;
 		spr_open = -1;
 		spr_fade = -1;
-		
+
 		 // Sounds:
 		snd_open = (_skill ? sndHPPickupBig : sndHPPickup);
 		snd_fade = sndPickupDisappear;
-		
+
 		 // Vars:
 		mask_index = mskPickup;
-		pull_dis = 20 + (30 * skill_get(mut_plutonium_hunger));
-		num = 1 * (1 + _skill);
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
+		pull_delay = 15;
+		num = (2 * (1 + _skill)) + (crown_current == crwn_haste);
+		wave = random(90);
 		
 		 // Events:
 		on_open = script_ref_create(OverhealPickup_open);
 		on_step = script_ref_create(BonusPickup_step);
+		on_pull = script_ref_create(BonusPickup_pull);
 		on_fade = script_ref_create(BonusPickup_fade);
 		
 		return id;	
 	}
 	
 #define OverhealPickup_open
-    var n = (0 * num) + (crown_current == crwn_haste); // ):
-    
-	 // Effects:
-	instance_create(x, y, PopupText).text = `+${n} BONUS HP`;
-	with(instance_create(x, y, SmallChestPickup)){
-		image_blend = make_color_rgb(26, 23, 38);
+	 // Determine Handouts:
+	var _inst = other;
+	if(!instance_is(other, Player)) _inst = Player;
+
+	 // Bonus HP:
+    var _num = num,
+    	_max = 8;
+
+	with(_inst){
+		my_health_bonus = min(_max, variable_instance_get(id, "my_health_bonus", 0) + _num);
+		my_health_bonus_hold = my_health;
+
+		 // Effects:
+		with(instance_create(x, y, PopupText)){
+			if(other.my_health_bonus < _max){
+				text = `+${_num}`;
+			}
+			else{
+				text = "MAX";
+			}
+			text += ` @5(${spr.BonusText}:-0.3) HP`;
+		}
+		with(instance_create(x, y, HealFX)){
+			sprite_index = (skill_get(mut_second_stomach) ? spr.OverhealBigFX : spr.OverhealFX);
+			depth = other.depth - 1;
+		}
 	}
+
+	 // Effects:
+	sound_play_pitch(sndRogueCanister, 1.3);
+	BonusPickup_open();
+
 
 #define OverstockPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
@@ -1129,47 +1190,93 @@
 		sprite_index = spr.OverstockPickup;
 		spr_open = -1;
 		spr_fade = -1;
-		
+
 		 // Sounds:
 		snd_open = sndAmmoPickup;
 		snd_fade = sndPickupDisappear;
-		
+
 		 // Vars:
 		mask_index = mskPickup;
-		pull_dis = 20 + (30 * skill_get(mut_plutonium_hunger));
-		
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
+		pull_delay = 15;
+		num = 24 + (crown_current == crwn_haste);
+		wave = random(90);
+
 		 // Events:
 		on_open = script_ref_create(OverstockPickup_open);
 		on_step = script_ref_create(BonusPickup_step);
+		on_pull = script_ref_create(BonusPickup_pull);
 		on_fade = script_ref_create(BonusPickup_fade);
 		
 		return id;	
 	}
-	
+
 #define OverstockPickup_open
-	var n = (32 * num) + (crown_current == crwn_haste);
-	with(other){
-		ammo_bonus = variable_instance_get(id, "ammo_bonus", 0) + n;
+	 // Determine Handouts:
+	var _inst = other;
+	if(!instance_is(other, Player)) _inst = Player;
+
+	 // Bonus Ammo:
+	var _num = num;
+	with(_inst){
+		ammo_bonus = variable_instance_get(id, "ammo_bonus", 0) + _num;
 		ammo_bonus_hold = array_clone(ammo);
+
+		 // Text:
+		with(instance_create(x, y, PopupText)){
+			text = `+${_num} @5(${spr.BonusText}:-0.3) AMMO`;
+		}
 	}
 	
 	 // Effects:
-	instance_create(x, y, PopupText).text = `+${n} BONUS AMMO`;
-	with(instance_create(x, y, SmallChestPickup)){
-		image_blend = make_color_rgb(26, 23, 38);
-	}
-	
+	sound_play_pitchvol(sndRogueCanister, 0.7, 0.7);
+	BonusPickup_open();
+
+
 #define BonusPickup_step
-	if(chance_ct(1, 15)) with(scrFX([x, 4], [y, 4], 0, FireFly)){
-		sprite_index = spr.OverstockFX;
-		depth = -1;
+	if(pull_delay > 0){
+		pull_delay -= current_time_scale;
 	}
+
+	 // FX:
+	wave += current_time_scale;
+	if(((wave % 30) < current_time_scale || pull_delay > 0) && chance(1, max(2, pull_delay))){
+		with(scrFX([x, 4], [y, 4], 0, FireFly)){
+			sprite_index = spr.OverstockFX;
+			depth = other.depth - 1;
+		}
+	}
+
+#define BonusPickup_pull
+	if(pull_delay <= 0){
+		 // Pull FX:
+		if(point_distance(x, y, other.x, other.y) < pull_dis || instance_exists(Portal)){
+			if(chance_ct(1, 2)){
+				with(scrFX([x, 4], [y, 4], 0, FireFly)){
+					sprite_index = spr.OverstockFX;
+					depth = other.depth - 1;
+					image_index = 1;
+				}
+			}
+		}
 	
+		return true;
+	}
+	return false;
+
+#define BonusPickup_open
+	sound_play_pitchvol(sndRogueRifle, 1.5, 1);
+	with(instance_create(x, y, SmallChestPickup)){
+		image_blend = c_aqua;//make_color_rgb(26, 23, 38);
+	}
+
 #define BonusPickup_fade
 	with(instance_create(x, y, SmallChestFade)){
 		image_blend = make_color_rgb(26, 23, 38);
 	}
-	
+
+
 #define SpiritPickup_create(_x, _y)
     with(obj_create(_x, _y, "CustomPickup")){
          // Visual:
@@ -1194,27 +1301,27 @@
         
         return id;
     }
-    
+   
 #define SpiritPickup_step
     wave += current_time_scale;
-    
+
 #define SpiritPickup_draw
     draw_sprite(sprHalo, 0, x, ((y + 3) + sin(wave * 0.1)));
-    
+
 #define SpiritPickup_open
     scrRestoreSpirit(other);
     
      // Effects:
     instance_create(x, y, SmallChestPickup);
-    
+
 #define SpiritPickup_fade
     instance_create(x, y, SmallChestFade);
     instance_create(x, y, StrongSpirit);
-    
+
 #define SpiritPickup_pull
     if(other.canspirit) return false;
     return true;
-    
+
 #define scrRestoreSpirit(_inst)
     with(_inst) if(skill_get(mut_strong_spirit) && !canspirit){
 		var i = index;
@@ -1228,6 +1335,7 @@
 		
 		sound_play(sndStrongSpiritGain);
 	}
+
 
 #define SunkenChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -1304,9 +1412,7 @@
     global.pickup_custom = [];
     
     if(DebugLag) trace_time("tepickups_step")
-    
-    
-/// Scripts
+
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
     
@@ -1330,7 +1436,9 @@
     }
     
     if(DebugLag) trace_time("tepickups_draw_dark_end");
-    
+
+
+/// Scripts
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);

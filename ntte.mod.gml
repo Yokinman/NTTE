@@ -1776,7 +1776,7 @@
 		with(instances_matching_gt(Player, "my_health_bonus", 0)){
 			drawlowhp = 0;
 	
-			if(nexthurt > current_frame){
+			if(nexthurt > current_frame && "my_health_bonus_hold" in self){
 				var a = my_health,
 					b = my_health_bonus_hold;
 		
@@ -1784,11 +1784,63 @@
 					var c = min(my_health_bonus, b - a);
 					my_health += c;
 					my_health_bonus -= c;
-					
-					 // FX:
-					repeat(c) with(instance_create(x, y, Dust)){
-						image_blend = c_aqua;
-						motion_add(other.direction, 3);
+
+					 // Sound:
+					sound_play_pitchvol(sndRogueAim, 2 + random(0.5), 0.7);
+					sound_play_pitchvol(sndHPPickup, 0.6 + random(0.1), 0.7);
+
+					 // Visual:
+					var _x1, _y1,
+						_x2, _y2,
+						_ang = direction + 180,
+						l = 12;
+
+					for(var d = _ang; d <= _ang + 360; d += (360 / 20)){
+						_x1 = x + lengthdir_x(l, d);
+						_y1 = y + lengthdir_y(l, d);
+						if(d > _ang){
+							with(instance_create(_x1, _y1, BoltTrail)){
+								image_blend = merge_color(c_aqua, c_blue, 0.2 + (0.2 * dsin(_ang + d)));
+								image_angle = point_direction(_x1, _y1, _x2, _y2);
+								image_xscale = point_distance(_x1, _y1, _x2, _y2) * 1.1;
+								image_yscale = 1.5 + dsin(_ang + d);
+								if(other.my_health_bonus > 0){
+									image_yscale = max(1.7, image_yscale);
+								}
+								motion_add(other.direction, 0.5);
+								depth = -2;
+							}
+						}
+						_x2 = _x1;
+						_y2 = _y1;
+					}
+					with(instance_create(x, y, BulletHit)){
+						sprite_index = sprPortalClear;
+						image_xscale = 0.4;
+						image_yscale = image_xscale;
+						image_speed = 1;
+						motion_add(other.direction, 0.5);
+					}
+
+					 // End:
+					if(my_health_bonus <= 0){
+						 // Can't die coming out of overheal:
+						spiriteffect = max(1, spiriteffect);
+
+						 // Effects:
+						sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+						sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
+						with(instance_create(x, y, BulletHit)){
+							sprite_index = sprThrowHit;
+							motion_add(other.direction, 1);
+							image_xscale = random_range(2/3, 1);
+							image_yscale = image_xscale;
+							image_angle = random(360);
+							image_blend = merge_color(c_aqua, c_blue, 0.2 + (0.2 * dsin(d)));
+							image_speed = 0.5;
+							image_alpha = 2;
+							depth = -3;
+						}
 					}
 				}
 			}
@@ -1849,17 +1901,17 @@
 	}
 	
 	 // Overheal, Overstock, and Spirit Pickups:
-	with(instances_matching([AmmoPickup, HPPickup], "canbonus", undefined)){
-		canbonus = false;
-		
-		if(global.specialPickups > 0){
+	with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)){
+		bonuspickup_spawn = false;
+
+		if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
 			
 			 // Spirit Pickups:
 			var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
 			if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
 				obj_create(x, y, "SpiritPickup");
 				instance_delete(id);
-				
+
 				global.specialPickups--;
 			}
 			
@@ -1867,7 +1919,7 @@
 			else if(GameCont.hard > 3 && chance(1, 50)){
 				obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
 				instance_delete(id);
-				
+
 				global.specialPickups--;
 			}
 		}

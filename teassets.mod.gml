@@ -140,9 +140,12 @@
 		 // Spirit Pickup:
 		SpiritPickup = sprite_add("sprites/chests/sprSpiritPickup.png", 1, 5, 5);
 
-         // Bonus Ammo Shell:
-        BonusShell      = sprite_add("sprites/misc/sprBonusShell.png",      1, 1, 2);
-        BonusShellHeavy = sprite_add("sprites/misc/sprBonusShellHeavy.png", 1, 2, 3);
+         // Bonus Ammo/Health:
+        BonusText		= sprite_add("sprites/misc/sprBonusText.png",		12,  0,  0);
+        BonusShell      = sprite_add("sprites/misc/sprBonusShell.png",		 1,  1,  2);
+        BonusShellHeavy = sprite_add("sprites/misc/sprBonusShellHeavy.png",	 1,  2,  3);
+        OverhealFX		= sprite_add("sprites/misc/sprOverhealFX.png",		 7,  8, 10);
+        OverhealBigFX	= sprite_add("sprites/misc/sprOverhealBigFX.png",	 8, 12, 24);
 
         //#region CAMPFIRE
              // Big Cactus:
