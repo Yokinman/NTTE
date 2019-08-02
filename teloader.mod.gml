@@ -3,27 +3,30 @@
 
      // Loading Vars:
     global.load = 0;
+    global.load_max = 0;
     global.load_hudy = 0;
     global.load_hudb = 0;
 
+     // Coop Delay Increase:
     var _coop = -1;
     for(var i = 0; i < maxp; i++) _coop += player_is_active(i);
     _coop *= 2;
 
+     // Mods:
     global.list = [ // [mod, delay]
         ["teassets.mod.gml",                        5 + _coop],
         ["ntte.mod.gml",                            1 + _coop],
         ["telib.mod.gml",                           1 + _coop],
         ["petlib.mod.gml",                          1 + _coop],
-        ["objects/tegeneral.mod.gml",               0 + _coop],
+        ["objects/tegeneral.mod.gml",               1 + _coop],
         ["objects/tepickups.mod.gml",               0 + _coop],
-        ["objects/tedesert.mod.gml",                1 + _coop],
-        ["objects/tecoast.mod.gml",                 0 + _coop],
+        ["objects/tedesert.mod.gml",                0 + _coop],
+        ["objects/tecoast.mod.gml",                 1 + _coop],
         ["objects/teoasis.mod.gml",                 0 + _coop],
-        ["objects/tetrench.mod.gml",                1 + _coop],
-        ["objects/tesewers.mod.gml",                0 + _coop],
+        ["objects/tetrench.mod.gml",                0 + _coop],
+        ["objects/tesewers.mod.gml",                1 + _coop],
         ["objects/tescrapyard.mod.gml",             0 + _coop],
-        ["objects/tecaves.mod.gml",                 1 + _coop],
+        ["objects/tecaves.mod.gml",                 0 + _coop],
         ["areas/coast.area.gml",                    1 + _coop],
         ["areas/oasis.area.gml",                    1 + _coop],
         ["areas/pizza.area.gml",                    1 + _coop],
@@ -53,6 +56,7 @@
         ["weps/quasar cannon.wep.gml",              1],
         ["crowns/crime.crown.gml",                  1]
     ];
+    global.load_max += array_length(global.list);
 
      // Wait for /allowmod:
     while(!mod_sideload()) wait 0;
@@ -72,6 +76,26 @@
         global.load += 1 + random(0.2);
 
         if(_wait > 0) wait _wait;
+
+         // Wait for Sprites:
+        if(array_length(mod_variable_get("mod", "teassets", "spr_load")) > 0){
+            var _perc = 0.2;
+
+            global.load /= (1 - _perc)
+            global.load_max /= (1 - _perc);
+
+            var l = global.load,
+                m = global.load_max * _perc;
+
+            while(true){
+                var _sprLoad = mod_variable_get("mod", "teassets", "spr_load");
+                if(array_length(_sprLoad) > 0){
+                    global.load = (l + (m * (_sprLoad[0, 1] / array_length(_sprLoad[0, 0]))));
+                }
+                else break;
+                wait 0;
+            }
+        }
     }
 
      // Finished:
@@ -82,7 +106,7 @@
 
 #define draw_gui
      // Hiding/Showing Loading Bar:
-    if(global.load < array_length(global.list)){
+    if(global.load < global.load_max){
         global.load_hudy += (1 - global.load_hudy) * 0.3;
     }
     else{
@@ -96,7 +120,7 @@
     var _x = round(game_width / 2),
         _y = round(22 * global.load_hudy),
         _spr = global.sprLoad,
-        _load = (global.load / array_length(global.list));
+        _load = (global.load / global.load_max);
 
     draw_set_fog(true, c_black, 0, 0);
     draw_sprite(_spr, 0, _x + 1, _y);
