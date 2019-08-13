@@ -2224,7 +2224,7 @@
 	    }
 
 	     // Aim:
-    	if(type && instance_exists(target)){
+    	if(type && instance_exists(target) && target.team != team){
 			var d = point_direction(x, y, target.x, target.y),
 				m = 60;
 

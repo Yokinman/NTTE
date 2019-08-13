@@ -590,7 +590,7 @@
 				instances_matching_ne(chestprop, "name", "SunkenChest")
 			);
 	        with(instances_matching(instances_matching_ge(_inst, "wading", 80), "visible", true)){
-	    		if(distance_to_object(Portal) > 96){
+	    		if(distance_to_object(Portal) > 96 && (object_index != Player || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)){
 		            var n = instance_nearest(x - 16, y - 16, Floor);
 		    		motion_add_ct(point_direction(x, y, n.x, n.y), 3 + ((wading - 80)) / 16);
 	

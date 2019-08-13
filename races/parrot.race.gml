@@ -249,11 +249,8 @@
     feather_ammo_max = 5 * feather_num;
     feather_targ_delay = 0;
 
-     // Extra Pet Slot:
-    if("ntte_pet" not in self) ntte_pet = [noone];
-    while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
-
-     // Pet Perching:
+     // Pets:
+    ntte_pet = [noone];
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
@@ -265,7 +262,7 @@
 		    if(instance_exists(self)){
 		        with(Pet_spawn(x, y, "Parrot")) {
 		            leader = other;
-		            other.ntte_pet[0] = id;
+		            array_push(other.ntte_pet, id);
 		            visible = false;
 		        }
 		    }

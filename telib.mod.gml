@@ -686,7 +686,7 @@
                     		 // Teamerize Nearby Projectiles:
                 			with(instances_matching(instances_matching(projectile, "creator", id), "team", team)){
                 				if(place_meeting(x, y, other)){
-                					team = other.c.team;
+                					team = c.team;
                 					charm_allyize(false);
                 				}
                 			}

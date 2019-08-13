@@ -1058,7 +1058,7 @@
     	_validArea = !(GameCont.area == 106),
     	_forceSpawn = (GameCont.area == 0);
 
-    if(GameCont.hard > 2 && ((_canBackpack && _validArea) || _forceSpawn)){
+    if(GameCont.hard > 4 && ((_canBackpack && _validArea) || _forceSpawn)){
 		 // Compile Potential Floors:
 		var _potentialFloors = [];
 		with(instances_matching_ne(Floor, "object_index", FloorExplo)){
@@ -1856,7 +1856,7 @@
 				}
 				
 				 // Overheal/Overstock Pickups:
-				else if(GameCont.hard > 3 && chance(1, 50)){
+				else if(GameCont.hard > 6 && chance(1, 50)){
 					obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
 					instance_delete(id);
 	
@@ -3319,6 +3319,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	                        with(instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone)){
 		                    	mod_script_call("mod", "telib", "charm_allyize", true);
 		                    }
+
+							 // Return Moved Players:
+							with(_lastPos){
+								with(self[0]){
+									x = other[1];
+									y = other[2];
+								}
+							}
 	
 	                        if(!instance_exists(self)) break;
 	
@@ -3345,14 +3353,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 										speed = _lastSpeed;
 										direction = _lastDirection;
 									}
-								}
-							}
-
-							 // Return Moved Players:
-							with(_lastPos){
-								with(self[0]){
-									x = other[1];
-									y = other[2];
 								}
 							}
 						}

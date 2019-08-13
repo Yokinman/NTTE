@@ -2631,12 +2631,12 @@
         else path = [];
 
          // Enter Portal:
-        if(visible){
+        if(visible || instance_exists(my_corpse)){
         	 // Portal Attraction:
         	var _spin = 0;
         	with(Portal) if(point_distance(x, y, other.x, other.y) < 64){
         		with(other){
-        			var l = 3 * current_time_scale,
+        			var l = 4 * current_time_scale,
         				d = point_direction(x, y, other.x, other.y),
         				_x = x + lengthdir_x(l, d),
         				_y = y + lengthdir_y(l, d)
@@ -2689,15 +2689,15 @@
                 var _max = array_length(ntte_pet);
                 if(_max > 0){
                      // Remove Oldest Pet:
-                    with(ntte_pet[_max - 1]){
+                    with(ntte_pet[0]){
                         leader = noone;
                         can_take = true;
                     }
-                    ntte_pet = array_slice(ntte_pet, 0, _max - 1);
+                    ntte_pet = array_delete(ntte_pet, 0);
 
                      // Add New Pet:
                     other.leader = self;
-                    array_insert(ntte_pet, 0, other);
+                    array_push(ntte_pet, other);
                     with(other) direction = point_direction(x, y, other.x, other.y);
 
                      // Effects:
@@ -3020,7 +3020,7 @@
 
 				 // Grab Back Pet:
 				if("ntte_pet" in self){
-					with(ntte_pet) if(is_real(self) && instance_exists(self) && !instance_exists(leader)){
+					with(ntte_pet) if(instance_exists(self) && !instance_exists(leader)){
 	                    leader = other;
 	                    
 	                     // FX:
