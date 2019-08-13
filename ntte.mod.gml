@@ -143,10 +143,11 @@
      // Options Menu:
     global.mouse_x_previous = array_create(maxp);
     global.mouse_y_previous = array_create(maxp);
-    global.option_NTTE_splat = 0;
-    global.option_NTTE_splat_menu = 0;
+    global.option_splat = 0;
+    global.option_splat_menu = 0;
+    global.option_splat_menu_blink = 0;
     global.option_open = false;
-    global.option_slct = -1;
+    global.option_slct = array_create(maxp, -1);
     global.option_pop = 0;
     global.option_menu = [
         {	name : "Use Shaders",
@@ -212,9 +213,9 @@
         }
         if("sync" not in self) sync = true;
         if("varname" not in self) varname = name;
-        if("clicked" not in self) clicked = false;
-        if(type >= 0 && varname not in opt){
-            lq_set(opt, varname, 0);
+        if("clicked" not in self) clicked = array_create(maxp, false);
+        if(type >= 0 && varname not in sav.option){
+            option_set(varname, 0);
         }
     }
 
@@ -304,6 +305,7 @@
     global.charm = ds_list_create();
 
      // Water Level Sounds:
+    global.waterBubblePop = [];
     global.waterSoundActive = false;
     global.waterSound = {
         "sndOasisShoot" : [
@@ -526,7 +528,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro areaList global.area
 #macro raceList global.race
@@ -549,12 +550,15 @@
 
 #macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
 
-#macro OptionOpen global.option_open
-#macro OptionMenu global.option_menu
-#macro OptionSlct global.option_slct
-#macro OptionPop  global.option_pop
-#macro OptionX (game_width / 2)
-#macro OptionY (game_height / 2) - 62
+#macro OptionOpen			global.option_open
+#macro OptionMenu			global.option_menu
+#macro OptionSlct			global.option_slct
+#macro OptionPop			global.option_pop
+#macro OptionSplat			global.option_splat
+#macro OptionSplatMenu		global.option_splat_menu
+#macro OptionSplatMenuBlink	global.option_splat_menu_blink
+#macro OptionX				(game_width / 2)
+#macro OptionY				(game_height / 2) - 62
 #macro opt_title -1
 #macro opt_toggle 0
 #macro opt_slider 1
@@ -643,77 +647,87 @@
     		}
 
 			 // Big Nests:
-			with(MaggotSpawn) if(chance(1, 10)){
+			with(MaggotSpawn) if(chance(1, 14)){
 				obj_create(x, y, "BigMaggotSpawn");
 				instance_delete(id);
 			}
 
-    	     // Spawn Sharky Skull on 1-3:
+			 // Find Prop-Spawnable Floors:
+    	    var _spawnFloor = [],
+    	    	_spawnIndex = -1;
+
+			with(Floor){
+				var _x = (bbox_left + bbox_right) / 2,
+					_y = (bbox_top + bbox_bottom) / 2;
+
+				if(point_distance(_x, _y, 10016, 10016) > 48){
+					if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+						array_push(_spawnFloor, {
+							inst : id,
+							cenx : _x,
+							ceny : _y
+						});
+						_spawnIndex++;
+					}
+				}
+			}
+			array_shuffle(_spawnFloor);
+
+    	     // Sharky Skull:
     		with(BigSkull) instance_delete(id);
-    		if(instance_exists(Floor)){
-        		if(GameCont.subarea == 3){
-        			if(fork()){
-	        		    var _tries = 100;
-	        		    while(_tries-- > 0){
-	            		    with(instance_random(Floor)){
-	                            if(point_distance(x, y, 10016, 10016) > 48){
-	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-	            		                obj_create(x + 16, y + 16, "CoastBossBecome");
-	            		                exit;
-	                                }
-	                            }
-	            		    }
-	        		    }
-	        		    exit;
-        			}
-        		}
+    		if(GameCont.subarea == 3){
+				var _sx = 10016,
+    				_sy = 10016;
 
-                 // Consistently Spawning Crab Skeletons:
-                if(!instance_exists(BonePile)){
-                	if(fork()){
-	        		    var _tries = 100;
-	                    while(_tries-- > 0){
-	                        with(instance_random(Floor)){
-	                            if(point_distance(x, y, 10016, 10016) > 48){
-	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-	                                    instance_create(x + 16, y + 16, BonePile);
-	            		                exit;
-	                                }
-	                            }
-	                        }
-	                    }
-	        		    exit;
-                	}
-                }
+			    if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
+	                _sx = cenx;
+	                _sy = ceny;
+			    }
 
-				 // Maggot Park:
-            	if(GameCont.subarea > 1 || GameCont.loops > 0){
-					if(chance(1, 40)){
-						 // Find Origin:
-						var _sx = 10000,
-							_sy = 10000,
-							_potentialFloors = [];
-	
-						with(Floor){
-							if(distance_to_object(Player) > 160){
-								array_push(_potentialFloors, id);
-							}
-						}
-						with(instance_random(_potentialFloors)){
-							_sx = x + (irandom_range(-2, 2) * 32);
-							_sy = y + (irandom_range(-2, 2) * 32);
-						}
-	
-						 // Generate Area:
-						var _floors = [],
+    			obj_create(_sx, _sy, "CoastBossBecome");
+    		}
+
+             // Consistently Spawn Crab Skeletons:
+            if(!instance_exists(BonePile)){
+			    if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
+	                obj_create(cenx, ceny, BonePile);
+			    }
+            }
+
+             // Spawn scorpion rocks occasionally:
+            if(chance(3, 5)){
+			    if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
+                    with(obj_create(cenx, ceny - 2, "ScorpionRock")){
+                		 // This part is irrelevant don't worry:
+		                var _friendChance = 0;
+		                with(instances_matching_le(Player, "my_health", 3)){
+		                	if(my_health < maxhealth || my_health <= 1){
+		                    	if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
+		                	}
+		                }
+                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
+                    }
+			    }
+		    }
+
+			 // Maggot Park:
+        	if(GameCont.subarea > 1 || GameCont.loops > 0){
+				with(instances_matching([RadChest, RadMaggotChest], "", null)) if(instance_exists(self)){
+					if(distance_to_object(Player) > 196 && chance(1, 40 + (20 * (object_index != RadMaggotChest)))){
+						var _sx = x + (irandom_range(-2, 2) * 32),
+							_sy = y + (irandom_range(-2, 2) * 32),
+							_floors = [],
 							_ang = random(360);
 	
+						instance_delete(id);
+
+						 // Generate Area:
 						for(var d = _ang; d < _ang + 360; d += (360 / 8)){
 							var l = 0;
 							repeat(5 + GameCont.loops){
 								var _x = (floor((_sx + lengthdir_x(l, d)) / 32) * 32) - 16,
 									_y = (floor((_sy + lengthdir_y(l, d)) / 32) * 32) - 16;
-	
+
 								for(var _ox = -32; _ox < 32; _ox += 32){
 									for(var _oy = -32; _oy < 32; _oy += 32){
 										with(instance_rectangle(_x + _ox, _y + _oy, _x + _ox + 16, _y + _oy + 16, Floor)){
@@ -770,6 +784,7 @@
 							if(!place_meeting(x, y, enemy)){
 								if(chance(2, 3)){
 									with(instance_create(x + 16, y + 16, MaggotSpawn)){
+										raddrop = 2;
 										x = xstart;
 										y = ystart;
 										move_contact_solid(random(360), random(16));
@@ -782,9 +797,7 @@
 									if(GameCont.loops > 0 && chance(1, 2)){
 										instance_create(x, y, JungleFly);
 									}
-									else{
-										instance_create(x, y, BigMaggot);
-									}
+									else instance_create(x, y, BigMaggot);
 								}
 							}
 						}
@@ -795,36 +808,8 @@
 						sound_play_pitchvol(sndBigMaggotUnburrow, 0.6, 3);
 						sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
 					}
-            	}
-
-                 // Spawn scorpion rocks occasionally:
-                if(chance(3, 5)){
-                     // This part is irrelevant don't worry:
-                    var _friendChance = 0;
-                    with(instances_matching_le(Player, "my_health", 3)){
-                    	if(my_health < maxhealth || my_health <= 1){
-                        	if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
-                    	}
-                    }
-
-                    if(fork()){
-	                    var _tries = 100;
-						while(_tries-- > 0){
-	                        with(instance_random(Floor)){
-	                            if(point_distance(x, y, 10016, 10016) > 48){
-	                                if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
-	                                    with(obj_create(x + 16, y + 14, "ScorpionRock")){
-	                                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
-	                                    }
-	                                    exit;
-	                                }
-	                            }
-	                        }
-	                    }
-			            exit;
-			        }
-			    }
-			}
+				}
+        	}
 
              // Spawn Baby Scorpions:
             with(Scorpion) if(chance(1, 4)){
@@ -839,7 +824,7 @@
 
              // Scorpion Desert:
             if(GameCont.subarea > 1 || GameCont.loops > 0){
-            	if(chance(1, 100) || (chance(1, 50) && array_length(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Scorpion")) > 0)){
+            	if(chance(1, 100) || (chance(1, 50) && array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")) > 0)){
 	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
 	                    var _gold = chance(1, 5);
 	                    
@@ -1058,12 +1043,6 @@
             }
         }
     }
-    
-     // Spawn CoolGuy:
-    if(GameCont.area = "pizza") with(TV) {
-        var f = instance_nearest(x, y + 48, Floor);
-        Pet_spawn(x, f.y + 16, "CoolGuy");
-    }
 
      // Spider Cocoons:
     with(Cocoon) if(chance(4, 5)){ 
@@ -1072,11 +1051,11 @@
     }
 
      // Visibilize Pets:
-    with(instances_matching(CustomObject, "name", "Pet")) visible = true;
+    with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
     
      // Backpack Setpieces:
-    var _canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
-    	_validArea = !(GameCont.area == 106 || (GameCont.area == 7 && GameCont.subarea == 3)),
+    var _canBackpack = (instance_number(enemy) > array_length(instances_matching(CustomEnemy, "name", "PortalPrevent")) && chance(1 + (2 * skill_get(mut_last_wish)), 12)),
+    	_validArea = !(GameCont.area == 106),
     	_forceSpawn = (GameCont.area == 0);
 
     if(GameCont.hard > 2 && ((_canBackpack && _validArea) || _forceSpawn)){
@@ -1325,11 +1304,6 @@
 		        }
 		    }
 	    }
-
-    	 // Disable Oasis Sounds:
-    	if(global.waterSoundActive){
-    		underwater_sound(false);
-    	}
     }
     else{
     	with([surfCrownHide, surfCrownHideScreen]) active = false;
@@ -1338,15 +1312,25 @@
 	    crownCamp = crown_current;
     }
 
+	 // Underwater Sounds:
+    if(global.waterSoundActive){
+    	if(!area_get_underwater(GameCont.area) && GameCont.area != 100){
+			underwater_sound(false);
+    	}
+    }
+    else if(area_get_underwater(GameCont.area)){
+		underwater_sound(true);
+	}
+
      // Pet Slots:
-    with(instances_matching(Player, "pet", null)) pet = [noone];
+    with(instances_matching(Player, "ntte_pet", null)) ntte_pet = [noone];
 
 	 // Save Stuff in Revive:
 	with(instances_matching_le(Player, "my_health", 0)){
 		if(fork()){
 			var _x = x,
 				_y = y,
-				_save = ["pet", "feather_ammo"],
+				_save = ["ntte_pet", "feather_ammo"],
 				_vars = {};
 
 			with(_save){
@@ -1371,13 +1355,17 @@
 		}
 	}
 
-     // GENERATION CODE //
+     // Wait for Level Start:
     if(instance_exists(GenCont) || instance_exists(Menu)){
+    	global.newLevel = true;
+
+    	 // Reset Things:
     	global.setup_floor_num = 0;
-    	global.newLevel = 1;
+    	with(global.waterBubblePop) with(self[0]) spr_bubble_pop_check = null
+    	global.waterBubblePop = [];
     }
     else if(global.newLevel){
-        global.newLevel = 0;
+        global.newLevel = false;
         level_start();
     }
 
@@ -1401,13 +1389,16 @@
         }
 
         if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+		     // Underwater Area:
+		    if(area_get_underwater(_area)) underwater_step();
+
              // Step(s):
             mod_script_call("area", _area, "area_step");
             if(mod_script_exists("area", _area, "area_begin_step")){
-                script_bind_begin_step(area_step, 0, _area);
+                script_bind_begin_step(area_step, 0);
             }
             if(mod_script_exists("area", _area, "area_end_step")){
-                script_bind_end_step(area_step, 0, _area);
+                script_bind_end_step(area_step, 0);
             }
 
              // Floor FX:
@@ -1690,57 +1681,6 @@
 	    	}
 	    }
 
-	     // Make Game Display Pickup Indicators:
-	    var _player = instances_matching(Player, "nearwep", noone);
-	    if(array_length(_player) > 0){
-	    	var _inst = instances_matching(instances_matching_ne(IceFlower, "pickup_indicator", null), "visible", true);
-	    	with(_inst){
-	    		if(instance_exists(creator)){
-		            x = creator.x;
-		            y = creator.y;
-	    		}
-	    		mask_index = mask;
-	    	}
-
-		    with(_player){
-		        if(place_meeting(x, y, IceFlower)){
-		        	var _nearest = noone,
-		        		_maxDis = 100000;
-
-		        	with(instances_meeting(x, y, _inst)){
-		        		if(array_length(whitelist) <= 0 || array_exists(whitelist, other.index)){
-		        			var _dis = point_distance(x, y, other.x, other.y);
-		        			if(_dis < _maxDis){
-		        				_maxDis = _dis;
-		        				_nearest = id;
-		        			}
-		        		}
-		        	}
-
-		            with(_nearest){
-		                if(place_meeting(x, y, other)){
-		                    x += xoff;
-		                    y += yoff;
-		                    with(other){
-		                        nearwep = other;
-		                        if(canpick && button_pressed(index, "pick")){
-		                            other.pick = index;
-		                        }
-		                    }
-		                }
-		            }
-		        }
-		    }
-
-			with(_inst){
-				if(array_length(instances_matching(Player, "nearwep", id)) <= 0){
-					x = 0;
-					y = 0;
-				}
-				mask_index = mskNone;
-			}
-	    }
-
 		 // Overstock / Bonus Ammo Cleanup:
 		with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
 			drawempty = 0;
@@ -1905,22 +1845,23 @@
 		bonuspickup_spawn = false;
 
 		if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
-			
-			 // Spirit Pickups:
-			var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
-			if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
-				obj_create(x, y, "SpiritPickup");
-				instance_delete(id);
-
-				global.specialPickups--;
-			}
-			
-			 // Overheal/Overstock Pickups:
-			else if(GameCont.hard > 3 && chance(1, 50)){
-				obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
-				instance_delete(id);
-
-				global.specialPickups--;
+			if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
+				 // Spirit Pickups:
+				var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
+				if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
+					obj_create(x, y, "SpiritPickup");
+					instance_delete(id);
+	
+					global.specialPickups--;
+				}
+				
+				 // Overheal/Overstock Pickups:
+				else if(GameCont.hard > 3 && chance(1, 50)){
+					obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
+					instance_delete(id);
+	
+					global.specialPickups--;
+				}
 			}
 		}
 	}
@@ -1935,17 +1876,16 @@
     	draw_set_projection(0);
 
 		if(OptionOpen){
-            global.option_NTTE_splat_menu = 2;
+            OptionNTTESplatMenu = 2;
 
 	         // Hide Things:
 	        with(Menu){
-	        	mode = 0;
 	            charsplat = 1;
 	            for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
-	            sound_stop(sndMenuCharSelect);
 	        }
 	        with(Loadout) instance_destroy();
 	        with(loadbutton) instance_destroy();
+	        with(menubutton) instance_destroy();
 	        with(BackFromCharSelect) noinput = 10;
 
 	         // Dim Screen:
@@ -1975,6 +1915,7 @@
 
 	        	 // Reset Menu:
 	        	with(Menu){
+	        		mode = 0;
 	        		event_perform(ev_step, ev_step_end);
 	        		sound_stop(sndMenuCharSelect);
 	        		with(CharSelect) alarm0 = 2;
@@ -2022,15 +1963,20 @@
 			}
 
 			 // Button Visual:
-            global.option_NTTE_splat_menu = clamp(global.option_NTTE_splat_menu, 0, sprite_get_number(sprBossNameSplat) - 1);
-			draw_sprite_ext(sprBossNameSplat, global.option_NTTE_splat_menu, _x1 + 17, _y1 + 12 + global.option_NTTE_splat_menu, 1, 1, 90, c_white, 1);
-            global.option_NTTE_splat_menu += current_time_scale * (mod_exists("mod", "teloader") ? -1 : 1);
-			if(global.option_NTTE_splat_menu > 0){
-				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, (_hover ? c_white : c_silver), 1);
+			OptionSplatMenu = clamp(OptionSplatMenu, 0, sprite_get_number(sprBossNameSplat) - 1);
+			draw_sprite_ext(sprBossNameSplat, OptionSplatMenu, _x1 + 17, _y1 + 12 + OptionSplatMenu, 1, 1, 90, c_white, 1);
+            OptionSplatMenu += current_time_scale * (mod_exists("mod", "teloader") ? -1 : 1);
+			if(OptionSplatMenu > 0){
+				var w = (OptionSplatMenuBlink % 300) - 120;
+				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, ((_hover || in_range(w, 0, 5) || in_range(w, 8, 10)) ? c_white : c_silver), 1);
+			}
+			if(OptionSplatMenuBlink >= 0){
+				OptionSplatMenuBlink += current_time_scale;
+				if(_hover || !option_get("remindPlayer", true)) OptionSplatMenuBlink = -1;
 			}
 		}
 
-		 // Main Option Drawing:
+		 // Main Options Code:
 		ntte_options(OptionX, OptionY);
 
 		draw_reset_projection();
@@ -2103,32 +2049,29 @@
 	draw_reset_projection();
 
 	 // Coast Indicator:
-	if(instance_exists(Player) && !instance_exists(Portal)){
-		with(instances_matching_gt(instances_matching(CustomDraw, "name", "darksea_draw"), "flash", 0)){
-			var	_ix = indicate_x,
-				_iy = indicate_y;
-
-			if(_ix >= 0 && _iy >= 0){
-				var	_size = 4;
-				_iy += sin(wave / 8);
+	if(instance_exists(Player)){
+		with(instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true)){
+			var p = player_find_local_nonsync();
+			if(point_seen(x, y, p)){
+				var	_size = 4,
+					_x = x,
+					_y = y;
 
 				 // Drawn to Player:
-				with(player_find(player_find_local_nonsync())){
-					draw_set_alpha((point_distance(x, y, _ix, _iy) - 12) / 80);
+				with(player_find(p)){
+					draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
 
-					var l = min(point_distance(_ix, _iy, x, y), 16 * min(1, 28 / point_distance(_ix, _iy, x, y))),
-						d = point_direction(_ix, _iy, x, y);
+					var l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
+						d = point_direction(_x, _y, x, y);
 
-					_ix += lengthdir_x(l, d);
-					_iy += lengthdir_y(l, d);
+					_x += lengthdir_x(l, d);
+					_y += lengthdir_y(l, d);
 				}
 
 				 // Draw:
-				var	_border = 2 + (_size / 2),
-					_x = clamp(_ix - view_xview_nonsync, _border, game_width - _border),
-					_y = clamp(_iy - view_yview_nonsync, _border, game_height - _border),
-					_x1 = _x - (_size / 2),
-					_y1 = _y - (_size / 2),
+				_y += sin(current_frame / 8);
+				var	_x1 = _x - view_xview_nonsync - (_size / 2),
+					_y1 = _y - view_yview_nonsync - (_size / 2),
 					_x2 = _x1 + _size,
 					_y2 = _y1 + _size;
 
@@ -2169,12 +2112,12 @@
 		        }
 	
 	             // Splat:
-	            global.option_NTTE_splat += (_hover ? 1 : -1) * current_time_scale;
-	            global.option_NTTE_splat = clamp(global.option_NTTE_splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
-	            draw_sprite(sprMainMenuSplat, global.option_NTTE_splat, (game_width / 2), _y);
+	            OptionSplat += (_hover ? 1 : -1) * current_time_scale;
+	            OptionSplat = clamp(OptionSplat, 0, sprite_get_number(sprMainMenuSplat) - 1);
+	            draw_sprite(sprMainMenuSplat, OptionSplat, (game_width / 2), _y);
 	
 	             // Gray Out Other Options:
-	            if(global.option_NTTE_splat > 0){
+	            if(OptionSplat > 0){
 	                var _spr = sprOptionsButtons;
 	                for(var j = 0; j < sprite_get_number(_spr); j++){
 	                    var _dx = (game_width / 2),
@@ -2187,7 +2130,7 @@
 	             // Button:
 	            draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_rgb(155, 155, 155)), 1);
 	        }
-    		else global.option_NTTE_splat = 0;
+    		else OptionSplat = 0;
     	}
     }
 	else if(instance_exists(menubutton)){
@@ -2280,21 +2223,31 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		global.mouse_y_previous[i] = mouse_y[i];
 	}
 
-#define area_step(_area)
-    var _scrt = "step";
-    switch(object_index){
-        case CustomBeginStep:
-            _scrt = "begin_step";
-            break;
+#define area_step
+	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+	    var a = array_find_index(areaList, GameCont.area);
+	    if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
+	    if(a >= 0){
+	        var _area = areaList[a],
+		    	_scrt = "step";
 
-        case CustomEndStep:
-            _scrt = "end_step";
-            break;
-    }
-
-    if(fork()){ // Fork for error handling
-        mod_script_call("area", _area, "area_" + _scrt);
-        exit;
+		    switch(object_index){
+		        case CustomBeginStep:
+		            _scrt = "begin_step";
+		            break;
+		
+		        case CustomEndStep:
+		            _scrt = "end_step";
+		            break;
+		    }
+		
+		    try{
+		        mod_script_call("area", _area, "area_" + _scrt);
+		    }
+		    catch(_error){
+		    	trace_error(_error);
+		    }
+	    }
     }
 
     instance_destroy();
@@ -2312,24 +2265,22 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	    draw_set_valign(fa_middle);
 
 		 // Arrow Key Selection Change:
-        var p = player_find_local_nonsync(),
-        	_moveOption = sign(button_pressed(p, "sout") - button_pressed(p, "nort"));
-
-		if(_moveOption != 0){
-			var m = OptionSlct;
-			do{
-				m += _moveOption;
-				m = ((m + array_length(OptionMenu)) % array_length(OptionMenu));
+		for(var p = 0; p < maxp; p++){
+	        var _moveOption = sign(button_pressed(p, "sout") - button_pressed(p, "nort"));
+			if(_moveOption != 0){
+				var m = OptionSlct[p];
+				do{
+					m += _moveOption;
+					m = ((m + array_length(OptionMenu)) % array_length(OptionMenu));
+				}
+				until (OptionMenu[m].type >= 0);
+				OptionSlct[p] = m;
 			}
-			until (OptionMenu[m].type >= 0);
-			OptionSlct = m;
 		}
 
          // Option Selecting & Splat:
         for(var i = 0; i < array_length(OptionMenu); i++){
-            var _option = OptionMenu[i],
-                _selected = (OptionSlct == i);
-
+            var _option = OptionMenu[i];
 			with(_option) appear = (i + 3);
 
              // Select:
@@ -2338,12 +2289,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     _vy = view_yview[p],
                     _mx = mouse_x[p] - _vx,
                     _my = mouse_y[p] - _vy,
-                    _hover = point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6);
+                    _hover = point_in_rectangle(_mx, _my, _x - 80, _y - 8, _x + 159, _y + 6),
+                    _selected = (OptionSlct[p] == i);
 
                 if(_hover || _selected){
-                    if(_option.type >= 0 && player_is_local_nonsync(p)){
+                    if(_option.type >= 0){
                     	if(!_hover || mouse_x[p] != global.mouse_x_previous[p] || mouse_y[p] != global.mouse_y_previous[p]){
-                        	OptionSlct = i;
+                        	OptionSlct[p] = i;
                     	}
                     }
 
@@ -2353,10 +2305,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Click:
                         if(type >= 0){
-                            if(!clicked){
+                            if(!clicked[p]){
                                 if(_confirm){
                                     if(button_pressed(p, "fire")){
-                                    	if(player_is_local_nonsync(p)) clicked = true;
+                                    	clicked[p] = true;
                                     }
                                     switch(type){
                                         case opt_slider:
@@ -2370,7 +2322,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                 }
                             }
                             else if(!button_check(p, "fire")){
-                                if(player_is_local_nonsync(p)) clicked = false;
+                            	clicked[p] = false;
                                 switch(type){
                                     case opt_slider:
                                         sound_play(sndSliderLetGo);
@@ -2380,22 +2332,22 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
 
                          // Option Specifics:
-                        if(sync || player_is_local_nonsync(p)) switch(type){
+                        if(_selected && (sync || player_is_local_nonsync(p))) switch(type){
                             case opt_toggle:
                                 if(_confirm){
-                                    lq_set(opt, varname, (lq_defget(opt, varname, 0) + 1) % array_length(pick));
+                                	option_set(varname, (option_get(varname, 0) + 1) % array_length(pick));
                                 }
                                 break;
 
                             case opt_slider:
-                                if(_hover && button_check(p, "fire") && clicked){
+                                if(_hover && button_check(p, "fire") && clicked[p]){
                                     var _slider = clamp(round(_mx - (_x + 40)) / 100, 0, 1);
-                                    lq_set(opt, varname, _slider);
+                                    option_set(varname, _slider);
                                 }
                                 else{
                                     var _adjust = 0.1 * sign(button_pressed(p, "east") - button_pressed(p, "west"));
                                     if(_adjust != 0){
-                                        lq_set(opt, varname, clamp(lq_get(opt, varname) + _adjust, pick[0], pick[1]));
+                                        option_set(varname, clamp(option_get(varname, 0) + _adjust, pick[0], pick[1]));
                                     }
                                 }
                                 break;
@@ -2413,9 +2365,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                         }
                     }
                 }
-                else if(player_is_local_nonsync(p)){
-                	_option.clicked = false;
-                }
+                else _option.clicked[p] = false;
             }
 
             with(_option){
@@ -2430,7 +2380,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     
                      // Selection Splat:
                     if(_moveOption == 0){
-	                    splat += (_selected ? 1 : -1) * current_time_scale;
+	                    splat += ((OptionSlct[player_find_local_nonsync()] == i) ? 1 : -1) * current_time_scale;
 	                    splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
                     }
 					if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _x, _y);
@@ -2443,7 +2393,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         var _titleFound = false;
         for(var i = 0; i < array_length(OptionMenu); i++){
             var _option = OptionMenu[i],
-                _selected = (OptionSlct == i);
+                _selected = (OptionSlct[player_find_local_nonsync()] == i);
 
             with(_option) if(OptionPop >= appear){
                  // Option Name:
@@ -2470,7 +2420,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                  // Option Specifics:
                 _x += 124;
-                var _value = lq_defget(opt, varname, 0);
+                var _value = option_get(varname, 0);
                 with(other){
                 	switch(other.type){
 	                    case opt_toggle:
@@ -2495,12 +2445,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 	}
                 	switch(_name){
                 		case "Water Quality :": // Water Quality Visual
-                			var	_slct = in_range(OptionSlct, i, i + 2),
+                			var	_slct = in_range(OptionSlct[player_find_local_nonsync()], i, i + 2),
                 				_spr = spr.GullIdle,
                 				_img = (current_frame * 0.4),
                 				_scale = [
-                					1/3 + (2/3 * lq_defget(opt, "waterQualityMain", 1)),
-                					1/2 + (1/2 * lq_defget(opt, "waterQualityTop", 1))
+                					1/3 + (2/3 * option_get("waterQualityMain", 1)),
+                					1/2 + (1/2 * option_get("waterQualityTop", 1))
                 				],
                 				_sx = _x - 32,
                 				_sy = _y + 12;
@@ -2555,7 +2505,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
     else{
         OptionPop = false;
-        OptionSlct = -1;
+        for(var p = 0; p < maxp; p++) OptionSlct[p] = -1;
         with(OptionMenu) splat = 0;
     }
 
@@ -2565,10 +2515,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
 	}
 
-#define underwater_step /// Call from underwater area step events
+#define underwater_step
      // Lightning:
     with(Lightning){
-        image_index -= image_speed * 0.75;
+        image_index -= image_speed_raw * 0.75;
 
          // Zap:
         if(image_index > image_number - 1){
@@ -2648,7 +2598,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
 
-    //with(script_bind_step(underwater_sound, 0)) name = script[2];
     with(script_bind_draw(underwater_draw, -3)) name = script[2];
     with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
 
@@ -2670,6 +2619,25 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             instance_create(x, y, Bubble);
         }
         else waterbubble = false;
+    }
+
+     // Air Bubble Pop:
+    with(global.waterBubblePop){
+    	var _inst = self[0];
+
+    	 // Follow Papa:
+    	if(instance_exists(_inst) && _inst.visible){
+			self[@1] = _inst.x + _inst.spr_bubble_x;
+			self[@2] = _inst.y + _inst.spr_bubble_y;
+			self[@3] = _inst.spr_bubble_pop;
+    	}
+
+    	 // Pop:
+    	else{
+    		with(_inst) spr_bubble_pop_check = null;
+    		with(instance_create(self[1], self[2], BubblePop)) sprite_index = other[3];
+    		global.waterBubblePop = array_delete_value(global.waterBubblePop, self);
+    	}
     }
 
      // Clam Chests:
@@ -2744,21 +2712,20 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 break;
         }
     }
-    with(instances_matching(instances_matching_ne(instances_seen(hitme, 16), "spr_bubble", -1), "visible", true)){
+    var _inst = instances_matching(hitme, "visible", true);
+    with(instances_seen(instances_matching_ne(_inst, "spr_bubble", -1), 16)){
         draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
-
-         // Death Pop:
-        if(my_health <= 0){
-            if(!instance_is(self, Player) || (candie && spiriteffect <= 0)){
-                instance_create(x + spr_bubble_x, y + spr_bubble_y, BubblePop);
-            }
-        }
     }
+    with(instances_matching(instances_matching_ne(_inst, "spr_bubble_pop", -1), "spr_bubble_pop_check", null)){
+    	spr_bubble_pop_check = true;
+    	array_push(global.waterBubblePop, [id, x, y, sprPlayerBubblePop]);
+    }
+    
 
      // Pet Bubbles:
-    with(instances_matching(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "pet", "Prism", "Octo", "Slaughter"), "visible", true)){
-        draw_sprite(sprPlayerBubble, -1, x, y);
-    }
+    /*with(instances_matching(instances_matching_ne(instances_matching(CustomHitme, "name", "Pet"), "spr_bubble", -1), "visible", true)){
+        draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
+    }*/
 
      // Boiling Water:
     d3d_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
@@ -2818,48 +2785,65 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
 #define scrBossIntro(_name, _sound, _music)
-	if(!instance_is(self, CustomBeginStep)){
+	if(!instance_is(self, CustomScript) || script[2] != "scrBossIntro"){
 	    sound_play(_sound);
 	    sound_play_ntte("mus", _music);
 
-		 // BeginStep to fix TopCont.darkness flash
-	    if(fork()){
+		 // Bind begin_step to fix TopCont.darkness flash
+	    if(_name != "" && fork()){
 	    	wait 0;
-			script_bind_begin_step(scrBossIntro, 0, _name, _sound, _music);
+			with(script_bind_begin_step(scrBossIntro, 0, _name, _sound, _music)){
+				replaced = false;
+				delay = 0;
+				for(var i = 0; i < maxp; i++){
+					delay += player_is_active(i);
+				}
+			}
 			exit;
 	    }
 	}
 	else{
-		var _option = lq_defget(opt, "intros", 2),
-			_introLast = UberCont.opt_bossintros;
+		 // Delay in Co-op:
+		if(delay > 0){
+			delay -= current_time_scale;
 
-		if(_option < 2) UberCont.opt_bossintros = _option;
-		if(UberCont.opt_bossintros){
-		    var _path = "sprites/intros/",
-		        _lastSub = GameCont.subarea; // !!!
+			 // Replace Big Bandit's Intro:
+			if(!replaced){
+				replaced = true;
+				var _path = "sprites/intros/";
+		        sprite_replace_image(sprBossIntro,          _path + "spr" + _name + "Main.png", 0);
+		        sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + _name + "Back.png", 0);
+		        sprite_replace_image(sprBossName,           _path + "spr" + _name + "Name.png", 0);
+			}
+
+			 // Call Big Bandit's Intro:
+			if(delay <= 0){
+				var _option = option_get("intros", 2),
+					_introLast = UberCont.opt_bossintros;
 	
-		    if(_name != ""){
-		        with(instance_create(0, 0, BanditBoss)){
-		            sprite_replace_image(sprBossIntro,          _path + "spr" + _name + "Main.png", 0);
-		            sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + _name + "Back.png", 0);
-		            sprite_replace_image(sprBossName,           _path + "spr" + _name + "Name.png", 0);
-		            event_perform(ev_alarm, 6);
-		            sound_stop(sndBigBanditIntro);
-		            instance_delete(id);
-		            if(fork()){
-		                wait 0;
-		                sprite_restore(sprBossIntro);
-		                sprite_restore(sprBossIntroBackLayer);
-		                sprite_restore(sprBossName);
-		                exit;
+				if(_option < 2) UberCont.opt_bossintros = _option;
+				if(UberCont.opt_bossintros){
+			    	var _lastSub = GameCont.subarea;
+		        	with(instance_create(0, 0, BanditBoss)){
+			            event_perform(ev_alarm, 6);
+			            sound_stop(sndBigBanditIntro);
+		            	instance_delete(id);
 		            }
-		        }
-		    }
-		    GameCont.subarea = _lastSub; // !!!
+		            GameCont.subarea = _lastSub;
+				}
+				UberCont.opt_bossintros = _introLast;
+			}
 		}
-		UberCont.opt_bossintros = _introLast;
 
-		instance_destroy();
+		 // End:
+		else{
+			if(replaced){
+	            sprite_restore(sprBossIntro);
+	            sprite_restore(sprBossIntroBackLayer);
+	            sprite_restore(sprBossName);
+			}
+			instance_destroy();
+		}
 	}
 
 #define scrUnlock(_name, _text, _sprite, _sound)
@@ -3126,84 +3110,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
     draw_reset_projection();
 
-#define scrPickupIndicator(_text)
-    with(instance_create(0, 0, IceFlower)){
-    	pickup_indicator = true;
-
-    	 // Visual:
-        sprite_index = mskNone;
-        spr_idle = mskNone;
-        spr_walk = mskNone;
-        spr_hurt = mskNone;
-        spr_dead = mskNone;
-        spr_shadow = -1;
-
-		 // Sound:
-		snd_hurt = -1;
-		snd_dead = -1;
-
-    	 // Vars:
-		persistent = true;
-        mask_index = mskNone;
-    	mask = mskWepPickup;
-        name = _text;
-        creator = other;
-        xoff = 0;
-        yoff = 0;
-        size = 0;
-        team = 0;
-        pick = -1;
-        nowade = true;
-        whitelist = [];
-
-		 // Bind to End Step:
-		if(array_length(instances_matching(CustomEndStep, "name", "PickupIndicator_end_step")) <= 0){
-			with(script_bind_end_step(PickupIndicator_end_step, 0)){
-				name = script[2];
-				persistent = true;
-			}
-		}
-
-        return id;
-    }
-
-#define PickupIndicator_end_step
-	var _inst = instances_matching(IceFlower, "pickup_indicator", true);
-	if(array_length(_inst) > 0){
-		with(_inst){
-		    pick = -1;
-		    feed = 0;
-		    my_health = 99999;
-		    nexthurt = current_frame + 99999;
-		
-		     // Follow Creator:
-		    var c = creator;
-		    if(c != noone){
-		        if(instance_exists(c)){
-		        	x = 0;
-		        	y = 0;
-		            image_index = c.image_index;
-		            image_angle = c.image_angle;
-		            image_xscale = c.image_xscale;
-		            image_yscale = c.image_yscale;
-		            if(mask_index != mskNone){
-		            	mask = mask_index;
-		            	mask_index = mskNone;
-		            }
-		            if(mask == mskNone){
-		                mask = c.mask_index;
-		                if(mask == -1) mask = c.sprite_index;
-		            }
-		            if("pickup_indicator" not in c || !instance_exists(c.pickup_indicator)){
-		                c.pickup_indicator = id;
-		            }
-		        }
-		        else instance_delete(id);
-		    }
-		}
-	}
-	else instance_destroy();
-
 #define scrCharmTarget()
     with(instance){
         var _x = x,
@@ -3218,8 +3124,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	if(DebugLag) trace_time();
 
     var _charmList = ds_list_to_array(global.charm),
-        _charmDraw = {},
+        _charmDraw = array_create(maxp + 1),
         _charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
+
+	for(var i = 0; i < array_length(_charmDraw); i++){
+		_charmDraw[i] = {
+			inst  : [],
+			depth : 9999
+		};
+	}
 
     with(_charmList){
         var _self = instance,
@@ -3462,6 +3375,10 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                 	var f = UberCont.opt_freeze;
                                 	UberCont.opt_freeze = 0;
 
+									 // Gamma Guts Fix (It breaks contact damage idk):
+									var _gamma = skill_get(mut_gamma_guts);
+									skill_set(mut_gamma_guts, false);
+
                                 	 // Speed Up 'canmelee' Reset:
                                     if(alarm11 > 0 && alarm11 < 26){
                                     	event_perform(ev_alarm, 11);
@@ -3474,6 +3391,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                                     with(other) nexthurt = current_frame;
 
                                 	UberCont.opt_freeze = f;
+                                	skill_set(mut_gamma_guts, _gamma);
                                 }
                             }
                         }
@@ -3514,17 +3432,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
                          // Add to Charm Drawing:
                         if(visible){
-                        	if(!lq_exists(_charmDraw, string(_index))){
-								lq_set(_charmDraw, string(_index), {
-									inst: [],
-									depth: 9999
-								});
+                        	var _draw = _charmDraw[player_is_active(_index) ? (_index + 1) : 0];
+                        	with(_draw){
+	                        	array_push(inst, other);
+	                        	if(other.depth < depth) depth = other.depth;
                         	}
-
-                        	var p = lq_get(_charmDraw, string(_index));
-
-                        	array_push(p.inst, id);
-                        	if(depth < p.depth) p.depth = depth;
                         }
                     }
 
@@ -3729,7 +3641,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
 
          // Charm Spawned Enemies:
-        with(instances_matching(instances_matching(_charmObject, "creator", _self), "charm", null)){
+        with(instances_matching(instances_matching(_charmObject, "creator", _self), "ntte_charm", null)){
             var c = scrCharm(id, true);
             c.index = _index;
 
@@ -3750,14 +3662,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         }
     }
 
-	if(lq_size(_charmDraw) > 0){
-	    for(var i = 0; i < lq_size(_charmDraw); i++){
-	    	var p = lq_get_value(_charmDraw, i);
-	        script_bind_draw(charm_draw, p.depth - 0.1, p.inst, real(lq_get_key(_charmDraw, i)));
-	    }
-		with(surfCharm) active = true;
-	}
-	else with(surfCharm) active = false;
+	with(surfCharm) active = false;
+	for(var i = 0; i < array_length(_charmDraw); i++){
+		var _draw = _charmDraw[i];
+		if(array_length(_draw.inst) > 0){
+			with(surfCharm) active = true;
+	        script_bind_draw(charm_draw, _draw.depth - 0.1, _draw.inst, i - 1);
+		}
+	} 
 
 	if(DebugLag) trace_time("ntte_charm_step " + string(array_length(_charmList)));
 
@@ -3808,40 +3720,25 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 					x -= _surfx;
 					y -= _surfy;
 
-					switch(object_index){ // literally laser sight exceptions
+					switch(object_index){
 						case SnowTank:
-						case GoldSnowTank:
+						case GoldSnowTank: // disable laser sights
 							var a = ammo;
 							ammo = 0;
 					        event_perform(ev_draw, 0);
 							ammo = a;
 							break;
 
-						case Sniper:
-							var g = gonnafire;
-							gonnafire = false;
-					        event_perform(ev_draw, 0);
-							gonnafire = g;
-							break;
-
-						case CustomEnemy:
-							if("name" in self){
-								switch(name){
-									case "Diver":
-										var c = canshoot;
-										canshoot = false;
-										event_perform(ev_draw, 0);
-										canshoot = c;
-										break;
-
-									default:
-										event_perform(ev_draw, 0);
-								}
-								break;
+						default:
+							var g = false;
+							if("gonnafire" in self){ // Disable laser sights
+								g = gonnafire;
+								gonnafire = false;
 							}
 
-						default:
 							event_perform(ev_draw, 0);
+
+							if(g != false) gonnafire = g;
 					}
 
 					x = _x;
@@ -3856,9 +3753,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 			current_time_scale = _cts;
 
 			 // Outlines:
-			var _option = lq_defget(opt, "outlineCharm", 2);
+			var _option = option_get("outlineCharm", 2);
 			if(_option > 0){
-				if(_option < 2 || player_get_outlines(_index)){
+				if(_option < 2 || player_get_outlines(player_find_local_nonsync())){
 					draw_set_flat(player_get_color(_index));
 					for(var a = 0; a <= 360; a += 90){
 						var _x = _surfx,
@@ -4348,6 +4245,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define cleanup
     sprite_restore(sprClockParts);
 
+	 // Fix Options:
+	if(OptionOpen) with(Menu) mode = 0;
+
      // Stop Area Music/Ambience:
     for(var i = 0; i < lq_size(global.current); i++){
         audio_stop_sound(lq_get_value(global.current, i).snd);
@@ -4360,6 +4260,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	if(global.waterSoundActive){
 		underwater_sound(false);
 	}
+
+	 // Reset Bubble Pop:
+    with(global.waterBubblePop){
+    	with(self[0]) spr_bubble_pop_check = null;
+    }
 
 
 /// Scripts
@@ -4386,11 +4291,11 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
 #define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
 #define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
+#define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -4415,13 +4320,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
@@ -4445,3 +4350,14 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

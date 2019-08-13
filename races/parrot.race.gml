@@ -55,7 +55,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 
 /// General
@@ -251,41 +250,44 @@
     feather_targ_delay = 0;
 
      // Extra Pet Slot:
-    pet = [noone, noone];
+    if("ntte_pet" not in self) ntte_pet = [noone];
+    while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
 
      // Pet Perching:
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
-    if(fork()){
-	    wait 0;
-
-	     // Starter Pet + Extra Pet Slot:
-	    if(instance_exists(self)){
-	        with(Pet_spawn(x, y, "Parrot")) {
-	            leader = other;
-	            other.pet[0] = id;
-	            visible = false;
+    with(instances_matching(Player, "race", mod_current)){
+    	if(fork()){
+		    wait 0;
+	
+		     // Starter Pet + Extra Pet Slot:
+		    if(instance_exists(self)){
+		        with(Pet_spawn(x, y, "Parrot")) {
+		            leader = other;
+		            other.ntte_pet[0] = id;
+		            visible = false;
+		        }
+		    }
+	
+		     // Wait Until Level is Generated:
+	        while(instance_exists(self) && !visible) wait 0;
+	
+	         // Starting Feather Ammo:
+	        if(instance_exists(self)){
+	            repeat(feather_num){
+	            	with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+		                target = other;
+		                creator = other;
+		                index = other.index;
+		                bskin = other.bskin;
+		                speed *= 3;
+	            	}
+	            }
 	        }
+	
+	        exit;
 	    }
-
-	     // Wait Until Level is Generated:
-        while(instance_exists(self) && !visible) wait 0;
-
-         // Starting Feather Ammo:
-        if(instance_exists(self)){
-            repeat(feather_num){
-            	with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-	                target = other;
-	                creator = other;
-	                index = other.index;
-	                bskin = other.bskin;
-	                speed *= 3;
-            	}
-            }
-        }
-
-        exit;
     }
 
 #define step
@@ -300,10 +302,10 @@
             with(instances_matching(_feathers, "canhold", false)){
 				 // Remove Charm Time:
                 if(target != creator){
-                    if("charm" in target && (lq_defget(target.charm, "time", 0) > 0 || creator != other)){
+                    if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) > 0 || creator != other)){
                     	with(target){
-	                        charm.time -= other.stick_time;
-	                        if(charm.time <= 0){
+	                        ntte_charm.time -= other.stick_time;
+	                        if(ntte_charm.time <= 0){
 	                            scrCharm(id, false);
 	                        }
                     	}
@@ -401,8 +403,8 @@
     if(ultra_get(mod_current, ultShare)){
         if(my_health != charm_hplink_lock){
             var _HPList = ds_list_create();
-            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
-                if(lq_defget(charm, "index", -1) == other.index){
+            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0)){
+                if(lq_defget(ntte_charm, "index", -1) == other.index){
                     ds_list_add(_HPList, id);
                 }
             }
@@ -501,8 +503,8 @@
             _hpColor = player_get_color(index);
 
         if(ultra_get(mod_current, ultShare)){
-            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "charm", null), "my_health", 0)){
-                if(lq_defget(charm, "index", -1) == other.index){
+            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0)){
+                if(lq_defget(ntte_charm, "index", -1) == other.index){
                     _myHealth += my_health;
                     _maxHealth += maxhealth;
                     
@@ -669,7 +671,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -694,13 +695,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -725,3 +726,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

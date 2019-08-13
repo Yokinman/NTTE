@@ -42,7 +42,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
@@ -53,11 +52,10 @@
 #macro surfSwim		global.surfSwim
 #macro surfSwimBot	global.surfSwimBot
 #macro surfSwimTop	global.surfSwimTop
-#macro surfScale	(1/3 + (2/3 * lq_defget(opt, "waterQualityMain", 1)))
-#macro surfScaleTop	(1/2 + (1/2 * lq_defget(opt, "waterQualityTop", 1)))
+#macro surfScale	(1/3 + (2/3 * option_get("waterQualityMain", 1)))
+#macro surfScaleTop	(1/2 + (1/2 * option_get("waterQualityTop", 1)))
 
 #macro DebugLag global.debug_lag
-#macro CanLeaveCoast (array_length(instances_matching_gt(instances_matching(CustomDraw, "name", "darksea_draw"), "flash", 0)) > 0)
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
@@ -129,6 +127,7 @@
 	            with(obj_create(x, y, "CoastBigDecal")){
                 	with(Pet_spawn(x, y, "Parrot")){
 	                    perched = other;
+    					can_take = false;
                 	}
                 }
 	        }
@@ -214,10 +213,7 @@
 			wave = 0;
 			wave_dis = 6;
 			wave_ang = 0;
-			indicate_x = -1;
-			indicate_y = -1;
 			flash = 0;
-			heat = 0;
 		}
 	}
 	if(array_length(instances_matching(CustomDraw, "name", "swimtop_draw")) <= 0){
@@ -263,592 +259,570 @@
 	}
 
 #define area_step
-	 // Water Wading:
-	if(instance_exists(Floor) && array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
-		with(surfSwim) if(surface_exists(surf) && surface_exists(surfSwimTop.surf) && surface_exists(surfSwimBot.surf)){
-			if(DebugLag) trace_time();
-
-			 // Setup:
-			var	_surfSwim = surf,
-				_surfSwimW = w,
-				_surfSwimH = h,
-				_surfScale = surfScale,
-				_surfScaleTop = surfScaleTop,
-				_tex = surface_get_texture(_surfSwim),
-				_vx = view_xview_nonsync,
-				_vy = view_yview_nonsync,
-				_vw = game_width,
-				_vh = game_height,
-				_x = floor(_vx / _vw) * _vw,
-				_y = floor(_vy / _vh) * _vh,
-				_inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme];
-
-			_inst = array_combine(_inst, instances_matching(CustomObject, "name", "Pet"));
-			_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
-			_inst = instances_matching(instances_matching(instances_matching_lt(_inst, "depth", global.seaDepth), "visible", true), "nowade", null, false);
-
-			with(instances_matching(_inst, "wading", null)){
-				wading = 0;
-				wading_clamp = 0;
-				wading_sink = 0;
-				wading_xprevious = x;
-				wading_yprevious = y;
-				wading_z = 0;
-				wading_h = 0;
-				if(object_index == Van) wading_clamp = 40;
-				if(instance_is(self, Corpse)) wading_sink = 1;
-			}
-
-			with([surfSwimBot, surfSwimTop]){
-				x = _x;
-				y = _y;
-				var s = ((self == surfSwimBot) ? _surfScale : _surfScaleTop);
-				w = _vw * 2 * s;
-				h = _vh * 2 * s;
-
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-			}
-			surface_reset_target();
-
-			 // Find Dudes In/Out of Water:
-			inst_visible = [];
-			with(_inst){
-				 // In Water:
-				var _dis = distance_to_object(Floor);
-				if(_dis > 4){
-					if(wading <= 0){
-						wading_xprevious = x - hspeed_raw;
-						wading_yprevious = y - vspeed_raw;
+	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
+		 // Water Wading:
+		if(instance_exists(Floor)){
+			with(surfSwim) if(surface_exists(surf) && surface_exists(surfSwimTop.surf) && surface_exists(surfSwimBot.surf)){
+				if(DebugLag) trace_time();
 	
-						 // Splash:
-						repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
-						var _vol = ((object_index == Player) ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1));
-						sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee), 1.5 + random(0.5), _vol);
-					}
-					array_push(other.inst_visible, id);
-					wading = _dis;
-
-					 // Splashies:
-					if(random(20) < min(speed_raw, 4)){
-						with(instance_create(x, y, Dust)){
-							motion_add(other.direction + orandom(10), 3);
-						}
-					}
-				}
-
-				 // Out of Water:
-				else{
-					if(wading > 0){
-						 // Sploosh:
-						var _vol = ((object_index == Player) ? 1 : clamp(1 - (distance_to_object(Player) / 150), 0.1, 1));
-						sound_play_pitchvol(choose(sndOasisChest, sndOasisMelee, sndOasisHurt), 1 + random(0.25), _vol);
-						repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
-							motion_add(other.direction, other.speed);
-						}
-					}
+				 // Setup:
+				var	_surfSwim = surf,
+					_surfSwimW = w,
+					_surfSwimH = h,
+					_surfScale = surfScale,
+					_surfScaleTop = surfScaleTop,
+					_tex = surface_get_texture(_surfSwim),
+					_vx = view_xview_nonsync,
+					_vy = view_yview_nonsync,
+					_vw = game_width,
+					_vh = game_height,
+					_x = floor(_vx / _vw) * _vw,
+					_y = floor(_vy / _vh) * _vh,
+					_inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme];
+	
+				_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
+				_inst = instances_matching(instances_matching(instances_matching_lt(_inst, "depth", global.seaDepth), "visible", true), "nowade", null, false);
+	
+				with(instances_matching(_inst, "wading", null)){
 					wading = 0;
-				}
-			}
-
-			if(DebugLag) trace_time("coast_area_step Wading Setup");
-
-			 // Water Wading Drawing:
-			if(DebugLag) trace_time();
-
-			var _charmShader = lq_defget(shadlist_get("Charm"), "shad", -1),
-				_charmOption = lq_defget(opt, "outlineCharm", 2),
-				_charmCanOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
-
-			with(other){
-				with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
-					var o = (object_index == Player),
-						_z = 2,
-						_wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2),
-						_surfSwimX = x - (_surfSwimW / 2),
-						_surfSwimY = y - (_surfSwimH / 2);
-
-					if(!o || !CanLeaveCoast || (instance_exists(Portal) && distance_to_object(Portal) > 64)){
-						if(wading_clamp) _wh = min(_wh, wading_clamp);
-						else _wh = min(_wh, sprite_yoffset);
-					}
-
-					 // Bobbing:
-					if(wading > sprite_height || !instance_is(id, hitme)){
-						var _bobspd = 1/10,
-							_bobmax = min(wading / sprite_height, 2) / (1 + (wading_sink / 10)),
-							_bob = _bobmax * sin((current_frame + x + y) * _bobspd);
-
-						_z += _bob;
-						_wh += _bob;
-					}
-
-					if(wading_sink != 0){
-						_wh += wading_sink / 8;
-						_z += wading_sink / 5;
-					}
-
-					 // Save + Temporarily Set Vars:
-					var s = {};
-					if(o){
-						 // Disable Laser Sight:
-						if(canscope){
-							s.canscope = canscope;
-							canscope = 0;
-						}
-
-						 // Sucked Into Abyss:
-						if(CanLeaveCoast && (mask_index == mskNone && distance_to_object(Portal) < 64)){
-							s.image_xscale = image_xscale;
-							s.image_yscale = image_yscale;
-							s.image_alpha  = image_alpha;
-							with(instance_nearest(x, y, Portal)) with(other){
-								var f = min(0.5 + (other.endgame / 60), 1);
-								image_xscale *= f;
-								image_yscale *= f;
-								image_alpha  *= f;
-								_wh += (1 - f) * 48;
-								_z += (1 - f) * 48;
-							}
-						}
-					}
-
-					wading_z = _z;
-					wading_h = _wh;
-
-					 // Call Draw Event to Surface:
-					surface_set_target(_surfSwim);
-					draw_clear_alpha(0, 0);
-
-					var _x = x, _y = y;
-					x -= _surfSwimX;
-					y -= _surfSwimY;
-					if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
-					else draw_self();
-					x = _x;
-					y = _y;
-
-					surface_reset_target();
-
-					 // Set Saved Vars:
-					if(lq_size(s) > 0){
-						for(var i = 0; i < lq_size(s); i++){
-							var k = lq_get_key(s, i);
-							variable_instance_set(id, k, lq_get(s, k));
-						}
-					}
-
-					 // Offset:
-					var	l = min(speed_raw, point_distance(x, y, wading_xprevious, wading_yprevious)),
-						d = direction,
-						_ox = lengthdir_x(l, d),
-						_oy = lengthdir_y(l, d);
-
-					_surfSwimX += _ox;
-					_surfSwimY += _oy;
-
-					 // Draw Top:
-					var _yoff = _surfSwimH - ((_surfSwimH / 2) - (sprite_height - sprite_yoffset)),
-						t = _yoff - _wh;
-
-					with(surfSwimTop){
-						var _surfx = x,
-							_surfy = y;
-
-						surface_set_target(surf);
-
-						with(other){
-							 // Manually Draw Laser Sights:
-							if(o && canscope){
-								draw_set_color(make_color_rgb(250, 54, 0));
-
-								var _wep = [wep];
-								if(race == "steroids") _wep = [wep, bwep];
-								for(var i = 0; i < array_length(_wep); i++) if(weapon_get_laser_sight(_wep[i])){
-									var	_sx = x + _ox,
-										_sy = y + _oy + _z - (i * 4),
-										_lx = _sx,
-										_ly = _sy,
-										_md = 1000, // Max Distance
-										d = _md,    // Distance
-										m = 0;      // Minor hitscan increment distance
-
-									while(d > 0){ // A strange but fast hitscan system
-										 // Major Hitscan Mode:
-										if(m <= 0){
-											_lx = _sx + lengthdir_x(d, gunangle);
-											_ly = _sy + lengthdir_y(d, gunangle);
-											d -= sqrt(_md);
-
-											 // Enter minor hitscan mode once no walls on path:
-											if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
-												m = 2;
-												d = sqrt(_md);
-											}
-										}
-
-										 // Minor Hitscan Mode:
-										else{
-											if(position_meeting(_lx, _ly, Wall)) break;
-											_lx += lengthdir_x(m, gunangle);
-											_ly += lengthdir_y(m, gunangle);
-											d -= m;
-										}
-									}
-
-									 // Draw Laser:
-									var _ox = lengthdir_x(right, gunangle - 90),
-										_oy = lengthdir_y(right, gunangle - 90),
-										_dx=[	_sx,
-												_sx + ((_lx - _sx) / 10),// ~ ~
-												_lx
-											],
-										_dy=[	_sy,
-												_sy + ((_ly - _sy) / 10),
-												_ly
-											];
-
-									draw_primitive_begin(pr_trianglestrip);
-									draw_set_alpha((sin(degtorad(gunangle)) * 5) - (max(_wh - (sprite_yoffset - 2), 0)));
-									for(var j = 0; j < array_length(_dx); j++){
-										draw_vertex((_dx[j] - _surfx      ) * _surfScaleTop, (_dy[j] - _surfy      ) * _surfScaleTop);
-										draw_vertex((_dx[j] - _surfx + _ox) * _surfScaleTop, (_dy[j] - _surfy + _oy) * _surfScaleTop);
-										draw_set_alpha(1);
-									}
-									draw_primitive_end();
-
-									//draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
-								}
-								draw_set_alpha(1);
-							}
-
-							 // Self:
-							var	_x = (_surfSwimX      - _surfx) * _surfScaleTop,
-								_y = (_surfSwimY + _z - _surfy) * _surfScaleTop;
-
-							draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
-
-							 // Charmed Enemy Eye:
-							if("charm" in self && charm.charmed){
-								 // Outlines:
-								if(_charmCanOutline){
-									draw_set_fog(true, player_get_color(player_find_local_nonsync()), 0, 0);
-									for(var a = 0; a <= 360; a += 90){
-										var _dx = _x,
-											_dy = _y;
-
-										if(a >= 360) draw_set_fog(false, 0, 0, 0);
-										else{
-											_dx += dcos(a);
-											_dy -= dsin(a);
-										}
-
-										draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _dx, _dy, _surfScaleTop, _surfScaleTop, c_white, 1);
-									}
-								}
-
-								 // Eyes:
-								if(_charmShader != -1){
-									shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-									shader_set(_charmShader);
-									texture_set_stage(0, _tex);
-									draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
-									shader_reset();
-								}
-							}
-						}
-
-						 // Water Interference Line Thing:
-						draw_set_fog(true, c_white, 0, 0);
-						draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, 1, _x, _y + (t * _surfScaleTop), _surfScaleTop, _surfScaleTop, c_white, 0.8);
-						draw_set_fog(false, 0, 0, 0);
-					}
-
-					 // Draw Bottom:
-					with(surfSwimBot){
-						surface_set_target(surf);
-						draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, (_surfSwimH - t), (_surfSwimX - x) * _surfScale, (_surfSwimY - y + _z + t) * _surfScale, _surfScale, _surfScale, c_white, (1 - (other.wading_sink / 120)));
-					}
-
-					surface_reset_target();
-
+					wading_clamp = 0;
+					wading_sink = 0;
 					wading_xprevious = x;
 					wading_yprevious = y;
+					wading_z = 0;
+					wading_h = 0;
+					if(object_index == Van) wading_clamp = 40;
+					if(instance_is(self, Corpse)) wading_sink = 1;
 				}
+	
+				with([surfSwimBot, surfSwimTop]){
+					x = _x;
+					y = _y;
+					var s = ((self == surfSwimBot) ? _surfScale : _surfScaleTop);
+					w = _vw * 2 * s;
+					h = _vh * 2 * s;
+	
+					surface_set_target(surf);
+					draw_clear_alpha(0, 0);
+				}
+				surface_reset_target();
+	
+				 // Find Dudes In/Out of Water:
+				inst_visible = [];
+				with(_inst){
+					 // In Water:
+					var _dis = distance_to_object(Floor);
+					if(_dis > 4){
+						if(wading <= 0){
+							wading_xprevious = x - hspeed_raw;
+							wading_yprevious = y - vspeed_raw;
+		
+							 // Splash:
+							repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
+							sound_pitch(sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0), 1.5 + random(0.5));
+						}
+						array_push(other.inst_visible, id);
+						wading = _dis;
+	
+						 // Splashies:
+						if(random(20) < min(speed_raw, 4)){
+							with(instance_create(x, y, Dust)){
+								motion_add(other.direction + orandom(10), 3);
+							}
+						}
+					}
+	
+					 // Out of Water:
+					else{
+						if(wading > 0){
+							 // Sploosh:
+							sound_pitch(sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0), 1 + random(0.25));
+							repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
+								motion_add(other.direction, other.speed);
+							}
+						}
+						wading = 0;
+					}
+				}
+	
+				if(DebugLag) trace_time("coast_area_step Wading Setup");
+	
+				 // Water Wading Drawing:
+				if(DebugLag) trace_time();
+	
+				var _charmShader = lq_defget(shadlist_get("Charm"), "shad", -1),
+					_charmOption = option_get("outlineCharm", 2),
+					_charmCanOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
+	
+				with(other){
+					with(instances_seen(instances_matching_gt(_inst, "wading", 0), 24)){
+						var o = (object_index == Player),
+							_z = 2,
+							_wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2),
+							_surfSwimX = x - (_surfSwimW / 2),
+							_surfSwimY = y - (_surfSwimH / 2);
+	
+						if(!o || distance_to_object(Portal) > 64){
+							if(wading_clamp) _wh = min(_wh, wading_clamp);
+							else _wh = min(_wh, sprite_yoffset);
+						}
+	
+						 // Bobbing:
+						if(wading > sprite_height || !instance_is(id, hitme)){
+							var _bobspd = 1/10,
+								_bobmax = min(wading / sprite_height, 2) / (1 + (wading_sink / 10)),
+								_bob = _bobmax * sin((current_frame + x + y) * _bobspd);
+	
+							_z += _bob;
+							_wh += _bob;
+						}
+	
+						if(wading_sink != 0){
+							_wh += wading_sink / 8;
+							_z += wading_sink / 5;
+						}
+	
+						 // Save + Temporarily Set Vars:
+						var s = {};
+						if(o){
+							 // Disable Laser Sight:
+							if(canscope){
+								s.canscope = canscope;
+								canscope = 0;
+							}
+	
+							 // Sucked Into Abyss:
+							if(instance_exists(Portal)){
+								s.image_xscale = image_xscale;
+								s.image_yscale = image_yscale;
+								s.image_alpha  = image_alpha;
+								with(instance_nearest(x, y, Portal)) if(endgame < 100){
+									with(other){
+										var f = min(0.5 + (other.endgame / 60), 1);
+										image_xscale *= f;
+										image_yscale *= f;
+										image_alpha  *= f;
+										_wh += (1 - f) * 48;
+										_z += (1 - f) * 48;
+									}
+								}
+							}
+						}
+	
+						wading_z = _z;
+						wading_h = _wh;
+	
+						 // Call Draw Event to Surface:
+						surface_set_target(_surfSwim);
+						draw_clear_alpha(0, 0);
+	
+						var _x = x, _y = y;
+						x -= _surfSwimX;
+						y -= _surfSwimY;
+						if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
+						else draw_self();
+						x = _x;
+						y = _y;
+	
+						surface_reset_target();
+	
+						 // Set Saved Vars:
+						if(lq_size(s) > 0){
+							for(var i = 0; i < lq_size(s); i++){
+								var k = lq_get_key(s, i);
+								variable_instance_set(id, k, lq_get(s, k));
+							}
+						}
+	
+						 // Offset:
+						var	l = min(speed_raw, point_distance(x, y, wading_xprevious, wading_yprevious)),
+							d = direction,
+							_ox = lengthdir_x(l, d),
+							_oy = lengthdir_y(l, d);
+	
+						_surfSwimX += _ox;
+						_surfSwimY += _oy;
+	
+						 // Draw Top:
+						var _yoff = _surfSwimH - ((_surfSwimH / 2) - (sprite_height - sprite_yoffset)),
+							t = _yoff - _wh;
+	
+						with(surfSwimTop){
+							var _surfx = x,
+								_surfy = y;
+	
+							surface_set_target(surf);
+	
+							with(other){
+								 // Manually Draw Laser Sights:
+								if(o && canscope){
+									draw_set_color(make_color_rgb(250, 54, 0));
+	
+									var _wep = [wep];
+									if(race == "steroids") _wep = [wep, bwep];
+									for(var i = 0; i < array_length(_wep); i++) if(weapon_get_laser_sight(_wep[i])){
+										var	_sx = x + _ox,
+											_sy = y + _oy + _z - (i * 4),
+											_lx = _sx,
+											_ly = _sy,
+											_md = 1000, // Max Distance
+											d = _md,    // Distance
+											m = 0;      // Minor hitscan increment distance
+	
+										while(d > 0){ // A strange but fast hitscan system
+											 // Major Hitscan Mode:
+											if(m <= 0){
+												_lx = _sx + lengthdir_x(d, gunangle);
+												_ly = _sy + lengthdir_y(d, gunangle);
+												d -= sqrt(_md);
+	
+												 // Enter minor hitscan mode once no walls on path:
+												if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
+													m = 2;
+													d = sqrt(_md);
+												}
+											}
+	
+											 // Minor Hitscan Mode:
+											else{
+												if(position_meeting(_lx, _ly, Wall)) break;
+												_lx += lengthdir_x(m, gunangle);
+												_ly += lengthdir_y(m, gunangle);
+												d -= m;
+											}
+										}
+	
+										 // Draw Laser:
+										var _ox = lengthdir_x(right, gunangle - 90),
+											_oy = lengthdir_y(right, gunangle - 90),
+											_dx=[	_sx,
+													_sx + ((_lx - _sx) / 10),// ~ ~
+													_lx
+												],
+											_dy=[	_sy,
+													_sy + ((_ly - _sy) / 10),
+													_ly
+												];
+	
+										draw_primitive_begin(pr_trianglestrip);
+										draw_set_alpha((sin(degtorad(gunangle)) * 5) - (max(_wh - (sprite_yoffset - 2), 0)));
+										for(var j = 0; j < array_length(_dx); j++){
+											draw_vertex((_dx[j] - _surfx      ) * _surfScaleTop, (_dy[j] - _surfy      ) * _surfScaleTop);
+											draw_vertex((_dx[j] - _surfx + _ox) * _surfScaleTop, (_dy[j] - _surfy + _oy) * _surfScaleTop);
+											draw_set_alpha(1);
+										}
+										draw_primitive_end();
+	
+										//draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
+									}
+									draw_set_alpha(1);
+								}
+	
+								 // Self:
+								var	_x = (_surfSwimX      - _surfx) * _surfScaleTop,
+									_y = (_surfSwimY + _z - _surfy) * _surfScaleTop;
+	
+								draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
+	
+								 // Charmed Enemy Eye:
+								if("charm" in self && charm.charmed){
+									 // Outlines:
+									if(_charmCanOutline){
+										draw_set_fog(true, player_get_color(player_find_local_nonsync()), 0, 0);
+										for(var a = 0; a <= 360; a += 90){
+											var _dx = _x,
+												_dy = _y;
+	
+											if(a >= 360) draw_set_fog(false, 0, 0, 0);
+											else{
+												_dx += dcos(a);
+												_dy -= dsin(a);
+											}
+	
+											draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _dx, _dy, _surfScaleTop, _surfScaleTop, c_white, 1);
+										}
+									}
+	
+									 // Eyes:
+									if(_charmShader != -1){
+										shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+										shader_set(_charmShader);
+										texture_set_stage(0, _tex);
+										draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
+										shader_reset();
+									}
+								}
+							}
+	
+							 // Water Interference Line Thing:
+							draw_set_fog(true, c_white, 0, 0);
+							draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, 1, _x, _y + (t * _surfScaleTop), _surfScaleTop, _surfScaleTop, c_white, 0.8);
+							draw_set_fog(false, 0, 0, 0);
+						}
+	
+						 // Draw Bottom:
+						with(surfSwimBot){
+							surface_set_target(surf);
+							draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, (_surfSwimH - t), (_surfSwimX - x) * _surfScale, (_surfSwimY - y + _z + t) * _surfScale, _surfScale, _surfScale, c_white, (1 - (other.wading_sink / 120)));
+						}
+	
+						surface_reset_target();
+	
+						wading_xprevious = x;
+						wading_yprevious = y;
+					}
+				}
+	
+				if(DebugLag) trace_time("coast_area_step Wading Drawing");
 			}
-
-			if(DebugLag) trace_time("coast_area_step Wading Drawing");
-		}
-
-		 // Corpse Sinking:
-		if(DebugLag) trace_time();
-        with(instances_matching_gt(instances_matching_lt(instances_matching(instances_matching_le(instances_matching_gt(Corpse, "wading", 30), "speed", 0), "image_speed", 0), "size", 3), "wading_sink", 0)){
-            if(wading_sink++ >= 120) instance_destroy();
-        }
-		if(DebugLag) trace_time("coast_area_step Wading Sink");
-
-         // Push Stuff to Shore:
-		if(DebugLag) trace_time();
-		var _inst = [enemy];
-		if(!instance_exists(Portal)) array_push(_inst, Pickup);
-		_inst = array_combine(
-			instances_matching(_inst, "", null),
-			array_combine(
-			instances_matching_ne(chestprop, "name", "SunkenChest"),
-			instances_matching(CustomObject, "name", "Pet")
-			)
-		);
-        with(instances_matching_ge(_inst, "wading", 80)){
-            var n = instance_nearest(x - 16, y - 16, Floor);
-    		motion_add(point_direction(x, y, n.x, n.y), 4);
-        }
-        
-         // Push Player to Shore
-        if(!CanLeaveCoast || instance_exists(Portal)){
-        	with(instances_matching_ge(Player, "wading", 80)){
-	        	if(visible && distance_to_object(Portal) > 0){
+	
+			 // Corpse Sinking:
+			if(DebugLag) trace_time();
+	        with(instances_matching_gt(instances_matching_lt(instances_matching(instances_matching_le(instances_matching_gt(Corpse, "wading", 30), "speed", 0), "image_speed", 0), "size", 3), "wading_sink", 0)){
+	            if(wading_sink++ >= 120) instance_destroy();
+	        }
+			if(DebugLag) trace_time("coast_area_step Wading Sink");
+	
+	         // Push Stuff to Shore:
+			if(DebugLag) trace_time();
+			var _inst = array_combine(
+				[hitme, Pickup],
+				instances_matching_ne(chestprop, "name", "SunkenChest")
+			);
+	        with(instances_matching(instances_matching_ge(_inst, "wading", 80), "visible", true)){
+	    		if(distance_to_object(Portal) > 96){
 		            var n = instance_nearest(x - 16, y - 16, Floor);
-		    		motion_add(point_direction(x, y, n.x, n.y), 4);
-
-					 // Just in Case:
-					while(distance_to_object(Floor) > 120){
-		        		var l = distance_to_object(Floor) / 120,
+		    		motion_add_ct(point_direction(x, y, n.x, n.y), 3 + ((wading - 80)) / 16);
+	
+		    		 // Extra Player Push:
+		    		if(wading > 120 && instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
+		        		var l = ((wading - 120) / 10) * current_time_scale,
 		        			d = point_direction(x, y, n.x, n.y);
-
-						if(chance(1, 3)) instance_create(x + orandom(4), y + orandom(4), Dust);
-
+	
 						x += lengthdir_x(l, d);
 						y += lengthdir_y(l, d);
-	        		}
-	        	}
-        	}
-        }
-		if(DebugLag) trace_time("coast_area_step Wading Push");
-
-		 // Set Visibility of Swimming Objects Before & After Drawing Events:
-		script_bind_draw(corpse_fix, 10000000);
-    	script_bind_step(reset_visible,   0, false);
-    	script_bind_draw(reset_visible, -14, true);
-
-         // Fix Spirit:
-        if(skill_get(mut_strong_spirit)){
-			script_bind_draw(draw_spiritfix, -8, instances_matching(Player, "visible", true));
-        }
-	}
-
-	if(DebugLag) trace_time();
-
-     // No Portals:
-	with(instances_matching_ne(Corpse, "do_portal", false)) do_portal = false;
-
-	 // It's like a portal exists but no it doesn't:
-	if(CanLeaveCoast && !instance_exists(Portal)){
-	    scrPickupPortalize();
-	    with(instances_matching_gt(Ally, "alarm2", 1)) alarm2 = 1;
-	}
-
-     // Explosion debris splash FX:
-	with(Explosion) if(chance_ct(1, 5)){
-        var l = random_range(24, 48),
-            d = random(360);
-
-        with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RainSplash)){
-            if(place_meeting(x, y, Floor)) instance_destroy();
-        }
-	}
-
-     // Destroy Projectiles Too Far Away:
-    with(instances_matching_le(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
-    	if(distance_to_object(Player) > 1000) instance_destroy();
-    }
-
-	 // Player Leaving Level:
-    with(Player){
-         // Move Camera Towards Sea at Level End:
-        if(CanLeaveCoast && !instance_exists(Portal) && instance_exists(Floor)){
-            var g = gunangle;
-            with(instances_matching(CustomDraw, "name", "darksea_draw")){
-                var _x = indicate_x;
-                	_y = indicate_y;
-
-				if(_x >= 0 && _y >= 0) with(other){
-		            var s = UberCont.opt_shake;
-		            UberCont.opt_shake = 1;
 	
-		            gunangle = point_direction(x, y, _x, _y);
-		            weapon_post(wkick, (point_distance(x, y, _x, _y) / 9) * current_time_scale, 0);
-		            gunangle = g;
+						 // FX:
+						if(chance_ct(1, 2)) instance_create(x, y, Dust);
+		    		}
+	    		}
+	        }
+			if(DebugLag) trace_time("coast_area_step Wading Push");
 	
-	            	UberCont.opt_shake = s;
-				}
-            }
-        }
-
-         // Wading Players:
-        if("wading" in self && wading > 0){
-			 // Player Moves 20% Slower in Water:
-            if(!skill_get(mut_extra_feet) && speed > 0){
-                var f = ((race == "fish") ? 0 : -0.2);
-                if(f != 0){
-                    x += hspeed * f;
-                    y += vspeed * f;
-                }
-            }
-
-             // Walk into Sea for Next Level:
-            if(CanLeaveCoast && !instance_exists(Portal)){
-                if(wading > 120 || !instance_exists(Floor)){
-                    instance_create(x, y, Portal);
-
-                     // Switch Sound:
-                    sound_stop(sndPortalOpen);
-                    sound_play(sndOasisPortal);
-                }
-
-                 // Push Out to Sea:
-                /*else{
-                     // Check if Player is Controlling Movement:
-                    var _moving = false;
-                    if(canwalk){
-                        _moveKey = ["east", "nort", "west", "sout"];
-                        for(var i = 0; i < array_length(_moveKey); i++){
-                            if(button_check(index, _moveKey[i])){
-                                _moving = true;
-                                break;
-                            }
-                        }
-                    }
-
-                     // Go out to the sea pls
-                    var f = instance_nearest(x, y, Floor),
-                        _dir = point_direction(f.x, f.y, x, y) + (20 * cos(current_frame / 30));
-
-                    if(!_moving || abs(angle_difference(_dir, direction)) > 90){
-                        var _dis = 2 * max(sin(current_frame / 10), 0) * current_time_scale;
-                        x += lengthdir_x(_dis, _dir);
-                        y += lengthdir_y(_dis, _dir);
-                    }
-                }*/
-            }
-        }
-    }
-
-     // Spinny Water Portals:
-    with(Portal) if(!place_meeting(xstart, ystart, Floor)){
-        image_alpha = 0;
-
-        var r = 5 + image_index,
-            c = current_frame;
-
-        x = xstart + (cos(c) * r);
-        y = ystart + (sin(c) * r);
-
-        instance_create(x, y, choose(Sweat, Sweat, Bubble));
-    }
-
-     // Spinny Water Shells:
-    with(Shell) if(!place_meeting(x, y, Floor)){
-    	y += sin((x + y + current_frame) / 10) * 0.1 * current_time_scale;
-    }
-
-     // things die bc of the missing walls
-	with(instances_matching(enemy, "canfly", false)) canfly = true;
-
-     // Weird fix for ultra bolts destroying themselves when not touching a floor:
-    with(UltraBolt){
-    	var _x = x,
-    		_y = y;
-
-		if(skill_get(mut_bolt_marrow)){
-			var n = instance_nearest(x, y, enemy);
-			if(instance_exists(n) && point_distance(x, y, n.x, n.y) < 24 * skill_get(mut_bolt_marrow)){
-				_x = n.x - hspeed;
-				_y = n.y - vspeed;
-			}
+			 // Set Visibility of Swimming Objects Before & After Drawing Events:
+			script_bind_draw(corpse_fix, 10000000);
+	    	script_bind_step(reset_visible,   0, false);
+	    	script_bind_draw(reset_visible, -14, true);
+	
+	         // Fix Spirit:
+	        if(skill_get(mut_strong_spirit)){
+				script_bind_draw(draw_spiritfix, -8, instances_matching(Player, "visible", true));
+	        }
 		}
-
-        if(!place_meeting(_x, _y, Floor)){
-            with(instance_create(0, 0, Floor)){
-                x = _x;
-                y = _y;
-                xprevious = x;
-                yprevious = y;
-                name = "UltraBoltCoastFix";
-                mask_index = sprBoltTrail;
-                visible = false;
-                creator = other;
-            }
-        }
-    }
-
-     // Popo Freaks Can't Spawn After Level End:
-    if(CanLeaveCoast){
-        with(WantRevivePopoFreak) instance_destroy();
-    }
+	
+		if(DebugLag) trace_time();
+	
+	     // Explosion debris splash FX:
+		with(Explosion) if(chance_ct(1, 5)){
+	        var l = random_range(24, 48),
+	            d = random(360);
+	
+	        with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RainSplash)){
+	            if(place_meeting(x, y, Floor)) instance_destroy();
+	        }
+		}
+	
+	     // Destroy Projectiles Too Far Away:
+	    with(instances_matching_le(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
+	    	if(distance_to_object(Player) > 1000) instance_destroy();
+	    }
+	
+		 // Player Leaving Level:
+	    with(Player){
+	         // Wading Players:
+	        if("wading" in self && wading > 0){
+				 // Player Moves 20% Slower in Water:
+	            if(!skill_get(mut_extra_feet) && speed > 0){
+	                var f = ((race == "fish") ? 0 : -0.2);
+	                if(f != 0){
+	                    x += hspeed * f;
+	                    y += vspeed * f;
+	                }
+	            }
+	
+	             // Walk into Sea for Next Level:
+	            var n = instance_nearest(x, y, Portal);
+	            if(instance_exists(n) && n.endgame >= 100){
+	                if(wading > 120 || !instance_exists(Floor)){
+	                    n.x = x;
+	                    n.y = y;
+	                    n.xstart = x;
+	                    n.ystart = y;
+	                }
+	            }
+	        }
+	    }
+	
+	     // Spinny Water Shells:
+	    with(Shell) if(!place_meeting(x, y, Floor)){
+	    	y += sin((x + y + current_frame) / 10) * 0.1 * current_time_scale;
+	    }
+	
+	     // Weird fix for ultra bolts destroying themselves when not touching a floor:
+	    with(UltraBolt){
+	    	var _x = x,
+	    		_y = y;
+	
+			if(skill_get(mut_bolt_marrow)){
+				var n = instance_nearest(x, y, enemy);
+				if(instance_exists(n) && point_distance(x, y, n.x, n.y) < 24 * skill_get(mut_bolt_marrow)){
+					_x = n.x - hspeed;
+					_y = n.y - vspeed;
+				}
+			}
+	
+	        if(!place_meeting(_x, _y, Floor)){
+	            with(instance_create(0, 0, Floor)){
+	                x = _x;
+	                y = _y;
+	                xprevious = x;
+	                yprevious = y;
+	                name = "UltraBoltCoastFix";
+	                mask_index = sprBoltTrail;
+	                visible = false;
+	                creator = other;
+	            }
+	        }
+	    }
+	
+	     // Prevent Enemies Drowning:
+		with(Player) alarm10 = max(alarm10, 90);
+	}
 
 	if(DebugLag) trace_time("coast_area_step");
 
 #define area_end_step
 	if(DebugLag) trace_time();
 
-     // Watery Dust:
-    with(instances_matching(Dust, "coast_water", null)){
-        coast_water = 1;
-        if(!place_meeting(x, y, Floor)){
-            if(chance(1, 10 + instance_number(AcidStreak))){
-                if(point_seen(x, y, -1)){
-                    sound_play_pitch(sndOasisCrabAttack, 0.9 + random(0.2));
-                }
-                with(scrWaterStreak(x, y, random(360), 2)){
-                    hspeed += other.hspeed / 2;
-                    vspeed += other.vspeed / 2;
-                }
-            }
-            else{
-                if(chance(1, 5) && point_seen(x, y, -1)){
-                    sound_play(choose(sndOasisChest, sndOasisMelee));
-                }
-                with(instance_create(x, y, Sweat)){
-                    hspeed = other.hspeed / 2;
-                    vspeed = other.vspeed / 2;
-                }
-            }
-            instance_destroy();
-        }
-    }
+	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
+	     // Spinny Water Portals:
+	    with(instances_matching(Portal, "coast_portal", null)){
+	    	coast_portal = false;
+	    	if(type != 2){
+	    		coast_portal = true;
+	
+		    	image_alpha = 0;
+		    	sound_stop(sndPortalOpen);
+	            with(instances_matching(CustomDraw, "name", "darksea_draw")) flash = 0;
+		
+				 // Move to Water:
+		    	event_perform(ev_alarm, 0);
+		    	alarm0 = -1;
+		
+				var	_sx = x,
+					_sy = y,
+					_moveDis = 8,
+					_moveDir = 0;
+		
+				with(Floor){
+					_moveDir += point_direction((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, _sx, _sy);
+				}
+				_moveDir /= instance_number(Floor);
+		
+				while(distance_to_object(Floor) < 120){
+					x += lengthdir_x(_moveDis, _moveDir);
+					y += lengthdir_y(_moveDis, _moveDir);
+				}
+				xstart = x;
+				ystart = y;
+		
+				 // Move Spawned Stuff:
+				with(instance_nearest(_sx, _sy, PortalShock)){
+					x = other.x;
+					y = other.y;
+				}
+				repeat(5) with(instance_nearest(_sx, _sy, PortalL)){
+					x = other.x;
+					y = other.y;
+				}
+			}
+	    }
+	    with(Portal){
+			if(image_alpha == 0 && !place_meeting(xstart, ystart, Floor)){
+				if(endgame < 100){
+			        var r = 5 + image_index,
+			            c = current_frame;
+			
+			        x = xstart + (cos(c) * r);
+			        y = ystart + (sin(c) * r);
+		
+					if(current_frame_active){
+			        	instance_create(x, y, choose(Sweat, Sweat, Bubble));
+					}
+	
+			    	if("coast_portal_sound" not in self){
+			    		coast_portal_sound = true;
+			    		sound_play(sndOasisPortal);
+			    	}
+				}
+				else{
+					with(instances_matching(instances_matching(PortalL, "xstart", x), "ystart", y)){
+						instance_destroy();
+					}
+				}
+			}
+	    }
+	
+	     // Watery Dust:
+	    with(instances_matching(Dust, "coast_water", null)){
+	        coast_water = 1;
+	        if(!place_meeting(x, y, Floor)){
+	            if(chance(1, 10 + instance_number(AcidStreak))){
+	                sound_play_hit(sndOasisCrabAttack, 0.1);
+	                with(scrWaterStreak(x, y, random(360), 2)){
+	                    hspeed += other.hspeed / 2;
+	                    vspeed += other.vspeed / 2;
+	                }
+	            }
+	            else{
+	                if(chance(1, 5) && point_seen(x, y, -1)){
+	                    sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0.2);
+	                }
+	                with(instance_create(x, y, Sweat)){
+	                    hspeed = other.hspeed / 2;
+	                    vspeed = other.vspeed / 2;
+	                }
+	            }
+	            instance_destroy();
+	        }
+	    }
+	
+	     // Watery Explosion Sounds:
+	    with(instances_matching(Explosion, "coast_water", null)){
+	        coast_water = false;
+	        if(!position_meeting(x, y, Floor)){
+	        	coast_water = true;
+	            sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
+	        }
+	    }
+	
+	     // Watery Melting Scorch Marks:
+	    with(instances_matching(MeltSplat, "coast_water", null)){
+	        coast_water = false;
+	        if(!position_meeting(x, y, Floor)){
+	        	coast_water = true;
+	            sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
+	            repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
+	                if(chance(1, 6)) scrWaterStreak(x, y, random(360), 4);
+	                else instance_create(x, y, Sweat);
+	            }
+	            instance_destroy();
+	        }
+	    }
 
-     // Watery Explosion Sounds:
-    var e = 0,
-        s = 0;
-
-    with(instances_matching(Explosion, "coast_water", null)){
-        coast_water = 1;
-        if(!position_meeting(x, y, Floor)){
-            if(object_index == SmallExplosion) s++;
-            else e++;
-        }
-    }
-    if(e > 0 || s > 0){
-        var _vol = 0.5;
-        if(e > 0) sound_play_pitchvol(sndOasisExplosion, 1, e * _vol);
-        if(s > 0) sound_play_pitchvol(sndOasisExplosion, 1, s * _vol);
-    }
-
-     // Watery Melting Scorch Marks:
-    with(instances_matching(MeltSplat, "coast_water", null)){
-        coast_water = 1;
-        if(!position_meeting(x, y, Floor)){
-            sound_play(sndOasisExplosionSmall);
-            repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
-                if(chance(1, 6)) scrWaterStreak(x, y, random(360), 4);
-                else instance_create(x, y, Sweat);
-            }
-            instance_destroy();
-        }
-    }
-
-	 // Ultra Bolt Fix Pt.2:
-    with(instances_matching(Floor, "name", "UltraBoltCoastFix")) instance_destroy();
+		 // Ultra Bolt Fix Pt.2:
+	    with(instances_matching(Floor, "name", "UltraBoltCoastFix")) instance_destroy();
+	}
 
 	if(DebugLag) trace_time("coast_area_end_step");
 
@@ -1217,7 +1191,7 @@
             }
 
 			 // Rock Decals:
-			with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
+			with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
 			with(instances_matching(instances_matching(Floor, "name", "CoastDecalCorpse"), "visible", false)){
@@ -1258,7 +1232,7 @@
 	}
 
 	 // Submerged Rock Decals:
-	with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastDecalBig"), "visible", true)){
+	with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
 		var _hurt = (nexthurt > current_frame + 3);
 		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
@@ -1304,110 +1278,46 @@
         }
 	}
 
-     // Stuff w/ Level Over:
-    if(!instance_exists(Portal)){
-	    if(flash > 0 || ((instance_number(enemy) - instance_number(Van) <= 0) && !instance_exists(becomenemy))){
-	    	 // Rogu:
-	    	if(flash > 15 && !heat){
-	    		heat = true;
-	    		if(!instance_exists(WantPopo)){
-		    		for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-		    			instance_create(x, y, WantPopo);
-		    		}
-	    		}
-	    	}
+     // Flash Sea w/ Level Over:
+    if(instance_exists(Portal)){
+        var _flashInt = 300, // Flash every X frames
+            _flashDur = 30,  // Flash lasts X frames
+            _max = ((flash <= _flashDur) ? 0.3 : 0.15); // Max flash alpha
 
-			 // Setup Portal Indicator:
-			var _x = indicate_x,
-				_y = indicate_y;
-	
-			if(_x < 0 || _y < 0){
-				with(Player){
-					_x = x;
-					_y = y;
-				}
+        draw_set_color(c_white);
+        draw_set_alpha(_max * (1 - ((flash % _flashInt) / _flashDur)));
+        draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
+        draw_set_alpha(1);
 
-				var _cx = _x,
-					_cy = _y,
-					_tries = 100,
-					_moveDis = 8,
-					_moveDir = 0;
-	
-				with(Floor){
-					_moveDir += point_direction((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, _x, _y);
-				}
-				_moveDir /= instance_number(Floor);
-	
-				while(_tries-- > 0){
-					var n = instance_nearest(_x - 16, _y - 16, Floor);
-					if(instance_exists(n)){
-						_cx = (n.bbox_left + n.bbox_right) / 2;
-						_cy = (n.bbox_top + n.bbox_bottom) / 2;
-	
-						if(point_distance(_cx, _cy, _x, _y) < 160){
-							_x += lengthdir_x(_moveDis, _moveDir);
-							_y += lengthdir_y(_moveDis, _moveDir);
-						}
-	
-						 // End:
-						else{
-							indicate_x = _x;
-							indicate_y = _y;
-							break;
-						}
-					}
-				}
+        if((flash % _flashInt) < current_time_scale){
+             // Sound:
+            sound_play_pitchvol(sndOasisHorn, 0.5, 2);
+            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
+    
+             // Effects:
+            for(var i = 0; i < maxp; i++) view_shake[i] += 8;
+            with(Floor) if(chance(1, 5)){
+                for(var d = 0; d < 360; d += 45){
+                    var _x = x + lengthdir_x(32, d),
+                        _y = y + lengthdir_y(32, d);
+    
+                    if(!position_meeting(_x, _y, Floor)){
+                        repeat(irandom_range(3, 6)){
+                            if(chance(1, 6 + instance_number(AcidStreak))){
+                                sound_play_hit(sndOasisCrabAttack, 0.2);
+                                scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
+                            }
+                            else instance_create(_x + random(32), _y + random(32), Sweat);
+                        }
+                    }
+                }
+            }
+			with(Portal){
+				repeat(3) scrFX(x, y, 3, Dust);
 			}
-	
-			 // Flash Sea:
-	        var _flashInt = 300, // Flash every X frames
-	            _flashDur = 30,  // Flash lasts X frames
-	            _max = ((flash <= _flashDur) ? 0.3 : 0.15); // Max flash alpha
-	
-	        draw_set_color(c_white);
-	        draw_set_alpha(_max * (1 - ((flash % _flashInt) / _flashDur)));
-	        draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
-	        draw_set_alpha(1);
-	
-	        if((flash % _flashInt) < current_time_scale){
-	             // Sound:
-	            sound_play_pitchvol(sndOasisHorn, 0.5, 2);
-	            sound_play_pitchvol(sndOasisExplosion, 1 + random(1), ((flash <= 0) ? 1 : 0.4));
-	    
-	             // Effects:
-	            for(var i = 0; i < maxp; i++) view_shake[i] += 8;
-	            with(Floor) if(chance(1, 5)){
-	                for(var d = 0; d < 360; d += 45){
-	                    var _x = x + lengthdir_x(32, d),
-	                        _y = y + lengthdir_y(32, d);
-	    
-	                    if(!position_meeting(_x, _y, Floor)){
-	                        repeat(irandom_range(3, 6)){
-	                            if(chance(1, 6 + instance_number(AcidStreak))){
-	                                sound_play_hit(sndOasisCrabAttack, 0.2);
-	                                scrWaterStreak(_x + 16 + orandom(8), _y + 16 + orandom(8), d + random_range(-20, 20), 4);
-	                            }
-	                            else instance_create(_x + random(32), _y + random(32), Sweat);
-	                        }
-	                    }
-	                }
-	            }
-				repeat(3) scrFX(indicate_x, indicate_y, 3, Dust);
-	        }
-	        flash += current_time_scale;
-	    }
-	}
-	else if(instance_exists(WantPopo) || instance_exists(IDPDSpawn)){
-		if(heat == true){
-			heat = 2;
-	    	with(IDPDSpawn){
-	    		if(elite) sound_stop(sndEliteIDPDPortalSpawn);
-	    		else sound_stop(sndIDPDPortalSpawn);
-	    		instance_destroy();
-	    	}
-		}
-		else if(!heat) heat = true;
-	}
+        }
+        flash += current_time_scale;
+    }
 
     if(DebugLag) trace_time("darksea_draw");
 
@@ -1480,7 +1390,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -1505,13 +1414,13 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -1536,3 +1445,14 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

@@ -13,7 +13,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro DebugLag global.debug_lag
 
@@ -23,7 +22,7 @@
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
-		spr_open = spr.BackpackOpen;
+		spr_dead = spr.BackpackOpen;
 		sprite_index = spr.Backpack;
 		spr_shadow_y = 2;
 		spr_shadow = shd16;
@@ -44,7 +43,7 @@
 
 		 // Cursed:
 		if(curse){
-			spr_open = spr.BackpackCursedOpen;
+			spr_dead = spr.BackpackCursedOpen;
 			sprite_index = spr.BackpackCursed;
 		}
 
@@ -217,7 +216,7 @@
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.BatChest;
-		spr_open = spr.BatChestOpen;
+		spr_dead = spr.BatChestOpen;
 		
 		 // Sound:
 		snd_open = sndWeaponChest;
@@ -249,12 +248,12 @@
 	 // Manually Create ChestOpen to Link Shops:
 	var _open = instance_create(x, y, ChestOpen);
 	with(_open){
-		sprite_index = other.spr_open;
+		sprite_index = other.spr_dead;
 		if(other.curse){
 			image_blend = merge_color(image_blend, c_purple, 0.6);
 		}
 	}
-	spr_open = -1;
+	spr_dead = -1;
 
 	 // Create Weapon Shops:
 	var o = 50,
@@ -378,7 +377,7 @@
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.CatChest;
-		spr_open = spr.CatChestOpen;
+		spr_dead = spr.CatChestOpen;
 		
 		 // Sound:
 		snd_open = sndAmmoChest;
@@ -393,8 +392,8 @@
 
 	 // Manually Create ChestOpen to Link Shops:
 	var _open = instance_create(x, y, ChestOpen);
-	_open.sprite_index = spr_open;
-	spr_open = -1;
+	_open.sprite_index = spr_dead;
+	spr_dead = -1;
 
 	 // Create Shops:
 	var o = 50,
@@ -558,7 +557,7 @@
 								break;
 
 							case "rads":
-								scrRadDrop(_x, _y, 25, random(360), 4);
+								rad_drop(_x, _y, 25, random(360), 4);
 								with(creator) depth++; depth--;
 								break;
 
@@ -819,14 +818,14 @@
 			break;
 	}
 
-	scrPickupIndicator(text + "#@s" + desc);
+	pickup_indicator = scrPickupIndicator(text + "#@s" + desc);
 
 
 #define CursedAmmoChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = sprAmmoChest;
-		spr_open = sprAmmoChestOpen;
+		spr_dead = sprAmmoChestOpen;
 		image_blend = merge_color(c_white, c_purple, 0.7);
 
 		 // Sound:
@@ -863,7 +862,7 @@
     with(instance_create(_x, _y, chestprop)){
          // Visual:
         sprite_index = sprAmmoChest;
-        spr_open = sprAmmoChestOpen;
+        spr_dead = sprAmmoChestOpen;
 
          // Sound:
         snd_open = sndAmmoChest;
@@ -903,8 +902,8 @@
             }
 
              // Effects:
-            if(sprite_exists(spr_open)){
-            	with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_open;
+            if(sprite_exists(spr_dead)){
+            	with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_dead;
             }
             instance_create(x, y, FXChestOpen);
             sound_play(snd_open);
@@ -1137,7 +1136,7 @@
 		mask_index = mskPickup;
 		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd = 4;
-		pull_delay = 15;
+		pull_delay = 9;
 		num = (2 * (1 + _skill)) + (crown_current == crwn_haste);
 		wave = random(90);
 		
@@ -1199,7 +1198,7 @@
 		mask_index = mskPickup;
 		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd = 4;
-		pull_delay = 15;
+		pull_delay = 9;
 		num = 24 + (crown_current == crwn_haste);
 		wave = random(90);
 
@@ -1277,6 +1276,59 @@
 	}
 
 
+#define Pizza_create(_x, _y)
+    with(instance_create(_x, _y, HPPickup)){
+        sprite_index = sprSlice;
+        num = ceil(num / 2);
+        return id;
+    }
+
+
+#define PizzaChest_create(_x, _y)
+	with(instance_create(_x, _y, HealthChest)){
+        sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
+        spr_dead = sprPizzaChestOpen;
+        num = ceil(num / 2);
+        return id;
+	}
+
+
+#define PizzaStack_create(_x, _y)
+    with(instance_create(_x, _y, CustomProp)){
+         // Visual:
+        spr_idle = sprPizzaBox;
+        spr_hurt = sprPizzaBoxHurt;
+        spr_dead = sprPizzaBoxDead;
+
+         // Sound:
+        snd_hurt = sndHitPlant;
+        snd_dead = sndPizzaBoxBreak;
+
+         // Vars:
+        maxhealth = 4;
+        size = 1;
+        num = choose(1, 2);
+
+	     // Big luck:
+	    if(chance(1, 10)) num = 4;
+
+        return id;
+    }
+
+#define PizzaStack_death
+     // Big:
+    if(num >= 4){
+        sound_play_pitch(snd_dead, 0.6);
+        snd_dead = -1;
+    }
+
+     // +Yum
+    repeat(num){
+    	obj_create(x + orandom(2 * num), y + orandom(2 * num), "Pizza");
+    	instance_create(x + orandom(4), y + orandom(4), Dust);
+    }
+
+
 #define SpiritPickup_create(_x, _y)
     with(obj_create(_x, _y, "CustomPickup")){
          // Visual:
@@ -1340,7 +1392,7 @@
 #define SunkenChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
-		spr_open = spr.SunkenChestOpen;
+		spr_dead = spr.SunkenChestOpen;
 		sprite_index = spr.SunkenChest;
 		
 		 // Sounds:
@@ -1419,7 +1471,7 @@
     if(DebugLag) trace_time();
     
      // Bonus Pickups:
-    with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")){
+    with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")) if(visible){
         draw_circle(x, y, 48 + random(2), false);
     }
     
@@ -1431,7 +1483,7 @@
     if(DebugLag) trace_time();
     
      // Bonus Pickups:
-    with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")){
+    with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")) if(visible){
         draw_circle(x, y, 16 + random(2), false);
     }
     
@@ -1468,7 +1520,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -1493,13 +1544,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -1524,3 +1575,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

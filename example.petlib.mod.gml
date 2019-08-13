@@ -15,35 +15,44 @@
         the proper arguments (see this mod's step event) and you're all done!
         
     USEFUL VARIABLES:
-        spr_idle    = The pet's idle sprite.
-        spr_walk    = The pet's walk sprite.
-        spr_hurt    = The pet's "dodge" sprite.
-        right       = Tracks if the pet is facing right.
-        pet         = The pet's name.
-        leader      = The current leader.
-        can_take    = Determines if a player can take the pet. Set to false when a leader exists.
-        can_path    = Determines if the pet can pathfind to its leader.
-        path        = An array of points leading the pet to its leader.
-        path_dir    = The direction to the next point on the path.
-        walk        = Time in frames until the pet will stop walking.
-        walkspd     = Walking acceleration.
-        maxspeed    = Maximum walking speed.
-        player_push = Determines if the pet can push the player.
-        alarm0      = Time in frames until the pet's _alrm0 script will be run again.
+        pet             = The pet's name. Mainly controls the event names that NTTE looks for.
+        spr_idle        = The pet's idle sprite.
+        spr_walk        = The pet's walk sprite.
+        spr_hurt        = The pet's hurt OR dodge sprite.
+        spr_dead        = The pet's death sprite, only used if the pet takes damage.
+        right           = Determines if the pet is facing left(-1) or right(1).
+        leader          = The current leader (Player ID).
+        can_take        = Determines if a player can take the pet. Set to false when a leader exists.
+        can_path        = Determines if the pet can attempt to pathfind to their leader.
+        path            = An array of points leading the pet to its leader.
+        path_dir        = The direction to reach the next point on the path.
+        path_wall       = An array of objects that the pet pathfinds around (Default - [Wall, InvisiWall]).
+        maxhealth       = The pet's max HP, set this if you want the pet to take damage.
+        walk            = Time in frames that the pet can move.
+        walkspd         = Walking acceleration.
+        maxspeed        = Maximum walking speed.
+        light           = Determines if NTTE should draw the pet's light on dark levels.
+        light_radius    = A 2 element array representing the pet's light radius. [Inner, Outer]
+        push            = How much the pet gets pushed around by the player/other pets.
+        alarm0          = Time in frames until the pet's _alrm0 script will be run again.
         
     SCRIPTS:
-        (any script can be left undefined if you feel the need)
+        (any script can be left undefined to use default pet behavior)
         
-        <Name>_create - Run once when the pet is created. Use it to set sprites and
-            important variables.
-        <Name>_step - The pet's step event. Run every frame.
-        <Name>_anim - Run every frame. Handles animations. Leave this alone
-            unless you want to give your pet more animations.
-        <Name>_draw - The pet's draw event. Run every frame.
-        <Name>_hurt - Run on collision with enemy bullets.
-        <Name>_alrm0 - Run when alarm0 reaches 0. Handles movement patterns and
-            behavior. Arguments _leaderDir and _leaderDis represent the distance
-            and direction to the pet's leader, respectively.
+        <Name>_create - Runs once when the pet is created.
+            Set sprites and important variables in here.
+        <Name>_anim - Runs every frame. Handles animations.
+            Leave this alone unless you want to change how the pet sets its sprites.
+        <Name>_step - Runs every frame. The pet's step event.
+        <Name>_draw - Runs every frame. The pet's draw event.
+            Called with all 9 arguments of draw_sprite_ext().
+        <Name>_alrm0 - Runs when the alarm0 timer reaches 0.
+            Handles main movement patterns and behavior.
+            Arguments: (Direction to leader, Distance to leader)
+        <Name>_hurt - Runs when the pet comes in contact with damage.
+            Leave this alone unless you want to change how the pet dodges/takes damage.
+            Arguments: (Damage, Knockback amount, Knockback direction)
+        <Name>_death - Runs on pet death, only used if the pet takes damage.
     
     SPRITES:
         If you're worried about consistency, the effect on the first frame of the pet
@@ -52,11 +61,14 @@
     */
     
 #define step
-    if(!instance_exists(GenCont)) with(instances_matching(RadChest, "has_baby", undefined)){
-        has_baby = true;
-        
-         // Here he comes:
-        mod_script_call("mod", "telib", "Pet_spawn", x, y, "Baby");
+     // Spawn Pet:
+    if(!instance_exists(GenCont)){
+        with(instances_matching(RadChest, "has_baby", undefined)){
+            has_baby = true;
+            
+             // Here he comes:
+            Pet_spawn(x, y, "Baby");
+        }
     }
 
 #define Baby_create(_x, _y)
@@ -64,6 +76,8 @@
     spr_idle = global.sprBabyIdle;
     spr_walk = global.sprBabyWalk;
     spr_hurt = global.sprBabyHurt;
+    spr_shadow = shd16;
+    spr_shadow_y = 5;
     
      // Vars:
     walkspd = 0.8;
@@ -75,17 +89,17 @@
         instance_create(x, y, Sweat);
     }
 
-#define Baby_hurt
-     // Hurt Sprite:
+#define Baby_hurt(_hitdmg, _hitvel, _hitdir)
+     // Hurt/Dodge Sprite:
     sprite_index = spr_hurt;
     image_index = 0;
-    
+
      // Effects:
     instance_create(x, y, Dust);
-    motion_set(random(360), 3);
+    motion_set(_hitdir, _hitvel);
     
-#define Baby_draw
-    draw_sprite_ext(sprite_index, image_index, x, y, (image_xscale * right), image_yscale, image_angle, image_blend, image_alpha);
+#define Baby_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+    draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
     
 #define Baby_alrm0(_leaderDir, _leaderDis)
     alarm0 = 30 + random(30);
@@ -98,7 +112,7 @@
          // Follow Leader:
         if(_leaderDis > 64 || collision_line(x, y, leader.x, leader.y, Wall, false, false)){
              // Pathfinding:
-            if(array_length(path) > 0){
+            if(path_dir != null){
                 direction = path_dir;
                 walk = 5 + random(5);
             }
@@ -108,7 +122,7 @@
                 direction = _leaderDir;
                 walk = 20 + random(20);
                 /*
-                Walking is handled automatically bt NTTE's systems, so all you
+                Walking is handled automatically by NTTE's systems, so all you
                 need to do is set walk to a positive number and set
                 direction to where you want them to go.
                 */
@@ -143,3 +157,9 @@
     _dir = (_dir + 360) mod 360;
     if(_dir < 90 || _dir > 270) right = 1;
     if(_dir > 90 && _dir < 270) right = -1;
+
+#define Pet_spawn(_x, _y, _pet)
+    /*
+    Use this to spawn your pet into the level
+    */
+    return mod_script_call("mod", "telib", "Pet_spawn", _x, _y, _pet);

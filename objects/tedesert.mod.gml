@@ -11,7 +11,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro DebugLag global.debug_lag
 
@@ -356,8 +355,8 @@
 			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), (_loop ? FiredMaggot : Maggot))){
 				x = xstart;
 				y = ystart;
+				kills = 1; // Fix FiredMaggot
 				creator = other;
-				raddrop = chance(1, 3);
 
 				 // Effects:
 				for(var i = 0; i <= (4 * _loop); i += 2){
@@ -508,8 +507,8 @@
 
 #define Bone_hit
      // Secret:
-    if(other.object_index = ScrapBoss) {
-        with(other) {
+    if(other.object_index = ScrapBoss){
+        with(other){
             var c = scrCharm(self, true);
             c.time = 300;
         }
@@ -521,13 +520,8 @@
     projectile_hit_push(other, damage, speed * force);
     if(!instance_exists(self)) exit;
 
-     // Bounce Off Enemy:
-    direction = point_direction(other.x, other.y, x, y);
-    speed /= 2;
-    rotspeed *= -1;
-
      // Sound:
-    sound_play_pitchvol(sndBloodGamble, 1.2 + random(0.2), 0.8);
+    sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 1.5);
 
      // Break:
     var i = nearest_instance(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"));
@@ -552,7 +546,7 @@
 
      // Darn:
     if(broken){
-    	sound_play_pitch(sndHitRock, 1.4 + random(0.2));
+    	sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2);
     	
     	var p = false;
     	with(["wep", "bwep"]){
@@ -633,7 +627,10 @@
         size = 2;
         part = 0;
         team = 0;
-        pickup_indicator = noone;
+        
+         // Easter:
+        pickup_indicator = scrPickupIndicator("DONATE");
+        with(pickup_indicator) on_meet = script_ref_create(CoastBossBecome_PickupIndicator_meet);
 
 		 // Part Bonus:
 		if(variable_instance_get(GameCont, "visited_coast", false)){
@@ -648,37 +645,22 @@
     speed = 0;
     x = xstart;
     y = ystart;
-    
-	 // Boneman Feature:
-	var _canpick = [];
-	with(instances_matching(Player, "race", "skeleton")) array_push(_canpick, index);
-	if(array_length(_canpick) > 0){
-		if(!instance_exists(pickup_indicator)){
-			scrPickupIndicator("DONATE");
-		}
-
-		 // Feed:
-		else with(player_find(pickup_indicator.pick)){
-			projectile_hit(id, 1);
-			lasthit = [sprBone, "GENEROSITY"];
-
-			with(other){
-				with(obj_create(x, y, "Bone")){
-					projectile_hit(other, damage);
-				}
-			}
-		}
-
-		with(pickup_indicator) whitelist = _canpick;
-	}
-	else with(pickup_indicator){
-		instance_destroy();
-	}
 
      // Animate:
     image_index = part;
     if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
     else sprite_index = spr_idle;
+
+	 // Boneman Feature:
+	var _pickup = pickup_indicator;
+	if(instance_exists(_pickup)) with(player_find(_pickup.pick)){
+		projectile_hit(id, 1);
+		lasthit = [sprBone, "GENEROSITY"];
+
+		with(other) with(obj_create(x, y, "Bone")){
+			projectile_hit(other, damage);
+		}
+	}
 
      // Rebuilding Skeleton:
 	if(part > 0){
@@ -706,13 +688,12 @@
 	        scrPortalPoof();
 	
 	        instance_delete(id);
+	        exit;
 	    }
 	}
 
      // Death:
-    if(instance_exists(self) && my_health <= 0){
-    	instance_destroy();
-    }
+    if(my_health <= 0) instance_destroy();
 
 #define CoastBossBecome_hurt(_hitdmg, _hitvel, _hitdir)
     my_health -= _hitdmg;			// Damage
@@ -758,6 +739,10 @@
     else for(var a = direction; a < direction + 360; a += (360 / 10)){
         with(instance_create(x, y, Dust)) motion_add(a, 3);
     }
+
+#define CoastBossBecome_PickupIndicator_meet
+	if(other.race == "skeleton") return true;
+	return false;
 
 
 #define CoastBoss_create(_x, _y)
@@ -812,6 +797,7 @@
 		direction = gunangle;
 		canfly = true;
 		intro = false;
+		tauntdelay = 40;
 		swim_ang_frnt = direction;
 		swim_ang_back = direction;
 		shot_wave = 0;
@@ -1061,6 +1047,14 @@
                     motion_add(_dir, 3);
                 }
             }
+        }
+    }
+
+     // Death Taunt:
+    if(tauntdelay > 0 && !instance_exists(Player)){
+        tauntdelay -= current_time_scale;
+        if(tauntdelay <= 0){
+            sound_play_pitch(sndOasisBossHalfHP, 0.8);
         }
     }
 
@@ -1382,133 +1376,123 @@
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
         sprite_index = spr.VenomFlak;
-        mask_index = mskFlakBullet;
+        mask_index = mskSuperFlakBullet;
         image_speed = 0.4;
         depth = -3;
 
          // Vars:
         damage = 2;
         force = 2;
-        my_charge = 0;
-        maxcharge = 36;
-        charged = false;
-            
+        charge = true;
+        charge_goal = 1;
+        charge_speed = 1/30;
+        image_xscale = 0.2;
+        image_yscale = 0.2;
+
         return id;
     }
     
 #define PetVenom_step
-    var _c = (my_charge / maxcharge);
-    if(!charged){
-        if(my_charge < maxcharge){
-            if(instance_exists(creator) && creator.my_health > 0){
-                if(instance_exists(target) && in_sight(target)) direction = point_direction(x, y, target.x, target.y);
-                else target = instance_nearest(x, y, enemy);
-                
-                 // Move:
-                my_charge += current_time_scale;
-                x = creator.x + lengthdir_x(10, direction) + creator.hspeed;
-                y = creator.y + lengthdir_y(6, direction) + creator.vspeed;
-                xprevious = x;
-                yprevious = y;
-                
-                 // Visuals:
-                depth = -3 + (direction < 180);
-                image_angle = direction;
-                
-                 // Creator things:
-                with(creator){
-                    scrRight(other.direction);
-                     // Keep firing:
-                    if(sprite_index != spr_fire && sprite_index != spr_hurt){
-                        sprite_index = spr_fire;
-                        image_index = 0;
+	 // Charge:
+    if(charge){
+        if(
+        	image_xscale < charge_goal	&&
+        	image_yscale < charge_goal	&&
+        	instance_exists(creator)	&&
+        	creator.visible
+        ){
+            image_xscale += charge_speed * current_time_scale;
+            image_yscale += charge_speed * current_time_scale;
+
+             // Effects:
+            sound_play_hit_ext(sndScorpionFire, 0.5 + (1.5 * (image_xscale / charge_goal)), 1.5);
+            if(chance_ct(1, 4)){
+                var l = random(sprite_width),
+                	d = random(360);
+
+                with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), AcidStreak)){
+                    motion_set(d + 180, 2);
+                    image_angle = direction;
+                    image_xscale = 0.8;
+                    image_yscale = 0.8;
+
+					 // Variance:
+                    if(chance(1, 2)){
+                    	sprite_index = spr.AcidPuff;
+                    	depth = other.depth - 1;
+                    	image_angle += 180;
                     }
+                    else depth = other.depth + 1;
+
+					 // Follow Creator:
+                    hspeed += other.creator.hspeed;
+                    vspeed += other.creator.vspeed;
                 }
-                
-                 // Effects:
-                if(random(4) < current_frame_active){
-                    var _d = irandom(359),
-                        _s = (_c * 0.8) * 0.2
-                    with(instance_create(x - lengthdir_x(24 + (4 * _s), _d), y - lengthdir_y(24 + (4 * _s), _d), AcidStreak)){
-                        motion_set(_d, 2);
-                        image_angle = direction;
-                        depth = other.depth + 1;
-                        image_xscale = 0.8;
-                        image_yscale = 0.8;
-                    }
-                }
-                
-                 // Reach full charge:
-                if(my_charge >= maxcharge){
-                    charged = true;
-                }
-            }
-            
-            else{
-                instance_destroy();
             }
         }
+        else charge = false;
     }
+
+     // Release:
     else{
-        my_charge -= current_time_scale * (maxcharge / 7);
-         
-        if(my_charge <= 0){
-            instance_destroy();
-        }
+        image_xscale -= (charge_goal / 7) * current_time_scale;
+        image_yscale -= (charge_goal / 7) * current_time_scale;
+        if(image_xscale <= 0.2) instance_destroy();
     }
-    
+
+#define PetVenom_end_step
+     // Follow Papa:
+    if(instance_exists(creator)){
+    	x = creator.x + lengthdir_x(10, direction);
+    	y = creator.y + lengthdir_y( 6, direction);
+        xprevious = x;
+        yprevious = y;
+    }
+
 #define PetVenom_hit
     if(projectile_canhit_melee(other)){
         projectile_hit(other, damage, force, direction);
         sleep(20);
     }
-    
-#define PetVenom_draw
-    var scale = 0.2 + ((my_charge / maxcharge) * 0.8);
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale, image_yscale * scale, image_angle, image_blend, image_alpha);
-    
-#define PetVenom_destroy
-    var dir = direction,
-        _lv = GameCont.level;
-    if(instance_exists(creator) && creator.my_health > 0) with(creator){
-        sleep(10);
-        view_shake_max_at(x, y, 10 + _lv * 2);
-        
-         // Fire:
-        for(var i = -1; i <= 1; i++){
-             // Middle shot:
-            if(i == 0){
-                repeat(6 + irandom(4) + (2 * _lv)) scrEnemyShoot(EnemyBullet2, dir + orandom(12), 8 + random(6)).force = 12;
-            }
-            
-             // Side shots:
-            else{
-                repeat(4 + irandom(4) + (2 * _lv)) scrEnemyShoot("VenomPellet", dir + (45 * i) + orandom(16) + (i * irandom(6 * _lv)), 4 + random(10));
-            }
-            
-             // Effects:
-            with(instance_create(x, y, AcidStreak)){
-                motion_set(dir + (45 * i), 4);
-                image_angle = direction;
-                image_xscale = 1.6;
-                image_yscale = 1.0;
-            }
-        }
-        
-         // Sounds:
-        sound_play_pitchvol(sndFlyFire,            1.0 + random(0.4),  1.0);
-        sound_play_pitchvol(sndGoldScorpionFire,   1.6 + random(0.4),  0.8);
-    }
-    else{
-        instance_create(x, y, BulletHit).sprite_index = sprScorpionBulletHit;
-    }
-    
+
 #define PetVenom_wall
-    if(instance_exists(creator)) with(creator){
-        if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-        if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-        scrRight(direction);
+	//
+
+#define PetVenom_destroy
+    var _dir = direction,
+        _lvl = GameCont.level;
+
+    sleep(10);
+    view_shake_max_at(x, y, 10 + (2 * _lvl));
+
+     // Fire:
+    for(var i = -1; i <= 1; i++){
+        repeat(irandom_range(4, 8) + (2 * (i == 0)) + (2 * _lvl)){
+	         // Main Shot:
+	        if(i == 0){
+	        	with(scrEnemyShoot(EnemyBullet2, _dir + orandom(12), 8 + random(6))){
+	        		force = 12;
+	        	}
+	        }
+	        
+	         // Side Shots:
+	        else{
+	            scrEnemyShoot("VenomPellet", _dir + (45 * i) + orandom(16) + (i * random(6 * _lvl)), 4 + random(10));
+	        }
+        }
+
+         // Effects:
+        with(instance_create(x, y, AcidStreak)){
+            motion_set(_dir + (45 * i), 4);
+            image_angle = direction;
+            image_xscale = 1.6;
+            image_yscale = 1.0;
+        }
     }
+
+     // Sounds:
+    sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 1);
+    sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 1);
 
 
 #define ScorpionRock_create(_x, _y)
@@ -1528,20 +1512,23 @@
         maxhealth = 32;
         size = 1;
         team = 1;
+        setup = true;
         friendly = false;
-        
-        if(fork()){
-        	wait 0;
-        	if(instance_exists(self) && friendly){
-        		spr_idle = spr.ScorpionRockFriend;
-        	}
-        	exit;
-        }
 
         return id;    
     }
-    
+
+#define ScorpionRock_setup
+	setup = false;
+
+	if(friendly){
+		spr_idle = spr.ScorpionRockFriend;
+		sprite_index = spr_idle;
+	}
+
 #define ScorpionRock_step
+	if(setup) ScorpionRock_setup();
+
      // Slow Animation:
     if(sprite_index == spr_idle){
     	var _img = image_index - image_speed,
@@ -1556,7 +1543,7 @@
             }
         }
 
-        image_index -= image_speed * _fac * current_time_scale;
+        image_index -= image_speed_raw * _fac;
     }
     
 #define ScorpionRock_death
@@ -1587,9 +1574,8 @@
 	if(DebugLag) trace_time();
 
 	 // Scorp Pet Attack:
-    with(instances_matching(CustomProjectile, "name", "PetVenom")){
-	    var scale = 0.2 + ((my_charge / maxcharge) * 0.8);
-	    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * scale * 2, image_yscale * scale * 2, image_angle, image_blend, image_alpha * 0.2);
+    with(instances_matching(CustomProjectile, "name", "PetVenom")) if(visible){
+	    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
     }
 
 	if(DebugLag) trace_time("tedesert_draw_bloom");
@@ -1641,7 +1627,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -1666,13 +1651,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -1697,3 +1682,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

@@ -15,8 +15,8 @@
      // Mods:
     global.list = [ // [mod, delay]
         ["teassets.mod.gml",                        5 + _coop],
-        ["ntte.mod.gml",                            1 + _coop],
         ["telib.mod.gml",                           1 + _coop],
+        ["ntte.mod.gml",                            1 + _coop],
         ["petlib.mod.gml",                          1 + _coop],
         ["objects/tegeneral.mod.gml",               1 + _coop],
         ["objects/tepickups.mod.gml",               0 + _coop],

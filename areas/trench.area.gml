@@ -64,7 +64,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro DebugLag global.debug_lag
 
@@ -85,6 +84,7 @@
 #define area_shadow_color       return c_black;
 #define area_darkness           return true;
 #define area_secret             return true;
+#define area_underwater			return true;
 
 #define area_name(_subarea, _loop)
     return "@1(sprInterfaceIcons)3-" + string(_subarea);
@@ -156,9 +156,6 @@
     background_color = area_background_color();
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
-
-	 // Enable Oasis Sounds:
-    mod_script_call("mod", "ntte", "underwater_sound", true);
 
 #define area_setup_floor(_explo)
     if(!_explo){
@@ -268,11 +265,6 @@
     else subarea++;
 
 #define area_transit
-	 // Disable Underwater Sounds:
-    if(GameCont.area != mod_current && GameCont.area != 100){
-    	mod_script_call("mod", "ntte", "underwater_sound", false);
-    }
-
 	 // Disable Surfaces:
 	with([surfPit, surfPitWallBot, surfPitWallTop]) active = false;
 	with(surfSpark) active = false;
@@ -282,9 +274,6 @@
 
 #define area_step
     if(DebugLag) trace_time();
-
-     // Run underwater code
-    mod_script_call("mod", "ntte", "underwater_step");
 
      // Update Pit Grid:
     with(instances_matching_ne(instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", false)){
@@ -305,8 +294,8 @@
     }
 
      // Fix scorchmarks showing above pits:
-    with(instances_matching([Scorch, ScorchTop], "trench_fix", null)){
-        trench_fix = true;
+    with(instances_matching([Scorch, ScorchTop], "trenchpit_check", null)){
+        trenchpit_check = true;
 
         var	_kill = true,
         	l = 12;
@@ -398,7 +387,7 @@
 
      // Pet Bubbles:
     if(chance(1, 4)){
-        with instances_matching(CustomObject, "name", "Pet") instance_create(x, y, Bubble);
+        with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
     }
 
      // Floor Bubbles:
@@ -795,7 +784,7 @@
 				}
 
 				 // Octo pet:
-				with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "Pet"), "pet", "Octo"), "hiding", true)){
+				with(instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "hiding", true)){
 					draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, visible);
 				}
 
@@ -882,7 +871,7 @@
     }
 
 	 // Reset Pit Sink Checks:
-	with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse], "trenchpit_check", null)){
+	with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse, Scorch, ScorchTop], "trenchpit_check", null)){
 	    trenchpit_check = null;
 	}
 
@@ -917,7 +906,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -942,13 +930,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -973,3 +961,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

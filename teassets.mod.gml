@@ -62,8 +62,8 @@
 	        BatLightningHit = sprite("weps/projectiles/sprBatLightningHit", 4, 12, 12);
 
 	         // Bone:
-	        Bone			   = sprite(m + "sprBone",           1,  6,  6);
-	        BoneShard		   = sprite(p + "sprBoneShard",      1,  3,  2, shnWep);
+	        Bone	  = sprite(m + "sprBone",      1, 6, 6);
+	        BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 
 	         // Bone 2:
 	        BoneSlashLight	   = sprite(p + "sprBoneSlashLight", 3, 16, 16);
@@ -76,12 +76,13 @@
 			}
 
 	         // Bubble Bombs:
-	    	BubbleBomb      = sprite("weps/projectiles/sprBubbleBomb",   		30, 12, 12);
-	    	BubbleBombEnemy = sprite("enemies/CoastBoss/sprBubbleBombEnemy",	30, 12, 12);
-	    	BubbleExplode   = sprite("weps/projectiles/sprBubbleExplode",		 9,	24, 24);
-	    	BubbleCharge    = sprite("weps/projectiles/sprBubbleCharge", 		12, 12, 12);
-	    	BubbleBombBig   = sprite("weps/projectiles/sprBubbleBombBig",		46, 16, 16);
-        
+	    	BubbleBomb           = sprite("weps/projectiles/sprBubbleBomb",           30, 12, 12);
+	    	BubbleBombEnemy      = sprite("enemies/CoastBoss/sprBubbleBombEnemy",     30, 12, 12);
+	    	BubbleExplosion      = sprite("weps/projectiles/sprBubbleExplosion",       9, 24, 24);
+	    	BubbleExplosionSmall = sprite("weps/projectiles/sprBubbleExplosionSmall",  7, 12, 12);
+	    	BubbleCharge         = sprite("weps/projectiles/sprBubbleCharge",         12, 12, 12);
+	    	BubbleBombBig        = sprite("weps/projectiles/sprBubbleBombBig",        46, 16, 16);
+
 	         // Electroplasma:
 	        ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
 	        ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
@@ -96,16 +97,16 @@
 	        NetNadeBlink = sprite(p + "sprNetNadeBlink", 2, 3, 3);
 
 	         // Quasar Beam:
-	        QuasarBeam      = sprite(p + "sprQuasarBeam",      2,  0, 10);
+	        QuasarBeam      = sprite(p + "sprQuasarBeam",      2,  0, 16);
 	        QuasarBeamStart = sprite(p + "sprQuasarBeamStart", 2, 32, 16);
 	        QuasarBeamEnd   = sprite(p + "sprQuasarBeamEnd",   2,  0, 16);
 	        QuasarBeamHit   = sprite(p + "sprQuasarBeamHit",   6, 24, 24);
 	        QuasarBeamTrail = sprite(p + "sprQuasarBeamTrail", 3,  4,  4);
 	        msk.QuasarBeam  = sprite(p + "mskQuasarBeam",      1, 32, 16);
-	
+
 	         // Small Green Explo:
 	        SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
-		
+
 			 // Trident:
 	    	Trident     = sprite(m + "sprTrident", 1, 11, 6, shnWep);
 	    	msk.Trident = sprite(p + "mskTrident", 1, 11, 6);
@@ -548,7 +549,11 @@
 	            PizzaDrainHurt = sprite(p + "sprPizzaDrainHurt", 3, 32, 38);
 	            PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
 	            msk.PizzaDrain = sprite(p + "mskPizzaDrain",     1, 32, 38);
-	            PizzaRubble    = sprite(p + "sprPizzaRubble",    1,  0,  0);
+	            
+	             // Rubble:
+	            PizzaRubbleIdle = sprite(p + "sprPizzaRubble",     1, 16, 0);
+	            PizzaRubbleHurt = sprite(p + "sprPizzaRubbleHurt", 3, 16, 0);
+	            msk.PizzaRubble = sprite(p + "mskPizzaRubble",     1, 16, 0);
 
 	             // TV:
 	            TVHurt = sprite(p + "sprTVHurt", 3, 24, 16);
@@ -869,12 +874,16 @@
 
              // BabyShark:
             p = m + "Oasis/";
-            PetSlaughterIdle = sprite(p + "sprPetSlaughterIdle",  4, 12, 12);
-            PetSlaughterWalk = sprite(p + "sprPetSlaughterWalk",  6, 12, 12);
-            PetSlaughterHurt = sprite(p + "sprPetSlaughterHurt",  3, 12, 12);
-            PetSlaughterDead = sprite(p + "sprPetSlaughterDead", 10, 24, 24);
-            PetSlaughterBite = sprite(p + "sprPetSlaughterBite",  6, 12, 12);
-            SlaughterBite    = sprite(p + "sprSlaughterBite",     6,  8, 12);
+            PetSlaughterIdle  = sprite(p + "sprPetSlaughterIdle",   4, 12, 12);
+            PetSlaughterWalk  = sprite(p + "sprPetSlaughterWalk",   6, 12, 12);
+            PetSlaughterHurt  = sprite(p + "sprPetSlaughterHurt",   3, 12, 12);
+            PetSlaughterDead  = sprite(p + "sprPetSlaughterDead",  10, 24, 24);
+            PetSlaughterSpwn  = sprite(p + "sprPetSlaughterSpwn",   7, 24, 24);
+            PetSlaughterBite  = sprite(p + "sprPetSlaughterBite",   6, 12, 12);
+            SlaughterBite     = sprite(p + "sprSlaughterBite",      6,  8, 12);
+            SlaughterPropIdle = sprite(p + "sprSlaughterPropIdle",  1, 12, 12);
+            SlaughterPropHurt = sprite(p + "sprSlaughterPropHurt",  3, 12, 12);
+            SlaughterPropDead = sprite(p + "sprSlaughterPropDead",  3, 12, 12);
 
              // Octopus:
             p = m + "Trench/";
@@ -906,34 +915,40 @@
      // SOUNDS //
     global.snd = {};
     with(global.snd){
+    	var m = "sounds/enemies/",
+    		p;
+
          // Palanking:
-        PalankingHurt  = sound_add("sounds/enemies/Palanking/sndPalankingHurt.ogg");
-        PalankingDead  = sound_add("sounds/enemies/Palanking/sndPalankingDead.ogg");
-        PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
-        PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
-        PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
+        p = m + "Palanking/";
+        PalankingHurt  = sound_add(p + "sndPalankingHurt.ogg");
+        PalankingDead  = sound_add(p + "sndPalankingDead.ogg");
+        PalankingCall  = sound_add(p + "sndPalankingCall.ogg");
+        PalankingSwipe = sound_add(p + "sndPalankingSwipe.ogg");
+        PalankingTaunt = sound_add(p + "sndPalankingTaunt.ogg");
         sound_volume(PalankingHurt, 0.6);
 
          // SawTrap:
-        SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
+        p = m + "SawTrap/";
+        SawTrap = sound_add(p + "sndSawTrap.ogg");
     }
 
      // MUSIC //
     global.mus = {};
     with(global.mus){
+    	var p = "music/";
         amb = {};
 
-        Placeholder = sound_add("music/musPlaceholder.ogg");
-        amb.Placeholder = sound_add("music/musPlaceholder.ogg");
+        Placeholder     = sound_add(p + "musPlaceholder.ogg");
+        amb.Placeholder = sound_add(p + "musPlaceholder.ogg");
 
          // Areas:
-        Coast   = sound_add("music/musCoast.ogg");
-        Oasis   = mus101;
-        Trench  = musBoss5;
-        Lair	= sound_add("music/musLair.ogg");
+        Coast  = sound_add(p + "musCoast.ogg");
+        Trench = musBoss5;
+        Lair   = sound_add(p + "musLair.ogg");
 
          // Bosses:
-        SealKing = sound_add("music/musSealKing.ogg");
+        SealKing = sound_add(p + "musSealKing.ogg");
+        BigShots = sound_add(p + "musBigShots.ogg");
     }
 
      // SAVE FILE //

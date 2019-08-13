@@ -16,7 +16,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro DebugLag global.debug_lag
 
@@ -1203,44 +1202,68 @@
     }
 
 
-#define BubbleExplosion_create(_x, _y, _small)
-    with(instance_create(_x, _y, (_small ? SmallExplosion : PopoExplosion))){
-        sprite_index = spr.BubbleExplode;
+#define BubbleExplosion_create(_x, _y)
+    with(instance_create(_x, _y, PopoExplosion)){
+    	 // Visual:
+        sprite_index = spr.BubbleExplosion;
+        hitid = [sprite_index, "BUBBLE EXPLOSION"];
+
+         // Vars:
         mask_index = mskExplosion;
-        hitid = [sprite_index, "BUBBLE EXPLO"];
         damage = 3;
         force = 1;
         alarm0 = -1; // No scorchmark
+        alarm1 = -1; // No CoDeath
 
-         // Small:
-        if(_small){
-            image_xscale *= 0.5; // Bad!
-            image_yscale *= 0.5; // Lazy!
-
-             // Sound:
-            sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
+         // Crown of Explosions:
+        if(crown_current == crwn_death){
+        	script_bind_end_step(BubbleExplosion_death, 0, id);
         }
 
-         // Normal:
-        else{
-             // Crown of Explosions:
-            if(GameCont.crown == crwn_death){
-                repeat(choose(2, 3)){
-                    with(obj_create(x, y, "BubbleExplosionSmall")){
-                        team = other.team;
-                    }
-                }
-            }
-
-             // Sound:
-            sound_play_pitch(sndExplosionS, 2);
-            sound_play_pitch(sndOasisExplosion, 1 + random(1));
-        }
-
-        repeat(10) instance_create(_x, _y, Bubble);
+         // FX:
+        sound_play_pitch(sndExplosionS, 2);
+        sound_play_pitch(sndOasisExplosion, 1 + random(1));
+        repeat(10) instance_create(x, y, Bubble);
 
         return id;
     }
+
+#define BubbleExplosion_death(_inst)
+	with(_inst){
+		repeat(choose(2, 3)){
+	        with(obj_create(x + orandom(9), y + orandom(9), "BubbleExplosionSmall")){
+	            team = other.team;
+	        }
+		}
+    }
+	instance_destroy();
+
+
+#define BubbleExplosionSmall_create(_x, _y)
+	with(instance_create(_x, _y, SmallExplosion)){
+		 // Visual:
+    	sprite_index = spr.BubbleExplosionSmall;
+    	hitid = [sprite_index, "SMALL BUBBLE#EXPLOSION"];
+
+		 // Vars:
+		mask_index = mskSmallExplosion;
+        damage = 3;
+        force = 1;
+
+         // FX:
+        sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
+        repeat(5) instance_create(x, y, Bubble);
+
+		return id;
+    }
+
+#define BubbleExplosionSmall_step
+	 // Projectile Kill:
+	if(place_meeting(x, y, projectile)){
+		with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0))){
+			if(place_meeting(x, y, other)) instance_destroy();
+		}
+	}
 
 
 #define FlakBall_create(_x, _y)
@@ -2191,27 +2214,30 @@
         	||
         	(!stick && stick_time < stick_time_max)
         ){
-            stick_time -= lq_defget(variable_instance_get(target, "charm", 0), "time_speed", 1) * current_time_scale;
+            stick_time -= lq_defget(variable_instance_get(target, "ntte_charm", 0), "time_speed", 1) * current_time_scale;
         }
     }
 
-    if(stick_time > 0 && instance_exists(target) && (!stick || ("charm" in target && lq_defget(target.charm, "charmed", true)))){
+    if(stick_time > 0 && instance_exists(target) && (!stick || ("ntte_charm" in target && lq_defget(target.ntte_charm, "charmed", true)))){
         if(!stick){
         	stick_list = [];
 
              // Reach Target Faster:
-            if(
-            	distance_to_object(target) > 48 &&
-            	abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
-            ){
-            	move_factor += ((distance_to_object(target) / 128) - move_factor) * 0.3 * current_time_scale;
+            if(canhold){
+	            if(
+	            	distance_to_object(target) > 48 &&
+	            	abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
+	            ){
+	            	move_factor += ((distance_to_object(target) / 128) - move_factor) * 0.3 * current_time_scale;
+	            }
+	            else{
+	            	move_factor -= move_factor * 0.8 * current_time_scale;
+	            }
+				move_factor = max(0, move_factor);
+	        	x += hspeed_raw * move_factor;
+	        	y += vspeed_raw * move_factor;
             }
-            else{
-            	move_factor -= move_factor * 0.8 * current_time_scale;
-            }
-			move_factor = max(0, move_factor);
-        	x += hspeed_raw * move_factor;
-        	y += vspeed_raw * move_factor;
+            else move_factor = 0;
 
 			 // Reaching Target:
             if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
@@ -2236,7 +2262,7 @@
                         speed = 0;
 
                          // Charm Enemy:
-                        var _wasUncharmed = ("charm" not in target || !target.charm.charmed);
+                        var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
                         with(scrCharm(target, true)){
                             index = other.index;
                             if(_wasUncharmed || time >= 0){
@@ -2337,11 +2363,11 @@
 
 	 // Sound:
     sound_play_pitchvol(sndMoneyPileBreak, 1.5 + random(1.5), random(0.4));
-    if("charm" in target){
+    if("ntte_charm" in target){
     	sound_play_pitchvol(
     		sndAssassinPretend,
     		1.5 + random(1.5),
-    		(stick_time_max / max(stick_time_max, lq_defget(target.charm, "time", 0)))
+    		(stick_time_max / max(stick_time_max, lq_defget(target.ntte_charm, "time", 0)))
     	);
     }
 
@@ -2352,42 +2378,58 @@
 
 
 #define Pet_create(_x, _y)
-    with(instance_create(_x, _y, CustomObject)){
+    with(instance_create(_x, _y, CustomHitme)){
          // Visual:
         spr_idle = spr.PetParrotIdle;
         spr_walk = spr.PetParrotWalk;
         spr_hurt = spr.PetParrotHurt;
-        spr_shadow = shd16;
+        spr_dead = mskNone;
+        spr_shadow = shd24;
         spr_shadow_x = 0;
-        spr_shadow_y = 4;
-        mask_index = mskPlayer;
-        image_speed = 0.4;
+        spr_shadow_y = -1;
+        spr_bubble = sprPlayerBubble;
+        spr_bubble_pop = sprPlayerBubblePop;
+        spr_bubble_x = 0;
+        spr_bubble_y = 0;
+    	hitid = -1;
         right = choose(1, -1);
+        image_speed = 0.4;
         depth = -2;
 
          // Sound:
-        snd_hurt = sndFrogEggHurt;
+        snd_hurt = sndAllyHurt;
+        snd_dead = sndAllyDead;
 
          // Vars:
+        mask_index = mskPlayer;
+        direction = random(360);
+        friction = 0.4;
         pet = "Parrot";
         leader = noone;
         can_take = true;
         can_path = true;
         path = [];
         path_dir = 0;
+        path_wall = [Wall, InvisiWall];
+        path_delay = 0;
+        maxhealth = 0;
+        my_health = 0;
         team = 0;
         size = 1;
+        push = 1;
+        wave = random(1000);
         walk = 0;
         walkspd = 2;
         maxspeed = 3;
-        friction = 0.4;
-        direction = random(360);
-        pickup_indicator = noone;
+        revive_delay = 0;
+        light = true;
+        light_radius = [32, 96]; // [Inner, Outer]
+        mask_store = null;
+        portal_angle = 0;
+        pickup_indicator = scrPickupIndicator("");
         my_portalguy = noone;
-        player_push = true;
-        //can_tp = true;
-        //tp_distance = 240;
-        
+    	my_corpse = noone;
+
          // Scripts:
         mod_type = "mod";
         mod_name = "petlib";
@@ -2395,15 +2437,18 @@
          // Alarms:
         alarm0 = 20 + random(10);
 
-		 // NTTE:
-		ntte_walk = false;
-
         return id;
     }
 
 #define Pet_begin_step
+	 // Reset Hitbox:
+    if(mask_index == mskNone && mask_store != null){
+    	mask_index = mask_store;
+    	mask_store = null;
+    }
+
      // Loading Screen Visual:
-    if((instance_exists(GenCont) || instance_exists(LevCont)) && instance_exists(SpiralCont)){
+    if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
     	if(!instance_exists(my_portalguy)){
     		my_portalguy = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
     		with(my_portalguy){
@@ -2428,30 +2473,44 @@
     }
 
 #define Pet_step
-    if(instance_exists(Menu)){ instance_destroy(); exit; }
+    if(instance_exists(Menu)){
+    	instance_delete(id);
+    	exit;
+    }
 
-    var _pickup = pickup_indicator;
+	 // Reset Hitbox:
+    if(mask_index == mskNone && mask_store != null){
+    	mask_index = mask_store;
+    	mask_store = null;
+    }
+
+    wave += current_time_scale;
 
     if(visible){
-	     // Movement:
-	    enemyWalk(walkspd, maxspeed);
-
 	     // Animate:
 	    var _scrt = pet + "_anim";
-	    if(mod_script_exists(mod_type, mod_name, _scrt)){
-	         // Custom Animation Event:
+	    if(mod_script_exists(mod_type, mod_name, _scrt)){ // Custom Animation Event
 	        mod_script_call(mod_type, mod_name, _scrt);
 	    }
 	    else enemySprites();
 
 	     // Push:
-		if(player_push && place_meeting(x, y, Player)){
+		if(instance_exists(leader) && place_meeting(x, y, Player)){
 		    with(instances_meeting(x, y, Player)){
 		        if(place_meeting(x, y, other) && speed > 0) with(other){
-		            motion_add_ct(point_direction(other.x, other.y, x, y), (instance_exists(leader) ? 1 : 0.6));
+		            motion_add_ct(point_direction(other.x, other.y, x, y), push);
 		        }
 		    }
 		}
+	    if(place_meeting(x, y, object_index)){
+	        with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
+	            if(place_meeting(x, y, other) && visible && (maxhealth <= 0 || my_health > 0)){
+	                var _dir = point_direction(other.x, other.y, x, y);
+	                motion_add(_dir, push);
+	                with(other) motion_add(_dir + 180, push);
+	            }
+	        }
+	    }
 
     	 // Custom Step Event:
         var _scrt = pet + "_step";
@@ -2459,86 +2518,158 @@
             mod_script_call(mod_type, mod_name, _scrt);
         }
     }
+    else walk = 0;
+
+	 // Death/Revive:
+	if(maxhealth > 0){
+	    if(my_health > 0){
+			 // Destroy Corpse:
+		    if(my_corpse != noone){
+		        with(my_corpse){
+		            repeat(4) scrFX([x, 8], [y, 8], 0, Smoke);
+		            instance_destroy();
+		        }
+		        my_corpse = noone;
+		        visible = true;
+		    }
+	    }
+	
+	     // Ded:
+	    else{
+	    	visible = false;
+	        x += (sin(current_frame / 10) / 3) * current_time_scale;
+	        y += (cos(current_frame / 10) / 3) * current_time_scale;
+
+	         // Corpse:
+	        if(my_corpse == noone){
+	            my_corpse = scrCorpse(direction, speed);
+	            motion_add(direction + orandom(20), speed * 2);
+
+				 // Truly Dead:
+	            sound_play_hit(snd_dead, 0.3);
+	            sprite_index = spr_hurt;
+	            image_index = 0;
+
+				 // Manual Drawing:
+				script_bind_draw(Pet_draw_bind, depth, id);
+
+	             // Custom Death Event:
+		        var _scrt = pet + "_death";
+		        if(mod_script_exists(mod_type, mod_name, _scrt)){
+		            mod_script_call(mod_type, mod_name, _scrt);
+		        }
+	        }
+
+	         // Revive:
+	        if(!instance_exists(my_corpse) || my_corpse.image_speed == 0){
+	        	if(place_meeting(x, y, Player)){
+		            with(instance_nearest(x, y, Player)){
+		                projectile_hit_raw(id, 1, true);
+		                lasthit = [sprHealBigFX, "LOVE"];
+		            }
+		            my_health = maxhealth;
+		            sprite_index = spr_hurt;
+		            image_index = 0;
+	
+		             // Effects:
+		            with(instance_create(x, y, HealFX)) depth = other.depth - 1;
+		            sound_play(sndHealthChestBig);
+	        	}
+	        }
+	    }
+	}
 
      // Player Owns Pet:
+    var _pickup = pickup_indicator;
     if(instance_exists(leader)){
         can_take = false;
         persistent = true;
 
-         // Teleport To Leader:
-        /*if(can_tp && point_distance(x, y, leader.x, leader.y) > tp_distance) {
-             // Decide Which Floor:
-            var f = instance_nearest(leader.x + orandom(16), leader.y + orandom(16), Floor);
-            var fx = f.x + (f.sprite_width/2);
-            var fy = f.y + (f.sprite_height/2);
-
-             // Teleport:
-            x = fx;
-            y = fy;
-
-             // Effects:
-            sound_play_pitch(sndCrystalTB, 1.40 + orandom(0.10));
-            repeat(2) instance_create(x + orandom(8), y + orandom(8), CaveSparkle);
-        }*/
-
          // Pathfind to Leader:
         var _xtarget = leader.x,
-            _ytarget = leader.y;
+            _ytarget = leader.y,
+            _targetSeen = true;
 
-        if(can_path && collision_line(x, y, _xtarget, _ytarget, Wall, false, false)){
+	    for(var i = 0; i < array_length(path_wall); i++){
+	    	var _wall = path_wall[i];
+	    	if(collision_line(x, y, _xtarget, _ytarget, _wall, false, false)){
+	    		_targetSeen = false;
+	    		break;
+	    	}
+	    }
+
+        if(can_path && !_targetSeen){
             var _pathEndX = x,
                 _pathEndY = y;
 
              // Find Path's Endpoint:
             if(array_length(path) > 0){
-                var p = path[array_length(path) - 1];
-                _pathEndX = p[0];
-                _pathEndY = p[1];
+                var e = path[array_length(path) - 1];
+                _pathEndX = e[0];
+                _pathEndY = e[1];
             }
 
              // Create path if current one doesn't reach leader:
-            if(collision_line(_pathEndX, _pathEndY, _xtarget, _ytarget, Wall, false, false)){
-                path = path_create(x, y, _xtarget, _ytarget);
-
-                 // Shrink Path:
-			    if(array_length(path) > 0){
-			        var _newPath = [],
-		        		_maxSkip = 10,
-						_link = 0;
-
-			        for(var i = 0; i < array_length(path); i++){
-			            if(
-			                i <= 0							||
-			                i >= array_length(path) - 1		||
-			                i - _link >= _maxSkip			||
-			                collision_line(path[i + 1, 0], path[i + 1, 1], path[_link, 0], path[_link, 1], Wall, false, false)
-			            ){
-			                array_push(_newPath, path[i]);
-			                _link = i;
-			            }
-			        }
-
-			        path = _newPath;
-			    }
+            var _pathWalled = false;
+		    for(var i = 0; i < array_length(path_wall); i++){
+		    	var _wall = path_wall[i];
+		    	if(collision_line(_pathEndX, _pathEndY, _xtarget, _ytarget, _wall, false, false)){
+		    		_pathWalled = true;
+		    		break;
+		    	}
+		    }
+            if(_pathWalled){
+            	if(path_delay > 0) path_delay -= current_time_scale;
+            	else{
+	            	path_delay = 30;
+	                path = path_create(x, y, _xtarget, _ytarget, path_wall);
+	                path = path_shrink(path, path_wall, 10);
+            	}
             }
+            else path_delay = 0;
         }
         else path = [];
 
          // Enter Portal:
         if(visible){
+        	 // Portal Attraction:
+        	var _spin = 0;
+        	with(Portal) if(point_distance(x, y, other.x, other.y) < 64){
+        		with(other){
+        			var l = 3 * current_time_scale,
+        				d = point_direction(x, y, other.x, other.y),
+        				_x = x + lengthdir_x(l, d),
+        				_y = y + lengthdir_y(l, d)
+
+        			if(place_free(_x, y)) x = _x;
+        			if(place_free(x, _y)) y = _y;
+        			_spin = (30 * right);
+        		}
+        	}
+        	if(_spin != 0){
+        		portal_angle += _spin;
+        		sprite_index = spr_hurt;
+        		image_index = 1;
+
+        		 // No Escape:
+        		speed -= min(speed, friction_raw * 3);
+        		walk = 0;
+        	}
+        	else{
+        		portal_angle += angle_difference(0, portal_angle) * 0.1 * current_time_scale;
+        	}
+
+			 // Enter:
             if(place_meeting(x, y, Portal) || instance_exists(GenCont) || instance_exists(LevCont)){
                 visible = false;
+                my_health = maxhealth;
                 repeat(3) instance_create(x, y, Dust);
-                
-                 // Healo:
-                if("maxhealth" in self){
-                	my_health = maxhealth;
-                }
             }
         }
         else if(instance_exists(GenCont)){
             x = leader.x + orandom(16);
             y = leader.y + orandom(16);
+            portal_angle = 0;
         }
     }
 
@@ -2555,18 +2686,18 @@
          // Looking for a home:
         if(instance_exists(Player) && can_take && instance_exists(_pickup)){
             with(player_find(_pickup.pick)){
-                var _max = array_length(pet);
+                var _max = array_length(ntte_pet);
                 if(_max > 0){
                      // Remove Oldest Pet:
-                    with(pet[_max - 1]){
+                    with(ntte_pet[_max - 1]){
                         leader = noone;
                         can_take = true;
                     }
-                    pet = array_slice(pet, 0, _max - 1);
+                    ntte_pet = array_slice(ntte_pet, 0, _max - 1);
 
                      // Add New Pet:
                     other.leader = self;
-                    array_insert(pet, 0, other);
+                    array_insert(ntte_pet, 0, other);
                     with(other) direction = point_direction(x, y, other.x, other.y);
 
                      // Effects:
@@ -2582,121 +2713,122 @@
     }
     with(_pickup) visible = other.can_take;
 
-	if(visible){
-	     // Dodge:
-	    if(instance_exists(leader)) team = leader.team;
-	    if(sprite_index != spr_hurt){
-	    	if(place_meeting(x, y, projectile) || place_meeting(x, y, Explosion) || place_meeting(x, y, PlasmaImpact) || place_meeting(x, y, MeatExplosion)){
+	if(visible || instance_exists(my_corpse)){
+		if(instance_exists(leader)) team = leader.team;
+
+		 // Dodge Collision:
+		if(maxhealth <= 0){
+			if(place_meeting(x, y, projectile) || place_meeting(x, y, Explosion) || place_meeting(x, y, PlasmaImpact) || place_meeting(x, y, MeatExplosion)){
 		    	with(instances_matching_ne(instances_meeting(x, y, [projectile, Explosion, PlasmaImpact, MeatExplosion]), "team", team)){
 		            if(place_meeting(x, y, other)) with(other){
-		                 // Custom Dodge Event:
-		                var _scrt = pet + "_hurt";
-		                if(mod_script_exists(mod_type, mod_name, _scrt)){
-		                    mod_script_call(mod_type, mod_name, _scrt);
-		                }
-
-		                 // Default:
-		                else if(other.speed > 1 || !instance_is(other, projectile)){
-		                    sprite_index = spr_hurt;
-		                    image_index = 0;
-		                }
+		                Pet_hurt(
+		                	other.damage,
+		                	other.force,
+		                	point_direction(other.x, other.y, x, y)
+		                );
 		            }
 		        }
 	    	}
-	    }
+		}
 
-	     // Pet Collision:
-	    if(place_meeting(x, y, object_index)){
-	        with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
-	            if(place_meeting(x, y, other) && visible){
-	                var _dir = point_direction(other.x, other.y, x, y);
-	                motion_add(_dir, 1);
-	                with(other) motion_add(_dir + 180, 1);
-	            }
-	        }
-	    }
-
-	     // Wall Collision:
-	    if(place_meeting(x + hspeed, y + vspeed, Wall)){
-	        if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
-	        if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
+		 // Wall Collision:
+	    with(path_wall) with(other){
+		    if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
+		        if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw = 0;
+		        if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw = 0;
+		    }
 	    }
 	}
 
+	 // Disabling Collision to Avoid Projectiles:
+	if(my_health <= 0){
+		mask_store = mask_index;
+		mask_index = mskNone;
+	}
+
 #define Pet_end_step
+	 // Reset Hitbox:
+    if(mask_index == mskNone && mask_store != null){
+    	mask_index = mask_store;
+    	mask_store = null;
+    }
+
      // Wall Collision Part2:
-    if(visible && place_meeting(x, y, Wall)){
+    if((visible || instance_exists(my_corpse)) && place_meeting(x, y, Wall)){
     	x = xprevious;
     	y = yprevious;
-        if(place_meeting(x + hspeed, y, Wall)) hspeed = 0;
-        if(place_meeting(x, y + vspeed, Wall)) vspeed = 0;
-        x += hspeed;
-        y += vspeed;
+        if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw = 0;
+        if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw = 0;
+        x += hspeed_raw;
+        y += vspeed_raw;
     }
 
 #define Pet_draw
-    image_alpha = abs(image_alpha);
+	var _spr = sprite_index,
+		_img = image_index,
+		_x = x,
+		_y = y,
+		_xsc = image_xscale * right,
+		_ysc = image_yscale,
+		_ang = image_angle + portal_angle,
+		_col = image_blend,
+		_alp = image_alpha * (instance_exists(my_corpse) ? 0.4 : 1);
 
      // Outline Setup:
     var _outline = (
     	instance_exists(leader)									&&
+    	!instance_exists(my_corpse)								&&
     	surface_exists(surfPet.surf)							&&
     	player_is_local_nonsync(player_find_local_nonsync())
 	);
     if(_outline){
     	with(surfPet){
-            x = other.x - (w / 2);
-            y = other.y - (h / 2);
+            x = _x - (w / 2);
+            y = _y - (h / 2);
 
 	        surface_set_target(surf);
 	        draw_clear_alpha(0, 0);
 
-	        other.x -= x;
-	        other.y -= y;
+	        _x -= x;
+	        _y -= y;
     	}
     }
 
-     // Custom Draw Event:
+	 // Custom Draw Event:
     var _scrt = pet + "_draw";
     if(mod_script_exists(mod_type, mod_name, _scrt)){
-        mod_script_call(mod_type, mod_name, _scrt);
+        mod_script_call(mod_type, mod_name, _scrt, _spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
     }
 
-     // Default:
-    else draw_self_enemy();
+	 // Default:
+    else draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 
      // Draw Outline:
     if(_outline){
 		with(surfPet){
-			other.x += x;
-			other.y += y;
-
 			surface_reset_target();
 
 			 // Fix coast stuff:
 			if("wading" in other && other.wading > 0){
 				with(surflist_get("CoastSwim")) if(surface_exists(surf)) surface_set_target(surf);
 			}
-			
-			 // Outline:
-			d3d_set_fog(true, player_get_color(other.leader.index), 0, 0);
-			for(var a = 0; a <= 360; a += 90){
-				var _x = x,
-				    _y = y;
 
-				if(a >= 360) d3d_set_fog(false, 0, 0, 0);
+			 // Outline:
+			draw_set_fog(true, player_get_color(other.leader.index), 0, 0);
+			for(var a = 0; a <= 360; a += 90){
+				var _dx = x,
+				    _dy = y;
+
+				if(a >= 360) draw_set_fog(false, 0, 0, 0);
 				else{
-					_x += dcos(a);
-					_y -= dsin(a);
+					_dx += dcos(a);
+					_dy -= dsin(a);
 				}
 
-				draw_surface(surf, _x, _y);
+				draw_surface(surf, _dx, _dy);
 	        }
         }
     }
-
-     // CustomObject draw events are annoying:
-    image_alpha = -abs(image_alpha);
 
 #define Pet_alrm0
     alarm0 = 30;
@@ -2711,42 +2843,13 @@
         }
 
          // Find Current Path Direction:
-        if(array_length(path) > 0){
-             // Find Nearest Point on Path:
-            var	_nearest = 0,
-        		d = 1000000;
-
-            for(var i = 0; i < array_length(path); i++){
-                var _x = path[i, 0],
-                    _y = path[i, 1],
-        		    _dis = point_distance(_x, _y, x, y);
-
-        		if(_dis < d){
-        			_nearest = i;
-        			d = _dis;
-        		}
-        	}
-
-             // Find Direction to Next Point on Path:
-            var _follow = _nearest + 1;
-            if(_follow < array_length(path)){
-                var _x = path[_follow, 0],
-                    _y = path[_follow, 1];
-
-				if(collision_line(x, y, _x, _y, Wall, false, false)){
-					_x = path[_nearest, 0];
-					_y = path[_nearest, 1];
-				}
-
-                path_dir = point_direction(x, y, _x, _y);
-            }
-        }
+        path_dir = path_direction(x, y, path, path_wall);
 
          // Custom Alarm Event:
         var _scrt = pet + "_alrm0";
         if(mod_script_exists(mod_type, mod_name, _scrt)){
             var a = mod_script_call(mod_type, mod_name, _scrt, _leaderDir, _leaderDis);
-            if(is_real(a) && a > 0) alarm0 = a;
+            if(is_real(a) && a != 0) alarm0 = a;
         }
 
          // Default:
@@ -2771,6 +2874,100 @@
              // Idle Movement:
             else scrWalk(15, random(360));
         }
+    }
+
+#define Pet_hurt(_hitdmg, _hitvel, _hitdir)
+	if(visible && !instance_is(other, Corpse)){
+		var _scrt = pet + "_hurt";
+
+	     // Hurt:
+    	if(my_health > 0){
+    		if(!instance_is(other, Debris)){
+				 // Manual debris exit cause debris don't call on_hurt correctly:
+				if(other == self && _hitvel == 0 && _hitdir == 0){
+					if(place_meeting(x, y, Debris)){
+						with(instances_meeting(x, y, instances_matching_ge(instances_matching_gt(Debris, "speed", 2), "size", size - 1))){
+							if(place_meeting(x, y, other)){
+								if(_hitdmg == round(1 + (speed / 10))){
+									exit;
+								}
+							}
+						}
+					}
+				}
+
+			     // Custom Hurt Event:
+			    if(mod_script_exists(mod_type, mod_name, _scrt)){
+			        mod_script_call(mod_type, mod_name, _scrt, _hitdmg, _hitvel, _hitdir);
+			    }
+
+			     // Default:
+				else enemyHurt(_hitdmg, _hitvel, _hitdir);
+    		}
+    	}
+
+	     // Dodge:
+	    else if(maxhealth <= 0){
+	    	if(sprite_index != spr_hurt){
+			    if(_hitvel > 0 && (speed > 0 || !instance_is(self, projectile))){
+				     // Custom Dodge Event:
+				    if(mod_script_exists(mod_type, mod_name, _scrt)){
+				        mod_script_call(mod_type, mod_name, _scrt, _hitdmg, _hitvel, _hitdir);
+				    }
+			
+				     // Default:
+				    else{
+				        sprite_index = spr_hurt;
+				        image_index = 0;
+				    }
+				}
+	    	}
+	    }
+	}
+
+#define Pet_draw_bind(_inst) // Manual drawing while dead, since visible=false to disable the shadow and stuff
+	if(instance_exists(_inst) && _inst.my_health <= 0){
+		with(_inst){
+			other.depth = depth;
+			event_perform(ev_draw, 0);
+		}
+	}
+	else instance_destroy();
+
+
+#define PickupIndicator_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+    	 // Vars:
+        mask_index = mskWepPickup;
+		persistent = true;
+        creator = noone;
+        nearwep = noone;
+        pick = -1;
+        text = "";
+        xoff = 0;
+        yoff = 0;
+        
+         // Events:
+        on_meet = ["", "", ""];
+
+        return id;
+    }
+
+#define PickupIndicator_end_step
+    pick = -1;
+    with(nearwep) instance_delete(id);
+
+     // Follow Creator:
+    var c = creator;
+    if(c != noone){
+        if(instance_exists(c)){
+        	x = c.x;
+        	y = c.y;
+        	image_angle = c.image_angle;
+            image_xscale = c.image_xscale;
+            image_yscale = c.image_yscale;
+        }
+        else instance_destroy();
     }
 
 
@@ -2798,6 +2995,7 @@
 #define ReviveNTTE_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
+		persistent = true;
 		creator = noone;
 		vars = {};
 		p = -1;
@@ -2821,8 +3019,8 @@
 				}
 
 				 // Grab Back Pet:
-				if("pet" in self){
-					with(pet) if(instance_exists(self) && !instance_exists(leader)){
+				if("ntte_pet" in self){
+					with(ntte_pet) if(is_real(self) && instance_exists(self) && !instance_exists(leader)){
 	                    leader = other;
 	                    
 	                     // FX:
@@ -2913,14 +3111,21 @@
     if(instance_exists(creator)){
     	 // Follow Creator:
 		if(instance_exists(creator)){
-	        var _xdis = creator_offx - ((roids ? creator.bwkick : creator.wkick) / 3),
-	            _xdir = creator.gunangle,
-	            _ydis = creator_offy * creator.right,
+	        var _xdis = creator_offx,
+	            _xdir = direction,
+	            _ydis = creator_offy,
 	            _ydir = _xdir - 90;
 
-	        x = creator.x + creator.hspeed + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
-	        y = creator.y + creator.vspeed + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
-	        if(roids) y -= 4;
+			if(instance_is(creator, Player)){
+		        _xdis -= (roids ? creator.bwkick : creator.wkick) / 3;
+		        _xdir = creator.gunangle;
+		        _ydis *= creator.right;
+		        _ydir = _xdir - 90;
+			}
+
+			x = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
+			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
+			if(roids) y -= 4;
 		}
 
 		 // Targeting:
@@ -2960,7 +3165,7 @@
 
          // Effects:
         view_shake_max_at(x, y, 3);
-        with(creator){
+        if(instance_is(creator, Player)) with(creator){
         	var k = 3;
         	if(other.roids) bwkick = max(bwkick, k);
         	else wkick = max(wkick, k);
@@ -3270,7 +3475,7 @@
 		Bubble
 	);
 
-#define Trident_cleanup // pls YAL why did u make portals instance_delete everything
+#define Trident_cleanup // pls why do portals instance_delete everything
 	var w = wep;
 	if(is_object(w)) w.visible = true;
 
@@ -3364,8 +3569,10 @@
     if(speed <= 0) instance_destroy();
 
 #define VenomPellet_anim
-    image_speed = 0;
-    image_index = image_number - 1;
+	if(instance_exists(self)){
+	    image_speed = 0;
+	    image_index = image_number - 1;
+	}
 
 #define VenomPellet_hit
     if(projectile_canhit_melee(other)){
@@ -3447,7 +3654,7 @@
 /// Mod Events
 #define game_start
 	 // Reset Pets:
-    with(instances_matching(CustomObject, "name", "Pet")) instance_destroy();
+    with(instances_matching(CustomHitme, "name", "Pet")) instance_destroy();
 
 #define step
 	if(DebugLag) trace_time();
@@ -3543,31 +3750,102 @@
         else scrHarpoonUnrope(_rope);
     }
 
+	 // Pet Levels:
+	with(instances_matching(LevelUp, "nttepet_levelup", null)){
+		nttepet_levelup = true;
+		if(instance_is(creator, Player)){
+			if("ntte_pet" in creator) with(creator.ntte_pet){
+				if(instance_exists(self)) with(other){
+					instance_copy(false).creator = other;
+				}
+			}
+		}
+	}
+
 	 // Enable/Disable Pet Outline Surface:
     with(surfPet){
     	active = false;
-		if(array_length(instances_matching_ne(instances_matching(CustomObject, "name", "Pet"), "leader", noone)) > 0){
-	    	var	_option = lq_defget(opt, "outlinePets", 2);
+		if(array_length(instances_matching_ne(instances_matching(CustomHitme, "name", "Pet"), "leader", noone)) > 0){
+	    	var	_option = option_get("outlinePets", 2);
 	    	if(_option > 0 && (_option < 2 || player_get_outlines(player_find_local_nonsync()))){
 	    		active = true;
 	    	}
 		}
     }
-    
+
      // Bind Events:
+    script_bind_end_step(end_step, 0);
     script_bind_draw(draw_shadows_top, -7.1);
 
 	if(DebugLag) trace_time("tegeneral_step");
 
-#define draw_bloom
+#define end_step
+	instance_destroy();
+
 	if(DebugLag) trace_time();
 
-	// draw_set_alpha(0.1);
- //   with(instances_matching(CustomProjectile, "name", "BubbleBomb")){
- //       var r = ((image_index / 2) + (image_xscale + image_yscale));
- //       draw_circle((x - 1), (y - 1) - z, r, false);
- //   }
- //   draw_set_alpha(1);
+     // Pickup Indicator Collision:
+    var _player = instances_matching(Player, "nearwep", noone);
+    if(array_length(_player) > 0){
+    	var _inst = instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true);
+	    with(_player){
+	        if(place_meeting(x, y, CustomObject)){
+	        	 // Find Nearest Touching Indicator:
+	        	var _nearest = noone,
+	        		_maxDis = 1000000;
+
+	        	with(instances_meeting(x, y, _inst)){
+	        		if(place_meeting(x, y, other)){
+	        			var e = on_meet;
+	        			if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
+		        			var _dis = point_distance(x, y, other.x, other.y);
+		        			if(_dis < _maxDis){
+		        				_maxDis = _dis;
+		        				_nearest = id;
+		        			}
+	        			}
+	        		}
+	        	}
+
+				 // Secret IceFlower:
+	            with(_nearest){
+	            	nearwep = instance_create(x + xoff, y + yoff, IceFlower);
+				    with(nearwep){
+				        name = other.text;
+				    	x = xstart;
+				    	y = ystart;
+				    	xprevious = x;
+				    	yprevious = y;
+				        mask_index = mskNone;
+				        sprite_index = mskNone;
+				        spr_idle = mskNone;
+				        spr_walk = mskNone;
+				        spr_hurt = mskNone;
+				        spr_dead = mskNone;
+				        spr_shadow = -1;
+						snd_hurt = -1;
+						snd_dead = -1;
+				        size = 0;
+				        team = 0;
+				        nowade = true;
+					    my_health = 99999;
+					    nexthurt = current_frame + 99999;
+				    }
+                    with(other){
+                        nearwep = other.nearwep;
+                        if(canpick && button_pressed(index, "pick")){
+                            other.pick = index;
+                        }
+                    }
+	            }
+	        }
+	    }
+    }
+
+	if(DebugLag) trace_time("tegeneral_end_step");
+
+#define draw_bloom
+	if(DebugLag) trace_time();
 
 	 // Charmed Gator Flak:
     with(instances_matching(CustomProjectile, "name", "AllyFlakBullet")){
@@ -3613,11 +3891,6 @@
 
 #define draw_shadows
 	if(DebugLag) trace_time();
-
-	 // Pets:
-    with(instances_matching(CustomObject, "name", "Pet")) if(visible){
-        draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
-    }
 
 	 // Bubble Bombs:
     with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
@@ -3691,8 +3964,15 @@
 	if(DebugLag) trace_time();
 
      // Big Decals:
-    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)){
+    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)) if(visible){
     	draw_circle(x, y, 96, false);
+    }
+
+     // Pets:
+    with(instances_matching(CustomHitme, "name", "Pet")){
+    	if(visible && light && light_radius[1] > 0){
+    		draw_circle(x, y, light_radius[1] + orandom(1), false);
+    	}
     }
 
 	if(DebugLag) trace_time("tegeneral_draw_dark");
@@ -3703,8 +3983,15 @@
 	if(DebugLag) trace_time();
 
      // Big Decals:
-    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)){
+    with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)) if(visible){
     	draw_circle(x, y, 40, false);
+    }
+
+     // Pets:
+    with(instances_matching(CustomHitme, "name", "Pet")){
+    	if(visible && light && light_radius[0] > 0){
+    		draw_circle(x, y, light_radius[0] + orandom(1), false);
+    	}
     }
 
 	if(DebugLag) trace_time("tegeneral_draw_dark_end");
@@ -3741,7 +4028,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -3766,13 +4052,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -3797,3 +4083,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);

@@ -19,7 +19,7 @@
         image_yscale = 0;
         team = other.team;
         creator = other;
-        ring_size = 0.5;
+        ring_size = 0.6;
     }
 
      // Effects:

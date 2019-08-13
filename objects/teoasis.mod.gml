@@ -11,7 +11,6 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
-#macro opt sav.option
 
 #macro DebugLag global.debug_lag
 
@@ -59,6 +58,55 @@
      // Angry puffer cause you dont have cool weapons loaded
     else with(obj_create(x, y, "Puffer")){
         instance_create(x, y, AssassinNotice);
+    }
+
+
+#define Crack_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.Crack;
+        image_speed = 0;
+
+         // Vars:
+        mask_index = mskWepPickup;
+
+        return id;
+    }
+
+#define Crack_step
+    if(image_index < 1){
+        if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion) || place_meeting(x, y, PortalShock)){
+            image_index = 1;
+             // Open effects:
+            sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
+            sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
+            sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
+            
+            sleep(50);
+            view_shake_at(x, y, 20);
+            
+            repeat(5 + irandom(5)) with(instance_create(x, y, Debris))
+                motion_set(random(360), 3 + random(5));
+                
+            repeat(10 + irandom(10)) with(instance_create(x, y, Bubble))
+                motion_set(random(360), 1 + random(2));
+                
+             // Portal
+            with(instance_create(x, y, Portal)){
+                sound_stop(sndPortalOpen);
+                image_alpha = 0;
+                GameCont.area = "trench";
+                GameCont.subarea = 0;
+            }
+        }
+        
+         // Bubble effects:
+        else if(chance_ct(1, 4)){
+            with(instance_create(x, y, Bubble)){
+                motion_set(90 + orandom(5), 4 + random(3));
+                friction = 0.2;
+            }
+        }
     }
 
 
@@ -224,21 +272,116 @@
     pickup_drop(30, 8);
 
 
-#define PetBite_create(_x, _y)
-    with(instance_create(_x, _y, CustomSlash)){
-         // Visual:
-        sprite_index =  mskNone;
-        mask_index =    mskWepPickup;
-        
+#define OasisPetBecome_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.SlaughterPropIdle;
+		spr_hurt = spr.SlaughterPropHurt;
+		spr_dead = spr.SlaughterPropDead;
+        spr_shadow = shd24;
+        spr_shadow_y = -2;
+        image_speed = 0.4;
+        depth = -1;
+
+         // Sound:
+        snd_hurt = sndHitRock;
+        snd_dead = sndOasisDeath;
+
          // Vars:
-        damage = 8 + (GameCont.level * 3);
-        force = 2;
-        
+        mask_index = mskFrogEgg;
+        image_xscale = choose(-1, 1);
+        maxhealth = 30;
+        raddrop = 0;
+        size = 1;
+        team = 0;
+		pickup_indicator = scrPickupIndicator("CHUNK");
+
         return id;
-    }
-     
-#define PetBite_hit
-    if(projectile_canhit(other)) projectile_hit(other, damage, force, direction);
+	}
+
+#define OasisPetBecome_step
+	 // Donate Rad Chunk:
+	var _pickup = pickup_indicator;
+	if(instance_exists(_pickup)){
+		var _cost = 10;
+
+		_pickup.visible = (GameCont.rad >= _cost && raddrop <= 0);
+
+		with(player_find(_pickup.pick)){
+			GameCont.rad -= _cost;
+			var r = instance_create(x, y, BigRad);
+			with(r){
+				sound_play_hit_ext(sndHitFlesh, 2.5, 0.15);
+				motion_add(random(360), 4);
+				depth = -2;
+			}
+			rad_path(r, other);
+		}
+	}
+
+	 // Eye Recieved:
+	if(raddrop > 0){
+		sound_play_hit_ext(sndRadPickup, 0.5 + orandom(0.1), 4);
+		with(instance_nearest(x, y, EatRad)){
+			x = other.x;
+			y = other.y;
+			depth = -3;
+		}
+
+		 // Boy:
+		with(Pet_spawn(x, y, "Slaughter")){
+			right = other.image_xscale;
+		}
+
+		instance_delete(id);
+	}
+
+#define OasisPetBecome_death
+	repeat(3) scrFX(x, y, 3, Dust);
+	
+	 // Bro come back:
+	with(obj_create(x, y, "OasisPetBecomeCorpse")){
+		inst = id + 1;
+	}
+
+
+#define OasisPetBecomeCorpse_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		inst = noone;
+		time = 300;
+		return id;
+	}
+
+#define OasisPetBecomeCorpse_step
+	if(instance_exists(inst)){
+		if(time > 0){
+			time -= current_time_scale;
+			
+			 // Effects:
+			if(chance_ct(1, 1 + (time / 5))){
+				with(inst) scrFX([x, 4], [y, 4], 0, Dust);
+			}
+		}
+	
+		 // Respawn:
+		else with(inst){
+			with(obj_create(x, y, "OasisPetBecome")){
+				image_xscale = other.image_xscale;
+				sprite_index = spr_hurt;
+				
+				 // Effects:
+				sound_play_hit(sndOasisMelee, 0.4);
+				with(scrWaterStreak(x, y, 0, 0)){
+					motion_set(random(360), 2);
+					image_angle = direction + 180;
+					scrFX(x, y, [direction, 2], Smoke);
+				}
+			}
+			instance_destroy();
+		}
+	}
+	else instance_destroy();
+
 
 #define Puffer_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -385,55 +528,6 @@
     }
 
 
-#define Crack_create(_x, _y)
-    with(instance_create(_x, _y, CustomObject)){
-         // Visual:
-        sprite_index = spr.Crack;
-        image_speed = 0;
-
-         // Vars:
-        mask_index = mskWepPickup;
-
-        return id;
-    }
-
-#define Crack_step
-    if(image_index < 1){
-        if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion) || place_meeting(x, y, PortalShock)){
-            image_index = 1;
-             // Open effects:
-            sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
-            sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
-            sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
-            
-            sleep(50);
-            view_shake_at(x, y, 20);
-            
-            repeat(5 + irandom(5)) with(instance_create(x, y, Debris))
-                motion_set(random(360), 3 + random(5));
-                
-            repeat(10 + irandom(10)) with(instance_create(x, y, Bubble))
-                motion_set(random(360), 1 + random(2));
-                
-             // Portal
-            with(instance_create(x, y, Portal)){
-                sound_stop(sndPortalOpen);
-                image_alpha = 0;
-                GameCont.area = "trench";
-                GameCont.subarea = 0;
-            }
-        }
-        
-         // Bubble effects:
-        else if(chance_ct(1, 4)){
-            with(instance_create(x, y, Bubble)){
-                motion_set(90 + orandom(5), 4 + random(3));
-                friction = 0.2;
-            }
-        }
-    }
-
-
 /// Scripts
 #define orandom(n)																		return  random_range(-n, n);
 #define chance(_numer, _denom)															return  random(_denom) < _numer;
@@ -464,7 +558,6 @@
 #define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrRadDrop(_x, _y, _raddrop, _dir, _spd)                                        return  mod_script_call(   "mod", "telib", "scrRadDrop", _x, _y, _raddrop, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
 #define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
 #define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
@@ -489,13 +582,13 @@
 #define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget)                               return  mod_script_call(   "mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
 #define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
 #define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
@@ -520,3 +613,14 @@
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
+#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
+#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
+#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
