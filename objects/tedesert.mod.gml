@@ -1364,9 +1364,11 @@
 #define CoastBoss_death
      // Coast Entrance:
     instance_create(x, y, Portal);
-    GameCont.area = "coast";
-    GameCont.subarea = 0;
-    with(enemy) my_health = 0;
+    with(GameCont){
+    	area = "coast";
+    	subarea = 0;
+    	killenemies = true;
+    }
 
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);

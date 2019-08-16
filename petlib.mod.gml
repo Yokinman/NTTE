@@ -68,7 +68,7 @@
 		if(_lvl >= array_length(c)){
 			_text = "COMBO#" + _text;
 		}
-		if(combo > stat_get("coolCombo")){
+		if(combo > stat_get("petPizza")){
 			_text += "!";
 		}
 
@@ -112,8 +112,8 @@
 			}
 			
 			 // Highscore!
-    		if(combo > stat_get("coolCombo")){
-    			stat_set("coolCombo", combo);
+    		if(combo > stat_get("petPizza")){
+    			stat_set("petPizza", combo);
 	    		if(combo >= 10){
 	    			with(combo_text) text += "@w#NEW RECORD";
 	    		}

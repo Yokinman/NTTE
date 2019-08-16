@@ -251,6 +251,7 @@
 
      // Pets:
     ntte_pet = [noone];
+    while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
     parrot_bob = [0, 1, 1, 0];
 
 #define game_start
@@ -262,8 +263,8 @@
 		    if(instance_exists(self)){
 		        with(Pet_spawn(x, y, "Parrot")) {
 		            leader = other;
-		            array_push(other.ntte_pet, id);
 		            visible = false;
+		            other.ntte_pet[array_length(other.ntte_pet) - 1] = id;
 		        }
 		    }
 	

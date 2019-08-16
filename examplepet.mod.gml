@@ -5,13 +5,12 @@
     
     /*
     ADDING A PET:
-        Adding a pet is simple. Just create a mod file with the extension ".petlib"
-        following its name (as seen with this mod). Once you've created your 
-        file, just pick a name for your pet and create scripts like the examples below.
+        Adding a pet is simple. Just create a mod file and paste in the "pet_create(x, y, name)" script.
+        Once you've created your file, just pick a name for your pet and create scripts like the examples below.
         
     SPAWNING A PET:
         Spawning a pet is also simple. All the setup required is handled by
-        Pet_spawn in telib.mod.gml (case sensitive), so just call the script with 
+        pet_create in telib.mod.gml (case sensitive), so just call the script with 
         the proper arguments (see this mod's step event) and you're all done!
         
     USEFUL VARIABLES:
@@ -67,7 +66,7 @@
             has_baby = true;
             
              // Here he comes:
-            Pet_spawn(x, y, "Baby");
+            pet_create(x, y, "Baby");
         }
     }
 
@@ -158,8 +157,5 @@
     if(_dir < 90 || _dir > 270) right = 1;
     if(_dir > 90 && _dir < 270) right = -1;
 
-#define Pet_spawn(_x, _y, _pet)
-    /*
-    Use this to spawn your pet into the level
-    */
-    return mod_script_call("mod", "telib", "Pet_spawn", _x, _y, _pet);
+#define pet_create(_x, _y, _pet)
+    return mod_script_call("mod", "telib", "pet_create", _x, _y, _pet, "mod", mod_current);

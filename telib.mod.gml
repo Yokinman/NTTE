@@ -2233,26 +2233,11 @@
     }
     return -1;
 
-#define Pet_spawn(_x, _y, _name)
-	 // Search petlib files for pets:
-	var _mod = "";
-	with(mod_get_names("mod")){
-		var o = self,
-			a = string_split(o, ".");
-			
-		if(a[array_length(a) - 1] == "petlib"){
-			if(mod_script_exists("mod", o, _name + "_create")){
-				_mod = o;
-				break;
-			}
-		}
-	}
-
-	 // Create the brand new pet:
-    var p = obj_create(_x, _y, "Pet");
-    with(p){
+#define pet_create(_x, _y, _name, _modType, _modName)
+    with(obj_create(_x, _y, "Pet")){
         pet = _name;
-        mod_name = _mod;
+        mod_name = _modName;
+        mod_type = _modType;
 
          // Sprites:
         if(mod_type == "mod" && mod_name == "petlib"){
@@ -2269,13 +2254,19 @@
         }
 
 		 // Auto-set Stuff:
-        with(pickup_indicator) if(text == "") text = other.pet;
-        if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
-		if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
-		if(hitid == -1) hitid = [spr_idle, pet];
-    }
+		if(instance_exists(self)){
+	        with(pickup_indicator) if(text == "") text = other.pet;
+	        if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
+			if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
+			if(hitid == -1) hitid = [spr_idle, pet];
+		}
 
-    return p;
+		return self;
+    }
+    return noone;
+
+#define Pet_spawn(_x, _y, _name)
+	return pet_create(_x, _y, _name, "mod", "petlib");
 
 #define scrFloorMake(_x, _y, _obj)
     instance_create(_x, _y, Floor);

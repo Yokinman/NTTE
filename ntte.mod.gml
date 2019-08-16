@@ -120,6 +120,10 @@
 	global.setup_floor_num = 0;
     global.effect_timer = 0;
 
+	 // Map:
+	global.mapAreaCheck = false;
+	global.mapArea = [];
+
 	 // Fix for custom music/ambience:
 	global.musTrans = false;
     global.current = {
@@ -199,7 +203,7 @@
             sync : false,
             varname : "waterQualityMain"
             }
-        ];
+    ];
 
     with(OptionMenu){
         if("name" not in self) name = "";
@@ -218,6 +222,92 @@
             option_set(varname, 0);
         }
     }
+
+	 // Stats Menu:
+	global.stat_menu = [
+		{	name : "MUTANTS",
+			x	 : -108,
+			y	 : 0,
+			list : [
+				{	text : "KILLS",
+					sprt : spr.Parrot[0].Map,
+					stat : "raceParrot"
+					},
+				{	text : "LOOPS",
+					sprt : mskNone,
+					stat : "raceParrot"
+					},
+				{	text : "RUNS",
+					sprt : mskNone,
+					stat : "raceParrot"
+					},
+				{	text : "DEATHS",
+					sprt : mskNone,
+					stat : "raceParrot"
+					},
+				{	text : "CHARMED",
+					sprt : mskNone,
+					stat : "raceParrot"
+					}
+			]
+		},
+
+		{	name : "PETS",
+			x	 : 16,
+			y	 : 0,
+			list : [
+				{	text : "BLOCKED",
+					sprt : spr.PetScorpionIdle,
+					stat : "petScorpion"
+					},
+				{	text : "PICKUPS",
+					sprt : spr.PetParrotIdle,
+					stat : "petParrot"
+					},
+				{	text : "COMBO",
+					sprt : spr.PetCoolGuyIdle,
+					stat : "petPizza"
+					},
+				{	text : "BITES",
+					sprt : spr.PetSlaughterIdle,
+					stat : "petOasis"
+					},
+				{	text : "ARCING",
+					sprt : spr.PetOctoIdle,
+					stat : "petTrench",
+					type : stat_time
+					},
+				{	text : "WEAPONS",
+					sprt : spr.PetMimicIdle,
+					stat : "petMansion"
+					},
+				{	text : "WEBBED",
+					sprt : spr.PetSpiderIdle,
+					stat : "petCaves"
+					},
+				{	text : "SPLITS",
+					sprt : spr.PetPrismIdle,
+					stat : "petCursedCaves"
+					}
+			]
+		},
+
+		{	name : "MISC",
+			x	 : 108,
+			y	 : 0,
+			list : [
+				{	text : "BONES",
+					sprt : sprBone,
+					stat : "miscBone"
+					}
+			]
+		}
+	];
+
+	 // Pet Map Icons:
+	global.petMapiconScrt = array_create(maxp, []);
+	global.petMapiconPause = 0;
+	global.petMapiconPauseForce = 0;
 
 	 // For Merged Weapon PopupText Fix:
 	global.wepMergeName = [];
@@ -563,6 +653,13 @@
 #macro opt_toggle 0
 #macro opt_slider 1
 
+#macro StatsMenu global.stat_menu
+#macro StatsX	 OptionX
+#macro StatsY	 OptionY - 10
+#macro stat_count 0
+#macro stat_time  1
+#macro stat_total 2
+
 #macro crownPlayer player_find_local_nonsync()
 #macro crownSize global.loadout_crown.size
 #macro crownRace global.loadout_crown.race
@@ -576,6 +673,11 @@
 
 
 #define game_start
+	 // Reset:
+    global.mapArea = [];
+    for(var i = 0; i < array_length(global.petMapiconScrt); i++){
+    	global.petMapiconScrt[i] = [];
+    }
     with(UnlockCont) instance_destroy();
     mod_variable_set("area", "trench", "trench_visited", []);
 
@@ -1324,6 +1426,15 @@
 
      // Pet Slots:
     with(instances_matching(Player, "ntte_pet", null)) ntte_pet = [noone];
+		
+	 // Pet Map Icons:
+	with(Player){
+		var _scrt = [];
+		with(ntte_pet) if(instance_exists(self)){
+			array_push(_scrt, [mod_type, mod_name, pet]);
+		}
+		global.petMapiconScrt[index] = _scrt;
+	}
 
 	 // Save Stuff in Revive:
 	with(instances_matching_le(Player, "my_health", 0)){
@@ -1657,10 +1768,29 @@
         else crabbone_splitcheck = true;
     }
 
+	 // Pet Map Icon Stuff:
+	global.petMapiconPause = 0;
+	if(instance_exists(GenCont)){
+		for(var i = 0; i < maxp; i++){
+			if(button_pressed(i, "paus")){
+				global.petMapiconPauseForce = true;
+			}
+		}
+	}
+
     if(DebugLag) trace_time("ntte_step");
 
 #define end_step
 	if(DebugLag) trace_time();
+
+	 // Manually Recreating Pause/Loading/GameOver Map:
+	if(global.mapAreaCheck){
+		global.mapAreaCheck = false;
+		with(GameCont){
+			var i = waypoints - 1;
+			if(i >= 0) global.mapArea[i] = [area, subarea, loops];
+		}
+	}
 
 	try{
 	     // Scramble Cursed Caves Weapons:
@@ -1786,85 +1916,85 @@
 			}
 			my_health_bonus_hold = my_health;
 		}
+	
+		 // Overheal, Overstock, and Spirit Pickups:
+		with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)){
+			bonuspickup_spawn = false;
+	
+			if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
+				if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
+					 // Spirit Pickups:
+					var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
+					if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
+						obj_create(x, y, "SpiritPickup");
+						instance_delete(id);
+		
+						global.specialPickups--;
+					}
+					
+					 // Overheal/Overstock Pickups:
+					else if(GameCont.hard > 6 && chance(1, 50)){
+						obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
+						instance_delete(id);
+		
+						global.specialPickups--;
+					}
+				}
+			}
+		}
+
+	     // Merged Wep Pickup Indicator:
+	    with(instances_matching(WepPickup, "mergewep_indicator", null)){
+	    	mergewep_indicator = true;
+	
+	    	if(wep_get(wep) == "merge" && is_object(wep)){
+	    		if("stock" in wep.base && "front" in wep.base){
+	    			var n = name;
+			    	name += `#@(${mod_script_call("mod", "teassets", "wep_merge_subtext", wep.base.stock, wep.base.front)})`;
+			    	array_push(global.wepMergeName, { inst:id, name:name, orig:n });
+	    		}
+	    	}
+	    }
+	    var _pop = instances_matching(PopupText, "mergewep_indicator", null);
+	    if(array_length(_pop) > 0){
+		    with(global.wepMergeName){
+				with(instances_matching(_pop, "text", name + "!")){
+					text = other.orig + "!";
+				}
+		    	if(!instance_exists(inst)){
+		    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
+		    	}
+		    }
+	    	with(_pop) mergewep_indicator = true;
+	    }
+	
+	     // No Cheaters (bro just play the mod):
+		with(Player){
+			var w = 0;
+			with([wep_get(wep), wep_get(bwep)]){
+				var _wep = self;
+				with(other){
+					if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && !mod_script_call("weapon", _wep, "weapon_avail")){
+						variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
+						var a = choose(-120, 120);
+						variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
+						
+						 // Effects:
+						sound_play(sndCrownRandom);
+						view_shake_at(x, y, 20);
+						instance_create(x, y, GunWarrantEmpty);
+						repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
+							depth = other.depth - 1;
+						}
+					}
+				}
+				w++;
+			}
+		}
     }
     catch(_error){
     	trace_error(_error);
     }
-    
-     // Merged Wep Pickup Indicator:
-    with(instances_matching(WepPickup, "mergewep_indicator", null)){
-    	mergewep_indicator = true;
-
-    	if(wep_get(wep) == "merge" && is_object(wep)){
-    		if("stock" in wep.base && "front" in wep.base){
-    			var n = name;
-		    	name += `#@(${mod_script_call("mod", "teassets", "wep_merge_subtext", wep.base.stock, wep.base.front)})`;
-		    	array_push(global.wepMergeName, { inst:id, name:name, orig:n });
-    		}
-    	}
-    }
-    var _pop = instances_matching(PopupText, "mergewep_indicator", null);
-    if(array_length(_pop) > 0){
-	    with(global.wepMergeName){
-			with(instances_matching(_pop, "text", name + "!")){
-				text = other.orig + "!";
-			}
-	    	if(!instance_exists(inst)){
-	    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
-	    	}
-	    }
-    	with(_pop) mergewep_indicator = true;
-    }
-    
-     // No Cheaters (bro just play the mod):
-	with(Player){
-		var w = 0;
-		with([wep_get(wep), wep_get(bwep)]){
-			var _wep = self;
-			with(other){
-				if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && !mod_script_call("weapon", _wep, "weapon_avail")){
-					variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
-					var a = choose(-120, 120);
-					variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
-					
-					 // Effects:
-					sound_play(sndCrownRandom);
-					view_shake_at(x, y, 20);
-					instance_create(x, y, GunWarrantEmpty);
-					repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
-						depth = other.depth - 1;
-					}
-				}
-			}
-			w++;
-		}
-	}
-	
-	 // Overheal, Overstock, and Spirit Pickups:
-	with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)){
-		bonuspickup_spawn = false;
-
-		if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
-			if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
-				 // Spirit Pickups:
-				var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
-				if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
-					obj_create(x, y, "SpiritPickup");
-					instance_delete(id);
-	
-					global.specialPickups--;
-				}
-				
-				 // Overheal/Overstock Pickups:
-				else if(GameCont.hard > 6 && chance(1, 50)){
-					obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
-					instance_delete(id);
-	
-					global.specialPickups--;
-				}
-			}
-		}
-	}
 
 	if(DebugLag) trace_time("ntte_end_step");
 
@@ -1978,6 +2108,58 @@
 
 		 // Main Options Code:
 		ntte_options(OptionX, OptionY);
+		
+		//if(OptionOpen){
+			/*
+			draw_set_font(fntM);
+			draw_set_valign(fa_middle);
+			with(StatsMenu){
+				 // Category Name:
+				var	_sx = StatsX + x,
+					_sy = StatsY + y;
+	
+				draw_set_halign(fa_center);
+				draw_text_nt(_sx, _sy, name);
+				_sx += string_width(name) / 2;
+				_sy += string_height(name);
+				_sy += 2;
+
+				 // Stats:
+				var _widthMax = 0;
+				with(list){
+					_widthMax = max(_widthMax, string_width(text));
+				}
+				with(list){
+					var _x = _sx,
+						_y = _sy,
+						_hide = (false && stat_get(stat) == 0);
+
+					 // Icon:
+					with(Menu){
+						if(_hide) draw_set_fog(true, c_black, 0, 0);
+						draw_sprite(other.sprt, 0, _x - _widthMax - 12, _y);
+						if(_hide) draw_set_fog(false, 0, 0, 0);
+					}
+
+					 // Stat:
+					if(_hide) draw_set_blend_mode_ext(bm_zero, bm_zero);
+					draw_set_halign(fa_right);
+					draw_text_nt(_x, _y, "@s" + text);
+					draw_set_halign(fa_left);
+					draw_text_nt(_x + 2, _y, string(stat_get(stat)));
+					if(_hide) draw_set_blend_mode(bm_normal);
+
+					_sy += string_height(text);
+					_sy += 2;
+				}
+			}
+			*/
+		//	
+		//	draw_set_font(fntM);
+		//	draw_set_valign(fa_middle);
+		//
+		//	//var	_sx = (game_width / 2) - 
+		//}
 
 		draw_reset_projection();
 	}
@@ -2085,9 +2267,60 @@
 		draw_set_alpha(1);
 	}
 
+	 // Pet Indicator:
+	with(instances_matching(CustomHitme, "name", "Pet")){
+		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || instance_exists(my_corpse))){
+			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
+
+			if(sprite_exists(_icon.spr)){
+				var _x = x + _icon.x - view_xview_nonsync,
+					_y = y + _icon.y - view_yview_nonsync;
+
+				 // Death Pointer:
+				if(instance_exists(my_corpse)){
+					_y -= 20 + sin(wave / 10);
+					draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
+				}
+
+				 // Icon:
+				var	_x1 = sprite_get_xoffset(_icon.spr),
+					_y1 = sprite_get_yoffset(_icon.spr),
+					_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
+					_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
+
+				_x = clamp(_x, _x1 + 1, _x2 - 1);
+				_y = clamp(_y, _y1 + 1, _y2 - 1);
+
+				draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
+
+				 // Death Indicating:
+				if(instance_exists(my_corpse)){
+					var _flashLength = 15,
+						_flashDelay = 10,
+						_flash = (current_frame % (_flashLength + _flashDelay));
+
+					if(_flash < _flashLength){
+						draw_set_blend_mode(bm_add);
+						draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
+						draw_set_blend_mode(bm_normal);
+					}
+				}
+			}
+		}
+	}
+
 #define draw_pause
+	 // (Frame Flash) Pet Map Icons:
+	if(global.petMapiconPause < 2){
+		if(global.petMapiconPause > 0){
+			draw_pet_mapicons(UberCont);
+		}
+		global.petMapiconPause++;
+	}
+	global.petMapiconPauseForce = false;
+
      // NTTE Options:
-	draw_set_projection(0);
+    draw_set_projection(0);
 
     if(!OptionOpen){
     	if(instance_exists(OptionMenuButton)){
@@ -2223,6 +2456,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		global.mouse_y_previous[i] = mouse_y[i];
 	}
 
+	 // Pet Map Icon Drawing:
+	var _mapObj = [TopCont, GenCont, UberCont];
+	for(var i = 0; i < array_length(_mapObj); i++){
+		var _obj = _mapObj[i];
+		with(script_bind_draw(draw_pet_mapicons, (instance_exists(_obj) ? _obj.depth : object_get_depth(_obj)) - 9000.1, _obj)){
+			persistent = true;
+		}
+	}
+
 #define area_step
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 	    var a = array_find_index(areaList, GameCont.area);
@@ -2251,6 +2493,229 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
     instance_destroy();
+
+#define pet_get_mapicon(_modType, _modName, _name)
+	var	_icon = {
+		spr	: spr.PetParrotIdle,
+		img	: 0.4 * current_frame,
+		x	: 0,
+		y	: 0,
+		xsc	: 1,
+		ysc	: 1,
+		ang	: 0,
+		col	: c_white,
+		alp	: 1
+	};
+
+	 // Custom:
+	var _modScrt = _name + "_icon"
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _iconCustom = mod_script_call(_modType, _modName, _modScrt);
+
+		for(var i = 0; i < min(array_length(_iconCustom), lq_size(_icon)); i++){
+			lq_set(_icon, lq_get_key(_icon, i), real(_iconCustom[i]));
+		}
+	}
+	
+	 // Default:
+	else if(_modType == "mod" && _modName == "petlib"){
+		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
+	}
+
+	return _icon;
+
+#define draw_pet_mapicons(_mapObj)
+	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
+		instance_destroy();
+	}
+
+	 // Map Index:
+	var _mapIndex = GameCont.waypoints;
+	if(instance_exists(_mapObj) && _mapObj == TopCont){
+		var _last = _mapObj.mapanim;
+		if("mapanim_petmapicon_last" in _mapObj) _last = _mapObj.mapanim_petmapicon_last;
+		_mapObj.mapanim_petmapicon_last = _mapObj.mapanim;
+
+		_mapIndex = clamp(min(_last, _mapObj.mapanim), 0, _mapIndex);
+	}
+
+	 // Exit Conditions:
+	if(instance_exists(_mapObj) || object_exists(_mapObj)){
+		 // Check if Can Draw:
+		if(array_length(instances_matching(_mapObj, "visible", true)) <= 0){
+			exit;
+		}
+
+		 // Extra Checks:
+		switch(_mapObj){
+			case UberCont:
+				if(!global.petMapiconPauseForce || instance_exists(GenCont)){
+					if(
+						global.petMapiconPause <= 0  ||
+						array_length(instances_matching([PauseButton, BackMainMenu, OptionMenuButton, AudioMenuButton, VisualsMenuButton, GameMenuButton, ControlMenuButton], "", null)) <= 0
+					){
+						exit;
+					}
+				}
+				break;
+
+			case TopCont:
+				var _last = _mapObj.go_addy1;
+				if("go_addy1_petmapicon_last" in _mapObj) _last = _mapObj.go_addy1_petmapicon_last;
+				_mapObj.go_addy1_petmapicon_last = _mapObj.go_addy1;
+	
+				if(instance_exists(Player) || _mapObj.go_addy1 != 0 || _last != 0){
+					exit;
+				}
+				break;
+		}
+	}
+
+	 // Map Position:
+	var _mapEnd = mapdata_get(_mapIndex),
+		_mapX = (game_width  / 2) - 70,
+		_mapY = (game_height / 2) + 7;
+
+	if(_mapObj == TopCont){
+		_mapX -= 50;
+		_mapY -= 3;
+		if(instance_exists(_mapObj)){
+			_mapY -= min(2, _mapObj.go_stage);
+		}
+	}
+
+	 // Draw Icons:
+	if(_mapIndex == 0 || (is_real(_mapEnd.area) && _mapEnd.area >= 0) || (is_string(_mapEnd.area) && mod_exists("area", _mapEnd.area))){
+		draw_set_projection(0);
+
+		var _playerMax = 0;
+		for(var i = 0; i < maxp; i++) if(player_is_active(i)){
+			_playerMax = i + 1;
+		}
+
+		for(var i = 0; i < _playerMax; i++){
+			var _px = _mapX + _mapEnd.x,
+				_py = _mapY + _mapEnd.y,
+				_iconAng = 30,
+				_iconDir = 0,
+				_iconDis = 10;
+
+			 // Co-op Offset:
+			if(_playerMax > 1){
+				var l = 2 * _playerMax,
+					d = 90 - ((360 / _playerMax) * i);
+	
+				if(_playerMax == 2) d += 45;
+	
+				_px += lengthdir_x(l, d);
+				_py += lengthdir_y(l, d);
+
+				_iconAng = d;
+			}
+
+			 // Pet Icons:
+			for(var _petNum = 0; _petNum < array_length(global.petMapiconScrt[i]); _petNum++){
+				var e = global.petMapiconScrt[i, _petNum],
+					_icon = pet_get_mapicon(e[0], e[1], e[2]);
+
+				 // Dim:
+				if(instance_exists(BackMainMenu)){
+					_icon.col = merge_color(_icon.col, c_black, 0.9);
+				}
+
+				 // Draw:
+				if(sprite_exists(_icon.spr)){
+					draw_sprite_ext(
+						_icon.spr,
+						_icon.img,
+						_px + floor(lengthdir_x(_iconDis, _iconAng + _iconDir)) + _icon.x,
+						_py + floor(lengthdir_y(_iconDis, _iconAng + _iconDir)) + _icon.y,
+						_icon.xsc,
+						_icon.ysc,
+						_icon.ang,
+						_icon.col,
+						_icon.alp
+					);
+				}
+
+				_iconDir += 60 / (1 + floor(_iconDir / 360));
+				if((_iconDir % 360) == 0) _iconDis += 8;
+			}
+		}
+
+		draw_reset_projection();
+	}
+
+#define mapdata_get(_index)
+	var _map = [];
+	for(var i = -1; i < GameCont.waypoints; i++){
+		var _data = {
+			x		 : 0,
+			y		 : 0,
+			area	 : -1,
+			subarea	 : 0,
+			loop	 : 0,
+			showdot  : false,
+			showline : true
+		};
+		
+		if(i >= 0 && i < array_length(global.mapArea)){
+			var _last = _map[i],
+				a = global.mapArea[i];
+
+			if(is_array(a)){
+				_data.area = a[0];
+				_data.subarea = a[1];
+				_data.loop = a[2];
+			}
+
+			 // Base Game:
+			if(is_real(_data.area)){
+				if(_data.area < 100){
+					var n = 0;
+					n += 3 *  ceil((floor(_data.area) - 1) / 2);	// Main Areas
+					n += 1 * floor((floor(_data.area) - 1) / 2);	// Transition Areas
+					n += _data.subarea - 1;							// Subarea
+					n += (_data.area - floor(_data.area));			// Fractional Areas
+
+					_data.x = 9 * n;
+					_data.y = 0;
+				}
+
+				 // Secret Areas:
+				else{
+					_data.x = _last.x;
+					_data.y = 9;
+				}
+
+				_data.showdot = (_data.subarea == 1);
+			}
+
+			 // Modded:
+			else if(is_string(_data.area)){
+				with(UberCont){
+					var d = mod_script_call("area", _data.area, "area_mapdata", _last.x, _last.y, _last.area, _last.subarea, _data.subarea, _data.loop),
+						n = array_length(d);
+
+					if(n >= 2){
+						_data.x = d[0];
+						_data.y = d[1];
+						if(n >= 3) _data.showdot = d[2];
+						if(n >= 4) _data.showline = d[3];
+					}
+				}
+			}
+		}
+
+		array_push(_map, _data);
+	}
+
+	 // Return Specific Waypoint:
+	if(_index >= 0){
+		return ((_index < array_length(_map)) ? _map[_index] : _map[0]);
+	}
+
+	return _map;
 
 #define ntte_options(_optionsX, _optionsY)
     if(OptionOpen){

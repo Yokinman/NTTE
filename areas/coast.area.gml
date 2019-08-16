@@ -249,6 +249,9 @@
     else subarea++;
 
 #define area_transit
+	mod_variable_set("mod", "ntte", "mapAreaCheck", true);
+
+	 // There Ain't No More Water:
 	with(instances_matching_ne(instances_matching(GameObject, "persistent", true), "wading", null)){
 		wading = 0;
 	}

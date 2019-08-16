@@ -848,8 +848,11 @@
         //#region PETS
         m = "pets/";
 
+			PetArrow = sprite(m + "sprPetArrow", 1, 3, 0);
+
              // Scorpion:
             p = m + "Desert/";
+            PetScorpionIcon   = sprite(p + "sprPetScorpionIcon",   1,  6,  5);
             PetScorpionIdle   = sprite(p + "sprPetScorpionIdle",   4, 16, 16);
             PetScorpionWalk   = sprite(p + "sprPetScorpionWalk",   6, 16, 16);
             PetScorpionHurt   = sprite(p + "sprPetScorpionHurt",   3, 16, 16);
@@ -857,23 +860,23 @@
             PetScorpionFire   = sprite(p + "sprPetScorpionFire",   6, 16, 16);
             PetScorpionShield = sprite(p + "sprPetScorpionShield", 6, 16, 16);
             
-             // Spider
-            p = m + "Caves/";
-            PetSpiderIdle    = sprite(p + "sprPetSpiderIdle",  8, 16, 16);
-            PetSpiderWalk    = sprite(p + "sprPetSpiderWalk",  6, 16, 16);
-            PetSpiderHurt    = sprite(p + "sprPetSpiderDodge", 3, 16, 16);
-            PetSpiderWeb     = sprite(p + "sprPetSpiderWeb",   1,  0,  0);
-            PetSpiderWebBits = sprite(p + "sprWebBits",        5,  4,  4);
-            PetSparkle       = sprite(p + "sprPetSparkle",     5,  8,  8);
-            
              // Parrot:
             p = m + "Coast/";
-            PetParrotIdle = sprite(p + "sprPetParrotIdle",   6, 12, 12);
-            PetParrotWalk = sprite(p + "sprPetParrotWalk",   6, 12, 14);
-            PetParrotHurt = sprite(p + "sprPetParrotDodge",  3, 12, 12);
+            PetParrotIcon = sprite(p + "sprPetParrotIcon",  1,  6,  6);
+            PetParrotIdle = sprite(p + "sprPetParrotIdle",  6, 12, 12);
+            PetParrotWalk = sprite(p + "sprPetParrotWalk",  6, 12, 14);
+            PetParrotHurt = sprite(p + "sprPetParrotDodge", 3, 12, 12);
+
+             // CoolGuy:
+            p = m + "Pizza/";
+            PetCoolGuyIcon = sprite(p + "sprPetCoolGuyIcon",  1,  6,  6);
+            PetCoolGuyIdle = sprite(p + "sprPetCoolGuyIdle",  4, 12, 12);
+            PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
+            PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
 
              // BabyShark:
             p = m + "Oasis/";
+            PetSlaughterIcon  = sprite(p + "sprPetSlaughterIcon",   1,  6,  6);
             PetSlaughterIdle  = sprite(p + "sprPetSlaughterIdle",   4, 12, 12);
             PetSlaughterWalk  = sprite(p + "sprPetSlaughterWalk",   6, 12, 12);
             PetSlaughterHurt  = sprite(p + "sprPetSlaughterHurt",   3, 12, 12);
@@ -887,26 +890,33 @@
 
              // Octopus:
             p = m + "Trench/";
+            PetOctoIcon = sprite(p + "sprPetOctoIcon",   1,  7,  6);
             PetOctoIdle = sprite(p + "sprPetOctoIdle",  20, 12, 12);
             PetOctoHurt = sprite(p + "sprPetOctoDodge",  3, 12, 12);
             PetOctoHide = sprite(p + "sprPetOctoHide",  30, 12, 12);
 
-             // CoolGuy:
-            p = m + "Pizza/";
-            PetCoolGuyIdle = sprite(p + "sprPetCoolGuyIdle",  4, 12, 12);
-            PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
-            PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
-
              // Golden Chest Mimic:
             p = m + "Mansion/";
+            PetMimicIcon = sprite(p + "sprPetMimicIcon",   1,  6,  6);
             PetMimicIdle = sprite(p + "sprPetMimicIdle",  16, 16, 16);
             PetMimicWalk = sprite(p + "sprPetMimicWalk",   6, 16, 16);
             PetMimicHurt = sprite(p + "sprPetMimicDodge",  3, 16, 16);
             PetMimicOpen = sprite(p + "sprPetMimicOpen",   1, 16, 16);
             PetMimicHide = sprite(p + "sprPetMimicHide",   1, 16, 16);
+            
+             // Spider
+            p = m + "Caves/";
+            PetSpiderIcon    = sprite(p + "sprPetSpiderIcon",  1,  6,  6);
+            PetSpiderIdle    = sprite(p + "sprPetSpiderIdle",  8, 16, 16);
+            PetSpiderWalk    = sprite(p + "sprPetSpiderWalk",  6, 16, 16);
+            PetSpiderHurt    = sprite(p + "sprPetSpiderDodge", 3, 16, 16);
+            PetSpiderWeb     = sprite(p + "sprPetSpiderWeb",   1,  0,  0);
+            PetSpiderWebBits = sprite(p + "sprWebBits",        5,  4,  4);
+            PetSparkle       = sprite(p + "sprPetSparkle",     5,  8,  8);
 
             // Prism:
             p = m + "Cursed Caves/";
+            PetPrismIcon = sprite(p + "sprPetPrismIcon", 1,  6,  6);
             PetPrismIdle = sprite(p + "sprPetPrismIdle", 6, 12, 12);
 			
         //#endregion

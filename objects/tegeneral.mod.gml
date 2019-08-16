@@ -2675,7 +2675,7 @@
 
      // No Owner:
     else{
-        persistent = false;
+        if(visible) persistent = false;
 
 		 // Leader Died or Something:
 		if(leader != noone){

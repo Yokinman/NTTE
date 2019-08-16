@@ -89,6 +89,11 @@
                     if(wep_get(wep) == mod_current){
                         w.ammo++;
 
+                         // Epic Time:
+                        if(w.ammo > stat_get("miscBone")){
+                            stat_set("miscBone", w.ammo);
+                        }
+
                          // Effects:
                         with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
                         sound_play_pitchvol(sndHPPickup, 4, 1);
@@ -153,8 +158,10 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
-#define unlock_set(_unlock, _value)                                                             mod_script_call_nc("mod", "telib", "unlock_set", _unlock, _value);
+#define unlock_get(_name)                                                               return  mod_script_call("mod", "telib", "unlock_get", _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call("mod", "telib", "stat_get", _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
