@@ -1,5 +1,8 @@
 #define init
-	with(Loadout) instance_destroy();
+	with(Loadout){
+		instance_destroy();
+		with(loadbutton) instance_destroy();
+	}
 
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -62,7 +65,7 @@
 	return "PARROT";
 
 #define race_text
-	return "MANY FRIENDS#BIRDS OF A @rFEATHER@w";
+	return "MANY FRIENDS#@rFEATHERS";
 
 #define race_ttip
     if(GameCont.level >= 10 && chance(1, 5)){
@@ -265,6 +268,7 @@
 		            leader = other;
 		            visible = false;
 		            other.ntte_pet[array_length(other.ntte_pet) - 1] = id;
+		            stat_found = false;
 		        }
 		    }
 	
@@ -638,7 +642,10 @@
 	draw_reset_projection();
 
 #define cleanup
-	with(Loadout) instance_destroy();
+	with(Loadout){
+		instance_destroy();
+		with(loadbutton) instance_destroy();
+	}
 
 
 /// Scripts
@@ -735,3 +742,5 @@
 #define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);

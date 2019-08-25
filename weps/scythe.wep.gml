@@ -114,6 +114,10 @@
 			
 			 // Sounds:
 			sound_play_pitch(sndBlackSword, 0.8 + random(0.3));
+			if(_heavy){
+				sound_play_pitchvol(sndHammer, 1 - random(0.2), 0.6);
+				sound_play_pitchvol(sndSwapHammer, 1.3 + random(0.2), 0.6);
+			}
 			
 			 // Effects:
 			motion_add(d - (30 * sign(wepangle)), 3.5);

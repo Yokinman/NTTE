@@ -829,17 +829,22 @@
         var _lstspr = sprite_index;
         if(fork()){
             if(sprite_index == spr_spwn) {
-                sprite_index = spr_idle;
+                sprite_index = spr_hurt;
 
                  // Spawn FX:
                 hspeed += 2 * right;
                 vspeed += orandom(2);
                 view_shake_at(x, y, 15);
-                sound_play(sndOasisBossIntro);
                 instance_create(x, y, PortalClear);
-                repeat(10) with(instance_create(x, y, Dust)){
-                    motion_add(random(360), 5);
+                for(var d = direction; d < direction + 360; d += (360 / 5)){
+                	repeat(2) scrFX(x, y, [d + orandom(30), 5], Dust);
+                	with(scrWaterStreak(x, y, 0, 0)){
+                		motion_set(d + orandom(30), 1 + random(4));
+                		image_angle = direction;
+                		image_speed *= random_range(0.8, 1.2);
+                	}
                 }
+				sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 0.4);
 
                  // Intro:
                 if(!intro){
@@ -1695,3 +1700,5 @@
 #define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);

@@ -864,27 +864,53 @@
 		
 	     // Bone Pickup Drops:
 	    with(other) if(my_health <= 0){
-			var _raddrop = variable_instance_get(id, "raddrop", 0),
-				d = (size >= 2) ? 2.6 : 1.8,
-				n = max((maxhealth / d) - _raddrop, 0);
-				
-			if(n > 0){
-				 // Big Pickups:
-				var _numLarge = floor(n div 10);
-				if(_numLarge > 0) repeat(_numLarge){
-					with(obj_create(x, y, "BoneBigPickup")){
-						motion_set(random(360), 3 + random(1));
+	    	var	_max = round(maxhealth / power(0.8, skill_get(mut_scarier_face))),
+				_num = round(power(maxhealth, 1 / (1 + (4 / size))));
+
+			if(_num > 0){
+		    	if(
+					!instance_is(self, prop)
+					|| string_pos("Bone",  object_get_name(object_index)) > 0
+					|| string_pos("Skull", object_get_name(object_index)) > 0
+					|| ("name" in self && (string_pos("Bone", name) > 0 || string_pos("Skull", name) > 0))
+				){
+					 // Big Pickups:
+					var _numLarge = floor(_num div 10);
+					if(_numLarge > 0) repeat(_numLarge){
+						with(obj_create(x, y, "BoneBigPickup")){
+							motion_set(random(360), 3 + random(1));
+						}
+					}
+		
+					 // Small Pickups:
+					var _numSmall = ceil(_num mod 10);
+					if(_numSmall > 0) repeat(_numSmall){
+						with(obj_create(x, y, "BonePickup")){
+							motion_set(random(360), 3 + random(1));
+						}
+					}
+		
+					 // Reap Soul:
+					if(other.heavy && size >= 1 && !instance_is(self, prop)){
+						with(instance_create(x, y - 4, ReviveFX)){
+							sprite_index = sprMeltGhost;
+							image_xscale = other.image_xscale * (("right" in other) ? other.right : 1);
+							image_yscale = other.image_yscale;
+							image_speed = 0.4 + random(0.4);
+							depth = -1;
+
+							 // Ghost FX:
+							repeat(3) with(scrFX(x, y, random_range(2, 4), Dust)){
+								depth = 1;
+							}
+							sound_play_hit_ext(sndCorpseExploDead, image_speed * 5, 0.15);
+						}
+
+						 // Stat:
+						stat_set("soul", stat_get("soul") + 1);
 					}
 				}
-	
-				 // Small Pickups:
-				var _numSmall = ceil(n mod 10);
-				if(_numSmall > 0) repeat(_numSmall){
-					with(obj_create(x, y, "BonePickup")){
-						motion_set(random(360), 3 + random(1));
-					}
-				}
-			}
+		    }
 	    }
 	}
 
@@ -2261,6 +2287,15 @@
                         image_angle = random(360);
                         speed = 0;
 
+						 // Parrot's Special Stat:
+						if("ntte_charm" not in target){
+							var _race = variable_instance_get(creator, "race", char_random);
+							if(_race == "parrot"){
+								var _stat = "race/" + _race + "/spec";
+								stat_set(_stat, stat_get(_stat) + 1);
+							}
+						}
+
                          // Charm Enemy:
                         var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
                         with(scrCharm(target, true)){
@@ -2404,7 +2439,6 @@
         mask_index = mskPlayer;
         direction = random(360);
         friction = 0.4;
-        pet = "Parrot";
         leader = noone;
         can_take = true;
         can_path = true;
@@ -2422,6 +2456,8 @@
         walkspd = 2;
         maxspeed = 3;
         revive_delay = 0;
+    	stat_found = true;
+        stat = {};
         light = true;
         light_radius = [32, 96]; // [Inner, Outer]
         mask_store = null;
@@ -2431,8 +2467,9 @@
     	my_corpse = noone;
 
          // Scripts:
-        mod_type = "mod";
-        mod_name = "petlib";
+        pet = "";
+        mod_type = "none";
+        mod_name = "none";
 
          // Alarms:
         alarm0 = 20 + random(10);
@@ -2473,6 +2510,9 @@
     }
 
 #define Pet_step
+    wave += current_time_scale;
+
+	 // Don't Persist to Menu:
     if(instance_exists(Menu)){
     	instance_delete(id);
     	exit;
@@ -2483,8 +2523,6 @@
     	mask_index = mask_store;
     	mask_store = null;
     }
-
-    wave += current_time_scale;
 
     if(visible){
 	     // Animate:
@@ -2562,14 +2600,17 @@
 
 	         // Revive:
 	        if(!instance_exists(my_corpse) || my_corpse.image_speed == 0){
-	        	if(place_meeting(x, y, Player)){
-		            with(instance_nearest(x, y, Player)){
-		                projectile_hit_raw(id, 1, true);
+	        	if(place_meeting(x, y, leader)){
+		            with(leader){
+		                with(other) projectile_hit_raw(other, 1, true);
 		                lasthit = [sprHealBigFX, "LOVE"];
 		            }
+		            
 		            my_health = maxhealth;
 		            sprite_index = spr_hurt;
 		            image_index = 0;
+		            
+					sound_play_hit_ext(snd_hurt, 1.1 + random(0.2), 0.8);
 	
 		             // Effects:
 		            with(instance_create(x, y, HealFX)) depth = other.depth - 1;
@@ -2598,7 +2639,7 @@
 	    	}
 	    }
 
-        if(can_path && !_targetSeen){
+        if(visible && can_path && !_targetSeen){
             var _pathEndX = x,
                 _pathEndY = y;
 
@@ -2671,6 +2712,11 @@
             y = leader.y + orandom(16);
             portal_angle = 0;
         }
+
+         // Time Stat:
+        if(instance_is(leader, Player)){
+        	stat.owned += (current_time_scale / 30);
+        }
     }
 
      // No Owner:
@@ -2696,9 +2742,17 @@
                     ntte_pet = array_delete(ntte_pet, 0);
 
                      // Add New Pet:
-                    other.leader = self;
                     array_push(ntte_pet, other);
-                    with(other) direction = point_direction(x, y, other.x, other.y);
+                    with(other){
+                    	leader = other;
+                    	direction = point_direction(x, y, other.x, other.y);
+
+	                     // Found Stat:
+	                    if(stat_found){
+	                    	stat_found = false;
+	                    	stat.found++;
+	                    }
+                    }
 
                      // Effects:
                     with(instance_create(x, y, WepSwap)){
@@ -3785,7 +3839,7 @@
 	if(DebugLag) trace_time();
 
      // Pickup Indicator Collision:
-    var _player = instances_matching(Player, "nearwep", noone);
+    var _player = instances_matching(instances_matching(Player, "nearwep", noone), "visible", true);
     if(array_length(_player) > 0){
     	var _inst = instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true);
 	    with(_player){
@@ -3795,7 +3849,7 @@
 	        		_maxDis = 1000000;
 
 	        	with(instances_meeting(x, y, _inst)){
-	        		if(place_meeting(x, y, other)){
+	        		if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible)){
 	        			var e = on_meet;
 	        			if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
 		        			var _dis = point_distance(x, y, other.x, other.y);
@@ -4094,3 +4148,5 @@
 #define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);

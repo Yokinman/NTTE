@@ -1,4 +1,112 @@
+#define chat_command(_cmd, _arg, _ind) /// debug commands
+    switch(_cmd){
+    	case "ntte":
+    		var _menu = mod_variable_get("mod", "ntte", "menu");
+    		_menu.open = !_menu.open;
+    		return true;
+    	
+        case "pet":
+            Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
+            return true;
+
+		case "wepmerge":
+			var a = string_split(_arg, "/"),
+				w = wep_none;
+
+			if(array_length(a) >= 2){
+				w = wep_merge(a[0], a[1]);
+			}
+			else{
+				w = wep_merge(a[0], a[0]);
+			}
+
+			with(instance_create(mouse_x[_ind], mouse_y[_ind], WepPickup)){
+				wep = w;
+				ammo = true;
+			}
+			return true;
+
+		case "debuglag":
+			var _mod = [];
+			if(_arg != ""){
+				var	p = 0;
+				for(var i = 0; i <= string_length(_arg); i++){
+					if(string_char_at(_arg, i) == "."){
+						p = i;
+					}
+				}
+	
+				var	_name = ((p <= 0) ? _arg : string_copy(_arg, 1, p - 1)),
+					_type = ((p <= 0) ? "mod" : string_delete(_arg, 1, p));
+	
+				array_push(_mod, [_type, _name]);
+			}
+			else{
+				DebugLag = !DebugLag;
+				with(["mod", "weapon", "race", "skill", "crown", "area", "skin"]){
+					with(mod_get_names(self)){
+						array_push(_mod, [other, self]);
+					}
+				}
+			}
+
+			with(_mod){
+				var _type = self[0],
+					_name = self[1],
+					_varn = "debug_lag";
+
+				if(mod_variable_exists(_type, _name, _varn)){
+					var _state = ((_arg != "") ? !mod_variable_get(_type, _name, _varn) : DebugLag);
+					if(_state ^^ mod_variable_get(_type, _name, _varn)){
+						mod_variable_set(_type, _name, _varn, _state);
+						trace_color((_state ? "ENABLED" : "DISABLED") + " " + _name + "." + _type, (_state ? c_lime : c_red));
+					}
+				}
+				else if(_arg != ""){
+					trace_color("Cannot debug lag for " + _arg, c_red);
+				}
+			}
+
+			return true;
+
+		case "unlockall":
+		case "unlockreset":
+			var _unlock = (_cmd == "unlockall");
+
+			with(global.debug_unlock){
+				unlock_set(self, _unlock);
+			}
+
+			scrUnlock("", "@wEVERYTHING " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "unlocktoggle":
+			var _unlock = !unlock_get(_arg);
+
+			unlock_set(_arg, _unlock);
+
+			scrUnlock("", "@w" + _arg + " " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "charm":
+			scrCharm(instance_create(mouse_x[_ind], mouse_y[_ind], asset_get_index(_arg)), true);
+			return true;
+    }
+
+
 #define init
+	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime", "boneScythe"];
+	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
+	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
+	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
+	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
+	chat_comp_add("charm", "(object)", "spawn a charmed object");
+	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
+	/** Delete above on release **/
+	
+	
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
@@ -450,6 +558,17 @@
 	var _bool = (_color >= 0);
 	draw_set_fog(_bool, (_bool ? _color : c_black), 0, 0);
 
+#define draw_text_bn(_x, _y, _string, _angle)
+	var _col = draw_get_color();
+	_string = string_upper(_string);
+	
+	draw_set_color(c_black);
+	draw_text_transformed(_x + 1, _y,     _string, 1, 1, _angle);
+	draw_text_transformed(_x,     _y + 2, _string, 1, 1, _angle);
+	draw_text_transformed(_x + 1, _y + 2, _string, 1, 1, _angle);
+	draw_set_color(_col);
+	draw_text_transformed(_x,     _y,     _string, 1, 1, _angle);
+
 #define scrWalk(_walk, _dir)
     walk = _walk;
     speed = max(speed, friction);
@@ -580,12 +699,26 @@
     lq_set(sav.unlock, _name, _value);
 
 #define stat_get(_name)
+	if(!is_array(_name)) _name = string_split(_name, "/");
+	
 	var q = lq_defget(sav, "stat", {});
-	return lq_defget(q, _name, 0);
+	with(_name) q = lq_defget(q, self, 0);
+	
+	return q;
 
 #define stat_set(_name, _value)
-	if(!lq_exists(sav, "stat")) sav.stat = {};
-	lq_set(sav.stat, _name, _value);
+	if(!is_array(_name)) _name = string_split(_name, "/");
+	
+	if("stat" not in sav) sav.stat = {};
+	
+	var q = sav.stat,
+		m = array_length(_name) - 1;
+		
+	with(array_slice(_name, 0, m)){
+		if(self not in q) lq_set(q, self, {});
+		q = lq_get(q, self);
+	}
+	lq_set(q, _name[m], _value);
 
 #define scrPickupIndicator(_text)
 	with(obj_create(x, y, "PickupIndicator")){
@@ -1107,6 +1240,8 @@
 	    }
 	}
 
+	return _array;
+
 #define array_delete(_array, _index)
     var i = _index,
         _new = array_slice(_array, 0, i);
@@ -1313,7 +1448,7 @@
 
 	     // Generate Level:
 	    var _minID = instance_create(0, 0, GameObject),
-	    	_chest = [WeaponChest, AmmoChest, RadChest, RogueChest, HealthChest];
+	    	_chest = [WeaponChest, AmmoChest, RadChest, HealthChest];
 
 		instance_delete(_minID);
 
@@ -1427,23 +1562,32 @@
 	            with(Player) if(my_health < maxhealth / 2) _lowHP = true;
 	            with(_newChest[2]) if(instance_exists(self)){
 	                if((_lowHP && chance(1, 2)) || (GameCont.crown == crwn_life && chance(2, 3))){
-	                    array_push(_newChest[4], instance_create(x, y, HealthChest));
+	                    array_push(_newChest[3], instance_create(x, y, HealthChest));
 	                    instance_destroy();
 	                    break;
 	                }
 	            }
 	        }
-	
+
+	         // Rogue:
+	        for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+		        with(RadChest){
+		        	instance_create(x, y, RogueChest);
+		        	instance_delete(id);
+		        }
+		        break;
+	        }
+
 	         // Mimics:
 	        with(_newChest[1]) if(instance_exists(self) && chance(1, 11)){
 	            instance_create(x, y, Mimic);
 	            instance_delete(id);
 	        }
-	        with(_newChest[4]) if(instance_exists(self) && chance(1, 51)){
+	        with(_newChest[3]) if(instance_exists(self) && chance(1, 51)){
 	            instance_create(x, y, SuperMimic);
 	            instance_delete(id);
 	        }
-	
+
 	         // Extras:
 	        mod_script_call("area", _area, "area_pop_extras");
 
@@ -1475,6 +1619,56 @@
 	     // Force Music Transition:
 	    mod_variable_set("mod", "ntte", "musTrans", true);
 	}
+
+#define area_get_name(_area, _subarea, _loop)
+	var a = [_area, "-", _subarea];
+
+	 // Custom Area:
+	if(is_string(_area)){
+		a = ["MOD"];
+		if(mod_script_exists("area", _area, "area_name")){
+			var _custom = mod_script_call("area", _area, "area_name", _subarea, _loop);
+			if(is_string(_custom)) a = [_custom];
+		}
+	}
+
+	 // Secret Area:
+	else if(real(_area) >= 100){
+		switch(_area){
+			case 100:
+				a = ["???"];
+				break;
+
+			case 106:
+				a = ["HQ", _subarea];
+				break;
+
+			case 107:
+				a = ["$$$"];
+				break;
+
+			default:
+				a = [_area - 100, "-?"];
+		}
+	}
+
+	 // Loop:
+	if(real(_loop) > 0){
+		array_push(a, " " + ((UberCont.hardmode == true) ? "H" : "L"));
+		array_push(a, _loop);
+	}
+
+	 // Compile Name:
+	var _name = "";
+	for(var i = 0; i < array_length(a); i++){
+		var n = a[i];
+		if(is_real(n) && frac(n) != 0){
+			a[i] = string_format(n, 0, 2);
+		}
+		_name += string(n);
+	}
+
+	return _name;
 
 #define area_get_subarea(_area)
     if(is_real(_area)){
@@ -2238,6 +2432,13 @@
         pet = _name;
         mod_name = _modName;
         mod_type = _modType;
+
+		 // Stats:
+		var s = `pet/${pet}.${mod_name}.${mod_type}`;
+		if(!is_object(stat_get(s))){
+			stat_set(s, { found:0, owned:0 });
+		}
+		stat = stat_get(s);
 
          // Sprites:
         if(mod_type == "mod" && mod_name == "petlib"){

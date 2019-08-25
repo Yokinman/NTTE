@@ -90,8 +90,8 @@
                         w.ammo++;
 
                          // Epic Time:
-                        if(w.ammo > stat_get("miscBone")){
-                            stat_set("miscBone", w.ammo);
+                        if(w.ammo > stat_get("bone")){
+                            stat_set("bone", w.ammo);
                         }
 
                          // Effects:

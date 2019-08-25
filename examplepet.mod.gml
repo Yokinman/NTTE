@@ -1,7 +1,8 @@
 #define init
-    global.sprBabyIdle = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAGAAAAAYCAYAAAAF6fiUAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gUcDh44s6rdNQAAAexJREFUaN7tmD1uwkAQhd+iVWqiWBTcwBKdU4YOKT4EuYU7pwwdtyCHgNoUFHEXyTdwgYxwTSxNCsd/McZ/u0FJ9kk0u/a39rzZ8SyAkpKSkpKSkpKSktJ/E+twD/W8/6+rVXwGLcG0342BtdSHz/9kryGc2zY+g6Zgb6nBsDkO2xMAwLA5BL4EASDD5pBosKwE6hWfui1Chs3hTqPzs6aQMkRYA967hvkxxOvtEPokgOFwuItIDB+At5TCp69An49Rg/iwJsGBCRAR2IYV4EQExlifl5DOl5xAdGk3NTF5UFcSUqdYmXFurGUdlsVP5U6j2MxHKgWfiPqU0Sw+Ffy3l49aCK+a8JYa7h5uMAp9pNsMEfbDcXzBDhiFfpJFrSWZT0kddhFlZq6FJlCZ1YF/6QpazYAnqzi4H46xefZxb2rQJ0GfbSyTTwWDnaxOpwajYPDV+LxuAYR+YeKwPeHe1Hp3DpL5TLcCWs0AWOUPZGIwJtfnV5Yg3Qri0jAtjs+PoZDeTTL/1yQQv1Sa3EWUfuUNJ+4m8m4bTlZjO5zAqdQxiOOXDE74IhMIAL7Hpy2fN+4mFsVA5Dukrts4b7BgfimBCl2RmAQqf4xNpDzD5o349eeAJgv3OQf8LF/kf2JVfCbw+ZWUlJRk6hPy8zg/RZIATAAAAABJRU5ErkJggg==", 4, 12, 12);
-    global.sprBabyWalk = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAJAAAAAYCAYAAAAVpXQNAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gUcDh8F8tmgZQAAAr1JREFUaN7tmD+O00AYxd+sRtRBWClyA0vpjAQF7pAwBTfIMdKZdjsX3AFuQIG3DkWadCv5Bikso3WNLH0U9vhPPInXnpmYwDwpcrQrfTPze/M+zwSwsrKysrKysrKysrKy+s+V7ldAbDn8s2xMLSKJHHghBwBqfSybik1V92bZGDPYC3kHTrpfEWJzkEyYbMpgL+Qd5rfI5hoGEwBKIoe8kFMSOYQY5IVcKygTAbiCwTUbxM0TABHR7AFgIxaBJHKwecrx7eUC7jqDt+M43Bdj6khreyHHwS/k/w2gWh91/aBcR7pfYZkftdRus3HXGZLH8okAICLGmFJ5qjannI8mNgBwuC8msWFzGpxEDtxtRoghgIM9sE5tIkJlAtNhsuYAGDNYsGlt/h4f+qCXzZQA3A22NQEnKCd8Cqhqo1N6KQlA9W6WTFYxwY3JMeCuMxz8ogR0zvQxLb/SOT462chY6GLjhbxmIp6IAcbY4Nzv5jQ4iRz8+LQ8PUsgXazKj+KBzmAAjBvcZnORz8wB4EODvHr3Asv82LwrUSBdVBPfo/2+HCvmbjP6+h7Att8NHj4f8TpwgPX0dLnbrDz/oGgMjfUEQLD5+D3tniVO+bw9qrF5I39F1nwU2fRYxOPY8DkNFiYg70L+9fO3CpxrBMC4wWLuX6oNCqA8s/mFFj66AsDnNLhOgd/9++Yp70JD8bd1OOMGyzrEwS/g7Tg2yFXRawsAGzqdy25g3u5kYdNuMr3bnTBANs6EMajdgTrpe2zAiBvH2Nqd1J6ZswKbi7c8MYZCbWp3IFFb8O/w2WYXx2CDoGIMGqyykLp+MPg7xWSTDQVAanCbka7fyepvfVZMpaaOADBVgxUX0gbEBgFO6HKGA3D2lqKw8Z87lo6a0gCMCRa78oTn0HOv6MzQmOyG+dyq51ZWVlZWVkP6AyN1NyA777poAAAAAElFTkSuQmCC", 6, 12, 12);
-    global.sprBabyHurt = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEgAAAAYCAYAAABZY7uwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAHdElNRQfiBRwOHi8weVjyAAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjE3M26fYwAAAVJJREFUWEftlMttwzAMhnXICDllgtybEbpVFuihW2SJjNANukOXYPiQFFaWgZgyARvhRxC2lOjnQ5ZSEARBELwPAFA9UOjGeDbo7+eU0j0PHHDT//0+po/rgV6pM8VXY7f6LCodZ1GAC34+6wVo9XGHAce70SdYDODMjSlPtnWCsA7uMGAx/KQC6D3/Noqr/rMZPRsPIInSjvZ8y/p0ZpHaCCKPxETcHKTq50RZf5r8ZvVlYduMntkCyLo2WVUA7fzAMfDWl7umXsjKaK44z9gC8F1QLsyaLL7TXHEuZpv6DMAXLm6Mm4Pz9bK2B4DbJ66lJJVT4jRPBQ4W4KrPDeh/QTQvzjO2AP92WDvNFx8owFs/L3zVlgeRNSrxcgTKcdDj/P8leOtXdBvmzR6gW4QeDxYw0WvHg/pM24g5t/JMeqqp3Yq3PrOa0Ax71w+CwEJKD4GhfQGUB08sAAAAAElFTkSuQmCC", 3, 12, 12);
+    global.sprBabyIcon = sprite_add("sprites/pets/Example/sprBabyIcon.png", 1,  6,  6);
+    global.sprBabyIdle = sprite_add("sprites/pets/Example/sprBabyIdle.png", 4, 12, 12);
+    global.sprBabyWalk = sprite_add("sprites/pets/Example/sprBabyWalk.png", 6, 12, 12);
+    global.sprBabyHurt = sprite_add("sprites/pets/Example/sprBabyHurt.png", 3, 12, 12);
     
     /*
     ADDING A PET:
@@ -33,6 +34,7 @@
         light           = Determines if NTTE should draw the pet's light on dark levels.
         light_radius    = A 2 element array representing the pet's light radius. [Inner, Outer]
         push            = How much the pet gets pushed around by the player/other pets.
+        stat            = A lightweight object containing the pet's stats, you can add your own to it.
         alarm0          = Time in frames until the pet's _alrm0 script will be run again.
         
     SCRIPTS:
@@ -40,22 +42,40 @@
         
         <Name>_create - Runs once when the pet is created.
             Set sprites and important variables in here.
+
+        <Name>_icon - Return the pet's icon sprite here.
+            Icons are used for the map, offscreen pets, revivable pets, and the stats screen.
+            You can also return an array of [spr,img,xoff,yoff,xscale,yscale,angle,blend,alpha].
+
+        <Name>_ttip - Return loading screen tips here.
+            Return a string or an array of strings for the game to randomly pick one.
+
+        <Name>_stat - Return stats screen info here.
+            If the name argument equals "" then you should return a sprite or title for the stats block.
+            Otherwise you can return the stat's display name or an array containing [Display Name, Display Value].
+            Arguments: (Name, Value)
+
         <Name>_anim - Runs every frame. Handles animations.
             Leave this alone unless you want to change how the pet sets its sprites.
+
         <Name>_step - Runs every frame. The pet's step event.
+
         <Name>_draw - Runs every frame. The pet's draw event.
-            Called with all 9 arguments of draw_sprite_ext().
+            Arguments: (sprite, image, x, y, xscale, yscale, angle, blend, alpha)
+
         <Name>_alrm0 - Runs when the alarm0 timer reaches 0.
             Handles main movement patterns and behavior.
             Arguments: (Direction to leader, Distance to leader)
+
         <Name>_hurt - Runs when the pet comes in contact with damage.
             Leave this alone unless you want to change how the pet dodges/takes damage.
             Arguments: (Damage, Knockback amount, Knockback direction)
+
         <Name>_death - Runs on pet death, only used if the pet takes damage.
     
     SPRITES:
         If you're worried about consistency, the effect on the first frame of the pet
-        hurt sprite is achieved by adding opaque white to the sprite on a layer with
+        dodge sprite is achieved by adding opaque white to the sprite on a layer with
         blending set to overlay.
     */
     
@@ -82,10 +102,29 @@
     walkspd = 0.8;
     maxspeed = 3;
     
+     // Stat:
+    if("tears" not in stat) stat.tears = 0;
+    
+#define Baby_icon
+    return global.sprBabyIcon;
+
+#define Baby_ttip
+    return ["JUST A BABY", "DON'T MAKE THEM SAD"];
+
+#define Baby_stat(_name, _value)
+    switch(_name){
+        case "":        return global.sprBabyIdle;
+        case "tears":   return [_name, `@(color:${make_color_rgb(30, 160, 240)})${_value}`];
+    }
+
 #define Baby_step
-     // He's crying:
+     // He's Crying:
     if(!instance_exists(leader) && random(10) < current_time_scale){
         instance_create(x, y, Sweat);
+        
+         // Special Stat:
+        if("tears" not in stat) stat.tears = 0;
+        stat.tears++;
     }
 
 #define Baby_hurt(_hitdmg, _hitvel, _hitdir)
@@ -143,14 +182,14 @@
     else{
         direction = random(360);
         walk = 20 + random(20);
-        
         scrRight(direction);
+        
         return walk + random(10);
     }
     
 #define scrRight(_dir)
     /*
-    A very handy script to have. Sets the pet's right variable according
+    A very handy script to have. Sets the pet's "right" variable according
     to a given angle. Put this wherever the pet will change directions.
     */
     _dir = (_dir + 360) mod 360;
@@ -159,3 +198,4 @@
 
 #define pet_create(_x, _y, _pet)
     return mod_script_call("mod", "telib", "pet_create", _x, _y, _pet, "mod", mod_current);
+    

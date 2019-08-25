@@ -862,7 +862,7 @@
             
              // Parrot:
             p = m + "Coast/";
-            PetParrotIcon = sprite(p + "sprPetParrotIcon",  1,  6,  6);
+            PetParrotIcon = sprite(p + "sprPetParrotIcon",  1,  6,  5);
             PetParrotIdle = sprite(p + "sprPetParrotIdle",  6, 12, 12);
             PetParrotWalk = sprite(p + "sprPetParrotWalk",  6, 12, 14);
             PetParrotHurt = sprite(p + "sprPetParrotDodge", 3, 12, 12);
@@ -906,7 +906,7 @@
             
              // Spider
             p = m + "Caves/";
-            PetSpiderIcon    = sprite(p + "sprPetSpiderIcon",  1,  6,  6);
+            PetSpiderIcon    = sprite(p + "sprPetSpiderIcon",  1,  6,  5);
             PetSpiderIdle    = sprite(p + "sprPetSpiderIdle",  8, 16, 16);
             PetSpiderWalk    = sprite(p + "sprPetSpiderWalk",  6, 16, 16);
             PetSpiderHurt    = sprite(p + "sprPetSpiderDodge", 3, 16, 16);
@@ -953,7 +953,7 @@
 
          // Areas:
         Coast  = sound_add(p + "musCoast.ogg");
-        Trench = musBoss5;
+        Trench = sound_add(p + "musTrench.ogg");
         Lair   = sound_add(p + "musLair.ogg");
 
          // Bosses:
@@ -1001,10 +1001,21 @@
                 global.sav_auto = true;
                 exit;
             }
+            
+             // Save File Corrupt:
+            else{
+            	string_save(string_load(_path), "saveCORRUPT.sav");
+            	if(fork()){
+            		while(mod_exists("mod", "teloader")) wait 0;
+            		wait 1;
+	    			trace_color("NTTE | Something isn't right with your save file... creating a new one and moving old to 'saveCORRUPT.sav'.", c_red);
+            		exit;
+            	}
+            }
         }
 
          // New Save File:
-        string_save(json_encode(global.sav), _path);
+        save();
         global.sav_auto = true;
         exit;
     }
@@ -1219,7 +1230,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 									 // Wait for Sprite to Load:
 									var _base = sprite_add(_path, _img, _x, _y),
 										_waitTex = sprite_get_texture(_base, 0),
-										_waitMax = 90;
+										_waitMax = 150;
 
 									while(_waitMax-- > 0 && sprite_get_texture(_base, 0) == _waitTex){
 										wait 0;
@@ -1243,7 +1254,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 							if(array_length(_mask) > 0){
 								 // Wait for Sprite to Load:
 								var _waitTex = sprite_get_texture(s, 0),
-									_waitMax = 90;
+									_waitMax = 150;
 
 								while(_waitMax-- > 0 && sprite_get_texture(s, 0) == _waitTex){
 									wait 0;
@@ -1609,5 +1620,10 @@ var _shine = argument_count > 4 ? argument[4] : false;
 
      // No Crash:
     with(global.race){
-        with(instances_matching([CampChar, CharSelect], "race", self)) instance_delete(id);
+        with(instances_matching([CampChar, CharSelect], "race", self)){
+        	repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
+        		motion_add(random(360), random(random(8)));
+        	}
+        	instance_delete(id);
+        }
     }

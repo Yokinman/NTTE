@@ -78,7 +78,7 @@
 
 #define area_subarea            return 3;
 #define area_next               return 4;
-#define area_music              return musBoss5;
+#define area_music              return [mus.Trench, 0.8];
 #define area_ambience           return amb101;
 #define area_background_color   return make_color_rgb(100, 114, 127);
 #define area_shadow_color       return c_black;
@@ -972,3 +972,5 @@
 #define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);

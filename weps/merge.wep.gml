@@ -2118,7 +2118,7 @@
 #define weapon_rads(w)			return wep_stat(w, "rads");
 #define weapon_auto(w)			return (instance_is(self, Player) && wep_stat(w, "blod") && ammo[wep_stat(w, "type")] < wep_stat(w, "cost") && infammo == 0) ? -1 : wep_stat(w, "auto");
 #define weapon_melee(w)			return wep_stat(w, "mele");
-#define weapon_gold(w)			return wep_stat(w, "gold");
+#define weapon_gold				return ((argument_count > 0) ? wep_stat(argument0, "gold") : false);
 #define weapon_laser_sight(w)	return wep_stat(w, "lasr");
 
 #define weapon_fire(w)
@@ -4287,3 +4287,5 @@
 #define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);

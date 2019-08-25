@@ -6,6 +6,7 @@
     global.load_max = 0;
     global.load_hudy = 0;
     global.load_hudb = 0;
+    global.load_text = "";
 
      // Coop Delay Increase:
     var _coop = -1;
@@ -14,11 +15,11 @@
 
      // Mods:
     global.list = [ // [mod, delay]
-        ["teassets.mod.gml",                        5 + _coop],
-        ["telib.mod.gml",                           1 + _coop],
+        ["teassets.mod.gml",                        5 + _coop, "Assets"],
+        ["telib.mod.gml",                           1 + _coop, "Main Files"],
         ["ntte.mod.gml",                            1 + _coop],
         ["petlib.mod.gml",                          1 + _coop],
-        ["objects/tegeneral.mod.gml",               1 + _coop],
+        ["objects/tegeneral.mod.gml",               1 + _coop, "Objects"],
         ["objects/tepickups.mod.gml",               0 + _coop],
         ["objects/tedesert.mod.gml",                0 + _coop],
         ["objects/tecoast.mod.gml",                 1 + _coop],
@@ -27,13 +28,14 @@
         ["objects/tesewers.mod.gml",                1 + _coop],
         ["objects/tescrapyard.mod.gml",             0 + _coop],
         ["objects/tecaves.mod.gml",                 0 + _coop],
-        ["areas/coast.area.gml",                    1 + _coop],
+        ["areas/coast.area.gml",                    1 + _coop, "Areas"],
         ["areas/oasis.area.gml",                    1 + _coop],
         ["areas/pizza.area.gml",                    1 + _coop],
         ["areas/lair.area.gml",                     1 + _coop],
         ["areas/trench.area.gml",                   1 + _coop],
-        ["races/parrot.race.gml",                   1 + _coop],
-        ["weps/merge.wep.gml",                      1 + _coop],
+        ["races/parrot.race.gml",                   1 + _coop, "Characters"],
+        ["crowns/crime.crown.gml",                  1 + _coop, "Crowns"],
+        ["weps/merge.wep.gml",                      1 + _coop, "Weapons"],
         ["weps/crabbone.wep.gml",                   1],
         ["weps/scythe.wep.gml",                     1],
         ["weps/bat disc launcher.wep.gml",          1],
@@ -53,8 +55,7 @@
         ["weps/electroplasma shotgun.wep.gml",      1],
         ["weps/quasar blaster.wep.gml",             1],
         ["weps/quasar rifle.wep.gml",               1],
-        ["weps/quasar cannon.wep.gml",              1],
-        ["crowns/crime.crown.gml",                  1]
+        ["weps/quasar cannon.wep.gml",              1]
     ];
     global.load_max += array_length(global.list);
 
@@ -73,8 +74,11 @@
 
         mod_load(_load);
 
+         // Advance Loading Bar:
         global.load += 1 + random(0.2);
+        if(array_length(self) > 2) global.load_text = self[2];
 
+         // Delay:
         if(_wait > 0) wait _wait;
 
          // Wait for Sprites:
@@ -99,6 +103,7 @@
     }
 
      // Finished:
+    global.load_text = `@q@(color:${make_color_rgb(150, 40, 240)})Complete!`;
     sound_play_pitchvol(sndEXPChest, 1.5 + random(0.1), 0.6);
     sound_play_pitchvol(sndNoSelect, 0.6 + random(0.1), 0.5);
     while(global.load_hudy > 0) wait 0;
@@ -157,8 +162,20 @@
     }
     draw_set_blend_mode(bm_normal);
     
-     // Text:
+     // % Text:
     draw_set_font(fntM);
     draw_set_halign(fa_center);
     draw_set_valign(fa_middle);
     draw_text_nt(_x + (string_width("%") / 4), _y, `${round(_load * 100)}%`);
+
+     // Loading Text:
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_text_nt(_x + 33, _y - 7, "Loading");
+    draw_set_font(fntSmall);
+    var t = global.load_text;
+    if(global.load < global.load_max){
+        t += string_repeat(".", round(1.5 + (1.5 * sin(global.load))))
+    }
+    draw_text_nt(_x + 34, _y + 2, t);
+    
