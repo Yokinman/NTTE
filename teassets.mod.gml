@@ -66,11 +66,12 @@
 	        BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 
 	         // Bone 2:
-	        BoneSlashLight	   = sprite(p + "sprBoneSlashLight", 3, 16, 16);
-	        msk.BoneSlashLight = sprite(p + "mskBoneSlashLight", 3, 16, 16);
-	        BoneSlashHeavy	   = sprite(p + "sprBoneSlashHeavy", 4, 24, 24);
-	        msk.BoneSlashHeavy = sprite(p + "mskBoneSlashHeavy", 4, 24, 24);
-			BoneArrow		   = sprite(p + "sprBoneArrow",      1, 10,  2);
+	        BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
+	        msk.BoneSlashLight	= sprite(p + "mskBoneSlashLight", 3, 16, 16);
+	        BoneSlashHeavy		= sprite(p + "sprBoneSlashHeavy", 4, 24, 24);
+	        msk.BoneSlashHeavy	= sprite(p + "mskBoneSlashHeavy", 4, 24, 24);
+			BoneArrow			= sprite(p + "sprBoneArrow",      1, 10,  2);
+			BoneArrowHeavy		= sprite(p + "sprBoneArrowHeavy", 1, 12,  3);
 			with([msk.BoneSlashLight, msk.BoneSlashHeavy]){
 				mask = [true, 0];
 			}

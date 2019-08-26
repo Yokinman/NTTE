@@ -706,7 +706,7 @@
 		damage_falloff = current_frame + 2;
 		wallbounce = 4 * _shotgunShoulders;
 		alarm1 = (_boltMarrow > 0 ? 5 : 0);
-		seekdist = 40;
+		seekdist = 42;
 		setup = false;
 		big = false;
 		
@@ -716,12 +716,10 @@
 #define BoneArrow_step
 	 // Particles:
 	if(chance_ct(1, 7)) scrBoneDust(x, y);
+	if(chance_ct((speed <= 4), 1)) scrFX(x, y, [direction, speed], Dust);
 
 	 // Destroy:
-	if(speed <= 3){
-		with(instance_create(x, y, Dust)) motion_set(other.direction, other.speed);
-		instance_destroy();
-	}
+	if(speed <= 2) instance_destroy();
 	
 #define BoneArrow_end_step
 	 // Setup:
@@ -731,12 +729,12 @@
 		 // Bigify:
 		if(big){
 			 // Visual:
-			sprite_index = sprHeavyBolt;
+			sprite_index = spr.BoneArrowHeavy;
 			
 			 // Vars:
 			friction = 0;
-			damage = 32;
-			seekdist = 16;
+			damage = 42;
+			seekdist = 14;
 		}
 	}
 
@@ -747,6 +745,8 @@
 	with(instance_create(x, y, BoltTrail)){
 		image_xscale = l;
 		image_angle = d;
+		
+		image_yscale += (0.5 * other.big);
 	}
 	
 #define BoneArrow_alrm1
@@ -763,19 +763,35 @@
 	else alarm1 = 1;
 	
 #define BoneArrow_wall
+	 // Movin' Closer:
+	move_contact_solid(direction, speed);
+	
+	var l = point_distance(x, y, xprevious, yprevious),
+		d = point_direction(x, y, xprevious, yprevious);
+	with(instance_create(x, y, BoltTrail)){
+		image_xscale = l;
+		image_angle = d;
+		
+		image_yscale += (0.5 * other.big);
+	}
+	
+	xprevious = x;
+	yprevious = y;
+
+	 // Big:
 	if(big){
-		friction = 0.8;
-		sleep(10);
-		view_shake_at(x, y, 10);
+		friction = 1.2;
+		sleep(12);
+		view_shake_at(x, y, 8);
 	}
 
 	 // Effects:
-	instance_create(x + hspeed, y + vspeed, Dust);
+	scrFX(x, y, [direction, 2], Dust);
+	repeat(3) scrBoneDust(x, y);
 	
 	 // Bounce:
 	speed *= 0.8;
-	if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-	if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	move_bounce_solid(true);
 	image_angle = direction;
 	
 	 // Shotgun Shoulders:
@@ -784,7 +800,10 @@
 	wallbounce *= 0.9;
 	
 	 // Sounds:
-	if(speed > 4) sound_play_hit(sndShotgunHitWall, 0.4);
+	if(speed > 4){
+		sound_play_hit_ext(sndShotgunHitWall,	0.7 + random(0.3), 1.0);
+		sound_play_hit_ext(sndPillarBreak,		0.9 + random(0.3), 0.8);
+	}
 	
 #define BoneArrow_hit
 	if(projectile_canhit_melee(other)){
@@ -805,6 +824,47 @@
 		return id;
 	}
 
+
+#define BoneFX_create(_x, _y)
+	with(instance_create(_x, _y, Shell)){
+		 // Visual:
+		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
+		image_speed = 0;
+		image_angle = random(360);
+		depth = -3;
+		
+		 // Vars:
+		creator = noone;
+		delay = 4 + random(3);
+		
+		 // Scripts:
+		on_step = script_ref_create(BoneFX_step);
+		
+		return id;
+	}
+	
+#define BoneFX_step
+	if(instance_exists(creator)){
+		delay -= current_time_scale;
+		if(delay <= 0){
+			var _creatorDir = point_direction(x, y, creator.x, creator.y);
+			image_angle = _creatorDir;
+			
+			 // Gravitate:
+			if(!place_meeting(x, y, creator)){
+				motion_add_ct(_creatorDir, 2.4);
+				speed = min(speed, 8);
+			}
+			
+			 // Goodbye:
+			else{
+				scrFX(x, y, [direction, 2 + random(3)], Dust);
+				
+				sleep(14);
+				instance_destroy();
+			}
+		}
+	}
 
 #define BoneSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
@@ -890,6 +950,7 @@
 						}
 					}
 		
+					/*
 					 // Reap Soul:
 					if(other.heavy && size >= 1 && !instance_is(self, prop)){
 						with(instance_create(x, y - 4, ReviveFX)){
@@ -909,6 +970,7 @@
 						 // Stat:
 						stat_set("soul", stat_get("soul") + 1);
 					}
+					*/
 				}
 		    }
 	    }
