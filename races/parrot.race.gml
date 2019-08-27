@@ -27,7 +27,7 @@
                             num = 18; break;
                         case GiantWeaponChest:
                         case GiantAmmoChest:
-                            num = 54; break;
+                            num = 60; break;
                     }
                 }
             }
@@ -231,6 +231,9 @@
 
 
 #define create
+	 // Sprite:
+	spr_feather = race_sprite(sprChickenFeather);
+
      // Sound:
     snd_wrld = race_sound(sndMutant1Wrld);
 	snd_hurt = race_sound(sndMutant1Hurt);
@@ -250,12 +253,14 @@
     feather_num = 12;
     feather_ammo = 0;
     feather_ammo_max = 5 * feather_num;
+    feather_ammo_hud = [];
     feather_targ_delay = 0;
 
      // Pets:
-    ntte_pet = [noone];
+    if("ntte_pet" not in self) ntte_pet = [noone];
     while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
     parrot_bob = [0, 1, 1, 0];
+    if(bskin) for(var i = 0; i < array_length(parrot_bob); i++) parrot_bob[i] += 3;
 
 #define game_start
     with(instances_matching(Player, "race", mod_current)){
@@ -264,11 +269,19 @@
 	
 		     // Starter Pet + Extra Pet Slot:
 		    if(instance_exists(self)){
-		        with(Pet_spawn(x, y, "Parrot")) {
+		        with(Pet_spawn(x, y, "Parrot")){
 		            leader = other;
 		            visible = false;
 		            other.ntte_pet[array_length(other.ntte_pet) - 1] = id;
 		            stat_found = false;
+		            
+		             // Special:
+		        	bskin = other.bskin;
+		        	if(bskin){
+			        	spr_idle = spr.PetParrotBIdle;
+			        	spr_walk = spr.PetParrotBWalk;
+			        	spr_hurt = spr.PetParrotBHurt;
+		        	}
 		        }
 		    }
 	
@@ -279,10 +292,11 @@
 	        if(instance_exists(self)){
 	            repeat(feather_num){
 	            	with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-		                target = other;
-		                creator = other;
-		                index = other.index;
+	            		sprite_index = other.spr_feather;
 		                bskin = other.bskin;
+		                index = other.index;
+		                creator = other;
+		                target = other;
 		                speed *= 3;
 	            	}
 	            }
@@ -334,10 +348,11 @@
 
                  // Feathers:
                 with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-                    creator = other;
-                    target = other;
+                	sprite_index = other.spr_feather;
                     bskin = other.bskin;
                     index = other.index;
+                    creator = other;
+                    target = other;
                     array_push(_feathersTargeting, id);
                 }
 

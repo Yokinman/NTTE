@@ -460,6 +460,7 @@
     spr_shadow = shd16;
     spr_shadow_y = 4;
     spr_bubble_y = -2;
+    bskin = false;
     depth = -3;
 
      // Vars:
@@ -475,6 +476,9 @@
     
      // Stat:
 	if("pickups" not in stat) stat.pickups = 0;
+
+#define Parrot_icon
+	return (("bskin" in self && bskin) ? spr.PetParrotBIcon : spr.PetParrotIcon);
 
 #define Parrot_ttip
 	return ["PARROTS RETRIEVE @wPICKUPS", "HANDY", "THEY LIKE YOU", "HAND OVER HAND"];

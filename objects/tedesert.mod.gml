@@ -210,7 +210,7 @@
 
 
 #define BigCactus_create(_x, _y)
-    with(instance_create(_x, _y, Cactus)){
+    with(instance_create(_x, _y, CustomProp)){
          // Visual:
         spr_shadow = shd32;
         spr_shadow_y = 4;
@@ -235,11 +235,11 @@
         }
 
 		 // Sound:
+		snd_hurt = sndHitPlant;
 		snd_dead = sndPlantSnareTrapper;
 
          // Vars:
         maxhealth = 24;
-        my_health = maxhealth;
         size = 4;
 
 		 // Spawn Enemies:
@@ -252,6 +252,15 @@
 
         return id;
     }
+
+#define BigCactus_death
+	 // Dust-o:
+	var _ang = random(360);
+	for(var d = _ang; d < _ang + 360; d += random_range(60, 180)){
+		with(scrFX(x, y, [d, random_range(4, 5)], Dust)){
+			friction *= 2;
+		}
+	}
 
 
 #define BigMaggotSpawn_create(_x, _y)

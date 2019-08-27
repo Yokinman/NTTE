@@ -824,7 +824,8 @@
                         ["GoSit",         3, 12,  12, true],
                         ["Sit",           1, 12,  12, true],
                         ["MenuSelected", 10, 16,  16, false],
-                        ["Feather",       1,  4,   4, true]
+                        ["Feather",       1,  3,   4, true],
+                        ["FeatherHUD",    1,  5,   5, false]
                     ];
 
                 Parrot[i] = {};
@@ -862,10 +863,14 @@
             
              // Parrot:
             p = m + "Coast/";
-            PetParrotIcon = sprite(p + "sprPetParrotIcon",  1,  6,  5);
-            PetParrotIdle = sprite(p + "sprPetParrotIdle",  6, 12, 12);
-            PetParrotWalk = sprite(p + "sprPetParrotWalk",  6, 12, 14);
-            PetParrotHurt = sprite(p + "sprPetParrotDodge", 3, 12, 12);
+            PetParrotIcon  = sprite(p + "sprPetParrotIcon",   1,  6,  5);
+            PetParrotIdle  = sprite(p + "sprPetParrotIdle",   6, 12, 12);
+            PetParrotWalk  = sprite(p + "sprPetParrotWalk",   6, 12, 14);
+            PetParrotHurt  = sprite(p + "sprPetParrotDodge",  3, 12, 12);
+            PetParrotBIcon = sprite(p + "sprPetParrotBIcon",  1,  6,  5);
+            PetParrotBIdle = sprite(p + "sprPetParrotBIdle",  6, 12, 12);
+            PetParrotBWalk = sprite(p + "sprPetParrotBWalk",  6, 12, 14);
+            PetParrotBHurt = sprite(p + "sprPetParrotBDodge", 3, 12, 12);
 
              // CoolGuy:
             p = m + "Pizza/";

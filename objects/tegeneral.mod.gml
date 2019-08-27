@@ -2140,32 +2140,37 @@
         y = creator.y; 
     }
     else{
-         // Feather Pickups:
         if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
 	        var t = instances_matching(Player, "race", "parrot");
-
-	        if(array_length(t) > 0){
-	        	if(!small || array_find_index(t, instance_nearest(x, y, Player)) >= 0 || place_meeting(x, y, Portal)){
-		            with(t){
-		            	for(var i = 0; i < other.num; i++){
-			                with(obj_create(other.x, other.y, "ParrotFeather")){
-			                    target = other;
-			                    creator = other;
-			                    index = other.index;
-			                    bskin = other.bskin;
-			                    stick_wait = 3;
-			                }
-		
-			                 // Sound FX:
-			                if(fork()){
-			                	wait((i * (4 / other.num)) + irandom(irandom(1)));
-			                	sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
-			                	exit;
-			                }
-		            	}
-		            }
+	        
+	         // Pickup Feathers go to Nearest Parrot:
+	        if(small && !place_meeting(x, y, Portal)){
+	        	t = instance_nearest(x, y, Player);
+	        	if(instance_exists(t) && t.race != "parrot"){
+	        		t = noone;
 	        	}
 	        }
+
+        	 // Feathers:
+            with(t){
+            	for(var i = 0; i < other.num; i++){
+	                with(obj_create(other.x, other.y, "ParrotFeather")){
+	                	sprite_index = other.spr_feather;
+	                    bskin = other.bskin;
+	                    index = other.index;
+	                    creator = other;
+	                    target = other;
+	                    stick_wait = 3;
+	                }
+
+	                 // Sound FX:
+	                if(fork()){
+	                	wait((i * (4 / other.num)) + irandom(irandom(1)));
+	                	sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
+	                	exit;
+	                }
+            	}
+            }
         }
 
         instance_destroy();
@@ -2175,10 +2180,10 @@
 #define ParrotFeather_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        sprite_index = mskNone;
+        sprite_index = sprChickenFeather;
         image_blend_fade = c_gray;
         depth = -8;
-
+        
          // Vars:
         mask_index = mskLaser;
         creator = noone;
@@ -2194,29 +2199,11 @@
         stick_wait = 0;
         canhold = false;
         move_factor = 0;
-
+        
          // Push:
         motion_add(random(360), 4 + random(2));
         image_angle = direction + 135;
         
-         // Spriterize:
-        if(fork()){
-            wait 0;
-            if(instance_exists(self)){
-            	sprite_index = sprChickenFeather;
-            	if(is_string(bskin)){
-            		sprite_index = sprite_skin(bskin, sprite_index);
-            	}
-            	else if(instance_exists(creator) && is_string(creator.race)){
-            		sprite_index = mod_script_call("race", creator.race, "race_sprite", sprite_index);
-            	}
-                if(sprite_index == sprChickenFeather){
-                	sprite_index = spr.Parrot[0].Feather;
-                }
-            }
-            exit;
-        }
-
         return id;
     }
 
@@ -2788,8 +2775,8 @@
 		 // Wall Collision:
 	    with(path_wall) with(other){
 		    if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-		        if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw = 0;
-		        if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw = 0;
+		        if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -0.05;
+		        if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -0.05;
 		    }
 	    }
 	}

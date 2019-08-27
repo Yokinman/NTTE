@@ -29,6 +29,9 @@
         amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
     };
 
+	 // HUD Surface, for Pause Screen:
+	global.surfMainHUD = surflist_set("MainHUD", 0, 0, game_width, game_height);
+
 	 // Loadout Crown System:
     global.loadout_crown = {
         size : [],
@@ -272,7 +275,7 @@
 		global.mouse_y_previous = array_create(maxp);
 		
 	 // Pet Map Icons:
-	global.petMapiconScrt = array_create(maxp, []);
+	global.petMapicon = array_create(maxp, []);
 	global.petMapiconPause = 0;
 	global.petMapiconPauseForce = 0;
 
@@ -367,215 +370,6 @@
      // Underwater Level:
     global.waterBubblePop = [];
     global.waterSoundActive = false;
-    global.waterSound = {
-        "sndOasisShoot" : [
-            sndBloodLauncher,
-            sndBouncerShotgun,
-            sndBouncerSmg,
-            sndClusterLauncher,
-            sndCrossbow,
-            sndDiscgun,
-            sndDoubleMinigun,
-            sndDragonStart,
-            sndEnemyFire,
-            sndFireShotgun,
-            sndFlakCannon,
-            sndFlare,
-            sndFlareExplode,
-            sndFrogPistol,
-            sndGoldCrossbow,
-            sndGoldDiscgun,
-            sndGoldFrogPistol,
-            sndGoldGrenade,
-            sndGoldLaser,
-            sndGoldLaserUpg,
-            sndGoldMachinegun,
-            sndGoldPistol,
-            sndGoldPlasma,
-            sndGoldPlasmaUpg,
-            sndGoldRocket,
-            sndGoldShotgun,
-            sndGoldSlugger,
-            sndGoldSplinterGun,
-            sndGrenade,
-            sndGrenadeRifle,
-            sndGrenadeShotgun,
-            sndGunGun,
-            sndHeavyCrossbow,
-            sndHeavyMachinegun,
-            sndHeavyNader,
-            sndHeavyRevoler,
-            sndHyperLauncher,
-            sndHyperRifle,
-            sndIncinerator,
-            sndMachinegun,
-            sndMinigun,
-            sndLaser,
-            sndLaserUpg,
-            sndLaserCannon,
-            sndLaserCannonUpg,
-            sndLightningHammer,
-            sndLightningPistol,
-            sndLightningPistolUpg,
-            sndLightningRifle,
-            sndLightningRifleUpg,
-            sndPistol,
-            sndPlasma,
-            sndPlasmaUpg,
-            sndPlasmaMinigun,
-            sndPlasmaMinigunUpg,
-            sndPlasmaRifle,
-            sndPlasmaRifleUpg,
-            sndPopgun,
-            sndQuadMachinegun,
-            sndRogueRifle,
-            sndRustyRevolver,
-            sndSeekerPistol,
-            sndSeekerShotgun,
-            sndShotgun,
-            sndSlugger,
-            sndSmartgun,
-            sndSplinterGun,
-            sndSplinterPistol,
-            sndSuperCrossbow,
-            sndSuperDiscGun,
-            sndSuperSplinterGun,
-            sndToxicLauncher,
-            sndTripleMachinegun,
-            sndUltraPistol,
-            sndWaveGun
-            ],
-        "sndOasisMelee" : [
-            sndBlackSword,
-            sndBloodHammer,
-            sndChickenSword,
-            sndClusterOpen,
-            sndEnergyHammer,
-            sndEnergyHammerUpg,
-            sndEnergyScrewdriver,
-            sndEnergyScrewdriverUpg,
-            sndEnergySword,
-            sndEnergySwordUpg,
-            sndFlamerStart,
-            sndGoldScrewdriver,
-            sndGoldWrench,
-            sndGuitar,
-            sndHammer,
-            sndJackHammer,
-            sndScrewdriver,
-            sndShovel,
-            sndToxicBoltGas,
-            sndUltraShovel,
-            sndWrench
-            ],
-        "sndOasisExplosion" : [
-            sndBloodCannonEnd,
-            sndBloodLauncherExplo,
-            sndCorpseExplo,
-            sndDevastator,
-            sndDevastatorExplo,
-            sndDevastatorUpg,
-            sndExplosion,
-            sndExplosionCar,
-            sndExplosionL,
-            sndExplosionXL,
-            sndFlameCannonEnd,
-            sndGoldNukeFire,
-            sndLightningCannonEnd,
-            sndLightningCannonUpg,
-            sndNukeFire,
-            sndNukeExplosion,
-            sndPlasmaBigExplode,
-            sndPlasmaBigUpg,
-            sndPlasmaHuge,
-            sndPlasmaHugeUpg,
-            sndSuperFlakCannon,
-            sndSuperFlakExplode
-            ],
-        "sndOasisExplosionSmall" : [
-            sndBloodCannon,
-            sndDoubleFireShotgun,
-            sndDoubleShotgun,
-            sndFlakExplode,
-            sndFlameCannon,
-            sndRocket,
-            sndEraser,
-            sndExplosionS,
-            sndHeavySlugger,
-            sndHyperSlugger,
-            sndLightningCannon,
-            sndLightningShotgun,
-            sndLightningShotgunUpg,
-            sndPlasmaBig,
-            sndPlasmaHit,
-            sndSawedOffShotgun,
-            sndSuperBazooka,
-            sndUltraCrossbow,
-            sndUltraGrenade,
-            sndUltraShotgun,
-            sndUltraLaser,
-            sndUltraLaserUpg
-            ],
-        "sndOasisPopo" : [
-            sndEliteIDPDPortalSpawn,
-            sndIDPDPortalSpawn
-            ],
-        "sndOasisPortal" : [
-            sndLaserCannonCharge,
-            sndPortalOpen
-            ],
-        "sndOasisChest" : [
-            sndAmmoChest,
-            sndBigCursedChest,
-            sndBigWeaponChest,
-            sndChest,
-            sndCursedChest,
-            sndGoldChest,
-            sndHealthChest,
-            sndHealthChestBig,
-            sndWeaponChest
-            ],
-        "sndOasisHurt" : [
-            sndMutant1Hurt,
-            sndMutant2Hurt,
-            sndMutant3Hurt,
-            sndMutant4Hurt,
-            sndMutant5Hurt,
-            sndMutant6Hurt,
-            sndMutant7Hurt,
-            sndMutant8Hurt,
-            sndMutant9Hurt,
-            sndMutant10Hurt,
-            sndMutant11Hurt,
-            sndMutant12Hurt,
-            sndMutant13Hurt,
-            sndMutant14Hurt,
-            sndMutant15Hurt,
-            sndMutant16Hurt
-            ],
-        "sndOasisDeath" : [
-            sndMutant1Dead,
-            sndMutant2Dead,
-            sndMutant3Dead,
-            sndMutant4Dead,
-            sndMutant5Dead,
-            sndMutant6Dead,
-            sndMutant7Dead,
-            sndMutant8Dead,
-            sndMutant9Dead,
-            sndMutant10Dead,
-            sndMutant11Dead,
-            sndMutant12Dead,
-            sndMutant13Dead,
-            sndMutant14Dead,
-            sndMutant15Dead,
-            sndMutant16Dead,
-            sndSuperSlugger
-            ],
-        "sndOasisHorn" : [
-            sndVenuz
-            ]
-    };
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -596,6 +390,7 @@
 #macro surfCrownHide		global.surfCrownHide
 #macro surfCrownHideScreen	global.surfCrownHideScreen
 #macro surfCharm			global.surfCharm
+#macro surfMainHUD			global.surfMainHUD
 
 #macro shadCharm global.shadCharm
 
@@ -650,8 +445,8 @@
 #define game_start
 	 // Reset:
     global.mapArea = [];
-    for(var i = 0; i < array_length(global.petMapiconScrt); i++){
-    	global.petMapiconScrt[i] = [];
+    for(var i = 0; i < array_length(global.petMapicon); i++){
+    	global.petMapicon[i] = [];
     }
     with(UnlockCont) instance_destroy();
     mod_variable_set("area", "trench", "trench_visited", []);
@@ -1087,7 +882,7 @@
         	}
 
              // Spawn Prism:
-            with(BigCursedChest) {
+            with(BigCursedChest){
                 Pet_spawn(x, y, "Prism");
             }
             break;
@@ -1204,7 +999,7 @@
     }
     
      // Treasure Chests:
-    if(chance(0, 1)){
+    /*if(chance(0, 1)){
     	var _x, _y,
     		o = 32;
 
@@ -1250,17 +1045,23 @@
     		
     			break;
     	}
-    }
+    }*/
     
      // More:
     global.specialPickups = global.specialPickupsMax;
 
 #define step
+    if(DebugLag) trace_time();
+    
+	 // Bind Events:
     script_bind_end_step(end_step, 0);
     script_bind_end_step(charm_step, 0);
     script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 0.1);
-
-    if(DebugLag) trace_time();
+    with(instances_matching(TopCont, "visible", true)){
+    	var d = depth;
+    	with(instances_matching(GenCont, "visible", true)) d = min(depth, d);
+    	script_bind_draw(draw_top, d - 0.1);
+    }
 
      // Character Selection Menu:
     if(instance_exists(Menu)){
@@ -1423,11 +1224,11 @@
 		
 	 // Pet Map Icons:
 	with(Player){
-		var _scrt = [];
+		var _list = [];
 		with(ntte_pet) if(instance_exists(self)){
-			array_push(_scrt, [mod_type, mod_name, pet]);
+			array_push(_list, pet_get_mapicon(mod_type, mod_name, pet));
 		}
-		global.petMapiconScrt[index] = _scrt;
+		global.petMapicon[index] = _list;
 	}
 
 	 // Player Death:
@@ -2098,7 +1899,7 @@
 	         // Dim Screen:
 	        draw_set_color(c_black);
 	        draw_set_alpha(0.75);
-	        draw_rectangle(0, 36, game_width, game_height - 36, 0);
+	        draw_rectangle(0, 0, game_width, game_height, 0);
 	        draw_set_alpha(1);
 
 	         // Leave:
@@ -2160,7 +1961,7 @@
 			 // Player Clicky:
 			if(!instance_exists(Loadout) || !Loadout.selected){
 				for(var i = 0; i < maxp; i++){
-					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x1, _y1, _x2, _y2)){
+					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x1, _y1 - 8, _x2, _y2)){
 						_hover = true;
 						if(button_pressed(i, "fire")){
 							sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
@@ -2174,7 +1975,7 @@
 
 			 // Button Visual:
 			draw_sprite_ext(sprBossNameSplat, MenuSplat, _x1 + 17, _y1 + 12 + MenuSplat, 1, 1, 90, c_white, 1);
-			if(MenuSplat > 0){
+			if(!MenuOpen && MenuSplat > 0){
 				var w = (MenuSplatBlink % 300) - 120;
 				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, ((_hover || in_range(w, 0, 5) || in_range(w, 8, 10)) ? c_white : c_silver), 1);
 			}
@@ -2192,72 +1993,222 @@
 
 	instance_destroy();
 
-#define draw_gui
-    var _active = 0,
-		_ox = 0,
-		_oy = 0;
-
-    for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-    if(_active > 1) _ox -= 19;
-
+#define draw_top
+    var _players = 0,
+		_vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_ox = _vx,
+		_oy = _vy,
+		_surfHUD = surfMainHUD,
+		_surfHUDDraw = true;
+		
 	draw_set_font(fntSmall);
 	draw_set_halign(fa_right);
 	draw_set_valign(fa_top);
-
-	 // Bonus Ammo HUD:
-	with(instances_matching_gt(Player, "ammo_bonus", 0)){
-		draw_set_projection(2, index);
-
-		 // Subtle Color Wave:
-		var _text = `+${ammo_bonus}`;
-		for(var i = 1; i <= string_length(_text); i++){
-			var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
-			_text = string_insert(a, _text, i);
-			i += string_length(a);
-		}
-
-		draw_text_nt(_ox + 66, _oy + 30 - (_active > 1), _text);
-	}
-
-	 // Bonus HP HUD:
-	with(instances_matching_ne(Player, "my_health_bonus", null)){
-		draw_set_projection(2, index);
+	
+	with(_surfHUD){
+		x = _vx;
+		y = _vy;
+		w = game_width;
+		h = game_height;
 		
-		if("my_health_bonus_hud" not in self){
-			my_health_bonus_hud = 0;
+		if(surface_exists(surf)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			surface_reset_target();
 		}
+		else _surfHUDDraw = false;
+	}
+	
+	 // Co-op Rad Canister Offset:
+    for(var i = 0; i < maxp; i++) _players += player_is_active(i);
+    if(_players > 1) _ox -= 17;
 
-		my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
+	 // Determine which sides of the screen player HUD is On:
+	var _hudSide = array_create(maxp, 0),
+		n = 0;
+		
+	for(var i = 0; i < maxp; i++) if(player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
+	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
 
-		var _x1 = _ox + 106,
-			_y1 = _oy + 5,
-			_x2 = _x1 + (3 * my_health_bonus_hud),
-			_y2 = _y1 + 10;
-
-		if(_x2 > _x1 + 1){
-			draw_set_color(c_black);
-			draw_rectangle(_x1, _y1 - 1, _x2 + 1, _y2 + 2, false); // Shadow
-			draw_set_color(c_white);
-			draw_rectangle(_x1, _y1,	 _x2,	  _y2,	   false); // Outline
-			draw_set_color(c_black);
-			draw_rectangle(_x1, _y1 + 1, _x2 - 1, _y2 - 1, false); // Inset
-
-			 // Filling:
-			if(my_health_bonus > 0){
-				if(sprite_index == spr_hurt && image_index < 1){
-					draw_set_color(c_white);
+	 // Player HUD:
+	for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
+		var _player = player_find(_index),
+			_side = _hudSide[_index],
+			_flip = (_side ? -1 : 1);
+			
+		draw_set_projection(2, _index);
+		
+		 // Draw Main Local Player to Surface for Pause Screen:
+		if(_surfHUDDraw && player_is_local_nonsync(_index)){
+			with(_surfHUD){
+				_ox -= x;
+				_oy -= y;
+				surface_set_target(surf);
+			}
+		}
+		
+		if(instance_exists(_player)){
+			 // Non-nonsync Stuff:
+			with(_player){
+				 // Bonus HP:
+				if("my_health_bonus" in self){
+					if("my_health_bonus_hud" not in self){
+						my_health_bonus_hud = 0;
+					}
+					my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
 				}
-				else{
-					draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+				
+				 // Feathers:
+				if(race == "parrot"){
+					var m = ceil(feather_ammo_max / feather_num);
+					if(array_length(feather_ammo_hud) != m){
+						feather_ammo_hud = array_create(m);
+						for(var i = 0; i < m; i++) feather_ammo_hud[i] = [0, 0];
+					}
 				}
-
-				draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - 1, _y2 - 1, false);
+			}
+			
+			if(player_get_show_hud(_index, player_find_local_nonsync())){
+				 // Bonus Ammo HUD:
+				with(instances_matching_gt(_player, "ammo_bonus", 0)){
+					 // Subtle Color Wave:
+					var _text = `+${ammo_bonus}`;
+					for(var i = 1; i <= string_length(_text); i++){
+						var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
+						_text = string_insert(a, _text, i);
+						i += string_length(a);
+					}
+					
+					draw_text_nt(_ox + 66, _oy + 30 - (_players > 1), _text);
+				}
+				
+				 // Bonus HP HUD:
+				with(instances_matching_ne(_player, "my_health_bonus", null)){
+					var _x1 = _ox + 106 - (85 * _side),
+						_y1 = _oy + 5,
+						_x2 = _x1 + (3 * my_health_bonus_hud * _flip),
+						_y2 = _y1 + 10;
+						
+					if((!_side && _x2 > _x1 + 1) || (_side && _x1 > _x2 + 1)){
+						draw_set_color(c_black);
+						draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
+						draw_set_color(c_white);
+						draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
+						draw_set_color(c_black);
+						draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
+						
+						 // Filling:
+						if(my_health_bonus > 0){
+							if(sprite_index == spr_hurt && image_index < 1){
+								draw_set_color(c_white);
+							}
+							else{
+								draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+							}
+							
+							draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - _flip, _y2 - 1, false);
+						}
+					}
+				}
+				
+				 // Parrot Feathers:
+				with(instances_matching(_player, "race", "parrot")){
+					var _x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
+						_y = _oy + 11,
+						_spr = spr_feather,
+						_skinCol = (bskin ? make_color_rgb(30, 30, 60) : make_color_rgb(80, 0, 0)),
+						_output = 1 + (2 * ultra_get(race, 1)),
+						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
+						_hudGoal = [feather_ammo, 0];
+						
+					with(instances_matching_ne(_feathers, "canhud", true)) if(canhold) canhud = true;
+					for(var i = 0; i < array_length(_hudGoal); i++){
+						_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
+					}
+						
+					for(var i = 0; i < array_length(feather_ammo_hud); i++){
+						var _hud = feather_ammo_hud[i],
+							_xsc = _flip,
+							_ysc = 1,
+							_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
+							_alp = 1,
+							_dx = _x + (5 * i * _flip),
+							_dy = _y;
+						
+						 // Gradual Fill Change:
+						for(var j = 0; j < array_length(_hudGoal); j++){
+							var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
+							
+							if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
+								_hud[j] += _diff;
+							}
+							else{
+								_hud[j] += _diff * 2/3 * current_time_scale;
+							}
+						}
+						
+						 // Extend Shootable Feathers:
+						if(i < _output && _hud[0] > 0){
+							_dx -= _flip;
+							if(_hud[0] > _hud[1]) _dy++;
+						}
+						
+						 // Draw:
+						draw_sprite_ext(spr.Parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+						_dx -= sprite_get_xoffset(_spr) * _xsc;
+						_dy -= sprite_get_yoffset(_spr) * _ysc;
+						for(var j = 0; j < array_length(_hud); j++){
+							if(_hud[j] > 0){
+								var _l = 0,
+									_t = 0,
+									_w = max(1, sprite_get_width(_spr) * _hud[j]),
+									_h = sprite_get_height(_spr);
+									
+								draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
+								draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
+								
+								 // Separation Line:
+								if(_hud[j] < 1 && _hud[0] > _hud[1]){
+									_l += _w - 1;
+									_w = 1;
+									draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
+									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
+								}
+							}
+						}
+						draw_set_fog(false, 0, 0, 0);
+					}
+					
+					 // LOW HP:
+					if(_players <= 1){
+						if(drawlowhp > 0 && sin(wave) > 0){
+							if(my_health <= 4 && my_health != maxhealth){
+								draw_set_font(fntM);
+								draw_set_halign(fa_left);
+								draw_set_valign(fa_top);
+								draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		 // Main Player Surface Finish:
+		if(_surfHUDDraw && player_is_local_nonsync(_index)){
+			_surfHUDDraw = false;
+			surface_reset_target();
+			with(_surfHUD){
+				draw_surface(surf, x, y);
+				_ox += x;
+				_oy += y;
 			}
 		}
 	}
-
+	
 	draw_reset_projection();
-
+	
 	 // Coast Indicator:
 	if(instance_exists(Player)){
 		with(instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true)){
@@ -2280,8 +2231,8 @@
 
 				 // Draw:
 				_y += sin(current_frame / 8);
-				var	_x1 = _x - view_xview_nonsync - (_size / 2),
-					_y1 = _y - view_yview_nonsync - (_size / 2),
+				var	_x1 = _x - (_size / 2),
+					_y1 = _y - (_size / 2),
 					_x2 = _x1 + _size,
 					_y2 = _y1 + _size;
 
@@ -2299,34 +2250,34 @@
 	with(instances_matching(CustomHitme, "name", "Pet")){
 		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || instance_exists(my_corpse))){
 			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
-
+			
 			if(sprite_exists(_icon.spr)){
-				var _x = x + _icon.x - view_xview_nonsync,
-					_y = y + _icon.y - view_yview_nonsync;
-
+				var _x = x + _icon.x,
+					_y = y + _icon.y;
+						
 				 // Death Pointer:
 				if(instance_exists(my_corpse)){
 					_y -= 20 + sin(wave / 10);
 					draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
 				}
-
+				
 				 // Icon:
 				var	_x1 = sprite_get_xoffset(_icon.spr),
 					_y1 = sprite_get_yoffset(_icon.spr),
 					_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
 					_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
-
-				_x = clamp(_x, _x1 + 1, _x2 - 1);
-				_y = clamp(_y, _y1 + 1, _y2 - 1);
-
+					
+				_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
+				_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
+				
 				draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
-
+				
 				 // Death Indicating:
 				if(instance_exists(my_corpse)){
 					var _flashLength = 15,
 						_flashDelay = 10,
 						_flash = (current_frame % (_flashLength + _flashDelay));
-
+						
 					if(_flash < _flashLength){
 						draw_set_blend_mode(bm_add);
 						draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
@@ -2336,6 +2287,29 @@
 			}
 		}
 	}
+	
+	draw_set_font(fntM);
+	
+	instance_destroy();
+
+#define draw_pause_pre
+	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
+		 // HUD:
+		with(surfMainHUD) if(surface_exists(surf)){
+			x = view_xview_nonsync;
+			y = view_yview_nonsync;
+			
+			 // Dim:
+			var _col = c_white;
+			if(instance_exists(BackMainMenu)){
+				_col = merge_color(_col, c_black, 0.9);
+			}
+			
+			draw_surface_ext(surf, x, y, 1, 1, 0, _col, 1);
+		}
+	}
+	
+	instance_destroy();
 
 #define draw_pause
 	 // (Frame Flash) Pet Map Icons:
@@ -2401,6 +2375,35 @@
 	draw_reset_projection();
 
 	ntte_menu();
+
+#define draw_gui_end
+     // Custom Sound Volume:
+    for(var i = 0; i < array_length(global.current); i++){
+        var c = lq_get_value(global.current, i);
+        if(c.snd != -1){
+            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
+        }
+    }
+
+	 // For Options Menu:
+	for(var i = 0; i < maxp; i++){
+		global.mouse_x_previous[i] = mouse_x[i];
+		global.mouse_y_previous[i] = mouse_y[i];
+	}
+
+	 // :
+	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)) with(UberCont){
+		script_bind_draw(draw_pause_pre, depth - 0.1);
+	}
+
+	 // Pet Map Icon Drawing:
+	var _mapObj = [TopCont, GenCont, UberCont];
+	for(var i = 0; i < array_length(_mapObj); i++){
+		var _obj = _mapObj[i];
+		with(script_bind_draw(draw_pet_mapicons, (instance_exists(_obj) ? _obj.depth : object_get_depth(_obj)) - 0.1, _obj)){
+			persistent = true;
+		}
+	}
 
 
 #define ammo_bono(_cost, _type)
@@ -2468,30 +2471,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 break;
         }
     }
-
-#define draw_gui_end
-     // Custom Sound Volume:
-    for(var i = 0; i < array_length(global.current); i++){
-        var c = lq_get_value(global.current, i);
-        if(c.snd != -1){
-            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
-        }
-    }
-
-	 // For Options Menu:
-	for(var i = 0; i < maxp; i++){
-		global.mouse_x_previous[i] = mouse_x[i];
-		global.mouse_y_previous[i] = mouse_y[i];
-	}
-
-	 // Pet Map Icon Drawing:
-	var _mapObj = [TopCont, GenCont, UberCont];
-	for(var i = 0; i < array_length(_mapObj); i++){
-		var _obj = _mapObj[i];
-		with(script_bind_draw(draw_pet_mapicons, (instance_exists(_obj) ? _obj.depth : object_get_depth(_obj)) - 0.1, _obj)){
-			persistent = true;
-		}
-	}
 
 #define area_step
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
@@ -2648,9 +2627,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 			}
 
 			 // Pet Icons:
-			for(var _petNum = 0; _petNum < array_length(global.petMapiconScrt[i]); _petNum++){
-				var e = global.petMapiconScrt[i, _petNum],
-					_icon = pet_get_mapicon(e[0], e[1], e[2]);
+			for(var _petNum = 0; _petNum < array_length(global.petMapicon[i]); _petNum++){
+				var _icon = global.petMapicon[i, _petNum];
 
 				 // Dim:
 				if(instance_exists(BackMainMenu)){
@@ -3869,14 +3847,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     	array_push(global.waterBubblePop, [id, x, y, sprPlayerBubblePop]);
     }
     
-
-     // Pet Bubbles:
-    /*with(instances_matching(instances_matching_ne(instances_matching(CustomHitme, "name", "Pet"), "spr_bubble", -1), "visible", true)){
-        draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
-    }*/
-
      // Boiling Water:
-    d3d_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
+    draw_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
     draw_set_blend_mode(bm_add);
     with(Flame) if(sprite_index != sprFishBoost){
         var s = 1.5,
@@ -3885,19 +3857,19 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         draw_sprite_ext(sprDragonFire, image_index + 2, x, y, image_xscale * s, image_yscale * s, image_angle, image_blend, image_alpha * a);
     }
     draw_set_blend_mode(bm_normal);
-    d3d_set_fog(0, 0, 0, 0);
+    draw_set_fog(0, 0, 0, 0);
 
 #define underwater_sound(_state)
     global.waterSoundActive = _state;
-    for(var i = 0; i < lq_size(global.waterSound); i++){
-        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
-        with(lq_get_value(global.waterSound, i)){
+    var _waterSound = mod_variable_get("mod", "telib", "waterSound");
+    for(var i = 0; i < lq_size(_waterSound); i++){
+        var _sndOasis = asset_get_index(lq_get_key(_waterSound, i));
+        with(lq_get_value(_waterSound, i)){
         	var _snd = self;
         	if(_state) sound_assign(_snd, _sndOasis);
         	else sound_restore(_snd);
         }
     }
-
 
 #define CampChar_create(_x, _y, _race)
     _race = race_get_name(_race);
@@ -3923,8 +3895,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
             y = round(y);
 
              // Safe:
-            var o = 12;
-            if(!collision_ellipse(x - o, y - o, x + o, y + o, CampChar, true, true) && !place_meeting(x, y, TV)){
+            if(!collision_circle(x, y, 12, CampChar, true, true) && !place_meeting(x, y, TV)){
                 break;
             }
         }
@@ -5074,7 +5045,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                     draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
                     surface_reset_target();
     
-                     // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State:
+                     // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
                     var f = crownPath + string(crwn) + crownPathD;
                     surface_save(_surfCrown, f);
                     surface_destroy(_surfCrown);
