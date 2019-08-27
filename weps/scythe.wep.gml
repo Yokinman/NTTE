@@ -3,11 +3,17 @@
 	var b = [
 		"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",
-		"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"
+		"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"
 	];
-    global.sprWep		= sprite_add_weapon_base64(b[0],  5, 7);
-	global.sprWepHUD	= sprite_add_weapon_base64(b[1], 10, 7);
-	global.sprShotbow	= sprite_add_weapon_base64(b[2],  6, 3);
+    global.sprWep			= sprite_add_weapon_base64(b[0],  5, 7);
+	global.sprWepHUD		= sprite_add_weapon_base64(b[1], 10, 7);
+	
+	global.sprShotbow		= sprite_add_weapon_base64(b[2],  6, 3);
+	
+	global.sprSlugbolt		= sprite_add_weapon_base64(b[3],  6, 5);
+	global.sprSlugboltHUD	= sprite_add_weapon_base64(b[3], 11, 5);
+	
     global.sprWepLocked	= mskNone;
 
 	 // Mode Info:
@@ -28,10 +34,12 @@
 			load : 18 // 0.6 Seconds
 		},
 		{
-			name : "bone slugbow",
-			sprt : sprHeavyCrossbow,
+			name : "bone slugbolt",
+			sprt : global.sprSlugbolt,
 			cost : 5,
-			load : 15 // 0.5 Seconds
+			load : 15, // 0.5 Seconds
+			
+			sprt_hud : global.sprSlugboltHUD
 		}
 	];
 	global.numModes = array_length(wepModes);
@@ -148,16 +156,17 @@
 				
 				 // Sounds:
 				sound_play_pitch(sndSuperCrossbow, 0.9 + random(0.3));
+				sound_play_pitch(sndBloodLauncherExplo, 1.2 + random(0.3));
 				
 				 // Effects:
-				weapon_post(6, 3, 5);
+				weapon_post(6, 3, 7);
 				sleep(4);
 			}
 		
 			break;
 		//#endregion
 		
-		//#region SLUGBOW
+		//#region SLUGBOLT
 		case 2:
 			if(wepammo_fire(w)){
 				 // Projectile:
@@ -168,9 +177,18 @@
 					big		= true;
 					
 					direction	= d;
-					speed		= 16;
+					speed		= 20;
 					image_angle = direction;
 				}
+			
+				 // Sounds:
+				sound_play_pitch(sndHeavyCrossbow, 0.9 + random(0.3));
+				sound_play_pitch(sndBloodHammer, 1.1 + random(0.2));
+				
+				 // Effects:
+				motion_add((gunangle + 180), 3);
+				weapon_post(12, 17, 15);
+				sleep(40);
 			}
 			
 			break;
@@ -210,12 +228,27 @@
     		 // Effects:
     		wkick = -2;
     		swapmove = true;
-    		sound_play(sndMutant14Turn);
+    		
+    		sound_play_pitch(sndMutant14Turn, 0.9 + random(0.2));
+    		sound_play_pitchvol(sndFishWarrantEnd, 0.9 + random(0.4), 1.2);
     		
     		with(instance_create(x, y, PopupText)){
     			target = i;
     			mytext = scrWepModeInfo(w, "name") + "!";
     		}
+    		
+    		 // Bone Piece Effects:
+    		var n = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id));
+    		if(n > 0) repeat(n) with(obj_create(x, y, "BoneFX")){
+    			speed = 4 + random(3);
+    			direction = random(360);
+    			creator = other;
+    		}
+    		repeat(4) with(scrFX(x, y, [random(360), 1 + random(3)], Dust)) depth = -3;
+    		
+    		 // Silence:
+    		mod_variable_set("mod", "ntte", "sPromptIndex", -1);
+    		
     	}
     }
 
@@ -225,3 +258,4 @@
 #define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);

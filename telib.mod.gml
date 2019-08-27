@@ -119,7 +119,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlakBall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlakBall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],

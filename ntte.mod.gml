@@ -370,6 +370,9 @@
      // Underwater Level:
     global.waterBubblePop = [];
     global.waterSoundActive = false;
+    
+    global.sPromptIndex = 0;
+    global.scythePrompt = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -513,6 +516,9 @@
 			stat_set(_stat, stat_get(_stat) + 1);
     	}
     }
+    
+     // Yeah:
+    global.sPromptIndex = 0;
 
 #define level_start // game_start but every level
     switch(GameCont.area){
@@ -1867,6 +1873,17 @@
 
 		 // NTTE Time Stat:
 		stat_set("time", stat_get("time") + (current_time_scale / 30));
+		
+		 // Scythe Prompts:
+		var _scytheExists = false;
+		with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+			_scytheExists = true;
+		}
+		with(instances_matching(GenCont, "scythe_prompt", undefined)) if(_scytheExists && global.sPromptIndex != -1){
+			scythe_prompt = true;
+			tip = global.scythePrompt[global.sPromptIndex];
+			global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
+		}
     }
     catch(_error){
     	trace_error(_error);
