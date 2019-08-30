@@ -521,8 +521,7 @@
 		    "soun" : sndNukeFire,
 		    "kick" : 10,
 		    "shif" : -40,
-		    "shak" : 8,
-		    "flag" : "nuke"
+		    "shak" : 8
 		},
 		{	"weap" : wep_ion_cannon,
 		    "proj" : {
@@ -573,8 +572,7 @@
 		    ],
 		    "kick" : 4,
 		    "shif" : -3,
-		    "shak" : 1,
-		    "flag" : "double"
+		    "shak" : 1
 		},
 		{	"weap" : wep_flare_gun,
 		    "proj" : Flare,
@@ -1310,7 +1308,6 @@
 		{	"weap" : wep_gun_gun,
 		    "proj" : ThrownWep,
 		    "sped" : 16,
-		    "amnt" : 5,
 		    "soun" : sndGunGun,
 		    "kick" : 6,
 		    "shif" : -30,
@@ -1331,28 +1328,27 @@
 		}
 	]);
 
-	//#region FLAG CONTROLLER SCRIPTS
-	global.flagCont = {};
-	flagcont_set("bouncer",		proj_bouncer);
-	flagcont_set("disc",		proj_disc);
-	flagcont_set("lightning",	proj_lightning);
-	flagcont_set("plasma",		proj_plasma);
-	flagcont_set("seeker",		proj_seeker);
-	flagcont_set("nade",		proj_explo);
-	flagcont_set("mininade",	proj_explosmall);
-	flagcont_set("heavynade",	proj_exploheavy);
-	flagcont_set("bloodnade",	proj_exploblood);
-	flagcont_set("stickynade",	proj_explostick);
-	flagcont_set("ultranade",	proj_suck);
-	flagcont_set("ultrabow",	proj_wallbreak);
-	flagcont_set("rocket",		proj_rocket);
-	flagcont_set("nuke",		proj_nuke);
-	flagcont_set("flare",		proj_flare);
-	flagcont_set("flame",		proj_flame);
-	flagcont_set("toxic",		proj_toxic);
-	flagcont_set("cluster",		proj_cluster);
-	flagcont_set("hyper",		proj_hyper);
-	//#endregion
+	 // Set Flagged Projectile Control Scripts:
+	global.flag_cont = [];
+	flagprojcont_set("bouncer",		proj_bouncer);
+	flagprojcont_set("disc",		proj_disc);
+	flagprojcont_set("lightning",	proj_lightning);
+	flagprojcont_set("plasma",		proj_plasma);
+	flagprojcont_set("seeker",		proj_seeker);
+	flagprojcont_set("nade",		proj_explo);
+	flagprojcont_set("mininade",	proj_explosmall);
+	flagprojcont_set("heavynade",	proj_exploheavy);
+	flagprojcont_set("bloodnade",	proj_exploblood);
+	flagprojcont_set("stickynade",	proj_explostick);
+	flagprojcont_set("ultranade",	proj_suck);
+	flagprojcont_set("ultrabow",	proj_wallbreak);
+	flagprojcont_set("rocket",		proj_rocket);
+	flagprojcont_set("nuke",		proj_nuke);
+	flagprojcont_set("flare",		proj_flare);
+	flagprojcont_set("flame",		proj_flame);
+	flagprojcont_set("toxic",		proj_toxic);
+	flagprojcont_set("cluster",		proj_cluster);
+	flagprojcont_set("hyper",		proj_hyper);
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1397,7 +1393,8 @@
         "cont" : script_ref_create(cont_basic)
     }
 
-#macro flagCont global.flagCont
+#macro flagProjCont global.flag_cont
+#macro flagProjPref "nttemergeproj_"
 
 #define wep_add(_wep)
     var _default = wepDefault;
@@ -1532,10 +1529,8 @@
             case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
             case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
 
-             // Bad:
+             // Specific Exclusions:
             case wep_jackhammer:
-            case wep_flamethrower:
-            case wep_dragon:
             	_add = false;
             	break;
         }
@@ -1577,9 +1572,8 @@
         gold = (_stock.gold || _front.gold);
         blod = (_stock.blod || _front.blod);
         lasr = (_stock.lasr || _front.lasr);
-        proj = _front.proj;
+        proj = lq_clone(_front.proj);
 
-		 // Projectile-Specific Changes:
         var	_stockObjRaw = _stock.proj.object_index,
         	_frontObjRaw = _front.proj.object_index,
         	_stockObj = _stockObjRaw,
@@ -1594,6 +1588,7 @@
             _stockSped = array_clone(_stock.sped),
             _frontSped = array_clone(_front.sped);
 
+		 // Projectile-Specific Changes:
 		switch(_stockObjRaw){
 			case Disc:
 			case Flare:
@@ -1625,6 +1620,10 @@
 			case Devastator:
 				_stockProjCost = max(_frontProjCost * 3, _stockProjCost);
 				break;
+				
+			case Flame:
+				_stockAmnt = ceil(_stockAmnt / 2);
+				break;
 		}
 		switch(_frontObjRaw){
 			case Laser:
@@ -1632,6 +1631,10 @@
 					_frontProjCost /= 2;
 					if(_stockObjRaw == Laser) _stockProjCost /= 2;
 				}
+				break;
+			
+			case Flame:
+				_frontProjCost = 1;
 				break;
 		}
 
@@ -1668,39 +1671,48 @@
         array_sort(sped, true);
 
 		/// Projectile Amount:
-			 // Determine Fraction of Stock Projectiles to Keep:
-			var f = (_stockProjCost / (_frontProjCost * (array_exists(_front.flag, "wave") ? _front.shot : 1)));
-			if(f < 1){
-				var _costLevel = 3.333 * sqrt(max(0, _stockProjCostRaw - 1/6)),
-					p = _frontProjCostRaw * (array_exists(_front.flag, "wave") ? _front.shot : 1);
-
-				if(p < 4){
-					f = 1 + (p / (2 * (1 + _costLevel)));
+		
+			 // Flamethrowers:
+			if(_stockObjRaw == Flame){
+				amnt = _frontAmnt * _stockAmnt;
+			}
+			
+			 // Normal:
+			else{
+				 // Determine Fraction of Stock Projectiles to Keep:
+				var f = (_stockProjCost / (_frontProjCost * (array_exists(_front.flag, "wave") ? _front.shot : 1)));
+				if(f < 1){
+					var _costLevel = 3.333 * sqrt(max(0, _stockProjCostRaw - 1/6)),
+						p = _frontProjCostRaw * (array_exists(_front.flag, "wave") ? _front.shot : 1);
+						
+					if(p < 4){
+						f = 1 + (p / (2 * (1 + _costLevel)));
+					}
+					else{
+						f = max(1, (p + 40) / (16 * (1 + (_costLevel / 2))));
+					}
+					f = 1 / f;
+					
+					// !!! Use graphing program to visualize ^
+				}
+				amnt = ceil(_stockAmnt * f);
+				
+				 // Maintain at least 2 projectiles if stock weapon shoots >1 projectiles (Mainly for stuff like Wave Gun):
+				if(_stockAmnt > 1) amnt = max(2, amnt);
+				
+				 // Front Bonus:
+				if(_stockObj == _frontObj || _frontProjCost == _stockProjCostRaw){
+					amnt += _frontAmnt - 1;
+					// Triple Machinegun + Quadruple Machinegun = Sextuple Machinegun, Shotgun + Double Shotgun = Sawed-Off Shotgun, etc.
 				}
 				else{
-					f = max(1, (p + 40) / (16 * (1 + (_costLevel / 2))));
+					amnt *= min(_frontAmnt, _front.cost);
+					// Double Shotgun doubles shots, Triple Machinegun triples shots, Super Crossbow quintuples shots, etc. 
 				}
-				f = 1 / f;
-
-				// !!! Use graphing program to visualize ^
 			}
-			amnt = ceil(_stockAmnt * f);
-
-			 // Maintain at least 2 projectiles if stock weapon shoots >1 projectiles (Mainly for stuff like Wave Gun):
-			if(_stockAmnt > 1) amnt = max(2, amnt);
-
-			 // Front Bonus:
-			if(_stockObj == _frontObj || _frontProjCost == _stockProjCostRaw){
-				amnt += _frontAmnt - 1;
-				// Triple Machinegun + Quadruple Machinegun = Sextuple Machinegun, Shotgun + Double Shotgun = Sawed-Off Shotgun, etc.
-			}
-			else{
-				amnt *= min(_frontAmnt, _front.cost);
-				// Double Shotgun doubles shots, Triple Machinegun triples shots, Super Crossbow quintuples shots, etc. 
-			}
-
+			
 			amnt = ceil(max(0, amnt)); // Just in case
-
+			
 		/// Burst Shots:
 			 // Uses same equation as projectile amount calculations ^
 			shot = _stock.shot;
@@ -1720,9 +1732,17 @@
 			 // Maintain at least 2 projectiles if stock weapon shoots >1 projectiles (Mainly for stuff like Wave Gun):
 			if(_stock.shot > 1) shot = max(shot, 2);
 
-			 // Super Flak Interaction:
-			if(_stockObjRaw == SuperFlakBullet){
-				shot += ceil(5 / _front.cost);
+			 // Special Interaction:
+			switch(_stockObjRaw){
+				case SuperFlakBullet:
+					shot += ceil(5 / _front.cost);
+					break;
+					
+				case Flame:
+					if(_frontObjRaw != Flame){
+						shot /= 1 + _front.amnt;
+					}
+					break;
 			}
 
 			shot = ceil(max(0, shot)); // Just in case
@@ -1842,7 +1862,7 @@
 	        	_stockSuffixStart = 0,
 	        	_stockSuffix = ["RIFLE", "MACHINEGUN", "SMG", "MINIGUN", "SHOTGUN", "BOW", "LAUNCHER", "BAZOOKA", "CANNON"],
 	        	_delete = ["GUN", "PISTOL"];
-
+	        	
 			 // Assault Bazooka > Assault Bazooka Rifle:
 			if(array_exists(_stockName, "ASSAULT") || array_exists(_stockName, "ROGUE")){
 				array_push(_delete, "RIFLE");
@@ -1929,13 +1949,14 @@
         else cont = _front.cont;
 
          // Projectile-Specific:
+        var _flagProj = [];
         switch(_stockObjRaw){
         	case BouncerBullet:
-        		array_push(flag, "bouncer");
+        		array_push(_flagProj, "bouncer");
         		break;
 
         	case Disc:
-        		array_push(flag, "disc");
+        		array_push(_flagProj, "disc");
         		break;
 
         	case Laser:
@@ -1952,17 +1973,17 @@
 
 			case Lightning:
 			case LightningBall:
-				array_push(flag, "lightning");
+        		array_push(_flagProj, "lightning");
 				break;
 
 			case PlasmaBall:
 			case PlasmaBig:
 			case PlasmaHuge:
-				array_push(flag, "plasma");
+        		array_push(_flagProj, "plasma");
 				break;
 
 			case Seeker:
-				array_push(flag, "seeker");
+        		array_push(_flagProj, "seeker");
 				break;
 
 			case Grenade:
@@ -1975,31 +1996,31 @@
 				if(_stockObjRaw != _frontObjRaw || lq_defget(_stock.proj, "sticky", false) != lq_defget(_front.proj, "sticky", false)){
 					switch(_stockObjRaw){
 						case MiniNade:
-							array_push(flag, "mininade");
+							array_push(_flagProj, "mininade");
 							break;
 
 						case UltraGrenade:
-							array_push(flag, "ultranade");
+							array_push(_flagProj, "ultranade");
 						case HeavyNade:
-							array_push(flag, "heavynade");
+							array_push(_flagProj, "heavynade");
 							break;
 
 						case ToxicGrenade:
-							array_push(flag, "nade");
-							array_push(flag, "toxic");
+							array_push(_flagProj, "nade");
+							array_push(_flagProj, "toxic");
 							break;
 
 						case BloodBall:
 						case BloodGrenade:
-							array_push(flag, "bloodnade");
+							array_push(_flagProj, "bloodnade");
 							break;
 						
 						default:
 							if(lq_defget(_stock.proj, "sticky", false)){
-								array_push(flag, "stickynade");
+								array_push(_flagProj, "stickynade");
 							}
 							else{
-								array_push(flag, "nade");
+								array_push(_flagProj, "nade");
 							}
 					}
 
@@ -2009,8 +2030,7 @@
 							(amnt * shot) / (_frontProjCostRaw * 2),
 							max(1, _frontProjCostRaw) / 3
 						)
-						*
-						max(1, _stockProjCostRaw)
+						* max(1, _stockProjCostRaw)
 					);
 
 					 // Extra Reload:
@@ -2019,46 +2039,72 @@
 				break;
 
 			case ClusterNade:
-				array_push(flag, "cluster");
+        		array_push(_flagProj, "cluster");
 				break;
 
 			case Rocket:
-				array_push(flag, "rocket");
+				array_push(_flagProj, "rocket");
+				break;
+
+			case Nuke:
+				array_push(_flagProj, "nuke");
 				break;
 
 			case Flare:
 			case FlameBall:
-				array_push(flag, "flare");
-				array_push(flag, "flame");
+				array_push(_flagProj, "flare");
+				array_push(_flagProj, "flame");
 				break;
 
 			case FlameShell:
-				array_push(flag, "flame");
+				array_push(_flagProj, "flame");
 				break;
 
 			case ToxicBolt:
-				array_push(flag, "toxic");
+				array_push(_flagProj, "toxic");
 				break;
 
 			case FlakBullet:
 			case SuperFlakBullet:
-				array_push(flag, "flak");
+				array_push(_flagProj, "flak");
 				break;
 
         	case HyperSlug:
 			case HyperGrenade:
-				array_push(flag, "hyper");
+				array_push(_flagProj, "hyper");
 				if(_frontObj == Lightning){
 					cost *= 2;
 				}
         		break;
 
 			case UltraBolt:
-				array_push(flag, "ultrabow");
+				array_push(_flagProj, "ultrabow");
 				break;
 
 			case Devastator:
 				sped[0] /= 2;
+				break;
+			
+			case Flame:
+				if(_frontObjRaw != Flame){
+					array_push(_flagProj, "flame");
+					if(_stock.load <= _stock.shot * max(1, _stock.time)){
+						 // Spread:
+						sprd *= 3;
+						
+						 // Reload/Delay:
+						time = round(sqrt(_front.load / (_front.shot * (1 + _front.time))));
+						load = (shot * time) * (_stock.load / (_stock.shot * _stock.time));
+						
+						 // Spawn Offset:
+						move = lerp(_stock.move, _front.move, 0.5);
+						
+						 // Post-fire:
+						kick = _front.kick;
+						shak = _front.shak;
+						shif = _stock.shif;
+					}
+				}
 				break;
         }
         switch(_frontObjRaw){
@@ -2066,6 +2112,58 @@
         		sped[0] *= 2/3;
         		sped[1] *= 2/3;
         		break;
+        	
+        	case Flame:
+        		time = _stock.time;
+        		break;
+        }
+        with(_flagProj) lq_set(other.proj, flagProjPref + self, null);
+        
+         // Gun Gun:
+        var _ggStock = (array_exists(_stock.flag, "gungun") && _stockObjRaw == ThrownWep),
+        	_ggFront = (array_exists(_front.flag, "gungun") && _frontObjRaw == ThrownWep);
+        	
+        if(_ggStock || _ggFront){
+        	var a = lq_clone_deep(_ggStock ? _stock : _front),
+        		b = lq_clone_deep(_ggStock ? _front : _stock);
+        		
+			 // Ammo Cost:
+			cost = 1 + (sqrt(b.cost) * 19 * ((type == 1) ? 5 : 1));
+			cost = clamp(cost, 1, ((type == 1) ? 555 : 99));
+			cost = round(cost);
+			rads = min(b.rads * 5, 600);
+			
+			 // Projectile:
+			proj = lq_clone(a.proj);
+        	proj.wep = array_create(2, -1);
+        	proj.wep[_ggFront ? 0 : 1] = lq_defget(b, "weap", b);
+        	
+        	 // Speed:
+			sped = [
+				max(b.sped[0], lerp(a.sped[0], b.sped[0], 0.5)),
+				max(b.sped[1], lerp(a.sped[1], b.sped[1], 0.5))
+			];
+			
+			 // Other:
+        	name = _stock.name + " " + _front.name;
+			swap = a.swap;
+			area = a.area;
+			type = b.type;
+			auto = b.auto;
+			load = b.load * 3;
+			sprd = b.sprd;
+			fixd = b.fixd;
+			amnt = a.amnt;
+			shot = a.shot;
+			time = a.time;
+			lq_set(self, "wait", lq_get(b, "wait"));
+			move = b.move;
+			kick = b.kick;
+			push = a.push;
+			shif = b.shif;
+			shak = b.shak;
+			cont = b.cont;
+			flag = array_combine(a.flag, b.flag);
         }
 
 		//- Flak,			projectile flakball (Burst shots become super flak)
@@ -2091,18 +2189,23 @@
 		//- Flame,			create flame on destruction (flameshell)
 		//- Toxic,			create toxic gas on destruction
 		//- Hyper,			hitscan
-		//  Flamethrower,	make weapon spew projectiles continuously, decrease shots so that its just really ammo expensive
+		//- Flamethrower,	make weapon spew projectiles continuously, decrease shots so that its just really ammo expensive
     }
 
     return _wep;
 
 
-#define flagcont_set(_flag, _scrt)
+#define flagprojcont_set(_flag, _scrt)
 	if(is_real(_scrt)) _scrt = script_ref_create(_scrt);
-	lq_set(flagCont, _flag, _scrt);
+	array_push(flagProjCont, {
+		"flag" : flagProjPref + _flag,
+		"scrt" : _scrt,
+		"inst" : [],
+		"vars" : []
+	});
 
-#define flagcont_get(_flag)
-	return lq_get(flagCont, _flag);
+#define flagprojcont_get(_flag)
+	return lq_get(flagProjCont, _flag);
 
 #define wep_stat(w, _stat)
 	return lq_defget(lq_defget(w, "base", wepDefault), _stat, lq_defget(wepDefault, _stat, -1));
@@ -2128,7 +2231,7 @@
 			if(wep_stat(w, "blod") && infammo == 0){
 				var _type = wep_stat(w, "type"),
 					_cost = wep_stat(w, "cost");
-	
+					
 				if(_cost > 0){
 					if(ammo[_type] < _cost){
 						sound_play(sndBloodHurt);
@@ -2147,7 +2250,7 @@
 #define GunCont(_x, _y, _wep, _creator)
     with(instance_create(_x, _y, CustomObject)){
         name = "GunCont";
-
+        
         wep = _wep;
         creator = _creator;
         gunangle = 0;
@@ -2156,16 +2259,16 @@
         shot = 0;
         time = lq_get(_wep, "wait");
         bloom = true;
-
+        
         on_step    = GunCont_step;
         on_draw    = GunCont_draw;
         on_destroy = GunCont_destroy;
         on_cleanup = GunCont_destroy;
-
+        
          // Call Init Event:
         var _scr = _wep.cont;
         mod_script_call(_scr[0], _scr[1], _scr[2], contInit);
-
+        
         if(instance_exists(self)){
              // Smart Gun:
             if(array_exists(_wep.flag, "smart")){
@@ -2181,11 +2284,11 @@
                     step_smartaim();
                 }
             }
-
+            
              // Call Step:
             GunCont_step();
         }
-
+        
         if(instance_exists(self)) return id;
     }
     return noone;
@@ -2203,7 +2306,7 @@
         else _amnt++;
     }
 
-    if((instance_exists(creator) || creator == noone) && shot < _shotMax){
+    if((instance_exists(creator) || creator == noone) && (time > 0 || shot < _shotMax)){
          // Follow Creator:
         if(instance_exists(creator)){
             x = creator.x;
@@ -2212,11 +2315,11 @@
             accuracy = creator.accuracy;
             team = creator.team;
         }
-
+        
          // Step:
         var _scr = _wep.cont;
         mod_script_call(_scr[0], _scr[1], _scr[2], contStep);
-
+        
          // Firing:
         var _x = x,
             _y = y,
@@ -2230,7 +2333,7 @@
             _flakBall = [],
             _laserMov = 0,
             _laserDir = [];
-
+            
         while(time <= 0 && shot < _shotMax){
             var _shot = shot;
 
@@ -2241,191 +2344,214 @@
 
              // Fire:
             if(object_exists(_obj)){
-                var _repeat = 1,
-            		_flak = [];
-
-                if(array_exists(_flag, "double")){
-                    _repeat *= 2;
-                }
-
-				repeat(_repeat){
-                	for(var i = 0; i < _amnt; i++){
-                         // Speed:
-                        var _spd = random_range(_wep.sped[0], _wep.sped[1]);
-
-                         // Center Projectile Bonus Speed (Shovels, Flamethrowers):
-                        if((_isMelee || _obj == Flame) && _amnt > 2){
-	                        if(i == floor((_amnt - 1) / 2) || i == ceil((_amnt - 1) / 2)){
-	                            _spd++;
-	                        }
+                var _flak = [];
+                
+            	for(var i = 0; i < _amnt; i++){
+                     // Speed:
+                    var _spd = random_range(_wep.sped[0], _wep.sped[1]);
+                    
+                     // Center Projectile Bonus Speed (Shovels, Flamethrowers):
+                    if((_isMelee || _obj == Flame) && _amnt > 2){
+                        if(i == floor((_amnt - 1) / 2) || i == ceil((_amnt - 1) / 2)){
+                            _spd++;
+                        }
+                    }
+                    
+                     // Fixed Spread:
+                    var _fix = _wep.fixd * (i - ((_amnt - 1) / 2));
+                    if(array_exists(_flag, "wave")){
+                        _fix -= ((_wep.fixd * sign(_fix)) / 2) * (1 - sin((7 * (1 - (_shot / (_shotMax - 1)))) / 2));
+                    }
+                    
+                     // Direction:
+                    var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
+                    
+                     // Save Projectile Laser Direction:
+                    if(_shot <= 0){
+                        if(array_exists(_flag, "laser") && _obj != Lightning){
+                        	_laserDir[i] = _dir;
+                        }
+                    }
+                    
+                     // Offset, Long Arms:
+                    var _dis = 0;
+                    if(_isMelee){
+                        _dis += ((_isMelee == 2) ? 10 : (20 - abs(_fix / 12))) * skill_get(mut_long_arms);
+                    }
+                    
+                     // Create Projectile:
+                    with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj)){
+                        if(_spd <= 0) direction = _dir;
+                        else motion_add(_dir, _spd);
+                        image_angle += direction;
+                        creator = _creator;
+                        team = _team;
+                        
+                         // Offset:
+                        if(_wep.move != 0){
+                            x += hspeed;
+                            y += vspeed
+                            move_contact_solid(direction, _wep.move);
+                            x -= hspeed;
+                            y -= vspeed;
+                            xprevious = x;
+                            yprevious = y;
+                            xstart = x;
+                            ystart = y;
+                        }
+                        
+                         // Wep-Specific:
+                        for(var j = 0; j < lq_size(_proj); j++){
+                            var _name = lq_get_key(_proj, j);
+                            
+							if(!array_exists(
+								["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"],
+								_name
+							)){
+								var _valu = lq_get_value(_proj, j);
+                                variable_instance_set(self, _name, _valu);
+                            }
                         }
 
-                         // Fixed Spread:
-                        var _fix = _wep.fixd * (i - ((_amnt - 1) / 2));
-                        if(array_exists(_flag, "wave")){
-                            _fix -= ((_wep.fixd * sign(_fix)) / 2) * (1 - sin((7 * (1 - (_shot / (_shotMax - 1)))) / 2));
-                        }
+						 // Lasery Hitscan:
+                        if(array_exists(_flag, "laser")){
+							if(_laserMov > 0){
+	                        	var a = angle_difference(_laserDir[i], direction);
+		                        direction += a / 1.5;
+		                        image_angle += a / 1.5;
 
-                         // Direction:
-                        var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
+								var d = _laserDir[i],
+									t = _laserMov;
 
-                         // Save Projectile Laser Direction:
-                        if(_shot <= 0){
-	                        if(array_exists(_flag, "laser") && _obj != Lightning){
-	                        	_laserDir[i] = _dir;
-	                        }
-                        }
+								while(true){
+									 // Collision:
+									if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+										t = 0;
+									}
+									if(place_meeting(x + hspeed_raw, y + vspeed_raw, hitme)){
+										with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+											if(place_meeting(x, y, other)){
+												if(chance(1, 4)) t = 0;
+											}
+										}
+									}
 
-                         // Offset, Long Arms:
-                        var _dis = 0;
-                        if(_isMelee){
-                            _dis += ((_isMelee == 2) ? 10 : (20 - abs(_fix / 12))) * skill_get(mut_long_arms);
-                        }
-
-                         // Create Projectile:
-                        with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj)){
-                            if(_spd <= 0) direction = _dir;
-                            else motion_add(_dir, _spd);
-
-                            if(image_angle == 0) image_angle = direction;
-
-                            creator = _creator;
-                            team = _team;
-
-                             // Offset:
-                            if(_wep.move != 0){
-                                x += hspeed;
-                                y += vspeed
-                                move_contact_solid(direction, _wep.move);
-                                x -= hspeed;
-                                y -= vspeed;
+									 // Move:
+									if(t > 0){
+										var l = min(t, max(speed_raw, 4));
+										x += lengthdir_x(l, d);
+										y += lengthdir_y(l, d);
+										t -= l;
+									}
+									else break;
+								}
                                 xprevious = x;
                                 yprevious = y;
                                 xstart = x;
                                 ystart = y;
-                            }
 
-                             // Wep-Specific:
-                            for(var j = 0; j < lq_size(_proj); j++){
-                                var _name = lq_get_key(_proj, j);
-
-								if(!array_exists(
-									["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"],
-									_name
-								)){
-									var _valu = lq_get_value(_proj, j);
-                                    variable_instance_set(self, _name, _valu);
+                                with(instance_create(x, y, EatRad)){
+                                	motion_add(other.direction + 180, 1);
+                                	depth = other.depth - 1;
+                                }
+                        	}
+                            if(chance(3, _amnt)){
+                                var o = random(random(speed));
+                                with(instance_create(x + lengthdir_x(o, direction) + orandom(12), y + lengthdir_y(o, direction) + orandom(12), PlasmaTrail)){
+                                	motion_add(other.direction, 1);
+                                	motion_add(random(360), 1);
                                 }
                             }
-
-							 // Lasery Hitscan:
-	                        if(array_exists(_flag, "laser")){
-								if(_laserMov > 0){
-		                        	var a = angle_difference(_laserDir[i], direction);
-			                        direction += a / 1.5;
-			                        image_angle += a / 1.5;
-	
-									var d = _laserDir[i],
-										t = _laserMov;
-	
-									while(true){
-										 // Collision:
-										if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-											t = 0;
-										}
-										if(place_meeting(x + hspeed_raw, y + vspeed_raw, hitme)){
-											with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
-												if(place_meeting(x, y, other)){
-													if(chance(1, 4)) t = 0;
-												}
-											}
-										}
-	
-										 // Move:
-										if(t > 0){
-											var l = min(t, max(speed_raw, 4));
-											x += lengthdir_x(l, d);
-											y += lengthdir_y(l, d);
-											t -= l;
-										}
-										else break;
-									}
-	                                xprevious = x;
-	                                yprevious = y;
-	                                xstart = x;
-	                                ystart = y;
-
-	                                with(instance_create(x, y, EatRad)){
-	                                	motion_add(other.direction + 180, 1);
-	                                	depth = other.depth - 1;
-	                                }
-	                        	}
-                                if(chance(3, _amnt)){
-	                                var o = random(random(speed));
-	                                with(instance_create(x + lengthdir_x(o, direction) + orandom(12), y + lengthdir_y(o, direction) + orandom(12), PlasmaTrail)){
-	                                	motion_add(other.direction, 1);
-	                                	motion_add(random(360), 1);
-	                                }
-                                }
-	                        }
-
-                             // Long Arms:
-                            if(_isMelee){
-                                speed += 3 * skill_get(mut_long_arms);
+                        }
+                        
+                         // Long Arms:
+                        if(_isMelee){
+                            speed += 3 * skill_get(mut_long_arms);
+                        }
+                        
+                         // Nukes:
+						if(object_index == Nuke && "index" in creator){
+							index = creator.index;
+						}
+						
+                         // Black Sword:
+                        if(array_exists(_flag, "blacksword")){
+                            if(instance_exists(creator) && creator.my_health <= 0){
+                                if(_isMelee == 1) sprite_index = sprMegaSlash;
+                                damage = max(damage, 80);
                             }
-
-                             // Black Sword:
-                            if(array_exists(_flag, "blacksword")){
-                                if(instance_exists(creator) && creator.my_health <= 0){
-                                    if(_isMelee == 1) sprite_index = sprMegaSlash;
-                                    damage = max(damage, 80);
+                        }
+                        
+                         // Gun Gun:
+                        if(array_exists(_flag, "gungun")){	
+                            instance_create(_x + hspeed, _y + vspeed, GunGun);
+                            
+                            if("wep" in self){
+                            	var	_hardMin = 0,
+                            		_hardMax = GameCont.hard + 10;
+                            		
+                                 // Merged:
+                                if(is_array(wep)){
+                                	var _part = wep_merge_decide(_hardMin, _hardMax);
+                                	if(array_length(_part) >= 2){
+                            			if(wep[0] == _part[1].weap || wep[1] == _part[0].weap){ // Don't Allow Slugger+Slugger, Plasma Gun+Plasma Gun:
+                            				array_flip(_part);
+                            			}
+                            			
+                            			for(var j = 0; j < array_length(wep); j++){
+                            				if(wep[j] != -1) _part[j] = wep[j];
+                            			}
+                                		wep = wep_merge(_part[0], _part[1]);
+                                	}
+                                	
+                                	 // Default:
+                                	else wep = wep_screwdriver;
                                 }
-                            }
-
-                             // Gun Gun:
-                            if(array_exists(_flag, "gungun")){
-                                instance_create(x + hspeed, y + vspeed, GunGun);
-                                if("wep" in self){
-                                     // Generate Weapon List:
+                                
+                                 // Normal:
+                                else{
                                     var _wepList = ds_list_create();
-                                    weapon_get_list(_wepList, 0, GameCont.hard + 10);
+                                    weapon_get_list(_wepList, _hardMin, _hardMax);
                                     ds_list_shuffle(_wepList);
-
-                                     // Decide Weapon:
-                                    var w = wep;
-                                    with(ds_list_to_array(_wepList)){
+                                    
+                                	with(ds_list_to_array(_wepList)){
                                         var c = false;
-                            			switch(self){
-                            				case wep_super_disc_gun:        if(other.curse <= 0)	        c = true; break;
+										switch(self){
+											case wep_super_disc_gun:        if(other.curse <= 0)	        c = true; break;
                                             case wep_golden_nuke_launcher:  if(!UberCont.hardmode)	        c = true; break;
                                             case wep_golden_disc_gun:       if(!UberCont.hardmode)	        c = true; break;
                                             case wep_gun_gun:               if(crown_current != crwn_guns)	c = true; break;
                                         }
                                         if(c) continue;
-                                        w = self;
+                                        other.wep = self;
                                         break;
                                     }
-                                    wep = w;
-                                    sprite_index = weapon_get_sprt(wep);
-
-	            					ds_list_destroy(_wepList);
+                                    
+									ds_list_destroy(_wepList);
                                 }
+                                
+                                 // Spriterize:
+                                sprite_index = weapon_get_sprt(wep);
                             }
-
-							 // Cannon:
-							if(array_exists(_flag, "flak")){
-								if(_amnt < 16) direction = (i + orandom(0.5)) * (360 / _amnt);
-								else direction = random(360);
-								image_angle = direction;
-								array_push(_flak, id);
-							}
-
-							 // Non-Cannon:
-							else proj_post(_flag);
+                            
+                            if("rotspeed" in self){
+                            	rotspeed /= 1 + (0.2 * abs(16 - speed));
+                            }
                         }
+                        
+						 // Cannon:
+						if(array_exists(_flag, "flak")){
+							if(_amnt < 16) direction = (i + orandom(0.5)) * (360 / _amnt);
+							else direction = random(360);
+							image_angle = direction;
+							array_push(_flak, id);
+						}
+						
+						 // Non-Cannon:
+						else proj_post(_flag);
                     }
                 }
-
+                
 				 // Flak Ball:
 				if(array_length(_flak) > 0){
 					with(obj_create(x, y, "FlakBall")){
@@ -2520,7 +2646,7 @@
             time = _timeMax;
             shot++;
         }
-
+        
 		 // Super Flak Ball:
 		var n = array_length(_flakBall);
 		for(var i = 0; i < n; i++){
@@ -2538,7 +2664,7 @@
 			flag = _flag;
     		event_perform(ev_step, ev_step_normal);
 		}
-
+		
         time -= current_time_scale;
     }
     else instance_destroy();
@@ -2577,39 +2703,41 @@
     switch(_event){
         case contInit:
             sound_play(sndLaserCannonCharge);
-
+            
              // Visual:
             sprite_index = sprPlasmaBall;
             image_xscale = 0.2;
             image_yscale = 0.2;
             image_speed = 0;
-
+            
              // Laser Brain:
             //notsure if(_wep.proj.object_index == Laser){
                 shot -= 2 * skill_get(mut_laser_brain);
             //}
-
+            
             break;
-
+            
         case contStep:
              // Charge:
-            image_xscale += 0.02;
-            image_yscale += 0.02;
+            image_xscale += 0.02 * current_time_scale;
+            image_yscale += 0.02 * current_time_scale;
             if(time <= 0){
                 var f = max(4 - (0.4 * _wep.shot), 1.05);
                 image_xscale /= 1.2;
                 image_yscale /= 1.2;
             }
-    
+            
              // Damage:
             for(var i = 0; i < _wep.amnt; i++){
                 var _dir = gunangle + (_wep.fixd * (i - ((_wep.amnt - 1) / 2))),
+                    _ox = lengthdir_x(_wep.move, _dir),
+                    _oy = lengthdir_y(_wep.move, _dir),
                     _x = x + lengthdir_x(_wep.move, _dir),
                     _y = y + lengthdir_y(_wep.move, _dir);
-
+                    
                 if(place_meeting(_x, _y, hitme)){
                     with(instances_meeting(_x, _y, instances_matching_ne(hitme, "team", team))){
-                        if(place_meeting(_x, _y, other)){
+                        if(place_meeting(x - _ox, y - _oy, other)){
                             with(other){
                                 if(projectile_canhit_melee(other)){
                                     projectile_hit(other, 2, 3, point_direction(_x, _y, other.x, other.y));
@@ -2621,21 +2749,21 @@
                     }
                 }
             }
-
+            
             break;
-
+            
         case contDraw:
              // Draw w/ Offset:
             for(var i = 0; i < _wep.amnt; i++){
                 var _dir = gunangle + (_wep.fixd * (i - ((_wep.amnt - 1) / 2))),
                     _x = x + lengthdir_x(_wep.move, _dir),
                     _y = y + lengthdir_y(_wep.move, _dir);
-
+                    
                 draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-
+                
                 if(_wep.fixd == 0) break;
             }
-
+            
             break;
     }
 
@@ -2662,34 +2790,34 @@
     }
 
 #define proj_post(_flag)
-	var _inst = [id];
-
+	var _inst = self;
+	
 	 // Lasers:
     if(instance_is(self, Laser)){
 		speed = 0;
 		event_perform(ev_alarm, 0);
     }
-
+    
      // Lightning (Manual Growth):
     if(instance_is(self, Lightning)){
         ammo = ceil(speed * 2);
-        if(array_exists(_flag, "nuke")){
+        if((flagProjPref + "nuke") in self){
         	ammo *= 2;
         }
-        if(array_exists(_flag, "rocket")){
+        if((flagProjPref + "rocket") in self){
         	ammo *= 2.5;
         }
-        if(array_exists(_flag, "hyper")){
+        if((flagProjPref + "hyper") in self){
         	ammo *= 2;
         }
-
+        
 		 // Grow:
         _inst = lightning_grow(
-        	array_exists(_flag, "seeker"),
-        	array_exists(_flag, "nuke") && "index" in creator,
-        	array_exists(_flag, "laser"),
-        	array_exists(_flag, "disc"),
-        	array_exists(_flag, "bouncer")
+        	(flagProjPref + "seeker"	) in self,
+        	(flagProjPref + "nuke"		) in self && "index" in creator,
+        	(flagProjPref + "disc"		) in self,
+        	(flagProjPref + "bouncer"	) in self,
+        	array_exists(_flag, "laser")
         );
 
          // Visual:
@@ -2699,66 +2827,69 @@
             creator = other;
         }
     }
+    
+     // Bind Flagged Projectile Controller Script:
+    with(flagProjCont){
+    	with(_inst) if(other.flag in self){
+    		variable_instance_set(id, other.flag, true);
+    	}
+    }
+	if(array_length(instances_matching(CustomScript, "name", "flagprojcont_step")) <= 0){
+		with(script_bind_step(flagprojcont_step, 0)){
+			name = script[2];
+			list = flagProjCont;
+		}
+	}
 
-	 // Bind Flag Controller Scripts:
-	with(_flag){
-		var _scrt = flagcont_get(self);
-		if(array_length(_scrt) >= 3){
-			with(_inst){
-				var _vars = {},
-					_bind = mod_script_call(_scrt[0], _scrt[1], _scrt[2], proj_create, _vars);
-
+#define flagprojcont_step
+	with(list){
+		var _scrtTyp = scrt[0],
+			_scrtMod = scrt[1],
+			_scrtNam = scrt[2],
+			_flag = flag,
+			_inst = inst,
+			_vars = vars;
+			
+		 // Add New:
+		with(instances_matching_ne(projectile, _flag, null)){
+			if(array_find_index(_inst, id) < 0){
+				var o = {},
+					_bind = mod_script_call(_scrtTyp, _scrtMod, _scrtNam, proj_create, o);
+					
 				if(is_undefined(_bind)) _bind = false;
 				else _bind = !_bind;
-
+				
 				if(_bind){
-					 // Bind Main Projectile Controller Step:
-					if(array_length(instances_matching(CustomStep, "name", "flagcont_step")) <= 0){
-						with(script_bind_step(flagcont_step, 0)){
-							name = script[2];
-							inst = [];
-							vars = [];
-							scrt = [];
-						}
-					}
-					with(instances_matching(CustomStep, "name", "flagcont_step")){
-						array_push(inst, other);
-						array_push(vars, _vars);
-						array_push(scrt, _scrt);
-					}
+					array_push(_inst, self);
+					array_push(_vars, o);
 				}
 			}
+			else break;
 		}
+		
+		 // Main:
+		var	i = 0;
+		with(_inst){
+			var _end = true;
+	
+			 // Call Projectile Events:
+			if(instance_exists(self)){
+				_end = mod_script_call(_scrtTyp, _scrtMod, _scrtNam, proj_step, _vars[i]);
+			}
+			else mod_script_call_nc(_scrtTyp, _scrtMod, _scrtNam, proj_destroy, _vars[i]);
+	
+			 // End:
+			if(_end){
+				_inst = array_delete(_inst, i);
+				_vars = array_delete(_vars, i);
+				if(instance_exists(self)) variable_instance_set(id, _flag, null);
+			}
+			else i++;
+		}
+		
+		inst = _inst;
+		vars = _vars;
 	}
-
-#define flagcont_step
-	var	_inst = inst,
-		_vars = vars,
-		_scrt = scrt,
-		i = 0;
-
-	with(_inst){
-		var _end = true,
-			s = _scrt[i];
-
-		 // Call Projectile Events:
-		if(instance_exists(self)){
-			_end = mod_script_call(s[0], s[1], s[2], proj_step, _vars[i]);
-		}
-		else mod_script_call_nc(s[0], s[1], s[2], proj_destroy, _vars[i]);
-
-		 // End:
-		if(_end){
-			_inst = array_delete(_inst, i);
-			_vars = array_delete(_vars, i);
-			_scrt = array_delete(_scrt, i);
-		}
-		else i++;
-	}
-
-	inst = _inst;
-	vars = _vars;
-	scrt = _scrt;
 
 #macro proj_create	0
 #macro proj_step	1
@@ -3654,20 +3785,12 @@
 #define proj_nuke(_event, o)
 	switch(_event){
 		case proj_create:
-			if("index" not in creator) return true;
-
-			 // Real Nukes:
-			if(object_index == Nuke){
-				index = creator.index;
-				return true;
-			}
-
 			 // Just in Case:
         	speed = max(speed, friction * 10);
 
 			 // Vars:
 			o.delay = ((friction >= 0.4) ? floor((speed - 6) / friction) : (8 - (speed / 4)));
-			o.index = creator.index;
+			o.index = variable_instance_get(creator, "index", -1);
 			if(object_index == Laser) o.delay = 0;
 			break;
 
@@ -3676,9 +3799,11 @@
 			else{
 				if(speed > 0){
 					 // Follow Mouse:
-		    		var a = ((angle_difference(point_direction(x, y, mouse_x[o.index], mouse_y[o.index]), direction) / (speed * 2)) + sin(current_frame / speed)) * current_time_scale;
-		    		direction += a;
-		    		image_angle += a;
+					if(player_is_active(o.index)){
+			    		var a = ((angle_difference(point_direction(x, y, mouse_x[o.index], mouse_y[o.index]), direction) / (speed * 2)) + sin(current_frame / speed)) * current_time_scale;
+			    		direction += a;
+			    		image_angle += a;
+					}
 		    		speed += friction_raw;
 	
 		    		 // Flame Trail:
@@ -4090,7 +4215,7 @@
 
     return true;
 
-#define lightning_grow(_seeker, _nuke, _laser, _disc, _bouncer)
+#define lightning_grow(_seeker, _nuke, _disc, _bouncer, _laser)
 	ammo--;
 
 	 // Home Towards Nearest Enemy:
@@ -4173,7 +4298,7 @@
 		with(instance_copy(false)){
 			image_xscale = 1;
 			image_angle = direction;
-			_inst = array_combine(_inst, lightning_grow(_seeker, _nuke, _laser, _disc, _bouncer));
+			_inst = array_combine(_inst, lightning_grow(_seeker, _nuke, _disc, _bouncer, _laser));
 		}
 	}
 
