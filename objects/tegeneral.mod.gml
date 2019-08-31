@@ -2670,7 +2670,9 @@
 	}
 
      // Player Owns Pet:
-    var _pickup = pickup_indicator;
+    var	_pickup = pickup_indicator,
+        _spin = 0;
+        
     if(instance_exists(leader)){
         can_take = false;
         persistent = true;
@@ -2723,7 +2725,6 @@
          // Enter Portal:
         if(visible || instance_exists(my_corpse)){
         	 // Portal Attraction:
-        	var _spin = 0;
         	with(Portal) if(point_distance(x, y, other.x, other.y) < 64){
         		with(other){
         			var l = 4 * current_time_scale,
@@ -2736,31 +2737,27 @@
         			_spin = (30 * right);
         		}
         	}
-        	if(_spin != 0){
-        		portal_angle += _spin;
-        		sprite_index = spr_hurt;
-        		image_index = 1;
-
-        		 // No Escape:
-        		speed -= min(speed, friction_raw * 3);
-        		walk = 0;
-        	}
-        	else{
-        		portal_angle += angle_difference(0, portal_angle) * 0.1 * current_time_scale;
-        	}
 
 			 // Enter:
-            if(place_meeting(x, y, Portal) || instance_exists(GenCont) || instance_exists(LevCont)){
+            if(place_meeting(x, y, Portal)){
                 visible = false;
                 my_health = maxhealth;
                 repeat(3) instance_create(x, y, Dust);
             }
         }
-        else if(instance_exists(GenCont)){
-            x = leader.x + orandom(16);
-            y = leader.y + orandom(16);
-            portal_angle = 0;
-        }
+        
+         // Breadcrumbs:
+		if(array_length(path) > 2 && (wave % 90) < 60 && chance_ct(1, 5)){
+		    var	i = round((wave / 10) % array_length(path)),
+				_x1 = ((i > 0) ? path[i - 1, 0] : x),
+				_y1 = ((i > 0) ? path[i - 1, 1] : y),
+				_x2 = ((i < array_length(path)) ? path[i, 0] : leader.x),
+				_y2 = ((i < array_length(path)) ? path[i, 1] : leader.y);
+				
+			with(instance_create(lerp(_x1, _x2, random(1)) + orandom(4), lerp(_y1, _y2, random(1)) + orandom(4), Dust)){
+				motion_set(point_direction(x, y, _x2, _y2) + orandom(20), min(random_range(1, 5), point_distance(x, y, _x2, _y2) / 3));
+			}
+		}
 
          // Time Stat:
         if(instance_is(leader, Player)){
@@ -2815,6 +2812,36 @@
         }
     }
     with(_pickup) visible = other.can_take;
+    
+     // Portal Spin:
+	if(_spin != 0){
+		portal_angle = (portal_angle + 360 + _spin) % 360;
+		sprite_index = spr_hurt;
+		image_index = 1;
+
+		 // No Escape:
+		speed -= min(speed, friction_raw * 3);
+		walk = 0;
+	}
+    else if(portal_angle != 0){
+    	portal_angle += angle_difference(0, portal_angle) * 0.2 * current_time_scale;
+    }
+    
+     // Going to New Level:
+    if(instance_exists(GenCont) || instance_exists(LevCont)){
+    	visible = false;
+    	
+    	 // Reset Stuff:
+        portal_angle = 0;
+        my_health = maxhealth;
+        
+         // Follow Player:
+        var _inst = (instance_exists(leader) ? leader : instance_nearest(x, y, Player));
+        if(instance_exists(_inst)){
+	        x = _inst.x + orandom(16);
+	        y = _inst.y + orandom(16);
+        }
+    }
 
 	if(visible || instance_exists(my_corpse)){
 		if(instance_exists(leader)) team = leader.team;
@@ -2837,8 +2864,8 @@
 		 // Wall Collision:
 	    with(path_wall) with(other){
 		    if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-		        if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -0.05;
-		        if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -0.05;
+		        if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw = 0;
+		        if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw = 0;
 		    }
 	    }
 	}
@@ -2857,13 +2884,49 @@
     }
 
      // Wall Collision Part2:
-    if((visible || instance_exists(my_corpse)) && place_meeting(x, y, Wall)){
-    	x = xprevious;
-    	y = yprevious;
-        if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw = 0;
-        if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw = 0;
-        x += hspeed_raw;
-        y += vspeed_raw;
+    if(visible || instance_exists(my_corpse)){
+	    with(path_wall) with(other){
+		    var _wall = other;
+		    
+	    	if(place_meeting(x, y, _wall)){
+		    	x = xprevious;
+		    	y = yprevious;
+		        if(place_meeting(x + hspeed_raw, y, _wall)) hspeed_raw = 0;
+		        if(place_meeting(x, y + vspeed_raw, _wall)) vspeed_raw = 0;
+		        x += hspeed_raw;
+		        y += vspeed_raw;
+	    	}
+        
+	         // Just in Case:
+	        if(place_meeting(x, y, _wall)){
+	        	speed = 0;
+	        	
+	        	var _goal = [],
+	        		_disMax = 96;
+	        		
+	        	with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
+	        		for(var _x = bbox_left; _x < bbox_right; _x += 8){
+	        			for(var _y = bbox_top; _y < bbox_bottom; _y += 8){
+			        		var _dis = point_distance(other.x, other.y, _x, _y);
+			    			if(_dis < _disMax){
+			    				with(other) if(!place_meeting(_x, _y, _wall)){
+			        				_disMax = _dis;
+			        				_goal = [_x, _y];
+			    				}
+			    			}
+	        			}
+	        		}
+	        	}
+	        	
+	        	 // Reach Nearest Open Floor:
+	        	if(array_length(_goal) >= 2){
+	        		while(place_meeting(x, y, _wall)){
+	        			x = lerp(x, _goal[0], 0.01);
+	        			y = lerp(y, _goal[1], 0.01);
+	        		}
+	        	}
+	        }
+	    }
     }
 
 #define Pet_draw

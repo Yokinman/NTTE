@@ -8,6 +8,8 @@
 
     global.newLevel = false;
 
+	global.palankingPan = [0, 0];
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -1010,14 +1012,14 @@
     if(intro_pan > 0){
         intro_pan -= current_time_scale;
 
-        var _px = intro_pan_x,
-            _py = intro_pan_y;
+		 // Pan:
+        global.palankingPan = [point_direction(x, y, intro_pan_x, intro_pan_y), point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5];
 
+		 // Still Camera:
         for(var i = 0; i < maxp; i++){
             view_object[i] = id;
             view_pan_factor[i] = 10000;
             if(intro_pan <= 0) view_pan_factor[i] = null;
-        	view_shift(i, point_direction(x, y, _px, _py), point_distance(x, y, _px, _py) / 1.5);
         }
 
          // Hold Off Seals:
@@ -1037,8 +1039,11 @@
         }
         else with(Player) visible = true;
     }
-    else for(var i = 0; i < maxp; i++){
-        if(view_object[i] == id) view_object[i] = noone;
+    else{
+    	global.palankingPan = [0, 0];
+    	for(var i = 0; i < maxp; i++){
+        	if(view_object[i] == id) view_object[i] = noone;
+    	}
     }
 
      // Z-Axis:
@@ -3451,6 +3456,15 @@
     }
 
 	if(DebugLag) trace_time("tecoast_draw_dark_end");
+
+#define draw_gui_end
+	 // Palanking camera pan here so that pausing doesn't jank things:
+	var _dir = global.palankingPan[0],
+		_dis = global.palankingPan[1];
+		
+	if(_dis > 0){
+		view_shift(-1, _dir, _dis);
+	}
 
 #define draw_palankingplayer(_inst)
     with(_inst){

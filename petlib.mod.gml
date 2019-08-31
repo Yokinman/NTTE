@@ -236,7 +236,8 @@
         if(_leaderDis > 24){
              // Pathfinding:
             if(path_dir != null){
-                direction = path_dir + orandom(20);
+                if(chance(1, 3)) direction = path_dir + orandom(20);
+                else direction += angle_difference(path_dir, direction) / 2;
             }
 
              // Turn Toward Leader:
@@ -432,15 +433,15 @@
 
 #define Mimic_alrm0(_leaderDir, _leaderDis)
     if(instance_exists(leader)){
-        if(_leaderDis > 48){
+        if(_leaderDis > 16){
              // Pathfinding:
             if(path_dir != null){
-                scrWalk(15, path_dir);
-                return 5 + random(10);
+                scrWalk(12, path_dir);
+                return irandom_range(3, walk);
             }
             
              // Wander Toward Leader:
-            else{
+            else if(_leaderDis > 48){
                 scrWalk(20 + random(max(0, _leaderDis - 64)), _leaderDir + orandom(10));
             }
         }
@@ -629,7 +630,7 @@
          // Fly Toward Pickup:
         if(instance_exists(pickup)){
             if(!pickup_held){
-                scrWalk(8, point_direction(x, y, pickup.x, pickup.y));
+                scrWalk(irandom_range(6, 10), point_direction(x, y, pickup.x, pickup.y) + orandom(5));
                 return walk;
             }
         }
@@ -773,8 +774,8 @@
 			
              // Pathfinding:
             if(path_dir != null && (!in_sight(target) || _leaderDis > 48)){
-                scrWalk(4 + random(4), path_dir + orandom(10));
-                return walk;
+                scrWalk(15, path_dir + orandom(15));
+                return 1 + irandom(walk);
             }
             
             else{
@@ -948,7 +949,6 @@
 
                     var _tries = 10;
                     while(place_meeting(x, y, Wall) && _tries-- > 0){
-            
                         var w = instance_nearest(x, y, Wall),
                             _dir = point_direction(w.x + 8, w.y + 8, other.x, other.y);
             
@@ -1038,8 +1038,8 @@
         if(instance_exists(leader)){
              // Pathfinding:
             if(path_dir != null && (!in_sight(target) || _leaderDis > 96)){
-                scrWalk(4 + random(4), path_dir + orandom(20));
-                return walk;
+                scrWalk(12, path_dir + orandom(20));
+                return 1 + irandom(walk);
             }
 
             else{
@@ -1089,7 +1089,7 @@
 	                }
 	                
 	                 // Movin:
-		        	if(instance_exists(target)){
+		        	if(instance_exists(target) && !collision_line(leader.x, leader.y, target.x, target.y, Wall, false, false)){
 		        		motion_add(point_direction(x, y, target.x, target.y) + orandom(10), 2);
 		        		scrRight(direction);
 		        	}
@@ -1232,7 +1232,7 @@
 	if(instance_exists(leader)){
          // Pathfinding:
         if(path_dir != null){
-            scrWalk(5 + random(5), path_dir + orandom(20));
+            scrWalk(5 + random(5), path_dir + orandom(15));
             return walk;
         }
 
@@ -1529,7 +1529,8 @@
         if(_leaderDis > 64 || !in_sight(leader)){
              // Pathfinding:
             if(path_dir != null){
-                scrWalk(4 + random(2), path_dir + orandom(30));
+                scrWalk(6, path_dir + orandom(10));
+                return 1 + irandom(walk) + irandom(6);
             }
 
              // Toward Leader:
@@ -1622,8 +1623,9 @@
      // Vars:
     mask_index = mskFrogEgg;
     maxspeed = 2.5;
-    spawn_loc = [x, y];
+    tp_delay = irandom(30);
     alarm0 = -1;
+    spawn_loc = [x, y];
     path_wall = [Wall];
     
      // Stat:
@@ -1658,8 +1660,6 @@
 
             if(distance_to_object(other) < 8){
                 if(!prism_duplicate && object_index != ThrownWep){
-                    prism_duplicate = true;
-
 					with(other){
                     	speed *= 0.5;
 	                    stat.splits++;
@@ -1679,7 +1679,7 @@
                         }
                     }
                     instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
-                    sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 1);
+                    sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 0.7 + random(0.3));
         
                      // Duplicate:
                     var _copy = instance_copy(false);
@@ -1699,11 +1699,16 @@
                             break;
         
                         case Lightning:
+                            for(var i = id + ceil(ammo); (i > id || instance_is(i, Lightning) || !instance_exists(i)); i--){
+                            	if(instance_is(i, Lightning)) with(i){
+                            		prism_duplicate = true;
+                            	}
+                            }
                             with(_copy){
                                 image_index = 0;
-                                image_angle += orandom(20);
+                                image_angle += random_range(20, 40) * choose(-1, 1);
                                 event_perform(ev_alarm, 0);
-                                with(Lightning) prism_duplicate = true;
+                                with(instances_matching_gt(Lightning, "id", id)) prism_duplicate = true;
                             }
                             break;
         
@@ -1715,6 +1720,8 @@
                                 _off *= -1;
                             }
                     }
+                    
+                    prism_duplicate = true;
                 }
                 else if(speed > 1){
                     sound_play_pitch(sndCursedReminder, 1.5);
@@ -1729,39 +1736,44 @@
         }
 
          // TP Around Player:
-        var _dis = 96,
-            _x = x,
-            _y = y;
-
-        if(!in_distance(leader, _dis)){
-            var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
-
-            do{
-                x = leader.x + lengthdir_x(_dis, _dir) + orandom(4);
-                y = leader.y + lengthdir_y(_dis, _dir) + orandom(4);
-                _dis -= 4;
-            }
-            until(
-                _dis < -12 ||
-                (
-                    !place_meeting(x, y, Wall) &&
-                    (
-                        place_meeting(x, y, Floor) ||
-                        !place_meeting(leader.x, leader.y, Floor)
-                    )
-                )
-            )
-
-             // Effects:
-            if(!place_meeting(x, y, Wall)){
-                repeat(8) with(instance_create(x + orandom(4), y + orandom(4), (chance(1, 10) ? Smoke : Curse))){
-                	depth = other.depth - 1;
-                	image_speed *= random_range(1, 1.5);
-                	motion_set(other.direction, other.speed * 2/3);
-                	motion_add(random(360), 0.6);
-                }
-	            sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 2 + random(2));
-            }
+        if(tp_delay > 0) tp_delay -= current_time_scale;
+        else{
+	        var _dis = 96,
+	            _x = x,
+	            _y = y;
+	
+	        if(!in_distance(leader, _dis)){
+	        	tp_delay = 10;
+	        	
+	            var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
+	
+	            do{
+	                x = leader.x + lengthdir_x(_dis, _dir) + orandom(4);
+	                y = leader.y + lengthdir_y(_dis, _dir) + orandom(4);
+	                _dis -= 4;
+	            }
+	            until(
+	                _dis < -12 ||
+	                (
+	                    !place_meeting(x, y, Wall) &&
+	                    (
+	                        place_meeting(x, y, Floor) ||
+	                        !place_meeting(leader.x, leader.y, Floor)
+	                    )
+	                )
+	            )
+	
+	             // Effects:
+	            if(!place_meeting(x, y, Wall)){
+	                repeat(8) with(instance_create(x + orandom(4), y + orandom(4), (chance(1, 10) ? Smoke : Curse))){
+	                	depth = other.depth - 1;
+	                	image_speed *= random_range(1, 1.5);
+	                	motion_set(other.direction, other.speed * 2/3);
+	                	motion_add(random(360), 0.6);
+	                }
+		            sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 3);
+	            }
+	        }
         }
     }
     else{
@@ -1769,7 +1781,19 @@
         y += cos(current_frame / 10) * 0.4 * current_time_scale;
 
          // Jitters Around:
-        if(chance(1, 30) && instance_exists(Floor)){
+        if(tp_delay > 0) tp_delay -= current_time_scale;
+        else if(instance_exists(Floor)){
+        	tp_delay = irandom(30);
+        	
+	    	if(!position_meeting(spawn_loc[0], spawn_loc[1], Floor)){
+	    		with(instance_random(Floor)){
+		    		other.spawn_loc = [
+		    			(bbox_left + bbox_right) / 2,
+		    			(bbox_top + bbox_bottom) / 2
+		    		];
+	    		}
+	    	}
+        	
              // Decide Which Floor:
             var f = instance_nearest(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor),
                 _fx = (f.bbox_left + f.bbox_right) / 2,

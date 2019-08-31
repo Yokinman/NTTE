@@ -1529,6 +1529,7 @@
 									
 								 //#region I Dunno:
 									
+								/* commenting this out cause bro i cant load the mod we literally at the threshold bro and i cant find anything to get rid of
 								case "Rat Horde": // maybe?
 									obj_name = FastRat;
 									with(obj_info){
@@ -1550,6 +1551,7 @@
 										}
 									}
 									break;
+									*/
 									
 								 //#endregion
 							}
@@ -2306,6 +2308,8 @@
 	}
 	
 	draw_set_font(fntM);
+	draw_set_halign(fa_center);
+	draw_set_valign(fa_top);
 	
 	instance_destroy();
 
@@ -2408,7 +2412,7 @@
 		global.mouse_y_previous[i] = mouse_y[i];
 	}
 
-	 // :
+	 // Draw on Pause Screen but Below draw_pause Depth:
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)) with(UberCont){
 		script_bind_draw(draw_pause_pre, depth - 0.1);
 	}
@@ -4278,79 +4282,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
         if(!instance_exists(_self)) scrCharm(_self, false);
         else{
-			//with(instances_matching(projectile, "creator", _self)){
-				/* Double Damage
-				if("damage_save" not in self) damage_save = damage;
-				damage = damage_save * 2;
-				*/
-
-				/* Triple Shot
-				if("charm_dupe" not in self){
-					charm_dupe = true;
-					for(var _off = -1; _off <= 1; _off += 2){
-						with(instance_copy(false)){
-							var o = 30 * _off * power(0.3, skill_get(mut_eagle_eyes));
-							direction += o;
-							if(speed > 0) image_angle += o;
-						}
-					}
-				}
-				*/
-
-				/* Homing
-				var n = nearest_instance(x, y, instances_matching_ne(hitme, "team", 0, team));
-				if(instance_exists(n)){
-					var a = (image_angle == direction);
-					direction += angle_difference(point_direction(x, y, n.x, n.y), direction) / (7 + random(3));
-					if(a) image_angle = direction;
-				}
-				*/
-				
-				/*
-				if("charm_newspeed" not in self){
-					charm_newspeed = true;
-					speed *= 1.25;
-				}*/
-			//}
-			
-			//with(_self){
-				//if(in_sight(other.target)){
-					//gunangle += angle_difference(point_direction(x, y, other.target.x + other.target.hspeed, other.target.y + other.target.vspeed), gunangle) / 3;
-				//}
-				//if("my_health" in self){
-					/* SharpTeeth
-					if("last_my_health" in self){
-						if(my_health < last_my_health){
-							with(instance_create(x, y, SharpTeeth)){
-								damage = 2.5 * (other.last_my_health - other.my_health);
-								alarm0 = 1;
-								creator = nearest_instance(x, y, instances_matching_ne(enemy, "team", other.team));
-							}
-						}
-					}
-					last_my_health = my_health;
-					*/
-	
-					// Immortal
-					/*if("last_my_health" in self){
-						if(my_health < last_my_health && sprite_index == spr_hurt){
-							my_health = last_my_health;
-							sound_stop(snd_hurt);
-							sprite_index = spr_idle;
-	
-				             // Effects:
-				            sound_play_pitch(sndCrystalPropBreak, 0.7);
-				            sound_play_pitchvol(sndShielderDeflect, 1.5, 0.5);
-				            repeat(5) with(instance_create(x, y, Dust)){
-				                motion_add(random(360), 3);
-				            }
-						}
-					}
-					last_my_health = my_health;
-					nexthurt = max(nexthurt, current_frame + 2);*/
-				//}
-			//}
-
              // Target Nearest Enemy:
             if(!instance_exists(target)) scrCharmTarget();
 

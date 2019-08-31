@@ -2566,16 +2566,16 @@
 
 #define path_direction(_x, _y, _path, _wall)
 	if(!is_array(_wall)) _wall = [_wall];
-
+	
      // Find Nearest Unobstructed Point on Path:
     var	_nearest = -1,
 		_disMax = 1000000;
-
+		
 	for(var i = 0; i < array_length(_path); i++){
 		var _px = _path[i, 0],
 			_py = _path[i, 1],
         	_dis = point_distance(_x, _y, _px, _py);
-
+        	
 		if(_dis < _disMax){
 			var _walled = false
 		    for(var j = 0; j < array_length(_wall); j++){
@@ -2590,13 +2590,13 @@
 		    }
 		}
 	}
-
+	
      // Find Direction to Next Point on Path:
     if(_nearest >= 0){
 	    var _follow = min(_nearest + 1, array_length(_path) - 1),
         	_nx = _path[_follow, 0],
             _ny = _path[_follow, 1];
-
+            
 		 // Go to Nearest Point if Path to Next Point Obstructed:
 	    for(var j = 0; j < array_length(_wall); j++){
     		if(collision_line(x, y, _nx, _ny, _wall[j], false, false)){
@@ -2605,10 +2605,10 @@
     			break;
     		}
 	    }
-
+	    
         return point_direction(x, y, _nx, _ny);
     }
-
+    
     return null;
 
 #define race_get_sprite(_race, _sprite)
