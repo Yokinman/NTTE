@@ -20,6 +20,113 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 
+#define AlbinoBolt_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.AlbinoGatorBolt;
+		
+		 // Vars:
+		mask_index = mskBolt;
+		creator = noone;
+		damage = 6;
+		force = 12;
+		typ = 2;
+		blink = 10;
+		setup = false;
+		small = false;
+		
+		return id;
+	}
+	
+#define AlbinoBolt_end_step
+	 // Setup:
+	if(!setup){
+		setup = true;
+		if(small){
+			 // Visual:
+			sprite_index = spr.AlbinoGatorSplinter;
+			
+			 // Vars:
+			damage = 3;
+			force = 6;
+		}
+	}
+
+     // Trail:
+    var _x1 = x,
+        _y1 = y,
+        _x2 = xprevious,
+        _y2 = yprevious;
+
+    with(instance_create(x, y, BoltTrail)){
+    	image_yscale = (other.small ? 1 : 1.5);
+        image_xscale = point_distance(_x1, _y1, _x2, _y2);
+        image_angle = point_direction(_x1, _y1, _x2, _y2);
+        image_blend = make_color_rgb(250, 56, 0);
+    }
+    
+#define AlbinoBolt_draw
+	if(blink % 2) d3d_set_fog(true, c_white, 0, 0);
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	d3d_set_fog(false, c_white, 0, 0);
+	
+#define AlbinoBolt_hit
+    var _inst = other;
+    if(speed > 0 && projectile_canhit(_inst)){
+        projectile_hit(_inst, damage, force, direction);
+
+         // Stick in Player:
+        with(instance_create(x, y, BoltStick)){
+        	sprite_index = other.sprite_index;
+            image_angle = other.image_angle;
+            target = _inst;
+        }
+    	instance_destroy();
+    }
+    
+#define AlbinoBolt_alrm0
+	if(small) instance_destroy();
+	
+	else{
+		alarm0 = 2;
+		if(blink > 0){
+			blink--;
+			if(blink <= 0){
+				
+				 // Explode:
+				instance_create(x, y, PortalClear);
+				for(var i = 0; i < 360; i += 360 / 16){
+					with(scrEnemyShoot("AlbinoBolt", (direction + i), 15)){
+						small = true;
+					}
+				}
+				
+				 // Effects:
+				repeat(5) scrFX(x, y, [random(360), 1 + random(2)], Smoke);
+				view_shake_max_at(x, y, 15);
+				sleep_max(25);
+				
+				sound_play_hit(sndSnowTankShoot,	0.2);
+				sound_play_hit(sndSplinterGun,		0.2);
+				
+				 // Goodbye:
+				instance_destroy();
+			}
+		}
+	}
+    
+#define AlbinoBolt_wall
+	 // Stick in Wall:
+	if(speed > 0){
+		speed = 0;
+		move_contact_solid(direction, 16);
+		
+		alarm0 = 20;
+		
+		instance_create(x, y, Smoke);
+		sound_play_hit(sndBoltHitWall, 0.2);
+	}
+
 #define AlbinoGator_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -27,9 +134,9 @@
 		spr_walk = spr.AlbinoGatorWalk;
 		spr_hurt = spr.AlbinoGatorHurt;
 		spr_dead = spr.AlbinoGatorDead;
-		spr_weap = sprAutoCrossbow;
+		spr_weap = spr.AlbinoGatorWeap;
 		sprite_index = spr_idle;
-		spr_halo = sprHalo;
+		spr_halo = sprStrongSpiritRefill;
 		halo_index = 0;
 		hitid = [spr_idle, "ALBINO GATOR"];
 		spr_shadow = shd24;
@@ -40,6 +147,7 @@
 		snd_dead = sndBuffGatorDie;
 		
 		 // Vars:
+		mask_index = mskBandit;
 		maxhealth = 45;
 		raddrop = 7;
 		size = 4;
@@ -91,6 +199,12 @@
 		aim_factor = max(aim_factor - _rate, 0);
 	}
 	
+	 // Bounce:
+	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	}
+	
 #define AlbinoGator_alrm1
 	alarm1 = 20 + random(30);
 	target = instance_nearest(x, y, Player);
@@ -112,14 +226,13 @@
 		 // Fire:
 		if(gonnafire <= 0){
 			alarm1 = 30;
-			if(in_sight(target)){
-				scrEnemyShoot("DiverHarpoon", gunangle, 16);
-				
-				sound_play_hit(sndCrossbow, 0.2);
-				motion_set(gunangle + 180, 3);
-				
-				wkick = 8;
-			}
+			
+			scrEnemyShoot("AlbinoBolt", gunangle, 16);
+			
+			sound_play_hit(sndCrossbow, 0.2);
+			motion_set(gunangle + 180, 3);
+			
+			wkick = 8;
 		}
 	}
 	
@@ -234,7 +347,7 @@
 		spr_walk = spr.BabyGatorWalk;
 		spr_hurt = spr.BabyGatorHurt;
 		spr_dead = spr.BabyGatorDead;
-		spr_weap = sprMolefishGun;
+		spr_weap = spr.BabyGatorWeap;
 		sprite_index = spr_idle;
 		hitid = [spr_idle, "BABY GATOR"];
 		spr_shadow = shd16;

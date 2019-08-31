@@ -1508,7 +1508,7 @@
 									with(obj_info){
 										spr_idle = spr.BabyGatorIdle;
 										spr_walk = spr.BabyGatorWalk;
-										spr_weap = sprRevolver;
+										spr_weap = spr.BabyGatorWeap;
 										spr_shadow = shd16;
 										spr_shadow_y = 0;
 									}
@@ -1523,7 +1523,7 @@
 									with(obj_info){
 										spr_idle = spr.AlbinoGatorIdle;
 										spr_walk = spr.AlbinoGatorWalk;
-										spr_weap = sprAutoCrossbow;
+										spr_weap = spr.AlbinoGatorWeap;
 									}
 									break;
 									
