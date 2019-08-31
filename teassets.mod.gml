@@ -765,6 +765,10 @@
 		//#region CHESTS/PICKUPS
 		p = "chests/";
 
+			 // Cursed Ammo Chests:
+			CursedAmmoChest 	= sprite(p + "sprCursedAmmoChest",		1, 8, 8, shn16);
+			CursedAmmoChestOpen = sprite(p + "sprCursedAmmoChestOpen",	1, 8, 8);
+
 	         // Backpack:
 	        Backpack           = sprite(p + "sprBackpack",           1, 8, 8, shn16);
 	        BackpackCursed     = sprite(p + "sprBackpackCursed",     1, 8, 8, shn16);
