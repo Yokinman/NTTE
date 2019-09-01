@@ -19,25 +19,31 @@
 	 // Mode Info:
 	global.wepModes = [
 		{
-			name : "bone scythe",
+			name : "BONE SCYTHE",
 			sprt : global.sprWep,
+			swap : sndSwapSword,
 			cost : 0,
 			load : 12, // 0.4 Seconds
+			auto : true,
+			mele : true,
 			
-			is_melee : true,
 			sprt_hud : global.sprWepHUD
 		},
 		{
-			name : "bone shotbow",
+			name : "BONE SHOTBOW",
 			sprt : global.sprShotbow,
+			swap : sndSwapMachinegun,
 			cost : 5,
-			load : 18 // 0.6 Seconds
+			load : 18, // 0.6 Seconds
+			auto : true
 		},
 		{
-			name : "bone slugbolt",
+			name : "BONE SLUGBOW",
 			sprt : global.sprSlugbolt,
+			swap : sndSwapMotorized,
 			cost : 5,
 			load : 15, // 0.5 Seconds
+			auto : false,
 			
 			sprt_hud : global.sprSlugboltHUD
 		}
@@ -68,17 +74,42 @@
 #define weapon_text 	return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
 #define weapon_load 	return scrWepModeInfo(argument0, "load");
 #define weapon_type 	return 0; // Melee
-#define weapon_melee	return scrWepModeInfo(argument0, "is_melee");
+#define weapon_melee	return scrWepModeInfo(argument0, "mele");
 #define weapon_area 	return (weapon_avail() ? 18 : -1); // 1-2 L1
 #define weapon_swap 	return sndBloodGamble;
 
 #define weapon_auto(w)
-	if(instance_is(self, Player) && (infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1)))) return true;
+	if(instance_is(self, Player) && (infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1)))){
+		return scrWepModeInfo(w, "auto");
+	}
 	return -1;
 
 #define weapon_sprt(w)
-	wepammo_draw(w);
+	 // Draw Ammo:
+	if(is_object(w) && instance_is(self, Player)){
+		var _ammo = w.ammo,
+			_primary = (wep == w),
+			_steroids = (race == "steroids"),
+			_col = "w";
+			
+		if(_ammo > 0){
+		    if(_primary || _steroids){
+		    	if(_ammo < 5){
+			    	_col = "r";
+			    }
+		    }
+		    else _col = "s";
+		}
+		else _col = "d";
+		
+		w.ammo = `@${_col}${_ammo}`;
+		
+		wepammo_draw(w);
+		
+		w.ammo = _ammo;
+	}
 	
+	 // Locked:
 	if(!weapon_avail()) return global.sprWepLocked;
 	
 	 // Hud Sprite:
@@ -105,7 +136,7 @@
 				_heavy = (++w.combo % 3 == 0),
 				_flip = sign(wepangle),
 				l = 10 + (10 * _skill),
-				d = gunangle + (accuracy * orandom(4));
+				d = gunangle + orandom(4 * accuracy);
 				
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
 				image_yscale = _flip;
@@ -121,16 +152,16 @@
 			}
 			
 			 // Sounds:
-			sound_play_pitch(sndBlackSword, 0.8 + random(0.3));
+			sound_play_hit_ext(sndBlackSword, 0.8 + random(0.3), 1);
 			if(_heavy){
-				sound_play_pitchvol(sndHammer, 1 - random(0.2), 0.6);
-				sound_play_pitchvol(sndSwapHammer, 1.3 + random(0.2), 0.6);
+				sound_play_hit_ext(sndHammer, 1 - random(0.2), 0.6);
+				sound_play_hit_ext(sndSwapHammer, 1.3 + random(0.2), 0.6);
 			}
 			
 			 // Effects:
-			motion_add(d - (30 * sign(wepangle)), 3.5);
 			wepangle *= -1;
-			wkick = 5;
+			motion_add(d + (30 * sign(wepangle)), 3 + _heavy);
+			weapon_post((_heavy ? -5 : 5), 6 + (10 * _heavy), 2);
 			if(_heavy) sleep(12);
 		
 			break;
@@ -155,8 +186,8 @@
 				}
 				
 				 // Sounds:
-				sound_play_pitch(sndSuperCrossbow, 0.9 + random(0.3));
-				sound_play_pitch(sndBloodLauncherExplo, 1.2 + random(0.3));
+				sound_play_hit_ext(sndSuperCrossbow, 0.9 + random(0.3), 0.5);
+				sound_play_hit_ext(sndBloodLauncherExplo, 1.2 + random(0.3), 0.5);
 				
 				 // Effects:
 				weapon_post(6, 3, 7);
@@ -182,8 +213,8 @@
 				}
 			
 				 // Sounds:
-				sound_play_pitch(sndHeavyCrossbow, 0.9 + random(0.3));
-				sound_play_pitch(sndBloodHammer, 1.1 + random(0.2));
+				sound_play_hit_ext(sndHeavyCrossbow, 0.9 + random(0.3), 2/3);
+				sound_play_hit_ext(sndBloodHammer, 1.1 + random(0.2), 2/3);
 				
 				 // Effects:
 				motion_add((gunangle + 180), 3);
@@ -216,46 +247,92 @@
         }
     }
     
+     // Big Ammo:
+    if(place_meeting(x, y, WepPickup)){
+        with(instances_meeting(x, y, instances_matching(WepPickup, "visible", true))){
+            if(place_meeting(x, y, other)){
+                if(wep_get(wep) == "crabbone"){
+                    w.ammo = min(w.ammo + 20, w.amax);
+                    
+                     // Effects:
+                    with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
+                    sound_play_hit_ext(sndHPPickup, 4, 0.6);
+                    sound_play_hit_ext(sndPickupDisappear, 1.2, 0.6);
+                    sound_play_hit_ext(sndBloodGamble, 0.4 + random(0.2), 0.4);
+                    
+                    instance_destroy();
+                }
+            }
+        }
+    }
+    
      // Switch Modes:
-    var i = index;
-    if(canpick && button_pressed(index, "pick")){
-    	if(_primary && !instance_exists(nearwep)){
-    		with(w){
-	    		mode = ++mode % numModes;
-	    		cost = scrWepModeInfo(w, "cost");
-    		}
-    		
-    		 // Effects:
-    		wkick = -2;
-    		swapmove = true;
-    		
-    		sound_play_pitch(sndMutant14Turn, 0.9 + random(0.2));
-    		sound_play_pitchvol(sndFishWarrantEnd, 0.9 + random(0.4), 1.2);
-    		
-    		with(instance_create(x, y, PopupText)){
-    			target = i;
-    			mytext = scrWepModeInfo(w, "name") + "!";
-    		}
-    		
-    		 // Bone Piece Effects:
-    		var n = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id));
-    		if(n > 0) repeat(n) with(obj_create(x, y, "BoneFX")){
-    			speed = 4 + random(3);
-    			direction = random(360);
-    			creator = other;
-    		}
-    		repeat(4) with(scrFX(x, y, [random(360), 1 + random(3)], Dust)) depth = -3;
-    		
-    		 // Silence:
-    		mod_variable_set("mod", "ntte", "sPromptIndex", -1);
-    		
+    if(array_length(instances_matching(CustomScript, "name", "scythe_swap")) <= 0){
+    	with(script_bind_step(scythe_swap, 0)){
+    		name = script[2];
+    		persistent = true;
     	}
     }
+
+#define scythe_swap
+	with(Player){
+		if(button_pressed(index, "pick") && !instance_exists(nearwep) && wep_get(wep) == mod_current){
+			var w = wep;
+			
+			 // Swap:
+			with(w){
+				mode = ++mode % numModes;
+				cost = scrWepModeInfo(w, "cost");
+			}
+			
+			 // Sound:
+			sound_play_hit(scrWepModeInfo(w, "swap"), 0.1);
+			sound_play_hit(sndMutant14Turn, 0.1);
+			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 2);
+			
+			 // Silence:
+			mod_variable_set("mod", "ntte", "sPromptIndex", -1);
+			
+			 // Effects:
+			swapmove = 1;
+			if(visible && !instance_exists(GenCont) && !instance_exists(LevCont)){
+				wkick = -3;
+				gunshine = 1;
+				
+				 // !
+				with(instance_create(x, y, PopupText)){
+					target = other.index;
+					mytext = scrWepModeInfo(w, "name") + "!";
+				}
+				
+				 // Bone Piece Effects:
+				var	n = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id)),
+		    		l = 12,
+					d = gunangle + wepangle;
+					
+				if(n > 0) repeat(n){
+					with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BoneFX")){
+						motion_add(d, 1);
+						creator = other;
+					}
+				}
+				
+				l = 8;
+				repeat(6){
+					with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d + orandom(60), 1 + random(5)], Dust)) depth = -3;
+				}
+			}
+    	}
+	}
+
 
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
-#define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
+#define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
+#define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
+#define sound_play_hit_ext(_snd, _pit, _vol)											return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);

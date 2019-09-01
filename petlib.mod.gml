@@ -1624,9 +1624,11 @@
     mask_index = mskFrogEgg;
     maxspeed = 2.5;
     tp_delay = irandom(30);
+    push = 0.5;
     alarm0 = -1;
     spawn_loc = [x, y];
     path_wall = [Wall];
+    flash_frame = 0;
     
      // Stat:
 	if("splits" not in stat) stat.splits = 0;
@@ -1653,12 +1655,12 @@
                 "can_prism_duplicate", true, null
             )
         ){
-            can_prism_duplicate = false;
-            if("prism_duplicate" not in self){
-                prism_duplicate = false;
-            }
-
             if(distance_to_object(other) < 8){
+	            if("prism_duplicate" not in self){
+	                prism_duplicate = false;
+	            }
+            	can_prism_duplicate = false;
+            	
                 if(!prism_duplicate && object_index != ThrownWep){
 					with(other){
                     	speed *= 0.5;
@@ -1666,6 +1668,8 @@
 					}
         
                      // Slice FX:
+                    other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
+                    
                     var _dir = random(360),
                         o = 6;
     
@@ -1679,8 +1683,8 @@
                         }
                     }
                     instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
-                    sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 0.7 + random(0.3));
-        
+                    sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 1);
+                    
                      // Duplicate:
                     var _copy = instance_copy(false);
                     switch(_copy.object_index){
@@ -1742,8 +1746,8 @@
 	            _x = x,
 	            _y = y;
 	
-	        if(!in_distance(leader, _dis)){
-	        	tp_delay = 10;
+	        if(!collision_circle(leader.x, leader.y, _dis, id, true, false)){
+	        	tp_delay = 15;
 	        	
 	            var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
 	
@@ -1765,13 +1769,12 @@
 	
 	             // Effects:
 	            if(!place_meeting(x, y, Wall)){
-	                repeat(8) with(instance_create(x + orandom(4), y + orandom(4), (chance(1, 10) ? Smoke : Curse))){
+	                flash_frame = max(flash_frame, current_frame + 1);
+	                repeat(4) with(instance_create(_x + orandom(6), _y + orandom(6), (chance(1, 6) ? CaveSparkle : Curse))){
+	                	direction = random(360);
 	                	depth = other.depth - 1;
-	                	image_speed *= random_range(1, 1.5);
-	                	motion_set(other.direction, other.speed * 2/3);
-	                	motion_add(random(360), 0.6);
 	                }
-		            sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 3);
+		            sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 2);
 	            }
 	        }
         }
@@ -1803,6 +1806,7 @@
             if(!place_meeting(_fx, _fy, Wall)){
 	            x = _fx;
 	            y = _fy;
+                flash_frame = max(flash_frame, current_frame + 1);
                 repeat(4) with(instance_create(x + orandom(6), y + orandom(6), (chance(1, 6) ? CaveSparkle : Curse))){
                 	direction = random(360);
                 	depth = other.depth - 1;
@@ -1825,6 +1829,11 @@
     if(chance_ct(1, 3)) repeat(irandom(4)){
         instance_create(x + orandom(8), y + orandom(8), Curse);
     }
+
+#define Prism_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	if(flash_frame > current_frame) draw_set_fog(true, image_blend, 0, 0);
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
 
 
 /// Mod Events
@@ -2130,7 +2139,7 @@
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

@@ -1877,14 +1877,21 @@
 		stat_set("time", stat_get("time") + (current_time_scale / 30));
 		
 		 // Scythe Prompts:
-		var _scytheExists = false;
-		with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-			_scytheExists = true;
-		}
-		with(instances_matching(GenCont, "scythe_prompt", undefined)) if(_scytheExists && global.sPromptIndex != -1){
-			scythe_prompt = true;
-			tip = global.scythePrompt[global.sPromptIndex];
-			global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
+		with(instances_matching(GenCont, "scythe_prompt", null)){
+			scythe_prompt = false;
+			
+			if(GameCont.hard > 1){
+				if(global.sPromptIndex != -1){
+					with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+						other.scythe_prompt = true;
+					}
+					
+					if(scythe_prompt){
+						tip = global.scythePrompt[global.sPromptIndex];
+						global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
+					}
+				}
+			}
 		}
     }
     catch(_error){
@@ -5453,7 +5460,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

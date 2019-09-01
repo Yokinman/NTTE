@@ -1591,7 +1591,7 @@
     return false;
 
 #define wepammo_draw(_wep)
-    if(instance_is(self, Player) && instance_is(other, TopCont) && is_object(_wep)){
+    if(instance_is(self, Player) && (instance_is(other, TopCont) || instance_is(other, UberCont)) && is_object(_wep)){
 		var _ammo = lq_defget(_wep, "ammo", 0);
 		draw_ammo(index, (wep == _wep), _ammo, lq_defget(_wep, "amax", _ammo), (race == "steroids"));
     }
@@ -1608,15 +1608,17 @@
 	
 			 // Determine Color:
 		    var _col = "w";
-			if(_ammo > 0){
-			    if(_primary || _steroids){
-			    	if(_ammo <= ceil(_ammoMax * 0.2)){
-				    	_col = "r";
+			if(is_real(_ammo)){
+				if(_ammo > 0){
+				    if(_primary || _steroids){
+				    	if(_ammo <= ceil(_ammoMax * 0.2)){
+					    	_col = "r";
+					    }
 				    }
-			    }
-			    else _col = "s";
+				    else _col = "s";
+				}
+				else _col = "d";
 			}
-			else _col = "d";
 	
 			 // !!!
 		    draw_set_halign(fa_left);

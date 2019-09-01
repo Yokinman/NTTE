@@ -705,38 +705,99 @@
 		typ = 2;
 		damage_falloff = current_frame + 2;
 		wallbounce = 4 * _shotgunShoulders;
-		alarm1 = (_boltMarrow > 0 ? 5 : 0);
-		seekdist = 42;
-		setup = false;
+		home_inst = noone;
+		home_dir = 0;
+		setup = true;
 		big = false;
 		
 		return id;	
 	}
+
+#define BoneArrow_setup
+	setup = false;
+	
+	 // Bigify:
+	if(big){
+		 // Visual:
+		sprite_index = spr.BoneArrowHeavy;
+		
+		 // Vars:
+		friction = 0;
+		damage = 42;
+	}
 	
 #define BoneArrow_step
+	 // Bone Marrow:
+	if(home_inst != noone){
+		if(instance_exists(home_inst) && projectile_canhit_melee(home_inst)){
+			 // Homing:
+			if(
+				abs(angle_difference(point_direction(x, y, home_inst.x, home_inst.y), home_dir)) < 90
+				&&
+				!place_meeting(x + lengthdir_x(speed, home_dir), y + lengthdir_y(speed, home_dir), home_inst)
+			){
+				var _tx = home_inst.x - lengthdir_x(speed, home_dir),
+					_ty = home_inst.y - lengthdir_y(speed, home_dir),
+					_diff = angle_difference(point_direction(x, y, _tx, _ty), direction) * 0.5 * current_time_scale;
+					
+				direction += _diff;
+				image_angle += _diff;
+			}
+			
+			 // Done Homing:
+			else{
+				home_inst = noone;
+				direction = home_dir;
+				image_angle = direction;
+			}
+		}
+		
+		 // Return to Original Direction:
+		else if(direction != home_dir){
+			var _diff = angle_difference(home_dir, direction);
+			if(abs(_diff) > 10) _diff = _diff * 0.5 * current_time_scale;
+			direction += _diff;
+			image_angle += _diff;
+		}
+		
+		 // Done Homing:
+		else home_inst = noone;
+	}
+	
+	else{
+		home_dir = direction;
+		
+		 // Home on Nearest Enemy:
+		var _disMax = 24 * skill_get(mut_bolt_marrow);
+		if(_disMax > 0){
+			var _nearest = noone;
+			with(instances_matching_ne(hitme, "team", team, 0)){
+				if(!instance_is(self, prop)){
+					var _dis = distance_to_point(other.x + other.hspeed, other.y + other.vspeed);
+					if(_dis < _disMax){
+						if(place_meeting(other.x, other.y, other)){
+							_disMax = _dis;
+							_nearest = id;
+						}
+					}
+				}
+			}
+			home_inst = _nearest;
+		}
+	}
+
 	 // Particles:
 	if(chance_ct(1, 7)) scrBoneDust(x, y);
-	if(chance_ct((speed <= 4), 1)) scrFX(x, y, [direction, speed], Dust);
+	if(speed <= 4 && current_frame_active){
+		scrFX(x, y, [direction, speed], Dust);
+	}
 
 	 // Destroy:
 	if(speed <= 2) instance_destroy();
 	
 #define BoneArrow_end_step
 	 // Setup:
-	if(!setup){
-		setup = true;
-		
-		 // Bigify:
-		if(big){
-			 // Visual:
-			sprite_index = spr.BoneArrowHeavy;
-			
-			 // Vars:
-			friction = 0;
-			damage = 42;
-			seekdist = 14;
-		}
-	}
+	if(setup) BoneArrow_setup();
 
 	 // Trail:
 	var l = point_distance(x, y, xprevious, yprevious),
@@ -748,19 +809,6 @@
 		
 		image_yscale += (0.5 * other.big);
 	}
-	
-#define BoneArrow_alrm1
-	alarm1 = 5;
-
-	 // Seeking:
-	var _seekDist = seekdist * skill_get(mut_bolt_marrow);;
-	with(nearest_instance(x, y, instances_matching_ne([Player, enemy], "team", team))) if(point_distance(x, y, other.x, other.y) <= _seekDist){
-		other.x = x;
-		other.y = y;
-	}
-	
-	 // Live to seek another frame:
-	else alarm1 = 1;
 	
 #define BoneArrow_wall
 	 // Movin' Closer:
@@ -790,9 +838,11 @@
 	repeat(3) scrBoneDust(x, y);
 	
 	 // Bounce:
+	var d = direction;
 	speed *= 0.8;
 	move_bounce_solid(true);
 	image_angle = direction;
+	home_dir += angle_difference(direction, d);
 	
 	 // Shotgun Shoulders:
 	var _skill = skill_get(mut_shotgun_shoulders);
@@ -830,15 +880,13 @@
 		 // Visual:
 		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
 		image_speed = 0;
-		image_angle = random(360);
 		depth = -3;
 		
 		 // Vars:
 		creator = noone;
-		delay = 4 + random(3);
-		
-		 // Scripts:
-		on_step = script_ref_create(BoneFX_step);
+		delay = 2 + random(4);
+		speed = (8 - delay) + random(2);
+		direction = random(360);
 		
 		return id;
 	}
@@ -847,13 +895,18 @@
 	if(instance_exists(creator)){
 		delay -= current_time_scale;
 		if(delay <= 0){
-			var _creatorDir = point_direction(x, y, creator.x, creator.y);
-			image_angle = _creatorDir;
-			
 			 // Gravitate:
-			if(!place_meeting(x, y, creator)){
-				motion_add_ct(_creatorDir, 2.4);
+			if(!place_meeting(x, y, creator) && !place_meeting(x, y, Portal)){
+				x += creator.hspeed_raw / 2;
+				y += creator.vspeed_raw / 2;
+				
+				var d = direction;
+				motion_add_ct(point_direction(x, y, creator.x, creator.y), 2.4);
+				image_angle += (direction - d);
 				speed = min(speed, 8);
+				
+				xprevious = x + hspeed_raw*2;
+				yprevious = y + vspeed_raw*2;
 			}
 			
 			 // Goodbye:
@@ -865,6 +918,7 @@
 			}
 		}
 	}
+
 
 #define BoneSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
@@ -925,7 +979,7 @@
 	     // Bone Pickup Drops:
 	    with(other) if(my_health <= 0){
 	    	var	_max = round(maxhealth / power(0.8, skill_get(mut_scarier_face))),
-				_num = round(power(maxhealth, 1 / (1 + (4 / size))));
+				_num = ceil(maxhealth / 5);
 
 			if(_num > 0){
 		    	if(
@@ -987,7 +1041,7 @@
 			image_angle = other.image_angle;
 			image_blend = choose(c_white, make_color_rgb(208, 197, 180), make_color_rgb(157, 133, 098), make_color_rgb(111, 082, 043));
 		}
-		sound_play_pitchvol(sndMeleeWall, 2 + orandom(0.3), 1);
+		sound_play_hit_ext(sndMeleeWall, 2 + orandom(0.3), 0.2);
 	}
 
 
@@ -3951,17 +4005,17 @@
 	if(DebugLag) trace_time();
 
      // Pickup Indicator Collision:
-    var _player = instances_matching(instances_matching(Player, "nearwep", noone), "visible", true);
+    var _player = instances_matching(Player, "nearwep", noone);
     if(array_length(_player) > 0){
     	var _inst = instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true);
-	    with(_player){
+	    with(_player) if(visible || variable_instance_get(id, "wading", 0) > 0){
 	        if(place_meeting(x, y, CustomObject)){
 	        	 // Find Nearest Touching Indicator:
 	        	var _nearest = noone,
 	        		_maxDis = 1000000;
 
 	        	with(instances_meeting(x, y, _inst)){
-	        		if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible)){
+	        		if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
 	        			var e = on_meet;
 	        			if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
 		        			var _dis = point_distance(x, y, other.x, other.y);
@@ -4253,7 +4307,7 @@
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

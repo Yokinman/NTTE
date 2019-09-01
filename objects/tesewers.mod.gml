@@ -42,7 +42,7 @@
 		 // Vars:
 		maxhealth = 45;
 		raddrop = 7;
-		size = 4;
+		size = 2;
 		walk = 0;
 		walkspd = 1.2;
 		maxspeed = 3.6;
@@ -50,12 +50,12 @@
 		direction = gunangle;
 		gonnafire = 0;
 		wave = 0;
-		canspirit = true;														// canspirit:		Has spirit or not
-		maxspirit = 15; 														// maxspirit:		Threshold for spirit regain
-		spirit_bonus = GameCont.hard;											// spirit_bonus:	Bonus spirit gained on spirit regain
-		spirit_regen = 10;														// spirit_regen:	Alarm interval for spirit regain
-		spirit = (maxspirit + spirit_bonus); 									// spirit:			Current spirit number
-		spirit_hurt = current_frame;											// spirit_hurt:		Spirit loss iframe cutoff
+		canspirit = true;						// canspirit:		Has spirit or not
+		maxspirit = 15; 						// maxspirit:		Threshold for spirit regain
+		spirit_bonus = GameCont.hard;			// spirit_bonus:	Bonus spirit gained on spirit regain
+		spirit_regen = 10;						// spirit_regen:	Alarm interval for spirit regain
+		spirit = (maxspirit + spirit_bonus); 	// spirit:			Current spirit number
+		spirit_hurt = current_frame;			// spirit_hurt:		Spirit loss iframe cutoff
 		aim_factor = 0;
 		
 		 // Alarms:
@@ -4417,7 +4417,7 @@
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

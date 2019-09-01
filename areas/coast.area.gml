@@ -599,21 +599,26 @@
 				instances_matching_ne(chestprop, "name", "SunkenChest")
 			);
 	        with(instances_matching(instances_matching_ge(_inst, "wading", 80), "visible", true)){
-	    		if(distance_to_object(Portal) > 96 && (object_index != Player || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)){
-		            var n = instance_nearest(x - 16, y - 16, Floor);
-		    		motion_add_ct(point_direction(x, y, n.x, n.y), 3 + ((wading - 80)) / 16);
-	
-		    		 // Extra Player Push:
-		    		if(wading > 120 && instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
-		        		var l = ((wading - 120) / 10) * current_time_scale,
-		        			d = point_direction(x, y, n.x, n.y);
-	
-						x += lengthdir_x(l, d);
-						y += lengthdir_y(l, d);
-	
-						 // FX:
-						if(chance_ct(1, 2)) instance_create(x, y, Dust);
-		    		}
+	    		if(
+	    			distance_to_object(Portal) > 96 &&
+	    			(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)
+	    		){
+	    			if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
+			            var n = instance_nearest(x - 16, y - 16, Floor);
+			    		motion_add_ct(point_direction(x, y, n.x, n.y), 3 + ((wading - 80)) / 16);
+		
+			    		 // Extra Player Push:
+			    		if(wading > 120 && instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
+			        		var l = ((wading - 120) / 10) * current_time_scale,
+			        			d = point_direction(x, y, n.x, n.y);
+		
+							x += lengthdir_x(l, d);
+							y += lengthdir_y(l, d);
+		
+							 // FX:
+							if(chance_ct(1, 2)) instance_create(x, y, Dust);
+			    		}
+	    			}
 	    		}
 	        }
 			if(DebugLag) trace_time("coast_area_step Wading Push");
@@ -719,10 +724,17 @@
 	    	coast_portal = false;
 	    	if(type != 2){
 	    		coast_portal = true;
-	
+
 		    	image_alpha = 0;
 		    	sound_stop(sndPortalOpen);
 	            with(instances_matching(CustomDraw, "name", "darksea_draw")) flash = 0;
+	            
+	             // Player Touched It:
+		    	if(endgame < 100){
+			    	endgame = 100;
+			    	sound_stop(sndPortalClose);
+		    		with(instances_matching(Player, "mask_index", mskNone)) mask_index = mskPlayer;
+		    	}
 		
 				 // Move to Water:
 		    	event_perform(ev_alarm, 0);
@@ -1458,7 +1470,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

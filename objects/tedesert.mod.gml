@@ -656,7 +656,7 @@
     y = ystart;
 
      // Animate:
-    image_index = part;
+    image_index = clamp(part, 0, image_number - 1);
     if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
     else sprite_index = spr_idle;
 
@@ -714,8 +714,10 @@
     	(instance_is(other, CustomProjectile) && "name" in other && other.name == "Bone")
     	||
     	(instance_is(other, ThrownWep) && wep_get(other.wep) == "crabbone")
+    	||
+    	(instance_is(other, CustomProjectile) && variable_instance_get(other, "name") == "BoneArrow")
     ){
-    	var _add = (("wep" in other) ? lq_defget(other.wep, "ammo", 1) : 1);
+    	var _add = lq_defget(variable_instance_get(other, "wep"), "ammo", 1) + variable_instance_get(other, "big", 0);
 
     	part += _add;
         my_health = max(my_health, maxhealth);
@@ -1702,7 +1704,7 @@
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);

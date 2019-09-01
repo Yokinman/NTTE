@@ -1992,6 +1992,7 @@
 			case ToxicGrenade:
 			case BloodGrenade:
 			case UltraGrenade:
+			case ClusterNade:
 			case BloodBall:
 				if(_stockObjRaw != _frontObjRaw || lq_defget(_stock.proj, "sticky", false) != lq_defget(_front.proj, "sticky", false)){
 					switch(_stockObjRaw){
@@ -2015,6 +2016,10 @@
 							array_push(_flagProj, "bloodnade");
 							break;
 						
+						case ClusterNade:
+        					array_push(_flagProj, "cluster");
+							break;
+							
 						default:
 							if(lq_defget(_stock.proj, "sticky", false)){
 								array_push(_flagProj, "stickynade");
@@ -2036,10 +2041,6 @@
 					 // Extra Reload:
 					load += round((amnt * shot * (1 + _frontProjCostRaw)) / 2);
 				}
-				break;
-
-			case ClusterNade:
-        		array_push(_flagProj, "cluster");
 				break;
 
 			case Rocket:
@@ -2066,7 +2067,7 @@
 
 			case FlakBullet:
 			case SuperFlakBullet:
-				array_push(_flagProj, "flak");
+				array_push(flag, "flak");
 				break;
 
         	case HyperSlug:
@@ -2234,7 +2235,7 @@
 					
 				if(_cost > 0){
 					if(ammo[_type] < _cost){
-						sound_play(sndBloodHurt);
+						sound_play_hit(sndBloodHurt, 0.1);
 						projectile_hit_raw(self, max(floor(_cost / 2), 1), true);
 						lasthit = [wep_stat(w, "sprt"), wep_stat(w, "name")];
 						ammo[_type] += _cost;
@@ -2468,11 +2469,6 @@
                         if(_isMelee){
                             speed += 3 * skill_get(mut_long_arms);
                         }
-                        
-                         // Nukes:
-						if(object_index == Nuke && "index" in creator){
-							index = creator.index;
-						}
 						
                          // Black Sword:
                         if(array_exists(_flag, "blacksword")){
@@ -2625,11 +2621,15 @@
 
                         if(loop){
                             if(loop_indx == -1){
-                                sound_play(loop_strt);
+                                with(instance_exists(_creator) ? _creator : other){
+                                	sound_play_hit(other.loop_strt, 0);
+                                }
                                 loop_indx = audio_play_sound(snd, 0, true);
                             }
                         }
-                        else sound_play_pitchvol(_snd, _pit, _vol);
+                        else with(instance_exists(_creator) ? _creator : other){
+                        	sound_play_hit_ext(_snd, _pit, _vol);
+                        }
                     }
                 }
 
@@ -2684,7 +2684,7 @@
      // Stop Sound Loops:
     if(array_length(instances_matching(instances_matching(object_index, "name", name), "wep", _wep)) <= 1){
         with(_wep.soun) if(loop_indx != -1){
-            if(loop) sound_play(loop_stop);
+            if(loop) sound_play_hit(loop_stop, 0);
             audio_stop_sound(loop_indx);
             loop_indx = -1;
         }
@@ -2702,7 +2702,7 @@
     var _wep = wep;
     switch(_event){
         case contInit:
-            sound_play(sndLaserCannonCharge);
+            sound_play_hit(sndLaserCannonCharge, 0.1);
             
              // Visual:
             sprite_index = sprPlasmaBall;
@@ -2819,7 +2819,7 @@
         	(flagProjPref + "bouncer"	) in self,
         	array_exists(_flag, "laser")
         );
-
+        
          // Visual:
         visible = false;
         with(instance_create(x, y, LightningSpawn)){
@@ -2828,10 +2828,22 @@
         }
     }
     
+     // Nukes:
+	if(instance_is(self, Nuke) && "index" in creator){
+		index = creator.index;
+	}
+    
      // Bind Flagged Projectile Controller Script:
     with(flagProjCont){
+    	var s = scrt;
     	with(_inst) if(other.flag in self){
-    		variable_instance_set(id, other.flag, true);
+    		var o = {};
+			variable_instance_set(id, other.flag, o);
+			
+			var _cancel = mod_script_call(s[0], s[1], s[2], proj_create, o);
+			if(instance_exists(self) && is_real(_cancel) && _cancel){
+				variable_instance_set(id, other.flag, null);
+			}
     	}
     }
 	if(array_length(instances_matching(CustomScript, "name", "flagprojcont_step")) <= 0){
@@ -2853,16 +2865,10 @@
 		 // Add New:
 		with(instances_matching_ne(projectile, _flag, null)){
 			if(array_find_index(_inst, id) < 0){
-				var o = {},
-					_bind = mod_script_call(_scrtTyp, _scrtMod, _scrtNam, proj_create, o);
-					
-				if(is_undefined(_bind)) _bind = false;
-				else _bind = !_bind;
-				
-				if(_bind){
-					array_push(_inst, self);
-					array_push(_vars, o);
-				}
+				var o = lq_clone(variable_instance_get(id, _flag));
+				variable_instance_set(id, _flag, o);
+				array_push(_inst, id);
+				array_push(_vars, o);
 			}
 			else break;
 		}
@@ -3371,6 +3377,9 @@
 				for(var i = 0; i < _num; i++){
 					var _boom = false,
 						_boomSmall = [],
+						_snd = -1,
+						_pit = 1 + orandom(0.1),
+						_vol = 3 + random(2),
 						_dir = (360 * (i / _num)) + _dirAng,
 						_x = x + lengthdir_x(_dis, _dir),
 						_y = y + lengthdir_y(_dis, _dir);
@@ -3383,12 +3392,12 @@
 	
 					switch(type){
 						case 1:
-							if(xplo != 2) sound_play(sndExplosion);
+							_snd = sndExplosion;
 							_boom = true;
 							break;
 		
 						case 2:
-							sound_play(sndExplosionL);
+							_snd = sndExplosionL;
 							_boom = true;
 	
 							var _ang = random(360);
@@ -3403,12 +3412,14 @@
 						default:
 							switch(xplo){
 								case 2:
-									sound_play_pitchvol(sndBloodLauncherExplo, 1.4 + orandom(0.2), 0.4);
+									_snd = sndBloodLauncherExplo;
+									_pit = 1.4 + orandom(0.2);
+									_vol = 0.6;
 									array_push(_boomSmall, instance_create(_x, _y, MeatExplosion));
 									break;
 	
 								default:
-									sound_play(sndExplosionS);
+									_snd = sndExplosionS;
 									array_push(_boomSmall, instance_create(_x, _y, SmallExplosion));
 							}
 							break;
@@ -3422,7 +3433,7 @@
 								break;
 								
 							case 2:
-								sound_play(sndBloodLauncherExplo);
+								_snd = sndBloodLauncherExplo;
 	
 								var _ang = random(360),
 									l = 24;
@@ -3461,6 +3472,12 @@
 								depth--;
 							}
 						}
+					}
+					
+					 // Sound:
+					with(instance_create(_x, _y, GameObject)){
+						sound_play_hit_ext(_snd, _pit, _vol);
+						instance_destroy();
 					}
 				}
 			}
@@ -3537,8 +3554,8 @@
 						_y = y + vspeed_raw;
 
 					if(place_meeting(_x, _y, Wall)){
+						sound_play_hit(sndGrenadeStickWall, 0.1);
 						with(instances_meeting(_x, _y, Wall)){
-							sound_play(sndGrenadeStickWall);
 							o.stic_inst = id;
 							break;
 						}
@@ -3562,7 +3579,7 @@
 								if(instance_is(other, prop) || other.team == 0) f = 0;
 								projectile_hit(other, min(damage, other.my_health - 1), f, direction);
 							}
-							sound_play(sndGrenadeStickWall);
+							sound_play_hit(sndGrenadeStickWall, 0.1);
 							o.stic_inst = id;
 							break;
 						}
@@ -3614,7 +3631,7 @@
 		case proj_step:
 			if(o.delay > 0){
 				o.delay -= current_time_scale;
-				if(o.delay <= 0) sound_play(sndUltraGrenadeSuck);
+				if(o.delay <= 0) sound_play_hit(sndUltraGrenadeSuck, 0.1);
 			}
 			else{
 				 // Suckin Nearby Enemies:
@@ -3695,6 +3712,9 @@
 			o.sped = 0;
 			o.goal = ((friction > 0) ? 12 : min(speed * 2, 12));
 			o.delay = ((friction >= 0.4) ? floor((speed - 6) / friction) : (8 - (speed / 4)));
+
+			 // Nuke:
+			if(object_index == Nuke) index = -1;
 
 			 // Don't Use Normal Speed Increase:
 			if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], object_index)){
@@ -3948,8 +3968,8 @@
 			break;
 
 		case proj_destroy:
-			 // Flame:
 			with(o) if(amnt > 0){
+				 // Flame:
 				repeat(amnt){
 					with(instance_create(x + orandom(4), y + orandom(4), Flame)){
 						hspeed = other.hspeed / 6;
@@ -3963,6 +3983,15 @@
 						}
 					}
 				}
+				
+				 // Smoke:
+				repeat(amnt / 2){
+					with(instance_create(x, y, Smoke)){
+						motion_add(random(360), random(sqrt(other.amnt)));
+					}
+				}
+				
+				 // Sound:
 				if(amnt > 3){
 					with(instance_create(x, y, GameObject)){
 						sound_play_hit(sndFlareExplode, 0.4);
@@ -4024,9 +4053,18 @@
 			break;
 
 		case proj_destroy:
-			 // Gas:
 			with(o) if(amnt > 0){
+				 // Gas:
 				repeat(amnt) instance_create(x, y, ToxicGas);
+				
+				 // Smoke:
+				repeat(amnt / 3){
+					with(instance_create(x, y, Smoke)){
+						motion_add(random(360), random(sqrt(other.amnt) / 2));
+					}
+				}
+				
+				 // Sound:
 				with(instance_create(x, y, GameObject)){
 					sound_play_hit(sndToxicBoltGas, 0.1);
 					instance_destroy();
@@ -4081,12 +4119,18 @@
 			with(o) repeat(amnt + (crown_current == crwn_death)){
 				with(instance_create(x, y, MiniNade)){
 					motion_add(random(360), random_range(1, 2 + (other.amnt / 2)));
+					image_angle = direction;
 					team = other.team;
+					depth = -1.5;
+					x += hspeed;
+					y += vspeed;
 
 					 // Open FX:
-					sound_play_hit(sndClusterOpen, 0.2);
+					sound_play_hit_ext(sndClusterOpen, 1 + orandom(0.2), 0.6);
 					with(instance_create(x, y, Smoke)){
 						motion_add(direction, random(2));
+						depth = other.depth - 1;
+						growspeed /= 2;
 					}
 				}
 			}
@@ -4405,7 +4449,7 @@
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_sound, _pitch, _volume)                                     return  mod_script_call_nc("mod", "telib", "sound_play_hit_ext", _sound, _pitch, _volume);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
