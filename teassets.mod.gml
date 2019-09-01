@@ -612,10 +612,13 @@
 			
 	        	 // Albino Gator:
 	        	p = m + "AlbinoGator/";
-	        	AlbinoGatorIdle = sprite(p + "sprAlbinoGatorIdle", 8, 16, 16);
-	        	AlbinoGatorWalk = sprite(p + "sprAlbinoGatorWalk", 6, 16, 16);
-	        	AlbinoGatorHurt = sprite(p + "sprAlbinoGatorHurt", 3, 16, 16);
-	        	AlbinoGatorDead = sprite(p + "sprAlbinoGatorDead", 6, 16, 16);
+	        	AlbinoGatorIdle 		= sprite(p + "sprAlbinoGatorIdle",		8, 16, 16);
+	        	AlbinoGatorWalk 		= sprite(p + "sprAlbinoGatorWalk",		6, 16, 16);
+	        	AlbinoGatorHurt 		= sprite(p + "sprAlbinoGatorHurt",		3, 16, 16);
+	        	AlbinoGatorDead 		= sprite(p + "sprAlbinoGatorDead",		6, 16, 16);
+	        	AlbinoGatorWeap 		= sprite(p + "sprAlbinoGatorWeap",		1,  7,  5, shnWep);
+	        	AlbinoGatorBolt 		= sprite(p + "sprAlbinoGatorBolt",		1,  8,  4);
+	        	AlbinoGatorSplinter 	= sprite(p + "sprAlbinoGatorSplinter",	1, -6, 3);
 	        	
 	        	 // Baby Gator:
 	        	p = m + "BabyGator/";
@@ -623,6 +626,7 @@
 	        	BabyGatorWalk = sprite(p + "sprBabyGatorWalk", 6, 12, 12);
 	        	BabyGatorHurt = sprite(p + "sprBabyGatorHurt", 3, 12, 12);
 	        	BabyGatorDead = sprite(p + "sprBabyGatorDead", 7, 12, 12);
+	        	BabyGatorWeap = sprite(p + "sprBabyGatorWeap", 1,  0,  3, shnWep);
 	        	
 	             // Bat:
 	            p = m + "Bat/";
@@ -760,6 +764,10 @@
 
 		//#region CHESTS/PICKUPS
 		p = "chests/";
+
+			 // Cursed Ammo Chests:
+			CursedAmmoChest 	= sprite(p + "sprCursedAmmoChest",		1, 8, 8, shn16);
+			CursedAmmoChestOpen = sprite(p + "sprCursedAmmoChestOpen",	1, 8, 8);
 
 	         // Backpack:
 	        Backpack           = sprite(p + "sprBackpack",           1, 8, 8, shn16);

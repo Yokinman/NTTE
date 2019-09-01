@@ -1508,7 +1508,7 @@
 									with(obj_info){
 										spr_idle = spr.BabyGatorIdle;
 										spr_walk = spr.BabyGatorWalk;
-										spr_weap = sprRevolver;
+										spr_weap = spr.BabyGatorWeap;
 										spr_shadow = shd16;
 										spr_shadow_y = 0;
 									}
@@ -1523,7 +1523,7 @@
 									with(obj_info){
 										spr_idle = spr.AlbinoGatorIdle;
 										spr_walk = spr.AlbinoGatorWalk;
-										spr_weap = sprAutoCrossbow;
+										spr_weap = spr.AlbinoGatorWeap;
 									}
 									break;
 									
@@ -1756,14 +1756,13 @@
 		}
 	
 		 // Overheal, Overstock, and Spirit Pickups:
-		with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)){
+		with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)) if(GameCont.hard > 6){
 			bonuspickup_spawn = false;
 	
 			if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
 				if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
 					 // Spirit Pickups:
-					var _spiritChance = (array_length(instances_matching(Player, "canspirit", false)) * skill_get(mut_strong_spirit));
-					if(instance_is(id, HPPickup) && chance(_spiritChance, 20)){
+					if(chance(1 + skill_get(mut_last_wish), 200)){
 						obj_create(x, y, "SpiritPickup");
 						instance_delete(id);
 		
@@ -1771,7 +1770,7 @@
 					}
 					
 					 // Overheal/Overstock Pickups:
-					else if(GameCont.hard > 6 && chance(1, 50)){
+					else if(chance(1, 50)){
 						obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
 						instance_delete(id);
 		
@@ -1891,6 +1890,15 @@
 						global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
 					}
 				}
+			}
+		}
+		
+		 // Cursed Ammo Chests:
+		with(instances_matching(AmmoChest, "cursedammochest_check", undefined)) if(crown_current == crwn_curses){
+			cursedammochest_check = true;
+			if(chance(1, 5)){
+				obj_create(x, y, "CursedAmmoChest");
+				instance_delete(id);
 			}
 		}
     }

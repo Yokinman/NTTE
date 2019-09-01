@@ -419,6 +419,7 @@
 			case "parrot":	array_push(_pool, "parrot");	break;
 		}
 	}
+	// if(chance(1, 5)) array_push(_pool, "spirit");
 	with(["wep", "bwep"]){
 		var w = self;
 		with(Player) if(wep_get(variable_instance_get(id, w)) == "scythe"){
@@ -595,6 +596,11 @@
 								repeat(10) with(obj_create(_x, _y, "BonePickup")){
 									motion_set(random(360), 3 + random(1));
 								}
+								break;
+								
+							case "spirit":
+								obj_create(_x, _y, "SpiritPickup");
+								instance_create(_x, _y, ImpactWrists);
 								break;
 						}
 						
@@ -803,6 +809,13 @@
 					text = "BONES";
 					desc = "BONES";
 					break;
+					
+				case "spirit":
+					sprite_index = spr.SpiritPickup;
+					image_blend = merge_color(c_yellow, c_white, 0.75);
+					text = "BONUS SPIRIT";
+					desc = "LIVE FOREVER";
+					break;
 
 				default:
 					sprite_index = sprAmmo;
@@ -824,9 +837,9 @@
 #define CursedAmmoChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
-		sprite_index = sprAmmoChest;
-		spr_dead = sprAmmoChestOpen;
-		image_blend = merge_color(c_white, c_purple, 0.7);
+		sprite_index = spr.CursedAmmoChest;
+		spr_dead = spr.CursedAmmoChestOpen;
+		spr_shadow_y = -2;
 
 		 // Sound:
 		snd_open = sndAmmoChest;
@@ -839,6 +852,7 @@
 #define CursedAmmoChest_open
 	sound_play(sndCursedChest);
 	instance_create(x, y, PortalClear);
+	instance_create(x, y, ReviveFX);
 	repeat(10){
 		with(obj_create(x + orandom(4), y + orandom(4), "BackpackPickup")){
 			sprite_index = sprCursedAmmo;
@@ -856,7 +870,6 @@
 			}
 		}
 	}
-
 
 #define CustomChest_create(_x, _y)
     with(instance_create(_x, _y, chestprop)){
@@ -1342,7 +1355,11 @@
         
          // Vars:
         mask_index = mskPickup;
-        wave = 0;
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
+        nextpull = current_frame + 9;
+        wave = random(90);
+        num = 1 + (crown_current == crwn_haste);
         
          // Events:
         on_open = script_ref_create(SpiritPickup_open);
@@ -1361,7 +1378,26 @@
     draw_sprite(sprHalo, 0, x, ((y + 3) + sin(wave * 0.1)));
 
 #define SpiritPickup_open
-    scrRestoreSpirit(other);
+	 // Restore Missing Strong Spirit (BORING):
+	var n = num;
+	with(other){
+		
+		 // Acquire Bonus Spirit:
+		if(n >= 1){
+			if("bonus_spirit" not in self) bonus_spirit = [];
+			
+			repeat(n) array_push(bonus_spirit, bonusSpiritGain);
+			sound_play(sndStrongSpiritGain);
+			
+			with(instance_create(x, y, PopupText)){
+				mytext = `+${n} @yBONUS @wSPIRIT${n > 1 ? "S" : ""}`;
+				target = other.index;
+			}
+		}
+		
+		 // for all the headless chickens in the crowd:
+		my_health = max(my_health, 1);
+	}
     
      // Effects:
     instance_create(x, y, SmallChestPickup);
@@ -1369,10 +1405,9 @@
 #define SpiritPickup_fade
     instance_create(x, y, SmallChestFade);
     instance_create(x, y, StrongSpirit);
-
+    
 #define SpiritPickup_pull
-    if(other.canspirit) return false;
-    return true;
+	return (nextpull <= current_frame);
 
 #define scrRestoreSpirit(_inst)
     with(_inst) if(skill_get(mut_strong_spirit) && !canspirit){
@@ -1412,8 +1447,105 @@
 
 
 /// Mod Events
+
+#define draw_bonus_spirit
+	with(Player){
+		var n = array_length(bonus_spirit);
+		if(n > 0){
+			for(var i = 0; i < n; i++){
+				var _naturalSpirit = (skill_get(mut_strong_spirit) && canspirit),
+					_x = x, // too lazy to make them wobble, sorry jsburg
+					_y = y - (7 * (i + _naturalSpirit)) + sin(wave * 0.1);
+					
+				draw_sprite(bonus_spirit[i].sprite, bonus_spirit[i].index, _x, _y);
+			}
+		}
+	}
+	
+	 // Goodbye Bro:
+	instance_destroy();
+
+#macro bonusSpiritGain {sprite : sprStrongSpiritRefill, index : 0, active : true}
+#macro bonusSpiritLose {sprite : sprStrongSpirit,		index : 0, active : false}
 #define step
     if(DebugLag) trace_time();
+    
+     // Bonus Spirits:
+    with(Player){
+    	if("bonus_spirit" not in self) bonus_spirit = [];
+    	script_bind_draw(draw_bonus_spirit, -12);
+    	
+    	 // Sort Spirits:
+    	var _spirits = [[], []];
+    	with(bonus_spirit){
+    		var o = self;
+    		array_push(_spirits[active], o);
+    	}
+
+		 // Grant Grace:
+    	if(array_length(bonus_spirit) > 0){
+	    	if(my_health <= 0){
+	    		if(spiriteffect <= 0){
+		    		var _doSpirit = false;
+		    		
+		    		 // Natural Spirit Depletion:
+			    	if(skill_get(mut_strong_spirit) && canspirit){
+			    		with(instances_matching(StrongSpirit, "creator", index)) instance_destroy();
+			    		canspirit = false;
+			    		GameCont.canspirit[index] = false;
+			    		
+			    		array_push(_spirits[0], bonusSpiritLose);
+			    		
+			    		_doSpirit = true;
+			    	}
+			    	
+			    	 // Bonus Spirit Depletion:
+			    	else if(array_length(_spirits[1]) > 0){
+			    		with(_spirits[1]){
+			    			sprite = mskNone;
+			    			break;
+			    		}
+			    		array_push(_spirits[0], bonusSpiritLose);
+			    		
+			    		_doSpirit = true;
+			    	}
+			    	
+			    	 // Perform Spirit Effect:
+			    	if(_doSpirit){
+			    		my_health = 1;
+			    		spiriteffect = 4;
+			    		sound_play(sndStrongSpiritLost);
+			    	}
+			    }
+			    
+			     // Fuck Explosions:
+			    else my_health = 1;
+	    	}
+	    }
+	    
+	     // Animate and Cull Spirits:
+	    var a = [],
+	    	s = 0.4;
+	    for(var i = 1; i >= 0; i--){
+	    	with(_spirits[i]){
+	    		
+	    		 // you may pass:
+	    		var o = self;
+	    		if(sprite != mskNone){
+		    		index += s;
+		    		if(index >= sprite_get_number(sprite)){
+		    			if(active) sprite = sprHalo;
+		    			else sprite = mskNone;
+		    		}
+	    			
+	    			array_push(a, o);
+	    		}
+	    	}
+	    }
+	    
+	     // the next generation:
+	    bonus_spirit = a;
+    }
 
 	 // Eyes Custom Pickup Attraction:
     with(instances_matching(Player, "race", "eyes")){
