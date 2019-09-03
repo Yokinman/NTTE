@@ -55,7 +55,7 @@
 				 // FX:
 				var	l = 16,
 					d = gunangle;
-		
+
 				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ThrowHit);
 				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ImpactWrists);
 				sound_play_pitch(sndCrystalRicochet, 3);
@@ -72,7 +72,7 @@
     	 // Pullback:
     	var f = (w.chrg_num / w.chrg_max);
 	    weapon_post(9 * f, 8 * f, 0);
-		
+
 		 // Pop Pop:
 		if(race == "venuz" && specfiring){
 			w.chrg_num = w.chrg_max;
@@ -120,7 +120,7 @@
 			else{
 				var l = weapon_get_load(w),
 					d = gunangle;
-				
+
 				variable_instance_set(self, b + "reload",	 l);
 				variable_instance_set(self, b + "can_shoot", false);
 				weapon_post(wkick, -20, 8);
@@ -129,32 +129,36 @@
 				l += 8 * skill_get(mut_long_arms);
 				variable_instance_set(self, b + "wkick", -l);
 				for(var i = l + 8; i > 0; i -= 16){
-					with(instance_create(x + lengthdir_x(i, d), y + lengthdir_y(i, d) - (_primary ? 0 : 4), Shank)){
-						projectile_init(other.team, other);
+          var e = -18;
+          repeat(3){
+  					with(instance_create(x + lengthdir_x(i, d + e / 2), y + lengthdir_y(i, d + e / 2) - (_primary ? 0 : 4), Shank)){
+  						projectile_init(other.team, other);
 
-						motion_add(d, 1 * (1 + (2 * skill_get(mut_long_arms))));
-						image_angle = direction;
-						image_xscale = 0.5;
-						depth = other.depth - 1;
-						canfix = false;
-						damage = 20;
+  						motion_add(d + e, 1 * (1 + (2 * skill_get(mut_long_arms))));
+  						image_angle = direction;
+  						image_xscale = 0.5;
+  						depth = other.depth - 1;
+  						canfix = false;
+  						damage = 20;
 
-						 // Secret Shanks:
-						if(i < l) visible = false;
-						
-						 // Hit Wall:
-						else if(place_meeting(x + hspeed, y + vspeed, Wall)){
-							sound_play(sndMeleeWall);
-							instance_create(x + orandom(4), y + orandom(4), Debris);
-							with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
-								with(instance_create(x + 8 + orandom(4), y + 8 + orandom(4), MeleeHitWall)){
-									image_angle = d;
-								}
-							}
-						}
+  						 // Secret Shanks:
+  						if(i < l) visible = false;
 
-						mask_index = mskSlash;
-					}
+  						 // Hit Wall:
+  						else if(place_meeting(x + hspeed, y + vspeed, Wall)){
+  							sound_play(sndMeleeWall);
+  							instance_create(x + orandom(4), y + orandom(4), Debris);
+  							with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
+  								with(instance_create(x + 8 + orandom(4), y + 8 + orandom(4), MeleeHitWall)){
+  									image_angle = d;
+  								}
+  							}
+  						}
+
+  						mask_index = mskSlash;
+              e += 18
+  					}
+          }
 				}
 			}
 
@@ -165,7 +169,7 @@
 			sound_play_pitchvol(sndOasisExplosionSmall,	0.7	* n, 0.7);
 			sound_play_pitchvol(sndOasisDeath,			1.2	* n, 0.8);
 			sound_play_pitchvol(sndOasisMelee,			1	* n, 1);
-	
+
 			 // bubbol:
 			var l = 24,
 				d = gunangle;
