@@ -462,7 +462,7 @@
          // Vars:
         mask_index = mskFlakBullet;
         friction = 1;
-        damage = 50;
+        damage = 34;
         force = 1;
         typ = 1;
         creator = noone;
@@ -1588,6 +1588,27 @@
 
 
 /// Mod Events
+#define step
+	if(DebugLag) trace_time();
+
+     // Baby Scorpion Spawn:
+    with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
+    	repeat(babyscorp_drop){
+    		obj_create(x, y, "BabyScorpion");
+    	}
+    }
+	
+	 // Separate Bones:
+    with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
+    	if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
+            wep.ammo--;
+            with(instance_create(x, y, WepPickup)) wep = "crabbone";
+        }
+        else crabbone_splitcheck = true;
+    }
+    
+	if(DebugLag) trace_time("tedesert_step");
+
 #define draw_bloom
 	if(DebugLag) trace_time();
 

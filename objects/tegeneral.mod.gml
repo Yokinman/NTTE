@@ -7,7 +7,9 @@
     global.debug_lag = false;
 
 	global.surfShadowTop = surflist_set("ShadowTop", 0, 0, game_width, game_height);
+	global.surfShadowTopMask = surflist_set("ShadowTopMask", 0, 0, 2 * game_width, 2 * game_height);
 	global.surfPet = surflist_set("Pet", 0, 0, 64, 64);
+	with(surfShadowTopMask) reset = true;
 
     global.poonRope = [];
 
@@ -23,6 +25,7 @@
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
 #macro surfShadowTop global.surfShadowTop
+#macro surfShadowTopMask global.surfShadowTopMask
 #macro surfPet global.surfPet
 
 
@@ -856,6 +859,9 @@
 	}
 	
 #define BoneArrow_hit
+	 // Setup:
+	if(setup) BoneArrow_setup();
+	
 	if(projectile_canhit_melee(other)){
 		var _damage = damage + ((damage_falloff > current_frame) * 2);
 		projectile_hit(other, _damage, force, direction);
@@ -989,7 +995,7 @@
 					|| ("name" in self && (string_pos("Bone", name) > 0 || string_pos("Skull", name) > 0))
 				){
 					 // Big Pickups:
-					var _numLarge = floor(_num div 10);
+					var _numLarge = floor((_num - 1) div 10);
 					if(_numLarge > 0) repeat(_numLarge){
 						with(obj_create(x, y, "BoneBigPickup")){
 							motion_set(random(360), 3 + random(1));
@@ -997,7 +1003,7 @@
 					}
 		
 					 // Small Pickups:
-					var _numSmall = ceil(_num mod 10);
+					var _numSmall = ceil((_num - 1) mod 10) + 1;
 					if(_numSmall > 0) repeat(_numSmall){
 						with(obj_create(x, y, "BonePickup")){
 							motion_set(random(360), 3 + random(1));
@@ -1818,37 +1824,39 @@
 
 		 // Skewer Corpses:
         if(place_meeting(x, y, Corpse)){
-            with(instances_meeting(x, y, instances_matching_le(instances_matching_ne(instances_matching_gt(Corpse, "speed", 1), "mask_index", -1), "size", 3))){
+            with(instances_meeting(x, y, instances_matching_ne(instances_matching_gt(Corpse, "speed", 1), "mask_index", -1))){
             	if(place_meeting(x, y, other)){
             		var c = id;
             		with(other){
 	            		if(array_find_index(corpses, c) < 0){
-							var _canTake = true;
-	            			with(instances_matching(object_index, "name", name)){
-	            				if(array_find_index(corpses, c) >= 0){
-	            					_canTake = false;
-	            					break;
-	            				}
-	            			}
-
-							if(_canTake){
-								 // Skewer:
-		            			array_push(corpses, c);
-		            			if(hspeed != 0){
-		            				c.image_xscale = -sign(hspeed);
+            				if(sprite_get_width(c.sprite_index) < 64 && sprite_get_height(c.sprite_index) < 64){
+								var _canTake = true;
+		            			with(instances_matching(object_index, "name", name)){
+		            				if(array_find_index(corpses, c) >= 0){
+		            					_canTake = false;
+		            					break;
+		            				}
 		            			}
-		            			speed = max(speed - (3 * (1 + c.size)), 12);
-
-		            			 // Effects:
-		            			view_shake_at(x, y, 6);
-		            			with(instance_create(c.x, c.y, ThrowHit)){
-		            				motion_add(other.direction + orandom(30), 3);
-		            				image_speed = random_range(0.8, 1);
-		            				image_xscale = min(0.5 * (c.size + 1), 1);
-		            				image_yscale = image_xscale;
-		            			}
-		            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
-		            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.3 + (0.2 * c.size));
+	
+								if(_canTake){
+									 // Skewer:
+			            			array_push(corpses, c);
+			            			if(hspeed != 0){
+			            				c.image_xscale = -sign(hspeed);
+			            			}
+			            			speed = max(speed - (3 * (1 + c.size)), 12);
+	
+			            			 // Effects:
+			            			view_shake_at(x, y, 6);
+			            			with(instance_create(c.x, c.y, ThrowHit)){
+			            				motion_add(other.direction + orandom(30), 3);
+			            				image_speed = random_range(0.8, 1);
+			            				image_xscale = min(0.5 * (c.size + 1), 1);
+			            				image_yscale = image_xscale;
+			            			}
+			            			sound_play_pitchvol(sndChickenThrow,   0.4 + random(0.2), 3);
+			            			sound_play_pitchvol(sndGrenadeShotgun, 0.6 + random(0.2), 0.3 + (0.2 * c.size));
+								}
 							}
 	            		}
             		}
@@ -1907,6 +1915,7 @@
         instance_create(x, y, Dust);
         sound_play(sndBoltHitWall);
         speed = 0;
+        typ = 0;
 
          // Deteriorate Rope if Both Harpoons Stuck:
         with(rope){
@@ -2801,7 +2810,7 @@
         }
         
          // Breadcrumbs:
-		if(array_length(path) > 2 && (wave % 90) < 60 && chance_ct(1, 5)){
+		if(array_length(path) > 2 && (wave % 90) < 60 && chance_ct(1, 15 / maxspeed)){
 		    var	i = round((wave / 10) % array_length(path)),
 				_x1 = ((i > 0) ? path[i - 1, 0] : x),
 				_y1 = ((i > 0) ? path[i - 1, 1] : y),
@@ -3162,6 +3171,7 @@
 		persistent = true;
         creator = noone;
         nearwep = noone;
+		depth = 0; // Priority (0==WepPickup)
         pick = -1;
         text = "";
         xoff = 0;
@@ -3173,10 +3183,10 @@
         return id;
     }
 
-#define PickupIndicator_end_step
-    pick = -1;
+#define PickupIndicator_begin_step
     with(nearwep) instance_delete(id);
 
+#define PickupIndicator_end_step
      // Follow Creator:
     var c = creator;
     if(c != noone){
@@ -3189,6 +3199,9 @@
         }
         else instance_destroy();
     }
+
+#define PickupIndicator_cleanup
+    with(nearwep) instance_delete(id);
 
 
 #define PortalPrevent_create(_x, _y)
@@ -3994,35 +4007,48 @@
     }
 
      // Bind Events:
-    script_bind_end_step(end_step, 0);
+    script_bind_step(step_post, 0);
     script_bind_draw(draw_shadows_top, -7.1);
 
 	if(DebugLag) trace_time("tegeneral_step");
 
-#define end_step
+#define step_post
 	instance_destroy();
 
 	if(DebugLag) trace_time();
 
      // Pickup Indicator Collision:
-    var _player = instances_matching(Player, "nearwep", noone);
-    if(array_length(_player) > 0){
-    	var _inst = instances_matching(instances_matching(CustomObject, "name", "PickupIndicator"), "visible", true);
-	    with(_player) if(visible || variable_instance_get(id, "wading", 0) > 0){
+    var _inst = instances_matching(CustomObject, "name", "PickupIndicator");
+	with(_inst) pick = -1;
+	_inst = instances_matching(_inst, "visible", true);
+	if(array_length(_inst) > 0){
+	    with(Player) if(visible || variable_instance_get(id, "wading", 0) > 0){
 	        if(place_meeting(x, y, CustomObject)){
 	        	 // Find Nearest Touching Indicator:
 	        	var _nearest = noone,
-	        		_maxDis = 1000000;
-
+	        		_maxDis = null,
+	        		_maxDepth = null;
+	        		
+	        	if(instance_exists(nearwep)){
+	        		_maxDis = point_distance(x, y, nearwep.x, nearwep.y);
+	        		_maxDepth = nearwep.depth;
+	        	}
+	        		
 	        	with(instances_meeting(x, y, _inst)){
 	        		if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
 	        			var e = on_meet;
 	        			if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
-		        			var _dis = point_distance(x, y, other.x, other.y);
-		        			if(_dis < _maxDis){
-		        				_maxDis = _dis;
-		        				_nearest = id;
-		        			}
+	        				if(_maxDepth == null || depth < _maxDepth){
+	        					_maxDepth = depth;
+	        					_maxDis = null;
+	        				}
+	        				if(depth == _maxDepth){
+			        			var _dis = point_distance(x, y, other.x, other.y);
+			        			if(_maxDis == null || _dis < _maxDis){
+			        				_maxDis = _dis;
+			        				_nearest = id;
+			        			}
+	        				}
 	        			}
 	        		}
 	        	}
@@ -4062,7 +4088,7 @@
 	    }
     }
 
-	if(DebugLag) trace_time("tegeneral_end_step");
+	if(DebugLag) trace_time("tegeneral_step_post");
 
 #define draw_bloom
 	if(DebugLag) trace_time();
@@ -4123,13 +4149,6 @@
         draw_ellipse(_x - w, _y - h, _x + w, _y + h, false);
     }
 
-	 // Custom RavenFlys:
-	with(instances_matching(CustomObject, "name", "NestRaven")) if(visible){
-		if(sprite_index != spr_idle && position_meeting(x, bbox_bottom + 8, Floor)){
-			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
-		}
-	}
-
 	if(DebugLag) trace_time("tegeneral_draw_shadows");
 
 #define draw_shadows_top
@@ -4137,43 +4156,114 @@
 
 	if(DebugLag) trace_time();
 
-	with(surfShadowTop){
-		x = view_xview_nonsync;
-		y = view_yview_nonsync;
-		w = game_width;
-		h = game_height;
-
-		var _inst = instances_matching(CustomObject, "name", "NestRaven", "TopEnemy");
-
-		if(instance_exists(BackCont) && array_length(_inst) > 0){
-			active = true;
-			if(surface_exists(surf)){
-				 // Draw Shadows to Surface:
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-
-				with(_inst) if(visible){
-					if(sprite_index == spr_idle || !position_meeting(x, bbox_bottom, Floor) || (z <= 0 && position_meeting(x, bbox_bottom + 8, Wall))){
-						var _x = x + spr_shadow_x,
-							_y = y + spr_shadow_y;
-
-						if(name != "NestRaven") _y -= 8;
-
-						draw_sprite(spr_shadow, 0, _x - other.x, _y - other.y);
-					}
-				}
-
-				surface_reset_target();
-
-				 // Draw Surface:
-				draw_set_flat(BackCont.shadcol);
-				draw_set_alpha(BackCont.shadalpha);
-				draw_surface(surf, x, y);
-				draw_set_alpha(1);
-				draw_set_flat(-1);
-			}
+	var _vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_vw = game_width,
+		_vh = game_height,
+		_inst = instances_matching_ge(instances_matching(
+			array_combine(
+				instances_matching(CustomObject, "name", "NestRaven", "TopEnemy"),
+				instances_matching(CustomProjectile, "name", "MortarPlasma"),
+			),
+			"visible", true
+			),
+			"z", 8
+		),
+		_active = (instance_exists(BackCont) && array_length(_inst) > 0);
+		
+	with(surfShadowTopMask){
+		var	_x = floor(_vx / _vw) * _vw,
+			_y = floor(_vy / _vh) * _vh;
+			
+		if(_x != x || _y != y){
+			x = _x;
+			y = _y;
+			reset = true;
 		}
-		else active = false;
+		w = _vw * 2;
+		h = _vh * 2;
+		active = _active;
+		
+		 // Draw Wall Mask:
+		if(active && reset && surface_exists(surf)){
+			reset = false;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
+				x -= other.x;
+				y -= other.y;
+				y -= 8;
+				draw_self();
+				x += other.x;
+				y += other.y;
+				y += 8;
+			}
+			draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+			with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
+				draw_sprite(outspr, outindex, x - other.x, y - other.y);
+			}
+			draw_set_blend_mode(bm_normal);
+			
+			surface_reset_target();
+		}
+		
+		 // New Floors:
+		with(instances_matching([Wall, Floor], "shadowtopmasksurf_check", null)){
+			shadowtopmasksurf_check = true;
+			other.reset = true;
+		}
+	}
+	with(surfShadowTop){
+		x = _vx;
+		y = _vy;
+		w = _vw;
+		h = _vy;
+		active = _active;
+
+		if(active && surface_exists(surf)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+
+			 // Draw Shadows:
+			with(_inst){
+				switch(name){
+					case "MortarPlasma":
+				        var _percent = clamp(96 / (z - 8), 0.1, 1),
+				            _w = ceil(18 * _percent),
+				            _h = ceil(6 * _percent),
+				            _x = x - other.x,
+				            _y = y - 8 - other.y;
+				            
+				        draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+				        
+				        break;
+				        
+				    default:
+						var _x = x + spr_shadow_x,
+							_y = y + spr_shadow_y - 8;
+							
+						draw_sprite(spr_shadow, 0, _x - other.x, _y - other.y);
+				}
+			}
+			
+			 // Clear Non-Wall Space:
+			with(surfShadowTopMask) if(surface_exists(surf)){
+				draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+				draw_surface(surf, x - other.x, y - other.y);
+				draw_set_blend_mode(bm_normal);
+			}
+			
+			surface_reset_target();
+			
+			 // Draw Surface:
+			draw_set_flat(BackCont.shadcol);
+			draw_set_alpha(BackCont.shadalpha);
+			draw_surface(surf, x, y);
+			draw_set_alpha(1);
+			draw_set_flat(-1);
+		}
 	}
 
 	if(DebugLag) trace_time("tegeneral_draw_shadows_top");

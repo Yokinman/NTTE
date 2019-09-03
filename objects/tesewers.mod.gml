@@ -24,108 +24,190 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.AlbinoGatorBolt;
+		depth = -2;
 		
 		 // Vars:
 		mask_index = mskBolt;
 		creator = noone;
+		target = noone;
 		damage = 6;
 		force = 12;
-		typ = 2;
-		blink = 10;
-		setup = false;
+		typ = 1;
+		ammo = 0;
+		ammo_max = 4;
+		setup = true;
 		small = false;
 		
 		return id;
 	}
 	
-#define AlbinoBolt_end_step
-	 // Setup:
-	if(!setup){
-		setup = true;
-		if(small){
-			 // Visual:
-			sprite_index = spr.AlbinoGatorSplinter;
-			
-			 // Vars:
-			damage = 3;
-			force = 6;
-		}
+#define AlbinoBolt_setup
+	setup = false;
+	
+	if(small){
+		 // Visual:
+		sprite_index = spr.AlbinoGatorSplinter;
+		
+		 // Vars:
+		damage = 3;
+		force = 6;
+		blink = 0;
+		ammo_max = 0;
 	}
 
-     // Trail:
-    var _x1 = x,
-        _y1 = y,
-        _x2 = xprevious,
-        _y2 = yprevious;
+#define AlbinoBolt_end_step
+	 // Setup:
+	if(setup) AlbinoBolt_setup();
+    
+     // Stuck:
+    if(instance_exists(target)){
+    	var	l = 12,
+    		d = image_angle + 180;
+    		
+    	x = target.x + lengthdir_x(l, d);
+    	y = target.y + lengthdir_y(l, d);
+    	speed = 0;
+    	
+    	 // Small:
+    	if(small){
+    		with(instance_create(x, y, BoltStick)){
+    			sprite_index = other.sprite_index;
+    			image_angle = other.image_angle;
+    			target = other.target;
+    		}
+    	}
+    }
 
-    with(instance_create(x, y, BoltTrail)){
-    	image_yscale = (other.small ? 1 : 1.5);
-        image_xscale = point_distance(_x1, _y1, _x2, _y2);
-        image_angle = point_direction(_x1, _y1, _x2, _y2);
-        image_blend = make_color_rgb(250, 56, 0);
+     // Trail:
+    if(speed > 0){
+	    var _x1 = x,
+	        _y1 = y,
+	        _x2 = xprevious,
+	        _y2 = yprevious;
+	
+	    with(instance_create(x, y, BoltTrail)){
+	    	image_yscale = (other.small ? 0.6 : 1.5);
+	        image_xscale = point_distance(_x1, _y1, _x2, _y2);
+	        image_angle = point_direction(_x1, _y1, _x2, _y2);
+	        image_blend = ((other.team == 2) ? c_yellow : make_color_rgb(250, 56, 0));
+	    }
+    }
+    
+     // Explo Time:
+    else if(alarm0 < 0){
+        alarm0 = 20;
+		typ = 0;
     }
     
 #define AlbinoBolt_draw
-	if(blink % 2) d3d_set_fog(true, c_white, 0, 0);
-	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-	d3d_set_fog(false, c_white, 0, 0);
+	var _blink = (ammo > 0 && ((current_frame % 4) < 2));
+	if(_blink) draw_set_fog(true, c_white, 0, 0);
 	
-#define AlbinoBolt_hit
-    var _inst = other;
-    if(speed > 0 && projectile_canhit(_inst)){
-        projectile_hit(_inst, damage, force, direction);
-
-         // Stick in Player:
-        with(instance_create(x, y, BoltStick)){
-        	sprite_index = other.sprite_index;
-            image_angle = other.image_angle;
-            target = _inst;
-        }
-    	instance_destroy();
-    }
+	draw_self();
+	
+	if(_blink) draw_set_fog(false, 0, 0, 0);
     
 #define AlbinoBolt_alrm0
-	if(small) instance_destroy();
+	var _sndInst = (instance_exists(target) ? target : self);
 	
-	else{
-		alarm0 = 2;
-		if(blink > 0){
-			blink--;
-			if(blink <= 0){
-				
-				 // Explode:
-				instance_create(x, y, PortalClear);
-				for(var i = 0; i < 360; i += 360 / 16){
-					with(scrEnemyShoot("AlbinoBolt", (direction + i), 15)){
-						small = true;
-					}
-				}
-				
-				 // Effects:
-				repeat(5) scrFX(x, y, [random(360), 1 + random(2)], Smoke);
-				view_shake_max_at(x, y, 15);
-				sleep_max(25);
-				
-				sound_play_hit(sndSnowTankShoot,	0.2);
-				sound_play_hit(sndSplinterGun,		0.2);
-				
-				 // Goodbye:
-				instance_destroy();
-			}
+	 // Prepare:
+	if(ammo <= 0 && ammo_max > 0){
+		alarm0 = 30;
+		ammo = ammo_max;
+		
+		 // :
+		with(_sndInst){
+			sound_play_hit_ext(sndSniperTarget,     0.8 + random(0.2),  0.6);
+			sound_play_hit_ext(sndUltraGrenadeSuck, 2.5 + orandom(0.5), 0.7);
 		}
+		repeat(6) scrFX(x, y, [image_angle + 180, random(3)], Smoke);
 	}
+	
+	 // Shooting:
+	else{
+		alarm0 = 1;
+		
+		if(ammo > 0){
+			 // Explo FX:
+			if(visible){
+				visible = false;
+				with(instance_create(x, y, PortalClear)){
+					image_xscale = 0.5;
+					image_yscale = image_xscale;
+				}
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = ((other.team == 2) ? sprFlakHit : sprEFlakHit);
+					image_index = 3 - image_speed;
+					image_xscale = 0.9;
+					image_yscale = 0.9;
+				}
+				with(_sndInst){
+					sound_play_hit_ext(sndFlakExplode, 1 + random(0.2), 0.6);
+				}
+				sleep_max(25);
+			}
+			
+			 // Splinters:
+			var d = 90 * (1 - (ammo / ammo_max));
+			for(var i = -sign(d); i <= sign(d); i += 2){
+				with(scrEnemyShoot("AlbinoBolt", direction + 180 + (d * i), 15)){
+					small = true;
+				}
+			}
+	
+			 // Effects:
+			with(_sndInst){
+				sound_play_hit_ext(
+					(other.ammo & 1) ? sndTurretFire : choose(sndSplinterGun, sndSplinterPistol),
+					1 + orandom(0.2),
+					1.2
+				);
+			}
+			repeat(5) scrFX(x, y, [random(360), 1 + random(2)], Smoke);
+			view_shake_at(x, y, 15);
+		}
+		
+		 // End:
+		if(--ammo <= 0) instance_destroy();
+	}
+	
+#define AlbinoBolt_hit
+	 // Setup:
+	if(setup) AlbinoBolt_setup();
+	
+	 // Hit:
+    if(speed > 0 && projectile_canhit(other)){
+        projectile_hit(other, damage, force, direction);
+        if(instance_exists(other) && other.my_health > 0){
+	        target = other;
+	        speed = 0;
+        }
+        
+         // FX:
+        repeat(4) scrFX(x, y, 2, Smoke);
+    }
     
 #define AlbinoBolt_wall
 	 // Stick in Wall:
 	if(speed > 0){
 		speed = 0;
-		move_contact_solid(direction, 16);
-		
-		alarm0 = 20;
-		
 		instance_create(x, y, Smoke);
+		
+		move_contact_solid(direction, 16);
+		x += lengthdir_x(6, direction);
+		y += lengthdir_y(6, direction);
+		xprevious = x;
+		yprevious = y;
+		
+		 // FX:
 		sound_play_hit(sndBoltHitWall, 0.2);
+		instance_create(x, y, Smoke);
+		if(!small){
+			sound_play_hit_ext(sndHammer, 1.3 + random(0.2), 0.7);
+			view_shake_at(x, y, 20);
+		}
 	}
+
 
 #define AlbinoGator_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -200,9 +282,9 @@
 	}
 	
 	 // Bounce:
-	if(place_meeting(x + hspeed, y + vspeed, Wall)){
-		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -0.5;
+		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -0.5;
 	}
 	
 #define AlbinoGator_alrm1
@@ -215,7 +297,7 @@
 		gonnafire--;
 		
 		 // Can't Aim if you Can't See:
-		if(instance_exists(target)){
+		if(in_sight(target)){
 			var	_targetDir = point_direction(x, y, target.x, target.y),
 				_angleDif = angle_difference(gunangle, _targetDir);
 				
@@ -229,9 +311,10 @@
 			
 			scrEnemyShoot("AlbinoBolt", gunangle, 16);
 			
-			sound_play_hit(sndCrossbow, 0.2);
-			motion_set(gunangle + 180, 3);
+			sound_play_hit_ext(sndHeavyCrossbow, 1.2 + random(0.2), 1);
+			sound_play_hit_ext(sndTurretFire,    0.8 + random(0.2), 1);
 			
+			motion_set(gunangle + 180, 3);
 			wkick = 8;
 		}
 	}
@@ -241,26 +324,27 @@
 			gunangle = point_direction(x, y, target.x, target.y);
 			
 			 // Begin Attack:
-			if(in_distance(target, 200) && chance(2, 3)){
+			if(in_distance(target, 192) && chance(2, 3)){
 				alarm1 = 1;
 				gonnafire = 30;
-				sound_play_hit(sndCrossReload, 0.2);
+				sound_play_hit_ext(sndCrossReload,   1.0 + random(0.2), 1.6);
+				sound_play_hit_ext(sndSnowTankAim,   1.5 + random(0.2), 0.6);
+				sound_play_pitchvol(sndSniperTarget, 1.4 + random(0.2), 0.25);
 			}
 			
+			 // Approach Target:
 			else{
-				 // Approach Target:
 				scrWalk(40 + random(20), gunangle + orandom(15));
 			}
-			
-			scrRight(gunangle);
 		}
 		
 		 // Wander:
 		else{
 			scrWalk(20 + random(40), direction + orandom(30));
 			gunangle = direction;
-			scrRight(gunangle);
 		}
+		
+		scrRight(gunangle);
 	}
 	
 #define AlbinoGator_alrm2
@@ -3834,7 +3918,7 @@
 		sprite_index = spr_idle;
 		image_index = 0;
 	}
-	depth = -10 - (y / 20000);
+	depth = -8 - (y / 20000);
 
 	 // No Escape:
 	with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
@@ -3883,7 +3967,7 @@
 				_ty = _sy,
 				_disMax = 1000000;
 
-			if(place_meeting(_tx, _ty, Wall)) with(Floor){
+			if(!place_meeting(_tx, _ty, Floor)) with(Floor){
 				var _x = (bbox_left + bbox_right) / 2,
 					_y = (bbox_top + bbox_bottom) / 2,
 					_dis = point_distance(_sx, _sy, _x, _y);
@@ -3940,16 +4024,16 @@
 	}
 	
 #define TopEnemy_destroy
-	var o = noone;
-	if(is_real(obj_name)) o = instance_create(x, y, obj_name);
-	else o = obj_create(x, y, obj_name);
+	var o = obj_create(x, y, obj_name);
 	if(!instance_exists(o)) exit;
 	
 	 // Transfer Visuals:
+	/*
 	for(var i = 0; i < lq_size(obj_info); i++){
 		var v = lq_get_key(obj_info, i);
 		variable_instance_set(o, v, lq_get(obj_info, v));
 	}
+	*/
 	
 	 // Transfer Variables:
 	with(["direction", "speed", "walk", "right", "gunangle"]){
@@ -4307,22 +4391,136 @@
         catlight_reset = true;
         global.catLight = [];
     }
-
-	if(DebugLag) trace_time("tesewers_step");
-
-#define draw
-	if(DebugLag) trace_time();
-
-	 // Cursed Bat Chest:
-	draw_set_blend_mode_ext(bm_src_alpha, bm_one);
-	with(instances_matching(chestprop, "name", "BatChest")){
-		if(visible && curse){
-			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, make_color_rgb(90, 0, 255), image_alpha);
+	
+	 // Crown of Crime:
+	if(!(GameCont.area == 7 && GameCont.area == 3)){
+		with(instances_matching(Crown, "ntte_crown", "crime")){
+			 // Watch where you're going bro:
+			if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
+			
+			 // Spawn Enemies:
+			if(enemies > 0){
+				enemy_time -= current_time_scale;
+				scrPortalPoof();
+				
+				if(enemy_time <= 0){
+					var f = instance_furthest(x, y, Floor),
+						l = irandom_range(360, 420),
+						d = point_direction(f.x, f.y, x, y);
+						
+					 // Weighted Pool:
+					var _enemyPool = [];
+						repeat(5) array_push(_enemyPool, "Gator");
+						repeat(2) array_push(_enemyPool, "Baby Gator");
+						
+					if(GameCont.hard >= 4)
+						repeat(3) array_push(_enemyPool, "Buff Gator");
+						
+					if(GameCont.hard >= 6)
+						repeat(2) array_push(_enemyPool, "Bone Gator");
+					
+					if(GameCont.hard >= 8)
+						repeat(1) array_push(_enemyPool, "Albino Gator");
+					
+					while(enemies > 0){
+						enemies -= 1;
+						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy")){
+							 // Determine Enemy Type:
+							switch(_enemyPool[irandom(array_length(_enemyPool) - 1)]){
+								case "Gator":
+									obj_name = Gator;
+									with(obj_info){
+										spr_idle = sprGatorIdle;
+										spr_walk = sprGatorWalk;
+										spr_weap = sprGatorShotgun;
+									}
+									break;
+									
+								case "Buff Gator":
+									obj_name = BuffGator;
+									with(obj_info){
+										spr_idle = sprBuffGatorIdle;
+										spr_walk = sprBuffGatorWalk;
+										spr_weap = sprBuffGatorFlakCannon;
+									}
+									break;
+								
+								case "Bone Gator":
+									obj_name = "BoneGator";
+									with(obj_info){
+										spr_idle = spr.BoneGatorIdle;
+										spr_walk = spr.BoneGatorWalk;
+										spr_weap = spr.BoneGatorWeap;
+									}
+									break;
+									
+								case "Baby Gator":
+									obj_name = "BabyGator";
+									with(obj_info){
+										spr_idle = spr.BabyGatorIdle;
+										spr_walk = spr.BabyGatorWalk;
+										spr_weap = spr.BabyGatorWeap;
+										spr_shadow = shd16;
+										spr_shadow_y = 1;
+									}
+									
+									 // Babies Stick Together:
+									var n = 1 + irandom(1 + GameCont.loops);
+									repeat(n) instance_copy(false);
+									break;
+									
+								case "Albino Gator":
+									obj_name = "AlbinoGator";
+									with(obj_info){
+										spr_idle = spr.AlbinoGatorIdle;
+										spr_walk = spr.AlbinoGatorWalk;
+										spr_weap = spr.AlbinoGatorWeap;
+									}
+									break;
+									
+								 //#region I Dunno:
+									
+								case "Rat Horde": // maybe?
+									obj_name = FastRat;
+									with(obj_info){
+										spr_idle = sprFastRatIdle;
+										spr_walk = sprFastRatWalk;
+									}
+									
+									 // The Horde:
+									var n = 3 + irandom(3 + GameCont.loops);
+									repeat(n) instance_copy(false);
+									
+									 // Large and in Charge:
+									with(obj_create(x, y, "TopEnemy")){
+										obj_name = Ratking;
+										with(obj_info){
+											spr_idle = sprRatkingRageWait;
+											spr_walk = sprRatkingRageAttack;
+											spr_shadow = shd48;
+										}
+									}
+									break;
+									
+								 //#endregion
+							}
+						}
+					}
+					
+					 // Effects:
+					with(instance_create(x + lengthdir_x(12, d), y + lengthdir_y(12, d), AssassinNotice)) motion_set(d, 0.6);
+					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
+				}
+			}
 		}
 	}
-	draw_set_blend_mode(bm_normal);
+	
+	 // Dissipate Cat Gas Faster:
+	with(instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1)){
+		growspeed -= random(0.002 * current_time_scale);
+	}
 
-	if(DebugLag) trace_time("tesewers_draw");
+	if(DebugLag) trace_time("tesewers_step");
 
 #define draw_shadows
 	if(DebugLag) trace_time();
@@ -4340,7 +4538,7 @@
 	
 	 // Top Enemy:
 	with(instances_matching(CustomObject, "name", "TopEnemy")) if(visible){
-		if(place_meeting(x, bbox_bottom - z + 8, Floor)){
+		if(position_meeting(x, bbox_bottom, Floor)){
 			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 		}
 	}

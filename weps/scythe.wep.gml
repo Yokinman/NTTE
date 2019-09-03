@@ -50,6 +50,14 @@
 	];
 	global.numModes = array_length(wepModes);
 
+	 // Global Step
+	while(true){
+		with(Player) if(wep_get(wep) == mod_current){
+	    	script_bind_end_step(scythe_swap, 0, id);
+		}
+		wait 0;
+	}
+
 #macro wepModes global.wepModes
 #macro numModes global.numModes
 
@@ -265,14 +273,6 @@
             }
         }
     }
-    
-     // Switch Modes:
-    if(array_length(instances_matching(CustomScript, "name", "scythe_swap")) <= 0){
-    	with(script_bind_step(scythe_swap, 0)){
-    		name = script[2];
-    		persistent = true;
-    	}
-    }
 
 #define scythe_swap
 	with(Player){
@@ -324,6 +324,7 @@
 			}
     	}
 	}
+	instance_destroy();
 
 
 /// Scripts

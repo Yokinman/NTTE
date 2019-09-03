@@ -19,6 +19,7 @@
 
 #macro surfShadowTop global.surfShadowTop
 
+
 #define NestRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -42,7 +43,7 @@
 		right = choose(-1, 1);
 		targetx = x;
 		targety = y;
-		z = 0;
+		z = 8;
 		force_spawn = false;
 
 		 // Alarms:
@@ -75,7 +76,7 @@
 
 	 // Lifting:
 	else if(sprite_index = spr_lift){
-		z += 3 * current_time_scale;
+		z += 2 * current_time_scale;
 
 		 // Fly Away:
 		if(anim_end) sprite_index = spr_wing;
@@ -130,7 +131,7 @@
 
 	 // Emergency Flight:
 	else if(alarm1 > 1){
-		if(instance_number(enemy) <= 2 || (position_meeting(x, bbox_bottom + 8, Floor) && !position_meeting(x, bbox_bottom + 8, Wall))){
+		if(instance_number(enemy) <= 2 || (position_meeting(x, bbox_bottom, Floor) && !position_meeting(x, bbox_bottom, Wall))){
 			alarm1 = 1;
 			force_spawn = true;
 		}
@@ -147,7 +148,7 @@
 
 #define NestRaven_alrm0
 	alarm0 = irandom_range(1, 80);
-
+	
 	 // Lookin:
 	if(sprite_index == spr_idle){
 		right = choose(-1, 1);
@@ -159,12 +160,12 @@
 
 #define NestRaven_alrm1
 	alarm1 = irandom_range(1, 100);
-
+	
 	var t = instance_nearest(x, y, Player);
 	if(force_spawn || in_distance(t, 128)){
 		var _x = x,
 			_y = y;
-
+			
 		 // Search Floors by Player:
 		if(instance_exists(t) && !chance(force_spawn, 2)){
 			scrRight(point_direction(x, y, t.x, t.y));
@@ -175,7 +176,7 @@
 				with(_inst){
 					_x = ((bbox_left + bbox_right) / 2) + orandom(4);
 					_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
-	
+					
 					var b = false;
 					with(other){
 						if(!place_meeting(_x, _y, Wall) && chance(1, array_length(_inst))){
@@ -186,34 +187,36 @@
 				}
 			}
 		}
-
+		
 		 // Random Nearby Floor:
 		else{
 			alarm = 1;
-
+			
 			var r = 64;
 			with(instance_random(instance_rectangle_bbox(x - r, y - r, x + r, y + r, Floor))){
 				_x = (bbox_left + bbox_right) / 2;
 				_y = (bbox_top + bbox_bottom) / 2;
 			}
 		}
-
+		
 		 // Take Off:
 		if(!place_meeting(_x, _y, Wall)){
-			sprite_index = spr_lift;
-			image_index = 0;
-			depth = floor(depth);
-			alarm1 = -1;
-			targetx = _x;
-			targety = _y;
-
-			 // Effects:
-			if(force_spawn) sound_play(sndRavenScreech);
-			sound_play(sndRavenLift);
-			repeat(6){
-				with(instance_create(x + orandom(8), y + random(16), Dust)){
-					motion_add(random(360), 3 + random(1));
-					depth = other.depth;
+			if(!instance_exists(t) || !collision_line(_x, _y, t.x, t.y, Wall, false, false)){
+				sprite_index = spr_lift;
+				image_index = 0;
+				depth = floor(depth);
+				alarm1 = -1;
+				targetx = _x;
+				targety = _y;
+				
+				 // Effects:
+				if(force_spawn) sound_play(sndRavenScreech);
+				sound_play(sndRavenLift);
+				repeat(6){
+					with(instance_create(x + orandom(8), y + random(16), Dust)){
+						motion_add(random(360), 3 + random(1));
+						depth = other.depth;
+					}
 				}
 			}
 		}
@@ -587,11 +590,6 @@
     if(_tf = 1) mask_index = mskBanditBoss; 
     else mask_index = mskBandit;
 
-#define draw_ravenflys
-	instance_destroy();
-	with(RavenFly){
-    	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	}
 
 /// Mod Events
 #define step
@@ -605,9 +603,22 @@
 	if(DebugLag) trace_time("tescrapyard_step");
 	
 #define draw_shadows
+	 // Wall Ravens:
+	with(instances_matching(CustomObject, "name", "NestRaven")) if(visible){
+		if(position_meeting(x, bbox_bottom, Floor)){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
+	
 	 // Saw Traps:
-	with(instances_matching(CustomHitme, "name", "SawTrap")){
+	with(instances_matching(CustomHitme, "name", "SawTrap")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
+	}
+
+#define draw_ravenflys
+	instance_destroy();
+	with(RavenFly){
+    	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 	}
 
 

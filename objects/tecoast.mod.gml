@@ -685,6 +685,7 @@
         move_contact_solid(direction, 16);
         instance_create(x, y, Dust);
         alarm0 = 30;
+        typ = 0;
     }
 
 

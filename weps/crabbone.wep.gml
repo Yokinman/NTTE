@@ -112,9 +112,10 @@
             if(!instance_exists(variable_instance_get(id, "pickup_scythe", noone))){
                 pickup_scythe = obj_create(x, y, "PickupIndicator");
                 with(pickup_scythe){
-            		creator = other;
             		text = "SCYTHE";
+            		creator = other;
             		index = other.index;
+            		depth = 1000000;
             		on_meet = script_ref_create(scythe_PickupIndicator_meet);
                 }
             }

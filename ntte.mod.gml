@@ -281,10 +281,6 @@
 
 	 // For Merged Weapon PopupText Fix:
 	global.wepMergeName = [];
-	
-	 // Max Special Pickups Per Level:
-	global.specialPickupsMax = 2;
-	global.specialPickups = global.specialPickupsMax;
 
 	 // Kills:
 	global.killsLast = GameCont.kills;
@@ -819,7 +815,7 @@
         	}
         	
         	 // Spawn Lightning Crystals:
-        	with(LaserCrystal) if(GameCont.loops <= 0 && chance(1, 20)){
+        	with(LaserCrystal) if(GameCont.loops <= 0 && chance(1, 30)){
         		instance_create(x, y, LightningCrystal);
         		instance_delete(id);
         	}
@@ -1052,9 +1048,6 @@
     			break;
     	}
     }*/
-    
-     // More:
-    global.specialPickups = global.specialPickupsMax;
 
 #define step
     if(DebugLag) trace_time();
@@ -1375,13 +1368,6 @@
         else audio_stop_sound(c.snd);
     }
 
-     // Baby Scorpion Spawn:
-    with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
-    	repeat(babyscorp_drop){
-    		obj_create(x, y, "BabyScorpion");
-    	}
-    }
-
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
@@ -1425,160 +1411,6 @@
 			}
 		}
 	}
-
-	 // Overstock / Bonus Ammo:
-	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true)){
-		var c = weapon_get_cost(wep),
-			t = weapon_get_type(wep),
-			_auto = weapon_get_auto(wep);
-
-		if(race == "steroids" && _auto >= 0) _auto = true;
-
-		if(canfire && can_shoot){
-			if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked)){
-				if(ammo[t] + ammo_bonus >= c){
-					ammo_bono(c, t);
-				}
-			}
-		}
-	}
-	
-	 // Crown of Crime:
-	if(!(GameCont.area == 7 && GameCont.area == 3)){
-		with(instances_matching(Crown, "ntte_crown", "crime")){
-			 // Watch where you're going bro:
-			if(hspeed != 0) image_xscale = abs(image_xscale) * sign(hspeed);
-			
-			 // Spawn Enemies:
-			if(enemies > 0){
-				enemy_time -= current_time_scale;
-				scrPortalPoof();
-				
-				if(enemy_time <= 0){
-					var f = instance_furthest(x, y, Floor),
-						l = irandom_range(360, 420),
-						d = point_direction(f.x, f.y, x, y);
-						
-					 // Weighted Pool:
-					var _enemyPool = [];
-						repeat(5) array_push(_enemyPool, "Gator");
-						repeat(3) array_push(_enemyPool, "Buff Gator");
-						repeat(2) array_push(_enemyPool, "Baby Gator");
-						
-					if(GameCont.hard > 2)
-						repeat(2) array_push(_enemyPool, "Bone Gator");
-					
-					if(GameCont.hard > 5)
-						repeat(1) array_push(_enemyPool, "Albino Gator");
-					
-					while(enemies > 0){
-						enemies -= 1;
-						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopEnemy")){
-							 // Determine Enemy Type:
-							switch(_enemyPool[irandom(array_length(_enemyPool) - 1)]){
-								case "Gator":
-									obj_name = Gator;
-									with(obj_info){
-										spr_idle = sprGatorIdle;
-										spr_walk = sprGatorWalk;
-										spr_weap = sprGatorShotgun;
-									}
-									break;
-									
-								case "Buff Gator":
-									obj_name = BuffGator;
-									with(obj_info){
-										spr_idle = sprBuffGatorIdle;
-										spr_walk = sprBuffGatorWalk;
-										spr_weap = sprBuffGatorFlakCannon;
-									}
-									break;
-								
-								case "Bone Gator":
-									obj_name = "BoneGator";
-									with(obj_info){
-										spr_idle = spr.BoneGatorIdle;
-										spr_walk = spr.BoneGatorWalk;
-										spr_weap = spr.BoneGatorWeap;
-									}
-									break;
-									
-								case "Baby Gator":
-									obj_name = "BabyGator";
-									with(obj_info){
-										spr_idle = spr.BabyGatorIdle;
-										spr_walk = spr.BabyGatorWalk;
-										spr_weap = spr.BabyGatorWeap;
-										spr_shadow = shd16;
-										spr_shadow_y = 0;
-									}
-									
-									 // Babies Stick Together:
-									var n = 2 + irandom(1 + GameCont.loops);
-									repeat(n) instance_copy(false);
-									break;
-									
-								case "Albino Gator":
-									obj_name = "AlbinoGator";
-									with(obj_info){
-										spr_idle = spr.AlbinoGatorIdle;
-										spr_walk = spr.AlbinoGatorWalk;
-										spr_weap = spr.AlbinoGatorWeap;
-									}
-									break;
-									
-								 //#region I Dunno:
-									
-								/* commenting this out cause bro i cant load the mod we literally at the threshold bro and i cant find anything to get rid of
-								case "Rat Horde": // maybe?
-									obj_name = FastRat;
-									with(obj_info){
-										spr_idle = sprFastRatIdle;
-										spr_walk = sprFastRatWalk;
-									}
-									
-									 // The Horde:
-									var n = 3 + irandom(3 + GameCont.loops);
-									repeat(n) instance_copy(false);
-									
-									 // Large and in Charge:
-									with(obj_create(x, y, "TopEnemy")){
-										obj_name = Ratking;
-										with(obj_info){
-											spr_idle = sprRatkingRageWait;
-											spr_walk = sprRatkingRageAttack;
-											spr_shadow = shd48;
-										}
-									}
-									break;
-									*/
-									
-								 //#endregion
-							}
-						}
-					}
-					
-					 // Effects:
-					with(instance_create(x + lengthdir_x(12, d), y + lengthdir_y(12, d), AssassinNotice)) motion_set(d, 1);
-					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
-				}
-			}
-		}
-	}
-	
-	 // Dissipate Cat Gas Faster:
-	with(instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1)){
-		growspeed -= random(0.002 * current_time_scale);
-	}
-
-	 // Separate Bones:
-    with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
-    	if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
-            wep.ammo--;
-            with(instance_create(x, y, WepPickup)) wep = "crabbone";
-        }
-        else crabbone_splitcheck = true;
-    }
 
 	 // Pet Map Icon Stuff:
 	global.petMapiconPause = 0;
@@ -1628,155 +1460,6 @@
 					if(is_string(_tip)) break;
 				}
 				if(is_string(_tip)) tip = _tip;
-			}
-		}
-
-	     // Scramble Cursed Caves Weapons:
-	    if(GameCont.area == 104){
-	    	with(instances_matching(WepPickup, "scrambled", null)){
-		    	scrambled = false;
-				if(roll && wep_get(wep) != "merge"){
-					//if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
-						scrambled = true;
-						curse = max(1, curse);
-
-						var _part = wep_merge_decide(0, GameCont.hard + 2);
-						if(array_length(_part) >= 2){
-							wep = wep_merge(_part[0], _part[1]);
-						}
-					//}
-				}
-	    	}
-	    }
-
-		 // Overstock / Bonus Ammo Cleanup:
-		with(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0)){
-			drawempty = 0;
-	
-			var t = weapon_get_type(wep),
-				c = weapon_get_cost(wep);
-	
-			if(c > 0){
-				 // Cool Blue Shells:
-				with(instances_matching(instances_matching_gt(Shell, "speed", 0), "ammo_bonus_shell", null)){
-					if(place_meeting(xprevious, yprevious, other)){
-						ammo_bonus_shell = true;
-						sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
-						image_blend = merge_color(image_blend, c_blue, random(0.25));
-					}
-				}
-		
-				 // Prevent Low Ammo PopupTexts:
-				if(ammo[t] + ammo_bonus >= c && infammo == 0){
-					var o = 10;
-					with(instance_rectangle_bbox(x - o, y - o, x + o, y + o, instances_matching(instances_matching(instances_matching(PopupText, "target", index), "text", "EMPTY", "NOT ENOUGH " + typ_name[t]), "alarm1", 30))){
-						if(point_distance(xstart, ystart, other.x, other.y) < o){
-							other.wkick = 0;
-							sound_stop(sndEmpty);
-							instance_destroy();
-						}
-					}
-				}
-			}
-		}
-
-		 // Overheal / Bonus HP:
-		with(instances_matching_gt(Player, "my_health_bonus", 0)){
-			drawlowhp = 0;
-	
-			if(nexthurt > current_frame && "my_health_bonus_hold" in self){
-				var a = my_health,
-					b = my_health_bonus_hold;
-		
-				if(a < b){
-					var c = min(my_health_bonus, b - a);
-					my_health += c;
-					my_health_bonus -= c;
-
-					 // Sound:
-					sound_play_pitchvol(sndRogueAim, 2 + random(0.5), 0.7);
-					sound_play_pitchvol(sndHPPickup, 0.6 + random(0.1), 0.7);
-
-					 // Visual:
-					var _x1, _y1,
-						_x2, _y2,
-						_ang = direction + 180,
-						l = 12;
-
-					for(var d = _ang; d <= _ang + 360; d += (360 / 20)){
-						_x1 = x + lengthdir_x(l, d);
-						_y1 = y + lengthdir_y(l, d);
-						if(d > _ang){
-							with(instance_create(_x1, _y1, BoltTrail)){
-								image_blend = merge_color(c_aqua, c_blue, 0.2 + (0.2 * dsin(_ang + d)));
-								image_angle = point_direction(_x1, _y1, _x2, _y2);
-								image_xscale = point_distance(_x1, _y1, _x2, _y2) * 1.1;
-								image_yscale = 1.5 + dsin(_ang + d);
-								if(other.my_health_bonus > 0){
-									image_yscale = max(1.7, image_yscale);
-								}
-								motion_add(other.direction, 0.5);
-								depth = -2;
-							}
-						}
-						_x2 = _x1;
-						_y2 = _y1;
-					}
-					with(instance_create(x, y, BulletHit)){
-						sprite_index = sprPortalClear;
-						image_xscale = 0.4;
-						image_yscale = image_xscale;
-						image_speed = 1;
-						motion_add(other.direction, 0.5);
-					}
-
-					 // End:
-					if(my_health_bonus <= 0){
-						 // Can't die coming out of overheal:
-						spiriteffect = max(1, spiriteffect);
-
-						 // Effects:
-						sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-						sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
-						with(instance_create(x, y, BulletHit)){
-							sprite_index = sprThrowHit;
-							motion_add(other.direction, 1);
-							image_xscale = random_range(2/3, 1);
-							image_yscale = image_xscale;
-							image_angle = random(360);
-							image_blend = merge_color(c_aqua, c_blue, 0.2 + (0.2 * dsin(d)));
-							image_speed = 0.5;
-							image_alpha = 2;
-							depth = -3;
-						}
-					}
-				}
-			}
-			my_health_bonus_hold = my_health;
-		}
-	
-		 // Overheal, Overstock, and Spirit Pickups:
-		with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", undefined)) if(GameCont.hard > 6){
-			bonuspickup_spawn = false;
-	
-			if(!position_meeting(xstart, ystart, ChestOpen) && global.specialPickups > 0){
-				if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
-					 // Spirit Pickups:
-					if(chance(1 + skill_get(mut_last_wish), 200)){
-						obj_create(x, y, "SpiritPickup");
-						instance_delete(id);
-		
-						global.specialPickups--;
-					}
-					
-					 // Overheal/Overstock Pickups:
-					else if(chance(1, 50)){
-						obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
-						instance_delete(id);
-		
-						global.specialPickups--;
-					}
-				}
 			}
 		}
 
@@ -1876,29 +1559,19 @@
 		stat_set("time", stat_get("time") + (current_time_scale / 30));
 		
 		 // Scythe Prompts:
-		with(instances_matching(GenCont, "scythe_prompt", null)){
-			scythe_prompt = false;
+		with(instances_matching(GenCont, "tip_scythe", null)){
+			tip_scythe = false;
 			
 			if(GameCont.hard > 1){
 				if(global.sPromptIndex != -1){
 					with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-						other.scythe_prompt = true;
+						other.tip_scythe = true;
 					}
-					
-					if(scythe_prompt){
+					if(tip_scythe){
 						tip = global.scythePrompt[global.sPromptIndex];
 						global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
 					}
 				}
-			}
-		}
-		
-		 // Cursed Ammo Chests:
-		with(instances_matching(AmmoChest, "cursedammochest_check", undefined)) if(crown_current == crwn_curses){
-			cursedammochest_check = true;
-			if(chance(1, 5)){
-				obj_create(x, y, "CursedAmmoChest");
-				instance_delete(id);
 			}
 		}
     }
@@ -2441,38 +2114,6 @@
 		}
 	}
 
-
-#define ammo_bono(_cost, _type)
-	_cost = min(ammo_bonus, _cost);
-	ammo_bonus -= _cost;
-	ammo[_type] += _cost;
-
-	 // FX:
-	if(_cost > 0){
-		repeat(_cost) with(instance_create(x, y, WepSwap)){
-			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
-			image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
-			image_speed *= random_range(0.8, 1.2);
-			if(chance(1, _cost) || chance(1, 3)){
-				creator = other;
-			}
-		}
-		sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
-	}
-
-	 // End:
-	if(ammo_bonus <= 0){
-		sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-		sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
-		with(instance_create(x, y, WepSwap)){
-			sprite_index = sprThrowHit;
-			image_xscale = random_range(2/3, 1);
-			image_yscale = image_xscale;
-			image_angle = random(360);
-			image_blend = c_aqua;
-			creator = other;
-		}
-	}
 
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
     var _type = argument[0], _snd = argument[1];

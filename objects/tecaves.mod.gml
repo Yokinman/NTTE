@@ -321,7 +321,7 @@
     depth = max(-z, -12);
 
      // Facing:
-    if(in_range(direction, 30, 150) || in_range(direction, 210, 330)){
+    if((direction >= 30 && direction <= 150) || (direction >= 210 && direction <= 330)){
         image_index = round((point_direction(0, 0, speed, zspeed) + 90) / (360 / image_number));
         image_angle = direction;
     }
@@ -341,7 +341,9 @@
     }
 
      // Hit:
-    if(z <= 0) instance_destroy();
+    if(z <= 0 || (position_meeting(x, y + 8, Wall) && z <= 8)){
+    	instance_destroy();
+    }
 
 #define MortarPlasma_draw
     draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
@@ -364,6 +366,11 @@
         creator = other.creator;
         hitid = other.hitid;
         damage = 2;
+        
+         // Over Wall:
+        if(position_meeting(x, y + 8, Wall)){
+        	depth = -8;
+        }
     }
 
      // Effects:
@@ -512,7 +519,11 @@
         if(special) Pet_spawn(x + 8, y + 8, "Spider");
         
          // Spawn Spiderlings:
-        else repeat(1 + irandom(2)) if(chance(3, 5)) obj_create(x + 8, y + 8, "Spiderling");
+        else repeat(1 + irandom(2)) if(chance(3, 5)){
+        	with(obj_create(x + 8, y + 8, "Spiderling")){
+        		nexthurt = current_frame + 15;
+        	}
+        }
         
         instance_destroy();
     }
@@ -532,16 +543,48 @@
 
 
 /// Mod Events:
+#define step
+	script_bind_end_step(end_step, 0);
+
+#define end_step
+    if(DebugLag) trace_time();
+    
+     // Scramble Cursed Caves Weapons:
+    if(GameCont.area == 104){
+    	with(instances_matching(WepPickup, "scrambled", null)){
+	    	scrambled = false;
+			if(roll && wep_get(wep) != "merge"){
+				//if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
+					scrambled = true;
+					curse = max(1, curse);
+
+					var _part = wep_merge_decide(0, GameCont.hard + 2);
+					if(array_length(_part) >= 2){
+						wep = wep_merge(_part[0], _part[1]);
+					}
+				//}
+			}
+    	}
+    }
+    
+    if(DebugLag) trace_time("tecaves_end_step");
+    
+	instance_destroy();
+
 #define draw_shadows
 	if(DebugLag) trace_time();
 
 	 // Mortar Plasma:
     with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
-        var _percent = clamp(96 / z, 0.1, 1),
-            _w = ceil(18 * _percent),
-            _h = ceil(6 * _percent);
-
-        draw_ellipse(x - _w / 2, y - _h / 2, x + _w / 2, y + _h / 2, false);
+    	if(position_meeting(x, y, Floor)){
+	        var _percent = clamp(96 / z, 0.1, 1),
+	            _w = ceil(18 * _percent),
+	            _h = ceil(6 * _percent),
+	            _x = x,
+	            _y = y;
+	            
+	        draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+    	}
     }
 
 	if(DebugLag) trace_time("tecaves_draw_shadows");

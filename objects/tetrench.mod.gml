@@ -185,10 +185,11 @@
     nexthurt = current_frame + 6;	// I-Frames
     sound_play_hit(snd_hurt, 0.3);	// Sound
 
+	 // Appear:
     if(my_health > 0 && hiding) scrAnglerAppear();
 
      // Hurt Sprite:
-    else{
+    else if(sprite_index != spr_appear){
         sprite_index = spr_hurt;
         image_index = 0;
     }

@@ -589,15 +589,17 @@
 
 		return _inst;
 	}
-
-	 // Return List of Objects if Object Doesn't Exist:
-	else{
+	
+	 // Return List of Objects:
+	else if(is_undefined(_name)){
 		var _list = [];
 		for(var i = 0; i < lq_size(objList); i++){
 			_list = array_combine(_list, lq_get_value(objList, i));
 		}
 		return _list;
 	}
+	
+	return noone;
 
 #define obj_step
     if(DebugLag){
@@ -931,8 +933,9 @@
 
 #define scrPickupIndicator(_text)
 	with(obj_create(x, y, "PickupIndicator")){
-		creator = other;
 		text = _text;
+		creator = other;
+		depth = other.depth;
 		return id;
 	}
 	return noone;
