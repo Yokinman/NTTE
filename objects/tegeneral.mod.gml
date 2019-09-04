@@ -4219,7 +4219,7 @@
 		x = _vx;
 		y = _vy;
 		w = _vw;
-		h = _vy;
+		h = _vh;
 		active = _active;
 
 		if(active && surface_exists(surf)){
