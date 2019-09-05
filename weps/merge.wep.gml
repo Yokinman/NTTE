@@ -2621,15 +2621,11 @@
 
                         if(loop){
                             if(loop_indx == -1){
-                                with(instance_exists(_creator) ? _creator : other){
-                                	sound_play_hit(other.loop_strt, 0);
-                                }
+                                sound_play(other.loop_strt);
                                 loop_indx = audio_play_sound(snd, 0, true);
                             }
                         }
-                        else with(instance_exists(_creator) ? _creator : other){
-                        	sound_play_hit_ext(_snd, _pit, _vol);
-                        }
+                        else sound_play_pitchvol(_snd, _pit, _vol);
                     }
                 }
 
@@ -2684,7 +2680,7 @@
      // Stop Sound Loops:
     if(array_length(instances_matching(instances_matching(object_index, "name", name), "wep", _wep)) <= 1){
         with(_wep.soun) if(loop_indx != -1){
-            if(loop) sound_play_hit(loop_stop, 0);
+            if(loop) sound_play(loop_stop);
             audio_stop_sound(loop_indx);
             loop_indx = -1;
         }
@@ -2702,7 +2698,7 @@
     var _wep = wep;
     switch(_event){
         case contInit:
-            sound_play_hit(sndLaserCannonCharge, 0.1);
+            sound_play_pitch(sndLaserCannonCharge, 1 + orandom(0.1));
             
              // Visual:
             sprite_index = sprPlasmaBall;
