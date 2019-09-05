@@ -254,6 +254,7 @@
     feather_ammo = 0;
     feather_ammo_max = 5 * feather_num;
     feather_ammo_hud = [];
+    //feather_ammo_hud_flash = 0;
     feather_targ_delay = 0;
 
      // Pets:

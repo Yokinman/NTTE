@@ -30,10 +30,10 @@
 		sprite_index = spr.Backpack;
 		spr_shadow_y = 2;
 		spr_shadow = shd16;
-
+		
 		 // Sounds:
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
-
+		
 		 // Vars:
 		raddrop = 8;
 		switch(crown_current){
@@ -44,17 +44,17 @@
 		for(var i = 0; i < maxp; i++){
 			raddrop += (player_get_race(i) == "melting");
 		}
-
+		
 		 // Cursed:
 		if(curse){
 			spr_dead = spr.BackpackCursedOpen;
 			sprite_index = spr.BackpackCursed;
 		}
-
+		
 		 // Events:
-		on_open = script_ref_create(Backpack_open);
 		on_step = script_ref_create(Backpack_step);
-
+		on_open = script_ref_create(Backpack_open);
+		
 		return id;
 	}
 	
@@ -65,7 +65,9 @@
 	}
 
 #define Backpack_open
-	if(curse) sound_play(sndCursedChest);
+	var _curse = curse;
+	
+	if(_curse) sound_play(sndCursedChest);
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 
 	 // DefPack Integration:	
@@ -92,12 +94,13 @@
 	 // Merged Weapon:
 	else{
 		var _refinedTaste = (ultra_get("robot", 1) * 4),
-			_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (curse ? 2 : 0));
+			_part = wep_merge_decide(_refinedTaste, max(GameCont.hard, _refinedTaste) + (_curse ? 2 : 0));
+			
 		if(array_length(_part) >= 2){
 			repeat(1 + ultra_get("steroids", 1)){
 				with(instance_create(x, y, WepPickup)){
 					wep = wep_merge(_part[0], _part[1]);
-					curse = other.curse;
+					curse = _curse;
 					ammo = true;
 					roll = true;
 				}
@@ -108,13 +111,85 @@
 	 // Pickups:
 	var _ang = random(360),
 		_num = 2 + ceil(skill_get(mut_rabbit_paw));
-
+		
 	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
+		instance_create(x, y, Dust);
 		with(obj_create(x, y, "BackpackPickup")){
 			direction = d;
-			curse = other.curse;
-			if(curse && object == AmmoPickup){
-				sprite_index = sprCursedAmmo;
+			
+			 // Determine Pickup:
+			var o = object,
+				_objMin = instance_create(0, 0, GameObject);
+				
+			instance_delete(_objMin);
+			
+			pickup_drop(10000, 0);
+			
+			with(instances_matching_gt([Pickup, chestprop], "id", _objMin)){
+				if(chance(1, 40)){
+					 // wtf this isnt a pickup
+					o.object_index = Bandit;
+					o.sprite_index = sprBanditHurt;
+					o.mask_index = mskBandit;
+				}
+				
+				else{
+					o.object_index = object_index;
+					o.sprite_index = sprite_index;
+					o.mask_index = mask_index;
+					
+					switch(o.object_index){
+						case AmmoPickup:
+							 // Curse:
+							if(_curse){
+								o.sprite_index = sprCursedAmmo;
+								cursed = _curse;
+								num = 1.5;
+							}
+							
+							 // Portal Strikes:
+							for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+								if(chance(1, 5)){
+									o.object_index = RoguePickup;
+									o.sprite_index = sprRogueAmmo;
+								}
+							}
+							break;
+							
+						case AmmoChest:
+							 // Curse:
+							if(_curse){
+								o.object_index = "CursedAmmoChest";
+								o.sprite_index = spr.CursedAmmoChest;
+							}
+							
+							 // Portal Strikes:
+							for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+								if(chance(1, 5)){
+									o.object_index = RogueChest;
+									o.sprite_index = sprRogueAmmoChest;
+								}
+							}
+							break;
+					}
+					
+					 // Other Vars:
+					if(o.object_index == object_index){
+						if("num" in self){
+							o.num = num;
+						}
+						
+						 // Cursed:
+						if("curse" in self && curse){
+							o.curse = curse;
+						}
+						if("cursed" in self && cursed){
+							o.cursed = cursed;
+						}
+					}
+				}
+				
+				instance_delete(id);
 			}
 		}
 	}
@@ -131,60 +206,20 @@
 
 
 #define BackpackPickup_create(_x, _y)
-	instance_create(_x, _y, Dust);
 	with(instance_create(_x, _y, CustomObject)){
-		 // Determine Pickup:
-		var _objMin = instance_create(0, 0, GameObject),
-			_obj = AmmoPickup,
-			_spr = sprAmmo,
-			_msk = mskPickup;
-
-		instance_delete(_objMin);
-		pickup_drop(10000, 0);
-		with(instances_matching_gt([Pickup, chestprop], "id", _objMin)){
-			_obj = object_index;
-			_spr = sprite_index;
-			_msk = mask_index;
-
-			if(instance_is(self, AmmoPickup)){
-				 // Portal Strikes:
-				for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-					if(chance(1, 5)){
-						_obj = RoguePickup;
-						_spr = sprRogueAmmo;
-					}
-					break;
-				}
-
-				 // Fix Cursed Ammo:
-				if(cursed) _spr = sprAmmo;
-			}
-
-			instance_delete(id);
-		}
-
-		 // wtf this isnt a pickup:
-		if(chance(1, 40)){
-			_obj = Bandit;
-			_spr = sprBanditHurt;
-			_msk = mskBandit;
-		}
-
 		 // Visual:
-		sprite_index = _spr;
 		image_speed = 0.4;
 		depth = -3;
-
+		
 		 // Vars:
-		object = _obj;
-		mask_index = _msk;
+		mask_index = mskPickup;
+		object = {};
         z = 0;
-        zspeed = random_range(2, 4);
         zfric = 0.7;
-        curse = false;
-		direction = random(360);
+        zspeed = random_range(2, 4);
 		speed = random_range(1, 3);
-
+		direction = random(360);
+		
 		return id;
 	}
 
@@ -194,25 +229,43 @@
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
 	}
-
+	
+	 // Z:
 	z_engine();
 	if(z <= 0) instance_destroy();
 
 #define BackpackPickup_draw
-	image_alpha = abs(image_alpha);
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-	image_alpha = -image_alpha;
+	var _spr = -1;
+	
+	if("sprite_index" in object){
+		_spr = object.sprite_index;
+	}
+	else if("object_index" in object && is_real(object.object_index)){
+		_spr = object_get_sprite(object.object_index);
+	}
+	
+	if(sprite_exists(_spr)){
+		draw_sprite_ext(_spr, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	}
 
 #define BackpackPickup_destroy
-	with(instance_create(x, y - z, object)){
-		xstart = other.xstart;
-		ystart = other.ystart;
-		sprite_index = other.sprite_index;
-		direction = other.direction;
-		speed = other.speed;
-		if("curse" in self) curse = other.curse;
-		if("cursed" in self) cursed = other.curse; // Bro why do ammo pickups be inconsistent
-	    bonuspickup_spawn = false; // Bro I feel u
+	if("object_index" in object){
+		with(obj_create(x, y - z, object.object_index)){
+			xstart = other.xstart;
+			ystart = other.ystart;
+			direction = other.direction;
+			speed = other.speed;
+			
+			 // Vars:
+			for(var i = 0; i < lq_size(other.object); i++){
+				var k = lq_get_key(other.object, i),
+					v = lq_get_value(other.object, i);
+					
+				if(k != "object_index"){
+					variable_instance_set(id, k, v);
+				}
+			}
+		}
 	}
 
 
@@ -224,18 +277,22 @@
 		
 		 // Sound:
 		snd_open = sndWeaponChest;
-
+		
 		 // Cursed:
 		switch(crown_current){
 			case crwn_none:		curse = false;			break;
 			case crwn_curses:	curse = chance(2, 3);	break;
 			default:			curse = chance(1, 7);
 		}
-		if(curse) snd_open = sndCursedChest;
-
+		if(curse){
+			sprite_index = spr.BatChestCursed;
+			spr_dead = spr.BatChestCursedOpen;
+			snd_open = sndCursedChest;
+		}
+		
 		 // Events:
+		on_step = script_ref_create(BatChest_step);
 		on_open = script_ref_create(BatChest_open);
-		//on_step = script_ref_create(BatChest_step);
 		
 		return id;
 	}
@@ -244,14 +301,6 @@
 	 // Curse FX:
 	if(chance_ct(curse, 16)){
 		instance_create(x + orandom(8), y + orandom(8), Curse);
-	}
-
-#define BatChest_draw
-	 // Cursed:
-	if(visible && curse){
-		draw_set_blend_mode_ext(bm_src_alpha, bm_one);
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, make_color_rgb(90, 0, 255), image_alpha);
-		draw_set_blend_mode(bm_normal);
 	}
 	
 #define BatChest_open
@@ -327,6 +376,7 @@
 		 // Vars:
 		mask_index = mskRad;
 		time = 150 + random(30);
+		time_loop = 1/4;
         pull_dis = 80 + (60 * skill_get(mut_plutonium_hunger));
         pull_spd = 12;
 
@@ -797,14 +847,10 @@
 									break;
 							}
 							
-							 // Sounds:
-							with(p){
-								sound_play_hit_ext(sndGunGun,    1.2 + random(0.4), 0.5);
-								sound_play_hit_ext(sndAmmoChest, 0.5 + random(0.2), 0.8);
-							}
-							
 							 // Effects:
 							instance_create(_x, _y, WepSwap);
+							sound_play_pitchvol(sndGunGun,    1.2 + random(0.4), 0.5);
+							sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
 							break;
 	
 						case ChestShop_wep:
@@ -815,18 +861,14 @@
 								ammo = true;
 								roll = true;
 							}
-	
-							 // Sounds:
-							with(p){
-								sound_play_hit(weapon_get_swap(other.drop), 0);
-								sound_play_hit_ext(sndGunGun,           0.8 + random(0.4), 0.6);
-								sound_play_hit_ext(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
-								if(other.curse){
-									sound_play_hit_ext(sndCursedPickup, 1 + orandom(0.2), 1.4);
-								}
-							}
-					
+							
 							 // Effects:
+							sound_play(weapon_get_swap(drop));
+							sound_play_pitchvol(sndGunGun,           0.8 + random(0.4), 0.6);
+							sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
+							if(curse){
+								sound_play_pitchvol(sndCursedPickup, 1 + orandom(0.2), 1.4);
+							}
 							instance_create(_x, _y, GunGun);
 							break;
 					}
@@ -958,30 +1000,56 @@
 		sprite_index = spr.CursedAmmoChest;
 		spr_dead = spr.CursedAmmoChestOpen;
 		spr_shadow_y = -1;
-
+		
 		 // Sound:
 		snd_open = sndAmmoChest;
-
+		
+		 // Vars:
+		num = 10;
+		
+		 // Get Loaded:
+		if(ultra_get("steroids", 2)){
+			sprite_index = spr.CursedAmmoChestSteroids;
+			spr_dead = spr.CursedAmmoChestSteroidsOpen;
+			num *= 1.5;
+		}
+		
+		 // Events:
+		on_step = script_ref_create(CursedAmmoChest_step);
 		on_open = script_ref_create(CursedAmmoChest_open);
 		
 		return id;
+	}
+
+#define CursedAmmoChest_step
+	if(chance_ct(1, 12)){
+		instance_create(x + orandom(4), y - 2 + orandom(4), Curse);
 	}
 
 #define CursedAmmoChest_open
 	sound_play(sndCursedChest);
 	instance_create(x, y, PortalClear);
 	instance_create(x, y, ReviveFX);
-	repeat(10){
+	repeat(num){
 		with(obj_create(x + orandom(4), y + orandom(4), "BackpackPickup")){
-			sprite_index = sprCursedAmmo;
-			mask_index = mskPickup;
-			object = AmmoPickup;
-			curse = true;
-
+			with(object){
+				object_index = AmmoPickup;
+				sprite_index = sprCursedAmmo;
+				cursed = true;
+				num = 1.5;
+				
+				 // Shorten Timer:
+				alarm0 = 120 + random(20);
+				alarm0 /= 1 + (0.2 * GameCont.loops);
+				if(crown_current == crwn_haste) alarm0 /= 3;
+			}
+			
+			 // Spread Out:
 			var s = random_range(1.5, 2);
 			speed *= s;
 			zspeed *= s - 0.5;
 
+			 // Effects:
 			with(instance_create(x, y, Curse)){
 				depth = other.depth - 1;
 				motion_add(other.direction, random(s));
@@ -1063,6 +1131,8 @@
         friction = 0.2;
         blink = 30;
 		time = 200 + random(30);
+		time_tick = ((crown_current == crwn_haste) ? 3 : 1);
+		time_loop = 1/5;
         pull_dis = 40 + (30 * skill_get(mut_plutonium_hunger));
         pull_spd = 6;
         num = 1;
@@ -1144,35 +1214,37 @@
     }
 
      // Fading:
-    if(time > 0){
-    	time -= ((time > 2 && crown_current == crwn_haste) ? 3 : 1) * current_time_scale;
+	if(time > 0){
+		time -= time_tick * (1 + (time_loop * GameCont.loops)) * current_time_scale;
 		if(time <= 0){
+			time_tick = 1;
+			
 			 // Blink:
 			if(blink >= 0){
 				time = 2;
 				blink--;
 				visible = !visible;
 			}
-	
+			
 			 // Fade:
-	    	else{
-	    		 // Call Fade Event:
-	            var e = on_fade;
-	            if(mod_script_exists(e[0], e[1], e[2])){
-	                mod_script_call(e[0], e[1], e[2]);
-	            }
-	
-	    		 // Effects:
-	            if(sprite_exists(spr_fade)){
-	            	with(instance_create(x, y, SmallChestFade)){
-	            		sprite_index = other.spr_fade;
-	            		image_xscale = other.image_xscale;
-	            		image_yscale = other.image_yscale;
-	            		image_angle = other.image_angle;
-	            	}
-	            }
-	            sound_play_hit(snd_fade, 0.1);
-	
+			else{
+				 // Call Fade Event:
+				var e = on_fade;
+				if(mod_script_exists(e[0], e[1], e[2])){
+					mod_script_call(e[0], e[1], e[2]);
+				}
+				
+				 // Effects:
+				if(sprite_exists(spr_fade)){
+					with(instance_create(x, y, SmallChestFade)){
+						sprite_index = other.spr_fade;
+						image_xscale = other.image_xscale;
+						image_yscale = other.image_yscale;
+						image_angle = other.image_angle;
+					}
+				}
+				sound_play_hit(snd_fade, 0.1);
+				
 				instance_destroy();
 			}
 		}
@@ -1186,18 +1258,18 @@
         image_index = 1;
         spr_open = spr.HarpoonOpen;
         spr_fade = spr.HarpoonFade;
-
+        
 		 // Vars:
 		mask_index = mskBigRad;
 		friction = 0.4;
 		pull_spd = 8;
 		target = noone;
-
+		
 		 // Events:
 		on_step = script_ref_create(HarpoonPickup_step);
 		on_pull = script_ref_create(HarpoonPickup_pull);
 		on_open = script_ref_create(HarpoonPickup_open);
-
+		
 		return id;
 	}
 
@@ -1272,9 +1344,9 @@
 		wave = random(90);
 		
 		 // Events:
-		on_open = script_ref_create(OverhealPickup_open);
 		on_step = script_ref_create(BonusPickup_step);
 		on_pull = script_ref_create(BonusPickup_pull);
+		on_open = script_ref_create(OverhealPickup_open);
 		on_fade = script_ref_create(BonusPickup_fade);
 		
 		return id;	
@@ -1310,7 +1382,7 @@
 	}
 
 	 // Effects:
-	sound_play_pitch(sndRogueCanister, 1.3);
+	sound_play_pitchvol(sndRogueCanister, 1.3, 0.7);
 	BonusPickup_open();
 
 
@@ -1334,9 +1406,9 @@
 		wave = random(90);
 
 		 // Events:
-		on_open = script_ref_create(OverstockPickup_open);
 		on_step = script_ref_create(BonusPickup_step);
 		on_pull = script_ref_create(BonusPickup_pull);
+		on_open = script_ref_create(OverstockPickup_open);
 		on_fade = script_ref_create(BonusPickup_fade);
 		
 		return id;	
@@ -1480,11 +1552,10 @@
         num = 1 + (crown_current == crwn_haste); // haste confirmed epic
         
          // Events:
+        on_step = script_ref_create(SpiritPickup_step);
+        on_pull = script_ref_create(SpiritPickup_pull);
         on_open = script_ref_create(SpiritPickup_open);
         on_fade = script_ref_create(SpiritPickup_fade);
-        on_pull = script_ref_create(SpiritPickup_pull);
-        on_step = script_ref_create(SpiritPickup_step);
-        on_draw = script_ref_create(SpiritPickup_draw);
         
         return id;
     }
@@ -1574,16 +1645,75 @@
 
 	 // Overstock / Bonus Ammo:
 	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true)){
-		var c = weapon_get_cost(wep),
-			t = weapon_get_type(wep),
-			_auto = weapon_get_auto(wep);
-
+		var _wep = wep,
+			_cost = weapon_get_cost(_wep),
+			_type = weapon_get_type(_wep),
+			_auto = weapon_get_auto(_wep),
+			_internal = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
+			_internalCost = (_internal ? _wep.cost : 0);
+			
 		if(race == "steroids" && _auto >= 0) _auto = true;
-
+		
 		if(canfire && can_shoot){
 			if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked)){
-				if(ammo[t] + ammo_bonus >= c){
-					ammo_bono(c, t);
+				 // Bonus Ammo:
+				var _fire = (ammo[_type] + ammo_bonus >= _cost);
+				if(_fire){
+					_cost = min(ammo_bonus, _cost);
+					ammo[_type] += _cost;
+					ammo_bonus -= _cost;
+				}
+				
+				 // Internal Bonus Ammo:
+				var _fireInternal = (_fire && _internal && _wep.ammo + ammo_bonus >= _internalCost)
+				if(_fireInternal){
+					_internalCost = min(ammo_bonus, _internalCost);
+					_wep.ammo += _internalCost;
+					ammo_bonus -= _internalCost;
+				}
+				
+				 // FX:
+				var	_end = (ammo_bonus <= 0);
+				if((_fire && _cost > 0) || (_fireInternal && _internalCost > 0) || _end){
+					var l = 12,
+						d = gunangle,
+						_x = x + hspeed + lengthdir_x(l, d),
+						_y = y + vspeed + lengthdir_y(l, d),
+						_load = weapon_get_load(_wep);
+						
+					sound_play_pitchvol(
+						choose(sndGruntFire, sndRogueRifle),
+						(0.6 + random(1)) / clamp(_load / 10, 1, 3),
+						0.8 + (0.2 * (_load / 20))
+					);
+					
+					with(instance_create(_x, _y, BulletHit)){
+						sprite_index = sprImpactWrists;
+						image_xscale = 0.4 + (0.1 * ceil(_load / 15));
+						image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
+						depth = -4;
+						
+						 // Normal:
+						if(!_end){
+							image_index = max(2 - image_speed, 3 - (_load / 30));
+							image_angle = 0;
+							
+							 // Fast Reload Spacing Out:
+							friction = 0.4;
+							motion_add(random(360), min(2, random(6 / _load)));
+						}
+						
+						 // End:
+						else{
+							image_xscale *= 1.5;
+							image_speed = 0.35;
+							sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+							sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+						}
+						
+						image_xscale = min(1.2, image_xscale);
+						image_yscale = image_xscale;
+					}
 				}
 			}
 		}
@@ -1817,8 +1947,8 @@
 					spiriteffect = max(1, spiriteffect);
 
 					 // Effects:
-					sound_play_hit_ext(sndLaserCannon, 1.4 + random(0.2), 0.8);
-					sound_play_hit_ext(sndEmpty,       0.8 + random(0.1), 1);
+					sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+					sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
 					with(instance_create(x, y, BulletHit)){
 						sprite_index = sprThrowHit;
 						motion_add(other.direction, 1);
@@ -1874,20 +2004,22 @@
 		with(instances_matching(AmmoChest, "cursedammochest_check", null)){
 			cursedammochest_check = false;
 			
-			 // Crown of Curses:
-			if(crown_current == crwn_curses && chance(1, 5)){
-				cursedammochest_check = true;
-			}
-			
-			 // Cursed Player:
-			with(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)){
-				if(chance(1, 2)) other.cursedammochest_check = true;
-			}
-			
-			 // Spawn:
-			if(cursedammochest_check){
-				obj_create(x, y, "CursedAmmoChest");
-				instance_delete(id);
+			if(!instance_is(self, IDPDChest)){
+				 // Crown of Curses:
+				if(crown_current == crwn_curses && chance(1, 5)){
+					cursedammochest_check = true;
+				}
+				
+				 // Cursed Player:
+				with(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)){
+					if(chance(1, 2)) other.cursedammochest_check = true;
+				}
+				
+				 // Spawn:
+				if(cursedammochest_check){
+					obj_create(x, y, "CursedAmmoChest");
+					instance_delete(id);
+				}
 			}
 		}
 	}
@@ -1951,7 +2083,7 @@
 #define draw_bonus_spirit
 	if(DebugLag) trace_time();
 	
-	with(Player){
+	with(instances_matching_ne(Player, "bonus_spirit", null)){
 		var n = array_length(bonus_spirit);
 		if(n > 0){
 			var _bend = bonus_spirit_bend,
@@ -1982,38 +2114,6 @@
 
 #macro bonusSpiritGain { sprite : sprStrongSpiritRefill, index : 0, active : true  }
 #macro bonusSpiritLose { sprite : sprStrongSpirit,       index : 0, active : false }
-
-#define ammo_bono(_cost, _type)
-	_cost = min(ammo_bonus, _cost);
-	ammo_bonus -= _cost;
-	ammo[_type] += _cost;
-
-	 // FX:
-	if(_cost > 0){
-		repeat(_cost) with(instance_create(x, y, WepSwap)){
-			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
-			image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
-			image_speed *= random_range(0.8, 1.2);
-			if(chance(1, _cost) || chance(1, 3)){
-				creator = other;
-			}
-		}
-		sound_play_pitchvol(sndLaser, 1.5 + random(1), 0.6 + random(0.3));
-	}
-
-	 // End:
-	if(ammo_bonus <= 0){
-		sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-		sound_play_pitchvol(sndEmpty, 0.8 + random(0.1), 1);
-		with(instance_create(x, y, WepSwap)){
-			sprite_index = sprThrowHit;
-			image_xscale = random_range(2/3, 1);
-			image_yscale = image_xscale;
-			image_angle = random(360);
-			image_blend = c_aqua;
-			creator = other;
-		}
-	}
 
 
 /// Scripts

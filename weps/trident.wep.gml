@@ -127,38 +127,44 @@
 
 				 // Stabby:
 				l += 8 * skill_get(mut_long_arms);
+				
 				variable_instance_set(self, b + "wkick", -l);
-				for(var i = l + 8; i > 0; i -= 16){
-          var e = -18;
-          repeat(3){
-  					with(instance_create(x + lengthdir_x(i, d + e / 2), y + lengthdir_y(i, d + e / 2) - (_primary ? 0 : 4), Shank)){
-  						projectile_init(other.team, other);
-
-  						motion_add(d + e, 1 * (1 + (2 * skill_get(mut_long_arms))));
-  						image_angle = direction;
-  						image_xscale = 0.5;
-  						depth = other.depth - 1;
-  						canfix = false;
-  						damage = 20;
-
-  						 // Secret Shanks:
-  						if(i < l) visible = false;
-
-  						 // Hit Wall:
-  						else if(place_meeting(x + hspeed, y + vspeed, Wall)){
-  							sound_play(sndMeleeWall);
-  							instance_create(x + orandom(4), y + orandom(4), Debris);
-  							with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
-  								with(instance_create(x + 8 + orandom(4), y + 8 + orandom(4), MeleeHitWall)){
-  									image_angle = d;
-  								}
-  							}
-  						}
-
-  						mask_index = mskSlash;
-              e += 18
-  					}
-          }
+				
+				var _off = 220 / l;
+				for(var o = -_off; o <= _off; o += _off){
+					for(var i = l + (8 * ((o == 0) ? 1 : 2/3)); i > 0; i -= 16){
+	  					with(instance_create(x + hspeed + lengthdir_x(i, d + o), y + vspeed + lengthdir_y(i, d + o) - (_primary ? 0 : 4), Shank)){
+	  						projectile_init(other.team, other);
+	
+	  						direction = d + (o / 3);
+	  						image_angle = direction;
+	  						
+	  						speed = 1 + skill_get(mut_long_arms);
+	  						if(o != 0) speed /= 2;
+	  						
+	  						depth = other.depth - (1 + (0.1 * (o != 0)));
+	  						image_xscale = 0.5 + (0.1 * (o == 0));
+	  						image_yscale = 0.9;
+	  						canfix = false;
+	  						damage = 20;
+	
+	  						 // Secret Shanks:
+	  						if(i < l) visible = false;
+	
+	  						 // Hit Wall:
+	  						else if(place_meeting(x + hspeed, y + vspeed, Wall)){
+	  							sound_play(sndMeleeWall);
+	  							instance_create(x + orandom(4), y + orandom(4), Debris);
+	  							with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
+	  								with(instance_create(x + 8 + orandom(4), y + 8 + orandom(4), MeleeHitWall)){
+	  									image_angle = d;
+	  								}
+	  							}
+	  						}
+	
+	  						mask_index = -1;
+	  					}
+	        		}
 				}
 			}
 

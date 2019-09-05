@@ -453,25 +453,28 @@
 
                              // Auto Script Binding:
                             else{
-                            	var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
-                            	if(array_length(_bind) <= 0 || self == "draw"){
-                            		switch(self){
-	                            		case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
-	                            		case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
-	                            		case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
-	                            		case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+                            	var s = variable_instance_get(other, "on_" + self, null);
+                            	if(array_length(s) < 3 || !mod_script_exists(s[0], s[1], s[2])){
+	                            	var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
+	                            	if(array_length(_bind) <= 0 || self == "draw"){
+	                            		switch(self){
+		                            		case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
+		                            		case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
+		                            		case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
+		                            		case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+		                            	}
+		                            	if(instance_exists(_bind)){
+		                            		with(_bind){
+		                            			name = "NTTEBind_" + other;
+			                            		inst_list = [];
+		                            			persistent = true;
+		                            		}
+		                            		variable_instance_set(other, v, _bind);
+		                            	}
 	                            	}
-	                            	if(instance_exists(_bind)){
-	                            		with(_bind){
-	                            			name = "NTTEBind_" + other;
-		                            		inst_list = [];
-	                            			persistent = true;
-	                            		}
-	                            		variable_instance_set(other, v, _bind);
+	                            	with(_bind){
+	                            		array_push(inst_list, { "inst" : _inst, "script" : [_modType, _modName, _modScrt] });
 	                            	}
-                            	}
-                            	with(_bind){
-                            		array_push(inst_list, { "inst" : _inst, "script" : [_modType, _modName, _modScrt] });
                             	}
                             }
                         }

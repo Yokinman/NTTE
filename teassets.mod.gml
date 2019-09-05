@@ -766,8 +766,10 @@
 		p = "chests/";
 
 			 // Cursed Ammo Chests:
-			CursedAmmoChest 	= sprite(p + "sprCursedAmmoChest",		1, 8, 8, shn16);
-			CursedAmmoChestOpen = sprite(p + "sprCursedAmmoChestOpen",	1, 8, 8);
+			CursedAmmoChest 	        = sprite(p + "sprCursedAmmoChest",             1,  8,  8, shn16);
+			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",         1,  8,  8);
+			CursedAmmoChestSteroids 	= sprite(p + "sprCursedAmmoChestSteroids",     1, 12, 12, shn20);
+			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen", 1, 12, 12);
 
 	         // Backpack:
 	        Backpack           = sprite(p + "sprBackpack",           1, 8, 8, shn16);
@@ -776,10 +778,12 @@
 	        BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen", 1, 8, 8);
 
 			 // Bat/Cat Chests:
-            BatChest     = sprite(p + "sprBatChest",     1, 10, 10, shn20);
-            CatChest     = sprite(p + "sprCatChest",     1, 10, 10, shn20);
-            BatChestOpen = sprite(p + "sprBatChestOpen", 1, 10, 10);
-            CatChestOpen = sprite(p + "sprCatChestOpen", 1, 10, 10);
+            BatChest           = sprite(p + "sprBatChest",           1, 10, 10, shn20);
+            BatChestCursed     = sprite(p + "sprBatChestCursed",     1, 10, 10, shn20);
+            CatChest           = sprite(p + "sprCatChest",           1, 10, 10, shn20);
+            BatChestOpen       = sprite(p + "sprBatChestOpen",       1, 10, 10);
+            BatChestCursedOpen = sprite(p + "sprBatChestCursedOpen", 1, 10, 10);
+            CatChestOpen       = sprite(p + "sprCatChestOpen",       1, 10, 10);
             
              // Bone:
 			BonePickup	  =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),

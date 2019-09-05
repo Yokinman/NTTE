@@ -398,21 +398,31 @@
 	}
 
 #define NewCocoon_death
-     // Hatch 1-3 Spiders:
-    repeat(irandom_range(1, 3)) {
-    	obj_create(x,y,"Spiderling");
-    }
-    var d = random(360);
-    for(var i = 0; i < 360; i += (360 / 5)){
-    	with(scrFX(x, y, [(d + i), 1.5], Feather)){
-    		sprite_index = spr.PetSpiderWebBits;
-    		image_blend = make_color_rgb(165, 165, 165);
+	 // Bits:
+	var _ang = random(360);
+	for(var d = _ang; d < _ang + 360; d += (360 / 5)){
+		with(scrFX(x, y, [d, 1.5], Feather)){
+			sprite_index = spr.PetSpiderWebBits;
+			image_blend = make_color_rgb(165, 165, 165);
 			image_angle = orandom(30);
 			image_index = irandom(image_number - 1);
 			image_speed = 0;
 			rot /= 2;
-    	}
-    }
+		}
+	}
+	
+	 // Hatch 1-3 Spiders:
+	if(chance(4, 5)){
+		repeat(irandom_range(1, 3)) {
+			obj_create(x,y,"Spiderling");
+		}
+	}
+	
+	 // Normal:
+	else{
+		instance_change(Cocoon, false);
+		instance_destroy();
+	}
 
 
 #define Spiderling_create(_x, _y)
@@ -439,6 +449,7 @@
 		walk = 0;
 		walkspd = 0.8;
 		maxspeed = 3;
+		nexthurt = current_frame + 15;
 		direction = random(360);
 
          // Alarms:
@@ -520,9 +531,7 @@
         
          // Spawn Spiderlings:
         else repeat(1 + irandom(2)) if(chance(3, 5)){
-        	with(obj_create(x + 8, y + 8, "Spiderling")){
-        		nexthurt = current_frame + 15;
-        	}
+        	obj_create(x + 8, y + 8, "Spiderling");
         }
         
         instance_destroy();

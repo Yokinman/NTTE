@@ -357,7 +357,7 @@
 			lsthealth -= 2;
 
 			 // Maggot:
-			var _loop = (GameCont.loops >= 1),
+			var _loop = chance(GameCont.loops, 3),
 				l = (24 + orandom(2)) * image_xscale,
 				d = (_loop ? random(360) : random_range(200, 340));
 
@@ -425,7 +425,7 @@
 		}
 	}
 	repeat(irandom_range(2, 3)){
-		with(instance_create(x, y, BigMaggot)){
+		with(instance_create(x, y, (chance(max(0.01, GameCont.loops), 3) ? JungleFly : BigMaggot))){
 			creator = other;
 			raddrop = 4;
 		}
@@ -1579,9 +1579,9 @@
          // Light Snack:
         repeat(3) if(chance(1, 2))
             instance_create(x, y, Maggot);
-         // Family Friend:
+         // Play Date:
         if(chance(1, 100))
-            instance_create(x, y, Spider);
+            obj_create(x, y, "Spiderling");
          // Possessions:
         pickup_drop(60, 10);
     }

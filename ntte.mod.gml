@@ -603,100 +603,118 @@
 			 // Maggot Park:
         	if(GameCont.subarea > 1 || GameCont.loops > 0){
 				with(instances_matching([RadChest, RadMaggotChest], "", null)) if(instance_exists(self)){
-					if(distance_to_object(Player) > 196 && chance(1, 40 + (20 * (object_index != RadMaggotChest)))){
-						var _sx = x + (irandom_range(-2, 2) * 32),
-							_sy = y + (irandom_range(-2, 2) * 32),
-							_floors = [],
-							_ang = random(360);
-	
-						instance_delete(id);
-
-						 // Generate Area:
-						for(var d = _ang; d < _ang + 360; d += (360 / 8)){
-							var l = 0;
-							repeat(5 + GameCont.loops){
-								var _x = (floor((_sx + lengthdir_x(l, d)) / 32) * 32) - 16,
-									_y = (floor((_sy + lengthdir_y(l, d)) / 32) * 32) - 16;
-
-								for(var _ox = -32; _ox < 32; _ox += 32){
-									for(var _oy = -32; _oy < 32; _oy += 32){
-										with(instance_rectangle(_x + _ox, _y + _oy, _x + _ox + 16, _y + _oy + 16, Floor)){
-											if(!array_exists(_floors, id)) instance_destroy();
+					if(distance_to_object(Player) > 196){
+						if(chance(1, 60 + (20 * (object_index != RadMaggotChest)))){
+							var _sx = x + (irandom_range(-2, 2) * 32),
+								_sy = y + (irandom_range(-2, 2) * 32),
+								_ang = random(360),
+								_floors = [],
+								_copy = {};
+								
+							 // Copy Origin Floor's Vars:
+							with(nearest_instance(_sx - 16, _sy - 16, instances_matching_ne(Floor, "object_index", FloorExplo))){
+								_copy.sprite_index = sprite_index;
+								_copy.depth        = depth;
+								_copy.material     = material;
+								_copy.traction     = traction;
+								_copy.styleb       = styleb;
+								_copy.area         = area;
+								if(styleb) trace("?")
+							}
+							
+							 // Delete RadChest:
+							instance_delete(id);
+							
+							 // Generate Area:
+							for(var d = _ang; d < _ang + 360; d += (360 / 8)){
+								var l = 0;
+								repeat(4 + GameCont.loops){
+									var _x = (floor((_sx + lengthdir_x(l, d)) / 32) * 32) - 16,
+										_y = (floor((_sy + lengthdir_y(l, d)) / 32) * 32) - 16;
+										
+									for(var _ox = -32; _ox < 32; _ox += 32){
+										for(var _oy = -32; _oy < 32; _oy += 32){
+											with(instance_rectangle(_x + _ox, _y + _oy, _x + _ox + 16, _y + _oy + 16, Floor)){
+												if(!array_exists(_floors, id)) instance_destroy();
+											}
+											with(instance_create(_x + _ox, _y + _oy, Floor)){
+												if(instance_exists(self)) array_push(_floors, id);
+											}
 										}
-										with(instance_create(_x + _ox, _y + _oy, Floor)){
-											if(instance_exists(self)) array_push(_floors, id);
+									}
+									
+									l += random_range(8, 24);
+								}
+							}
+							
+							with(_floors){
+								 // Clear Walls:
+								with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, [Wall, TopSmall, Bones, TopPot])){
+									instance_destroy();
+								}
+								
+								 // Setup:
+								for(var i = 0; i < lq_size(_copy); i++){
+									variable_instance_set(id, lq_get_key(_copy, i), lq_get_value(_copy, i));
+								}
+							}
+							
+							 // New Walls:
+							with(_floors){
+								scrFloorWalls();
+								if(chance(1, 3)){
+									with(instance_create(x + 16, y + 16, PortalClear)){
+										mask_index = mskPlasmaImpact;
+									}
+								}
+							}
+							with(Wall){
+								for(var _x = x - 16; _x <= x + 16; _x += 16){
+									for(var _y = y - 16; _y <= y + 16; _y += 16){
+										if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
+											instance_create(_x, _y, TopSmall);
 										}
 									}
 								}
-	
-								l += random(32);
 							}
-						}
-	
-						 // Clear Walls:
-						with(_floors){
-							with(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, [Wall, TopSmall, Bones, TopPot])){
-								instance_destroy();
+							
+							 // Nests:
+							var _ang = random(360),
+								_num = 2 + GameCont.loops;
+								
+							for(var d = _ang; d < _ang + 360; d += (360 / _num)){
+								var l = 12 + (random_range(4, 12) * _num);
+								obj_create(round(_sx + lengthdir_x(l, d)), round(_sy + lengthdir_y(l, d)), "BigMaggotSpawn");
 							}
-						}
-	
-						 // New Walls:
-						with(_floors){
-							scrFloorWalls();
-							if(chance(1, 3)){
-								with(instance_create(x + 16, y + 16, PortalClear)){
-									mask_index = mskPlasmaImpact;
+							with(_floors){
+								if(!place_meeting(x, y, enemy)){
+									if(chance(2, 3)){
+										with(instance_create(x + 16, y + 16, MaggotSpawn)){
+											x = xstart;
+											y = ystart;
+											move_contact_solid(random(360), random(16));
+											instance_create(x, y, Maggot);
+										}
+									}
 								}
-							}
-						}
-						with(Wall){
-							for(var _x = x - 16; _x <= x + 16; _x += 16){
-								for(var _y = y - 16; _y <= y + 16; _y += 16){
-									if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
-										instance_create(_x, _y, TopSmall);
+								else with(instances_meeting(x, y, instances_matching_ne(enemy, "object_index", MaggotSpawn, CustomEnemy, Maggot))){
+									if(chance(2, 3)){
+										if(!place_meeting(x, y, BigMaggot) && !place_meeting(x, y, JungleFly)){
+											if(GameCont.loops > 0 && chance(1, 2)){
+												instance_create(x, y, JungleFly);
+											}
+											else instance_create(x, y, BigMaggot);
+										}
 									}
 								}
 							}
+							
+							 // Sound:
+							sound_play_pitchvol(sndBigMaggotBite, 0.4 + random(0.1), 1.5);
+							sound_play_pitchvol(sndBigMaggotBurrow, 0.6, 2);
+							sound_play_pitchvol(sndBigMaggotUnburrow, 0.6, 3);
+							sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
 						}
-	
-						 // Nests:
-						var _ang = random(360),
-							r = choose(-1, 1);
-	
-						for(var d = _ang; d < _ang + 360; d += (360 / 3)){
-							var l = random_range(28, 40);
-							with(obj_create(round(_sx + lengthdir_x(l, d)), round(_sy + lengthdir_y(l, d)), "BigMaggotSpawn")){
-								right = r;
-								r *= -1;
-							}
-						}
-						with(_floors){
-							if(!place_meeting(x, y, enemy)){
-								if(chance(2, 3)){
-									with(instance_create(x + 16, y + 16, MaggotSpawn)){
-										raddrop = 2;
-										x = xstart;
-										y = ystart;
-										move_contact_solid(random(360), random(16));
-										instance_create(x, y, Maggot);
-									}
-								}
-							}
-							else with(instances_meeting(x, y, instances_matching_ne(enemy, "object_index", MaggotSpawn, CustomEnemy, Maggot))){
-								if(!place_meeting(x, y, BigMaggot) && !place_meeting(x, y, JungleFly)){
-									if(GameCont.loops > 0 && chance(1, 2)){
-										instance_create(x, y, JungleFly);
-									}
-									else instance_create(x, y, BigMaggot);
-								}
-							}
-						}
-	
-						 // Sound:
-						sound_play_pitchvol(sndBigMaggotBite, 0.4 + random(0.1), 1.5);
-						sound_play_pitchvol(sndBigMaggotBurrow, 0.6, 2);
-						sound_play_pitchvol(sndBigMaggotUnburrow, 0.6, 3);
-						sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
 					}
 				}
         	}
@@ -935,7 +953,7 @@
     }
 
      // Spider Cocoons:
-    with(Cocoon) if(chance(4, 5)){ 
+    with(Cocoon){
     	obj_create(x, y, "NewCocoon");
     	instance_delete(id);
     }
@@ -1056,11 +1074,22 @@
     script_bind_end_step(end_step, 0);
     script_bind_end_step(charm_step, 0);
     script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 0.1);
+    
+     // Bind HUD Event:
+    var _HUDDepth = 0,
+    	_HUDVisible = false;
+    	
     with(instances_matching(TopCont, "visible", true)){
-    	var d = depth;
-    	with(instances_matching(GenCont, "visible", true)) d = min(depth, d);
-    	script_bind_draw(draw_top, d - 0.1);
+    	_HUDDepth = depth - 0.1;
+    	_HUDVisible = true;
     }
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
+		with(instances_matching(UberCont, "visible", true)){
+    		_HUDDepth = min(depth - 0.1, _HUDDepth);
+    		_HUDVisible = true;
+		}
+	}
+    script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
 
      // Character Selection Menu:
     if(instance_exists(Menu)){
@@ -1700,321 +1729,22 @@
 
 	instance_destroy();
 
-#define draw_top
-    var _players = 0,
-		_vx = view_xview_nonsync,
-		_vy = view_yview_nonsync,
-		_ox = _vx,
-		_oy = _vy,
-		_surfHUD = surfMainHUD,
-		_surfHUDDraw = true;
-		
-	draw_set_font(fntSmall);
-	draw_set_halign(fa_right);
-	draw_set_valign(fa_top);
-	
-	with(_surfHUD){
-		x = _vx;
-		y = _vy;
-		w = game_width;
-		h = game_height;
-		
-		if(surface_exists(surf)){
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			surface_reset_target();
-		}
-		else _surfHUDDraw = false;
-	}
-	
-	 // Co-op Rad Canister Offset:
-    for(var i = 0; i < maxp; i++) _players += player_is_active(i);
-    if(_players > 1) _ox -= 17;
-
-	 // Determine which sides of the screen player HUD is On:
-	var _hudSide = array_create(maxp, 0),
-		n = 0;
-		
-	for(var i = 0; i < maxp; i++) if(player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
-	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
-
-	 // Player HUD:
-	for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
-		var _player = player_find(_index),
-			_side = _hudSide[_index],
-			_flip = (_side ? -1 : 1);
-			
-		draw_set_projection(2, _index);
-		
-		 // Draw Main Local Player to Surface for Pause Screen:
-		if(_surfHUDDraw && player_is_local_nonsync(_index)){
-			with(_surfHUD){
-				_ox -= x;
-				_oy -= y;
-				surface_set_target(surf);
-			}
-		}
-		
-		if(instance_exists(_player)){
-			 // Non-nonsync Stuff:
-			with(_player){
-				 // Bonus HP:
-				if("my_health_bonus" in self){
-					if("my_health_bonus_hud" not in self){
-						my_health_bonus_hud = 0;
-					}
-					my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
-				}
-				
-				 // Feathers:
-				if(race == "parrot"){
-					var m = ceil(feather_ammo_max / feather_num);
-					if(array_length(feather_ammo_hud) != m){
-						feather_ammo_hud = array_create(m);
-						for(var i = 0; i < m; i++) feather_ammo_hud[i] = [0, 0];
-					}
-				}
-			}
-			
-			if(player_get_show_hud(_index, player_find_local_nonsync())){
-				 // Bonus Ammo HUD:
-				with(instances_matching_gt(_player, "ammo_bonus", 0)){
-					 // Subtle Color Wave:
-					var _text = `+${ammo_bonus}`;
-					for(var i = 1; i <= string_length(_text); i++){
-						var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
-						_text = string_insert(a, _text, i);
-						i += string_length(a);
-					}
-					
-					draw_text_nt(_ox + 66, _oy + 30 - (_players > 1), _text);
-				}
-				
-				 // Bonus HP HUD:
-				with(instances_matching_ne(_player, "my_health_bonus", null)){
-					var _x1 = _ox + 106 - (85 * _side),
-						_y1 = _oy + 5,
-						_x2 = _x1 + (3 * my_health_bonus_hud * _flip),
-						_y2 = _y1 + 10;
-						
-					if((!_side && _x2 > _x1 + 1) || (_side && _x1 > _x2 + 1)){
-						draw_set_color(c_black);
-						draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
-						draw_set_color(c_white);
-						draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
-						draw_set_color(c_black);
-						draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
-						
-						 // Filling:
-						if(my_health_bonus > 0){
-							if(sprite_index == spr_hurt && image_index < 1){
-								draw_set_color(c_white);
-							}
-							else{
-								draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
-							}
-							
-							draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - _flip, _y2 - 1, false);
-						}
-					}
-				}
-				
-				 // Parrot Feathers:
-				with(instances_matching(_player, "race", "parrot")){
-					var _x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
-						_y = _oy + 11,
-						_spr = spr_feather,
-						_skinCol = (bskin ? make_color_rgb(30, 30, 60) : make_color_rgb(80, 0, 0)),
-						_output = 1 + (2 * ultra_get(race, 1)),
-						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
-						_hudGoal = [feather_ammo, 0];
-						
-					with(instances_matching_ne(_feathers, "canhud", true)) if(canhold) canhud = true;
-					for(var i = 0; i < array_length(_hudGoal); i++){
-						_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
-					}
-						
-					for(var i = 0; i < array_length(feather_ammo_hud); i++){
-						var _hud = feather_ammo_hud[i],
-							_xsc = _flip,
-							_ysc = 1,
-							_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
-							_alp = 1,
-							_dx = _x + (5 * i * _flip),
-							_dy = _y;
-						
-						 // Gradual Fill Change:
-						for(var j = 0; j < array_length(_hudGoal); j++){
-							var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
-							
-							if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
-								_hud[j] += _diff;
-							}
-							else{
-								_hud[j] += _diff * 2/3 * current_time_scale;
-							}
-						}
-						
-						 // Extend Shootable Feathers:
-						if(i < _output && _hud[0] > 0){
-							_dx -= _flip;
-							if(_hud[0] > _hud[1]) _dy++;
-						}
-						
-						 // Draw:
-						draw_sprite_ext(spr.Parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
-						_dx -= sprite_get_xoffset(_spr) * _xsc;
-						_dy -= sprite_get_yoffset(_spr) * _ysc;
-						for(var j = 0; j < array_length(_hud); j++){
-							if(_hud[j] > 0){
-								var _l = 0,
-									_t = 0,
-									_w = max(1, sprite_get_width(_spr) * _hud[j]),
-									_h = sprite_get_height(_spr);
-									
-								draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
-								draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
-								
-								 // Separation Line:
-								if(_hud[j] < 1 && _hud[0] > _hud[1]){
-									_l += _w - 1;
-									_w = 1;
-									draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
-									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
-								}
-							}
-						}
-						draw_set_fog(false, 0, 0, 0);
-					}
-					
-					 // LOW HP:
-					if(_players <= 1){
-						if(drawlowhp > 0 && sin(wave) > 0){
-							if(my_health <= 4 && my_health != maxhealth){
-								draw_set_font(fntM);
-								draw_set_halign(fa_left);
-								draw_set_valign(fa_top);
-								draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		 // Main Player Surface Finish:
-		if(_surfHUDDraw && player_is_local_nonsync(_index)){
-			_surfHUDDraw = false;
-			surface_reset_target();
-			with(_surfHUD){
-				draw_surface(surf, x, y);
-				_ox += x;
-				_oy += y;
-			}
-		}
-	}
-	
-	draw_reset_projection();
-	
-	 // Coast Indicator:
-	if(instance_exists(Player)){
-		with(instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true)){
-			var p = player_find_local_nonsync();
-			if(point_seen(x, y, p)){
-				var	_size = 4,
-					_x = x,
-					_y = y;
-
-				 // Drawn to Player:
-				with(player_find(p)){
-					draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
-
-					var l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
-						d = point_direction(_x, _y, x, y);
-
-					_x += lengthdir_x(l, d);
-					_y += lengthdir_y(l, d);
-				}
-
-				 // Draw:
-				_y += sin(current_frame / 8);
-				var	_x1 = _x - (_size / 2),
-					_y1 = _y - (_size / 2),
-					_x2 = _x1 + _size,
-					_y2 = _y1 + _size;
-
-				draw_set_color(c_black);
-				draw_rectangle(_x1, _y1 + 1, _x2, _y2 - 1, false);
-				draw_rectangle(_x1 + 1, _y1, _x2 - 1, _y2, false);
-				draw_set_color(make_color_rgb(150, 100, 200));
-				draw_rectangle(_x1 + 1, _y1 + 1, _x1 + 1 + max(0, _size - 3), _y1 + 1 + max(0, _size - 3), false);
-			}
-		}
-		draw_set_alpha(1);
-	}
-
-	 // Pet Indicator:
-	with(instances_matching(CustomHitme, "name", "Pet")){
-		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || instance_exists(my_corpse))){
-			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
-			
-			if(sprite_exists(_icon.spr)){
-				var _x = x + _icon.x,
-					_y = y + _icon.y;
-						
-				 // Death Pointer:
-				if(instance_exists(my_corpse)){
-					_y -= 20 + sin(wave / 10);
-					draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
-				}
-				
-				 // Icon:
-				var	_x1 = sprite_get_xoffset(_icon.spr),
-					_y1 = sprite_get_yoffset(_icon.spr),
-					_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
-					_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
-					
-				_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
-				_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
-				
-				draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
-				
-				 // Death Indicating:
-				if(instance_exists(my_corpse)){
-					var _flashLength = 15,
-						_flashDelay = 10,
-						_flash = (current_frame % (_flashLength + _flashDelay));
-						
-					if(_flash < _flashLength){
-						draw_set_blend_mode(bm_add);
-						draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
-						draw_set_blend_mode(bm_normal);
-					}
-				}
-			}
-		}
-	}
-	
-	draw_set_font(fntM);
-	draw_set_halign(fa_center);
-	draw_set_valign(fa_top);
-	
-	instance_destroy();
-
 #define draw_pause_pre
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
 		 // HUD:
-		with(surfMainHUD) if(surface_exists(surf)){
-			x = view_xview_nonsync;
-			y = view_yview_nonsync;
-			
-			 // Dim:
-			var _col = c_white;
-			if(instance_exists(BackMainMenu)){
-				_col = merge_color(_col, c_black, 0.9);
+		if(player_get_show_hud(player_find_local_nonsync(), player_find_local_nonsync())){
+			with(surfMainHUD) if(surface_exists(surf)){
+				x = view_xview_nonsync;
+				y = view_yview_nonsync;
+				
+				 // Dim:
+				var _col = c_white;
+				if(instance_exists(BackMainMenu)){
+					_col = merge_color(_col, c_black, 0.9);
+				}
+				
+				draw_surface_ext(surf, x, y, 1, 1, 0, _col, 1);
 			}
-			
-			draw_surface_ext(surf, x, y, 1, 1, 0, _col, 1);
 		}
 	}
 	
@@ -2406,6 +2136,343 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 	return _map;
 
+#define ntte_hud(_visible)
+    var _players = 0,
+		_vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_ox = _vx,
+		_oy = _vy,
+		_surfHUD = surfMainHUD;
+		
+	draw_set_font(fntSmall);
+	draw_set_halign(fa_right);
+	draw_set_valign(fa_top);
+	
+	with(_surfHUD){
+		x = _vx;
+		y = _vy;
+		w = game_width;
+		h = game_height;
+		
+		active = false;
+		
+		if(surface_exists(surf)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			surface_reset_target();
+		}
+	}
+	
+	 // Co-op Rad Canister Offset:
+    for(var i = 0; i < maxp; i++) _players += player_is_active(i);
+    if(_players > 1) _ox -= 17;
+
+	 // Determine which sides of the screen player HUD is On:
+	var _hudSide = array_create(maxp, 0),
+		n = 0;
+		
+	for(var i = 0; i < maxp; i++) if(player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
+	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
+
+	 // Player HUD:
+	for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
+		var _player = player_find(_index),
+			_side = _hudSide[_index],
+			_flip = (_side ? -1 : 1),
+			_HUDVisible = (_visible && player_get_show_hud(_index, player_find_local_nonsync())),
+			_HUDMain = (player_find_local_nonsync() == _index);
+			
+		draw_set_projection(2, _index);
+		
+		 // Draw Main Local Player to Surface for Pause Screen:
+		if(_HUDMain){
+			with(_surfHUD) if(surface_exists(surf)){
+				_ox -= x;
+				_oy -= y;
+				surface_set_target(surf);
+			}
+		}
+		
+		if(instance_exists(_player)){
+			 // Non-nonsync Stuff:
+			with(_player){
+				 // Bonus HP:
+				if("my_health_bonus" in self){
+					if("my_health_bonus_hud" not in self){
+						my_health_bonus_hud = 0;
+					}
+					my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
+				}
+				
+				 // Feathers:
+				if(race == "parrot"){
+					var m = ceil(feather_ammo_max / feather_num);
+					if(array_length(feather_ammo_hud) != m){
+						feather_ammo_hud = array_create(m);
+						for(var i = 0; i < m; i++) feather_ammo_hud[i] = [0, 0];
+					}
+					
+					/*
+					 // Flash:
+					if(feather_ammo < feather_ammo_max) feather_ammo_hud_flash = 0;
+					else feather_ammo_hud_flash += current_time_scale;
+					*/
+				}
+			}
+			
+			if(_HUDVisible || _HUDMain){
+				 // Bonus Ammo HUD:
+				with(instances_matching_gt(_player, "ammo_bonus", 0)){
+					_surfHUD.active = true;
+					
+					 // Subtle Color Wave:
+					var _text = `+${ammo_bonus}`;
+					for(var i = 1; i <= string_length(_text); i++){
+						var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
+						_text = string_insert(a, _text, i);
+						i += string_length(a);
+					}
+					
+					draw_text_nt(_ox + 66, _oy + 30 - (_players > 1), _text);
+				}
+				
+				 // Bonus HP HUD:
+				with(instances_matching_ne(_player, "my_health_bonus", null)){
+					var _x1 = _ox + 106 - (85 * _side),
+						_y1 = _oy + 5,
+						_x2 = _x1 + (3 * my_health_bonus_hud * _flip),
+						_y2 = _y1 + 10;
+						
+					if((!_side && _x2 > _x1 + 1) || (_side && _x1 > _x2 + 1)){
+						_surfHUD.active = true;
+						
+						draw_set_color(c_black);
+						draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
+						draw_set_color(c_white);
+						draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
+						draw_set_color(c_black);
+						draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
+						
+						 // Filling:
+						if(my_health_bonus > 0){
+							if(sprite_index == spr_hurt && image_index < 1){
+								draw_set_color(c_white);
+							}
+							else{
+								draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+							}
+							
+							draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - _flip, _y2 - 1, false);
+						}
+					}
+				}
+				
+				 // Parrot Feathers:
+				with(instances_matching(_player, "race", "parrot")){
+					_surfHUD.active = true;
+					
+					var _x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
+						_y = _oy + 11,
+						_spr = spr_feather,
+						_output = 1 + (2 * ultra_get(race, 1)),
+						_skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10)),
+						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
+						_hudGoal = [feather_ammo, 0];
+						
+					with(instances_matching_ne(_feathers, "canhud", true)) if(canhold) canhud = true;
+					for(var i = 0; i < array_length(_hudGoal); i++){
+						_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
+					}
+					
+					for(var i = 0; i < array_length(feather_ammo_hud); i++){
+						var _hud = feather_ammo_hud[i],
+							_xsc = _flip,
+							_ysc = 1,
+							_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
+							_alp = 1,
+							_dx = _x + (5 * i * _flip),
+							_dy = _y;
+							
+						 // Gradual Fill Change:
+						for(var j = 0; j < array_length(_hudGoal); j++){
+							var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
+							if(_diff != 0){
+								if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
+									_hud[j] += _diff;
+								}
+								else{
+									_hud[j] += _diff * 2/3 * current_time_scale;
+								}
+							}
+						}
+						
+						 // Extend Shootable Feathers:
+						if(i < _output && _hud[0] > 0){
+							_dx -= _flip;
+							if(_hud[0] > _hud[1]) _dy++;
+						}
+						
+						 // Draw:
+						draw_sprite_ext(spr.Parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+						_dx -= sprite_get_xoffset(_spr) * _xsc;
+						_dy -= sprite_get_yoffset(_spr) * _ysc;
+						for(var j = 0; j < array_length(_hud); j++){
+							if(_hud[j] > 0){
+								var _l = 0,
+									_t = 0,
+									_w = max(1, sprite_get_width(_spr) * _hud[j]),
+									_h = sprite_get_height(_spr);
+									
+								draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
+								draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
+								
+								 // Separation Line:
+								if(_hud[j] < 1 && _hud[0] > _hud[1]){
+									_l += _w - 1;
+									_w = 1;
+									draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
+									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
+								}
+								
+								/*
+								 // Flash:
+								if(j == 0 && feather_ammo_hud_flash > 0){
+									var	_flash = ((feather_ammo_hud_flash - 1 - array_length(feather_ammo_hud) - (i * _flip)) % 150),
+										_flashAlpha = _alp * ((3 - _flash) / 5);
+										
+									if(_flash >= 0 && _flashAlpha > 0){
+										if(fork()){
+											 // Paused:
+											for(var n = 0; n < maxp; n++) if(button_pressed(n, "paus")){
+												exit;
+											}
+											
+											draw_set_fog(true, merge_color(_skinCol, c_white, 1), 0, 0);
+											draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _flashAlpha);
+											
+											exit;
+										}
+									}
+								}
+								*/
+							}
+						}
+						draw_set_fog(false, 0, 0, 0);
+					}
+					
+					 // LOW HP:
+					if(_players <= 1){
+						if(drawlowhp > 0 && sin(wave) > 0){
+							if(my_health <= 4 && my_health != maxhealth){
+								draw_set_font(fntM);
+								draw_set_halign(fa_left);
+								draw_set_valign(fa_top);
+								draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		 // Main Player Surface Finish:
+		if(_HUDMain){
+			surface_reset_target();
+			with(_surfHUD) if(surface_exists(surf)){
+				if(_HUDVisible) draw_surface(surf, x, y);
+				_ox += x;
+				_oy += y;
+			}
+		}
+	}
+	
+	draw_reset_projection();
+	
+	 // Coast Indicator:
+	if(instance_exists(Player)){
+		with(instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true)){
+			var p = player_find_local_nonsync();
+			if(point_seen(x, y, p)){
+				var	_size = 4,
+					_x = x,
+					_y = y;
+
+				 // Drawn to Player:
+				with(player_find(p)){
+					draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
+
+					var l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
+						d = point_direction(_x, _y, x, y);
+
+					_x += lengthdir_x(l, d);
+					_y += lengthdir_y(l, d);
+				}
+
+				 // Draw:
+				_y += sin(current_frame / 8);
+				var	_x1 = _x - (_size / 2),
+					_y1 = _y - (_size / 2),
+					_x2 = _x1 + _size,
+					_y2 = _y1 + _size;
+
+				draw_set_color(c_black);
+				draw_rectangle(_x1, _y1 + 1, _x2, _y2 - 1, false);
+				draw_rectangle(_x1 + 1, _y1, _x2 - 1, _y2, false);
+				draw_set_color(make_color_rgb(150, 100, 200));
+				draw_rectangle(_x1 + 1, _y1 + 1, _x1 + 1 + max(0, _size - 3), _y1 + 1 + max(0, _size - 3), false);
+			}
+		}
+		draw_set_alpha(1);
+	}
+
+	 // Pet Indicator:
+	with(instances_matching(CustomHitme, "name", "Pet")){
+		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || instance_exists(my_corpse))){
+			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
+			
+			if(sprite_exists(_icon.spr)){
+				var _x = x + _icon.x,
+					_y = y + _icon.y;
+						
+				 // Death Pointer:
+				if(instance_exists(my_corpse)){
+					_y -= 20 + sin(wave / 10);
+					draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
+				}
+				
+				 // Icon:
+				var	_x1 = sprite_get_xoffset(_icon.spr),
+					_y1 = sprite_get_yoffset(_icon.spr),
+					_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
+					_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
+					
+				_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
+				_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
+				
+				draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
+				
+				 // Death Indicating:
+				if(instance_exists(my_corpse)){
+					var _flashLength = 15,
+						_flashDelay = 10,
+						_flash = (current_frame % (_flashLength + _flashDelay));
+						
+					if(_flash < _flashLength){
+						draw_set_blend_mode(bm_add);
+						draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
+						draw_set_blend_mode(bm_normal);
+					}
+				}
+			}
+		}
+	}
+	
+	draw_set_font(fntM);
+	draw_set_halign(fa_center);
+	draw_set_valign(fa_top);
+	
+	instance_destroy();
+	
 #define ntte_menu()
 	if(MenuOpen){
 		for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){

@@ -298,6 +298,7 @@
 			if(visible && !instance_exists(GenCont) && !instance_exists(LevCont)){
 				wkick = -3;
 				gunshine = 1;
+				clicked = false;
 				
 				 // !
 				with(instance_create(x, y, PopupText)){
