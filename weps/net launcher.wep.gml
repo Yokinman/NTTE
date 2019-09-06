@@ -13,15 +13,17 @@
 #define weapon_laser_sight  return false; // wtf why isnt this just called weapon_laser or weapon_sight
 #define weapon_avail        return unlock_get("coastWep");
 
-#define weapon_fire(_wep)
+#define weapon_fire(w)
+    var _creator = wep_creator();
+    
      // Shoot Harpoon:
     with(obj_create(x, y, "NetNade")){
         motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
         image_angle = direction;
+        creator = _creator;
         team = other.team;
-        creator = other;
     }
-
+    
      // Effects:
     weapon_post(6, 8, -20);
     sound_play(sndGrenade);
@@ -32,4 +34,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

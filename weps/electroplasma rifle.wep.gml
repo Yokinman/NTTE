@@ -17,34 +17,35 @@
     sound_play(sndLightningReload);
 
 #define weapon_fire
-    if("last_electroplasma" not in self) last_electroplasma = noone;
-    if("electroplasma_side" not in self) electroplasma_side = 1;
-    
+    var _creator = wep_creator(),
+        _brain = (skill_get(mut_laser_brain) > 0);
+        
      // Sounds:
-    var _brain = (skill_get(mut_laser_brain) > 0);
-    if(_brain)  sound_play_gun(sndLightningPistolUpg,   0.4, 0.6);
-    else        sound_play_gun(sndLightningPistol,      0.3, 0.3);
+    if(_brain) sound_play_gun(sndLightningPistolUpg, 0.4, 0.6);
+    else       sound_play_gun(sndLightningPistol,    0.3, 0.3);
     
      // Burst Fire:
     var _num = 3;
     repeat(_num) if(instance_exists(self)){
-        var _last = last_electroplasma;
-        
          // Projectile:
-        var d = gunangle + (((17 * electroplasma_side) + orandom(7)) * accuracy);
+        var _last = variable_instance_get(_creator, "electroplasma_last", noone),
+            _side = variable_instance_get(_creator, "electroplasma_side", 1),
+            _dir = gunangle + (((17 * _side) + orandom(7)) * accuracy);
+            
         with(obj_create(x, y, "ElectroPlasma")){
-            motion_set(d, 4 + random(0.4));
+            motion_set(_dir, 4 + random(0.4));
             image_angle = direction;
+            creator = _creator;
             team = other.team;
-            creator = other;
 
              // Tether Together:
             tether_inst = _last;
             _last = id;
         }
-        
-        last_electroplasma = _last;
-        electroplasma_side *= -1;
+        with(_creator){
+            electroplasma_last = _last;
+            electroplasma_side = -_side;
+        }
         
          // Effects:
         weapon_post(6, 3, 0);
@@ -61,4 +62,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

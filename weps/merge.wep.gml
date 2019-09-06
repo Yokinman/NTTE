@@ -2227,6 +2227,8 @@
 
 #define weapon_fire(w)
 	if(is_object(w)){
+		var _creator = mod_script_call("mod", "telib", "wep_creator");
+		
 		 // Blood Cost:
 		if(instance_is(self, Player)){
 			if(wep_stat(w, "blod") && infammo == 0){
@@ -2244,19 +2246,19 @@
 				}
 			}
 		}
-	
-	    GunCont(x, y, lq_defget(w, "base", wepDefault), self);
+		
+	    GunCont(lq_defget(w, "base", wepDefault), x, y, team, _creator, gunangle, accuracy);
 	}
 
-#define GunCont(_x, _y, _wep, _creator)
+#define GunCont(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
     with(instance_create(_x, _y, CustomObject)){
         name = "GunCont";
         
         wep = _wep;
         creator = _creator;
-        gunangle = 0;
-        accuracy = 1;
-        team = -1;
+        gunangle = _gunangle;
+        accuracy = _accuracy;
+        team = _team;
         shot = 0;
         time = lq_get(_wep, "wait");
         bloom = true;
@@ -2312,9 +2314,9 @@
         if(instance_exists(creator)){
             x = creator.x;
             y = creator.y;
-            gunangle = creator.gunangle;
-            accuracy = creator.accuracy;
-            team = creator.team;
+            if("gunangle" in creator) gunangle = creator.gunangle;
+            if("accuracy" in creator) accuracy = creator.accuracy;
+            if("team" in creator) team = creator.team;
         }
         
          // Step:
@@ -2575,7 +2577,7 @@
                     sprite_index = sprScrapBossCharge;
                 }
             }
-
+            
              // Post-Fire Effects:
             if(_timeMax > 0 || shot == 0){
                  // Sound:
@@ -2584,7 +2586,7 @@
                         var _snd = (is_array(snd) ? snd[irandom(array_length(snd) - 1)] : snd),
                             _pit = (is_array(pit) ? random_range(pit[0], pit[1]) : pit),
                             _vol = (is_array(vol) ? random_range(vol[0], vol[1]) : vol);
-
+                            
                         switch(_snd){
                              // Laser Brain:
                             case sndLaser:
@@ -2608,7 +2610,7 @@
                                     _snd = asset_get_index(sound_get_name(_snd) + "Upg");
                                 }
                                 break;
-
+                                
                              // Black Sword:
                             case sndBlackSword:
                                 if(array_exists(_flag, "blacksword")){
@@ -2618,27 +2620,32 @@
                                 }
                                 break;
                         }
-
+                        
                         if(loop){
                             if(loop_indx == -1){
-                                sound_play(other.loop_strt);
+                                sound_play(loop_strt);
                                 loop_indx = audio_play_sound(snd, 0, true);
                             }
                         }
                         else sound_play_pitchvol(_snd, _pit, _vol);
                     }
                 }
-
+                
                 with(creator){
-                    wepangle *= -1;
+                    if("wepangle" in self) wepangle *= -1;
     
                      // Kick, Shift, Shake, Knockback:
-                    weapon_post(_wep.kick, _wep.shif, _wep.shak);
-                    hspeed -= lengthdir_x(_wep.push, gunangle);
-                    vspeed -= lengthdir_y(_wep.push, gunangle);
+                    if(instance_is(self, Player)){
+                    	weapon_post(_wep.kick, _wep.shif, _wep.shak);
+                    }
+                    else if("wkick" in self){
+                    	wkick = _wep.kick;
+                    }
+                    hspeed -= lengthdir_x(_wep.push, _angle);
+                    vspeed -= lengthdir_y(_wep.push, _angle);
                 }
             }
-
+            
             time = _timeMax;
             shot++;
         }
@@ -2770,18 +2777,25 @@
 
          // Auto Aim:
         with(creator){
-            var _x = mouse_x[index],
-                _y = mouse_y[index];
-
-            var n = nearest_instance(_x, _y, instances_matching_ne(instances_matching_ne([Player, Sapling, Ally, enemy, CustomHitme], "team", team, 0), "mask_index", mskNone, sprVoid));
-            if(instance_exists(n)){
-                gunangle = point_direction(x, y, n.x, n.y);
-                canaim = false;
+            var _x = (instance_is(self, Player) ? mouse_x[index] : x),
+                _y = (instance_is(self, Player) ? mouse_y[index] : y),
+                _team = variable_instance_get(self, "team", 0),
+                _nearest = nearest_instance(_x, _y, instances_matching_ne(instances_matching_ne([Player, Sapling, Ally, enemy, CustomHitme], "team", _team, 0), "mask_index", mskNone, sprVoid));
+                
+            if(instance_exists(_nearest)){
+                if("gunangle" in self){
+                	gunangle = point_direction(x, y, _nearest.x, _nearest.y);
+                }
+                if(instance_is(self, Player)){
+                	canaim = false;
+                }
             }
         }
     }
     else{
-        with(creator) canaim = true;
+        if(instance_is(creator, Player)){
+        	with(creator) canaim = true;
+        }
         instance_destroy();
     }
 

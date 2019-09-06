@@ -48,7 +48,6 @@
 			sprt_hud : global.sprSlugboltHUD
 		}
 	];
-	global.numModes = array_length(wepModes);
 
 	 // Global Step
 	while(true){
@@ -59,7 +58,7 @@
 	}
 
 #macro wepModes global.wepModes
-#macro numModes global.numModes
+#macro numModes array_length(wepModes)
 
 #macro wepLWO {
         wep  : mod_current,
@@ -130,12 +129,15 @@
 	return scrWepModeInfo(w, "sprt");
 
 #define weapon_fire(w)
-	 // LWO Insurance:
-	if(!is_object(wep)){
-		step(true);
-		w = wep;
+	var _creator = wep_creator(),
+		_wepHeld = (variable_instance_get(_creator, "wep") == w);
+	
+	 // LWO Setup:
+	if(!is_object(w)){
+		w = wepLWO;
+        if(_wepHeld) _creator.wep = w;
 	}
-
+	
 	 // Mode Specific:
 	switch(w.mode){
 		//#region SCYTHE:
@@ -149,7 +151,7 @@
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
 				image_yscale = _flip;
 				
-				creator = other;
+				creator = _creator;
 				team	= other.team;
 				heavy	= _heavy;
 				rotspd	= (-3 * _flip);
@@ -160,10 +162,10 @@
 			}
 			
 			 // Sounds:
-			sound_play_hit_ext(sndBlackSword, 0.8 + random(0.3), 1);
+			sound_play_pitchvol(sndBlackSword, 0.8 + random(0.3), 1);
 			if(_heavy){
-				sound_play_hit_ext(sndHammer, 1 - random(0.2), 0.6);
-				sound_play_hit_ext(sndSwapHammer, 1.3 + random(0.2), 0.6);
+				sound_play_pitchvol(sndHammer,     1 - random(0.2),   0.6);
+				sound_play_pitchvol(sndSwapHammer, 1.3 + random(0.2), 0.6);
 			}
 			
 			 // Effects:
@@ -184,7 +186,7 @@
 
 				for(var i = -1; i <= 1; i++){
 					with(obj_create(x, y, "BoneArrow")){
-						creator = other;
+						creator = _creator;
 						team	= other.team;
 						
 						direction	= d + (i * o);
@@ -194,8 +196,8 @@
 				}
 				
 				 // Sounds:
-				sound_play_hit_ext(sndSuperCrossbow, 0.9 + random(0.3), 0.5);
-				sound_play_hit_ext(sndBloodLauncherExplo, 1.2 + random(0.3), 0.5);
+				sound_play_pitchvol(sndSuperCrossbow,      0.9 + random(0.3), 0.5);
+				sound_play_pitchvol(sndBloodLauncherExplo, 1.2 + random(0.3), 0.5);
 				
 				 // Effects:
 				weapon_post(6, 3, 7);
@@ -211,7 +213,7 @@
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(4));
 				with(obj_create(x, y, "BoneArrow")){
-					creator = other;
+					creator = _creator;
 					team	= other.team;
 					big		= true;
 					
@@ -221,8 +223,8 @@
 				}
 			
 				 // Sounds:
-				sound_play_hit_ext(sndHeavyCrossbow, 0.9 + random(0.3), 2/3);
-				sound_play_hit_ext(sndBloodHammer, 1.1 + random(0.2), 2/3);
+				sound_play_pitchvol(sndHeavyCrossbow, 0.9 + random(0.3), 2/3);
+				sound_play_pitchvol(sndBloodHammer,   1.1 + random(0.2), 2/3);
 				
 				 // Effects:
 				motion_add((gunangle + 180), 3);
@@ -264,9 +266,9 @@
                     
                      // Effects:
                     with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
-                    sound_play_hit_ext(sndHPPickup, 4, 0.6);
-                    sound_play_hit_ext(sndPickupDisappear, 1.2, 0.6);
-                    sound_play_hit_ext(sndBloodGamble, 0.4 + random(0.2), 0.4);
+                    sound_play_pitchvol(sndHPPickup, 4, 0.6);
+                    sound_play_pitchvol(sndPickupDisappear, 1.2, 0.6);
+                    sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.4);
                     
                     instance_destroy();
                 }
@@ -286,7 +288,7 @@
 			}
 			
 			 // Sound:
-			sound_play_hit(scrWepModeInfo(w, "swap"), 0.1);
+			sound_play(scrWepModeInfo(w, "swap"));
 			sound_play_hit(sndMutant14Turn, 0.1);
 			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 2);
 			
@@ -331,6 +333,7 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

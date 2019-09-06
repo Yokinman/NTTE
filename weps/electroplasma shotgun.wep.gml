@@ -16,12 +16,12 @@
     sound_play(sndLightningReload);
 
 #define weapon_fire
-    if("last_electroplasma" not in self) last_electroplasma = noone;
-
+    var _creator = wep_creator(),
+        _brain = (skill_get(mut_laser_brain) > 0);
+        
      // Sounds:
-    var _brain = (skill_get(mut_laser_brain) > 0);
-    if(_brain)  sound_play_gun(sndLightningShotgunUpg,  0.4, 0.6);
-    else        sound_play_gun(sndLightningShotgun,     0.3, 0.3);
+    if(_brain) sound_play_gun(sndLightningShotgunUpg, 0.4, 0.6);
+    else       sound_play_gun(sndLightningShotgun,    0.3, 0.3);
     sound_play_pitch(sndPlasmaBig, 1.1 + random(0.3));
     
      // Effects:
@@ -29,24 +29,29 @@
     motion_add(gunangle, -4);
     
      // Spread Fire:
-    var _last = last_electroplasma,
+    var _last = variable_instance_get(_creator, "electroplasma_last", noone),
         _num = 5;
-
+        
     for(var i = floor(_num / 2) * -1; i <= floor(_num / 2); i++){
+        var _dir = other.gunangle + (((20 * i) + orandom(6)) * other.accuracy);
         with(obj_create(x, y, "ElectroPlasma")){
-            motion_set(other.gunangle + (20 * i) + (orandom(6) * other.accuracy), 4 + random(0.8));
+            motion_set(_dir, 4 + random(0.8));
             image_angle = direction;
+            creator = _creator;
             team = other.team;
-            creator = other;
-
+            
              // Tether Together:
             tether_inst = _last;
             _last = id;
         }
+    }
+    with(_creator){
+        electroplasma_last = _last;
     }
 
 
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

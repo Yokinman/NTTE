@@ -18,7 +18,7 @@
 #define weapon_name		return (weapon_avail() ? "TRIDENT" : "LOCKED");
 #define weapon_text		return "SCEPTER OF THE @bSEA";
 #define weapon_type		return 0;  // Melee
-#define weapon_load		return 14; // 0.47 Seconds (Stab Length)
+#define weapon_load		return 14; // 0.47 Seconds (Also Stab Length)
 #define weapon_area		return (weapon_avail() ? 7 : -1); // 3-2
 #define weapon_auto		return true;
 #define weapon_melee	return false;
@@ -28,88 +28,118 @@
 #define weapon_avail	return unlock_get("coastWep");
 
 #define weapon_fire(w)
+	var	_creator = wep_creator(),
+		_wepHeld = (variable_instance_get(_creator, "wep") == w);
+		
+	 // LWO Setup:
 	if(!is_object(w)){
-		step(true);
-		w = wep;
+		w = wepLWO;
+        if(_wepHeld) _creator.wep = w;
 	}
 
 	 // Charge Trident:
 	if(w.visible){
-		w.chrg = true;
-		w.primary = (race != "steroids" || !specfiring);
-    	if(w.chrg_num < w.chrg_max){
-    		var n = reloadspeed;
-    		n *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
-    		if(race == "venuz"){
-    			n *= 1.2 + (0.4 * ultra_get(race, 2));
-    		}
-    		w.chrg_num += n * current_time_scale;
-
-			 // Charging FX:
-			sound_play_pitch(sndOasisMelee, 1 / (1 - ((w.chrg_num / w.chrg_max) * 0.25)));
-
-	    	 // Full Charge:
-			if(w.chrg_num >= w.chrg_max){
-				w.chrg_num = w.chrg_max;
-
-				 // FX:
-				var	l = 16,
-					d = gunangle;
-
-				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ThrowHit);
-				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ImpactWrists);
-				sound_play_pitch(sndCrystalRicochet, 3);
-				sound_play_pitch(sndSewerDrip,		 3);
-				sleep(5);
+		if(instance_is(_creator, Player)){
+			w.chrg = true;
+			w.primary = (race != "steroids" || !variable_instance_get(self, "specfiring", false));
+			
+	    	if(w.chrg_num < w.chrg_max){
+	    		var n = 1;
+	    		with(_creator) if(instance_is(self, Player)){
+	    			n *= reloadspeed;
+		    		n *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
+	    		}
+	    		if(race == "venuz"){
+	    			n *= 1.2 + (0.4 * ultra_get(race, 2));
+	    		}
+		    	w.chrg_num += n * current_time_scale;
+		    	
+				 // Charging FX:
+				sound_play_pitch(sndOasisMelee, 1 / (1 - ((w.chrg_num / w.chrg_max) * 0.25)));
+				
+		    	 // Full Charge:
+				if(w.chrg_num >= w.chrg_max){
+					w.chrg_num = w.chrg_max;
+					
+					 // FX:
+					var	l = 16,
+						d = gunangle;
+						
+					instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ThrowHit);
+					instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ImpactWrists);
+					sound_play_pitch(sndCrystalRicochet, 3);
+					sound_play_pitch(sndSewerDrip,		 3);
+					sleep(5);
+				}
+	    	}
+	    	
+	    	 // Fully Charged - Blink:
+	    	else if(frame_active(12)){
+				with(_creator) if(instance_is(self, Player)){
+					gunshine = 2;
+				}
 			}
-    	}
-
-    	 // Fully Charged - Blink:
-    	else if(frame_active(12)){
-			gunshine = 2;
+			
+	    	 // Pullback:
+	    	var f = (w.chrg_num / w.chrg_max);
+		    weapon_post(9 * f, 8 * f, 0);
+		    
+			 // Pop Pop:
+			if(race == "venuz" && variable_instance_get(self, "specfiring", false)){
+				w.chrg_num = w.chrg_max;
+			}
 		}
-
-    	 // Pullback:
-    	var f = (w.chrg_num / w.chrg_max);
-	    weapon_post(9 * f, 8 * f, 0);
-
-		 // Pop Pop:
-		if(race == "venuz" && specfiring){
-			w.chrg_num = w.chrg_max;
+		
+		 // player_fire Support:
+		else{
+			w.chrg = false;
+			w.primary = true;
+			w.chrg_num = 1;
+			harpoon_step(true, w);
 		}
 	}
-	reload = current_time_scale;
+	if(instance_is(self, Player)) reload = current_time_scale;
 
 #define step(_primary)
     var b = (_primary ? "" : "b"),
         w = variable_instance_get(self, b + "wep");
-
+        
      // LWO Setup:
     if(!is_object(w)){
         w = wepLWO;
         variable_instance_set(self, b + "wep", w);
     }
+    
+    harpoon_step(_primary, w);
 
+#define harpoon_step(_primary, w)
+	var b = (_primary ? "" : "b");
+	
      // Harpoon Charge:
     if(!w.chrg){
     	if(w.chrg_num > 0 && w.primary == _primary){
+			var _creator = wep_creator();
+			
 			 // Throw Trident:
 		    if(w.chrg_num >= w.chrg_max){
-		    	var c = variable_instance_get(self, b + "curse");
-		    	if(!c){
-					variable_instance_set(self, b + "wep", wep_none);
-					if(_primary){
-						wkick = 0;
-						scrSwap();
-					}
+		    	if(instance_is(_creator, Player)){
+			    	var c = variable_instance_get(_creator, b + "curse", false);
+			    	if(!c){
+						variable_instance_set(_creator, b + "wep", wep_none);
+						if(_primary) with(_creator){
+							wkick = 0;
+							scrSwap();
+						}
+			    	}
+			    	else w.visible = false;
 		    	}
-		    	else w.visible = false;
 
 				 // Trident:
 				with(obj_create(x, y, "Trident")){
-					projectile_init(other.team, other);
 					motion_add(other.gunangle, 18);
 					image_angle = direction;
+					creator = _creator;
+					team = other.team;
 					curse = c;
 					wep = w;
 				}
@@ -120,22 +150,24 @@
 			else{
 				var l = weapon_get_load(w),
 					d = gunangle;
-
+					
 				variable_instance_set(self, b + "reload",	 l);
 				variable_instance_set(self, b + "can_shoot", false);
-				weapon_post(wkick, -20, 8);
-
-				 // Stabby:
+				
+				 // Long Arms:
 				l += 8 * skill_get(mut_long_arms);
 				
-				variable_instance_set(self, b + "wkick", -l);
+				 // Stabby:
+				weapon_post(wkick, -20, 8);
+				if((b + "wkick") in self){
+					variable_instance_set(self, b + "wkick", -l);
+				}
 				
+				 // Stab:
 				var _off = 220 / l;
 				for(var o = -_off; o <= _off; o += _off){
 					for(var i = l + (8 * ((o == 0) ? 1 : 2/3)); i > 0; i -= 16){
 	  					with(instance_create(x + hspeed + lengthdir_x(i, d + o), y + vspeed + lengthdir_y(i, d + o) - (_primary ? 0 : 4), Shank)){
-	  						projectile_init(other.team, other);
-	
 	  						direction = d + (o / 3);
 	  						image_angle = direction;
 	  						
@@ -145,6 +177,8 @@
 	  						depth = other.depth - (1 + (0.1 * (o != 0)));
 	  						image_xscale = 0.5 + (0.1 * (o == 0));
 	  						image_yscale = 0.9;
+							creator = _creator;
+							team = other.team;
 	  						canfix = false;
 	  						damage = 20;
 	
@@ -161,8 +195,6 @@
 	  								}
 	  							}
 	  						}
-	
-	  						mask_index = -1;
 	  					}
 	        		}
 				}
@@ -189,7 +221,7 @@
     w.chrg = false;
 
      // Curse Harpoon Grab Reorient:
-    if(w.wepangle != 0){
+    if(instance_is(self, Player) && w.wepangle != 0){
     	script_bind_end_step(end_step, 0, _primary, self);
     }
 
@@ -197,17 +229,22 @@
 	instance_destroy();
 
 	 // Wepangle Transition:
-	var b = (_primary ? "" : "b"),
-		w = variable_instance_get(_inst, b + "wep");
-
-	variable_instance_set(_inst, b + "wepangle", w.wepangle);
-	w.wepangle -= clamp(w.wepangle * 0.4, -40, 40) * current_time_scale;
-	if(abs(w.wepangle) < 1) w.wepangle = 0;
+	if(instance_exists(_inst)){
+		var b = (_primary ? "" : "b"),
+			w = variable_instance_get(_inst, b + "wep");
+			
+		if(is_object(w) && "wepangle" in w){
+			variable_instance_set(_inst, b + "wepangle", w.wepangle);
+			w.wepangle -= clamp(w.wepangle * 0.4, -40, 40) * current_time_scale;
+			if(abs(w.wepangle) < 1) w.wepangle = 0;
+		}
+	}
 
 
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
-#define scrSwap()                                                                       return  mod_script_call("mod", "telib", "scrSwap");
-#define frame_active(_interval)                                                         return  mod_script_call("mod", "telib", "frame_active", _interval);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
+#define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
+#define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);

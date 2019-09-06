@@ -12,14 +12,16 @@
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_avail    return unlock_get("oasisWep");
 
-#define weapon_fire(_wep)
-     // Muzzle Explosion:
+#define weapon_fire(w)
+    var _creator = wep_creator();
+    
+     // Projectile:
     var l = 20,
         d = gunangle + (accuracy * orandom(3));
-    with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "HyperBubble")){
-        team    = other.team;
-        creator = other;
         
+    with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "HyperBubble")){
+        creator = _creator;
+        team = other.team;
         direction = d;
     }
     
@@ -35,4 +37,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

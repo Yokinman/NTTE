@@ -1689,7 +1689,7 @@
                     var _copy = instance_copy(false);
                     switch(_copy.object_index){
                         case Laser:
-                            var l = point_distance(xstart, ystart, other.x, other.y),
+                            var l = point_distance(xstart, ystart, other.x, other.y) + 12,
                                 d = image_angle;
     
                             with(_copy){
@@ -1709,10 +1709,24 @@
                             	}
                             }
                             with(_copy){
-                                image_index = 0;
-                                image_angle += random_range(20, 40) * choose(-1, 1);
+                                image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1));
+                            	
+                            	 // Split Lightning:
+                                var _varCopy = variable_instance_get_names(id),
+                                	_varNo = [
+	                                	"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
+	                                	"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
+                                	];
+                                	
                                 event_perform(ev_alarm, 0);
-                                with(instances_matching_gt(Lightning, "id", id)) prism_duplicate = true;
+                                with(instances_matching_gt(Lightning, "id", id)){
+                            		prism_duplicate = true;
+                                	with(_varCopy){
+                                		if(!array_exists(_varNo, self)){
+                                			variable_instance_set(other, self, variable_instance_get(_copy, self));
+                                		}
+                                	}
+                                }
                             }
                             break;
         
@@ -1733,7 +1747,7 @@
             }
         }
         var _prism = instances_matching(instances_matching(object_index, "name", name), "pet", pet);
-        with(instances_matching(projectile, "can_prism_duplicate", false)){
+        with(instances_matching(instances_matching_gt(projectile, "speed", 0), "can_prism_duplicate", false)){
             if(array_length(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16, _prism)) <= 0){
                 can_prism_duplicate = true;
             }

@@ -14,8 +14,10 @@
 #define weapon_avail    return unlock_get("oasisWep");
 
 #define weapon_reloaded
-    var _dis = 19, _dir = gunangle;
-    with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), BubblePop)){
+    var l = 19,
+        d = gunangle;
+        
+    with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), BubblePop)){
         image_index = (other.wkick > 0);
         image_angle = random(360);
         depth = -1;
@@ -24,28 +26,33 @@
     sound_play_pitchvol(sndOasisExplosionSmall, 1.1, 0.4);
 
 #define weapon_fire(_wep)
+    var _creator = wep_creator();
+    
+     // Burst Fire:
     repeat(3) if(instance_exists(self)){
+         // Projectile:
         with(obj_create(x, y, "BubbleBomb")){
             move_contact_solid(other.gunangle, 6);
-            motion_add(other.gunangle + (orandom(6) * other.accuracy), 8 + random(4));
+            motion_add(other.gunangle + orandom(6 * other.accuracy), 8 + random(4));
+            creator = _creator;
             team = other.team;
-            creator = other;
         }
-    
+        
          // Effects:
         var _pitch = random_range(0.8, 1.2);
         sound_play_pitch(sndOasisCrabAttack,        0.7 * _pitch);
         sound_play_pitch(sndSuperSplinterGun,       1.4 * _pitch);
         sound_play_pitch(sndOasisExplosionSmall,    0.7 * _pitch);
+        
+         // Post:
         weapon_post(5, -5, 10);
-
-         // Knockback:
         motion_add(gunangle + 180, 0.5);
-
+        
         wait 1;
     }
 
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

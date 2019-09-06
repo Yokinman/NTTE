@@ -17,39 +17,43 @@
     sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
 
 #define weapon_fire
-    var _roids = (specfiring && (race == "steroids")),
+    var _creator = wep_creator(),
+        _roids = (race == "steroids" && variable_instance_get(self, "specfiring", false)),
         _xdis, _ydis;
-
+        
+     // Projectile:
     with(obj_create(x, y, "TeslaCoil")){
-        creator = other;
+        direction = other.gunangle;
+        creator = _creator;
+        team = other.team;
         roids = _roids;
         if(roids) creator_offy -= 4;
         
         _xdis = creator_offx;
         _ydis = creator_offy;
     }
-
+    
      // Effects:
-    if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", id), "roids", _roids)) <= 1){
+    if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", _creator), "roids", _roids)) <= 1){
         weapon_post(8, -10, 10);
-
+        
          // Ball Appear FX:
-        _ydis *= right;
+        _ydis *= variable_instance_get(_creator, "right", 1);
         with(instance_create(
             x + lengthdir_x(_xdis, gunangle) + lengthdir_x(_ydis, gunangle - 90),
-            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (_roids ? 4 : 0),
+            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (4 * _roids),
             LightningHit
         )){
             motion_add(other.gunangle, 0.5);
         }
-
+        
          // Upgrade Sounds:
         if(skill_get(mut_laser_brain)){
             sound_play_pitchvol(sndGuitarHit7,          2.4 + random(0.4),  0.6);
             sound_play_pitchvol(sndLaserUpg,            0.8 + random(0.2),  0.6);
             sound_play_pitchvol(sndDevastatorExplo,     1.4 + random(0.4),  0.6);
         }
-
+        
          // Default Sounds:
         else{
             sound_play_pitchvol(sndGuitarHit6,          1.6 + random(0.4),  0.4);
@@ -61,4 +65,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

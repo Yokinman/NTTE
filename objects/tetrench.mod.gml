@@ -1065,8 +1065,8 @@
 
          // Vars:
         mask_index = mskLaserCrystal;
-        maxhealth = 52 // (c == 3 ? 72 : 52);
-        raddrop = 16 // (c == 3 ? 38 : 16);
+        maxhealth = 52; // (c == 3 ? 72 : 52);
+        raddrop = 16; // (c == 3 ? 38 : 16);
         size = 2;
         walk = 0;
         walkspd = 1;
@@ -1221,8 +1221,8 @@
     }
 
 #define LightningDisc_step
-    rotation += rotspeed;
-
+    rotation += rotspeed * current_time_scale;
+    
      // Charge Up:
     if(image_xscale < charge){
     	var s = charge_spd;
@@ -1230,56 +1230,53 @@
     		s *= reloadspeed;
     		s *= 1 + ((1 - (my_health / maxhealth)) * skill_get(mut_stress));
     	}
-
+    	
         image_xscale += (charge / 20) * s * current_time_scale;
         image_yscale = image_xscale;
-
+        
         if(creator_follow){
             if(instance_exists(creator)){
                 x = creator.x;
-                y = creator.y;
-                if(roids) y -= 4;
-            }
-
-             // Lightning Disc Weaponry:
-            if(instance_is(creator, Player)){
-                direction = creator.gunangle;
-
-                var _big = (charge >= 2.5);
-                if(_big){
-                    x += hspeed;
-                    y += vspeed;
-                }
-
-                 // Attempt to Unstick from Wall:
-                if(place_meeting(x, y, Wall)){
-                    if(!_big){
-                        var w = instance_nearest(x, y, Wall),
-                            _dis = 2,
-                            _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
-
-                        while(place_meeting(x, y, w)){
-                            x += lengthdir_x(_dis, _dir);
-                            y += lengthdir_y(_dis, _dir);
-                        }
-                    }
-
-                     // Big boy:
-                    else with(Wall) if(place_meeting(x, y, other)){
-                        instance_create(x, y, FloorExplo);
-                        instance_destroy();
-                    }
-                }
-
-                if(!_big){
-                    move_contact_solid(direction, speed);
-                }
-
+                y = creator.y - (4 * roids);
+                
+	            if("gunangle" in creator){
+	            	direction = creator.gunangle;
+	            	
+	                var _big = (charge >= 2.5);
+	                if(_big){
+	                    x += hspeed;
+	                    y += vspeed;
+	                }
+                
+	                 // Attempt to Unstick from Wall:
+	                if(place_meeting(x, y, Wall)){
+	                    if(!_big){
+	                        var w = instance_nearest(x, y, Wall),
+	                            _dis = 2,
+	                            _dir = round(point_direction(w.x + 8, w.y + 8, x, y) / 90) * 90;
+	                            
+	                        while(place_meeting(x, y, w)){
+	                            x += lengthdir_x(_dis, _dir);
+	                            y += lengthdir_y(_dis, _dir);
+	                        }
+	                    }
+	                    
+	                     // Big boy:
+	                    else with(Wall) if(place_meeting(x, y, other)){
+	                        instance_create(x, y, FloorExplo);
+	                        instance_destroy();
+	                    }
+	                }
+	                
+	                if(!_big){
+	                    move_contact_solid(direction, speed);
+	                }
+	            }
+                
                  // Chargin'
-                with(creator){
-                	var k = 5 * (other.image_xscale / other.charge);
-                	if(other.roids) bwkick = k;
-                	else wkick = k;
+                var _kick = (roids ? "bwkick" : "wkick");
+                if(_kick in creator){
+                	variable_instance_set(creator, _kick, 5 * (image_xscale / charge));
                 }
             }
         }
@@ -1287,8 +1284,8 @@
          // Stay Still:
         xprevious = x;
         yprevious = y;
-        x -= hspeed * current_time_scale;
-        y -= vspeed * current_time_scale;
+        x -= hspeed_raw;
+        y -= vspeed_raw;
 
          // Effects:
         sound_play_pitch(sndLightningHit, (image_xscale / charge));
@@ -1835,6 +1832,7 @@
 							damage = 2;
 							bend_fric = 0.2;
 							scale_goal = 0.8;
+        					follow_creator = false;
 							image_xscale = scale_goal / 2;
 							image_yscale = scale_goal / 2;
 						}
@@ -2806,7 +2804,7 @@
         line_dir_turn = 0;
         line_dir_goal = null;
         blast_hit = true;
-        follow_player	= true;	// Follow Player
+        follow_creator	= true;	// Follow Creator
         offset_dis		= 0;	// Offset from Creator Towards image_angle
         bend_fric		= 0.3;	// Multiplicative Friction for Line Bending
         line_dir_fric	= 1/4;	// Multiplicative Friction for line_dir_turn
@@ -2830,16 +2828,16 @@
 
 #define QuasarBeam_quick_fix
 	on_end_step = [];
-
+	
 	var l = line_dis_max;
 	line_dis_max = 0;
 	QuasarBeam_step();
 	if(instance_exists(self)) line_dis_max = l;
-
+	
 #define QuasarBeam_step
 	wave += current_time_scale;
 	hit_time += current_time_scale;
-
+	
      // Shrink:
     if(shrink_delay <= 0){
 	    var f = shrink * current_time_scale;
@@ -2855,11 +2853,11 @@
 	    	f *= power(0.7, skill_get(mut_laser_brain));
 	    }*/
     	shrink_delay -= f;
-
-    	if(shrink_delay <= 0 || (follow_player && !instance_exists(creator))){
+    	
+    	if(shrink_delay <= 0 || (follow_creator && !instance_exists(creator))){
     		shrink_delay = -1;
     	}
-
+    	
 		 // Growin:
 		var _goal = scale_goal;
 		if(!instance_is(creator, enemy)){
@@ -2868,9 +2866,9 @@
 		if(abs(_goal - image_xscale) > 0.05 || abs(_goal - image_yscale) > 0.05){
 			image_xscale += (_goal - image_xscale) * 0.4;
 			image_yscale += (_goal - image_yscale) * 0.4;
-
+			
 			 // FX:
-			if(instance_is(creator, Player)){
+			if(follow_creator){
 				var p = (image_yscale * 0.5);
 				if(image_yscale < 1){
 					sound_play_pitchvol(sndLightningCrystalHit, p - random(0.1), 0.8);
@@ -2884,15 +2882,15 @@
 			image_yscale = _goal;
 		}
     }
-
+    
 	 // Player Stuff:
-	if(follow_player){
-		if(!ring && instance_is(creator, Player)){
-			with(creator){
-				 // Visually Force Player's Gunangle:
+	if(follow_creator){
+		with(creator){
+			 // Visually Force Player's Gunangle:
+			if(instance_is(self, Player)){
 				var _ang = 0,
 					w = (other.roids ? bwep : wep);
-
+					
 				if(string_pos("quasar", string(wep_get(w))) == 1){
 					_ang = angle_difference(other.image_angle, gunangle);
 					with(other){
@@ -2909,34 +2907,31 @@
 						}
 					}
 				}
-
-				 // Kickback:
-				if(other.shrink_delay > 0){
-					var k = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30));
-					if(other.roids) bwkick = max(bwkick, k);
-					else wkick = max(wkick, k);
-				}
-
-	        	 // Knockback:
-	        	motion_add(other.image_angle + 180, other.image_yscale / 2.5);
 			}
-
+			
+			 // Kickback:
+			if(other.shrink_delay > 0){
+				var k = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30));
+				if(other.roids){
+					if("bwkick" in self) bwkick = max(bwkick, k);
+				}
+				else{
+					if("wkick" in self) wkick = max(wkick, k);
+				}
+			}
+			
+        	 // Knockback:
+        	if(friction > 0){
+        		motion_add(other.image_angle + 180, other.image_yscale / 2.5);
+        	}
+        	
 		     // Follow Player:
-	    	var c = creator;
-	        line_dir_goal = c.gunangle;
-	        hold_x = c.x;
-	        hold_y = c.y;
-	        with(c){
-	        	if(!place_meeting(x + hspeed, y, Wall)) other.hold_x += hspeed;
-	        	if(!place_meeting(x, y + vspeed, Wall)) other.hold_y += vspeed;
-	        }
-	        if(roids){
-	        	hold_y -= 4;
-	        	//hold_x -= lengthdir_x(2 * c.right, c.gunangle - 90);
-	        	//hold_y -= lengthdir_y(2 * c.right, c.gunangle - 90);
-	        }
+	        other.hold_x = x;
+	        other.hold_y = y - (4 * other.roids);
+        	if(!place_meeting(x + hspeed_raw, y, Wall)) other.hold_x += hspeed_raw;
+        	if(!place_meeting(x, y + vspeed_raw, Wall)) other.hold_y += vspeed_raw;
+	        if("gunangle" in self) other.line_dir_goal = gunangle;
 		}
-		else follow_player = false;
     }
 
 	 // Stay:
@@ -3231,7 +3226,7 @@
         creator = other.creator;
 
         spr_strt = -1;
-        follow_player = false;
+        follow_creator = false;
         line_dir_goal = image_angle + random(orandom(180));
         shrink_delay = min(other.shrink_delay, random_range(10, 120));
         scale_goal = other.scale_goal - random(0.6);
@@ -3363,6 +3358,7 @@
 
 		 // Vars:
 		mask_index = mskExploder;
+        follow_creator = false;
         shrink_delay = 120;
 		ring = true;
 		force = 1;

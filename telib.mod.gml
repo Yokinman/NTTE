@@ -1566,15 +1566,24 @@
 	}
 	return noone;
 
+#define wep_creator()
+	var _creator = self;
+    if(variable_instance_get(self, "object_index") == FireCont){
+        instance_change(Bullet1, false);
+        _creator = creator;
+        instance_change(FireCont, false);
+    }
+    return _creator;
+
 #define wepammo_fire(_wep)
      // Infinite Ammo:
     if(infammo != 0) return true;
     
-     // Subtract Cost:
+     // Ammo Cost:
 	var _cost = lq_defget(_wep, "cost", 1);
     with(_wep) if(ammo >= _cost){
         ammo -= _cost;
-
+        
          // Can Fire:
         return true;
     }
@@ -1594,7 +1603,8 @@
             }
         }
     }
-    return false;
+    
+	return false;
 
 #define wepammo_draw(_wep)
     if(instance_is(self, Player) && (instance_is(other, TopCont) || instance_is(other, UberCont)) && is_object(_wep)){
@@ -2297,8 +2307,8 @@
         _oy		= lengthdir_y(_disAdd, _dir),
         _obj	= (_enemy ? EnemyLightning : Lightning),
 		_inst	= [],
-		_team	= team,
-		_hitid	= (("hitid" in self) ? hitid : -1),
+		_team	= variable_instance_get(self, "team", -1),
+		_hitid	= variable_instance_get(self, "hitid", -1),
 		_imgInd	= -1,
 		_imgSpd	= 0.4,
 		a, _off, _wx, _wy;

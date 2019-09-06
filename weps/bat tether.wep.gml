@@ -28,17 +28,23 @@
     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(w)
+    var _creator = wep_creator(),
+        _roids = (instance_is(self, Player) && specfiring && (race == "steroids")),
+        _wepHeld = (variable_instance_get(_creator, "wep") == w);
+        
+     // LWO Setup:
     if(!is_object(w)){
-        step(true);
-        w = wep;
+        w = wepLWO;
+        if(_wepHeld) _creator.wep = w;
     }
 
      // Fire:
     if(wepammo_fire(w)){
-        var _roids = (specfiring && (race == "steroids"));
-    
+         // Projectile:
         with(obj_create(x, y, "TeslaCoil")){
-            creator = other;
+            direction = other.gunangle;
+            creator = _creator;
+            team = other.team;
             roids = _roids;
             dist_max = 64;
             bat = true;
@@ -47,13 +53,14 @@
         }
         
          // Refill:
-        if(wep.ammo <= 0){
-            wep.ammo = wep.amax * (1 + skill_get(mut_back_muscle));
-            
-            projectile_hit_raw(id, 1, false);
-            lasthit = [global.sprWep, "PLAYING GOD"];
+        if(w.ammo <= 0 && instance_is(self, Player)){
+            w.ammo = w.amax * (1 + skill_get(mut_back_muscle));
             
              // Hurt:
+            projectile_hit_raw(_creator, 1, false);
+            lasthit = [global.sprWep, "PLAYING GOD"];
+            
+             // Hurt FX:
             if(my_health > 0){
                 var _addVol = (my_health <= maxhealth / 2) * 0.3
                 
@@ -78,7 +85,7 @@
         }
         
          // Effects:
-        if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", id), "roids", _roids)) <= 1){
+        if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", _creator), "roids", _roids)) <= 1){
             weapon_post(8, -10, 10);
     
              // Upgrade Sounds:
@@ -94,7 +101,7 @@
             }
         }
         if(skill_get(mut_laser_brain)){
-            instance_create(x, y, LaserBrain).creator = id; // Upgrade FX
+            instance_create(x, y, LaserBrain).creator = _creator; // Upgrade FX
         }
     }
 
@@ -123,7 +130,8 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
-#define wepammo_draw(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_draw", _wep);
-#define wepammo_fire(_wep)                                                              return  mod_script_call("mod", "telib", "wepammo_fire", _wep);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call("mod", "telib", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
+#define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
+#define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   "mod", "telib", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);

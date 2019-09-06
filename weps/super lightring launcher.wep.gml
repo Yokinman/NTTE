@@ -17,8 +17,10 @@
     sound_play(sndLightningReload);
 
 #define weapon_fire
-    var _roids = (specfiring && (race == "steroids"));
-
+    var _creator = wep_creator(),
+        _roids = (race == "steroids" && variable_instance_get(self, "specfiring", false));
+        
+     // Projectile:
     with(obj_create(x, y, "LightningDisc")){
         motion_add(other.gunangle, 14);
         maxspeed = 2.5;
@@ -31,12 +33,12 @@
             stretch *= 1.2;
             image_speed *= 0.75;
         }
+        creator = _creator;
         team = other.team;
-        creator = other;
         roids = _roids;
         super = 1.2;
     }
-
+    
      // Effects:
     sound_play_pitchvol(sndLightningCannon, 1.5, 0.6)
     sound_play_pitchvol(sndLightningCannonUpg, 0.5, 0.4);
@@ -45,4 +47,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call("mod", "telib", "unlock_get", _unlock);
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

@@ -38,9 +38,13 @@
     return global.sprWep;
 
 #define weapon_fire(w)
+    var _creator = wep_creator(),
+    	_wepHeld = (variable_instance_get(_creator, "wep") == w);
+    
+     // LWO Setup:
     if(!is_object(w)){
-        step(true);
-        w = wep;
+        w = wepLWO;
+        if(_wepHeld) _creator.wep = w;
     }
 
      // Fire:
@@ -49,9 +53,13 @@
         with(obj_create(x, y, "Bone")){
             motion_add(other.gunangle, 16);
             rotation = direction;
+            creator = _creator;
             team = other.team;
-            creator = other;
-            broken = (other.infammo != 0);
+            
+             // Death to Free Bones:
+            if(!_wepHeld || other.infammo != 0){
+            	broken = true;
+            }
         }
 
          // Effects:
@@ -95,9 +103,9 @@
                          // Effects:
                         with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
                         with(other){
-                            sound_play_hit_ext(sndHPPickup, 4, 1);
-                            sound_play_hit_ext(sndPickupDisappear, 1.2, 1);
-                            sound_play_hit_ext(sndBloodGamble, 0.4 + random(0.2), 0.9);
+                            sound_play_pitch(sndHPPickup, 4);
+                            sound_play_pitch(sndPickupDisappear, 1.2);
+                            sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
                         }
 
                         instance_destroy();
@@ -141,9 +149,9 @@
                 }
                 
                  // Sounds:
-                sound_play_hit_ext(weapon_get_swap(wep), 0.5, 1);
-                sound_play_hit_ext(sndCursedChest, 0.9, 2);
-			    sound_play_hit_ext(sndFishWarrantEnd, 1.2, 2);
+                sound_play_pitch(weapon_get_swap(wep), 0.5);
+                sound_play_pitchvol(sndCursedChest, 0.9, 2);
+			    sound_play_pitchvol(sndFishWarrantEnd, 1.2, 2);
                 
 				wkick = -3;
 				gunshine = 1;
@@ -211,6 +219,7 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
+#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
 #define unlock_get(_name)                                                               return  mod_script_call(   "mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call(   "mod", "telib", "stat_get", _name);
@@ -222,4 +231,3 @@
 #define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
-#define sound_play_hit_ext(_snd, _pit, _vol)											return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
