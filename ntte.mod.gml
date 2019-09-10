@@ -127,7 +127,7 @@
 							"x" : 56,
 							"y" : -16,
 							"slct" : array_create(maxp, ""),
-							"list" : [
+							"list" : [ // Pets that show up by default
 								"Scorpion"	+ ".petlib.mod",
 								"Parrot"	+ ".petlib.mod",
 								"CoolGuy"	+ ".petlib.mod",
@@ -136,10 +136,29 @@
 								"Octo"		+ ".petlib.mod",
 								"Spider"	+ ".petlib.mod",
 								"Prism"		+ ".petlib.mod"
-								]
+							]
 						},
 						
-						"other" : {}
+						"other" : {
+							"slct" : array_create(maxp, 0),
+							"list" : [
+								{	name : "AREA UNLOCKS",
+									list : [
+										["BEACH GUNS",		"coastWep",		["harpoon launcher.wep", "net launcher.wep", "trident.wep"]],
+										["BUBBLE GUNS",		"oasisWep",		["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
+										["TECH GUNS",		"trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
+										["SAWBLADE GUNS",	"lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
+										["CROWN OF CRIME",	"lairCrown",	["crime.crown"]]
+										]
+									},
+								{	name : "MISC",
+									list : [
+										["Time",  "time", stat_time],
+										["Bones", "bone", stat_base]
+										]
+									}
+							]
+						}
 					}
 				},
 				
@@ -1517,27 +1536,42 @@
 	    	with(_pop) mergewep_indicator = true;
 	    }
 	
-	     // No Cheaters (bro just play the mod):
+	     // Weapon Unlock Stuff:
 		with(Player){
 			var w = 0;
 			with([wep_get(wep), wep_get(bwep)]){
 				var _wep = self;
 				with(other){
-					if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && !mod_script_call("weapon", _wep, "weapon_avail")){
-						variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
-						var a = choose(-120, 120);
-						variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
+					if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && array_exists(wepsList, _wep)){
+						 // No Cheaters (bro just play the mod):
+						if(!mod_script_call("weapon", _wep, "weapon_avail")){
+							variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
+							var a = choose(-120, 120);
+							variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
+							
+							 // Effects:
+							sound_play(sndCrownRandom);
+							view_shake_at(x, y, 20);
+							instance_create(x, y, GunWarrantEmpty);
+							repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
+								depth = other.depth - 1;
+							}
+						}
 						
-						 // Effects:
-						sound_play(sndCrownRandom);
-						view_shake_at(x, y, 20);
-						instance_create(x, y, GunWarrantEmpty);
-						repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
-							depth = other.depth - 1;
+						 // Weapon Found:
+						else if(!unlock_get("found(" + _wep + ".wep)")){
+							unlock_set("found(" + _wep + ".wep)", true);
 						}
 					}
 				}
 				w++;
+			}
+		}
+		
+		 // Crown Found:
+		if(is_string(crown_current) && array_exists(crwnList, crown_current)){
+			if(!unlock_get("found(" + crown_current + ".crown_current)")){
+				unlock_set("found(" + crown_current + ".crown)", true);
 			}
 		}
 
@@ -1583,9 +1617,6 @@
 			}
 		}
 		global.killsLast = GameCont.kills;
-
-		 // NTTE Time Stat:
-		stat_set("time", stat_get("time") + (current_time_scale / 30));
 		
 		 // Scythe Prompts:
 		with(instances_matching(GenCont, "tip_scythe", null)){
@@ -1843,6 +1874,9 @@
 			persistent = true;
 		}
 	}
+	
+	 // NTTE Time Stat:
+	stat_set("time", stat_get("time") + (current_time_scale / 30));
 
 
 #define sound_play_ntte /// sound_play_ntte(_type, _snd, ?_vol = undefined, ?_pos = undefined)
@@ -2951,16 +2985,21 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 									
 									 // Temporary:
 									if(unlock_get("parrot")){
-										_x += 10;
+										_x += 12;
+										
 										var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 24, _y - 8, _x + 24, _y + 8);
+										
+										draw_set_flat(make_color_hsv(0, 0, (_hover ? 50 : 30)));
+										draw_sprite(sprMapIcon, 0, _x, _y)
+										draw_set_flat(-1);
+										
 										if(_hover && button_pressed(_index, "fire")){
 											sound_play(sndNoSelect);
-											_x += cos(current_frame);
-											_y += sin(current_frame);
+											_x += choose(-1, 1);
 										}
 										draw_set_halign(fa_center);
 										draw_set_valign(fa_middle);
-										draw_text_nt(_x, _y - _hover, (_hover ? "@s" : "@d") + "COMING#SOON")
+										draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
 									}
 								}
 								
@@ -3055,17 +3094,54 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 								_y = game_height - 36,
 								_spr = sprLoadoutOpen;
 								
-							draw_sprite_ext(_spr, clamp(_pop - 1, 0, (instance_exists(BackMainMenu) ? 1 : sprite_get_number(_spr) - 1)), _x, _y, -1, (game_height / 240), 0, c_white, 1);
+							draw_sprite_ext(_spr, clamp(_pop - 1, 0, (instance_exists(BackMainMenu) ? 1 : sprite_get_number(_spr) - 1)), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
 							
 							 // Icons:
 							if(_pop >= 3){
-								var	_col = min(4, floor(sqrt(array_length(_petList)))),
+								var	_col = min(4, floor(sqrt(lq_size(_petList)))),
 									_w = 13,
 									_h = 13,
 									_x = 40 - round(_w * ((_col - 1) / 2)) - (2 * (_pop <= 3)) + (_pop == 4),
 									_y = 96;
 									
-								for(var i = 0; i < array_length(_petList); i++){
+								 // Arrow Key Selection:
+								var _swaph = (button_pressed(_index, "east") - button_pressed(_index, "west")),
+									_swapv = (button_pressed(_index, "sout") - button_pressed(_index, "nort")) * _col;
+									
+								if(_swaph != 0 || _swapv != 0){
+									 // Get Current Pet Index:
+									var _slct = -1;
+									for(var i = 0; i < lq_size(_petList); i++){
+										if(lq_get_key(_petList, i) == _petSlct[_index]){
+											_slct = i;
+											break;
+										}
+									}
+									
+									 // Swap:
+									if(_slct >= 0) while(true){
+										var _max = ceil(lq_size(_petList) / _col) * _col;
+										_slct = (_slct + _swaph + _swapv + _max) % _max;
+										
+										 // Back at Start:
+										if(lq_get_key(_petList, _slct) == _petSlct[_index]){
+											break;
+										}
+										
+										 // New Selection:
+										if(lq_defget(lq_get_value(_petList, _slct), "avail", false)){
+											_petSlct[_index] = lq_get_key(_petList, _slct);
+											
+											_pop = 4;
+											MenuPop[_index] = _pop;
+											sound_play((_slct & 1) ? sndMenuBSkin : sndMenuASkin);
+											
+											break;
+										}
+									}
+								}
+								
+								for(var i = 0; i < lq_size(_petList); i++){
 									var _pet = lq_get_key(_petList, i),
 										_info = lq_get_value(_petList, i),
 										_icon = pet_get_mapicon(_info.mod_type, _info.mod_name, _info.name),
@@ -3089,6 +3165,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 										if(button_pressed(_index, "fire")){
 											if(_avail){
 												_petSlct[_index] = _pet;
+												
 												_pop = 4;
 												MenuPop[_index] = _pop;
 												sound_play((i & 1) ? sndMenuBSkin : sndMenuASkin);
@@ -3119,12 +3196,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 							var	_pet = lq_get(_petList, _petSlct[_index]);
 							
 							 // Name:
-							if(_pop >= 5){
+							var _appear = 5;
+							if(_pop >= _appear){
 								draw_set_color(c_white);
 								draw_set_font(fntBigName);
 								draw_set_halign(fa_left);
 								draw_set_valign(fa_top);
-								draw_text_bn(28 + (2 * max(0, 6 - _pop)), 46, (_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"), 1.5);
+								draw_text_bn(28 + (2 * max(0, (_appear + 1) - _pop)), 46, (_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"), 1.5);
 							}
 							
 							 // Get Stats to Display:
@@ -3174,6 +3252,214 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 								array_push(_statDraw, _stat);
 							}
 								
+							break;
+							
+						case "other":
+						
+							var _otherList = _statMenu.list;
+							
+							 // Splat:
+							var _x = -64,
+								_y = game_height - 36,
+								_spr = sprLoadoutOpen;
+								
+							draw_sprite_ext(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
+							
+							 // Draw Categories:
+							var	_appear = 5,
+								_sx = 6 + (2 * max(0, (_appear + 1) - _pop)),
+								_sy = 44;
+								
+							draw_set_halign(fa_left);
+							draw_set_valign(fa_top);
+							
+							with(_otherList){
+								 // Name:
+								draw_set_font(fntBigName);
+								if(_pop >= _appear){
+									var _scale = 0.95;
+									draw_set_color(c_black);
+									draw_text_transformed(_sx + 1, _sy,     name, _scale, _scale, 0);
+									draw_text_transformed(_sx,     _sy + 2, name, _scale, _scale, 0);
+									draw_text_transformed(_sx + 1, _sy + 2, name, _scale, _scale, 0);
+									draw_set_color(c_white);
+									draw_text_transformed(_sx,     _sy,     name, _scale, _scale, 0);
+								}
+								_sy += string_height(name) + 4;
+								
+								 // Main Drawing:
+								switch(name){
+									case "AREA UNLOCKS":
+										
+										if(_pop >= _appear){
+											draw_set_font(fntM);
+											
+											var _slct = _statMenu.slct
+											
+											 // Auto Select First Unlocked:
+											if(!unlock_get(list[_slct[_index], 1])){
+												for(var i = 0; i < array_length(list); i++){
+													if(unlock_get(list[i, 1])){
+														_slct[_index] = i;
+														break;
+													}
+												}
+											}
+											
+											 // Up/Down Select:
+											var	_slctSwap = _slct[_index],
+												s = ((button_pressed(_index, "sout") || button_pressed(_index, "east")) - (button_pressed(_index, "nort") || button_pressed(_index, "west")));
+												
+											while(s != 0){
+												_slctSwap = (_slctSwap + s + array_length(list)) % array_length(list);
+												if(unlock_get(list[_slctSwap, 1]) || _slctSwap == _slct[_index]){
+													break;
+												}
+											}
+											
+											with(list){
+												var	_unlock = unlock_get(self[1]),
+													_unlockList = self[2],
+													_name = (_unlock ? self[0] : "LOCKED"),
+													_selected = (_unlock && _slct[_index] == array_find_index(other.list, self)),
+													_hover = false;
+													
+												if(_selected){
+													with(UberCont){
+														var _dx = _sx + 116,
+															_dy = _sy;
+															
+														 // Splat:
+														var	_spr = sprKilledBySplat,
+															_img = min(_pop - (_appear + 1), sprite_get_number(_spr) - 1);
+															
+														if(_img >= 0){
+															draw_sprite(_spr, _img, _dx + 32, _dy - (string_height(_name) / 2));
+														}
+														
+														 // Unlocks:
+														_dy += 2;
+														for(var i = 0; i < array_length(_unlockList); i++){
+															var _unlockAppear = _appear + 2 + i;
+															if(_pop >= _unlockAppear){
+																var	_split = string_split(_unlockList[i], "."),
+																	_modType = _split[array_length(_split) - 1],
+																	_modName = array_join(array_slice(_split, 0, array_length(_split) - 1), "."),
+																	_found = unlock_get("found(" + _unlockList[i] + ")");
+																	
+																if(_modType == "wep") _modType = "weapon";
+																
+																 // Get Sprite:
+																var	_spr = -1,
+																	_img = (_found ? ((_pop * 0.4) - (3 * i)) : 0);
+																	
+																if(mod_exists(_modType, _modName)){
+																	switch(_modType){
+																		case "weapon":
+																			_spr = mod_variable_get(_modType, _modName, "sprWep");
+																			if((_img % sprite_get_number(_spr)) < 2) _img = 0;
+																			break;
+																			
+																		case "crown":
+																			_spr = mod_variable_get(_modType, _modName, "sprCrownIdle");
+																			break;
+																	}
+																}
+																if((_img + sprite_get_number(_spr)) % ((1 + array_length(_unlockList)) * sprite_get_number(_spr)) >= sprite_get_number(_spr)){
+																	_img = 0;
+																}
+																
+																 // Loop Over:
+																if(_dx + sprite_get_width(_spr) > game_width){
+																	_dx = _sx + 124;
+																	_dy += 16;
+																}
+																
+																if(is_real(_spr) && sprite_exists(_spr)){
+																	if(!_found){
+																		 // Shadow:
+																		draw_set_fog(true, c_black, 0, 0);
+																		draw_sprite(
+																			_spr,
+																			_img,
+																			_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
+																			_dy + 1
+																		);
+																		
+																		 // Draw in Flat Gray:
+																		draw_set_fog(true, make_color_hsv(0, 0, 28 + (10 * instance_exists(BackMainMenu))), 0, 0);
+																	}
+																	
+																	draw_sprite(
+																		_spr,
+																		_img,
+																		_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
+																		_dy
+																	);
+																	
+																	_dx += 1 + sprite_get_width(_spr);
+																	
+																	if(!_found) draw_set_fog(false, 0, 0, 0);
+																}
+																
+																 // Sound:
+																if(_pop == _unlockAppear){
+																	sound_play_pitch(sndAppear, 1 + (i * 0.05));
+																}
+															}
+														}
+													}
+												}
+												
+												 // Selection:
+												if(point_in_rectangle(_mx - _vx, _my - _vy, _sx, _sy, _sx + 120, _sy + string_height(_name))){
+													_hover = true;
+													if(button_pressed(_index, "fire")){
+														_selected = true;
+														
+														if(_unlock){
+															_slctSwap = array_find_index(other.list, self);
+														}
+														
+														 // No:
+														else sound_play(sndNoSelect);
+													}
+												}
+												
+												 // Name:
+												draw_text_nt(
+													_sx + (2 * _selected) - !_unlock,
+													_sy,
+													(_unlock ? (_selected ? "" : (_hover ? "@s" : "@d")) : `@(color:${make_color_hsv(0, 0, 25 + (15 * (_hover && !_selected)))})`) + _name
+												);
+												
+												_sy += 1 + string_height(_name);
+											}
+											
+											 // Selection Swapped:
+											if(_slctSwap != _slct[_index]){
+												_slct[_index] = _slctSwap;
+												
+												_pop = _appear + 1;
+												MenuPop[_index] = _pop;
+												sound_play_pitchvol(sndClick, 1 + (0.2 * _slct[_index]), 2/3);
+											}
+										}
+										
+										break;
+										
+									case "MISC":
+									
+										_statX = _sx + 44;
+										_statY = _sy;
+										_statDraw = { name : "", list : ((_pop >= _appear) ? list : []) };
+										
+										break;
+								}
+								
+								_sy += 16;
+							}
+							
 							break;
 					}
 					

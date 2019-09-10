@@ -13,14 +13,15 @@
 #define weapon_avail	return unlock_get("trenchWep");
 
 #define weapon_fire(w)
-    var _creator = wep_creator();
+    var f = wepfire_init(w);
+    w = f.wep;
     
      // Projectile:
     with(obj_create(x, y, "QuasarRing")){
         motion_add(other.gunangle + orandom(8 * other.accuracy), 4);
         image_angle = direction;
         image_yscale = 0;
-        creator = _creator;
+        creator = f.creator;
         team = other.team;
         ring_size = 0.6;
     }
@@ -37,5 +38,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

@@ -559,14 +559,14 @@
     if(DebugLag) trace_time();
     
      // Scramble Cursed Caves Weapons:
-    if(GameCont.area == 104){
-    	with(instances_matching(WepPickup, "scrambled", null)){
-	    	scrambled = false;
+	with(instances_matching(WepPickup, "cursedcavescramble_check", null)){
+    	cursedcavescramble_check = false;
+    	if(GameCont.area == 104){
 			if(roll && wep_get(wep) != "merge"){
 				//if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
-					scrambled = true;
+					cursedcavescramble_check = true;
 					curse = max(1, curse);
-
+	
 					var _part = wep_merge_decide(0, GameCont.hard + 2);
 					if(array_length(_part) >= 2){
 						wep = wep_merge(_part[0], _part[1]);
@@ -574,7 +574,7 @@
 				//}
 			}
     	}
-    }
+	}
     
     if(DebugLag) trace_time("tecaves_end_step");
     

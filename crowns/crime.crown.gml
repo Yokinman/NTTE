@@ -1,8 +1,8 @@
 #define init
-	global.sprCrownCrimeIcon	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",		1, 12, 16);
-	global.sprCrownCrimeIdle	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
-	global.sprCrownCrimeWalk	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
-	global.sprCrownCrimeLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
+	global.sprCrownIcon	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",		1, 12, 16);
+	global.sprCrownIdle	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
+	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
+	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
 
 #define crown_name			return "CROWN OF CRIME";
 #define crown_text			return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
@@ -11,18 +11,18 @@
 #define crown_menu_avail	return unlock_get("crownCrime");
 
 #define crown_menu_button
-    sprite_index = global.sprCrownCrimeLoadout;
+    sprite_index = global.sprCrownLoadout;
     image_index = !crown_menu_avail();
     dix = 0;
     diy = -1;
 
 #define crown_button
-	sprite_index = global.sprCrownCrimeIcon;
+	sprite_index = global.sprCrownIcon;
 
 #define crown_object
 	 // Visual:
-	spr_idle = global.sprCrownCrimeIdle;
-	spr_walk = global.sprCrownCrimeWalk;
+	spr_idle = global.sprCrownIdle;
+	spr_walk = global.sprCrownWalk;
 	sprite_index = spr_idle;
 
 	 // Vars:

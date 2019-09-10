@@ -119,12 +119,12 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlakBall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlakBall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "Trident", "VenomPellet"],
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
 		"teoasis"	  : ["ClamChest", "Crack", "Hammerhead", "OasisPetBecome", "Puffer"],
-		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "QuasarBeam", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
+		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "SquidArm", "SquidBomb", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
@@ -1565,15 +1565,46 @@
 		}
 	}
 	return noone;
-
-#define wep_creator()
-	var _creator = self;
+   
+#define wepfire_init(_wep)
+	var _fire = {
+		wep     : _wep,
+		creator : noone,
+		wepheld : false,
+		roids   : false,
+		spec    : false
+	};
+	
+	 // Creator:
+	_fire.creator = self;
     if(variable_instance_get(self, "object_index") == FireCont){
         instance_change(Bullet1, false);
-        _creator = creator;
+        _fire.creator = creator;
         instance_change(FireCont, false);
     }
-    return _creator;
+    
+     // Weapon Held by Creator:
+	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
+    
+	 // Secondary Firing:
+	if(variable_instance_get(_fire.creator, "specfiring", false)){
+		_fire.spec = true;
+		if(race == "steroids") _fire.roids = true;
+	}
+	
+	 // LWO Setup:
+	if(is_string(_fire.wep)){
+		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
+		if(is_object(_lwo)){
+			_fire.wep = lq_clone(_lwo);
+			
+			if(_fire.wepheld){
+				_fire.creator.wep = _fire.wep;
+			}
+		}
+	}
+	
+	return _fire;
 
 #define wepammo_fire(_wep)
      // Infinite Ammo:

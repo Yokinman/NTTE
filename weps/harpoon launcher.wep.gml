@@ -1,11 +1,13 @@
 #define init
     global.sprWep = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 3, 4);
     global.sprWepLocked = mskNone;
-
-#macro wepLWO {
+    
+    global.lwoWep = {
         wep  : mod_current,
         rope : noone
-    }
+    };
+    
+#macro lwoWep global.lwoWep
     
 #define weapon_name     return (weapon_avail() ? "HARPOON LAUNCHER" : "LOCKED");
 #define weapon_text     return "REEL IT IN";
@@ -18,14 +20,8 @@
 #define weapon_avail    return unlock_get("coastWep");
 
 #define weapon_fire(w)
-    var _creator = wep_creator(),
-        _wepHeld = (variable_instance_get(_creator, "wep") == w);
-    
-     // LWO Setup:
-    if(!is_object(w)){
-        w = wepLWO;
-        if(_wepHeld) _creator.wep = w;
-    }
+    var f = wepfire_init(w);
+    w = f.wep;
     
      // Effects:
     weapon_post(6, 8, -20);
@@ -36,13 +32,13 @@
     with(obj_create(x, y, "Harpoon")){
         motion_add(other.gunangle + orandom(3 * other.accuracy), 22);
         image_angle = direction;
-        creator = _creator;
+        creator = f.creator;
         team = other.team;
         
          // Link Harpoon:
-        if(_wepHeld){
+        if(f.wepheld){
             if(!instance_exists(lq_defget(w.rope, "link1", noone)) || lq_defget(w.rope, "broken", true)){
-                w.rope = scrHarpoonRope(id, _creator);
+                w.rope = scrHarpoonRope(id, f.creator);
             }
             else{
                 array_push(rope, w.rope);
@@ -57,6 +53,6 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
 #define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call("mod", "tegeneral", "scrHarpoonRope", _link1, _link2);

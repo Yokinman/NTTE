@@ -551,6 +551,14 @@
 	            PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
 	            msk.PizzaDrain = sprite(p + "mskPizzaDrain",     1, 32, 38);
 	            
+	             // Manhole:
+	            PizzaManhole = [
+					sprPizzaEntrance,
+					sprite(p + "sprPizzaManholeA", 2, 0, 0),
+					sprite(p + "sprPizzaManholeB", 2, 0, 0),
+					sprite(p + "sprPizzaManholeC", 2, 0, 0)
+				];
+	            
 	             // Rubble:
 	            PizzaRubbleIdle = sprite(p + "sprPizzaRubble",     1, 16, 0);
 	            PizzaRubbleHurt = sprite(p + "sprPizzaRubbleHurt", 3, 16, 0);
@@ -861,8 +869,10 @@
 
         //#region PETS
         m = "pets/";
-
-			PetArrow = sprite(m + "sprPetArrow", 1, 3, 0);
+        
+        	 // General:
+			PetArrow = sprite(m + "sprPetArrow", 1, 3,  0);
+			PetLost  = sprite(m + "sprPetLost",  7, 8, 16);
 
              // Scorpion:
             p = m + "Desert/";

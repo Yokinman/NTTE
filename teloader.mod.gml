@@ -59,13 +59,16 @@
     ];
     global.load_max += array_length(global.list);
 
-     // Wait for /allowmod:
-    while(!mod_sideload()) wait 0;
-
-     // Loading Bar Appear:
-    sound_play_pitchvol(sndMeleeFlip, 1.4 + random(0.1), 0.25);
-    sound_play_pitchvol(sndHitMetal,  1.4 + random(0.1), 0.25);
-    while(global.load_hudy < 0.99) wait 0;
+     // Waiting for...
+    while(
+        !mod_sideload() // Mod loading permissions
+        ||
+        (!instance_exists(Menu) || Menu.mode == 0) // Menu to exist
+        ||
+        global.load_hudy < 0.99 // Loading bar to appear
+    ){
+        wait 0;
+    }
 
      // Load Mods:
     with(global.list){
@@ -109,9 +112,19 @@
     while(global.load_hudy > 0) wait 0;
     mod_loadtext("main3.txt");
 
+#define step
+    with(instances_matching(Menu, "teloaderbar_reset", null)){
+        teloaderbar_reset = true;
+        global.load_hudy = 0;
+    }
+
 #define draw_gui
      // Hiding/Showing Loading Bar:
     if(global.load < global.load_max){
+        if(global.load_hudy <= 0){
+            sound_play_pitchvol(sndMeleeFlip, 1.4 + random(0.1), 0.25);
+            sound_play_pitchvol(sndHitMetal,  1.4 + random(0.1), 0.25);
+        }
         global.load_hudy += (1 - global.load_hudy) * 0.3;
     }
     else{
@@ -169,13 +182,31 @@
     draw_text_nt(_x + (string_width("%") / 4), _y, `${round(_load * 100)}%`);
 
      // Loading Text:
-    draw_set_halign(fa_left);
-    draw_set_valign(fa_top);
-    draw_text_nt(_x + 33, _y - 7, "Loading");
-    draw_set_font(fntSmall);
-    var t = global.load_text;
-    if(global.load < global.load_max){
-        t += string_repeat(".", round(1.5 + (1.5 * sin(global.load))))
+    if(global.load_text != ""){
+        draw_set_halign(fa_left);
+        draw_set_valign(fa_top);
+        draw_text_nt(_x + 33, _y - 7, "Loading");
+        draw_set_font(fntSmall);
+        var t = global.load_text;
+        if(global.load < global.load_max){
+            t += string_repeat(".", round(1.5 + (1.5 * sin(global.load))))
+        }
+        draw_text_nt(_x + 34, _y + 2, t);
     }
-    draw_text_nt(_x + 34, _y + 2, t);
+    else{
+        var _text = "";
+        if(!instance_exists(Menu)){
+            _text = "RETURN TO THE @yCAMPFIRE";
+        }
+        else if(!mod_sideload()){
+            _text = `/@yallowmod @w${mod_current}.mod`;
+        }
+        
+        if(_text != ""){
+            draw_set_font(fntSmall);
+            draw_set_halign(fa_center);
+            draw_set_valign(fa_top);
+            draw_text_nt(_x, _y + 12, _text);
+        }
+    }
     

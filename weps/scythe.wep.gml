@@ -15,7 +15,19 @@
 	global.sprSlugboltHUD	= sprite_add_weapon_base64(b[3], 11, 5);
 	
     global.sprWepLocked	= mskNone;
-
+    
+     // LWO:
+	global.lwoWep = {
+        wep   : mod_current,
+        ammo  : 0,
+        amax  : 55,
+        anam  : "BONES",
+        cost  : 0,
+        buff  : false,
+        mode  : 0,
+        combo : 0
+    };
+    
 	 // Mode Info:
 	global.wepModes = [
 		{
@@ -60,16 +72,7 @@
 #macro wepModes global.wepModes
 #macro numModes array_length(wepModes)
 
-#macro wepLWO {
-        wep  : mod_current,
-        ammo : 0,
-        amax : 55,
-        anam : "BONES",
-        cost : 0,
-        buff : false,
-        mode : 0,
-        combo : 0
-    }
+#macro lwoWep global.lwoWep
     
 #define scrWepModeInfo(_wep, _name)
 	var _index = lq_defget(_wep, "mode", 0);
@@ -129,14 +132,8 @@
 	return scrWepModeInfo(w, "sprt");
 
 #define weapon_fire(w)
-	var _creator = wep_creator(),
-		_wepHeld = (variable_instance_get(_creator, "wep") == w);
-	
-	 // LWO Setup:
-	if(!is_object(w)){
-		w = wepLWO;
-        if(_wepHeld) _creator.wep = w;
-	}
+	var f = wepfire_init(w);
+	w = f.wep;
 	
 	 // Mode Specific:
 	switch(w.mode){
@@ -151,7 +148,7 @@
 			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
 				image_yscale = _flip;
 				
-				creator = _creator;
+				creator = f.creator;
 				team	= other.team;
 				heavy	= _heavy;
 				rotspd	= (-3 * _flip);
@@ -186,7 +183,7 @@
 
 				for(var i = -1; i <= 1; i++){
 					with(obj_create(x, y, "BoneArrow")){
-						creator = _creator;
+						creator = f.creator;
 						team	= other.team;
 						
 						direction	= d + (i * o);
@@ -213,7 +210,7 @@
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(4));
 				with(obj_create(x, y, "BoneArrow")){
-					creator = _creator;
+					creator = f.creator;
 					team	= other.team;
 					big		= true;
 					
@@ -242,7 +239,7 @@
 
      // LWO Setup:
     if(!is_object(w)){
-        w = wepLWO;
+        w = lq_clone(lwoWep);
         variable_instance_set(self, b + "wep", w);
     }
 
@@ -333,7 +330,7 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

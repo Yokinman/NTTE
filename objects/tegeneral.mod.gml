@@ -246,12 +246,14 @@
 					
 				with(instance_exists(return_to) ? return_to : self){
 					 // Epic:
-					var _kick = 6 * sign(angle_difference(_dir, gunangle + 90));
-					if("wkick" in self && variable_instance_get(self, "wep") == _wep){
-						wkick  = _kick;
-					}
-					if("bwkick" in self && variable_instance_get(self, "bwep") == _wep){
-						bwkick  = _kick;
+					if("gunangle" in self){
+						var _kick = 6 * sign(angle_difference(_dir, gunangle + 90));
+						if("wkick" in self && variable_instance_get(self, "wep") == _wep){
+							wkick  = _kick;
+						}
+						if("bwkick" in self && variable_instance_get(self, "bwep") == _wep){
+							bwkick  = _kick;
+						}
 					}
 					
 					 // Effects:
@@ -2613,9 +2615,10 @@
         light_radius = [32, 96]; // [Inner, Outer]
         mask_store = null;
         portal_angle = 0;
-        pickup_indicator = scrPickupIndicator("");
         my_portalguy = noone;
     	my_corpse = noone;
+        pickup_indicator = scrPickupIndicator("");
+        with(pickup_indicator) mask_index = mskShield;
 
          // Scripts:
         pet = "";
@@ -2886,6 +2889,15 @@
                     with(ntte_pet[0]){
                         leader = noone;
                         can_take = true;
+                        
+                         // Effects:
+                        with(instance_create(x + hspeed, y + vspeed, HealFX)){
+                        	sprite_index = spr.PetLost;
+                        	image_xscale = choose(-1, 1);
+                        	image_speed = 0.5;
+                        	friction = 1/8;
+                        	depth = -9;
+                        }
                     }
                     ntte_pet = array_delete(ntte_pet, 0);
 
@@ -3492,7 +3504,7 @@
 	 // Cursed:
 	if(curse){
 		 // Cursed Trident Returns:
-		curse_return = (instance_exists(creator) && (creator.wep == wep || creator.bwep == wep));
+		curse_return = (instance_exists(creator) && (variable_instance_get(creator, "wep") == wep || variable_instance_get(creator, "bwep") == wep));
 
 		 // FX:
 		if(visible && current_frame_active){
@@ -3743,15 +3755,19 @@
 
 	 // Return to Player:
 	if(curse_return) with(creator){
-		var b = ((wep == w) ? "" : "b");
-		if(is_object(w)){
-			w.wepangle = angle_difference(other.image_angle, gunangle)
-			if(chance(1, 8)) w.wepangle += 360 * sign(w.wepangle);
-			variable_instance_set(self, b + "wepangle",	w.wepangle);
+		if(instance_is(self, Player)){
+			var b = ((wep == w) ? "" : "b");
+			if(is_object(w)){
+				w.wepangle = angle_difference(other.image_angle, gunangle)
+				if(chance(1, 8)) w.wepangle += 360 * sign(w.wepangle);
+				variable_instance_set(self, b + "wepangle",	w.wepangle);
+			}
 		}
 
 		 // Effects:
-		with(instance_create(x, y, WepSwap)) creator = other;
+		if(instance_is(self, Player)){
+			with(instance_create(x, y, WepSwap)) creator = other;
+		}
 		sound_play(weapon_get_swap(w));
 		sound_play(sndSwapCursed);
 	}
@@ -3803,7 +3819,7 @@
 			}
 
 			 // Determination:
-			if(instance_exists(other.creator) && ultra_get(char_chicken, 2) && other.creator.race == "chicken"){
+			if(instance_exists(other.creator) && ultra_get(char_chicken, 2) && variable_instance_get(other.creator, "race") == "chicken"){
 				creator = other.creator;
 				alarm0 = 30;
 			}
@@ -4105,6 +4121,7 @@
 				        nowade = true;
 					    my_health = 99999;
 					    nexthurt = current_frame + 99999;
+                    	script_bind_end_step(nearwep_move, 0, self, other, other.xoff, other.yoff);
 				    }
                     with(other){
                         nearwep = other.nearwep;
@@ -4118,6 +4135,13 @@
     }
 
 	if(DebugLag) trace_time("tegeneral_step_post");
+
+#define nearwep_move(_inst, _target, _xoff, _yoff)
+	if(instance_exists(_target) && instance_exists(_inst)){
+		_inst.x = _target.x + _xoff;
+		_inst.y = _target.y + _yoff;
+	}
+	instance_destroy();
 
 #define draw_bloom
 	if(DebugLag) trace_time();

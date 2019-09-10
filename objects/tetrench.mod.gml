@@ -27,9 +27,8 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index > image_number - 1 + image_speed)
 
-#macro surfAnglerTrail global.surfAnglerTrail
-#macro surfAnglerClear global.surfAnglerClear
-#macro AnglerTrailFrame surfAnglerTrail.frame
+#macro surfAnglerTrail	global.surfAnglerTrail
+#macro surfAnglerClear	global.surfAnglerClear
 
 
 #define Angler_create(_x, _y)
@@ -101,7 +100,7 @@
 	 // Charging:
 	if(!hiding && ammo >= 0){
 		speed -= (speed * 0.15) * current_time_scale;
-		AnglerTrailFrame = current_frame + 30;
+		surfAnglerTrail.frame = current_frame + 30;
 	}
 
 #define Angler_draw
@@ -2841,17 +2840,17 @@
      // Shrink:
     if(shrink_delay <= 0){
 	    var f = shrink * current_time_scale;
-	    /*if(!instance_is(creator, enemy)){
-	    	f *= power(0.7, skill_get(mut_laser_brain));
-	    }*/
+	    if(ring && !instance_is(creator, enemy)){
+	    	f *= power(2/3, skill_get(mut_laser_brain));
+	    }
 	    image_xscale -= f;
 	    image_yscale -= f;
     }
     else{
     	var f = current_time_scale;
-	    /*if(ring && !instance_is(creator, enemy)){
-	    	f *= power(0.7, skill_get(mut_laser_brain));
-	    }*/
+	    if(ring && !instance_is(creator, enemy)){
+	    	f *= power(2/3, skill_get(mut_laser_brain));
+	    }
     	shrink_delay -= f;
     	
     	if(shrink_delay <= 0 || (follow_creator && !instance_exists(creator))){
@@ -2860,12 +2859,12 @@
     	
 		 // Growin:
 		var _goal = scale_goal;
-		if(!instance_is(creator, enemy)){
+		if(!ring && !instance_is(creator, enemy)){
 			_goal *= power(1.2, skill_get(mut_laser_brain));
 		}
 		if(abs(_goal - image_xscale) > 0.05 || abs(_goal - image_yscale) > 0.05){
-			image_xscale += (_goal - image_xscale) * 0.4;
-			image_yscale += (_goal - image_yscale) * 0.4;
+			image_xscale += (_goal - image_xscale) * 0.4 * current_time_scale;
+			image_yscale += (_goal - image_yscale) * 0.4 * current_time_scale;
 			
 			 // FX:
 			if(follow_creator){
@@ -2995,7 +2994,7 @@
 		if(place_meeting(x, y, object_index)){
 			with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
 				if(ring && place_meeting(x, y, other)){
-					var l = 0.5,
+					var l = 0.5 * current_time_scale,
 						d = point_direction(other.x, other.y, x, y);
 
 					x += lengthdir_x(l, d);
@@ -3057,6 +3056,7 @@
 					var o = (2 + (2 * ring_size * image_yscale)) / max(shrink_delay / 20, 1);
 					_x += lengthdir_x(o, d) * dcos((_dir *  2) + (wave * 4));
 					_y += lengthdir_y(o, d) * dsin((_dir * 10) + (wave * 4));
+					d -= (_lineAdd / ring_size) * 0.5;
 				}
 
 				 // Pulsate:
@@ -3214,6 +3214,23 @@
 	    	QuasarBeam_draw();
 		}
 	    draw_set_alpha(1);
+	    
+	    var i = 0,
+	    	_x1 = null,
+	    	_y1 = null,
+	    	_x2 = null,
+	    	_y2 = null;
+	    	
+	    with(line_seg){
+	    	_x1 = x + (xoff * 2 * other.image_yscale);
+	    	_y1 = y + (yoff * 2 * other.image_yscale);
+	    	if(_x2 != null){
+	    		draw_set_color([c_green, c_blue][i++ % 2]);
+	        	///draw_line(_x1, _y1, _x2, _y2);
+	    	}
+	    	_x2 = _x1;
+	    	_y2 = _y1;
+	    }
 	}
 
 #define QuasarBeam_alrm0
@@ -3767,7 +3784,7 @@
 	if(DebugLag) trace_time();
 
 	 // Bind Angler Trail Drawing:
-	var _active = (AnglerTrailFrame > current_frame);
+	var _active = (surfAnglerTrail.frame > current_frame);
 	if(_active) script_bind_draw(draw_anglertrail, -3);
 	surfAnglerTrail.active = _active;
 	surfAnglerClear.active = _active;
@@ -3888,13 +3905,17 @@
     
 	 // Quasar Beams:
     with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")) if(visible){
-    	var a = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5));
-    	if(blast_hit) a *= 1.5 / image_yscale;
-    	QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, a * image_alpha);
+    	var _alp = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5)),
+    		_xsc = 2,
+    		_ysc = 2;
+    		
+    	if(blast_hit) _alp *= 1.5 / image_yscale;
+    	
+    	QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
 
     	if(ring){
     		with(ring_lasers) if(instance_exists(self) && !visible){
-    			QuasarBeam_draw_laser(2 * image_xscale, 2 * image_yscale, a * image_alpha);
+    			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
     		}
     	}
     }

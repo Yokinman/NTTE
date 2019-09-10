@@ -2,13 +2,15 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
     global.sprWepLocked = mskNone;
 
-#macro wepLWO {
-        wep : mod_current,
+    global.lwoWep = {
+        wep  : mod_current,
         ammo : 6,
         amax : 6,
         cost : 1,
         buff : false
-    }
+    };
+
+#macro lwoWep global.lwoWep
 
 #define weapon_name     return (weapon_avail() ? "VAMPIRE" : "LOCKED");
 #define weapon_text     return "HEMOELECTRICITY";
@@ -28,27 +30,22 @@
     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(w)
-    var _creator = wep_creator(),
-        _roids = (instance_is(self, Player) && specfiring && (race == "steroids")),
-        _wepHeld = (variable_instance_get(_creator, "wep") == w);
-        
-     // LWO Setup:
-    if(!is_object(w)){
-        w = wepLWO;
-        if(_wepHeld) _creator.wep = w;
-    }
-
+    var f = wepfire_init(w);
+    w = f.wep;
+    
      // Fire:
     if(wepammo_fire(w)){
          // Projectile:
         with(obj_create(x, y, "TeslaCoil")){
             direction = other.gunangle;
-            creator = _creator;
+            creator = f.creator;
             team = other.team;
-            roids = _roids;
             dist_max = 64;
-            bat = true;
             time = 7 * (1 + skill_get(mut_laser_brain));
+            
+            bat = true;
+            
+            roids = f.roids;
             if(roids) creator_offy -= 4;
         }
         
@@ -57,16 +54,16 @@
             w.ammo = w.amax * (1 + skill_get(mut_back_muscle));
             
              // Hurt:
-            projectile_hit_raw(_creator, 1, false);
+            projectile_hit_raw(f.creator, 1, false);
             lasthit = [global.sprWep, "PLAYING GOD"];
             
              // Hurt FX:
             if(my_health > 0){
-                var _addVol = (my_health <= maxhealth / 2) * 0.3
+                var _addVol = (my_health <= maxhealth / 2) * 0.3;
                 
                  // Sounds:
                 sound_play_pitchvol(sndGammaGutsProc, 0.9 + random(0.3), 1.1 + _addVol);
-                sound_play_pitchvol(sndHitFlesh, 0.8 + random(0.4), 0.9 + _addVol);
+                sound_play_pitchvol(sndHitFlesh,      0.8 + random(0.4), 0.9 + _addVol);
                 
                  // Effects:
                 view_shake_max_at(x, y, 12);
@@ -85,15 +82,15 @@
         }
         
          // Effects:
-        if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", _creator), "roids", _roids)) <= 1){
+        if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", f.creator), "roids", f.roids)) <= 1){
             weapon_post(8, -10, 10);
-    
+            
              // Upgrade Sounds:
             if(skill_get(mut_laser_brain)){
                 sound_play_pitchvol(sndBloodLauncherExplo, 0.7 + random(0.3), 0.8);
                 sound_play_pitchvol(sndLightningShotgunUpg, 0.7 + random(0.4), 0.8)
             }
-    
+            
              // Default Sounds:
             else{
                 sound_play_pitchvol(sndBloodLauncherExplo, 0.9 + random(0.4), 0.8);
@@ -101,7 +98,7 @@
             }
         }
         if(skill_get(mut_laser_brain)){
-            instance_create(x, y, LaserBrain).creator = _creator; // Upgrade FX
+            instance_create(x, y, LaserBrain).creator = f.creator; // Upgrade FX
         }
     }
 
@@ -111,7 +108,7 @@
 
      // LWO Setup:
     if(!is_object(w)){
-        w = wepLWO;
+        w = lq_clone(lwoWep);
         variable_instance_set(self, b + "wep", w);
     }
 
@@ -130,8 +127,8 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
-#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   "mod", "telib", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);

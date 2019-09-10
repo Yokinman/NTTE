@@ -1,10 +1,8 @@
 #define init
     global.sprWep = sprite_add_weapon("../sprites/weps/sprBatDiscCannon.png", 13, 6);
     global.sprWepLocked = mskNone;
-
-#macro current_frame_active ((current_frame % 1) < current_time_scale)
-
-#macro wepLWO {
+    
+    global.lwoWep = {
         wep : mod_current,
         ammo : 14,
         amax : 14,
@@ -12,7 +10,11 @@
         cost : 7,
         buff : false,
         canload : true
-    }
+    };
+
+#macro current_frame_active ((current_frame % 1) < current_time_scale)
+
+#macro lwoWep global.lwoWep
 
 #define weapon_name     return (weapon_avail() ? "SAWBLADE CANNON" : "LOCKED");
 #define weapon_text     return "THEY STAND NO CHANCE";
@@ -32,21 +34,15 @@
     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 
 #define weapon_fire(w)
-    var _creator = wep_creator(),
-        _wepHeld = (variable_instance_get(_creator, "wep") == w);
-    
-     // LWO Setup:
-    if(!is_object(w)){
-        w = wepLWO;
-        if(_wepHeld) _creator.wep = w;
-    }
+    var f = wepfire_init(w);
+    w = f.wep;
     
      // Fire:
     if(wepammo_fire(w)){
          // Projectile:
         with(obj_create(x, y, "BatDisc")){
             direction = other.gunangle + orandom(4 * other.accuracy); // sorry smash but 32° is too much for a cannon
-            creator = _creator;
+            creator = f.creator;
             team = other.team;
             ammo = w.cost;
             my_lwo = w;
@@ -77,7 +73,7 @@
 
      // LWO Setup:
     if(!is_object(w)){
-        w = wepLWO;
+        w = lq_clone(lwoWep);
         variable_instance_set(self, b + "wep", w);
     }
 
@@ -140,7 +136,7 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
-#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);
+#define wepfire_init(_wep)														        return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
+#define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

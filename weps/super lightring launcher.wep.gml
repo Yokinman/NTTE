@@ -16,10 +16,10 @@
 #define weapon_reloaded
     sound_play(sndLightningReload);
 
-#define weapon_fire
-    var _creator = wep_creator(),
-        _roids = (race == "steroids" && variable_instance_get(self, "specfiring", false));
-        
+#define weapon_fire(w)
+    var f = wepfire_init(w);
+    w = f.wep;
+    
      // Projectile:
     with(obj_create(x, y, "LightningDisc")){
         motion_add(other.gunangle, 14);
@@ -28,14 +28,16 @@
         charge_spd /= 2;
         stretch = 1.2;
         radius = 16;
+        
         if(skill_get(mut_laser_brain)){
             charge *= 1.2;
             stretch *= 1.2;
             image_speed *= 0.75;
         }
-        creator = _creator;
+        
+        creator = f.creator;
         team = other.team;
-        roids = _roids;
+        roids = f.roids;
         super = 1.2;
     }
     
@@ -47,5 +49,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

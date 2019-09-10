@@ -2,10 +2,12 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
     global.sprWepLocked = mskNone;
 
-#macro wepLWO {
+	global.lwoWep = {
 		wep  : mod_current,
 		beam : noone
-	}
+	};
+
+#macro lwoWep global.lwoWep
 
 #define weapon_name		return (weapon_avail() ? "QUASAR RIFLE" : "LOCKED");
 #define weapon_text		return "BLINDING LIGHT";
@@ -19,24 +21,16 @@
 #define weapon_avail	return unlock_get("trenchWep");
 
 #define weapon_fire(w)
-    var	_creator = wep_creator(),
-    	_wepHeld = (variable_instance_get(_creator, "wep") == w),
-        _roids = (race == "steroids" && variable_instance_get(self, "specfiring", false)),
-        _venuz = (race != "steroids" && variable_instance_get(self, "specfiring", false));
-        
-     // LWO Setup:
-    if(!is_object(w)){
-    	w = wepLWO;
-        if(_wepHeld) _creator.wep = w;
-    }
+    var	f = wepfire_init(w);
+    w = f.wep;
     
      // New Beam:
-    if(!instance_exists(w.beam) || _venuz){
+    if(!instance_exists(w.beam) || (f.spec && !f.roids)){
     	 // Projectile:
         with(obj_create(x, y, "QuasarBeam")){
             image_angle = other.gunangle + orandom(6 * other.accuracy);
             image_yscale = 0.6;
-            creator = _creator;
+            creator = f.creator;
             team = other.team;
 
             turn_factor = 1/100;
@@ -75,21 +69,12 @@
      // Keep Setting:
     with(w.beam){
         shrink_delay = weapon_load() + 1;
-        roids = _roids;
-    }
-
-#define step(_primary)
-     // LWO Setup:
-    if(_primary){
-        if(!is_object(wep)) wep = wepLWO;
-    }
-    else{
-        if(!is_object(bwep)) bwep = wepLWO;
+        roids = f.roids;
     }
 
 
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

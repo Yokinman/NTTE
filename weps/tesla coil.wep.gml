@@ -16,17 +16,17 @@
 #define weapon_reloaded
     sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
 
-#define weapon_fire
-    var _creator = wep_creator(),
-        _roids = (race == "steroids" && variable_instance_get(self, "specfiring", false)),
-        _xdis, _ydis;
-        
+#define weapon_fire(w)
+    var f = wepfire_init(w);
+    w = f.wep;
+    
      // Projectile:
+    var _xdis, _ydis;
     with(obj_create(x, y, "TeslaCoil")){
         direction = other.gunangle;
-        creator = _creator;
+        creator = f.creator;
         team = other.team;
-        roids = _roids;
+        roids = f.roids;
         if(roids) creator_offy -= 4;
         
         _xdis = creator_offx;
@@ -34,14 +34,14 @@
     }
     
      // Effects:
-    if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", _creator), "roids", _roids)) <= 1){
+    if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", f.creator), "roids", f.roids)) <= 1){
         weapon_post(8, -10, 10);
         
          // Ball Appear FX:
-        _ydis *= variable_instance_get(_creator, "right", 1);
+        _ydis *= variable_instance_get(f.creator, "right", 1);
         with(instance_create(
             x + lengthdir_x(_xdis, gunangle) + lengthdir_x(_ydis, gunangle - 90),
-            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (4 * _roids),
+            y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (4 * f.roids),
             LightningHit
         )){
             motion_add(other.gunangle, 0.5);
@@ -65,5 +65,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

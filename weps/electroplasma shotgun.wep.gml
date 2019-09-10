@@ -6,8 +6,8 @@
 #define weapon_text     return "WHERE'S THE PEANUT BUTTER";
 #define weapon_type     return 5;  // Energy
 #define weapon_cost     return 8;  // 8 Ammo
-#define weapon_load     return 18; // 0.6 Seconds
-#define weapon_area     return (weapon_avail() ? 12 : -1); // 5-2
+#define weapon_load     return 27; // 0.9 Seconds
+#define weapon_area     return (weapon_avail() ? 8 : -1); // 3-3
 #define weapon_swap     return sndSwapEnergy;
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_avail    return unlock_get("trenchWep");
@@ -15,11 +15,12 @@
 #define weapon_reloaded
     sound_play(sndLightningReload);
 
-#define weapon_fire
-    var _creator = wep_creator(),
-        _brain = (skill_get(mut_laser_brain) > 0);
-        
+#define weapon_fire(w)
+    var f = wepfire_init(w);
+    w = f.wep;
+    
      // Sounds:
+    var _brain = (skill_get(mut_laser_brain) > 0);
     if(_brain) sound_play_gun(sndLightningShotgunUpg, 0.4, 0.6);
     else       sound_play_gun(sndLightningShotgun,    0.3, 0.3);
     sound_play_pitch(sndPlasmaBig, 1.1 + random(0.3));
@@ -29,7 +30,7 @@
     motion_add(gunangle, -4);
     
      // Spread Fire:
-    var _last = variable_instance_get(_creator, "electroplasma_last", noone),
+    var _last = variable_instance_get(f.creator, "electroplasma_last", noone),
         _num = 5;
         
     for(var i = floor(_num / 2) * -1; i <= floor(_num / 2); i++){
@@ -37,7 +38,7 @@
         with(obj_create(x, y, "ElectroPlasma")){
             motion_set(_dir, 4 + random(0.8));
             image_angle = direction;
-            creator = _creator;
+            creator = f.creator;
             team = other.team;
             
              // Tether Together:
@@ -45,7 +46,7 @@
             _last = id;
         }
     }
-    with(_creator){
+    with(f.creator){
         electroplasma_last = _last;
     }
 
@@ -53,5 +54,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

@@ -25,8 +25,9 @@
 
     sound_play_pitchvol(sndOasisExplosionSmall, 1.1, 0.4);
 
-#define weapon_fire(_wep)
-    var _creator = wep_creator();
+#define weapon_fire(w)
+    var f = wepfire_init(w);
+    w = f.wep;
     
      // Burst Fire:
     repeat(3) if(instance_exists(self)){
@@ -34,7 +35,7 @@
         with(obj_create(x, y, "BubbleBomb")){
             move_contact_solid(other.gunangle, 6);
             motion_add(other.gunangle + orandom(6 * other.accuracy), 8 + random(4));
-            creator = _creator;
+            creator = f.creator;
             team = other.team;
         }
         
@@ -54,5 +55,5 @@
 /// Scripts
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define wep_creator()                                                                   return  mod_script_call(   "mod", "telib", "wep_creator");
+#define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define unlock_get(_unlock)                                                             return  mod_script_call(   "mod", "telib", "unlock_get", _unlock);

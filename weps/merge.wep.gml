@@ -2227,7 +2227,8 @@
 
 #define weapon_fire(w)
 	if(is_object(w)){
-		var _creator = mod_script_call("mod", "telib", "wep_creator");
+		var f = mod_script_call("mod", "telib", "wepfire_init", w);
+		w = f.wep;
 		
 		 // Blood Cost:
 		if(instance_is(self, Player)){
@@ -2247,7 +2248,7 @@
 			}
 		}
 		
-	    GunCont(lq_defget(w, "base", wepDefault), x, y, team, _creator, gunangle, accuracy);
+	    GunCont(lq_defget(w, "base", wepDefault), x, y, team, f.creator, gunangle, accuracy);
 	}
 
 #define GunCont(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
@@ -2302,7 +2303,7 @@
         _amnt = _wep.amnt,
         _shotMax = _wep.shot,
         _timeMax = _wep.time;
-
+        
      // Crown of Death:
     if(crown_current == crwn_death && _wep.proj.object_index == MiniNade){
         if(_shotMax > 1) _shotMax++;

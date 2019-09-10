@@ -3134,11 +3134,8 @@
 	    		if(image_alpha > 0){
 		    		image_alpha = 0;
 		    		mask_index = mskReviveArea;
-
-		    		 // Fix Particles:
 		    		repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
-	    				x = other.x;
-	    				y = other.y;
+	    				instance_destroy();
 		    		}
 
 		    		 // Remove Light:
@@ -3154,6 +3151,15 @@
 	    			direction = point_direction(other.x, other.y, x, y);
 	    			speed = max(256 / point_distance(other.x, other.y, x, y), speed);
 	    		}
+	    		
+				 // No Zap:
+		        if(place_meeting(x, y, PortalL)){
+		        	with(instances_meeting(x, y, PortalL)){
+		        		if(place_meeting(x, y, other)){
+		        			instance_destroy();
+		        		}
+		        	}
+		        }
 	    	}
 	    }
     }
@@ -3385,7 +3391,14 @@
 #define Manhole_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        sprite_index = sprPizzaEntrance;
+        var _num = 0;
+    	if(chance(1, 10)){
+    		_num = array_length(spr.PizzaManhole) - 1;
+    	}
+    	else{
+    		_num = irandom(array_length(spr.PizzaManhole) - 2);
+    	}
+        sprite_index = spr.PizzaManhole[_num];
         image_speed = 0;
         mask_index = mskFloor;
 
@@ -3397,9 +3410,8 @@
     }
 
 #define Manhole_step
-	if(image_index == 0 && place_meeting(x, y, Explosion)){
-	    var _canhole = (!instance_exists(FrogQueen) && array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0);
-	    if(_canhole){
+	if(image_index < 1){
+	    if(place_meeting(x, y, Explosion) && !instance_exists(FrogQueen) && array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0){
 	        image_index = 1;
 
 	        with(GameCont){
@@ -3411,11 +3423,56 @@
 	         // Portal:
 	        with(instance_create(x + 16, y + 16, Portal)){
 	        	image_alpha = 0;
-	        	with(instances_meeting(x, y, [Corpse, ChestOpen, Scorch, ScorchTop])) instance_destroy();
+	        	mask_index = mskExploder;
 	        }
 	        sound_stop(sndPortalOpen);
+	        
+        	 // Splat:
+	        var _ang = random(360);
+	        for(var d = _ang; d < _ang + 360; d += (360 / 3)){
+	        	with(scrWaterStreak(x + 16, y + 16, d, 0)){
+	        		motion_set(d + orandom(20), 4 + random(1));
+	        		image_angle = direction;
+	        		image_blend = c_orange;
+	        	}
+	        }
 	    }
 	}
+	
+	 // Open:
+	else{
+		with(instance_nearest(x, y, Portal)){
+			 // No Zap:
+	        if(place_meeting(x, y, PortalL)){
+	        	with(instances_meeting(x, y, PortalL)){
+	        		if(place_meeting(x, y, other)){
+	        			instance_destroy();
+	        		}
+	        	}
+	        }
+	        
+	         // Clear Area:
+	        if(place_meeting(x, y, Corpse) || place_meeting(x, y, chestprop)){
+	        	with(instances_meeting(x, y, [Corpse, chestprop])){
+	        		if(place_meeting(x, y, other)){
+	        			var _dis = 16;
+	        			if(point_distance(other.x, other.y, x, y) < _dis){
+	        				var _dir = point_direction(other.x, other.y, x, y);
+	        				x = other.x + lengthdir_x(_dis, _dir);
+	        				y = other.y + lengthdir_y(_dis, _dir);
+	        			}
+	        			if(speed < 1){
+	        				motion_add_ct(point_direction(other.x, other.y, x, y), 0.8);
+	        			}
+	        		}
+	        	}
+	        }
+	        if(place_meeting(x, y, Scorch) || place_meeting(x, y, ScorchTop)){
+	        	with(instances_meeting(x, y, [Scorch, ScorchTop])) instance_destroy();
+	        }
+		}
+	}
+	
 
 #define NewTable_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
