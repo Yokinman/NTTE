@@ -514,14 +514,14 @@
 					on_create = script_ref_create_ext("mod", mod_current, "obj_create", _x, _y, _name);
 
 	                 // Override Events:
-	                var _override = ["step"];
+	                var _override = ["step", "draw"];
 	                with(_override){
 	                    var v = "on_" + self;
 	                    if(v in other){
 	                        var e = variable_instance_get(other, v),
-	                            _objStep = script_ref_create(obj_step);
+	                            _objScrt = script_ref_create(script_get_index("obj_" + self));
 	        
-	                        if(!is_array(e) || !array_equals(e, _objStep)){
+	                        if(!is_array(e) || !array_equals(e, _objScrt)){
 	                            with(other){
 	                                variable_instance_set(id, "on_ntte_" + other, e);
 	
@@ -565,10 +565,16 @@
 	                                        
 	                                         // Set on_step to obj_step if Needed:
 	                                        if(ntte_anim || ntte_walk || ntte_alarm_max > 0 || (DebugLag && array_length(on_step) >= 3)){
-	                                        	on_step = _objStep;
+	                                        	on_step = _objScrt;
 	                                        }
 	                                        break;
-	
+	                                        
+	                                    case "on_draw":
+	                                    	if(DebugLag && array_length(on_draw) >= 3){
+	                                        	on_draw = _objScrt;
+	                                        }
+	                                    	break;
+	                                        
 	                                    default:
 	                                        variable_instance_set(id, v, []);
 	                                }
@@ -666,6 +672,13 @@
 	    trace_lag_end(name);
     }
 
+#define obj_draw // Only used for debugging lag
+	if(DebugLag) trace_lag_bgn(name + "_draw");
+	
+    script_ref_call(on_ntte_draw);
+	
+	if(DebugLag) trace_lag_end(name + "_draw");
+
 #define ntte_bind
 	if(array_length(inst_list) > 0){
 		if(DebugLag) trace_time();
@@ -688,17 +701,21 @@
 	else instance_destroy();
 
 #define step
-	if(DebugLag){
-	    trace("");
-		trace("Frame", current_frame, "Lag:")
-	    trace_lag();
-	}
+	script_bind_end_step(end_step, 0);
     
      // sleep_max():
     if(global.sleep_max > 0){
 	    sleep(global.sleep_max);
 	    global.sleep_max = 0;
     }
+   
+#define end_step
+	if(DebugLag){
+	    trace("");
+		trace("Frame", current_frame, "Lag:")
+	    trace_lag();
+	}
+	instance_destroy();
 
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
@@ -767,10 +784,6 @@
     draw_vertex(_x2a, _y1);
     draw_vertex(_x2b, _y2);
     draw_primitive_end();
-
-#define draw_set_flat(_color)
-	var _bool = (_color >= 0);
-	draw_set_fog(_bool, (_bool ? _color : c_black), 0, 0);
 
 #define draw_text_bn(_x, _y, _string, _angle)
 	var _col = draw_get_color();
@@ -2343,12 +2356,12 @@
 		_imgInd	= -1,
 		_imgSpd	= 0.4,
 		a, _off, _wx, _wy;
-
+		
     while(_dis > _disAdd){
         _dis -= _disAdd;
         _x += _ox;
         _y += _oy;
-
+        
 		 // Wavy Offset:
 		if(_dis > _disAdd){
 	        a = (_dis / _disMax) * pi;
@@ -2356,13 +2369,13 @@
 	        _wx = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(a));
 	        _wy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(a / 2));
 		}
-
+		
 		 // End:
 		else{
 			_wx = _x2;
 			_wy = _y2;
 		}
-
+		
 		 // Lightning:
 	    with(instance_create(_wx, _wy, _obj)){
 	        ammo = ceil(_dis / _disAdd);
@@ -2372,7 +2385,7 @@
 		    hitid = _hitid;
 		    creator = other;
 		    team = _team;
-
+		    
 			 // Exists 1 Frame - Manually Animate:
 			if(_imgInd < 0){
 				_imgInd = ((current_frame + _arc) * image_speed) % image_number;
@@ -2383,11 +2396,11 @@
 
 			array_push(_inst, id);
 	    }
-
+	    
         _lx = _wx;
         _ly = _wy;
     }
-
+    
 	 // FX:
 	if(chance_ct(array_length(_inst), 200)){
 		with(_inst[irandom(array_length(_inst) - 1)]){
@@ -2398,7 +2411,7 @@
 			else sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
 		}
 	}
-
+	
     return _inst;
 
 #define scrLightning(_x1, _y1, _x2, _y2, _enemy)

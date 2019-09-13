@@ -23,21 +23,13 @@
      // Projectile:
     with(obj_create(x, y, "LightningDisc")){
         motion_add(other.gunangle, 14);
-        maxspeed = 2.5;
-        charge *= 2.5;
-        charge_spd /= 2;
-        stretch = 1.2;
-        radius = 16;
-        
-        if(skill_get(mut_laser_brain)){
-            charge *= 1.2;
-            stretch *= 1.2;
-            image_speed *= 0.75;
-        }
-        
         creator = f.creator;
         team = other.team;
         roids = f.roids;
+        charge *= 2.5;
+        charge_spd /= 2;
+        stretch *= 1.2;
+        radius *= 4/3;
         super = 1.2;
     }
     

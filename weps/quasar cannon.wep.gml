@@ -5,7 +5,7 @@
 #define weapon_name		return (weapon_avail() ? "QUASAR CANNON" : "LOCKED");
 #define weapon_text		return "PULSATING";
 #define weapon_type		return 5;	// Energy
-#define weapon_cost		return 12;	// 12 Ammo
+#define weapon_cost		return 16;	// 16 Ammo
 #define weapon_load		return 159; // 5.3 Seconds
 #define weapon_area		return (weapon_avail() ? 18 : -1); // L1 1-1
 #define weapon_swap		return sndSwapEnergy;
@@ -17,18 +17,18 @@
     w = f.wep;
     
      // Projectile:
+    var _brain = skill_get(mut_laser_brain);
     with(obj_create(x, y, "QuasarRing")){
         motion_add(other.gunangle + orandom(8 * other.accuracy), 4);
         image_angle = direction;
         image_yscale = 0;
         creator = f.creator;
         team = other.team;
-        ring_size = 0.6;
+        ring_size = 0.6 * power(1.2, _brain);
     }
 
      // Effects:
     weapon_post(20, -24, 8);
-    var _brain = skill_get(mut_laser_brain);
 	sound_play_pitch(_brain ? sndLightningCannonUpg	: sndLaser,		0.4 + random(0.1));
 	sound_play_pitch(_brain ? sndPlasmaBigUpg		: sndPlasmaBig,	1.2 + random(0.2));
 	sound_play_pitchvol(sndExplosion, 0.8, 0.8);

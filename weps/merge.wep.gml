@@ -1529,7 +1529,7 @@
             case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
             case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
 
-             // Specific Exclusions:
+             // Bro no melee allowed:
             case wep_jackhammer:
             	_add = false;
             	break;
@@ -1714,6 +1714,7 @@
 			amnt = ceil(max(0, amnt)); // Just in case
 			
 		/// Burst Shots:
+		
 			 // Uses same equation as projectile amount calculations ^
 			shot = _stock.shot;
 			if(shot > 1){
@@ -1790,23 +1791,14 @@
 		load = max(1, round(load));
 
          // Ammo Cost:
-		var _projCost = _frontProjCostRaw;
-		if(_front.type == 1){ // Bullet Mode
-			cost = _projCost * amnt * shot;
-		}
-		else if(_frontProjCost == 1){ // Basic Mode
-	        cost = min(_projCost * amnt * shot, sqrt(16 * amnt * shot));
-		}
-		else{ // Drop-Off Mode
-			cost = 0;
-			repeat(amnt * shot){
-				cost += _projCost;
-				_projCost *= 1 - (0.1 * sqrt(_projCost));
-			}
-		}
+		var _limit = max(2, (16 / _frontProjCostRaw) * ((_front.type == 1) ? 5 : 1));
+		if(_frontObjRaw == Laser) _limit /= 2;
+        cost = _frontProjCostRaw * min(amnt * shot, sqrt(_limit * amnt * shot));
+        
     	if(_stock.type == 1){ // Pop Rifle-type stuff
     		cost += min(0, _stock.cost - (min(_stock.amnt, _stock.cost) * _stock.shot));
     	}
+    	
         cost = clamp(cost, 1, ((type == 1) ? 555 : 99));
 		cost = round(cost);
 
@@ -2078,6 +2070,11 @@
 				}
         		break;
 
+			case UltraBullet:
+				sped[0] *= 1.2;
+				sped[1] *= 1.2;
+				break;
+
 			case UltraBolt:
 				array_push(_flagProj, "ultrabow");
 				break;
@@ -2116,6 +2113,24 @@
         	
         	case Flame:
         		time = _stock.time;
+        		amnt *= _front.shot;
+        		fixd /= _front.shot;
+        		shot = _stock.shot;
+        		
+        		switch(_stockObjRaw){
+        			case SuperFlakBullet:
+        				shot += ceil(5 / _front.cost);
+        				break;
+        		
+        			case PlasmaBall:
+        			case PlasmaBig:
+        			case PlasmaHuge:
+		        		if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], _stockObjRaw)){
+		        			sped[0] *= 4/3;
+		        			sped[1] *= 4/3;
+		        		}
+		        		break;
+        		}
         		break;
         }
         with(_flagProj) lq_set(other.proj, flagProjPref + self, null);
@@ -3203,7 +3218,7 @@
 				}
 
 				 // Trail:
-				if(chance_ct(speed, 48)){
+				if(object_index != Flame && chance_ct(speed, 48)){
 					instance_create(x + orandom(sprite_height / 4), y + orandom(sprite_height / 4), PlasmaTrail);
 				}
 			}
@@ -3756,7 +3771,7 @@
 	    		}
 
 	    		 // Flame Trail:
-	    		if(object_index != Nuke){
+	    		if(object_index != Nuke && object_index != Flame){
 					var d = floor(depth / 0.1) * 0.1,
 						c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
 
@@ -3838,7 +3853,7 @@
 		    		speed += friction_raw;
 	
 		    		 // Flame Trail:
-		    		if(object_index != Rocket){
+		    		if(object_index != Rocket && object_index != Flame){
 						var d = round(depth / 0.1) * 0.1,
 							c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
 	
@@ -4448,7 +4463,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

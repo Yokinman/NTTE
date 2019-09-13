@@ -4100,7 +4100,7 @@
 
 				 // Secret IceFlower:
 	            with(_nearest){
-	            	nearwep = instance_create(x + xoff, y + yoff, IceFlower);
+	            	nearwep = instance_create(x + hspeed_raw + xoff, y + vspeed_raw + yoff, IceFlower);
 				    with(nearwep){
 				        name = other.text;
 				    	x = xstart;
@@ -4121,7 +4121,6 @@
 				        nowade = true;
 					    my_health = 99999;
 					    nexthurt = current_frame + 99999;
-                    	script_bind_end_step(nearwep_move, 0, self, other, other.xoff, other.yoff);
 				    }
                     with(other){
                         nearwep = other.nearwep;
@@ -4135,13 +4134,6 @@
     }
 
 	if(DebugLag) trace_time("tegeneral_step_post");
-
-#define nearwep_move(_inst, _target, _xoff, _yoff)
-	if(instance_exists(_target) && instance_exists(_inst)){
-		_inst.x = _target.x + _xoff;
-		_inst.y = _target.y + _yoff;
-	}
-	instance_destroy();
 
 #define draw_bloom
 	if(DebugLag) trace_time();
@@ -4311,11 +4303,11 @@
 			surface_reset_target();
 			
 			 // Draw Surface:
-			draw_set_flat(BackCont.shadcol);
+			draw_set_fog(true, BackCont.shadcol, 0, 0);
 			draw_set_alpha(BackCont.shadalpha);
 			draw_surface(surf, x, y);
+			draw_set_fog(false, 0, 0, 0);
 			draw_set_alpha(1);
-			draw_set_flat(-1);
 		}
 	}
 
@@ -4436,7 +4428,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

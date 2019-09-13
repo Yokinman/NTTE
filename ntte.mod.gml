@@ -935,12 +935,9 @@
     	}
     }
 
-     // Crab Skeletons Drop Bones:
-    with(BonePile) with(obj_create(x, y, "BoneSpawner")) creator = other;
-
 	 // Sewer manhole:
 	with(PizzaEntrance){
-	    with obj_create(x,y,"Manhole") toarea = "pizza";
+	    with(obj_create(x, y, "Manhole")) toarea = "pizza";
 	    instance_delete(id);
 	}
 
@@ -971,18 +968,12 @@
         }
     }
 
-     // Spider Cocoons:
-    with(Cocoon){
-    	obj_create(x, y, "NewCocoon");
-    	instance_delete(id);
-    }
-
      // Visibilize Pets:
     with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
     
      // Backpack Setpieces:
-    var _canBackpack = (instance_number(enemy) > array_length(instances_matching(CustomEnemy, "name", "PortalPrevent")) && chance(1 + (2 * skill_get(mut_last_wish)), 12)),
-    	_validArea = !(GameCont.area == 106),
+    var _canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
+    	_validArea = (GameCont.area != 106 && instance_number(enemy) > array_length(instances_matching(CustomEnemy, "name", "PortalPrevent"))),
     	_forceSpawn = (GameCont.area == 0);
 
     if(GameCont.hard > 4 && ((_canBackpack && _validArea) || _forceSpawn)){
@@ -1019,7 +1010,6 @@
      // Lair Chests:
     var _crownCrime = (crown_current == "crime");
     if(variable_instance_get(GameCont, "visited_lair", false) || _crownCrime){
-		
 		 // Cat Chests:
 		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
 			if(_crownCrime ? chance(2, 3) : chance(1, 5)){
@@ -1139,27 +1129,32 @@
 	        }
 	
 	         // CampChar Management:
-	        var _playersLocal = 0;
-	        for(var i = 0; i < maxp; i++) _playersLocal += player_is_local_nonsync(i);
+	        var _playersTotal = 0,
+	        	_playersLocal = 0;
+	        	
+	        for(var i = 0; i < maxp; i++){
+	        	_playersTotal += player_is_active(i);
+	        	_playersLocal += player_is_local_nonsync(i);
+	        }
 	        for(var i = 0; i < maxp; i++) if(player_is_active(i)){
 	            var _race = player_get_race(i);
 	            if(array_exists(raceList, _race)){
 	                with(instances_matching(CampChar, "race", _race)){
 	                     // Pan Camera:
-	                    if(_playersLocal <= 1){
+	                    if(_playersLocal <= 1 || _playersTotal > _playersLocal){
 		                    with(instances_matching(CampChar, "num", 17)){
 								var _x1 = x,
 									_y1 = y,
 									_x2 = other.x,
 									_y2 = other.y,
 					        		_pan = 4;
-	
+					        		
 								view_shift(
 									i,
 									point_direction(_x1, _y1, _x2, _y2),
 									point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
 								);
-	
+								
 								break;
 		                    }
 	                    }
@@ -1283,7 +1278,7 @@
 		if(fork()){
 			var _x = x,
 				_y = y,
-				_save = ["ntte_pet", "feather_ammo"],
+				_save = ["ntte_pet", "feather_ammo", "ammo_bonus"],
 				_vars = {},
 				_race = race;
 
@@ -1330,6 +1325,8 @@
         global.newLevel = false;
         level_start();
     }
+    
+    if(DebugLag) trace_time("ntte_step A");
 
      // Call Area Events (Not built into area mods):
     var a = array_find_index(areaList, GameCont.area);
@@ -1403,6 +1400,8 @@
         }
     }
 
+    if(DebugLag) trace_time("ntte_step B");
+    
      // Fix for Custom Music/Ambience:
     for(var i = 0; i < lq_size(global.current); i++){
         var _type = lq_get_key(global.current, i),
@@ -1470,7 +1469,7 @@
 		}
 	}
 
-    if(DebugLag) trace_time("ntte_step");
+    if(DebugLag) trace_time("ntte_step C");
 
 #define end_step
 	if(DebugLag) trace_time();
@@ -2808,15 +2807,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 												 // Draw Clipped/Colored Surface:
 												if(s == 0){
 													var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
-													draw_set_flat(_active ? b : merge_color(b, c_black, 0.5));
+													draw_set_fog(true, (_active ? b : merge_color(b, c_black, 0.5)), 0, 0);
 													draw_surface_part_ext(_surf, 0, (_sh / 2), _sw, (_sh / 2), _sx, _sy + ((_sh / 2) / _scale[s]), 1 / _scale[s], 1 / _scale[s], c_white, 1);
-													draw_set_flat(-1);
+													draw_set_fog(false, 0, 0, 0);
 												}
 												else{
 													draw_surface_part_ext(_surf, 0, 0, _sw, (_sh / 2) + 1, _sx,	_sy, 1/_scale[s], 1/_scale[s], c_white, 1);
-													draw_set_flat(_active ? c_white : c_gray);
+													draw_set_fog(true, (_active ? c_white : c_gray), 0, 0);
 													draw_surface_part_ext(_surf, 0,	(_sh / 2), _sw, 1, _sx, _sy + ((_sh / 2) / _scale[s]), 1/_scale[s], 1/_scale[s], c_white, 0.8);
-													draw_set_flat(-1);
+													draw_set_fog(false, 0, 0, 0);
 												}
 												
 												surface_destroy(_surf);
@@ -2976,9 +2975,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 											}
 										}
 										
-										if(!_avail) draw_set_flat(make_color_hsv(0, 0, 22 * (1 + _hover)));
+										if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
 										draw_sprite_ext(_sprt, 0.4 * current_frame, _x, _y - _selected, 1, 1, 0, (_selected ? c_white : (_hover ? c_silver : c_gray)), 1);
-										if(!_avail) draw_set_flat(-1);
+										if(!_avail) draw_set_fog(false, 0, 0, 0);
 										
 										_x += 32;
 									}
@@ -2989,9 +2988,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 										
 										var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 24, _y - 8, _x + 24, _y + 8);
 										
-										draw_set_flat(make_color_hsv(0, 0, (_hover ? 50 : 30)));
+										draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
 										draw_sprite(sprMapIcon, 0, _x, _y)
-										draw_set_flat(-1);
+										draw_set_fog(false, 0, 0, 0);
 										
 										if(_hover && button_pressed(_index, "fire")){
 											sound_play(sndNoSelect);
@@ -3760,6 +3759,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define underwater_end_step
     instance_destroy();
 
+	if(DebugLag) trace_time();
+
      // Bubbles:
     with(instances_matching(Dust, "waterbubble", null)){
         instance_create(x, y, Bubble);
@@ -3813,9 +3814,13 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     	snd_hurt = sndOasisHurt;
     	snd_dead = sndOasisDeath;
     }
+    
+	if(DebugLag) trace_time("underwater_end_step");
 
 #define underwater_draw
     instance_destroy();
+    
+	if(DebugLag) trace_time();
 
      // Air Bubbles:
     with(instances_matching(hitme, "spr_bubble", null)){
@@ -3880,14 +3885,16 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
      // Boiling Water:
     draw_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
     draw_set_blend_mode(bm_add);
-    with(Flame) if(sprite_index != sprFishBoost){
+    with(instances_matching_ne(Flame, "sprite_index", sprFishBoost)){
         var s = 1.5,
-            a = 0.1;
+            a = 0.2;
 
         draw_sprite_ext(sprDragonFire, image_index + 2, x, y, image_xscale * s, image_yscale * s, image_angle, image_blend, image_alpha * a);
     }
     draw_set_blend_mode(bm_normal);
     draw_set_fog(0, 0, 0, 0);
+    
+	if(DebugLag) trace_time("underwater_draw");
 
 #define underwater_sound(_state)
     global.waterSoundActive = _state;
@@ -4732,6 +4739,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	            repeat(max(_time / 90, 1)) with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
 	                target = other;
 	            	index = _index;
+	            	with(player_find(index)) if("spr_feather" in self){
+	            		other.sprite_index = spr_feather;
+	            	}
 	            }
             }
             else c.time = _time;
@@ -4832,12 +4842,12 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 			var _option = option_get("outlineCharm", 2);
 			if(_option > 0){
 				if(_option < 2 || player_get_outlines(player_find_local_nonsync())){
-					draw_set_flat(player_get_color(_index));
+					draw_set_fog(true, player_get_color(_index), 0, 0);
 					for(var a = 0; a <= 360; a += 90){
 						var _x = _surfx,
 						    _y = _surfy;
 
-						if(a >= 360) draw_set_flat(-1);
+						if(a >= 360) draw_set_fog(false, 0, 0, 0);
 						else{
 						    _x += dcos(a);
 						    _y -= dsin(a);
@@ -4962,7 +4972,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         _cx = game_width - 102,
         _cy = 75;
 
-	if(is_undefined(_crown)){
+	if(_crown == null){
 		instance_destroy();
 		exit;
 	}
@@ -5329,7 +5339,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 				}
 			}
 
-			 // Looping to Farthest CharSelect:
+			 // Loop Around to Farthest CharSelect:
 			else{
 				var _max = 0;
 				with(_slct){
@@ -5448,7 +5458,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

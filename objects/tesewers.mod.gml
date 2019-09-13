@@ -2758,11 +2758,11 @@
 #define CatDoor_draw
     if(surface_exists(my_surf)){
         var h = (nexthurt > current_frame + 3);
-        if(h) draw_set_flat(image_blend);
+        if(h) draw_set_fog(true, image_blend, 0, 0);
 
         draw_surface_ext(my_surf, x - (my_surf_w / 2), y - (my_surf_h / 2), 1, 1, 0, c_white, image_alpha);
 
-        if(h) draw_set_flat(-1);
+        if(h) draw_set_fog(false, 0, 0, 0);
     }
 
 #define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
@@ -4771,7 +4771,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

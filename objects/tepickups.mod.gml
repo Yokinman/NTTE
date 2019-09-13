@@ -1423,7 +1423,6 @@
 	var _num = num;
 	with(_inst){
 		ammo_bonus = variable_instance_get(id, "ammo_bonus", 0) + _num;
-		ammo_bonus_hold = array_clone(ammo);
 
 		 // Text:
 		with(instance_create(x, y, PopupText)){
@@ -1538,6 +1537,8 @@
         sprite_index = spr.SpiritPickup;
         spr_open = -1;
         spr_fade = -1;
+        halo_sprite = sprStrongSpiritRefill;
+        halo_index = 0;
         
          // Sounds:
         snd_open = sndAmmoPickup;
@@ -1547,7 +1548,7 @@
         mask_index = mskPickup;
 		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd = 4;
-		pull_delay = 9;
+		pull_delay = 30;
         wave = random(90);
         num = 1 + (crown_current == crwn_haste); // haste confirmed epic
         
@@ -1557,30 +1558,43 @@
         on_open = script_ref_create(SpiritPickup_open);
         on_fade = script_ref_create(SpiritPickup_fade);
         
+         // FX:
+        sound_play_pitchvol(sndStrongSpiritGain, 1.4 + random(0.3), 0.7);
+        repeat(5) with(scrFX(x, y, 3, Dust)) depth = other.depth;
+        
         return id;
     }
    
 #define SpiritPickup_step
 	if(pull_delay > 0) pull_delay -= current_time_scale;
     wave += current_time_scale;
+    
+     // Animate Halo:
+    if(halo_sprite != sprHalo){
+    	halo_index += 0.4 * current_time_scale;
+    	if(halo_index > sprite_get_number(halo_sprite) - 1) halo_sprite = sprHalo;
+    }
 
 #define SpiritPickup_draw
-    draw_sprite(sprHalo, 0, x, ((y + 3) + sin(wave * 0.1)));
+    for(var i = 0; i < num; i++){
+    	draw_sprite(halo_sprite, halo_index, x, (y + 3) + sin(wave * 0.1) - (i * 7));
+    }
 
 #define SpiritPickup_open
-	 // Restore Missing Strong Spirit (BORING):
-	var n = num;
-	with(other){
-		
+	var _inst = noone,
+		_num = num;
+
+	if(instance_is(other, Player)) _inst = other;
+	else _inst = Player;
+	
+	with(_inst){
 		 // Acquire Bonus Spirit:
-		if(n >= 1){
-			if("bonus_spirit" not in self) bonus_spirit = [];
-			
-			repeat(n) array_push(bonus_spirit, bonusSpiritGain);
+		if(_num > 0 && "bonus_spirit" in self){
+			repeat(_num) array_push(bonus_spirit, bonusSpiritGain);
 			sound_play(sndStrongSpiritGain);
 			
 			with(instance_create(x, y, PopupText)){
-				mytext = `+${n} @yBONUS @wSPIRIT${n > 1 ? "S" : ""}`;
+				mytext = `+${_num} @yBONUS @wSPIRIT${(_num > 1) ? "S" : ""}`;
 				target = other.index;
 			}
 		}
@@ -2191,7 +2205,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

@@ -78,7 +78,7 @@
 
 #define area_subarea            return 3;
 #define area_next               return 4;
-#define area_music              return [mus.Trench, 0.8];
+#define area_music              return mus.Trench;
 #define area_ambience           return amb101;
 #define area_background_color   return make_color_rgb(100, 114, 127);
 #define area_shadow_color       return c_black;
@@ -627,9 +627,9 @@
     }
 
 #define draw_pit
-    if(DebugLag) trace_time();
-
     if(!instance_exists(GenCont)){
+    	if(DebugLag) trace_time();
+    	
 		 // Pit Surfaces Follow Screen:
 		var _vx = view_xview_nonsync,
 			_vy = view_yview_nonsync,
@@ -857,9 +857,9 @@
 
 			draw_surface(surf, x, y);
         }
-    }
 
-    if(DebugLag) trace_time("trench_draw_pit");
+    	if(DebugLag) trace_time("trench_draw_pit");
+    }
 
 #define pit_get(_x, _y)
 	return global.pit_grid[# _x / 16, _y / 16];
@@ -953,7 +953,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

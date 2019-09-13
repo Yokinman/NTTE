@@ -1192,7 +1192,7 @@
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 
-			draw_set_flat(c_white);
+			draw_set_fog(true, c_white, 0, 0);
 
 			 // Floors:
 			with(surfFloor) if(surface_exists(surf)){
@@ -1219,7 +1219,7 @@
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
 
-			draw_set_flat(-1);
+			draw_set_fog(false, 0, 0, 0);
 		}
 
 		 // Animate Foam (Part player sees):
@@ -1264,7 +1264,7 @@
 	}
 
 	 // Bottom Halves of Things:
-	draw_set_flat(WadeColor);
+	draw_set_fog(true, WadeColor, 0, 0);
 
 		 // Palanking:
 		with(instances_matching(CustomEnemy, "name", "Palanking")) if(visible){
@@ -1279,7 +1279,7 @@
 			draw_surface_cropped(surf, 1 / _surfScale, x, y);
 		}
 
-	draw_set_flat(-1);
+	draw_set_fog(false, 0, 0, 0);
 
      // Draw Sea:
     draw_set_color(background_color);
@@ -1456,7 +1456,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

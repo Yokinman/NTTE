@@ -105,9 +105,9 @@
 
 #define Angler_draw
     var h = (sprite_index == spr_appear && nexthurt > current_frame + 3);
-    if(h) draw_set_flat(image_blend);
+    if(h) draw_set_fog(true, image_blend, 0, 0);
     draw_self_enemy();
-    if(h) draw_set_flat(-1);
+    if(h) draw_set_fog(false, 0, 0, 0);
 
 #define Angler_alrm1
     alarm1 = 6 + irandom(6);
@@ -524,14 +524,14 @@
 #define Eel_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
-        c = irandom(2);
-        if(c == 0 && GameCont.crown == crwn_guns) c = 1;
-        if(c == 1 && GameCont.crown == crwn_life) c = 0;
-        spr_idle = spr.EelIdle[c];
+        type = irandom(2);
+        if(type == 0 && crown_current == crwn_guns) type = 1;
+        if(type == 1 && crown_current == crwn_life) type = 0;
+        spr_idle = spr.EelIdle[type];
         spr_walk = spr_idle;
-        spr_hurt = spr.EelHurt[c];
-        spr_dead = spr.EelDead[c];
-        spr_tell = spr.EelTell[c];
+        spr_hurt = spr.EelHurt[type];
+        spr_dead = spr.EelDead[type];
+        spr_tell = spr.EelTell[type];
         hitid = [spr_idle, "EEL"];
         spr_shadow = shd24;
         image_index = random(image_number - 1);
@@ -562,29 +562,35 @@
         canmelee_last = canmelee;
 
          // Alarms:
-        alarm1 = 60 + random(90);
+        alarm1 = 15 + random(45);
 
         return id;
     }
 
 #define Eel_step
-	var _arcDistance = 96,
-		_arcDistanceElite = 128;
-
+	 // Arcing:
 	if(arc_inst != noone){
-		if(instance_exists(arc_inst) && arc_inst.c > 2){
-			_arcDistance = _arcDistanceElite;
+		var _ax = x,
+			_ay = y;
+			
+		if(instance_exists(arc_inst)){
+			_ax = arc_inst.x;
+			_ay = arc_inst.y;
 		}
-
-	     // Arc Lightning w/ Jelly:
-	    if(in_distance(arc_inst, _arcDistance) && in_sight(arc_inst) && in_distance(target, 120)){
+		else arcing = -1;
+		
+	    if(
+	    	arcing >= 0											&&
+	    	point_distance(x, y, _ax, _ay) < arc_inst.arc_dis	&&
+	    	!collision_line(x, y, _ax, _ay, Wall, false, false)
+	    ){
 	         // Start Arcing:
 	        if(arcing < 1){
 	            arcing += 0.15 * current_time_scale;
 	
 	            if(current_frame_active){
-	                var _dis = random(point_distance(x, y, arc_inst.x, arc_inst.y)),
-	                    _dir = point_direction(x, y, arc_inst.x, arc_inst.y);
+	                var _dis = random(point_distance(x, y, _ax, _ay)),
+	                    _dir = point_direction(x, y, _ax, _ay);
 	
 	                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, PortalL, LaserCharge))){
 	                    motion_add(random(360), 1);
@@ -597,13 +603,13 @@
 	                sound_play_pitch(sndLightningHit, 2);
 	
 	                 // Color:
-	                if(arc_inst.c <= 2){
-	                    c = max(arc_inst.c, 0);
-	                    spr_idle = spr.EelIdle[c];
+	                if(arc_inst.type <= 2){
+	                    type = max(arc_inst.type, 0);
+	                    spr_idle = spr.EelIdle[type];
 	                    spr_walk = spr_idle;
-	                    spr_hurt = spr.EelHurt[c];
-	                    spr_dead = spr.EelDead[c];
-	                    spr_tell = spr.EelTell[c];
+	                    spr_hurt = spr.EelHurt[type];
+	                    spr_dead = spr.EelDead[type];
+	                    spr_tell = spr.EelTell[type];
 	                    if(sprite_index != spr_hurt){
 	                        sprite_index = spr_idle;
 	                    }
@@ -615,7 +621,7 @@
 	         // Arcing:
 	        else{
 				wave += current_time_scale;
-	            if(arc_inst.c > 2) elite = 30;
+	            if(arc_inst.type > 2) elite = 30;
 	            with(arc_inst){
 	            	lightning_connect(other.x, other.y, x, y, ((other.elite > 0) ? 16 : 12) * sin(other.wave / 30), true);
 	            }
@@ -624,40 +630,22 @@
 	
 		 // Stop Arcing:
 	    else{
-	    	if(instance_exists(arc_inst)){
-	    		arc_inst.arc_num--;
-				if(arcing > 0){
-		    		var _lx = arc_inst.x,
-		    			_ly = arc_inst.y;
-		
-		            repeat(2){
-		                var _dis = random(point_distance(x, y, _lx, _ly)),
-		                    _dir = point_direction(x, y, _lx, _ly);
-		
-		                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
-		                    motion_add(random(360), 1);
-		                }
-		            }
-				}
+	    	with(arc_inst){
+	    		arc_num--;
+	            repeat(2){
+	                var _dis = random(point_distance(x, y, other.x, other.y)),
+	                    _dir = point_direction(x, y, other.x, other.y);
+	                    
+	                with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
+	                    motion_add(random(360), 1);
+	                }
+	            }
 	    	}
 	        arc_inst = noone;
 	        arcing = 0;
 	    }
 	}
-
-	 // Search for New Jelly:
-    if(!instance_exists(arc_inst) && (((current_frame + wave) mod 15) < current_time_scale)){
-    	var _inst = nearest_instance(x, y, instances_matching_lt(instances_matching(CustomEnemy, "name", "JellyElite"), "arc_num", 5));
-
-        if(!in_distance(_inst, _arcDistanceElite)){
-        	_inst = nearest_instance(x, y, instances_matching_lt(instances_matching(CustomEnemy, "name", "Jelly"), "arc_num", 3));
-        }
-
-        if(in_distance(_inst, _arcDistance)){
-        	arc_inst = _inst;
-        	arc_inst.arc_num++;
-        }
-    }
+	else arcing = 0;
 
      // Elite:
     if(elite > 0){
@@ -700,45 +688,40 @@
 #define Eel_alrm1
     alarm1 = 30 + random(10);
 
-    target = instance_nearest(x,y,Player);
-    if ammo{
-        alarm1 = 3;
-        ammo--;
-
-        var _dist = irandom(256);
-        repeat(2)
-            with instance_create(x + lengthdir_x(_dist, gunangle), y + lengthdir_y(_dist, gunangle), LaserCharge){
-                alarm0 = 6;
-                motion_set(irandom(359), 2);
-                if(!in_sight(other)) instance_destroy();
-            }
-
-         // Shoot:
-        if ammo <= 0{
-            sound_play(sndLaser);
-            with scrEnemyShoot(EnemyLaser, gunangle + orandom(15), 0){
-                alarm0 = 1;
-            }
-        }
-    }
-    else{
-         // Begin shoot laser
-        if(false && instance_exists(arc_inst) && arc_inst.c == 3 && chance(1, 5) && in_sight(target) && in_distance(target, 96)){
-            alarm1 = 3;
-            ammo = 10;
-            gunangle = point_direction(x, y, target.x, target.y);
-            sound_play(sndLaserCrystalCharge);
-        }
-        else{
-             // When you walking:
-            if(in_sight(target)){
-                scrWalk(irandom_range(23,30), point_direction(x,y,target.x,target.y) + orandom(20));
-            }
-            else{
-                scrWalk(irandom_range(17,30), direction+orandom(30));
-            }
-        }
-    }
+    target = instance_nearest(x, y, Player);
+    
+	 // Search for New Jelly:
+	if(in_distance(target, 160)){
+		if(arc_inst == noone){
+	    	var _disMax = 1000000;
+	    	with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")){
+	    		if(arc_num < arc_max){
+		    		var _dis = point_distance(x, y, other.x, other.y);
+		    		if(_dis < arc_dis && _dis < _disMax){
+		    			if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+			    			_disMax = _dis;
+			    			other.arc_inst = id;
+		    			}
+		    		}
+	    		}
+	    	}
+	    	with(arc_inst) arc_num++;
+		}
+	}
+	else arcing = -1;
+	
+	 // When you walking:
+	if(in_sight(target)){
+		scrWalk(irandom_range(23, 30), point_direction(x, y, target.x, target.y) + orandom(20));
+	}
+	else{
+		scrWalk(irandom_range(17, 30), direction + orandom(30));
+	}
+	
+	 // Stay Near Papa:
+	if(instance_exists(arc_inst) && (arcing < 1 || !in_distance(arc_inst, arc_inst.arc_dis - 16))){
+		direction = point_direction(x, y, arc_inst.x, arc_inst.y) + orandom(10);
+	}
 
 #define Eel_death
     if(elite){
@@ -757,7 +740,7 @@
     }
 
      // Type-Pickups:
-    else switch(c){
+    else switch(type){
         case 0: // Blue
             if(chance(2 * pickup_chance_multiplier, 3)){
                 instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
@@ -1044,15 +1027,14 @@
 #define Jelly_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
-        c = irandom(2);
-        if(c == 0 && GameCont.crown == crwn_guns) c = 1;
-        if(c == 1 && GameCont.crown == crwn_life) c = 0;
-        spr_charged = spr.JellyIdle[c];
-        spr_idle = spr_charged;
-        spr_walk = spr_charged;
-        spr_hurt = spr.JellyHurt[c];
-        spr_dead = spr.JellyDead[c];
-        spr_fire = (c == 3 ? spr.JellyEliteFire : spr.JellyFire);
+        type = irandom(2);
+        if(type == 0 && GameCont.crown == crwn_guns) type = 1;
+        if(type == 1 && GameCont.crown == crwn_life) type = 0;
+        spr_idle = spr.JellyIdle[type];
+        spr_walk = spr_idle;
+        spr_hurt = spr.JellyHurt[type];
+        spr_dead = spr.JellyDead[type];
+        spr_fire = spr.JellyFire;
         spr_shadow = shd24;
         spr_shadow_y = 6;
         hitid = [spr_idle, "JELLY"];
@@ -1064,8 +1046,8 @@
 
          // Vars:
         mask_index = mskLaserCrystal;
-        maxhealth = 52; // (c == 3 ? 72 : 52);
-        raddrop = 16; // (c == 3 ? 38 : 16);
+        maxhealth = 52; // (type == 3 ? 72 : 52);
+        raddrop = 16; // (type == 3 ? 38 : 16);
         size = 2;
         walk = 0;
         walkspd = 1;
@@ -1073,6 +1055,8 @@
         meleedamage = 4;
         direction = random(360);
         arc_num = 0;
+        arc_max = 3;
+        arc_dis = 96;
 
          // Alarms:
         alarm1 = 40 + irandom(20);
@@ -1118,7 +1102,7 @@
             alarm1 += 60;
 
              // Shoot lightning disc:
-            if(c > 2){
+            if(type > 2){
                 for(var a = _targetDir; a < _targetDir + 360; a += (360 / 3)){
                     with(scrEnemyShoot("LightningDiscEnemy", a, 8)){
                         shrink /= 2; // Last twice as long
@@ -1140,19 +1124,18 @@
     sprite_index = spr_walk;
 
 #define Jelly_death
-    if(c <= 2) pickup_drop(50, 2);
+    if(type <= 2) pickup_drop(50, 2);
     else pickup_drop(100, 10);
 
 
 #define JellyElite_create(_x, _y)
     with(obj_create(_x, _y, "Jelly")){
          // Visual:
-        c = 3;
-        spr_charged = spr.JellyIdle[c]
-        spr_idle = spr_charged;
-        spr_walk = spr_charged;
-        spr_hurt = spr.JellyHurt[c];
-        spr_dead = spr.JellyDead[c];
+        type = 3;
+        spr_idle = spr.JellyIdle[type];
+        spr_walk = spr_idle;
+        spr_hurt = spr.JellyHurt[type];
+        spr_dead = spr.JellyDead[type];
         spr_fire = spr.JellyEliteFire;
 
          // Sound:
@@ -1161,6 +1144,8 @@
 
          // Vars:
         raddrop *= 2;
+        arc_max = 5;
+        arc_dis = 128;
 
         return id;
     }
@@ -1215,12 +1200,27 @@
         super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
         creator_follow = true;
         roids = false;
+        setup = true;
         
         return id;
     }
 
+#define LightningDisc_setup
+	setup = false;
+	
+	 // Laser Brain:
+	if(!is_enemy){
+		var _skill = skill_get(mut_laser_brain);
+		charge *= power(1.2, _skill);
+		stretch *= power(1.2, _skill);
+        image_speed *= power(0.75, _skill);
+	}
+
 #define LightningDisc_step
     rotation += rotspeed * current_time_scale;
+    
+     // Setup:
+    if(setup) LightningDisc_setup();
     
      // Charge Up:
     if(image_xscale < charge){
@@ -1288,7 +1288,10 @@
 
          // Effects:
         sound_play_pitch(sndLightningHit, (image_xscale / charge));
-        if(!is_enemy) sound_play_pitch(sndPlasmaReload, (image_xscale / charge) * 3);
+        if(!is_enemy){
+        	sound_play_pitch(sndPlasmaReload, (image_xscale / charge) * 3);
+        	view_shake_max_at(x, y, 6 * image_xscale);
+        }
     }
     else{
         if(charge > 0){
@@ -1300,16 +1303,16 @@
                 }
             }
 
-             // Player Shooting:
-            if(instance_is(creator, Player)) with(creator){
-            	var k = wkick;
-                weapon_post(-4, 16, 8);
-            	if(other.roids){
-            		bwkick = wkick;
-            		wkick = k;
-            	}
-
-                with(other) direction += orandom(6) * other.accuracy;
+             // Creator Stuff:
+            with(creator){
+                var	_kick = (other.roids ? "bwkick" : "wkick");
+                if(_kick in self) variable_instance_set(id, _kick, -4);
+                
+                 // Player Papa:
+                if(instance_is(self, Player)){
+                	weapon_post(wkick, 16 * other.charge, 8 * other.charge);
+                	other.direction += orandom(6 * accuracy);
+                }
             }
 
              // Effects:
@@ -1356,8 +1359,8 @@
         }
 
          // Super Ring Split FX:
-        if (super != -1 && charge <= 0 && image_xscale < super + .9){
-            if (chance(1, 12 * (image_xscale - super))){
+        if(super >= 0 && charge <= 0 && image_xscale < super + 1){
+            if(chance(1, 12 * (image_xscale - super))){
                  // Particles:
                 var _ang = random(360);
                 repeat(irandom(2)){
@@ -1372,13 +1375,14 @@
                  // Sound:
                 var _pitchMod = 1 / (4 * ((image_xscale - super) + .12));
                     _vol = 0.1 / ((image_xscale - super) + 0.2);
-                    sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, min(_vol, 0.7));
-                    sound_play_pitchvol(sndLightningHit, random_range(0.8, 1.2) * _pitchMod, min(_vol, 0.7)*2);
+                    
+                sound_play_pitchvol(sndGammaGutsKill, random_range(1.8, 2.5) * _pitchMod, min(_vol, 0.7));
+                sound_play_pitchvol(sndLightningHit,  random_range(0.8, 1.2) * _pitchMod, min(_vol, 0.7) * 2);
 
-                // DIsplacement:
-                speed *= .98;
-                y += orandom(3) * _pitchMod;
-                x += orandom(3) * _pitchMod;
+                // Displacement:
+                speed -= speed_raw * 0.02;
+                x += orandom(3) * _pitchMod * current_time_scale;
+                y += orandom(3) * _pitchMod * current_time_scale;
             }
         }
     }
@@ -1390,7 +1394,7 @@
         image_yscale -= s;
 
          // Super lightring split:
-        if(super != -1 && image_xscale <= super){
+        if(super >= 0 && (image_xscale <= super || image_yscale <= super)){
             instance_destroy();
             exit;
         }
@@ -1469,8 +1473,7 @@
     }
 
 #define LightningDisc_destroy
-    if(super != -1)
-    {
+    if(super >= 0){
          // Effects:
         sleep(80);
         sound_play_pitchvol(sndLightningPistolUpg, 0.7,               0.4);
@@ -1479,17 +1482,10 @@
 
          // Disc Split:
         var _ang = random(360);
-        for(var a = _ang; a < _ang + 360; a += (360 / 5))
-        {
-            with(obj_create(x, y, "LightningDisc"))
-            {
+        for(var a = _ang; a < _ang + 360; a += (360 / 5)){
+            with(obj_create(x, y, "LightningDisc")){
                 motion_add(a, 10);
                 charge = other.image_xscale / 1.2;
-                if(skill_get(mut_laser_brain)){
-                    charge *= 1.2;
-                    stretch *= 1.2;
-                    image_speed *= 0.75;
-                }
 
                  // Insta-Charge:
                 image_xscale = charge * 0.9;
@@ -2840,7 +2836,7 @@
      // Shrink:
     if(shrink_delay <= 0){
 	    var f = shrink * current_time_scale;
-	    if(ring && !instance_is(creator, enemy)){
+	    if(!instance_is(creator, enemy)){
 	    	f *= power(2/3, skill_get(mut_laser_brain));
 	    }
 	    image_xscale -= f;
@@ -2848,7 +2844,7 @@
     }
     else{
     	var f = current_time_scale;
-	    if(ring && !instance_is(creator, enemy)){
+	    if(!instance_is(creator, enemy)){
 	    	f *= power(2/3, skill_get(mut_laser_brain));
 	    }
     	shrink_delay -= f;
@@ -2859,7 +2855,7 @@
     	
 		 // Growin:
 		var _goal = scale_goal;
-		if(!ring && !instance_is(creator, enemy)){
+		if(!instance_is(creator, enemy)){
 			_goal *= power(1.2, skill_get(mut_laser_brain));
 		}
 		if(abs(_goal - image_xscale) > 0.05 || abs(_goal - image_yscale) > 0.05){
@@ -2886,25 +2882,18 @@
 	if(follow_creator){
 		with(creator){
 			 // Visually Force Player's Gunangle:
-			if(instance_is(self, Player)){
-				var _ang = 0,
-					w = (other.roids ? bwep : wep);
-					
-				if(string_pos("quasar", string(wep_get(w))) == 1){
-					_ang = angle_difference(other.image_angle, gunangle);
-					with(other){
-						if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)) <= 0){
-							with(script_bind_end_step(QuasarBeam_wepangle, 0)){
-								name = script[2];
-								creator = other.creator;
-								roids = other.roids;
-								angle = 0;
-							}
-						}
-						with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)){
-							angle = _ang;
-						}
+			if(instance_is(self, Player)) with(other){
+				var _ang = angle_difference(image_angle, other.gunangle);
+				if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)) <= 0){
+					with(script_bind_end_step(QuasarBeam_wepangle, 0)){
+						name = script[2];
+						creator = other.creator;
+						roids = other.roids;
+						angle = 0;
 					}
+				}
+				with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)){
+					angle = _ang;
 				}
 			}
 			
@@ -2962,7 +2951,7 @@
     bend -= line_dir_turn * current_time_scale;
 
      // Line:
-    var _lineAdd = max(12, 20 * image_yscale),
+    var _lineAdd = 20,
         _lineWid = 16,
         _lineDir = image_angle,
         _lineChange = (instance_is(creator, Player) ? 120 : 40) * current_time_scale,
@@ -3353,13 +3342,15 @@
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
     	with(creator){
-    		if(other.roids){
-    			bwepangle = other.angle;
-    		}
-    		else{
-	    		wepangle = other.angle;
-		    	back = (((((gunangle + wepangle) + 360) % 360) > 180) ? -1 : 1);
-		    	scrRight(gunangle + wepangle);
+    		if(string_pos("quasar", string(wep_get(other.roids ? bwep : wep))) == 1){
+	    		if(other.roids){
+	    			bwepangle = other.angle;
+	    		}
+	    		else{
+		    		wepangle = other.angle;
+			    	back = (((((gunangle + wepangle) + 360) % 360) > 180) ? -1 : 1);
+			    	scrRight(gunangle + wepangle);
+	    		}
     		}
     	}
     	angle -= angle * 0.3 * current_time_scale;
@@ -3865,13 +3856,13 @@
 		                _alpha = image_alpha,
 						_charm = (_blend == c_white && "charm" in self && lq_defget(charm, "charmed", true));
 	
-		        	if(_charm) draw_set_flat(make_color_rgb(56, 252, 0));
+		        	if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
 	
 		            for(var o = 0; o <= _dis; o++){
 		                draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - other.x, _y1 + lengthdir_y(o, _dir) - other.y, _xscal, _yscal, _angle, _blend, _alpha);
 		            }
 	
-		            if(_charm) draw_set_flat(-1);
+		            if(_charm) draw_set_fog(false, 0, 0, 0);
 		        }
 		    }
 		    //d3d_set_fog(0, 0, 0, 0);
@@ -3986,7 +3977,7 @@
     }
 
      // Anglers:
-    draw_set_flat(draw_get_color());
+    draw_set_fog(true, draw_get_color(), 0, 0);
     with(instances_matching(CustomEnemy, "name", "Angler")) if(visible){
         var _img = image_index;
 
@@ -4000,7 +3991,7 @@
             draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
         }
     }
-    draw_set_flat(-1);
+    draw_set_fog(false, 0, 0, 0);
 
      // Jellies:
     with(instances_matching(CustomEnemy, "name", "Jelly")) if(visible){
@@ -4041,7 +4032,7 @@
     }
     
      // Quasar Beams:
-    draw_set_flat(draw_get_color());
+    draw_set_fog(true, draw_get_color(), 0, 0);
     with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")) if(visible){
         var _scale = 5,
         	_xscale = _scale * image_xscale,
@@ -4070,7 +4061,7 @@
         	draw_circle(x, y, (280 * ring_size) + random(4), false);
         }
     }
-    draw_set_flat(-1);
+    draw_set_fog(false, 0, 0, 0);
 
 	if(DebugLag) trace_time("tetrench_draw_dark");
 
@@ -4135,7 +4126,7 @@
     }
     
 	 // Quasar Beams:
-    draw_set_flat(draw_get_color());
+    draw_set_fog(true, draw_get_color(), 0, 0);
     with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")) if(visible){
         var _scale = 2,
         	_xscale = _scale * image_xscale,
@@ -4164,7 +4155,7 @@
         	draw_circle(x, y, (120 * ring_size) + random(4), false);
         }
     }
-    draw_set_flat(-1);
+    draw_set_fog(false, 0, 0, 0);
 
 	if(DebugLag) trace_time("tetrench_draw_dark_end");
 
@@ -4252,7 +4243,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);

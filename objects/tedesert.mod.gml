@@ -1591,6 +1591,12 @@
 #define step
 	if(DebugLag) trace_time();
 
+     // Crab Skeletons Drop Bones:
+    with(instances_matching(BonePile, "my_bone_spawner", null)){
+    	my_bone_spawner = obj_create(x, y, "BoneSpawner");
+    	with(my_bone_spawner) creator = other;
+    }
+
      // Baby Scorpion Spawn:
     with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
     	repeat(babyscorp_drop){
@@ -1711,7 +1717,6 @@
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define draw_set_flat(_color)                                                                   mod_script_call_nc("mod", "telib", "draw_set_flat", _color);
 #define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
 #define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
