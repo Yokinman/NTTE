@@ -2097,7 +2097,7 @@
 #define draw_bonus_spirit
 	if(DebugLag) trace_time();
 	
-	with(instances_matching_ne(Player, "bonus_spirit", null)){
+	with(instances_matching(instances_matching_ne(Player, "bonus_spirit", null), "visible", true)){
 		var n = array_length(bonus_spirit);
 		if(n > 0){
 			var _bend = bonus_spirit_bend,

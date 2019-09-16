@@ -2346,7 +2346,7 @@
 #define ParrotFeather_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
-        sprite_index = sprChickenFeather;
+        sprite_index = spr.Parrot[0].Feather;
         image_blend_fade = c_gray;
         depth = -8;
         
@@ -3827,6 +3827,248 @@
 	}
 
 
+#define UnlockCont_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        depth = UberCont.depth - 1;
+
+         // Vars:
+        persistent = true;
+        unlock = [];
+        unlock_sprit = sprMutationSplat;
+        unlock_image = 0;
+        unlock_delay = 50;
+        unlock_index = 0;
+        unlock_porty = 0;
+        unlock_delay_continue = 0;
+        splash_sprit = sprUnlockPopupSplat;
+        splash_image = 0;
+        splash_delay = 0;
+        splash_index = -1;
+        splash_texty = 0;
+        splash_timer = 0;
+        splash_timer_max = 150;
+        
+        return id;
+    }
+
+#define UnlockCont_step
+    if(instance_exists(Menu)){
+        instance_destroy();
+        exit;
+    }
+    
+    depth = UberCont.depth - 1;
+
+     // Animate Corner Popup:
+    if(splash_delay > 0) splash_delay -= current_time_scale;
+    else{
+	    var _img = 0;
+	    if(instance_exists(Player)){
+	        if(splash_timer > 0){
+	            splash_timer -= current_time_scale;
+	    
+	            _img = sprite_get_number(splash_sprit) - 1;
+	    
+	             // Text Offset:
+	            if(splash_image >= _img && splash_texty > 0){
+	                splash_texty -= current_time_scale;
+	            }
+	        }
+	        else{
+	            splash_texty = 2;
+	    
+	             // Splash Next Unlock:
+	            if(splash_index < array_length(unlock) - 1){
+	                splash_index++;
+	                splash_timer = splash_timer_max;
+	            }
+	        }
+	    }
+	    splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
+	}
+
+     // Game Over Splash:
+    if(instance_exists(UnlockScreen)) unlock_delay = 1;
+    else if(!instance_exists(Player)){
+        while(
+            unlock_index >= 0                   &&
+            unlock_index < array_length(unlock) &&
+            unlock[unlock_index].spr == -1
+        ){
+            unlock_index++; // No Game Over Splash
+        }
+
+        if(unlock_index < array_length(unlock)){
+             // Disable Game Over Screen:
+            with(GameOverButton){
+                if(game_letterbox) alarm_set(0, 30);
+                else instance_destroy();
+            }
+            with(TopCont){
+                gameoversplat = 0;
+                go_addy1 = 9999;
+                dead = false;
+            }
+    
+             // Delay Unlocks:
+            if(unlock_delay > 0){
+                unlock_delay -= current_time_scale;
+                var _delayOver = (unlock_delay <= 0);
+    
+                unlock_delay_continue = 20;
+                unlock_porty = 0;
+    
+                 // Screen Dim + Letterbox:
+                with(TopCont){
+                    visible = _delayOver;
+                    if(darkness){
+                       visible = true;
+                       darkness = 2;
+                    }
+                }
+                game_letterbox = _delayOver;
+    
+                 // Sound:
+                if(_delayOver){
+                    sound_play(sndCharUnlock);
+                    sound_play(unlock[unlock_index].snd);
+                }
+            }
+            else{
+                 // Animate Unlock Splash:
+                var _img = sprite_get_number(unlock_sprit) - 1;
+                unlock_image += clamp(_img - unlock_image, -1, 1) * current_time_scale;
+    
+                 // Portrait Offset:
+                if(unlock_porty < 3){
+                    unlock_porty += current_time_scale;
+                }
+    
+                 // Next Unlock:
+                if(unlock_delay_continue > 0) unlock_delay_continue -= current_time_scale;
+                else for(var i = 0; i < maxp; i++){
+                    if(button_pressed(i, "fire") || button_pressed(i, "okay")){
+                        if(unlock_index < array_length(unlock)){
+                            unlock_index++;
+                            unlock_delay = 1;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+         // Done:
+        else{
+            with(TopCont){
+                go_addy1 = 55;
+                dead = true;
+            }
+            instance_destroy();
+        }
+    }
+
+#define UnlockCont_draw
+    draw_set_projection(0);
+
+     // Game Over Splash:
+    if(unlock_delay <= 0){
+        if(unlock_image > 0){
+            var _unlock = unlock[unlock_index],
+                _nam = _unlock.nam[1],
+                _spr = _unlock.spr,
+                _img = _unlock.img,
+                _x = game_width / 2,
+                _y = game_height - 20;
+
+             // Unlock Portrait:
+            var _px = _x - 60,
+                _py = _y + 9 + unlock_porty;
+
+            draw_sprite(_spr, _img, _px, _py);
+
+             // Splash:
+            draw_sprite(unlock_sprit, unlock_image, _x, _y);
+
+             // Unlock Name:
+            var _tx = _x,
+                _ty = _y - 92 + (unlock_porty < 2);
+
+            draw_set_font(fntBigName);
+            draw_set_halign(fa_center);
+            draw_set_valign(fa_top);
+
+            var t = string_upper(_nam);
+            draw_text_nt(_tx, _ty, t);
+
+             // Unlocked!
+            _ty += string_height(t) + 3;
+            if(unlock_porty >= 3){
+                d3d_set_fog(1, 0, 0, 0);
+                draw_sprite(sprTextUnlocked, 4, _tx + 1, _ty);
+                draw_sprite(sprTextUnlocked, 4, _tx,     _ty + 1);
+                draw_sprite(sprTextUnlocked, 4, _tx + 1, _ty + 1);
+                d3d_set_fog(0, 0, 0, 0);
+                draw_sprite(sprTextUnlocked, 4, _tx,     _ty);
+            }
+
+             // Continue Button:
+            if(unlock_delay_continue <= 0){
+                var _cx = _x,
+                    _cy = _y - 4,
+                    _blend = make_color_rgb(102, 102, 102);
+
+                for(var i = 0; i < maxp; i++){
+                    if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _cx - 64, _cy - 12, _cx + 64, _cy + 16)){
+                        _blend = c_white;
+                        break;
+                    }
+                }
+
+                draw_sprite_ext(sprUnlockContinue, 0, _cx, _cy, 1, 1, 0, _blend, 1);
+            }
+        }
+    }
+
+     // Corner Popup:
+    if(splash_image > 0){
+         // Splash:
+        var _x = game_width,
+            _y = game_height;
+    
+        draw_sprite(splash_sprit, splash_image, _x, _y);
+
+         // Unlock Text:
+        if(splash_texty < 2){
+            var _unlock = unlock[splash_index],
+                _nam = _unlock.nam[0],
+                _txt = _unlock.txt,
+                _tx = _x - 4,
+                _ty = _y - 16 + splash_texty;
+
+            draw_set_font(fntM);
+            draw_set_halign(fa_right);
+            draw_set_valign(fa_bottom);
+
+             // Title:
+            var t = "";
+            if(_nam != ""){
+	            t = _nam + " UNLOCKED";
+	            draw_text_nt(_tx, _ty, t);
+            }
+
+             // Description:
+            if(splash_texty <= 0){
+                _ty += max(string_height("A"), string_height(t));
+                draw_text_nt(_tx, _ty, "@s" + _txt);
+            }
+        }
+    }
+
+    draw_reset_projection();
+
+
 #define VenomPellet_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -4027,8 +4269,34 @@
         }
         else scrHarpoonUnrope(_rope);
     }
+    
+	 // Pet Tips:
+	with(instances_matching(GenCont, "tip_ntte_pet", null)){
+		tip_ntte_pet = chance(1, 14);
+		if(tip_ntte_pet){
+			var _player = array_shuffle(instances_matching_ne(Player, "ntte_pet", null)),
+				_tip = null;
 
-	 // Pet Levels:
+			with(_player){
+				var _pet = array_shuffle(array_clone(ntte_pet));
+				with(_pet) if(instance_exists(self)){
+					var _scrt = pet + "_ttip";
+					if(mod_script_exists(mod_type, mod_name, _scrt)){
+						_tip = mod_script_call(mod_type, mod_name, _scrt);
+						if(array_length(_tip) > 0){
+							_tip = _tip[irandom(array_length(_tip) - 1)];
+						}
+					}
+
+					if(is_string(_tip)) break;
+				}
+				if(is_string(_tip)) break;
+			}
+			if(is_string(_tip)) tip = _tip;
+		}
+	}
+
+	 // Pet Leveling Up FX:
 	with(instances_matching(LevelUp, "nttepet_levelup", null)){
 		nttepet_levelup = true;
 		if(instance_is(creator, Player)){

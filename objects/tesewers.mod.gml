@@ -817,9 +817,9 @@
 		depth = -2;
 
          // Sound:
-        snd_hurt = sndSalamanderHurt;
-        snd_dead = sndRatkingCharge;
-		snd_lowh = sndLilHunterHalfHP;
+        snd_hurt = sndMutant10Hurt;
+        snd_dead = sndMutant10Dead;
+		snd_lowh = sndNothing2HalfHP;
 
          // Vars:
         friction = 0.01;
@@ -884,7 +884,7 @@
     if(tauntdelay > 0 && !instance_exists(Player)){
         tauntdelay -= current_time_scale;
         if(tauntdelay <= 0){
-            sound_play_pitch(sndLilHunterTaunt, 0.8);
+            sound_play_pitchvol(sndMutant10KillBigBandit, 0.7 + orandom(0.05), 1);
         }
     }
 
@@ -954,9 +954,14 @@
 	image_blend = merge_color(image_blend, c_black, cloud_blend);
 
 	 // Self:
+	var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	if(h) draw_set_fog(true, _blend, 0, 0);
+	
     if(gunangle >  180) draw_self_enemy();
     draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
     if(gunangle <= 180) draw_self_enemy();
+    
+    if(h) draw_set_fog(false, 0, 0, 0);
 
     image_blend = _blend;
 
@@ -972,7 +977,7 @@
 
 		 // Turnin Into Bats:
 		var _ang = random(360);
-		for(var d = _ang; d < _ang + 360; d += (360 / 3)){
+		for(var d = _ang; d < _ang + 360; d += (360 / (3 + (2 * GameCont.loops)))){
 			var l = 8;
 			with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatCloud")){
 				target = other.target;
@@ -1025,7 +1030,7 @@
 
 	if(active){
 	    target = instance_nearest(x, y, Player);
-	    if instance_exists(target){
+	    if(instance_exists(target)){
     	    var _targetDir = point_direction(x, y, target.x, target.y);
     
     	    if(in_sight(target) && in_distance(target, 240)){
@@ -1083,6 +1088,12 @@
     	    gunangle = (in_sight(target) ? _targetDir : direction);
     		scrRight(gunangle);
 	    }
+	    
+	     // Wander:
+	    else{
+	    	alarm1 = 45 + random(60);
+	    	scrWalk(5, random(360));
+	    }
 	}
 
 	 // More Aggressive Bats:
@@ -1125,11 +1136,24 @@
     if(!instance_is(other, ToxicGas)){
         stress += _hitdmg;
         enemyHurt(_hitdmg, _hitvel, _hitdir);
+        
+         // Pitch Hurt:
+        if(snd_hurt == sndMutant10Hurt){
+        	var s = sound_play_hit_ext(snd_hurt, 0.6 + random(0.2), 0.5 + random(0.1));
+        	audio_sound_set_track_position(s, 0.07);
+        	sound_play_hit_ext(sndHitFlesh, 1 + orandom(0.3), 1.3);
+        }
 
          // Half HP:
         var h = (maxhealth / 2);
-        if(in_range(my_health, h - _hitdmg, h)){
-        	sound_play(snd_lowh);
+        if(in_range(my_health, h - _hitdmg + 1, h)){
+        	if(snd_lowh == sndNothing2HalfHP){
+        		sound_play_pitch(sndNothing2HalfHP, 1.3);
+        	}
+        	else sound_play(snd_lowh);
+        	
+        	 // Biggo Screech:
+        	scrBatBossScreech(5);
         }
     }
 
@@ -1138,11 +1162,16 @@
         stress -= 4;
         nexthurt = current_frame + 5;
 
-        scrBatBossScreech(true);
+        scrBatBossScreech(1);
     }
 
 #define BatBoss_death
     instance_create(x, y, PortalClear);
+
+	 // Pitch Death:
+	if(snd_dead == sndMutant10Dead){
+		sound_play_hit_ext(snd_dead, 0.55 + random(0.1), 1);
+	}
 
 	 // Pickups:
     repeat(2) pickup_drop(1000, 0);
@@ -1182,8 +1211,10 @@
      // Boss Win Music:
     else with(MusCont) alarm_set(1, 1);
 
-#define scrBatBossScreech /// scrBatBossScreech(?_single = undefined)
-    var _single = argument_count > 0 ? argument[0] : undefined;
+#define scrBatBossScreech /// scrBatBossScreech(_extraNum = 3, _extraScale = 0.5)
+    var _extraNum = argument_count > 0 ? argument[0] : 3;
+var _extraScale = argument_count > 1 ? argument[1] : 0.5;
+    
      // Effects:
     sound_play_pitchvol(sndNothing2Hurt, 1.4 + random(0.2), 0.7);
     sound_play_pitchvol(sndSnowTankShoot, 0.8 + random(0.4), 0.5);
@@ -1192,18 +1223,20 @@
     sleep(40);
 
      // Alert nearest cat:
-    with nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))
+    with(nearest_instance(x, y, instances_matching(CustomEnemy, "name", "Cat"))){
         cantravel = true;
+    }
 
      // Screech:
     scrEnemyShoot("BatScreech", 0, 0);
-    if(is_undefined(_single) || !_single){
+    if(_extraNum > 0){
         var l = 56;
-        for (var d = 0; d <= 360; d += 360 / 3)
-            with scrEnemyShootExt(x + lengthdir_x(l, gunangle + d), y + lengthdir_y(l, gunangle + d), "BatScreech", 0, 0){
-                image_xscale = 0.5;
-                image_yscale = 0.5;
+        for(var d = gunangle; d < gunangle + 360; d += (360 / _extraNum)){
+            with scrEnemyShootExt(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0){
+                image_xscale = _extraScale;
+                image_yscale = _extraScale;
             }
+    	}
     }
     sprite_index = spr_fire;
     image_index = 0;
@@ -1974,9 +2007,9 @@
 		depth = -2;
 
          // Sound:
-		snd_hurt = sndScorpionHit;
+		snd_hurt = sndBuffGatorHit;
 		snd_dead = sndSalamanderDead;
-		snd_lowh = sndBigBanditHalfHP;
+		snd_lowh = sndBallMamaAppear;
 		jetpack_loop = -1;
 
 		 // Vars:
@@ -2049,7 +2082,13 @@
     if(tauntdelay > 0 && !instance_exists(Player)){
         tauntdelay -= current_time_scale;
         if(tauntdelay <= 0){
-            sound_play_pitch(sndBigBanditTaunt, 1.2);
+            var s = sound_play_pitchvol(sndBallMamaTaunt, 0.9, 3);
+            audio_sound_set_track_position(s, 1);
+            
+             // Epic Fart:
+            walk = 0;
+            sound_play_pitchvol(sndToxicBoltGas, 0.4, 0.5);
+        	with(instance_create(x, y + 8, ToxicDelay)) alarm0 = 1;
         }
     }
 
@@ -2172,7 +2211,7 @@
                     	
                     	 // Effects:
                     	repeat(16) scrFX(x, y, random(5), Dust);
-                    	sound_play_pitchvol(sndBigBanditMeleeStart, 0.7 + random(0.2), 1.2);
+                    	sound_play_pitchvol(sndBigBanditMeleeStart, 0.6 + random(0.2), 1.2);
                     }
                 }
         
@@ -2275,41 +2314,53 @@
 #define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)
     if(!instance_is(other, ToxicGas)){
     	enemyHurt(_hitdmg, (dash ? 0 : _hitvel), _hitdir);
+    	
+    	 // Pitch Hurt:
+    	if(snd_hurt == sndBuffGatorHit){
+    		sound_play_hit_ext(snd_hurt, 0.6 + random(0.3), 2);
+    	}
 
          // Half HP:
         var h = (maxhealth / 2);
-        if(in_range(my_health, h - _hitdmg, h)){
-        	sound_play(snd_lowh);
+        if(in_range(my_health, h - _hitdmg + 1, h)){
+        	if(snd_lowh == sndBallMamaAppear){
+        		var s = sound_play_pitchvol(snd_lowh, 0.8, 1.5);
+        		audio_sound_set_track_position(s, 1.5);
+        	}
+        	else sound_play(snd_lowh);
         }
 
          // Break charging:
-        if supertime > 0 && superbreakmax > 0{
+        if(supertime > 0 && superbreakmax > 0){
             supertime += _hitdmg * 4;
             superbreakmax--;
-            if supertime >= maxsupertime{
+            
+            if(supertime >= maxsupertime){
                 alarm1 = 40 + irandom(20);
                 supertime = 0;
                 gunangle = right ? 300 : 240;
                 sleep(100);
                 view_shake_at(x, y, 20);
                 motion_add(_hitdir, 4);
+                
                  // Sounds:
                 sound_play_pitch(sndGunGun, 0.8);
                 sound_play_pitch(sndStrongSpiritLost, 1.2);
-                 // Effects:
-                instance_create(x, y, ImpactWrists).depth = -3;
                 
-                raddrop = max(0, raddrop - 2);
-                if raddrop > 0
-                    repeat(2 + irandom(2))
-                        with instance_create(x, y, Rad){
-                            motion_set(_hitdir + orandom(30), 4 + random(4));
-                            friction = 0.4;
-                        }
-                repeat(3 + irandom(6))
-                    with instance_create(x, y, Smoke)
+                 // Effects:
+                with(instance_create(x, y, ImpactWrists)) depth = -3;
+            	repeat(2 + irandom(2)){
+                    with(instance_create(x, y, Rad)){
                         motion_set(_hitdir + orandom(30), 4 + random(4));
-                with instance_create(x + lengthdir_x(16, gunangle), y + lengthdir_y(16, gunangle), FishA){
+                        friction = 0.4;
+                    }
+            	}
+                repeat(3 + irandom(6)){
+                    with(instance_create(x, y, Smoke)){
+                        motion_set(_hitdir + orandom(30), 4 + random(4));
+                	}
+                }
+                with(instance_create(x + lengthdir_x(16, gunangle), y + lengthdir_y(16, gunangle), FishA)){
                     image_angle = other.gunangle;
                     depth = -3;
                 }
@@ -3590,7 +3641,7 @@
 	if(place_meeting(x, y, hitme)){
 		var _x = x,
 			_y = y - 8;
-
+			
 		with(instances_meeting(x, y, hitme)){
 			if(place_meeting(x, y, other) && !instance_is(self, prop)){
 				motion_add_ct(((y <= _y) ? 270 : point_direction(_x, _y, x, y)), 0.6);
@@ -3599,8 +3650,14 @@
 	}
 
      // Animate:
-    if(sprite_index != spr_idle && anim_end){
-        sprite_index = spr_idle;
+    if(sprite_index == spr_idle){
+    	if(image_index < 1){
+    		image_index -= image_speed_raw * random_range(0.99, 1);
+    	}
+    }
+    else if(anim_end){
+    	sprite_index = spr_idle;
+    	image_index = 0;
     }
 
      // Break:
@@ -4281,15 +4338,15 @@
         charging = true;
 
 		 // Alarms:
-        alarm0 = 15;
+        alarm0 = max(1, 15 / (1 + (0.5 * GameCont.loops)));
 
         return id;
     }
 
 #define VenomFlak_step
 	if(charging){
-		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0);
-		speed += ((friction + (0.3 * _angry)) * current_time_scale);
+		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0) + (0.5 * GameCont.loops);
+		speed += friction_raw + (0.3 * _angry * current_time_scale);
 
 		 // Follow Creator:
 		if(instance_exists(creator)){

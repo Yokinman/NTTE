@@ -1425,7 +1425,7 @@
             _y = y + lengthdir_y(r * image_yscale, d);
 
         with(instance_create(_x, _y, (is_enemy ? EnemyLightning : Lightning))){
-            ammo = other.image_xscale + random(other.image_xscale * 2);
+            ammo = min(30, other.image_xscale + random(other.image_xscale * 2));
             direction = point_direction(x, y, _tx, _ty) + orandom(12);
             image_angle = direction;
             team = other.team;
@@ -2282,7 +2282,7 @@
 
      // Half HP:
     var h = (maxhealth / 2);
-    if(in_range(my_health, h - _hitdmg, h)){
+    if(in_range(my_health, h - _hitdmg + 1, h)){
     	sound_play(snd_lowh);
     }
 

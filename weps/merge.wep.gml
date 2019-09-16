@@ -1627,7 +1627,7 @@
 		}
 		switch(_frontObjRaw){
 			case Laser:
-				if(_stockObjRaw != Disc){
+				if(_stockObjRaw != Disc && _stockObjRaw != Grenade && !object_is_ancestor(_stockObjRaw, Grenade)){
 					_frontProjCost /= 2;
 					if(_stockObjRaw == Laser) _stockProjCost /= 2;
 				}

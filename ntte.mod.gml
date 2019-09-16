@@ -927,6 +927,9 @@
             break;
     }
 
+     // Visibilize Pets:
+    with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
+
      // Flavor big cactus:
     if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
     	with(instance_random([Cactus, NightCactus])){
@@ -967,9 +970,6 @@
             }
         }
     }
-
-     // Visibilize Pets:
-    with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
     
      // Backpack Setpieces:
     var _canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
@@ -1325,8 +1325,6 @@
         global.newLevel = false;
         level_start();
     }
-    
-    if(DebugLag) trace_time("ntte_step A");
 
      // Call Area Events (Not built into area mods):
     var a = array_find_index(areaList, GameCont.area);
@@ -1399,8 +1397,6 @@
             }
         }
     }
-
-    if(DebugLag) trace_time("ntte_step B");
     
      // Fix for Custom Music/Ambience:
     for(var i = 0; i < lq_size(global.current); i++){
@@ -1469,7 +1465,7 @@
 		}
 	}
 
-    if(DebugLag) trace_time("ntte_step C");
+    if(DebugLag) trace_time("ntte_step");
 
 #define end_step
 	if(DebugLag) trace_time();
@@ -1484,32 +1480,6 @@
 	}
 
 	try{
-		 // Pet Tips:
-		with(instances_matching(GenCont, "tip_ntte_pet", null)){
-			tip_ntte_pet = chance(1, 14);
-			if(tip_ntte_pet){
-				var _player = array_shuffle(instances_matching_ne(Player, "ntte_pet", null)),
-					_tip = null;
-
-				with(_player){
-					var _pet = array_shuffle(array_clone(ntte_pet));
-					with(_pet) if(instance_exists(self)){
-						var _scrt = pet + "_ttip";
-						if(mod_script_exists(mod_type, mod_name, _scrt)){
-							_tip = mod_script_call(mod_type, mod_name, _scrt);
-							if(array_length(_tip) > 0){
-								_tip = _tip[irandom(array_length(_tip) - 1)];
-							}
-						}
-
-						if(is_string(_tip)) break;
-					}
-					if(is_string(_tip)) break;
-				}
-				if(is_string(_tip)) tip = _tip;
-			}
-		}
-
 	     // Merged Wep Pickup Indicator:
 	    with(instances_matching(WepPickup, "mergewep_indicator", null)){
 	    	mergewep_indicator = true;
@@ -1569,7 +1539,7 @@
 		
 		 // Crown Found:
 		if(is_string(crown_current) && array_exists(crwnList, crown_current)){
-			if(!unlock_get("found(" + crown_current + ".crown_current)")){
+			if(!unlock_get("found(" + crown_current + ".crown)")){
 				unlock_set("found(" + crown_current + ".crown)", true);
 			}
 		}
@@ -2300,15 +2270,119 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 					}
 				}
 				
-				 // Parrot Feathers:
 				with(instances_matching(_player, "race", "parrot")){
 					_surfHUD.active = true;
 					
+					var _skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10));
+					
+					 // Ultra B:
+					if(charm_hplink_hud > 0){
+						var	_HPCur = max(0, my_health),
+							_HPMax = max(0, maxhealth),
+							_HPLst = max(0, lsthealth),
+							_HPCurCharm = max(0, charm_hplink_hud_hp[0]),
+							_HPMaxCharm = max(0, charm_hplink_hud_hp[1]),
+							_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
+							_w = 83,
+							_h = 7,
+							_x = _ox + 22,
+							_y = _oy + 7,
+							_HPw = floor(_w * (1 - (0.7 * charm_hplink_hud)));
+							
+						draw_set_halign(fa_center);
+						draw_set_valign(fa_middle);
+						
+						 // Main BG:
+						draw_set_color(c_black);
+						draw_rectangle(_x, _y, _x + _w, _y + _h, false);
+							
+						/// Charmed HP:
+							var _x1 = _x + _HPw + 2,
+								_x2 = _x + _w;
+								
+							if(_x1 < _x2){
+								 // lsthealth Filling:
+								if(_HPLstCharm > _HPCurCharm){
+									draw_set_color(merge_color(
+										merge_color(_skinCol, player_get_color(index), 0.5),
+										make_color_rgb(21, 27, 42),
+										2/3
+									));
+									draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLstCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+								}
+								
+								 // my_health Filling:
+								if(_HPCurCharm > 0 && _HPMaxCharm > 0){
+									draw_set_color(
+										(sprite_index == spr_hurt && image_index < 1)
+										? c_white
+										: merge_color(_skinCol, player_get_color(index), 0.5)
+									);
+									draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+								}
+								
+								 // Text:
+								var _HPText = `${_HPCurCharm}/${_HPMaxCharm}`;
+								draw_set_font(
+									(string_length(_HPText) > 7 || ((string_length(_HPText) - 1) * 8) >= _x2 - _x1)
+									? fntSmall
+									: fntM
+								);
+								draw_text_nt(min(floor(lerp(_x1, _x + _w, 0.54)), _x + _w - (string_width(_HPText) / 2)), _y + 1 + floor(_h / 2), _HPText);
+							}
+							
+						/// Normal HP:
+							 // BG:
+							draw_set_color(c_black);
+							draw_rectangle(_x, _y, _x + _HPw, _y + _h, false);
+							
+							 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
+							if(_HPLst > _HPCur){
+								draw_set_color(merge_color(
+									player_get_color(index),
+									make_color_rgb(21, 27, 42),
+									2/3
+								));
+								draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
+							}
+							
+							 // my_health Filling:
+							if(_HPCur > 0 && _HPMax > 0){
+								draw_set_color(
+									(_HPLst < _HPCur)
+									? c_white
+									: player_get_color(index)
+								);
+								draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
+							}
+							
+							 // Text:
+							if(_HPLst >= _HPCur || sin(wave) > 0){
+								var _HPText = `${_HPCur}/${_HPMax}`;
+								draw_set_font(
+									(string_length(_HPText) > 6 * (1 - charm_hplink_hud))
+									? fntSmall
+									: fntM
+								);
+								draw_text_nt(_x + floor(_HPw * 0.55), _y + 1 + floor(_h / 2), _HPText);
+							}
+							
+						 // Separator:
+						if(_HPw < _w){
+							draw_set_color(c_white);
+							draw_line_width(_x + _HPw + 1, _y - 2, _x + _HPw + 1, _y + _h, 1);
+							if(_HPw + 1 < _w){
+								draw_set_color(c_black);
+								draw_line_width(_x + _HPw + 2, _y - 2, _x + _HPw + 2, _y + _h, 1);
+							}
+						}
+					}
+					
+					 // Parrot Feathers:
 					var _x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
 						_y = _oy + 11,
 						_spr = spr_feather,
-						_output = 1 + (2 * ultra_get(race, 1)),
-						_skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10)),
+						_output = feather_num_mult,
 						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
 						_hudGoal = [feather_ammo, 0];
 						
@@ -2397,10 +2471,19 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 					if(_players <= 1){
 						if(drawlowhp > 0 && sin(wave) > 0){
 							if(my_health <= 4 && my_health != maxhealth){
-								draw_set_font(fntM);
-								draw_set_halign(fa_left);
-								draw_set_valign(fa_top);
-								draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
+								if(fork()){
+									for(var i = 0; i < maxp; i++) if(button_pressed(i, "paus")){
+										drawlowhp = 0;
+										exit;
+									}
+									
+									draw_set_font(fntM);
+									draw_set_halign(fa_left);
+									draw_set_valign(fa_top);
+									draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
+									
+									exit;
+								}
 							}
 						}
 					}
@@ -4005,33 +4088,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrUnlock(_name, _text, _sprite, _sound)
      // Make Sure UnlockCont Exists:
     if(array_length(UnlockCont) <= 0){
-        with(instance_create(0, 0, CustomObject)){
-            name = "UnlockCont";
-
-             // Visual:
-            depth = UberCont.depth - 1;
-
-             // Vars:
-            persistent = true;
-            unlock = [];
-            unlock_sprit = sprMutationSplat;
-            unlock_image = 0;
-            unlock_delay = 50;
-            unlock_index = 0;
-            unlock_porty = 0;
-            unlock_delay_continue = 0;
-            splash_sprit = sprUnlockPopupSplat;
-            splash_image = 0;
-            splash_delay = 0;
-            splash_index = -1;
-            splash_texty = 0;
-            splash_timer = 0;
-            splash_timer_max = 150;
-
-             // Events:
-            on_step = unlock_step;
-            on_draw = unlock_draw;
-        }
+    	obj_create(0, 0, "UnlockCont");
     }
 
      // Add New Unlock:
@@ -4051,220 +4108,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
     return u;
-
-#define unlock_step
-    if(instance_exists(Menu)){
-        instance_destroy();
-        exit;
-    }
-
-     // Animate Corner Popup:
-    if(splash_delay > 0) splash_delay -= current_time_scale;
-    else{
-	    var _img = 0;
-	    if(instance_exists(Player)){
-	        if(splash_timer > 0){
-	            splash_timer -= current_time_scale;
-	    
-	            _img = sprite_get_number(splash_sprit) - 1;
-	    
-	             // Text Offset:
-	            if(splash_image >= _img && splash_texty > 0){
-	                splash_texty -= current_time_scale;
-	            }
-	        }
-	        else{
-	            splash_texty = 2;
-	    
-	             // Splash Next Unlock:
-	            if(splash_index < array_length(unlock) - 1){
-	                splash_index++;
-	                splash_timer = splash_timer_max;
-	            }
-	        }
-	    }
-	    splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
-	}
-
-     // Game Over Splash:
-    if(instance_exists(UnlockScreen)) unlock_delay = 1;
-    else if(!instance_exists(Player)){
-        while(
-            unlock_index >= 0                   &&
-            unlock_index < array_length(unlock) &&
-            unlock[unlock_index].spr == -1
-        ){
-            unlock_index++; // No Game Over Splash
-        }
-
-        if(unlock_index < array_length(unlock)){
-             // Disable Game Over Screen:
-            with(GameOverButton){
-                if(game_letterbox) alarm_set(0, 30);
-                else instance_destroy();
-            }
-            with(TopCont){
-                gameoversplat = 0;
-                go_addy1 = 9999;
-                dead = false;
-            }
-    
-             // Delay Unlocks:
-            if(unlock_delay > 0){
-                unlock_delay -= current_time_scale;
-                var _delayOver = (unlock_delay <= 0);
-    
-                unlock_delay_continue = 20;
-                unlock_porty = 0;
-    
-                 // Screen Dim + Letterbox:
-                with(TopCont){
-                    visible = _delayOver;
-                    if(darkness){
-                       visible = true;
-                       darkness = 2;
-                    }
-                }
-                game_letterbox = _delayOver;
-    
-                 // Sound:
-                if(_delayOver){
-                    sound_play(sndCharUnlock);
-                    sound_play(unlock[unlock_index].snd);
-                }
-            }
-            else{
-                 // Animate Unlock Splash:
-                var _img = sprite_get_number(unlock_sprit) - 1;
-                unlock_image += clamp(_img - unlock_image, -1, 1) * current_time_scale;
-    
-                 // Portrait Offset:
-                if(unlock_porty < 3){
-                    unlock_porty += current_time_scale;
-                }
-    
-                 // Next Unlock:
-                if(unlock_delay_continue > 0) unlock_delay_continue -= current_time_scale;
-                else for(var i = 0; i < maxp; i++){
-                    if(button_pressed(i, "fire") || button_pressed(i, "okay")){
-                        if(unlock_index < array_length(unlock)){
-                            unlock_index++;
-                            unlock_delay = 1;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-         // Done:
-        else{
-            with(TopCont){
-                go_addy1 = 55;
-                dead = true;
-            }
-            instance_destroy();
-        }
-    }
-
-#define unlock_draw
-    draw_set_projection(0);
-
-     // Game Over Splash:
-    if(unlock_delay <= 0){
-        if(unlock_image > 0){
-            var _unlock = unlock[unlock_index],
-                _nam = _unlock.nam[1],
-                _spr = _unlock.spr,
-                _img = _unlock.img,
-                _x = game_width / 2,
-                _y = game_height - 20;
-
-             // Unlock Portrait:
-            var _px = _x - 60,
-                _py = _y + 9 + unlock_porty;
-
-            draw_sprite(_spr, _img, _px, _py);
-
-             // Splash:
-            draw_sprite(unlock_sprit, unlock_image, _x, _y);
-
-             // Unlock Name:
-            var _tx = _x,
-                _ty = _y - 92 + (unlock_porty < 2);
-
-            draw_set_font(fntBigName);
-            draw_set_halign(fa_center);
-            draw_set_valign(fa_top);
-
-            var t = string_upper(_nam);
-            draw_text_nt(_tx, _ty, t);
-
-             // Unlocked!
-            _ty += string_height(t) + 3;
-            if(unlock_porty >= 3){
-                d3d_set_fog(1, 0, 0, 0);
-                draw_sprite(sprTextUnlocked, 4, _tx + 1, _ty);
-                draw_sprite(sprTextUnlocked, 4, _tx,     _ty + 1);
-                draw_sprite(sprTextUnlocked, 4, _tx + 1, _ty + 1);
-                d3d_set_fog(0, 0, 0, 0);
-                draw_sprite(sprTextUnlocked, 4, _tx,     _ty);
-            }
-
-             // Continue Button:
-            if(unlock_delay_continue <= 0){
-                var _cx = _x,
-                    _cy = _y - 4,
-                    _blend = make_color_rgb(102, 102, 102);
-
-                for(var i = 0; i < maxp; i++){
-                    if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _cx - 64, _cy - 12, _cx + 64, _cy + 16)){
-                        _blend = c_white;
-                        break;
-                    }
-                }
-
-                draw_sprite_ext(sprUnlockContinue, 0, _cx, _cy, 1, 1, 0, _blend, 1);
-            }
-        }
-    }
-
-     // Corner Popup:
-    if(splash_image > 0){
-         // Splash:
-        var _x = game_width,
-            _y = game_height;
-    
-        draw_sprite(splash_sprit, splash_image, _x, _y);
-
-         // Unlock Text:
-        if(splash_texty < 2){
-            var _unlock = unlock[splash_index],
-                _nam = _unlock.nam[0],
-                _txt = _unlock.txt,
-                _tx = _x - 4,
-                _ty = _y - 16 + splash_texty;
-
-            draw_set_font(fntM);
-            draw_set_halign(fa_right);
-            draw_set_valign(fa_bottom);
-
-             // Title:
-            var t = "";
-            if(_nam != ""){
-	            t = _nam + " UNLOCKED";
-	            draw_text_nt(_tx, _ty, t);
-            }
-
-             // Description:
-            if(splash_texty <= 0){
-                _ty += max(string_height("A"), string_height(t));
-                draw_text_nt(_tx, _ty, "@s" + _txt);
-            }
-        }
-    }
-
-    draw_reset_projection();
 
 #define scrCharmTarget()
     with(instance){
@@ -4716,7 +4559,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 }
 
                  // Charm Timer:
-                if(instance_is(_self, hitme) && time > 0){
+                if((instance_is(_self, hitme) || instance_is(_self, becomenemy)) && time > 0){
                     time -= time_speed * current_time_scale;
                     if(time <= 0) scrCharm(_self, false);
                 }
@@ -5317,7 +5160,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 		var _new = _race;
 
 		with(instances_matching(CharSelect, "race", _race)){
-			var _slct = instances_matching_ne(instances_matching_ne(CharSelect, "id", id), "race", 16/*=Locked in game logic??*/),
+			var _slct = instances_matching_ne(instances_matching_ne(CharSelect, "id", id), "race", 16/*==Locked in game logic??*/),
 				_inst = _slct;
 
 			if(_raceChange > 0){

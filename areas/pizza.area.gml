@@ -32,7 +32,7 @@
     return choose(choose("IT SMELLS NICE HERE", "HUNGER..."), mod_script_call("area", "lair", "area_text"));
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx + 0.5, -8, true];
+    return [_lastx, 9];
 
 #define area_sprite(_spr)
     switch(_spr){

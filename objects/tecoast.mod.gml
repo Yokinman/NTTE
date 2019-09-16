@@ -1530,7 +1530,7 @@
 
      // Half HP:
     var h = (maxhealth / 2);
-    if(in_range(my_health, h - _hitdmg, h)){
+    if(in_range(my_health, h - _hitdmg + 1, h)){
     	if(snd_lowh == sndRocket) sound_play_pitch(snd_lowh, 0.5);
     	else sound_play(snd_lowh);
 

@@ -1710,6 +1710,7 @@
                             }
                             with(_copy){
                                 image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1));
+                                ammo = min(30, ammo);
                             	
                             	 // Split Lightning:
                                 var _varCopy = variable_instance_get_names(id),

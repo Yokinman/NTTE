@@ -10,8 +10,6 @@
     global.sav = mod_variable_get("mod", "teassets", "sav");
 
     while(true){
-        with(TopCont) script_bind_draw(draw_gui, depth - 0.01);
-
          // Chests Give Feathers:
         if(!instance_exists(GenCont)){
             with(instances_matching(chestprop, "my_feather_storage", null)){
@@ -205,15 +203,22 @@
 	return lq_get(spr.Parrot[0], "UltraHUD" + chr(64 + _ultra));
 
 #define race_ultra_take(_ultra, _state)
-	switch(_ultra){
-		case ultFeath:
-			with(instances_matching(Player, "race", mod_current)){
-				feather_ammo = feather_ammo_max;
-			}
-			break;
-
-		case ultShare:
-			break;
+	with(instances_matching(Player, "race", mod_current)){
+		switch(_ultra){
+			case ultFeath:
+				feather_num_mult = 1 + (2 * _state);
+				feather_targ_radius = 32 * (1 + _state);
+				
+				 // Bonus - Full Ammo:
+				if(instance_exists(EGSkillIcon)){
+					feather_ammo = feather_ammo_max;
+				}
+				break;
+	
+			case ultShare:
+				// Look elsewhere bro
+				break;
+		}
 	}
 
 	 // Ultra Sound:
@@ -251,17 +256,36 @@
 
      // Feather Related:
     feather_num = 12;
+    feather_num_mult = 1;
     feather_ammo = 0;
     feather_ammo_max = 5 * feather_num;
     feather_ammo_hud = [];
     //feather_ammo_hud_flash = 0;
+    feather_targ_radius = 32;
     feather_targ_delay = 0;
+    
+     // Ultra B:
+    charm_hplink_lock = my_health;
+    charm_hplink_hud = 0;
+    charm_hplink_hud_hp = array_create(2, 0);
+    charm_hplink_hud_hp_lst = 0;
 
      // Pets:
     if("ntte_pet" not in self) ntte_pet = [noone];
     while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
+    
+     // Perching Parrot:
     parrot_bob = [0, 1, 1, 0];
-    if(bskin) for(var i = 0; i < array_length(parrot_bob); i++) parrot_bob[i] += 3;
+    if(bskin) for(var i = 0; i < array_length(parrot_bob); i++){
+    	parrot_bob[i] += 3;
+    }
+    
+     // Re-Get Ultras When Revived:
+    for(var i = 0; i < ultra_count(mod_current); i++){
+    	if(ultra_get(mod_current, i)){
+    		race_ultra_take(i, true);
+    	}
+    }
 
 #define game_start
     with(instances_matching(Player, "race", mod_current)){
@@ -312,7 +336,7 @@
     if(button_check(index, "spec") || usespec > 0){
         var _feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
             _feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
-            _featherNum = ceil(feather_num * (1 + (2 * ultra_get(mod_current, ultFeath))));
+            _featherNum = ceil(feather_num * feather_num_mult);
 
         if(array_length(_feathersTargeting) < _featherNum){
              // Retrieve Feathers:
@@ -370,7 +394,7 @@
                 var _targ = [],
                     _targX = mouse_x[index],
                     _targY = mouse_y[index],
-                	_targRadius = 32 * (1 + ultra_get(mod_current, ultFeath)),
+                	_targRadius = feather_targ_radius,
                     _featherMax = array_length(_feathersTargeting);
 
 				 // Gather All Potential Targets:
@@ -416,246 +440,86 @@
             sound_play_pitchvol(sndMutant0Cnfm, 3 + orandom(0.2), 0.5);
         }
     }
+    
+	 // Bind Ultra Script:
+	if(array_length(instances_matching(CustomScript, "name", "step_charm_hplink")) <= 0){
+		with(script_bind_end_step(step_charm_hplink, 0)){
+			name = script[2];
+			persistent = true;
+		}
+	}
 
-     // HP Link
-    if(ultra_get(mod_current, ultShare)){
-        if(my_health != charm_hplink_lock){
+#define step_charm_hplink
+     /// ULTRA B : Flock Together / HP Link
+    with(instances_matching(Player, "race", mod_current)){
+	    if(ultra_get(mod_current, ultShare)){
+        	 // Gather Charmed Bros:
             var _HPList = ds_list_create();
             with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0)){
                 if(lq_defget(ntte_charm, "index", -1) == other.index){
                     ds_list_add(_HPList, id);
                 }
             }
-
-            if(ds_list_size(_HPList) > 0){
-                ds_list_shuffle(_HPList);
-
-                while(my_health != charm_hplink_lock){
-                    if(ds_list_size(_HPList) > 0){
-                        with(ds_list_to_array(_HPList)){
-                            with(other){
-                                var a = clamp(charm_hplink_lock - my_health, -1, 1);
-                        		my_health += a;
-
-                        		 // Alter Enemy HP:
-                        		if(a > 0){
-                        		     // FX:
-                        		    var o = other;
-                        		    with(instances_meeting(x, y, HealFX)){
-                        		        with(instance_copy(true)){
-                        		            x = o.x;
-                        		            y = o.y;
-                        		        }
-                        		    }
-
-                        		     // Heal:
-                        		    with(o) if(my_health <= maxhealth){
-                        		        my_health = min(my_health + a, maxhealth);
-                        		    }
-                        		}
-                        		else projectile_hit_raw(other, a, true);
-
-                        		if(other.my_health <= 0) ds_list_remove(_HPList, id);
-
-                                if(my_health == charm_hplink_lock){
-                                    my_health = charm_hplink_lock;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else break;
-                }
-            }
-        }
-    }
-    charm_hplink_lock = my_health;
-
-     /// ULTRA A: Flock Together
-     // probably incredibly busted
-    /*
-    if(ultra_get(mod_current, 1)) {
-        with(instances_matching(Corpse, "flock_together", null)) {
-            flock_together = 1;
-            // Hacky but me lazy:
-            with(other) {
-                with(obj_create(other.x + orandom(8), other.y + orandom(8), "ParrotFeather")){
-                    target = other;
-                    creator = other;
-                    index = other.index;
-                    bskin = other.bskin;
-                }
-            }
-        }
-    }
-    */
-
-#define draw
-    /*
-    if(button_check(index, "spec")){
-        draw_text_nt(x, y - 32, string(feather_ammo));
-        
-        var t = nearest_instance(mouse_x[index], mouse_y[index], instances_matching([enemy, RadMaggotChest], "", null));
-        draw_sprite_ext(t.sprite_index, t.image_index, t.x, t.y, (t.image_xscale + sin((current_frame div (3 * current_time_scale))/2)/4) * t.right, t.image_yscale + sin((current_frame div (3 * current_time_scale))/2)/4, t.image_angle, c_red, t.image_alpha * 0.7)
-    }
-	*/
-
-#define draw_gui
-    instance_destroy();
-    draw_set_projection(0);
-
-    var _index = player_find_local_nonsync(),
-        _playersActive = 0;
-
-    for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
-
-	with(player_find(_index)){
-	    if("charm_hplink_hud" not in self){
-	        charm_hplink_hud = true;
-	        charm_hplink_hud_hp = [my_health, maxhealth];
+            
+			if(ds_list_size(_HPList) > 0){
+				var _HPListSave = ds_list_to_array(_HPList);
+				
+				 // Steal Charmed Bro HP:
+				if(nexthurt > current_frame && my_health < charm_hplink_lock){
+	                ds_list_shuffle(_HPList);
+	                
+	                while(my_health < charm_hplink_lock){
+	                    if(ds_list_size(_HPList) > 0){
+	                        with(ds_list_to_array(_HPList)){
+	                            with(other){
+	                                var a = min(1, charm_hplink_lock - my_health);
+	                                if(a > 0){
+		                        		my_health += a;
+		                        		projectile_hit_raw(other, a, true);
+		                        		if(!instance_exists(other) || other.my_health <= 0){
+		                        			ds_list_remove(_HPList, other);
+		                        		}
+	                                }
+	                                else{
+	    								my_health = charm_hplink_lock;
+	                                	break;
+	                                }
+	                            }
+	                        }
+	                    }
+	                    else break;
+	                }
+	    			my_health = charm_hplink_lock;
+	            }
+	            
+				 // HUD Drawn Health:
+				var _canChangeMax = (charm_hplink_hud_hp_lst <= charm_hplink_hud_hp[0]);
+			    for(var i = 0; i < array_length(charm_hplink_hud_hp); i++){
+			    	if(i != 1 || _canChangeMax) charm_hplink_hud_hp[i] = 0;
+			    }
+			    with(_HPListSave){
+                    other.charm_hplink_hud_hp[0] += my_health;
+                    if(_canChangeMax) other.charm_hplink_hud_hp[1] += maxhealth;
+			    }
+	        }
+	        else{
+	        	charm_hplink_hud_hp[0] -= ceil(charm_hplink_hud_hp[0] / 5) * current_time_scale;
+	        	charm_hplink_hud_hp_lst -= ceil(charm_hplink_hud_hp_lst / 10) * current_time_scale;
+	        }
 	    }
-
-         // Add Up Charmed Ally HP:
-        var _myHealth = 0,
-            _maxHealth = 0,
-            _hpColor = player_get_color(index);
-
-        if(ultra_get(mod_current, ultShare)){
-            with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0)){
-                if(lq_defget(ntte_charm, "index", -1) == other.index){
-                    _myHealth += my_health;
-                    _maxHealth += maxhealth;
-                    
-                     // Hurt:
-                    if(sprite_index == spr_hurt && image_index < 1){
-                        _hpColor = c_white;
-                    }
-                }
-            }
-        }
-
-        var _goal = [_myHealth, _maxHealth],
-            _goalFactor = 0.2;
-
-    	if(_myHealth != 0) charm_hplink_hud = true;
-
-    	 // No Allies Alive:
-    	else{
-    	    _goal = [my_health, maxhealth];
-    	    _goalFactor = 0.5;
-    	    if(array_equals(charm_hplink_hud_hp, _goal)){
-                charm_hplink_hud = false;
-    	    }
-    	}
-
-         // Draw HP:
-    	if(charm_hplink_hud){
-        	var	_x1 = 22 + ((_playersActive > 1) ? -17 : 0),
-        		_y1 = 7,
-        		_x2 = _x1 + 83,
-        		_y2 = _y1 + 7;
-
-             // Hurt:
-            if(sprite_index == spr_hurt && image_index < 1){
-                _hpColor = c_white;
-            }
-
-    		if(_x1 < _x2){
-    		     // Hide Normal HP:
-    		    draw_set_color(c_black);
-    			draw_rectangle(_x1, _y1, _x2, _y2, 0);
-
-    			 // True HP Filling:
-                draw_set_color(merge_color(_hpColor, c_black, 0.6));
-    			draw_rectangle(_x1, _y1, _x1 + (clamp(min(my_health, maxhealth) / maxhealth, 0, 1) * (_x2 - _x1)), _y2, 0);
-
-                 // Filling:
-                draw_set_color(merge_color(_hpColor, c_white, 0.4));
-    			draw_rectangle(_x1, _y1, _x1 + (clamp(min(charm_hplink_hud_hp[0], charm_hplink_hud_hp[1]) / charm_hplink_hud_hp[1], 0, 1) * (_x2 - _x1)), _y2, 0);
-
-                 // Text:
-    			draw_set_font(fntM);
-    			draw_set_halign(fa_center);
-    			draw_set_valign(fa_top);
-    			draw_text_nt(_x1 + 45, _y1, `${charm_hplink_hud_hp[0]}/${charm_hplink_hud_hp[1]}`);
-    		}
-
-    		 // HP Changes Gradually (Visual Only):
-        	for(var i = 0; i < array_length(_goal); i++){
-                var a = (_goal[i] - charm_hplink_hud_hp[i]) * _goalFactor;
-                charm_hplink_hud_hp[i] += ceil(abs(a)) * sign(a);
-
-                if(abs(_goal[i] - charm_hplink_hud_hp[i]) < 1){
-                    charm_hplink_hud_hp[i] = _goal[i];
-                }
-        	}
-    	}
-    	else charm_hplink_hud_hp = [my_health, maxhealth];
+	    else charm_hplink_hud_hp_lst = 0;
+	    
+	    charm_hplink_lock = my_health;
+           
+         // HUD Related:
+        var a = 0.5 * current_time_scale;
+    	charm_hplink_hud_hp_lst += clamp(charm_hplink_hud_hp[0] - charm_hplink_hud_hp_lst, -a, a);
     	
-    	 // Test Visual:
-    	/*
-    	if("test_off" not in self) test_off = 0;
-    	if("test_has" not in self) test_has = 20;
-    	if(button_check(index, "spec")){
-	    	test_off += (1 - test_off) * 0.6 * current_time_scale;
-	    }
-	    else test_off -= test_off * 0.3 * current_time_scale;
-
-	    if(test_off != 0){
-	    	var _off = test_off;
-	    	if("test_surf" not in self) test_surf = -1;
-	    	if(!surface_exists(test_surf)){
-	    		test_surf = surface_create(game_width, game_height);
-	    	}
-	    	
-	    	surface_set_target(test_surf);
-	    	draw_clear_alpha(0, 0);
-
-			draw_set_color(c_black);
-			var _x = mouse_x_nonsync,
-				_y = mouse_y_nonsync;
-	    	
-	    	var r = 32,
-	    		_test = false;
-	    	test_has = 32;
-
-            with(instances_matching_ne(instance_rectangle_bbox(_x - r, _y - r, _x + r, _y + r, [enemy, RadMaggotChest]), "object_index", Van)){
-                if("test_thing" not in self) test_thing = 0;
-                if(collision_circle(_x, _y, r, id, true, false)){
-                	test_thing += (1 - test_thing) * 0.1 * current_time_scale;
-                }
-            }
-            with(instances_matching_gt(hitme, "test_thing", 0.1)){
-                other.test_has -= (6 * test_thing);
-	    		draw_circle(_x + ((x - _x) * test_thing) - view_xview_nonsync, _y + ((y - _y) * test_thing) - view_yview_nonsync, (4 + sprite_xoffset) * test_thing, false);
-                if(!collision_circle(_x, _y, r, id, true, false)){
-                	test_thing -= test_thing * 0.2 * current_time_scale;
-                }
-            }
-
-	    	//draw_circle(_x - view_xview_nonsync, _y - view_yview_nonsync, test_has + (2 * sin(current_frame / 20)), false);
-	    	
-	    	surface_reset_target();
-	    	
-	    	draw_set_blend_mode_ext(bm_dest_alpha, bm_inv_src_alpha);
-	    	surface_screenshot(test_surf);
-	    	draw_set_blend_mode(bm_normal);
-	    	
-	    	draw_set_fog(true, _hpColor, 0, 0);
-	    	draw_set_alpha(0.5);
-	    	draw_surface(test_surf, view_xview_nonsync + _off, view_yview_nonsync - (_off * 4));
-	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4) + _off);
-	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4) - _off);
-	    	draw_surface(test_surf, view_xview_nonsync - _off, view_yview_nonsync - (_off * 4));
-	    	draw_set_alpha(1);
-	    	draw_set_fog(false, 0, 0, 0);
-	    	
-	    	draw_surface(test_surf, view_xview_nonsync, view_yview_nonsync - (_off * 4));
-	    }
-	    */
-	}
-
-	draw_reset_projection();
+		var _hudGoal = (charm_hplink_hud_hp_lst >= 1);
+        charm_hplink_hud += (_hudGoal - charm_hplink_hud) * 0.2 * current_time_scale;
+        if(abs(_hudGoal - charm_hplink_hud) < 0.01) charm_hplink_hud = _hudGoal;
+    }
+    instance_destroy();
 
 #define cleanup
 	with(Loadout){

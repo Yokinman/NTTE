@@ -736,7 +736,9 @@
 
 /// Scripts
 #define draw_self_enemy()
-    draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	image_xscale *= right;
+	draw_self(); // This is faster than draw_sprite_ext yea
+	image_xscale /= right;
 
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)
 	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
@@ -1042,8 +1044,10 @@
 				 // Reset Team:
                 if(c.team != -1){
                 	if(fork()){
-                		while(instance_exists(self) && instance_is(self, becomenemy)) wait 0;
-                		if(instance_exists(self)){
+                		while("team" not in self && instance_is(self, becomenemy)){
+                			wait 0;
+                		}
+                		if("team" in self){
                     		 // Teamerize Nearby Projectiles:
                 			with(instances_matching(instances_matching(projectile, "creator", id), "team", team)){
                 				if(place_meeting(x, y, other)){
@@ -1097,6 +1101,7 @@
     return c;
 
 #define charm_allyize(_bool)
+	 // Become Allied:
 	if(_bool){
 		switch(sprite_index){
 			case sprEnemyBullet1:
@@ -1151,6 +1156,8 @@
 				break;
 		}
 	}
+	
+	 // Become Enemied:
 	else{
 		switch(sprite_index){
 			case sprAllyBullet:
@@ -2237,9 +2244,9 @@
 	 // Delete:
 	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y + _caveDis), "object_index", Dust)){
 		 // Kill:
-		if(y > _y + 64 && instance_is(self, hitme)){
+		if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
 			my_health = 0;
-			if("lasthit" in self) lasthit = [sprDebris102, "CAVE IN"]
+			if("lasthit" in self) lasthit = [sprDebris102, "CAVE IN"];
 			event_perform(ev_step, ev_step_normal);
 		}
 

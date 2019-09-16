@@ -546,7 +546,7 @@
 	            PizzaDoorDebris = sprite(p + "sprPizzaDoorDebris",  4, 4, 4);
 
 	             // Drain:
-	            PizzaDrainIdle = sprite(p + "sprPizzaDrain",     1, 32, 38);
+	            PizzaDrainIdle = sprite(p + "sprPizzaDrain",     8, 32, 38);
 	            PizzaDrainHurt = sprite(p + "sprPizzaDrainHurt", 3, 32, 38);
 	            PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
 	            msk.PizzaDrain = sprite(p + "mskPizzaDrain",     1, 32, 38);

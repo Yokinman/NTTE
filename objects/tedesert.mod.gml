@@ -1213,7 +1213,7 @@
 
          // Half HP:
         var h = (maxhealth / 2);
-        if(in_range(my_health, h - _hitdmg, h)){
+        if(in_range(my_health, h - _hitdmg + 1, h)){
         	sound_play(snd_lowh);
         }
 
