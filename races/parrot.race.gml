@@ -92,18 +92,18 @@
 
 #define race_sound(_snd)
 	switch(_snd){
-		case sndMutant1Wrld: return sndMutant9Wrld;
+		case sndMutant1Wrld: return -1;
 		case sndMutant1Hurt: return sndRavenHit;
-		case sndMutant1Dead: return sndRavenDie;
-		case sndMutant1LowA: return sndMutant9LowA;
-		case sndMutant1LowH: return sndMutant9LowH;
-		case sndMutant1Chst: return sndMutant9Chst;
-		case sndMutant1Valt: return sndMutant9Valt;
-		case sndMutant1Crwn: return sndMutant9Crwn;
-		case sndMutant1Spch: return sndMutant9Spch;
-		case sndMutant1IDPD: return sndMutant9IDPD;
-		case sndMutant1Cptn: return sndMutant9Cptn;
-		case sndMutant1Thrn: return sndMutant9Thrn;
+		case sndMutant1Dead: return sndAllyDead;
+		case sndMutant1LowA: return -1;
+		case sndMutant1LowH: return -1;
+		case sndMutant1Chst: return -1;
+		case sndMutant1Valt: return -1;
+		case sndMutant1Crwn: return -1;
+		case sndMutant1Spch: return -1;
+		case sndMutant1IDPD: return -1;
+		case sndMutant1Cptn: return -1;
+		case sndMutant1Thrn: return -1;
 	}
 	return -1;
 
@@ -118,10 +118,54 @@
 
 /// Menu
 #define race_menu_select
-	return sndRavenScreech;
+	if(instance_is(self, CharSelect) || instance_is(other, CharSelect)){
+		 // Yo:
+		sound_play_pitchvol(sndMutant6Slct, 2, 0.6);
+		
+		 // Kun:
+		if(fork()){
+			wait 5 * current_time_scale;
+			
+			audio_sound_set_track_position(
+				sound_play_pitchvol(sndMutant15Hurt, 2, 0.6),
+				0.2
+			);
+			
+			 // Extra singy noise:
+			audio_sound_set_track_position(
+				sound_play_pitchvol(sndMutant15Slct, 2.5, 0.2),
+				0.2
+			);
+			
+			exit;
+		}
+		
+		return -1;
+	}
+	
+	return sndRavenLift;
 
 #define race_menu_confirm
-	return sndRavenScreech;
+	if(instance_is(self, Menu) || instance_is(other, Menu) || instance_is(other, UberCont)){
+		 // Wah:
+		sound_play_pitchvol(sndMutant6Slct, 2.4, 0.6);
+		
+		 // Tohohoho:
+		if(fork()){
+			wait 5 * current_time_scale;
+			
+			audio_sound_set_track_position(
+				sound_play_pitchvol(sndMutant15Cnfm, 2.5, 0.5),
+				0.4
+			);
+			
+			exit;
+		}
+		
+		return -1;
+	}
+	
+	return sndRavenLand;
 
 #define race_menu_button
     sprite_index = spr.Parrot[0].Select;
@@ -223,19 +267,65 @@
 
 	 // Ultra Sound:
 	if(_state && instance_exists(EGSkillIcon)){
+		sound_play(sndBasicUltra);
+		
 		switch(_ultra){
 			case ultFeath:
-				// insert sound
+				 // Feathers:
+				if(fork()){
+	                for(var i = 0; i < 8; i++){
+	                	sound_play_pitchvol(sndSharpTeeth, 4 + sin(i / 3), 0.4);
+	                	wait (1 + (2 * sin(i * 1.5))) * current_time_scale;
+	                }
+	                
+	                exit;
+				}
+				
+				 // Charm:
+				if(fork()){
+	                wait 7 * current_time_scale;
+	                
+	                var _snd = [sndBigBanditIntro, sndBigDogIntro, sndLilHunterAppear];
+	                for(var i = 0; i < array_length(_snd); i++){
+	                	sound_play_pitchvol(_snd[i], 1.2, 0.8 - (i * 0.1));
+	                	sound_play_pitch(sndBanditDie, 1.2 + (i * 0.4));
+	                	wait 4 * current_time_scale;
+	                }
+					
+	                exit;
+				}
 				break;
 
 			case ultShare:
-				// insert sound
+				if(fork()){
+					sound_play_pitch(sndCoopUltraA, 2);
+					sound_play_pitch(sndHPPickupBig, 0.8);
+					sound_play_pitch(sndHealthChestBig, 1.5);
+					
+					wait 10 * current_time_scale;
+					
+					 // They Dyin:
+					var _snd = [sndBigMaggotDie, sndScorpionDie, sndBigBanditDie];
+					for(var i = 0; i < array_length(_snd); i++){
+						sound_play_pitchvol(_snd[i], 1.3, 1.4);
+						wait 5 * current_time_scale;
+					}
+					
+					exit;
+				}
 				break;
 		}
 	}
 
 
 #define create
+	 // Random lets you play locked characters:
+	if(!unlock_get(mod_current)){
+		race = "fish";
+		player_set_race(index, race);
+		exit;
+	}
+
 	 // Sprite:
 	spr_feather = race_sprite(sprChickenFeather);
 
@@ -440,6 +530,28 @@
             sound_play_pitchvol(sndMutant0Cnfm, 3 + orandom(0.2), 0.5);
         }
     }
+	
+	 // Feather FX:
+	if(lsthealth > my_health && (chance_ct(1, 10) || my_health <= 0)){
+		repeat((my_health <= 0) ? 5 : 1) with(instance_create(x, y, Feather)){
+			sprite_index = other.spr_feather;
+			image_blend = c_gray;
+		}
+	}
+	
+	 // Pitched snd_hurt:
+	if(sprite_index == spr_hurt && image_index == image_speed_raw){
+		var _sndMax = sound_play_pitchvol(0, 0, 0);
+		sound_stop(_sndMax);
+		
+		for(var i = _sndMax - 1; i >= _sndMax - 10; i--){
+			if(audio_get_name(i) == audio_get_name(snd_hurt)){
+				sound_pitch(i, 1.2 + random(0.3));
+				sound_volume(i, 1.5);
+				break;
+			}
+		}
+	}
     
 	 // Bind Ultra Script:
 	if(array_length(instances_matching(CustomScript, "name", "step_charm_hplink")) <= 0){

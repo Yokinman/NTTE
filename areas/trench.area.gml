@@ -97,7 +97,7 @@
         _y = -9;
 
      // Manual Line Shadow:
-    /* draws over the mapicon (??? bro)
+    /* draws over the mapicon (??? bro idk why it does)
     if(_subarea == 3){
         if(GameCont.area != mod_current || GameCont.subarea != _subarea || GameCont.loops != _loops){
              // Map Offset:
@@ -160,7 +160,7 @@
     TopCont.darkness = area_darkness();
 
 #define area_setup_floor(_explo)
-    if(!_explo){
+    if(!_explo || styleb){
         if(styleb){
              // Fix Depth:
             depth = 9;
@@ -169,9 +169,11 @@
             traction = 0.1;
             
              // Get rid of them:
-            if(place_meeting(x, y, Detail))
-                with(Detail) if place_meeting(x, y, other)
+            if(place_meeting(x, y, Detail)){
+                with(Detail) if place_meeting(x, y, other){
                     instance_destroy();
+                }
+            }
         }
 
          // Footsteps:
@@ -194,17 +196,35 @@
         instance_delete(id);
     }
 
-	 // Pit Boy:
-    if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
-        var f = noone,
-            p = instance_nearest(10016, 10016, Player),
-            _tries = 1000;
-
-        do f = instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB));
-        until (point_distance(f.x + 16, f.y + 16, p.x, p.y) > 128 || _tries-- <= 0);
-
-        Pet_spawn(f.x + 16, f.y + 16, "Octo");
-    }
+	switch(GameCont.subarea){
+		 // Small Pit Boy:
+	    case 1:
+			with(instance_random(Floor)){
+	        	Pet_spawn((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, "Octo");
+			}
+			break;
+			
+		 // Big Pit Boy:
+		case 3:
+	    	var _x = 10016,
+	    		_y = 10016;
+	    		
+	    	if(false){
+	    		var _spawnFloor = [];
+	    		
+		    	with(Floor) if(distance_to_object(Player) > 96){
+		    		array_push(_spawnFloor, id);
+		    	}
+		    		
+		    	with(instance_random(_spawnFloor)){
+		    		_x = (bbox_left + bbox_right) / 2;
+		    		_y = (bbox_top + bbox_bottom) / 2;
+		    	}
+	    	}
+	    	
+	    	obj_create(_x + orandom(8), _y - random(16), "PitSquid");
+			break;
+	}
 
      // Fix Props:
     if(instance_exists(Floor) && instance_exists(Player)){
@@ -257,9 +277,14 @@
         }
         if(_isParrot && !unlock_get("parrotB")){
             unlock_set("parrotB", true); // It's a secret yo
-            with(scrUnlock("PARROT B", "FOR BEATING THE AQUATIC ROUTE", spr.Parrot[1].Portrait, sndRavenScreech)){
-                nam[0] += "-SKIN";
-            }
+	        with(scrUnlock(
+	        	"PARROT B",
+	        	"FOR BEATING THE AQUATIC ROUTE",
+	        	spr.Parrot[1].Portrait,
+	        	mod_script_call("race", "parrot", "race_menu_confirm")
+	        )){
+	        	nam[0] += "-SKIN";
+	        }
         }
     }
 
@@ -353,7 +378,7 @@
     }
 
      // Stuff Falling Into Pits:
-    with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen], "trenchpit_check", null), "speed", 1)){
+    with(instances_matching_le(instances_matching([Debris, Shell, ChestOpen, Feather], "trenchpit_check", null), "speed", 1)){
         if(speed <= 0) trenchpit_check = true;
         if(pit_get(x, bbox_bottom)){
             pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
@@ -566,9 +591,6 @@
         }
     }
     
-     // Spawn Pitsquid:
-    if(GameCont.subarea == 3) obj_create(0, 0, "WantPitSquid");
-    
      // Got too many eels, bro? No problem:
 	with(instances_matching(CustomEnemy, "name", "Eel")) if(array_length(instances_matching(CustomEnemy, "name", "Eel")) > (8 + (4 * GameCont.loops))){
 		obj_create(0, 0, "WantEel");
@@ -749,7 +771,7 @@
 						_xscal = image_xscale * max(pit_height, 0),
 						_yscal = image_yscale * max(pit_height, 0),
 						_angle = image_angle,
-						_blend = merge_color(c_black, image_blend, pit_height),
+						_blend = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
 						_alpha = image_alpha;
 
 					 // Eyes:
@@ -761,7 +783,7 @@
 
 						with(other){
 							 // Cornea + Pupil:
-							if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+							if(_hurt) draw_set_fog(true, _blend, 0, 0);
 							if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
 								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xscal, _yscal, _angle, _blend, _alpha);
 								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xscal, _yscal, _angle, _blend, _alpha);
@@ -775,13 +797,36 @@
 
 					 // Bite:
 					if(bite > 0 && bite <= 1){
-						draw_sprite_ext(spr_maw, ((1 - bite) * sprite_get_number(spr_maw)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+						draw_sprite_ext(spr_bite, ((1 - bite) * sprite_get_number(spr_bite)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
 					}
 
 				     // Spit:
 					else if(spit > 0 && spit <= 1){
-						var _spr = spr.PitSquidMawSpit;
-						draw_sprite_ext(_spr, ((1 - spit) * sprite_get_number(_spr)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+						draw_sprite_ext(spr_fire, ((1 - spit) * sprite_get_number(spr_fire)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+					}
+				}
+				with(instances_matching(CustomObject, "name", "PitSquidDeath")){
+					var	_xscal = image_xscale * max(pit_height, 0),
+						_yscal = image_yscale * max(pit_height, 0),
+						_angle = image_angle,
+						_blend = merge_color(c_black, image_blend, clamp(pit_height, 0, 1)),
+						_alpha = image_alpha;
+						
+					with(eye){
+						var	_x = x - _surfx,
+							_y = y - _surfy,
+							l = dis * max(other.pit_height, 0),
+							d = dir;
+							
+						with(other){
+							if(explo){
+								draw_set_fog(((current_frame % 6) < 2 || (!sink && pit_height < 1)), _blend, 0, 0);
+								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xscal,       _yscal, _angle, _blend, _alpha);
+								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xscal * 0.5, _yscal, _angle, _blend, _alpha);
+								draw_set_fog(false, 0, 0, 0);
+							}
+							draw_sprite_ext(spr.PitSquidEyelid, (explo ? 0 : sprite_get_number(spr.PitSquidEyelid) - 1), _x, _y, _xscal, _yscal, _angle, _blend, _alpha);
+						}
 					}
 				}
 
@@ -810,7 +855,7 @@
 						draw_sprite(_spr,                  image_index, x - _surfx, y - _surfy);
 						draw_sprite(spr.PStatTrenchLights, anim,        x - _surfx, y - _surfy);
 				
-						// i know but base game doesnt use draw_sprite_ext either
+						// base game doesnt use draw_sprite_ext either
 					}
 				}
 				with(instances_matching(Corpse, "sprite_index", sprPStatDead)){
@@ -832,7 +877,7 @@
 									break;
 
 								default:
-								_img = 0;
+									_img = 0;
 							}
 
 							if(_img > 0){
@@ -873,7 +918,7 @@
     }
 
 	 // Reset Pit Sink Checks:
-	with(instances_matching_ne([Debris, Shell, ChestOpen, Corpse, Scorch, ScorchTop], "trenchpit_check", null)){
+	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop], "trenchpit_check", null)){
 	    trenchpit_check = null;
 	}
 

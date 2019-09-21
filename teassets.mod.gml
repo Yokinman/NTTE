@@ -886,6 +886,7 @@
             
              // Parrot:
             p = m + "Coast/";
+            PetParrotNote  = sprite(p + "sprPetParrotNote",   5,  4,  4);
             PetParrotIcon  = sprite(p + "sprPetParrotIcon",   1,  6,  5);
             PetParrotIdle  = sprite(p + "sprPetParrotIdle",   6, 12, 12);
             PetParrotWalk  = sprite(p + "sprPetParrotWalk",   6, 12, 14);
@@ -987,6 +988,7 @@
          // Bosses:
         SealKing = sound_add(p + "musSealKing.ogg");
         BigShots = sound_add(p + "musBigShots.ogg");
+        PitSquid = sound_add(p + "musPitSquid.ogg");
     }
 
      // SAVE FILE //

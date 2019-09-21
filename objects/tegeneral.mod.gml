@@ -400,10 +400,10 @@
              // Avoid Bad Stuff:
             var _tries = 1000;
 		    while(_tries-- > 0){
-		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor)){
-		            var _dis = 16,
-		                _dir = irandom(3) * 90;
-
+	            var _dis = 16,
+	                _dir = irandom(3) * 90;
+	                
+		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor) || distance_to_object(Player) < 80){
 		            x += lengthdir_x(_dis, _dir);
 		            y += lengthdir_y(_dis, _dir);
 		        }

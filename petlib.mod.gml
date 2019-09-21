@@ -660,10 +660,25 @@
             }
         }
 
-         // Repeat sound:
-        else if(chance(1, 4)) with(leader){
-            sound_play_pitchvol(sndSaplingSpawn, 1.8 + random(0.2), 0.4);
-            sound_play_pitchvol(choose(snd_wrld, snd_chst, snd_crwn), 2, 0.4);
+         // Real Parrot:
+        else if(chance(1, 4)){
+        	with(leader){
+	            sound_play_hit_ext(sndSaplingSpawn,                      1.8 + random(0.2), 0.3);
+	            sound_play_hit_ext(choose(snd_wrld, snd_chst, snd_crwn), 1.6,               0.4);
+        	}
+            
+             // Real:
+        	hspeed = 4 * right;
+			with(instance_create(x + (8 * right) + perched_x, y - 4 + perched_y, Wind)){
+				sprite_index = spr.PetParrotNote;
+				image_xscale = choose(-1, 1);
+				depth = other.depth - 1;
+				
+				hspeed = random_range(1, 1.4) * other.right;
+				gravity = -abs(speed / 10);
+				friction = 0.1;
+			}
+            
             return 40 + random(20);
         }
     }
@@ -671,9 +686,10 @@
      // Look Around:
     if(!instance_exists(leader) || instance_exists(perched)){
         scrRight(random(360));
+        return 30 + random(30);
     }
 
-    return (30 + random(30));
+    return 20 + random(20);
 
 #define Parrot_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!instance_exists(perched)){

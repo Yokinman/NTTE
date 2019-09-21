@@ -35,12 +35,13 @@
 		 // Sound:
 		snd_hurt = sndScorpionHit;
 		snd_dead = sndScorpionDie;
+		snd_mele = sndScorpionMelee
 		snd_fire = sndScorpionFireStart;
 
 		 // Vars:
 		gold = false;
 		maxhealth = 7;
-		meleedamage = 2;
+		meleedamage = 6;
 		canmelee = true;
 		raddrop = 4;
 		size = 1;
@@ -197,6 +198,7 @@
 		 // Sound:
 		snd_hurt = sndGoldScorpionHurt;
 		snd_dead = sndGoldScorpionDead;
+		snd_mele = sndGoldScorpionMelee;
 		snd_fire = sndGoldScorpionFire;
 
 		 // Vars:

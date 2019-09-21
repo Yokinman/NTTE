@@ -2072,7 +2072,7 @@
     sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
 
 #define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
-	if(dash > 0) _hitvel /= 2;
+	if(dash > 0) _hitvel = min(_hitvel, 3);
 	enemyHurt(_hitdmg, _hitvel, _hitdir);
 
 #define Pelican_death
@@ -3332,6 +3332,12 @@
 		}
 	}
 
+#define TrafficCrab_draw
+	var h = (sprite_index == spr_hide && nexthurt > current_frame + 3);
+	if(h) draw_set_fog(true, image_blend, 0, 0);
+	draw_self_enemy();
+	if(h) draw_set_fog(false, 0, 0, 0);
+
 #define TrafficCrab_alrm1
 	target = instance_nearest(x, y, Player);
 
@@ -3414,7 +3420,16 @@
 	}
 	
 #define TrafficCrab_hurt(_hitdmg, _hitvel, _hitdir)
-	enemyHurt(_hitdmg, _hitvel, _hitdir);
+    my_health -= _hitdmg;			// Damage
+    motion_add(_hitdir, _hitvel);	// Knockback
+    nexthurt = current_frame + 6;	// I-Frames
+    sound_play_hit(snd_hurt, 0.3);	// Sound
+
+     // Hurt Sprite:
+    if(sprite_index != spr_hide){
+	    sprite_index = spr_hurt;
+	    image_index = 0;
+    }
 	
 	 // Awaken Bro:
 	active = true;

@@ -3852,6 +3852,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			if(instance_is(self, Pickup) && alarm0 > 0){
 				alarm0 = max(alarm0, 90);
 			}
+			else if(instance_is(self, hitme) && !chance_ct(1, speed) && chance(1, 2)){
+				with(scrFX(x, y, [90 + orandom(30), random(3)], Dust)){
+					depth = other.depth + choose(0, -1);
+				}
+			}
 			x = other.x;
 			y = other.y + 16;
 			xprevious = x;

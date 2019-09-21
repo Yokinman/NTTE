@@ -556,7 +556,7 @@
     		}
 
 			 // Big Nests:
-			with(MaggotSpawn) if(chance(1, 14)){
+			with(MaggotSpawn) if(chance(1, 12)){
 				obj_create(x, y, "BigMaggotSpawn");
 				instance_delete(id);
 			}
@@ -959,15 +959,8 @@
 		_chance = 1;
 	}
     if(chance(_chance, 1) && instance_exists(Player)){
-        var _tries = 1000;
-        while(_tries-- > 0){
-            with(instance_random(TopSmall)){
-                var p = instance_nearest(x, y, Player);
-                if(point_distance(x + 8, y + 8, p.x, p.y) > 100){
-                    obj_create(x, y, "BigDecal");
-                    _tries = 0;
-                }
-            }
+        with(instance_random(TopSmall)){
+            obj_create(x, y, "BigDecal");
         }
     }
     

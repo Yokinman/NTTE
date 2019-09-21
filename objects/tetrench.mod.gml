@@ -925,6 +925,7 @@
 				}
 	
 				with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
+					damage = floor(other.damage * 7/3);
 					sprite_index = spr.ElectroPlasmaTether;
 					depth = -3;
 				
@@ -1541,7 +1542,7 @@
 #define PitSpark_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index = spr.PitSpark[irandom(4)];
+		sprite_index = spr.PitSpark[irandom(array_length(spr.PitSpark) - 1)];
 		image_angle = random(360);
 		image_speed = 0.4;
 		depth = 5;
@@ -1589,13 +1590,13 @@
         col = c_red;
 
          // Visual:
-		spr_maw = spr.PitSquidMawBite;
-		hitid = [spr_maw, "PIT SQUID"];
+		spr_bite = spr.PitSquidMawBite;
+		spr_fire = spr.PitSquidMawSpit;
+		hitid = [spr_fire, "PIT SQUID"];
 
          // Sounds:
-        snd_hurt = sndBallMamaHurt;
-        snd_mele = sndMaggotBite;
-        snd_lowh = sndBigDogHalfHP;
+        snd_hurt = sndBigDogHit;
+        snd_lowh = sndNothing2HalfHP;
 
          // Vars:
         posx = x;
@@ -1606,21 +1607,20 @@
         mask_index = mskNone;
         meleedamage = 8;
         maxhealth = scrBossHP(400);
-        tauntdelay = 40;
-        is_dead = false;
-        raddrop = 1;
+        tauntdelay = 60;
+        intro = false;
+        raddrop = 50;
         size = 5;
         canfly = true;
         target = noone;
         bite = 0;
         sink = false;
-        sink_targetx = posx;
-        sink_targety = posy;
         pit_height = 1;
         spit = 0;
         ammo = 0;
-        volley_angle = 18;
-        last_electroplasma = noone;
+        gunangle = random(360);
+        electroplasma_side = choose(-1, 1);
+        electroplasma_last = noone;
 		laser = 0;
 		laser_charge = 0;
 
@@ -1637,7 +1637,7 @@
                 y : 0,
                 dis : 5,
                 dir : random(360),
-                blink : false,
+                blink : true,
                 blink_img : 0,
                 my_laser : noone
             });
@@ -1657,21 +1657,26 @@
      // Pit Z Movement:
     if(sink){
          // Quickly Sink:
-        if(pit_height > 0.5){
-	        pit_height += ((0.5 - pit_height) / 4) * current_time_scale;
+        var t = (instance_exists(Player) ? 0.5 : 0);
+        if(pit_height > t){
+	        pit_height += ((t - pit_height) / (instance_exists(Player) ? 4 : 8)) * current_time_scale;
+	        if(abs(t - pit_height) < 0.05) pit_height = t;
 	        with(eye) blink = true;
-	        if(pit_height < 0.55) pit_height = 0.5;
         }
 
          // Start Rising:
         /*
         if(pit_height <= 0.5){
             sink = false;
-            posx = sink_targetx;
-            posy = sink_targety;
             pit_height = -random_range(0.2, 0.5);
         }
         */
+        
+		 // Intro Dim Music:
+		if(!intro){
+			var _mus = lq_defget(mod_variable_get("mod", "ntte", "current"), "mus", { vol : 1 });
+			if(_mus.vol > 0.3) _mus.vol -= 0.01 * current_time_scale;
+		}
     }
     else{
          // Slow Initial Rise:
@@ -1687,17 +1692,25 @@
          // Quickly Rise:
         else if(pit_height < 1){
     		if(bite <= 0) bite = 1;
-        	else if(((1 - bite) * sprite_get_number(spr_maw)) >= 6){
+        	else if(((1 - bite) * sprite_get_number(spr_bite)) >= 6){
 	            pit_height += 0.1 * current_time_scale;
 	
 	             // Reached Top of Pit:
 	            if(pit_height >= 1){
 	                pit_height = 1;
-	                alarm1 = 30 + random(30);
+	                speed /= 3;
+	                alarm1 = 10 + random(10);
 	                alarm2 = 30 + random(10);
 	            	with(eye) blink = true;
 	                view_shake_at(posx, posy, 30);
 	                sound_play(sndOasisExplosion);
+	                
+					 // Intro:
+				    if(!intro){
+				        intro = true;
+						scrBossIntro(name, sndBigDogIntro, mus.PitSquid);
+						sound_play_pitchvol(sndNothing2Taunt, 0.7, 0.8);
+				    }
 	            }
         	}
         }
@@ -1746,19 +1759,16 @@
     if(eye_laser_delay > 0){
     	eye_laser_delay -= current_time_scale;
     	if(eye_laser){
-    		if(eye_laser_delay > 8){
-    			sound_play_pitchvol(sndNothing2Appear, 0.2 + (0.6 * (eye_laser_delay / 40)), 0.5);
-    		}
-			if(eye_laser_delay <= 0){
-				sound_play_pitchvol(sndNothingBeamStart, 1.2 + random(0.2), 0.8);
-			}
+    		if(bite <= 0 && eye_laser_delay < 20) bite = 1;
+			var s = sound_play_pitchvol(sndNothing2Appear, 0.7, 1.5);
+			audio_sound_set_track_position(s, audio_sound_length_nonsync(s) * clamp(eye_laser_delay / 40, 0, 0.8));
     	}
     }
     eye_dir += eye_dir_speed * current_time_scale;
     eye_dir_speed -= (eye_dir_speed * 0.1) * current_time_scale;
     for(var i = 0; i < array_length(eye); i++){
         var _dis = (24 + eye_dis) * max(pit_height, 0),
-            _dir = image_angle + eye_dir + (360 / array_length(eye)) * i,
+            _dir = image_angle + eye_dir + ((360 / array_length(eye)) * i),
             _x = posx + hspeed_raw + lengthdir_x(_dis * image_xscale, _dir),
             _y = posy + vspeed_raw + lengthdir_y(_dis * image_yscale, _dir) + 16;
 
@@ -1788,8 +1798,8 @@
                 	if(chance_ct(10, other.eye_laser_delay)){
 	                	if(chance(1, 7)){
 	                		with(instance_create(x + orandom(12), y, PortalL)){
-								if(chance(1, 2)) sprite_index = spr.PitSpark[irandom(4)];
 	                			name = "PitSquidL";
+								if(chance(1, 2)) sprite_index = spr.PitSpark[irandom(4)];
 	                		}
 	                	}
 	                	else{
@@ -1805,8 +1815,8 @@
                  // End Blink:
                 if(blink_img >= n){
                 	blink_img = n;
-                    if(instance_exists(Player) && chance(1, 4)){
-                        blink = false;
+                    if((instance_exists(Player) || other.pit_height >= 1) && (other.intro || other.pit_height < 1)){
+                    	if(chance(1, 4)) blink = false;
                     }
                 }
             }
@@ -1823,13 +1833,14 @@
 							other.my_laser = scrEnemyShootExt(other.x, other.y, "QuasarBeam", _dir, 0);
 						}
 						with(my_laser){
-							depth = -3;
-							damage = 2;
+							damage = 3;
 							bend_fric = 0.2;
 							scale_goal = 0.8;
         					follow_creator = false;
+        					mask_index = mskSuperFlakBullet;
 							image_xscale = scale_goal / 2;
 							image_yscale = scale_goal / 2;
+							depth = -3;
 						}
 					}
 					with(my_laser) shrink_delay = 4;
@@ -1864,16 +1875,28 @@
 	        }*/
         }
     }
+    
+     // Eye Lasering:
+	if(eye_laser){
+    	 // Away From Walls:
+		if(instance_exists(Wall)){
+			var n = instance_nearest(posx - 8, posy - 8, Wall);
+			motion_add_ct(point_direction(n.x + 8, n.y + 8, posx, posy), 0.5);
+		}
+		
+		 // Player Dead:
+		if(!instance_exists(Player)) eye_laser = false;
+	}
 
 	 // Spit:
 	if(spit > 0){
 		_eyeDisGoal = 8;
 		
-		var _spr = spr.PitSquidMawSpit,
+		var _spr = spr_fire,
 			_img = ((1 - spit) * sprite_get_number(_spr));
 			
 		if(_img < 6 || ammo <= 0){
-			spit -= (image_speed / sprite_get_number(_spr)) * current_time_scale;
+			spit -= (image_speed_raw / sprite_get_number(_spr));
 			
 			 // Effects:
 			if(chance_ct(1, 5)){
@@ -1886,29 +1909,31 @@
     if(bite > 0){
         _eyeDisGoal = 8;
 
-        var _spr = spr_maw,
+        var _spr = spr_bite,
             _img = ((1 - bite) * sprite_get_number(_spr));
 
          // Finish chomp at top of pit:
-        if(_img < 6 || pit_height > 0.5){
-            bite -= (image_speed / sprite_get_number(_spr)) * current_time_scale;
+        if(_img < 6 || _img >= 8 || (pit_height > 0.5 && (!eye_laser || eye_laser_delay <= 0))){
+            bite -= (image_speed_raw / sprite_get_number(_spr));
         }
 
          // Bite Time:
         if(in_range(_img, 8, 9)){
-            mask_index = mskReviveArea;
-            with(instances_meeting(posx, posy, instances_matching_ne(hitme, "team", team))){
-                with(other) if(place_meeting(posx, posy, other)){
-                    if(projectile_canhit_melee(other)){
-                        projectile_hit_raw(other, meleedamage, true);
-                        //if("lasthit" in other) other.lasthit = hitid;
-                    }
-                }
-            }
-            mask_index = mskNone;
+        	if(pit_height > 0.5){
+	            mask_index = mskReviveArea;
+	            with(instances_meeting(posx, posy, instances_matching_ne(hitme, "team", team))){
+	                with(other) if(place_meeting(posx, posy, other)){
+	                    if(projectile_canhit_melee(other)){
+	                        projectile_hit_raw(other, meleedamage, true);
+	                        if("lasthit" in other) other.lasthit = [spr_bite, "PIT SQUID"];
+	                    }
+	                }
+	            }
+	            mask_index = mskNone;
+        	}
 
              // Chomp FX:
-            if(_img - image_speed < 8){
+            if(_img - image_speed_raw < 8){
                 sound_play_pitchvol(snd_mele, 0.8 + orandom(0.1), 0.8);
                 sound_play_pitchvol(sndOasisChest, 0.8 + orandom(0.1), 1);
                 repeat(3) instance_create(posx, posy + 16, Bubble);
@@ -1921,57 +1946,22 @@
      // Death Taunt:
     if(tauntdelay > 0 && !instance_exists(Player)){
         tauntdelay -= current_time_scale;
-        if(tauntdelay <= 0){
-            sound_play_pitch(sndBigDogTaunt, 1.2);
+        if(tauntdelay <= 0 && intro){
+        	if(!sink){
+	            sink = true;
+	            eye_dir_speed -= 8;
+	            sound_play_pitchvol(sndNothing2Hurt,      0.6, 0.4);
+	            sound_play_pitchvol(sndNothingHurtHigh,   0.3, 0.5);
+        	}
+            sound_play_pitchvol(sndNothingGenerators, 0.4, 0.4);
         }
-    }
-
-	/* dev stuff
-    if(button_pressed(0, "key6")){
-        scrBossIntro(name, sndBigDogIntro, musBoss2);
-    }
-    if(button_pressed(0, "horn")){
-        var _num = 4;
-        for(var i = 0; i < _num; i++){
-            var l = 64,
-                d = (i * (360 / _num)) + eye_dir;
-
-            with(obj_create(posx + lengthdir_x(l, d), posy + lengthdir_y(l, d) + 20, "Tentacle")){
-                creator = other;
-                xoff = x - other.posx;
-                yoff = y - other.posy;
-                dir = d;
-                spd = 6;
-                alarm1 = 5 + random(15);
-                alarm2 += alarm1;
-                move_delay = 50 - alarm1;
-                scrRight(d + 180);
-            }
-        }
-    }
-	if(button_pressed(0, "key7")){
-		eye_laser = !eye_laser;
-		eye_laser_delay = 30;
-	}
-    if(button_pressed(0, "key8")){
-        sink = true;
-    }
-    if(button_pressed(0, "key9")){
-        bite = 1.2;
-    }
-    */
-
-     // Die:
-    if(my_health <= 0 && !is_dead){
-        my_health = 1;
-        is_dead = true; // idea is to use this to make death animations before the head disappears
     }
 
 #define PitSquid_end_step
 	x = 0;
 	y = 0;
 
-	var _xprev = posx;
+	var	_xprev = posx,
 		_yprev = posy;
 
 	posx += hspeed_raw;
@@ -2039,9 +2029,7 @@
                     with(instances_meeting(posx, posy, _floors)){
                         styleb = true;
                         sprite_index = spr.FloorTrenchB;
-                        depth = 9;
-                        material = 0;
-                        traction = 0.1;
+                        mod_script_call("area", "trench", "area_setup_floor", false);
 
                          // Effects:
                         sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
@@ -2050,7 +2038,7 @@
                                 var _dir = point_direction(other.posx, other.posy, _x + 8, _y + 8),
                                     _spd = 8 - (point_distance(other.posx, other.posy, _x + 8, _y + 8) / 16);
 
-								if(chance(2, 3)){
+								if(other.intro && chance(2, 3)){
 	                                with(obj_create(_x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
 	                                    zspeed = _spd;
 	                                    direction = _dir;
@@ -2074,7 +2062,6 @@
                                 instance_destroy();
                             }
                         }
-                        mod_script_call("area", "trench", "area_setup_floor", false);
                     }
                 }
             }
@@ -2091,136 +2078,139 @@
 
     target = instance_nearest(posx, posy, Player);
 
-    if(instance_exists(target)){
-        var _targetDir = point_direction(posx, posy, target.x, target.y),
-        	_targetDis = point_distance(posx, posy, target.x, target.y);
-
-        if(_targetDis >= 96 || pit_height < 1 || chance(1, 2)){
-        	if(chance(pit_height, 2)){
-	            motion_add(_targetDir, 1);
-	            sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
-	            sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
-        	}
-
-			 // In Pit:
-            if(sink){
-            	alarm1 = 20 + random(10);
-
-            	direction = _targetDir;
-            	speed = max(speed, 2);
-
-            	 // Rise:
-            	if(
-            		_targetDis < 40						   ||
-            		(!pit_get(posx, posy) && chance(1, 2)) ||
-            		(_targetDis < 96 && (chance(1, 3) || !chance(my_health, maxhealth)))
-            	){
-            		sink = false;
-            	}
-            }
-        }
-
-        if(pit_height >= 1 && chance(1, 2)){
-             // Check LOS to Player:
-            var _targetSeen = (!collision_line(posx, posy, target.x, target.y, Wall, false, false) && _targetDis < 256);
-            if(_targetSeen && !eye_laser){
-                var f = instances_matching(Floor, "styleb", true);
-                with(f) x -= 10000;
-                if(collision_line(posx, posy, target.x, target.y, Floor, false, false)){
-                    _targetSeen = false;
-                }
-                with(f) x += 10000;
-            }
-
-             // Sink into pit:
-            if(!_targetSeen){
-                sink = true;
-                sink_targetx = target.x;
-                sink_targety = target.y;
-                alarm1 = 20;
-            }
-        }
-
-         // Spawn Tentacles:
-        var t = array_length(instances_matching(instances_matching(CustomEnemy, "name", "SquidArm"), "creator", id));
-        if(t < 3 || chance(1, 5 + (5 * t))){
-        	with(obj_create(0, 0, "SquidArm")){
-        		creator = other;
-        		alarm2 = 1;
-        	}
-        }
-    }
+	if(instance_exists(target)){
+		if(intro || instance_number(enemy) <= array_length(instances_matching(object_index, "name", name))){
+	    	if(intro || pit_height < 1){
+		        var _targetDir = point_direction(posx, posy, target.x, target.y),
+		        	_targetDis = point_distance(posx, posy, target.x, target.y);
+		
+		        if(_targetDis >= 96 || pit_height < 1 || chance(1, 2)){
+		        	if(chance(pit_height, 2) || !intro){
+			            motion_add(_targetDir, 1);
+			            sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
+			            sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
+		        	}
+		
+					 // In Pit:
+		            if(sink){
+		            	alarm1 = 20 + random(10);
+		
+		            	direction = _targetDir;
+		            	speed = max(speed, 2);
+		            	if(!intro) speed = min(speed, 3);
+						
+		            	 // Rise:
+		            	if(
+		            		_targetDis < (intro ? 40 : 120) ||
+		            		(
+		            			intro &&
+		            			(
+		            				(_targetDis < 160 && !pit_get(posx, posy)) ||
+		            				(_targetDis < 128 && (chance(1, 2) || !chance(my_health, maxhealth)))
+		            			)
+		            		)
+		            	){
+		            		sink = false;
+		            		if(!intro) speed /= 2;
+		            	}
+		            }
+		        }
+		
+		        if(pit_height >= 1){
+		             // Check LOS to Player:
+		            var _targetSeen = (!collision_line(posx, posy, target.x, target.y, Wall, false, false) && _targetDis < 256);
+		            if(_targetSeen && (chance(1, 2) || _targetDis > 128) && !eye_laser){
+		                var f = instances_matching(Floor, "styleb", true);
+		                with(f) x -= 10000;
+		                if(collision_line(posx, posy, target.x, target.y, Floor, false, false)){
+		                    _targetSeen = false;
+		                }
+		                with(f) x += 10000;
+		            }
+		
+		             // Sink into pit:
+		            if(!_targetSeen && eye_laser_delay <= 0){
+		                sink = true;
+		                alarm1 = 20;
+		            }
+			
+			         // Spawn Tentacles:
+			        else repeat(irandom_range(2, 3)){
+				        var t = array_length(instances_matching(instances_matching(CustomEnemy, "name", "SquidArm"), "creator", id));
+				        if(t < 3 || chance(1, 5 + (5 * t))){
+				        	with(obj_create(0, 0, "SquidArm")){
+				        		creator = other;
+				        		hitid = other.hitid;
+				        		alarm2 = 1;
+				        	}
+				        }
+			        }
+		        }
+		    }
+		    else sink = true;
+		}
+	}
     
 #define PitSquid_alrm2
     alarm2 = 60 + random(30);
 
-    if(pit_height >= 1){
+    if(pit_height >= 1 && intro){
         target = instance_nearest(posx, posy, Player);
 		
-        if(instance_exists(target)){
-            var _targetDis = point_distance(posx, posy, target.x, target.y),
-                _targetDir = point_direction(posx, posy, target.x, target.y);
-        	
-			 // Electroplasma Volley:
-			if(ammo > 0){
-				ammo--;
-				spit = 0.6;
-				
-				 // Projectile:
-				var _last = last_electroplasma,
-					_angle = _targetDir;
-					
-				if(!collision_line(posx, posy, target.x, target.y, Wall, false, false)) with(_last){
-					var d = angle_difference(direction, _angle);
-					_angle = direction - min(abs(d), 40) * sign(d);
-				}
-				
-				with(scrEnemyShootExt(posx, posy + 16, "ElectroPlasma", _angle + volley_angle + orandom(5), 5)){
-					tether_inst = _last;
-					damage = 1;
-
-					_last = id;
-				}
-				
-				last_electroplasma = _last;
-				volley_angle *= -1;
-				
-				 // Sounds:
-				sound_play_pitch(sndOasisShoot, 		1.1 + random(0.3));
-				sound_play_pitchvol(sndGammaGutsProc,	0.9 + random(0.5), 0.4);
-				
-				 // Effects:
-				instance_create(posx + orandom(8), posy + orandom(8) + 16, PortalL);
-				view_shake_max_at(posx, posy, 5);
-				 
-				 // End Volley Attack:
-				if(ammo <= 0){
-					last_electroplasma = noone;
-					
-					 // Sounds:
-					sound_play_pitchvol(sndOasisDeath, 0.9 + random(0.3), 2.4);
-				}
-				
-				 // Continue Volley Attack:
-				else{
-					alarm2 = 5 + random(2);
-					alarm1 = alarm1 + alarm2;
+		 // Electroplasma Volley:
+		if(ammo > 0){
+			spit = 0.6;
+			
+			 // Aiming:
+			if(instance_exists(target)){
+				if(!collision_line(posx, posy, target.x, target.y, Wall, false, false)){
+					gunangle += clamp(angle_difference(point_direction(posx, posy, target.x, target.y), gunangle) / 2, -30, 30);
 				}
 			}
 			
-			else if(!collision_line(posx, posy, target.x, target.y, Wall, false, false)){
+			 // Projectile:
+			var _last = electroplasma_last;
+			with(scrEnemyShootExt(posx, posy + 16, "ElectroPlasma", gunangle + (18 * electroplasma_side) + orandom(5), 5)){
+				tether_inst = _last;
+				damage = 1;
+				
+				_last = id;
+			}
+			electroplasma_last = _last;
+			electroplasma_side *= -1;
+			
+			 // Sounds:
+			sound_play_pitch(sndOasisShoot, 		1.1 + random(0.3));
+			sound_play_pitchvol(sndGammaGutsProc,	0.9 + random(0.5), 0.4);
+			
+			 // Effects:
+			instance_create(posx + orandom(8), posy + orandom(8) + 16, PortalL);
+			view_shake_max_at(posx, posy, 5);
+			 
+			 // Continue:
+			if(--ammo > 0){
+				alarm2 = 5 + random(2);
+				alarm1 = alarm1 + alarm2;
+			}
+			
+			 // End:
+			else{
+				sound_play_pitchvol(sndOasisDeath, 0.9 + random(0.3), 2.4);
+			}
+		}
+		
+        else if(instance_exists(target)){
+            var _targetDis = point_distance(posx, posy, target.x, target.y),
+                _targetDir = point_direction(posx, posy, target.x, target.y);
+                
+			if(!collision_line(posx, posy, target.x, target.y, Wall, false, false)){
 	            if(point_distance(target.x, target.y, posx + hspeed, posy + vspeed + 16) > 64){
-					
-					 // Half-Health Attack Pattern:
+					 // Half-Health Laser:
 					if(!eye_laser && my_health < maxhealth / 2){
-						/*
-						
-						Thinking about a half health attack pattern where he, instead of the volley attack, does the triple quasar spin
-						(also thinking make him snipe you with smaller quasars when you're over land)
-						
-						*/
 						eye_laser = true;
-						eye_laser_delay = 40;
+						eye_laser_delay = 60;
+						sound_play_pitchvol(sndGammaGutsKill,      0.6 + random(0.1), 0.8);
+						sound_play_pitchvol(sndHyperCrystalSearch, 0.6 + random(0.1), 0.8);
 					}
 					
 					 // Begin Volley Attack:
@@ -2230,6 +2220,7 @@
 						alarm1 = alarm1 + alarm2;
 						
 						ammo = 3 + irandom(2);
+						gunangle = _targetDir;
 						
 						 // Sounds:
 						sound_play_pitchvol(sndOasisHorn, 0.9, 2.4);
@@ -2258,7 +2249,7 @@
 	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_pits));
 
 	 // Cool tentacle effects:
-	if(pit_height >= 1){
+	if(pit_height >= 1 && intro){
 		var _tries = 10;
 		while(_tries-- > 0){
 			with(instance_random(_pits)){
@@ -2276,19 +2267,142 @@
 	}
 
 #define PitSquid_hurt(_hitdmg, _hitvel, _hitdir)
+    x = posx;
+    y = posy;
+    
     my_health -= _hitdmg;
     nexthurt = current_frame + 6;
-    sound_play_hit(snd_hurt, 0.3);
+    sound_play_hit_ext(snd_hurt, 1.4 + orandom(0.4), 2.5);
 
      // Half HP:
     var h = (maxhealth / 2);
     if(in_range(my_health, h - _hitdmg + 1, h)){
-    	sound_play(snd_lowh);
+    	if(snd_lowh == sndNothing2HalfHP){
+    		sound_play_pitch(snd_lowh, 0.6);
+    	}
+    	else sound_play(snd_lowh);
+    	
+    	bite = 1;
+    	if(ammo <= 0){
+    		alarm2 = max(alarm2, 45 + random(15));
+    	}
     }
+    
+    x = 0;
+    y = 0;
 
 #define PitSquid_death
+	sound_play_pitchvol(sndBallMamaHalfHP, 0.6, 2);
+	sound_play_pitchvol(sndNothing2Hurt, 0.6, 1);
+
+	 // Death Time:
+	with(obj_create(posx, posy, "PitSquidDeath")){
+        eye = other.eye;
+        eye_dir = other.eye_dir;
+        eye_dir_speed = other.eye_dir_speed;
+        eye_dis = other.eye_dis;
+        pit_height = other.pit_height;
+        direction = other.direction;
+        speed = min(other.speed, 2);
+        raddrop = other.raddrop;
+	}
+	raddrop = 0;
+
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);
+
+
+#define PitSquidDeath_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_bite = spr.PitSquidMawBite;
+		
+		 // Vars:
+		friction = 0.01;
+		eye = [];
+        eye_dir = random(360);
+        eye_dir_speed = 0;
+        eye_dis = 0;
+        pit_height = 0;
+        raddrop = 0;
+        explo = true;
+        sink = false;
+		
+		alarm0 = 30;
+		
+		return id;
+	}
+
+#define PitSquidDeath_step
+	with(instances_matching_ge(Corpse, "alarm0", 0)) alarm0 = -1;
+	
+	if(pit_height > 0.1){
+		 // Sinkin:
+    	var _pitHeightGoal = (sink ? (explo ? 0.5 : 0) : 1);
+    	if(explo && !sink && pit_height != _pitHeightGoal){
+    		if(abs(_pitHeightGoal - pit_height) < 0.2){
+    			explo = false;
+				with(eye){
+					obj_create(x, y, "BubbleExplosion");
+					sound_play_pitchvol(sndNothingDeath2, 0.6, 0.8);
+					
+					 // Pickups:
+					with(other){
+						var	_x = x,
+							_y = y;
+							
+						x = other.x;
+						y = other.y;
+						pickup_drop(80, 0);
+						x = _x;
+						y = _y;
+					}
+				}
+				
+				 // Rads:
+				rad_drop(x, y + 16, raddrop, direction, speed);
+    		}
+    	}
+		pit_height += ((_pitHeightGoal - pit_height) / (sink ? 30 : 4)) * current_time_scale;
+    	
+    	 // Eyes:
+    	eye_dis -= (eye_dis / 5) * current_time_scale;
+	    eye_dir += eye_dir_speed * current_time_scale;
+	    eye_dir_speed -= (eye_dir_speed * (explo ? 0.1 : 0.05)) * current_time_scale;
+	    for(var i = 0; i < array_length(eye); i++){
+	        var _dis = (24 + eye_dis) * max(pit_height, 0),
+	            _dir = image_angle + eye_dir + ((360 / array_length(eye)) * i),
+	            _x = x + hspeed_raw + lengthdir_x(_dis * image_xscale, _dir),
+	            _y = y + vspeed_raw + lengthdir_y(_dis * image_yscale, _dir) + 16;
+	
+	        with(eye[i]){
+	            x = _x + orandom(2/3);
+	            y = _y + orandom(2/3);
+	            
+            	dis -= dis * 0.3 * current_time_scale;
+	            
+	            if(chance_ct(1, 16)){
+	            	with(instance_create(x + orandom(8), y + orandom(8), PortalL)){
+	            		image_xscale = 0.5;
+	            		image_yscale = 0.5;
+	            	}
+	            }
+	        }
+	    }
+	}
+	else instance_destroy();
+
+#define PitSquidDeath_alrm0
+	if(explo || !sink){
+		alarm0 = (sink ? 30 : 33);
+		sink = !sink;
+		if(explo) eye_dir_speed -= 12 + random(4);
+		else vspeed += 2/3;
+	}
+
+#define PitSquidDeath_destroy
+	instance_create(x, y, Bubble);
+	with(instance_create(x, y, Corpse)) alarm0 = 9;
 
 
 #define SquidArm_create(_x, _y)
@@ -2307,14 +2421,13 @@
         
          // Sound:
         snd_hurt = sndHitFlesh;
-        snd_dead = -1;
-        //snd_dead = sndMaggotSpawnDie;
+        snd_dead = sndMeatExplo;
         snd_mele = sndPlantSnare;
 
          // Vars:
         mask_index = mskLaserCrystal;
         friction = 0.8;
-        maxhealth = 22;
+        maxhealth = irandom_range(20, 80);
         raddrop = 0;
         size = 3;
         creator = noone;
@@ -2399,8 +2512,9 @@
 	else speed = 0;
 
 	 // Dead:
-	if(!instance_exists(creator)){
+	if(!instance_exists(creator) || (!bomb && creator.pit_height < 1)){
 		my_health = 0;
+		snd_dead = -1;
 	}
 
 #define SquidArm_end_step
@@ -2430,8 +2544,17 @@
 	        y += vspeed;
 		}
     }
-    else if(alarm2 <= 0){
-    	alarm2 = 1;
+    else{
+		with(instances_meeting(x, y, Wall)){
+			instance_create(x, y, FloorExplo);
+			instance_destroy();
+		}
+        with(instances_meeting(x, y, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB))){
+            styleb = true;
+            sprite_index = spr.FloorTrenchB;
+            mod_script_call("area", "trench", "area_setup_floor", false);
+            sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
+        }
     }
 
 #define SquidArm_alrm1
@@ -2460,7 +2583,7 @@
 				else{
 					 // Attack:
 					if(in_sight(target) && pit_get(target.x, target.y)){
-						if(chance(2, 7)){
+						if(chance(2, 5)){
 							alarm2 = 1;
 							bomb = true;
 							bomb_delay = 18;
@@ -2553,7 +2676,7 @@
 					var _target = target,
 						_creator = creator,
 						_allPits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
-					
+						
 					 // Bomb Attack:
 					if(bomb){
 						with(scrEnemyShoot("SquidBomb", point_direction(x, y, target.x, target.y), 0)){
@@ -2572,41 +2695,48 @@
 					 // Teleport Closer to Player:
 					else{
 						var _emptyPits = [],
-							_validPits = [];
-						
+							_validPits = [],
+							_minDist = 96;
+							
 						 // Find Clear Pits:
-						with(_allPits) if(!place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, instances_matching_ne(FloorExplo, "sprite_index", spr.FloorTrenchB))) <= 0){
-							array_push(_emptyPits, id);
+						with(_allPits){
+							if(!place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, instances_matching_ne(FloorExplo, "sprite_index", spr.FloorTrenchB))) <= 0){
+								array_push(_emptyPits, id);
+								_minDist = min(_minDist, point_distance(_target.x, _target.y, (bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2));
+							}
 						}
-						
-						var _nearest = nearest_instance(target.x, target.y, _emptyPits),
-							_minDist = point_distance(target.x, target.y, _nearest.x, _nearest.y);
 							
 						 // Find Pits Near Target:
 						with(_emptyPits){
-							var _squidDis = point_distance(x, y, _creator.posx, _creator.posy);
-							if(in_distance(_target, [32, max(96, _minDist)]) && _squidDis > 60 && _squidDis < 180){
-								array_push(_validPits, id);
+							if(!place_meeting(x, y, hitme)){
+								var	_x = (bbox_left + bbox_right) / 2,
+									_y = (bbox_top + bbox_bottom) / 2,
+									_targetDis = point_distance(_x, _y, _target.x, _target.y);
+									
+								if(_targetDis > 32 && _targetDis < 128){
+									var _squidDis = point_distance(_x, _y, _creator.posx, _creator.posy);
+									if(_squidDis > 60 && _squidDis < 180){
+										array_push(_validPits, id);
+									}
+								}
 							}
 						}
 						
 						 // Teleport to Random Valid Pit:
-						if(array_length(_validPits)){
+						if(array_length(_validPits) > 0){
 							with(instance_random(_validPits)){
 								with(other){
-									teleport_x = other.x + 16;
-									teleport_y = other.y + 16;
+									teleport_x = (other.bbox_left + other.bbox_right) / 2;
+									teleport_y = (other.bbox_top + other.bbox_bottom) / 2;
 								}
 							}
 						}
 						
 						 // Teleport to a Random Pit:
-						else{
-							with(instance_random(_emptyPits)){
-								with(other){
-									teleport_x = other.x + 16;
-									teleport_y = other.y + 16;
-								}
+						else with(instance_random(_emptyPits)){
+							with(other){
+								teleport_x = (other.bbox_left + other.bbox_right) / 2;
+								teleport_y = (other.bbox_top + other.bbox_bottom) / 2;
 							}
 						}
 					}
@@ -2650,6 +2780,10 @@
         
         scrRight(_hitdir + 180);
     }
+
+#define SquidArm_death
+	pickup_drop(20, 0);
+	repeat(3) with(scrFX(x, y, 1, Smoke)) depth = 2;
 
 
 #define SquidBomb_create(_x, _y)
@@ -2750,8 +2884,8 @@
 		direction = other.direction;
 		creator	  = other.creator;
 		team	  = other.team;
+		hitid	  = other.hitid;
 		damage	  = 2;
-		hitid	  = [spr.PitSquidMawBite, "PIT SQUID"];
 		
 		image_speed = 0.4;
 		
@@ -3660,15 +3794,14 @@
 	}
 	
 #define WantPitSquid_step
-
-	 // Be more elaborate later:
-	if(!instance_exists(enemy)){
+	if(!instance_exists(enemy) && instance_exists(Player)){
 		with(instance_random(Player)){
-			with(obj_create(x, y, "PitSquid")){
-				scrBossIntro(name, sndBigDogIntro, musBoss2);
-			}
+			var	l = random_range(128, 256),
+				d = random(360);
+				
+			obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PitSquid");
 		}
-		
+		scrPortalPoof();
 		instance_destroy();
 	}
 
