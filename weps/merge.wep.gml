@@ -1627,7 +1627,7 @@
 		}
 		switch(_frontObjRaw){
 			case Laser:
-				if(_stockObjRaw != Disc && _stockObjRaw != Grenade && !object_is_ancestor(_stockObjRaw, Grenade)){
+				if(_stock.type != 1 && _stockObjRaw != Disc && _stockObjRaw != Grenade && !object_is_ancestor(_stockObjRaw, Grenade)){
 					_frontProjCost /= 2;
 					if(_stockObjRaw == Laser) _stockProjCost /= 2;
 				}
@@ -1638,23 +1638,23 @@
 				break;
 		}
 
-		 // Devalue Bullets:
-		if(_stock.type == 1){
-			if(_front.type == 1 || clamp(_frontProjCostRaw, 1, (_front.amnt * _front.shot)) > clamp(_stockProjCostRaw, 1, (_stock.amnt * _stock.shot))){
-				if(_frontProjCostRaw < _stockProjCostRaw / 2) _stockProjCost /= 2;
-				else _stockProjCost /= 3;
-			}
-			
-			 // Slower:
-			if(_stock.type != _front.type || _frontSped[1] < _stockSped[1]){
-				_stockSped[0] *= 2/3;
-				_stockSped[1] *= 2/3;
-			}
+		 // Slow Bullets:
+		if(_stock.type == 1 && (_front.type != 1 || _frontSped[1] < _stockSped[1])){
+			_stockSped[0] *= 2/3;
+			_stockSped[1] *= 2/3;
 		}
+		
+		 // Devalue Bullets:
 		if(_front.type == 1){
 			_frontProjCost = max(1, _frontProjCost);
 			if(_stockProjCostRaw < _frontProjCostRaw / 2) _frontProjCost /= 2;
 			else _frontProjCost /= 3;
+			
+			if(_stock.type == 1){
+				_stockProjCost = max(1, _stockProjCost);
+				if(_frontProjCostRaw < _stockProjCostRaw / 2) _stockProjCost /= 2;
+				else _stockProjCost /= 3;
+			}
 		}
 
          // Speed:

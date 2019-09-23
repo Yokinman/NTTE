@@ -853,7 +853,7 @@
         	
         	 // Spawn Lightning Crystals:
         	if(GameCont.loops <= 0){
-	        	with(LaserCrystal)  chance(1, 30)){
+	        	with(LaserCrystal) if(chance(1, 30)){
 	        		instance_create(x, y, LightningCrystal);
 	        		instance_delete(id);
 	        	}
