@@ -329,34 +329,46 @@
 			var	l = random_range(12, 16),
 				d = dir,
 				_x = x + lengthdir_x(l, d) + orandom(2),
-				_y = y + lengthdir_y(l, d) - random(2),
-				_inv = side * -1;
+				_y = y + lengthdir_y(l, d) - random(2);
+				
 			if(chance_ct(2, 3)){
 				with(instance_create(_x, _y, BulletHit)){
 					sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
-					image_angle = d + random_range(15, 60) * _inv;
-					image_yscale = random_range(1, 1.5) * _inv;
+					image_angle = d - (random_range(15, 60) * other.side);
+					image_yscale = -(random_range(1, 1.5) * other.side);
 					
 					if(!place_meeting(x, y, Wall)) instance_destroy();
 				}
 			}
-			if(chance_ct(1, 4)) scrFX([_x, 3], [_y, 3], [d + (random_range(45, 90) * _inv), random(2)], Sweat).image_blend = make_color_rgb(255, 222, 056);
+			if(chance_ct(1, 4)){
+				with(scrFX([_x, 3], [_y, 3], [d - (random_range(45, 90) * side), random(2)], Sweat)){
+					image_blend = make_color_rgb(255, 222, 56);
+				}
+			}
 		}
 	}
 
 	 // Sound:
-	var _pit = (1 + (0.05 * sin(current_frame / 8))) * (spd / maxspeed),
-		_vol = min(2, 80 / (distance_to_object(Player) + 1)) * (spd / maxspeed);
-
-	if(active && !audio_is_playing(loop_snd)){
-		loop_snd = audio_play_sound(snd.SawTrap, 0, false);
-
-		var n = 0;
-		for(var i = 0; i < maxp; i++) n += player_is_active(i);
-		if(n <= 1) audio_sound_set_track_position(loop_snd, random(audio_sound_length_nonsync(loop_snd)));
+	var _volGoal = (spd / maxspeed);
+	if(_volGoal > 0 && point_in_rectangle(x, y, view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height)){
+		if(!audio_is_playing(loop_snd)){
+			loop_snd = audio_play_sound(snd.SawTrap, 0, true);
+			audio_sound_gain(loop_snd, 0, 0);
+		}
 	}
-	audio_sound_gain(loop_snd, _vol, 0);
-	audio_sound_pitch(loop_snd, _pit);
+	else _volGoal = 0;
+	
+	var _vol = audio_sound_get_gain(loop_snd);
+	if(_vol > 0 || _volGoal > 0){
+		 // Pitch:
+		audio_sound_pitch(loop_snd, (1 + (0.05 * sin(current_frame / 8))) * (spd / maxspeed));
+		
+		 // Volume:
+		_vol += 0.1 * (_volGoal - _vol) * current_time_scale;
+		audio_sound_gain(loop_snd, _vol, 0);
+	}
+	else audio_stop_sound(loop_snd);
+	
 
 	 // Hitme Collision:
 	var _scale = 0.55,
@@ -378,7 +390,7 @@
 						projectile_hit_raw(other, meleedamage, true);
 	
 						 // Effects:
-						sound_play_pitchvol(snd_mele, 0.7 + random(0.2), 1);
+						sound_play_hit_ext(snd_mele, 0.7 + random(0.2), 0.6);
 					}
 				}
 
@@ -387,7 +399,7 @@
 					if(active && side != other.side){
 						_sawtrapHit = true;
 						if(!sawtrap_hit || chance_ct(1, 30)){
-							sound_play_pitchvol(sndDiscBounce, 0.6 + random(0.2), _vol / 2);
+							sound_play_hit_ext(sndDiscBounce, 0.6 + random(0.2), 0.5);
 							with(instance_create(x, y, MeleeHitWall)){
 								motion_add(other.dir - random(120 * other.side), random(1));
 								image_angle = direction + 180;
@@ -414,8 +426,8 @@
 		repeat(3 + irandom(3)) instance_create(x, y, Debris).sprite_index = spr.SawTrapDebris;
 
 		 // Sounds:
-		sound_play(sndExplosion);
-		sound_play_pitch(snd_dead, 1 + orandom(0.2));
+		sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
+		sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
 
 		 // Pickups:
 		pickup_drop(50, 0);

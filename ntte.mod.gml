@@ -852,9 +852,11 @@
         	}
         	
         	 // Spawn Lightning Crystals:
-        	with(LaserCrystal) if(GameCont.loops <= 0 && chance(1, 30)){
-        		instance_create(x, y, LightningCrystal);
-        		instance_delete(id);
+        	if(GameCont.loops <= 0){
+	        	with(LaserCrystal)  chance(1, 30)){
+	        		instance_create(x, y, LightningCrystal);
+	        		instance_delete(id);
+	        	}
         	}
         	
         	 // Spawn Spider Walls:
@@ -2536,7 +2538,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 	 // Pet Indicator:
 	with(instances_matching(CustomHitme, "name", "Pet")){
-		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || instance_exists(my_corpse))){
+		var _dead = (maxhealth > 0 && my_health <= 0);
+		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || _dead)){
 			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
 			
 			if(sprite_exists(_icon.spr)){
@@ -2544,7 +2547,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 					_y = y + _icon.y;
 						
 				 // Death Pointer:
-				if(instance_exists(my_corpse)){
+				if(_dead){
 					_y -= 20 + sin(wave / 10);
 					draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
 				}
@@ -2561,7 +2564,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 				draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
 				
 				 // Death Indicating:
-				if(instance_exists(my_corpse)){
+				if(_dead){
 					var _flashLength = 15,
 						_flashDelay = 10,
 						_flash = (current_frame % (_flashLength + _flashDelay));

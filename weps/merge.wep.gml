@@ -1640,9 +1640,11 @@
 
 		 // Devalue Bullets:
 		if(_stock.type == 1){
-			if(_frontProjCostRaw < _stockProjCostRaw / 2) _stockProjCost /= 2;
-			else _stockProjCost /= 3;
-
+			if(_front.type == 1 || clamp(_frontProjCostRaw, 1, (_front.amnt * _front.shot)) > clamp(_stockProjCostRaw, 1, (_stock.amnt * _stock.shot))){
+				if(_frontProjCostRaw < _stockProjCostRaw / 2) _stockProjCost /= 2;
+				else _stockProjCost /= 3;
+			}
+			
 			 // Slower:
 			if(_stock.type != _front.type || _frontSped[1] < _stockSped[1]){
 				_stockSped[0] *= 2/3;
@@ -1786,7 +1788,7 @@
 			}
 
 			 // Fast Stock:
-			load *= min(1, (_stock.load * ((_stock.type != 1) ? 0.5 : 1)) / min(_front.load, 10));
+			load *= min(1, (_stock.load * ((_stock.type != 1) ? 0.5 : 1.5)) / min(_front.load, 10));
 		}
 		load = max(1, round(load));
 
@@ -4116,7 +4118,7 @@
 					break;
 			}
 			
-			o.amnt = ceil(d / 3);
+			o.amnt = ceil(d / 3) + (crown_current == crwn_death);
 			o.team = team;
 			o.x = x;
 			o.y = y;
@@ -4142,7 +4144,7 @@
 
 		case proj_destroy:
 			 // Nades:
-			with(o) repeat(amnt + (crown_current == crwn_death)){
+			with(o) repeat(amnt){
 				with(instance_create(x, y, MiniNade)){
 					motion_add(random(360), random_range(1, 2 + (other.amnt / 2)));
 					image_angle = direction;

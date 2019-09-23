@@ -546,8 +546,8 @@
 		
 		for(var i = _sndMax - 1; i >= _sndMax - 10; i--){
 			if(audio_get_name(i) == audio_get_name(snd_hurt)){
-				sound_pitch(i, 1.2 + random(0.3));
-				sound_volume(i, 1.5);
+				sound_pitch(i, 1.1 + random(0.4));
+				sound_volume(i, 1.2);
 				break;
 			}
 		}

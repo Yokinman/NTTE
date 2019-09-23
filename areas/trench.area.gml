@@ -222,7 +222,7 @@
 		    	}
 	    	}
 	    	
-	    	obj_create(_x + orandom(8), _y - random(16), "PitSquid");
+	    	obj_create(_x + orandom(8), _y + orandom(8), "PitSquid");
 			break;
 	}
 
@@ -321,7 +321,7 @@
     }
 
      // Fix scorchmarks showing above pits:
-    with(instances_matching([Scorch, ScorchTop], "trenchpit_check", null)){
+    with(instances_matching([Scorch, ScorchTop, MeltSplat], "trenchpit_check", null)){
         trenchpit_check = true;
 
         var	_kill = true,
@@ -385,7 +385,7 @@
             instance_destroy();
         }
     }
-    with(instances_matching_lt(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "size", 4)){
+    with(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0)){
         if(instance_exists(enemy) || instance_exists(Portal)){
             if(speed <= 0) trenchpit_check = true;
             if(pit_get(x, y)){
@@ -797,12 +797,12 @@
 
 					 // Bite:
 					if(bite > 0 && bite <= 1){
-						draw_sprite_ext(spr_bite, ((1 - bite) * sprite_get_number(spr_bite)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+						draw_sprite_ext(spr_bite, ((1 - bite) * sprite_get_number(spr_bite)), posx - _surfx, posy - _surfy, _xscal, _yscal, _angle, _blend, _alpha);
 					}
 
 				     // Spit:
 					else if(spit > 0 && spit <= 1){
-						draw_sprite_ext(spr_fire, ((1 - spit) * sprite_get_number(spr_fire)), posx - _surfx, posy - _surfy + 16, _xscal, _yscal, _angle, _blend, _alpha);
+						draw_sprite_ext(spr_fire, ((1 - spit) * sprite_get_number(spr_fire)), posx - _surfx, posy - _surfy, _xscal, _yscal, _angle, _blend, _alpha);
 					}
 				}
 				with(instances_matching(CustomObject, "name", "PitSquidDeath")){
@@ -918,7 +918,7 @@
     }
 
 	 // Reset Pit Sink Checks:
-	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop], "trenchpit_check", null)){
+	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop, MeltSplat], "trenchpit_check", null)){
 	    trenchpit_check = null;
 	}
 

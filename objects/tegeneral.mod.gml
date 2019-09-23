@@ -2572,6 +2572,7 @@
         spr_walk = spr.PetParrotWalk;
         spr_hurt = spr.PetParrotHurt;
         spr_dead = mskNone;
+        spr_icon = -1;
         spr_shadow = shd24;
         spr_shadow_x = 0;
         spr_shadow_y = -1;
@@ -2828,7 +2829,7 @@
         else path = [];
 
          // Enter Portal:
-        if(visible || instance_exists(my_corpse)){
+        if(visible || (maxhealth > 0 && my_health <= 0)){
         	 // Portal Attraction:
         	with(Portal) if(point_distance(x, y, other.x, other.y) < 64){
         		with(other){
@@ -2957,7 +2958,7 @@
         }
     }
 
-	if(visible || instance_exists(my_corpse)){
+	if(visible || (maxhealth > 0 && my_health <= 0)){
 		if(instance_exists(leader)) team = leader.team;
 
 		 // Dodge Collision:
@@ -2998,7 +2999,7 @@
     }
 
      // Wall Collision Part2:
-    if(visible || instance_exists(my_corpse)){
+    if(visible || (maxhealth > 0 && my_health <= 0)){
 	    with(path_wall) with(other){
 		    var _wall = other;
 		    
@@ -3052,12 +3053,12 @@
 		_ysc = image_yscale,
 		_ang = image_angle + portal_angle,
 		_col = image_blend,
-		_alp = image_alpha * (instance_exists(my_corpse) ? 0.4 : 1);
+		_alp = image_alpha * ((maxhealth > 0 && my_health <= 0) ? 0.4 : 1);
 
      // Outline Setup:
     var _outline = (
     	instance_exists(leader)									&&
-    	!instance_exists(my_corpse)								&&
+    	(maxhealth <= 0 || my_health > 0)						&&
     	surface_exists(surfPet.surf)							&&
     	player_is_local_nonsync(player_find_local_nonsync())
 	);
@@ -4175,6 +4176,9 @@
 #define game_start
 	 // Reset Pets:
     with(instances_matching(CustomHitme, "name", "Pet")) instance_destroy();
+    
+	 // Delete Revives:
+    with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_destroy();
 
 #define step
 	if(DebugLag) trace_time();

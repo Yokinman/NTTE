@@ -2725,6 +2725,7 @@
 	        spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
 	        spr_dead = lq_defget(spr, "Pet" + pet + "Dead", mskNone);
         }
+        spr_icon = lq_defget(mod_script_call("mod", "ntte", "pet_get_mapicon", mod_type, mod_name, pet), "spr", spr_icon);
 
          // Custom Create Event:
     	var _scrt = pet + "_create";
@@ -2734,7 +2735,9 @@
 
 		 // Auto-set Stuff:
 		if(instance_exists(self)){
-	        with(pickup_indicator) if(text == "") text = other.pet;
+	        with(pickup_indicator) if(text == ""){
+	        	text = `@2(${other.spr_icon})` + other.pet;
+	        }
 	        if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
 			if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
 			if(hitid == -1) hitid = [spr_idle, pet];
