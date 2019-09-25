@@ -441,8 +441,9 @@
 		depth = -2;
 
 		 // Sound:
-		snd_hurt = sndHitMetal;
-		snd_dead = sndAssassinDie;
+        var _water = area_get_underwater(GameCont.area);
+		snd_hurt = (_water ? sndOasisHurt  : sndHitMetal);
+		snd_dead = (_water ? sndOasisDeath : sndAssassinDie);
 
 		 // Vars:
 		mask_index = mskBandit;
@@ -515,6 +516,11 @@
 
 #define Diver_alrm1
     alarm1 = 60 + irandom(30);
+
+	 // Breath:
+	if(area_get_underwater(GameCont.area)){
+		with(instance_create(x, y, Bubble)) speed /= 3;
+	}
 
      // Shooty Harpoony:
     if(gonnafire){
@@ -819,7 +825,7 @@
 		 // Vars:
 		mask_index = mskNone;
 		mask_hold = msk.Palanking;
-		maxhealth = scrBossHP(350);
+		maxhealth = scrBossHP(300);
 		raddrop = 120;
 		size = 4;
 		walk = 0;
@@ -3502,7 +3508,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

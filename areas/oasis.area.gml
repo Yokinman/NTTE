@@ -16,8 +16,6 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
-
 #define area_subarea			return 1;
 #define area_next				return [3, 3];
 #define area_music				return mus101;
@@ -35,42 +33,11 @@
 	return choose("DON'T MOVE", "IT'S BEAUTIFUL DOWN HERE", "HOLD YOUR BREATH", "FISH", "RIPPLING SKY", "IT'S SO QUIET", "THERE'S SOMETHING IN THE WATER");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 27.5,
-        _y = -9;
-
-    if(array_length(TrenchVisited) <= _loops || !TrenchVisited[_loops]){
-        _x += 16.5;
-
-         // Manual Line Shadow:
-        if(GameCont.area != mod_current || GameCont.subarea != _subarea || GameCont.loops != _loops){
-             // Map Offset:
-            var _dx = view_xview_nonsync + (game_width / 2),
-                _dy = view_yview_nonsync + (game_height / 2);
-
-            if(instance_exists(GameOverButton)){
-                _dx -= 120;
-                _dy += 1;
-            }
-            else{
-                _dx -= 70;
-                _dy += 6;
-            }
-
-             // Draw Shadow:
-            var _x1 = _dx + _x,
-                _y1 = _dy + _y,
-                _x2 = _dx + 53,
-                _y2 = _dy + 0;
-
-            var c = draw_get_color();
-            draw_set_color(c_black);
-            draw_line_width(_x1, _y1 + 1, _x2, _y2 + 1, 1);
-            draw_set_color(c);
-        }
-    }
-
-     // Return Map Stuff:
-    return [_x, _y, (_subarea == 1)];
+    return [
+    	44,
+    	-9,
+    	(_subarea == 1)
+    ];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -117,8 +84,8 @@
     if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
 	    var _spawnFloor = [];
 		with(Floor){
-			var _x = (bbox_left + bbox_right) / 2,
-				_y = (bbox_top + bbox_bottom) / 2;
+			var _x = (bbox_left + bbox_right + 1) / 2,
+				_y = (bbox_top + bbox_bottom + 1) / 2;
 
 			if(point_distance(_x, _y, 10016, 10016) > 48){
 				if(array_length(instances_meeting(x, y, [prop, chestprop, Wall])) <= 0){
@@ -128,7 +95,7 @@
 		}
 
 		with(instance_random(_spawnFloor)){
-        	obj_create((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, "OasisPetBecome");
+        	obj_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "OasisPetBecome");
 		}
     }
 
@@ -212,9 +179,7 @@
     /// Chests & Branching:
          // Turn Arounds (Weapon Chests):
         if(_trn == 180 && _outOfSpawn){
-            with(scrFloorMake(_x, _y, WeaponChest)){
-                sprite_index = sprClamChest;
-            }
+            scrFloorMake(_x, _y, WeaponChest);
         }
 
          // Dead Ends (Ammo Chests):
@@ -332,7 +297,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

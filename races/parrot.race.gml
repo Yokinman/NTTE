@@ -251,7 +251,7 @@
 		switch(_ultra){
 			case ultFeath:
 				feather_num_mult = 1 + (2 * _state);
-				feather_targ_radius = 32 * (1 + _state);
+				feather_targ_radius = 24 * (1 + _state);
 				
 				 // Bonus - Full Ammo:
 				if(instance_exists(EGSkillIcon)){
@@ -351,7 +351,7 @@
     feather_ammo_max = 5 * feather_num;
     feather_ammo_hud = [];
     //feather_ammo_hud_flash = 0;
-    feather_targ_radius = 32;
+    feather_targ_radius = 24;
     feather_targ_delay = 0;
     
      // Ultra B:
@@ -650,7 +650,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

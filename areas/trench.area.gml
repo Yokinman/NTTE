@@ -53,11 +53,8 @@
 
 	 // Pit Grid:
 	global.pit_grid = ds_grid_create(1250, 1250);
-	mod_variable_set("mod", "tetrench", "pit_grid", global.pit_grid);
+	mod_variable_set("mod", "tewater", "pit_grid", global.pit_grid);
 	with(Floor) trenchpit_check = null;
-
-	 // For Pause Screen Map:
-    global.trench_visited = [];
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -74,10 +71,8 @@
 #macro surfPitWallTop	global.surfPitWallTop
 #macro surfSpark		global.surfSpark
 
-#macro TrenchVisited global.trench_visited
-
 #define area_subarea            return 3;
-#define area_next               return 4;
+#define area_next               return 5;
 #define area_music              return mus.Trench;
 #define area_ambience           return amb101;
 #define area_background_color   return make_color_rgb(100, 114, 127);
@@ -93,46 +88,11 @@
 	return choose("IT'S SO DARK", "SHADOWS CRAWL", "IT'S ELECTRIC", "GLOWING", "BLUB", "SWIM OVER PITS", "UNTOUCHED");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 36.5 + (8.8 * (_subarea - 1)),
-        _y = -9;
-
-     // Manual Line Shadow:
-    /* draws over the mapicon (??? bro idk why it does)
-    if(_subarea == 3){
-        if(GameCont.area != mod_current || GameCont.subarea != _subarea || GameCont.loops != _loops){
-             // Map Offset:
-            var _dx = view_xview_nonsync + (game_width / 2),
-                _dy = view_yview_nonsync + (game_height / 2);
-
-            if(instance_exists(GameOverButton)){
-                _dx -= 120;
-                _dy += 1;
-            }
-            else{
-                _dx -= 70;
-                _dy += 6;
-            }
-
-             // Draw Shadow:
-            var _x1 = _dx + _x - 1,
-                _y1 = _dy + _y,
-                _x2 = _dx + 62,
-                _y2 = _dy + 0;
-
-            var c = draw_get_color();
-            draw_set_color(c_black);
-            draw_line_width(_x1, _y1 + 1, _x2, _y2 + 1, 1);
-            draw_set_color(c);
-        }
-    }
-    */
-
-     // Map Stuff:
-    if(array_length(TrenchVisited) <= _loops){
-        TrenchVisited[@_loops] = (_lastarea == "oasis");
-    }
-
-    return [_x, _y, (_subarea == 1)];
+    return [
+    	44 + (9.9 * (_subarea - 1)),
+    	9,
+    	(_subarea == 1)
+    ];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -200,7 +160,9 @@
 		 // Small Pit Boy:
 	    case 1:
 			with(instance_random(Floor)){
-	        	Pet_spawn((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, "Octo");
+	        	with(Pet_spawn((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "Octo")){
+	        		hiding = true;
+	        	}
 			}
 			break;
 			
@@ -217,12 +179,12 @@
 		    	}
 		    		
 		    	with(instance_random(_spawnFloor)){
-		    		_x = (bbox_left + bbox_right) / 2;
-		    		_y = (bbox_top + bbox_bottom) / 2;
+		    		_x = (bbox_left + bbox_right + 1) / 2;
+		    		_y = (bbox_top + bbox_bottom + 1) / 2;
 		    	}
 	    	}
 	    	
-	    	obj_create(_x + orandom(8), _y + orandom(8), "PitSquid");
+	    	obj_create(_x + orandom(8), _y + random(8), "PitSquid");
 			break;
 	}
 
@@ -263,9 +225,11 @@
         subarea = n[1];
 
          // Cursed Caves:
+        /* fun fact trench used to exit at 4-1 woah
         with(Player) if(curse || bcurse){
             other.area = 104;
         }
+        */
 
          // who's that bird? \\
         var _isParrot = false;
@@ -305,16 +269,16 @@
      // Update Pit Grid:
     with(instances_matching_ne(instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", false)){
     	trenchpit_check = false;
-    	for(var _x = bbox_left; _x < bbox_right; _x += 16){
-    		for(var _y = bbox_top; _y < bbox_bottom; _y += 16){
+    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
     			pit_set(_x, _y, false);
     		}
     	}
     }
     with(instances_matching_ne(instances_matching(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", true)){
     	trenchpit_check = true;
-    	for(var _x = bbox_left; _x < bbox_right; _x += 16){
-    		for(var _y = bbox_top; _y < bbox_bottom; _y += 16){
+    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
     			pit_set(_x, _y, true);
     		}
     	}
@@ -385,7 +349,7 @@
             instance_destroy();
         }
     }
-    with(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0)){
+    with(instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", sprPStatDead)){
         if(instance_exists(enemy) || instance_exists(Portal)){
             if(speed <= 0) trenchpit_check = true;
             if(pit_get(x, y)){
@@ -461,9 +425,7 @@
     /// Chests & Branching:
          // Weapon Chests:
         if(_outOfSpawn && _trn == 180){
-            with(scrFloorMake(_x, _y, WeaponChest)){
-                sprite_index = sprClamChest;
-            }
+            scrFloorMake(_x, _y, WeaponChest);
         }
 
 	     // Ammo Chests + End Branch:
@@ -935,7 +897,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

@@ -403,7 +403,7 @@
 	            var _dis = 16,
 	                _dir = irandom(3) * 90;
 	                
-		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor) || distance_to_object(Player) < 80){
+		        if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones) || place_meeting(x, y, Floor) || distance_to_object(PortalClear) < 64){
 		            x += lengthdir_x(_dis, _dir);
 		            y += lengthdir_y(_dis, _dir);
 		        }
@@ -473,7 +473,7 @@
     			case 4:
     			case 104: // Face drill
     				with(nearest_instance(x - 16, y - 16, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 16), "bbox_bottom", y + 48))){
-    					var _fx = (bbox_left + bbox_right) / 2;
+    					var _fx = (bbox_left + bbox_right + 1) / 2;
     					if(_fx != other.x){
     						other.image_xscale = -sign(_fx - other.x);
     					}
@@ -557,14 +557,19 @@
         _y = y + 16;
 
     switch(area){
-        case 1: // Spawn a handful of crab bones:
+        case 1: // Bones
             repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
                 motion_set(irandom(359), random_range(3, 6));
                 wep = "crabbone";
+                repeat(3) scrFX(x, y, 2, Smoke);
             }
+            
+             // Sound:
+            sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 1);
+            
             break;
 
-        case 2: // Spawn a bunch of frog eggs:
+        case 2: // Egg Vat
             repeat(irandom_range(3, 5)){
                 with(instance_create(_x, _y, FrogEgg)){
                     alarm0 = irandom_range(20, 60);
@@ -579,11 +584,19 @@
                         if(!place_meeting(x, y, FrogEgg)) break;
                     }
                     until (_tries-- <= 0);
+                    
+                     // FX:
+                    repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
+                    	motion_add(random(360), 1);
+                    	image_angle = direction;
+                    	image_speed *= random_range(1/3, 1);
+                    }
                 }
             }
+            sound_play_hit_ext(sndToxicBarrelGas, 0.5 + random(0.2), 2);
             break;
 
-		case 3: // Nest bits:
+		case 3: // Nest Bits
 			repeat(irandom_range(12, 14)){
                 with(instance_create(_x + orandom(24), _y + orandom(12) - random(8), Feather)){
                 	motion_add(point_direction(_x, _y, x, y), random(6));
@@ -594,30 +607,20 @@
                     depth = -1;
                 }
 			}
+            sound_play_hit_ext(sndMoneyPileBreak, 0.6 + random(0.2), 3);
+            sound_play_hit_ext(sndWallBreakJungle, 1.2 + random(0.2), 1);
 			break;
 
 		case 4:
-		case 104: // Drill Explosion
-			var _ang = random(360);
-			for(i = 0; i < 2; i++){
-				var _dis = 12 + random(8),
-					_dir = _ang + (i * 180) + orandom(20);
-
-				with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), Grenade)){
-					alarm0 = 1 + (i * 4);
-					mask_index = mskNone;
-					visible = false;
-					repeat(irandom_range(1, 3)) with(instance_create(x + orandom(8), y + orandom(8), MiniNade)){
-						alarm0 = other.alarm0 + random(2);
-						mask_index = mskNone;
-						visible = false;
-					}
-				}
+		case 104: // Spider Nest
+			with(instance_create(_x, _y + 16, PortalClear)){
+				image_xscale *= 1.5;
+				image_yscale *= 1.2;
 			}
 
 			 // Sticky Floor:
-			/*for(var _ox = -32; _ox <= 0; _ox += 32){
-				with(instance_rectangle(_x + _ox, _y, _x + _ox + 32, _y + 32, FloorExplo)){
+			for(var _ox = -32; _ox <= 0; _ox += 32){
+				with(instance_rectangle(_x + _ox, _y, _x + _ox + 32, _y + 32, [FloorExplo, TopSmall])){
 					instance_destroy();
 				}
 				with(instance_create(_x + _ox, _y, Floor)){
@@ -627,16 +630,15 @@
 					material = 5;
 					depth = 8;
 				}
-			}*/
+			}
 
-			 // Wall Crystals:
+			 // Inhabitants:
 			repeat(irandom_range(2, 3)){
-				var e = ((area == 104) ? InvLaserCrystal : LaserCrystal);
-				if(chance(1, 3)) e = LightningCrystal;
+				var e = "Spiderling";
+				if(chance(1, 3)) e = ((area == 104) ? InvSpider : Spider);
 
-				with(instance_create(_x, _y, e)){
+				with(obj_create(_x, _y, e)){
 					nexthurt = current_frame + 30;
-					my_health += 16;
 
 					 // Space Out:
                     var _tries = 50;
@@ -645,34 +647,63 @@
                         y = _y + random(16);
                         xprevious = x;
                         yprevious = y;
-                        if(!place_meeting(x, y, crystaltype)) break;
+                        if(!place_meeting(x, y, enemy)) break;
                     }
                     until (_tries-- <= 0);
 
 					 // Props:
 					repeat(irandom_range(1, 2)){
-						var e = ((other.area == 104) ? InvCrystal : CrystalProp);
-						with(instance_create(x + orandom(12), y + orandom(12), e)){
+						with(instance_create(x + orandom(12), y + orandom(12), choose(InvCrystal, Cocoon))){
 							nexthurt = current_frame + 30;
-							my_health += 48;
 						}
 					}
 				}
 			}
+			
+			 // Webby:
+			repeat(irandom_range(12, 14)){
+                with(instance_create(_x + orandom(32), _y - 12 + orandom(16), Feather)){
+                	motion_add(point_direction(_x, _y, x, y), random(6));
+                    sprite_index = spr.PetSpiderWebBits;
+                    image_index = irandom(irandom(image_number - 1));
+                    fall *= random(2);
+                    image_speed = 0;
+                    depth = -1;
+                }
+			}
+			
+			 // Sound:
+			sound_play_hit_ext(sndWallBreakScrap, 0.5 + random(0.2), 2);
+			sound_play_hit_ext(sndCocoonBreak, 0.5, 2);
+			
 			break;
 
         case "pizza": // Pizza time
             repeat(irandom_range(4, 6)){
                 obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
-                with(scrWaterStreak(_x, _y, random(360), 4 + random(4))){
+                with(scrWaterStreak(_x, _y, 0, 0)){
+                	speed = 1 + random(3);
+                	direction = random(360);
+                	image_angle = direction;
                     image_blend = c_orange;
-                    image_speed *= random_range(0.5, 1.25);
+                    image_speed *= random_range(0.4, 1.25);
                     depth = -3;
+                	mask_index = mskNone;
                 }
             }
+            
+             // Sound:
+            sound_play_hit_ext(sndPizzaBoxBreak,  0.2 + random(0.2), 3);
+            sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 1);
+            
             break;
 
 		case "oasis": // They livin in there u kno
+			with(instance_create(_x, _y + 16, PortalClear)){
+				image_xscale *= 1.5;
+				image_yscale *= 1.2;
+			}
+			
 			repeat(4){
 				var _sx = _x + orandom(24),
 					_sy = _y + orandom(16);
@@ -681,7 +712,8 @@
 					instance_create(_sx, _sy, Freak);
 				}
 				else{
-					obj_create(_sx, _sy, choose(BoneFish, "Puffer"));
+					if(chance(1, 4)) obj_create(_sx, _sy, Crab);
+					else obj_create(_sx, _sy, choose(BoneFish, "Puffer"));
 				}
 
 				with(obj_create(_sx, _sy, choose(WaterPlant, WaterPlant, OasisBarrel))){
@@ -695,25 +727,31 @@
 					}
 				}
 			}
+			
+			 // Floorify:
+			for(var _ox = -32; _ox <= 0; _ox += 32){
+				with(instance_rectangle(_x + _ox, _y, _x + _ox + 32, _y + 32, [FloorExplo, TopSmall])){
+					instance_destroy();
+				}
+				with(instance_create(_x + _ox, _y, Floor)){
+					sprite_index = sprFloor101B;
+					styleb = true;
+					material = 4;
+					depth = 8;
+				}
+			}
 
 			 // Effects:
 			repeat(20) instance_create(_x + orandom(24), _y + orandom(24), Bubble);
-			sound_play_pitch(sndOasisPortal, 2 + orandom(0.2));
+			sound_play_hit_ext(sndOasisPortal, 2 + orandom(0.2), 2);
+			sound_play_hit_ext(sndOasisExplosion, 1 + orandom(0.2), 2);
 			break;
 
         case "trench": // Boom
-            var _num = 3,
-                _ang = random(360);
-
-            for(var i = 0; i < _num; i++){
-                var l = random_range(8, 24),
-                    d = _ang + (i * (360 / _num));
-
-                with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BubbleBomb")){
-                    image_index = (image_number - 1) - (i + random(1));
-                    team = 0;
-                }
-            }
+			obj_create(_x, _y, "BubbleExplosion");
+			repeat(3) obj_create(_x, _y, "BubbleExplosionSmall");
+			repeat(150) scrFX([_x, 32], [_y, 24], random(2), Bubble);
+			sound_play_hit_ext(sndOasisExplosionSmall, 1 + orandom(0.2), 3);
             break;
     }
 
@@ -3020,8 +3058,8 @@
 	        		_disMax = 96;
 	        		
 	        	with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
-	        		for(var _x = bbox_left; _x < bbox_right; _x += 8){
-	        			for(var _y = bbox_top; _y < bbox_bottom; _y += 8){
+	        		for(var _x = bbox_left; _x < bbox_right + 1; _x += 8){
+	        			for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 8){
 			        		var _dis = point_distance(other.x, other.y, _x, _y);
 			    			if(_dis < _disMax){
 			    				with(other) if(!place_meeting(_x, _y, _wall)){
@@ -3784,8 +3822,8 @@
 		if(!visible && !place_meeting(x, y, Floor)){
 			if(instance_exists(Floor)){
 				var n = instance_nearest(x, y, Floor);
-				x = (n.bbox_left + n.bbox_right) / 2;
-				y = (n.bbox_top + n.bbox_bottom) / 2;
+				x = (n.bbox_left + n.bbox_right + 1) / 2;
+				y = (n.bbox_top + n.bbox_bottom + 1) / 2;
 				repeat(4) instance_create(x, y, Smoke);
 			}
 		}
@@ -4501,35 +4539,38 @@
 		h = _vh * 2;
 		active = _active;
 		
-		 // Draw Wall Mask:
-		if(active && reset && surface_exists(surf)){
-			reset = false;
-			
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
-				x -= other.x;
-				y -= other.y;
-				y -= 8;
-				draw_self();
-				x += other.x;
-				y += other.y;
-				y += 8;
+		 // Drawing Wall Mask:
+		if(active){
+			 // New Floors:
+			with(instances_matching([Wall, Floor], "shadowtopmasksurf_check", null)){
+				shadowtopmasksurf_check = true;
+				other.reset = true;
 			}
-			draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-			with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
-				draw_sprite(outspr, outindex, x - other.x, y - other.y);
-			}
-			draw_set_blend_mode(bm_normal);
 			
-			surface_reset_target();
-		}
-		
-		 // New Floors:
-		with(instances_matching([Wall, Floor], "shadowtopmasksurf_check", null)){
-			shadowtopmasksurf_check = true;
-			other.reset = true;
+			 // Reset Wall Mask:
+			if(reset && surface_exists(surf)){
+				reset = false;
+				
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				
+				with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
+					x -= other.x;
+					y -= other.y;
+					y -= 8;
+					draw_self();
+					x += other.x;
+					y += other.y;
+					y += 8;
+				}
+				draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+				with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
+					draw_sprite(outspr, outindex, x - other.x, y - other.y);
+				}
+				draw_set_blend_mode(bm_normal);
+				
+				surface_reset_target();
+			}
 		}
 	}
 	with(surfShadowTop){
@@ -4637,7 +4678,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

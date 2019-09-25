@@ -58,8 +58,6 @@
 #macro DebugLag global.debug_lag
 #macro WadeColor make_color_rgb(44, 37, 122)
 
-#macro TrenchVisited (mod_exists("area", "trench") ? mod_variable_get("area", "trench", "trench_visited") : [])
-
 #define area_subarea            return 3;
 #define area_next               return "oasis";
 #define area_music              return [mus.Coast, 0.5];
@@ -76,16 +74,11 @@
 	return choose("COWABUNGA", "WAVES CRASH", "SANDY SANCTUARY", "THE WATER CALLS", "SO MUCH GREEN", "ENDLESS BLUE");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    var _x = 0.5 + (9 * (_subarea - 1)),
-        _y = -9,
-        _showLine = (_subarea != 1);
-
-    if(array_length(TrenchVisited) <= _loops || !TrenchVisited[_loops]){
-        _x += 18;
-        _showLine = true;
-    }
-
-    return [_x, _y, (_subarea == 1), _showLine];
+    return [
+    	18.15 + (9 * (_subarea - 1)),
+    	-9,
+    	(_subarea == 1)
+    ];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -746,7 +739,7 @@
 					_moveDir = 0;
 		
 				with(Floor){
-					_moveDir += point_direction((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, _sx, _sy);
+					_moveDir += point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, _sx, _sy);
 				}
 				_moveDir /= instance_number(Floor);
 		
@@ -1028,8 +1021,8 @@
 	 // Underwater Details:
 	with(Floor) if(chance(1, 3)){
 		for(var a = 0; a < 360; a += 45){
-			var	_x = (bbox_left + bbox_right) / 2,
-				_y = (bbox_top + bbox_bottom) / 2;
+			var	_x = (bbox_left + bbox_right + 1) / 2,
+				_y = (bbox_top + bbox_bottom + 1) / 2;
 
 			if(chance(1, 2) && !position_meeting(_x + lengthdir_x(sprite_get_width(mask_index), a), _y + lengthdir_y(sprite_get_height(mask_index), a), Floor)){
 				var l = random_range(32, 44),
@@ -1393,7 +1386,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

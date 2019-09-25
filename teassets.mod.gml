@@ -669,14 +669,22 @@
 	
 	             // Cat:
 	            p = m + "Cat/";
-	            CatIdle  = sprite(p + "sprCatIdle",      4, 12, 12);
-	            CatWalk  = sprite(p + "sprCatWalk",      6, 12, 12);
-	            CatHurt  = sprite(p + "sprCatHurt",      3, 12, 12);
-	            CatDead  = sprite(p + "sprCatDead",      6, 12, 12);
-	            CatSit1  =[sprite(p + "sprCatGoSit",     3, 12, 12),
-						   sprite(p + "sprCatGoSitSide", 3, 12, 12)];
-	            CatSit2  =[sprite(p + "sprCatSit",       1, 12, 12),
-						   sprite(p + "sprCatSitSide",   1, 12, 12)];
+	            CatIdle      = sprite(p + "sprCatIdle",          4, 12, 12);
+	            CatWalk      = sprite(p + "sprCatWalk",          6, 12, 12);
+	            CatHurt      = sprite(p + "sprCatHurt",          3, 12, 12);
+	            CatDead      = sprite(p + "sprCatDead",          6, 12, 12);
+	            CatSit1      =[sprite(p + "sprCatGoSit",         3, 12, 12),
+						       sprite(p + "sprCatGoSitSide",     3, 12, 12)];
+	            CatSit2      =[sprite(p + "sprCatSit",           6, 12, 12),
+						       sprite(p + "sprCatSitSide",       6, 12, 12)];
+	            CatSnowIdle  = sprite(p + "sprCatSnowIdle",      4, 12, 12);
+	            CatSnowWalk  = sprite(p + "sprCatSnowWalk",      6, 12, 12);
+	            CatSnowHurt  = sprite(p + "sprCatSnowHurt",      3, 12, 12);
+	            CatSnowDead  = sprite(p + "sprCatSnowDead",      6, 12, 12);
+	            CatSnowSit1  =[sprite(p + "sprCatSnowGoSit",     3, 12, 12),
+						       sprite(p + "sprCatSnowGoSitSide", 3, 12, 12)];
+	            CatSnowSit2  =[sprite(p + "sprCatSnowSit",       6, 12, 12),
+						       sprite(p + "sprCatSnowSitSide",   6, 12, 12)];
 	            CatWeap	 = sprite(p + "sprCatToxer",     1,  3,  4);
 	            AcidPuff = sprite(p + "sprAcidPuff",     4, 16, 16);
 	
@@ -754,10 +762,11 @@
 	
 	        	 // Spiderling:
 	        	p = m + "Spiderling/";
-	        	SpiderlingIdle = sprite(p + "sprSpiderlingIdle", 4, 8, 8);
-	        	SpiderlingWalk = sprite(p + "sprSpiderlingWalk", 4, 8, 8);
-	        	SpiderlingHurt = sprite(p + "sprSpiderlingHurt", 3, 8, 8);
-	        	SpiderlingDead = sprite(p + "sprSpiderlingDead", 7, 8, 8);
+	        	SpiderlingIdle  = sprite(p + "sprSpiderlingIdle",  4, 8, 8);
+	        	SpiderlingWalk  = sprite(p + "sprSpiderlingWalk",  4, 8, 8);
+	        	SpiderlingHurt  = sprite(p + "sprSpiderlingHurt",  3, 8, 8);
+	        	SpiderlingDead  = sprite(p + "sprSpiderlingDead",  7, 8, 8);
+	        	SpiderlingHatch = sprite(p + "sprSpiderlingHatch", 5, 8, 8);
 	        	
 	        //#endregion
 
@@ -919,10 +928,11 @@
 
              // Octopus:
             p = m + "Trench/";
-            PetOctoIcon = sprite(p + "sprPetOctoIcon",   1,  7,  6);
-            PetOctoIdle = sprite(p + "sprPetOctoIdle",  20, 12, 12);
-            PetOctoHurt = sprite(p + "sprPetOctoDodge",  3, 12, 12);
-            PetOctoHide = sprite(p + "sprPetOctoHide",  30, 12, 12);
+            PetOctoIcon     = sprite(p + "sprPetOctoIcon",      1,  7,  6);
+            PetOctoIdle     = sprite(p + "sprPetOctoIdle",     20, 12, 12);
+            PetOctoHurt     = sprite(p + "sprPetOctoDodge",     3, 12, 12);
+            PetOctoHide     = sprite(p + "sprPetOctoHide",     30, 12, 12);
+            PetOctoHideIcon = sprite(p + "sprPetOctoHideIcon",  1,  7,  6);
 
              // Golden Chest Mimic:
             p = m + "Mansion/";

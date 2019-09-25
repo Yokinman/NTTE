@@ -633,7 +633,6 @@
     }
 
 #define Bat_step
-
      // Animate:
     if((sprite_index != spr_fire && sprite_index != spr_hurt) || anim_end){
         if(speed <= 0) sprite_index = spr_idle;
@@ -642,9 +641,9 @@
 
      // Bounce:
     if(speed > 0){
-    	if(place_meeting(x + hspeed, y + vspeed, Wall)){
-    		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-    		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+    	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+    		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+    		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
     	}
     }
 
@@ -654,7 +653,7 @@
     if(gunangle <= 180) draw_self_enemy();
 
 #define Bat_alrm1
-    alarm1 = 15 + irandom(20);
+    alarm1 = 20 + irandom(30);
     target = instance_nearest(x, y, Player);
 
 	if(canfire){
@@ -666,8 +665,9 @@
          // Bullets:
         var d = 4,
             s = 2;
+            
         for (var i = 0; i <= 5; i++){
-            with scrEnemyShoot("VenomPellet", gunangle + orandom(2 + i), s * i){
+            with(scrEnemyShoot("VenomPellet", gunangle + orandom(2 + i), s * i)){
                 move_contact_solid(direction, d + d * i);
 
                  // Effects:
@@ -703,7 +703,7 @@
 	        }
 	        else if(in_distance(target, 50)){
 	             // Walk away from target:
-	            scrWalk(10+irandom(5), gunangle + 180 + orandom(12));
+	            scrWalk(10 + irandom(5), gunangle + 180 + orandom(12));
 	            alarm1 = walk;
 	        }
 	
@@ -1693,14 +1693,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define Cat_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
-		spr_idle = spr.CatIdle;
-		spr_walk = spr.CatWalk;
-		spr_hurt = spr.CatHurt;
-		spr_dead = spr.CatDead;
-		spr_sit1 = spr.CatSit1[0];
-		spr_sit2 = spr.CatSit2[0];
-		spr_sit1_side = spr.CatSit1[1];
-		spr_sit2_side = spr.CatSit2[1];
+        var _snow = (GameCont.area == 5);
+		spr_idle      = (_snow ?  spr.CatSnowIdle    : spr.CatIdle);
+		spr_walk      = (_snow ?  spr.CatSnowWalk    : spr.CatWalk);
+		spr_hurt      = (_snow ?  spr.CatSnowHurt    : spr.CatHurt);
+		spr_dead      = (_snow ?  spr.CatSnowDead    : spr.CatDead);
+		spr_sit1      = (_snow ?  spr.CatSnowSit1[0] : spr.CatSit1[0]);
+		spr_sit2      = (_snow ?  spr.CatSnowSit2[0] : spr.CatSit2[0]);
+		spr_sit1_side = (_snow ?  spr.CatSnowSit1[1] : spr.CatSit1[1]);
+		spr_sit2_side = (_snow ?  spr.CatSnowSit2[1] : spr.CatSit2[1]);
 		spr_weap = spr.CatWeap;
 		spr_shadow = shd24;
 		hitid = [spr_idle, "CAT"];
@@ -1725,7 +1726,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		cantravel = false;
 		gunangle = random(360);
 		direction = gunangle;
-		sit = noone;
+		sit = false;
 		sit_side = 0;
 
 		 // Alarms:
@@ -1734,78 +1735,89 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 		 // NTTE:
 		ntte_anim = false;
+		
+		 // Sittin:
+		with(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch")){
+			if(in_sight(other) || chance(1, 2)){
+				if(array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", id)) <= 0){
+					other.sit = id;
+					break;
+				}
+			}
+		}
 
 		return id;
 	}
 
 #define Cat_step
-     // Animate:
-    if(sprite_index == spr_sit1){
-        if(anim_end) sprite_index = spr_sit2;
-    }
-    else if(sprite_index == spr_sit1_side){
-        if(anim_end) sprite_index = spr_sit2_side;
-    }
-    else if(sprite_index != spr_sit2 && sprite_index != spr_sit2_side){
-        if(speed <= 0) sprite_index = spr_idle;
-        else sprite_index = spr_walk;
-    }
+	if(active){
+		 // Sitting:
+		if(sit){
+	        walk = 0;
+	        speed = 0;
+	    	
+	    	 // Animate:
+	    	if(sprite_index == spr_sit2 || sprite_index == spr_sit2_side){
+	    		if(image_index < 1){
+	    			image_index = max(0, image_index - (image_speed_raw * random_range(0.96, 1)));
+	    		}
+	    	}
+	    	else{
+	    		if(sprite_index == spr_sit1 || sprite_index == spr_sit1_side){
+		    		if(anim_end){
+					    if(sprite_index == spr_sit1) sprite_index = spr_sit2;
+					    else sprite_index = spr_sit2_side;
+					    image_index = 0;
+		    		}
+	    		}
+	    		else{
+	    			sprite_index = spr_sit1_side;
+	    			if(array_exists(["ChairFront", "Couch"], variable_instance_get(sit, "name"))){
+	    				sprite_index = spr_sit1;
+	    			}
+	    			image_index = 0;
+	    		}
+	    	}
+	    	
+	    	 // Sittin:
+	        if(instance_exists(sit)){
+		        x = sit.x;
+		        y = sit.y - 5;
+		        xprevious = x;
+		        yprevious = y;
+		        right = -sit.image_xscale;
+	        }
+	        else if(sit >= 100000){
+	        	sit = false;
+	        }
+	    }
+	    
+	     // Animate:
+	    else if(sprite_index != spr_hurt || anim_end){
+	        if(speed <= 0) sprite_index = spr_idle;
+	        else sprite_index = spr_walk;
+	    }
+	}
 
      // Disabled:
-    if(!active){
+    else{
         visible = false
         canfly = true;
         x = 0;
         y = 0;
     }
 
-    else{
-    	 // Sitting:
-    	if(!cantravel){
-    		if(instance_exists(sit)){
-		        speed = 0;
-		        x = sit.x;
-		        y = sit.y - 3;
-		        right = -sit.image_xscale;
-    		}
-
-	         // Find Seat:
-	        else{
-	        	if(sit != noone){
-	        		sit = noone;
-	        		sprite_index = spr_idle;
-	        	}
-		        if(place_meeting(x, y, CustomProp)){
-	                with(instances_meeting(x, y, instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"))){
-	                	if(place_meeting(x, y, other)) with(other){
-		                    if(array_length(instances_matching(instances_matching(object_index, "name", name), "sit", other)) <= 0){
-		                        sit = other;
-		                        image_index = 0;
-		                        if(other.sprite_index == spr.ChairSideIdle){
-		                            sprite_index = spr_sit1_side;
-		                        }
-		                        else sprite_index = spr_sit1;
-		                    }
-	                	}
-	                }
-	            }
-	        }
-    	}
-    	
-    	 // On Alert:
-    	else if(sit != noone){
-            sit = noone;
-            sprite_index = spr_idle;
-    	}
-    }
-
 #define Cat_draw
-    if(sit == noone){
+    if(sit){
+    	y += 2;
+    	draw_self_enemy();
+    	y -= 2;
+    }
+    else{
         if(gunangle >  180) draw_self_enemy();
         draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
         if(gunangle <= 180) draw_self_enemy();
     }
-    else draw_self_enemy();
 
 #define Cat_alrm1
     alarm1 = 20 + irandom(20);
@@ -1813,6 +1825,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
      // Spraying Toxic Gas:
     if(ammo > 0){
         alarm1 = 2;
+        sit = false;
 
          // Toxic:
         repeat(2){
@@ -1852,14 +1865,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
             if(
             	my_health < maxhealth
             	|| (
-            		in_distance(target, 140) &&
+            		in_distance(target, 128) &&
             		(in_sight(target) || (target.reload > 0 && in_distance(target, 96)))
             	)
             ){
                 cantravel = true;
+                if(sit){
+                	sit = false;
+                	instance_create(x, y, AssassinNotice);
+                }
             }
 
-            if(!instance_exists(sit)){
+            if(!sit || chance(1, 12)){
+            	sit = false;
+            	
                 if(in_sight(target)){
                     var _targetDir = point_direction(x, y, target.x, target.y);
         
@@ -1914,12 +1933,19 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
                             }
                         }
                     }
-        
+                    
                      // Wander:
-                    else{
+                    else if((instance_exists(target) && cantravel) || chance(3, 4)){
                         alarm1 = 30 + irandom(20);
                         scrWalk(20 + irandom(10), direction + orandom(30));
                         if(chance(1, 2)) direction = random(360);
+                    }
+                    
+                     // Sittin:
+                    else{
+                    	sit = true;
+                    	var n = instance_nearest(x, y, prop);
+                    	if(in_sight(n)) scrRight(point_direction(x, y, n.x, n.y));
                     }
                 }
             }
@@ -1969,6 +1995,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     if(!instance_is(other, ToxicGas)){
         if(active){
             enemyHurt(_hitdmg, _hitvel, _hitdir)
+            sit = false;
         }
     }
 
@@ -2710,31 +2737,42 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 
      // Opening & Closing:
-    var s = 0,
+    var _push = 0,
         _open = false;
 
-    if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0 || distance_to_object(CustomObject) <= 0){
-        with(instances_meeting(x, y, array_combine(
-        	instances_matching_ne(hitme, "team", team),
-        	instances_matching(CustomObject, "name", "Pet")
-        ))){
+    if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0){
+    	with(
+			instances_matching_ne(
+    		instances_matching_le(
+    		instances_matching_ge(
+    		instances_matching_le(
+    		instances_matching_ge(
+			
+			hitme,
+			
+			"bbox_right", bbox_left),
+    		"bbox_left", bbox_right),
+	    	"bbox_bottom", bbox_top),
+	    	"bbox_top", bbox_bottom),
+			"team", team)
+		){
             var _sx = lengthdir_x(hspeed, other.image_angle),
                 _sy = lengthdir_y(vspeed, other.image_angle);
 
-            s = 3 * (_sx + _sy);
+            _push = 3 * (_sx + _sy);
             _open = true;
         }
     }
     if(_open){
-        if(s != 0){
-            if(abs(openang) < abs(s) && abs(openang) < 4){
+        if(_push != 0){
+            if(abs(openang) < abs(_push) && abs(openang) < 4){
                 var _vol = clamp(40 / (distance_to_object(Player) + 1), 0, 1);
                 if(_vol > 0.2){
                     sound_play_pitchvol(sndMeleeFlip, 1 + random(0.4), 0.8 * _vol);
                     sound_play_pitchvol(((openang > 0) ? sndAmmoChest : sndWeaponChest), 0.4 + random(0.2), 0.5 * _vol);
                 }
             }
-            openang += s * current_time_scale;
+            openang += _push * current_time_scale;
         }
         openang = clamp(openang, -90, 90);
     }
@@ -2745,19 +2783,21 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     else mask_index = msk.CatDoor;
 
      // Block Line of Sight:
-    if(!instance_exists(my_wall)) my_wall = instance_create(0, 0, Wall);
+    if(!instance_exists(my_wall)){
+    	my_wall = instance_create(x, y, Wall);
+    	with(my_wall){
+        	image_xscale = other.image_xscale;
+        	image_yscale = other.image_yscale;
+        	image_angle  = other.image_angle;
+		    sprite_index = -1;
+		    topspr = -1;
+		    outspr = -1;
+        }
+    }
     with(my_wall){
-        x = other.x;
-        y = other.y;
         if(other.mask_index == mskNone) mask_index = -1;
         else mask_index = msk.CatDoorLOS;
-        image_xscale = other.image_xscale;
-        image_yscale = other.image_yscale;
-        image_angle = other.image_angle;
-        sprite_index = -1;
-        visible = 0;
-        topspr = -1;
-        outspr = -1;
+        visible = false;
     }
 
      // Draw Self:
@@ -3034,7 +3074,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         x = creator.x;
         y = creator.y;
 
-        var _imgSpeed = creator.image_speed * current_time_scale;
+        var _imgSpeed = creator.image_speed_raw;
         if(open){
             depth = -6;
 
@@ -3067,7 +3107,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
          // Draw Self:
         with(creator){
-            draw_sprite_ext(other.sprite_index, other.image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+        	var	_saveSpr = sprite_index,
+        		_saveImg = image_index;
+        		
+            sprite_index = other.sprite_index;
+            image_index = other.image_index;
+            draw_self(); // Faster than using draw_sprite_ext
+            sprite_index = _saveSpr;
+            image_index = _saveImg;
         }
     }
     else instance_destroy();
@@ -3374,21 +3421,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		    _x2b = _x1b + _w2,
 		    _y2 = _y + _h1;
 
-	    draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2);
-	
-	     // Half Oval Bit:
-	    var _segments = floor(_h2 / 2),
-	        _cw = _w2 / 2,
-	        _cx = _x1b + _cw,
-	        _cy = _y2;
-	
-	    draw_primitive_begin(pr_trianglefan);
-	    draw_vertex(_cx, _cy);
-	    for(var i = 0; i <= _segments; i++){
-	        var a = (i / _segments) * -180;
-	        draw_vertex(_cx + lengthdir_x(_cw, a), _cy + lengthdir_y(_h2, a));
-	    }
+	     // Main Trapezoid:
+	    draw_primitive_begin(pr_trianglestrip);
+	    draw_vertex(_x1a, _y1);
+	    draw_vertex(_x1b, _y2);
+	    draw_vertex(_x2a, _y1);
+	    draw_vertex(_x2b, _y2);
 	    draw_primitive_end();
+	    
+	     // Rounded Bottom:
+		draw_ellipse(_x1b - 1, _y2 - 1 - _h2,  _x2b - 1, _y2 - 1 + _h2, false);
 	}
 
 
@@ -3532,7 +3574,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         spr_hurt = spr.TableHurt;
         spr_dead = spr.TableDead;
         spr_shadow = shd32;
-        depth--;
+        depth = -1;
 
          // Sounds:
         snd_hurt = sndHitMetal;
@@ -3652,7 +3694,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
      // Animate:
     if(sprite_index == spr_idle){
     	if(image_index < 1){
-    		image_index -= image_speed_raw * random_range(0.99, 1);
+    		image_index -= image_speed_raw * random_range(0.98, 1);
     	}
     }
     else if(anim_end){
@@ -4087,8 +4129,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				_disMax = 1000000;
 
 			if(!place_meeting(_tx, _ty, Floor)) with(Floor){
-				var _x = (bbox_left + bbox_right) / 2,
-					_y = (bbox_top + bbox_bottom) / 2,
+				var _x = (bbox_left + bbox_right + 1) / 2,
+					_y = (bbox_top + bbox_bottom + 1) / 2,
 					_dis = point_distance(_sx, _sy, _x, _y);
 
 				if(_dis < _disMax){
@@ -4770,7 +4812,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

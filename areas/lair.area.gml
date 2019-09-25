@@ -42,6 +42,7 @@
             carpet : 1.00,
             special : true
         },
+        
         "Boss" : {
             w : 12,
             h : 12,
@@ -123,6 +124,11 @@
                 [L,L,L]
                 ]
         },
+        
+        "Vault" : {
+            w : 3,
+            h : 3
+        },
 
          // LARGE:
         "SmallAtrium" : {
@@ -167,7 +173,7 @@
                 [L,L,L,L]
                 ]
         },
-
+        
         "Office" : {
             w : 6,
             h : 4,
@@ -242,7 +248,10 @@
     return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx, 9];
+    return [
+    	_lastx,
+    	9
+    ];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -607,7 +616,7 @@
         }
 
          // Make sure door isn't placed weirdly:
-        with(instances_at((bbox_left + bbox_right) / 2, bbox_bottom - 5, Floor)){
+        with(instances_at((bbox_left + bbox_right + 1) / 2, bbox_bottom - 5, Floor)){
             for(var i = 0; i <= 180; i += 180){
                 var a = other.image_angle - 90 + i;
                 if(position_meeting(x + lengthdir_x(32, a), y + lengthdir_y(32, a), Floor)){
@@ -705,11 +714,7 @@
         }
          
         case "Boss" : {
-             // Spawn boss spawner
-            with obj_create(_cx, _cy, "CatHoleBig"){
-                with obj_create(x + o + orandom(2), y + o - 32 + orandom(2), "NewTable")
-                    obj_create(x + orandom(2), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
-            }
+            obj_create(_cx, _cy, "CatHoleBig");
 
              // Corner Columns:
             instance_create(_x + 80,           _y + 80,           Wall);
@@ -855,6 +860,31 @@
             create_enemies(_cx, _cy, 1 + irandom(1));
             
             break;
+        }
+        
+        case "Vault": {
+        	 // Corners:
+        	instance_create(_x,                _y,                Wall);
+        	instance_create(_x + (w * o) - 16, _y,                Wall);
+        	instance_create(_x,                _y + (h * o) - 16, Wall);
+        	instance_create(_x + (w * o) - 16, _y + (h * o) - 16, Wall);
+        	
+        	 // Valuables:
+        	var	_ang = random(360),
+        		_num = random_range(2, 4);
+        		
+        	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
+        		var l = random(24);
+        		obj_create(_cx + lengthdir_x(l, d), _cy + lengthdir_y(l, d), choose("PizzaStack", "PizzaStack", "PizzaChest", MoneyPile));
+        	}
+        	
+        	 // Center Floor:
+        	with(floors) if(position_meeting(_cx, _cy, id)){
+				sprite_index = sprFloor102B;
+				material = 6;
+        	}
+        	
+        	break;
         }
             
          // LARGE ROOMS
@@ -1222,7 +1252,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

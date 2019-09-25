@@ -596,15 +596,22 @@
 #define Parrot_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
      // Perched:
     if(instance_exists(perched)){
-        var _uvsStart = sprite_get_uvs(perched.sprite_index, 0),
-            _uvsCurrent = sprite_get_uvs(perched.sprite_index, perched.image_index);
+    	var _perch = perched;
+    	
+    	with(PlayerSit){
+    		var _player = instances_matching(Player, "", null);
+	    	if(_perch == _player[array_length(_player) - 1]) _perch = self;
+    	}
+    	
+        var	_uvsStart = sprite_get_uvs(_perch.sprite_index, 0),
+            _uvsCurrent = sprite_get_uvs(_perch.sprite_index, _perch.image_index);
 
         _x += perched_x;
         _y += perched_y;
 
          // Manual Bobbing:
-        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in perched){
-            with(perched){
+        if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in _perch){
+            with(_perch){
                 var _bob = parrot_bob[floor(image_index % array_length(parrot_bob))];
                 if(is_array(_bob)){
                 	if(array_length(_bob) > 0) _x += _bob[0];
@@ -616,8 +623,8 @@
 
          // Auto Bobbing:
         else{
-        	if(perched.sprite_index != sprMutant10Idle && perched.sprite_index != sprMutant4Idle){
-        		_x += (_uvsCurrent[4] - _uvsStart[4]) * (("right" in perched) ? perched.right : 1);
+        	if(_perch.sprite_index != sprMutant10Idle && _perch.sprite_index != sprMutant4Idle){
+        		_x += (_uvsCurrent[4] - _uvsStart[4]) * (("right" in _perch) ? _perch.right : 1);
         	}
         	_y += (_uvsCurrent[5] - _uvsStart[5]);
         }
@@ -1518,14 +1525,22 @@
     if(hiding){
 		light = false;
 		spr_shadow = -1;
+		
+		 // Icon:
+        if(spr_icon == spr.PetOctoIcon){
+        	spr_icon = spr.PetOctoHideIcon;
+        	with(pickup_indicator){
+        		text = string_replace(text, string(spr.PetOctoIcon), string(other.spr_icon));
+        	}
+    	}
 
          // Hop to New Pit:
         if(image_index < 1) image_index -= image_speed_raw * 0.95;
         else if(anim_end){
     		var f = instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB));
     		if(instance_exists(f)){
-    			x = (f.bbox_left + f.bbox_right) / 2;
-    			y = (f.bbox_bottom + f.bbox_top) / 2;
+    			x = (f.bbox_left + f.bbox_right + 1) / 2;
+    			y = (f.bbox_bottom + f.bbox_top + 1) / 2;
     		}
         }
 
@@ -1534,6 +1549,15 @@
 
          // Can't be Grabbed Under Floors:
         can_take = (floor_at(x, y - 4).sprite_index == spr.FloorTrenchB);
+    }
+    else{
+		 // Icon:
+        if(spr_icon == spr.PetOctoHideIcon){
+        	spr_icon = spr.PetOctoIcon;
+        	with(pickup_indicator){
+        		text = string_replace(text, string(spr.PetOctoHideIcon), string(other.spr_icon));
+        	}
+    	}
     }
 
 #define Octo_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
@@ -1596,8 +1620,8 @@
             		_disMax = 1000000;
 
 				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
-					var	_x = (bbox_left + bbox_right) / 2,
-						_y = (bbox_top + bbox_bottom) / 2,
+					var	_x = (bbox_left + bbox_right + 1) / 2,
+						_y = (bbox_top + bbox_bottom + 1) / 2,
 						_dis = point_distance(other.x, other.y, _x, _y);
 
 					if(_dis < _disMax && !collision_line(other.x, other.y, _x, _y, Wall, false, false)){
@@ -1684,25 +1708,27 @@
 					}
         
                      // Slice FX:
-                    other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
-                    
                     var _dir = random(360),
-                        o = 6;
+                        _disMax = 6;
     
-                    for(var _dis = o; _dis >= -o; _dis -= 2){
+                    for(var _dis = _disMax; _dis >= -_disMax; _dis -= 2){
                         with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
                             motion_add(_dir, 1);
                             image_angle = _dir;
                             image_xscale = 2;
-                            image_yscale = 1 + (1 * (1 - ((_dis + o) / (o * 2))));
+                            image_yscale = 1 + (1 * (1 - ((_dis + _disMax) / (2 * _disMax))));
+                            if(skill_get(mut_bolt_marrow) > 0) image_yscale *= 0.7;
                             depth = -4;
                         }
                     }
                     instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
                     sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 1);
+                    other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
                     
                      // Duplicate:
-                    var _copy = instance_copy(false);
+                    var _copy = instance_copy(false),
+                    	_accuracy = variable_instance_get(other.leader, "accuracy", 1);
+                    	
                     switch(_copy.object_index){
                         case Laser:
                             var l = point_distance(xstart, ystart, other.x, other.y) + 12,
@@ -1713,7 +1739,7 @@
                                 y = other.ystart + lengthdir_y(l, d);
                                 xstart = x;
                                 ystart = y;
-                                image_angle += orandom(20);
+                                image_angle += orandom(20 * _accuracy);
                                 event_perform(ev_alarm, 0);
                             }
                             break;
@@ -1725,7 +1751,7 @@
                             	}
                             }
                             with(_copy){
-                                image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1));
+                                image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
                                 ammo = min(30, ammo);
                             	
                             	 // Split Lightning:
@@ -1748,7 +1774,7 @@
                             break;
         
                         default:
-                            var _off = random_range(4, 16);
+                            var _off = random_range(4, 16) * _accuracy;
                             with([id, _copy]){
                                 direction += _off;
                                 image_angle += _off;
@@ -1822,16 +1848,16 @@
 	    	if(!position_meeting(spawn_loc[0], spawn_loc[1], Floor)){
 	    		with(instance_random(Floor)){
 		    		other.spawn_loc = [
-		    			(bbox_left + bbox_right) / 2,
-		    			(bbox_top + bbox_bottom) / 2
+		    			(bbox_left + bbox_right + 1) / 2,
+		    			(bbox_top + bbox_bottom + 1) / 2
 		    		];
 	    		}
 	    	}
         	
              // Decide Which Floor:
             var f = instance_nearest(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor),
-                _fx = (f.bbox_left + f.bbox_right) / 2,
-                _fy = (f.bbox_top + f.bbox_bottom) / 2;
+                _fx = (f.bbox_left + f.bbox_right + 1) / 2,
+                _fy = (f.bbox_top + f.bbox_bottom + 1) / 2;
             	
              // Teleport:
             if(!place_meeting(_fx, _fy, Wall)){
@@ -2093,7 +2119,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

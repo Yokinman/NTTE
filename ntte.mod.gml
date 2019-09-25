@@ -467,7 +467,6 @@
     	global.petMapicon[i] = [];
     }
     with(UnlockCont) instance_destroy();
-    mod_variable_set("area", "trench", "trench_visited", []);
 	global.killsLast = GameCont.kills;
 	
 	 // Reset Haste Hands:
@@ -556,7 +555,7 @@
     		}
 
 			 // Big Nests:
-			with(MaggotSpawn) if(chance(1, 12)){
+			with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
 				obj_create(x, y, "BigMaggotSpawn");
 				instance_delete(id);
 			}
@@ -566,8 +565,8 @@
     	    	_spawnIndex = -1;
 
 			with(Floor){
-				var _x = (bbox_left + bbox_right) / 2,
-					_y = (bbox_top + bbox_bottom) / 2;
+				var _x = (bbox_left + bbox_right + 1) / 2,
+					_y = (bbox_top + bbox_bottom + 1) / 2;
 
 				if(point_distance(_x, _y, 10016, 10016) > 48){
 					if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
@@ -790,20 +789,28 @@
     	        	obj_create(x, y, "Cat");
     	        }
     	    }
+    	    
+    	     // Loop Spawns:
+    	    if(GameCont.loops > 0){
+    	    	with(Ratking) if(chance(1, 3) || floor_at(x, y).styleb){
+    	    		obj_create(x, y, "TrafficCrab");
+    	    		instance_delete(id);
+    	    	}
+    	    }
             break;
 
 		case 3: /// SCRAPYARDS
-			 // Sawblade Traps:
-			with(Raven) if(distance_to_object(Player) > 128 && chance(1, 10)){
-				obj_create(x, y, "SawTrap");
-				instance_delete(id);
-			}
-
 			var _event = chance(1, 60),
 				_ravenChance = (_event ? 1 : 0.1) * (1 + GameCont.loops);
 
 			if(!_event && instance_exists(BecomeScrapBoss)){
 				_ravenChance *= 2.5;
+			}
+			
+			 // Sawblade Traps:
+			with(Raven) if(distance_to_object(Player) > 128 && chance(1, 10)){
+				obj_create(x, y, "SawTrap");
+				instance_delete(id);
 			}
 
 			 // Raven Spectators:
@@ -839,6 +846,14 @@
 					exit;
 				}
 			}
+			
+    	     // Loop Spawns:
+    	    if(GameCont.loops > 0){
+    	    	with(Raven) if(chance(4 - GameCont.subarea, 12)){
+    	    		obj_create(x, y, "Pelican");
+    	    		instance_delete(id);
+    	    	}
+    	    }
 			break;
 
         case 4: /// CAVES
@@ -861,46 +876,74 @@
         	
         	 // Spawn Spider Walls:
         	if(instance_exists(Wall)){
+    	    	var _spawnWall = [];
+    	    	with(Wall) if(distance_to_object(PortalClear) > 16){
+    	    		array_push(_spawnWall, id);
+    	    	}
+    	    	
+    	    	 // Central Mass:
+    	        with(instance_random(_spawnWall)){
+    	             // Spawn Main Wall:
+    	            with(obj_create(x, y, "SpiderWall")){
+    	                creator = other;
+    	                special = true;
+    	            }
+    	            
+    	             // Spawn fake walls:
+    	            with(_spawnWall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(2, 3)){
+    	                with(obj_create(x, y, "SpiderWall")){
+    	                    creator = other;
+    	                }
+    	            }
+    	            
+    	             // Change TopSmalls:
+    	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(1, 3)){
+    	                sprite_index = spr.SpiderWallTrans;
+    	            }
+    	        }
+    	    	
         	     // Strays:
-        	    repeat(8 + irandom(4)) with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 48){
-        	    	if(array_length(instances_matching(instances_matching(CustomObject, "name", "SpiderWall"), "creator", id)) <= 0){
-	        	        with(obj_create(x, y, "SpiderWall")){
-	        	            creator = other;
-	        	        }
-        	    	}
-        	    }
-        	    
-        	     // Central mass:
-        	    if(fork()){
-	        	    var _tries = 100;
-	        	    while(_tries-- > 0){
-	        	        with(instance_random(Wall)) if(point_distance(x, y, 10016, 10016) > 128){
-	        	             // Spawn Main Wall:
-	        	            with(obj_create(x, y, "SpiderWall")){
-	        	                creator = other;
-	        	                special = true;
-	        	            }
-	        	            
-	        	             // Spawn fake walls:
-	        	            with(Wall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(2, 3) && self != other){
-	        	                with(obj_create(x, y, "SpiderWall")){
-	        	                    creator = other;
-	        	                }
-	        	            }
-	        	            
-	        	             // Change TopSmalls:
-	        	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= 48 && chance(1, 3)){
-	        	                sprite_index = spr.SpiderWallTrans;
-	        	            }
-	
-	        	        	exit;
-	        	        }
-	        	    }
-	        	    exit;
+        	    repeat(8 + irandom(4)) with(instance_random(_spawnWall)){
+        	        with(obj_create(x, y, "SpiderWall")){
+        	            creator = other;
+        	        }
         	    }
         	} 
         	 
             break;
+            
+        case 5: /// FROZEN CITY
+    	     // Loop Spawns:
+    	    if(GameCont.loops > 0){
+    	    	with(SnowBot) if(chance(1, 4)){
+    	    		obj_create(x, y, "Cat");
+    	    		instance_delete(id);
+    	    	}
+    	    }
+        	break;
+            
+        case 6: /// LABS
+    	     // Loop Spawns:
+    	    if(GameCont.loops > 0){
+    	    	with(RhinoFreak) if(chance(1, 3)){
+    	    		obj_create(x, y, "Bat");
+    	    		instance_delete(id);
+    	    	}
+    	    	with(Ratking) if(chance(1, 5)){
+    	    		obj_create(x, y, "Bat");
+    	    		instance_delete(id);
+    	    	}
+    	    }
+        	break;
+            
+        case 7: /// PALACE
+    	     // Loop Spawns:
+    	    if(GameCont.loops > 0){
+    	    	with(JungleBandit){
+    	    		repeat(chance(1, 5) ? 5 : 1) obj_create(x, y, "Gull");
+    	    	}
+    	    }
+        	break;
 
         case 103: /// MANSIOM  its MANSION idiot, who wrote this
              // Spawn Gold Mimic:
@@ -928,6 +971,13 @@
             }
             break;
     }
+    
+	 // Bab:
+	with(instances_matching([CrystalProp, InvCrystal], "", null)){
+		repeat(irandom_range(1, 3)){
+			obj_create(x, y, "Spiderling");
+		}
+	}
 
      // Visibilize Pets:
     with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
@@ -3829,6 +3879,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
         if(object_index != CustomEnemy){
             if(snd_hurt != -1) snd_hurt = sndOasisHurt;
             if(snd_dead != -1) snd_dead = sndOasisDeath;
+            if(snd_mele != -1) snd_mele = sndOasisMelee;
         }
     }
 
@@ -3877,6 +3928,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
     }
 
      // Clam Chests:
+    with(instances_matching(WeaponChest, "sprite_index", sprWeaponChest)){
+    	sprite_index = sprClamChest;
+    }
     with(instances_matching(ChestOpen, "waterchest", null)){
         waterchest = true;
         repeat(3) instance_create(x, y, Bubble);
@@ -5236,7 +5290,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

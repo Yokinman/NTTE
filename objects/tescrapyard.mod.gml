@@ -174,8 +174,8 @@
 			if(place_meeting(_x, _y, Wall) || force_spawn){
 				var _inst = instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor);
 				with(_inst){
-					_x = ((bbox_left + bbox_right) / 2) + orandom(4);
-					_y = ((bbox_top + bbox_bottom) / 2) + orandom(4);
+					_x = ((bbox_left + bbox_right + 1) / 2) + orandom(4);
+					_y = ((bbox_top + bbox_bottom + 1) / 2) + orandom(4);
 					
 					var b = false;
 					with(other){
@@ -194,8 +194,8 @@
 			
 			var r = 64;
 			with(instance_random(instance_rectangle_bbox(x - r, y - r, x + r, y + r, Floor))){
-				_x = (bbox_left + bbox_right) / 2;
-				_y = (bbox_top + bbox_bottom) / 2;
+				_x = (bbox_left + bbox_right + 1) / 2;
+				_y = (bbox_top + bbox_bottom + 1) / 2;
 			}
 		}
 		
@@ -646,7 +646,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);

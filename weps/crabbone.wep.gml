@@ -68,7 +68,7 @@
 	}
     
      // Gone:
-    if(w.ammo <= 0 && f.wepheld){
+    if(w.ammo <= 0 && f.wepheld && !f.roids){
     	with(f.creator) step(true);
     }
 

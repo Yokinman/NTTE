@@ -29,9 +29,9 @@
 
      // Effects:
     weapon_post(20, -24, 8);
-	sound_play_pitch(_brain ? sndLightningCannonUpg	: sndLaser,		0.4 + random(0.1));
-	sound_play_pitch(_brain ? sndPlasmaBigUpg		: sndPlasmaBig,	1.2 + random(0.2));
-	sound_play_pitchvol(sndExplosion, 0.8, 0.8);
+	sound_play_gun(_brain ? sndPlasmaBigUpg       : sndPlasmaBig, 0.4, -0.5);
+	sound_play_gun(_brain ? sndLightningCannonUpg : sndLaser,     0.4, -0.5);
+	sound_play_pitchvol(sndExplosion, 0.8, 1.5);
 	motion_add(gunangle + 180, 5);
 
 

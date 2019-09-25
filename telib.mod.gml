@@ -123,8 +123,7 @@
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
-		"teoasis"	  : ["ClamChest", "Crack", "Hammerhead", "OasisPetBecome", "Puffer"],
-		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidDeath", "SquidArm", "SquidBomb", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
+		"tewater"	  : ["Angler", "ClamChest", "Crack", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Hammerhead", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "OasisPetBecome", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "Puffer", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
@@ -563,7 +562,7 @@
 	                                            }
 	                                        }*/
 	                                        
-	                                         // Set on_step to obj_step if Needed:
+	                                         // Set on_step to obj_step only if needed:
 	                                        if(ntte_anim || ntte_walk || ntte_alarm_max > 0 || (DebugLag && array_length(on_step) >= 3)){
 	                                        	on_step = _objScrt;
 	                                        }
@@ -611,7 +610,7 @@
 	return noone;
 
 #define obj_step
-    if(DebugLag){
+	if(DebugLag){
     	//trace_lag_bgn("Objects");
     	trace_lag_bgn(name);
     }
@@ -649,7 +648,7 @@
 	var r = (ntte_alarm_max - ntte_alarm_min);
     if(r > 0){
 	    var i = ntte_alarm_min;
-	    repeat(r){ // repeat() is slightly faster than a for loop here i think- big optimizations
+	    repeat(r){ // repeat() is very slightly faster than a for loop here i think- big optimizations
 	        var a = alarm_get(i);
 	        if(a > 0){
 	             // Decrement Alarm:
@@ -701,7 +700,7 @@
 	else instance_destroy();
 
 #define step
-	script_bind_end_step(end_step, 0);
+	if(DebugLag) script_bind_end_step(end_step_trace_lag, 0);
     
      // sleep_max():
     if(global.sleep_max > 0){
@@ -709,12 +708,10 @@
 	    global.sleep_max = 0;
     }
    
-#define end_step
-	if(DebugLag){
-	    trace("");
-		trace("Frame", current_frame, "Lag:")
-	    trace_lag();
-	}
+#define end_step_trace_lag
+    trace("");
+	trace("Frame", current_frame, "Lag:")
+    trace_lag();
 	instance_destroy();
 
 #define draw_dark // Drawing Grays
@@ -778,14 +775,6 @@
     draw_line_width(_sx, _sy, _lx, _ly, _width);
 
     return [_lx, _ly];
-
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)
-    draw_primitive_begin(pr_trianglestrip);
-    draw_vertex(_x1a, _y1);
-    draw_vertex(_x1b, _y2);
-    draw_vertex(_x2a, _y1);
-    draw_vertex(_x2b, _y2);
-    draw_primitive_end();
 
 #define draw_text_bn(_x, _y, _string, _angle)
 	var _col = draw_get_color();
@@ -2066,7 +2055,7 @@
 
 	    		 // Debris:
 				var _floor = instances_matching_gt(Floor, "bbox_bottom", _y);
-				with(_floor) if(point_seen_ext((bbox_left + bbox_right) / 2, (bbox_top + bbox_bottom) / 2, 16, 16, -1)){
+				with(_floor) if(point_seen_ext((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, 16, 16, -1)){
 					var n = 2 * array_length(instances_matching_gt(Floor, "y", y));
 					if(chance_ct(1, n) && (object_index != FloorExplo || chance(1, 10))){
 						with(instance_create(choose(bbox_left + 4, bbox_right - 4), choose(bbox_top + 4, bbox_bottom - 4), Debris)){
@@ -2103,7 +2092,7 @@
 	    			if(instance_exists(self)){
 						visible = false;
 		    			y = _y + 16 + other.cavein_dis;
-		    			if(instance_exists(f)) x += (((f.bbox_left + f.bbox_right) / 2) - x) * 0.1 * current_time_scale;
+		    			if(instance_exists(f)) x += (((f.bbox_left + f.bbox_right + 1) / 2) - x) * 0.1 * current_time_scale;
 		    			
 		    			 // Why do health chests break walls again
 		    			if(instance_is(self, HealthChest)) mask_index = mskNone;
@@ -2155,9 +2144,9 @@
 
 					 // Fix Potential Softlockyness:
 					with(instances_matching_lt(instances_matching_gt(FloorExplo, "bbox_bottom", _y - 4), "bbox_top", _y - 4)){
-						var _x1 = (bbox_left + bbox_right) / 2,
-							_y1 = (bbox_top + bbox_bottom) / 2,
-							_x2 = (other.bbox_left + other.bbox_right) / 2;
+						var _x1 = (bbox_left + bbox_right + 1) / 2,
+							_y1 = (bbox_top + bbox_bottom + 1) / 2,
+							_x2 = (other.bbox_left + other.bbox_right + 1) / 2;
 
 						if(collision_line(_x1, _y1, _x2, _y1, Wall, false, false)){
 							with(instance_create(_x1, _y - 24, PortalClear)){

@@ -1,8 +1,7 @@
 /loadmod tegeneral
 /loadmod tedesert
 /loadmod tecoast
-/loadmod teoasis
-/loadmod tetrench
+/loadmod tewater
 /loadmod tesewers
 /loadmod tescrapyard
 /loadmod tecaves

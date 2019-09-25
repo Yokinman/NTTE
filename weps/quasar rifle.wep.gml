@@ -57,12 +57,14 @@
 
             if(scale_goal < m){
                 scale_goal = min((floor(image_yscale / a) * a) + a, m);
+    	    	flash_frame = max(flash_frame, current_frame + 2);
             }
         }
 
          // Knockback:
         if(image_yscale < scale_goal){
     	    with(other) motion_add(gunangle + 180, 2);
+    	    flash_frame = max(flash_frame, current_frame + 3);
         }
     }
 

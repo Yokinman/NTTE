@@ -411,10 +411,17 @@
 		}
 	}
 	
+	 // O no:
+	if(chance(1, 30)){
+		with(obj_create(x, y, "Seal")){
+			nexthurt = current_frame + 15;
+		}
+	}
+	
 	 // Hatch 1-3 Spiders:
-	if(chance(4, 5)){
+	else if(chance(4, 5)){
 		repeat(irandom_range(1, 3)) {
-			obj_create(x,y,"Spiderling");
+			obj_create(x, y, "Spiderling");
 		}
 	}
 	
@@ -452,9 +459,19 @@
 		nexthurt = current_frame + 15;
 		direction = random(360);
 
+		 // Cursed:
+		curse = (GameCont.area == 104);
+		if(curse){
+			snd_hurt = choose(sndHitFlesh, sndBanditHit, sndFastRatHit);
+			snd_dead = choose(sndEnemyDie, sndBanditDie, sndFastRatDie);
+		}
+		
          // Alarms:
-		alarm0 = 300 + random(90);
-		alarm1 = 20 + random(20);
+		alarm0 = irandom_range(120, 300);
+		alarm1 = irandom_range(20, 40);
+		
+		var n = instance_nearest(x, y, Player);
+		if(instance_exists(n)) alarm0 += point_distance(x, y, n.x, n.y);
 
 		return id;
     }
@@ -465,11 +482,12 @@
     with(instance_create(x, y, _obj)){
         x = other.x;
         y = other.y;
+        creator = other;
         right = other.right;
         alarm1 = 10 + random(10);
     }
 
-     // Effects
+     // Effects:
     for(var a = 0; a < 360; a += (360 / 6)){
         var o = random(8);
         with(instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), Smoke)){
@@ -482,13 +500,11 @@
         }
     }
     for(var a = direction; a < direction + 360; a += (360 / 3)){
-        with(instance_create(x, y, Shell)){
-            motion_add(a + orandom(30), 3 + random(4));
-            friction *= 2;
-            sprite_index = sprHyperCrystalShard;
-            image_index = random(image_number - 1);
-            image_speed = 0;
-            depth = 0;
+        with(obj_create(x, y, "CatDoorDebris")){
+            sprite_index = spr.SpiderlingHatch;
+            image_index = irandom(image_number - 1);
+            direction = a + orandom(30);
+            speed += 1 + random(4);
         }
     }
     sound_play_hit(sndHitRock, 0.3);
@@ -499,55 +515,118 @@
 
 #define Spiderling_alrm1
     alarm1 = 10 + irandom(10);
-    target = instance_nearest(x,y,Player);
+    
+    target = nearest_instance(x, y, [Player, CrystalProp, InvCrystal]);
+
+	 // Cursed:
+	if(curse) instance_create(x, y, Curse);
 
      // Move towards player:
     if(in_sight(target) && in_distance(target, 96)){
         scrWalk(14, point_direction(x, y, target.x, target.y) + orandom(20));
+        if(instance_is(target, prop)){
+        	direction += orandom(60);
+        	alarm1 *= random_range(1, 2);
+        }
     }
 
      // Wander:
     else scrWalk(12, direction + orandom(20));
 
+#define Spiderling_death
+	pickup_drop(15, 0);
+	
+	 // Dupe Time:
+	if(chance(curse, 4)){
+		speed = min(1, speed);
+		repeat(2) with(obj_create(x, y, "Spiderling")){
+			sprite_index = spr_hurt;
+			alarm0 = ceil(other.alarm0 / 2);
+			kills = other.kills;
+			raddrop = 0;
+		}
+	}
+
 
 #define SpiderWall_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
-        mask_index = mskWall;
+         // Visual:
+        topspr = spr.SpiderWallFakeTop;
+        botspr = sprWall4Bot;
+        topindex = 0;
+        botindex = 0;
         
          // Vars:
+        mask_index = mskWall;
         creator = noone;
         special = false;
+        setup = true;
         
         return id;
     }
-    
-#define SpiderWall_step
-	 // Destroy Overlapping Walls:
-	with(instances_at(x, y, instances_matching_ne(instances_matching(instances_matching(CustomObject, "name", "SpiderWall"), "special", false), "id", id))) instance_destroy();
 
-    if(!instance_exists(creator)){
-         // Spawn Special Spider:
-        if(special) Pet_spawn(x + 8, y + 8, "Spider");
-        
-         // Spawn Spiderlings:
-        else repeat(1 + irandom(2)) if(chance(3, 5)){
-        	obj_create(x + 8, y + 8, "Spiderling");
-        }
+#define SpiderWall_setup
+	setup = false;
+	
+	 // Sprites:
+	topspr = (special ? spr.SpiderWallMainTop : spr.SpiderWallFakeTop);
+	botspr = (special ? spr.SpiderWallMainBot : sprWall4Bot);
+	topindex = irandom(sprite_get_number(topspr) - 1);
+	botindex = irandom(sprite_get_number(botspr) - 1);
+	with(creator){
+		topspr = other.topspr;
+        topindex = other.topindex;
+        sprite_index = other.botspr;
+        image_index = other.botindex;
+	}
+	
+	 // No Duplicates:
+	with(instances_matching_gt(instances_matching(instances_matching(CustomObject, "name", name), "creator", creator), "id", id)){
+		instance_destroy();
+	}
+
+#define SpiderWall_step
+	if(setup) SpiderWall_setup();
+	
+	 // Sparklin:
+	if(special && chance_ct(1, 90)){
+		with(instance_create(x + random_range(-4, 20), y - 8 + random_range(-4, 20), CaveSparkle)){
+			sprite_index = spr.PetSparkle;
+			depth = -9;
+		}
+	}
+	
+	 // Spawn:
+    if(!instance_exists(creator) && !place_meeting(x, y, Explosion)){
+    	 // Spawn:
+    	if(position_meeting(x + 8, y + 8, FloorExplo)){
+    		
+	         // Special Spider:
+	        if(special){
+	        	with(Pet_spawn(x + 8, y + 8, "Spider")){
+	        		sprite_index = spr_hurt;
+    				sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 2);
+	        	}
+	        }
+	        
+	         // Spiderlings:
+	        else repeat(irandom_range(1, 3)){
+	        	if(chance(3, 5)){
+	        		with(obj_create(x + 8, y + 8, "Spiderling")){
+	        			sprite_index = spr_hurt;
+    					sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 2);
+	        		}
+	        	}
+	        	
+	        	 // Sparkle:
+	        	with(instance_create(x + random(16), y + orandom(8), CaveSparkle)){
+					sprite_index = spr.PetSparkle;
+					depth = -3;
+				}
+	        }
+    	}
         
         instance_destroy();
-    }
-    
-    else{
-         // Change wall sprites:
-        var _top = (special ? spr.SpiderWallMainTop : spr.SpiderWallFakeTop),
-            _bot = (special ? spr.SpiderWallMainBot : sprWall4Bot);
-            
-        with(creator) if(topspr != _top || sprite_index != _bot){
-            topspr =        _top;
-            sprite_index =  _bot;
-            topindex =      irandom(sprite_get_number(_top) - 1);
-            image_index =   irandom(sprite_get_number(_bot) - 1);
-        }
     }
 
 
@@ -655,7 +734,6 @@
 #define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define draw_trapezoid(_x1a, _x2a, _y1, _x1b, _x2b, _y2)                                        mod_script_call_nc("mod", "telib", "draw_trapezoid", _x1a, _x2a, _y1, _x1b, _x2b, _y2);
 #define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
 #define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
 #define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
