@@ -1,10 +1,5 @@
 #define chat_command(_cmd, _arg, _ind) /// debug commands
     switch(_cmd){
-    	case "ntte":
-    		var _menu = mod_variable_get("mod", "ntte", "menu");
-    		_menu.open = !_menu.open;
-    		return true;
-    	
         case "pet":
             Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
             return true;
@@ -104,7 +99,7 @@
 	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
 	chat_comp_add("charm", "(object)", "spawn a charmed object");
 	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
-	/** Delete above on release **/
+	/** Delete above in release versions **/
 	
 	
     global.spr = mod_variable_get("mod", "teassets", "spr");
@@ -1709,7 +1704,11 @@
 	    }
 	
 	     // No Duplicates:
-	    with(TopCont) instance_destroy();
+	    var _fogscroll = 0;
+	    with(TopCont){
+	    	_fogscroll = fogscroll;
+	    	instance_destroy();
+	    }
 	    with(SubTopCont) instance_destroy();
 	    with(BackCont) instance_destroy();
 
@@ -1863,6 +1862,7 @@
 	        event_perform(ev_alarm, 1);
 	        if(instance_number(Wall) > n) instance_delete(Wall.id);
 	    }
+	    with(TopCont) fogscroll = _fogscroll;
 
 	     // Remove Portal FX:
 	    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();

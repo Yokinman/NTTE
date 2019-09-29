@@ -1,3 +1,9 @@
+#define chat_command(_cmd, _arg, _ind)
+    if(string_upper(_cmd) == "NTTE"){
+		NTTEMenu.open = !NTTEMenu.open;
+		return true;
+    }
+
 #define init
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
@@ -1648,6 +1654,37 @@
 				}
 			}
 		}
+		
+		 // Last Wish:
+		with(instances_matching_ne(Player, "ntte_lastwish", skill_get(mut_last_wish))){
+			var _wishDiff = (skill_get(mut_last_wish) - variable_instance_get(id, "ntte_lastwish", 0));
+			ntte_lastwish = skill_get(mut_last_wish);
+			
+			if(ntte_lastwish != 0){
+				 // LWO Weapons:
+				with([wep, bwep]){
+					var w = self;
+					if(is_object(w) && "ammo" in w && "amax" in w && array_exists(wepsList, wep_get(w))){
+						var	_cost = lq_defget(w, "cost", 0),
+							_amax = w.amax,
+							_amaxRaw = (_amax / (1 + lq_defget(w, "buff", 0))),
+							_wish = lq_defget(w, "wish", (
+								(_amaxRaw < 200)
+								? ceil(_amax * 0.35)
+								: round(_amax * 0.785)
+							));
+							
+						w.ammo = clamp(w.ammo + (_wish * _wishDiff), _cost, _amax);
+					}
+				}
+				
+				 // Parrot:
+				if(race == "parrot"){
+					var _wish = (2 * feather_num);
+					feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
+				}
+			}
+		}
     }
     catch(_error){
     	trace_error(_error);
@@ -3112,22 +3149,25 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 									}
 									
 									 // Temporary:
-									if(unlock_get("parrot")){
-										_x += 12;
+									if(instance_exists(Menu) && unlock_get("parrot")){
+										_y -= 2;
 										
-										var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 24, _y - 8, _x + 24, _y + 8);
-										
-										draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
-										draw_sprite(sprMapIcon, 0, _x, _y)
-										draw_set_fog(false, 0, 0, 0);
+										var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 12, _y - 8, _x + 12, _y + 8);
 										
 										if(_hover && button_pressed(_index, "fire")){
 											sound_play(sndNoSelect);
-											_x += choose(-1, 1);
+											_y += choose(-1, 1);
 										}
-										draw_set_halign(fa_center);
-										draw_set_valign(fa_middle);
-										draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
+										
+										draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
+										draw_sprite(sprMapIcon, 4, _x, _y - _hover)
+										draw_set_fog(false, 0, 0, 0);
+										
+										//draw_set_halign(fa_center);
+										//draw_set_valign(fa_middle);
+										//draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
+										
+										if(_hover) _tooltip = "@sCOMING#SOON@w?";
 									}
 								}
 								

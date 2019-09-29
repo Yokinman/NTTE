@@ -278,6 +278,7 @@
     background_color = area_background_color();
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
+    TopCont.fog = sprFog102;
 
     RoomList = [];
 

@@ -1703,7 +1703,7 @@
 				if(_stockAmnt > 1) amnt = max(2, amnt);
 				
 				 // Front Bonus:
-				if(_stockObj == _frontObj || _frontProjCost == _stockProjCostRaw){
+				if(_stockAmnt > 1 && _frontAmnt > 1 && (_stockObj == _frontObj || _frontProjCost == _stockProjCostRaw)){
 					amnt += _frontAmnt - 1;
 					// Triple Machinegun + Quadruple Machinegun = Sextuple Machinegun, Shotgun + Double Shotgun = Sawed-Off Shotgun, etc.
 				}
