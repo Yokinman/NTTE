@@ -1171,16 +1171,6 @@
 				        }
 				        type = _pick[irandom(array_length(_pick) - 1)];
 
-				         // Set Sprites:
-				        spr_idle = spr.SealIdle[type];
-				        spr_walk = spr.SealWalk[type];
-				        spr_hurt = spr.SealHurt[type];
-				        spr_dead = spr.SealDead[type];
-				        spr_spwn = spr.SealSpwn[type];
-				        spr_weap = spr.SealWeap[type];
-				        sprite_index = spr_spwn;
-				        hitid = [spr_idle, name];
-
 						 // Launchin:
 						if(GameCont.loops > 0 && chance(1, 2)){
 							with(obj_create(x, y, "PalankingToss")){
@@ -1268,7 +1258,7 @@
     }
     else{
         switch(phase){
-            case 0: // Wave of Seals:
+            case 0: // Wave of Seals
             	var _delay = 20,
                 	_groups = 5;
 
@@ -1995,9 +1985,11 @@
         dash -= current_time_scale;
 
          // Dusty:
-        instance_create(x + orandom(3), y + random(6), Dust);
-        with(instance_create(x + orandom(3), y + random(6), Dust)){
-            motion_add(other.direction + orandom(45), (4 + random(1)) * other.dash_factor);
+        if(current_frame_active){
+	        instance_create(x + orandom(3), y + random(6), Dust);
+	        with(instance_create(x + orandom(3), y + random(6), Dust)){
+	            motion_add(other.direction + orandom(45), (4 + random(1)) * other.dash_factor);
+	        }
         }
     }
 
@@ -2078,7 +2070,7 @@
     sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
 
 #define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
-	if(dash > 0) _hitvel = min(_hitvel, 3);
+	if(dash > 0) _hitvel = min(_hitvel, speed - 1);
 	enemyHurt(_hitdmg, _hitvel, _hitdir);
 
 #define Pelican_death
@@ -2141,7 +2133,13 @@
         shield_ang = gunangle;
         shield_draw = true;
         surfClamShield = -1;
-        next_attack = (current_frame + 30)
+        toss = noone;
+        toss_speed = 0;
+        toss_time = 0;
+        toss_ammo = 2;
+        toss_spin = 0;
+        next_attack = (current_frame + 30);
+        setup = true;
 
          // Alarms:
         alarm1 = 20 + random(20);
@@ -2153,18 +2151,56 @@
         return id;
     }
 
+#macro seal_none		0
+#macro seal_hookpole	1
+#macro seal_shield		2
+#macro seal_blunderbuss	3
+#macro seal_mercenary	4
+#macro seal_dasher		5
+#macro seal_deadeye		6
+#macro seal_chance		[	0,
+							7,
+							3,
+							5,
+							7 * (GameCont.loops > 0),
+							5 * (GameCont.loops > 0),
+							3 * (GameCont.loops > 0)	]
+
+#macro surfClamShieldW 100
+#macro surfClamShieldH 100
+#macro surfClamShieldX x - (surfClamShieldW / 2)
+#macro surfClamShieldY y - (surfClamShieldH / 2)
+
+#define Seal_setup
+	setup = false;
+
+     // Set Sprites:
+    spr_idle = spr.SealIdle[type];
+    spr_walk = spr.SealWalk[type];
+    spr_hurt = spr.SealHurt[type];
+    spr_dead = spr.SealDead[type];
+    spr_spwn = spr.SealSpwn[type];
+    spr_weap = spr.SealWeap[type];
+    hitid = [spr_idle, name];
+    if(sprite_index == spr.SealSpwn[0]) sprite_index = spr_spwn;
+
 #define Seal_step
+	if(setup) Seal_setup();
+	
      // Slide:
     if(slide > 0){
         speed += min(slide, 2) * current_time_scale;
 
         var _turn = 5 * sin(current_frame / 10) * current_time_scale;
+        if(type == seal_dasher) _turn /= 3;
         direction += _turn;
         gunangle += _turn;
 
          // Effects:
-        with(instance_create(x + orandom(3), y + 6, Dust)){
-            direction = other.direction;
+        if(current_frame_active){
+	        with(instance_create(x + orandom(3), y + 6, Dust)){
+	            direction = other.direction;
+	        }
         }
 
         slide -= current_time_scale;
@@ -2186,8 +2222,10 @@
              // Shield Mode:
             if(shield){
                  // Turn:
-                var t = angle_difference(gunangle, shield_ang) / 8;
-                shield_ang += t;
+                var m = random(10/3) * current_time_scale,
+                	t = clamp(angle_difference(gunangle, shield_ang) / 8, -m, m);
+                	
+                shield_ang = (shield_ang + t + 360) % 360;
 
                  // Draw Shield:
                 if(t != 0 && point_seen_ext(x, y, 16, 16, -1)){
@@ -2198,31 +2236,34 @@
                 var o = 6,
                     r = 12,
                     _x = x + lengthdir_x(o, shield_ang),
-                    _y = y + lengthdir_y(o, shield_ang);
+                    _y = y + lengthdir_y(o, shield_ang),
+                    b = r + 32;
 
-                if(collision_circle(_x, _y, r * 2, projectile, false, false)){
-                    with(instances_matching_ne(instances_matching_ne(instances_matching_gt(instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0), "speed", 0), "object_index", ToxicGas), "mask_index", mskNone, sprVoid)){
-                        if(point_in_circle(x + hspeed, y + vspeed, _x, _y, r + (speed / 2))){
-                            other.wkick = 8 + orandom(1);
-                            speed += friction * 3;
-
-                             // Knockback:
-                            if(force > 3){
-                                with(other) motion_add(shield_ang + 180, min(other.damage / 3, 3));
-                            }
-
-                             // Reflect:
-                            var _reflectLine = other.shield_ang;
-                            direction = _reflectLine - clamp(angle_difference(direction + 180, _reflectLine), -40, 40);
-                            image_angle = direction;
-
-                             // Effects:
-                            sound_play(sndShielderDeflect);
-                            with(instance_create(x, y, Deflect)) image_angle = _reflectLine;
-                            instance_create(x, y, Dust);
-
-                             // Destroyables:
-                            if(typ == 2) instance_destroy();
+                if(collision_circle(_x, _y, b, projectile, false, false)){
+                    with(instances_matching_ne(instances_matching_ne(instances_matching_gt(instances_matching_ne(instances_matching_ne(instance_rectangle(_x - b, _y - b, _x + b, _y + b, projectile), "team", team), "typ", 0), "speed", 0), "object_index", ToxicGas), "mask_index", mskNone, sprVoid)){
+                        if(abs(angle_difference(direction + 180, other.shield_ang)) < 80){
+                        	if(point_in_circle(x + hspeed_raw, y + vspeed_raw, _x, _y, r + (speed_raw / 2))){
+	                            other.wkick = 8 + orandom(1);
+	                            speed += friction * 3;
+	
+	                             // Knockback:
+	                            if(force > 3){
+	                                with(other) motion_add(shield_ang + 180, min(other.damage / 3, 3));
+	                            }
+	
+	                             // Reflect:
+	                            var _reflectLine = other.shield_ang;
+	                            direction = _reflectLine - clamp(angle_difference(direction + 180, _reflectLine), -40, 40);
+	                            image_angle = direction;
+	
+	                             // Effects:
+	                            sound_play(sndShielderDeflect);
+	                            with(instance_create(x, y, Deflect)) image_angle = _reflectLine;
+	                            instance_create(x, y, Dust);
+	
+	                             // Destroyables:
+	                            if(typ == 2) instance_destroy();
+	                        }
                         }
                     }
                 }
@@ -2286,6 +2327,103 @@
                 }
             }
             break;
+        
+        case seal_dasher:
+        	if(slide <= 0 && gunangle > 180){
+        		gunangle = random(180);
+        	}
+        	break;
+
+		case seal_deadeye:
+			 // Tossing:
+			if(instance_exists(toss)){
+				 // Move Away from Walls:
+				var n = instance_nearest(x - 8, y - 8, Wall);
+				if(instance_exists(n)){
+					with(n) if(distance_to_point(other.x, other.y) < other.toss_speed + (max(other.toss.sprite_height, other.toss.sprite_width) / 2)){
+						with(other){
+							motion_add_ct(point_direction(other.x + 8, other.y + 8, x, y), 1);
+						}
+					}
+				}
+				
+				with(toss){
+					 // Build Speed:
+					if(speed < other.toss_speed){
+						speed += (1.5 * current_time_scale) + friction_raw;
+						
+						depth = other.depth;
+						
+						 // Ready:
+						if(speed >= other.toss_speed){
+							speed = other.toss_speed + 0.0001;
+							
+							 // Effects:
+							other.wkick = 1;
+							repeat(2){
+								scrFX(x, y, [direction + orandom(30), random_range(3, 5)], Dust);
+							}
+							sound_play_pitchvol(sndMeleeFlip, 1.4 + random(0.2), 0.8);
+							sound_play_pitchvol(sndDiscgun, 1.6 + random(0.2), 0.4);
+						}
+					}
+					
+					 // Spin:
+					else{
+						depth = other.depth - 1;
+						other.toss_spin += clamp((6 * speed) - other.toss_spin, -1, 1) * current_time_scale;
+						direction += other.toss_spin * current_time_scale;
+					}
+					
+					 // Holding:
+					var l = (speed + other.wkick) - (speed_raw - friction_raw);
+					x = other.x + lengthdir_x(l, direction);
+					y = other.y + lengthdir_y(l, direction);
+					xprevious = x;
+					yprevious = y;
+					
+					 // Toss:
+					if(other.toss_time > 0) other.toss_time -= current_time_scale;
+					else if(speed >= other.toss_speed){
+						if(abs(angle_difference(direction + (90 * sign(other.toss_spin)), other.gunangle)) < abs(other.toss_spin * 0.5 * max(1, current_time_scale))){
+							other.toss = noone;
+							
+							x = other.x + hspeed;
+							y = other.y + vspeed;
+							direction += 90 * sign(other.toss_spin);
+							x -= hspeed_raw;
+							y -= vspeed_raw;
+							
+							 // FX:
+							with(other) motion_add(other.direction, 3);
+							repeat(2){
+								with(scrFX(x, y, [direction + orandom(30), random_range(2, random(speed * 2/3))], Smoke)){
+									image_xscale *= 2/3;
+									image_yscale *= 2/3;
+								}
+							}
+							sound_play_hit_ext(sndDiscDie, 0.6 + random(0.3), 1.3);
+							sound_play_hit(sndMeleeFlip, 0.2);
+						}
+					}
+					
+					 // Discin:
+					if(instance_is(self, Disc)){
+						dist = 0;
+						alarm0 = max(alarm0, 15);
+					}
+					
+					with(other) scrRight(other.direction);
+				}
+			}
+			else{
+				toss_speed = 0;
+				toss_spin = 0;
+				
+				 // No More Discs:
+				if(toss_ammo <= 0) type = seal_none;
+			}
+			break;
 
         default:
             if(walk > 0) direction += orandom(10);
@@ -2304,17 +2442,6 @@
     else if(image_index < 2){
 		y -= image_index * current_time_scale;
 	}
-
-#macro seal_none 0
-#macro seal_hookpole 1
-#macro seal_shield 2
-#macro seal_blunderbuss 3
-#macro seal_chance [0, 7, 3, 5]
-
-#macro surfClamShieldW 100
-#macro surfClamShieldH 100
-#macro surfClamShieldX x - (surfClamShieldW / 2)
-#macro surfClamShieldY y - (surfClamShieldH / 2)
 
 #define Seal_draw
     var _drawWep = (sprite_index != spr_spwn || image_index > 2);
@@ -2340,18 +2467,20 @@
             var _surfx = surfClamShieldX,
                 _surfy = surfClamShieldY + 16;
 
-            d3d_set_fog(true, c_black, 0, 0);
+            draw_set_fog(true, c_black, 0, 0);
             for(var a = 0; a < 360; a += 90){
                 draw_surface(surfClamShield, _surfx + dcos(a), _surfy + dsin(a));
             }
-            d3d_set_fog(false, 0, 0, 0);
+            draw_set_fog(false, 0, 0, 0);
 
             draw_surface(surfClamShield, _surfx, _surfy);
         }
     }
 
      // Self Behind:
-    if(gunangle > 180) draw_self_enemy();
+    var _back = (gunangle <= 180);
+    if(type == seal_shield && shield) _back = (shield_ang <= 180);
+    if(!_back) draw_self_enemy();
 
     if(_drawWep){
          // 3D Shield + Auto-Outline:
@@ -2375,7 +2504,7 @@
     }
 
      // Self:
-    if(gunangle <= 180) draw_self_enemy();
+    if(_back) draw_self_enemy();
 
      // Reset Vars:
     if(slide > 0){
@@ -2389,191 +2518,290 @@
     trident_dist = 0;
 
     target = instance_nearest(x, y, Player);
-    if(in_sight(target)){
+    
+    if(instance_exists(target)){
         var _targetDir = point_direction(x, y, target.x, target.y),
         	_canAttack = (next_attack <= current_frame);
-
-         // Seal Types:
-        switch(type){
-            case seal_hookpole:
-                alarm1 = 10 + random(15);
-
-                 // Too Close:
-                if(in_distance(target, 20)){
-                    scrWalk(10, _targetDir + 180 + orandom(60));
-                }
-
-                else{
-                    if(chance(4, 5)){
-                         // Attack:
-                        if(_canAttack && in_distance(target, 70)){
-                            alarm1 = 30;
-                            alarm2 = 10;
-                            trident_dist = point_distance(x, y, target.x, target.y) - 24;
-                        }
-
-                         // Too Far:
-                        else{
-                            scrWalk(10, _targetDir + orandom(20));
-                            if(chance(1, 10)) slide = 10;
-                        }
-                    }
-
-                     // Side Step:
-                    else{
-                        scrWalk(15, _targetDir + choose(-80, 80));
-                        if(chance(1, 2)) slide = 5 + random(10);
-                    }
-                }
-                break;
-
-            case seal_shield:
-                if(shield){
-                    alarm1 = 15 + random(5);
-                    if(in_distance(target, 80) && wkick == 0){
-                        scrWalk(4 + random(4), _targetDir + orandom(10));
-
-                         // Dagger Time:
-                        shield = false;
-                        shield_draw = true;
-                        alarm1 = 20;
-
-                         // Swap FX:
-                        var o = 8;
-                        instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), WepSwap);
-                        sound_play(sndSwapSword);
-                    }
-                    else if(chance(2, 3)){
-                        scrWalk(6 + random(6), _targetDir + orandom(50));
-                    }
-                }
-
-                 // Sword Stabby Mode:
-                else{
-                    alarm1 = 20 + random(10);
-                    if(in_distance(target, 120)){
-                        scrWalk(5 + random(5), _targetDir + choose(0, 0, 180) + orandom(20));
-
-                        if(_canAttack && in_distance(target, 80)){
-                             // Stabby:
-                            gunangle = _targetDir;
-                            with(scrEnemyShoot(Shank, gunangle, 3)) damage = 2;
-
-                            motion_add(gunangle, 2);
-
-                             // Effects:
-                            wkick = -5;
-                            wepangle *= -1;
-                            sound_play(sndMeleeFlip);
-                            sound_play(sndScrewdriver);
-                            sound_play_pitchvol(sndSwapGold, 1.25 + random(0.5), 0.4);
-                            instance_create(x, y, Dust);
-                        }
-
-                         // Slide Away:
-                        else{
-                            direction = _targetDir + 180;
-                            slide = 10;
-                        }
-                    }
-                    else{
-                        shield = true;
-                        shield_ang = _targetDir;
-                        shield_draw = true;
-                        wkick = 2;
-
-                         // Swap FX:
-                        var o = 8;
-                        instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), WepSwap);
-                        sound_play(sndSwapHammer);
-                    }
-                }
-                break;
-
-            case seal_blunderbuss:
-                 // Slide Away:
-                if(in_distance(target, 80)){
-                    direction = _targetDir + 180;
-                    slide = 15;
-                    alarm1 = slide + random(10);
-                }
-
-                 // Good Distance Away:
-                else{
-                     // Aim & Ignite Powder:
-                    if(_canAttack && in_distance(target, 192) && chance(2, 3)){
-                        alarm1 = alarm1 + 90;
-
-                        gunangle = _targetDir;
-                        alarm2 = 15;
-
-                         // Effects:
-                        sound_play_pitchvol(sndEmpty, 2.5, 0.5);
-                        wkick = -2;
-                    }
-
-                     // Reposition:
-                    else{
-                        scrWalk(10, _targetDir + orandom(90));
-                        if(chance(1, 2)) slide = 15;
-                    }
-
-                     // Important:
-                    if(chance(1, 3)){
-                        instance_create(x, y, CaveSparkle).depth = depth - 1;
-                    }
-                }
-            	break;
-
-            default:
-                if(instance_exists(creator) && creator.active){
-                    scrWalk(10 + random(10), point_direction(x, y, creator.x, creator.y));
-                }
-                else{
-                     // Don't kill me!
-                    if(scared){
-                        if(in_distance(target, 120) || chance(2, array_length(instances_matching(object_index, "name", name)))){
-                            scrWalk(20 + random(10), _targetDir + 180 + orandom(50));
-                            if(chance(1, 3)) slide = walk - 5;
-                            alarm1 = walk;
-                        }
-                        else{
-                            scrWalk(5 + random(5), random(360));
-                            scrRight(_targetDir);
-                        }
-                    }
-
-                     // Passive:
-                    else{
-                        scrWalk(5 + random(5), point_direction(x, y, xstart + orandom(24), ystart + orandom(24)));
-                        if(in_distance(target, 120)) scrRight(_targetDir);
-                    }
-                }
+        	
+        if(in_sight(target) || type == seal_none){
+        	 // Seal Types:
+        	switch(type){
+	            case seal_hookpole:
+	            
+	                alarm1 = 10 + random(15);
+	
+	                 // Too Close:
+	                if(in_distance(target, 20)){
+	                    scrWalk(10, _targetDir + 180 + orandom(60));
+	                }
+	
+	                else{
+	                    if(chance(4, 5)){
+	                         // Attack:
+	                        if(_canAttack && in_distance(target, 70)){
+	                            alarm1 = 30;
+	                            alarm2 = 10;
+	                            trident_dist = point_distance(x, y, target.x, target.y) - 24;
+	                        }
+	
+	                         // Too Far:
+	                        else{
+	                            scrWalk(10, _targetDir + orandom(20));
+	                            if(chance(1, 10)) slide = 10;
+	                        }
+	                    }
+	
+	                     // Side Step:
+	                    else{
+	                        scrWalk(15, _targetDir + choose(-80, 80));
+	                        if(chance(1, 2)) slide = 5 + random(10);
+	                    }
+	                }
+	                
+	                break;
+	
+	            case seal_shield:
+	            
+	            	 // Shield Defendy Mode:
+	                if(shield){
+	                    alarm1 = 15 + irandom(5);
+	                    
+	                     // Dagger Time:
+	                    if((in_distance(target, 80) || abs(angle_difference(shield_ang, _targetDir)) > 80) && wkick == 0){
+	                        scrWalk(4 + random(4), _targetDir + orandom(10));
+	
+	                        shield = false;
+	                        shield_draw = true;
+	                        alarm1 = 20;
+	
+	                         // Swap FX:
+	                        var o = 8;
+	                        instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), WepSwap);
+	                        sound_play(sndSwapSword);
+	                    }
+	                    
+	                     // Reposition:
+	                    else if(chance(2, 3)){
+	                        scrWalk(6 + random(6), _targetDir + orandom(50));
+	                    }
+	                }
+	
+	                 // Sword Stabby Mode:
+	                else{
+	                    alarm1 = 20 + random(10);
+	                    
+	                    if(in_distance(target, 120)){
+	                        scrWalk(5 + random(5), _targetDir + choose(0, 0, 180) + orandom(20));
+	
+	                         // Stabby:
+	                        if(_canAttack && in_distance(target, 80)){
+	                            gunangle = _targetDir;
+	                            with(scrEnemyShoot(Shank, gunangle, 3)) damage = 2;
+	
+	                            motion_add(gunangle, 2);
+	
+	                             // Effects:
+	                            wkick = -5;
+	                            wepangle *= -1;
+	                            sound_play(sndMeleeFlip);
+	                            sound_play(sndScrewdriver);
+	                            sound_play_pitchvol(sndSwapGold, 1.25 + random(0.5), 0.4);
+	                            instance_create(x, y, Dust);
+	                        }
+	
+	                         // Slide Away:
+	                        else{
+	                            direction = _targetDir + 180;
+	                            slide = 10;
+	                        }
+	                    }
+	                    
+	                     // Shield Time:
+	                    else{
+	                        shield = true;
+	                        shield_ang = _targetDir;
+	                        shield_draw = true;
+	                        wkick = 2;
+	
+	                         // Swap FX:
+	                        var o = 8;
+	                        instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), WepSwap);
+	                        sound_play(sndSwapHammer);
+	                    }
+	                }
+	                
+	                break;
+	
+	            case seal_blunderbuss:
+	            
+	                 // Slide Away:
+	                if(in_distance(target, 80)){
+	                    direction = _targetDir + 180;
+	                    slide = 15;
+	                    alarm1 = slide + random(10);
+	                }
+	
+	                 // Good Distance Away:
+	                else{
+	                     // Aim & Ignite Powder:
+	                    if(_canAttack && in_distance(target, 192) && chance(2, 3)){
+	                        alarm1 = alarm1 + 90;
+	
+	                        gunangle = _targetDir;
+	                        alarm2 = 15;
+	
+	                         // Effects:
+	                        sound_play_pitchvol(sndEmpty, 2.5, 0.5);
+	                        wkick = -2;
+	        			}
+	
+	                     // Reposition:
+	                    else{
+	                        scrWalk(10, _targetDir + orandom(90));
+	                        if(chance(1, 2)) slide = 15;
+	                    }
+	
+	                     // Important:
+	                    if(chance(1, 3)){
+	                        instance_create(x, y, CaveSparkle).depth = depth - 1;
+	                    }
+	                }
+	                
+	            	break;
+	            	
+	            case seal_mercenary:
+	            
+	                 // Slide Towards:
+	                if(!in_distance(target, 160)){
+	                    direction = _targetDir + orandom(60);
+	                    slide = 15;
+	                    alarm1 = slide + random(20);
+	                }
+	
+	                 // Within Range:
+	                else{
+	                	scrWalk(15, _targetDir + orandom(90));
+	                	
+	                     // Pew Time:
+	                    if(_canAttack){
+	                    	alarm2 = 8;
+	                    	alarm1 = alarm2 + 5 + random(20);
+	                    	
+	                    	 // Preparin:
+	                    	wkick = -4;
+	                    	sound_play_hit_ext(sndShotReload, 1.5 + random(0.5), 0.5);
+	                    	with(instance_create(x, y, Shell)){
+	                    		sprite_index = sprShotShell;
+	                    		motion_add(other.gunangle + (90 * other.right), 2 + random(2));
+	                    	}
+	                    }
+	                }
+	                
+	            	break;
+	            	
+	            case seal_dasher:
+	            
+	            	 // Move Away:
+	            	if(in_distance(target, 32) || chance(1, 4)){
+	            		slide = 5 + random(5);
+	            		direction = _targetDir + 180 + orandom(40);
+	            	}
+	            
+	            	 // Combat Slide:
+	            	else{
+	                    slide = 20;
+	                    alarm2 = 8;
+	                    direction = random(360);
+	                    sound_play_hit_ext(sndSnowBotSlideStart, 1.3 + random(0.4), 1);
+	            	}
+	            	
+	                alarm1 = slide + 5 + random(15);
+	                
+	            	break;
+	            
+	            case seal_deadeye:
+	            
+	            	if(!instance_exists(toss)){
+		                 // Hobble Around:
+		                if(chance(1, 2)){
+		                    scrWalk(irandom_range(4, 20), _targetDir + choose(-80, 80) + orandom(20));
+		                }
+		            	
+		            	 // Toss Disc:
+		            	else{
+		            		toss_ammo--;
+		            		toss_time = 60;
+		            		toss_speed = random_range(7, 9);
+		            		toss = scrEnemyShoot(Disc, random(360), 0);
+		            	}
+	            	}
+	            	
+	            	if(instance_exists(toss)) alarm1 = 15;
+	            	
+	            	break;
+	
+	            default:
+	            
+	            	 // Follow Big Seal:
+	                if(instance_exists(creator) && creator.active){
+	                    scrWalk(10 + random(10), point_direction(x, y, creator.x, creator.y));
+	                }
+	                
+	                 // Normal:
+	                else{
+	                     // Don't kill me!
+	                    if(scared){
+	                        if(in_distance(target, 120) || chance(2, array_length(instances_matching(object_index, "name", name)))){
+	                            scrWalk(20 + random(10), _targetDir + 180 + orandom(50));
+	                            if(chance(1, 3)) slide = walk - 5;
+	                            alarm1 = walk;
+	                        }
+	                        else{
+	                            scrWalk(5 + random(5), random(360));
+	                            scrRight(_targetDir);
+	                        }
+	                    }
+	
+	                     // Passive:
+	                    else{
+	                        scrWalk(5 + random(5), point_direction(x, y, xstart + orandom(24), ystart + orandom(24)));
+	                        if(in_distance(target, 120)) scrRight(_targetDir);
+	                    }
+	                }
+	        }
+	
+	         // Face Target:
+	        if(type != seal_none){
+	            gunangle = _targetDir;
+	            scrRight(gunangle - ((alarm2 > 0 && slide > 0) * (direction - 90)));
+	        }
         }
-
-         // Face Target:
-        if(type != seal_none){
-            gunangle = _targetDir;
-            scrRight(gunangle);
-        }
-
-         // Slide FX:
-        if(slide > 0){
-            if(hold) slide = 0;
-            else{
-                sound_play_hit(sndRoll, 0.4);
-                sound_play_pitch(sndBouncerBounce, 0.4 + random(0.1));
-                repeat(5) with(instance_create(x, y, Dust)){
-                    motion_add(random(360), 3);
-                }
-            }
+        
+         // Looking for Player:
+        else{
+        	scrWalk(5 + random(20), _targetDir + orandom(60));
+        	alarm1 = 5 + irandom(walk) + irandom(15);
+        	
+        	if(type == seal_dasher) gunangle = random(180);
         }
     }
 
-     // Passive Movement:
+     // Wander:
     else{
         scrWalk(5 + random(20), random(360));
         alarm1 += walk;
+    }
+
+     // Slide FX:
+    if(slide > 0){
+        if(hold) slide = 0;
+        else{
+            sound_play_hit(sndRoll, 0.4);
+            sound_play_pitch(sndBouncerBounce, 0.4 + random(0.1));
+            repeat(5) with(instance_create(x, y, Dust)){
+                motion_add(random(360), 3);
+            }
+        }
     }
 
 #define Seal_alrm2
@@ -2632,25 +2860,85 @@
         	wkick = 10;
 
             break;
+        
+        case seal_mercenary:
+        	if(chance(1, 3)) alarm2 = irandom_range(3, 5);
+        	
+        	 // Pew:
+        	scrEnemyShoot(EnemyBullet3, gunangle + orandom(4), 12 + random(2));
+        	
+        	 // Effects:
+        	scrFX(x, y, [gunangle, 2], Smoke);
+			sound_play_pitchvol(sndEnemyFire, 1, 1.5);
+			sound_play_pitchvol(sndShotgun, 2 + random(0.4), 0.8);
+			motion_add(gunangle + 180, 1);
+            wkick += 5;
+        	
+        	 // Aim:
+        	target = instance_nearest(x, y, Player);
+        	if(instance_exists(target)){
+        		gunangle = point_direction(x, y, target.x, target.y);
+        		scrRight(gunangle);
+        	}
+        	
+        	break;
+        
+        case seal_dasher:
+        	 // Aim:
+        	with(instance_nearest(x, y, Player)){
+        		if(in_sight(other)){
+        			other.gunangle = point_direction(other.x, other.y, x, y);
+        		}
+        	}
+        	
+        	 // Shooty:
+			scrEnemyShoot(EnemyBullet1, gunangle, 6);
+			
+			 // Effects:
+			wkick = 10;
+			direction += choose(-30, 30);
+			sound_play_hit_ext(sndEnemyFire, 1 + random(0.3), 1.5);
+			sound_play_hit_ext(sndTurretFire, 1.3 + orandom(0.2), 0.8);
+			
+        	break;
     }
 
 #define Seal_hurt(_hitdmg, _hitvel, _hitdir)
     enemyHurt(_hitdmg, _hitvel, _hitdir);
 
-     // Alert:
-    if(type == seal_none){
-        with(instances_matching(object_index, "name", name)){
-            if(!scared && type == other.type){
-                if(in_distance(other, 80)){
-                    scared = true;
-                    instance_create(x, y, AssassinNotice);
-                }
-            }
-        }
+    switch(type){
+    	case seal_none:
+    		 // Alert:
+	        with(instances_matching(object_index, "name", name)){
+	            if(!scared && type == other.type){
+	                if(in_distance(other, 80)){
+	                    scared = true;
+	                    instance_create(x, y, AssassinNotice);
+	                }
+	            }
+	        }
+	        break;
+	        
+		case seal_shield:
+			sound_play_hit(sndHitRock, 0.3);
+			break;
+			
+		case seal_dasher:
+			sound_play_hit(sndSnowBotHurt, 0.3);
+			break;
     }
 
 #define Seal_death
     pickup_drop(50, 0);
+    
+     // Tossin:
+    if(instance_exists(toss) && (toss.speed < toss_speed || toss_spin < 20)){
+    	with(toss){
+    		sound_play_hit(sndDiscDie, 0.2);
+    		with(instance_create(x, y, DiscDisappear)) depth = other.depth;
+    	}
+    	instance_delete(toss);
+    }
 
 #define Seal_cleanup
 	surface_destroy(surfClamShield);
@@ -3008,7 +3296,9 @@
         with(my_mine){
             zspeed = 10;
             direction = point_direction(x, y, other.target_x, other.target_y);
-            speed = ((point_distance(x, y, other.target_x, other.target_y) - z) * zfric) / (zspeed * 2);
+            speed = (point_distance(x, y, other.target_x, other.target_y) * zfric) / (zspeed * 2);
+            x -= hspeed_raw;
+            y -= vspeed_raw;
         }
         my_mine = noone;
         my_mine_spin = 0;
@@ -3592,3 +3882,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

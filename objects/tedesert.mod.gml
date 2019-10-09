@@ -432,6 +432,11 @@
 			raddrop = 4;
 		}
 	}
+	
+	 // Flies:
+	repeat(irandom_range(3, 6)){
+		obj_create(x + orandom(32), y + orandom(16), "FlySpin");
+	}
 
 	 // Scrop:
 	if(scorp_drop > 0) repeat(scorp_drop){
@@ -602,16 +607,18 @@
         y = creator.y;
     }
     else{
-         // Enter the bone zone:
-        with(instance_create(x, y, WepPickup)){
-            wep = "crabbone";
-            motion_add(random(360), 3);
-        }
-
-         // Effects:
-        repeat(2) with(instance_create(x, y, Dust)){
-            motion_add(random(360), 3);
-        }
+    	if(position_meeting(x, y, Corpse)){
+	         // Enter the bone zone:
+	        with(instance_create(x, y, WepPickup)){
+	            wep = "crabbone";
+	            motion_add(random(360), 3);
+	        }
+	
+	         // Effects:
+	        repeat(2) with(instance_create(x, y, Dust)){
+	            motion_add(random(360), 3);
+	        }
+    	}
 
         //with(instances_matching(object_index, "name", name)) instance_destroy();
         instance_destroy();
@@ -1392,6 +1399,33 @@
     with(MusCont) alarm_set(1, 1);
 
 
+#define FlySpin_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.FlySpin;
+		image_index = irandom(image_number - 1);
+		image_speed = 0.4 + random(0.1);
+		image_xscale = choose(-1, 1);
+		depth = -9;
+
+		 // Vars:
+		target = noone;
+		target_x = 0;
+		target_y = 0;
+
+		return id;
+	}
+
+#define FlySpin_end_step
+	if(target != noone){
+		if(instance_exists(target)){
+			x = target.x + target_x;
+			y = target.y + target_y;
+		}
+		else instance_destroy();
+	}
+
+
 #define PetVenom_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:
@@ -1594,9 +1628,11 @@
 	if(DebugLag) trace_time();
 
      // Crab Skeletons Drop Bones:
-    with(instances_matching(BonePile, "my_bone_spawner", null)){
-    	my_bone_spawner = obj_create(x, y, "BoneSpawner");
-    	with(my_bone_spawner) creator = other;
+    if(!instance_exists(GenCont)){
+	    with(instances_matching([BonePile, BonePileNight], "my_bone_spawner", null)){
+	    	my_bone_spawner = obj_create(x, y, "BoneSpawner");
+	    	with(my_bone_spawner) creator = other;
+	    }
     }
 
      // Baby Scorpion Spawn:
@@ -1740,3 +1776,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

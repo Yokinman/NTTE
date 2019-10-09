@@ -14,6 +14,10 @@
     with(global.spr){
         var m, p;
         msk = {};
+        shd = {};
+
+		 // Top Prop:
+		msk.TopProp = sprite("misc/mskTopProp", 1, 2, -6);
 
          // Top Decals:
         TopDecal = {
@@ -32,8 +36,10 @@
     	    "oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
     	    "trench": sprite("areas/Trench/sprTrenchBigTopDecal",       1, 32, 24)
     	}
-        NestDebris		= sprite("areas/Scrapyard/sprNestDebris", 16,  4,  4);
-    	msk.BigTopDecal	= sprite("areas/Desert/mskBigTopDecal",	   1, 32, 24);
+        NestDebris		 = sprite("areas/Scrapyard/sprNestDebris", 16,  4,  4);
+    	msk.BigTopDecal	 = sprite("areas/Desert/mskBigTopDecal",    1, 32, 24);
+    	shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 32, 32);
+    	shd.BigGeneratorF = sprite("areas/Palace/shdBigGenerator",   1, 32, 32);
 
 		//#region MENU
 		
@@ -187,6 +193,9 @@
 			
 	         // Fly:
 	        FlySpin = sprite("misc/sprFlySpin", 16, 4, 4);
+	        
+	         // Pedestal:
+	        Pedestal = sprite("misc/sprPedestal", 1, 16, 16);
         	
         //#endregion
 
@@ -290,31 +299,27 @@
 
 	             // Seal:
 	            p = m + "Seal/";
-	            SealIdle   =[sprite(p + "sprSealIdle",     6, 12, 12),
-							 sprite(p + "sprSealIdle1",    6, 12, 12),
-							 sprite(p + "sprSealIdle2",    6, 12, 12),
-							 sprite(p + "sprSealIdle3",    6, 12, 12)];
-	            SealWalk   =[sprite(p + "sprSealWalk",     6, 12, 12),
-							 sprite(p + "sprSealWalk1",    6, 12, 12),
-							 sprite(p + "sprSealWalk2",    6, 12, 12),
-							 sprite(p + "sprSealWalk3",    6, 12, 12)];
-	            SealHurt   =[sprite(p + "sprSealHurt",     3, 12, 12),
-							 sprite(p + "sprSealHurt1",    3, 12, 12),
-							 sprite(p + "sprSealHurt2",    3, 12, 12),
-							 sprite(p + "sprSealHurt3",    3, 12, 12)];
-	            SealDead   =[sprite(p + "sprSealDead",     6, 12, 12),
-							 sprite(p + "sprSealDead1",    6, 12, 12),
-							 sprite(p + "sprSealDead2",    6, 12, 12),
-							 sprite(p + "sprSealDead3",    6, 12, 12)];
-	            SealSpwn   =[sprite(p + "sprSealSpwn",     6, 12, 12),
-							 sprite(p + "sprSealSpwn1",    6, 12, 12),
-							 sprite(p + "sprSealSpwn2",    6, 12, 12),
-							 sprite(p + "sprSealSpwn3",    6, 12, 12)];
-	            SealWeap   =[mskNone,
-							 sprite(p + "sprHookPole",     1, 18,  2),
-							 sprite(p + "sprSabre",        1, -2,  1),
-							 sprite(p + "sprBlunderbuss",  1,  7,  1)];
-	            ClamShield = sprite(p + "sprClamShield",  14,  7,  1);
+	            SealIdle = [];
+	            SealWalk = [];
+	            SealHurt = [];
+	            SealDead = [];
+	            SealSpwn = [];
+	            SealWeap = [];
+	            for(var i = 0; i <= 6; i++){
+	            	var n = ((i <= 0) ? "" : string(i));
+	            	SealIdle[i] = sprite(p + "sprSealIdle" + n, 6, 12, 12);
+	            	SealWalk[i] = sprite(p + "sprSealWalk" + n, 6, 12, 12);
+	            	SealHurt[i] = sprite(p + "sprSealHurt" + n, 3, 12, 12);
+	            	SealDead[i] = sprite(p + "sprSealDead" + n, 6, 12, 12);
+	            	SealSpwn[i] = sprite(p + "sprSealSpwn" + n, 6, 12, 12);
+	            	SealWeap[i] = mskNone;
+	            }
+	            SealWeap[1] = sprite(p + "sprHookPole",     1, 18, 2);
+				SealWeap[2] = sprite(p + "sprSabre",        1, -2, 1);
+				SealWeap[3] = sprite(p + "sprBlunderbuss",  1,  7, 1);
+				SealWeap[4] = sprite(p + "sprRepeater",     1,  4, 2);
+				SealWeap[5] = sprBanditGun;
+	            ClamShield  = sprite(p + "sprClamShield",  14,  7, 1);
 
 	             // Seal (Heavy):
 	            p = m + "SealHeavy/";
@@ -553,7 +558,6 @@
 	            
 	             // Manhole:
 	            PizzaManhole = [
-					sprPizzaEntrance,
 					sprite(p + "sprPizzaManholeA", 2, 0, 0),
 					sprite(p + "sprPizzaManholeB", 2, 0, 0),
 					sprite(p + "sprPizzaManholeC", 2, 0, 0)
@@ -795,12 +799,16 @@
 	        BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen", 1, 8, 8);
 
 			 // Bat/Cat Chests:
-            BatChest           = sprite(p + "sprBatChest",           1, 10, 10, shn20);
-            BatChestCursed     = sprite(p + "sprBatChestCursed",     1, 10, 10, shn20);
-            CatChest           = sprite(p + "sprCatChest",           1, 10, 10, shn20);
-            BatChestOpen       = sprite(p + "sprBatChestOpen",       1, 10, 10);
-            BatChestCursedOpen = sprite(p + "sprBatChestCursedOpen", 1, 10, 10);
-            CatChestOpen       = sprite(p + "sprCatChestOpen",       1, 10, 10);
+            BatChest              = sprite(p + "sprBatChest",              1, 10, 10, shn20);
+            BatChestCursed        = sprite(p + "sprBatChestCursed",        1, 10, 10, shn20);
+            BatChestBig           = sprite(p + "sprBatChestBig",           1, 12, 12, shn24);
+            BatChestBigCursed     = sprite(p + "sprBatChestBigCursed",     1, 12, 12, shn24);
+            CatChest              = sprite(p + "sprCatChest",              1, 10, 10, shn20);
+            BatChestOpen          = sprite(p + "sprBatChestOpen",          1, 10, 10);
+            BatChestCursedOpen    = sprite(p + "sprBatChestCursedOpen",    1, 10, 10);
+            BatChestBigOpen       = sprite(p + "sprBatChestBigOpen",       1, 12, 12);
+            BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
+            CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
             
              // Bone:
 			BonePickup	  =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
@@ -813,12 +821,12 @@
 			 // Overstock/Overheal:
 			OverstockPickup	= sprite(p + "sprOverstockPickup",   1,  5,  5, shn10);
 			OverhealPickup	= sprite(p + "sprOverhealPickup",    1,  5,  5, shn10);
-	        BonusShell  	= sprite("misc/sprBonusShell",       1,  1,  2);
-	        BonusShellHeavy	= sprite("misc/sprBonusShellHeavy",  1,  2,  3);
-	        BonusText		= sprite("misc/sprBonusText",       12,  0,  0);
-			OverstockFX 	= sprite("misc/sprOverstockFX",     13,  4, 12);
-	        OverhealFX		= sprite("misc/sprOverhealFX",       7,  8, 10);
-	        OverhealBigFX	= sprite("misc/sprOverhealBigFX",    8, 12, 24);
+	        BonusShell  	= sprite(p + "sprBonusShell",       1,  1,  2);
+	        BonusShellHeavy	= sprite(p + "sprBonusShellHeavy",  1,  2,  3);
+	        BonusText		= sprite(p + "sprBonusText",       12,  0,  0);
+			OverstockFX 	= sprite(p + "sprOverstockFX",     13,  4, 12);
+	        OverhealFX		= sprite(p + "sprOverhealFX",       7,  8, 10);
+	        OverhealBigFX	= sprite(p + "sprOverhealBigFX",    8, 12, 24);
 
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
@@ -984,7 +992,7 @@
      // MUSIC //
     global.mus = {};
     with(global.mus){
-    	var p = "music/";
+    	var p = "sounds/music/";
         amb = {};
 
         Placeholder     = sound_add(p + "musPlaceholder.ogg");
@@ -996,9 +1004,10 @@
         Lair   = sound_add(p + "musLair.ogg");
 
          // Bosses:
-        SealKing = sound_add(p + "musSealKing.ogg");
-        BigShots = sound_add(p + "musBigShots.ogg");
-        PitSquid = sound_add(p + "musPitSquid.ogg");
+        SealKing      = sound_add(p + "musSealKing.ogg");
+        BigShots      = sound_add(p + "musBigShots.ogg");
+        PitSquid      = sound_add(p + "musPitSquid.ogg");
+        PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
     }
 
      // SAVE FILE //
@@ -1108,7 +1117,7 @@
                 _text = "make sure music is on";
             }
             if(_text != ""){
-                trace_color("NTTE | For the full experience, " + _text + "!", c_yellow);
+                trace_color("NTTE | For the full experience - " + _text + "!", c_yellow);
             }
         }
         exit;

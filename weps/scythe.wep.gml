@@ -89,7 +89,7 @@
 #define weapon_swap 	return sndBloodGamble;
 
 #define weapon_auto(w)
-	if(instance_is(self, Player) && (infammo != 0 || (lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1)))){
+	if(lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1) || variable_instance_get(self, "infammo", 0) != 0){
 		return scrWepModeInfo(w, "auto");
 	}
 	return -1;

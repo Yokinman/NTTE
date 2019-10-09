@@ -182,20 +182,23 @@
 	}
 
     if(ammo > 0){
-        var _targetDir = point_direction(x, y, target_x, target_y) + orandom(6);
-
+        var	_tx = target_x + orandom(16),
+        	_ty = target_y + orandom(16),
+        	_targetDir = point_direction(x, y, _tx, _ty);
+        	
          // Sound:
         sound_play(sndCrystalTB);
         sound_play(sndPlasma);
-
+        
          // Facing:
         scrRight(_targetDir);
-
+        
          // Shoot Mortar:
         with(scrEnemyShootExt(x + (5 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
             depth = 12;
-            zspeed = ((point_distance(x, y, other.target_x + orandom(16), other.target_y + orandom(16)) - z) * zfric) / (speed * 2);
+            var d = point_distance(x, y, _tx, _ty) / speed;
+            zspeed = (d * zfric * 0.5) - (z / d);
 
              // Cool particle line
             var _x = x,
@@ -318,7 +321,7 @@
 #define MortarPlasma_step
      // Rise & Fall:
     z_engine();
-    depth = max(-z, -12);
+    depth = max(-z, -9);
 
      // Facing:
     if((direction >= 30 && direction <= 150) || (direction >= 210 && direction <= 330)){
@@ -368,7 +371,7 @@
         damage = 2;
         
          // Over Wall:
-        if(position_meeting(x, y + 8, Wall)){
+        if(position_meeting(x, y + 8, Wall) || !position_meeting(x, y + 8, Floor)){
         	depth = -8;
         }
     }
@@ -648,15 +651,17 @@
     	cursedcavescramble_check = false;
     	if(GameCont.area == 104){
 			if(roll && wep_get(wep) != "merge"){
-				//if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
+				if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
 					cursedcavescramble_check = true;
+					mergewep_indicator = null;
+					
 					curse = max(1, curse);
 	
-					var _part = wep_merge_decide(0, GameCont.hard + 2);
+					var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
 					if(array_length(_part) >= 2){
 						wep = wep_merge(_part[0], _part[1]);
 					}
-				//}
+				}
 			}
     	}
 	}
@@ -818,3 +823,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

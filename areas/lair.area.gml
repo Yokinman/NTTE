@@ -290,11 +290,12 @@
         if(styleb) depth = 8;
 
          // Footsteps:
-        material = (styleb ? 6 : 2);
+        material = (styleb ? 3 : 2);
     }
 
 #define area_finish
     lastarea = area;
+    lastsubarea = subarea;
     
      // Remember you were here:
     with(GameCont) visited_lair = true;
@@ -328,50 +329,16 @@
 
 #define area_begin_step
 	if(DebugLag) trace_time();
-
-	with(instances_matching(instances_matching(EnemyBullet1, "hitid", 32), "lair", undefined, false)){
-		lair = true;
-		var p = id;
-		
-		 // Replace bullet:
-		with(instance_create(x, y, EnemyBullet2)){
-			with(["speed", "direction", "image_angle", "creator", "team"]){
-				var o = self;
-				variable_instance_set(other, o, variable_instance_get(p, o));
-			}
-			
-			hitid = [spr.LairTurretIdle, "TURRET"];
-		}
-		 
-		 // Effects:
-		with(instance_create(x, y, AcidStreak)){
-			sprite_index = spr.AcidPuff;
-			image_angle = other.direction + orandom(30);
-			depth = (image_angle < 180 ? -1.9 : -2.1);
-		
-			with(instance_create(x, y, AcidStreak)){
-				image_angle = other.image_angle;
-				motion_set(image_angle, 2 + random(2));
-				depth = other.depth;
-			}
-		}
-		
-		 // Sounds:
-		sound_play_hit(sndFrogEggSpawn3, 0.4);
-		
-		instance_delete(id);
-	}
 	
-	 // Resprite turrets:
-	with(instances_matching(Turret, "lair", undefined, false)){
-		lair = true;
-		
-		 // Resprite:
-		spr_idle = spr.LairTurretIdle;
-		spr_walk = spr.LairTurretIdle;
-		spr_hurt = spr.LairTurretHurt;
+	 // Resprite turrets iam smash brother and i dont want to recode turrets:
+	with(instances_matching_ne(Turret, "hitid", "LairTurret")){
+		hitid = "LairTurret";
+		spr_idle = spr.LairTurretAppear;
+		spr_walk = spr.LairTurretAppear;
+		spr_hurt = spr.LairTurretAppear;
 		spr_dead = spr.LairTurretDead;
 		spr_fire = spr.LairTurretFire;
+		sprite_index = spr_idle;
 	}
 
 	if(DebugLag) trace_time("lair_area_step");
@@ -1337,3 +1304,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

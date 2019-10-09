@@ -1466,6 +1466,65 @@
         array_push(wepList, self);
     }
 
+#define wep_merge_decide(_hardMin, _hardMax)
+	return wep_merge_decide_raw(_hardMin, _hardMax, -1, -1);
+
+#define wep_merge_decide_raw(_hardMin, _hardMax, _stock, _front)
+	 // Robot:
+	for(var i = 0; i < maxp; i++) if(player_get_race(i) == "robot") _hardMax++;
+	_hardMin += (5 * ultra_get("robot", 1));
+	
+	 // Just in Case:
+	_hardMin = min(_hardMin, _hardMax);
+	
+	 // Get Potential Candidates:
+	var _pickList = [];
+	with(wepList){
+        var _add = true;
+        if(mele || gold || area < _hardMin || area > _hardMax){
+        	_add = false;
+        }
+        else switch(weap){
+			case wep_super_disc_gun:        if(variable_instance_get(other, "curse", 0) <= 0)	_add = false; break;
+            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)								_add = false; break;
+            case wep_golden_disc_gun:       if(!UberCont.hardmode)								_add = false; break;
+            case wep_gun_gun:               if(crown_current != crwn_guns)						_add = false; break;
+            
+             // Bro no melee allowed:
+            case wep_jackhammer:
+            	_add = false;
+            	break;
+        }
+        
+        if(_add) array_push(_pickList, self);
+	}
+	
+	 // Randomly Select Weps from List:
+	var _min = 0,
+		_max = array_length(_pickList),
+		_part = [];
+		
+	array_shuffle(_pickList);
+	
+	for(var s = _min; s < _max; s++){
+		for(var f = (is_object(_stock) ? _min : s + 1); f < _max; f++){
+			_part = [
+				(is_object(_stock) ? _stock : _pickList[s]),
+				(is_object(_front) ? _front : _pickList[f])
+			];
+			
+			 // Difficulty Check:
+            if(1 + max(1, _part[0].area) + max(1, _part[1].area) <= _hardMax){
+            	if(_part[0] != _part[1]) return _part;
+            }
+            
+            if(is_object(_front)) break;
+		}
+		if(is_object(_stock)) break;
+	}
+	
+	return _part;
+
 #define wep_merge(_stock, _front)
 	var _part = [_stock, _front];
 
@@ -1515,47 +1574,6 @@
 	}
 
 	return { wep : mod_current, base : wep_merge_raw(_part[0], _part[1]) };
-
-#define wep_merge_decide(_hardMin, _hardMax)
-	var _pickList = [];
-	with(mod_variable_get("weapon", "merge", "wep_list")){
-        var _add = true;
-        if(mele || gold || area < _hardMin || area > _hardMax){
-        	_add = false;
-        }
-        else switch(weap){
-			case wep_super_disc_gun:        if(other.curse <= 0)			_add = false; break;
-            case wep_golden_nuke_launcher:  if(!UberCont.hardmode)			_add = false; break;
-            case wep_golden_disc_gun:       if(!UberCont.hardmode)			_add = false; break;
-            case wep_gun_gun:               if(crown_current != crwn_guns)	_add = false; break;
-
-             // Bro no melee allowed:
-            case wep_jackhammer:
-            	_add = false;
-            	break;
-        }
-
-        if(_add) array_push(_pickList, self);
-	}
-
-	 // Randomly Select Weps from List:
-	var m = array_length(_pickList),
-		_part = [];
-
-	array_shuffle(_pickList);
-
-	for(var i = 0; i < m; i++){
-		for(var j = i + 1; j < m; j++){
-			_part = [_pickList[i], _pickList[j]];
-
-			 // Difficulty Check:
-            if(1 + max(1, _part[0].area) + max(1, _part[1].area) <= _hardMax){
-            	return _part;
-            }
-		}
-	}
-
-	return _part;
 
 #define wep_merge_raw(_stock, _front)
     var _wep = lq_clone_deep(_front);
@@ -1698,6 +1716,11 @@
 					// !!! Use graphing program to visualize ^
 				}
 				amnt = ceil(_stockAmnt * f);
+				
+				 // Bro moment:
+				if(_front.weap == wep_super_splinter_gun){
+					amnt /= _front.shot;
+				}
 				
 				 // Maintain at least 2 projectiles if stock weapon shoots >1 projectiles (Mainly for stuff like Wave Gun):
 				if(_stockAmnt > 1) amnt = max(2, amnt);
@@ -1958,8 +1981,8 @@
         			array_push(flag, "laser");
         			if(_stock.shot <= 1){
         				time = 0;
-        				var n = min(_front.amnt, _front.cost);
-        				shot = max(shot, amnt / n);
+        				var n = min(_front.cost, _front.amnt);
+        				shot *= (amnt / n);
         				amnt = n;
         			}
         		}
@@ -2026,7 +2049,7 @@
 					 // Extra Ammo Cost:
 					cost += round(
 						power(
-							(amnt * shot) / (_frontProjCostRaw * 2),
+							(amnt * shot) / power(_frontProjCostRaw, 1/2),
 							max(1, _frontProjCostRaw) / 3
 						)
 						* max(1, _stockProjCostRaw)
@@ -2115,24 +2138,26 @@
         		break;
         	
         	case Flame:
-        		time = _stock.time;
-        		amnt *= _front.shot;
-        		fixd /= _front.shot;
-        		shot = _stock.shot;
-        		
-        		switch(_stockObjRaw){
-        			case SuperFlakBullet:
-        				shot += ceil(5 / _front.cost);
-        				break;
-        		
-        			case PlasmaBall:
-        			case PlasmaBig:
-        			case PlasmaHuge:
-		        		if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], _stockObjRaw)){
-		        			sped[0] *= 4/3;
-		        			sped[1] *= 4/3;
-		        		}
-		        		break;
+        		if(!array_exists(flag, "laser")){
+	        		time = _stock.time;
+	        		amnt *= _front.shot;
+	        		fixd /= _front.shot;
+	        		shot = _stock.shot;
+	        		
+	        		switch(_stockObjRaw){
+	        			case SuperFlakBullet:
+	        				shot += ceil(5 / _front.cost);
+	        				break;
+	        		
+	        			case PlasmaBall:
+	        			case PlasmaBig:
+	        			case PlasmaHuge:
+			        		if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], _stockObjRaw)){
+			        			sped[0] *= 4/3;
+			        			sped[1] *= 4/3;
+			        		}
+			        		break;
+	        		}
         		}
         		break;
         }
@@ -2155,7 +2180,7 @@
 			 // Projectile:
 			proj = lq_clone(a.proj);
         	proj.wep = array_create(2, -1);
-        	proj.wep[_ggFront ? 0 : 1] = lq_defget(b, "weap", b);
+        	proj.wep[_ggFront ? 0 : 1] = b;
         	
         	 // Speed:
 			sped = [
@@ -2236,7 +2261,7 @@
 #define weapon_area(w)			return -1;
 #define weapon_type(w)			return wep_stat(w, "type");
 #define weapon_load(w)			return wep_stat(w, "load");
-#define weapon_cost(w)			return wep_stat(w, "blod") ? 0 : wep_stat(w, "cost");
+#define weapon_cost(w)			return (instance_is(self, Player) && wep_stat(w, "blod")) ? 0 : wep_stat(w, "cost");
 #define weapon_rads(w)			return wep_stat(w, "rads");
 #define weapon_auto(w)			return (instance_is(self, Player) && wep_stat(w, "blod") && ammo[wep_stat(w, "type")] < wep_stat(w, "cost") && infammo == 0) ? -1 : wep_stat(w, "auto");
 #define weapon_melee(w)			return wep_stat(w, "mele");
@@ -2505,19 +2530,12 @@
                             
                             if("wep" in self){
                             	var	_hardMin = 0,
-                            		_hardMax = GameCont.hard + 10;
+                            		_hardMax = GameCont.hard + 10 + (2 * variable_instance_get(_creator, "curse", 0));
                             		
                                  // Merged:
                                 if(is_array(wep)){
-                                	var _part = wep_merge_decide(_hardMin, _hardMax);
+                                	var _part = wep_merge_decide_raw(_hardMin, _hardMax, wep[0], wep[1]);
                                 	if(array_length(_part) >= 2){
-                            			if(wep[0] == _part[1].weap || wep[1] == _part[0].weap){ // Don't Allow Slugger+Slugger, Plasma Gun+Plasma Gun:
-                            				array_flip(_part);
-                            			}
-                            			
-                            			for(var j = 0; j < array_length(wep); j++){
-                            				if(wep[j] != -1) _part[j] = wep[j];
-                            			}
                                 		wep = wep_merge(_part[0], _part[1]);
                                 	}
                                 	
@@ -2584,7 +2602,7 @@
 				}
             }
             if(array_exists(_flag, "laser") && _obj != Lightning){
-				_laserMov += sprite_get_width(object_get_sprite(_obj));
+				_laserMov += sprite_get_width(object_get_sprite(_obj)) * ((_obj == Flame) ? 0.4 : 1);
             }
 
              // Dog Spin Attack:
@@ -2877,6 +2895,7 @@
 		with(script_bind_step(flagprojcont_step, 0)){
 			name = script[2];
 			list = flagProjCont;
+			flagprojcont_step();
 		}
 	}
 
@@ -2907,7 +2926,8 @@
 	
 			 // Call Projectile Events:
 			if(instance_exists(self)){
-				_end = mod_script_call(_scrtTyp, _scrtMod, _scrtNam, proj_step, _vars[i]);
+				_end = mod_script_call_self(_scrtTyp, _scrtMod, _scrtNam, proj_step, _vars[i]);
+				// Having to use mod_script_call_self because mod_script_call is calling it multiple times based on the number of Player objects ???
 			}
 			else mod_script_call_nc(_scrtTyp, _scrtMod, _scrtNam, proj_destroy, _vars[i]);
 	
@@ -3748,6 +3768,19 @@
 				o.sped = -1;
 				o.goal = 8;
 			}
+			
+    		 // Flame Trail:
+    		if(object_index != Nuke && object_index != Flame){
+    			if(array_length(instances_matching(CustomDraw, "name", "proj_rocket_trail")) <= 0){
+    				with(script_bind_draw(proj_rocket_trail, -0.1)){
+    					name = script[2];
+    					inst = [];
+    				}
+    			}
+    			with(instances_matching(CustomDraw, "name", "proj_rocket_trail")){
+    				array_push(inst, other);
+    			}
+    		}
 			break;
 
 		case proj_step:
@@ -3769,23 +3802,6 @@
 				 // Stop on Collision:
 	    		if(place_meeting(x + hspeed, y + vspeed, Wall) || place_meeting(x + hspeed, y + vspeed, nearest_instance(x + hspeed, y + vspeed, instances_matching_ne(hitme, "team", team)))){
 	    			return true;
-	    		}
-
-	    		 // Flame Trail:
-	    		if(object_index != Nuke && object_index != Flame){
-					var d = floor(depth / 0.1) * 0.1,
-						c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
-
-					if(array_length(c) > 0) with(c){
-						if(!array_exists(inst, other)){
-							array_push(inst, other);
-						}
-					}
-					else with(script_bind_draw(proj_rocket_trail, d - 0.001)){
-						name = script[2];
-						inst = [other];
-						depth_mark = d;
-					}
 	    		}
 			}
 			break;
@@ -3816,8 +3832,8 @@
 	
 			 // Smoke:
 			if(speed > 0 && chance_ct(1, 20 / (speed + 1))){
-				with(instance_create(_x - hspeed, _y - vspeed, Smoke)){
-					depth = max(depth, other.depth - 0.1);
+				with(instance_create(_x - (2 * hspeed), _y - (2 * vspeed), Smoke)){
+					depth = max(depth, other.depth - 0.05);
 					image_xscale *= other.image_xscale;
 					image_yscale *= other.image_xscale;
 				}
@@ -3839,6 +3855,19 @@
 			o.delay = ((friction >= 0.4) ? floor((speed - 6) / friction) : (8 - (speed / 4)));
 			o.index = variable_instance_get(creator, "index", -1);
 			if(object_index == Laser) o.delay = 0;
+			
+    		 // Flame Trail:
+    		if(object_index != Rocket && object_index != Flame){
+    			if(array_length(instances_matching(CustomDraw, "name", "proj_rocket_trail")) <= 0){
+    				with(script_bind_draw(proj_rocket_trail, -0.1)){
+    					name = script[2];
+    					inst = [];
+    				}
+    			}
+    			with(instances_matching(CustomDraw, "name", "proj_rocket_trail")){
+    				array_push(inst, other);
+    			}
+    		}
 			break;
 
 		case proj_step:
@@ -3847,26 +3876,15 @@
 				if(speed > 0){
 					 // Follow Mouse:
 					if(player_is_active(o.index)){
-			    		var a = ((angle_difference(point_direction(x, y, mouse_x[o.index], mouse_y[o.index]), direction) / (speed * 2)) + sin(current_frame / speed)) * current_time_scale;
-			    		direction += a;
-			    		image_angle += a;
+						var	_diff = angle_difference(point_direction(x, y, mouse_x[o.index], mouse_y[o.index]), direction),
+			    			_turn = (_diff / (2 * speed)) * power(abs(dsin(_diff)), 1) * current_time_scale;
+			    			
+			    		direction += _turn;
+			    		image_angle += _turn;
+			    		x -= hspeed_raw * power(abs(dsin(_diff / 4)), 24 / speed);
+			    		y -= vspeed_raw * power(abs(dsin(_diff / 4)), 24 / speed);
 					}
 		    		speed += friction_raw;
-	
-		    		 // Flame Trail:
-		    		if(object_index != Rocket && object_index != Flame){
-						var d = round(depth / 0.1) * 0.1,
-							c = instances_matching(instances_matching(CustomDraw, "name", "proj_rocket_trail"), "depth_mark", d);
-	
-						if(array_length(c) > 0) with(c){
-							if(!array_exists(inst, other)) array_push(inst, other);
-						}
-						else with(script_bind_draw(proj_rocket_trail, d - 0.001)){
-							name = script[2];
-							inst = [other];
-							depth_mark = d;
-						}
-		    		}
 				}
 
 				 // Laser Interaction:
@@ -3897,44 +3915,54 @@
 #define proj_flare(_event, o)
 	switch(_event){
 		case proj_step:
-			if(current_frame_active){
-				switch(object_index){
-					case Laser:
-						var d = image_angle + 180;
-						for(var l = 0; l < (image_xscale * 2); l += 8){
-							if(chance_ct(1, max(l / 16, 4))){
-								with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame)){
-									motion_add(other.image_angle + orandom(20), random(3));
-									creator = other.creator;
-									hitid = other.hitid;
-									team = other.team;
-								}
-							}
-						}
-						break;
-
-					case Lightning:
-						if(chance_ct(1, 5)){
-							with(instance_create(x, y, Flame)){
-								motion_add(other.image_angle + orandom(10), random(3));
+			switch(object_index){
+				case Laser:
+					var d = image_angle + 180;
+					for(var l = 0; l < (image_xscale * 2); l += 8){
+						if(chance_ct(1, max(l / 16, 4))){
+							with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame)){
+								motion_add(other.image_angle + orandom(20), random(3));
 								creator = other.creator;
 								hitid = other.hitid;
 								team = other.team;
 							}
 						}
-						break;
+					}
+					break;
 
-					default:
+				case Lightning:
+					if(chance_ct(1, 5)){
+						with(instance_create(x, y, Flame)){
+							motion_add(other.image_angle + orandom(10), random(3));
+							creator = other.creator;
+							hitid = other.hitid;
+							team = other.team;
+						}
+					}
+					break;
+
+				default:
+					if(current_frame % damage >= 1){
 						var d = direction;
-						for(var l = 0; l < speed; l += 8){
+						for(var l = 0; l < speed_raw; l += 8){
 							with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame)){
 								motion_add(random(360), 1);
 								creator = other.creator;
 								hitid = other.hitid;
 								team = other.team;
+								
+								 // Dissipate Faster:
+								image_index = max(0, (image_number - 1) - (1 + other.damage));
+								
+								 // Scale Up:
+								var h = other.sprite_height;
+								if(instance_is(other, Devastator)) h *= 1.5;
+								image_xscale *= (h / 16);
+								if(h >= 6) image_xscale = max(1, image_xscale);
+								image_yscale = image_xscale;
 							}
 						}
-				}
+					}
 			}
 			break;
 	}
@@ -4121,6 +4149,8 @@
 			o.team = team;
 			o.x = x;
 			o.y = y;
+			o.hspeed = hspeed;
+			o.vspeed = vspeed;
 
 			 // Nerf Lightning:
 			if(instance_is(self, Lightning) && ammo > 0){
@@ -4132,6 +4162,8 @@
 			var l = ((object_index == Laser) ? -8 : 0);
 			o.x = x + lengthdir_x(l, direction);
 			o.y = y + lengthdir_y(l, direction);
+			o.hspeed = hspeed;
+			o.vspeed = vspeed;
 			o.team = team;
 
 			 // Shell Early Release:
@@ -4145,6 +4177,8 @@
 			 // Nades:
 			with(o) repeat(amnt){
 				with(instance_create(x, y, MiniNade)){
+					hspeed = o.hspeed / 2;
+					vspeed = o.vspeed / 2;
 					motion_add(random(360), random_range(1, 2 + (other.amnt / 2)));
 					image_angle = direction;
 					team = other.team;
@@ -4483,3 +4517,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

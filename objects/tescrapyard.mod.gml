@@ -36,7 +36,7 @@
 		sprite_index = spr_idle;
 		image_index = irandom(image_number - 1);
 		image_speed = 0.4;
-		depth = -8 - (y / 20000);
+		depth = -6 - (y / 10000);
 
 		 // Vars:
 		mask_index = mskBandit;
@@ -131,7 +131,11 @@
 
 	 // Emergency Flight:
 	else if(alarm1 > 1){
-		if(instance_number(enemy) <= 2 || (position_meeting(x, bbox_bottom, Floor) && !position_meeting(x, bbox_bottom, Wall))){
+		if(
+			(instance_number(enemy) + array_length(instances_matching_gt(instances_matching(object_index, "name", name), "force_spawn", force_spawn))) < (5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood)))
+			||
+			(position_meeting(x, bbox_bottom, Floor) && !position_meeting(x, bbox_bottom, Wall))
+		){
 			alarm1 = 1;
 			force_spawn = true;
 		}
@@ -139,11 +143,7 @@
 
 #define NestRaven_draw
 	image_alpha = abs(image_alpha);
-
-	var _blend = image_blend;
-	if(z <= 0) _blend = merge_color(_blend, c_black, 0.2);
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, _blend, image_alpha);
-
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 	image_alpha = -image_alpha;
 
 #define NestRaven_alrm0
@@ -204,7 +204,7 @@
 			if(!instance_exists(t) || !collision_line(_x, _y, t.x, t.y, Wall, false, false)){
 				sprite_index = spr_lift;
 				image_index = 0;
-				depth = floor(depth);
+				depth = -8;
 				alarm1 = -1;
 				targetx = _x;
 				targety = _y;
@@ -242,7 +242,7 @@
 		mask_index = mskShield;
 		friction = 0.2;
 		maxhealth = 30;
-		meleedamage = 4;
+		meleedamage = 6;
 		canmelee = true;
 		raddrop = 0;
 		size = 3;
@@ -609,7 +609,7 @@
 	
 	 // Bind Events:
 	if(array_length(instances_seen(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24)) > 0){
-		script_bind_draw(draw_ravenflys, -9);
+		script_bind_draw(draw_ravenflys, -8);
 	}
 
 	if(DebugLag) trace_time("tescrapyard_step");
@@ -730,3 +730,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

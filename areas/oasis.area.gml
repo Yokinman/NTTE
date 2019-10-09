@@ -101,6 +101,7 @@
 
 #define area_finish
     lastarea = area;
+    lastsubarea = subarea;
 
      // Area End:
     if(subarea >= area_subarea()){
@@ -197,22 +198,28 @@
         _y = y + 16;
 
     if(chance(1, 2)){
+        var _top = chance(1, 2);
+        
          // Shoals:
         if(chance(1, 2)){
             if(!styleb && chance(3, 4)){
                 if(GameCont.loops > 0 && chance(1, 2)){
-                    repeat(irandom_range(1, 4)) instance_create(_x, _y, Freak);
+                    repeat(irandom_range(1, 4)){
+                    	obj_create(_x, _y, Freak);
+                    }
                 }
-                repeat(irandom_range(1, 4)) instance_create(_x, _y, BoneFish);
+                repeat(irandom_range(1, 4)){
+                	obj_create(_x, _y, BoneFish);
+                }
             }
-            else{
-                repeat(irandom_range(1, 4)) obj_create(_x, _y, "Puffer");
+            else repeat(irandom_range(1, 4)){
+            	obj_create(_x, _y, "Puffer");
             }
         }
 
         else{
-            if(GameCont.loops > 0 && chance(1, 3)) {
-                instance_create(_x, _y, (styleb ? Necromancer : Ratking));
+            if(GameCont.loops > 0 && chance(1, 3)){
+                instance_create(_x, _y, choose(Necromancer, Ratking));
             }
             else{
                 if(chance(1, 5)) obj_create(_x, _y, "Diver");
@@ -220,7 +227,9 @@
                     if(!styleb){
                         if(chance(1, 2)) instance_create(_x, _y, Crab);
                     }
-                    else obj_create(_x, _y, "Hammerhead"); 
+                    else{
+                    	obj_create(_x, _y, "Hammerhead");
+                    }
                 }
             }
         }
@@ -270,8 +279,11 @@
 			else{
 				with(instance_create(_x, _y, choose(LightBeam, WaterPlant, choose(WaterMine, WaterMine, OasisBarrel)))){
 					if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
-						y += 8;
-						yprevious = y;
+						if(!place_meeting(x, y + 32, Wall)){
+							y += 32;
+							yprevious = y;
+						}
+						depth = -1;
 					}
 				}
 			}
@@ -381,3 +393,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

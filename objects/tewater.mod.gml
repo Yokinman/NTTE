@@ -11,7 +11,223 @@
 	 // Surfaces:
 	global.surfAnglerTrail = surflist_set("AnglerTrail", 0, 0, 0, 0);
 	global.surfAnglerClear = surflist_set("AnglerClear", 0, 0, 0, 0);
-	with(surfAnglerTrail) if("frame" not in self) frame = 0;
+	with(surfAnglerTrail){
+		if("frame" not in self) frame = 0;
+		reset = true;
+	}
+	
+	 // Underwater Stuff:
+    global.waterBubblePop = [];
+    global.waterSoundActive = false;
+    global.waterSound = {
+        "sndOasisShoot" : [
+            sndBloodLauncher,
+            sndBouncerShotgun,
+            sndBouncerSmg,
+            sndClusterLauncher,
+            sndCrossbow,
+            sndDiscgun,
+            sndDoubleMinigun,
+            sndDragonStart,
+            sndEnemyFire,
+            sndFireShotgun,
+            sndFlakCannon,
+            sndFlare,
+            sndFlareExplode,
+            sndFrogPistol,
+            sndGoldCrossbow,
+            sndGoldDiscgun,
+            sndGoldFrogPistol,
+            sndGoldGrenade,
+            sndGoldLaser,
+            sndGoldLaserUpg,
+            sndGoldMachinegun,
+            sndGoldPistol,
+            sndGoldPlasma,
+            sndGoldPlasmaUpg,
+            sndGoldRocket,
+            sndGoldShotgun,
+            sndGoldSlugger,
+            sndGoldSplinterGun,
+            sndGrenade,
+            sndGrenadeRifle,
+            sndGrenadeShotgun,
+            sndGunGun,
+            sndHeavyCrossbow,
+            sndHeavyMachinegun,
+            sndHeavyNader,
+            sndHeavyRevoler,
+            sndHyperLauncher,
+            sndHyperRifle,
+            sndIncinerator,
+            sndMachinegun,
+            sndMinigun,
+            sndLaser,
+            sndLaserUpg,
+            sndLaserCannon,
+            sndLaserCannonUpg,
+            sndLightningHammer,
+            sndLightningPistol,
+            sndLightningPistolUpg,
+            sndLightningRifle,
+            sndLightningRifleUpg,
+            sndPistol,
+            sndPlasma,
+            sndPlasmaUpg,
+            sndPlasmaMinigun,
+            sndPlasmaMinigunUpg,
+            sndPlasmaRifle,
+            sndPlasmaRifleUpg,
+            sndPopgun,
+            sndQuadMachinegun,
+            sndRogueRifle,
+            sndRustyRevolver,
+            sndSeekerPistol,
+            sndSeekerShotgun,
+            sndShotgun,
+            sndSlugger,
+            sndSmartgun,
+            sndSplinterGun,
+            sndSplinterPistol,
+            sndSuperCrossbow,
+            sndSuperDiscGun,
+            sndSuperSplinterGun,
+            sndToxicLauncher,
+            sndTripleMachinegun,
+            sndUltraPistol,
+            sndWaveGun
+            ],
+        "sndOasisMelee" : [
+            sndBlackSword,
+            sndBloodHammer,
+            sndChickenSword,
+            sndClusterOpen,
+            sndEnergyHammer,
+            sndEnergyHammerUpg,
+            sndEnergyScrewdriver,
+            sndEnergyScrewdriverUpg,
+            sndEnergySword,
+            sndEnergySwordUpg,
+            sndFlamerStart,
+            sndGoldScrewdriver,
+            sndGoldWrench,
+            sndGuitar,
+            sndHammer,
+            sndJackHammer,
+            sndScrewdriver,
+            sndShovel,
+            sndToxicBoltGas,
+            sndUltraShovel,
+            sndWrench
+            ],
+        "sndOasisExplosion" : [
+            sndBloodCannonEnd,
+            sndBloodLauncherExplo,
+            sndCorpseExplo,
+            sndDevastator,
+            sndDevastatorExplo,
+            sndDevastatorUpg,
+            sndExplosion,
+            sndExplosionCar,
+            sndExplosionL,
+            sndExplosionXL,
+            sndFlameCannonEnd,
+            sndGoldNukeFire,
+            sndLightningCannonEnd,
+            sndLightningCannonUpg,
+            sndNukeFire,
+            sndNukeExplosion,
+            sndPlasmaBigExplode,
+            sndPlasmaBigUpg,
+            sndPlasmaHuge,
+            sndPlasmaHugeUpg,
+            sndSuperFlakCannon,
+            sndSuperFlakExplode
+            ],
+        "sndOasisExplosionSmall" : [
+            sndBloodCannon,
+            sndDoubleFireShotgun,
+            sndDoubleShotgun,
+            sndFlakExplode,
+            sndFlameCannon,
+            sndRocket,
+            sndEraser,
+            sndExplosionS,
+            sndHeavySlugger,
+            sndHyperSlugger,
+            sndLightningCannon,
+            sndLightningShotgun,
+            sndLightningShotgunUpg,
+            sndPlasmaBig,
+            sndPlasmaHit,
+            sndSawedOffShotgun,
+            sndSuperBazooka,
+            sndUltraCrossbow,
+            sndUltraGrenade,
+            sndUltraShotgun,
+            sndUltraLaser,
+            sndUltraLaserUpg
+            ],
+        "sndOasisPopo" : [
+            sndEliteIDPDPortalSpawn,
+            sndIDPDPortalSpawn
+            ],
+        "sndOasisPortal" : [
+            sndLaserCannonCharge,
+            sndPortalOpen
+            ],
+        "sndOasisChest" : [
+            sndAmmoChest,
+            sndBigCursedChest,
+            sndBigWeaponChest,
+            sndChest,
+            sndCursedChest,
+            sndGoldChest,
+            sndHealthChest,
+            sndHealthChestBig,
+            sndWeaponChest
+            ],
+        "sndOasisHurt" : [
+            sndMutant1Hurt,
+            sndMutant2Hurt,
+            sndMutant3Hurt,
+            sndMutant4Hurt,
+            sndMutant5Hurt,
+            sndMutant6Hurt,
+            sndMutant7Hurt,
+            sndMutant8Hurt,
+            sndMutant9Hurt,
+            sndMutant10Hurt,
+            sndMutant11Hurt,
+            sndMutant12Hurt,
+            sndMutant13Hurt,
+            sndMutant14Hurt,
+            sndMutant15Hurt,
+            sndMutant16Hurt
+            ],
+        "sndOasisDeath" : [
+            sndMutant1Dead,
+            sndMutant2Dead,
+            sndMutant3Dead,
+            sndMutant4Dead,
+            sndMutant5Dead,
+            sndMutant6Dead,
+            sndMutant7Dead,
+            sndMutant8Dead,
+            sndMutant9Dead,
+            sndMutant10Dead,
+            sndMutant11Dead,
+            sndMutant12Dead,
+            sndMutant13Dead,
+            sndMutant14Dead,
+            sndMutant15Dead,
+            sndMutant16Dead,
+            sndSuperSlugger
+            ],
+        "sndOasisHorn" : [
+            sndVenuz
+            ]
+    };
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -297,7 +513,363 @@
     }
 
 
-#define ChaserTentacle_create(_x, _y)
+#define BubbleBomb_create(_x, _y)
+    with(instance_create(_x, _y, CustomProjectile)){
+         // Visual:
+        sprite_index = spr.BubbleBomb;
+        image_speed = 0.5;
+        depth = -3;
+
+         // Vars:
+        mask_index = mskSuperFlakBullet;
+        z = 0;
+        zspeed = -0.5;
+        zfric = -0.02;
+        friction = 0.4;
+        damage = 0;
+        force = 2;
+        typ = 1;
+        big = 0;
+        held = [];
+        setup = true;
+        test = choose(0, 1);
+
+        return id;
+    }
+
+#define BubbleBomb_setup
+	setup = false;
+	
+	 // Become Big:
+	if(big){
+		sprite_index = spr.BubbleBombBig;
+		mask_index = mskExploder;
+	}
+	
+	 // Become Enemy Bubble:
+	else if(team == 1){
+		sprite_index = spr.BubbleBombEnemy;
+	}
+	
+#define BubbleBomb_step
+     // Float Up:
+    z += zspeed * current_time_scale;
+    zspeed -= zfric * current_time_scale;
+    image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
+    depth = max(min(depth, -z), TopCont.depth + 1);
+
+     // Bubble Excrete:
+    if(big && z < 24 && image_index >= 6 && chance_ct(1, 5 + max(z, 0))){
+		with(obj_create(x + orandom(8), y - 8 - z + orandom(8), "BubbleBomb")){
+			team = other.team;
+			creator = other.creator;
+			hitid = other.hitid;
+			image_speed *= random_range(0.8, 1);
+		}
+    }
+
+     // Charge FX:
+    image_blend = c_white;
+    if(chance_ct(1, 8 + (image_number - image_index))){
+        image_blend = c_black;
+        var o = image_index / 3;
+        instance_create(x + orandom(o), y + orandom(o), PortalL);
+    }
+    if(speed <= 0 && chance_ct(1, 12)){
+        with(instance_create(x, y - z, BulletHit)){
+        	sprite_index = spr.BubbleCharge;
+        }
+    }
+    
+     // Effects:
+    /*if(chance_ct(2, (3 + speed))){
+    	var l = random_range(24, 32),
+    		d = random(360),
+    		_bubbles = instances_matching_ne(instances_matching(CustomProjectile, "name", name), "id", id),
+       		_canSpawn = true;
+    		
+    	with(_bubbles) if(_canSpawn && point_distance(x, y, other.x + lengthdir_x(l, d), other.y + lengthdir_y(l, d)) <= l){
+    		_canSpawn = false;
+    	}
+    		
+    	if(_canSpawn){
+	    	with(scrFX([x + lengthdir_x(l, d), 2], [(y - z) + lengthdir_y(l, d), 2], [d + 90, random(1)], BulletHit)){
+	    		sprite_index = sprBubble;
+	    		image_blend = c_black;
+	    		depth = -3;
+	    	}
+    	}
+    }*/
+
+#define BubbleBomb_end_step
+	 // Setup:
+	if(setup) BubbleBomb_setup();
+
+     // Hold Projectile:
+    if(array_length(held) > 0){
+	    var n = 0;
+	    with(held){
+	    	if(instance_exists(self)){
+		        //speed += friction * current_time_scale;
+	
+		    	 // Push Bubble:
+	    		if(instance_is(self, hitme)) with(other){
+	    			x += (other.hspeed_raw * other.size) / 6;
+	    			y += (other.vspeed_raw * other.size) / 6;
+	    		}
+	
+				 // Float in Bubble:
+				if(!other.big){
+					x = other.x;
+					y = other.y - other.z;
+				}
+				else{
+			        var	l = 2 + ((n * 123) % 8),
+			        	d = (current_frame / (10 + speed)) + direction,
+			        	s = (instance_is(self, hitme) ? max(0.3 - (n * 0.05), 0.1) : 0.5);
+		
+			        x += ((other.x + (l * cos(d))		   ) - x) * s;
+			        y += ((other.y + (l * sin(d)) - other.z) - y) * s;
+				}
+	
+				n++;
+	    	}
+	    	else other.held = array_delete_value(other.held, self);
+	    }
+    }
+
+	 // Push:
+    if(place_meeting(x, y - z, Player)){
+    	with(instances_meeting(x, y - z, Player)){
+    		if(place_meeting(x, y + other.z, other)) with(other){
+            	motion_add_ct(point_direction(other.x, other.y, x, y), 1.5);
+    		}
+        }
+    }
+    
+     // Grab Projectile:
+	if(place_meeting(x, y - z, projectile) || place_meeting(x, y - z, enemy)){
+		var _meeting = instances_meeting(x, y - z, [enemy, projectile]);
+		
+    	 // Baseball:
+    	var m = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
+        if(m) with(m){
+        	if(place_meeting(x, y + other.z, other)){
+        		with(other) if(speed < 8){
+        			direction = other.direction;
+        			speed = max(0, 10 - (4 * (array_length(held) - 1 + big)));
+
+        			sound_play_pitchvol(sndBouncerBounce, (big ? 0.5 : 0.8) + random(0.1), 3);
+        		}
+        	}
+        }
+
+         // Bubble Collision:
+        var m = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
+	    if(m) with(m){
+            if(place_meeting(x, y + other.z, other)){
+                with(other) motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
+            }
+	    }
+	    
+		 // Poppable:
+        var m = instances_matching(instances_matching_ne(_meeting, "team", team), "object_index", Flame, Bolt, Splinter, HeavyBolt, UltraBolt);
+		if(m) with(m){
+			if(place_meeting(x, y + other.z, other)){
+				with(other) instance_destroy();
+				exit;
+			}
+		}
+
+		 // Grabbing:
+    	if(z < 24){
+	    	if(array_length(held) <= 0 || big){
+	    		var m = instances_matching_ne(instances_matching(_meeting, "bubble_bombed", null, false), "team", team);
+		        if(m) with(m){
+		            if(place_meeting(x, y + other.z, other)){
+		            	if("size" not in self || size - (object_index == DogGuardian) <= (3 * other.big)){
+		            		if(!instance_is(self, projectile) || (typ != 0 && variable_instance_get(id, "name") != other.name)){
+			                    bubble_bombed = true;
+		
+			                    array_push(other.held, id);
+		
+			                    with(other){
+			                    	if(!big){
+				                        x = lerp(x, other.x,	 0.5);
+				                        y = lerp(y, other.y + z, 0.5);
+				                        friction = max(0.3, friction);
+				                        motion_add(other.direction, other.speed / 2);
+			                    	}
+			                    	if(instance_is(other, hitme)){
+			                    		speed *= 0.8;
+			                    	}
+			
+			                         // Effects:
+			                        instance_create(x, y - z, Dust);
+			                        repeat(4) instance_create(x, y - z, Bubble);
+			                        sound_play(sndOasisHurt);
+			                    }
+			
+				                break;
+		            		}
+		            	}
+		            }
+		        }
+	    	}
+    	}
+    }
+
+#define BubbleBomb_draw
+    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+
+#define BubbleBomb_hit
+    if(z < 24 && !instance_is(other, prop) && other.team != 0){
+         // Knockback:
+        if(chance(1, 2) && ("bubble_bombed" not in other || other.bubble_bombed == false)){
+            speed *= 0.9;
+            with(other) motion_add(other.direction, other.force);
+        }
+
+         // Speed Up:
+        if(!big && team == 2){
+        	image_index += image_speed * 2;
+        }
+    }
+
+#define BubbleBomb_wall
+    if(speed > 0){
+        sound_play(sndBouncerBounce);
+        move_bounce_solid(false);
+        speed *= 0.5;
+    }
+
+#define BubbleBomb_anim
+     // Explode:
+    var _dis = 0,
+    	_dir = direction,
+    	_num = 1;
+
+	if(big){
+		_dis = 16;
+		_num = 3;
+	}
+
+	for(var a = _dir; a < _dir + 360; a += (360 / _num)){
+	    with(obj_create(x + lengthdir_x(_dis, a), y - z + lengthdir_y(_dis, a), "BubbleExplosion")){
+	        team = other.team;
+	        var c = other.creator;
+	        if(instance_exists(c)){
+	            if(c.object_index == Player) team = 2;
+	            else if(team == 2) team = -1; // Popo nade logic
+	        }
+	        hitid = other.hitid;
+	    }	
+	}
+
+	 // Big Bombage:
+    if(big){
+    	/*repeat(8){
+    		with(obj_create(x + orandom(2), y - z + orandom(2), "BubbleBomb")){
+    			team = other.team;
+    			creator = other.creator;
+    			hitid = other.hitid;
+    			image_speed += random(0.1);
+    		}
+    	}*/
+
+		 // Effects:
+    	sleep(15);
+    	view_shake_at(x, y, 60);
+    	sound_play_pitch(sndOasisExplosion, 0.8 + orandom(0.05));
+    }
+
+	 // Make Sure Projectile Dies:
+	with(held) if(instance_is(self, projectile)){
+		instance_destroy();
+	}
+
+    instance_destroy();
+
+#define BubbleBomb_destroy
+	with(held) if(instance_exists(self)){
+		bubble_bombed = false;
+	}
+
+     // Pop:
+    sound_play_pitchvol(sndLilHunterBouncer, 2 + random(0.5), 0.5);
+    with(instance_create(x, y - z, BulletHit)){
+        sprite_index = sprPlayerBubblePop;
+        image_angle = other.image_angle;
+        image_xscale = 0.5 + (0.01 * other.image_index);
+        image_yscale = image_xscale;
+    }
+
+
+#define BubbleExplosion_create(_x, _y)
+    with(instance_create(_x, _y, PopoExplosion)){
+    	 // Visual:
+        sprite_index = spr.BubbleExplosion;
+        hitid = [sprite_index, "BUBBLE EXPLOSION"];
+
+         // Vars:
+        mask_index = mskExplosion;
+        damage = 3;
+        force = 1;
+        alarm0 = -1; // No scorchmark
+        alarm1 = -1; // No CoDeath
+
+         // Crown of Explosions:
+        if(crown_current == crwn_death){
+        	script_bind_end_step(BubbleExplosion_death, 0, id);
+        }
+
+         // FX:
+        sound_play_pitch(sndExplosionS, 2);
+        sound_play_pitch(sndOasisExplosion, 1 + random(1));
+        repeat(10) instance_create(x, y, Bubble);
+
+        return id;
+    }
+
+#define BubbleExplosion_death(_inst)
+	with(_inst){
+		repeat(choose(2, 3)){
+	        with(obj_create(x + orandom(9), y + orandom(9), "BubbleExplosionSmall")){
+	            team = other.team;
+	        }
+		}
+    }
+	instance_destroy();
+
+
+#define BubbleExplosionSmall_create(_x, _y)
+	with(instance_create(_x, _y, SmallExplosion)){
+		 // Visual:
+    	sprite_index = spr.BubbleExplosionSmall;
+    	hitid = [sprite_index, "SMALL BUBBLE#EXPLOSION"];
+
+		 // Vars:
+		mask_index = mskSmallExplosion;
+        damage = 3;
+        force = 1;
+
+         // FX:
+        sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
+        repeat(5) instance_create(x, y, Bubble);
+
+		return id;
+    }
+
+#define BubbleExplosionSmall_step
+	 // Projectile Kill:
+	if(place_meeting(x, y, projectile)){
+		with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0))){
+			if(place_meeting(x, y, other)) instance_destroy();
+		}
+	}
+
+
+/*#define ChaserTentacle_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
         spr_spwn = spr.TentacleSpwn;
@@ -339,15 +911,15 @@
         alarm2 = 1; // teleport
 
         return id;
-    }
+    }*/
     
-#define ChaserTentacle_step
+/*#define ChaserTentacle_step
     if place_meeting(x + hspeed, y, Wall) hspeed *= -1;
     if place_meeting(x, y + vspeed, Wall) vspeed *= -1;
     
-    depth = -2 - (y / 20000);
+    depth = -2 - (y / 20000);*/
 
-#define ChaserTentacle_alrm0
+/*#define ChaserTentacle_alrm0
     alarm0 = 10 + irandom(10);
     maxspeed = 3.5;
     target = instance_nearest(x, y, Player);
@@ -422,9 +994,9 @@
     else{
         alarm0 = -1;
         sprite_index = spr_dead;
-    }
+    }*/
     
-#define ChaserTentacle_alrm1
+/*#define ChaserTentacle_alrm1
     alarm0 = 10;
     alarm1 = -1;
     maxspeed = 5.5;
@@ -451,9 +1023,9 @@
          // Sounds:
         sound_play_pitchvol(sndCrystalJuggernaut, 1.2, 0.8);
         sound_play_pitchvol(sndOasisMelee, 1.0, 1.0);
-    }
+    }*/
     
-#define ChaserTentacle_alrm2
+/*#define ChaserTentacle_alrm2
     alarm0 = 40 + irandom(20);
     alarm2 = -1;
     target = instance_nearest(x, y, Player);
@@ -478,9 +1050,9 @@
         }
     }
     
-    sprite_index = spr_spwn;
+    sprite_index = spr_spwn;*/
 
-#define ChaserTentacle_hurt(_hitdmg, _hitvel, _hitdir)
+/*#define ChaserTentacle_hurt(_hitdmg, _hitvel, _hitdir)
      // Counterattack:
     if counterTime > 0{
         if minCounter <= 0{
@@ -519,7 +1091,7 @@
             sprite_index = spr_hurt;
             image_index = 0;
         }
-    }
+    }*/
 
 
 #define ClamChest_create(_x, _y)
@@ -952,7 +1524,7 @@
 	}
 
 #define ElectroPlasma_anim
-	image_index = 1;
+	if(instance_exists(self)) image_index = 1;
 
 #define ElectroPlasma_step
 	wave += current_time_scale;
@@ -1284,6 +1856,72 @@
 
 #define Hammerhead_death
     pickup_drop(30, 8);
+
+
+#define HyperBubble_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Vars:
+		mask_index = mskNone;
+		hits = 3;
+		damage = 12;
+		force = 12;
+		
+		return id;
+	}
+	
+#define HyperBubble_end_step
+	mask_index = mskBullet1;
+
+	var _dist = 100,
+		_proj = [],
+		_dis = 8,
+		_dir = direction,
+		_mx = lengthdir_x(_dis, _dir),
+		_my = lengthdir_y(_dis, _dir);
+		
+	 // Muzzle Explosion:
+	array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+
+	 // Hitscan:
+	while(_dist-- > 0 && hits > 0 && !place_meeting(x, y, Wall)){
+		x += _mx;
+		y += _my;
+		
+		 // Effects:
+		if(chance(1, 3)) scrFX([x, 4], [y, 4], [_dir + orandom(4), 6 + random(4)], Bubble).friction = 0.2;
+		if(chance(2, 3)) scrFX([x, 2], [y, 2], [_dir + orandom(4), 2 + random(2)], Smoke);
+		
+		 // Explosion:
+		var e = instances_meeting(x, y, instances_matching_gt(instances_matching_ne(hitme, "team", team), "my_health", 0));
+		if(array_length(e) > 0){
+			var _hit = false;
+			with(e) if(place_meeting(x, y, other)){
+				if(!_hit){
+					_hit = true;
+					with(other){
+						hits--;
+						array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+					}
+				}
+
+				 // Impact Damage:
+				projectile_hit(id, other.damage, other.force, _dir);
+			}
+		}
+	}
+	
+	 // End Explosion:
+	array_push(_proj, obj_create(x, y, "BubbleExplosion"));
+	if(hits > 0) repeat(hits) array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+	
+	 // Your Properties, Madam:
+	with(_proj){
+		creator = other.creator;
+		team	= other.team;
+	}
+	
+	 // Goodbye:
+	instance_destroy();
 
 
 #define Jelly_create(_x, _y)
@@ -1929,7 +2567,7 @@
 		tentacle = {};
 		tentacle_visible = true;
 		with(tentacle){
-			scale = 1;//random_range(1, 1.2);
+			scale = 1 + (0.1 * GameCont.loops);//random_range(1, 1.2);
 			right = choose(-1, 1);
 			rotation = irandom(359);
 			move_dir = irandom(359);
@@ -1969,12 +2607,12 @@
 		spr_bite = spr.PitSquidMawBite;
 		spr_fire = spr.PitSquidMawSpit;
 		hitid = [spr_fire, "PIT SQUID"];
-
+		
          // Sounds:
         snd_hurt = sndBigDogHit;
         snd_dead = sndNothing2Hurt;
         snd_lowh = sndNothing2HalfHP;
-
+        
          // Vars:
         posx = x;
         posy = y;
@@ -1986,6 +2624,7 @@
         maxhealth = scrBossHP(400);
         tauntdelay = 60;
         intro = false;
+        intro_pitbreak = false;
         raddrop = 50;
         size = 5;
         canfly = true;
@@ -2000,7 +2639,8 @@
         electroplasma_last = noone;
 		laser = 0;
 		laser_charge = 0;
-
+		rise_delay = 0;
+		
          // Eyes:
         eye = [];
         eye_dir = random(360);
@@ -2019,7 +2659,11 @@
                 my_laser : noone
             });
         }
-
+        
+         // Loop
+        image_xscale += (0.1 * GameCont.loops);
+        image_yscale = image_xscale;
+        
          // Alarms:
         alarm1 = 90;
         alarm2 = 90;
@@ -2032,7 +2676,9 @@
 	var _eyeDisGoal = 0;
 
      // Pit Z Movement:
-    if(sink){
+    if(sink || rise_delay > 0){
+		rise_delay -= current_time_scale;
+		
          // Quickly Sink:
         var t = (instance_exists(Player) ? 0.5 : 0);
         if(pit_height > t){
@@ -2085,8 +2731,17 @@
 					 // Intro:
 				    if(!intro){
 				        intro = true;
+				        intro_pitbreak = true;
 						scrBossIntro(name, sndBigDogIntro, mus.PitSquid);
 						sound_play_pitchvol(sndNothing2Taunt, 0.7, 0.8);
+						view_shake_at(x, y, 30);
+						
+						 // Fix game being bad:
+						if(fork()){
+							wait 2;
+							with(instance_nearest(0, 0, Wall)) event_perform(ev_create, 0);
+							exit;
+						}
 				    }
 	            }
         	}
@@ -2142,7 +2797,7 @@
 		
 		 // Spinny:
 		if(eye_laser > 30){
-			eye_dir_speed += 0.075 * current_time_scale;
+			eye_dir_speed += (0.1 - (0.03 * (image_xscale - 1))) * current_time_scale;
 		}
 		else with(eye) blink = true;
 		
@@ -2229,9 +2884,9 @@
 							other.my_laser = scrEnemyShootExt(other.x, other.y, "QuasarBeam", _dir, 0);
 						}
 						with(my_laser){
-							damage = 3;
+							damage = 6;
 							bend_fric = 0.2;
-							scale_goal = 0.8 + (0.1 * GameCont.loops);
+							scale_goal = 0.8 * creator.image_xscale;
         					follow_creator = false;
         					mask_index = mskSuperFlakBullet;
 							image_xscale = scale_goal / 2;
@@ -2386,7 +3041,12 @@
         if(pit_height >= 1){
             var _xsc = image_xscale,
                 _ysc = image_yscale;
-
+                
+            if(intro_pitbreak){
+                _xsc *= 1.5;
+                _ysc *= 1.5;
+            }
+            
              // Clear Walls:
             if(place_meeting(posx, posy - 16, Wall)){
                 image_xscale = _xsc * 1.6;
@@ -2445,6 +3105,12 @@
                 }
             }
 
+            if(intro_pitbreak){
+                intro_pitbreak = false;
+                _xsc /= 1.5;
+                _ysc /= 1.5;
+            }
+            
             image_xscale = _xsc;
             image_yscale = _ysc;
         }
@@ -2453,12 +3119,12 @@
     }
 
 #define PitSquid_alrm1
-    alarm1 = 30 + random(30);
+    alarm1 = 20 + irandom(30);
 
     target = instance_nearest(posx, posy, Player);
 
 	if(instance_exists(target)){
-		if(intro || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching(object_index, "name", name))){
+		if(intro || pit_height < 1 || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching(object_index, "name", name))){
 	    	if(intro || pit_height < 1){
 		        var _targetDir = point_direction(posx, posy, target.x, target.y),
 		        	_targetDis = point_distance(posx, posy, target.x, target.y);
@@ -2475,30 +3141,34 @@
 		            	alarm1 = 20 + random(10);
 		
 		            	direction = _targetDir;
-		            	speed = max(speed, 2 + (0.15 * GameCont.loops));
+		            	speed = max(speed, 2.4);
 		            	if(!intro) speed = min(speed, 3);
 						
 		            	 // Rise:
 		            	if(
-		            		_targetDis < (intro ? 40 : 120) ||
+		            		_targetDis < (intro ? 40 : 120) * image_xscale ||
 		            		(
 		            			intro &&
 		            			(
-		            				(_targetDis < 160 && !pit_get(posx, posy)) ||
-		            				(_targetDis < 128 && (chance(1, 2) || !chance(my_health, maxhealth)))
+		            				(_targetDis < (160 * image_xscale) && !pit_get(posx, posy)) ||
+		            				(_targetDis < (128 * image_xscale) && (chance(1, 2) || !chance(my_health, maxhealth)))
 		            			)
 		            		)
 		            	){
 		            		sink = false;
-		            		if(!intro) speed /= 2;
+		            		if(!intro){
+		            			speed /= 2;
+		            			rise_delay = 84;
+		            			sound_play(mus.PitSquidIntro);
+		            		}
 		            	}
 		            }
 		        }
 		
 		        if(pit_height >= 1){
 		             // Check LOS to Player:
-		            var _targetSeen = (!collision_line(posx, posy, target.x, target.y, Wall, false, false) && _targetDis < 256);
-		            if(_targetSeen && (chance(1, 2) || _targetDis > 128) && eye_laser <= 0){
+		            var _targetSeen = (!collision_line(posx, posy, target.x, target.y, Wall, false, false) && _targetDis < 240);
+		            if(_targetSeen && (chance(2, 3) || _targetDis > 128) && eye_laser <= 0){
 		                var f = instances_matching(Floor, "styleb", true);
 		                with(f) x -= 10000;
 		                if(collision_line(posx, posy, target.x, target.y, Floor, false, false)){
@@ -2516,11 +3186,11 @@
 			         // Spawn Tentacles:
 			        else{
 			        	var	_ang = random(360),
-			        		_num = irandom_range(2, 3 + floor(GameCont.loops / 2));
+			        		_num = irandom_range(2, 3 + floor(5 * (image_xscale - 1)));
 			        		
 			        	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
 					        var t = array_length(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "creator", id));
-					        if(t < 3 + GameCont.loops || chance(1, 5 + (5 * t))){
+					        if(t < 2 + (10 * (image_xscale - 1)) || chance(1, 5 + (5 * t))){
 					        	with(obj_create(posx + dcos(d), posy + dsin(d) - 8, "PitSquidArm")){
 					        		creator = other;
 					        		hitid = other.hitid;
@@ -2534,8 +3204,6 @@
 					        		}
 					        	}
 					        }
-					        
-			        		alarm1 += 20;
 			        	}
 			        }
 		        }
@@ -2545,7 +3213,7 @@
 	}
     
 #define PitSquid_alrm2
-    alarm2 = 60 + random(30);
+    alarm2 = 40 + random(20);
 
     if(pit_height >= 1 && intro){
         target = instance_nearest(posx, posy, Player);
@@ -2555,18 +3223,22 @@
 			spit = 0.6;
 			
 			 // Aiming:
+			var _targetDis = 96;
 			if(instance_exists(target)){
 				if(!collision_line(posx, posy, target.x, target.y, Wall, false, false)){
-					gunangle += clamp(angle_difference(point_direction(posx, posy, target.x, target.y), gunangle) / 2, -30, 30);
+					_targetDis = point_distance(posx, posy, target.x, target.y);
+					gunangle += clamp(angle_difference(point_direction(posx, posy, target.x + (_targetDis/12 * target.hspeed), target.y + (_targetDis/12 * target.vspeed)), gunangle) * 0.5 * current_time_scale, -60, 60);
 				}
 			}
 			
 			 // Projectile:
 			var _last = electroplasma_last,
-				_ang = 18;
+				_ang = (2000 / max(1, _targetDis)) * image_xscale;
 				
-			with(scrEnemyShootExt(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side) + orandom(5 + GameCont.loops), 5)){
+			with(scrEnemyShootExt(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
 				tether_inst = _last;
+				image_xscale *= other.image_xscale;
+				image_yscale *= other.image_yscale;
 				damage = 1;
 				
 				_last = id;
@@ -2615,7 +3287,7 @@
 						alarm2 = 15;
 						alarm1 = alarm1 + alarm2;
 						
-						ammo = 3 + irandom(2 + GameCont.loops);
+						ammo = 3 + irandom(2 * image_xscale);
 						gunangle = _targetDir;
 						
 						 // Sounds:
@@ -2724,7 +3396,7 @@
         spr_disappear = spr.TentacleDead;
         depth = -2 - (y / 20000);
         hitid = [spr_idle, "PIT SQUID"];
-        image_speed = 0.4 + orandom(0.2);
+        image_speed = 0.4 + orandom(0.1);
         sprite_index = spr_appear;
         
          // Sound:
@@ -2735,7 +3407,7 @@
          // Vars:
         mask_index = mskLaserCrystal;
         friction = 0.8;
-        maxhealth = irandom_range(20, 80);
+        maxhealth = irandom_range(20, 60);
         raddrop = 0;
         size = 3;
         creator = noone;
@@ -2757,7 +3429,7 @@
         teleport_drawy = y;
         
          // Alarms:
-        alarm1 = 10;
+        alarm1 = 15;
         alarm2 = -1;
         alarm11 = 30;
         
@@ -2777,7 +3449,7 @@
 		//y = 0;
 		if(sprite_index == spr_disappear){
 			if(anim_end){
-				image_index -= image_speed;
+				image_index -= image_speed_raw;
 			}
 		}
 		else{
@@ -2799,7 +3471,6 @@
 		}
 		else if(anim_end){
 			sprite_index = spr_idle;
-
         	mask_index = mskLaserCrystal;
 		}
 	}
@@ -2833,7 +3504,7 @@
 #define PitSquidArm_end_step
 	 // PitSquid Collision:
 	if(instance_exists(creator)){
-		var l = 48;
+		var l = 48 * creator.image_xscale;
 		if(point_distance(x, y, creator.posx, creator.posy - 8) < l){
 			var d = point_direction(creator.posx, creator.posy - 8, x, y);
 			x = creator.posx + lengthdir_x(l, d);
@@ -2850,12 +3521,12 @@
 	        x = xprevious;
 	        y = yprevious;
 	
-	        if(array_length(instances_meeting(x + hspeed, y, f)) > 0) hspeed *= -1;
-	        if(array_length(instances_meeting(x, y + vspeed, f)) > 0) vspeed *= -1;
+	        if(array_length(instances_meeting(x + hspeed_raw, y, f)) > 0) hspeed_raw *= -1;
+	        if(array_length(instances_meeting(x, y + vspeed_raw, f)) > 0) vspeed_raw *= -1;
 	        speed *= 0.5;
 	
-	        x += hspeed;
-	        y += vspeed;
+	        x += hspeed_raw;
+	        y += vspeed_raw;
 		}
     }
     else{
@@ -2878,12 +3549,13 @@
 	alarm1 = 20 + irandom(20);
 	
 	target = instance_nearest(x, y, Player);
-	if(instance_exists(target)){
-		if(in_sight(target)){
+	
+	if(sprite_index != spr_appear && instance_exists(target)){
+		if(in_sight(target) && (!instance_exists(creator) || !collision_line(x - creator.posx, y - creator.posy, target.x - creator.posx, target.y - creator.posy, creator, false, false))){
 			var _targetDir = point_direction(x, y, target.x, target.y);
 			
 			 // Keep away:
-			if(in_distance(target, 48)){
+			if(in_distance(target, 16)){
 				scrWalk(10 + random(10), _targetDir + 180 + orandom(30));
 				alarm1 = walk + irandom(10);
 				
@@ -2891,31 +3563,31 @@
 			}
 
 			else{
-				 // Get closer:
-				if(!in_distance(target, 96)){
-					scrWalk(10 + random(10), _targetDir + orandom(10));
-					alarm1 = walk + random(5);
+				 // Attack:
+				if(in_sight(target) && in_distance(target, 160) && chance(1, 2)){
+					alarm2 = 1;
+					bomb = true;
+					bomb_delay = 18;
+					
+					 // Sounds:
+					sound_play_pitchvol(sndPlasmaReloadUpg, 0.8 + random(0.3), 0.6);
+					sound_play_pitch(sndOasisPortal, 1.1 + random(0.3));
 				}
 				
 				else{
-					 // Attack:
-					if(in_sight(target)){
-						if(chance(1 + (0.1 * GameCont.loops), 2)){
-							alarm2 = 1;
-							bomb = true;
-							bomb_delay = 18;
-							
-							 // Sounds:
-							sound_play_pitchvol(sndPlasmaReloadUpg, 0.8 + random(0.3), 0.6);
-							sound_play_pitch(sndOasisPortal, 1.1 + random(0.3));
-						}
+					if(in_distance(target, 96)){
+						 // Wander Passively:
+						direction += orandom(30);
+						
+						 // Effects:
+						instance_create(x, y, Bubble);
 					}
 					
-					 // Wander Passively:
-					direction += orandom(30);
-					
-					 // Effects:
-					instance_create(x, y, Bubble);
+					 // Get closer:
+					else{
+						scrWalk(10 + random(10), _targetDir + orandom(10));
+						alarm1 = walk + random(5);
+					}
 				}
 				
 				scrRight(direction);
@@ -3014,13 +3686,12 @@
 					else{
 						var _emptyPits = [],
 							_validPits = [],
-							_minDist = 96;
+							_exploTiles = instances_matching_ne(FloorExplo, "sprite_index", spr.FloorTrenchB);
 							
 						 // Find Clear Pits:
 						with(_allPits){
-							if(!place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, instances_matching_ne(FloorExplo, "sprite_index", spr.FloorTrenchB))) <= 0){
+							if(!place_meeting(x, y, Wall) && (!place_meeting(x, y, FloorExplo) || array_length(instances_meeting(x, y, _exploTiles)) <= 0)){
 								array_push(_emptyPits, id);
-								_minDist = min(_minDist, point_distance(_target.x, _target.y, (bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2));
 							}
 						}
 							
@@ -3033,7 +3704,7 @@
 									
 								if(_targetDis > 32 && _targetDis < 128){
 									var _squidDis = point_distance(_x, _y, _creator.posx, _creator.posy);
-									if(_squidDis > 60 && _squidDis < 180){
+									if(_squidDis > (60 * _creator.image_xscale) && _squidDis < (180 * _creator.image_xscale)){
 										array_push(_validPits, id);
 									}
 								}
@@ -3084,13 +3755,14 @@
 	
 #define PitSquidArm_hurt(_hitdmg, _hitvel, _hitdir)
     if(sprite_index != mskNone){
+    	var _armHealth = my_health;
         my_health -= _hitdmg;
         nexthurt = current_frame + 6;
         sound_play_hit(snd_hurt, 0.3);
-    
+    	
          // Hurt Papa Squid:
         with(other) with(other.creator){
-        	PitSquid_hurt(_hitdmg, _hitvel, _hitdir);
+        	PitSquid_hurt(min(_hitdmg, max(0, _armHealth)), _hitvel, _hitdir);
         }
         with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
         	nexthurt = current_frame + 6;
@@ -3100,8 +3772,18 @@
     }
 
 #define PitSquidArm_death
-	pickup_drop(20, 0);
+	pickup_drop(30, 0);
 	repeat(3) with(scrFX(x, y, 1, Smoke)) depth = 2;
+	
+	 // Manual Corpse:
+	if(corpse){
+		corpse = false;
+		with(scrCorpse(direction, speed)){
+			if(other.sprite_index == other.spr_appear){
+				image_index = (image_number - 1) * (1 - (ceil(other.image_index) / (other.image_number - 1)));
+			}
+		}
+	}
 
 
 #define PitSquidBomb_create(_x, _y)
@@ -3198,7 +3880,7 @@
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
 	        with(scrEnemyShootExt(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
-	            zspeed = ((point_distance(x, y, other.target.x, other.target.y) - z) * zfric) / (speed * 2);
+	            zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfric) / (speed * 2);
 	        }
 		}
 	}
@@ -4477,6 +5159,22 @@
 #define step
 	if(DebugLag) trace_time();
 
+	 // Underwater Sounds:
+    if(global.waterSoundActive){
+    	if(!area_get_underwater(GameCont.area) && GameCont.area != 100){
+			underwater_sound(false);
+    	}
+    }
+    else if(area_get_underwater(GameCont.area)){
+		underwater_sound(true);
+	}
+	
+	 // Reset Bubbles:
+	if(instance_exists(GenCont)){
+		with(global.waterBubblePop) with(self[0]) spr_bubble_pop_check = null
+		global.waterBubblePop = [];
+	}
+
 	 // Bind Angler Trail Drawing:
 	var _active = (surfAnglerTrail.frame > current_frame);
 	if(_active) script_bind_draw(draw_anglertrail, -3);
@@ -4499,6 +5197,245 @@
 
 	if(DebugLag) trace_time("tewater_step");
 
+#define underwater_step
+     // Lightning:
+    with(Lightning){
+        image_index -= image_speed_raw * 0.75;
+
+         // Zap:
+        if(image_index > image_number - 1){
+            with(instance_create(x, y, EnemyLightning)){
+                image_speed = 0.3;
+                image_angle = other.image_angle;
+                image_xscale = other.image_xscale;
+                hitid = 88;
+                
+                 // FX:
+                if(chance(1, 8)){
+                    sound_play_hit(sndLightningHit,0.2);
+                    with(instance_create(x, y, GunWarrantEmpty)){
+                        image_angle = other.direction;
+                    }
+                }
+                else if(chance(1, 3)){
+                    instance_create(x + orandom(18), y + orandom(18), PortalL);
+                }
+            }
+            instance_destroy();
+        }
+    }
+
+     // Flames Boil Water:
+    with(instances_matching([Flame, TrapFire], "", null)){
+        if(sprite_index != sprFishBoost){
+            if(image_index > 2){
+                sprite_index = sprFishBoost;
+                image_index = 0;
+
+                 // FX:
+                if(chance(1, 3)){
+                    var xx = x,
+                        yy = y,
+                        vol = 0.4;
+
+                    if(fork()){
+                        repeat(1 + irandom(3)){
+                            instance_create(xx, yy, Bubble);
+                            
+                            view_shake_max_at(xx, yy, 3);
+                            sleep(6);
+                            
+                            sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), vol);
+                            audio_sound_set_track_position(sndOasisPortal, 0.52 + random(0.04));
+                            vol -= 0.1;
+                            
+                            wait(10 + irandom(20));
+                        }
+                        exit;
+                    }
+                }
+            }
+        }
+
+         // Hot hot hot:
+        else if(chance_ct(1, 100)){
+            instance_create(x, y, Bubble);
+        }
+
+         // Go away ugly smoke:
+        if(place_meeting(x, y, Smoke)){
+            with(instance_nearest(x, y, Smoke)) instance_destroy();
+            if(chance(1, 2)) with(instance_create(x, y, Bubble)){
+                motion_add(other.direction, other.speed / 2);
+            }
+        }
+    }
+
+    with(script_bind_draw(underwater_draw, -3)) name = script[2];
+    with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
+
+#define underwater_end_step
+    instance_destroy();
+
+	if(DebugLag) trace_time();
+
+     // Bubbles:
+    with(instances_matching(Dust, "waterbubble", null)){
+        instance_create(x, y, Bubble);
+        instance_destroy();
+    }
+    with(instances_matching(Smoke, "waterbubble", null)){
+        waterbubble = true;
+        instance_create(x, y, Bubble);
+    }
+    with(instances_matching(BoltTrail, "waterbubble", null)){
+        if(image_xscale != 0 && chance(1, 4)){
+            waterbubble = true;
+            instance_create(x, y, Bubble);
+        }
+        else waterbubble = false;
+    }
+
+     // Air Bubble Pop:
+    with(global.waterBubblePop){
+    	var _inst = self[0];
+
+    	 // Follow Papa:
+    	if(instance_exists(_inst) && _inst.visible){
+			self[@1] = _inst.x + _inst.spr_bubble_x;
+			self[@2] = _inst.y + _inst.spr_bubble_y;
+			self[@3] = _inst.spr_bubble_pop;
+    	}
+
+    	 // Pop:
+    	else{
+    		with(_inst) spr_bubble_pop_check = null;
+    		with(instance_create(self[1], self[2], BubblePop)) sprite_index = other[3];
+    		global.waterBubblePop = array_delete_value(global.waterBubblePop, self);
+    	}
+    }
+
+     // Clam Chests:
+    with(instances_matching(WeaponChest, "sprite_index", sprWeaponChest)){
+    	sprite_index = sprClamChest;
+    }
+    with(instances_matching(ChestOpen, "waterchest", null)){
+        waterchest = true;
+        repeat(3) instance_create(x, y, Bubble);
+        if(sprite_index == sprWeaponChestOpen) sprite_index = sprClamChestOpen;
+    }
+    
+     // Fish Freaks:
+    with(instances_matching(Freak, "fish_freak", null)){
+    	fish_freak = true;
+    	spr_idle = spr.FishFreakIdle;
+    	spr_walk = spr.FishFreakWalk;
+    	spr_hurt = spr.FishFreakHurt;
+    	spr_dead = spr.FishFreakDead;
+    }
+    
+     // Watery Enemy Hurt/Death Sounds:
+    with(instances_matching(enemy, "underwater_sound_check", null)){
+        underwater_sound_check = true;
+        if(object_index != CustomEnemy){
+            if(snd_hurt != -1) snd_hurt = sndOasisHurt;
+            if(snd_dead != -1) snd_dead = sndOasisDeath;
+            if(snd_mele != -1) snd_mele = sndOasisMelee;
+        }
+    }
+    
+	if(DebugLag) trace_time("underwater_end_step");
+
+#define underwater_draw
+    instance_destroy();
+    
+	if(DebugLag) trace_time();
+
+     // Air Bubbles:
+    with(instances_matching(hitme, "spr_bubble", null)){
+        spr_bubble = -1;
+        spr_bubble_pop = -1;
+        spr_bubble_x = 0;
+        spr_bubble_y = 0;
+        switch(object_index){
+            case Ally:
+            case Sapling:
+            case Bandit:
+            case Grunt:
+            case Inspector:
+            case Shielder:
+            case EliteGrunt:
+            case EliteInspector:
+            case EliteShielder:
+            case PopoFreak:
+            case Necromancer:
+            case FastRat:
+            case Rat:
+                spr_bubble = sprPlayerBubble;
+                spr_bubble_pop = sprPlayerBubblePop;
+                break;
+
+            case Player:
+                if(race != "fish"){
+                    spr_bubble = sprPlayerBubble;
+                    spr_bubble_pop = sprPlayerBubblePop;
+                }
+                break;
+
+            case Salamander:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
+                break;
+
+            case Ratking:
+            case RatkingRage:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
+                spr_bubble_y = 2;
+                break;
+
+            case FireBaller:
+            case SuperFireBaller:
+                spr_bubble = spr.BigBubble;
+                spr_bubble_pop = spr.BigBubblePop;
+                spr_bubble_y = -6;
+                break;
+        }
+    }
+    var _inst = instances_matching(hitme, "visible", true);
+    with(instances_seen(instances_matching_ne(_inst, "spr_bubble", -1), 16)){
+        draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
+    }
+    with(instances_matching(instances_matching_ne(_inst, "spr_bubble_pop", -1), "spr_bubble_pop_check", null)){
+    	spr_bubble_pop_check = true;
+    	array_push(global.waterBubblePop, [id, x, y, sprPlayerBubblePop]);
+    }
+    
+     // Boiling Water:
+    draw_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
+    draw_set_blend_mode(bm_add);
+    with(instances_matching_ne(Flame, "sprite_index", sprFishBoost)){
+        var s = 1.5,
+            a = 0.2;
+
+        draw_sprite_ext(sprDragonFire, image_index + 2, x, y, image_xscale * s, image_yscale * s, image_angle, image_blend, image_alpha * a);
+    }
+    draw_set_blend_mode(bm_normal);
+    draw_set_fog(0, 0, 0, 0);
+    
+	if(DebugLag) trace_time("underwater_draw");
+
+#define underwater_sound(_state)
+    global.waterSoundActive = _state;
+    for(var i = 0; i < lq_size(global.waterSound); i++){
+        var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
+        with(lq_get_value(global.waterSound, i)){
+        	var _snd = self;
+        	if(_state) sound_assign(_snd, _sndOasis);
+        	else sound_restore(_snd);
+        }
+    }
+
 #define draw_anglertrail
     var _surfTrail = surfAnglerTrail,
     	_surfClear = surfAnglerClear;
@@ -4515,6 +5452,14 @@
 			with(_surfClear){
 				w = other.w;
 				h = other.h;
+			}
+			
+			 // Make sure it clear bro:
+			if(reset){
+				reset = false;
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				surface_reset_target();
 			}
 		}
 
@@ -4862,6 +5807,17 @@
 
 	if(DebugLag) trace_time("tewater_draw_dark_end");
 
+#define cleanup
+	 // Disable Water Sounds:
+	if(global.waterSoundActive){
+		underwater_sound(false);
+	}
+
+	 // Reset Bubble Pop:
+    with(global.waterBubblePop){
+    	with(self[0]) spr_bubble_pop_check = null;
+    }
+
 
 /// Pits Yo
 #define pit_get(_x, _y)
@@ -4967,3 +5923,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

@@ -90,6 +90,7 @@
         if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
             styleb = true;
             sprite_index = area_sprite(sprFloor1B);
+            area_setup_floor(false);
         }
     }
     with(HPPickup) alarm0 *= 2;
@@ -178,6 +179,7 @@
 
 #define area_finish
     lastarea = area;
+    lastsubarea = subarea;
 
      // Area End:
     if(subarea >= area_subarea()){
@@ -279,7 +281,12 @@
      // Gimme pizza:
     if(!_nort && !_sout && !_west && _east){
         repeat(irandom_range(1, 4)){
-            obj_create(_x + orandom(4), _y + orandom(4), choose("Pizza", "PizzaStack", "PizzaChest"));
+            if(true || chance(2, 3)){
+                obj_create(_x + orandom(4), _y + orandom(4), choose("Pizza", PizzaBox, "PizzaChest"));
+            }
+            else{
+                TopObject_create(_x + 16, _y, "PizzaStack", orandom(60), -1);
+            }
         }
     }
 
@@ -380,3 +387,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

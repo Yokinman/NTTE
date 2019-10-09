@@ -214,6 +214,7 @@
 
 #define area_finish
     lastarea = area;
+    lastsubarea = subarea;
 
      // Area End:
     if(subarea >= area_subarea()){
@@ -265,41 +266,6 @@
 
 #define area_step
     if(DebugLag) trace_time();
-
-     // Update Pit Grid:
-    with(instances_matching_ne(instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", false)){
-    	trenchpit_check = false;
-    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-    			pit_set(_x, _y, false);
-    		}
-    	}
-    }
-    with(instances_matching_ne(instances_matching(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", true)){
-    	trenchpit_check = true;
-    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-    			pit_set(_x, _y, true);
-    		}
-    	}
-    }
-
-     // Fix scorchmarks showing above pits:
-    with(instances_matching([Scorch, ScorchTop, MeltSplat], "trenchpit_check", null)){
-        trenchpit_check = true;
-
-        var	_kill = true,
-        	l = 12;
-
-        for(var d = 0; d < 360; d += 45){
-        	if(pit_get(x + lengthdir_x(l, d), y + lengthdir_y(l, d))){
-                depth = 9;
-            }
-            else _kill = false;
-        }
-
-        if(_kill) instance_destroy();
-    }
 
      // Player Above Pits:
     with(Player){
@@ -366,6 +332,46 @@
     while(m > 80) with(s[--m]) instance_destroy();
 
     if(DebugLag) trace_time("trench_step");
+
+#define area_end_step
+	if(DebugLag) trace_time();
+	
+     // Update Pit Grid:
+    with(instances_matching_ne(instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", false)){
+    	trenchpit_check = false;
+    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+    			pit_set(_x, _y, false);
+    		}
+    	}
+    }
+    with(instances_matching_ne(instances_matching(Floor, "sprite_index", spr.FloorTrenchB), "trenchpit_check", true)){
+    	trenchpit_check = true;
+    	for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+    		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+    			pit_set(_x, _y, true);
+    		}
+    	}
+    }
+
+     // Fix scorchmarks showing above pits:
+    with(instances_matching([Scorch, ScorchTop, MeltSplat, GroundFlame, BlueFlame], "trenchpit_check", null)){
+        trenchpit_check = true;
+
+        var	_kill = true,
+        	l = 12;
+
+        for(var d = 0; d < 360; d += 45){
+        	if(pit_get(x + lengthdir_x(l, d), y + lengthdir_y(l, d))){
+                depth = 9;
+            }
+            else _kill = false;
+        }
+
+        if(_kill) instance_destroy();
+    }
+	
+	if(DebugLag) trace_time("trench_end_step");
 
 #define area_effect(_vx, _vy)
     var _x = _vx + random(game_width),
@@ -880,7 +886,7 @@
     }
 
 	 // Reset Pit Sink Checks:
-	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop, MeltSplat], "trenchpit_check", null)){
+	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop, MeltSplat, GroundFlame, BlueFlame], "trenchpit_check", null)){
 	    trenchpit_check = null;
 	}
 
@@ -981,3 +987,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);

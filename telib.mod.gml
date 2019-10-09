@@ -114,12 +114,12 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "FlakBall", "FlySpin", "Harpoon", "HarpoonStick", "HyperBubble", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "Trident", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedVaultPedestal", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "Trident", "VenomPellet"],
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
-		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "PetVenom", "ScorpionRock"],
+		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
-		"tewater"	  : ["Angler", "ClamChest", "Crack", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Hammerhead", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "OasisPetBecome", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "Puffer", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
-	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TopEnemy", "TurtleCool", "VenomFlak"],
+		"tewater"	  : ["Angler", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "ClamChest", "Crack", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Hammerhead", "HyperBubble", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "OasisPetBecome", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "Puffer", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
+	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
 	    "tecaves"	  : ["InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "Spiderling", "SpiderWall"]
     };
@@ -135,217 +135,6 @@
 			lq_set(objScrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
 		}
 	}
-	
-	 // Water Sound Replacements:
-    global.waterSound = {
-        "sndOasisShoot" : [
-            sndBloodLauncher,
-            sndBouncerShotgun,
-            sndBouncerSmg,
-            sndClusterLauncher,
-            sndCrossbow,
-            sndDiscgun,
-            sndDoubleMinigun,
-            sndDragonStart,
-            sndEnemyFire,
-            sndFireShotgun,
-            sndFlakCannon,
-            sndFlare,
-            sndFlareExplode,
-            sndFrogPistol,
-            sndGoldCrossbow,
-            sndGoldDiscgun,
-            sndGoldFrogPistol,
-            sndGoldGrenade,
-            sndGoldLaser,
-            sndGoldLaserUpg,
-            sndGoldMachinegun,
-            sndGoldPistol,
-            sndGoldPlasma,
-            sndGoldPlasmaUpg,
-            sndGoldRocket,
-            sndGoldShotgun,
-            sndGoldSlugger,
-            sndGoldSplinterGun,
-            sndGrenade,
-            sndGrenadeRifle,
-            sndGrenadeShotgun,
-            sndGunGun,
-            sndHeavyCrossbow,
-            sndHeavyMachinegun,
-            sndHeavyNader,
-            sndHeavyRevoler,
-            sndHyperLauncher,
-            sndHyperRifle,
-            sndIncinerator,
-            sndMachinegun,
-            sndMinigun,
-            sndLaser,
-            sndLaserUpg,
-            sndLaserCannon,
-            sndLaserCannonUpg,
-            sndLightningHammer,
-            sndLightningPistol,
-            sndLightningPistolUpg,
-            sndLightningRifle,
-            sndLightningRifleUpg,
-            sndPistol,
-            sndPlasma,
-            sndPlasmaUpg,
-            sndPlasmaMinigun,
-            sndPlasmaMinigunUpg,
-            sndPlasmaRifle,
-            sndPlasmaRifleUpg,
-            sndPopgun,
-            sndQuadMachinegun,
-            sndRogueRifle,
-            sndRustyRevolver,
-            sndSeekerPistol,
-            sndSeekerShotgun,
-            sndShotgun,
-            sndSlugger,
-            sndSmartgun,
-            sndSplinterGun,
-            sndSplinterPistol,
-            sndSuperCrossbow,
-            sndSuperDiscGun,
-            sndSuperSplinterGun,
-            sndToxicLauncher,
-            sndTripleMachinegun,
-            sndUltraPistol,
-            sndWaveGun
-            ],
-        "sndOasisMelee" : [
-            sndBlackSword,
-            sndBloodHammer,
-            sndChickenSword,
-            sndClusterOpen,
-            sndEnergyHammer,
-            sndEnergyHammerUpg,
-            sndEnergyScrewdriver,
-            sndEnergyScrewdriverUpg,
-            sndEnergySword,
-            sndEnergySwordUpg,
-            sndFlamerStart,
-            sndGoldScrewdriver,
-            sndGoldWrench,
-            sndGuitar,
-            sndHammer,
-            sndJackHammer,
-            sndScrewdriver,
-            sndShovel,
-            sndToxicBoltGas,
-            sndUltraShovel,
-            sndWrench
-            ],
-        "sndOasisExplosion" : [
-            sndBloodCannonEnd,
-            sndBloodLauncherExplo,
-            sndCorpseExplo,
-            sndDevastator,
-            sndDevastatorExplo,
-            sndDevastatorUpg,
-            sndExplosion,
-            sndExplosionCar,
-            sndExplosionL,
-            sndExplosionXL,
-            sndFlameCannonEnd,
-            sndGoldNukeFire,
-            sndLightningCannonEnd,
-            sndLightningCannonUpg,
-            sndNukeFire,
-            sndNukeExplosion,
-            sndPlasmaBigExplode,
-            sndPlasmaBigUpg,
-            sndPlasmaHuge,
-            sndPlasmaHugeUpg,
-            sndSuperFlakCannon,
-            sndSuperFlakExplode
-            ],
-        "sndOasisExplosionSmall" : [
-            sndBloodCannon,
-            sndDoubleFireShotgun,
-            sndDoubleShotgun,
-            sndFlakExplode,
-            sndFlameCannon,
-            sndRocket,
-            sndEraser,
-            sndExplosionS,
-            sndHeavySlugger,
-            sndHyperSlugger,
-            sndLightningCannon,
-            sndLightningShotgun,
-            sndLightningShotgunUpg,
-            sndPlasmaBig,
-            sndPlasmaHit,
-            sndSawedOffShotgun,
-            sndSuperBazooka,
-            sndUltraCrossbow,
-            sndUltraGrenade,
-            sndUltraShotgun,
-            sndUltraLaser,
-            sndUltraLaserUpg
-            ],
-        "sndOasisPopo" : [
-            sndEliteIDPDPortalSpawn,
-            sndIDPDPortalSpawn
-            ],
-        "sndOasisPortal" : [
-            sndLaserCannonCharge,
-            sndPortalOpen
-            ],
-        "sndOasisChest" : [
-            sndAmmoChest,
-            sndBigCursedChest,
-            sndBigWeaponChest,
-            sndChest,
-            sndCursedChest,
-            sndGoldChest,
-            sndHealthChest,
-            sndHealthChestBig,
-            sndWeaponChest
-            ],
-        "sndOasisHurt" : [
-            sndMutant1Hurt,
-            sndMutant2Hurt,
-            sndMutant3Hurt,
-            sndMutant4Hurt,
-            sndMutant5Hurt,
-            sndMutant6Hurt,
-            sndMutant7Hurt,
-            sndMutant8Hurt,
-            sndMutant9Hurt,
-            sndMutant10Hurt,
-            sndMutant11Hurt,
-            sndMutant12Hurt,
-            sndMutant13Hurt,
-            sndMutant14Hurt,
-            sndMutant15Hurt,
-            sndMutant16Hurt
-            ],
-        "sndOasisDeath" : [
-            sndMutant1Dead,
-            sndMutant2Dead,
-            sndMutant3Dead,
-            sndMutant4Dead,
-            sndMutant5Dead,
-            sndMutant6Dead,
-            sndMutant7Dead,
-            sndMutant8Dead,
-            sndMutant9Dead,
-            sndMutant10Dead,
-            sndMutant11Dead,
-            sndMutant12Dead,
-            sndMutant13Dead,
-            sndMutant14Dead,
-            sndMutant15Dead,
-            sndMutant16Dead,
-            sndSuperSlugger
-            ],
-        "sndOasisHorn" : [
-            sndVenuz
-            ]
-    };
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -956,7 +745,7 @@
             "boss"		: false,	// Instance is a boss
             "kill"		: false 	// Kill when uncharmed (For dudes who were spawned by charmed dudes)
         },
-        _charmListRaw = mod_variable_get("mod", "ntte", "charm");
+        _charmListRaw = mod_variable_get("race", "parrot", "charm");
 
     with(_instance){
         if("ntte_charm" not in self) ntte_charm = c;
@@ -1880,7 +1669,7 @@
 	    	var _vx = _viewPos[i, 0],
 	    		_vy = _viewPos[i, 1];
 
-	    	view_shift(i, point_direction(0, 0, _vx, _vy), point_distance(0, 0, _vx, _vy));
+	    	view_shift(i, point_direction(0, 0, _vx, _vy), point_distance(0, 0, _vx, _vy) / current_time_scale);
 	    }
 
 	     // Force Music Transition:
@@ -2001,41 +1790,53 @@
 
 #define floor_reveal(_floors, _maxTime)
     if(instance_is(self, CustomDraw) && script[2] == "floor_reveal"){
-        if(array_length(_floors) > num){
-            var _yOffset = 8;
-            draw_set_color(area_get_background_color(102));
-
-             // Hiding Floors:
-            with(array_slice(_floors, num + 1, array_length(_floors) - (num + 1))){
-                draw_rectangle(x - 15, y - _yOffset, x + 32 + 15, y + 31 - _yOffset, 0);
+        if(array_length(list) > 0){
+            with(list){
+            	 // Revealing:
+	            if(time > 0){
+	            	time -= current_time_scale;
+	            	
+	                var	t = clamp(time / time_max, 0, 1),
+	                	_ox = ox + lengthdir_x(move_dis * (1 - t), move_dir),
+	                	_oy = oy + lengthdir_y(move_dis * (1 - t), move_dir),
+	                	_bx = bx,
+	                	_by = by;
+	                	
+	                draw_set_alpha(t);
+	                draw_set_color(merge_color(c_white, color, (flash ? ((time > time_max) ? 1 : (1 - t)) : t)));
+	                
+	                with(inst){
+	                    draw_rectangle(bbox_left + _ox - _bx, bbox_top + _oy - _by, bbox_right + _ox + _bx, bbox_bottom + _oy + _by, false);
+	                }
+	            }
+	            
+	             // Done:
+	            else other.list = array_delete_value(other.list, self);
             }
-
-             // Revealing Floor:
-            if(time > 0){
-            	time -= current_time_scale;
-
-                var a = clamp(time / _maxTime, 0, 1);
-                _yOffset += 4 * a;
-
-                draw_set_alpha(a);
-                draw_set_color(merge_color(draw_get_color(), c_white, a));
-                with(_floors[num]){
-                    draw_rectangle(bbox_left - 16, bbox_top - _yOffset, bbox_right + 16, bbox_bottom - _yOffset + (24 * (other.time >= _maxTime)), 0);
-                }
-                draw_set_alpha(1);
-            }
-
-             // Next Floor:
-            else{
-                num++;
-                time = _maxTime;
-            }
+			draw_set_alpha(1);
         }
         else instance_destroy();
     }
-    else with(script_bind_draw(floor_reveal, -7, _floors, _maxTime)){
-        time = _maxTime + 1;
-        num = 0;
+    else with(script_bind_draw(floor_reveal, -6.00001, _floors, _maxTime)){
+    	list = [];
+    	
+    	with(_floors) if(instance_exists(self)){
+    		array_push(other.list, {
+    			inst		: id,
+    			time		: _maxTime,
+				time_max	: _maxTime,
+    			color		: background_color,
+    			flash		: false,
+    			move_dis	: 4,
+    			move_dir	: 90,
+    			ox			: 0,
+    			oy			: -8,
+    			bx			: 0,
+    			by			: 0
+    		})
+    	}
+        
+        return list;
     }
 
 #define area_border(_y, _area, _color)
@@ -2101,13 +1902,14 @@
 	    		}
 
 				 // Screenshake:
+				if(cavein_pan < 1) cavein_pan += 1/20 * current_time_scale;
 				for(var i = 0; i < maxp; i++){
 					view_shake[i] = max(view_shake[i], 5);
 					with(instance_exists(view_object[i]) ? view_object[i] : player_find(i)){
 						view_shake_max_at(x, _y + other.cavein_dis, 20);
 
 						 // Pan Down:
-						view_shift(i, 270, clamp(y - (_y - 64), 0, min(20, other.cavein_dis / 10)));
+						view_shift(i, 270, clamp(y - (_y - 64), 0, min(20, other.cavein_dis / 10)) * other.cavein_pan);
 					}
 				}
     		}
@@ -2216,6 +2018,7 @@
     	cavein = false;
     	cavein_dis = 800;
     	cavein_inst = [];
+		cavein_pan = 0;
 
     	type = [
     		[Wall,		 0, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
@@ -2263,7 +2066,32 @@
 	instance_destroy();
 
 #define area_get_sprite(_area, _spr)
-    return mod_script_call("area", _area, "area_sprite", _spr);
+	if(is_string(_area)){
+		var s = mod_script_call("area", _area, "area_sprite", _spr);
+		if(s != 0 && s != null) return s;
+	}
+	
+	if(is_real(_spr) || is_string(_spr)){
+		var	_name = (is_real(_spr) ? sprite_get_name(_spr) : _spr),
+			_list = {
+		        "sprFloor1"		 : `sprFloor${_area}`,
+		        "sprFloor1B"	 : `sprFloor${_area}B`,
+		        "sprFloor1Explo" : `sprFloor${_area}Explo`,
+		        "sprWall1Trans"	 : `sprWall${_area}Trans`,
+		        "sprWall1Bot"	 : `sprWall${_area}Bot`,
+		        "sprWall1Out"	 : `sprWall${_area}Out`,
+		        "sprWall1Top"	 : `sprWall${_area}Top`,
+		        "sprDebris1"	 : `sprDebris${_area}`,
+		        "sprDetail1"	 : `sprDetail${_area}`
+			},
+			s = asset_get_index(lq_defget(_list, _name, ""));
+			
+		if(!sprite_exists(s)) s = asset_get_index(_name);
+		
+		return s;
+	}
+	
+	return -1;
 
 #define floor_at(_x, _y)
 	 // Find Floor:
@@ -2738,6 +2566,328 @@
 
 #define Pet_spawn(_x, _y, _name)
 	return pet_create(_x, _y, _name, "mod", "petlib");
+
+#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)
+	with(obj_create(_x, _y, "TopEnemy")){
+		object.object_index = _obj;
+		
+		 // Object-Specific Setup:
+		switch(_obj){
+			 /// ENEMIES ///
+			case Bandit:
+				if(GameCont.area == 5) sprite_index = sprSnowBanditIdle;
+				break;
+				
+			case BoneFish:
+			case "Puffer":
+			case "Hammerhead":
+				wander_chance = 1/12;
+    			wander_walk = [0, 5];
+    			wander_chance = 1/2;
+				break;
+				
+			case BuffGator:
+				spr_weap = sprBuffGatorFlakCannon;
+				break;
+				
+			case ExploFreak:
+				object.my_health = 0;
+				wander_chance = 1;
+				wander_walk = [0, 5];
+				jump *= 1.2;
+				spawn_dis = random_range(80, 160);
+				alarm1 = random_range(90, 600 + (150 * GameCont.loops));
+				break;
+				
+			case Freak:
+				object.fish_freak = area_get_underwater(GameCont.area);
+				if(object.fish_freak){
+					object.spr_idle = spr.FishFreakIdle;
+					object.spr_walk = spr.FishFreakWalk;
+					object.spr_hurt = spr.FishFreakHurt;
+					object.spr_dead = spr.FishFreakDead;
+					jump = 0;
+				}
+				wander_chance = 1;
+				wander_walk = [0, 5];
+				spawn_dis = random_range(64, 240);
+				alarm1 = random_range(90, 600 + (150 * GameCont.loops));
+				break;
+				
+			case Gator:
+				spr_weap = sprGatorShotgun;
+				break;
+				
+			case JungleBandit:
+				spr_weap = sprJungleBanditGun;
+				break;
+				
+			case JungleFly:
+    			maxspeed = 3.6;
+    			walkspd = 0.6;
+    			wander_chance = 1/2;
+    			wander_walk = [8, 12];
+    			jump = 0;
+    			grav = random_range(0.1, 0.3);
+    			alarm1 = 300 + random(600);
+				break;
+				
+			case MeleeBandit:
+				spr_weap = sprPipe;
+				wander_chance = 1/2;
+				wander_walk = [10, 30];
+				break;
+			
+			case Necromancer:
+				spr_weap = sprNecrogun;
+				maxspeed = 2.5;
+				jump *= 2/3;
+				wander_chance = 1/16;
+				break;
+			
+			case "Seal":
+			    wander_chance = 1/12;
+			    break;
+			
+			case "Spiderling":
+				wander_chance = 1/4;
+				jump *= 4/5;
+				break;
+				
+			 /// PROPS ///
+			case Anchor:
+				mask_index = mskBandit;
+				spr_shadow = mskNone;
+				break;
+				
+			case Barrel:
+				spawn_dis = 32;
+			case GoldBarrel:
+			case ToxicBarrel:
+				object.my_health = 0;
+				spr_shadow = shd16;
+				spr_shadow_y = 4;
+				jump *= 1.5;
+				break;
+				
+			case BigFlower:
+				object.my_health = 0;
+				mask_index = mskBandit;
+				spr_shadow = sprBigFlowerIdle;
+				spr_shadow_y = 1;
+				break;
+				
+			case BonePile:
+    		case BonePileNight:
+				object.my_health = 0;
+				mask_index = mskFrogEgg;
+    			with(obj_create(x, y, "BoneSpawner")) creator = other;
+    			
+    			 // Fly Guy:
+        		with(obj_create(x, y, "FlySpin")){
+					target = other;
+					target_x = orandom(8);
+					target_y = -other.z - random(8);
+        		}
+				break;
+				
+			case Bush:
+				object.my_health = 0;
+				object.spr_shadow_y = -1;
+				break;
+				
+			case Cactus:
+				var t = choose("", "3");
+				if(chance(1, 2) || variable_instance_get(instance_nearest(x - 16, y - 16, Floor), "styleb", false)){
+					t = "B" + t;
+				}
+				with(object){
+					spr_idle = asset_get_index("sprCactus" + t);
+					spr_hurt = asset_get_index("sprCactus" + t + "Hurt");
+					spr_dead = asset_get_index("sprCactus" + t + "Dead");
+				}
+				spr_shadow = sprMine;
+				spr_shadow_y = 9;
+				break;
+			
+			case Car:
+				spawn_dis = 16;
+				break;
+			
+			case Cocoon:
+			case "NewCocoon":
+				object.my_health = 0;
+				spr_shadow = shd16;
+				spr_shadow_y = 3;
+				spawn_dis = 8;
+				break;
+			
+			case CrystalProp:
+			case InvCrystal:
+				object.my_health = 0;
+				break;
+				
+			case FireBaller:
+			case SuperFireBaller:
+				z += random(8);
+    			jump = random(1);
+    			grav = random_range(0.1, 0.2);
+    			maxspeed = random_range(2, 3);
+				break;
+				
+			case FrogEgg:
+				object.sprite_index = sprFrogEggSpawn;
+				object.alarm0 = random_range(10, 30);
+				mask_index = mskFrogEgg;
+				spr_idle = sprFrogEgg;
+				grav = 1.5;
+				break;
+				
+			case Generator:
+				object.my_health = 0;
+				object.image_xscale = 1;
+				mask_index = mskFloor;
+				spr_idle = sprBigGenerator;
+				spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorF : spr.shd.BigGenerator);
+				spawn_dis = 64;
+				break;
+				
+			case Hydrant:
+				object.my_health = 0;
+				spawn_dis = random_range(32, 96);
+				
+				 // Icicle:
+				if(chance(1, 2) || variable_instance_get(instance_nearest(x - 16, y - 16, Floor), "styleb", false)){
+					with(object){
+						spr_idle = sprIcicle;
+						spr_hurt = sprIcicleHurt;
+						spr_dead = sprIcicleDead;
+						snd_hurt = sndHitRock;
+						snd_dead = sndIcicleBreak;
+						spr_shadow = shd16;
+						spr_shadow_y = 3;
+					}
+				}
+				break;
+				
+			case MeleeFake:
+				object.image_speed = 0.4;
+				spr_walk = sprMeleeDead;
+				spr_shadow = sprMine;
+				spr_shadow_y = 7;
+				shine = true;
+				break;
+				
+			case MoneyPile:
+				object.my_health = 0;
+				object.spr_shadow_y = -1;
+				spawn_dis = 8;
+				break;
+				
+			/*case NightCactus:
+				var t = choose("", "3");
+				with(object){
+					spr_idle = asset_get_index("sprNightCactus" + t);
+					spr_hurt = asset_get_index("sprNightCactus" + t + "Hurt");
+					spr_dead = asset_get_index("sprNightCactus" + t + "Dead");
+				}
+				spr_shadow = sprMine;
+				spr_shadow_y = 9;
+				break;*/
+				
+			case OasisBarrel:
+				spr_shadow = mskNone;
+				break;
+				
+			case Pillar:
+				mask_index = mskBandit;
+				spr_shadow = shd32;
+				spr_shadow_y = -3;
+				break;
+				
+			case Pipe:
+				object.my_health = 0;
+				spr_shadow = sprMine;
+				spr_shadow_y = 8;
+				break;
+				
+			case Server:
+				object.my_health = 0;
+				mask_index = mskBandit;
+				spr_shadow = sprHydrant;
+				spr_shadow_y = 5;
+				
+				  // Not using actual Server object cause it can get replaced by a Terminal in its create event
+				object.object_index = Terminal;
+				object.spr_idle = sprServer;
+				object.spr_hurt = sprServerHurt;
+				object.spr_dead = sprServerDead;
+				object.snd_dead = sndServerBreak;
+				break;
+				
+			case SmallGenerator:
+				object.my_health = 0;
+				object.image_xscale = 1;
+				mask_index = mskFrogEgg;
+				spr_shadow = spr_idle;
+				spr_shadow_y = 1;
+				spawn_dis = 32;
+				break;
+				
+			case SnowMan:
+				object.my_health = 0;
+				spr_shadow = sprNewsStand;
+				spr_shadow_y = 5;
+				spawn_dis = random_range(8, 40);
+				break;
+				
+			case Terminal:
+				object.my_health = 0;
+				mask_index = mskBandit;
+				spr_shadow_y = 1;
+				break;
+				
+			case Tires:
+				object.my_health = 0;
+				object.spr_shadow_y = -1;
+				spawn_dis = random_range(24, 80);
+				break;
+				
+			case Torch:
+				object.my_health = 0;
+				break;
+		}
+		
+		 // General Setup:
+		if(_spawnDir >= 0) spawn_dir = _spawnDir;
+		if(_spawnDis >= 0) spawn_dis = _spawnDis;
+		if(setup) mod_script_call("mod", "tegeneral", "TopEnemy_setup");
+		
+		 // Object-Specific Post-Setup:
+		if(instance_exists(self)){
+			switch(_obj){
+				case BoneFish:
+				case Freak:
+				case "Puffer":
+				case "Hammerhead": // Swimming bro
+					if(area_get_underwater(GameCont.area)){
+    					z += random_range(8, distance_to_object(Floor) / 2) * ((_obj == "Puffer") ? 0.5 : 1);
+					}
+					break;
+					
+				case JungleFly: // Bro hes actually flying real
+    				z += random(16 + (distance_to_object(Floor) / 2));
+    				break;
+    				
+				case MeleeFake: // Wake up bro, dumbass
+					if("my_health" in object) object.my_health--;
+					break;
+			}
+			
+			return id;
+		}
+	}
+	return noone;
 
 #define scrFloorMake(_x, _y, _obj)
     instance_create(_x, _y, Floor);
