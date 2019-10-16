@@ -114,7 +114,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedVaultPedestal", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "Trident", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedVaultPedestal", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "Trident", "VenomPellet"],
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
@@ -145,7 +145,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 #macro objList global.objectList
 #macro objScrt global.objectScrt
@@ -322,7 +322,7 @@
 	                                        	if("spr_chrg" not in self) spr_chrg = -1;
 	                                        }
                                         	if(ntte_walk){
-                                        		if("walkspd" not in self) walkspd = 0.8;
+                                        		if("walkspeed" not in self) walkspeed = 0.8;
                                         		if("maxspeed" not in self) maxspeed = 3;
                                         	}
 	                                        ntte_alarm_max = 0;
@@ -418,7 +418,7 @@
 	 // Movement:
 	if(ntte_walk){
 		if(walk > 0){
-	        motion_add(direction, walkspd);
+	        motion_add(direction, walkspeed);
 	        walk -= current_time_scale;
 	    }
 	    if(speed > maxspeed) speed = maxspeed; // Max Speed
@@ -1875,7 +1875,7 @@
 							repeat(choose(1, choose(1, 2))) with(instance_create(random_range(bbox_left - 12, bbox_right + 12), bbox_bottom, Dust)){
 								image_xscale *= 2;
 								image_yscale *= 2;
-								depth = -10;
+								depth = -8;
 								vspeed -= 5;
 								sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
 							}
@@ -2624,7 +2624,7 @@
 				
 			case JungleFly:
     			maxspeed = 3.6;
-    			walkspd = 0.6;
+    			walkspeed = 0.6;
     			wander_chance = 1/2;
     			wander_walk = [8, 12];
     			jump = 0;
@@ -2661,9 +2661,9 @@
 				break;
 				
 			case Barrel:
-				spawn_dis = 32;
 			case GoldBarrel:
 			case ToxicBarrel:
+				spawn_dis = ((_obj == Barrel) ? 32 : 8);
 				object.my_health = 0;
 				spr_shadow = shd16;
 				spr_shadow_y = 4;
@@ -2776,6 +2776,7 @@
 				spr_shadow = sprMine;
 				spr_shadow_y = 7;
 				shine = true;
+				shine_speed = 1/90;
 				break;
 				
 			case MoneyPile:
@@ -2808,7 +2809,7 @@
 			case Pipe:
 				object.my_health = 0;
 				spr_shadow = sprMine;
-				spr_shadow_y = 8;
+				spr_shadow_y = 7;
 				break;
 				
 			case Server:
@@ -2987,7 +2988,7 @@
 
 #define trace_error(_error)
 	trace(_error);
-	trace_color("Hey, screenshot that ^^^ error and send it to Yokin#1322 on Discord (or another NTTE dev)", c_yellow);
+	trace_color(" ^ Screenshot that error and post it on NTTE's itch.io page, thanks!", c_yellow);
 
 #define sleep_max(_milliseconds)
 	global.sleep_max = max(global.sleep_max, _milliseconds);

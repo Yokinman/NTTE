@@ -783,6 +783,25 @@
         	
         //#endregion
 
+		//#region
+        
+        	//#region ENEMIES
+        	m = "enemies/";
+        	
+	        	 // Portal Guardian:
+	        	p = m + "PortalGuardian/";
+	        	PortalGuardianIdle      = sprite(p + "sprPortalGuardianIdle",      4, 16, 16);
+	        	PortalGuardianHurt      = sprite(p + "sprPortalGuardianHurt",      3, 16, 16);
+	        	PortalGuardianDead      = sprite(p + "sprPortalGuardianDead",      9, 32, 32);
+	        	PortalGuardianAppear    = sprite(p + "sprPortalGuardianAppear",    5, 32, 32);
+	        	PortalGuardianDisappear = sprite(p + "sprPortalGuardianDisappear", 4, 32, 32);
+	        	PortalGuardianBall      = sprite(p + "sprPortalGuardianBall",      4, 12, 12);
+	        	PortalGuardianBallSpawn = sprite(p + "sprPortalGuardianBallSpawn", 7, 26, 26);
+	        	
+        	//#endregion
+        	
+		//#endregion
+
 		//#region CHESTS/PICKUPS
 		p = "chests/";
 

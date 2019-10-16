@@ -20,7 +20,7 @@
 #define weapon_text     return "THEY STAND NO CHANCE";
 #define weapon_type     return 0;  // None
 #define weapon_load     return 20; // 0.66 Seconds
-#define weapon_area     return (weapon_avail() ? 13 : -1); // 6-1
+#define weapon_area     return (weapon_avail() ? 11 : -1); // 5-2
 #define weapon_melee    return false;
 #define weapon_swap     return sndSwapShotgun;
 #define weapon_avail    return unlock_get("lairWep");

@@ -15,7 +15,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 #macro surfShadowTop global.surfShadowTop
 
@@ -482,7 +482,7 @@
 		raddrop = 8;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 2.4;
 		gunangle = random(360);
 		direction = gunangle;
@@ -502,7 +502,7 @@
     enemySprites();
      
     if(!tunneling) {
-        enemyWalk(walkspd, maxspeed);
+        enemyWalk(walkspeed, maxspeed);
     }
 
 #define Tunneler_end_step
@@ -567,7 +567,7 @@
                 
                 if(_targetDist < 8) {
                     alarm1 = 5 + random(5);
-                    scrWalk(_targetDist/walkspd, point_direction(x, y, _targetWall.x, _targetWall.y) + orandom(5));
+                    scrWalk(_targetDist/walkspeed, point_direction(x, y, _targetWall.x, _targetWall.y) + orandom(5));
                 }
                 
                 else {
@@ -606,6 +606,13 @@
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
+	
+	 // Nest Raven Disable Portal:
+	if(!instance_exists(enemy)){
+		if(array_length(instances_matching(CustomObject, "name", "NestRaven")) > 0){
+			with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
+		}
+	}
 	
 	 // Bind Events:
 	if(array_length(instances_seen(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24)) > 0){

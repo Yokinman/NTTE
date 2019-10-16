@@ -22,7 +22,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 #macro surfShadowTop global.surfShadowTop
 #macro surfShadowTopMask global.surfShadowTopMask
@@ -317,7 +317,12 @@
 		
 		 // Effects:
 		repeat(irandom_range(1, 2)){
-			scrFX(x, y, random(6), Smoke);
+			with(scrFX(x, y, random(6), Smoke)){
+				if(other.in_wall){
+					depth = -6.01;
+					speed /= 2;
+				}
+			}
 		}
 	}
 	
@@ -1351,7 +1356,7 @@
 
 
 #define BuriedVaultPedestal_create(_x, _y)
-	with(instance_create(_x, _y, ChestOpen)){
+	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.Pedestal;
 		depth = 2;
@@ -1375,10 +1380,19 @@
 				
 		var _obj = _pool[irandom(array_length(_pool) - 1)],
 			_inst = [],
-			_num = 1 + skill_get(mut_open_mind);
+			_mind = skill_get(mut_open_mind),
+			_num = 1;
 			
-		if(_num > 0) repeat(_num){
-			with(obj_create(x + orandom(4 * (_num - 1)), y + orandom(4 * (_num - 1)) - 4, _obj)) array_push(_inst, id);
+		while(_num-- > 0){
+			with(obj_create(x, y - 4, _obj)){
+				array_push(_inst, id);
+				
+				 // Open Mind:
+				if(_mind > 0 && (instance_is(self, chestprop) || instance_is(self, RadChest))){
+					_num += _mind;
+					_mind = 0;
+				}
+			}
 		}
 		
 		with(_inst) switch(_obj){
@@ -1388,6 +1402,9 @@
 				
 			case ProtoChest:
 				if(wep == wep_rusty_revolver){
+					sprite_index = sprProtoChestEmpty;
+					
+					 // Cool Wep:
 					var _part = wep_merge_decide(0, GameCont.hard + 4);
 					wep = wep_merge(_part[0], _part[1]);
 				}
@@ -1445,7 +1462,56 @@
 		}
 		rad_drop(x, y, _rad, random(360), 0);
 		
+		 // Vars:
+		inst = _inst;
+		spawn = ((_obj == EnemyHorror) ? 0 : (irandom_range(1, 2) + GameCont.vaults));
+		spawn_time = 0;
+		
 		return id;
+	}
+	
+#define BuriedVaultPedestal_step
+	if(spawn > 0){
+		if(spawn_time > 0){
+			spawn_time -= current_time_scale;
+			if(spawn_time <= 0){
+				spawn_time = 10;
+				spawn--;
+				
+				sound_play_pitch(sndCrownGuardianAppear, 1 + random(0.4));
+				
+				with(instance_random(instance_rectangle_bbox(x - 96, y - 96, x + 96, y + 96, instances_matching_ne(Floor, "id", floor_at(x, y))))){
+					with(instance_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, CrownGuardian)){
+						spr_idle = sprCrownGuardianAppear;
+						sprite_index = spr_idle;
+						
+						 // Just in Case:
+						with(instance_create(x, y, PortalClear)){
+							sprite_index = other.sprite_index;
+							mask_index = other.mask_index;
+						}
+					}
+				}
+			}
+		}
+		
+		 // Loot Taken:
+		else{
+			with(inst){
+				if(
+					!instance_exists(self)
+					||
+					(instance_is(self, ProtoStatue) && my_health < maxhealth * 0.7)
+					||
+					(instance_is(self, ProtoChest) && sprite_index == sprProtoChestOpen)
+				){
+					other.spawn_time = 30;
+					sound_play_pitch(sndCrownGuardianDisappear, 0.7 + random(0.2));
+					sound_play_music(mus100b);
+                    with(MusCont) alarm_set(3, -1);
+				}
+			}
+		}
 	}
 
 
@@ -2526,7 +2592,7 @@
         push = 1;
         wave = random(1000);
         walk = 0;
-        walkspd = 2;
+        walkspeed = 2;
         maxspeed = 3;
         revive_delay = 0;
     	stat_found = true;
@@ -2538,7 +2604,10 @@
         my_portalguy = noone;
     	my_corpse = noone;
         pickup_indicator = scrPickupIndicator("");
-        with(pickup_indicator) mask_index = mskShield;
+        with(pickup_indicator){
+        	mask_index = mskShield;
+        	creator_visible_follow = false;
+        }
 
          // Scripts:
         pet = "";
@@ -2847,7 +2916,9 @@
             }
         }
     }
-    with(_pickup) visible = other.can_take;
+    with(_pickup){
+    	visible = (other.can_take && (other.visible || (other.maxhealth > 0 && other.my_health <= 0)));
+    }
     
      // Portal Spin:
 	if(_spin != 0){
@@ -3149,6 +3220,7 @@
         text = "";
         xoff = 0;
         yoff = 0;
+        creator_visible_follow = true;
         
          // Events:
         on_meet = ["", "", ""];
@@ -3175,6 +3247,279 @@
 
 #define PickupIndicator_cleanup
     with(nearwep) instance_delete(id);
+
+
+#define PortalGuardian_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle      = spr.PortalGuardianIdle;
+		spr_walk      = spr.PortalGuardianIdle;
+		spr_hurt      = spr.PortalGuardianHurt;
+		spr_dead      = spr.PortalGuardianDead;
+		spr_appear    = spr.PortalGuardianAppear;
+		spr_disappear = spr.PortalGuardianDisappear;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "PORTAL GUARDIAN"];
+		depth = -2;
+		
+		 // Sound:
+		snd_hurt = sndExploGuardianHurt;
+		snd_dead = sndDogGuardianDead;
+		snd_mele = sndGuardianFire;
+		
+		 // Vars:
+		mask_index = mskBandit;
+		maxhealth = 45;
+		raddrop = 16;
+		meleedamage = 2;
+		size = 2;
+		walk = 0;
+		walkspeed = 0.8;
+		maxspeed = 4;
+		
+		 // Alarms:
+		alarm1 = 40 + irandom(20);
+		
+		 // NTTE:
+		ntte_anim = false;
+		
+		return id;
+	}
+	
+#define PortalGuardian_step
+	 // Hovery:
+	if(array_length(instances_meeting(x, y, instances_matching(projectile, "creator", id))) <= 0){
+		speed = max(1, speed);
+	}
+	
+	 // Animate:
+	if(sprite_index == spr_appear){
+		speed = 0;
+		
+		if(anim_end){
+			image_index = 0;
+			sprite_index = spr_idle;
+			
+			 // Effects:
+			repeat(8) scrFX(x, y, 3, Dust);
+			repeat(3){
+				with(instance_create(x + orandom(16), y + orandom(16), PortalL)){
+					depth = other.depth - 1;
+				}
+			}
+			sound_play_hit_ext(sndGuardianFire, 1.5 + orandom(0.2), 2);
+		}
+	}
+	else if((sprite_index != spr_disappear && sprite_index != spr_hurt) || anim_end){
+		if(speed <= 0) sprite_index = spr_idle;
+		else sprite_index = spr_walk;
+	}
+	
+	 // FX:
+	if(chance_ct(1, 30)){
+		with(instance_create(x + hspeed_raw, y + vspeed_raw, PortalL)){
+			depth = other.depth + choose(0, -1);
+		}
+	}
+	
+#define PortalGuardian_alrm1
+	alarm1 = 30 + random(30);
+	
+	target = instance_nearest(x, y, Player);
+	
+	if(instance_exists(target)){
+		var _targetDir = point_direction(x, y, target.x, target.y);
+		
+		if(in_sight(target)){
+			 // Attack:
+			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
+				scrEnemyShoot("PortalGuardianBall", _targetDir, 6);
+				scrRight(_targetDir);
+				
+				 // Sound:
+				sound_play_pitchvol(sndPortalOld, 2 + random(2), 1.5);
+			}
+			
+			 // Move:
+			else{
+				scrWalk(20 + random(20), _targetDir + (random_range(60, 100) * choose(-1, 1)));
+				
+				 // Away From Target:
+				if(in_distance(target, 128)){
+					direction = _targetDir + 180 + orandom(30);
+				}
+			}
+		}
+		
+		 // Wander:
+		else{
+			scrWalk(10 + random(10), _targetDir + orandom(40));
+		}
+	}
+	
+	 // Wander:
+	else{
+		scrWalk(30, random(360));
+	}
+	
+#define PortalGuardian_death
+	with(instance_create(x, y, PortalClear)){
+		image_xscale = 2/3;
+		image_yscale = image_xscale;
+	}
+	
+	 // Pickups:
+	pickup_drop(40, 10);
+
+
+#define PortalGuardianBall_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		spr_spwn = spr.PortalGuardianBallSpawn;
+		spr_idle = spr.PortalGuardianBall;
+		sprite_index = spr_spwn;
+		image_speed = 0.4;
+		depth = -3;
+		
+		 // Vars:
+		mask_index = mskNone;
+		damage = 2;
+		force = 0;
+		typ = 1;
+		creator = noone;
+		
+		return id;
+	}
+	
+#define PortalGuardianBall_anim
+	 // Fire:
+	if(sprite_index == spr_spwn){
+		sprite_index = spr_idle;
+		mask_index = mskSuperFlakBullet;
+		
+		 // FX:
+		sound_play_pitch(sndGuardianHurt, 1.5 + orandom(0.2));
+		repeat(5) scrFX(x, y, [direction + orandom(60), 3], Dust);
+	}
+	
+#define PortalGuardianBall_step
+	 // Spawning:
+	if(sprite_index == spr_spwn){
+		if(instance_exists(creator)){
+			var	l = 4,
+				d = direction;
+				
+			x = creator.x + lengthdir_x(l, d);
+			y = creator.y + lengthdir_y(l, d);
+		}
+		else{
+			x -= hspeed_raw;
+			y -= vspeed_raw;
+		}
+	}
+	
+	 // FX:
+	if(chance_ct(1, 15)){
+		with(instance_create(x + hspeed_raw, y + vspeed_raw, PortalL)){
+			depth = other.depth + choose(0, -1);
+		}
+	}
+	
+#define PortalGuardianBall_hit
+	if(projectile_canhit(other) && !instance_is(other, prop) && other.team != 0){
+		projectile_hit_push(other, damage, force);
+		
+		 // Swap Positions:
+		if(instance_exists(creator) && instance_exists(other)){
+			if(!instance_is(other, prop) && other.team != 0 && other.size < 6){
+				with(other){
+					x = other.creator.x;
+					y = other.creator.y;
+					xprevious = x;
+					yprevious = y;
+					
+					 // Effects:
+					with(instance_create(x, y, BulletHit)){
+						sprite_index = sprPortalDisappear;
+						depth = other.depth - 1;
+						image_angle = 0;
+					}
+					repeat(3) scrFX(x, y, 2, Smoke);
+					sound_play_hit_ext(sndPortalAppear, 2.5, 1);
+					
+					 // Just in Case:
+					with(instance_create(x, y, PortalClear)){
+						mask_index = other.mask_index;
+						sprite_index = other.sprite_index;
+						image_xscale = other.image_xscale;
+						image_yscale = other.image_yscale;
+						image_angle = other.image_angle;
+					}
+				}
+			}
+		}
+		
+		instance_destroy();
+	}
+	
+#define PortalGuardianBall_destroy
+	repeat(5) scrFX(x, y, [direction, 2], Smoke);
+	sound_play_hit_ext(sndGuardianDisappear, 2, 1);
+	
+	 // Teleport:
+	if(instance_exists(creator)) with(creator){
+		 // Disappear:
+		with(instance_create(x, y, BulletHit)){
+			sprite_index = other.spr_disappear;
+			image_xscale = other.image_xscale * other.right;
+			image_yscale = other.image_yscale;
+			image_angle = other.image_angle;
+			depth = other.depth - 1;
+		}
+		
+		 // Move:
+		x = other.x;
+		y = other.y;
+		xprevious = x;
+		yprevious = y;
+		
+		 // Unwall:
+		if(place_meeting(x, y, Wall)){
+			var	_tx = x,
+				_ty = y,
+				_disMax = 16;
+				
+			with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
+				for(var _x = bbox_left; _x <= bbox_right + 1; _x += 4){
+					for(var _y = bbox_top; _y <= bbox_bottom + 1; _y += 4){
+						var _dis = point_distance(_x, _y, _tx, _ty);
+						if(_dis < _disMax){
+							with(other) if(!place_meeting(_x, _y, Wall)){
+								_tx = _x;
+								_ty = _y;
+								_disMax = _dis;
+							}
+						}
+					}
+				}
+			}
+			
+			x = _tx;
+			y = _ty;
+		}
+		
+		 // Appear:
+		image_index = 0;
+		sprite_index = spr_appear;
+		sound_play_hit_ext(sndPortalAppear, 3, 1);
+	}
+	
+	 // Creator Dead:
+	else with(instance_create(x, y, BulletHit)){
+		sprite_index = sprPortalDisappear;
+		image_xscale = 0.7;
+		image_yscale = image_xscale;
+	}
 
 
 #define PortalPrevent_create(_x, _y)
@@ -3604,7 +3949,7 @@
 		jump_y = y;
 		grav = 0.8;
 		walk = 0;
-		walkspd = -1;
+		walkspeed = -1;
 		maxspeed = -1;
 		gunangle = -1;
 		wepangle = -1;
@@ -3648,7 +3993,7 @@
 	}
 	
 	 // Grab Sprites/Vars:
-	var _grab = ["sprite_index", "spr_idle", "spr_walk", "spr_weap", "spr_shadow", "spr_shadow_x", "spr_shadow_y", "gunangle", "wepangle", "maxspeed", "walkspd"];
+	var _grab = ["sprite_index", "spr_idle", "spr_walk", "spr_weap", "spr_shadow", "spr_shadow_x", "spr_shadow_y", "gunangle", "wepangle", "maxspeed", "walkspeed"];
 	for(var i = 0; i < lq_size(object); i++){
 		var k = lq_get_key(object, i);
 		if(k != "spr_walk" || !is_prop){
@@ -3671,7 +4016,7 @@
 	speed = max(speed, 0);
 	if(mask_index == -1) mask_index = (is_prop ? msk.TopProp : mskBandit);
 	if(maxspeed  == -1) maxspeed = (is_prop ? 0 : random_range(3.6, 4));
-	if(walkspd   == -1) walkspd  = (is_prop ? 0 : 0.8);
+	if(walkspeed == -1) walkspeed= (is_prop ? 0 : 0.8);
 	if(gunangle  == -1) gunangle = random(360);
 	if(wepangle  == -1) wepangle = 0;
 	if(!is_prop) scrRight(gunangle);
@@ -3783,7 +4128,7 @@
 			if(place_meeting(x, y, object_index)){
 				with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
 					if(place_meeting(x, y, other)) with(other){
-						motion_add_ct(point_direction(other.x, other.y, x, y), walkspd);
+						motion_add_ct(point_direction(other.x, other.y, x, y), walkspeed);
 					}
 				}
 			}
@@ -3842,7 +4187,7 @@
             }
             
              // Sound:
-			sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 4);
+			sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 6);
 		}
 	}
 
@@ -3980,9 +4325,13 @@
 				}
 			}
 		}
-		with(["x", "y", "xstart", "ystart", "xprevious", "yprevious", "direction", "speed", "walk", "right", "gunangle", "sprite_index"]){
+		with(["x", "y", "xstart", "ystart", "direction", "speed", "walk", "right", "gunangle", "sprite_index"]){
 			var n = self;
 			variable_instance_set(o, n, variable_instance_get(other, n));
+		}
+		with(o){
+			xprevious = x;
+			yprevious = y;
 		}
 		
 		 // Not today, Walls:
@@ -4017,7 +4366,7 @@
 		
 		 // Sounds:
 		if(!area_get_underwater(GameCont.area)){
-			sound_play_hit_ext(sndAssassinHit, 1 + orandom(0.3), abs(zspeed) / 6);
+			sound_play_hit_ext(sndAssassinHit, 1 + orandom(0.3), abs(zspeed) / 8);
 		}
 	}
 	
@@ -4839,7 +5188,7 @@
 			else{
 				zfric = grav;
 				zspeed = jump;
-				motion_add(random(360), walkspd * 2);
+				motion_add(random(360), walkspeed * 2);
 			}
 		}
 	}
@@ -4930,7 +5279,7 @@
 	        	}
 	        		
 	        	with(instances_meeting(x, y, _inst)){
-	        		if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
+	        		if(place_meeting(x, y, other) && (!creator_visible_follow || !instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
 	        			var e = on_meet;
 	        			if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
 	        				if(_maxDepth == null || depth < _maxDepth){
@@ -5026,6 +5375,11 @@
 				image_alpha /= 0.1;
 			}
 		}
+	}
+	
+	 // Portal Ball:
+	with(instances_matching(CustomProjectile, "name", "PortalGuardianBall")){
+		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 
 	if(DebugLag) trace_time("tegeneral_draw_bloom");

@@ -6,7 +6,7 @@
 #define weapon_text     return "SUMMERTIME FUN";
 #define weapon_type     return 4;  // Explosive
 #define weapon_cost     return 3;  // 3 Ammo
-#define weapon_load     return 17; // 0.57 Seconds
+#define weapon_load     return 23; // 0.77 Seconds
 #define weapon_area     return (weapon_avail() ? 8 : -1); // 3-3
 #define weapon_swap     return sndSwapExplosive;
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
@@ -29,7 +29,7 @@
     w = f.wep;
     
      // Projectiles:
-    for(var i = 0; i < 6; i++){
+    for(var i = 0; i < 5; i++){
         with(obj_create(x, y, "BubbleBomb")){
             move_contact_solid(other.gunangle, 6 + (i * 8));
             motion_add(other.gunangle + (orandom(12) * other.accuracy), 9 + random(1));

@@ -29,7 +29,7 @@
         path_wall       = An array of objects that the pet pathfinds around (Default - [Wall, InvisiWall]).
         maxhealth       = The pet's max HP, set this if you want the pet to take damage.
         walk            = Time in frames that the pet can move.
-        walkspd         = Walking acceleration.
+        walkspeed       = Walking acceleration.
         maxspeed        = Maximum walking speed.
         light           = Determines if NTTE should draw the pet's light on dark levels.
         light_radius    = A 2 element array representing the pet's light radius. [Inner, Outer]
@@ -99,7 +99,7 @@
     spr_shadow_y = 5;
     
      // Vars:
-    walkspd = 0.8;
+    walkspeed = 0.8;
     maxspeed = 3;
     
      // Stat:

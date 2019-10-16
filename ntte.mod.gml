@@ -328,7 +328,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 #macro surfCrownHide		global.surfCrownHide
 #macro surfCrownHideScreen	global.surfCrownHideScreen
@@ -698,8 +698,11 @@
             }
 
              // Scorpion Desert:
+            var _eventScorp = false;
             if(GameCont.subarea > 1 || GameCont.loops > 0){
             	if(chance(1, 80) || (chance(1, 40) && array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")) > 0)){
+            		_eventScorp = true;
+            		
 	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
 	                    var _gold = chance(1, 5);
 	                    
@@ -723,9 +726,6 @@
 	                	obj_create(x, y, "BigCactus");
 	                	instance_delete(id);
 	                }
-	                for(var i = 0; i < array_length(_topSpawn); i++){
-	                	if(_topSpawn[i, 0] == Bandit) _topSpawn[i, 0] = "BabyScorpion";
-	                }
 	                
 	                 // Scary sound:
 	                sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
@@ -734,15 +734,47 @@
             }
             
              // Top Spawns:
-            _topChance *= 1 + (GameCont.loops > 0) + (2 * GameCont.loops);
+            _topChance *= (0.5 + (0.5 * GameCont.loops)) * (1 + _eventScorp);
             _topSpawn = [
             	[Cactus,			1],
-            	[Bandit,			(1 + (GameCont.subarea == 3)) * (1 + GameCont.loops)],
-            	[JungleFly,			GameCont.loops/2],
-            	["BabyScorpion",	1/15]
+            	["BabyScorpion",	(_eventScorp ? (1 + GameCont.loops) : 1/20)]
             ];
             if(GameCont.subarea == 3){
-            	array_push(_topSpawn, [Barrel, 1/3]);
+            	_topChance *= 2;
+            	
+             	if(!_eventScorp){
+             		array_push(_topSpawn, [Bandit, 1 + GameCont.loops]);
+             	}
+            	array_push(_topSpawn, [Barrel, 1/5]);
+            	
+            	 // Bandit Camp:
+            	if(chance(1, 30)){
+            		_topChance *= 2.5;
+            		
+            		with(_topSpawn){
+            			switch(self[0]){
+            				case Cactus:
+            					self[@0] = Bandit;
+            					break;
+            					
+            				case Barrel:
+            					self[@1] = 1 + GameCont.loops;
+            					if(_eventScorp) self[@1] /= 2;
+            					break;
+            			}
+            		}
+            		
+            		with(WantBoss) number++;
+            		
+            		 // Sound:
+            		sound_play_pitchvol(sndVlambeer, 0.7, 2);
+            		sound_play_pitchvol(sndHitPlant, 0.5, 2);
+            		sound_play_pitchvol(sndSelectUp, 0.7, 2);
+            		sound_play_pitchvol(sndBigBanditTaunt, 1 + orandom(0.2), 0.5);
+            	}
+            }
+            else{
+            	array_push(_topSpawn, [JungleFly, GameCont.loops]);
             }
             if(chance(1, 3)){
             	with(instance_random(TopSmall)){
@@ -766,6 +798,9 @@
 								target = instance_create(x, y, AmmoChest);
 							}
 							TopObject_create(x, y, Cactus, random(360), -1);
+							
+							 // Skipping Doesn't Count:
+							if(instance_is(target, BigWeaponChest)) GameCont.nochest -= 2;
 						}
             		}
             	}
@@ -783,9 +818,10 @@
     	    }
     	    
              // Top Spawns:
+            _topChance /= 1.2;
             _topSpawn = [
             	[Pipe,			1],
-            	[ToxicBarrel,	1/10]
+            	[ToxicBarrel,	1/20]
             ];
             with(FrogQueen){
 		    	repeat(irandom_range(1, 3) + (3 * GameCont.loops)){
@@ -966,7 +1002,7 @@
         case 5: /// FROZEN CITY
         
         	 // Top Spawns:
-        	_topChance *= 5/6;
+        	_topChance /= 1.5;
         	_topSpawn = [
         		[Hydrant, 1],
         		[SnowMan, 1/20]
@@ -995,7 +1031,7 @@
 	    			}
 	        	}
     	    }
-	    	with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 100))){
+	    	with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 200))){
 	    		with(obj_create(x, y, "Cat")){
 	    			sit = other; // It fits
 	    			depth = other.depth - 0.1;
@@ -1033,6 +1069,10 @@
         	
     	     // Loop Spawns:
     	    if(GameCont.loops > 0){
+    	    	with(Freak) if(chance(1, 5)){
+    	    		instance_create(x, y, BoneFish);
+    	    		instance_delete(id);
+    	    	}
     	    	with(RhinoFreak) if(chance(1, 3)){
     	    		obj_create(x, y, "Bat");
     	    		instance_delete(id);
@@ -1041,8 +1081,8 @@
     	    		obj_create(x, y, "Bat");
     	    		instance_delete(id);
     	    	}
-    	    	with(Freak) if(chance(1, 5)){
-    	    		instance_create(x, y, BoneFish);
+    	    	with(LaserCrystal) if(chance(1, 2)){
+    	    		obj_create(x, y, "PortalGuardian");
     	    		instance_delete(id);
     	    	}
     	    }
@@ -1051,11 +1091,18 @@
             
         case 7: /// PALACE
         
+    		 // Cool Dudes:
+    		with(Guardian) if(chance(1, 20)){
+    			obj_create(x, y, "PortalGuardian");
+    			instance_delete(id);
+    		}
+    		
         	 // Top Spawns
         	if(GameCont.subarea != 3){
+            	_topChance /= 1.2;
         		_topSpawn = [
-	        		[Pillar,			1],
-	        		[Generator,			1/5]
+	        		[Pillar,	1],
+	        		[Generator,	1/5]
 	        	];
         	}	
         	/*else with(ThroneStatue){
@@ -1072,6 +1119,12 @@
     	    		TopObject_create(x, y, object_index, -1, -1);
     	    		instance_delete(id);
     	    	}
+    	    	
+    	    	 // More Cool Dudes:
+	    		with(ExploGuardian) if(chance(1, 10)){
+	    			obj_create(x, y, "PortalGuardian");
+	    			instance_delete(id);
+	    		}
     	    }
     	    
         	break;
@@ -1222,7 +1275,7 @@
 							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / 3)){
 								var l = random_range(12, 24);
 								with(TopObject_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bandit, d, 0)){
-									wander_chance = 0;
+									wander_chance = 1/20;
 								}
 							}
 							break;
@@ -1289,7 +1342,7 @@
 						case Hydrant: // Seal Squads
 							var	_type = choose(5, 6),
 								_alrm = 30 * random_range(5, 1 + instance_number(enemy)),
-								_num = 3 + irandom(1 + (crown_current == crwn_blood)) + ceil(GameCont.loops / 2);
+								_num = 3 + irandom(2 + (crown_current == crwn_blood)) + ceil(GameCont.loops / 2);
 								
 							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / _num)){
 								with(TopObject_create(x, y, (chance(1, 80) ? Bandit : "Seal"), d, -1)){
@@ -1349,7 +1402,7 @@
     	}
 		
 		 // Rads:
-		if(_obj == -1 && chance(1, 9)){
+		if(_obj == -1 && chance(1, 10)){
 			_obj = ((crown_current == crwn_life && chance(2, 3)) ? HealthChest : RadChest);
 		}
 		

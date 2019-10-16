@@ -6,7 +6,7 @@
 #define weapon_text     return "SOAP EVERYWHERE";
 #define weapon_auto     return true;
 #define weapon_type     return 4; // Explosive
-#define weapon_cost     return 2; // 2 Ammo
+#define weapon_cost     return 3; // 3 Ammo
 #define weapon_load     return 3; // 0.1 Seconds
 #define weapon_area     return (weapon_avail() ? 10 : -1); // 5-1
 #define weapon_swap     return sndSwapMotorized;
@@ -34,7 +34,7 @@
          // Projectile:
         with(obj_create(x, y, "BubbleBomb")){
             move_contact_solid(other.gunangle, 6);
-            motion_add(other.gunangle + orandom(6 * other.accuracy), 8 + random(4));
+            motion_add(other.gunangle + orandom(6 * other.accuracy), 10 + random(2));
             creator = f.creator;
             team = other.team;
         }

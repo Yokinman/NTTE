@@ -5,7 +5,7 @@
 #define weapon_name     return (weapon_avail() ? "HYPER BUBBLER" : "LOCKED");
 #define weapon_text     return "POWER WASHER";
 #define weapon_type     return 4; // Explosive
-#define weapon_cost     return 4; // 4 Ammo
+#define weapon_cost     return 3; // 3 Ammo
 #define weapon_load     return 7; // 0.43 Seconds
 #define weapon_area     return (weapon_avail() ? 15 : -1); // 7-2
 #define weapon_swap     return sndSwapExplosive;

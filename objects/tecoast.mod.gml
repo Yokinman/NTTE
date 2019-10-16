@@ -19,7 +19,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 
 #define BloomingAssassin_create(_x, _y)
@@ -350,7 +350,7 @@
         nowade = true;
         right = choose(-1, 1);
         walk = 0;
-		walkspd = 1.2;
+		walkspeed = 1.2;
 		maxspeed = 2.6;
 		scared = false;
 
@@ -451,7 +451,7 @@
 		raddrop = 4;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		gunangle = random(360);
 		direction = gunangle;
@@ -717,7 +717,7 @@
 		raddrop = 3;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3.5;
 		gunangle = random(360);
 		direction = gunangle;
@@ -829,7 +829,7 @@
 		raddrop = 120;
 		size = 4;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 2;
 		ammo = 0;
 		canmelee = 0;
@@ -871,7 +871,7 @@
 
 #define Palanking_step
     if(z <= 0) walk = 0;
-    enemyWalk(walkspd, maxspeed);
+    enemyWalk(walkspeed, maxspeed);
 
      // Seals:
     var _sealNum = (seal_max - array_count(seal, noone)),
@@ -908,7 +908,7 @@
                 else{
                     hold_x = x - other.x;
                     hold_y = y - other.y;
-                    motion_add(point_direction(x, y, other.x + _x, other.y + _y) + orandom(10), walkspd);
+                    motion_add(point_direction(x, y, other.x + _x, other.y + _y) + orandom(10), walkspeed);
                     if(distance_to_point(_x, _y) < 8 || distance_to_object(other) < 8) hold = true;
                 }
             }
@@ -1963,7 +1963,7 @@
 		raddrop = 20;
 		size = 2;
 		walk = 0;
-		walkspd = 0.6;
+		walkspeed = 0.6;
 		maxspeed = 3;
 		dash = 0;
 		dash_factor = 1.25;
@@ -2117,7 +2117,7 @@
         raddrop = 1;
         size = 1;
         walk = 0;
-        walkspd = 0.8;
+        walkspeed = 0.8;
         maxspeed = 3.5;
         type = 0;
         hold = false;
@@ -3082,7 +3082,7 @@
         raddrop = 12;
         size = 2;
         walk = 0;
-        walkspd = 0.8;
+        walkspeed = 0.8;
         maxspeed = 3;
         wepangle = 0;
         gunangle = random(360);
@@ -3575,7 +3575,7 @@
         size = 2;
         meleedamage = 4;
         walk = 0;
-        walkspd = 1;
+        walkspeed = 1;
         maxspeed = 2.5;
 		gunangle = random(360);
 		direction = gunangle;

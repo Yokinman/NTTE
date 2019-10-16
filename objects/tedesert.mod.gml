@@ -15,7 +15,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 
 #define BabyScorpion_create(_x, _y)
@@ -47,7 +47,7 @@
 		size = 1;
 		walk = 0;
 		ammo = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 2.4;
 		gunangle = random(360);
 		direction = gunangle;
@@ -283,7 +283,7 @@
 
 		 // Vars:
 		mask_index = mskLast;
-		maxhealth = 60 + 30 * GameCont.loops;
+		maxhealth = 50;
 		lsthealth = maxhealth;
 		raddrop = 6;
 		size = 4;
@@ -807,7 +807,7 @@
 		size = 3;
 		meleedamage = 3;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		ammo = 4;
 		swim = 0;

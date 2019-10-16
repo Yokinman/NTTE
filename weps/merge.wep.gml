@@ -1515,7 +1515,9 @@
 			
 			 // Difficulty Check:
             if(1 + max(1, _part[0].area) + max(1, _part[1].area) <= _hardMax){
-            	if(_part[0] != _part[1]) return _part;
+            	if(lq_defget(_part[0], "weap", _part[0]) != lq_defget(_part[1], "weap", _part[1])){
+            		return _part;
+            	}
             }
             
             if(is_object(_front)) break;
@@ -3143,6 +3145,8 @@
 #define proj_lightning(_event, o)
 	switch(_event){
 		case proj_create:
+			if(instance_is(self, Lightning)) return true;
+			
 			 // Vars:
 			o.time = 1;
 			o.last = noone;
@@ -3812,8 +3816,8 @@
 		if(instance_exists(self)){
 			var _spr = ((sprite_get_height(sprite_index) > 16) ? sprNukeFlame : sprRocketFlame),
 				_img = ((current_frame + id) * 0.4),
-				_xsc = image_xscale * (speed / 10),
-				_ysc = image_yscale * min(speed / 5, 1),
+				_xsc = image_xscale * (speed / 12),
+				_ysc = image_yscale * min(speed / 6, 1),
 				_ang = direction,
 				_col = image_blend,
 				_alp = image_alpha,
@@ -3831,7 +3835,7 @@
 			}
 	
 			 // Smoke:
-			if(speed > 0 && chance_ct(1, 20 / (speed + 1))){
+			if(speed > 0 && chance_ct(1, 200 / ((2 * (speed + damage)) + 1))){
 				with(instance_create(_x - (2 * hspeed), _y - (2 * vspeed), Smoke)){
 					depth = max(depth, other.depth - 0.05);
 					image_xscale *= other.image_xscale;
@@ -3877,7 +3881,7 @@
 					 // Follow Mouse:
 					if(player_is_active(o.index)){
 						var	_diff = angle_difference(point_direction(x, y, mouse_x[o.index], mouse_y[o.index]), direction),
-			    			_turn = (_diff / (2 * speed)) * power(abs(dsin(_diff)), 1) * current_time_scale;
+			    			_turn = (_diff / 12) * power(abs(dsin(_diff)), 1) * current_time_scale;
 			    			
 			    		direction += _turn;
 			    		image_angle += _turn;

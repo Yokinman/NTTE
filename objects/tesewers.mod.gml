@@ -17,7 +17,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 
 #define AlbinoBolt_create(_x, _y)
@@ -228,7 +228,7 @@
 		raddrop = 7;
 		size = 2;
 		walk = 0;
-		walkspd = 1.2;
+		walkspeed = 1.2;
 		maxspeed = 3.6;
 		gunangle = random(360);
 		direction = gunangle;
@@ -448,7 +448,7 @@
 		zfric = 0.5;
 		zbounce = 0;
 		kick_invul = (current_frame + 30);
-		walkspd = 1.2;
+		walkspeed = 1.2;
 		maxspeed = 3.4;
 		gunangle = random(360);
 		direction = gunangle;
@@ -598,7 +598,6 @@
 		spr_weap = spr.BatWeap;
 		spr_shadow = shd48;
 		hitid = [spr_idle, "BAT"];
-		mask_index = mskScorpion;
 		depth = -2;
 
          // Sound:
@@ -606,13 +605,14 @@
         snd_dead = sndFrogEggDead;
 
          // Vars:
+		mask_index = mskScorpion;
 		maxhealth = 30;
 		raddrop = 12;
 		size = 2;
 		walk = 0;
 		scream = 0;
 		stress = 20;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 2.5;
 		gunangle = random(360);
 		direction = gunangle;
@@ -826,7 +826,7 @@
 		walk = 0;
 		scream = 0;
 		stress = 20;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		tauntdelay = 60;
 		gunangle = random(360);
@@ -1417,7 +1417,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		raddrop = 6;
 		size = 2;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3.6;
 		gunangle = random(360);
 		ammo = 0;
@@ -1705,7 +1705,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_weap = spr.CatWeap;
 		spr_shadow = shd24;
 		hitid = [spr_idle, "CAT"];
-		mask_index = mskRat;
 		depth = -2;
 
          // Sound:
@@ -1714,11 +1713,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		toxer_loop = -1;
 
 		 // Vars:
+		mask_index = mskRat;
 		maxhealth = 10;
 		raddrop = 6;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		hole = noone;
 		ammo = 0;
@@ -2079,7 +2079,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		canmelee = false;
 		size = 3;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
         tauntdelay = 40;
         dash = 0;
@@ -2101,7 +2101,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 
 #define CatBoss_step
-	enemyWalk(walkspd, maxspeed + (3.5 * (dash > 0)));
+	enemyWalk(walkspeed, maxspeed + (3.5 * (dash > 0)));
 
 	 // Boutta Dash:
 	if(sprite_index == spr_chrg){
@@ -3905,7 +3905,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         spr_shadow = mskNone;
         image_xscale = choose(-1, 1);
         image_speed = 0.4;
-		depth = -9;
+		depth = -6.0001;
 
          // Sound:
         snd_hurt = sndHitRock;

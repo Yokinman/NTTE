@@ -5,8 +5,8 @@
 #define weapon_name     return (weapon_avail() ? "BUBBLE RIFLE" : "LOCKED");
 #define weapon_text     return "REFRESHING";
 #define weapon_type     return 4; // Explosive
-#define weapon_cost     return 1; // 1 Ammo
-#define weapon_load     return 6; // 0.2 Seconds
+#define weapon_cost     return 2; // 2 Ammo
+#define weapon_load     return 9; // 0.3 Seconds
 #define weapon_area     return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap     return sndSwapExplosive;
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);

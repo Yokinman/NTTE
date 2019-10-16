@@ -16,7 +16,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 
 #define InvMortar_create(_x, _y)
@@ -65,7 +65,7 @@
 		raddrop = 30;
 		size = 3;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 2;
 		ammo = 4;
 		target_x = x;
@@ -457,7 +457,7 @@
 		raddrop = 2;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		nexthurt = current_frame + 15;
 		direction = random(360);

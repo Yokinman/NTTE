@@ -238,10 +238,7 @@
 #macro DebugLag global.debug_lag
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
-
-#macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index > image_number - 1 + image_speed)
+#macro anim_end (image_index + image_speed_raw >= image_number)
 
 #macro surfAnglerTrail	global.surfAnglerTrail
 #macro surfAnglerClear	global.surfAnglerClear
@@ -282,7 +279,7 @@
 		meleedamage = 4;
 		size = 3;
 		walk = 0;
-		walkspd = 0.6;
+		walkspeed = 0.6;
 		maxspeed = 3;
 		hiding = true;
 		ammo = 0;
@@ -300,7 +297,7 @@
     }
 
 #define Angler_step
-    enemyWalk(walkspd, maxspeed + (8 * (ammo >= 0 && walk > 0)));
+    enemyWalk(walkspeed, maxspeed + (8 * (ammo >= 0 && walk > 0)));
 
      // Animate:
     if(hiding){
@@ -667,7 +664,7 @@
          // Bubble Collision:
         var m = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
 	    if(m) with(m){
-            if(place_meeting(x, y + other.z, other)){
+            if(place_meeting(x, y, other)){
                 with(other) motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
             }
 	    }
@@ -898,7 +895,7 @@
         canfly = true;
         kills = 0;
         walk = 0;
-        walkspd = 1;
+        walkspeed = 1;
         maxspeed = 3.5;
         minCounter = 0; // grace period before counters are active
         counterTime = 0;
@@ -1220,7 +1217,7 @@
         meleedamage = 2;
         size = 1;
         walk = 0;
-        walkspd = 1.2;
+        walkspeed = 1.2;
         maxspeed = 3;
         pitDepth = 0;
         direction = random(360);
@@ -1720,7 +1717,7 @@
 		raddrop = 12;
 		size = 2;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 4;
 		meleedamage = 4;
 		direction = random(360);
@@ -1952,7 +1949,7 @@
         raddrop = 16; // (type == 3 ? 38 : 16);
         size = 2;
         walk = 0;
-        walkspd = 1;
+        walkspeed = 1;
         maxspeed = 2.6;
         meleedamage = 3;
         direction = random(360);
@@ -1975,7 +1972,7 @@
 
      // Movement:
     var _maxSpd = clamp(0.07 * walk * current_time_scale, 1, maxspeed); // arbitrary values, feel free to fiddle
-    enemyWalk(walkspd, _maxSpd);
+    enemyWalk(walkspeed, _maxSpd);
 
      // Bouncy Boy:
     if(speed > 0){
@@ -3414,7 +3411,7 @@
         canfly = true;
         walk = 0;
         kills = 0;
-        walkspd = 2;
+        walkspeed = 2;
         maxspeed = 3.5;
         meleedamage = 1;
         canmelee = false;
@@ -4029,7 +4026,7 @@
 		raddrop = 4;
 		size = 1;
 		walk = 0;
-		walkspd = 0.8;
+		walkspeed = 0.8;
 		maxspeed = 3;
 		meleedamage = 2;
 		direction = random(360);
@@ -4374,7 +4371,7 @@
 		}
 
 		 // Position Beams:
-		var o = _yoff + (6 * other.image_yscale),
+		var o = _yoff + (6 * image_yscale),
 			t = 4 * current_time_scale,
 			_x = x + hspeed,
 			_y = y + vspeed,
@@ -4913,7 +4910,7 @@
 		active = false;
 		canfly = true;
 		walk = 0;
-		walkspd = 0.6;
+		walkspeed = 0.6;
 		maxspeed = 2.4;
 		pit_height = 0;
 		alarm1 = 30;
@@ -5081,7 +5078,7 @@
         raddrop = 3;
         size = 1;
         walk = 0;
-        walkspd = 1;
+        walkspeed = 1;
         maxspeed = 4;
         meleedamage = 2;
         is_king = 0; // Decides leader
