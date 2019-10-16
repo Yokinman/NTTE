@@ -628,7 +628,7 @@
     }
 
      // Hurt:
-    else if(image_index > image_number - 1){
+    else if(image_index + image_speed_raw >= image_number){
         sprite_index = spr_idle;
     }
 
