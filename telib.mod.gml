@@ -1,4 +1,106 @@
+#define chat_command(_cmd, _arg, _ind) /// debug commands
+    switch(_cmd){
+        case "pet":
+            Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
+            return true;
+
+		case "wepmerge":
+			var a = string_split(_arg, "/"),
+				w = wep_none;
+
+			if(array_length(a) >= 2){
+				w = wep_merge(a[0], a[1]);
+			}
+			else{
+				w = wep_merge(a[0], a[0]);
+			}
+
+			with(instance_create(mouse_x[_ind], mouse_y[_ind], WepPickup)){
+				wep = w;
+				ammo = true;
+			}
+			return true;
+
+		case "debuglag":
+			var _mod = [];
+			if(_arg != ""){
+				var	p = 0;
+				for(var i = 0; i <= string_length(_arg); i++){
+					if(string_char_at(_arg, i) == "."){
+						p = i;
+					}
+				}
+	
+				var	_name = ((p <= 0) ? _arg : string_copy(_arg, 1, p - 1)),
+					_type = ((p <= 0) ? "mod" : string_delete(_arg, 1, p));
+	
+				array_push(_mod, [_type, _name]);
+			}
+			else{
+				DebugLag = !DebugLag;
+				with(["mod", "weapon", "race", "skill", "crown", "area", "skin"]){
+					with(mod_get_names(self)){
+						array_push(_mod, [other, self]);
+					}
+				}
+			}
+
+			with(_mod){
+				var _type = self[0],
+					_name = self[1],
+					_varn = "debug_lag";
+
+				if(mod_variable_exists(_type, _name, _varn)){
+					var _state = ((_arg != "") ? !mod_variable_get(_type, _name, _varn) : DebugLag);
+					if(_state ^^ mod_variable_get(_type, _name, _varn)){
+						mod_variable_set(_type, _name, _varn, _state);
+						trace_color((_state ? "ENABLED" : "DISABLED") + " " + _name + "." + _type, (_state ? c_lime : c_red));
+					}
+				}
+				else if(_arg != ""){
+					trace_color("Cannot debug lag for " + _arg, c_red);
+				}
+			}
+
+			return true;
+
+		case "unlockall":
+		case "unlockreset":
+			var _unlock = (_cmd == "unlockall");
+
+			with(global.debug_unlock){
+				unlock_set(self, _unlock);
+			}
+
+			scrUnlock("", "@wEVERYTHING " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "unlocktoggle":
+			var _unlock = !unlock_get(_arg);
+
+			unlock_set(_arg, _unlock);
+
+			scrUnlock("", "@w" + _arg + " " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "charm":
+			scrCharm(instance_create(mouse_x[_ind], mouse_y[_ind], asset_get_index(_arg)), true);
+			return true;
+    }
+
+
 #define init
+	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime", "boneScythe"];
+	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
+	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
+	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
+	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
+	chat_comp_add("charm", "(object)", "spawn a charmed object");
+	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
+	/** Delete above in release versions **/
+	
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
