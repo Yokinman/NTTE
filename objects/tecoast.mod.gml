@@ -3106,7 +3106,7 @@
 
 #define SealAnchor_projectile
 	 // Deflect Projectile, No Team Change:
-	if(team != other.team){
+	if(instance_exists(self) && instance_exists(other) && team != other.team){
 		with(other){
 			if(typ == 1){
 				direction = other.direction;

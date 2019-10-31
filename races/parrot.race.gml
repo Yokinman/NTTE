@@ -145,6 +145,8 @@
 #macro surfCharm global.surfCharm
 #macro shadCharm global.shadCharm
 
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+
 /// General
 #define race_name
 	return "PARROT";

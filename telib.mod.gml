@@ -874,48 +874,45 @@
     return c;
 
 #define charm_allyize(_bool)
+	var _inst = noone;
+	
 	 // Become Allied:
 	if(_bool){
 		switch(sprite_index){
 			case sprEnemyBullet1:
 				if(instance_is(self, EnemyBullet1)){
-	    			instance_change(AllyBullet, false);
+	    			_inst = instance_create(x, y, AllyBullet);
 				}
 	    		sprite_index = sprAllyBullet;
 				break;
 	
 			case sprEBullet3:
 				if(instance_is(self, EnemyBullet3)){
-	    			instance_change(Bullet2, false);
-	    			bonus = false;
+	    			_inst = instance_create(x, y, Bullet2);
+	    			with(_inst) bonus = false;
 				}
 	    		sprite_index = sprBullet2;
 				break;
 	
 			case sprEnemyBullet4:
 				if(instance_is(self, EnemyBullet4)){
-	    			instance_change(AllyBullet, false);
+	    			_inst = instance_create(x, y, AllyBullet);
 				}
 	    		sprite_index = spr.AllyBullet4;
 				break;
 	
 			case sprLHBouncer:
 				if(instance_is(self, LHBouncer)){
-	    			instance_change(BouncerBullet, false);
+	    			_inst = instance_create(x, y, BouncerBullet);
 				}
 	    		sprite_index = sprBouncerBullet;
 				break;
 	
 			case sprEFlak:
 				if(instance_is(self, EFlakBullet)){
-					var _inst = obj_create(x, y, "AllyFlakBullet");
-					with(variable_instance_get_names(id)){
-						if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "sprite_index"], self)){
-							variable_instance_set(_inst, self, variable_instance_get(other, self));
-						}
-					}
-					instance_delete(id);
+					_inst = obj_create(x, y, "AllyFlakBullet");
 				}
+				sprite_index = spr.AllyFlakBullet;
 				break;
 	
 			case sprEnemyLaser:
@@ -935,22 +932,22 @@
 		switch(sprite_index){
 			case sprAllyBullet:
 				if(instance_is(self, AllyBullet)){
-	    			instance_change(EnemyBullet1, false);
+	    			_inst = instance_create(x, y, EnemyBullet1);
 				}
 	    		sprite_index = sprEnemyBullet1;
 				break;
 	
 			case sprBullet2:
 				if(instance_is(self, Bullet2)){
-	    			instance_change(EnemyBullet3, false);
-	    			bonus = false;
+	    			_inst = instance_create(x, y, EnemyBullet3);
+	    			with(_inst) bonus = false;
 				}
 	    		sprite_index = sprEBullet3;
 				break;
 	
 			case sprBouncerBullet:
 				if(instance_is(self, BouncerBullet)){
-	    			instance_change(LHBouncer, false);
+	    			_inst = instance_create(x, y, LHBouncer);
 				}
 	    		sprite_index = sprLHBouncer;
 				break;
@@ -968,7 +965,7 @@
 			default:
 				if(sprite_index == spr.AllyBullet4){
 					if(instance_is(self, AllyBullet)){
-		    			instance_change(EnemyBullet4, false);
+	    				_inst = instance_create(x, y, EnemyBullet4);
 					}
 		    		sprite_index = sprEnemyBullet4;
 				}
@@ -979,6 +976,16 @@
 					}
 				}
 		}
+	}
+	
+	 // Better than instance_change:
+	if(instance_exists(_inst)){
+		with(variable_instance_get_names(id)){
+			if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self)){
+				variable_instance_set(_inst, self, variable_instance_get(other, self));
+			}
+		}
+		instance_delete(id);
 	}
 
 #define scrBossHP(_hp)
