@@ -114,10 +114,10 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedVaultPedestal", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "Trident", "VenomPellet"],
-		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "CatChest", "ChestShop", "CursedAmmoChest", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "VenomPellet"],
+		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
-		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab"],
+		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"tewater"	  : ["Angler", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "ClamChest", "Crack", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Hammerhead", "HyperBubble", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "OasisPetBecome", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "Puffer", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "YetiCrab"],
 	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
 	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
@@ -682,7 +682,7 @@
 
 #define z_engine()
     z += zspeed * current_time_scale;
-    zspeed -= zfric * current_time_scale;
+    zspeed -= zfriction * current_time_scale;
 
 #define option_get(_name, _default)
 	var q = lq_defget(sav, "option", {});
@@ -1328,12 +1328,11 @@
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)
     return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1), "bbox_left", _x2), "bbox_bottom", _y1), "bbox_top", _y2);
 
-#define instances_seen(_obj, _ext)
+#define instances_seen_nonsync(_obj, _bx, _by)
     var _vx = view_xview_nonsync,
-        _vy = view_yview_nonsync,
-        o = _ext;
-
-    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - o), "bbox_left", _vx + game_width + o), "bbox_bottom", _vy - o), "bbox_top", _vy + game_height + o);
+        _vy = view_yview_nonsync;
+        
+    return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - _bx), "bbox_left", _vx + game_width + _bx), "bbox_bottom", _vy - _by), "bbox_top", _vy + game_height + _by);
 
 #define instances_meeting(_x, _y, _obj)
     var _tx = x,
@@ -2582,8 +2581,8 @@
 			case "Puffer":
 			case "Hammerhead":
 				wander_chance = 1/12;
-    			wander_walk = [0, 5];
-    			wander_chance = 1/2;
+				wander_walk = [0, 5];
+				wander_chance = 1/2;
 				break;
 				
 			case BuffGator:
@@ -2596,7 +2595,7 @@
 				wander_walk = [0, 5];
 				jump *= 1.2;
 				spawn_dis = random_range(80, 160);
-				alarm1 = random_range(90, 600 + (150 * GameCont.loops));
+				alarm1 = (distance_to_object(Player) * (2 + GameCont.loops)) + irandom(30);
 				break;
 				
 			case Freak:
@@ -2611,7 +2610,7 @@
 				wander_chance = 1;
 				wander_walk = [0, 5];
 				spawn_dis = random_range(64, 240);
-				alarm1 = random_range(90, 600 + (150 * GameCont.loops));
+				alarm1 = irandom_range(1, 60) + (distance_to_object(Player) * (2 + GameCont.loops));
 				break;
 				
 			case Gator:
@@ -2771,12 +2770,9 @@
 				break;
 				
 			case MeleeFake:
-				object.image_speed = 0.4;
-				spr_walk = sprMeleeDead;
+				spr_walk = sprMeleeFake;
 				spr_shadow = sprMine;
 				spr_shadow_y = 7;
-				shine = true;
-				shine_speed = 1/90;
 				break;
 				
 			case MoneyPile:
@@ -2882,6 +2878,13 @@
     				
 				case MeleeFake: // Wake up bro, dumbass
 					if("my_health" in object) object.my_health--;
+					image_index = 0;
+					break;
+					
+				case Pipe: // eat smash br
+					with(instances_meeting(x, y, Wall)){
+						topindex = 0;
+					}
 					break;
 			}
 			

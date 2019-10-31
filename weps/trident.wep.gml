@@ -29,7 +29,7 @@
 #define weapon_chrg		return true;
 #define weapon_swap(w)	return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
 #define weapon_sprt(w)	return (lq_defget(w, "visible", true) ? (weapon_avail() ? global.sprWep : global.sprWepLocked) : mskNone);
-#define weapon_avail	return unlock_get("coastWep");
+#define weapon_avail	return (unlock_get("coastWep") || unlock_get("trident"));
 
 #define weapon_load(w)
 	 // Stab Reload:

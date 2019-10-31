@@ -521,7 +521,7 @@
         mask_index = mskSuperFlakBullet;
         z = 0;
         zspeed = -0.5;
-        zfric = -0.02;
+        zfriction = -0.02;
         friction = 0.4;
         damage = 0;
         force = 2;
@@ -551,7 +551,7 @@
 #define BubbleBomb_step
      // Float Up:
     z += zspeed * current_time_scale;
-    zspeed -= zfric * current_time_scale;
+    zspeed -= zfriction * current_time_scale;
     image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
     depth = max(min(depth, -z), TopCont.depth + 1);
 
@@ -1659,14 +1659,25 @@
 			_y2 = tether_y;
 
 		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
-			instance_change(BoltTrail, true);
-			with(other) if(!place_meeting(_x1, _y1, Wall) && !place_meeting(_x2, _y2, Wall)){
-				other.direction = direction;
-				other.speed = max(0, speed - 1);
+			with(instance_create(x, y, BoltTrail)){
+				sprite_index = spr.ElectroPlasmaTether;
+				image_index  = other.image_index;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = other.image_angle;
+				image_blend  = other.image_blend;
+				image_alpha  = other.image_alpha;
+				hspeed       = other.hspeed;
+				vspeed       = other.vspeed;
+				
+				with(other) if(!place_meeting(_x1, _y1, Wall) && !place_meeting(_x2, _y2, Wall)){
+					other.direction = direction;
+					other.speed = max(0, speed - 1);
+				}
+				image_yscale -= random(0.4);
+				depth = -3;
 			}
-			sprite_index = spr.ElectroPlasmaTether;
-			image_yscale -= random(0.4);
-			depth = -3;
+			instance_delete(id);
 		}
     }
 
@@ -3081,7 +3092,7 @@
 	                                	if(other.object_index == FloorExplo || chance(1, 2)){
 	                                		sprite_index = spr.DebrisTrench;
 	                                		zspeed /= 2;
-	                                		zfric /= 2;
+	                                		zfriction /= 2;
 	                                	}
 	                                    //image_index = (point_direction(other.x, other.y, x, y) - 45) mod 90;
 	                                }
@@ -3156,7 +3167,13 @@
 		            		if(!intro){
 		            			speed /= 2;
 		            			rise_delay = 84;
-		            			sound_play(mus.PitSquidIntro);
+		            			
+		            			var	s = sound_play(mus.PitSquidIntro),
+							    	c = mod_variable_get("mod", "ntte", "current");
+							    	
+							    if(is_object(c)){
+							    	audio_sound_gain(s, audio_sound_get_gain(c.mus.hold), 0);
+							    }
 		            		}
 		            	}
 		            }
@@ -3856,7 +3873,7 @@
 	
 #define PitSquidBomb_destroy
 	var l = 8,
-		_projectiles = [];
+		_explo = [];
 	
 	 // Triple Sucker:
 	if(triple){
@@ -3864,27 +3881,25 @@
 			var _x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			array_push(_projectiles, instance_create(_x, _y, CustomProjectile));
+			array_push(_explo, instance_create(_x, _y, PlasmaImpact));
 			// scrEnemyShootExt(_x, _y, "ElectroPlasmaImpact", direction, 0);
 		}
 	}
 
 	 // Single Sucker:
 	else{
-		array_push(_projectiles, instance_create(x, y, CustomProjectile));
+		array_push(_explo, instance_create(x, y, PlasmaImpact));
 		// scrEnemyShoot("ElectroPlasmaImpact", direction, 0);
 		
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
 	        with(scrEnemyShootExt(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
-	            zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfric) / (speed * 2);
+	            zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfriction) / (speed * 2);
 	        }
 		}
 	}
 	
-	with(_projectiles){
-		instance_change(PlasmaImpact, false);
-
+	with(_explo){
 		direction = other.direction;
 		creator	  = other.creator;
 		team	  = other.team;
@@ -3898,7 +3913,7 @@
 		image_yscale = other.scale;
 		
 		 // Effects:
-		instance_create(x, y, Smoke).waterbubble = false;
+		with(instance_create(x, y, Smoke)) waterbubble = false;
 	}
 	
 	 // Effects:
@@ -4775,7 +4790,7 @@
          // Vars:
         z = 0;
         zspeed = 6 + random(4);
-        zfric = 0.3;
+        zfriction = 0.3;
         friction = 0.05;
         image_angle += orandom(20);
         rotspeed = random_range(1, 2) * choose(-1, 1);
@@ -5400,7 +5415,7 @@
         }
     }
     var _inst = instances_matching(hitme, "visible", true);
-    with(instances_seen(instances_matching_ne(_inst, "spr_bubble", -1), 16)){
+    with(instances_seen_nonsync(instances_matching_ne(_inst, "spr_bubble", -1), 16, 16)){
         draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
     }
     with(instances_matching(instances_matching_ne(_inst, "spr_bubble_pop", -1), "spr_bubble_pop_check", null)){
@@ -5863,7 +5878,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

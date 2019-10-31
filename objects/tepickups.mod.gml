@@ -113,84 +113,68 @@
 		_num = 2 + ceil(skill_get(mut_rabbit_paw));
 		
 	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-		instance_create(x, y, Dust);
-		with(obj_create(x, y, "BackpackPickup")){
-			direction = d;
-			
-			 // Determine Pickup:
-			var o = object,
-				_objMin = instance_create(0, 0, GameObject);
-				
-			instance_delete(_objMin);
-			
+		var _objMin = instance_create(x, y, Dust);
+		with(_objMin) depth = 0;
+		
+		 // Rogues:
+		var _rogue = 0;
+		for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
+			_rogue++;
+		}
+		
+		 // Determine Pickup:
+		if(chance(1, 40)){ // wtf this isnt a pickup
+			instance_create(x, y, choose(Ally, Bandit));
+		}
+		else{
 			pickup_drop(10000, 0);
-			
-			with(instances_matching_gt([Pickup, chestprop], "id", _objMin)){
-				if(chance(1, 40)){
-					 // wtf this isnt a pickup
-					o.object_index = choose(Ally, Bandit);
-					o.sprite_index = ((o.object_index == Ally) ? sprAllyHurt : sprBanditHurt);
-					o.mask_index = mskBandit;
-				}
+		}
+		with(instances_matching_gt(GameObject, "id", _objMin)){
+			switch(object_index){
+				case AmmoPickup:
 				
-				else{
-					o.object_index = object_index;
-					o.sprite_index = sprite_index;
-					o.mask_index = mask_index;
-					
-					switch(o.object_index){
-						case AmmoPickup:
-							 // Curse:
-							if(_curse){
-								o.sprite_index = sprCursedAmmo;
-								cursed = _curse;
-								num = 1.5;
-							}
-							o.cursed = cursed;
-							
-							 // Portal Strikes:
-							for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-								if(chance(1, 5)){
-									o.object_index = RoguePickup;
-									o.sprite_index = sprRogueAmmo;
-								}
-							}
-							break;
-							
-						case AmmoChest:
-							 // Curse:
-							if(_curse){
-								o.object_index = "CursedAmmoChest";
-								o.sprite_index = spr.CursedAmmoChest;
-							}
-							
-							 // Portal Strikes:
-							for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-								if(chance(1, 5)){
-									o.object_index = RogueChest;
-									o.sprite_index = sprRogueAmmoChest;
-								}
-							}
-							break;
+					 // Portal Strikes:
+					if(chance(_rogue, 5)){
+						instance_create(x, y, RoguePickup);
+						instance_delete(id);
+						break;
 					}
 					
-					 // Other Vars:
-					if(o.object_index == object_index){
-						if("num" in self){
-							o.num = num;
-						}
-						
-						 // Cursed:
-						if("curse" in self && curse){
-							o.curse = curse;
-						}
-						if("cursed" in self && cursed){
-							o.cursed = cursed;
-						}
+					 // Cursed:
+					if(_curse > cursed){
+						sprite_index = sprCursedAmmo;
+						cursed = _curse;
+						num = 1 + (0.5 * cursed);
+						alarm0 = (200 + random(30)) / (1 + (2 * cursed));
 					}
-				}
+					
+					break;
+					
+				case AmmoChest:
 				
-				instance_delete(id);
+					 // Portal Strikes:
+					if(chance(_rogue, 5)){
+						instance_create(x, y, RogueChest);
+						instance_delete(id);
+						break;
+					}
+					
+					 // Cursed:
+					if(_curse){
+						obj_create(x, y, "CursedAmmoChest");
+						instance_delete(id);
+					}
+					
+					break;
+			}
+		}
+		
+		 // Coolify:
+		with(instances_matching_gt(GameObject, "id", _objMin)){
+			with(obj_create(x, y, "BackpackPickup")){
+				direction = d;
+				target = other;
+				event_perform(ev_step, ev_step_end);
 			}
 		}
 	}
@@ -208,66 +192,90 @@
 
 #define BackpackPickup_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		image_speed = 0.4;
-		depth = -3;
-		
 		 // Vars:
+		sprite_index = mskPickup;
 		mask_index = mskPickup;
-		object = {};
+		visible = false;
+		target = noone;
+		target_x = x;
+		target_y = y;
         z = 0;
-        zfric = 0.7;
+        zfriction = 0.7;
         zspeed = random_range(2, 4);
 		speed = random_range(1, 3);
 		direction = random(360);
 		
 		return id;
 	}
-
-#define BackpackPickup_step
-	 // Collision:
-	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
-		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-	}
 	
-	 // Z:
-	z_engine();
-	if(z <= 0) instance_destroy();
-
-#define BackpackPickup_draw
-	var _spr = -1;
-	
-	if("sprite_index" in object){
-		_spr = object.sprite_index;
-	}
-	else if("object_index" in object && is_real(object.object_index)){
-		_spr = object_get_sprite(object.object_index);
-	}
-	
-	if(sprite_exists(_spr)){
-		draw_sprite_ext(_spr, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-	}
-
-#define BackpackPickup_destroy
-	if("object_index" in object){
-		with(obj_create(x, y - z, object.object_index)){
-			xstart = other.xstart;
-			ystart = other.ystart;
-			direction = other.direction;
-			speed = other.speed;
-			
-			 // Vars:
-			for(var i = 0; i < lq_size(other.object); i++){
-				var k = lq_get_key(other.object, i),
-					v = lq_get_value(other.object, i);
-					
-				if(k != "object_index"){
-					variable_instance_set(id, k, v);
+#define BackpackPickup_end_step
+    if(instance_exists(target)){
+		z_engine();
+	    if(z > 0 || zspeed > 0){
+	        with(target){
+	            x = other.x;
+	            y = other.y - other.z;
+	            xprevious = x;
+	            yprevious = y;
+				other.target_x = x;
+				other.target_y = y;
+				
+				 // Important:
+				if(instance_is(self, enemy)){
+					sprite_index = spr_hurt;
 				}
+				
+				 // Disable Collision:
+				if(mask_index != mskNone){
+					other.mask_index = other.mask_index;
+					mask_index = mskNone;
+				}
+	        }
+	        
+			 // Collision:
+			if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+				if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+				if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
 			}
+	    }
+    	else instance_destroy();
+    }
+	
+	else{
+		 // Grab Pickup (In case it was replaced or something):
+		with(instances_matching(instances_matching_gt(instances_matching_gt(instances_matching(instances_matching(GameObject, "xstart", target_x), "ystart", target_y), "id", id), "id", target), "backpackpickup_grab", null)){
+			backpackpickup_grab = true;
+			with(other){
+				target = other;
+				BackpackPickup_end_step();
+			}
+			exit;
 		}
+		
+		 // Time to die:
+		instance_destroy();
 	}
+	
+#define BackpackPickup_destroy
+     // Reset Vars:
+    with(target){
+    	x = other.x;
+    	y = other.y;
+    	xprevious = x;
+    	yprevious = y;
+        mask_index = other.mask_index;
+		direction = other.direction;
+		speed = other.speed;
+		
+	     // Effects:
+	    repeat(3){
+	        with(instance_create(x, y, Dust)){
+	            motion_add(random(360), 3);
+	            motion_add(other.direction, 1);
+	            depth = 0;
+	        }
+	    }
+    }
 
 
 #define BatChest_create(_x, _y)
@@ -389,7 +397,7 @@
 			}
 			
 			 // Next Merged Weapon Uses the Current Stock as its Front:
-			_part = mod_script_call("weapon", "merge", "wep_merge_decide_raw", _hardMin, _hardMax, -1, _part[0]);
+			_part = mod_script_call("weapon", "merge", "wep_merge_decide_raw", _hardMin, _hardMax, -1, _part[0], false);
 		}
 	}
 
@@ -1263,14 +1271,14 @@
 	instance_create(x, y, ReviveFX);
 	repeat(num){
 		with(obj_create(x + orandom(4), y + orandom(4), "BackpackPickup")){
-			with(object){
-				object_index = AmmoPickup;
+			target = instance_create(x, y, AmmoPickup);
+			with(target){
 				sprite_index = sprCursedAmmo;
 				cursed = true;
 				num = 1.5;
 				
 				 // Shorten Timer:
-				alarm0 = 120 + random(20);
+				alarm0 = 120 + random(30);
 				alarm0 /= 1 + (0.2 * GameCont.loops);
 				if(crown_current == crwn_haste) alarm0 /= 3;
 			}
@@ -1285,6 +1293,100 @@
 				depth = other.depth - 1;
 				motion_add(other.direction, random(s));
 			}
+			
+			event_perform(ev_step, ev_step_end);
+		}
+	}
+
+
+#define CursedMimic_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.CursedMimicIdle;
+		spr_walk = spr.CursedMimicFire;
+		spr_hurt = spr.CursedMimicHurt;
+		spr_dead = spr.CursedMimicDead;
+		spr_chrg = spr.CursedMimicTell;
+		spr_shadow = shd24;
+		hitid = [spr.CursedMimicFire, "CURSED MIMIC"];
+		
+		 // Sound:
+		snd_hurt = sndMimicHurt;
+		snd_dead = sndMimicDead;
+		snd_mele = sndMimicMelee;
+		snd_tell = sndMimicSlurp;
+		
+		 // Vars:
+		mask_index = -1;
+		maxhealth = 12;
+		raddrop = 16;
+		size = 1;
+		maxspeed = 2;
+		meleedamage = 4;
+		num = 4;
+		
+		 // Alarms:
+		alarm1 = irandom_range(90, 240);
+		
+		return id;
+	}
+	
+#define CursedMimic_step
+	if(speed > maxspeed) speed = maxspeed;
+	
+	 // Animate:
+	if(sprite_index == spr_chrg && anim_end){
+		sprite_index = spr_idle;
+	}
+	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+		sprite_index = spr_walk;
+	}
+	
+	 // FX:
+	if(chance_ct(1, 12)){
+		with(instance_create(x + orandom(4), y - 2 + orandom(4), Curse)){
+			depth = other.depth - 1;
+		}
+	}
+	
+	 // Melee Curse:
+	with(instances_matching(Player, "lasthit", hitid)){
+		if(curse < 1){
+			curse++;
+			sound_play(sndBigCursedChest);
+		}
+		lasthit = array_clone(lasthit);
+	}
+	
+#define CursedMimic_alrm1
+	alarm1 = irandom_range(90, 240);
+	
+	sprite_index = spr_chrg;
+	image_index = 0;
+	
+	sound_play_hit(snd_tell, 0.1);
+	
+#define CursedMimic_death
+	sound_play_hit(sndCursedChest, 0.1);
+	
+	 // Pickups:
+	var _objMin = instance_create(0, 0, GameObject);
+	instance_delete(_objMin);
+	repeat(num) pickup_drop(200, 0);
+	
+	 // Make Dropped Ammo Cursed:
+	with(instances_matching_lt(instances_matching_gt(AmmoPickup, "id", _objMin), "cursed", 1)){
+		sprite_index = sprCursedAmmo;
+		cursed = true;
+		num = 1 + (0.5 * cursed);
+		alarm0 = (200 + random(30)) / (1 + (2 * cursed));
+		
+		 // Spread Out:
+		with(obj_create(x, y, "BackpackPickup")){
+			target = other;
+			var s = random_range(1, 1.5);
+			speed *= s;
+			zspeed *= s - 0.5;
 		}
 	}
 
@@ -1724,8 +1826,355 @@
 	with(instance_create(x, y, SmallChestFade)){
 		image_blend = make_color_rgb(26, 23, 38);
 	}
+	
 
-
+#define BuriedVaultChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.BuriedVaultChest;
+		spr_dead = spr.BuriedVaultChestOpen;
+		spr_shadow = -1;
+		
+		 // Sound:
+		snd_open = sndBigWeaponChest;
+		
+		 // Vars:
+		num = 3 + skill_get(mut_open_mind);
+		
+		 // Events:
+		on_open = script_ref_create(BuriedVaultChest_open);
+		
+		return id;
+	}
+	
+#define BuriedVaultChest_open
+	 // Important:
+	if(instance_is(other, Player)){
+		sound_play(other.snd_chst);
+	}
+	
+	 // Loot:
+	var _ang = random(360);
+	for(var d = _ang; d < _ang + 360; d += (360 / num)){
+		with(obj_create(x, y, "BackpackPickup")){
+			zfriction = 0.6;
+	        zspeed = random_range(3, 4);
+			speed = 1.5 + orandom(0.2);
+			direction = d;
+			
+			var _pool = [AmmoChest, WeaponChest, HealthChest, RadChest];
+			if(chance(1, 2)) array_push(_pool, "Backpack");
+			
+			switch(crown_current){
+				case crwn_love:
+					for(var i = 0; i < array_length(_pool); i++){
+						_pool[i] = AmmoChest;
+					}
+					break;
+					
+				case crwn_life:
+					for(var i = 0; i < array_length(_pool); i++){
+						if(_pool[i] == RadChest && chance(2, 3)){
+							_pool[i] = HealthChest;
+						}
+					}
+					break;
+			}
+			
+			target = obj_create(x, y, _pool[irandom(array_length(_pool) - 1)]);
+			
+			event_perform(ev_step, ev_step_end);
+		}
+	}
+	
+	 // Blast Off:
+	sound_play_pitch(sndStatueXP, 0.5 + orandom(0.1));
+	sound_play_pitchvol(sndExplosion, 1.4 + random(0.3), 0.8);
+	with(instance_create(x, y - 2, FXChestOpen)){
+		sprite_index = sprMutant6Dead;
+		image_index = 9;
+		image_xscale *= 0.75;
+		image_yscale = image_xscale;
+		image_blend = make_color_rgb(random_range(120, 190), 255, 8);
+	}
+	with(obj_create(x, y - 2, "BuriedVaultChestDebris")){
+		direction = _ang + ((360 / other.num) * random_range(1/3, 2/3));
+	}
+	
+	
+#define BuriedVaultChestDebris_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.BuriedVaultChestDebris;
+		image_speed = 0.4 * choose(-1, 1);
+		depth = -8;
+		
+		 // Vars:
+		friction = 0.15;
+		direction = random(360);
+		speed = random_range(1, 2);
+		z = 0;
+		zspeed = 10;
+		zfriction = 1;
+		rotspeed = orandom(30);
+		land = false;
+		
+		return id;
+	}
+	
+#define BuriedVaultChestDebris_step
+	z_engine();
+	
+	 // Spinny:
+	if(zspeed > 0){
+		image_angle += rotspeed * current_time_scale;
+		image_angle = (image_angle + 360) % 360;
+	}
+	else{
+		image_angle += angle_difference(0, image_angle) * 0.2 * current_time_scale;
+	}
+	
+	 // Land:
+	if(z <= 0 || z <= 8){
+		var _land = false;
+		
+		if(position_meeting(x, y + 8, Wall) || place_meeting(x, y + 8, TopSmall)){
+			z = 8;
+			depth = -6 - (y / 10000);
+			_land = true;
+		}
+		else if(z <= 0){
+			z = 0;
+			depth = 0;
+			_land = true;
+			
+			 // Collision:
+			if(position_meeting(x, y - 8, Wall)){
+				y += current_time_scale;
+				depth = -1;
+			}
+			if(position_meeting(x + hspeed_raw, y + 8 + vspeed_raw, Wall)){
+				if(position_meeting(x + hspeed_raw, y + 8, Wall)) hspeed_raw = 0;
+				if(position_meeting(x, y + 8 + vspeed_raw, Wall)) vspeed_raw = 0;
+			}
+		}
+		
+		if(_land){
+			if(abs(zspeed) > zfriction){
+				repeat(3) with(scrFX(x, y - z, 2, Dust)){
+					depth = other.depth;
+				}
+			}
+			image_index = 0;
+			image_angle = 0;
+			zspeed = 0;
+		}
+	}
+	else{
+		depth = -8;
+		speed += friction_raw;
+	}
+	
+#define BuriedVaultChestDebris_draw
+	image_alpha = abs(image_alpha);
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	image_alpha *= -1;
+	
+	
+#define BuriedVaultPedestal_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.BuriedVaultChestBase;
+		image_speed = 0.4;
+		depth = 2;
+		
+		 // Vars:
+		mask_index = mskSalamander;
+		spawn = irandom_range(1, 2) + GameCont.vaults;
+		spawn_time = 0;
+		spawn_inst = [];
+		
+		 // Main Loot:
+		var _pool = [];
+			repeat(4) array_push(_pool, "BuriedVaultChest");
+			repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest));
+			repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : RadChest));
+		
+		if(!instance_exists(ProtoChest))
+			repeat(1) array_push(_pool, ProtoChest);
+		
+		if(GameCont.subarea == 2) // (proto statues do not support non-subarea of 2)
+			repeat(2) array_push(_pool, ProtoStatue);
+		
+		if(chance(1, 5))
+			repeat(1) array_push(_pool, EnemyHorror);
+			
+		target = obj_create(x, y + 2, _pool[irandom(array_length(_pool) - 1)]);
+		if(!instance_exists(target)){
+			with(instances_matching_gt(chestprop, "id", target)){
+				other.target = id;
+			}
+		}
+		with(target){
+			x = xstart;
+			y = ystart;
+			switch(object_index){
+				case EnemyHorror:
+					instance_create(x, y, PortalShock);
+					other.spawn = 0;
+					break;
+					
+				case ProtoChest:
+					 // Cool Wep:
+					if(wep == wep_rusty_revolver){
+						sprite_index = spr.ProtoChestMerge;
+						var _part = wep_merge_decide(0, GameCont.hard + 4);
+						wep = wep_merge(_part[0], _part[1]);
+					}
+					break;
+					
+				case ProtoStatue:
+					y -= 12;
+					spr_shadow = -1;
+					with(instances_matching_gt(Bandit, "id", id)){
+						instance_delete(id);
+					}
+					break;
+					
+				case RadChest:
+					y -= 4;
+					spr_idle = sprRadChestBig;
+					spr_hurt = sprRadChestBigHurt;
+					spr_dead = sprRadChestBigDead;
+					break;
+			}
+		}
+		
+		 // Extra Loot:
+		var	_rad = (instance_is(target, RadChest) ? 30 : 15),
+			_num = irandom_range(1, 2) + floor(_rad / 15) + skill_get(mut_open_mind),
+			_ang = random(360);
+			
+		if(_num > 0) for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+			var	l = random_range(16, 40),
+				d = _dir + orandom((360 / _num) * 0.4),
+				o = RadChest;
+				
+			switch(crown_current){
+				case crwn_love:
+					o = AmmoChest;
+					break;
+					
+				case crwn_life:
+					if(chance(2, 3)) o = HealthChest;
+					break;
+			}
+			
+			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), o)){
+				if(instance_is(self, RadChest)){
+					if(chance(1, 6)){
+						spr_idle = sprRadChestBig;
+						spr_hurt = sprRadChestBigHurt;
+						spr_dead = sprRadChestBigDead;
+					}
+					else{
+						spr_idle = sprRadChest;
+						spr_hurt = sprRadChestHurt;
+						spr_dead = sprRadChestCorpse;
+					}
+				}
+			}
+		}
+		rad_drop(x, y, _rad, random(360), 0);
+		
+		return id;
+	}
+	
+#define BuriedVaultPedestal_step
+	if(image_speed != 0){
+		 // Holding Loot:
+		if(
+			place_meeting(x, y, target)
+			&&
+			(!instance_is(target, ProtoChest) || target.sprite_index != sprProtoChestOpen)
+			&&
+			(!instance_is(target, ProtoStatue) || target.my_health >= target.maxhealth * 0.7)
+		){
+			image_index = 0;
+			
+			 // Hold Chest:
+			if(variable_instance_get(target, "name") == "BuriedVaultChest"){
+				target.x = x;
+				target.y = y;
+				target.speed = 0;
+			}
+		}
+		
+		 // Loot Taken:
+		else if(anim_end){
+			image_speed = 0;
+			image_index = image_number - 1;
+		}
+	}
+	
+	 // Guardians:
+	else if(spawn > 0){
+		if(spawn_time > 0){
+			spawn_time -= current_time_scale;
+			if(spawn_time <= 0){
+				spawn_time = 10;
+				spawn--;
+				
+				sound_play_pitch(sndCrownGuardianAppear, 1 + random(0.4));
+				
+				var _inst = noone;
+				with(instance_random(instance_rectangle_bbox(x - 96, y - 96, x + 96, y + 96, instances_matching_ne(Floor, "id", floor_at(x, y))))){
+					_inst = instance_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, CrownGuardian);
+				}
+				with(_inst){
+					spr_idle = sprCrownGuardianAppear;
+					sprite_index = spr_idle;
+					
+					 // Just in Case:
+					with(instance_create(x, y, PortalClear)){
+						sprite_index = other.sprite_index;
+						mask_index = other.mask_index;
+					}
+				}
+				
+				array_push(spawn_inst, _inst);
+			}
+		}
+		
+		 // Begin Spawnage
+		else{
+			other.spawn_time = 30;
+			GameCont.buried_vaults = variable_instance_get(GameCont, "buried_vaults", 0) + 1;
+	        scrPortalPoof();
+			
+			 // Sound/Music:
+			sound_play_pitch(sndCrownGuardianDisappear, 0.7 + random(0.2));
+			//sound_play_music(mus100b);
+	        //with(MusCont) alarm_set(3, -1);
+		}
+	}
+	
+	 // Proto Statue Charged:
+	if(instance_is(target, ProtoStatue) && target.canim > 0){
+		image_index = max(0, (image_number - 1) - (0.5 * target.canim));
+		image_speed = 0.4;
+	}
+	
+#define BuriedVaultPedestal_end_step
+	 // Music Fix:
+	with(instances_matching_le(spawn_inst, "my_health", 0)){
+		var m = -1;
+		with(MusCont) m = alarm_get(1);
+		instance_destroy();
+		with(MusCont) alarm_set(1, m);
+	}
+	
+	
 #define Pizza_create(_x, _y)
     with(instance_create(_x, _y, HPPickup)){
         sprite_index = sprSlice;
@@ -1879,25 +2328,231 @@
 #define SunkenChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
-		spr_dead = spr.SunkenChestOpen;
 		sprite_index = spr.SunkenChest;
+		spr_dead = spr.SunkenChestOpen;
+		spr_shadow_y = 0;
 		
 		 // Sounds:
-		snd_open = sndMenuGoldwep;
+		snd_open = sndGoldChest;
+		
+		 // Vars:
+		num = 2;
+		wep = wep_golden_revolver;
+		
+		 // Decide Weapon:
+		if(GameCont.area == "coast"){
+			wep = "trident";
+		}
+		else{
+			wep = "merge";
+		}
 		
 		 // Events:
+		on_step = script_ref_create(SunkenChest_step);
 		on_open = script_ref_create(SunkenChest_open);
 		
 		return id;
 	}
 	
+#define SunkenChest_step
+	 // Shiny:
+	if(chance_ct(1, 90)){
+		with(instance_create(x + orandom(16), y + orandom(8), CaveSparkle)){
+			depth = other.depth - 1;
+		}
+	}
+	
 #define SunkenChest_open
-	 // Unlocks:
-	var _areas = ["coast", "oasis"];
-	for(var i = 0; i < array_length(_areas); i++) if(GameCont.area == _areas[i])
-		scrUnlock("part " + string(i + 1) + "/2", "it would be cool", -1, -1);
-
-
+	instance_create(x, y, PortalClear);
+	
+	with(GameCont){
+		if("sunkenchests" not in self){
+			sunkenchests = 0;
+		}
+		sunkenchests++;
+	}
+	
+	 // Important:
+	if(instance_is(other, Player)){
+		sound_play(other.snd_chst);
+	}
+	
+	 // Trident Unlock:
+	if(wep == "trident" && !unlock_get("trident")){
+		unlock_set("trident", true);
+	}
+	
+	 // Weapon:
+	var _num = 1 + ultra_get("steroids", 1);
+	if(_num > 0) repeat(_num){
+		var _wep = wep;
+		
+		if(_wep == "merge"){
+			var _part = mod_script_call("weapon", _wep, "wep_merge_decide_raw", 0, GameCont.hard, -1, -1, true);
+			if(array_length(_part) >= 2){
+				_wep = wep_merge(_part[0], _part[1]);
+			}
+		}
+		
+		with(instance_create(x, y, WepPickup)){
+			wep = _wep;
+			ammo = true;
+		}
+	}
+	
+	 // Real Loot:
+	if(num > 0){
+		repeat(num * 10){
+			with(obj_create(x, y, "SunkenCoin")){
+				motion_add(random(360), 2 + random(2.5));
+			}
+		}
+		
+		 // Ammo:
+		var _ang = random(360);
+		for(var d = _ang; d < _ang + 360; d += (360 / num)){
+			with(obj_create(x, y, "BackpackPickup")){
+				target = instance_create(x, y, AmmoPickup);
+				direction = d;
+				speed = random_range(2, 3);
+				event_perform(ev_step, ev_step_end);
+			}
+		}
+	}
+	
+	 // Skealetons:
+	if(num + 1 > 0){
+		var _ang = random(360);
+		for(var d = _ang; d < _ang + 360; d += (360 / (num + 1))){
+			with(obj_create(x, y, "SunkenSealSpawn")){
+				var	_dis = random_range(40, 80),
+					_dir = d + orandom(30);
+					
+				while(_dis > 0 && !position_meeting(x, y, Wall)){
+					var l = min(_dis, 4);
+					x += lengthdir_x(l, _dir);
+					y += lengthdir_y(l, _dir);
+					_dis -= l;
+				}
+			}
+			
+			 // Top Bros:
+			if(area_get_underwater(GameCont.area)){
+				var _spawnX = x,
+					_spawnY = y,
+					_spawnObj = ((GameCont.area == "trench" || (GameCont.area == 100 && GameCont.lastarea == "trench")) ? Freak : BoneFish),
+					_spawnDir = d,
+					_spawnDis = random_range(320, 400);
+					
+				with(instance_nearest(x-8 + lengthdir_x(32, _spawnDir), y-8 + lengthdir_y(32, _spawnDir), TopSmall)){
+					_spawnDir = point_direction(other.x, other.y, x + 8, y + 8);
+				}
+				
+				repeat(3){
+					with(TopObject_create(_spawnX, _spawnY, _spawnObj, _spawnDir, _spawnDis)){
+						alarm1 = irandom_range(30, 150);
+						
+						_spawnX = x;
+						_spawnY = y;
+						_spawnDir = random(360);
+						_spawnDis = -1;
+						
+						z = 8;
+						
+						 // Poof:
+						repeat(3){
+							with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
+								depth = other.depth - 1;
+							}
+						}
+					}
+				}
+				
+				sound_play_pitchvol(sndMutant14Turn, 0.2 + random(0.1), 1);
+			}
+		}
+	}
+	
+	
+#define SunkenCoin_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = (chance(1, 3) ? spr.SunkenCoinBig : spr.SunkenCoin);
+		image_angle = random(360);
+        spr_open = sprCaveSparkle;
+        spr_fade = sprCaveSparkle;
+        shine = 0.03;
+        
+		 // Sound:
+		snd_open = sndRadPickup;
+		snd_fade = -1;
+		
+		 // Vars:
+		mask_index = mskRad;
+		time_loop = 1/4;
+        pull_dis = 18 + (12 * skill_get(mut_plutonium_hunger));
+        
+		 // Events:
+		on_pull = script_ref_create(SunkenCoin_pull);
+		on_open = script_ref_create(SunkenCoin_open);
+		
+		return id;
+	}
+	
+#define SunkenCoin_pull
+	return (speed <= 0);
+	
+#define SunkenCoin_open
+	if(speed > 0) return true;
+	
+	
+#define SunkenSealSpawn_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mask_index = mskBandit;
+		
+		 // Alarms:
+		alarm0 = 30 + (10 * array_length(instances_matching(CustomObject, "name", "SunkenSealSpawn")));
+		
+		return id;
+	}
+	
+#define SunkenSealSpawn_step
+	scrPortalPoof();
+	
+	 // Make Room:
+	if(place_meeting(x, y, Wall)){
+		with(instances_meeting(x, y, Wall)){
+			if(place_meeting(x, y, other)){
+				instance_create(x, y, FloorExplo);
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // Unburrowing FX:
+	if(chance_ct(1, 2)){
+		with(scrFX(x, y + random(4), 1.5, Dust)){
+			depth = -4;
+			waterbubble = false;
+		}
+	}
+	
+#define SunkenSealSpawn_alrm0
+	with(obj_create(x, y, "Seal")){
+		skeal = !(GameCont.area == "coast" || (GameCont.area == 100 && GameCont.lastarea == "coast"));
+		type = choose(1, 2, 3);
+	}
+	
+	 // Sound:
+	sound_play_hit_ext(sndBloodGamble, 1.6 + random(0.2), 0.5);
+	var s = audio_play_sound(sndSharpTeeth, 0, false);
+	audio_sound_pitch(s, 0.6 + random(0.4));
+	audio_sound_gain(s, 0.4, 0);
+	
+	instance_destroy();
+	
+	
 /// Mod Events
 #define step
     script_bind_step(post_step, 0);
@@ -2163,14 +2818,14 @@
 				}
 			}
 		}
-	
+		
 		 // Cursed Ammo Chests:
 		with(instances_matching(AmmoChest, "cursedammochest_check", null)){
 			cursedammochest_check = false;
 			
 			if(!instance_is(self, IDPDChest)){
 				 // Crown of Curses:
-				if(crown_current == crwn_curses && chance(1, 5)){
+				if((crown_current == crwn_curses || GameCont.area == 104) && chance(1, 5)){
 					cursedammochest_check = true;
 				}
 				
@@ -2184,6 +2839,25 @@
 					obj_create(x, y, "CursedAmmoChest");
 					instance_delete(id);
 				}
+			}
+		}
+		with(instances_matching(Mimic, "cursedmimic_check", null)){
+			cursedmimic_check = false;
+			
+			 // Crown of Curses:
+			if((crown_current == crwn_curses || GameCont.area == 104) && chance(1, 3)){
+				cursedmimic_check = true;
+			}
+			
+			 // Cursed Player:
+			with(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)){
+				if(chance(1, 2)) other.cursedmimic_check = true;
+			}
+			
+			 // Spawn:
+			if(cursedmimic_check){
+				obj_create(x, y, "CursedMimic");
+				instance_delete(id);
 			}
 		}
 	}
@@ -2432,7 +3106,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

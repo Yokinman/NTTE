@@ -703,7 +703,7 @@
             	if(chance(1, 80) || (chance(1, 40) && array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")) > 0)){
             		_eventScorp = true;
             		
-	                with(instances_matching_ge(enemy, "size", 1)) if(chance(1, 2)){
+	                with(instances_matching_lt(instances_matching_ge(enemy, "size", 1), "size", 4)) if(chance(1, 2)){
 	                    var _gold = chance(1, 5);
 	                    
 	                     // Normal scorpion:
@@ -749,8 +749,6 @@
             	
             	 // Bandit Camp:
             	if(chance(1, 30)){
-            		_topChance *= 2.5;
-            		
             		with(_topSpawn){
             			switch(self[0]){
             				case Cactus:
@@ -764,6 +762,21 @@
             			}
             		}
             		
+            		 // More Bandit:
+            		with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
+            			scrCorpse(direction, 0);
+            			
+        				mask_index = sprBarrel;
+        				if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop)){
+	            			with(instance_create(x, y, Barrel)){
+	            				x += irandom_range(-2, 2);
+	            				y -= irandom(2);
+	            				repeat(2) instance_create(x, y, Bandit);
+	            			}
+        				}
+        				
+            			instance_delete(id);
+            		}
             		with(WantBoss) number++;
             		
             		 // Sound:
@@ -818,7 +831,7 @@
     	    }
     	    
              // Top Spawns:
-            _topChance /= 1.2;
+            _topChance /= 2;
             _topSpawn = [
             	[Pipe,			1],
             	[ToxicBarrel,	1/20]
@@ -945,6 +958,15 @@
         	    }
         	}
         	
+        	 // Baby:
+        	with(instances_matching(Spider, "spiderling_check", null)){
+        		spiderling_check = true;
+        		if(chance(1, 4)){
+        			obj_create(x, y, "Spiderling");
+        			instance_delete(id);
+        		}
+        	}
+        	
         	 // Spawn Lightning Crystals:
         	if(GameCont.loops <= 0){
 	        	with(LaserCrystal) if(chance(1, 40)){
@@ -1043,7 +1065,7 @@
         case 6: /// LABS
         
         	 // Top Spawns:
-        	_topChance *= (1 + GameCont.loops);
+        	_topChance *= (1 + (0.5 * GameCont.loops));
         	_topSpawn = [
         		[Freak,			1],
         		[ExploFreak,	1/5]
@@ -1102,7 +1124,7 @@
             	_topChance /= 1.2;
         		_topSpawn = [
 	        		[Pillar,	1],
-	        		[Generator,	1/5]
+	        		[Generator,	1/30]
 	        	];
         	}	
         	/*else with(ThroneStatue){
@@ -1296,7 +1318,7 @@
 									
 								with(TopObject_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), object.object_index, d, 0)){
 									alarm1 = other.alarm1;
-									z = other.z + orandom(8);
+									z = max(8, other.z + orandom(8));
 								}
 							}
 							break;
@@ -1324,8 +1346,8 @@
 							break;
 							
 						case CrystalProp: // Spider Time
-						case InvCrystal:
-							if(chance(1, 2)) repeat(irandom_range(1, 3)){
+						//case InvCrystal:
+							if(chance(1, 8)) repeat(irandom_range(1, 3)){
 								TopObject_create(x, y, "Spiderling", random(360), -1);
 							}
 							break;
@@ -1352,6 +1374,7 @@
 								        spr_idle = spr.SealIdle[object.type];
 								        spr_walk = spr.SealWalk[object.type];
 									    spr_weap = spr.SealWeap[object.type];
+									    // they looked better with normal seal skin colors bro
 									}
 								}
 							}
@@ -1373,14 +1396,14 @@
     	var _obj = -1;
     	
     	 // Health:
-    	if(chance(1, 2) || (crown_current == crwn_life)){
+    	if(chance(1, 2) || crown_current == crwn_life){
 			with(Player) if(!chance(my_health, maxhealth)){
 				_obj = ((crown_current == crwn_love) ? AmmoChest : HealthChest);
 			} 
 		}
 		
     	 // Ammo:
-    	if(_obj == -1){
+    	if(_obj == -1 && chance(1, 2)){
 		    var	_chance = 0,
 		    	_chanceMax = 0;
 		    	
@@ -1402,7 +1425,7 @@
     	}
 		
 		 // Rads:
-		if(_obj == -1 && chance(1, 10)){
+		if(_obj == -1 && chance(1, 15)){
 			_obj = ((crown_current == crwn_life && chance(2, 3)) ? HealthChest : RadChest);
 		}
 		
@@ -1417,7 +1440,10 @@
     
      // Buried Vault:
     if(_validArea || instance_exists(IDPDSpawn) || instance_exists(CrownPed)){
-	    if(chance(1 + (7/3 * GameCont.vaults * (GameCont.area == 100)), 8)){
+	    if(chance(
+	    	1 + (2 * GameCont.vaults * (GameCont.area == 100)),
+	    	8 + variable_instance_get(GameCont, "buried_vaults", 0)
+	    )){
 	    	with(instance_random(Wall)){
 		    	obj_create(x, y, "BuriedVault");
 		    	
@@ -1429,9 +1455,13 @@
     }
     
 	 // Bab:
-	with(instances_matching([CrystalProp, InvCrystal], "", null)){
-		if(chance(1, 2)) repeat(irandom_range(1, 3)){
-			obj_create(x, y, "Spiderling");
+	if(instance_exists(CrystalProp) || instance_exists(InvCrystal)){
+		with(instances_matching([CrystalProp, InvCrystal, chestprop], "", null)){
+			if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
+				repeat(irandom_range(1, 3)){
+					obj_create(x, y, "Spiderling");
+				}
+			}
 		}
 	}
 
@@ -4351,6 +4381,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 	if(!instance_is(self, CustomScript) || script[2] != "scrBossIntro"){
 	    sound_play(_sound);
 	    sound_play_ntte("mus", _music);
+        with(MusCont) alarm_set(3, -1);
 
 		 // Bind begin_step to fix TopCont.darkness flash
 	    if(_name != "" && fork()){
@@ -4979,7 +5010,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

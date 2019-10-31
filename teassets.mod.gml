@@ -17,7 +17,7 @@
         shd = {};
 
 		 // Top Prop:
-		msk.TopProp = sprite("misc/mskTopProp", 1, 2, -6);
+		msk.TopProp = sprite("areas/mskTopProp", 1, 2, -6);
 
          // Top Decals:
         TopDecal = {
@@ -31,6 +31,7 @@
     	    "2"     : sprite("areas/Sewers/sprSewersBigTopDecal",       8, 32, 24),
     	    "3"     : sprite("areas/Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
     	    "4"     : sprite("areas/Caves/sprCavesBigTopDecal",         1, 32, 24),
+    	    "7"     : sprite("areas/Palace/sprPalaceBigTopDecal",       1, 32, 24),
     	    "104"   : sprite("areas/Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
     	    "pizza" : sprite("areas/Pizza/sprPizzaBigTopDecal",         1, 32, 24),
     	    "oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
@@ -179,8 +180,8 @@
 		    	BigFishLeap       = sprite(p + "sprBigFishLeap",      11, 32, 32);
 		    	BigFishSwim       = sprite(p + "sprBigFishSwim",       8, 24, 24);
 		    	BigFishRise       = sprite(p + "sprBigFishRise",       5, 32, 32);
-		    	BigFishSwimFrnt   = sprite(p + "sprBigFishSwimFront",  6,  4,  1);
-		    	BigFishSwimBack   = sprite(p + "sprBigFishSwimBack",  11,  5,  1);
+		    	BigFishSwimFrnt   = sprite(p + "sprBigFishSwimFront",  6,  0,  4);
+		    	BigFishSwimBack   = sprite(p + "sprBigFishSwimBack",  11,  0,  5);
 	
 	             // Big Maggot Nest:
 	        	p = m + "BigMaggotNest/";
@@ -192,10 +193,8 @@
 			//#endregion
 			
 	         // Fly:
-	        FlySpin = sprite("misc/sprFlySpin", 16, 4, 4);
-	        
-	         // Pedestal:
-	        Pedestal = sprite("misc/sprPedestal", 1, 16, 16);
+	        p = "areas/Desert/"
+	        FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
         	
         //#endregion
 
@@ -314,12 +313,17 @@
 	            	SealSpwn[i] = sprite(p + "sprSealSpwn" + n, 6, 12, 12);
 	            	SealWeap[i] = mskNone;
 	            }
-	            SealWeap[1] = sprite(p + "sprHookPole",     1, 18, 2);
-				SealWeap[2] = sprite(p + "sprSabre",        1, -2, 1);
-				SealWeap[3] = sprite(p + "sprBlunderbuss",  1,  7, 1);
-				SealWeap[4] = sprite(p + "sprRepeater",     1,  4, 2);
+	            SealWeap[1] = sprite(p + "sprHookPole",     1, 18,  2);
+				SealWeap[2] = sprite(p + "sprSabre",        1, -2,  1);
+				SealWeap[3] = sprite(p + "sprBlunderbuss",  1,  7,  1);
+				SealWeap[4] = sprite(p + "sprRepeater",     1,  6,  2);
 				SealWeap[5] = sprBanditGun;
-	            ClamShield  = sprite(p + "sprClamShield",  14,  7, 1);
+	            ClamShield  = sprite(p + "sprClamShield",  14,  0,  7);
+            	SkealIdle   = sprite(p + "sprSkealIdle",    6, 12, 12);
+            	SkealWalk   = sprite(p + "sprSkealWalk",    7, 12, 12);
+            	SkealHurt   = sprite(p + "sprSkealHurt",    3, 12, 12);
+            	SkealDead   = sprite(p + "sprSkealDead",   10, 16, 16);
+            	SkealSpwn   = sprite(p + "sprSkealSpwn",    8, 16, 16);
 
 	             // Seal (Heavy):
 	            p = m + "SealHeavy/";
@@ -766,11 +770,16 @@
 	
 	        	 // Spiderling:
 	        	p = m + "Spiderling/";
-	        	SpiderlingIdle  = sprite(p + "sprSpiderlingIdle",  4, 8, 8);
-	        	SpiderlingWalk  = sprite(p + "sprSpiderlingWalk",  4, 8, 8);
-	        	SpiderlingHurt  = sprite(p + "sprSpiderlingHurt",  3, 8, 8);
-	        	SpiderlingDead  = sprite(p + "sprSpiderlingDead",  7, 8, 8);
-	        	SpiderlingHatch = sprite(p + "sprSpiderlingHatch", 5, 8, 8);
+	        	SpiderlingIdle     = sprite(p + "sprSpiderlingIdle",     4, 8, 8);
+	        	SpiderlingWalk     = sprite(p + "sprSpiderlingWalk",     4, 8, 8);
+	        	SpiderlingHurt     = sprite(p + "sprSpiderlingHurt",     3, 8, 8);
+	        	SpiderlingDead     = sprite(p + "sprSpiderlingDead",     7, 8, 8);
+	        	SpiderlingHatch    = sprite(p + "sprSpiderlingHatch",    5, 8, 8);
+	        	InvSpiderlingIdle  = sprite(p + "sprInvSpiderlingIdle",  4, 8, 8);
+	        	InvSpiderlingWalk  = sprite(p + "sprInvSpiderlingWalk",  4, 8, 8);
+	        	InvSpiderlingHurt  = sprite(p + "sprInvSpiderlingHurt",  3, 8, 8);
+	        	InvSpiderlingDead  = sprite(p + "sprInvSpiderlingDead",  7, 8, 8);
+	        	InvSpiderlingHatch = sprite(p + "sprInvSpiderlingHatch", 5, 8, 8);
 	        	
 	        //#endregion
 
@@ -806,10 +815,15 @@
 		p = "chests/";
 
 			 // Cursed Ammo Chests:
-			CursedAmmoChest 	        = sprite(p + "sprCursedAmmoChest",             1,  8,  8, shn16);
-			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",         1,  8,  8);
-			CursedAmmoChestSteroids 	= sprite(p + "sprCursedAmmoChestSteroids",     1, 12, 12, shn20);
-			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen", 1, 12, 12);
+			CursedAmmoChest 	        = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
+			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",          1,  8,  8);
+			CursedAmmoChestSteroids 	= sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
+			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
+			CursedMimicIdle             = sprite(p + "sprCursedMimicIdle",              1, 16, 16);
+			CursedMimicFire             = sprite(p + "sprCursedMimicFire",              4, 16, 16);
+			CursedMimicHurt             = sprite(p + "sprCursedMimicHurt",              3, 16, 16);
+			CursedMimicDead             = sprite(p + "sprCursedMimicDead",              6, 16, 16);
+			CursedMimicTell             = sprite(p + "sprCursedMimicTell",             12, 16, 16);
 
 	         // Backpack:
 	        Backpack           = sprite(p + "sprBackpack",           1, 8, 8, shn16);
@@ -836,7 +850,14 @@
 						    sprite(p + "sprBonePickup3",    1, 4, 4, shn8)];
 			BonePickupBig =[sprite(p + "sprBoneBigPickup0", 1, 8, 8, shn16),
 							sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
-
+			
+			 // Buried Vault:
+			BuriedVaultChest       = sprite(p + "sprVaultChest",       1, 12, 12, shn24);
+			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",   1, 12, 12);
+			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris", 8, 12, 12);
+			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",   3, 16, 12);
+			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",  6, 12, 12)
+			
 			 // Overstock/Overheal:
 			OverstockPickup	= sprite(p + "sprOverstockPickup",   1,  5,  5, shn10);
 			OverhealPickup	= sprite(p + "sprOverhealPickup",    1,  5,  5, shn10);
@@ -853,6 +874,8 @@
              // Sunken Chest:
             SunkenChest 	= sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
             SunkenChestOpen = sprite(p + "sprSunkenChestOpen", 1, 12, 12);
+            SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
+            SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
 
 			 // Merged Weapon Sprite Storage:
 	        MergeWep = {};

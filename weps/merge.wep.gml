@@ -1467,21 +1467,28 @@
     }
 
 #define wep_merge_decide(_hardMin, _hardMax)
-	return wep_merge_decide_raw(_hardMin, _hardMax, -1, -1);
+	return wep_merge_decide_raw(_hardMin, _hardMax, -1, -1, false);
 
-#define wep_merge_decide_raw(_hardMin, _hardMax, _stock, _front)
+#define wep_merge_decide_raw(_hardMin, _hardMax, _stock, _front, _gold)
 	 // Robot:
 	for(var i = 0; i < maxp; i++) if(player_get_race(i) == "robot") _hardMax++;
 	_hardMin += (5 * ultra_get("robot", 1));
 	
 	 // Just in Case:
+	_hardMax = max(0, _hardMax);
 	_hardMin = min(_hardMin, _hardMax);
 	
 	 // Get Potential Candidates:
 	var _pickList = [];
 	with(wepList){
         var _add = true;
-        if(mele || gold || area < _hardMin || area > _hardMax){
+        if(
+        	mele
+        	||
+        	(_gold xor (gold != 0)) // ^^ is kinda ugly bro
+        	||
+        	((area < _hardMin || area > _hardMax) && !(_gold && array_exists([wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol], weap)))
+        ){
         	_add = false;
         }
         else switch(weap){
@@ -1507,18 +1514,18 @@
 	array_shuffle(_pickList);
 	
 	for(var s = _min; s < _max; s++){
-		for(var f = (is_object(_stock) ? _min : s + 1); f < _max; f++){
-			_part = [
-				(is_object(_stock) ? _stock : _pickList[s]),
-				(is_object(_front) ? _front : _pickList[f])
-			];
-			
-			 // Difficulty Check:
-            if(1 + max(1, _part[0].area) + max(1, _part[1].area) <= _hardMax){
-            	if(lq_defget(_part[0], "weap", _part[0]) != lq_defget(_part[1], "weap", _part[1])){
-            		return _part;
-            	}
-            }
+		for(var f = (is_object(_stock) ? _min : _min); f < _max; f++){
+			var	_partStock = (is_object(_stock) ? _stock : _pickList[s]),
+				_partFront = (is_object(_front) ? _front : _pickList[f]);
+				
+            if(lq_defget(_partStock, "weap", _partStock) != lq_defget(_partFront, "weap", _partFront)){
+				_part = [_partStock, _partFront];
+				
+				 // Difficulty Check:
+	            if(1 + max(1, lq_defget(_partStock, "area", 0)) + max(1, lq_defget(_partFront, "area", 0)) <= _hardMax){
+	            	return _part;
+	            }
+			}
             
             if(is_object(_front)) break;
 		}
@@ -1587,11 +1594,11 @@
         swap = _front.swap;
         area = -1;
         type = _front.type;
-        auto = (_stock.auto || (_front.auto && _front.load < 10));
-        mele = (_stock.mele || _front.mele);
-        gold = (_stock.gold || _front.gold);
-        blod = (_stock.blod || _front.blod);
-        lasr = (_stock.lasr || _front.lasr);
+        auto = (((_front.auto && _front.load < 10) || _front.auto < 0) ? _front.auto : _stock.auto);
+        mele = ((_front.mele != 0) ? _front.mele : _stock.mele);
+        gold = ((_front.gold != 0) ? _front.gold : _stock.gold);
+        blod = ((_front.blod != 0) ? _front.blod : _stock.blod);
+        lasr = ((_front.lasr != 0) ? _front.lasr : _stock.lasr);
         proj = lq_clone(_front.proj);
 
         var	_stockObjRaw = _stock.proj.object_index,
@@ -1894,6 +1901,11 @@
 
 			 // Start Name w/ Pre-Suffix Stock Name:
 			var _name = [];
+			if(array_exists(_stockName, "GOLDEN") || array_exists(_frontName, "GOLDEN")){
+				array_push(_name, "GOLDEN");
+				_stockName = array_delete_value(_stockName, "GOLDEN");
+				_frontName = array_delete_value(_frontName, "GOLDEN");
+			}
 			with(_stockName){
 				if(array_exists(_stockSuffix, self)) break;
 				array_push(_name, self);
@@ -2536,7 +2548,7 @@
                             		
                                  // Merged:
                                 if(is_array(wep)){
-                                	var _part = wep_merge_decide_raw(_hardMin, _hardMax, wep[0], wep[1]);
+                                	var _part = wep_merge_decide_raw(_hardMin, _hardMax, wep[0], wep[1], (lq_defget(wep[0], "gold", 0) != 0 || lq_defget(wep[1], "gold", 0) != 0));
                                 	if(array_length(_part) >= 2){
                                 		wep = wep_merge(_part[0], _part[1]);
                                 	}
@@ -4466,7 +4478,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

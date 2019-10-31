@@ -754,7 +754,13 @@
      // Death Effects:
     if(part > 0){
         sound_play(sndOasisDeath);
-        repeat(part * 2) instance_create(x, y, Bubble);
+        repeat(part){
+	        with(instance_create(x, y, WepPickup)){
+	            wep = "crabbone";
+	            motion_add(random(360), 3);
+	        }
+        	repeat(2) instance_create(x, y, Bubble);
+        }
     }
     else for(var a = direction; a < direction + 360; a += (360 / 10)){
         with(instance_create(x, y, Dust)) motion_add(a, 3);
@@ -798,6 +804,7 @@
          // Sound:
 		snd_hurt = sndOasisBossHurt;
 		snd_dead = sndOasisBossDead;
+		snd_mele = sndOasisBossMelee;
 		snd_lowh = sndOasisBossHalfHP;
 
 		 // Vars:
@@ -870,7 +877,6 @@
                 if(!intro){
                     intro = true;
                     scrBossIntro("", sndOasisBossIntro, musBoss1);
-                    with(MusCont) alarm_set(3, -1);
                 }
                 exit; }
 
@@ -1287,7 +1293,7 @@
                     _drawy = _y + lengthdir_y(_dis[j], _dir[j]);
 
                 for(var i = 0; i < sprite_get_number(s); i++){
-                    draw_sprite_ext(s, i, _drawx, _drawy - (i * _yscale), _xscale, _yscale, _ang[j] + _trn[j], _blend, _alpha);
+                    draw_sprite_ext(s, i, _drawx, _drawy - (i * _yscale), _xscale, _yscale, _ang[j] - 90 + _trn[j], _blend, _alpha);
                 }
             }
         }
@@ -1651,6 +1657,13 @@
         else crabbone_splitcheck = true;
     }
     
+     // Big Fish Train Pickups:
+    with(instances_matching_le(BoneFish, "my_health", 0)){
+    	if("creator" in self && instance_is(creator, CustomEnemy) && variable_instance_get(creator, "name") == "CoastBoss"){
+    		pickup_drop(10, 0);
+    	}
+    }
+    
 	if(DebugLag) trace_time("tedesert_step");
 
 #define draw_bloom
@@ -1719,7 +1732,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

@@ -94,6 +94,15 @@
                     if(wep_get(wep) == mod_current){
                         w.ammo++;
                         
+                        with(other){
+	                        if(_primary || race == "steroids"){
+	                        	variable_instance_set(self, b + "wkick", min(-8, variable_instance_get(self, b + "wkick")));
+	                        }
+	                        else with(instance_create(x, y, PopupText)){
+	                    		text = "+1 BONE";
+	                    	}
+                        }
+                        
                          // Epic Time:
                         if(w.ammo > stat_get("bone")){
                             stat_set("bone", w.ammo);

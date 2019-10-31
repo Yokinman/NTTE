@@ -643,12 +643,26 @@
         }
         else{
             pickup_held = false;
-            var _pickup = nearest_instance(x, y, instances_matching(Pickup, "mask_index", mskPickup));
+            
+             // Find Pickup:
+            var	_pickup = noone,
+            	_disMax = 400;
+            	
+            with(instances_matching(Pickup, "mask_index", mskPickup)){
+            	if(array_length(instances_matching(CustomHitme, "pickup", id)) <= 0){
+	            	var _dis = point_distance(x, y, other.x, other.y);
+	            	if(_dis < _disMax){
+	                	if(in_sight(other)){
+		            		_pickup = id;
+		            		_disMax = _dis;
+	                	}
+	            	}
+            	}
+            }
+            
             if(instance_exists(_pickup)){
-                if(in_sight(_pickup)){
-                    pickup = _pickup;
-                    return 1;
-                }
+                pickup = _pickup;
+                return 1;
             }
         }
 
@@ -1780,6 +1794,11 @@
                                 image_angle += _off;
                                 _off *= -1;
                             }
+                            
+                             // Fix Quasar Cannon:
+                            with(_copy) if(instance_is(self, CustomProjectile) && variable_instance_get(self, "name") == "QuasarRing"){
+                            	ring_lasers = array_clone(ring_lasers);
+                            }
                     }
                     
                     prism_duplicate = true;
@@ -2146,7 +2165,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);

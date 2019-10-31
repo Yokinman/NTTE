@@ -196,16 +196,15 @@
          // Shoot Mortar:
         with(scrEnemyShootExt(x + (5 * right), y, "MortarPlasma", _targetDir, 3)){
             z += 18;
-            depth = 12;
             var d = point_distance(x, y, _tx, _ty) / speed;
-            zspeed = (d * zfric * 0.5) - (z / d);
+            zspeed = (d * zfriction * 0.5) - (z / d);
 
              // Cool particle line
             var _x = x,
                 _y = y,
                 _z = z,
                 _zspd = zspeed,
-                _zfrc = zfric,
+                _zfrc = zfriction,
                 i = 0;
 
             while(_z > 0){
@@ -307,11 +306,12 @@
          // Visual:
         sprite_index = spr.MortarPlasma;
         mask_index = mskNone;
+	    depth = -8;
 
          // Vars:
         z = 1;
         zspeed = 0;
-        zfric = 0.4; // 0.8
+        zfriction = 0.4; // 0.8
         damage = 0;
         force = 0;
 
@@ -319,9 +319,7 @@
     }
 
 #define MortarPlasma_step
-     // Rise & Fall:
     z_engine();
-    depth = max(-z, -9);
 
      // Facing:
     if((direction >= 30 && direction <= 150) || (direction >= 210 && direction <= 330)){
@@ -344,7 +342,7 @@
     }
 
      // Hit:
-    if(z <= 0 || (position_meeting(x, y + 8, Wall) && z <= 8)){
+    if(z <= 0 || (z <= 8 && position_meeting(x, y + 8, Wall))){
     	instance_destroy();
     }
 
@@ -442,6 +440,7 @@
 		spr_walk = spr.SpiderlingWalk;
 		spr_hurt = spr.SpiderlingHurt;
 		spr_dead = spr.SpiderlingDead;
+		spr_hatch = spr.SpiderlingHatch;
 		spr_shadow = shd16;
 		spr_shadow_y = 2;
 		mask_index = mskMaggot;
@@ -465,12 +464,17 @@
 		 // Cursed:
 		curse = (GameCont.area == 104);
 		if(curse){
+	        spr_idle = spr.InvSpiderlingIdle;
+			spr_walk = spr.InvSpiderlingWalk;
+			spr_hurt = spr.InvSpiderlingHurt;
+			spr_dead = spr.InvSpiderlingDead;
+			spr_hatch = spr.InvSpiderlingHatch;
 			snd_hurt = choose(sndHitFlesh, sndBanditHit, sndFastRatHit);
 			snd_dead = choose(sndEnemyDie, sndBanditDie, sndFastRatDie);
 		}
 		
          // Alarms:
-		alarm0 = irandom_range(120, 300);
+		alarm0 = irandom_range(60, 150);
 		alarm1 = irandom_range(20, 40);
 		
 		var n = instance_nearest(x, y, Player);
@@ -504,7 +508,7 @@
     }
     for(var a = direction; a < direction + 360; a += (360 / 3)){
         with(obj_create(x, y, "CatDoorDebris")){
-            sprite_index = spr.SpiderlingHatch;
+            sprite_index = other.spr_hatch;
             image_index = irandom(image_number - 1);
             direction = a + orandom(30);
             speed += 1 + random(4);
@@ -540,11 +544,13 @@
 	pickup_drop(15, 0);
 	
 	 // Dupe Time:
-	if(chance(curse, 4)){
+	var _chance = 2/3 * curse;
+	if(chance(_chance, 1)){
 		speed = min(1, speed);
-		repeat(2) with(obj_create(x, y, "Spiderling")){
+		repeat(3 * max(1, _chance)) with(obj_create(x, y, "Spiderling")){
 			sprite_index = spr_hurt;
 			alarm0 = ceil(other.alarm0 / 2);
+			curse = other.curse / 2;
 			kills = other.kills;
 			raddrop = 0;
 		}
@@ -766,7 +772,7 @@
 #define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
 #define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen(_obj, _ext)                                                      return  mod_script_call_nc("mod", "telib", "instances_seen", _obj, _ext);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
 #define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
 #define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
 #define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);
