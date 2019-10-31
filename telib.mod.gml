@@ -1,14 +1,4 @@
 #define init
-	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime", "boneScythe"];
-	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
-	with(global.debug_unlock) chat_comp_add_arg("unlocktoggle", 0, self);
-	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
-	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
-	chat_comp_add("charm", "(object)", "spawn a charmed object");
-	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
-	/** Delete above in release versions **/
-
-
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
