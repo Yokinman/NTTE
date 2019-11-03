@@ -1889,7 +1889,7 @@
         else global.effect_timer = 0;
 
          // Music / Ambience:
-        if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
+        if(GameCont.area != 100 && (global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton))){
         	global.musTrans = false;
             var _scrt = ["area_music", "area_ambience"];
             for(var i = 0; i < lq_size(global.current); i++){

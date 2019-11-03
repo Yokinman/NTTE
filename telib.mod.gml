@@ -777,7 +777,7 @@
                 }
 
 				 // Boss Check:
-				c.boss = (("boss" in self && boss) || array_find_index([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) >= 0);
+				c.boss = (("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index));
 
 				 // Charm Duration Speed:
 				c.time_speed = (c.boss ? 2 : 1);

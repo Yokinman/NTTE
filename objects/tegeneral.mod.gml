@@ -1947,7 +1947,9 @@
 		         // Deteriorate Rope if Doing Nothing:
 		        if(array_length(instances_matching_gt([link1, link2], "pull_speed", 0)) <= 0){
 		            broken = -1;
-		            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+		            if(instance_exists(link1) && instance_exists(link2)){
+		            	length = point_distance(link1.x, link1.y, link2.x, link2.y);
+		            }
 		        }
 		    }
 	    }
