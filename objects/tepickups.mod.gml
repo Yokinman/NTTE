@@ -3034,26 +3034,28 @@
 #define draw_bonus_spirit
 	if(DebugLag) trace_time();
 	
-	with(instances_matching(instances_matching_ne(Player, "bonus_spirit", null), "visible", true)){
-		var n = array_length(bonus_spirit);
-		if(n > 0){
-			var _bend = bonus_spirit_bend,
-				_dir = 90,
-				_dis = 7,
-				_x = x,
-				_y = y + sin(wave * 0.1);
+	with(instances_matching_ne(Player, "bonus_spirit", null)){
+		if(visible || variable_instance_get(self, "wading", 0) > 0){
+			var n = array_length(bonus_spirit);
+			if(n > 0){
+				var _bend = bonus_spirit_bend,
+					_dir = 90,
+					_dis = 7,
+					_x = x,
+					_y = y + sin(wave * 0.1);
+					
+				if(skill_get(mut_strong_spirit) && canspirit){
+					_x += lengthdir_x(_dis, _dir);
+					_y += lengthdir_y(_dis, _dir);
+					_dir += _bend;
+				}
 				
-			if(skill_get(mut_strong_spirit) && canspirit){
-				_x += lengthdir_x(_dis, _dir);
-				_y += lengthdir_y(_dis, _dir);
-				_dir += _bend;
-			}
-			
-			for(var i = 0; i < n; i++){
-				draw_sprite_ext(bonus_spirit[i].sprite, bonus_spirit[i].index, _x, _y, 1, 1, _dir - 90, c_white, 1);
-				_x += lengthdir_x(_dis, _dir);
-				_y += lengthdir_y(_dis, _dir);
-				_dir += _bend;
+				for(var i = 0; i < n; i++){
+					draw_sprite_ext(bonus_spirit[i].sprite, bonus_spirit[i].index, _x, _y, 1, 1, _dir - 90, c_white, 1);
+					_x += lengthdir_x(_dis, _dir);
+					_y += lengthdir_y(_dis, _dir);
+					_dir += _bend;
+				}
 			}
 		}
 	}

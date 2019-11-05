@@ -4089,7 +4089,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		friction = 0.4;
 		maxhealth = 15;
 		size = 4;
-		team = 1;
+		team = 0;
 		right = choose(-1, 1);
 		patience = random_range(30, 40);
 		notice_delay = random_range(1, 8);
@@ -4357,6 +4357,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 #define VenomFlak_destroy
     instance_create(x, y, PortalClear);
+    pickup_drop(50, 0);
 
      // Effects:
     for(var a = 0; a < 360; a += (360 / 20)){

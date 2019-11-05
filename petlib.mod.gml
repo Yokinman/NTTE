@@ -270,6 +270,7 @@
     maxspeed = 2;
     push = 0;
     wep = wep_none;
+    wep_inst = noone;
     ammo = true;
     curse = false;
     open = false;
@@ -341,7 +342,8 @@
 
                  // Drop Weapon:
                 if(wep != wep_none){
-                    with(instance_create(x, y, WepPickup)){
+                    wep_inst = instance_create(x, y, WepPickup);
+                    with(wep_inst){
                         wep = other.wep;
                         ammo = other.ammo;
                         curse = other.curse;
@@ -365,7 +367,10 @@
                 with(player_find(pickup_mimic.pick)){
                     if(canpick && wep != wep_none){
                         if(!curse){
-                            with(instance_create(other.x, other.y, WepPickup)) wep = other.wep;
+                            with(other){
+                            	wep_inst = instance_create(x, y, WepPickup);
+                            	wep_inst.wep = other.wep;
+                            }
                             wep = wep_none;
                             scrSwap();
                             
@@ -415,6 +420,15 @@
     }
     if(hushtime <= 0) hush = max(hush - 0.1, 0);
     else hushtime -= current_time_scale;
+    
+     // Hold Wep:
+    if(instance_exists(wep_inst)){
+    	with(wep_inst){
+    		x = other.x;
+    		y = other.y;
+    		speed = 0;
+    	}
+    }
     
      // Sparkle:
     if(frame_active(10 + orandom(2))){
@@ -1491,7 +1505,11 @@
 				with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
-						if(size <= 1 || (!instance_is(self, prop) && team != 0)){
+						if(
+							(!instance_is(self, prop) && team != 0)
+							||
+							(instance_is(self, prop) && sprite_get_width(sprite_index) <= 24 && sprite_get_height(sprite_index) <= 24)
+						){
 							if(in_sight(other)){
 								_disMax = _dis;
 								_nearest = id;

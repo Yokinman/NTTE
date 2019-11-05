@@ -1030,7 +1030,7 @@
         }
 
          // Hold Off Seals:
-        with(Seal) alarm0 = 30 + random(90);
+        with(Seal) attack_delay = 15 + random(30);
 
          // Enable/Disable Players:
         if(intro_pan > 0){
@@ -1195,7 +1195,6 @@
 
 					 // Important Stuff:
 					if(creator.active) kills = 0;
-					next_attack = (current_frame + 30);
 					array_push(lq_defget(mod_variable_get("area", "coast", "surfSwim"), "inst_visible", []), id);
 				}
     		}
@@ -2140,7 +2139,7 @@
         toss_time = 0;
         toss_ammo = 2;
         toss_spin = 0;
-        next_attack = 0;
+        attack_delay = 0;
         skeal = false;
         setup = true;
 
@@ -2207,6 +2206,8 @@
 
 #define Seal_step
 	if(setup) Seal_setup();
+	
+	if(attack_delay > 0) attack_delay -= current_time_scale;
 	
      // Slide:
     if(slide > 0){
@@ -2570,7 +2571,7 @@
     
     if(instance_exists(target)){
         var _targetDir = point_direction(x, y, target.x, target.y),
-        	_canAttack = (next_attack <= current_frame);
+        	_canAttack = (attack_delay <= 0);
         	
         if(in_sight(target) || type == seal_none){
         	 // Seal Types:
@@ -2983,7 +2984,7 @@
 			break;
 			
 		case seal_dasher:
-			sound_play_hit(sndSnowBotHurt, 0.3);
+			//sound_play_hit(sndSnowBotHurt, 0.3); i miss snowbot hunter bro
 			break;
     }
 
@@ -3106,7 +3107,7 @@
 
 #define SealAnchor_projectile
 	 // Deflect Projectile, No Team Change:
-	if(team != other.team){
+	if(instance_exists(self) && instance_exists(other) && team != other.team){
 		with(other){
 			if(typ == 1){
 				direction = other.direction;
@@ -3385,6 +3386,7 @@
                 alarm1 = 60;
                 anchor = scrEnemyShoot("SealAnchor", gunangle, 0);
                 anchor_throw = 8;
+                anchor_spin = max(20, abs(anchor_spin)) * sign(anchor_spin);
                 if(instance_exists(target)) direction = point_direction(x, y, target.x, target.y);
 
                  // Effects:

@@ -1202,6 +1202,9 @@
 		with(instance_nearest(_x - 16, _y - 16, Floor)){
 			other.direction = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_left + bbox_right + 1) / 2, _x, _y);
 		}
+		if(array_length(instances_matching(CustomHitme, "name", "PizzaDrain")) > 0){
+			direction = (direction % 180) + 180;
+		}
 		
 		var	_move = 32,
 			_dis = random_range(40, 80);
@@ -1254,17 +1257,19 @@
 			_dir = direction,
 			_ped = true;
 			
-		while(_num-- > 0){
+		while(_num > 0){
 			var	_moveDis = 32,
-				_moveDir = round(_dir / 90)* 90;
+				_moveDir = round(_dir / 90) * 90;
 				
 			_fx += lengthdir_x(_moveDis, _moveDir);
 			_fy += lengthdir_y(_moveDis, _moveDir);
 			
-			var	_spawnPed = chance(_ped, 1 + (_num * 2)),
+			var	_spawnPed = chance(_ped, 1 + ((_num - 1) * 2)),
 				n = instance_nearest(_fx, _fy, Floor);
 				
 			if(!instance_exists(n) || point_distance(_fx, _fy, n.x, n.y) > (_spawnPed ? 128 : 64)){
+				_num--;
+				
 				 // Main Loot:
 				if(_spawnPed){
 					_ped = false;
@@ -1942,7 +1947,9 @@
 		         // Deteriorate Rope if Doing Nothing:
 		        if(array_length(instances_matching_gt([link1, link2], "pull_speed", 0)) <= 0){
 		            broken = -1;
-		            length = point_distance(link1.x, link1.y, link2.x, link2.y);
+		            if(instance_exists(link1) && instance_exists(link2)){
+		            	length = point_distance(link1.x, link1.y, link2.x, link2.y);
+		            }
 		        }
 		    }
 	    }

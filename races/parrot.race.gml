@@ -145,12 +145,14 @@
 #macro surfCharm global.surfCharm
 #macro shadCharm global.shadCharm
 
+#macro current_frame_active ((current_frame mod 1) < current_time_scale)
+
 /// General
 #define race_name
 	return "PARROT";
 
 #define race_text
-	return "MANY FRIENDS#@rFEATHERS";
+	return "MANY FRIENDS#@rCHARM ENEMIES";
 
 #define race_ttip
     if(GameCont.level >= 10 && chance(1, 5)){
@@ -579,8 +581,15 @@
 				 // Gather All Potential Targets:
                 with(instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
                     if(collision_circle(_targX, _targY, _targRadius, id, true, false)){
-                        array_push(_targ, id);
-                        if(array_length(_targ) >= _featherMax) break;
+                    	 // Intro played OR is not a boss:
+                		if(
+                			variable_instance_get(self, "intro", true)
+                			||
+                			!(array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) || variable_instance_get(self, "boss", false))
+                		){
+	                        array_push(_targ, id);
+	                        if(array_length(_targ) >= _featherMax) break;
+                		}
                     }
                 }
 
@@ -1194,7 +1203,7 @@
 
             if(instance_is(self, hitme)){
             	 // Kill When Uncharmed if Infinitely Spawned:
-            	if("kills" in self && kills <= 0 && object_index != ScrapBossMissile){
+            	if("kills" in self && kills <= 0 && !other.boss){
             		c.kill = true;
 	            	if("raddrop" in self) raddrop = 0;
             	}

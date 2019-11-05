@@ -2472,7 +2472,7 @@
         raddrop = 0;
         size = 1;
         team = 0;
-		pickup_indicator = scrPickupIndicator("CHUNK");
+		pickup_indicator = scrPickupIndicator("SHARE");
 
         return id;
 	}
@@ -5206,6 +5206,12 @@
     		}
     	}
     }
+    
+     // Replace Lame MineExplosion:
+    with(instances_matching(MineExplosion, "alarm0", ceil(current_time_scale))){
+    	with(obj_create(x, y - 12, "SealMine")) my_health = 0;
+    	instance_destroy();
+    }
 
 	if(DebugLag) trace_time("tewater_step");
 
@@ -5681,7 +5687,7 @@
     
      // Squid Arms:
     with(instances_matching(CustomEnemy, "name", "PitSquidArm")) if(visible){
-    	draw_circle(x, y - 12, 24 + orandom(1), false);
+    	draw_circle(x, y - 12, 72 + orandom(1), false);
     }
     
      // Pit Squid:
@@ -5776,6 +5782,11 @@
      // Elite Eels:
     with(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0)) if(visible){
         draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
+    }
+    
+     // Squid Arms:
+    with(instances_matching(CustomEnemy, "name", "PitSquidArm")) if(visible){
+    	draw_circle(x, y - 12, 24 + orandom(1), false);
     }
     
      // Pit Squid:

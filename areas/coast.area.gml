@@ -541,7 +541,7 @@
 								draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
 								
 								 // Charmed Enemy Eye:
-								if("charm" in self && charm.charmed){
+								if("ntte_charm" in self && ntte_charm.charmed){
 									 // Outlines:
 									if(_charmCanOutline){
 										draw_set_fog(true, player_get_color(player_find_local_nonsync()), 0, 0);

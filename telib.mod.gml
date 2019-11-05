@@ -1,3 +1,96 @@
+#define chat_command(_cmd, _arg, _ind) /// debug commands
+    switch(_cmd){
+        case "pet":
+            Pet_spawn(mouse_x[_ind], mouse_y[_ind], _arg);
+            return true;
+
+		case "wepmerge":
+			var a = string_split(_arg, "/"),
+				w = wep_none;
+
+			if(array_length(a) >= 2){
+				w = wep_merge(a[0], a[1]);
+			}
+			else{
+				w = wep_merge(a[0], a[0]);
+			}
+
+			with(instance_create(mouse_x[_ind], mouse_y[_ind], WepPickup)){
+				wep = w;
+				ammo = true;
+			}
+			return true;
+
+		case "debuglag":
+			var _mod = [];
+			if(_arg != ""){
+				var	p = 0;
+				for(var i = 0; i <= string_length(_arg); i++){
+					if(string_char_at(_arg, i) == "."){
+						p = i;
+					}
+				}
+	
+				var	_name = ((p <= 0) ? _arg : string_copy(_arg, 1, p - 1)),
+					_type = ((p <= 0) ? "mod" : string_delete(_arg, 1, p));
+	
+				array_push(_mod, [_type, _name]);
+			}
+			else{
+				DebugLag = !DebugLag;
+				with(["mod", "weapon", "race", "skill", "crown", "area", "skin"]){
+					with(mod_get_names(self)){
+						array_push(_mod, [other, self]);
+					}
+				}
+			}
+
+			with(_mod){
+				var _type = self[0],
+					_name = self[1],
+					_varn = "debug_lag";
+
+				if(mod_variable_exists(_type, _name, _varn)){
+					var _state = ((_arg != "") ? !mod_variable_get(_type, _name, _varn) : DebugLag);
+					if(_state ^^ mod_variable_get(_type, _name, _varn)){
+						mod_variable_set(_type, _name, _varn, _state);
+						trace_color((_state ? "ENABLED" : "DISABLED") + " " + _name + "." + _type, (_state ? c_lime : c_red));
+					}
+				}
+				else if(_arg != ""){
+					trace_color("Cannot debug lag for " + _arg, c_red);
+				}
+			}
+
+			return true;
+
+		case "unlockall":
+		case "unlockreset":
+			var _unlock = (_cmd == "unlockall");
+
+			with(global.debug_unlock){
+				unlock_set(self, _unlock);
+			}
+
+			scrUnlock("", "@wEVERYTHING " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "unlocktoggle":
+			var _unlock = !unlock_get(_arg);
+
+			unlock_set(_arg, _unlock);
+
+			scrUnlock("", "@w" + _arg + " " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
+			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			return true;
+
+		case "charm":
+			scrCharm(instance_create(mouse_x[_ind], mouse_y[_ind], asset_get_index(_arg)), true);
+			return true;
+    }
+
+
 #define init
 	global.debug_unlock = ["parrot", "parrotB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "crownCrime", "boneScythe"];
 	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
@@ -7,8 +100,7 @@
 	chat_comp_add("charm", "(object)", "spawn a charmed object");
 	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
 	/** Delete above in release versions **/
-
-
+	
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
@@ -685,7 +777,7 @@
                 }
 
 				 // Boss Check:
-				c.boss = (("boss" in self && boss) || array_find_index([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) >= 0);
+				c.boss = (("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index));
 
 				 // Charm Duration Speed:
 				c.time_speed = (c.boss ? 2 : 1);
@@ -781,48 +873,45 @@
     return c;
 
 #define charm_allyize(_bool)
+	var _inst = noone;
+	
 	 // Become Allied:
 	if(_bool){
 		switch(sprite_index){
 			case sprEnemyBullet1:
 				if(instance_is(self, EnemyBullet1)){
-	    			instance_change(AllyBullet, false);
+	    			_inst = instance_create(x, y, AllyBullet);
 				}
 	    		sprite_index = sprAllyBullet;
 				break;
 
 			case sprEBullet3:
 				if(instance_is(self, EnemyBullet3)){
-	    			instance_change(Bullet2, false);
-	    			bonus = false;
+	    			_inst = instance_create(x, y, Bullet2);
+	    			with(_inst) bonus = false;
 				}
 	    		sprite_index = sprBullet2;
 				break;
 
 			case sprEnemyBullet4:
 				if(instance_is(self, EnemyBullet4)){
-	    			instance_change(AllyBullet, false);
+	    			_inst = instance_create(x, y, AllyBullet);
 				}
 	    		sprite_index = spr.AllyBullet4;
 				break;
 
 			case sprLHBouncer:
 				if(instance_is(self, LHBouncer)){
-	    			instance_change(BouncerBullet, false);
+	    			_inst = instance_create(x, y, BouncerBullet);
 				}
 	    		sprite_index = sprBouncerBullet;
 				break;
 
 			case sprEFlak:
 				if(instance_is(self, EFlakBullet)){
-					var _inst = obj_create(x, y, "AllyFlakBullet");
-					with(variable_instance_get_names(id)){
-						if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "sprite_index"], self)){
-							variable_instance_set(_inst, self, variable_instance_get(other, self));
-						}
-					}
-					instance_delete(id);
+					_inst = obj_create(x, y, "AllyFlakBullet");
 				}
+				sprite_index = spr.AllyFlakBullet;
 				break;
 
 			case sprEnemyLaser:
@@ -842,22 +931,22 @@
 		switch(sprite_index){
 			case sprAllyBullet:
 				if(instance_is(self, AllyBullet)){
-	    			instance_change(EnemyBullet1, false);
+	    			_inst = instance_create(x, y, EnemyBullet1);
 				}
 	    		sprite_index = sprEnemyBullet1;
 				break;
 
 			case sprBullet2:
 				if(instance_is(self, Bullet2)){
-	    			instance_change(EnemyBullet3, false);
-	    			bonus = false;
+	    			_inst = instance_create(x, y, EnemyBullet3);
+	    			with(_inst) bonus = false;
 				}
 	    		sprite_index = sprEBullet3;
 				break;
 
 			case sprBouncerBullet:
 				if(instance_is(self, BouncerBullet)){
-	    			instance_change(LHBouncer, false);
+	    			_inst = instance_create(x, y, LHBouncer);
 				}
 	    		sprite_index = sprLHBouncer;
 				break;
@@ -875,7 +964,7 @@
 			default:
 				if(sprite_index == spr.AllyBullet4){
 					if(instance_is(self, AllyBullet)){
-		    			instance_change(EnemyBullet4, false);
+	    				_inst = instance_create(x, y, EnemyBullet4);
 					}
 		    		sprite_index = sprEnemyBullet4;
 				}
@@ -886,6 +975,16 @@
 					}
 				}
 		}
+	}
+	
+	 // Better than instance_change:
+	if(instance_exists(_inst)){
+		with(variable_instance_get_names(id)){
+			if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self)){
+				variable_instance_set(_inst, self, variable_instance_get(other, self));
+			}
+		}
+		instance_delete(id);
 	}
 
 #define scrBossHP(_hp)
