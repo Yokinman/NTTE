@@ -648,19 +648,19 @@
 	if(place_meeting(x, y - z, projectile) || place_meeting(x, y - z, enemy)){
 		var _meeting = instances_meeting(x, y - z, [enemy, projectile]);
 		
-    	 // Baseball:
-    	var m = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
+		 // Baseball:
+		var m = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
         if(m) with(m){
         	if(place_meeting(x, y + other.z, other)){
         		with(other) if(speed < 8){
-        			direction = other.direction;
+        			direction = other.image_angle;
         			speed = max(0, 10 - (4 * (array_length(held) - 1 + big)));
 
         			sound_play_pitchvol(sndBouncerBounce, (big ? 0.5 : 0.8) + random(0.1), 3);
         		}
         	}
         }
-
+        
          // Bubble Collision:
         var m = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
 	    if(m) with(m){
@@ -5660,7 +5660,7 @@
     draw_set_fog(false, 0, 0, 0);
 
      // Jellies:
-    with(instances_matching(CustomEnemy, "name", "Jelly")) if(visible){
+    with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")) if(visible){
         var o = 0,
             _frame = floor(image_index);
 
@@ -5764,7 +5764,7 @@
     draw_set_blend_mode(bm_normal);
 
      // Jellies:
-    with(instances_matching(CustomEnemy, "name", "Jelly")) if(visible){
+    with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")) if(visible){
         var o = 0,
             _frame = floor(image_index);
 
@@ -5876,7 +5876,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -5946,4 +5946,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

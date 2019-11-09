@@ -1560,12 +1560,17 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	instance_create(x, y, Explosion);
 	repeat(1 + irandom(2)) instance_create(x, y, SmallExplosion);
 	
-	var l = 12
+	var l = 12;
 	for(var d = 0; d < 360; d += (360 / 20)){
 		var _x = x + lengthdir_x(l, d),
 			_y = y + lengthdir_y(l, d);
-		if(position_meeting(_x, _y, Floor)) scrEnemyShootExt(_x, _y, TrapFire, d + random_range(60, 90), random(2));
-		with(scrFlameSpark(_x, _y)) motion_add(d + random_range(30, 90), random(5));
+			
+		if(position_meeting(_x, _y, Floor)){
+			scrEnemyShootExt(_x, _y, TrapFire, d + random_range(60, 90), random(2));
+		}
+		with(scrFlameSpark(_x, _y)){
+			motion_add(d + random_range(30, 90), random(5));
+		}
 	}
 	view_shake_at(x, y, 20);
 	
@@ -3312,7 +3317,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     phase++;
 
      // Reset camera:
-    for(var i; i < maxp; i++){
+    for(var i = 0; i < maxp; i++){
         if(view_object[i] == id) view_object[i] = noone;
         if(view_pan_factor[i] == 10000) view_pan_factor[i] = null;
     }
@@ -4357,7 +4362,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 #define VenomFlak_destroy
     instance_create(x, y, PortalClear);
-    pickup_drop(50, 0);
+    if(!instance_is(creator, Player)) pickup_drop(50, 0);
 
      // Effects:
     for(var a = 0; a < 360; a += (360 / 20)){
@@ -4423,7 +4428,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				if(enemy_time <= 0){
 					var	_spawnX = x,
 						_spawnY = y,
-						_spawnDis = random_range(320, 400),
+						_spawnDis = 240,
 						_spawnDir = random(360);
 						
 					with(instance_furthest(_spawnX - 16, _spawnY - 16, Floor)){
@@ -4469,44 +4474,45 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						
 						scrPortalPoof();
 						
-						with(TopObject_create(_spawnX, _spawnY, _enemyPool[irandom(array_length(_enemyPool) - 1)], _spawnDir, _spawnDis)){
-							alarm1 = 1;
+						with(top_create(_spawnX, _spawnY, _enemyPool[irandom(array_length(_enemyPool) - 1)], _spawnDir, _spawnDis)){
+							jump_time = 1;
+							idle_time = 0;
 							
 							_spawnX = x;
 							_spawnY = y;
 							_spawnDir = random(360);
 							_spawnDis = -1;
 							
-							 // Type-Specific:
-							switch(object.object_index){
-								case "BabyGator":
-									 // Babies Stick Together:
-									var n = 1 + irandom(1 + GameCont.loops);
-									repeat(n) with(TopObject_create(x, y, "BabyGator", random(360), -1)){
-										alarm1 = other.alarm1;
+							with(target){
+								 // Type-Specific:
+								switch(object_index){
+									case "BabyGator":
+										 // Babies Stick Together:
+										var n = 1 + irandom(1 + GameCont.loops);
+										repeat(n) with(top_create(x, y, "BabyGator", random(360), -1)){
+											jump_time = 1;
+										}
+										break;
+										
+									case FastRat: // maybe?
+										 // The Horde:
+										var n = 3 + irandom(3 + GameCont.loops);
+										repeat(n) with(top_create(x, y, FastRat, random(360), -1)){
+											jump_time = 1;
+										}
+										
+										 // Large and in Charge:
+										with(top_create(x, y, RatkingRage, random(360), -1)){
+											jump_time = 1;
+										}
+										break;
+								}
+								
+								 // Poof:
+								repeat(3){
+									with(instance_create(x + orandom(8), y + orandom(8), Dust)){
+										depth = other.depth - 1;
 									}
-									break;
-									
-								case FastRat: // maybe?
-									 // The Horde:
-									var n = 3 + irandom(3 + GameCont.loops);
-									repeat(n) with(TopObject_create(x, y, FastRat, random(360), -1)){
-										alarm1 = other.alarm1;
-									}
-									
-									 // Large and in Charge:
-									with(TopObject_create(x, y, Ratking, random(360), -1)){
-										spr_idle = sprRatkingRageWait;
-										spr_walk = sprRatkingRageAttack;
-										alarm1 = other.alarm1;
-									}
-									break;
-							}
-							
-							 // Poof:
-							repeat(3){
-								with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
-									depth = other.depth - 1;
 								}
 							}
 						}
@@ -4700,7 +4706,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -4770,4 +4776,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

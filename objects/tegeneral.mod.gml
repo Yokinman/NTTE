@@ -10,7 +10,9 @@
 	global.surfShadowTopMask = surflist_set("ShadowTopMask", 0, 0, 2 * game_width, 2 * game_height);
 	global.surfPet = surflist_set("Pet", 0, 0, 64, 64);
 	with(surfShadowTopMask) reset = true;
-
+	
+	global.TopObject_search = GameObject.id;
+	
 	 // Floor Related:
 	global.floor_num = 0;
 	global.floor_left = 0;
@@ -201,7 +203,7 @@
 	        	if(place_meeting(x, y, other)){
 	        		with(other){
 	        			speed = max(speed, 16);
-	        			direction = other.direction;
+	        			direction = other.image_angle;
 	        			with(instance_create(x, y, Deflect)) image_angle = other.direction;
 	        		}
 	        	}
@@ -352,11 +354,11 @@
 		 // Effects:
 		instance_create(x, y, Smoke);
 		
-		var _big = ((other.size >= 3 && big));
+		var _big = ((instance_exists(other) && other.size >= 3 && big));
 		
 		view_shake_max_at(x, y, (_big ? 12 : 6));
 		
-		if(other.my_health <= 0){
+		if(!instance_exists(other) || other.my_health <= 0){
 			sleep_max(_big ? 48 : 24);
 			view_shake_max_at(x, y, (_big ? 32 : 16))
 		}
@@ -1255,9 +1257,10 @@
 			_fy = floor(((bbox_top + bbox_bottom + 1) / 2) / 16) * 16,
 			_num = irandom_range(6, 12),
 			_dir = direction,
-			_ped = true;
+			_ped = true,
+			_tries = 1000;
 			
-		while(_num > 0){
+		while(_num > 0 && _tries-- > 0){
 			var	_moveDis = 32,
 				_moveDir = round(_dir / 90) * 90;
 				
@@ -1265,9 +1268,10 @@
 			_fy += lengthdir_y(_moveDis, _moveDir);
 			
 			var	_spawnPed = chance(_ped, 1 + ((_num - 1) * 2)),
+				_floorDis = 48 + (32 * _spawnPed),
 				n = instance_nearest(_fx, _fy, Floor);
 				
-			if(!instance_exists(n) || point_distance(_fx, _fy, n.x, n.y) > (_spawnPed ? 128 : 64)){
+			if(!instance_exists(n) || point_distance(_fx, _fy, n.x, n.y) > sqrt(sqr(_floorDis) + sqr(_floorDis))){
 				_num--;
 				
 				 // Main Loot:
@@ -1315,7 +1319,11 @@
 				 // Turn:
 				_dir += orandom(60);
 			}
-			else _dir = direction;
+			else{
+				_fx -= lengthdir_x(_moveDis, _moveDir);
+				_fy -= lengthdir_y(_moveDis, _moveDir);
+				_dir = direction;
+			}
 		}
 		
 		return id;
@@ -3615,9 +3623,9 @@
 			}
 		}
 	}
-
-
-#define TopChest_create(_x, _y)
+	
+	
+#define TopObject_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		spr_shadow = -1;
@@ -3626,613 +3634,362 @@
 		depth = depth_top;
 		
 		 // Vars:
-	    mask_index = msk.TopProp;
+	    mask_index = -1;
+	    mask_x = 0;
+	    mask_y = 8;
 		target = noone;
 		target_save = {};
-		target_x = x;
-		target_y = y;
 		z = 8;
 		zspeed = 0;
 		zfriction = 0;
+		maxspeed = 0;
 		grav = 0.8;
-		jump = grav + 0.4;
+		jump = random_range(3, 4);
+		jump_x = x;
+		jump_y = y;
+		jump_time = 0;
+		idle_time = 0;
+		idle_wait = [15, 90];
+		idle_walk = [5, 20];
+		idle_walk_chance = 1/6;
+		spawn_dis = 0;
+		spawn_dir = 0;
 		wobble = 0;
+		wobble_num = 0;
+		override_mask = true;
+		override_depth = true;
+		is_enemy = false;
+		is_damage = false;
+		unstick = false;
 		
-		 // Away From Floors:
-		var	_dis = 8,
-			_dir = random(360);
-			
-		with(instance_nearest(x - 16, y - 16, Floor)){
-			_dir = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, other.x, other.y);
-		}
-		
-		while(
-			distance_to_object(Floor)			< _dis		||
-			distance_to_object(PortalClear)		< _dis + 16	||
-			distance_to_object(Bones)			< 16		||
-			distance_to_object(TopPot)			< 8			||
-			distance_to_object(CustomObject)	< 8
-		){
-			var l = 4;
-			x += lengthdir_x(l, _dir);
-			y += lengthdir_y(l, _dir);
-		}
-		
-		
-		for(var _x = x - 24; _x < x + 24; _x += 16){
-			for(var _y = y - 8; _y < y + 24; _y += 16){
-				if(chance(4, 5)){
-					var	_sx = floor(_x / 16) * 16,
-						_sy = floor(_y / 16) * 16;
-						
-			        if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
-			            instance_create(_sx, _sy, TopSmall);
-			        }
-				}
-			}
-		}
-		
-		target_x = x;
-		target_y = y;
+		y += z;
 		
 		return id;
 	}
-
-#define TopChest_end_step
+	
+#define TopObject_end_step
 	if(instance_exists(target)){
-	    if(zspeed != 0) z += zspeed * current_time_scale;
-	    
-	     // Hold Chest:
-	    var _save = target_save;
-	    with(target){
-	    	 // Move:
-	    	if(x != xprevious || y != yprevious){
-		    	other.x += (x - xprevious);
-		    	other.y += (y - yprevious);
-				other.depth = depth_top;
-				depth = other.depth;
-	    	}
-	    	
-	    	 // Follow Controller:
-			x = other.x;
-			y = other.y - other.z;
-			other.target_x = x;
-			other.target_y = y;
-			
-			 // Appear Above Walls:
-			if(depth != other.depth){
-				_save.depth = depth;
-				depth = other.depth;
+		if(zspeed != 0) z += zspeed * current_time_scale;
+		
+		 // Target Management:
+		with(target){
+			 // Position:
+			if(x != xprevious || y != yprevious){
+				if(other.zfriction == 0 || !other.unstick){
+					if("walk" in self || other.jump_time <= 0){
+						other.x += (x - xprevious);
+						other.y += (y - yprevious);
+						
+						 // Depth:
+						if(other.override_depth){
+							if(depth != other.depth) other.target_save.depth = depth;
+							other.depth = -6 - ((other.y - 8) / 10000);
+							depth = other.depth;
+						}
+					}
+				}
+				
+				var _spd = point_distance(xprevious, yprevious, x, y);
+				other.direction = point_direction(xprevious, yprevious, x, y);
+				if(_spd > other.maxspeed) other.maxspeed = _spd;
+				
+				if("spr_shadow" in self && other.z <= 8){
+					 // Trail:
+					if(chance_ct(sqr(_spd), 90)){
+						var	o = abs(sprite_width / 16),
+							_leaf = (GameCont.area == 105);
+							
+						with(instance_create(x + orandom(o), y + o + random(o), (_leaf ? Feather : Dust))){
+							if(_leaf){
+								sprite_index = sprLeaf;
+								speed *= random_range(0.5, 1);
+							}
+							depth = other.depth + 0.1;
+						}
+					}
+					
+					 // Push Bros:
+					/*
+					var	_inst = id,
+						_saveMask = mask_index;
+						
+					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+					
+					with(instances_matching(instances_matching_ne(instance_rectangle(x - 32, y - 32, x + 32, y + 32, instances_matching(other.object_index, "name", other.name)), "id", other), "zfriction", 0)){
+						with(target) if(instance_is(self, hitme) && !instance_is(self, prop)){
+							var m = mask_index;
+							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+							
+							if(place_meeting(x, y, _inst)){
+								var _dir = point_direction(_inst.x, _inst.y, x, y);
+								if(x == _inst.x && y == _inst.y) _dir = random(360);
+								motion_add_ct(_dir, 1);
+							}
+							
+							mask_index = m;
+						}
+					}
+					
+					mask_index = _saveMask;
+					*/
+				}
+			}
+			if(x != other.x || y != other.y - other.z){
+				x = other.x;
+				y = other.y - other.z;
+				xprevious = x;
+				yprevious = y;
 			}
 			
-			 // Disable Collision:
-			if(mask_index != mskNone){
-				_save.mask_index = mask_index;
+			 // Disable Hitbox:
+			if(mask_index != mskNone && other.override_mask){
+				other.target_save.mask_index = mask_index;
 				mask_index = mskNone;
 			}
 			
 			 // Disable Shadow:
-			if("spr_shadow" in self){
-				if(spr_shadow != -1){
-					_save.spr_shadow = spr_shadow;
-					other.spr_shadow = spr_shadow;
-	    			other.mask_index = spr_shadow;
-	    			other.image_xscale = 0.5;
-	    			other.image_yscale = 0.5;
-					spr_shadow = -1;
-				}
-				other.spr_shadow_x = spr_shadow_x;
-				other.spr_shadow_y = spr_shadow_y - 1;
-			}
-			/*else{
-				other.spr_shadow = shd16;
-				other.spr_shadow_y = -1;
-			}*/
-	    }
-	    
-	     // Check Collision:
-	    if(zfriction == 0){
-	    	if(place_meeting(x, y, Floor)){
-	    		if(!place_meeting(x, y, Wall)){
-		    		zfriction = grav;
-		    		zspeed = jump;
-	    		}
-	    		
-	    		 // Wobble:
-	    		var	_wobWest = position_meeting(x - 4, y, Floor),
-	    			_wobEast = position_meeting(x + 4, y, Floor);
-	    			
-	    		if(_wobWest || _wobEast){
-	    			var _wobMove = ((_wobWest - _wobEast) - wobble) * 0.1 * current_time_scale;
-	    			wobble += _wobMove;
-	    			
-	    			with(target){
-	    				image_angle += 8 * _wobMove;
-	    				image_angle += 0.5 * sin(current_frame / 10) * other.wobble;
-	    			}
-	    		}
-	    	}
-	    	else if(wobble != 0){
-	    		wobble -= wobble * 0.5 * current_time_scale;
-	    		with(target) image_angle -= image_angle * 0.5 * current_time_scale;
-	    		
-	    		if(abs(wobble) < 0.5){
-	    			wobble = 0;
-	    			with(target) image_angle = 0;
-	    		}
-	    	}
-	    }
-	    
-	     // Falling:
-	    else{
-	    	zspeed -= zfriction * current_time_scale;
-	    	
-	    	 // Depth:
-			if(z < 8){
-				if(z >= 0){
-					if(!collision_rectangle(bbox_left + 4, bbox_top + 8 - z, bbox_right - 4, bbox_bottom - z, Wall, false, false)){
-						target.depth = min(-1, lq_defget(target_save, "depth", 0));
-					}
-				}
-				else depth = max(12, depth);
+			if("spr_shadow" in self && spr_shadow != -1){
+				other.target_save.spr_shadow = spr_shadow;
+				spr_shadow = -1;
 			}
 			
-			 // Landing:
-			if(z <= 0){
-				if(!instance_exists(NothingSpiral)) instance_destroy();
-				
-				 // Abyss Time:
-				else if(!point_seen(x, bbox_top - z, -1)){
-					with(target) instance_delete(id);
-					instance_delete(id);
-				}
-			}
-	    }
-	}
-	
-	else{
-		 // Grab Chest (In case it was replaced or something):
-		with(instances_matching(instances_matching_gt(instances_matching_gt(instances_matching(instances_matching([chestprop, Pickup, RadChest], "xstart", target_x), "ystart", target_y), "id", id), "id", target), "topchest_grab", null)){
-			topchest_grab = true;
-			
-			 // No softlock:
-			if(instance_is(self, RadMaggotChest)){
-				instance_delete(id);
-				with(other) instance_delete(id);
+			 // Depth:
+			if(depth != other.depth){
+				other.target_save.depth = depth;
+				depth = other.depth;
 			}
 			
-			else{
-				other.target = id;
-				other.target_save = {};
-				with(other) TopChest_end_step();
+			 // Disable Death:
+			if("canfly" in self && !canfly){
+				other.target_save.canfly = canfly;
+				canfly = true;
 			}
-			
-			exit;
 		}
 		
-		 // Time to die:
-		instance_destroy();
+		 // Jumping:
+		if(zfriction != 0){
+			zspeed -= zfriction * current_time_scale;
+			
+			if(z < 8){
+				if(place_meeting(x, y, Floor)) with(target){
+					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+					if(place_meeting(x, y, Wall)) mask_index = mskNone;
+				}
+				
+	    		 // Depth:
+				if(z > 0){
+					if(!collision_rectangle(bbox_left + 4, bbox_top + 8 - z, bbox_right - 4, bbox_bottom - z, Wall, false, false)){
+						depth = min(-1, lq_defget(target_save, "depth", 0));
+						target.depth = depth;
+					}
+				}
+				
+				 // Landing:
+				else{
+					if(!instance_exists(NothingSpiral) || place_meeting(x, y, Floor)){
+						instance_destroy();
+					}
+					
+					 // Abyss Time:
+					else{
+						depth = max(12, depth);
+						target.depth = depth;
+						if(!point_seen(x, bbox_top - z, -1)){
+							with(target) instance_delete(id);
+							instance_delete(id);
+						}
+					}
+				}
+			}
+		}
+		
+		 // Enemy Stuff:
+		else if(is_enemy){
+			if(idle_time > 0) idle_time -= current_time_scale;
+			else{
+				 // Time to Jump Off:
+				if(jump_time == 0){
+					with(target){
+						if("walk" not in self || walk <= 0 || instance_is(self, Freak) || instance_is(self, ExploFreak)){
+							idle_time = 10 + random(20);
+							
+							var n = (instance_exists(Player) ? instance_nearest(other.x, other.y, Player) : instance_nearest(other.x - 16, other.y - 16, Floor));
+							direction = point_direction(x, y, n.x, n.y - 8);
+							speed += current_time_scale;
+							
+							if("walk" in self) walk = idle_time;
+							if("gunangle" in self) gunangle = direction;
+							if("right" in self) scrRight(direction);
+						}
+					}
+				}
+				
+				 // Idling:
+				else{
+					idle_time = random_range(idle_wait[0], idle_wait[1]);
+					
+					var n = instance_nearest(x, y, Player);
+					
+					with(target){
+						 // Face Player:
+						if(instance_exists(n)){
+							var d = point_direction(x, y, n.x, n.y - 8) + orandom(5);
+						    if("gunangle" in self) gunangle = d;
+						    if("right" in self){
+								if("gunangle" not in self) direction = d;
+						    	scrRight(d);
+						    }
+						 }
+						
+						 // Wander:
+						if(chance(other.idle_walk_chance, 1)){
+						    direction = random(360);
+							if("walk" in self){
+								walk = random_range(other.idle_walk[0], other.idle_walk[1]);
+							}
+						}
+						
+						 // Cold:
+						if(GameCont.area == 5 && chance(2, 3)){
+							with(instance_create(x, y, Breath)){
+								image_xscale = sign(other.image_xscale) * variable_instance_get(other, "right", 1);
+								depth = -8;
+							}
+						}
+					}
+					
+					 // Let's Roll:
+					if(chance(1, 5) && in_distance(n, 160)){
+						jump_time = 1;
+					}
+				}
+			}
+			
+			 // Time Until Jump Off:
+			if(jump_time > 0){
+				jump_time -= current_time_scale;
+				if(jump_time <= 0){
+					jump_time = 0;
+					
+					 // Cmon Bros:
+					with(instances_matching(object_index, "name", name)){
+						if(instance_exists(target) && target.object_index == other.target.object_index && in_distance(other, 64)){
+							jump_time = 0;
+							idle_time = random_range(10, 60);
+						}
+					}
+				}
+			}
+		}
+		
+		 // Damage Stuff:
+		else if(is_damage){
+			with(target){
+				var	_inst = id,
+					_saveMask = mask_index;
+					
+				mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+				
+				with(instances_matching_ne(instance_rectangle(x - 32, y - 32, x + 32, y + 32, instances_matching(other.object_index, "name", other.name)), "id", other)){
+					with(target) if(instance_is(self, hitme)){
+						var m = mask_index;
+						mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+						
+						if(place_meeting(x, y, _inst)){
+							with(_inst) event_perform(ev_collision, hitme);
+						}
+						
+						mask_index = m;
+					}
+				}
+				
+				mask_index = _saveMask;
+			}
+		}
 	}
-
-#define TopChest_destroy
+	
+	 // Target Destroyed:
+	else{
+		if(target != noone) target = noone; // basically just to give a 1 frame delay
+		else instance_destroy();
+	}
+	
+#define TopObject_destroy
 	with(target){
 		x = other.x;
 		y = other.y;
-		image_angle = 0;
+		xprevious = x;
+		yprevious = y;
+		xstart = x;
+		ystart = y;
+		top_object = noone;
+		
+		 // Unwobble:
+		if(other.wobble_num != 0){
+			image_angle = 0;
+		}
+		
+		 // Restore Vars:
 		for(var i = 0; i < lq_size(other.target_save); i++){
 			variable_instance_set(id, lq_get_key(other.target_save, i), lq_get_value(other.target_save, i));
 		}
 		
-		 // Clear Walls:
-		with(instance_create(x, y, PortalClear)){
-			sprite_index = other.sprite_index;
-			mask_index = other.mask_index;
-			image_xscale = other.image_xscale;
-			image_yscale = other.image_yscale;
-			image_angle = other.image_angle;
-		}
-		
-		 // Effects:
-		var _num = abs(sprite_width * random_range(0.5, 1));
-		for(var d = direction; d < direction + 360; d += (360 / _num)){
-			var _obj = (chance(1, 8) ? Debris : Dust);
-			with(instance_create(x, y, Dust)){
-				motion_add(d + orandom(20), random_range(2, 5));
-				depth = max(depth, other.depth);
-			}
-		}
-		view_shake_max_at(x, y, 6);
-		
-		 // Sounds:
-		if(!instance_is(self, Pickup) && !area_get_underwater(GameCont.area)){
-			sound_play_hit_ext(sndWeaponChest, 0.5 + random(0.2), 0.8);
-		}
-	}
-
-
-#define TopEnemy_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		spr_idle = -1;
-		spr_walk = -1;
-		spr_weap = -1;
-		spr_shadow = -1;
-		spr_shadow_x = -1;
-		spr_shadow_y = -1;
-		sprite_index = -1;
-		image_speed = 0.4;
-		depth = depth_top;
-		
-		 // Vars:
-		mask_index = -1;
-		object = { object_index : Bandit };
-		z = 8;
-		zspeed = 0;
-		zfriction = 0;
-		jump = random_range(3, 5);
-		jump_x = x;
-		jump_y = y;
-		grav = 0.8;
-		walk = 0;
-		walkspeed = -1;
-		maxspeed = -1;
-		gunangle = -1;
-		wepangle = -1;
-		wkick = 0;
-		right = choose(-1, 1);
-		wander_chance = 1/6;
-		wander_walk = [5, 20];
-		spawn_dis = -1;
-		spawn_dir = -1;
-		is_enemy = false;
-		is_prop = false;
-		setup = true;
-		
-		 // Alarms:
-		alarm0 = 90 + random(90);
-		alarm1 = -1;
-
-		return id;
-	}
-	
-#define TopEnemy_setup
-	setup = false;
-	
-	 // Object Vars:
-	var _obj = obj_create(x, y - z, lq_defget(object, "object_index", -1));
-	if(is_real(_obj) && instance_exists(_obj)){
-		is_enemy = instance_is(_obj, enemy);
-		is_prop = instance_is(_obj, prop);
-		with(variable_instance_get_names(_obj)){
-			if(self not in other.object){
-				lq_set(other.object, self, variable_instance_get(_obj, self));
-			}
-		}
-		instance_delete(_obj);
-	}
-	else{
-		instance_destroy();
-		exit;
-	}
-	
-	 // Grab Sprites/Vars:
-	var _grab = ["sprite_index", "spr_idle", "spr_walk", "spr_weap", "spr_shadow", "spr_shadow_x", "spr_shadow_y", "gunangle", "wepangle", "maxspeed", "walkspeed"];
-	for(var i = 0; i < lq_size(object); i++){
-		var k = lq_get_key(object, i);
-		if(k != "spr_walk" || !is_prop){
-			if(string_pos("image_", k) == 1 || (array_exists(_grab, k) && variable_instance_get(id, k, -1) == -1)){
-				if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width", "speed_raw", "hspeed_raw", "vspeed_raw", "friction_raw", "image_speed_raw"], k)){
-					variable_instance_set(id, k, lq_get(object, k));
+		 // Not today, Walls:
+		if(other.unstick && place_meeting(x, y, Wall)){
+			if(point_distance(x, y, other.jump_x, other.jump_y) < 8 * other.speed){
+				if(!place_meeting(other.jump_x, other.jump_y, Wall)){
+					x = other.jump_x;
+					y = other.jump_y;
 				}
-			}
-		}
-	}
-	
-	 // Visual:
-	image_alpha = -abs(image_alpha);
-	if(spr_walk == -1) spr_walk = (is_prop ? lq_defget(object, "spr_hurt", spr_idle) : spr_idle);
-	if(spr_weap == -1 && "gunspr" in object) spr_weap = object.gunspr;
-	if(alarm1 > 0) alarm1 = max(alarm1, (image_number / image_speed));
-	if(sprite_index == spr_idle && image_index == 0) image_index = random(sprite_get_number(image_number - 1));
-	
-	 // Misc:
-	speed = max(speed, 0);
-	if(mask_index == -1) mask_index = (is_prop ? msk.TopProp : mskBandit);
-	if(maxspeed  == -1) maxspeed = (is_prop ? 0 : random_range(3.6, 4));
-	if(walkspeed == -1) walkspeed= (is_prop ? 0 : 0.8);
-	if(gunangle  == -1) gunangle = random(360);
-	if(wepangle  == -1) wepangle = 0;
-	if(!is_prop) scrRight(gunangle);
-	else{
-		alarm0 = -1;
-		right = 1;
-	}
-	
-	 // Push Away From Floors:
-	if(spawn_dir == -1){
-		with(instance_nearest(x - 16, y - 16, Floor)){
-			other.spawn_dir = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, other.x, other.y);
-		}
-	}
-	if(spawn_dis == -1) spawn_dis = (is_prop ? 4 : 16);
-	if(spawn_dis > 0){
-		while(
-			chance(1, 3)											||
-			distance_to_object(Floor)			< spawn_dis			||
-			distance_to_object(PortalClear)		< spawn_dis + 16	||
-			distance_to_object(Bones)			< 16				||
-			distance_to_object(TopPot)			< 8					||
-			distance_to_object(CustomObject)	< 8
-		){
-			var l = random_range(4, 16);
-			x += lengthdir_x(l, spawn_dir);
-			y += lengthdir_y(l, spawn_dir);
-		}
-	}
-	
-	 // Underwater Time:
-	if(area_get_underwater(GameCont.area)){
-		jump /= 6;
-		grav /= 4;
-	}
-	
-	 // Insta-Land:
-	if((place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)) || (in_sight(Player) && !instance_exists(NothingSpiral))){
-		instance_destroy();
-		exit;
-	}
-	
-	 // TopSmalls:
-	if(is_prop){
-		var m = mask_index;
-		mask_index = -1;
-		for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 16){
-			for(var _y = y - 8; _y < bbox_bottom + 1 + 8; _y += 16){
-				if(chance(4, 5)){
-					var	_sx = floor(_x / 16) * 16,
-						_sy = floor(_y / 16) * 16;
-						
-			        if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
-			            instance_create(_sx, _sy, TopSmall);
-			        }
+				else{
+					if(!place_meeting(other.jump_x, y, Wall)) x = other.jump_x;
+					if(!place_meeting(x, other.jump_y, Wall)) y = other.jump_y;
 				}
-			}
-		}
-		mask_index = m;
-	}
-	
-	x = round(x);
-	y = round(y);
-	depth = depth_top;
-	
-#define TopEnemy_step
-	if(setup){
-		TopEnemy_setup();
-		if(!instance_exists(self)) exit;
-	}
-	
-	 // Animate:
-	if(speed <= 0){
-		if(sprite_index != spr_idle){
-			if((zspeed == 0 && sprite_index == spr_walk) || anim_end){
-				sprite_index = spr_idle;
-				image_index = 0;
-			}
-		}
-	}
-	else{
-		if(walk > 0) sprite_index = spr_walk;
-		depth = depth_top;
-	}
-
-	 // Jumpin:
-	if(zspeed != 0) z += zspeed * current_time_scale;
-
-	 // On Walls:
-	if(zfriction == 0){
-		if(speed > 0){
-			 // Friction:
-			speed -= min(speed, 0.4 * current_time_scale);
-			
-			 // Trail:
-			if(chance_ct(sqr(speed), 90)){
-				var o = abs(sprite_width / 16);
-				with(instance_create(x + orandom(o), y - z + o + random(o), Dust)){
-					depth = other.depth + 0.1;
-				}
-			}
-			
-			 // Push Bros:
-			if(place_meeting(x, y, object_index)){
-				with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
-					if(place_meeting(x, y, other)) with(other){
-						motion_add_ct(point_direction(other.x, other.y, x, y), walkspeed);
+				if(!place_meeting(x, y, Floor)){
+					with(instance_nearest(x - 16, y - 16, Floor)){
+						x = (bbox_left + bbox_right + 1) / 2;
+						y = (bbox_top + bbox_bottom + 1) / 2;
 					}
 				}
 			}
-		}
-	}
-
-	 // Landing:
-	else{
-	    zspeed -= zfriction * current_time_scale;
-		mask_index = -1;
-	    
-	    if(speed > 0) sprite_index = spr_walk;
-		
-		 // Deptherize:
-		if(z < 8){
-			if(z >= 0){
-				if(!collision_rectangle(bbox_left + 4, bbox_top + 8 - z, bbox_right - 4, bbox_bottom - z, Wall, false, false)){
-					var o = lq_defget(object, "object_index", -1);
-					depth = min(-1, (is_real(o) ? object_get_depth(o) : 0));
+			if(place_meeting(x, y, Wall)){
+				with(instance_create(x, y, PortalClear)){
+					mask_index = other.mask_index;
+					sprite_index = other.sprite_index;
+					image_xscale = other.image_xscale;
+					image_yscale = other.image_yscale;
+					image_angle = other.image_angle;
 				}
 			}
-			else depth = max(12, depth);
-		}
-	    
-	     // Trail:
-		if(chance_ct(zfriction, 2)){
-			var o = abs(sprite_width / 16);
-			with(instance_create(x + orandom(o), y - z + o + random(o), Dust)){
-				depth = other.depth + 0.1;
-			}
-		}
-
-		 // We in:
-		if(z <= 0){
-			if(!instance_exists(NothingSpiral)) instance_destroy();
-			
-			 // Abyss Time:
-			else if(!point_seen(x, bbox_top - z, -1)){
-				instance_delete(id);
-			}
-		}
-	}
-	
-#define TopEnemy_draw
-	y -= z;
-	image_alpha = abs(image_alpha);
-
-	 // Weapon:
-	var _back = (gunangle < 180),
-		_drawWep = (spr_weap != -1);
-		
-	if(_drawWep && _back){
-		draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, right, image_blend, image_alpha);
-	}
-	
-	 // Self:
-	image_xscale *= right;
-	draw_self();
-	image_xscale /= right;
-	
-	 // Weapon:
-	if(_drawWep && !_back){
-		draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, right, image_blend, image_alpha);
-	}
-
-	y += z;
-	image_alpha *= -1;
-
-#define TopEnemy_alrm0
-	alarm0 = irandom_range(15, 90);
-	
-	 // Idle:
-	if(zfriction == 0 && speed <= 0){
-		 // Lookin:
-		gunangle = random(360);
-		if(instance_exists(Player)){
-			var t = instance_nearest(x, y, Player);
-			gunangle = point_direction(x, y, t.x, t.y) + orandom(5);
-		}
-		scrRight(gunangle);
-		
-		 // Cold:
-		if(GameCont.area == 5 && chance(2, 3)){
-			with(instance_create(x, y - z, Breath)){
-				image_xscale = other.right;
-				depth = other.depth - 1;
-			}
-		}
-		
-		 // Let's Roll:
-		if(
-			(chance(1, 10) && in_distance(Player, 192))
-			||
-			(instance_number(enemy) + array_length(instances_matching_gt(instances_matching(object_index, "name", name), "speed", 0))) < (10 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood)))
-		){
-			with(instances_matching(object_index, "name", name)){
-				if(in_distance(other, 64) && lq_get(object, "object_index") == lq_get(other.object, "object_index")){
-					alarm1 = random_range(10, 60);
-				}
-			}
-		}
-		
-		 // Wander:
-		else if(chance(wander_chance, 1)){
-			walk = random_range(wander_walk[0], wander_walk[1]);
-			direction = random(360);
-		}
-	}
-	
-#define TopEnemy_alrm1
-	alarm1 = 10 + random(20);
-	var _target = instance_nearest(x, y, Player);
-	
-	 // Travel to Player:
-	if(zfriction == 0 && instance_exists(_target)){
-		var _targetDir = point_direction(x, y, _target.x, _target.y);
-		scrWalk(alarm1, _targetDir);
-	}
-	
-#define TopEnemy_destroy
-	if("object_index" in object){
-		var o = obj_create(x, y, object.object_index);
-		if(!instance_exists(o)) exit;
-		
-		if(speed > 0 && zfriction != 0 && point_distance(x, y, jump_x, jump_y) < 5 * speed){
-			x = jump_x;
-			y = jump_y;
-		}
-		
-		 // Transfer Variables:
-		for(var i = 0; i < lq_size(object); i++){
-			var k = lq_get_key(object, i),
-				v = lq_get_value(object, i);
-				
-			if(!array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], k)){
-				if(string_pos("Custom", object_get_name(o.object_index)) != 1 || string_pos("on_", k) != 1 || !is_undefined(v)){
-					variable_instance_set(o, k, v);
-				}
-			}
-		}
-		with(["x", "y", "xstart", "ystart", "direction", "speed", "walk", "right", "gunangle", "sprite_index"]){
-			var n = self;
-			variable_instance_set(o, n, variable_instance_get(other, n));
-		}
-		with(o){
-			xprevious = x;
-			yprevious = y;
-		}
-		
-		 // Not today, Walls:
-		with(instance_create(x, y, PortalClear)){
-			sprite_index = o.sprite_index;
-			mask_index = o.mask_index;
-			image_xscale = o.image_xscale;
-			image_yscale = o.image_yscale;
-			image_angle = o.image_angle;
-		}
-		
-		 // Insta-Die (specifically to fix walltop bonepile bone drop):
-		if(variable_instance_get(o, "my_health", 1) <= 0){
-			with(o) event_perform(ev_step, ev_step_begin);
 		}
 		
 		 // Effects:
-		else{
-			var _num = 6 + irandom(2);
+		if("spr_shadow" in self){
+			var _num = abs(sprite_width / 4) + irandom(2);
 			for(var d = direction; d < direction + 360; d += (360 / _num)){
 				var _obj = (chance(1, 8) ? Debris : Dust);
 				with(instance_create(x, y, Dust)){
 					motion_add(d + orandom(20), random_range(2, 4));
 					hspeed += other.hspeed / 2;
 					vspeed += other.vspeed / 2;
-					depth = max(depth, o.depth);
+					depth = max(depth, other.depth);
 				}
 			}
+			view_shake_max_at(x, y, 6);
 		}
-		view_shake_max_at(x, y, 6);
-		sleep(12);
 		
 		 // Sounds:
 		if(!area_get_underwater(GameCont.area)){
-			sound_play_hit_ext(sndAssassinHit, 1 + orandom(0.3), abs(zspeed) / 8);
+			if(instance_is(self, hitme)){
+				sound_play_hit_ext(sndAssassinHit, 1 + orandom(0.3), abs(other.zspeed) / 8);
+			}
+			else if(instance_is(self, chestprop)){
+				sound_play_hit_ext(sndWeaponChest, 0.5 + random(0.2), 0.8);
+			}
 		}
 	}
 	
-
+	
 #define UnlockCont_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
@@ -4696,89 +4453,128 @@
         else scrHarpoonUnrope(_rope);
     }
     
-	 // Top Enemies:
-	var _topEnemy = instances_matching(CustomObject, "name", "TopEnemy");
-	with(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching(_topEnemy, "zfriction", 0))){
-		 // Jump to Ground (Code goes here using some instances_matching cause it's just faster than checking in step)
-		if(place_meeting(x, y, Floor)){
-			var	l = 10 * speed,
-				d = direction,
-				_sx = x + lengthdir_x(l, d),
-				_sy = y + lengthdir_y(l, d),
-				_tx = _sx,
-				_ty = _sy,
-				_disMax = 1000000;
-				
-			mask_index = lq_defget(object, "mask_index", mask_index);
-			
-			 // Find Open Space to Jump, if Possible:
-			if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)) with(Floor){
-        		for(var _x = bbox_left; _x < bbox_right + 1; _x += 8){
-        			for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 8){
-		        		var _dis = point_distance(other.x, other.y, _x, _y);
-		    			if(_dis < _disMax){
-							if(abs(angle_difference(point_direction(other.x, other.y, _x, _y), other.direction)) < 180){
-			    				with(other) if(!place_meeting(_x, _y, Wall)){
-			        				_disMax = _dis;
-									_tx = _x;
-									_ty = _y;
-			    				}
-							}
-		    			}
-        			}
-        		}
+	 // Top Objects:
+	var _topObject = instances_matching(CustomObject, "name", "TopObject");
+	with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, instances_matching_gt(instances_matching(_topObject, "zfriction", 0), "grav", 0))){
+		if(place_meeting(x + mask_x, y + mask_y, Floor)){
+			 // Wobble:
+			if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
+	    		var	_wobWest = position_meeting(bbox_left, y, Floor),
+	    			_wobEast = position_meeting(bbox_right, y, Floor);
+	    			
+	    		if(_wobWest || _wobEast){
+	    			var _wobMove = ((_wobWest - _wobEast) - wobble_num) * 0.1 * current_time_scale;
+	    			wobble_num += _wobMove;
+	    			
+	    			with(target){
+	    				image_angle += other.wobble * _wobMove;
+	    				image_angle += (other.wobble / 16) * sin(current_frame / 10) * other.wobble_num;
+	    			}
+	    		}
 			}
-			jump_x = _tx;
-			jump_y = _ty;
 			
-			 // Jump to Target Position:
-            walk = 0;
-            alarm0 = -1;
-            alarm1 = -1;
-			zfriction = grav;
-            zspeed = jump * ((sprite_index == spr_walk) ? 1 : 2/3);
-            direction = point_direction(x, y, _tx, _ty);
-            var d = point_distance(x, y, _tx, _ty);
-            speed = min(maxspeed, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
-			
-             // Visual:
-            if(speed > 0){
-            	gunangle = direction;
-            	scrRight(gunangle);
-            }
-            if(sprite_index != spr_walk){
-	        	sprite_index = spr_walk;
-	        	image_index = 0;
-            }
-            
-             // Sound:
-			sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 6);
-		}
-	}
-	if(!instance_exists(enemy)){ // No Escape from the Top Boys:
-		if(array_length(instances_matching_gt(_topEnemy, "alarm0", 0)) > 0 || array_length(instances_matching_gt(_topEnemy, "alarm1", 0)) > 0){
-			with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
-		}
-	}
-	if(instance_exists(NothingSpiral)){ // Fall into Portal Abyss
-		with(instances_matching(instances_matching(CustomObject, "name", "TopChest", "TopEnemy"), "zfriction", 0)){
-			if(array_length(instances_matching_gt(instances_matching_lt(instances_matching_gt(Floor, "y", y), "bbox_left", x), "bbox_right", x)) > 0){
-				instance_delete(id); // Delete if directly above any floors cause the portal background & the floor stalactites draw at the same depth
-			}
+			 // Jump to Ground:
 			else{
-				zfriction = grav;
+				if(instance_exists(target)){
+					jump_x = x;
+					jump_y = y;
+					
+					 // Find Open Space to Jump, if Possible:
+					if(unstick) with(target){
+						var	_disMin = 5 * max(speed, other.maxspeed),
+							_disMax = 4 * _disMin,
+							_dir = other.direction,
+							_sx = x + lengthdir_x(_disMin, _dir),
+							_sy = y + lengthdir_y(_disMin, _dir),
+							_tx = _sx,
+							_ty = _sy,
+							_saveMask = mask_index;
+							
+						mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+						
+						if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)){
+							with(instance_rectangle_bbox(x - _disMax - 1, y - _disMax - 1, x + _disMax, y + _disMax, Floor)){
+								with(other){
+									for(var _fx = other.bbox_left; _fx < other.bbox_right + 1; _fx += 8){
+										for(var _fy = other.bbox_top; _fy < other.bbox_bottom + 1; _fy += 8){
+											if(!place_meeting(_fx, _fy, Wall)){
+												var _dis = point_distance(x, y, _fx, _fy);
+												if(_dis < _disMax || (_dis > _disMin && _disMax < _disMin)){
+													if(abs(angle_difference(point_direction(x, y, _fx, _fy), _dir)) < 90){
+														_disMax = _dis;
+														_tx = _fx;
+														_ty = _fy;
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						
+						mask_index = _saveMask;
+						
+						other.jump_x = _tx;
+						other.jump_y = _ty;
+					}
+					
+					 // Jump to Target Position:
+					zfriction = grav;
+					zspeed = jump * ((target.speed > 0) ? 1 : 2/3);
+					direction = point_direction(x, y, jump_x, jump_y);
+					var d = point_distance(x, y, jump_x, jump_y);
+					speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
+					
+					 // Facing:
+					if(speed > 0){
+						with(target){
+							if("gunangle" in self) gunangle = other.direction;
+							if("right" in self) scrRight(other.direction);
+						}
+					}
+					
+					 // Sound:
+					sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 6);
+				}
+			}
+		}
+		
+		 // Unwobble:
+    	else if(wobble_num != 0){
+    		wobble_num -= wobble_num * 0.5 * current_time_scale;
+    		with(target) image_angle -= image_angle * 0.5 * current_time_scale;
+    		
+    		if(abs(wobble_num) < 0.5){
+    			wobble_num = 0;
+    			with(target) image_angle = 0;
+    		}
+    	}
+	}
+	if(instance_exists(NothingSpiral)){
+		 // Above Throne II Abyss:
+		with(instances_matching(_topObject, "zfriction", 0)){
+			 // Delete if directly above any floors cause the portal background & floor stalactites draw at the same depth :(
+			if(array_length(instances_matching_gt(instances_matching_lt(instances_matching_gt(Floor, "bbox_top", y), "bbox_left", x), "bbox_right", x)) > 0){
+				if(instance_exists(target)) instance_delete(target);
+			}
+			
+			 // Fall Into Abyss:
+			else{
 				zspeed = jump;
-				if("walkspeed" in self){
-					motion_add(random(360), walkspeed * 2);
+				zfriction = grav;
+				if(instance_is(self, hitme)){
+					motion_add(random(360), 2);
 				}
 			}
 		}
 	}
-	else if(GameCont.killenemies){ // Someone ended it
-		with(instances_matching(_topEnemy, "is_enemy", true)){
-			//object.my_health = 0; // hmmmmm should i do this
-			if(zfriction == 0 && (alarm1 < 0 || alarm1 > 10)){
-				alarm1 = irandom_range(1, 10);
+	else{
+		 // Not Many Enemies, Don't Stay on Wall:
+		var _jumpInst = instances_matching_gt(instances_matching(_topObject, "is_enemy", true), "jump_time", 60);
+		if(instance_number(enemy) - array_length(_jumpInst) < 5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood))){
+			with(instance_random(_jumpInst)){
+				jump_time = random_range(1, 60);
 			}
 		}
 	}
@@ -4913,9 +4709,82 @@
 	        }
 	    }
     }
-
+    
+	 // Auto-Topify New Objects:
+	if(instance_exists(GameObject)){
+		if(GameObject.id > global.TopObject_search){
+			var _topObject = instances_matching(CustomObject, "name", "TopObject");
+			if(array_length(_topObject) > 0){
+				var _search = instances_matching(
+					instances_matching_gt(
+						[	hitme,
+							projectile,
+							becomenemy,
+							Pickup,
+							chestprop,
+							Corpse,
+							Effect,
+							Explosion,
+							MeatExplosion,
+							PlasmaImpact,
+							BigDogExplo,
+							NothingDeath,
+							Nothing2Death,
+							FrogQueenDie,
+							PopoShield,
+							CrystalShield,
+							SharpTeeth,
+							ReviveArea,
+							NecroReviveArea,
+							RevivePopoFreak
+						],
+						"id", global.TopObject_search
+					),
+					"z", null
+				);
+				
+				if(array_length(_search) > 0) with(_search){
+					if(!position_meeting(xstart, ystart, Floor) || (place_meeting(xstart, ystart, Wall) && (instance_is(self, hitme) || instance_is(self, chestprop) || instance_is(self, Corpse) || instance_is(self, ChestOpen)))){
+						with(instances_matching_ge(instances_matching_le(_topObject, "bbox_left", x + 96), "bbox_right", x - 96)){
+							if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, PortalShock)){
+								var	_mask = lq_defget(target_save, "mask_index", -1),
+									w = max(8, abs(variable_instance_get(target, "sprite_width",  0)), sprite_get_width(_mask)) / 2,
+									h = max(8, abs(variable_instance_get(target, "sprite_height", 0)), sprite_get_height(_mask)) / 2;
+									
+								if(point_in_rectangle(other.x, other.y, x - w, y - h - z, x + w, y + h + z)){
+									if("creator" not in other || !instance_exists(other.creator) || other.creator == target || !instance_exists(target) || ("target" in other && other.target == target)){
+										with(other){
+											 // Effects:
+											if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris)){
+												if(instance_is(self, MeltSplat)){
+													instance_destroy();
+												}
+												else depth = min(depth, -6.01);
+											}
+											else if(instance_is(self, SharpTeeth)){
+												depth = min(depth, -8);
+											}
+											
+											 // Epic Stuff:
+											else top_create(x, y, id, 0, 0);
+										}
+										
+										break;
+									}
+								}
+								
+								if(!instance_exists(other)) break;
+							}
+						}
+					}
+				}
+			}
+			global.TopObject_search = GameObject.id;
+		}
+	}
+	
 	if(DebugLag) trace_time("tegeneral_step_post");
-
+	
 #define draw_bloom
 	if(DebugLag) trace_time();
 
@@ -4982,10 +4851,19 @@
 	
 	 // Top Objects:
 	if(!instance_exists(NothingSpiral)){
-		with(instances_matching(CustomObject, "name", "TopChest", "TopEnemy")) if(visible){
-			if(place_meeting(x, y, Floor)){
+		with(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching_ne(instances_matching(CustomObject, "name", "TopObject"), "spr_shadow", -1))){
+			var	_xsc = image_xscale,
+				_ysc = image_yscale;
+				
+			image_xscale = 1;
+			image_yscale = 1;
+			
+			if(place_meeting(x + spr_shadow_x, y + spr_shadow_y, Floor) && visible && variable_instance_get(target, "visible", false)){
 				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 			}
+			
+			image_xscale = _xsc;
+			image_yscale = _ysc;
 		}
 	}
 
@@ -5000,15 +4878,18 @@
 		_vy = view_yview_nonsync,
 		_vw = game_width,
 		_vh = game_height,
-		_inst = instances_matching_ge(
-			instances_matching(
-				array_combine(
-					instances_matching(CustomObject, "name", "NestRaven", "TopChest", "TopEnemy"),
-					instances_matching(CustomProjectile, "name", "MortarPlasma"),
+		_inst = instances_matching_ne(
+			instances_matching_ge(
+				instances_matching(
+					array_combine(
+						instances_matching(CustomObject, "name", "NestRaven", "TopObject"),
+						instances_matching(CustomProjectile, "name", "MortarPlasma"),
+					),
+					"visible", true
 				),
-				"visible", true
+				"z", 8
 			),
-			"z", 8
+			"spr_shadow", -1
 		),
 		_active = (array_length(_inst) > 0 && !instance_exists(NothingSpiral) && instance_exists(BackCont));
 		
@@ -5178,7 +5059,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -5248,4 +5129,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

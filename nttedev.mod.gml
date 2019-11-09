@@ -8,7 +8,7 @@
         "races/parrot.race.gml",
         "weps/merge.wep.gml"
     ]){
-        script_set(self, "mod", "telib", "TopObject_create", ["_x", "_y", "_obj", "_spawnDir", "_spawnDis"], "return", "_nc");
+        script_set(self, "mod", "telib", "scrBossIntro", ["_name", "_sound", "_music"], "return", "");
         //script_remove(self, "scrRadDrop");
         
         //script_remove(self, "obj_create");

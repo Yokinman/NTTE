@@ -83,14 +83,11 @@
      // Secret:
 	if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(TopSmall)){
-			with(obj_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "TopChest")){
-				target = obj_create(x, y, "SunkenChest");
-				
+			with(top_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "SunkenChest", -1, -1)){
 				with(instance_create(x, y - 8, LightBeam)){
 					x = xstart;
 					y = ystart;
 				}
-				
 				with(instances_meeting(x, y, TopSmall)){
 					sprite_index = sprWall101Top;
 				}
@@ -341,7 +338,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -411,4 +408,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

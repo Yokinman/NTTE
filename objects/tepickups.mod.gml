@@ -2449,8 +2449,8 @@
 				}
 				
 				repeat(3){
-					with(TopObject_create(_spawnX, _spawnY, _spawnObj, _spawnDir, _spawnDis)){
-						alarm1 = irandom_range(30, 150);
+					with(top_create(_spawnX, _spawnY, _spawnObj, _spawnDir, _spawnDis)){
+						jump_time = irandom_range(30, 150);
 						
 						_spawnX = x;
 						_spawnY = y;
@@ -2460,8 +2460,8 @@
 						z = 8;
 						
 						 // Poof:
-						repeat(3){
-							with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
+						with(target) repeat(3){
+							with(instance_create(x + orandom(8), y + orandom(8), Dust)){
 								depth = other.depth - 1;
 							}
 						}
@@ -2562,18 +2562,37 @@
     if(DebugLag) trace_time();
 
 	 // Overstock / Bonus Ammo:
-	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true)){
+	with(instances_matching(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true), "can_shoot", 1)){
 		var _wep = wep,
 			_cost = weapon_get_cost(_wep),
 			_type = weapon_get_type(_wep),
 			_auto = weapon_get_auto(_wep),
 			_internal = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
-			_internalCost = (_internal ? _wep.cost : 0);
+			_internalCost = (_internal ? _wep.cost : 0),
+			_fireNum = 0;
 			
-		if(race == "steroids" && _auto >= 0) _auto = true;
-		
-		if(canfire && can_shoot){
-			if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked)){
+		if(_type != 0){
+			if(canfire >= 1){
+				if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked >= 1)){
+					_fireNum = 1;
+				}
+			}
+			
+			 // Race-Specific:
+			switch(race){
+				case "steroids": // Automatic Weapons
+					if(_auto >= 0) _auto = true;
+					break;
+					
+				case "venuz": // Pop Pop
+					if(canspec && button_pressed(index, "spec")){
+						_fireNum = floor(2 * (1 + skill_get(mut_throne_butt)));
+					}
+					break;
+			}
+			
+			 // Firing:
+			if(_fireNum > 0) repeat(_fireNum){
 				 // Bonus Ammo:
 				var _fire = (ammo[_type] + ammo_bonus >= _cost);
 				if(_fire){
@@ -3095,7 +3114,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -3165,4 +3184,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

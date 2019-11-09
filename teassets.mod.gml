@@ -15,15 +15,13 @@
         var m, p;
         msk = {};
         shd = {};
-
-		 // Top Prop:
-		msk.TopProp = sprite("areas/mskTopProp", 1, 2, -6);
-
+        
          // Top Decals:
         TopDecal = {
             "trench" : sprite("areas/Trench/sprTopDecalTrench", 2, 19, 24)
         }
         TopDecalMine = sprite("areas/Trench/sprTopDecalMine", 12, 12, 36);
+        TopDecalScrapyardAlt = sprite("areas/Scrapyard/sprTopDecalScrapyardAlt", 1, 16, 16);
 
     	 // Big Decals:
     	BigTopDecal = {
@@ -37,10 +35,10 @@
     	    "oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
     	    "trench": sprite("areas/Trench/sprTrenchBigTopDecal",       1, 32, 24)
     	}
-        NestDebris		 = sprite("areas/Scrapyard/sprNestDebris", 16,  4,  4);
-    	msk.BigTopDecal	 = sprite("areas/Desert/mskBigTopDecal",    1, 32, 24);
-    	shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 32, 32);
-    	shd.BigGeneratorF = sprite("areas/Palace/shdBigGenerator",   1, 32, 32);
+        NestDebris		  = sprite("areas/Scrapyard/sprNestDebris", 16,     4,  4);
+    	msk.BigTopDecal	  = sprite("areas/Desert/mskBigTopDecal",    1,    32, 24);
+    	shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 48-16, 32);
+    	shd.BigGeneratorR = sprite("areas/Palace/shdBigGeneratorR",  1, 48+16, 32);
 
 		//#region MENU
 		
@@ -1010,13 +1008,13 @@
 			
         //#endregion
     }
-
+    
      // SOUNDS //
     global.snd = {};
     with(global.snd){
     	var m = "sounds/enemies/",
     		p;
-
+    		
          // Palanking:
         p = m + "Palanking/";
         PalankingHurt  = sound_add(p + "sndPalankingHurt.ogg");
@@ -1025,12 +1023,12 @@
         PalankingSwipe = sound_add(p + "sndPalankingSwipe.ogg");
         PalankingTaunt = sound_add(p + "sndPalankingTaunt.ogg");
         sound_volume(PalankingHurt, 0.6);
-
+        
          // SawTrap:
         p = m + "SawTrap/";
         SawTrap = sound_add(p + "sndSawTrap.ogg");
     }
-
+    
      // MUSIC //
     global.mus = {};
     with(global.mus){
@@ -1051,7 +1049,7 @@
         PitSquid      = sound_add(p + "musPitSquid.ogg");
         PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
     }
-
+    
      // SAVE FILE //
     global.sav_auto = false;
     global.sav = {
@@ -1065,7 +1063,7 @@
             "waterQualityTop"  : 1
         }
     };
-
+    
     if(fork()){
          // Load Existing Save:
         var _path = savPath;
@@ -1110,19 +1108,19 @@
         global.sav_auto = true;
         exit;
     }
-
+    
      // Surface Storage:
     global.surf = [];
-
+    
      // Shader Storage:
     global.shad = [];
-
+    
 	 // Mod Lists:
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot"];
     global.crwn = ["crime"];
     global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
-
+    
      // Reminders:
     global.remind = [];
     if(fork()){

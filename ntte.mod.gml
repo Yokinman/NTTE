@@ -791,10 +791,10 @@
             }
             if(chance(1, 3)){
             	with(instance_random(TopSmall)){
-            		with(TopObject_create(x, y, BonePile, random(360), 128)){
+            		with(top_create(x, y, BonePile, random(360), random_range(128, 160))){
 						var d = random(360);
 						repeat(choose(1, 1, 2)){
-							TopObject_create(x, y, Cactus, d, -1);
+							top_create(x, y, Cactus, d, -1);
 							d += 180 + orandom(90);
 						}
 						
@@ -802,15 +802,9 @@
 						var	l = 128,
 							d = spawn_dir;
 							
-						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "TopChest")){
-							target = instance_create(x, y, ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest));
-							with(instances_matching_gt(PortalClear, "id", target)){
-								instance_destroy();
-							}
-							with(obj_create(x + orandom(24), y + orandom(24), "TopChest")){
-								target = instance_create(x, y, AmmoChest);
-							}
-							TopObject_create(x, y, Cactus, random(360), -1);
+						with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest), -1, -1)){
+							top_create(x + orandom(24), y + orandom(24), AmmoChest, -1, -1);
+							top_create(x, y, Cactus, random(360), -1);
 							
 							 // Skipping Doesn't Count:
 							if(instance_is(target, BigWeaponChest)) GameCont.nochest -= 2;
@@ -838,7 +832,7 @@
             ];
             with(FrogQueen){
 		    	repeat(irandom_range(1, 3) + (3 * GameCont.loops)){
-		    		with(TopObject_create(x, y, FrogEgg, random(360), -1)){
+		    		with(top_create(x, y, FrogEgg, random(360), -1)){
 						if(distance_to_object(Floor) > 24 && chance(2, 3)){
 							var	a = random(360),
 								l = 8,
@@ -846,7 +840,7 @@
 								_cy = y + lengthdir_y(l, a);
 								
 							for(var d = a - 60; d <= a + 60; d += 120){
-								TopObject_create(
+								top_create(
 									_cx + lengthdir_x(l, d) + orandom(2),
 									_cy + lengthdir_y(l, d) + orandom(2),
 									FrogEgg,
@@ -928,9 +922,9 @@
             ];
         	var _num = irandom_range(-2, 1) + (3 * GameCont.loops);
         	if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
-    			TopObject_create(
-    				x + random(8),
-    				y + random(8),
+    			top_create(
+    				random_range(bbox_left, bbox_right),
+    				random_range(bbox_top, bbox_bottom),
     				MeleeBandit,
     				-1,
     				random_range(32, 80)
@@ -1043,13 +1037,11 @@
     	    	 // Charging Wall-Top Bots:
 	        	var _num = (3 * GameCont.loops) + random_range(1, 3);
 	        	if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
-	    			with(TopObject_create(x, y, SnowBot, random(360), random_range(80, 192))){
-						object.alarm1 = irandom_range(3, 10);
-						spr_walk = sprSnowBotFire;
-						maxspeed = 6;
+	    			with(top_create(x, y, SnowBot, random(360), random_range(80, 192))){
 						jump = 0.5;
-						wander_chance = 0;
-		    			alarm1 = 300 + random(900);
+						idle_walk_chance = 0;
+						target_save.alarm1 = irandom_range(3, 10);
+						with(target) spr_walk = sprSnowBotFire;
 	    			}
 	        	}
     	    }
@@ -1075,14 +1067,16 @@
         			_spawnNum = irandom_range(3, 5);
         			
         		for(var _spawnDir = _spawnAng; _spawnDir < _spawnAng + 360; _spawnDir += (360 / _spawnNum)){
-        			with(TopObject_create(x, y, choose(Server, Terminal), _spawnDir, 32)){
-	        			if(object.spr_idle == sprTerminal && distance_to_object(Floor) > 16){
+        			with(top_create(x, y, choose(Server, Terminal), _spawnDir, 32)){
+	        			if(instance_is(target, Terminal) && distance_to_object(Floor) > 16){
 	        				var	l = 16,
 	        					d = 270 + orandom(70);
 	        					
-	        				with(TopObject_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Necromancer, d, 0)){
-	        					gunangle = point_direction(x, y - z, other.x, other.y);
-	        					scrRight(d);
+	        				with(top_create(target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d), Necromancer, d, 0)){
+	        					with(target){
+	        						gunangle = d + 180;
+	        						scrRight(gunangle);
+	        					}
 	        				}
 	        			}
         			}
@@ -1124,12 +1118,12 @@
             	_topChance /= 1.2;
         		_topSpawn = [
 	        		[Pillar,	1],
-	        		[Generator,	1/30]
+	        		[Generator,	1/50]
 	        	];
         	}	
         	/*else with(ThroneStatue){
     			var f = instance_nearest(x, y, Carpet);
-    			TopObject_create(x + (72 * sign(x - f.x)), y - 8, ThroneStatue, -1, 0);
+    			top_create(x + (72 * sign(x - f.x)), y - 8, ThroneStatue, -1, 0);
     		}*/
         	
     	     // Loop Spawns:
@@ -1138,8 +1132,7 @@
     	    		repeat(chance(1, 5) ? 5 : 1) obj_create(x, y, "Gull");
     	    		
     	    		 // Move to Wall:
-    	    		TopObject_create(x, y, object_index, -1, -1);
-    	    		instance_delete(id);
+    	    		top_create(x, y, id, -1, -1);
     	    	}
     	    	
     	    	 // More Cool Dudes:
@@ -1223,14 +1216,12 @@
         
         	 // Top Spawns:
         	_topSpawn = [
-        		[Bush,		1],
-        		[BigFlower,	1/3]
+        		[Bush,					1],
+        		[JungleAssassinHide,	1/3],
+        		[BigFlower,				1/3]
         	];
         	with(instances_matching([JungleBandit, JungleFly], "", null)){
-        		if(chance(1, 3)){
-        			TopObject_create(x, y, object_index, -1, -1);
-        			instance_delete(id);
-        		}
+        		if(chance(1, 3)) top_create(x, y, id, -1, -1);
         	}
         	
         	break;
@@ -1286,18 +1277,15 @@
 				
 				 // Spawn:
 				var	_x = x + random(8),
-					_y = y + random(8),
-					_spawnDir = 90;
+					_y = y + random(8);
 					
-				with(TopObject_create(_x, _y, _obj, -1, -1)){
-					_spawnDir = spawn_dir;
-					
-					switch(object.object_index){
+				with(top_create(_x, _y, _obj, -1, -1)){
+					switch(_obj){
 						case Barrel: // Bandit Boys
 							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / 3)){
 								var l = random_range(12, 24);
-								with(TopObject_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bandit, d, 0)){
-									wander_chance = 1/20;
+								with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bandit, d, 0)){
+									idle_walk_chance = 1/20;
 								}
 							}
 							break;
@@ -1308,7 +1296,7 @@
 							var _num = irandom_range(1, 4) + (3 * GameCont.loops),
 								_ang = random(360);
 								
-							if(object.object_index == "Hammerhead"){
+							if(_obj == "Hammerhead"){
 								_num = floor(_num / 4);
 							}
 							
@@ -1316,8 +1304,8 @@
 								var	l = 12 + random(12 + (4 * GameCont.loops)),
 									d = _dir + orandom(40);
 									
-								with(TopObject_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), object.object_index, d, 0)){
-									alarm1 = other.alarm1;
+								with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), _obj, d, 0)){
+									jump_time = other.jump_time;
 									z = max(8, other.z + orandom(8));
 								}
 							}
@@ -1328,13 +1316,13 @@
 						case MeleeFake:
 							with(obj_create(x, y + 1, "NestRaven")){
 								x = other.x;
-								y = other.bbox_top - (other.z - z) - (sprite_get_bbox_bottom(spr_idle) - sprite_get_bbox_top(spr_idle));
+								y = other.y + 5 - (other.z - z) - (sprite_get_bbox_bottom(spr_idle) - sprite_get_bbox_top(spr_idle));
 								spr_shadow = shd16;
 								spr_shadow_y = 5;
 								
-								switch(other.object.object_index){
+								switch(_obj){
 									case Car:
-										x += 2 * other.image_xscale * other.right;
+										x += 2 * other.target.image_xscale * variable_instance_get(other.target, "right", 1);
 										y += choose(-1, 0, 1);
 										break;
 										
@@ -1348,33 +1336,32 @@
 						case CrystalProp: // Spider Time
 						//case InvCrystal:
 							if(chance(1, 8)) repeat(irandom_range(1, 3)){
-								TopObject_create(x, y, "Spiderling", random(360), -1);
+								top_create(x, y, "Spiderling", random(360), -1);
 							}
 							break;
 							
 						case Freak: // Freak Groups
 							var _num = irandom_range(1, 4);
 							if(_num > 0) repeat(_num){
-								with(TopObject_create(x + orandom(24), y + orandom(24), object.object_index, 0, 0)){
-									alarm1 = other.alarm1;
+								with(top_create(x + orandom(24), y + orandom(24), _obj, 0, 0)){
+									jump_time = other.jump_time;
 								}
 							}
 							break;
 							
 						case Hydrant: // Seal Squads
 							var	_type = choose(5, 6),
-								_alrm = 30 * random_range(5, 1 + instance_number(enemy)),
+								_time = 30 * random_range(5, 1 + instance_number(enemy)),
 								_num = 3 + irandom(2 + (crown_current == crwn_blood)) + ceil(GameCont.loops / 2);
 								
 							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / _num)){
-								with(TopObject_create(x, y, (chance(1, 80) ? Bandit : "Seal"), d, -1)){
-									alarm1 = _alrm + random(30);
-									if(object.object_index == "Seal"){
-										object.type = (chance(1, 2) ? _type : 4);
-								        spr_idle = spr.SealIdle[object.type];
-								        spr_walk = spr.SealWalk[object.type];
-									    spr_weap = spr.SealWeap[object.type];
-									    // they looked better with normal seal skin colors bro
+								with(top_create(x, y, (chance(1, 80) ? Bandit : "Seal"), d, -1)){
+									jump_time = _time + random(30);
+									with(target) if(variable_instance_get(self, "name") == "Seal"){
+										type = (chance(1, 2) ? _type : 4);
+								        spr_idle = spr.SealIdle[type];
+								        spr_walk = spr.SealWalk[type];
+									    spr_weap = spr.SealWeap[type];
 									}
 								}
 							}
@@ -1382,7 +1369,7 @@
 							
 						/*case ToxicBarrel: // Cat Dudes
 							repeat(choose(1, 1, 2)){
-								TopObject_create(x, y, "Cat", random(360), -1);
+								top_create(x, y, "Cat", random(360), -1);
 							}
 							break;*/
 					}
@@ -1431,10 +1418,7 @@
 		
 		 // Create:
 		with(instance_random([Wall, TopSmall])){
-			with(obj_create(x + random(16), y + random(16), "TopChest")){
-				target = obj_create(x, y, _obj);
-				event_perform(ev_step, ev_step_end);
-			}
+			top_create(x + random(16), y + random(16), _obj, -1, -1);
 		}
     }
     
@@ -1520,11 +1504,15 @@
     }
     
      // Lair Chests:
-    var _crownCrime = (crown_current == "crime");
-    if(variable_instance_get(GameCont, "visited_lair", false) || _crownCrime){
+    var	_crime = (crown_current == "crime"),
+    	_lair = variable_instance_get(GameCont, "visited_lair", false);
+    	
+    if(_lair || _crime){
+    	var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
+    	
 		 // Cat Chests:
 		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
-			if(_crownCrime ? chance(2, 3) : chance(1, 5)){
+			if(instance_is(self, _crimePick) || chance(_lair, 5)){
 				obj_create(x, y, "CatChest");
 				instance_delete(id);
 			}
@@ -1532,7 +1520,7 @@
 		
 		 // Bat Chests:
 		with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
-			if(_crownCrime ? chance(2, 3) : chance(1, 5)){
+			if(instance_is(self, _crimePick) || chance(_lair, 5)){
 				with(obj_create(x, y, "BatChest")){
 					big = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
 					curse = other.curse;
@@ -1613,7 +1601,7 @@
 		}
 	}
     script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
-
+    
      // Character Selection Menu:
     if(instance_exists(Menu)){
     	if(!mod_exists("mod", "teloader")){
@@ -1770,10 +1758,10 @@
 		 // For CharSelection Crown Boy:
 	    crownCamp = crown_current;
     }
-
+    
      // Pet Slots:
     with(instances_matching(Player, "ntte_pet", null)) ntte_pet = [noone];
-		
+	
 	 // Pet Map Icons:
 	with(Player){
 		var _list = [];
@@ -1833,7 +1821,7 @@
         global.newLevel = false;
         level_start();
     }
-
+    
      // Call Area Events (Not built into area mods):
     var a = array_find_index(areaList, GameCont.area);
     if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
@@ -1841,15 +1829,17 @@
         var _area = areaList[a];
 
          // Floor Setup:
-        var	_scrt = "area_setup_floor";
-        if(mod_script_exists("area", _area, _scrt)){
-	        var _num = instance_number(Floor);
-	        if(global.setup_floor_num != _num){
-	        	global.setup_floor_num = _num;
-	            with(instances_matching(Floor, "ntte_setup", null)){
-	                ntte_setup = true;
-	                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
-	            }
+        if(GameCont.area != 100){
+	        var	_scrt = "area_setup_floor";
+	        if(mod_script_exists("area", _area, _scrt)){
+		        var _num = instance_number(Floor);
+		        if(global.setup_floor_num != _num){
+		        	global.setup_floor_num = _num;
+		            with(instances_matching(Floor, "ntte_setup", null)){
+		                ntte_setup = true;
+		                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
+		            }
+		        }
 	        }
         }
 
@@ -1889,22 +1879,24 @@
         else global.effect_timer = 0;
 
          // Music / Ambience:
-        if(GameCont.area != 100 && (global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton))){
-        	global.musTrans = false;
-            var _scrt = ["area_music", "area_ambience"];
-            for(var i = 0; i < lq_size(global.current); i++){
-                var _type = lq_get_key(global.current, i);
-                if(mod_script_exists("area", _area, _scrt[i])){
-                    var s = mod_script_call("area", _area, _scrt[i]);
-                    if(!is_array(s)) s = [s];
-
-                    while(array_length(s) < 3) array_push(s, -1);
-                    if(s[1] == -1) s[1] = 1;
-                    if(s[2] == -1) s[2] = 0;
-
-                    sound_play_ntte(_type, s[0], s[1], s[2]);
-                }
-            }
+        if(GameCont.area != 100){
+	        if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
+	        	global.musTrans = false;
+	            var _scrt = ["area_music", "area_ambience"];
+	            for(var i = 0; i < lq_size(global.current); i++){
+	                var _type = lq_get_key(global.current, i);
+	                if(mod_script_exists("area", _area, _scrt[i])){
+	                    var s = mod_script_call("area", _area, _scrt[i]);
+	                    if(!is_array(s)) s = [s];
+	
+	                    while(array_length(s) < 3) array_push(s, -1);
+	                    if(s[1] == -1) s[1] = 1;
+	                    if(s[2] == -1) s[2] = 0;
+	
+	                    sound_play_ntte(_type, s[0], s[1], s[2]);
+	                }
+	            }
+	        }
         }
     }
     
@@ -1920,7 +1912,7 @@
         }
         else audio_stop_sound(c.snd);
     }
-
+    
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
@@ -1953,7 +1945,7 @@
 			//}
 		}
 	}
-
+	
 	 // Game Win Crown Unlock:
 	with(SitDown) if(place_meeting(x, y, Player)){
 		if(array_exists(crwnList, crown_current)){
@@ -1964,7 +1956,7 @@
 			}
 		}
 	}
-
+	
 	 // Pet Map Icon Stuff:
 	global.petMapiconPause = 0;
 	if(instance_exists(GenCont)){
@@ -1974,7 +1966,37 @@
 			}
 		}
 	}
-
+	
+	 // Delete IDPD Chest Cheese:
+	with(instances_matching(ChestOpen, "portalpoof_check", null)){
+		portalpoof_check = false;
+		if(sprite_index == sprIDPDChestOpen && instance_exists(IDPDSpawn)){
+			portalpoof_check = true;
+			scrPortalPoof();
+		}
+	}
+	
+	 // Portal Weapons:
+	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
+		with(WepPickup){
+			if(!instance_exists(variable_instance_get(self, "portal_inst", noone))){
+				portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
+	    		with(portal_inst){
+					sprite_index = other.sprite_index;
+					image_index = 0;
+					turnspeed = orandom(1);
+					rotspeed = orandom(15);
+					dist = random_range(80, 120);
+	    		}
+	    	}
+	    	with(portal_inst){
+				image_xscale = 0.7 + (0.1 * sin((-image_angle / 2) / 200));
+				image_yscale = image_xscale;
+				grow = 0;
+	    	}
+		}
+	}
+	
     if(DebugLag) trace_time("ntte_step");
 
 #define end_step
@@ -2463,6 +2485,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
                 break;
         }
     }
+    
+    return c;
 
 #define area_step
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
@@ -4379,23 +4403,38 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 
 #define scrBossIntro(_name, _sound, _music)
 	if(!instance_is(self, CustomScript) || script[2] != "scrBossIntro"){
-	    sound_play(_sound);
-	    sound_play_ntte("mus", _music);
+		var s = sound_play(_sound),
+	    	m = sound_play_ntte("mus", _music);
+	    	
         with(MusCont) alarm_set(3, -1);
 
 		 // Bind begin_step to fix TopCont.darkness flash
-	    if(_name != "" && fork()){
-	    	wait 0;
-			with(script_bind_begin_step(scrBossIntro, 0, _name, _sound, _music)){
+	    if(_name != ""){
+	    	var _bind = instance_create(0, 0, CustomBeginStep);
+			with(_bind){
 				replaced = false;
+				sound = s;
+				music = m;
 				delay = 0;
 				loops = 0;
 				for(var i = 0; i < maxp; i++){
 					delay += player_is_active(i);
 				}
 			}
-			exit;
+			
+			 // wait hold on:
+	    	if(fork()){
+		    	wait 0;
+				with(_bind){
+					script = ["mod", mod_current, "scrBossIntro", _name, _sound, _music];
+				}
+				exit;
+	    	}
+	    	
+	    	return _bind;
 	    }
+	    
+	    return noone;
 	}
 	else{
 		 // Delay in Co-op:
@@ -5066,4 +5105,4 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

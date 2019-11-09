@@ -20,7 +20,7 @@
 #define weapon_text     return "LIKE DISCS BUT @ySMARTER";
 #define weapon_type     return 0; // None
 #define weapon_load     return 8; // 0.26 Seconds
-#define weapon_area     return (weapon_avail() ? 5 : -1); // 2-1
+#define weapon_area     return (weapon_avail() ? 7 : -1); // 3-2
 #define weapon_melee    return false;
 #define weapon_swap     return sndSwapShotgun;
 #define weapon_avail    return unlock_get("lairWep");

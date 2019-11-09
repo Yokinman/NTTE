@@ -2279,7 +2279,7 @@
 #define weapon_rads(w)			return wep_stat(w, "rads");
 #define weapon_auto(w)			return (instance_is(self, Player) && wep_stat(w, "blod") && ammo[wep_stat(w, "type")] < wep_stat(w, "cost") && infammo == 0) ? -1 : wep_stat(w, "auto");
 #define weapon_melee(w)			return wep_stat(w, "mele");
-#define weapon_gold				return ((argument_count > 0) ? wep_stat(argument0, "gold") : false);
+#define weapon_gold(w)			return wep_stat(w, "gold");
 #define weapon_laser_sight(w)	return wep_stat(w, "lasr");
 
 #define weapon_fire(w)
@@ -2424,16 +2424,6 @@
                         _fix -= ((_wep.fixd * sign(_fix)) / 2) * (1 - sin((7 * (1 - (_shot / (_shotMax - 1)))) / 2));
                     }
                     
-                     // Direction:
-                    var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
-                    
-                     // Save Projectile Laser Direction:
-                    if(_shot <= 0){
-                        if(array_exists(_flag, "laser") && _obj != Lightning){
-                        	_laserDir[i] = _dir;
-                        }
-                    }
-                    
                      // Offset, Long Arms:
                     var _dis = 0;
                     if(_isMelee){
@@ -2441,6 +2431,7 @@
                     }
                     
                      // Create Projectile:
+                    var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
                     with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj)){
                         if(_spd <= 0) direction = _dir;
                         else motion_add(_dir, _spd);
@@ -2475,7 +2466,10 @@
                         }
 
 						 // Lasery Hitscan:
-                        if(array_exists(_flag, "laser")){
+                        if(array_exists(_flag, "laser") && !instance_is(self, Lightning)){
+                        	if(array_length(_laserDir) <= i){
+                        		_laserDir[i] = _dir;
+                        	}
 							if(_laserMov > 0){
 	                        	var a = angle_difference(_laserDir[i], direction);
 		                        direction += a / 1.5;
@@ -4465,7 +4459,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -4533,4 +4527,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

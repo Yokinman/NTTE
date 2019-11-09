@@ -1328,7 +1328,9 @@
                      // Boss Intro:
                     if(!intro){
                         intro = true;
-                        scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
+                        with(scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing)){
+                        	music.vol = 4;
+                        }
                     }
 
                      // Walk Towards Player:
@@ -1748,6 +1750,28 @@
         return id;
 	}
 
+#define PalankingSlash_step
+	 // Launch Pickups:
+	if(place_meeting(x, y, Pickup)){
+		with(instances_meeting(x, y, instances_matching(Pickup, "mask_index", mskPickup))){
+			if(place_meeting(x, y, other)){
+				var s = other;
+				with(obj_create(x, y, "PalankingToss")){
+					direction = s.direction + (angle_difference(point_direction(s.x, s.y, x, y), s.direction) / 3);
+					speed = 4;
+					zspeed *= 2/3;
+					creator = other;
+					depth = other.depth;
+					mask_index = other.mask_index;
+					if("spr_shadow_y" in other){
+						spr_shadow_y = other.spr_shadow_y;
+					}
+				}
+				mask_index = mskNone;
+			}
+		}
+	}
+
 #define PalankingSlash_hit
 	if(projectile_canhit_melee(other)){
     	projectile_hit_push(other, damage, force);
@@ -1763,7 +1787,10 @@
 				mask_index = p.mask_index;
 				spr_shadow_y = p.spr_shadow_y;
 			}
-			if(instance_is(other, Player)) other.smoke = 6 + random(6);
+			with(other){
+				if(instance_is(self, Player)) smoke = 6 + random(6);
+				mask_index = mskNone;
+			}
 		}
 
     	sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
@@ -1837,7 +1864,9 @@
 
              // Visual:
             depth = -7;
-            spr_shadow_y = other.spr_shadow_y + other.z;
+            if("spr_shadow_y" in self){
+            	spr_shadow_y = other.spr_shadow_y + other.z;
+            }
             var _ang = point_direction(0, 0, other.hspeed, -other.zspeed) - 90;
             if("angle" in self) angle = _ang;
             else image_angle = _ang;
@@ -1857,17 +1886,17 @@
             nowade = false;
             depth = other.depth;
             mask_index = other.mask_index;
-            spr_shadow_y = other.spr_shadow_y;
+            if("spr_shadow_y" in self) spr_shadow_y = other.spr_shadow_y;
             if("angle" in self) angle = 0;
             else image_angle = 0;
 
-	        if(place_meeting(x, y, Floor) || GameCont.area != "coast"){
+	        if(instance_is(self, hitme) && (place_meeting(x, y, Floor) || GameCont.area != "coast")){
 	            projectile_hit(id, 1);
 	        }
         }
 
          // Effects:
-        repeat(10){
+        repeat(5 + variable_instance_get(creator, "size", 0)){
             with(instance_create(x, y, Dust)){
                 motion_add(random(360), 3);
                 motion_add(other.direction, 1);
@@ -3494,8 +3523,8 @@
         spr_dead = sprScorchmark;
         spr_shadow = shd24;
         hitid = [spr_idle, "WATER MINE"];
-        depth = -5;
         image_speed = 0.4;
+        depth = -3;
 
          // Sound:
         snd_hurt = sndHitMetal;
@@ -3530,6 +3559,7 @@
     if(z <= 0){
         friction = 0.4;
         mask_index = mskWepPickup;
+        depth = -3;
 
          // Movement:
         if(speed > 0){
@@ -3581,6 +3611,8 @@
     else{
         friction = 0;
         mask_index = mskNone;
+        depth = -8;
+        
         nowade = true;
         if("wading" in self) wading = 0;
     }
@@ -4237,7 +4269,7 @@
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
 #define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
 #define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                                     mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
+#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
 #define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
 #define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
 #define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
@@ -4307,4 +4339,4 @@
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)                            return  mod_script_call_nc("mod", "telib", "TopObject_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);

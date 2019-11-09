@@ -88,6 +88,10 @@
 		case "charm":
 			scrCharm(instance_create(mouse_x[_ind], mouse_y[_ind], asset_get_index(_arg)), true);
 			return true;
+
+		case "top":
+			top_create(mouse_x[_ind], mouse_y[_ind], (object_exists(asset_get_index(_arg)) ? asset_get_index(_arg) : _arg), 0, 0);
+			return true;
     }
 
 
@@ -98,7 +102,8 @@
 	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
 	for(var i = 1; i <= 127; i++){ var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_"); chat_comp_add_arg("wepmerge", 0, t); chat_comp_add_arg("wepmerge", 2, t); }
 	chat_comp_add("charm", "(object)", "spawn a charmed object");
-	for(var i = 1; i < object_max; i++) if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); }
+	chat_comp_add("top", "(object)", "spawn a top object");
+	for(var i = 1; i < object_max; i++){ if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){ chat_comp_add_arg("charm", 0, object_get_name(i)); } chat_comp_add_arg("top", 0, object_get_name(i)); }
 	/** Delete above in release versions **/
 	
     global.spr = mod_variable_get("mod", "teassets", "spr");
@@ -113,7 +118,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopChest", "TopEnemy", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
@@ -735,7 +740,7 @@
             "instance"	: _instance,
             "charmed"	: false,
             "target"	: noone,
-            "alarm"		: [],
+            "on_step"	: [],		// Custom object step event
             "index"		: -1,		// Player who charmed
             "team"		: -1,		// Original team before charming
             "time"		: 0,		// Charm duration in frames
@@ -766,14 +771,18 @@
         				}
         			}
                 }
-
-                 // Setup Custom Alarms:
-                for(var i = 0; i <= 10; i++){
-                	var a = alarm_get(i);
-                	if(a == 0) a = 1;
-
-                    c.alarm[i] = a;
-                    alarm_set(i, -1);
+                
+                 // Custom (Override Step Event):
+                if(string_pos("Custom", object_get_name(object_index)) == 1){
+                	c.on_step = on_step;
+                	on_step = [];
+                }
+                
+                 // Normal (Delay Alarms):
+                else for(var i = 0; i <= 10; i++){
+                	if(alarm_get(i) > 0){
+                		alarm_set(i, alarm_get(i) + ceil(current_time_scale));
+                	}
                 }
 
 				 // Boss Check:
@@ -834,14 +843,11 @@
                 		exit;
                 	}
                 }
-
-                 // Reset Alarms:
-                for(var i = 0; i <= 10; i++){
-                	var a = floor(c.alarm[i]);
-                	if(a == 0) a = 1;
-
-                	alarm_set(i, a);
-                	c.alarm[i] = -1;
+                
+                 // Reset Step:
+                if(array_length(c.on_step) > 0){
+                	on_step = c.on_step;
+                	c.on_step = [];
                 }
 
                  // Kill:
@@ -993,7 +999,7 @@
     return round(_hp * (1 + ((1/3) * GameCont.loops)) * (1 + (0.5 * (n - 1))));
 
 #define scrBossIntro(_name, _sound, _music)
-    mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
+    return mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
 
 #define scrUnlock(_name, _text, _sprite, _sound)
     return mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
@@ -1120,7 +1126,10 @@
 	clicked = 0;
 
 #define scrPortalPoof()  // Get Rid of Portals (but make it look cool)
-    if(instance_exists(Portal) && array_length(instances_matching(Portal, "type", 2)) <= 0 && array_length(instances_matching_le(Portal, "endgame", 0)) <= 0){
+    if(
+    	instance_exists(Portal) &&
+    	array_length(instances_matching_gt(instances_matching_gt(instances_matching_ne(Portal, "type", 2), "endgame", 0), "image_alpha", 0)) >= instance_number(Portal)
+    ){
         //var _spr = sprite_duplicate(sprPortalDisappear);
         with(Portal) if(endgame >= 0){
         	sound_stop(sndPortalClose);
@@ -1148,10 +1157,12 @@
         }
     	if(fork()){
     		while(instance_exists(Portal)) wait 0;
-    		with(instances_matching(Player, "mask_index", mskNone)){
-	    		mask_index = mskPlayer;
-	    		if(skill_get(mut_throne_butt)) angle = 0;
-	    		else roll = true;
+    		with(Player){
+	    		if(mask_index == mskNone) mask_index = mskPlayer;
+	    		if(angle != 0){
+		    		if(skill_get(mut_throne_butt)) angle = 0;
+		    		else roll = true;
+	    		}
     		}
     		exit;
     	}
@@ -1376,20 +1387,16 @@
 	 // Creator:
 	_fire.creator = self;
     if(variable_instance_get(self, "object_index") == FireCont){
-        instance_change(Bullet1, false);
         _fire.creator = creator;
-        instance_change(FireCont, false);
     }
 
      // Weapon Held by Creator:
 	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
 
 	 // Secondary Firing:
-	if(variable_instance_get(_fire.creator, "specfiring", false)){
-		_fire.spec = true;
-		if(race == "steroids") _fire.roids = true;
-	}
-
+	_fire.spec = variable_instance_get(self, "specfiring", false);
+	if(_fire.spec && race == "steroids") _fire.roids = true;
+	
 	 // LWO Setup:
 	if(is_string(_fire.wep)){
 		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
@@ -1407,16 +1414,16 @@
 #define wepammo_fire(_wep)
      // Infinite Ammo:
     if(infammo != 0) return true;
-
+    
      // Ammo Cost:
 	var _cost = lq_defget(_wep, "cost", 1);
     with(_wep) if(ammo >= _cost){
         ammo -= _cost;
-
+        
          // Can Fire:
         return true;
     }
-
+    
      // Not Enough Ammo:
     reload = 0;
     if("anam" in _wep){
@@ -1432,7 +1439,7 @@
             }
         }
     }
-
+    
 	return false;
 
 #define wepammo_draw(_wep)
@@ -2571,333 +2578,429 @@
 
 #define Pet_spawn(_x, _y, _name)
 	return pet_create(_x, _y, _name, "mod", "petlib");
-
-#define TopObject_create(_x, _y, _obj, _spawnDir, _spawnDis)
-	with(obj_create(_x, _y, "TopEnemy")){
-		object.object_index = _obj;
-
-		 // Object-Specific Setup:
-		switch(_obj){
-			 /// ENEMIES ///
-			case Bandit:
-				if(GameCont.area == 5) sprite_index = sprSnowBanditIdle;
-				break;
-
-			case BoneFish:
-			case "Puffer":
-			case "Hammerhead":
-				wander_chance = 1/12;
-				wander_walk = [0, 5];
-				wander_chance = 1/2;
-				break;
-
-			case BuffGator:
-				spr_weap = sprBuffGatorFlakCannon;
-				break;
-
-			case ExploFreak:
-				object.my_health = 0;
-				wander_chance = 1;
-				wander_walk = [0, 5];
-				jump *= 1.2;
-				spawn_dis = random_range(80, 160);
-				alarm1 = (distance_to_object(Player) * (2 + GameCont.loops)) + irandom(30);
-				break;
-
-			case Freak:
-				object.fish_freak = area_get_underwater(GameCont.area);
-				if(object.fish_freak){
-					object.spr_idle = spr.FishFreakIdle;
-					object.spr_walk = spr.FishFreakWalk;
-					object.spr_hurt = spr.FishFreakHurt;
-					object.spr_dead = spr.FishFreakDead;
+	
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)
+	var _inst = _obj;
+	if(!is_real(_obj) || _obj < 100000){
+		_inst = obj_create(_x, _y, _obj);
+	}
+	with(_inst){
+		x = _x;
+		y = _y;
+		xprevious = x;
+		yprevious = y;
+	}
+	
+	 // Don't Clear Walls:
+	with(instances_matching_gt([PortalClear, PortalShock], "id", _inst)){
+		instance_destroy();
+	}
+	
+	 // Top-ify:
+	if(array_length(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "target", _inst)) <= 0){
+		with(obj_create(_x, _y, "TopObject")){
+			target = _inst;
+			
+			if(instance_exists(target)){
+				target.top_object = id;
+				spawn_dis = random_range(16, 48);
+				
+				 // Object-General Setup:
+				if(instance_is(target, projectile)){
+					is_damage = true;
+				}
+				if(instance_is(target, hitme) || instance_is(target, chestprop) || instance_is(target, WepPickup)){
+					unstick = true;
+				}
+				if(instance_is(target, Pickup) || instance_is(target, projectile)){
 					jump = 0;
 				}
-				wander_chance = 1;
-				wander_walk = [0, 5];
-				spawn_dis = random_range(64, 240);
-				alarm1 = irandom_range(1, 60) + (distance_to_object(Player) * (2 + GameCont.loops));
-				break;
-
-			case Gator:
-				spr_weap = sprGatorShotgun;
-				break;
-
-			case JungleBandit:
-				spr_weap = sprJungleBanditGun;
-				break;
-
-			case JungleFly:
-    			maxspeed = 3.6;
-    			walkspeed = 0.6;
-    			wander_chance = 1/2;
-    			wander_walk = [8, 12];
-    			jump = 0;
-    			grav = random_range(0.1, 0.3);
-    			alarm1 = 300 + random(600);
-				break;
-
-			case MeleeBandit:
-				spr_weap = sprPipe;
-				wander_chance = 1/2;
-				wander_walk = [10, 30];
-				break;
-
-			case Necromancer:
-				spr_weap = sprNecrogun;
-				maxspeed = 2.5;
-				jump *= 2/3;
-				wander_chance = 1/16;
-				break;
-
-			case "Seal":
-			    wander_chance = 1/12;
-			    break;
-
-			case "Spiderling":
-				wander_chance = 1/4;
-				jump *= 4/5;
-				break;
-
-			 /// PROPS ///
-			case Anchor:
-				mask_index = mskBandit;
-				spr_shadow = mskNone;
-				break;
-
-			case Barrel:
-			case GoldBarrel:
-			case ToxicBarrel:
-				spawn_dis = ((_obj == Barrel) ? 32 : 8);
-				object.my_health = 0;
-				spr_shadow = shd16;
-				spr_shadow_y = 4;
-				jump *= 1.5;
-				break;
-
-			case BigFlower:
-				object.my_health = 0;
-				mask_index = mskBandit;
-				spr_shadow = sprBigFlowerIdle;
-				spr_shadow_y = 1;
-				break;
-
-			case BonePile:
-    		case BonePileNight:
-				object.my_health = 0;
-				mask_index = mskFrogEgg;
-    			with(obj_create(x, y, "BoneSpawner")) creator = other;
-
-    			 // Fly Guy:
-        		with(obj_create(x, y, "FlySpin")){
-					target = other;
-					target_x = orandom(8);
-					target_y = -other.z - random(8);
-        		}
-				break;
-
-			case Bush:
-				object.my_health = 0;
-				object.spr_shadow_y = -1;
-				break;
-
-			case Cactus:
-				var t = choose("", "3");
-				if(chance(1, 2) || variable_instance_get(instance_nearest(x - 16, y - 16, Floor), "styleb", false)){
-					t = "B" + t;
+				if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
+					grav = 0;
 				}
-				with(object){
-					spr_idle = asset_get_index("sprCactus" + t);
-					spr_hurt = asset_get_index("sprCactus" + t + "Hurt");
-					spr_dead = asset_get_index("sprCactus" + t + "Dead");
+				if(instance_is(target, chestprop) || instance_is(target, Pickup)){
+					wobble = 8;
+					spawn_dis = 8;
 				}
-				spr_shadow = sprMine;
-				spr_shadow_y = 9;
-				break;
-
-			case Car:
-				spawn_dis = 16;
-				break;
-
-			case Cocoon:
-			case "NewCocoon":
-				object.my_health = 0;
-				spr_shadow = shd16;
-				spr_shadow_y = 3;
-				spawn_dis = 8;
-				break;
-
-			case CrystalProp:
-			case InvCrystal:
-				object.my_health = 0;
-				break;
-
-			case FireBaller:
-			case SuperFireBaller:
-				z += random(8);
-    			jump = random(1);
-    			grav = random_range(0.1, 0.2);
-    			maxspeed = random_range(2, 3);
-				break;
-
-			case FrogEgg:
-				object.sprite_index = sprFrogEggSpawn;
-				object.alarm0 = random_range(10, 30);
-				mask_index = mskFrogEgg;
-				spr_idle = sprFrogEgg;
-				grav = 1.5;
-				break;
-
-			case Generator:
-				object.my_health = 0;
-				object.image_xscale = 1;
-				mask_index = mskFloor;
-				spr_idle = sprBigGenerator;
-				spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorF : spr.shd.BigGenerator);
-				spawn_dis = 64;
-				break;
-
-			case Hydrant:
-				object.my_health = 0;
-				spawn_dis = random_range(32, 96);
-
-				 // Icicle:
-				if(chance(1, 2) || variable_instance_get(instance_nearest(x - 16, y - 16, Floor), "styleb", false)){
-					with(object){
-						spr_idle = sprIcicle;
-						spr_hurt = sprIcicleHurt;
-						spr_dead = sprIcicleDead;
-						snd_hurt = sndHitRock;
-						snd_dead = sndIcicleBreak;
+				if(instance_is(target, Effect) || instance_is(target, Corpse) || instance_is(target, Pickup)){
+					override_depth = false;
+					depth = -6.01;
+				}
+				if(instance_is(target, Explosion) || instance_is(target, MeatExplosion) || instance_is(target, PlasmaImpact)){
+					grav = 0;
+					is_damage = true;
+					override_mask = false;
+					override_depth = false;
+					depth = -8;
+				}
+				if(instance_is(target, ReviveArea) || instance_is(target, NecroReviveArea) || instance_is(target, RevivePopoFreak)){
+					grav = 0;
+					override_mask = false;
+					override_depth = false;
+					depth = -6.01;
+				}
+				if(instance_is(target, prop)){
+					spawn_dis = random_range(4, 16);
+					
+					 // Death on Impact:
+					if(target.team == 0 && target.size <= 1 && target.maxhealth < 50){
+						target_save.my_health = 0;
+					}
+				}
+				if(instance_is(target, enemy)){
+					is_enemy = true;
+					idle_time = 90 + random(90);
+					if(direction == 0 && "walk" not in self && "right" in self){
+						direction = random(360);
+						scrRight(direction);
+					}
+					
+					 // Disable AI:
+					with(target) for(var i = 0; i <= 10; i++){
+						lq_set(other.target_save, `alarm${i}`, alarm_get(i));
+						alarm_set(i, -1);
+					}
+				}
+				
+				 // Object-Specific Setup:
+				switch((string_pos("Custom", object_get_name(target.object_index)) == 1 && "name" in target) ? target.name : target.object_index){
+					 /// ENEMIES ///
+					case BoneFish:
+					case "Puffer":
+					case "Hammerhead":
+						idle_walk = [0, 5];
+						idle_walk_chance = 1/2;
+						break;
+						
+					case Exploder:
+						jump_time = 1;
+						break;
+						
+					case ExploFreak:
+						jump *= 1.2;
+						idle_walk = [0, 5];
+						idle_walk_chance = 1;
+						spawn_dis = random_range(120, 192);
+						
+						 // Important:
+						target_save.my_health = 0;
+						break;
+						
+					case Freak:
+						idle_walk = [0, 5];
+						idle_walk_chance = 1;
+						spawn_dis = random_range(80, 240);
+						break;
+						
+					case JungleFly:
+						jump = 0;
+						grav = random_range(0.1, 0.3);
+						idle_walk = [8, 12];
+						idle_walk_chance = 1/2;
+						break;
+						
+					case MeleeBandit:
+						idle_walk = [10, 30];
+						idle_walk_chance = 1/2;
+						break;
+						
+					case Necromancer:
+						jump *= 2/3;
+						idle_walk_chance = 1/16;
+						break;
+						
+					case "Seal":
+					    idle_walk_chance = 1/12;
+					    break;
+					    
+					case "Spiderling":
+						jump *= 4/5;
+						idle_walk_chance = 1/4;
+						break;
+						
+					 /// PROPS ///
+					case Anchor:
+					case OasisBarrel:
+					case WaterMine:
+						mask_index = target.spr_shadow;
+						image_xscale = 0.5;
+						image_yscale = 0.5;
+						spr_shadow = mskNone;
+						break;
+						
+					case Barrel:
+					case GoldBarrel:
+					case ToxicBarrel:
+						jump *= 1.5;
+						spawn_dis = ((target.object_index == Barrel) ? 32 : 8);
+						spr_shadow = shd16;
+						spr_shadow_y = 4;
+						wobble = 8;
+						break;
+						
+					case BigFlower:
+					case IceFlower:
+						override_depth = false;
+						depth = -6.01;
+						spr_shadow = target.spr_idle;
+						spr_shadow_y = 1;
+						break;
+						
+					case Bush:
+					case JungleAssassinHide:
+						spr_shadow_y = -1;
+						break;
+						
+					case Cactus:
+						with(target){
+							var t = choose("", "3");
+							if(chance(2, 3)) t = "B" + t; // Rotten epic
+							spr_idle = asset_get_index("sprCactus" + t);
+							spr_hurt = asset_get_index("sprCactus" + t + "Hurt");
+							spr_dead = asset_get_index("sprCactus" + t + "Dead");
+						}
+					//case NightCactus:
+						spr_shadow = sprMine;
+						spr_shadow_y = 9;
+						break;
+						
+					case Car:
+						spawn_dis = 16;
+						break;
+						
+					case Cocoon:
+					case "NewCocoon":
+						spawn_dis = 8;
 						spr_shadow = shd16;
 						spr_shadow_y = 3;
+						break;
+						
+					case FireBaller:
+					case SuperFireBaller:
+						z += random(8);
+						jump = random(1);
+						grav = random_range(0.1, 0.2);
+						break;
+						
+					case FrogEgg:
+						grav = 1.5;
+						break;
+						
+					case Generator:
+						spawn_dis = 64;
+						spr_shadow = ((target.image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
+						target_save.my_health = 0;
+						break;
+						
+					case Hydrant:
+						spawn_dis = random_range(32, 96);
+						
+						 // Icicle:
+						if(chance(1, 2) || target.spr_idle == sprIcicle) with(target){
+							spr_idle = sprIcicle;
+							spr_hurt = sprIcicleHurt;
+							spr_dead = sprIcicleDead;
+							snd_hurt = sndHitRock;
+							snd_dead = sndIcicleBreak;
+							spr_shadow = shd16;
+							spr_shadow_y = 3;
+						}
+						break;
+						
+					case MeleeFake:
+						spr_shadow = sprMine;
+						spr_shadow_y = 7;
+						break;
+						
+					case MoneyPile:
+						spawn_dis = 8;
+						spr_shadow_y = -1;
+						break;
+						
+					case Pillar:
+						spr_shadow = shd32;
+						spr_shadow_y = -3;
+						break;
+						
+					case Pipe:
+						spr_shadow = sprMine;
+						spr_shadow_y = 7;
+						break;
+						
+					case Server:
+						spr_shadow = sprHydrant;
+						spr_shadow_y = 5;
+						break;
+						
+					case SmallGenerator:
+						spawn_dis = 32;
+						target.image_xscale = 1;
+						spr_shadow = target.spr_idle;
+						spr_shadow_y = 1;
+						break;
+						
+					case SnowMan:
+						spawn_dis = random_range(8, 40);
+						spr_shadow = sprNewsStand;
+						spr_shadow_y = 5;
+						break;
+						
+					case Terminal:
+						spr_shadow_y = 1;
+						break;
+						
+					case Tires:
+						spawn_dis = random_range(24, 80);
+						spr_shadow_y = -1;
+						break;
+				}
+				
+				 // Shadow:
+				if("spr_shadow" in target){
+					if(spr_shadow   == -1) spr_shadow   = target.spr_shadow;
+					if(spr_shadow_x ==  0) spr_shadow_x = target.spr_shadow_x;
+					if(spr_shadow_y ==  0) spr_shadow_y = target.spr_shadow_y;
+				}
+				
+				 // Hitbox:
+				if(mask_index == -1){
+					image_xscale = 0.5;
+					image_yscale = 0.5;
+					
+					 // Default:
+					if(spr_shadow == -1){
+						mask_index = target.sprite_index;
+					}
+					
+					 // Shadow-Based:
+					else{
+						mask_index = spr_shadow;
+						mask_y = spr_shadow_y + (((bbox_top - y) * (1 - image_yscale)));
 					}
 				}
-				break;
-
-			case MeleeFake:
-				spr_walk = sprMeleeFake;
-				spr_shadow = sprMine;
-				spr_shadow_y = 7;
-				break;
-
-			case MoneyPile:
-				object.my_health = 0;
-				object.spr_shadow_y = -1;
-				spawn_dis = 8;
-				break;
-
-			/*case NightCactus:
-				var t = choose("", "3");
-				with(object){
-					spr_idle = asset_get_index("sprNightCactus" + t);
-					spr_hurt = asset_get_index("sprNightCactus" + t + "Hurt");
-					spr_dead = asset_get_index("sprNightCactus" + t + "Dead");
+				
+				 // Push Away From Floors:
+				if(_spawnDir >= 0){
+					spawn_dir = _spawnDir;
 				}
-				spr_shadow = sprMine;
-				spr_shadow_y = 9;
-				break;*/
-
-			case OasisBarrel:
-				spr_shadow = mskNone;
-				break;
-
-			case Pillar:
-				mask_index = mskBandit;
-				spr_shadow = shd32;
-				spr_shadow_y = -3;
-				break;
-
-			case Pipe:
-				object.my_health = 0;
-				spr_shadow = sprMine;
-				spr_shadow_y = 7;
-				break;
-
-			case Server:
-				object.my_health = 0;
-				mask_index = mskBandit;
-				spr_shadow = sprHydrant;
-				spr_shadow_y = 5;
-
-				  // Not using actual Server object cause it can get replaced by a Terminal in its create event
-				object.object_index = Terminal;
-				object.spr_idle = sprServer;
-				object.spr_hurt = sprServerHurt;
-				object.spr_dead = sprServerDead;
-				object.snd_dead = sndServerBreak;
-				break;
-
-			case SmallGenerator:
-				object.my_health = 0;
-				object.image_xscale = 1;
-				mask_index = mskFrogEgg;
-				spr_shadow = spr_idle;
-				spr_shadow_y = 1;
-				spawn_dis = 32;
-				break;
-
-			case SnowMan:
-				object.my_health = 0;
-				spr_shadow = sprNewsStand;
-				spr_shadow_y = 5;
-				spawn_dis = random_range(8, 40);
-				break;
-
-			case Terminal:
-				object.my_health = 0;
-				mask_index = mskBandit;
-				spr_shadow_y = 1;
-				break;
-
-			case Tires:
-				object.my_health = 0;
-				object.spr_shadow_y = -1;
-				spawn_dis = random_range(24, 80);
-				break;
-
-			case Torch:
-				object.my_health = 0;
-				break;
-		}
-
-		 // General Setup:
-		if(_spawnDir >= 0) spawn_dir = _spawnDir;
-		if(_spawnDis >= 0) spawn_dis = _spawnDis;
-		if(setup) mod_script_call("mod", "tegeneral", "TopEnemy_setup");
-
-		 // Object-Specific Post-Setup:
-		if(instance_exists(self)){
-			switch(_obj){
-				case BoneFish:
-				case Freak:
-				case "Puffer":
-				case "Hammerhead": // Swimming bro
-					if(area_get_underwater(GameCont.area)){
-    					z += random_range(8, distance_to_object(Floor) / 2) * ((_obj == "Puffer") ? 0.5 : 1);
+				else with(instance_nearest(x - 16, y - 16, Floor)){
+					other.spawn_dir = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, other.x, other.y);
+				}
+				if(_spawnDis >= 0){
+					spawn_dis = _spawnDis;
+				}
+				if(spawn_dis > 0){
+					var l = 4;
+					while(
+						distance_to_object(Floor)			< spawn_dis			||
+						distance_to_object(PortalClear)		< spawn_dis + 16	||
+						distance_to_object(Bones)			< 16				||
+						distance_to_object(TopPot)			< 8					||
+						distance_to_object(CustomObject)	< 8
+					){
+						x += lengthdir_x(l, spawn_dir);
+						y += lengthdir_y(l, spawn_dir);
 					}
-					break;
-
-				case JungleFly: // Bro hes actually flying real
-    				z += random(16 + (distance_to_object(Floor) / 2));
-    				break;
-
-				case MeleeFake: // Wake up bro, dumbass
-					if("my_health" in object) object.my_health--;
-					image_index = 0;
-					break;
-
-				case Pipe: // eat smash br
-					with(instances_meeting(x, y, Wall)){
-						topindex = 0;
+				}
+				x = round(x);
+				y = round(y);
+				
+				 // Object-Specific Post-Setup:
+				if(instance_is(target, enemy) && jump_time == 0){
+					with(instance_nearest(x - 16, y - 16, Floor)){
+						other.jump_time = 90 + (distance_to_object(Player) * (2 + GameCont.loops));
 					}
-					break;
+				}
+				switch(target.object_index){
+					case BoneFish:
+					case Freak:
+					case "Puffer":
+					case "Hammerhead": // Swimming bro
+						if(area_get_underwater(GameCont.area)){
+							z += random_range(8, distance_to_object(Floor) / 2) * ((target.object_index == "Puffer") ? 0.5 : 1);
+						}
+						break;
+						
+					case FrogEgg: // Hatch
+						target.alarm0 = irandom(150) + (distance_to_object(Player) * (1 + GameCont.loops));
+						target_save.alarm0 = random_range(10, 30);
+						break;
+						
+					case JungleFly: // Bro hes actually flying real
+						z += random_range(4, 16 + (distance_to_object(Floor) / 2));
+						break;
+						
+					case Pipe: // eat smash br
+						with(target) with(instances_meeting(x, y, Wall)){
+							topindex = 0;
+						}
+						break;
+				}
+				
+				 // Underwater Time:
+				if(area_get_underwater(GameCont.area)){
+					jump /= 6;
+					grav /= 4;
+				}
+				
+				 // Insta-Land:
+				var n = instance_nearest(x - 16, y - 16, Floor);
+				if(
+					instance_exists(n)																											&&
+					!instance_exists(NothingSpiral)																								&&
+					!collision_line(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, Wall,     false, false)	&&
+					!collision_line(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, TopSmall, false, false)
+				){
+					zspeed = jump;
+					zfriction = grav;
+				}
+				
+				 // TopSmalls:
+				else if(instance_is(target, prop)) with(target){
+					var _xsc = image_xscale;
+					image_xscale = sign(image_xscale * variable_instance_get(self, "right", 1));
+					
+					var _west = bbox_left - 8,
+						_east = bbox_right + 1 + 8,
+						_nort = y - 8,
+						_sout = bbox_bottom + 1 + 8,
+						_shad = ((other.spr_shadow != -1) ? other.spr_shadow : spr_shadow),
+						_chance = 4/5;
+						
+					if(sprite_get_bbox_right(_shad) - sprite_get_bbox_left(_shad) > 64){
+						_chance = 1;
+					}
+					
+					for(var _ox = _west; _ox < _east; _ox += 16){
+						for(var _oy = _nort; _oy < _sout; _oy += 16){
+							if(chance(_chance, 1)){
+								var	_sx = floor(_ox / 16) * 16,
+									_sy = floor(_oy / 16) * 16;
+									
+								if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
+									instance_create(_sx, _sy, TopSmall);
+								}
+							}
+						}
+					}
+					
+					image_xscale = _xsc;
+				}
+				
+				 // Depth:
+				if(override_depth) depth = -6 - ((y - 8) / 10000);
 			}
-
-			return id;
+			
+			if(instance_exists(other)){
+				event_perform(ev_step, ev_step_end);
+			}
+			else{ // bro wtf
+				mod_script_call(on_end_step[0], on_end_step[1], on_end_step[2]);
+			}
+			
+			return self;
 		}
 	}
-	return noone;
 
 #define scrFloorMake(_x, _y, _obj)
     instance_create(_x, _y, Floor);
