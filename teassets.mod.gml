@@ -850,11 +850,12 @@
 							sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
 			
 			 // Buried Vault:
-			BuriedVaultChest       = sprite(p + "sprVaultChest",       1, 12, 12, shn24);
-			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",   1, 12, 12);
-			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris", 8, 12, 12);
-			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",   3, 16, 12);
-			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",  6, 12, 12)
+			BuriedVaultTopTiny     = sprite(p + "sprVaultTopTiny",     12,  0,  0);
+			BuriedVaultChest       = sprite(p + "sprVaultChest",        1, 12, 12, shn24);
+			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",    1, 12, 12);
+			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
+			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
+			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12)
 			
 			 // Overstock/Overheal:
 			OverstockPickup	= sprite(p + "sprOverstockPickup",   1,  5,  5, shn10);

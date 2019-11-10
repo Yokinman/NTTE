@@ -1163,6 +1163,11 @@
 
 #define BatBoss_death
     instance_create(x, y, PortalClear);
+    
+     // Die:
+    with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
+    	my_health = 0;
+    }
 
 	 // Pitch Death:
 	if(snd_dead == sndMutant10Dead){
@@ -1304,12 +1309,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		nexthurt = current_frame + 12;
 		creator = other.creator;
 		kills = 0;
-
+		
 		 // Save HP:
 		if("my_health" in other){
 			my_health = other.my_health;
 		}
-
+		
 		 // Aim:
 		if(instance_exists(other.target)){
 			gunangle = point_direction(x, y, other.target.x, other.target.y);
@@ -1326,7 +1331,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
 	 // Effects:
 	sound_play_pitchvol(sndBouncerSmg, 0.2 + random(0.2), 0.6);
 	sound_play_pitchvol(sndBloodHammer,  1.6 + random(0.4), 0.4);

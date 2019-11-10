@@ -1886,7 +1886,7 @@
 		_dir = direction,
 		_mx = lengthdir_x(_dis, _dir),
 		_my = lengthdir_y(_dis, _dir),
-		_targets = instances_matching_gt(instances_matching_ne(hitme, "team", team), "my_health", 0);
+		_targets = instances_matching_ne(hitme, "team", team);
 		
 	 // Muzzle Explosion:
 	array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
@@ -1901,20 +1901,22 @@
 		if(chance(2, 3)) scrFX([x, 2], [y, 2], [_dir + orandom(4), 2 + random(2)], Smoke);
 		
 		 // Explosion:
-		var e = instances_meeting(x, y, _targets);
-		if(array_length(e) > 0){
-			var _hit = false;
-			with(e) if(place_meeting(x, y, other)){
-				if(!_hit){
-					_hit = true;
-					with(other){
-						hits--;
-						array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+		if(place_meeting(x, y, hitme)){
+			var e = instances_meeting(x, y, instances_matching_gt(_targets, "my_health", 0));
+			if(array_length(e) > 0){
+				var _hit = false;
+				with(e) if(place_meeting(x, y, other)){
+					if(!_hit){
+						_hit = true;
+						with(other){
+							hits--;
+							array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+						}
 					}
+	
+					 // Impact Damage:
+					projectile_hit(id, other.damage, other.force, _dir);
 				}
-
-				 // Impact Damage:
-				projectile_hit(id, other.damage, other.force, _dir);
 			}
 		}
 	}

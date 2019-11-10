@@ -242,13 +242,13 @@
 
          // Vars:
         maxhealth = 24;
-        size = 4;
+        size = 2;
 
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
 		if(!in_distance(Player, 96)){
 			repeat(choose(2, 3)){
-				obj_create(x + orandom(4), y + orandom(4), ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+				obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
 			}
 		}
 

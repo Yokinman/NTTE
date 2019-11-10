@@ -276,7 +276,7 @@
     open = false;
     hush = 0;
     hushtime = 0;
-    pickup_mimic = scrPickupIndicator("");
+    pickup_mimic = scrPickupIndicator("DROP");
     
      // Stat:
 	if("weapons" not in stat) stat.weapons = [];
@@ -1813,9 +1813,17 @@
                                 _off *= -1;
                             }
                             
-                             // Fix Quasar Cannon:
-                            with(_copy) if(instance_is(self, CustomProjectile) && variable_instance_get(self, "name") == "QuasarRing"){
-                            	ring_lasers = array_clone(ring_lasers);
+                             // Custom Projectile Fixes:
+                            with(_copy) if(instance_is(self, CustomProjectile)){
+                            	switch(variable_instance_get(self, "name")){
+                            		case "Bone":
+                            			broken = true;
+                            			break;
+                            			
+                            		case "QuasarRing":
+                            			ring_lasers = array_clone(ring_lasers);
+                            			break;
+                            	}
                             }
                     }
                     

@@ -33,8 +33,6 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index + image_speed_raw >= image_number)
 
-#macro depth_top -6 - (y / 10000)
-
 #macro surfShadowTop global.surfShadowTop
 #macro surfShadowTopMask global.surfShadowTopMask
 #macro surfPet global.surfPet
@@ -495,7 +493,7 @@
 								x = other.x + _x;
 								y = other.y + _y;
 
-								var n = nearest_instance(x, y, instances_matching_ne(instances_matching(CustomObject, "name", "NestRaven"), "id", id));
+								var n = nearest_instance(x, y, instances_matching_ne(instances_matching(object_index, "name", name), "id", id));
 								if(!instance_exists(n) || point_distance(x, y, n.x, n.y) > 16){
 									break;
 								}
@@ -1217,7 +1215,7 @@
 		}
 		
 		 // Create TopSmalls/Decals:
-		var _floors = [];
+		var _tiles = [];
 		for(var _ox = 0; _ox < _w; _ox++){
 			for(var _oy = 0; _oy < _h; _oy++){
 				var	_sx = x + (_ox * 16),
@@ -1227,7 +1225,7 @@
 				if(_center || chance(1, 3)){
 					if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
 						with(instance_create(_sx, _sy, TopSmall)){
-							array_push(_floors, id);
+							array_push(_tiles, id);
 						}
 					}
 				}
@@ -1241,15 +1239,32 @@
 			_x2 = random_range(bbox_left + 16, bbox_right - 16),
 			_y2 = random_range(bbox_top + 16, bbox_bottom - 16);
 			
-		with(array_shuffle(_floors)){
+		with(array_shuffle(_tiles)){
+			var _vault = collision_line(_x1, _y1, _x2, _y2, id, false, false);
 			sprite_index = area_get_sprite(
-				collision_line(_x1, _y1, _x2, _y2, id, false, false)
+				_vault
 					? other.area
 					: GameCont.area,
 				(position_meeting(_x2, _y2, id) || chance(2, 3))
 					? sprWall1Top
 					: sprWall1Trans
 			);
+			
+			if(_vault){
+				for(var _ox = bbox_left - 8; _ox < bbox_right + 1 + 8; _ox += 8){
+					for(var _oy = bbox_top - 8; _oy < bbox_bottom + 1 + 8; _oy += 8){
+						if(!position_meeting(_ox, _oy, id) && chance(1, 10)){
+							with(instance_create(_ox, _oy, TopPot)){ // TopPot is so epic
+								x = xstart;
+								y = ystart;
+								sprite_index = spr.BuriedVaultTopTiny;
+								image_index = irandom(image_number - 1);
+								image_speed = 0;
+							}
+						}
+					}
+				}
+			}
 		}
 		
 		 // Generate Room Layout:
@@ -3631,7 +3646,7 @@
 		spr_shadow = -1;
 		spr_shadow_x = 0;
 		spr_shadow_y = 0;
-		depth = depth_top;
+		depth = -6 - (y / 10000);
 		
 		 // Vars:
 	    mask_index = -1;
@@ -3661,6 +3676,10 @@
 		is_enemy = false;
 		is_damage = false;
 		unstick = false;
+		search_x1 = x - 8;
+		search_x2 = x + 8;
+		search_y1 = y - 8;
+		search_y2 = y + 8;
 		
 		y += z;
 		
@@ -3733,12 +3752,30 @@
 					mask_index = _saveMask;
 					*/
 				}
+				
+				 // Update Object Auto-Topify Range:
+				var m = mask_index;
+				mask_index = -1;
+				other.search_x1 = min(x - 8, bbox_left);
+				other.search_x2 = max(x + 8, bbox_right);
+				other.search_y1 = min(y - 8, bbox_top);
+				other.search_y2 = max(y + 8, bbox_bottom);
+				mask_index = m;
 			}
 			if(x != other.x || y != other.y - other.z){
 				x = other.x;
 				y = other.y - other.z;
 				xprevious = x;
 				yprevious = y;
+				
+				 // Update Object Auto-Topify Range (copy-paste edition):
+				var m = mask_index;
+				mask_index = -1;
+				other.search_x1 = min(x - 8, bbox_left);
+				other.search_x2 = max(x + 8, bbox_right);
+				other.search_y1 = min(y - 8, bbox_top);
+				other.search_y2 = max(y + 8, bbox_bottom);
+				mask_index = m;
 			}
 			
 			 // Disable Hitbox:
@@ -3896,7 +3933,11 @@
 						mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 						
 						if(place_meeting(x, y, _inst)){
-							with(_inst) event_perform(ev_collision, hitme);
+							with(_inst){
+								event_perform(ev_collision, hitme);
+							}
+							if(!instance_exists(self)) break;
+							if(!instance_exists(other)) exit;
 						}
 						
 						mask_index = m;
@@ -3947,8 +3988,8 @@
 				}
 				if(!place_meeting(x, y, Floor)){
 					with(instance_nearest(x - 16, y - 16, Floor)){
-						x = (bbox_left + bbox_right + 1) / 2;
-						y = (bbox_top + bbox_bottom + 1) / 2;
+						other.x = (bbox_left + bbox_right + 1) / 2;
+						other.y = (bbox_top + bbox_bottom + 1) / 2;
 					}
 				}
 			}
@@ -4453,9 +4494,17 @@
         else scrHarpoonUnrope(_rope);
     }
     
-	 // Top Objects:
-	var _topObject = instances_matching(CustomObject, "name", "TopObject");
-	with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, instances_matching_gt(instances_matching(_topObject, "zfriction", 0), "grav", 0))){
+	 // Top Object Floor-Collision:
+	var	_topObject = instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zfriction", 0),
+		_topRaven = instances_matching_gt(instances_matching(CustomObject, "name", "NestRaven"), "alarm1", 1);
+		
+	with(instance_rectangle(global.floor_left - 8, global.floor_top - 8, global.floor_right + 8, global.floor_bottom + 8, _topRaven)){
+		if(position_meeting(x, y + 8, Floor) && !position_meeting(x, y + 8, Wall)){
+			alarm1 = 1;
+			force_spawn = true;
+		}
+	}
+	with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, instances_matching_gt(_topObject, "grav", 0))){
 		if(place_meeting(x + mask_x, y + mask_y, Floor)){
 			 // Wobble:
 			if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
@@ -4551,9 +4600,10 @@
     		}
     	}
 	}
-	if(instance_exists(NothingSpiral)){
-		 // Above Throne II Abyss:
-		with(instances_matching(_topObject, "zfriction", 0)){
+	
+	 // Top Object Emergency Activation:
+	if(instance_exists(NothingSpiral)){ /* Throne II Abyss */
+		with(_topObject){
 			 // Delete if directly above any floors cause the portal background & floor stalactites draw at the same depth :(
 			if(array_length(instances_matching_gt(instances_matching_lt(instances_matching_gt(Floor, "bbox_top", y), "bbox_left", x), "bbox_right", x)) > 0){
 				if(instance_exists(target)) instance_delete(target);
@@ -4568,13 +4618,27 @@
 				}
 			}
 		}
+		with(_topRaven){
+			alarm1 = 1;
+			force_spawn = true;
+		}
 	}
-	else{
-		 // Not Many Enemies, Don't Stay on Wall:
-		var _jumpInst = instances_matching_gt(instances_matching(_topObject, "is_enemy", true), "jump_time", 60);
-		if(instance_number(enemy) - array_length(_jumpInst) < 5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood))){
-			with(instance_random(_jumpInst)){
-				jump_time = random_range(1, 60);
+	else{ /* Not Many Enemies */
+		var	_idleTopObject = instances_matching_gt(instances_matching(_topObject, "is_enemy", true), "jump_time", 60),
+			_idleTopRaven = instances_matching_ne(_topRaven, "force_spawn", true);
+			
+		if(instance_number(enemy) - array_length(_idleTopObject) + (array_length(_topRaven) - array_length(_idleTopRaven)) < 5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood))){
+			with(instance_random(array_combine(_idleTopObject, _idleTopRaven))){
+				switch(name){
+					case "TopObject":
+						jump_time = random_range(1, 60);
+						break;
+						
+					case "NestRaven":
+						alarm1 = 1;
+						force_spawn = true;
+						break;
+				}
 			}
 		}
 	}
@@ -4743,34 +4807,28 @@
 					"z", null
 				);
 				
-				if(array_length(_search) > 0) with(_search){
+				if(array_length(_search) > 0) with(array_flip(_search)){
 					if(!position_meeting(xstart, ystart, Floor) || (place_meeting(xstart, ystart, Wall) && (instance_is(self, hitme) || instance_is(self, chestprop) || instance_is(self, Corpse) || instance_is(self, ChestOpen)))){
-						with(instances_matching_ge(instances_matching_le(_topObject, "bbox_left", x + 96), "bbox_right", x - 96)){
-							if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, PortalShock)){
-								var	_mask = lq_defget(target_save, "mask_index", -1),
-									w = max(8, abs(variable_instance_get(target, "sprite_width",  0)), sprite_get_width(_mask)) / 2,
-									h = max(8, abs(variable_instance_get(target, "sprite_height", 0)), sprite_get_height(_mask)) / 2;
-									
-								if(point_in_rectangle(other.x, other.y, x - w, y - h - z, x + w, y + h + z)){
-									if("creator" not in other || !instance_exists(other.creator) || other.creator == target || !instance_exists(target) || ("target" in other && other.target == target)){
-										with(other){
-											 // Effects:
-											if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris)){
-												if(instance_is(self, MeltSplat)){
-													instance_destroy();
-												}
-												else depth = min(depth, -6.01);
+						with(instances_matching_ge(instances_matching_le(instances_matching_ge(instances_matching_le(_topObject, "search_x1", x), "search_x2", x), "search_y1", y), "search_y2", y)){
+							if(array_length(instances_meeting(x, y, instances_matching_lt([PortalClear, PortalShock], "id", other))) <= 0){
+								if("creator" not in other || !instance_exists(other.creator) || other.creator == target || !instance_exists(target) || ("target" in other && other.target == target)){
+									with(other){
+										 // Effects:
+										if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
+											if(instance_is(self, MeltSplat)){
+												instance_destroy();
 											}
-											else if(instance_is(self, SharpTeeth)){
-												depth = min(depth, -8);
-											}
-											
-											 // Epic Stuff:
-											else top_create(x, y, id, 0, 0);
+											else depth = min(depth, -6.01);
+										}
+										else if(instance_is(self, SharpTeeth)){
+											depth = min(depth, -8);
 										}
 										
-										break;
+										 // Epic Stuff:
+										else top_create(x, y, id, 0, 0);
 									}
+									
+									break;
 								}
 								
 								if(!instance_exists(other)) break;
@@ -4851,7 +4909,8 @@
 	
 	 // Top Objects:
 	if(!instance_exists(NothingSpiral)){
-		with(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching_ne(instances_matching(CustomObject, "name", "TopObject"), "spr_shadow", -1))){
+		var _inst = instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching_ne(instances_matching(CustomObject, "name", "TopObject", "NestRaven"), "spr_shadow", -1))
+		with(instances_matching(_inst, "name", "TopObject")){
 			var	_xsc = image_xscale,
 				_ysc = image_yscale;
 				
@@ -4864,6 +4923,13 @@
 			
 			image_xscale = _xsc;
 			image_yscale = _ysc;
+		}
+		
+		 // Top Ravens:
+		with(instances_matching(_inst, "name", "NestRaven")){
+			if(position_meeting(x, bbox_bottom, Floor) && visible){
+				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+			}
 		}
 	}
 
@@ -4882,8 +4948,8 @@
 			instances_matching_ge(
 				instances_matching(
 					array_combine(
-						instances_matching(CustomObject, "name", "NestRaven", "TopObject"),
-						instances_matching(CustomProjectile, "name", "MortarPlasma"),
+						instances_matching(CustomObject, "name", "TopObject", "NestRaven"),
+						instances_matching(CustomProjectile, "name", "MortarPlasma")
 					),
 					"visible", true
 				),

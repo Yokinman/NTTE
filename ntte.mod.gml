@@ -748,7 +748,7 @@
             	array_push(_topSpawn, [Barrel, 1/5]);
             	
             	 // Bandit Camp:
-            	if(chance(1, 30)){
+            	if(chance(1, 50)){
             		with(_topSpawn){
             			switch(self[0]){
             				case Cactus:

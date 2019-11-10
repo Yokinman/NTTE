@@ -2589,11 +2589,13 @@
 		y = _y;
 		xprevious = x;
 		yprevious = y;
-	}
-	
-	 // Don't Clear Walls:
-	with(instances_matching_gt([PortalClear, PortalShock], "id", _inst)){
-		instance_destroy();
+		
+		 // Don't Clear Walls:
+		if(instance_is(self, hitme) || instance_is(self, chestprop)){
+			with(instances_matching(instances_matching(instances_matching_gt([PortalClear, PortalShock], "id", id), "xstart", xstart), "ystart", ystart)){
+				instance_destroy();
+			}
+		}
 	}
 	
 	 // Top-ify:
@@ -2617,6 +2619,8 @@
 				}
 				if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
 					grav = 0;
+					override_depth = false;
+					depth = -6.01;
 				}
 				if(instance_is(target, chestprop) || instance_is(target, Pickup)){
 					wobble = 8;
@@ -2625,6 +2629,8 @@
 				if(instance_is(target, Effect) || instance_is(target, Corpse) || instance_is(target, Pickup)){
 					override_depth = false;
 					depth = -6.01;
+					if(instance_is(target, Corpse)) depth -= 0.001;
+					if(instance_is(target, Pickup)) depth -= 0.002;
 				}
 				if(instance_is(target, Explosion) || instance_is(target, MeatExplosion) || instance_is(target, PlasmaImpact)){
 					grav = 0;
@@ -2989,6 +2995,16 @@
 				
 				 // Depth:
 				if(override_depth) depth = -6 - ((y - 8) / 10000);
+				
+				with(target){
+					var m = mask_index;
+					mask_index = -1;
+					other.search_x1 = min(x - 8, bbox_left);
+					other.search_x2 = max(x + 8, bbox_right);
+					other.search_y1 = min(y - 8, bbox_top);
+					other.search_y2 = max(y + 8, bbox_bottom);
+					mask_index = m;
+				}
 			}
 			
 			if(instance_exists(other)){

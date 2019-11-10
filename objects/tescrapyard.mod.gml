@@ -36,20 +36,30 @@
 		sprite_index = spr_idle;
 		image_index = irandom(image_number - 1);
 		image_speed = 0.4;
-		depth = -6 - (y / 10000);
-
+		depth = -6 - ((y - 8) / 10000);
+		
 		 // Vars:
-		mask_index = mskBandit;
+		mask_index = object_get_mask(Raven);
 		right = choose(-1, 1);
 		targetx = x;
 		targety = y;
 		z = 8;
 		force_spawn = false;
-
+		teeth = 0;
+		
+		 // HP:
+		maxhealth = 10;
+		with(instance_create(x, y, CustomEnemy)){
+			maxhealth = other.maxhealth;
+			other.maxhealth = maxhealth;
+			instance_delete(id);
+		}
+		my_health = maxhealth;
+		
 		 // Alarms:
 		alarm0 = 1;
 		alarm1 = irandom_range(90, 1500);
-
+		
 		return id;
 	}
 
@@ -129,21 +139,13 @@
 		}
 	}
 
-	 // Emergency Flight:
-	else if(alarm1 > 1){
-		if(
-			(instance_number(enemy) + array_length(instances_matching_gt(instances_matching(object_index, "name", name), "force_spawn", force_spawn))) < (5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood)))
-			||
-			(position_meeting(x, bbox_bottom, Floor) && !position_meeting(x, bbox_bottom, Wall))
-		){
-			alarm1 = 1;
-			force_spawn = true;
-		}
-	}
-
 #define NestRaven_draw
 	image_alpha = abs(image_alpha);
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	y -= z;
+	image_xscale *= right;
+	draw_self();
+	y += z;
+	image_xscale /= right;
 	image_alpha = -image_alpha;
 
 #define NestRaven_alrm0
@@ -155,6 +157,17 @@
 		if(instance_exists(Player)){
 			var t = instance_nearest(x, y, Player);
 			scrRight(point_direction(x, y, t.x, t.y));
+		}
+	}
+	
+	 // Sharp Teeth:
+	if(teeth != 0){
+		my_health = min(my_health - teeth, maxhealth);
+		if(my_health <= 0){
+			with(top_create(x, y, Raven, 0, 0)){
+				target.my_health = other.my_health;
+			}
+			instance_destroy();
 		}
 	}
 
@@ -169,28 +182,29 @@
 		 // Search Floors by Player:
 		if(instance_exists(t) && !chance(force_spawn, 2)){
 			scrRight(point_direction(x, y, t.x, t.y));
+			
 			_x = t.x;
 			_y = t.y;
-			if(place_meeting(_x, _y, Wall) || force_spawn){
-				var _inst = instance_rectangle_bbox(t.x - 16, t.y - 16, t.x + 16, t.y + 16, Floor);
-				with(_inst){
-					_x = ((bbox_left + bbox_right + 1) / 2) + orandom(4);
-					_y = ((bbox_top + bbox_bottom + 1) / 2) + orandom(4);
+			
+			with(array_shuffle(instance_rectangle_bbox(t.x - 64, t.y - 64, t.x + 64, t.y + 64, Floor))){
+				var	_fx = ((bbox_left + bbox_right + 1) / 2) + orandom(4),
+					_fy = ((bbox_top + bbox_bottom + 1) / 2) + orandom(4),
+					b = false;
 					
-					var b = false;
-					with(other){
-						if(!place_meeting(_x, _y, Wall) && chance(1, array_length(_inst))){
-							b = true;
-						}
+				with(other){
+					if(!place_meeting(_fx, _fy, Wall)){
+						_x = _fx;
+						_y = _fy;
+						b = true;
 					}
-					if(b) break;
 				}
+				if(b) break;
 			}
 		}
 		
 		 // Random Nearby Floor:
 		else{
-			alarm = 1;
+			alarm1 = 1;
 			
 			var r = 64;
 			with(instance_random(instance_rectangle_bbox(x - r, y - r, x + r, y + r, Floor))){
@@ -607,6 +621,9 @@
 #define step
 	if(DebugLag) trace_time();
 	
+	 // Bind Events:
+	script_bind_draw(draw_ravenflys, -8);
+	
 	 // Nest Raven Disable Portal:
 	if(!instance_exists(enemy)){
 		if(array_length(instances_matching(CustomObject, "name", "NestRaven")) > 0){
@@ -614,11 +631,25 @@
 		}
 	}
 	
-	 // Bind Events:
-	if(array_length(instances_seen_nonsync(instances_matching(CustomObject, "name", "BigDecal", "NestRaven"), 24, 24)) > 0){
-		script_bind_draw(draw_ravenflys, -8);
+	 // Nest Raven Manual Sharp Teeth:
+	if(skill_get(mut_sharp_teeth) != 0){
+		with(Player) if(lsthealth > my_health){
+			var _damage = (lsthealth - my_health) * 2.5 * skill_get(mut_sharp_teeth);
+			with(instance_rectangle(view_xview[index], view_yview[index], view_xview[index] + game_width, view_yview[index] + game_height, instances_matching(CustomObject, "name", "NestRaven"))){
+				teeth += _damage;
+				alarm0 = round(1 + (point_distance(x, y, 0.x, 0.y) / 8));
+				
+				 // Just Visual:
+				with(instance_create(x, y - z, SharpTeeth)){
+					depth = -8;
+					damage = other.teeth;
+					alarm0 = other.alarm0;
+				}
+			}
+		}
 	}
 	
+	 // Variant Car Decal:
 	with(instances_matching(TopDecalScrapyard, "verticalcar_check", null)){
 		verticalcar_check = (image_index == 0 && chance(1, 2));
 		if(verticalcar_check) sprite_index = spr.TopDecalScrapyardAlt;
@@ -627,23 +658,21 @@
 	if(DebugLag) trace_time("tescrapyard_step");
 	
 #define draw_shadows
-	 // Wall Ravens:
-	with(instances_matching(CustomObject, "name", "NestRaven")) if(visible){
-		if(position_meeting(x, bbox_bottom, Floor)){
-			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
-		}
-	}
-	
 	 // Saw Traps:
 	with(instances_matching(CustomHitme, "name", "SawTrap")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
 	}
 
 #define draw_ravenflys
-	instance_destroy();
+	 // RavenFlys draw at like -6 depth, not cool bro:
 	with(RavenFly){
-    	draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+		y += z;
+		image_xscale *= right;
+    	draw_self();
+		y -= z;
+		image_xscale /= right;
 	}
+	instance_destroy();
 
 
 /// Scripts
