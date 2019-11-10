@@ -1328,9 +1328,7 @@
                      // Boss Intro:
                     if(!intro){
                         intro = true;
-                        with(scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing)){
-                        	music.vol = 4;
-                        }
+                        scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
                     }
 
                      // Walk Towards Player:
