@@ -4909,7 +4909,7 @@
 	if(pit_get(x, y)) my_health = 0;
 
 #define Vent_death
-    obj_create(x, y, "BubbleExplosion");
+    if(!instance_exists(Spiral)) obj_create(x, y, "BubbleExplosion");
 
 
 #define WantEel_create(_x, _y)
