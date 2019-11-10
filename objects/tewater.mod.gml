@@ -5847,7 +5847,7 @@
 
 /// Pits Yo
 #define pit_get(_x, _y)
-	return global.pit_grid[# _x / 16, _y / 16];
+	return global.pit_grid[clamp(_x / 16, 0, global.pit_grid_w), clamp(_y / 16, 0, global.pit_grid_h)];
 
 #define pit_set(_x, _y, _bool)
 	mod_script_call_nc("area", "trench", "pit_set", _x, _y, _bool);

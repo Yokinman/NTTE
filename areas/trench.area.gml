@@ -52,8 +52,15 @@
 	with(surfPitWallTop) draw = [[spr.PitTop, spr.PitSmallTop]];
 
 	 // Pit Grid:
-	global.pit_grid = ds_grid_create(1250, 1250);
+	global.pit_grid_w = 1250;
+	global.pit_grid_h = 1250;
+	global.pit_grid = array_create(global.pit_grid_w, 0);
+	for(var i = 0; i < global.pit_grid_w; i++){
+		global.pit_grid[i] = array_create(global.pit_grid_h, false);
+	}
 	mod_variable_set("mod", "tewater", "pit_grid", global.pit_grid);
+	mod_variable_set("mod", "tewater", "pit_grid_w", global.pit_grid_w);
+	mod_variable_set("mod", "tewater", "pit_grid_h", global.pit_grid_h);
 	with(Floor) trenchpit_check = null;
 
 #macro spr global.spr
@@ -271,7 +278,9 @@
 	with(surfSpark) active = false;
 
 	 // Reset Pit:
-	ds_grid_clear(global.pit_grid, false);
+	for(var i = 0; i < global.pit_grid_w; i++){
+		global.pit_grid[i] = array_create(global.pit_grid_h, false);
+	}
 
 #define area_step
     if(DebugLag) trace_time();
@@ -884,10 +893,10 @@
     }
 
 #define pit_get(_x, _y)
-	return global.pit_grid[# _x / 16, _y / 16];
+	return global.pit_grid[clamp(_x / 16, 0, global.pit_grid_w), clamp(_y / 16, 0, global.pit_grid_h)];
 
 #define pit_set(_x, _y, _bool)
-	global.pit_grid[# _x / 16, _y / 16] = _bool;
+	global.pit_grid[clamp(_x / 16, 0, global.pit_grid_w), clamp(_y / 16, 0, global.pit_grid_h)] = _bool;
 
 	 // Reset Pit Surfaces:
     with([surfPit, surfPitWallBot, surfPitWallTop]){
