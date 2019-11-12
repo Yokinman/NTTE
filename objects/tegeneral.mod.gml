@@ -2779,34 +2779,39 @@
                 var _max = array_length(ntte_pet);
                 if(_max > 0){
                      // Remove Oldest Pet:
-                    with(ntte_pet[0]){
-                        leader = noone;
-                        can_take = true;
-                        
-                         // Effects:
-                        with(instance_create(x + hspeed, y + vspeed, HealFX)){
-                        	sprite_index = spr.PetLost;
-                        	image_xscale = choose(-1, 1);
-                        	image_speed = 0.5;
-                        	friction = 1/8;
-                        	depth = -8;
-                        }
-                    }
-                    ntte_pet = array_delete(ntte_pet, 0);
-
+					for(var i = _max - 1; i >= 0; i--){
+						if(!instance_exists(ntte_pet[i]) || i == 0){
+							with(ntte_pet[i]){
+		                        leader = noone;
+		                        can_take = true;
+		                        
+		                         // Effects:
+		                        with(instance_create(x + hspeed, y + vspeed, HealFX)){
+		                        	sprite_index = spr.PetLost;
+		                        	image_xscale = choose(-1, 1);
+		                        	image_speed = 0.5;
+		                        	friction = 1/8;
+		                        	depth = -8;
+		                        }
+		                    }
+		                    ntte_pet = array_delete(ntte_pet, i);
+		                    break;
+						}
+					}
+                    
                      // Add New Pet:
                     array_push(ntte_pet, other);
                     with(other){
                     	leader = other;
                     	direction = point_direction(x, y, other.x, other.y);
-
+                    	
 	                     // Found Stat:
 	                    if(stat_found){
 	                    	stat_found = false;
 	                    	stat.found++;
 	                    }
                     }
-
+                    
                      // Effects:
                     with(instance_create(x, y, WepSwap)){
                         sprite_index = sprHealFX;

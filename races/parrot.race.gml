@@ -449,9 +449,8 @@
     charm_hplink_hud_hp = array_create(2, 0);
     charm_hplink_hud_hp_lst = 0;
 
-     // Pets:
-    if("ntte_pet" not in self) ntte_pet = [noone];
-    while(array_length(ntte_pet) < 2) array_push(ntte_pet, noone);
+     // Extra Pet Slot:
+    ntte_pet_max = mod_variable_get("mod", "ntte", "pet_max") + 1;
     
      // Perching Parrot:
     parrot_bob = [0, 1, 1, 0];
@@ -469,10 +468,10 @@
 #define game_start
     with(instances_matching(Player, "race", mod_current)){
     	if(fork()){
-		    wait 0;
-	
-		     // Starter Pet + Extra Pet Slot:
-		    if(instance_exists(self)){
+		    while(instance_exists(self) && "ntte_pet" not in self) wait 0;
+		    
+		     // Parrot Pet:
+		    if(instance_exists(self) && array_length(ntte_pet) > 0){
 		        with(Pet_spawn(x, y, "Parrot")){
 		            leader = other;
 		            visible = false;

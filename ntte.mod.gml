@@ -299,7 +299,8 @@
 		global.mouse_x_previous = array_create(maxp);
 		global.mouse_y_previous = array_create(maxp);
 		
-	 // Pet Map Icons:
+	 // Pets:
+	global.pet_max = 1;
 	global.petMapicon = array_create(maxp, []);
 	global.petMapiconPause = 0;
 	global.petMapiconPauseForce = 0;
@@ -384,12 +385,13 @@
 
 #define game_start
 	 // Reset:
-    global.mapArea = [];
+	global.pet_max = 1;
     for(var i = 0; i < array_length(global.petMapicon); i++){
     	global.petMapicon[i] = [];
     }
-    with(UnlockCont) instance_destroy();
+    global.mapArea = [];
 	global.killsLast = GameCont.kills;
+    with(UnlockCont) instance_destroy();
 	
 	 // Reset Haste Hands:
     if(global.clock_fix){
@@ -1759,11 +1761,21 @@
 	    crownCamp = crown_current;
     }
     
-     // Pet Slots:
-    with(instances_matching(Player, "ntte_pet", null)) ntte_pet = [noone];
-	
-	 // Pet Map Icons:
+	 // Pets:
 	with(Player){
+		if("ntte_pet" not in self){
+			ntte_pet = [];
+		}
+		if("ntte_pet_max" not in self){
+			ntte_pet_max = global.pet_max;
+		}
+		
+		 // Slots:
+		while(array_length(ntte_pet) < ntte_pet_max){
+			array_push(ntte_pet, noone);
+		}
+		
+		 // Map Icons:
 		var _list = [];
 		with(ntte_pet) if(instance_exists(self)){
 			array_push(_list, pet_get_mapicon(mod_type, mod_name, pet));
