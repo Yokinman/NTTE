@@ -31,5 +31,11 @@
     with(instances_matching_ne(Player, "ntte_pet_max", null)) ntte_pet_max += (_num - global.last);
     global.last = _num;
     
+     // Sound:
+    if(instance_exists(SkillIcon)){
+        sound_play(sndMut);
+        sound_play_pitch(sndMutLuckyShot, 1.2);
+    }
+    
 #define skill_lose
     skill_take(0);
