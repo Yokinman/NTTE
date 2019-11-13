@@ -1286,7 +1286,7 @@
 				_floorDis = 48 + (32 * _spawnPed),
 				n = instance_nearest(_fx, _fy, Floor);
 				
-			if(!instance_exists(n) || point_distance(_fx, _fy, n.x, n.y) > sqrt(sqr(_floorDis) + sqr(_floorDis))){
+			if(!instance_exists(n) || abs(_fx - n.x) > _floorDis || abs(_fy - n.y) > _floorDis){
 				_num--;
 				
 				 // Main Loot:
@@ -1393,12 +1393,35 @@
 			with(instances_matching_gt(Floor, "id", _minID)){
 				scrFloorWalls();
 			}
+			var f = [];
 			with(instances_matching_gt(Wall, "id", _minID)){
 				GameCont.area = (chance(1, 2) ? other.area : _areaCurrent);
-				instance_create(x,      y,      Top);
-				instance_create(x - 16, y,      Top);
-				instance_create(x,      y - 16, Top);
-				instance_create(x - 16, y - 16, Top);
+				
+				 // TopSmalls:
+				if(array_length(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, instances_matching_lt(Floor, "id", _minID))) <= 0){
+					instance_create(x,      y,      Top);
+					instance_create(x - 16, y,      Top);
+					instance_create(x,      y - 16, Top);
+					instance_create(x - 16, y - 16, Top);
+				}
+				
+				 // Less Softlock:
+				else{
+					GameCont.area = other.area;
+					array_push(f, instance_create(x, y, FloorExplo));
+					instance_destroy();
+				}
+			}
+			
+			 // Even Less Softlock:
+			with(f){ // i dislike walls as objects
+				if(position_meeting(x - 16, y, Wall) && position_meeting(x, y - 16, Wall) && position_meeting(x + 16, y, Wall) && position_meeting(x, y + 16, Wall)){
+					with([instance_place(x - 16, y, Wall), instance_place(x, y - 16, Wall), instance_place(x + 16, y, Wall), instance_place(x, y + 16, Wall)]){
+						GameCont.area = ((id > _minID) ? other.area : _areaCurrent);
+						instance_create(x, y, FloorExplo);
+						instance_destroy();
+					}
+				}
 			}
 			
 			 // Cool Reveal:
@@ -1412,6 +1435,12 @@
 			GameCont.area = _areaCurrent;
 			instance_destroy();
 		}
+	}
+	
+#define BuriedVault_draw
+	draw_set_color(c_white);
+	with(layout) if(obj == Floor){
+		draw_rectangle(x, y, x + 32, y + 32, false);
 	}
 
 
