@@ -34,6 +34,7 @@
         ["areas/trench.area.gml",                   1 + _coop],
         ["races/parrot.race.gml",                   1 + _coop, "Characters"],
         ["skills/compassion.skill.gml",             1 + _coop, "Mutations"],
+        ["skills/reroll.skill.gml",                 1 + _coop],
         ["crowns/crime.crown.gml",                  1 + _coop, "Crowns"],
         ["weps/merge.wep.gml",                      1 + _coop, "Weapons"],
         ["weps/crabbone.wep.gml",                   1],

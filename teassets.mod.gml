@@ -790,7 +790,7 @@
         	
         //#endregion
 
-		//#region
+		//#region PALACE
         
         	//#region ENEMIES
         	m = "enemies/";
@@ -808,6 +808,23 @@
         	//#endregion
         	
 		//#endregion
+		
+		//#region VAULT
+		
+			//#region PROPS
+			p = "areas/Vault/";
+			VaultFlowerIdle 		= sprite(p + "sprVaultFlowerIdle",			4,	24, 24);
+			VaultFlowerHurt 		= sprite(p + "sprVaultFlowerHurt",			3,	24, 24);
+			VaultFlowerDead 		= sprite(p + "sprVaultFlowerDead",			6,	24, 24);
+			VaultFlowerWiltedIdle	= sprite(p + "sprVaultFlowerWiltedIdle",	1,	24, 24);
+			VaultFlowerWiltedHurt	= sprite(p + "sprVaultFlowerWiltedHurt",	3,	24, 24);
+			VaultFlowerWiltedDead	= sprite(p + "sprVaultFlowerWiltedDead",	6,	24, 24);
+			
+			VaultFlowerDebris		= sprite(p + "sprVaultFlowerDebris",		10, 4,	4);
+			VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris",	10, 4,	4);
+			
+			 // Reroll Skill:
+			RerollHUDSmall = sprite("skills/Reroll/sprRerollHudSmall", 1, 4, 4);
 
 		//#region CHESTS/PICKUPS
 		p = "chests/";
@@ -828,6 +845,9 @@
 	        BackpackCursed     = sprite(p + "sprBackpackCursed",     1, 8, 8, shn16);
 	        BackpackOpen       = sprite(p + "sprBackpackOpen",       1, 8, 8);
 	        BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen", 1, 8, 8);
+	        
+	         // Deceased Backpacker:
+	        Backpacker = sprite(p + "sprBackpacker", 3, 12, 12);
 
 			 // Bat/Cat Chests:
             BatChest              = sprite(p + "sprBatChest",              1, 10, 10, shn20);
@@ -869,6 +889,10 @@
 
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
+			
+			 // Hammerhead Pickup:
+			HammerHeadPickup		= sprite(p  + "sprHammerHeadPickup",		1, 5, 5, shn10);
+			HammerHeadPickupEffect	= sprite(p + "sprHammerHeadPickupEffect",	3, 16, 8);
 
              // Sunken Chest:
             SunkenChest 	= sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
@@ -978,7 +1002,7 @@
              // Octopus:
             p = m + "Trench/";
             PetOctoIcon     = sprite(p + "sprPetOctoIcon",      1,  7,  6);
-            PetOctoIdle     = sprite(p + "sprPetOctoIdle",     20, 12, 12);
+            PetOctoIdle     = sprite(p + "sprPetOctoIdle",     16, 12, 12);
             PetOctoHurt     = sprite(p + "sprPetOctoDodge",     3, 12, 12);
             PetOctoHide     = sprite(p + "sprPetOctoHide",     30, 12, 12);
             PetOctoHideIcon = sprite(p + "sprPetOctoHideIcon",  1,  7,  6);

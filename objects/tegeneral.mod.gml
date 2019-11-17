@@ -3153,7 +3153,6 @@
         nearwep = noone;
 		depth = 0; // Priority (0==WepPickup)
         pick = -1;
-        text = "";
         xoff = 0;
         yoff = 0;
         creator_visible_follow = true;
@@ -3205,7 +3204,7 @@
 		
 		 // Vars:
 		mask_index = mskBandit;
-		maxhealth = 45;
+		maxhealth = 55; // 45
 		raddrop = 16;
 		meleedamage = 2;
 		size = 2;
@@ -3259,7 +3258,7 @@
 	}
 	
 #define PortalGuardian_alrm1
-	alarm1 = 30 + random(30);
+	alarm1 = 20 + random(30);
 	
 	target = instance_nearest(x, y, Player);
 	
@@ -3269,7 +3268,7 @@
 		if(in_sight(target)){
 			 // Attack:
 			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
-				scrEnemyShoot("PortalGuardianBall", _targetDir, 6);
+				scrEnemyShoot("PortalGuardianBall", _targetDir, 9);
 				scrRight(_targetDir);
 				
 				 // Sound:

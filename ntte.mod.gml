@@ -1148,6 +1148,31 @@
         	
         case 100: /// CROWN VAULT
         	
+			 // Vault Flower:
+			var _potentialFloors = [];
+			with(Floor) if(!place_meeting(x, y, hitme)){
+				array_push(_potentialFloors, id);
+			}
+			with(instance_random(_potentialFloors)){
+				with(scrFloorFill(x, y, 3, 3)) if(instance_exists(self)){
+					with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, [Wall, TopSmall, Bones, TopPot])){
+						instance_delete(id);
+					}
+					scrFloorWalls();
+					with(Wall){
+						for(var _x = x - 16; _x <= x + 16; _x += 16){
+							for(var _y = y - 16; _y <= y + 16; _y += 16){
+								if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
+									instance_create(_x, _y, TopSmall);
+								}
+							}
+						}
+					}
+				}
+				
+				obj_create(x + 16, y + 8, "VaultFlower");
+			}
+        	
         	 // Top Spawns:
         	_topChance = 1/40;
         	_topSpawn = [
@@ -1489,6 +1514,9 @@
 
 			 // Flavor Corpse:
 			if(GameCont.area != 0){
+				obj_create((x + 16) + orandom(8), (y + 16) + irandom(8), "Backpacker");
+				
+				/*
 				with(instance_create(x + 16 + orandom(8), y + 16 + irandom(8), CorpseActive)){
 					image_xscale = choose(-1, 1);
 					sprite_index = sprMutant14Dead;
@@ -1499,6 +1527,7 @@
 						wep = "crabbone";
 					}
 				}
+				*/
 			}
 			
 			instance_create(x + 16, y + 16, PortalClear);
@@ -2007,6 +2036,15 @@
 				grow = 0;
 	    	}
 		}
+	}
+	
+	 // Goodbye, stupid mechanic:
+	with(instances_matching(instances_matching(Corpse, "sprite_index", sprIceFlowerDead), "no_reroll", null)) if(GameCont.area == 105 && position_meeting(x, y, Portal)){
+		GameCont.skillpoints--;
+		no_reroll = true;
+		
+		 // Give it back:
+		skill_set(mut_last_wish, 1);
 	}
 	
     if(DebugLag) trace_time("ntte_step");

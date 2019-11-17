@@ -8,9 +8,7 @@
     
     global.pickup_custom = [];
     
-	 // Max Special Pickups Per Level:
-	global.specialPickupsMax = 2;
-	global.specialPickups = global.specialPickupsMax;
+	game_start();
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -22,6 +20,17 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 #macro anim_end (image_index + image_speed_raw >= image_number)
+
+#define game_start
+	 // Special Pickups:
+	global.sPickupsMax = 4;
+	global.sPickupsInc = 1;
+	global.sPickupsNum = 1;
+	
+	 // Vault Flower:
+	global.vFlowerWilted = false;
+	global.vFlowerSkill = 0;
+	global.vFlowerIndex = 0;
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -189,6 +198,46 @@
 	 // Restore Strong Spirit:
 	if(instance_is(other, Player)) scrRestoreSpirit(other);
 
+
+#define Backpacker_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.Backpacker;
+		spr_hurt = mskNone;
+		spr_dead = mskNone;
+		sprite_index = spr_idle;
+		image_index = irandom(image_number);
+		image_speed = 0;
+		spr_shadow_y = -2;
+		
+		 // Sounds:
+		snd_dead = sndHitRock;
+		snd_dead = sndHitRock;
+		
+		 // Vars:
+		mask_index = mskBandit;
+		my_health = 1;
+		raddrop = 2;
+		size = 1;
+		team = 1;
+		weps = ["crabbone"];
+		
+		return id;
+	}
+	
+#define Backpacker_death
+	repeat(8) scrFX(x, y, [random(360), random(4)], Dust);
+	repeat(6) with(scrFX(x, y, [random(360), 2 + random(3)], Shell)){
+		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
+		image_index = 0;
+		image_speed = 0;
+	}
+	
+	 // with(weps) was erroring :(
+	for(var i = 0; i < array_length(weps); i++){
+		var w = weps[i];
+		with(instance_create(x, y, WepPickup)) wep = w;
+	}
 
 #define BackpackPickup_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -1600,6 +1649,62 @@
     }
 
 
+#define HammerHeadPickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = spr.HammerHeadPickup;
+		spr_open = -1;
+		spr_fade = -1;
+		
+		 // Sounds:
+		snd_open = sndHammerHeadProc;
+		snd_fade = sndHammerHeadEnd;
+		
+		 // Vars:
+		mask_index = mskPickup;
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
+		pull_delay = 9;
+		num = 10 + (crown_current == crwn_haste);
+		
+		 // Events:
+		on_open = script_ref_create(HammerHeadPickup_open);
+		on_fade = script_ref_create(HammerHeadPickup_fade);
+		
+		return id;
+	}
+	
+#define HammerHeadPickup_draw
+	draw_sprite(spr.HammerHeadPickupEffect, (current_frame * current_time_scale * 0.4), x, y);
+	
+#define HammerHeadPickup_open
+	 // Determine Handouts:
+	var _inst = other;
+	if(!instance_is(other, Player)) _inst = Player;
+
+	 // Hammer Time:
+	var _num = num;
+	with(_inst){
+		hammerhead += _num;
+		
+		 // Text:
+		with(instance_create(x, y, PopupText)){
+			var _color = c_yellow;
+			text = `+${_num} @(color:${_color})HAMMERHEAD`;
+		}
+	}
+	
+	sound_play(sndLuckyShotProc);
+	sleep(20); // i am karmelyth now
+	
+	instance_create(x, y, Hammerhead);
+	
+#define HammerHeadPickup_fade
+	instance_create(x, y, Hammerhead);
+	repeat(1 + irandom(2)) scrFX(x, y, [random(360), random(2)], Smoke);
+	
+	sound_play_hit(sndBurn, 0.4);
+
 #define HarpoonPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -2247,6 +2352,7 @@
 		pull_spd = 4;
 		pull_delay = 30;
         wave = random(90);
+        time = 90 + random(30);
         num = 1 + (crown_current == crwn_haste); // haste confirmed epic
         
          // Events:
@@ -2305,7 +2411,9 @@
 
 #define SpiritPickup_fade
     instance_create(x, y, SmallChestFade);
-    instance_create(x, y, StrongSpirit);
+    for(var i = 0; i < num; i++){
+    	instance_create(x, (y + 3) - (i * 7), StrongSpirit);
+    }
     
 #define SpiritPickup_pull
 	return (pull_delay <= 0);
@@ -2554,6 +2662,158 @@
 	
 	
 /// Mod Events
+
+#define VaultFlower_create(_x, _y)
+	var a = [],
+		i = 0;
+		
+	while(skill_get_at(i) != null){
+		var c = skill_get_at(i);
+		if(c != mut_patience && c != "reroll"){
+			array_push(a, c);
+		}
+		i++;
+	}
+	
+	 // Determine Target Skill:
+	var w = (global.vFlowerWilted || array_length(a) <= 0),
+		s = mut_last_wish;
+	
+	if(!w && skill_get(mut_last_wish) <= 0){
+		s = a[irandom(array_length(a) - 1)];
+	}
+	
+	 // HUD Icon:
+	var _skillImg = sprSkillIconHUD,
+		_skillInd = real(s);
+	if(is_string(s)) _skillImg = mod_script_call("skill", s, "skill_icon");
+	
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		VaultFlower_sprites(w);
+		
+		 // Sounds:
+		snd_hurt = sndHitPlant;
+		snd_dead = sndMoneyPileBreak;
+		
+		 // Vars:
+		mask_index = mskBigSkull;
+		maxhealth = 30;
+		size = 2;
+		skill = s;
+		wilted = w;
+		pickup_indicator = noone;
+		if(!w){
+			pickup_indicator = scrPickupIndicator("  REROLL");
+			with(pickup_indicator){
+				mask_index = mskLast;
+				xoff = -8;
+				yoff = -10;
+				icon = {sprite: _skillImg, index: _skillInd};
+				on_meet = script_ref_create(VaultFlower_PickupIndicator_meet);
+			}
+		}
+		
+		return id;
+	}
+	
+#define VaultFlower_sprites(_wilted)
+	var w = (_wilted ? "Wilted" : "");
+	with(["Idle", "Hurt", "Dead"]){
+		var s = self;
+		variable_instance_set(other, "spr_" + string_lower(s), variable_instance_get(spr, "VaultFlower" + w + s));
+	}
+	
+#define VaultFlower_step
+	 // Stay Put:
+	x = xstart;
+	y = ystart;
+	
+	if(!wilted){
+		if(!global.vFlowerWilted){
+			
+			 // Effects:
+			if(chance_ct(1, 7)) instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle).depth = depth - 1;
+			
+			 // Interact:
+			if(instance_exists(pickup_indicator) && pickup_indicator.pick != -1){
+				global.vFlowerWilted = true;
+				global.vFlowerSkill = skill;
+				
+				skill_set(skill, 0);
+				skill_set("reroll", 1);
+				
+				with(GameCont) skillpoints++;
+				
+				var i = 0;
+				while(skill_get_at(i) != null){
+					if(skill_get_at(i) == "reroll") global.vFlowerIndex = i;
+					i++;
+				}
+			}
+		}
+		
+		 // Wilt:
+		if(global.vFlowerWilted){
+			wilted = true;
+			
+			VaultFlower_sprites(true);
+			instance_delete(pickup_indicator);
+			
+			global.vFlowerWilted = false;
+		}
+	}
+	
+	 // Wilted Effects:
+	else if(chance_ct(1, 120)) scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0);
+	
+	 // Hurt Effects:
+	if(sprite_index == spr_hurt && image_index == image_speed) scrVaultFlowerDebris(x, y, direction + orandom(45), 3 + random(4));
+
+#define VaultFlower_death
+
+	 // Effects:
+	repeat(8) scrVaultFlowerDebris(x, y, random(360), random(4));
+	repeat(4) scrVaultFlowerDebris(x, y, direction + orandom(45), 3 + random(4));
+	
+	for(var i = 0; i < 360; i += 360 / 3){
+		var d = direction + i;
+		with(instance_create(x, y, AcidStreak)){
+			sprite_index = spr.WaterStreak;
+			
+			direction	= d;
+			image_angle = d;
+		}
+	}
+	
+	
+	 // Secret:
+	if(!wilted){
+		Pet_spawn(x, y, "THX SPRITE FLOWERPET"); // thx sprite flowerpet
+	}
+	
+#define VaultFlower_PickupIndicator_meet
+	script_bind_draw(VaultFlower_PickupIndicator_icon, -100, id, icon, other.index);
+	return true;
+	
+#define VaultFlower_PickupIndicator_icon(_id, _icon, _index)
+	if(player_find_local_nonsync() == _index) with(_id) draw_sprite(_icon.sprite, _icon.index, x - xoff, (y - 13) + yoff);
+	instance_delete(id);
+	
+#define scrVaultFlowerDebris(_x, _y, _dir, _spd)
+	with(instance_create(_x, _y, Feather)){
+		sprite_index = (other.wilted ? spr.VaultFlowerWiltedDebris : spr.VaultFlowerDebris);
+		image_index = irandom(image_number - 1);
+		image_angle = orandom(30);
+		image_speed = 0;
+		depth = other.depth - 1;
+		rot *= 0.5;
+		// alarm0 = 60 + random(30);
+		motion_set(_dir, _spd);
+		
+		return id;
+	}
+
 #define step
     script_bind_step(post_step, 0);
     script_bind_end_step(end_step, 0);
@@ -2805,32 +3065,46 @@
 	}
 	
      // More:
+    var _minHard = 8;
     if(instance_exists(GenCont)){
-    	global.specialPickups = global.specialPickupsMax;
+    	with(instances_matching(GenCont, "ntte_special_pickup", null)){
+    		ntte_special_pickup = true;
+    		global.sPickupsNum = min(global.sPickupsNum + global.sPickupsInc, global.sPickupsMax, (GameCont.hard < _minHard));
+    	}
     }
 
 	else{
 		 // Spawning Overheal, Overstock, and Spirit Pickups:
-		with(instances_matching([AmmoPickup, HPPickup], "bonuspickup_spawn", null)){
-			bonuspickup_spawn = false;
+		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
+			ntte_special_pickup = false;
 			
-			if(GameCont.hard >= 8 && global.specialPickups > 0){
+			if(GameCont.hard >= _minHard && global.sPickupsNum > 0){
 				if(!position_meeting(xstart, ystart, ChestOpen)){
 					if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
+						var _sPickupsDec = 0;
+						
 						 // Spirit Pickups:
 						if(chance(1 + skill_get(mut_last_wish), 200)){
-							bonuspickup_spawn = true;
+							_sPickupsDec = 2;
 							obj_create(x, y, "SpiritPickup");
 						}
 						
-						 // Overheal/Overstock Pickups:
 						else if(chance(1, 50)){
-							bonuspickup_spawn = true;
-							obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
+							 // Hammerhead Pickups:
+							if(chance(2, 5)){
+								_sPickupsDec = 0.5;
+								obj_create(x, y, "HammerHeadPickup");
+							}
+							
+							 // Overheal / Overstock Pickups:
+							else{
+								_sPickupsDec = 1;
+								obj_create(x, y, (instance_is(id, HPPickup) ? "OverhealPickup" : "OverstockPickup"));
+							}
 						}
 						
-						if(bonuspickup_spawn){
-							global.specialPickups--;
+						if(_sPickupsDec > 0){
+							global.sPickupsNum -= _sPickupsDec;
 							instance_delete(id);
 						}
 					}
@@ -3022,6 +3296,11 @@
         draw_circle(x, y, 48 + random(2), false);
     }
     
+     // Vault Flower:
+    with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "wilted", false)){
+    	draw_circle(x, y, 64 + (sin(current_frame * 0.1) * 2), false);
+    }
+    
     if(DebugLag) trace_time("tepickups_draw_dark");
 
 #define draw_dark_end // Drawing Clears
@@ -3046,6 +3325,11 @@
      // Bonus Pickups:
     with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")) if(visible){
         draw_circle(x, y, 16 + random(2), false);
+    }
+    
+     // Vault Flower:
+    with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "wilted", false)){
+    	draw_circle(x, y, 24 + (sin(current_frame * 0.1) * 2), false);
     }
     
     if(DebugLag) trace_time("tepickups_draw_dark_end");
