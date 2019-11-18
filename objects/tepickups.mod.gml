@@ -2660,8 +2660,6 @@
 	
 	instance_destroy();
 	
-	
-/// Mod Events
 
 #define VaultFlower_create(_x, _y)
 	var a = [],
@@ -2814,6 +2812,8 @@
 		return id;
 	}
 
+	
+/// Mod Events
 #define step
     script_bind_step(post_step, 0);
     script_bind_end_step(end_step, 0);

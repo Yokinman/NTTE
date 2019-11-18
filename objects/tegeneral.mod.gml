@@ -1436,12 +1436,6 @@
 			instance_destroy();
 		}
 	}
-	
-#define BuriedVault_draw
-	draw_set_color(c_white);
-	with(layout) if(obj == Floor){
-		draw_rectangle(x, y, x + 32, y + 32, false);
-	}
 
 
 #define FlakBall_create(_x, _y)
