@@ -2760,7 +2760,7 @@
 			VaultFlower_sprites(true);
 			instance_delete(pickup_indicator);
 			
-			global.vFlowerWilted = false;
+			// global.vFlowerWilted = false;
 		}
 	}
 	
