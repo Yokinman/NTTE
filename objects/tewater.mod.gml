@@ -5847,7 +5847,7 @@
 
 /// Pits Yo
 #define pit_get(_x, _y)
-	return global.pit_grid[clamp(_x / 16, 0, global.pit_grid_w), clamp(_y / 16, 0, global.pit_grid_h)];
+	return global.pit_grid[# _x / 16, _y / 16];
 
 #define pit_set(_x, _y, _bool)
 	mod_script_call_nc("area", "trench", "pit_set", _x, _y, _bool);
@@ -5913,6 +5913,7 @@
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");

@@ -77,12 +77,11 @@
 			return true;
 
 		case "unlocktoggle":
-			var _unlock = !unlock_get(_arg);
-
-			unlock_set(_arg, _unlock);
-
-			scrUnlock("", "@w" + _arg + " " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
-			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
+			if(!unlock_call(_arg)){
+				unlock_set(_arg, false);
+				scrUnlock("", "@w" + _arg + " @rLOCKED", -1, -1);
+				sound_play(sndCursedChest);
+			}
 			return true;
 
 		case "charm":
@@ -704,6 +703,113 @@
     if(!lq_exists(sav, "unlock")) sav.unlock = {};
     lq_set(sav.unlock, _name, _value);
 
+#define unlock_get_name(_name)
+	 // Crown Unlock:
+	if(string_pos("crown", _name) == 1){
+		return string_upper(crown_get_name(string_lower(string_delete(_name, 1, 5)))) + "@s";
+	}
+	
+	 // General Unlock:
+	switch(_name){
+		case "coastWep":	return "BEACH GUNS";
+		case "oasisWep":	return "BUBBLE GUNS";
+		case "trenchWep":	return "TECH GUNS";
+		case "lairWep":		return "SAWBLADE GUNS";
+		case "lairCrown":	return crown_get_name("crime");
+		case "boneScythe":	return weapon_get_name("scythe");
+	}
+	
+	 // Default (Split Name by Capitalization):
+	var _split = [];
+	for(var i = 1; i <= string_length(_name); i++){
+		var c = string_char_at(_name, i);
+		if(i == 1 || string_lower(c) != c) array_push(_split, "");
+		_split[array_length(_split) - 1] += string_upper(c);
+	}
+	return array_join(_split, " ");
+	
+#define unlock_get_text(_name)
+	 // Crown Unlock:
+	if(string_pos("crown", _name) == 1){
+		return "FOR @wEVERYONE";
+	}
+	
+	 // General Unlock:
+	switch(_name){
+		case "parrot":		return "FOR REACHING COAST";
+		case "parrotB":		return "FOR BEATING THE AQUATIC ROUTE";
+		case "bee":			return "???";
+		case "beeB":		return "???";
+		case "coastWep":	return "GRAB YOUR FRIENDS";
+		case "oasisWep":	return "SOAP AND WATER";
+		case "trenchWep":	return "TERRORS FROM THE DEEP";
+		case "lairWep":		return "DEVICES OF TORTURE";
+		case "lairCrown":	return "STOLEN FROM THIEVES";
+		case "boneScythe":	return "A PACKAGE DEAL";
+	}
+	
+	return "";
+
+#define unlock_call(_name)
+	if(!unlock_get(_name)){
+		unlock_set(_name, true);
+		
+		 // General Unlocks:
+		var _type = {
+			"race" : ["parrot", "bee"],
+			"skin" : ["parrotB", "beeB"],
+			"pack" : ["coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown"],
+			"misc" : ["crownCrime", "boneScythe"]
+		};
+		for(var i = 0; i < array_length(_type); i++){
+			var	_packName = lq_get_key(_type, i),
+				_pack = lq_get_value(_type, i);
+				
+			if(array_exists(_pack, _name)){
+				var	_unlockName = unlock_get_name(_name),
+					_unlockText = unlock_get_text(_name);
+					
+				switch(_packName){
+					case "race":
+						scrUnlock(
+							_unlockName,
+							_unlockText,
+							mod_script_call("race", _name, "race_portrait", 0, 0),
+							mod_script_call("race", _name, "race_menu_confirm")
+						);
+						sound_play_pitchvol(sndGoldUnlock, 0.9, 0.9);
+						break;
+						
+					case "skin":
+						var	_race = string_copy(_name, 1, string_length(_name) - 1),
+							_skin = ord(string_char_at(_name, string_length(_name))) - 65;
+							
+						with(scrUnlock(
+							_unlockName,
+							_unlockText,
+							mod_script_call("race", _race, "race_portrait", 0, _skin),
+							mod_script_call("race", _race, "race_menu_confirm")
+						)){
+							nam[0] += "-SKIN";
+						}
+						sound_play(sndMenuBSkin);
+						break;
+						
+					case "pack":
+						scrUnlock(_unlockName, _unlockText, -1, -1);
+						sound_play(sndGoldUnlock);
+						break;
+						
+					default:
+						scrUnlock(_unlockName, _unlockText, -1, -1);
+				}
+			}
+		}
+		
+		return unlock_get(_name);
+	}
+	return false;
+
 #define stat_get(_name)
 	if(!is_array(_name)) _name = string_split(_name, "/");
 
@@ -1002,8 +1108,29 @@
     return mod_script_call("mod", "ntte", "scrBossIntro", _name, _sound, _music);
 
 #define scrUnlock(_name, _text, _sprite, _sound)
-    return mod_script_call("mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);
+     // Make Sure UnlockCont Exists:
+    if(array_length(instances_matching(CustomObject, "name", "UnlockCont")) <= 0){
+    	obj_create(0, 0, "UnlockCont");
+    }
 
+     // Add New Unlock:
+    var _unlock = {
+        "nam" : [_name, _name], // [splash popup, gameover popup]
+        "txt" : _text,
+        "spr" : _sprite,
+        "img" : 0,
+        "snd" : _sound
+	};
+
+    with(instances_matching(CustomObject, "name", "UnlockCont")){
+        if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
+        	splash_delay = 40;
+        }
+        array_push(unlock, _unlock);
+    }
+
+    return _unlock;
+    
 #define scrTopDecal(_x, _y, _area)
     _area = string(_area);
     var _topDecal = {

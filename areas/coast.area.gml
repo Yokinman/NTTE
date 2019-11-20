@@ -218,17 +218,8 @@
 		with(script_bind_draw(swimtop_draw, -1)) name = script[2];
 	}
 
-     // who's that bird? \\
-    if(!unlock_get("parrot")){
-        unlock_set("parrot", true); // It's a secret yo
-        scrUnlock(
-        	"PARROT",
-        	"FOR REACHING COAST",
-        	spr.Parrot[0].Portrait,
-        	mod_script_call("race", "parrot", "race_menu_confirm")
-        );
-        sound_play_pitchvol(sndGoldUnlock, 0.9, 0.9);
-    }
+     // who's that bird?
+    unlock_call("parrot");
 
 	 // Reset Surfaces:
 	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
@@ -1449,6 +1440,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");

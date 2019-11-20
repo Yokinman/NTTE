@@ -5,10 +5,10 @@
         "ntte.mod.gml", "petlib.mod.gml",
         "areas/template.gml", "areas/coast.area.gml", "areas/oasis.area.gml", "areas/pizza.area.gml", "areas/lair.area.gml", "areas/trench.area.gml",
         "objects/template.gml", "objects/tegeneral.mod.gml", "objects/tedesert.mod.gml", "objects/tecoast.mod.gml", "objects/tewater.mod.gml", "objects/tesewers.mod.gml", "objects/tescrapyard.mod.gml", "objects/tecaves.mod.gml", "objects/tepickups.mod.gml",
-        "races/parrot.race.gml",
+        "races/template.gml", "races/parrot.race.gml", "races/bee.race.gml",
         "weps/merge.wep.gml"
     ]){
-        script_set(self, "mod", "telib", "scrBossIntro", ["_name", "_sound", "_music"], "return", "");
+        script_set(self, "mod", "telib", "unlock_call", ["_name"], "return", "_nc");
         //script_remove(self, "scrRadDrop");
         
         //script_remove(self, "obj_create");
