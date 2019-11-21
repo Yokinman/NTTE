@@ -150,11 +150,11 @@
 							"list" : [
 								{	name : "AREA UNLOCKS",
 									list : [
-										["BEACH GUNS",		"coastWep",		["harpoon launcher.wep", "net launcher.wep", "trident.wep"]],
-										["BUBBLE GUNS",		"oasisWep",		["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
-										["TECH GUNS",		"trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
-										["SAWBLADE GUNS",	"lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
-										["CROWN OF CRIME",	"lairCrown",	["crime.crown"]]
+										["coastWep",	["harpoon launcher.wep", "net launcher.wep", "trident.wep"]],
+										["oasisWep",	["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
+										["trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
+										["lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
+										["lairCrown",	["crime.crown"]]
 										]
 									},
 								{	name : "MISC",
@@ -298,7 +298,7 @@
 		
 		global.mouse_x_previous = array_create(maxp);
 		global.mouse_y_previous = array_create(maxp);
-		
+	
 	 // Pets:
 	global.pet_max = 1;
 	global.petMapicon = array_create(maxp, []);
@@ -337,8 +337,6 @@
 
 #macro cMusic	 global.current.mus
 #macro cAmbience global.current.amb
-
-#macro UnlockCont instances_matching(CustomObject, "name", "UnlockCont")
 
 #macro NTTEMenu			global.menu
 #macro MenuOpen			NTTEMenu.open
@@ -391,7 +389,7 @@
     }
     global.mapArea = [];
 	global.killsLast = GameCont.kills;
-    with(UnlockCont) instance_destroy();
+    with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
 	
 	 // Reset Haste Hands:
     if(global.clock_fix){
@@ -467,11 +465,7 @@
     	
     		 // Unlock Custom Crowns:
     		if(array_exists(crwnList, crown_current)){
-    			var _unlock = "crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1);
-    			if(!unlock_get(_unlock)){
-    				unlock_set(_unlock, true);
-    				scrUnlock(crown_get_name(crown_current) + "@s", "FOR @wEVERYONE", -1, -1);
-    			}
+    			unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
     		}
     		
     		 // Less Bones:
@@ -1988,26 +1982,17 @@
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
 			//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
 				var _packList = {
-					"coast"  : [["BEACH GUNS" 		, "GRAB YOUR FRIENDS"		, "Wep"		]],
-					"oasis"  : [["BUBBLE GUNS"		, "SOAP AND WATER"			, "Wep"		]],
-					"trench" : [["TECH GUNS"  		, "TERRORS FROM THE DEEP"	, "Wep"		]],
-					"lair"	 : [["SAWBLADE GUNS"	, "DEVICES OF TORTURE"		, "Wep"		],
-								["CROWN OF CRIME"	, "STOLEN FROM THIEVES"		, "Crown"	]]
+					"coast"  : ["Wep"],
+					"oasis"  : ["Wep"],
+					"trench" : ["Wep"],
+					"lair"	 : ["Wep", "Crown"]
 				};
-
-				for(var i = 0; i < array_length(_packList); i++){
-					var _area = lq_get_key(_packList, i);
-					if(GameCont.area == _area){
-						if(GameCont.subarea >= area_get_subarea(_area)){
+				
+				with(GameCont){
+					if(is_string(area) && area in _packList){
+						if(subarea >= area_get_subarea(area)){
 							with(lq_get_value(_packList, i)){
-								var	_pack = self,
-									_unlock = _area + _pack[2];
-
-								if(!unlock_get(_unlock)){
-									unlock_set(_unlock, true);
-									sound_play(sndGoldUnlock);
-									scrUnlock(_pack[0], _pack[1], -1, -1);
-								}
+								unlock_call(other.area + self);
 							}
 						}
 					}
@@ -2019,11 +2004,7 @@
 	 // Game Win Crown Unlock:
 	with(SitDown) if(place_meeting(x, y, Player)){
 		if(array_exists(crwnList, crown_current)){
-			var _unlock = "crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1);
-			if(!unlock_get(_unlock)){
-				unlock_set(_unlock, true);
-				scrUnlock(crown_get_name(crown_current) + "@s", "FOR @wEVERYONE", -1, -1);
-			}
+			unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
 		}
 	}
 	
@@ -2167,9 +2148,7 @@
 						}
 						
 						 // Weapon Found:
-						else if(!unlock_get("found(" + _wep + ".wep)")){
-							unlock_set("found(" + _wep + ".wep)", true);
-						}
+						else unlock_call("found(" + _wep + ".wep)");
 					}
 				}
 				w++;
@@ -2178,9 +2157,7 @@
 		
 		 // Crown Found:
 		if(is_string(crown_current) && array_exists(crwnList, crown_current)){
-			if(!unlock_get("found(" + crown_current + ".crown)")){
-				unlock_set("found(" + crown_current + ".crown)", true);
-			}
+			unlock_call("found(" + crown_current + ".crown)");
 		}
 
 		 // Race Stats:
@@ -3105,7 +3082,7 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 						}
 						
 						 // Draw:
-						draw_sprite_ext(spr.Parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+						draw_sprite_ext(spr.Race.parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
 						_dx -= sprite_get_xoffset(_spr) * _xsc;
 						_dy -= sprite_get_yoffset(_spr) * _ysc;
 						for(var j = 0; j < array_length(_hud); j++){
@@ -4068,9 +4045,9 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 											var _slct = _statMenu.slct
 											
 											 // Auto Select First Unlocked:
-											if(!unlock_get(list[_slct[_index], 1])){
+											if(!unlock_get(list[_slct[_index], 0])){
 												for(var i = 0; i < array_length(list); i++){
-													if(unlock_get(list[i, 1])){
+													if(unlock_get(list[i, 0])){
 														_slct[_index] = i;
 														break;
 													}
@@ -4083,15 +4060,15 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 												
 											while(s != 0){
 												_slctSwap = (_slctSwap + s + array_length(list)) % array_length(list);
-												if(unlock_get(list[_slctSwap, 1]) || _slctSwap == _slct[_index]){
+												if(unlock_get(list[_slctSwap, 0]) || _slctSwap == _slct[_index]){
 													break;
 												}
 											}
 											
 											with(list){
-												var	_unlock = unlock_get(self[1]),
-													_unlockList = self[2],
-													_name = (_unlock ? self[0] : "LOCKED"),
+												var	_unlock = unlock_get(self[0]),
+													_unlockList = self[1],
+													_name = (_unlock ? mod_script_call_nc("mod", "telib", "unlock_get_name", self[0]) : "LOCKED"),
 													_selected = (_unlock && _slct[_index] == array_find_index(other.list, self)),
 													_hover = false;
 													
@@ -4566,30 +4543,6 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 			instance_destroy();
 		}
 	}
-
-#define scrUnlock(_name, _text, _sprite, _sound)
-     // Make Sure UnlockCont Exists:
-    if(array_length(UnlockCont) <= 0){
-    	obj_create(0, 0, "UnlockCont");
-    }
-
-     // Add New Unlock:
-    var u = {
-        nam : [_name, _name], // [splash popup, gameover popup]
-        txt : _text,
-        spr : _sprite,
-        img : 0,
-        snd : _sound
-	};
-
-    with(UnlockCont){
-        if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
-        	splash_delay = 40;
-        }
-        array_push(unlock, u);
-    }
-
-    return u;
 
 #define loadout_behind
     instance_destroy();
@@ -5149,6 +5102,8 @@ var _pos = argument_count > 3 ? argument[3] : undefined;
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
+#define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
 #define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);

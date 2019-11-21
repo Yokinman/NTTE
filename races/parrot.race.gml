@@ -148,11 +148,13 @@
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
 /// General
-#define race_name
-	return "PARROT";
-
-#define race_text
-	return "MANY FRIENDS#@rCHARM ENEMIES";
+#define race_name			return "PARROT";
+#define race_text			return "MANY FRIENDS#@rCHARM ENEMIES";
+#define race_lock			return "REACH @1(sprInterfaceIcons)1-1";
+#define race_tb_text		return "@wPICKUPS @sGIVE @rFEATHERS@s";
+#define race_portrait(p, b)	return race_sprite_raw("Portrait", b);
+#define race_mapicon(p, b)	return race_sprite_raw("Map",      b);
+#define race_avail			return unlock_get(mod_current);
 
 #define race_ttip
     if(GameCont.level >= 10 && chance(1, 5)){
@@ -161,21 +163,21 @@
     else{
         return choose("HITCHHIKER", "BIRDBRAIN", "PARROT IS AN EXPERT TRAVELER", "WIND UNDER MY WINGS", "PARROT LIKES CAMPING", "MACAW WORKS TOO", "CHESTS GIVE YOU @rFEATHERS@s");
     }
-
+    
 #define race_sprite(_spr)
     var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
     switch(_spr){
-        case sprMutant1Idle:        return spr.Parrot[b].Idle;
-        case sprMutant1Walk:        return spr.Parrot[b].Walk;
-        case sprMutant1Hurt:        return spr.Parrot[b].Hurt;
-        case sprMutant1Dead:        return spr.Parrot[b].Dead;
-        case sprMutant1GoSit:       return spr.Parrot[b].GoSit;
-        case sprMutant1Sit:         return spr.Parrot[b].Sit;
-        case sprFishMenu:           return spr.Parrot[b].Idle;
-        case sprFishMenuSelected:   return spr.Parrot[b].MenuSelected;
-        case sprFishMenuSelect:     return spr.Parrot[b].Idle;
-        case sprFishMenuDeselect:   return spr.Parrot[b].Idle;
-        case sprChickenFeather:     return spr.Parrot[b].Feather;
+        case sprMutant1Idle:        return race_sprite_raw("Idle",         b);
+        case sprMutant1Walk:        return race_sprite_raw("Walk",         b);
+        case sprMutant1Hurt:        return race_sprite_raw("Hurt",         b);
+        case sprMutant1Dead:        return race_sprite_raw("Dead",         b);
+        case sprMutant1GoSit:       return race_sprite_raw("GoSit",        b);
+        case sprMutant1Sit:         return race_sprite_raw("Sit",          b);
+        case sprFishMenu:           return race_sprite_raw("Idle",         b);
+        case sprFishMenuSelected:   return race_sprite_raw("MenuSelected", b);
+        case sprFishMenuSelect:     return race_sprite_raw("Idle",         b);
+        case sprFishMenuDeselect:   return race_sprite_raw("Idle",         b);
+        case sprChickenFeather:     return race_sprite_raw("Feather",      b);
     }
     return mskNone;
 
@@ -195,15 +197,14 @@
 		case sndMutant1Thrn: return -1;
 	}
 	return -1;
-
-
-/// Lock Status
-#define race_avail
-    return unlock_get("parrot");
-
-#define race_lock
-    return "REACH @1(sprInterfaceIcons)1-1";
-
+    
+#define race_sprite_raw(_spr, _skin)
+	var s = lq_defget(spr.Race, mod_current, []);
+	if(_skin >= 0 && _skin < array_length(s)){
+		return lq_defget(s[_skin], _spr, -1);
+	}
+	return -1;
+	
 
 /// Menu
 #define race_menu_select
@@ -257,15 +258,9 @@
 	return sndRavenLand;
 
 #define race_menu_button
-    sprite_index = spr.Parrot[0].Select;
+    sprite_index = race_sprite_raw("Select", 0);
     image_index = !race_avail();
-
-#define race_portrait(p, _skin)
-	return spr.Parrot[_skin].Portrait;
-
-#define race_mapicon(p, _skin)
-    return spr.Parrot[_skin].Map;
-
+    
 
 /// Skins
 #define race_skins
@@ -276,7 +271,7 @@
 	}
 	else{ // Fix co-op bugginess
 		var n = 1;
-		while(unlock_get("parrot" + chr(65 + n))) n++;
+		while(unlock_get(mod_current + chr(65 + n))) n++;
 		return n;
 	}
 
@@ -285,7 +280,7 @@
 	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
 	if(_playersActive <= 1){
 		if(_skin == 0) return true;
-    	return unlock_get("parrot" + chr(65 + real(_skin)));
+    	return unlock_get(mod_current + chr(65 + real(_skin)));
 	}
 	else{ // Fix co-op bugginess
 		return true;
@@ -299,16 +294,11 @@
         case 0: return "EDIT THE SAVE FILE LMAO";
         case 1: return "COMPLETE THE#AQUATIC ROUTE";
     }
-
+    
 #define race_skin_button(_skin)
-    sprite_index = spr.Parrot[_skin].Loadout;
+    sprite_index = race_sprite_raw("Loadout", _skin);
     image_index = !race_skin_avail(_skin);
-
-
-/// Throne Butt
-#define race_tb_text
-	return "@wPICKUPS @sGIVE @rFEATHERS@s";
-
+    
 
 /// Ultras
 #macro ultFeath 1
@@ -327,14 +317,14 @@
         case ultShare: return "@wFEATHERED @sENEMIES#SHARE @rHEALTH @sWITH YOU";
     }
     return "";
-
+    
 #define race_ultra_button(_ultra)
-	sprite_index = spr.Parrot[0].UltraIcon;
+	sprite_index = race_sprite_raw("UltraIcon", 0);
 	image_index = _ultra - 1; // why are ultras 1-based bro
-
+	
 #define race_ultra_icon(_ultra)
-	return lq_get(spr.Parrot[0], "UltraHUD" + chr(64 + _ultra));
-
+	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);
+	
 #define race_ultra_take(_ultra, _state)
 	with(instances_matching(Player, "race", mod_current)){
 		switch(_ultra){
@@ -347,13 +337,13 @@
 					feather_ammo = feather_ammo_max;
 				}
 				break;
-	
+				
 			case ultShare:
 				// Look elsewhere bro
 				break;
 		}
 	}
-
+	
 	 // Ultra Sound:
 	if(_state && instance_exists(EGSkillIcon)){
 		sound_play(sndBasicUltra);
@@ -384,7 +374,7 @@
 	                exit;
 				}
 				break;
-
+				
 			case ultShare:
 				if(fork()){
 					sound_play_pitch(sndCoopUltraA, 2);
@@ -405,7 +395,7 @@
 				break;
 		}
 	}
-
+	
 
 #define create
 	 // Random lets you play locked characters: (Remove once 9941+ gets stable build)
@@ -432,6 +422,12 @@
 	snd_cptn = race_sound(sndMutant1Cptn);
 	snd_thrn = race_sound(sndMutant1Thrn);
 	footkind = 2; // Pla
+    
+     // Perching Parrot:
+    parrot_bob = [0, 1, 1, 0];
+    if(bskin) for(var i = 0; i < array_length(parrot_bob); i++){
+    	parrot_bob[i] += 3;
+    }
 
      // Feather Related:
     feather_num = 12;
@@ -451,12 +447,6 @@
 
      // Extra Pet Slot:
     ntte_pet_max = mod_variable_get("mod", "ntte", "pet_max") + 1;
-    
-     // Perching Parrot:
-    parrot_bob = [0, 1, 1, 0];
-    if(bskin) for(var i = 0; i < array_length(parrot_bob); i++){
-    	parrot_bob[i] += 3;
-    }
     
      // Re-Get Ultras When Revived:
     for(var i = 0; i < ultra_count(mod_current); i++){
@@ -1375,6 +1365,7 @@
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");

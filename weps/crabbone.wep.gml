@@ -143,10 +143,7 @@
                 variable_instance_set(id, b + "wep", _wep);
                 
                  // Unlock:
-                if(!unlock_get("boneScythe")){
-                    unlock_set("boneScythe", true);
-                    scrUnlock(weapon_get_name(_wep), "A PACKAGE DEAL", -1, -1);
-                }
+                unlock_call("boneScythe");
                 
                  // Drop Spare Bones:
                 w.ammo -= 10;
@@ -232,8 +229,7 @@
 #define wepfire_init(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepfire_init", _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_draw", _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   "mod", "telib", "wepammo_fire", _wep);
-#define unlock_get(_name)                                                               return  mod_script_call(   "mod", "telib", "unlock_get", _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
 #define stat_get(_name)                                                                 return  mod_script_call(   "mod", "telib", "stat_get", _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "ntte", "scrUnlock", _name, _text, _sprite, _sound);

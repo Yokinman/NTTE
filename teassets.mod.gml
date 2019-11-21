@@ -907,41 +907,80 @@
 		//#endregion
 
         //#region RACES
-    	p = "races/Parrot/";
+    	m = "races/";
     		
-    		 // Parrot:
-            Parrot = array_create(2);
-            for(var i = 0; i < array_length(Parrot); i++){
-                var _sprt = [
-                        ["Loadout",       2, 16,  16, true],
-                        ["Map",           1, 10,  10, true],
-                        ["Portrait",      1, 20, 221, true],
-                        ["Select",        2,  0,   0, false],
-                        ["UltraIcon",	  2, 12,  16, false],
-                        ["UltraHUDA",	  1,  8,   9, false],
-                        ["UltraHUDB",	  1,  8,   9, false],
-                        ["Idle",          4, 12,  12, true],
-                        ["Walk",          6, 12,  12, true],
-                        ["Hurt",          3, 12,  12, true],
-                        ["Dead",          6, 12,  12, true],
-                        ["GoSit",         3, 12,  12, true],
-                        ["Sit",           1, 12,  12, true],
-                        ["MenuSelected", 10, 16,  16, false],
-                        ["Feather",       1,  3,   4, true],
-                        ["FeatherHUD",    1,  5,   5, false]
-                    ];
-
-                Parrot[i] = {};
-                with(_sprt){
-                    var _name = self[0],
-                        _img  = self[1],
-                        _x    = self[2],
-                        _y    = self[3],
-                        _hasB = self[4];
-
-                    lq_set(other.Parrot[i], _name, sprite(p + "sprParrot" + (_hasB ? ["", "B"][i] : "") + _name + "", _img, _x, _y));
-                }
+    		var _list = {
+    			"parrot" : {
+    				skin : 2,
+    				sprt : [
+	                    ["Loadout",       2, 16,  16, true],
+	                    ["Map",           1, 10,  10, true],
+	                    ["Portrait",      1, 20, 221, true],
+	                    ["Select",        2,  0,   0, false],
+	                    ["UltraIcon",	  2, 12,  16, false],
+	                    ["UltraHUDA",	  1,  8,   9, false],
+	                    ["UltraHUDB",	  1,  8,   9, false],
+	                    ["Idle",          4, 12,  12, true],
+	                    ["Walk",          6, 12,  12, true],
+	                    ["Hurt",          3, 12,  12, true],
+	                    ["Dead",          6, 12,  12, true],
+	                    ["GoSit",         3, 12,  12, true],
+	                    ["Sit",           1, 12,  12, true],
+	                    ["MenuSelected", 10, 16,  16, false],
+	                    ["Feather",       1,  3,   4, true],
+	                    ["FeatherHUD",    1,  5,   5, false]
+	    				]
+	    			},
+	    			
+                "bee" : {
+                	skin : 2,
+                	sprt : [
+	                    ["Loadout",   2, 16,  16, true],
+	                    ["Map",       1, 10,  10, true],
+	                    ["Portrait",  1, 40, 243, true],
+	                    ["Select",    2,  0,   0, false],
+	                    ["UltraIcon", 2, 12,  16, false],
+	                    ["UltraHUDA", 1,  8,   9, false],
+	                    ["UltraHUDB", 1,  8,   9, false],
+	                    ["Idle",      8, 12,  12, true],
+	                    ["Walk",      6, 12,  12, true],
+	                    ["Hurt",      3, 12,  12, true],
+	                    ["Dead",      6, 12,  12, true],
+	                    ["GoSit",     3, 12,  12, true],
+	                    ["Sit",       1, 12,  12, true]
+	                	]
+	                }
+    		};
+    		
+    		Race = {};
+			for(var i = 0; i < lq_size(_list); i++){
+				var	_race = lq_get_key(_list, i),
+					_info = lq_get_value(_list, i);
+					
+				lq_set(Race, _race, []);
+				
+				for(var b = 0; b < _info.skin; b++){
+					var	_sprt = {},
+						n = string_upper(string_char_at(_race, 0)) + string_delete(_race, 1, 1);
+						
+					p = m + n + "/spr" + n;
+					
+					with(lq_get_value(_list, i).sprt){
+						var _name = self[0],
+							_img  = self[1],
+							_x    = self[2],
+							_y    = self[3],
+							_hasB = self[4];
+							
+						lq_set(_sprt, _name, sprite(p + ((_hasB && b > 0) ? chr(65 + b) : "") + _name, _img, _x, _y));
+					}
+					
+					array_push(lq_get(Race, _race), _sprt);
+				}
             }
+            
+             // Parrot Charm:
+            p = m + "Parrot/";
             AllyBullet4			= sprite(p + "sprAllyBullet4",         2,  6,  8);
             AllyFlakBullet		= sprite(p + "sprAllyFlakBullet",      2,  8,  8);
             AllyReviveArea		= sprite(p + "sprAllyReviveArea",      4, 35, 45);
@@ -1166,8 +1205,8 @@
     
 	 // Mod Lists:
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
-    global.race = ["parrot"];
-    global.crwn = ["crime"];
+    global.race = ["parrot", "bee"];
+    global.crwn = ["crime", "bonus"];
     global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
     
      // Reminders:

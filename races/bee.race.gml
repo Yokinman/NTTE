@@ -1,10 +1,15 @@
 #define init
+	with(Loadout){
+		instance_destroy();
+		with(loadbutton) instance_destroy();
+	}
+	
     global.spr = mod_variable_get("mod", "teassets", "spr");
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.sav = mod_variable_get("mod", "teassets", "sav");
-
-    global.debug_lag = false;
+    
+	global.debug_lag = false;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -16,279 +21,203 @@
 
 #macro current_frame_active ((current_frame mod 1) < current_time_scale)
 
-#define area_subarea            return 1;
-#define area_next               return 3;
-#define area_music              return mus102;
-#define area_ambience           return amb102;
-#define area_background_color   return area_get_background_color(102);
-#define area_shadow_color       return area_get_shadow_color(102);
-#define area_darkness           return true;
-#define area_secret             return true;
+#define race_name			return "BEE";
+#define race_text			return "PASSIVE#ACTIVE";
+#define race_lock			return "???";
+#define race_tb_text		return "???";
+#define race_portrait(p, b)	return race_sprite_raw("Portrait", b);
+#define race_mapicon(p, b)	return race_sprite_raw("Map",      b);
+#define race_avail			return unlock_get(mod_current);
 
-#define area_name(_subarea, _loop)
-    return "2-@2(sprSlice:0)";
-
-#define area_text
-    return choose(choose("IT SMELLS NICE HERE", "HUNGER..."), mod_script_call("area", "lair", "area_text"));
-
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [
-        _lastx,
-        9
-    ];
-
-#define area_sprite(_spr)
+#define race_ttip
+    if(GameCont.level >= 10 && chance(1, 5)){
+        return choose("ULTRA TIP");
+    }
+    else{
+        return choose("BASIC TIP");
+    }
+    
+#define race_sprite(_spr)
+    var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
     switch(_spr){
-         // Floors:
-        case sprFloor1      : return sprFloor102;
-        case sprFloor1B     : return sprFloor102B;
-        case sprFloor1Explo : return sprFloor102Explo;
-
-         // Walls:
-        case sprWall1Trans  : return sprWall102Trans;
-        case sprWall1Bot    : return sprWall102Bot;
-        case sprWall1Out    : return sprWall102Out;
-        case sprWall1Top    : return sprWall102Top;
-
-         // Misc:
-        case sprDebris1     : return sprDebris102;
-        case sprDetail1     : return sprDetail102;
+        case sprMutant1Idle:		return race_sprite_raw("Idle",  b);
+        case sprMutant1Walk:		return race_sprite_raw("Walk",  b);
+        case sprMutant1Hurt:		return race_sprite_raw("Hurt",  b);
+        case sprMutant1Dead:		return race_sprite_raw("Dead",  b);
+        case sprMutant1GoSit:		return race_sprite_raw("GoSit", b);
+        case sprMutant1Sit:			return race_sprite_raw("Sit",   b);
+        case sprFishMenu:			return race_sprite_raw("Idle",  b);
+        case sprFishMenuSelected:	return race_sprite_raw("Walk",  b);
+        case sprFishMenuSelect:		return race_sprite_raw("Idle",  b);
+        case sprFishMenuDeselect:	return race_sprite_raw("Idle",  b);
+		case shd24:					return shd16;
     }
-
-#define area_setup
-    var _den = {
-        cols : 0,
-        rows : 0,
-        cols_max : 8,
-        rows_max : 6
-    };
-    turtle_den = _den;
-
-    goal = (_den.cols_max * _den.rows_max) + 2;
-    safespawn = false;
-
-    background_color = area_background_color();
-    BackCont.shadcol = area_shadow_color();
-    TopCont.darkness = area_darkness();
-    TopCont.fog = sprFog102;
-
-#define area_setup_floor(_explo)
-    if(!_explo){
-         // Fix Depth:
-        if(styleb) depth = 8;
-
-         // Footsteps:
-        material = (styleb ? 6 : 2);
-    }
-
-#define area_start
-    instance_delete(instances_matching(Wall, "", null)[0]);
-    obj_create(0, 0, "PortalPrevent");
-
-     // So much pizza:
-    with(Floor){
-        if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
-            styleb = true;
-            sprite_index = area_sprite(sprFloor1B);
-            area_setup_floor(false);
-        }
-    }
-    with(HPPickup) alarm0 *= 2;
-
-     // Turt Squad:
-    with(TV){
-        x += random(32);
-        xstart = x;
-
-        var c = [1, 2, 4],
-            a = random(360);
+    return mskNone;
     
-        for(var i = 0; i < array_length(c); i++){
-            var _dis = 20 + random(4),
-                _dir = a + (i * (360 / array_length(c))) + orandom(10);
+#define race_sound(_snd)
+	switch(_snd){
+		case sndMutant1Wrld: return -1;
+		case sndMutant1Hurt: return -1;
+		case sndMutant1Dead: return -1;
+		case sndMutant1LowA: return -1;
+		case sndMutant1LowH: return -1;
+		case sndMutant1Chst: return -1;
+		case sndMutant1Valt: return -1;
+		case sndMutant1Crwn: return -1;
+		case sndMutant1Spch: return -1;
+		case sndMutant1IDPD: return -1;
+		case sndMutant1Cptn: return -1;
+		case sndMutant1Thrn: return -1;
+	}
+	return -1;
     
-            with(obj_create(x + lengthdir_x(_dis, _dir), y + 64 + lengthdir_y(_dis, _dir), "TurtleCool")){
-                snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
-                scrRight(_dir + 180);
-            }
-        }
+#define race_sprite_raw(_spr, _skin)
+	var s = lq_defget(spr.Race, mod_current, []);
+	if(_skin >= 0 && _skin < array_length(s)){
+		return lq_defget(s[_skin], _spr, -1);
+	}
+	return -1;
+	
 
-         // The man himself:
-        with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
-            move_contact_solid(random(180), random_range(12, 64));
+/// Menu
+#define race_menu_select
+	return sndMutant1Slct;
+	
+#define race_menu_confirm
+	return sndMutant1Cnfm;
+	
+#define race_menu_button
+    sprite_index = race_sprite_raw("Select", 0);
+    image_index = !race_avail();
+    
 
-             // Visual:
-            spr_idle = sprRatIdle;
-            spr_walk = sprRatWalk;
-            spr_hurt = sprRatHurt;
-            spr_dead = sprRatDead;
-            sprite_index = spr_idle;
+/// Skins
+#define race_skins
+	var _playersActive = 0;
+	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	if(_playersActive <= 1){
+    	return 2;
+	}
+	else{ // Fix co-op bugginess
+		var n = 1;
+		while(unlock_get(mod_current + chr(65 + n))) n++;
+		return n;
+	}
+	
+#define race_skin_avail(_skin)
+	var _playersActive = 0;
+	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	if(_playersActive <= 1){
+		if(_skin == 0) return true;
+    	return unlock_get(mod_current + chr(65 + real(_skin)));
+	}
+	else{ // Fix co-op bugginess
+		return true;
+	}
+	
+#define race_skin_name(_skin)
+    if(race_skin_avail(_skin)){
+        return chr(65 + _skin) + " SKIN";
+    }
+    else switch(_skin){
+        case 0: return "EDIT THE SAVE FILE LMAO";
+        case 1: return "??";
+    }
+    
+#define race_skin_button(_skin)
+    sprite_index = race_sprite_raw("Loadout", _skin);
+    image_index = !race_skin_avail(_skin);
+    
 
-             // Sound:
-            snd_hurt = sndRatHit;
-            snd_dead = sndRatDie;
+/// Ultras
+#macro ultA 1
+#macro ultB 2
 
-             // Vars:
-            become = Rat;
-            right = 1;
-        }
+#define race_ultra_name(_ultra)
+    switch(_ultra){
+        case ultA: return "ULTRA A";
+        case ultB: return "ULTRA B";
+    }
+    return "";
+    
+#define race_ultra_text(_ultra)
+    switch(_ultra){
+        case ultA: return "???";
+        case ultB: return "???";
+    }
+    return "";
 
-         // Hungry Boy:
-        with(instance_random([PizzaBox, HealthChest, HPPickup])){
-            with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
-                snd_dead = sndTurtleDead3;
-                right = 1;
-            }
-        }
+#define race_ultra_button(_ultra)
+	sprite_index = race_sprite_raw("UltraIcon", 0);
+	image_index = _ultra - 1; // why are ultras 1-based bro
+
+#define race_ultra_icon(_ultra)
+	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);
+
+#define race_ultra_take(_ultra, _state)
+	 // Ultra Sound:
+	if(_state && instance_exists(EGSkillIcon)){
+		sound_play(sndBasicUltra);
+		
+		switch(_ultra){
+			case ultA:
+				break;
+
+			case ultB:
+				break;
+		}
+	}
+
+
+#define create
+	 // Random lets you play locked characters: (Remove once 9941+ gets stable build)
+	if(!unlock_get(mod_current)){
+		race = "fish";
+		player_set_race(index, race);
+		exit;
+	}
+	
+	 // Shadow:
+	spr_shadow = race_sprite(shd24);
+	spr_shadow_y = 7;
+	
+     // Sound:
+    snd_wrld = race_sound(sndMutant1Wrld);
+	snd_hurt = race_sound(sndMutant1Hurt);
+	snd_dead = race_sound(sndMutant1Dead);
+	snd_lowa = race_sound(sndMutant1LowA);
+	snd_lowh = race_sound(sndMutant1LowH);
+	snd_chst = race_sound(sndMutant1Chst);
+	snd_valt = race_sound(sndMutant1Valt);
+	snd_crwn = race_sound(sndMutant1Crwn);
+	snd_spch = race_sound(sndMutant1Spch);
+	snd_idpd = race_sound(sndMutant1IDPD);
+	snd_cptn = race_sound(sndMutant1Cptn);
+	snd_thrn = race_sound(sndMutant1Thrn);
+	footkind = 1; // Sho
+	
+     // Perching Parrot:
+    parrot_bob = [0];
+    
+     // Re-Get Ultras When Revived:
+    for(var i = 0; i < ultra_count(mod_current); i++){
+    	if(ultra_get(mod_current, i)){
+    		race_ultra_take(i, true);
+    	}
     }
 
-     // Spawn Stuff:
-    if(instance_exists(Player)) with(Player.id){
-         // Open Manhole:
-        obj_create(x, y, "PizzaManholeCover");
+#define step
+	if(DebugLag) trace_time();
+	
+	
+	
+	if(DebugLag) trace_time(mod_current + "_step");
 
-         // Door:
-        with(instance_nearest(x, y, Floor)){
-            var p = noone;
-            for(var i = -1; i <= 1; i += 2){
-                with(obj_create(x + 16 - (16 * i), y - 32 + 3, "CatDoor")){
-                    sprite_index = spr.PizzaDoor;
-                    image_angle = 90;
-                    image_yscale = i;
-                    y += 3;
-                    
-                     // Link Doors:
-                    partner = p;
-                    with(partner) partner = other;
-                    p = id;
-                }
-            }
-        }
-    }
-
-     // Light up specific things:
-    with(instances_matching([chestprop, RadChest], "", null)){
-        obj_create(x, y - 32, "CatLight");
-    }
-
-     // Cooler Pizza Box:
-    with(PizzaBox){
-        obj_create(x, y, "PizzaStack");
-        instance_delete(id);
-    }
-
-#define area_finish
-    lastarea = area;
-    lastsubarea = subarea;
-
-     // Area End:
-    if(subarea >= area_subarea()){
-        var n = area_next();
-        if(!is_array(n)) n = [n];
-        if(array_length(n) < 1) array_push(n, mod_current);
-        if(array_length(n) < 2) array_push(n, 1);
-        area = n[0];
-        subarea = n[1];
-    }
-
-     // Next Subarea: 
-    else subarea++;
-
-#define area_end_step
-    if(DebugLag) trace_time();
-
-     // Allow Portal:
-    if(instance_number(enemy) > 1){
-        with(instances_matching(CustomEnemy, "name", "PortalPrevent")){
-            instance_delete(id);
-        }
-    }
-
-     // Yummy HP:
-    with(instances_matching(HPPickup, "sprite_index", sprHP)){
-        sprite_index = sprSlice;
-        num = ceil(num / 2);
-    }
-
-    if(DebugLag) trace_time("pizza_area_end_step");
-
-#define area_effect(_vx, _vy)
-    var _x = _vx + random(game_width),
-        _y = _vy + random(game_height);
-
-     // Cheesy Drips:
-    var f = instance_nearest(_x, _y, Floor);
-    with(f) with(instance_create(x + random_range(8, 32), y + random_range(8, 32), Drip)){
-        sprite_index = sprCheeseDrip;
-    }
-
-    return random(120);
-
-#define area_make_floor
-    var _den = GenCont.turtle_den;
-    if(_den.cols <= 0){
-        x = xstart - 48;
-        instance_create(xstart, ystart - 32, Floor);
-    }
-    if(_den.rows <= 0){
-        y = ystart - 64;
-    }
-    direction = 90;
-    styleb = false;
-
-    instance_create(x, y, Floor);
-   
-     // Important Tiles:
-    var _tile = `${_den.cols},${_den.rows}`;
-    switch(_tile){
-         /// Corner Walls:
-        case "0,0": instance_create(x,      y + 16, Wall);  break;
-        case "0,5": instance_create(x,      y,      Wall);  break;
-        case "7,0": instance_create(x + 16, y + 16, Wall);  break;
-        case "7,5": instance_create(x + 16, y,      Wall);  break;
-
-        case "3,3": /// Toons Viewer
-            obj_create(x, y - 16, "PizzaTV");
-            break;
-
-        case "6,5": /// Sewage Hole
-            obj_create(x, y, "PizzaDrain");
-            break;
-    }
-
-    if(++_den.rows >= _den.rows_max){
-        x += 32;
-        _den.rows = 0;
-        if(++_den.cols >= _den.cols_max){
-            instance_destroy();
-        }
-    }
-    /*var _x = 10000 - 32,
-        _y = 10000,
-        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
-
-    styleb = 0;
-    scrFloorFill(_x, _y, 8, 6);*/
-
-#define area_pop_props
-    var _x = x + 16,
-        _y = y + 16,
-        _west = !position_meeting(x - 16, y, Floor),
-        _east = !position_meeting(x + 48, y, Floor),
-        _nort = !position_meeting(x, y - 16, Floor),
-        _sout = !position_meeting(x, y + 48, Floor);
-
-     // Gimme pizza:
-    if(!_nort && !_sout && !_west && _east){
-        repeat(irandom_range(1, 4)){
-            if(true || chance(2, 3)){
-                obj_create(_x + orandom(4), _y + orandom(4), choose("Pizza", PizzaBox, "PizzaChest"));
-            }
-            else{
-                top_create(_x + 16, _y, "PizzaStack", orandom(60), -1);
-            }
-        }
-    }
+#define cleanup
+	with(Loadout){
+		instance_destroy();
+		with(loadbutton) instance_destroy();
+	}
 
 
 /// Scripts
