@@ -118,7 +118,7 @@
 
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
@@ -1789,7 +1789,7 @@
 		_y1 = bbox_top - 16,
 		_x2 = bbox_right + 1,
 		_y2 = bbox_bottom + 1;
-
+		
 	for(var _x = _x1; _x <= _x2; _x += 16){
 		for(var _y = _y1; _y <= _y2; _y += 16){
 			if(_x == _x1 || _y == _y1 || _x == _x2 || _y == _y2){

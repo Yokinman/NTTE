@@ -258,6 +258,18 @@
     }
 
 
+#define Mantis_create
+	 // Visual:
+	
+	 // Vars:
+	
+#define Mantis_ttip
+	return ["ELEGANT", "FLORID"];
+	
+#define Mantis_step
+	 // Effects:
+	if(chance_ct(1, 30)) scrFX([x, 8], [y, 8], 0, CaveSparkle).depth = depth - 1;
+	
 #define Mimic_create
      // Visual:
     spr_open = spr.PetMimicOpen;
@@ -740,6 +752,14 @@
         }
 	}
 
+
+#define Salamander_create
+	 // Visual:
+	 
+	 // Vars:
+	 
+#define Salamander_ttip
+	return [""];
 
 #define Scorpion_create
      // Visual:
@@ -1939,6 +1959,162 @@
 
 
 /// Mod Events
+#define Weapon_create
+	 // Visual:
+	spr_spwn = spr.PetWeaponSpwn;
+	sprite_index = spr_spwn;
+	
+	 // Sounds:
+	snd_hurt = sndMimicHurt;
+	snd_dead = sndMimicDead;
+	 
+	 // Vars:
+	mask_index = mskFrogEgg;
+	maxhealth = scrBossHP(30); // set low for debug purposes
+	can_take = false;
+	hostile = true;
+	target = noone;
+	wep = wep_machinegun;
+	wep_visible = false;
+	wkick = 0;
+	gunangle = random(360);
+	pickup_indicator.visible = false;
+	
+	 // Sounds:
+	audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 1), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
+	audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
+	sound_play_hit(sndBigWeaponChest, 0);
+
+	
+#define Weapon_ttip
+	return ["MUTUAL RESPECT", "WALKING WEAPON"];
+	
+#define Weapon_step
+	 // Ally:
+	if(in_sight(leader)){
+		var _index = leader.index,
+			_leaderAim = point_direction(x, y, mouse_x[_index], mouse_y[_index]);
+		
+		if(button_pressed(_index, "fire")){
+			scrEnemyShoot(AllyBullet, _leaderAim, 8);
+			gunangle = _leaderAim;
+			wkick = 4;
+		}
+	}
+	
+	 // Effects:
+	if(wkick != 0) wkick -= sign(wkick);
+	
+#define Weapon_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	var h = (_spr != spr_hurt && nexthurt > current_frame),
+		b = (gunangle < 180);
+	
+	if(h) d3d_set_fog(true, _col, 0, 0);
+	
+	if(!b) draw_self_enemy();
+	if (wep_visible) draw_weapon(weapon_get_sprite(wep), x, y, gunangle, 0, wkick, ((gunangle > 90 && gunangle <= 270) ? -1 : 1), _col, _alp);
+	if(b) draw_self_enemy();
+	
+	if(h) d3d_set_fog(false, c_white, 0, 0);
+	
+#define Weapon_anim
+	if((sprite_index != spr_hurt && sprite_index != spr_spwn) || anim_end){
+		
+		 // Spawn Anim:
+		if(sprite_index == spr_spwn){
+			sprite_index = spr_idle;
+			
+			wep_visible = true;
+			instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
+			
+			scrBossIntro("PetWeapon", -1, -1);
+		}
+		
+        if(speed <= 0) sprite_index = spr_idle;
+        else sprite_index = spr_walk;
+	}
+	
+#define Weapon_alrm0(_leaderDir, _leaderDis)
+	alarm0 = 30 + random(30);
+	
+	 // Hostile Behavior:
+	if(hostile){
+		target = instance_nearest(x, y, Player);
+		if(in_sight(target)){
+			
+		}
+	}
+	
+	 // Passive Behavior:
+	else{
+		if(instance_exists(leader)){
+			var _index = leader.index,
+				_leaderAim = point_direction(x, y, mouse_x[_index], mouse_y[_index]);
+			
+			 // Pathfind:
+			if(path_dir != null){
+				scrWalk(10, path_dir + orandom(20));
+				gunangle = direction;
+				
+				alarm0 = 1 + irandom(walk);
+			}
+				
+			 // Walkin':
+			else if(_leaderDis > 64){
+				scrWalk(30 + random(30), _leaderDir + orandom(30));
+				gunangle = _leaderAim;
+			}
+		}
+		else{
+			
+			 // Angry:
+			if(in_sight(target)){
+				var _targetDis = point_distance(x, y, target.x, target.y),
+					_targetDir = point_direction(x, y, target.x, target.y);
+					
+				 // Advance:
+				if(_targetDis > 128){
+					scrWalk(30 + random(30), _targetDir + orandom(30));
+					gunangle = _targetDir;
+					
+				}
+				else{
+					
+					 // Retreat:
+					if(_targetDis < 32){
+						scrWalk(30 + random(30), (_targetDir + 180) + orandom(30));
+						gunangle = _targetDir;
+					}
+					
+					 // Attack:
+					else{
+						if(chance(1, 3)){
+							scrEnemyShoot(AllyBullet, _targetDir, 8);
+						}
+					}
+				}
+			}
+			
+			 // Wander:
+			else{
+				scrWalk(10 + random(20), random(360));
+				gunangle = direction;
+			}
+		}
+	}
+	
+	scrRight(gunangle);
+	
+#define Weapon_hurt(_hitdmg, _hitvel, _hitdir)
+	enemyHurt(_hitdmg, _hitvel, _hitdir);
+	if(other != leader) target = other.creator;
+	
+#define Weapon_death
+	if(hostile){
+		hostile = false;
+		can_take = true;
+	}
+
 #define step
 	if(DebugLag) trace_time();
 

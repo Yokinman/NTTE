@@ -1006,6 +1006,13 @@
             PetOctoHurt     = sprite(p + "sprPetOctoDodge",     3, 12, 12);
             PetOctoHide     = sprite(p + "sprPetOctoHide",     30, 12, 12);
             PetOctoHideIcon = sprite(p + "sprPetOctoHideIcon",  1,  7,  6);
+            
+             // Salamander:
+            p = m + "Scrapyards/";
+            PetSalamanderIcon = sprite(p + "sprPetSalamanderIcon",	1,	6,	6);
+            PetSalamanderIdle = sprite(p + "sprPetSalamanderIdle",	6, 16, 16);
+            PetSalamanderWalk = sprite(p + "sprPetSalamanderWalk",	8, 16, 16);
+            PetSalamanderHurt = sprite(p + "sprPetSalamanderHurt",	3, 16, 16);
 
              // Golden Chest Mimic:
             p = m + "Mansion/";
@@ -1026,10 +1033,27 @@
             PetSpiderWebBits = sprite(p + "sprWebBits",        5,  4,  4);
             PetSparkle       = sprite(p + "sprPetSparkle",     5,  8,  8);
 
-            // Prism:
+             // Prism:
             p = m + "Cursed Caves/";
             PetPrismIcon = sprite(p + "sprPetPrismIcon", 1,  6,  6);
             PetPrismIdle = sprite(p + "sprPetPrismIdle", 6, 12, 12);
+            
+             // Mantis:
+            p = m + "Vault/";
+        	PetMantisIcon = sprite(p + "sprPetMantisIcon",	1,	6,	6);
+            PetMantisIdle = sprite(p + "sprPetMantisIdle",	28, 12, 12);
+            PetMantisWalk = sprite(p + "sprPetMantisWalk",	6,	12, 12);
+            PetMantisHurt = sprite(p + "sprPetMantisHurt",	3,	12, 12);
+            
+             // Weapon Chest Mimic:
+            p = m + "Weapon/";
+            PetWeaponIcon = sprite(p + "sprPetWeaponIcon",	1,	6,	6);
+            PetWeaponChst = sprite(p + "sprPetWeaponChst",	1,	8,	8);
+            PetWeaponSpwn = sprite(p + "sprPetWeaponSpwn",	16,	12,	12);
+            PetWeaponIdle = sprite(p + "sprPetWeaponIdle",	8,	12,	12);
+            PetWeaponWalk = sprite(p + "sprPetWeaponWalk",	8,	12,	12);
+            PetWeaponHurt = sprite(p + "sprPetWeaponHurt",	3,	12,	12);
+            PetWeaponDead = sprite(p + "sprPetWeaponDead",	6,	12,	12);
 			
         //#endregion
     }

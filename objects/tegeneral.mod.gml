@@ -2834,6 +2834,13 @@
                     	leader = other;
                     	direction = point_direction(x, y, other.x, other.y);
                     	
+                    	 // Auto Revive on Pickup:
+                    	if(maxhealth > 0 && my_health <= 0){
+                    		my_health = maxhealth;
+				            projectile_hit_raw(leader, 1, true);
+		                	with(leader) lasthit = [sprHealBigFX, "LOVE"];
+                    	}
+                    	
 	                     // Found Stat:
 	                    if(stat_found){
 	                    	stat_found = false;
@@ -3143,7 +3150,26 @@
 	}
 	else instance_destroy();
 
-
+#define PetWeaponBecome_create(_x, _y)
+	with(instance_create(_x, _y, chestprop)){
+		 // Visual:
+		sprite_index = spr.PetWeaponChst;
+		 
+		 // Vars:
+		pickup_indicator = scrPickupIndicator("BATTLE");
+		pickup_indicator.yoff = -1;
+		
+		return id;
+	}
+	
+#define PetWeaponBecome_step
+	var _pickup = pickup_indicator;
+	if(instance_exists(_pickup) && _pickup.pick != -1){
+		
+		Pet_spawn(x, y, "Weapon");
+		instance_delete(id);
+	}
+	
 #define PickupIndicator_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
     	 // Vars:

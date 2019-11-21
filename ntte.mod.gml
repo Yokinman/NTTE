@@ -1534,6 +1534,35 @@
 		}
     }
     
+     // Wepmimic Arena:
+    if(chance(1, 1) && !(GameCont.area == 7 && GameCont.subarea == 3)) with(instances_matching(WeaponChest, "sprite_index", sprWeaponChest, sprWeaponChestSteroidsUltra)){
+    	
+    	 // Create Clearing:
+    	var _floors = scrFloorFillRound((round(x / 32) * 32) - 16, (round(y / 32) * 32) - 16, 5, 5),
+    		_wallId = instance_create(0, 0, GameObject),
+    		_validA = (GameCont.area != "coast");
+    	with(_floors) if(instance_exists(self)){
+    		with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching([Wall, TopSmall, TopPot, Bones], "", null))){
+    			instance_delete(id);
+    		}
+    		if(_validA) scrFloorWalls();
+    	}
+    	
+    	 // Wall Time:
+    	instance_delete(_wallId);
+		if(_validA) with(instances_matching_gt(Wall, "id", _wallId)){
+    		for(var _x = x - 16; _x <= x + 16; _x += 16) for(var _y = y - 16; _y <= y + 16; _y += 16){
+    			if(!place_meeting(_x, _y, Wall) && !place_meeting(_x, _y, TopSmall) && !place_meeting(_x, _y, Floor)){
+    				instance_create(_x, _y, TopSmall);
+    			}
+    		}
+		}
+    	
+    	 // Wepmimic Time:
+    	obj_create(x, y, "PetWeaponBecome");
+    	instance_delete(id);
+    }
+    
      // Lair Chests:
     var	_crime = (crown_current == "crime"),
     	_lair = variable_instance_get(GameCont, "visited_lair", false);

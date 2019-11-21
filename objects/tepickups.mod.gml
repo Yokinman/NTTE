@@ -2659,9 +2659,6 @@
 	audio_sound_gain(s, 0.4, 0);
 	
 	instance_destroy();
-	
-	
-/// Mod Events
 
 #define VaultFlower_create(_x, _y)
 	var a = [],
@@ -2789,7 +2786,7 @@
 	
 	 // Secret:
 	if(!wilted){
-		Pet_spawn(x, y, "THX SPRITE FLOWERPET"); // thx sprite flowerpet
+		Pet_spawn(x, y, "Mantis"); // thx sprite flowerpet
 	}
 	
 #define VaultFlower_PickupIndicator_meet
@@ -2813,6 +2810,8 @@
 		
 		return id;
 	}
+
+/// Mod Events
 
 #define step
     script_bind_step(post_step, 0);
