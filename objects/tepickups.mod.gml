@@ -798,7 +798,7 @@
 					desc = `${num} ${text}`;
 					
 					 // Visual:
-					sprite_index = spr.Parrot[0].Feather;
+					sprite_index = spr.Race.parrot[0].Feather;
 					image_blend = make_color_rgb(255, 120, 120);
 					image_xscale = -1.2;
 					image_yscale = 1.2;
@@ -2486,9 +2486,7 @@
 	}
 	
 	 // Trident Unlock:
-	if(wep == "trident" && !unlock_get("trident")){
-		unlock_set("trident", true);
-	}
+	if(wep == "trident") unlock_call("trident");
 	
 	 // Weapon:
 	var _num = 1 + ultra_get("steroids", 1);
@@ -3431,6 +3429,7 @@
 #define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
 #define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
 #define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
 #define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
 #define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
 #define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
