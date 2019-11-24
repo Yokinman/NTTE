@@ -1293,14 +1293,17 @@
 				if(_spawnPed){
 					_ped = false;
 					
-					_index = 0;
+					var _img = 0;
 					for(var _ox = -32; _ox <= 32; _ox += 32){
 						for(var _oy = -32; _oy <= 32; _oy += 32){
 							array_push(layout, {
-								x	: _fx + _ox,
-								y	: _fy + _oy,
-								obj	: Floor,
-								ind : _index++
+								x	 : _fx + _ox,
+								y	 : _fy + _oy,
+								obj	 : Floor,
+								vars : {
+									sprite_index : spr.VaultFlowerFloor,
+									image_index : _img++
+								}
 							})
 						}
 					}
@@ -1389,12 +1392,13 @@
 			 // Generate:
 			var	_minID = instance_create(0, 0, GameObject);
 			instance_delete(_minID);
-			with(layout) with(obj_create(x, y, obj)){
-				
-				 // Epic Floors:
-				if(instance_is(id, Floor) && lq_get(other, "ind") != null){
-					sprite_index = spr.VaultFlowerFloor;
-					image_index = lq_get(other, "ind");
+			with(layout){
+				with(obj_create(x, y, obj)){
+					if("vars" in other){
+						for(var i = 0; i < lq_size(other.vars); i++){
+							variable_instance_set(id, lq_get_key(other.vars, i), lq_get_value(other.vars, i));
+						}
+					}
 				}
 			}
 			

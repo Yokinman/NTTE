@@ -2748,12 +2748,9 @@
 				}
 				
 				 // Sounds:
-				var _sndCrwn = sndMutant1Crwn;
 				with(player_find(_pickup.pick)){
-					if(race_id < 17) _sndCrwn = asset_get_index(`sndMutant${race_id}Crwn`);
-					else _sndCrwn = mod_script_call("race", race, "race_sound", _sndCrwn);
+					sound_play(snd_crwn);
 				}
-				sound_play(_sndCrwn);
 			}
 		}
 		
