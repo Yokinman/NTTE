@@ -2012,7 +2012,7 @@
 	if(h) d3d_set_fog(true, _col, 0, 0);
 	
 	if(!b) draw_self_enemy();
-	if (wep_visible) draw_weapon(weapon_get_sprite(wep), x, y, gunangle, 0, wkick, ((gunangle > 90 && gunangle <= 270) ? -1 : 1), _col, _alp);
+	if(wep_visible) draw_weapon(weapon_get_sprite(wep), x, y, gunangle, 0, wkick, ((gunangle > 90 && gunangle <= 270) ? -1 : 1), _col, _alp);
 	if(b) draw_self_enemy();
 	
 	if(h) d3d_set_fog(false, c_white, 0, 0);

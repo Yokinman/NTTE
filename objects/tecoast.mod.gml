@@ -191,6 +191,74 @@
     }
 
 
+#define ClamShield_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Vars:
+		mask_index = msk.ClamShield;
+		creator = noone;
+		damage = 0;
+		force = 0;
+		typ = 0;
+		wep = noone;
+		
+		 // Script Override:
+		with(["hit", "wall", "anim"]) variable_instance_set(other, "on_" + self, script_ref_create(ClamShield_blank));
+		
+		return id;
+	}
+	
+#define ClamShield_step
+
+	 // Goodbye:
+	if(!instance_exists(creator) || (creator.wep != wep && creator.bwep != wep)){
+		instance_destroy();
+		exit;
+	}
+	
+#define ClamShield_projectile
+	var _primary = (creator.wep == wep),
+		b = (_primary ? "" : "b"),
+		p = other,
+		w = wep;
+		
+	if(p.typ > 0 && p.speed > 0){
+		
+		 // Recoil:
+		variable_instance_set(creator, b + "wkick", 4);
+		
+		 // Effects:
+		sound_play_hit(sndCrystalRicochet, 0);
+		sleep(10);
+		
+		 // Destroyables:
+		if(p.typ == 2){
+			with(p) instance_destroy();
+			exit;
+		}
+		
+		 // Reflect:
+		with(p){
+			var a = 40 * variable_instance_get(creator, "accuracy", 1);
+			
+			direction = w.ang + clamp(angle_difference(direction + 180, w.ang), -a, a);
+			image_angle = direction;
+			
+			var _x = x + lengthdir_x(1, direction),
+				_y = y + lengthdir_y(1, direction);
+			while(place_meeting(x, y, other) && place_free(_x, _y)){
+				trace(1)
+				x = _x;
+				y = _y;
+			}
+		}
+	}
+	
+#define ClamShield_grenade
+	ClamShield_projectile();
+	
+#define ClamShield_blank
+	 // This Script is the Blank One:
+
 #define CoastBigDecal_create(_x, _y)
     with(obj_create(_x, _y, "CoastDecal")){
     	 // Visual:
@@ -4200,6 +4268,18 @@
 
 
 /// Mod Events
+#define draw_shadows
+	 // Shield Shadows:
+	with(["wep", "bwep"]) with(Player){
+		var w = variable_instance_get(id, other);
+		if(lq_get(w, "wep") == "clam shield"){
+			var _len = (w.length - w.kick) - 12,
+				_x = x + lengthdir_x(_len, w.ang),
+				_y = y + lengthdir_y(_len, w.ang);
+			draw_sprite_ext(shd16, 0, _x, _y + 7, 1, 1, (w.ang + 90), c_white, 1);
+		}
+	}
+	
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
 

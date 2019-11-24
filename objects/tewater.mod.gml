@@ -1218,7 +1218,7 @@
         size = 1;
         walk = 0;
         walkspeed = 1.2;
-        maxspeed = 3;
+        maxspeed = 3.4;
         pitDepth = 0;
         direction = random(360);
         arc_inst = noone;
@@ -1964,8 +1964,8 @@
         size = 2;
         walk = 0;
         walkspeed = 1;
-        maxspeed = 2.6;
-        meleedamage = 3;
+        maxspeed = 3.4;
+        meleedamage = 4;
         direction = random(360);
         arc_num = 0;
         arc_max = 3;
@@ -2012,7 +2012,7 @@
 
          // Attack:
         if(chance(1, 3) && in_distance(target, [32, 256])){
-            alarm1 += 60;
+            alarm1 += 30;
 
              // Shoot lightning disc:
             if(type > 2){
@@ -2447,7 +2447,7 @@
         is_enemy = true;
         maxspeed = 2;
         radius = 16;
-        charge_spd = 1;
+        charge_spd = 1.4;
 
         return id;
     }

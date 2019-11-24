@@ -116,6 +116,9 @@
 			 // Trident:
 	    	Trident     = sprite(m + "sprTrident", 1, 11, 6, shnWep);
 	    	msk.Trident = sprite(p + "mskTrident", 1, 11, 6);
+	    	
+	    	 // Clam Shield:
+	    	msk.ClamShield = sprite(p + "mskClamShield", 1, 12, 12);
 			
 		//#endregion
 
@@ -823,8 +826,14 @@
 			VaultFlowerDebris		= sprite(p + "sprVaultFlowerDebris",		10, 4,	4);
 			VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris",	10, 4,	4);
 			
+			VaultFlowerFloor		= sprite(p + "sprVaultFlowerFloor",			9,	0,	0);
+			
 			 // Reroll Skill:
 			RerollHUDSmall = sprite("skills/Reroll/sprRerollHudSmall", 1, 4, 4);
+			
+			//#endregion
+			
+		//#endregion
 
 		//#region CHESTS/PICKUPS
 		p = "chests/";
@@ -1048,10 +1057,11 @@
             
              // Salamander:
             p = m + "Scrapyards/";
-            PetSalamanderIcon = sprite(p + "sprPetSalamanderIcon",	1,	6,	6);
-            PetSalamanderIdle = sprite(p + "sprPetSalamanderIdle",	6, 16, 16);
-            PetSalamanderWalk = sprite(p + "sprPetSalamanderWalk",	8, 16, 16);
-            PetSalamanderHurt = sprite(p + "sprPetSalamanderHurt",	3, 16, 16);
+            PetSalamanderIcon			= sprite(p + "sprPetSalamanderIcon",		1,	6,	6);
+            PetSalamanderIdle			= sprite(p + "sprPetSalamanderIdle",		6, 16, 16);
+            PetSalamanderWalk			= sprite(p + "sprPetSalamanderWalk",		8, 16, 16);
+            PetSalamanderHurt			= sprite(p + "sprPetSalamanderHurt",		3, 16, 16);
+            PetSalamanderMountedHurt	= sprite(p + "sprPetSalamanderMountedHurt", 3, 16, 16);
 
              // Golden Chest Mimic:
             p = m + "Mansion/";
@@ -1207,7 +1217,7 @@
     global.area = ["coast", "oasis", "trench", "pizza", "lair"];
     global.race = ["parrot", "bee"];
     global.crwn = ["crime", "bonus"];
-    global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+    global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
     
      // Reminders:
     global.remind = [];

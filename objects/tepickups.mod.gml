@@ -2731,7 +2731,8 @@
 			if(chance_ct(1, 7)) instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle).depth = depth - 1;
 			
 			 // Interact:
-			if(instance_exists(pickup_indicator) && pickup_indicator.pick != -1){
+			var _pickup = pickup_indicator;
+			if(instance_exists(_pickup) && _pickup.pick != -1){
 				global.vFlowerWilted = true;
 				global.vFlowerSkill = skill;
 				
@@ -2745,6 +2746,14 @@
 					if(skill_get_at(i) == "reroll") global.vFlowerIndex = i;
 					i++;
 				}
+				
+				 // Sounds:
+				var _sndCrwn = sndMutant1Crwn;
+				with(player_find(_pickup.pick)){
+					if(race_id < 17) _sndCrwn = asset_get_index(`sndMutant${race_id}Crwn`);
+					else _sndCrwn = mod_script_call("race", race, "race_sound", _sndCrwn);
+				}
+				sound_play(_sndCrwn);
 			}
 		}
 		
@@ -2781,18 +2790,17 @@
 		}
 	}
 	
-	
 	 // Secret:
-	if(!wilted){
-		Pet_spawn(x, y, "Mantis"); // thx sprite flowerpet
-	}
+	if(!wilted)	Pet_spawn(x, y, "Mantis");
 	
 #define VaultFlower_PickupIndicator_meet
 	script_bind_draw(VaultFlower_PickupIndicator_icon, -100, id, icon, other.index);
 	return true;
 	
 #define VaultFlower_PickupIndicator_icon(_id, _icon, _index)
-	if(player_find_local_nonsync() == _index) with(_id) draw_sprite(_icon.sprite, _icon.index, x - xoff, (y - 13) + yoff);
+	var _pickup = player_find(_index).nearwep;
+	if(player_find_local_nonsync() == _index && (_pickup == noone || instance_is(_pickup, IceFlower))) 
+		with(_id) draw_sprite(_icon.sprite, _icon.index, x - xoff, (y - 13) + yoff);
 	instance_delete(id);
 	
 #define scrVaultFlowerDebris(_x, _y, _dir, _spd)

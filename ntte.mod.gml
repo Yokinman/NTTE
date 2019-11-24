@@ -134,14 +134,17 @@
 							"y" : -16,
 							"slct" : array_create(maxp, ""),
 							"list" : [ // Pets that show up by default
-								"Scorpion"	+ ".petlib.mod",
-								"Parrot"	+ ".petlib.mod",
-								"CoolGuy"	+ ".petlib.mod",
-								"Mimic"		+ ".petlib.mod",
-								"Slaughter"	+ ".petlib.mod",
-								"Octo"		+ ".petlib.mod",
-								"Spider"	+ ".petlib.mod",
-								"Prism"		+ ".petlib.mod"
+								"Scorpion"		+ ".petlib.mod",
+								"Parrot"		+ ".petlib.mod",
+								"CoolGuy"		+ ".petlib.mod",
+								"Salamander"	+ ".petlib.mod",
+								"Mimic"			+ ".petlib.mod",
+								"Slaughter"		+ ".petlib.mod",
+								"Octo"			+ ".petlib.mod",
+								"Spider"		+ ".petlib.mod",
+								"Prism"			+ ".petlib.mod",
+								"Weapon"		+ ".petlib.mod",
+								"Mantis"		+ ".petlib.mod"
 							]
 						},
 						
@@ -150,7 +153,7 @@
 							"list" : [
 								{	name : "AREA UNLOCKS",
 									list : [
-										["coastWep",	["harpoon launcher.wep", "net launcher.wep", "trident.wep"]],
+										["coastWep",	["harpoon launcher.wep", "net launcher.wep", "clam shield.wep", "trident.wep"]],
 										["oasisWep",	["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
 										["trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
 										["lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
@@ -1142,29 +1145,80 @@
         	
         case 100: /// CROWN VAULT
         	
-			 // Vault Flower:
-			var _potentialFloors = [];
-			with(Floor) if(!place_meeting(x, y, hitme)){
-				array_push(_potentialFloors, id);
-			}
-			with(instance_random(_potentialFloors)){
-				with(scrFloorFill(x, y, 3, 3)) if(instance_exists(self)){
-					with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, [Wall, TopSmall, Bones, TopPot])){
-						instance_delete(id);
+        	 // Vault Flower:
+			var _x = 10000,
+				_y = 10000,
+				_farFloor = instance_furthest(_x, _y, Floor),
+				_floorDir = point_direction(_x, _y, _farFloor.x, _farFloor.y),
+				_floorDis = point_distance(_x, _y, _farFloor.x, _farFloor.y) / 2,
+				_midFloor = nearest_instance(_x + lengthdir_x(_floorDis, _floorDir), _y + lengthdir_y(_floorDis, _floorDir), instances_matching(Floor, "mask_index", mskFloor));
+			
+			 // Generate Separate Room:
+			with(instance_random(instances_matching(Floor, "mask_index", mskFloor))){
+				with(instance_create(x, y, CustomObject)){
+					 // Create Room:
+					var _size = 3;
+					mask_index = mskFloor;
+					image_xscale = _size;
+					image_yscale = _size;
+					direction = choose(0, 90, 180, 270);
+					
+					 // Move Away:
+					var o = 32;
+					while(place_meeting(x, y, Floor)){
+						direction += choose(0, 0, 90, 180, 270);
+						x += lengthdir_x(o, direction);
+						y += lengthdir_y(o, direction);
 					}
-					scrFloorWalls();
-					with(Wall){
-						for(var _x = x - 16; _x <= x + 16; _x += 16){
-							for(var _y = y - 16; _y <= y + 16; _y += 16){
-								if(!position_meeting(_x, _y, Wall) && !position_meeting(_x, _y, Floor) && !position_meeting(_x, _y, TopSmall)){
-									instance_create(_x, _y, TopSmall);
-								}
-							}
+					
+					 // Floor Time:
+					var _floors = scrFloorFill(x + o, y + o, _size, _size),
+						_wallId = instance_create(0, 0, GameObject);
+						
+					 // Retexture Room Floors:
+					for(var i = 0; i < array_length(_floors); i++){
+						with(_floors[i]){ // love u yokin
+							sprite_index = spr.VaultFlowerFloor;
+							image_index = i;
+							depth = 7;
 						}
 					}
+						
+					 // Floor Time Two:
+					with(instances_matching(_floors, "", null)){
+						with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching([Wall, TopSmall, TopPot, Bones], "", null))){
+							instance_delete(id);
+						}
+						scrFloorWalls();
+					}
+					
+					 // Wall Time:
+					instance_delete(_wallId);
+					with(instances_matching_gt(Wall, "id", _wallId)){
+						for(var _x = x - 16; _x <= x + 16; _x += 16){
+							for(var _y = y - 16; _y <= y + 16; _y += 16){
+				    			if(!place_meeting(_x, _y, Wall) && !place_meeting(_x, _y, TopSmall) && !place_meeting(_x, _y, Floor)){
+				    				instance_create(_x, _y, TopSmall);
+				    			}
+							}
+			    		}
+					}
+					
+					 // The Star of the Show:
+ 					var cx = x + (floor(_size / 2) * o) + 16,
+						cy = y + (floor(_size / 2) * o) + 16,
+						yoff = -8;
+					obj_create(cx, cy + yoff, "VaultFlower");
+					with(instance_create(x, y, PortalClear)){
+						mask_index = mskFloor;
+						image_xscale = _size;
+						image_yscale = _size;
+					}
+					with(instance_create(cx, cy + yoff, LightBeam)) sprite_index = sprLightBeamVault;
+					
+					 // Goodbye:
+					instance_destroy();
 				}
-				
-				obj_create(x + 16, y + 8, "VaultFlower");
 			}
         	
         	 // Top Spawns:

@@ -43,6 +43,7 @@
         ["weps/bat disc cannon.wep.gml",            1],
         ["weps/harpoon launcher.wep.gml",           1],
         ["weps/net launcher.wep.gml",               1],
+        ["weps/clam shield.wep.gml",                1],
         ["weps/trident.wep.gml",                    1],
         ["weps/bubble rifle.wep.gml",               1],
         ["weps/bubble shotgun.wep.gml",             1],
