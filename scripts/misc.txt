@@ -1,0 +1,49 @@
+"path" : {
+	"skills/" : ["compassion.skill", "reroll.skill"],
+	"crowns/" : ["bonus.crown", "crime.crown"]
+},
+
+"script" : "
+#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#define orandom(n)                                                                      return  random_range(-n, n);
+#define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'telib', 'unlock_get', _unlock);
+",
+
+"remove" : [
+	"scrWaterStreak",
+	"enemySprites",
+	"scrDefaultDrop",
+	"z_engine",
+	"scrSetPet",
+	"scrLightning",
+	"trace_lag",
+	"trace_lag_bgn",
+	"trace_lag_end"
+],
+
+"rename" : {
+	"enemyWalk"          : "enemy_walk",
+	"enemyHurt"          : "enemy_hurt",
+	"scrEnemyShoot"      : "enemy_shoot",
+	"scrEnemyShootExt"   : "enemy_shoot_ext",
+	"nearest_instance"   : "instance_nearest_array",
+	"scrBossHP"          : "boss_hp",
+	"scrBossIntro"       : "boss_intro",
+	"scrSwap"            : "player_swap",
+	"scrTopDecal"        : "TopDecal_create",
+	"scrCharm"           : "charm_instance",
+	"scrCorpse"          : "corpse_drop",
+	"scrFloorWalls"      : "floor_walls",
+	"scrPortalPoof"      : "portal_poof",
+	"floor_ext"          : "dfloor",
+	"scrPickupPortalize" : "portal_pickups",
+	"scrFloorMake"       : "floor_make",
+	"scrFloorFill"       : "floor_fill",
+	"scrFloorFillRound"  : "floor_fill_round",
+	"scrUnlock"          : "unlock_splat",
+	"decide_wep_gold"    : "weapon_decide_gold",
+	"Pet_spawn"          : "pet_spawn"
+}

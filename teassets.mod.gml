@@ -34,7 +34,7 @@
     	    "pizza" : sprite("areas/Pizza/sprPizzaBigTopDecal",         1, 32, 24),
     	    "oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
     	    "trench": sprite("areas/Trench/sprTrenchBigTopDecal",       1, 32, 24)
-    	}
+    	};
         NestDebris		  = sprite("areas/Scrapyard/sprNestDebris", 16,     4,  4);
     	msk.BigTopDecal	  = sprite("areas/Desert/mskBigTopDecal",    1,    32, 24);
     	shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 48-16, 32);
@@ -140,18 +140,27 @@
         
         	//#region PROPS
         	p = "areas/Desert/Props/";
-        		
+	        
+	        	 // Camp:
+	        	BanditCampfire     = sprite(p + "sprBanditCampfire",     1, 26, 26);
+	        	BanditTentIdle     = sprite(p + "sprBanditTentIdle",     1, 24, 24);
+	        	BanditTentHurt     = sprite(p + "sprBanditTentHurt",     3, 24, 24);
+	        	BanditTentDead     = sprite(p + "sprBanditTentDead",     3, 24, 24);
+	        	BanditTentWallIdle = sprite(p + "sprBanditTentWallIdle", 1, 24, 24);
+	        	BanditTentWallHurt = sprite(p + "sprBanditTentWallHurt", 3, 24, 24);
+	        	BanditTentWallDead = sprite(p + "sprBanditTentWallDead", 3, 24, 24);
+	        	
 	        	 // Big Cactus:
 	        	BigCactusIdle = sprite(p + "sprBigCactusIdle", 1, 16, 16);
 	        	BigCactusHurt = sprite(p + "sprBigCactusHurt", 3, 16, 16);
 	        	BigCactusDead = sprite(p + "sprBigCactusDead", 4, 16, 16);
-        	
+	        	
 	        	 // Scorpion Rock:
 	        	ScorpionRockEnemy   = sprite(p + "sprScorpionRockEnemy",  6, 16, 16);
 	        	ScorpionRockFriend  = sprite(p + "sprScorpionRockFriend", 6, 16, 16);
 	        	ScorpionRockHurt    = sprite(p + "sprScorpionRockHurt",   3, 16, 16);
 	        	ScorpionRockDead    = sprite(p + "sprScorpionRockDead",   6, 16, 16);
-        	
+	        	
         	//#endregion
         	
         	//#region ENEMIES
@@ -164,7 +173,7 @@
 	        	BabyScorpionHurt = sprite("enemies/BabyScorpion/sprBabyScorpionHurt", 3, 16, 16);
 	        	BabyScorpionDead = sprite("enemies/BabyScorpion/sprBabyScorpionDead", 6, 16, 16);
 	        	BabyScorpionFire = sprite("enemies/BabyScorpion/sprBabyScorpionFire", 6, 16, 16);
-	
+	        	
 	        	 // Golden Baby Scorp:
 	        	p = m + "BabyScorpionGold/";
 	        	BabyScorpionGoldIdle = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldIdle", 4, 16, 16);
@@ -172,7 +181,18 @@
 	        	BabyScorpionGoldHurt = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldHurt", 3, 16, 16);
 	        	BabyScorpionGoldDead = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldDead", 6, 16, 16);
 	        	BabyScorpionGoldFire = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldFire", 6, 16, 16);
-
+	        	
+	        	 // Bandit Campers:
+	        	p = m + "Camp/";
+	        	BanditCamperIdle = sprite(p + "sprBanditCamperIdle", 4, 12, 12);
+	        	BanditCamperWalk = sprite(p + "sprBanditCamperWalk", 6, 12, 12);
+	        	BanditCamperHurt = sprite(p + "sprBanditCamperHurt", 3, 12, 12);
+	        	BanditCamperDead = sprite(p + "sprBanditCamperDead", 6, 12, 12);
+	        	BanditHikerIdle  = sprite(p + "sprBanditHikerIdle",  4, 12, 12);
+	        	BanditHikerWalk  = sprite(p + "sprBanditHikerWalk",  6, 12, 12);
+	        	BanditHikerHurt  = sprite(p + "sprBanditHikerHurt",  3, 12, 12);
+	        	BanditHikerDead  = sprite(p + "sprBanditHikerDead",  6, 12, 12);
+	        	
 		    	 // Big Fish:
 		    	p = m + "CoastBoss/";
 		    	BigFishBecomeIdle = sprite(p + "sprBigFishBuild",      4, 40, 38);
@@ -1657,7 +1677,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 
 	return sprite_add("sprShine.png", _img, _ox, _oy);
 
-#define wep_merge_sprite(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+#define weapon_merge_sprite(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
     var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
     if(lq_exists(spr.MergeWep, _sprName)){
         return lq_get(spr.MergeWep, _sprName);
@@ -1729,7 +1749,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
     	return s;
     }
 
-#define wep_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
+#define weapon_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
     var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
     if(lq_exists(spr.MergeWepText, _sprName)){
         return lq_get(spr.MergeWepText, _sprName);

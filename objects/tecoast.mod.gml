@@ -18,10 +18,6 @@
 
 #macro DebugLag global.debug_lag
 
-#macro current_frame_active ((current_frame mod 1) < current_time_scale)
-#macro anim_end (image_index + image_speed_raw >= image_number)
-
-
 #define BloomingAssassin_create(_x, _y)
 	with(instance_create(_x, _y, JungleAssassin)){
 		 // Visual:
@@ -84,7 +80,7 @@
 	}
 
 #define BloomingAssassinHide_hurt(_hitdmg, _hitvel, _hitdir)
-	enemyHurt(_hitdmg, _hitvel / 2, _hitdir);
+	enemy_hurt(_hitdmg, _hitvel / 2, _hitdir);
 	BloomingAssassinHide_alrm1();
 
 #define BloomingAssassinHide_alrm0
@@ -594,7 +590,7 @@
     if(gonnafire){
         gonnafire = false;
 
-		with(scrEnemyShoot("DiverHarpoon", gunangle, 14)){
+		with(enemy_shoot("DiverHarpoon", gunangle, 14)){
 		    //if(GameCont.area == "oasis" || GameCont.area == "trench") speed *= 0.7;
 		}
         sound_play(sndCrossbow);
@@ -640,7 +636,7 @@
 
         	 // Go to Nearest Non-Pit Floor:
         	if(array_length(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)) > 0){
-	        	var f = nearest_instance(x - 8 + (hspeed * 4), y - 8 + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+	        	var f = instance_nearest_array(x - 8 + (hspeed * 4), y - 8 + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
 	        	if(!place_meeting(x, y, f) && instance_exists(f)){
 	        		direction = point_direction(x, y, f.x, f.y) + orandom(20);
 	        	}
@@ -850,7 +846,7 @@
 #define Gull_alrm2
      // Slash:
     gunangle = point_direction(x, y, target.x, target.y) + orandom(10);
-    with(scrEnemyShoot(EnemySlash, gunangle, 4)) damage = 2;
+    with(enemy_shoot(EnemySlash, gunangle, 4)) damage = 2;
 
      // Visual/Sound Related:
     wkick = -3;
@@ -893,7 +889,7 @@
 		 // Vars:
 		mask_index = mskNone;
 		mask_hold = msk.Palanking;
-		maxhealth = scrBossHP(300);
+		maxhealth = boss_hp(300);
 		raddrop = 120;
 		size = 4;
 		walk = 0;
@@ -939,7 +935,7 @@
 
 #define Palanking_step
     if(z <= 0) walk = 0;
-    enemyWalk(walkspeed, maxspeed);
+    enemy_walk(walkspeed, maxspeed);
 
      // Seals:
     var _sealNum = (seal_max - array_count(seal, noone)),
@@ -1079,7 +1075,7 @@
             with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")) my_health = 0;
 
         	 // Attract Pickups:
-            scrPickupPortalize();
+            portal_pickups();
         }
     }
 
@@ -1255,7 +1251,7 @@
 
 								 // FX:
 								sound_play_pitchvol(sndSlugger, 1.5, 0.6);
-								scrWaterStreak(x, y, point_direction(x, y, x, z) + orandom(30), 2 + random(2));
+								scrFX(x, y, [point_direction(x, y, x, z) + orandom(30), 2 + random(2)], "WaterStreak");
 								repeat(4) instance_create(x, y, Dust);
 							}
 						}
@@ -1396,7 +1392,7 @@
                      // Boss Intro:
                     if(!intro){
                         intro = true;
-                        scrBossIntro("Palanking", sndBigDogIntro, mus.SealKing);
+                        boss_intro("Palanking", sndBigDogIntro, mus.SealKing);
                     }
 
                      // Walk Towards Player:
@@ -1423,7 +1419,7 @@
      // Bubble Bomb Burp:
     /*if(ammo > 0){
         alarm1 = 4;
-        with(scrEnemyShootExt(x, y - z + 2, "BubbleBomb", gunangle + orandom(10), 8 + random(4))){
+        with(enemy_shoot_ext(x, y - z + 2, "BubbleBomb", gunangle + orandom(10), 8 + random(4))){
             depth = other.depth - 1;
 
              // Gassy:
@@ -1534,7 +1530,7 @@
         var _dis = (ground_smash * 24);
         for(var a = 0; a < 360; a += (360 / 16)){
              // Ground Smash Slash:
-            with(scrEnemyShootExt(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 1)){
+            with(enemy_shoot_ext(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 1)){
                 team = -1;
             }
 
@@ -1563,7 +1559,7 @@
 
 #define Palanking_alrm3
      // Slappin:
-    scrEnemyShootExt(x, y + 16 - z, "PalankingSlash", gunangle, 8);
+    enemy_shoot_ext(x, y + 16 - z, "PalankingSlash", gunangle, 8);
     motion_add(gunangle, 4);
 
      // Effects:
@@ -1728,7 +1724,8 @@
     }
 
 #define PalankingDie_step
-    z_engine();
+    z += zspeed * current_time_scale;
+    zspeed -= zfriction * current_time_scale;
     if(z <= 0) instance_destroy();
 
 #define PalankingDie_draw
@@ -1781,7 +1778,7 @@
     	_dis = 24;
 
     for(var a = 0; a < 360; a += (360 / 16)){
-        scrEnemyShootExt(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 3 + random(1));
+        enemy_shoot_ext(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 3 + random(1));
 
          // Effects:
         if(chance(1, 4)){
@@ -1915,7 +1912,9 @@
 	}
 
 #define PalankingToss_end_step
-    z_engine();
+    z += zspeed * current_time_scale;
+    zspeed -= zfriction * current_time_scale;
+    
     if(instance_exists(creator) && (z > 0 || zspeed > 0)){
     	if(instance_is(creator, Player)){
 	        hspeed += (creator.hspeed / 10) * current_time_scale;
@@ -2151,7 +2150,7 @@
     motion_set(gunangle, maxspeed);
 
      // Heavy Slash:
-    with(scrEnemyShoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
+    with(enemy_shoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
         sprite_index = sprHeavySlash;
         friction = 0.4;
         damage = 10;
@@ -2167,7 +2166,7 @@
 
 #define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
 	if(dash > 0) _hitvel = min(_hitvel, speed - 1);
-	enemyHurt(_hitdmg, _hitvel, _hitdir);
+	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 
 #define Pelican_death
     pickup_drop(80, 0);
@@ -2741,7 +2740,7 @@
 	                         // Stabby:
 	                        if(_canAttack && in_distance(target, 80)){
 	                            gunangle = _targetDir;
-	                            with(scrEnemyShoot(Shank, gunangle, 3)) damage = 2;
+	                            with(enemy_shoot(Shank, gunangle, 3)) damage = 2;
 	
 	                            motion_add(gunangle, 2);
 	
@@ -2877,7 +2876,7 @@
 		            		toss_ammo--;
 		            		toss_time = 60;
 		            		toss_speed = random_range(7, 9);
-		            		toss = scrEnemyShoot(Disc, random(360), 0);
+		            		toss = enemy_shoot(Disc, random(360), 0);
 		            	}
 	            	}
 	            	
@@ -2966,7 +2965,7 @@
             var _dis = 24 + trident_dist,
                 _dir = gunangle;
 
-            with(scrEnemyShootExt(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
+            with(enemy_shoot_ext(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
                 damage = 3;
                 image_angle = _dir;
                 image_xscale = 0.5;
@@ -2998,7 +2997,7 @@
         case seal_blunderbuss:
              // Blammo:
         	repeat(6){
-        	    scrEnemyShoot(EnemyBullet1, gunangle + orandom(6), 6 + random(2));
+        	    enemy_shoot(EnemyBullet1, gunangle + orandom(6), 6 + random(2));
         	}
 
              // Effects:
@@ -3020,7 +3019,7 @@
         	if(chance(1, 3)) alarm2 = irandom_range(3, 5);
         	
         	 // Pew:
-        	scrEnemyShoot(EnemyBullet3, gunangle + orandom(4), 12 + random(2));
+        	enemy_shoot(EnemyBullet3, gunangle + orandom(4), 12 + random(2));
         	
         	 // Effects:
         	scrFX(x, y, [gunangle, 2], Smoke);
@@ -3047,7 +3046,7 @@
         	}
         	
         	 // Shooty:
-			scrEnemyShoot(EnemyBullet1, gunangle, 6);
+			enemy_shoot(EnemyBullet1, gunangle, 6);
 			
 			 // Effects:
 			wkick = 10;
@@ -3059,7 +3058,7 @@
     }
 
 #define Seal_hurt(_hitdmg, _hitvel, _hitdir)
-    enemyHurt(_hitdmg, _hitvel, _hitdir);
+    enemy_hurt(_hitdmg, _hitvel, _hitdir);
 
     switch(type){
     	case seal_none:
@@ -3272,7 +3271,9 @@
 
 #define SealHeavy_step
      // Animate:
-    if(sprite_index != spr_spwn) enemySprites();
+    if(sprite_index != spr_spwn){
+    	sprite_index = enemy_sprite;
+    }
     else{
         if(anim_end) sprite_index = spr_idle;
         if(image_index < 2) y -= image_index * current_time_scale;
@@ -3479,7 +3480,7 @@
              // Throw Out Anchor:
             if(!instance_exists(anchor)){
                 alarm1 = 60;
-                anchor = scrEnemyShoot("SealAnchor", gunangle, 0);
+                anchor = enemy_shoot("SealAnchor", gunangle, 0);
                 anchor_throw = 8;
                 anchor_spin = max(20, abs(anchor_spin)) * sign(anchor_spin);
                 if(instance_exists(target)) direction = point_direction(x, y, target.x, target.y);
@@ -3620,7 +3621,8 @@
     }
 
      // Z-Axis:
-    z_engine();
+    z += zspeed * current_time_scale;
+    zspeed -= zfriction * current_time_scale;
     image_angle -= sign(hspeed) * (abs(vspeed / 2) + abs(hspeed));
     if(z <= 0){
         friction = 0.4;
@@ -3651,7 +3653,7 @@
             else{
                 var _ang = orandom(20);
                 for(var a = _ang; a < _ang + 360; a += (360 / 2)){
-                    with(scrWaterStreak(x, y, a, 4)){
+                    with(scrFX(x, y, [a, 4], "WaterStreak")){
                         hspeed += other.hspeed / 2;
                         vspeed += other.vspeed / 2;
                     }
@@ -3818,7 +3820,7 @@
 	            _y = y + 4;
 	
 	        repeat(choose(2, 3)){
-	            scrEnemyShootExt(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
+	            enemy_shoot_ext(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
 	        }
 	        gunangle += (sweep_dir * sweep_spd);
 	
@@ -4322,100 +4324,100 @@
 
 
 /// Scripts
-#define orandom(n)																		return  random_range(-n, n);
-#define chance(_numer, _denom)															return  random(_denom) < _numer;
-#define chance_ct(_numer, _denom)														return  random(_denom) < (_numer * current_time_scale);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc("mod", "telib", "obj_create", _x, _y, _obj));
-#define surflist_set(_name, _x, _y, _width, _height)									return	mod_script_call_nc("mod", "teassets", "surflist_set", _name, _x, _y, _width, _height);
-#define surflist_get(_name)																return	mod_script_call_nc("mod", "teassets", "surflist_get", _name);
-#define shadlist_set(_name, _vertex, _fragment)											return	mod_script_call_nc("mod", "teassets", "shadlist_set", _name, _vertex, _fragment);
-#define shadlist_get(_name)																return	mod_script_call_nc("mod", "teassets", "shadlist_get", _name);
-#define draw_self_enemy()                                                                       mod_script_call(   "mod", "telib", "draw_self_enemy");
-#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call(   "mod", "telib", "draw_weapon", _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
-#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call(   "mod", "telib", "draw_lasersight", _x, _y, _dir, _maxDistance, _width);
-#define scrWalk(_walk, _dir)                                                                    mod_script_call(   "mod", "telib", "scrWalk", _walk, _dir);
-#define scrRight(_dir)                                                                          mod_script_call(   "mod", "telib", "scrRight", _dir);
-#define scrEnemyShoot(_object, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrEnemyShoot", _object, _dir, _spd);
-#define scrEnemyShootExt(_x, _y, _object, _dir, _spd)                                   return  mod_script_call(   "mod", "telib", "scrEnemyShootExt", _x, _y, _object, _dir, _spd);
-#define enemyWalk(_spd, _max)                                                                   mod_script_call(   "mod", "telib", "enemyWalk", _spd, _max);
-#define enemySprites()                                                                          mod_script_call(   "mod", "telib", "enemySprites");
-#define enemyHurt(_hitdmg, _hitvel, _hitdir)                                                    mod_script_call(   "mod", "telib", "enemyHurt", _hitdmg, _hitvel, _hitdir);
-#define scrDefaultDrop()                                                                        mod_script_call(   "mod", "telib", "scrDefaultDrop");
-#define in_distance(_inst, _dis)			                                            return  mod_script_call(   "mod", "telib", "in_distance", _inst, _dis);
-#define in_sight(_inst)																	return  mod_script_call(   "mod", "telib", "in_sight", _inst);
-#define z_engine()                                                                              mod_script_call(   "mod", "telib", "z_engine");
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   "mod", "telib", "scrPickupIndicator", _text);
-#define scrCharm(_instance, _charm)                                                     return  mod_script_call_nc("mod", "telib", "scrCharm", _instance, _charm);
-#define scrBossHP(_hp)                                                                  return  mod_script_call(   "mod", "telib", "scrBossHP", _hp);
-#define scrBossIntro(_name, _sound, _music)                                             return  mod_script_call(   "mod", "telib", "scrBossIntro", _name, _sound, _music);
-#define scrTopDecal(_x, _y, _area)                                                      return  mod_script_call(   "mod", "telib", "scrTopDecal", _x, _y, _area);
-#define scrWaterStreak(_x, _y, _dir, _spd)                                              return  mod_script_call(   "mod", "telib", "scrWaterStreak", _x, _y, _dir, _spd);
-#define scrCorpse(_dir, _spd)                                                           return  mod_script_call(   "mod", "telib", "scrCorpse", _dir, _spd);
-#define scrSwap()                                                                       return  mod_script_call(   "mod", "telib", "scrSwap");
-#define scrSetPet(_pet)                                                                 return  mod_script_call(   "mod", "telib", "scrSetPet", _pet);
-#define scrPortalPoof()                                                                 return  mod_script_call(   "mod", "telib", "scrPortalPoof");
-#define scrPickupPortalize()                                                            return  mod_script_call(   "mod", "telib", "scrPickupPortalize");
-#define floor_ext(_num, _round)                                                         return  mod_script_call(   "mod", "telib", "floor_ext", _num, _round);
-#define array_count(_array, _value)                                                     return  mod_script_call(   "mod", "telib", "array_count", _array, _value);
-#define array_flip(_array)                                                              return  mod_script_call(   "mod", "telib", "array_flip", _array);
-#define nearest_instance(_x, _y, _instances)                                            return  mod_script_call(   "mod", "telib", "nearest_instance", _x, _y, _instances);
-#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc("mod", "telib", "instance_rectangle", _x1, _y1, _x2, _y2, _obj);
-#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc("mod", "telib", "instances_seen_nonsync", _obj, _bx, _by);
-#define instance_random(_obj)                                                           return  mod_script_call(   "mod", "telib", "instance_random", _obj);
-#define frame_active(_interval)                                                         return  mod_script_call(   "mod", "telib", "frame_active", _interval);
-#define area_generate(_x, _y, _area)                                                    return  mod_script_call(   "mod", "telib", "area_generate", _x, _y, _area);
-#define scrFloorWalls()                                                                 return  mod_script_call(   "mod", "telib", "scrFloorWalls");
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call(   "mod", "telib", "floor_reveal", _floors, _maxTime);
-#define area_border(_y, _area, _color)                                                  return  mod_script_call(   "mod", "telib", "area_border", _y, _area, _color);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   "mod", "telib", "area_get_sprite", _area, _spr);
-#define floor_at(_x, _y)                                                                return  mod_script_call(   "mod", "telib", "floor_at", _x, _y);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   "mod", "telib", "lightning_connect", _x1, _y1, _x2, _y2, _arc, _enemy);
-#define scrLightning(_x1, _y1, _x2, _y2, _enemy)                                        return  mod_script_call(   "mod", "telib", "scrLightning", _x1, _y1, _x2, _y2, _enemy);
-#define in_range(_num, _lower, _upper)                                                  return  mod_script_call(   "mod", "telib", "in_range", _num, _lower, _upper);
-#define wep_get(_wep)                                                                   return  mod_script_call(   "mod", "telib", "wep_get", _wep);
-#define decide_wep_gold(_minhard, _maxhard, _nowep)                                     return  mod_script_call(   "mod", "telib", "decide_wep_gold", _minhard, _maxhard, _nowep);
-#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc("mod", "telib", "path_create", _xstart, _ystart, _xtarget, _ytarget, _wall);
-#define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   "mod", "telib", "race_get_sprite", _race, _sprite);
-#define scrFloorMake(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "scrFloorMake", _x, _y, _obj);
-#define scrFloorFill(_x, _y, _w, _h)                                                    return  mod_script_call(   "mod", "telib", "scrFloorFill", _x, _y, _w, _h);
-#define scrFloorFillRound(_x, _y, _w, _h)                                               return  mod_script_call(   "mod", "telib", "scrFloorFillRound", _x, _y, _w, _h);
-#define unlock_get(_name)                                                               return  mod_script_call_nc("mod", "telib", "unlock_get", _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
-#define unlock_call(_name)                                                              return  mod_script_call_nc("mod", "telib", "unlock_call", _name);
-#define scrUnlock(_name, _text, _sprite, _sound)                                        return  mod_script_call(   "mod", "telib", "scrUnlock", _name, _text, _sprite, _sound);
-#define area_get_subarea(_area)                                                         return  mod_script_call(   "mod", "telib", "area_get_subarea", _area);
-#define trace_lag()                                                                             mod_script_call(   "mod", "telib", "trace_lag");
-#define trace_lag_bgn(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_bgn", _name);
-#define trace_lag_end(_name)                                                                    mod_script_call(   "mod", "telib", "trace_lag_end", _name);
-#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc("mod", "telib", "instance_rectangle_bbox", _x1, _y1, _x2, _y2, _obj);
-#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   "mod", "telib", "instances_meeting", _x, _y, _obj);
-#define array_delete(_array, _index)                                                    return  mod_script_call_nc("mod", "telib", "array_delete", _array, _index);
-#define array_delete_value(_array, _value)                                              return  mod_script_call_nc("mod", "telib", "array_delete_value", _array, _value);
-#define instances_at(_x, _y, _obj)                                                      return  mod_script_call(   "mod", "telib", "instances_at", _x, _y, _obj);
-#define Pet_spawn(_x, _y, _name)                                                        return  mod_script_call(   "mod", "telib", "Pet_spawn", _x, _y, _name);
-#define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc("mod", "telib", "scrFX", _x, _y, _motion, _obj);
-#define array_combine(_array1, _array2)                                                 return  mod_script_call_nc("mod", "telib", "array_combine", _array1, _array2);
-#define player_create(_x, _y, _index)                                                   return  mod_script_call(   "mod", "telib", "player_create", _x, _y, _index);
-#define trace_error(_error)                                                                     mod_script_call_nc("mod", "telib", "trace_error", _error);
-#define sleep_max(_milliseconds)                                                                mod_script_call_nc("mod", "telib", "sleep_max", _milliseconds);
-#define array_clone_deep(_array)                                                        return  mod_script_call_nc("mod", "telib", "array_clone_deep", _array);
-#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc("mod", "telib", "lq_clone_deep", _obj);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc("mod", "telib", "array_exists", _array, _value);
-#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc("mod", "telib", "wep_merge", _stock, _front);
-#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call(   "mod", "telib", "wep_merge_decide", _hardMin, _hardMax);
-#define array_shuffle(_array)                                                           return  mod_script_call_nc("mod", "telib", "array_shuffle", _array);
-#define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc("mod", "telib", "view_shift", _index, _dir, _pan);
-#define stat_get(_name)                                                                 return  mod_script_call_nc("mod", "telib", "stat_get", _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc("mod", "telib", "stat_set", _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc("mod", "telib", "option_get", _name, _default);
-#define option_set(_name, _value)                                                               mod_script_call_nc("mod", "telib", "option_set", _name, _value);
-#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   "mod", "telib", "sound_play_hit_ext", _snd, _pit, _vol);
-#define area_get_secret(_area)                                                          return  mod_script_call_nc("mod", "telib", "area_get_secret", _area);
-#define area_get_underwater(_area)                                                      return  mod_script_call_nc("mod", "telib", "area_get_underwater", _area);
-#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc("mod", "telib", "path_shrink", _path, _wall, _skipMax);
-#define path_direction(_x, _y, _path, _wall)                                            return  mod_script_call_nc("mod", "telib", "path_direction", _x, _y, _path, _wall);
-#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc("mod", "telib", "rad_drop", _x, _y, _raddrop, _dir, _spd);
-#define rad_path(_inst, _target)                                                        return  mod_script_call_nc("mod", "telib", "rad_path", _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc("mod", "telib", "area_get_name", _area, _subarea, _loop);
-#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc("mod", "telib", "draw_text_bn", _x, _y, _string, _angle);
-#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc("mod", "telib", "top_create", _x, _y, _obj, _spawnDir, _spawnDis);
+#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  anim_end                                                                                image_index + image_speed_raw >= image_number
+#macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#define orandom(n)                                                                      return  random_range(-n, n);
+#define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
+#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale
+#define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
+#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
+#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
+#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
+#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
+#define unlock_call(_name)                                                              return  mod_script_call_nc('mod', 'telib', 'unlock_call', _name);
+#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
+#define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
+#define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
+#define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
+#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
+#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
+#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
+#define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
+#define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
+#define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
+#define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
+#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
+#define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
+#define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
+#define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
+#define array_delete(_array, _index)                                                    return  mod_script_call_nc('mod', 'telib', 'array_delete', _array, _index);
+#define array_delete_value(_array, _value)                                              return  mod_script_call_nc('mod', 'telib', 'array_delete_value', _array, _value);
+#define array_flip(_array)                                                              return  mod_script_call_nc('mod', 'telib', 'array_flip', _array);
+#define array_shuffle(_array)                                                           return  mod_script_call_nc('mod', 'telib', 'array_shuffle', _array);
+#define array_clone_deep(_array)                                                        return  mod_script_call_nc('mod', 'telib', 'array_clone_deep', _array);
+#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc('mod', 'telib', 'lq_clone_deep', _obj);
+#define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
+#define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
+#define scrWalk(_walk, _dir)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _walk, _dir);
+#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
+#define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
+#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
+#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
+#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
+#define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
+#define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
+#define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
+#define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_generate(_x, _y, _area)                                                    return  mod_script_call_nc('mod', 'telib', 'area_generate', _x, _y, _area);
+#define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
+#define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
+#define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
+#define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
+#define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
+#define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
+#define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
+#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
+#define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
+#define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
+#define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
+#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
+#define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
+#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
+#define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
+#define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
+#define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
+#define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
+#define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
+#define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
+#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
+#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
