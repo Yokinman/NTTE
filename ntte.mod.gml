@@ -705,89 +705,91 @@
 	            }
             }
         	
-			 // :
-			var	_instSpawn = [],
-				_w = 5 * 32,
-				_h = 4 * 32;
-				
-			with(Wall){
-				if(
-					abs(((bbox_left + bbox_right + 1) / 2) - _spawnx) > 48 + (_w / 2) &&
-					abs(((bbox_top + bbox_bottom + 1) / 2) - _spawny) > 48 + (_h / 2)
-				){
-					array_push(_instSpawn, id);
-				}
-			}
-			
-			with(instance_random(_instSpawn)){
-				var	_dir = point_direction(_spawnx, _spawny, x, y),
-					_dis = 1/3,
-					_campX = x + lengthdir_x(_w * _dis, _dir),
-					_campY = y + lengthdir_y(_h * _dis, _dir),
-					_floor = floor_fill(_campX, _campY, _w / 32, _h / 32);
+			 // Bandit Camp:
+			if((GameCont.subarea = 3 || GameCont.loops > 0) && chance(1, 10)) {
+				var	_instSpawn = [],
+					_w = 5 * 32,
+					_h = 4 * 32;
 					
-				if(array_length(_floor) > 0) with(_floor[0]){
-					var	_x = x + (_w / 2),
-						_y = y + (_h / 2);
-						
-					with(instance_create(_x, _y, Detail)){
-						sprite_index = spr.BanditCampfire;
-						with(instance_create(_x, _y - 2, GroundFlame)){
-							alarm0 *= 4;
-						}
+				with(Wall){
+					if(
+						abs(((bbox_left + bbox_right + 1) / 2) - _spawnx) > 48 + (_w / 2) &&
+						abs(((bbox_top + bbox_bottom + 1) / 2) - _spawny) > 48 + (_h / 2)
+					){
+						array_push(_instSpawn, id);
 					}
-					obj_create(_x, _y, "BanditHiker");
-					
-					var _ang = random(360);
-					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-						var	l = 40,
-							d = _dir + orandom(10);
+				}
+				
+				with(instance_random(_instSpawn)){
+					var	_dir = point_direction(_spawnx, _spawny, x, y),
+						_dis = 1/3,
+						_campX = x + lengthdir_x(_w * _dis, _dir),
+						_campY = y + lengthdir_y(_h * _dis, _dir),
+						_floor = floor_fill(_campX, _campY, _w / 32, _h / 32);
+						
+					if(array_length(_floor) > 0) with(_floor[0]){
+						var	_x = x + (_w / 2),
+							_y = y + (_h / 2);
 							
-						with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BanditTent")){
-							with(instance_nearest_array(x, y, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
-								with(other){
-									target = other;
-									event_perform(ev_step, ev_step_begin);
+						with(instance_create(_x, _y, Detail)){
+							sprite_index = spr.BanditCampfire;
+							with(instance_create(_x, _y - 2, GroundFlame)){
+								alarm0 *= 4;
+							}
+						}
+						obj_create(_x, _y, "BanditHiker");
+						
+						var _ang = random(360);
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+							var	l = 40,
+								d = _dir + orandom(10);
+								
+							with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BanditTent")){
+								with(instance_nearest_array(x, y, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
+									with(other){
+										target = other;
+										event_perform(ev_step, ev_step_begin);
+									}
 								}
 							}
 						}
 					}
-				}
-				
-        		with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
-        			if(chance(1, point_distance(x, y, _campX, _campY) / 160)){
-        				instance_delete(id);
-        			}
-        		}
-				
-				with(array_shuffle(instances_matching(instances_matching(Floor, "mask_index", mskFloor), "styleb", false))){
-					if(chance(1, point_distance(x, y, _campX, _campY) / 24)){
-						if(!place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
-							var	_fw = ((bbox_right + 1) - bbox_left),
-								_fh = ((bbox_bottom + 1) - bbox_top),
-								_fx = x + (_fw / 2),
-								_fy = y + (_fh / 2);
-								
-							if(point_distance(_fx, _fy, _spawnx, _spawny) > 64){
-								var	_sideStart = choose(-1, 1),
-									_spawn = true;
+					
+	        		with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
+	        			if(chance(1, point_distance(x, y, _campX, _campY) / 160)){
+	        				instance_delete(id);
+	        			}
+	        		}
+					
+					with(array_shuffle(instances_matching(instances_matching(Floor, "mask_index", mskFloor), "styleb", false))){
+						if(chance(1, point_distance(x, y, _campX, _campY) / 24)){
+							if(!place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
+								var	_fw = ((bbox_right + 1) - bbox_left),
+									_fh = ((bbox_bottom + 1) - bbox_top),
+									_fx = x + (_fw / 2),
+									_fy = y + (_fh / 2);
 									
-								for(var _side = _sideStart; abs(_side) <= 1; _side += 2 * -_sideStart){
-									if(_spawn && !place_meeting(x + (_fw * _side), y, Floor)){
-										_spawn = false;
-										with(obj_create(_fx + (((_fw / 2) - irandom_range(3, 5)) * _side), _fy - random(2), "BanditTent")){
-											spr_idle = spr.BanditTentWallIdle;
-											spr_hurt = spr.BanditTentWallHurt;
-											spr_dead = spr.BanditTentWallDead;
-											image_xscale = -_side;
+								if(point_distance(_fx, _fy, _spawnx, _spawny) > 64){
+									var	_sideStart = choose(-1, 1),
+										_spawn = true;
+										
+									for(var _side = _sideStart; abs(_side) <= 1; _side += 2 * -_sideStart){
+										if(_spawn && !place_meeting(x + (_fw * _side), y, Floor)){
+											_spawn = false;
+											with(obj_create(_fx + (((_fw / 2) - irandom_range(3, 5)) * _side), _fy - random(2), "BanditTent")){
+												spr_idle = spr.BanditTentWallIdle;
+												spr_hurt = spr.BanditTentWallHurt;
+												spr_dead = spr.BanditTentWallDead;
+												image_xscale = -_side;
+											}
 										}
 									}
-								}
-								
-								if(_spawn){
-									if(!collision_rectangle(_fx - 32, _fy - 32, _fx + 32, _fy + 32, Wall, false, false)){
-										if(!collision_rectangle(bbox_left - 4, bbox_top - 4, bbox_right + 4, bbox_bottom + 4, hitme, false, false)){
-											obj_create(_fx + orandom(8), _fy + orandom(8), (chance(1, 3) ? Barrel : "BanditTent"));
+									
+									if(_spawn){
+										if(!collision_rectangle(_fx - 32, _fy - 32, _fx + 32, _fy + 32, Wall, false, false)){
+											if(!collision_rectangle(bbox_left - 4, bbox_top - 4, bbox_right + 4, bbox_bottom + 4, hitme, false, false)){
+												obj_create(_fx + orandom(8), _fy + orandom(8), (chance(1, 3) ? Barrel : "BanditTent"));
+											}
 										}
 									}
 								}
