@@ -144,7 +144,7 @@
 								"Spider"		+ ".petlib.mod",
 								"Prism"			+ ".petlib.mod",
 								"Weapon"		+ ".petlib.mod",
-								"Mantis"		+ ".petlib.mod"
+								"Orchid"		+ ".petlib.mod"
 							]
 						},
 						
@@ -469,8 +469,8 @@
 	}
     
      // Wepmimic Arena:
-    if(_validArea && chance(1, 2)){
-    	with(instances_matching(WeaponChest, "sprite_index", sprWeaponChest, sprWeaponChestSteroidsUltra)){
+    if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
+    	with(instance_furthest(_spawnx, _spawny, WeaponChest)){
 	    	floor_fill_round(x, y, 5, 5);
 	    	obj_create(x, y, "PetWeaponBecome");
 	    	instance_delete(id);
@@ -704,9 +704,9 @@
 	                sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
 	            }
             }
-        	
+            
 			 // Bandit Camp:
-			if((GameCont.subarea = 3 || GameCont.loops > 0) && chance(1, 10)) {
+			if((GameCont.subarea = 3 || GameCont.loops > 0) && chance(1, 10)){
 				var	_instSpawn = [],
 					_w = 5 * 32,
 					_h = 4 * 32;
@@ -727,24 +727,27 @@
 						_campY = y + lengthdir_y(_h * _dis, _dir),
 						_floor = floor_fill(_campX, _campY, _w / 32, _h / 32);
 						
+					 // Main Campsite:
 					if(array_length(_floor) > 0) with(_floor[0]){
 						var	_x = x + (_w / 2),
 							_y = y + (_h / 2);
 							
+						 // Dying Campfire:
 						with(instance_create(_x, _y, Detail)){
 							sprite_index = spr.BanditCampfire;
 							with(instance_create(_x, _y - 2, GroundFlame)){
 								alarm0 *= 4;
 							}
 						}
-						obj_create(_x, _y, "BanditHiker");
 						
+						 // Main Tents:
 						var _ang = random(360);
 						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
 							var	l = 40,
 								d = _dir + orandom(10);
 								
 							with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BanditTent")){
+								 // Grab Chests:
 								with(instance_nearest_array(x, y, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
 									with(other){
 										target = other;
@@ -753,14 +756,19 @@
 								}
 							}
 						}
+						
+						 // Bro:
+						obj_create(_x, _y, "BanditHiker");
 					}
 					
+					 // Reduce Nearby Non-Bandits:
 	        		with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
 	        			if(chance(1, point_distance(x, y, _campX, _campY) / 160)){
 	        				instance_delete(id);
 	        			}
 	        		}
 					
+					 // Random Tent Spawns:
 					with(array_shuffle(instances_matching(instances_matching(Floor, "mask_index", mskFloor), "styleb", false))){
 						if(chance(1, point_distance(x, y, _campX, _campY) / 24)){
 							if(!place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
@@ -773,6 +781,7 @@
 									var	_sideStart = choose(-1, 1),
 										_spawn = true;
 										
+									 // Wall Tent:
 									for(var _side = _sideStart; abs(_side) <= 1; _side += 2 * -_sideStart){
 										if(_spawn && !place_meeting(x + (_fw * _side), y, Floor)){
 											_spawn = false;
@@ -785,6 +794,7 @@
 										}
 									}
 									
+									 // Can't Spawn Wall Tent, Spawn Normal:
 									if(_spawn){
 										if(!collision_rectangle(_fx - 32, _fy - 32, _fx + 32, _fy + 32, Wall, false, false)){
 											if(!collision_rectangle(bbox_left - 4, bbox_top - 4, bbox_right + 4, bbox_bottom + 4, hitme, false, false)){
@@ -4966,12 +4976,14 @@
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
-#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale
+#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
+#define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
+#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -4990,6 +5002,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -5010,11 +5023,13 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc('mod', 'telib', 'lq_clone_deep', _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_walk, _dir)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _walk, _dir);
+#define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
+#define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
@@ -5049,6 +5064,7 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
+#define path_draw(_path)                                                                return  mod_script_call(   'mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);

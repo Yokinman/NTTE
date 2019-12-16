@@ -1,8 +1,8 @@
 #define init
-    global.sprWep		= sprite_add_weapon("../sprites/weps/sprWepClamShield.png", 	8,	8);
-    global.sprWepHUD	= sprite_add("../sprites/weps/sprWepClamShieldHUD.png", 	1,	0,	6);
-    global.sprWepHeld	= sprite_add("../sprites/enemies/Seal/sprClamShield.png",	14, 7,	7);
-    global.sprWepShine	= sprite_add("../sprites/chests/sprShine64.png",			7,	0,	0);
+    global.sprWep		= sprite_add_weapon("../sprites/weps/sprWepClamShield.png",          8, 8);
+    global.sprWepHUD	= sprite_add(       "../sprites/weps/sprWepClamShieldHUD.png",    1, 0, 6);
+    global.sprWepHeld	= sprite_add(       "../sprites/enemies/Seal/sprClamShield.png", 14, 7, 7);
+    global.sprWepShine	= sprite_add(       "../sprites/chests/sprShine64.png",           7, 0, 0);
     global.sprWepLocked = mskNone;
     
     global.lwoWep = {
