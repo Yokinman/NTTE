@@ -20,75 +20,209 @@
 			float4 vPosition : POSITION;
 			float2 vTexcoord : TEXCOORD0;
 		};
-
+		
 		struct VertexShaderOutput
 		{
 			float4 vPosition : SV_POSITION;
 			float2 vTexcoord : TEXCOORD0;
 		};
-
+		
 		uniform float4x4 matrix_world_view_projection;
-
+		
 		VertexShaderOutput main(VertexShaderInput INPUT)
 		{
 			VertexShaderOutput OUT;
-
+			
 			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
 			OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
-
+			
 			return OUT;
 		}
 		",
-
+		
 		/* Fragment/Pixel Shader */"
 		struct PixelShaderInput
 		{
 			float2 vTexcoord : TEXCOORD0;
 		};
-
+		
 		sampler2D s0;
-
+		uniform float2 pixelSize;
+		
+		//float3 RGBtoHSV(in float3 RGB)
+		//{
+		//	float R = RGB.r,
+		//		  G = RGB.g,
+		//		  B = RGB.b,
+		//		  H = 0.0,
+		//		  S = 0.0,
+		//		  V = 0.0,
+		//		  maxRGB = max(max(R, G), B);
+		//		  
+		//	if(maxRGB != 0){
+		//		float delta = maxRGB - min(min(R, G), B);
+		//		
+		//		 // Hue:
+		//		if(R == maxRGB){
+		//			// -1 ~ 1, Yellow to Magenta
+		//			H = ((G - B) / delta);
+		//		}
+		//		else if(G == maxRGB){
+		//			// 1 ~ 3, Cyan to Yellow
+		//			H = 2 + ((B - R) / delta);
+		//		}
+		//		else{
+		//			// 3 ~ 5, Magenta to Cyan
+		//			H = 4 + ((R - G) / delta);
+		//		}
+		//		H *= (60.0 / 360.0);
+		//		if(H < 0) H++;
+		//		
+		//		 // Saturation:
+		//		S = delta / maxRGB;
+		//		
+		//		 // Value:
+		//		V = maxRGB;
+		//	}
+		//	
+		//	return float3(H, S, V);
+		//}
+		//
+		//bool isEyeColor(in float3 HSV)
+		//{
+		//	if(HSV.y > 0.8 && HSV.z > 0.33){
+		//		if(HSV.x < (10.0 / 360.0)){
+		//			return true;
+		//		}
+		//		if(HSV.z > 0.75){
+		//			if(
+		//				HSV.x < ( 20.0 / 360.0) ||
+		//				HSV.x > (345.0 / 360.0)
+		//			){
+		//				return true;
+		//			}
+		//		}
+		//	}
+		//	return false;
+		//}
+		//
+		//float4 main(PixelShaderInput INPUT) : SV_TARGET
+		//{
+		//	float4 RGBA = tex2D(s0, INPUT.vTexcoord);
+		//	
+		//	if(RGBA.r > RGBA.g && RGBA.r > RGBA.b){
+		//		float3 HSV = RGBtoHSV(RGBA.rgb);
+		//		
+		//		 // Turn Green if Red:
+		//		if(isEyeColor(HSV)){
+		//			return RGBA.grba;
+		//		}
+		//		
+		//		 // Turn Green if Yellow-ish or Almost-Red & Adjacent to Red:
+		//		if(
+		//			(
+		//				HSV.y > 0.7		&&
+		//				HSV.z > 0.95	&&
+		//				(
+		//					HSV.x >= (20.0 / 360.0)	&&
+		//					HSV.x <  (40.0 / 360.0)
+		//				)
+		//			)
+		//			||
+		//			(
+		//				HSV.y > 0.8		&&
+		//				HSV.z > 0.33	&&
+		//				(
+		//					HSV.x > (345.0 / 360.0)	||
+		//					HSV.x < ( 20.0 / 360.0)
+		//				)
+		//			)
+		//		){
+		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY - float2(pixelSize.x, 0.0)).rgb))) return RGBA.grba;
+		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY + float2(pixelSize.x, 0.0)).rgb))) return RGBA.grba;
+		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY - float2(0.0, pixelSize.y)).rgb))) return RGBA.grba;
+		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY + float2(0.0, pixelSize.y)).rgb))) return RGBA.grba;
+		//			// i wanna do a flood fill search but i cannot figure out how cause shaders suck ass fuck
+		//		}
+		//	}
+		//	
+		//	 // Return Blank Pixel:
+		//	return float4(0.0, 0.0, 0.0, 0.0);
+		//}
+		
+		bool isEyeColor(in float3 RGB)
+		{
+			float R = round(RGB.r * 255.0);
+			float G = round(RGB.g * 255.0);
+			float B = round(RGB.b * 255.0);
+			if(
+				R == 252.0 && G == 56.0 && B ==  0.0 ||	//  Standard enemy eye color
+				R == 199.0 && G ==  0.0 && B ==  0.0 ||	//  Freak eye color
+				R ==  95.0 && G ==  0.0 && B ==  0.0 ||	//  Freak eye color
+				R == 163.0 && G ==  5.0 && B ==  5.0 ||	//  Buff gator ammo
+				R == 105.0 && G ==  3.0 && B ==  3.0 ||	//  Buff gator ammo
+				R == 255.0 && G ==  0.0 && B ==  0.0 ||	//  Wolf eye color
+				R == 165.0 && G ==  9.0 && B == 43.0 ||	//  Snowbot eye color
+				R == 194.0 && G == 42.0 && B ==  0.0 ||	//  Explo freak color
+				R == 122.0 && G == 27.0 && B ==  0.0 ||	//  Explo freak color
+				R == 156.0 && G == 20.0 && B == 31.0 ||	//  Turret eye color
+				R ==  99.0 && G ==  9.0 && B == 17.0 ||	//  Turret color
+				R == 112.0 && G ==  0.0 && B == 17.0 ||	//  Necromancer eye color
+				R == 210.0 && G == 32.0 && B == 71.0 ||	//  Jungle fly eye color
+				R == 179.0 && G == 27.0 && B == 60.0	//  Jungle fly eye color
+			){
+				return true;
+			}
+			return false;
+		}
+		
 		float4 main(PixelShaderInput INPUT) : SV_TARGET
 		{
-			 // Break Down Pixel's Color:
-			float4 Color = tex2D(s0, INPUT.vTexcoord); // (r,g,b,a)
-			float R = round(Color.r * 255.0);
-			float G = round(Color.g * 255.0);
-			float B = round(Color.b * 255.0);
-
-			if(R > G && R > B){
+			float4 RGBA = tex2D(s0, INPUT.vTexcoord);
+			
+			 // Red Eyes to Green:
+			if(RGBA.r > RGBA.g && RGBA.r > RGBA.b){
 				if(
-					(R == 252.0 && G ==  56.0 && B ==  0.0) || // Standard enemy eye color
-					(R == 199.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-					(R ==  95.0 && G ==   0.0 && B ==  0.0) || // Freak eye color
-					(R == 163.0 && G ==   5.0 && B ==  5.0) || // Buff gator ammo
-					(R == 105.0 && G ==   3.0 && B ==  3.0) || // Buff gator ammo
-					(R == 255.0 && G == 164.0 && B == 15.0) || // Saladmander fire color
-					(R == 255.0 && G ==   0.0 && B ==  0.0) || // Wolf eye color
-					(R == 165.0 && G ==   9.0 && B == 43.0) || // Snowbot eye color
-					(R == 255.0 && G == 168.0 && B == 61.0) || // Snowbot eye color
-					(R == 194.0 && G ==  42.0 && B ==  0.0) || // Explo freak color
-					(R == 122.0 && G ==  27.0 && B ==  0.0) || // Explo freak color
-					(R == 156.0 && G ==  20.0 && B == 31.0) || // Turret eye color
-					(R == 255.0 && G == 134.0 && B == 47.0) || // Turret eye color
-					(R ==  99.0 && G ==   9.0 && B == 17.0) || // Turret color
-					(R == 112.0 && G ==   0.0 && B == 17.0) || // Necromancer eye color
-					(R == 210.0 && G ==  32.0 && B == 71.0) || // Jungle fly eye color
-					(R == 179.0 && G ==  27.0 && B == 60.0) || // Jungle fly eye color
-					(R == 255.0 && G == 160.0 && B == 35.0) || // Jungle fly eye/wing color
-					(R == 255.0 && G == 228.0 && B == 71.0)    // Jungle fly wing color
+					isEyeColor(RGBA.rgb)													||
+					isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(pixelSize.x, 0.0)).rgb)	||
+					isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(pixelSize.x, 0.0)).rgb)	||
+					isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(0.0, pixelSize.y)).rgb)	||
+					isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(0.0, pixelSize.y)).rgb)
 				){
-					return float4(G / 255.0, R / 255.0, B / 255.0, Color.a);
+					return RGBA.grba;
 				}
 			}
-
+			
 			 // Return Blank Pixel:
 			return float4(0.0, 0.0, 0.0, 0.0);
 		}
 		"
+		/*
+			  R    G    B |   H    S    V |
+			252,  56,   0 |  13, 100,  99 | Standard enemy eye color
+			199,   0,   0 |   0, 100,  78 | Freak eye color
+			 95,   0,   0 |   0, 100,  37 | Freak eye color
+			163,   5,   5 |   0,  97,  64 | Buff gator ammo
+			105,   3,   3 |   0,  97,  41 | Buff gator ammo
+			255,   0,   0 |   0, 100, 100 | Wolf eye color
+			165,   9,  43 | 347,  95,  65 | Snowbot eye color
+			194,  42,   0 |  13, 100,  76 | Explo freak color
+			122,  27,   0 |  13, 100,  48 | Explo freak color
+			156,  20,  31 | 355,  87,  61 | Turret eye color
+			 99,   9,  17 | 355,  91,  39 | Turret color
+			112,   0,  17 | 351, 100,  44 | Necromancer eye color
+			210,  32,  71 | 347,  85,  82 | Jungle fly eye color
+			179,  27,  60 | 347,  85,  70 | Jungle fly eye color
+			
+			255, 164,  15 |  37,  94, 100 | Saladmander fire color
+			255, 168,  61 |  33,  76  100 | Snowbot eye color
+			255, 134,  47 |  25,  82, 100 | Turret eye color
+			255, 160,  35 |  34,  86, 100 | Jungle fly eye/wing color
+			///255, 228,  71 |  51,  72, 100 | Jungle fly wing color
+		*/
 	);
     global.charm = ds_list_create();
-
+    
 	 // Global Step:
     while(true){
     	script_bind_end_step(charm_step, 0);
@@ -1184,30 +1318,30 @@
 	if(_index < 0 || _index >= maxp){
 		_index = player_find_local_nonsync();
 	}
-
+	
 	with(surfCharm){
 		x = view_xview_nonsync;
 		y = view_yview_nonsync;
 		w = game_width;
 		h = game_height;
-
+		
 		if(surface_exists(surf)){
 			var _cts = current_time_scale;
 			current_time_scale = 0.00001;
-
+			
 			var	_surfx = x,
 				_surfy = y;
-
+				
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
-
+			
 			try{
-				with(other) with(instances_seen_nonsync(instances_matching_ne(_inst, "sprite_index", sprSuperFireBallerFire, sprFireBallerFire), 24, 24)){
+				with(other) with(instances_seen_nonsync(_inst, 24, 24)){
 					/*var _x = x - _surfx,
 						_y = y - _surfy,
 						_spr = sprite_index,
 						_img = image_index;
-
+						
 					if(object_index == TechnoMancer){ // JW help me
 						_spr = drawspr;
 						_img = drawimg;
@@ -1216,36 +1350,36 @@
 							draw_sprite_ext(sprTechnoMancerActivate, 8, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);
 						}
 					}
-
+					
 					draw_sprite_ext(_spr, _img, _x, _y, image_xscale * (("right" in self) ? right : 1), image_yscale, image_angle, image_blend, image_alpha);*/
-
+					
 					var _x = x,
 						_y = y;
-
+						
 					x -= _surfx;
 					y -= _surfy;
-
+					
 					switch(object_index){
 						case SnowTank:
 						case GoldSnowTank: // disable laser sights
 							var a = ammo;
 							ammo = 0;
-					        event_perform(ev_draw, 0);
+							event_perform(ev_draw, 0);
 							ammo = a;
 							break;
-
+							
 						default:
 							var g = false;
 							if("gonnafire" in self){ // Disable laser sights
 								g = gonnafire;
 								gonnafire = false;
 							}
-
+							
 							event_perform(ev_draw, 0);
-
+							
 							if(g != false) gonnafire = g;
 					}
-
+					
 					x = _x;
 					y = _y;
 				}
@@ -1253,10 +1387,10 @@
 			catch(_error){
 				trace_error(_error);
 			}
-
+			
 			surface_reset_target();
 			current_time_scale = _cts;
-
+			
 			 // Outlines:
 			var _option = option_get("outlineCharm", 2);
 			if(_option > 0){
@@ -1265,31 +1399,30 @@
 					for(var a = 0; a <= 360; a += 90){
 						var _x = _surfx,
 						    _y = _surfy;
-
+						    
 						if(a >= 360) draw_set_fog(false, 0, 0, 0);
 						else{
 						    _x += dcos(a);
 						    _y -= dsin(a);
 						}
-
+						
 						draw_surface(surf, _x, _y);
 					}
 				}
 			}
-
+			
 			 // Eye Shader:
-			with(shadCharm) if(shad != -1){
-				shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-				shader_set(shad);
-				texture_set_stage(0, surface_get_texture(other.surf));
-
-				draw_surface(other.surf, _surfx, _surfy);
-
+			if(shadlist_setup(
+				shadCharm,
+				surface_get_texture(surf),
+				[w, h]
+			)){
+				draw_surface(surf, _surfx, _surfy);
 				shader_reset();
 			}
 		}
 	}
-
+	
 	instance_destroy();
 
 #define cleanup
@@ -1310,12 +1443,14 @@
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
-#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale
+#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
+#define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
+#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -1334,6 +1469,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1354,11 +1490,13 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc('mod', 'telib', 'lq_clone_deep', _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_walk, _dir)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _walk, _dir);
+#define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
+#define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
@@ -1393,6 +1531,7 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
+#define path_draw(_path)                                                                return  mod_script_call(   'mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);

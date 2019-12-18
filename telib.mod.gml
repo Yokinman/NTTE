@@ -8,19 +8,19 @@
 
 	 // sleep_max():
 	global.sleep_max = 0;
-
+	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     global.objectList = {
-		"tegeneral"	  : ["AllyFlakBullet", "BatDisc", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PickupIndicator", "PortalGuardian", "PortalGuardianBall", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
+		"tegeneral"	  : ["AllyFlakBullet", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"tewater"	  : ["Angler", "BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "ClamChest", "Crack", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Hammerhead", "HyperBubble", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "OasisPetBecome", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "Puffer", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid", "WaterStreak", "YetiCrab"],
-	    "tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
-	    "tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
+		"tesewers"	  : ["AlbinoBolt", "AlbinoGator", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
+		"tescrapyard" : ["NestRaven", "SawTrap", "Tunneler"],
 	    "tecaves"	  : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "Spiderling", "SpiderWall"]
     };
-
+    
 	 // Auto Create Event Script References:
     global.objectScrt = {}
 	for(var i = 0; i < lq_size(objList); i++){
@@ -461,18 +461,24 @@
 	draw_set_color(_col);
 	draw_text_transformed(_x,     _y,     _string, 1, 1, _angle);
 
-#define scrWalk(_walk, _dir)
-    walk = _walk;
+#define scrWalk(_dir, _walk)
+    walk = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
     speed = max(speed, friction);
     direction = _dir;
-    if("gunangle" in self) gunangle = direction;
-    scrRight(direction);
-
+    if("gunangle" not in self) scrRight(direction);
+    
 #define scrRight(_dir)
-    _dir = (_dir + 360) mod 360;
+    _dir = ((_dir % 360) + 360) % 360;
     if(_dir < 90 || _dir > 270) right = 1;
     if(_dir > 90 && _dir < 270) right = -1;
-
+    
+#define scrAim(_dir)
+    if("gunangle" in self){
+    	gunangle = (_dir % 360);
+    	if(gunangle < 0) gunangle += 360;
+    }
+    scrRight(_dir);
+    
 #define enemy_shoot(_object, _dir, _spd)
     return enemy_shoot_ext(x, y, _object, _dir, _spd);
 
@@ -523,6 +529,17 @@
 #define enemy_death
     pickup_drop(16, 0); // Bandit drop-ness
 
+#define enemy_target(_x, _y)
+	// Base game targeting
+	if(!instance_exists(target)){
+		target = -1;
+	}
+	if(instance_exists(Player)){
+	    target = instance_nearest(_x, _y, Player);
+	}
+	return (target > 0 && instance_exists(target));
+	// Just doing this for consistency with base game, with consistency you can have clever solutions
+
 #define chance(_numer, _denom)
 	return random(_denom) < _numer;
 
@@ -558,6 +575,29 @@
 	 // Return if '_inst' is in line of sight:
 	return !collision_line(x, y, _inst.x, _inst.y, Wall, false, false);
 
+#define shadlist_setup(_shader, _texture, _args)
+	if(is_string(_shader)){
+		_shader = mod_script_call_nc('mod', 'teassets', 'shadlist_get', _shader);
+	}
+	if(lq_defget(_shader, "shad", -1) != -1){
+		shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+		
+		switch(lq_get(_shader, "name")){
+			case "Charm":
+				var	_w = _args[0],
+					_h = _args[1];
+					
+				shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+				break;
+		}
+		
+		shader_set(_shader.shad);
+		texture_set_stage(0, _texture);
+		
+		return true;
+	}
+	return false;
+	
 #define option_get(_name, _default)
 	var q = lq_defget(sav, "option", {});
 	return lq_defget(q, _name, _default);
@@ -858,6 +898,18 @@
 #define charm_allyize(_bool)
 	var _inst = noone;
 	
+	/*
+		[[EnemyBullet4, spr.EnemyBullet0], Bullet1],
+		[EnemyBullet1,                     AllyBullet],
+		[EnemyBullet3,                     Bullet2],
+		[EnemyBullet4,                     [AllyBullet, spr.AllyBullet4]],
+		[EFlakBullet,                      ["AllyFlakBullet", sprFlakBullet]],
+		[LHBouncer,                        BouncerBullet],
+		[EnemyLaser,                       Laser],
+		[EnemyLightning,                   Lightning]
+	*/
+	
+	
 	 // Become Allied:
 	if(_bool){
 		switch(sprite_index){
@@ -894,7 +946,7 @@
 				if(instance_is(self, EFlakBullet)){
 					_inst = obj_create(x, y, "AllyFlakBullet");
 				}
-				sprite_index = spr.AllyFlakBullet;
+				sprite_index = sprFlakBullet;
 				break;
 
 			case sprEnemyLaser:
@@ -952,7 +1004,7 @@
 		    		sprite_index = sprEnemyBullet4;
 				}
 
-				else if(sprite_index == spr.AllyFlakBullet){
+				else if(sprite_index == sprFlakBullet){
 					if(instance_is(self, CustomProjectile) && "name" in self && name == "AllyFlakBullet"){
 						sprite_index = sprEFlak;
 					}
@@ -2258,8 +2310,12 @@
 		_gridY = 10000,
 		_gridW = 16,
 		_gridH = 16,
-		_floorAdjacent = instance_rectangle_bbox(_x - _bw, _y - _bh, _x + _w + _bw - 1, _y + _h + _bh - 1, Floor);
+		_floorAdjacent = instance_rectangle_bbox(_x - _bw, _y - _bh, _x + _w + _bw - 1, _y + _h + _bh - 1, instances_matching_ne(Floor, "object_index", FloorExplo));
 		
+	if(array_length(_floorAdjacent) <= 0){
+		instance_rectangle_bbox(_x - _bw, _y - _bh, _x + _w + _bw - 1, _y + _h + _bh - 1, FloorExplo);
+	}
+	
 	if(array_length(_floorAdjacent) > 0){
 		with(instance_nearest_array(_x, _y, _floorAdjacent)){
 			_gridX = x;
@@ -2751,6 +2807,16 @@
     }
 
     return null;
+    
+#define path_draw(_path)
+	var	_x = x,
+		_y = y;
+		
+	with(_path){
+		draw_line(self[0], self[1], _x, _y);
+		_x = self[0];
+		_y = self[1];
+	}
 
 #define race_get_sprite(_race, _sprite)
     var i = race_get_id(_race),

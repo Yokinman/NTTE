@@ -254,17 +254,18 @@
     }
 
 
-#define Mantis_create
+#define Orchid_create
 	 // Visual:
 	
 	 // Vars:
 	
-#define Mantis_ttip
+#define Orchid_ttip
 	return ["ELEGANT", "FLORID"];
 	
-#define Mantis_step
+#define Orchid_step
 	 // Effects:
 	if(chance_ct(1, 30)) scrFX([x, 8], [y, 8], 0, CaveSparkle).depth = depth - 1;
+	
 	
 #define Mimic_create
      // Visual:
@@ -458,13 +459,13 @@
         if(_leaderDis > 16){
              // Pathfinding:
             if(path_dir != null){
-                scrWalk(12, path_dir);
+                scrWalk(path_dir, 12);
                 return irandom_range(3, walk);
             }
             
              // Wander Toward Leader:
             else if(_leaderDis > 48){
-                scrWalk(20 + random(max(0, _leaderDis - 64)), _leaderDir + orandom(10));
+                scrWalk(_leaderDir + orandom(10), 20 + random(max(0, _leaderDis - 64)));
             }
         }
     }
@@ -600,7 +601,7 @@
         	spr_bubble_y -= perched_y;
 		    perched_x = 0;
 		    perched_y = 0;
-            scrWalk(16, random(360));
+            scrWalk(random(360), 16);
 	    	if(!instance_exists(leader)) can_take = true;
     	}
 
@@ -659,7 +660,7 @@
          // Fly Toward Pickup:
         if(instance_exists(pickup)){
             if(!pickup_held){
-                scrWalk(irandom_range(6, 10), point_direction(x, y, pickup.x, pickup.y) + orandom(5));
+                scrWalk(point_direction(x, y, pickup.x, pickup.y) + orandom(5), [6, 10]);
                 return walk;
             }
         }
@@ -692,13 +693,13 @@
         if(perched != leader){
              // Pathfinding:
             if(path_dir != null){
-                scrWalk(4 + random(4), path_dir + orandom(4));
+                scrWalk(path_dir + orandom(4), [4, 8]);
                 return walk;
             }
 
              // Wander Toward Leader:
             else{
-                scrWalk(10 + random(10), _leaderDir + orandom(30));
+                scrWalk(_leaderDir + orandom(30), [10, 20]);
                 if(_leaderDis > 32) return walk;
             }
         }
@@ -741,7 +742,7 @@
     
          // Movin'
         if(speed <= 0){
-            scrWalk(maxspeed, _hitdir);
+            scrWalk(_hitdir, maxspeed);
             var o = 6;
             x += lengthdir_x(o, direction);
             y += lengthdir_y(o, direction);
@@ -841,14 +842,14 @@
 			
              // Pathfinding:
             if(path_dir != null && (!in_sight(target) || _leaderDis > 48)){
-                scrWalk(15, path_dir + orandom(15));
+                scrWalk(path_dir + orandom(15), 15);
                 return 1 + irandom(walk);
             }
             
             else{
                  // Follow Leader:
                 if(_leaderDis > 28){
-                    scrWalk(10 + irandom(20), _leaderDir + orandom(20));
+                    scrWalk(_leaderDir + orandom(20), [10, 30]);
                 }
 				
 				 // Attacking:
@@ -869,7 +870,7 @@
 		
          // Wander:
         else{
-            scrWalk(10 + irandom(10), random(360));
+            scrWalk(random(360), [10, 20]);
             return 20 + irandom(20);
         }
     }
@@ -1105,7 +1106,7 @@
         if(instance_exists(leader)){
              // Pathfinding:
             if(path_dir != null && (!in_sight(target) || _leaderDis > 96)){
-                scrWalk(12, path_dir + orandom(20));
+                scrWalk(path_dir + orandom(20), 12);
                 return 1 + irandom(walk);
             }
 
@@ -1126,7 +1127,7 @@
 
                      // Towards Enemy:
                     else{
-                        scrWalk(8 + random(8), point_direction(x, y, target.x, target.y) + orandom(20));
+                        scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [8, 16]);
                         alarm0 = 10;
                     }
                 }
@@ -1134,11 +1135,11 @@
                  // Towards Leader:
                 else{
                     if(_leaderDis > 48){
-                        scrWalk(15 + random(10), _leaderDir + orandom(20));
+                        scrWalk(_leaderDir + orandom(20), [15, 25]);
                         if(instance_exists(my_bone)) walk = alarm0;
                     }
                     else if(!instance_exists(my_bone)){
-                        scrWalk(8 + random(8), _leaderDir + orandom(90));
+                        scrWalk(_leaderDir + orandom(90), [8, 16]);
                     }
                 }
 
@@ -1182,7 +1183,7 @@
 
          // Wander:
         else{
-            scrWalk(8 + random(8), random(360));
+            scrWalk(random(360), [8, 16]);
             return 30 + random(10);
         }
     }
@@ -1299,13 +1300,13 @@
 	if(instance_exists(leader)){
          // Pathfinding:
         if(path_dir != null){
-            scrWalk(5 + random(5), path_dir + orandom(15));
+            scrWalk(path_dir + orandom(15), [5, 10]);
             return walk;
         }
 
          // Move Towards Leader:
         else{
-        	scrWalk(20, _leaderDir + orandom(30));
+        	scrWalk(_leaderDir + orandom(30), 20);
         	if(_leaderDis > 160) return walk;
 
         	/*
@@ -1344,12 +1345,12 @@
 			else{
 				 // Follow Leader:
 				if(_leaderDis > 64){
-					scrWalk(20 + irandom(10), _leaderDir);
+					scrWalk(_leaderDir, [20, 30]);
 				}
 				
 				 // Wander:
 				else{
-					scrWalk(10 + irandom(10), direction + orandom(45));
+					scrWalk(direction + orandom(45), [10, 20]);
 				}
 			}
 			*/
@@ -1358,7 +1359,7 @@
 
 	 // Wander:
 	else{
-        scrWalk(5 + random(5), random(360));
+        scrWalk(random(360), [5, 10]);
 	}
 
 #define Spider_web_add(_x, _y)
@@ -1617,13 +1618,13 @@
         if(_leaderDis > 64 || !in_sight(leader)){
              // Pathfinding:
             if(path_dir != null){
-                scrWalk(6, path_dir + orandom(10));
+                scrWalk(path_dir + orandom(10), 6);
                 return 1 + irandom(walk) + irandom(6);
             }
 
              // Toward Leader:
             else{
-                scrWalk(5 + random(10), _leaderDir + orandom(20));
+                scrWalk(_leaderDir + orandom(20), [5, 15]);
             }
 
             return walk + random(5);
@@ -1679,7 +1680,7 @@
 				}
 
 				if(_dir >= 0){
-	                scrWalk(10 + random(5), _dir);
+	                scrWalk(_dir, [10, 15]);
 	                return walk + random(5);
 				}
             }
@@ -1687,7 +1688,7 @@
 
          // Idle Movement:
         instance_create(x, y, Bubble);
-        scrWalk(5 + random(10), direction + orandom(60));
+        scrWalk(direction + orandom(60), [5, 15]);
         return walk + random_range(30, 60);
     }
 
@@ -1697,7 +1698,7 @@
         image_index = 0;
    
          // Movin'
-        scrWalk(10, _hitdir);
+        scrWalk(_hitdir, 10);
         scrRight(direction + 180);
 	}
 
@@ -1730,8 +1731,8 @@
 #define Prism_step
     if(instance_exists(leader)){
         spawn_loc = [x, y];
-
-        scrWalk(1, direction); // Aimlessly floats
+        
+        scrWalk(direction, 1); // Aimlessly floats
         
          // Duplicate Friendly Bullets:
         with(
@@ -1954,7 +1955,6 @@
 	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
 
 
-/// Mod Events
 #define Weapon_create
 	 // Visual:
 	spr_spwn = spr.PetWeaponSpwn;
@@ -1966,151 +1966,103 @@
 	 
 	 // Vars:
 	mask_index = mskFrogEgg;
-	maxhealth = boss_hp(30); // set low for debug purposes
-	can_take = false;
-	hostile = true;
+	maxhealth = 60;
 	target = noone;
 	wep = wep_machinegun;
-	wep_visible = false;
-	wkick = 0;
 	gunangle = random(360);
-	pickup_indicator.visible = false;
-	
-	 // Sounds:
-	audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 1), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
-	audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
-	sound_play_hit(sndBigWeaponChest, 0);
-
+	wkick = 0;
 	
 #define Weapon_ttip
 	return ["MUTUAL RESPECT", "WALKING WEAPON"];
 	
 #define Weapon_step
 	 // Ally:
-	if(in_sight(leader)){
+	if(in_sight(leader) && "index" in leader){
 		var _index = leader.index,
 			_leaderAim = point_direction(x, y, mouse_x[_index], mouse_y[_index]);
 		
 		if(button_pressed(_index, "fire")){
-			enemy_shoot(AllyBullet, _leaderAim, 8);
-			gunangle = _leaderAim;
+			scrAim(_leaderAim);
+			enemy_shoot(AllyBullet, gunangle, 8);
 			wkick = 4;
 		}
 	}
 	
-	 // Effects:
-	if(wkick != 0) wkick -= sign(wkick);
+	 // Kick:
+	wkick -= clamp(wkick, -current_time_scale, current_time_scale);
 	
 #define Weapon_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
-	var h = (_spr != spr_hurt && nexthurt > current_frame),
-		b = (gunangle < 180);
+	var _back = (gunangle < 180);
+	if(!_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
-	if(h) d3d_set_fog(true, _col, 0, 0);
-	
-	if(!b) draw_self_enemy();
-	if(wep_visible) draw_weapon(weapon_get_sprite(wep), x, y, gunangle, 0, wkick, ((gunangle > 90 && gunangle <= 270) ? -1 : 1), _col, _alp);
-	if(b) draw_self_enemy();
-	
-	if(h) d3d_set_fog(false, c_white, 0, 0);
-	
-#define Weapon_anim
-	if((sprite_index != spr_hurt && sprite_index != spr_spwn) || anim_end){
-		
-		 // Spawn Anim:
-		if(sprite_index == spr_spwn){
-			sprite_index = spr_idle;
-			
-			wep_visible = true;
-			instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
-			
-			boss_intro("PetWeapon", -1, -1);
-		}
-		
-        if(speed <= 0) sprite_index = spr_idle;
-        else sprite_index = spr_walk;
+	 // Gun:
+	if(my_health > 0 || maxhealth <= 0){
+		draw_weapon(weapon_get_sprite(wep), _x, _y, gunangle, 0, wkick, right, _col, _alp);
 	}
+	
+	if(_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
 #define Weapon_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 30 + random(30);
 	
-	 // Hostile Behavior:
-	if(hostile){
-		target = instance_nearest(x, y, Player);
-		if(in_sight(target)){
+	if(instance_exists(leader)){
+		 // Pathfind:
+		if(path_dir != null){
+			scrWalk(path_dir + orandom(20), 10);
+			scrAim(direction);
 			
+			alarm0 = 1 + irandom(walk);
+		}
+			
+		 // Walkin':
+		else if(_leaderDis > 64){
+			scrWalk(_leaderDir + orandom(30), [30, 60]);
+			
+			if("index" in leader){
+				var _index = leader.index;
+				scrAim(point_direction(x, y, mouse_x[_index], mouse_y[_index]));
+			}
 		}
 	}
 	
-	 // Passive Behavior:
 	else{
-		if(instance_exists(leader)){
-			var _index = leader.index,
-				_leaderAim = point_direction(x, y, mouse_x[_index], mouse_y[_index]);
+		 // Angry:
+		if(in_sight(target)){
+			gunangle = point_direction(x, y, target.x, target.y);
 			
-			 // Pathfind:
-			if(path_dir != null){
-				scrWalk(10, path_dir + orandom(20));
-				gunangle = direction;
-				
-				alarm0 = 1 + irandom(walk);
+			 // Advance:
+			if(!in_distance(target, 128)){
+				scrWalk(gunangle + orandom(30), [30, 60]);
 			}
+			
+			else{
+				 // Retreat:
+				if(in_distance(target, 32)){
+					scrWalk((gunangle + 180) + orandom(30), [30, 60]);
+				}
 				
-			 // Walkin':
-			else if(_leaderDis > 64){
-				scrWalk(30 + random(30), _leaderDir + orandom(30));
-				gunangle = _leaderAim;
+				 // Attack:
+				else{
+					if(chance(1, 3)){
+						enemy_shoot(AllyBullet, gunangle, 8);
+					}
+				}
 			}
 		}
+		
+		 // Wander:
 		else{
-			
-			 // Angry:
-			if(in_sight(target)){
-				var _targetDis = point_distance(x, y, target.x, target.y),
-					_targetDir = point_direction(x, y, target.x, target.y);
-					
-				 // Advance:
-				if(_targetDis > 128){
-					scrWalk(30 + random(30), _targetDir + orandom(30));
-					gunangle = _targetDir;
-					
-				}
-				else{
-					
-					 // Retreat:
-					if(_targetDis < 32){
-						scrWalk(30 + random(30), (_targetDir + 180) + orandom(30));
-						gunangle = _targetDir;
-					}
-					
-					 // Attack:
-					else{
-						if(chance(1, 3)){
-							enemy_shoot(AllyBullet, _targetDir, 8);
-						}
-					}
-				}
-			}
-			
-			 // Wander:
-			else{
-				scrWalk(10 + random(20), random(360));
-				gunangle = direction;
-			}
+			scrWalk(random(360), [10, 30]);
+			scrAim(direction);
 		}
 	}
-	
-	scrRight(gunangle);
 	
 #define Weapon_hurt(_hitdmg, _hitvel, _hitdir)
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
-	if(other != leader) target = other.creator;
-	
-#define Weapon_death
-	if(hostile){
-		hostile = false;
-		can_take = true;
-	}
+	if(leader != other && "creator" in other) target = other.creator;
 
+
+/// Mod Events
 #define step
 	if(DebugLag) trace_time();
 
@@ -2332,12 +2284,14 @@
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
-#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale
+#define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
+#define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
+#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -2356,6 +2310,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -2376,11 +2331,13 @@
 #define lq_clone_deep(_obj)                                                             return  mod_script_call_nc('mod', 'telib', 'lq_clone_deep', _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_walk, _dir)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _walk, _dir);
+#define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
+#define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
@@ -2415,6 +2372,7 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
+#define path_draw(_path)                                                                return  mod_script_call(   'mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
