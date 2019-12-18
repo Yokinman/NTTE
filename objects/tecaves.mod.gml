@@ -15,6 +15,259 @@
 
 #macro DebugLag global.debug_lag
 
+#define CrystalHeart_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.CrystalHeartIdle;
+		spr_walk = spr.CrystalHeartIdle;
+		spr_hurt = spr.CrystalHeartHurt;
+		spr_dead = spr.CrystalHeartDead;
+		sprite_index = spr_idle;
+		hitid = [spr_idle, "CRYSTAL HEART"];
+		depth = -4;
+		spr_shadow = shd24;
+		spr_shadow_y = 4;
+		
+		 // Sounds:
+		snd_hurt = sndHyperCrystalHurt;
+		snd_dead = sndHyperCrystalDead;
+		
+		 // Vars:
+		mask_index = mskLaserCrystal;
+		maxhealth = 50;
+		size = 3;
+		walk = 0;
+		friction = 0.1;
+		walkspeed = 0.3;
+		maxspeed = 2;
+		meleedamage = 10;
+		
+		 // Alarms:
+		alarm1 = 30;
+		
+		 // Light Radius:
+		dark_vertices = 30;
+		dark_vertices_offsets = [];
+		repeat(dark_vertices) array_push(dark_vertices_offsets, random(1));
+		
+		return id;
+	}
+	
+#define CrystalHeart_step
+	 // Effects:
+	if(chance_ct(1, 10)) with(scrFX([x, 6], [y, 12], [random(360), random(1)], LaserCharge)) alarm0 = 10 + random(10);
+	
+#define CrystalHeart_alrm1
+	target = instance_nearest(x, y, Player);
+	alarm1 = 30 + random(30);
+	
+	scrWalk(10 + random(30), random(360));
+	
+#define CrystalHeart_death
+
+	 // Unfold:
+	instance_create(x, y, PortalClear);
+	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
+	for(var i = 0; i < 3; i++){
+		with(enemy_shoot("CrystalHeartProj", (direction + (i * 120)) + orandom(4), 4)){
+			chest_type = _chestTypes[i];
+		}
+	}
+	
+	 // Effects:
+	sleep(100);
+	
+#define CrystalHeartProj_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.CrystalHeartProj;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = mskFlakBullet;
+		floor_goal = 10 + irandom(10);
+		damage = 3;
+		force = 12;
+		typ = 1;
+		maxspeed = 12;
+		friction = 0.4;
+		wall_break = 3;
+		chest_type = AmmoChest;
+		
+		 // Alarms:
+		alarm0 = 12;
+		
+		return id;
+	}
+	
+#define CrystalHeartProj_step
+	
+	 // Effects:
+	if(chance_ct(2, 3)) with(scrFX([x, 6], [y, 6], [random(360), random(1)], LaserCharge)) alarm0 = 5 + random(15);
+	if(current_frame_active) with(instance_create(x, y, DiscTrail)){
+		image_blend = make_color_rgb(253, 0, 67);
+	}
+	
+#define CrystalHeartProj_alrm0
+	alarm0 = 1;
+	motion_add(direction, 0.8);
+	speed = min(speed, maxspeed);
+	
+#define CrystalHeartProj_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage);
+	}
+	
+#define CrystalHeartProj_wall
+	 // Melt Through a Few Walls:
+	if(wall_break > 0 && instance_is(other, Wall)){
+		with(other) with(instance_create(x, y, PortalClear)) mask_index = other.mask_index;
+		wall_break--;
+		
+		 // Sounds:
+		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
+		sound_stop(_snd - 1);
+	}
+	
+	 // Tunnel Time:
+	else{
+	
+		var _minID = GameObject.id,
+			_fGoal = floor_goal,
+			_pDist = distance_to_object(instance_nearest(x, y, Player));
+			
+		 // No Softlocks:
+		with(Floor) with(instance_create(x - 16, y - 16, NOWALLSHEREPLEASE)){
+			mask_index = mskFloor;
+			image_xscale = 2;
+			image_yscale = 2;
+		}
+			
+		 // Make Floors:
+		var _startDir = round(direction / 90) * 90;
+		with(instance_create((x + 16) - (x % 32), (y + 16) - (y % 32), CustomObject)){
+			
+			mask_index = mskFloor;
+			direction = _startDir;
+			
+			while(_fGoal > 0){
+				
+				 // Generate Floors:
+				if(!position_meeting(x, y, Floor) || instance_is(floor_get(x, y), FloorExplo)){
+					 // 3x3 Diamond:
+					if(chance(1, 7)){
+						floor_fill_round(x, y, 3, 3);
+					}
+					
+					 // Normal Tunnel:
+					else{
+						floor_set(x, y, true);
+					}
+					
+					 // Spawn Chests:
+					_fGoal--;
+					if(_fGoal <= 0){
+						obj_create(x + 16, y + 16, other.chest_type);
+					}
+				}
+				
+				 // Move:
+				var _turn = choose(0, 0, 0, 0, 90, 270, 180);
+				direction += _turn;
+				
+				var _x = x + lengthdir_x(32, direction),
+					_y = y + lengthdir_y(32, direction),
+					_dir = point_direction(xstart, ystart, _x, _y);
+					
+				if(abs(angle_difference(_startDir, _dir)) <= 45){
+					x = _x;
+					y = _y;
+				}
+			}
+			instance_delete(id);
+		}
+		
+		 // Beautify Floors:
+		var _floors = instances_matching_gt(Floor, "id", _minID),
+			_hard = GameCont.hard;
+		with(_floors){
+			sprite_index = spr.FloorCrystal;
+			material = 2; // Stone
+			depth = 8;
+			
+			 // Populate Tunnels:
+			if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
+				var _cx = x + 16,
+					_cy = y + 16;
+					
+				 // Enemies:
+				if(chance(_hard, _hard + 10)){
+					if(_pDist >= 64 && chance(3, 5)){
+		
+						 // Big:
+						if(chance(1, 7)){
+							instance_create(_cx, _cy, RhinoFreak);
+						}
+						
+						 // Small:
+						else{
+							instance_create(_cx, _cy, Spider);
+						}
+					}
+				}
+				else{
+					
+					 // Props:
+					if(chance(1, 7)){
+						obj_create(_cx, _cy, "RedCrystalProp");
+					}
+					
+					 // Walls:
+					else if(instance_exists(Wall) && chance(2, 3)){
+						var _wx = x + choose(0, 16),
+							_wy = y + choose(0, 16);
+						if(!position_meeting(_wx, _wy, NOWALLSHEREPLEASE)){
+							
+							instance_create(_wx - 8, _wy - 8, NOWALLSHEREPLEASE);
+							instance_create(_wx, _wy, Wall);
+						}
+					}
+				}
+			}
+		}
+		
+		 // Goodbye:
+		with(NOWALLSHEREPLEASE) instance_delete(id);
+		
+		 // Prettify Walls:
+		with(instances_matching_gt(Wall, "id", _minID)){
+			sprite_index = spr.WallCrystalBot;
+			topspr = spr.WallCrystalTop;
+			outspr = spr.WallCrystalOut;
+		}
+		with(instances_matching_gt(TopSmall, "id", _minID)) if(chance(3, 5)){
+			sprite_index = spr.WallCrystalTrans;
+		}
+		
+		/*
+		 // Reveal:
+		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 4)){
+			time = (point_distance(inst.x, inst.y, other.x, other.y) - 16) / 4;
+		}
+		*/
+		
+		instance_create(x, y, PortalClear);
+		instance_destroy();
+	}
+	
+#define CrystalHeartProj_destroy
+	 // Effects:
+	sound_play_hit_ext(sndGammaGutsKill,		0.8 + random(0.3), 1.2);
+	sound_play_hit_ext(sndNothing2Beam, 		0.7 + random(0.2), 1.0);
+	sound_play_hit_ext(sndHyperCrystalSearch,	0.6 + random(0.3), 0.4);
+	view_shake_max_at(x, y, 20);
+	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
+	
 #define InvMortar_create(_x, _y)
     with(obj_create(_x, _y, "Mortar")){
          // Visual:
@@ -423,6 +676,23 @@
 	}
 
 
+#define RedCrystalProp_create(_x, _y)
+	with(instance_create(_x, _y, CrystalProp)){
+		 // Visual:
+		spr_idle = spr.RedCrystalPropIdle;
+		spr_hurt = spr.RedCrystalPropHurt;
+		spr_dead = spr.RedCrystalPropDead;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndCrystalPropBreak;
+		
+		 // Vars:
+		maxhealth = 2;
+		
+		return id;
+	}
+
 #define Spiderling_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -634,6 +904,23 @@
 /// Mod Events:
 #define step
 	script_bind_end_step(end_step, 0);
+	
+	 // Crystal Tunnel Particles:
+	if(chance(1, 40)){
+        do var i = irandom(maxp - 1);
+        until player_is_active(i);
+        
+        var _floors = instances_matching(Floor, "sprite_index", spr.FloorCrystal),
+        	_x = view_xview[i],
+        	_y = view_yview[i];
+        with(instance_random(instance_rectangle_bbox(_x, _y, _x + game_height, _y + game_width, _floors))){
+        	with(instance_create(x + random(32), y + random(32), LaserCharge)){
+        		depth = -8;
+        		alarm0 = 40 + random(40);
+        		motion_set(random(360), random(0.2));
+        	}
+        }
+	}
 
 #define end_step
     if(DebugLag) trace_time();
@@ -691,6 +978,11 @@
 
 	if(DebugLag) trace_time();
 
+	 // Crystal Heart:
+	with(instances_matching(CustomEnemy, "name", "CrystalHeart")){
+		draw_crystal_heart_dark(45, 72 + random(2), 3);
+	}
+	
      // Mortar:
     with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
         if(sprite_index == spr_fire){
@@ -709,6 +1001,11 @@
     draw_set_color(c_black);
 
 	if(DebugLag) trace_time();
+	
+	 // Crystal Heart:
+	with(instances_matching(CustomEnemy, "name", "CrystalHeart")){
+		draw_crystal_heart_dark(15, 24 + random(2), 2);
+	}
 
      // Mortar:
     with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
@@ -723,7 +1020,24 @@
     }
 
 	if(DebugLag) trace_time("tecaves_draw_dark_end");
+	
+#define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
+	draw_primitive_begin(pr_trianglefan);
+	draw_vertex(x, y);
+	for(var i = 0; i <= _vertices + 1; i++){
+		var _x = x + lengthdir_x(_radius, (360 / _vertices) * i),
+			_y = y + lengthdir_y(_radius, (360 / _vertices) * i);
+		_x += sin(_x * 0.1) * _coefficient;
+		_y += sin(_y * 0.1) * _coefficient;
+		draw_vertex(_x, _y);
+	}
+	draw_primitive_end();
 
+#define draw_bloom
+	 // Crystal Heart Projectile:
+	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	}
 
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
