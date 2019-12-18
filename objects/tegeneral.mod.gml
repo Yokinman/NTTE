@@ -2795,6 +2795,7 @@
 		sprite_index = spr.PetWeaponChst;
 		 
 		 // Vars:
+		type = 3;
 		pickup_indicator = scrPickupIndicator("BATTLE");
 		pickup_indicator.yoff = -1;
 		
@@ -2805,14 +2806,15 @@
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
 		with(obj_create(x, y, "PetWeaponBoss")){
+			type = other.type;
+			
 			 // Push Away:
 			with(player_find(_pickup.pick)) with(other){
 				motion_add(point_direction(other.x, other.y, x, y), 3);
 			}
 		}
-		GameCont.nochest = 0;
 		portal_poof();
-		
+		GameCont.nochest = 0;
 		instance_destroy();
 	}
 	
@@ -2844,30 +2846,32 @@
 		
 		 // Vars:
 		mask_index = mskFreak;
-		maxhealth = boss_hp(100);
+		maxhealth = boss_hp(120);
 		size = 1;
         walk = 0;
         walkspeed = 2;
         maxspeed = 3;
 		intro = false;
 		corpse = false;
+		type = irandom(5);
 		gunangle = random(360);
 		gunangle_goal = gunangle;
+		gunangle_turn = 0;
+		shootdis_min = 0;
+		shootdis_max = 0;
 		path = [];
 		path_delay = 0;
 		cover_x = x;
 		cover_y = y;
 		cover_peek = false;
 		cover_delay = 0;
+		setup = true;
 		
 		 // Alarms:
 		alarm1 = 60;
 		alarm2 = 30;
 		
 		 // Weapons:
-		aim_speed = 0.25;
-		shootdis_min = 0;
-		shootdis_max = 196;
 		with(["", "b"]){
 			var b = self;
 			with(other){
@@ -2878,37 +2882,6 @@
 				variable_instance_set(self, b + "can_shoot", false);
 				variable_instance_set(self, b + "wep_laser", 0);
 			}
-		}
-		switch(choose(1, 3)){
-			case 0:
-				wep = wep_wrench;
-				break;
-				
-			case 1:
-				wep = wep_revolver;
-				bwep = wep;
-				break;
-				
-			case 2:
-				wep = wep_shotgun;
-				aim_speed = 0.1;
-				shootdis_max = 64;
-				break;
-				
-			case 3:
-				wep = wep_crossbow;
-				aim_speed = 0.5;
-				shootdis_min = 64;
-				shootdis_max = 400;
-				break;
-				
-			case 4:
-				wep = wep_grenade_launcher;
-				break;
-				
-			case 5:
-				wep = wep_laser_cannon;
-				break;
 		}
 		
 		 // Sounds:
@@ -2922,11 +2895,50 @@
 		return id;
 	}
 	
+#define PetWeaponBoss_setup
+	setup = false;
+	
+	 // Weapon Setup:
+	shootdis_min = 0;
+	shootdis_max = 196;
+	gunangle_turn = 0.25;
+	switch(type){
+		case 0:
+			wep = wep_wrench;
+			break;
+			
+		case 1:
+			wep = wep_revolver;
+			bwep = wep;
+			break;
+			
+		case 2:
+			wep = wep_shotgun;
+			shootdis_max = 64;
+			gunangle_turn = 0.1;
+			break;
+			
+		case 3:
+			wep = wep_crossbow;
+			shootdis_min = 64;
+			shootdis_max = 320;
+			gunangle_turn = 0.5;
+			break;
+			
+		case 4:
+			wep = wep_grenade_launcher;
+			break;
+			
+		case 5:
+			wep = wep_laser_cannon;
+			break;
+	}
+	
 #define PetWeaponBoss_step
+	if(setup) PetWeaponBoss_setup();
+	
 	if(path_delay > 0) path_delay -= current_time_scale;
 	if(cover_delay > 0) cover_delay -= current_time_scale;
-	
-	enemy_target(x, y);
 	
 	 // Animate:
 	if(sprite_index != spr_spwn || anim_end){
@@ -2945,6 +2957,12 @@
 		}
 	}
 	bwkick -= clamp(bwkick, -current_time_scale, current_time_scale);
+	
+	 // Aim:
+	if(enemy_target(x, y) && in_sight(target)){
+		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+	}
+	scrAim(angle_lerp(gunangle, gunangle_goal, gunangle_turn * current_time_scale));
 	
 	 // Weapons:
 	with(["", "b"]){
@@ -3040,11 +3058,7 @@
 		}
 	}
 	
-	 // Aim:
-	if(instance_exists(target) && in_sight(target)){
-		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-	}
-	scrAim(angle_lerp(gunangle, gunangle_goal, aim_speed * current_time_scale));
+	 // Laser Cannon:
 	with(instances_matching(LaserCannon, "creator", id)){
 		direction = other.gunangle;
 		image_angle = other.gunangle;
@@ -3109,23 +3123,24 @@
 					 // Peek Out of Cover:
 					else{
 						cover_peek = true;
+						gunangle_goal = _targetDir;
 						
 						alarm1 = 15;
 						alarm2 = alarm1 - random(3);
 						
-						gunangle_goal = _targetDir;
-						
-						 // Determine Side to Peek From:
+						 // Peekin:
 						var	l = 16,
 							d = round(point_direction(cover_x, cover_y, _tx, _ty) / 90) * 90,
-							_peekSide = 0;
+							_peekLeft  = !collision_line(cover_x + lengthdir_x(l, d - 90), cover_y + lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
+							_peekRight = !collision_line(cover_x - lengthdir_x(l, d - 90), cover_y - lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
+							_peekSide = sign(_peekRight - _peekLeft);
 							
-						_peekSide += !collision_line(cover_x - lengthdir_x(l, d - 90), cover_y - lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false);
-						_peekSide -= !collision_line(cover_x + lengthdir_x(l, d - 90), cover_y + lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false);
-						if(_peekSide == 0) _peekSide = choose(-1, 1);
+						scrWalk(d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
 						
-						 // Peek:
-						scrWalk(d + (90 * sign(_peekSide)), 4);
+						 // Stay in Cover:
+						if(_peekRight || _peekLeft){
+							cover_delay = random_range(60, 90);
+						}
 					}
 				}
 				

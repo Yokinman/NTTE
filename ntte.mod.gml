@@ -471,8 +471,36 @@
      // Wepmimic Arena:
     if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
     	with(instance_furthest(_spawnx, _spawny, WeaponChest)){
-	    	floor_fill_round(x, y, 5, 5);
-	    	obj_create(x, y, "PetWeaponBecome");
+	    	with(obj_create(x, y, "PetWeaponBecome")){
+	    		switch(type){
+	    			case 3:
+	    				 // Area:
+	    				floor_fill(x, y, 5, 5);
+	    				
+	    				 // Cover Zones:
+	    				if(fork()){
+	    					wait 0;
+		    				for(var	_x = x - 32; _x <= x + 32; _x += 64){
+		    					for(var	_y = y - 32; _y <= y + 32; _y += 64){
+		    						var _cover = true;
+		    						with(instances_at(_x, _y, instances_matching_ne(Floor, "mask_index", mskFloor))){
+			    						if(place_meeting(x, y, hitme) || place_meeting(x, y, chestprop)){
+			    							_cover = false;
+			    						}
+		    						}
+		    						if(_cover){
+		    							floor_set(_x, _y, false);
+		    						}
+		    					}
+		    				}
+		    				exit;
+	    				}
+	    				break;
+	    				
+	    			default:
+	    				floor_fill_round(x, y, 5, 5);
+	    		}
+	    	}
 	    	instance_delete(id);
     	}
     }
