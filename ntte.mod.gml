@@ -473,8 +473,12 @@
     	with(instance_furthest(_spawnx, _spawny, WeaponChest)){
 	    	with(obj_create(x, y, "PetWeaponBecome")){
 	    		switch(type){
+	    			case 2:
+	    				floor_fill(x, y, 5, 1);
+	    				floor_fill(x, y, 1, 5);
+	    				break;
+	    				
 	    			case 3:
-	    				 // Area:
 	    				floor_fill(x, y, 5, 5);
 	    				
 	    				 // Cover Zones:
@@ -508,37 +512,37 @@
      // Area-Specific:
     switch(GameCont.area){
     	case 0: /// CAMPFIRE
-    	
-    		 // Unlock Custom Crowns:
-    		if(array_exists(crwnList, crown_current)){
-    			unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
-    		}
-    		
-    		 // Less Bones:
-    		with(BonePileNight) if(chance(1, 3)) instance_delete(id);
-    		
-    		 // Top Spawns:
-    		_topSpawn = [
-    			[NightCactus,	1],
-    			[BonePileNight,	1/2]
-    		];
-    		
-    		break;
-
+		
+			 // Unlock Custom Crowns:
+			if(array_exists(crwnList, crown_current)){
+				unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
+			}
+			
+			 // Less Bones:
+			with(BonePileNight) if(chance(1, 3)) instance_delete(id);
+			
+			 // Top Spawns:
+			_topSpawn = [
+				[NightCactus,	1],
+				[BonePileNight,	1/2]
+			];
+			
+			break;
+			
         case 1: /// DESERT
         
              // Disable Oasis Skip:
-    		with(instance_create(0, 0, chestprop)){
-    			visible = false;
-    			mask_index = mskNone;
-    		}
-
+			with(instance_create(0, 0, chestprop)){
+				visible = false;
+					mask_index = mskNone;
+			}
+			
 			 // Big Nests:
 			with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
 				obj_create(x, y, "BigMaggotSpawn");
 				instance_delete(id);
 			}
-
+			
 			 // Find Prop-Spawnable Floors:
     	    var _spawnFloor = [],
     	    	_spawnIndex = -1;

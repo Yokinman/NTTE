@@ -2795,7 +2795,7 @@
 		sprite_index = spr.PetWeaponChst;
 		 
 		 // Vars:
-		type = 3;
+		type = 2;
 		pickup_indicator = scrPickupIndicator("BATTLE");
 		pickup_indicator.yoff = -1;
 		
@@ -2813,8 +2813,10 @@
 				motion_add(point_direction(other.x, other.y, x, y), 3);
 			}
 		}
-		portal_poof();
+		
 		GameCont.nochest = 0;
+		portal_poof();
+		
 		instance_destroy();
 	}
 	
@@ -2914,8 +2916,7 @@
 			
 		case 2:
 			wep = wep_shotgun;
-			shootdis_max = 64;
-			gunangle_turn = 0.1;
+			shootdis_max = 96;
 			break;
 			
 		case 3:
@@ -3018,7 +3019,7 @@
 					skill_set(mut_laser_brain, 0);
 					
 					 // Fire:
-					with(player_fire_ext(gunangle, variable_instance_get(self, b + "wep"), x, y, team, id)){
+					with(player_fire_ext(gunangle, _wep, x, y, team, id)){
 						_reload = reload + (30 * (_canShoot <= 0));
 						_wkick = wkick + 3;
 					}
@@ -3028,9 +3029,8 @@
 					skill_set(mut_long_arms, _arms);
 					skill_set(mut_shotgun_shoulders, _shot);
 					skill_set(mut_laser_brain, _bran);
-					with(instances_matching_gt(Bolt, "id", _minID)){
-						instance_create_copy(x, y, "DiverHarpoon");
-						instance_delete(id);
+					with(instances_matching_gt(projectile, "id", _minID)){
+						hitid = other.hitid;
 					}
 					with(instances_matching_gt(Bullet1, "id", _minID)){
 						sprite_index = spr.EnemyBullet;
@@ -3042,8 +3042,15 @@
 						instance_create_copy(x, y, EnemyBullet4);
 						instance_delete(id);
 					}
-					with(instances_matching_gt(projectile, "id", _minID)){
-						hitid = other.hitid;
+					with(instances_matching_gt(Bullet2, "id", _minID)){
+						sprite_index = sprEBullet3;
+						speed *= 0.8;
+						instance_create_copy(x, y, EnemyBullet3);
+						instance_delete(id);
+					}
+					with(instances_matching_gt(Bolt, "id", _minID)){
+						instance_create_copy(x, y, "DiverHarpoon");
+						instance_delete(id);
 					}
 					
 					variable_instance_set(self, b + "can_shoot", _canShoot);
@@ -3062,6 +3069,63 @@
 	with(instances_matching(LaserCannon, "creator", id)){
 		direction = other.gunangle;
 		image_angle = other.gunangle;
+	}
+	
+#define PetWeaponBoss_draw
+	//path_draw(path);
+	
+	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	
+	 // Gun Drawing Setup:
+	var	_wepOffX = 1,
+		_wepOffY = ((wep != wep_none && bwep != wep_none) ? 5 : 2),
+		_wepDraw = [];
+		
+	if(sprite_index != spr_spwn) with(["", "b"]){
+		var b = self;
+		with(other){
+			var	_wep = variable_instance_get(self, b + "wep"),
+				_wepAng = gunangle + wepangle;
+				
+			array_push(_wepDraw, {
+				"sprt" : weapon_get_sprt(_wep),
+				"x"    : x + lengthdir_x(_wepOffX, _wepAng) + lengthdir_x(_wepOffY,       _wepAng - 90),
+				"y"    : y + lengthdir_y(_wepOffX, _wepAng) + lengthdir_y(_wepOffY * 2/3, _wepAng - 90),
+				"guna" : gunangle,
+				"wepa" : variable_instance_get(self, b + "wepangle"),
+				"kick" : variable_instance_get(self, b + "wkick"),
+				"flip" : ((_wepOffY == 0) ? right : sign(_wepOffY)),
+				"blnd" : image_blend,
+				"alph" : image_alpha,
+				"load" : variable_instance_get(self, b + "reload"),
+				"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, b + "wep_laser"))
+			});
+			_wepOffY *= -1;
+		}
+	}
+	
+	 // Guns in Back:
+	with(_wepDraw){
+		 // Laser Sight:
+		if(lasr > 0){
+			draw_set_color(make_color_rgb(250, 54, 0));
+			draw_lasersight(x, y, guna, 1000, lasr);
+		}
+		
+		 // Gun:
+		if(y < other.y){
+			draw_weapon(sprt, x, y, guna, wepa, kick, flip, blnd, alph);
+		}
+	}
+	
+	 // Self:
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	draw_self_enemy();
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
+	
+	 // Guns in Front:
+	with(_wepDraw) if(y >= other.y){
+		draw_weapon(sprt, x, y, guna, wepa, kick, flip, blnd, alph);
 	}
 	
 #define PetWeaponBoss_alrm1
@@ -3098,6 +3162,18 @@
 				break;
 				
 			case 2: /// SHELL
+				
+				 // Movement:
+				if(in_sight(target)){
+					scrWalk(gunangle + orandom(60), 20);
+					alarm1 = walk;
+				}
+				
+				 // Find Player:
+				else{
+					_pathX = _tx;
+					_pathY = _ty;
+				}
 				
 				break;
 				
@@ -3255,62 +3331,9 @@
 		}
 	}
 	
-#define PetWeaponBoss_draw
-	//path_draw(path);
-	
-	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	
-	 // Gun Drawing Setup:
-	var	_wepOffX = 1,
-		_wepOffY = ((wep != wep_none && bwep != wep_none) ? 5 : 2),
-		_wepDraw = [];
-		
-	if(sprite_index != spr_spwn) with(["", "b"]){
-		var b = self;
-		with(other){
-			var	_wep = variable_instance_get(self, b + "wep"),
-				_wepAng = gunangle + wepangle;
-				
-			array_push(_wepDraw, {
-				"sprt" : weapon_get_sprt(_wep),
-				"x"    : x + lengthdir_x(_wepOffX, _wepAng) + lengthdir_x(_wepOffY,       _wepAng - 90),
-				"y"    : y + lengthdir_y(_wepOffX, _wepAng) + lengthdir_y(_wepOffY * 2/3, _wepAng - 90),
-				"guna" : gunangle,
-				"wepa" : variable_instance_get(self, b + "wepangle"),
-				"kick" : variable_instance_get(self, b + "wkick"),
-				"flip" : ((_wepOffY == 0) ? right : sign(_wepOffY)),
-				"blnd" : image_blend,
-				"alph" : image_alpha,
-				"load" : variable_instance_get(self, b + "reload"),
-				"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, b + "wep_laser"))
-			});
-			_wepOffY *= -1;
-		}
-	}
-	
-	 // Guns in Back:
-	with(_wepDraw){
-		 // Laser Sight:
-		if(lasr > 0){
-			draw_set_color(make_color_rgb(250, 54, 0));
-			draw_lasersight(x, y, guna, 1000, lasr);
-		}
-		
-		 // Gun:
-		if(y < other.y){
-			draw_weapon(sprt, x, y, guna, wepa, kick, flip, blnd, alph);
-		}
-	}
-	
-	 // Self:
-	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
-	draw_self_enemy();
-	if(_hurt) draw_set_fog(false, 0, 0, 0);
-	
-	 // Guns in Front:
-	with(_wepDraw) if(y >= other.y){
-		draw_weapon(sprt, x, y, guna, wepa, kick, flip, blnd, alph);
-	}
+#define PetWeaponBoss_hurt(_hitdmg, _hitvel, _hitdir)
+	if(weapon_get_type(wep) == 2) _hitdir += 180 + orandom(60);
+	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 	
 #define PetWeaponBoss_death
 	 // Pet Time:
