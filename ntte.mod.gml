@@ -1669,6 +1669,13 @@
 		}
 	}
 	
+	 // Crystal Hearts:
+	with(GameCont) if(!(area == 7 && subarea == 3) || area != 0 || area != 106 || area != "coast"){
+		if(area == 104 || chance(hard, (hard + 80))){
+			with(instance_random(enemy)) obj_create(x, y, "CrystalHeart");
+		}
+	}
+	
 #define step
     if(DebugLag) trace_time();
     
