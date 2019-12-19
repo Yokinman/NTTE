@@ -55,13 +55,13 @@
 	
 #define CrystalHeart_step
 	 // Effects:
-	if(chance_ct(1, 10)) with(scrFX([x, 6], [y, 12], [random(360), random(1)], LaserCharge)) alarm0 = 10 + random(10);
+	if(chance_ct(1, 10)) with(scrFX([x, 6], [y, 12], random(1), LaserCharge)) alarm0 = 10 + random(10);
 	
 #define CrystalHeart_alrm1
 	target = instance_nearest(x, y, Player);
 	alarm1 = 30 + random(30);
 	
-	scrWalk(10 + random(30), random(360));
+	scrWalk(random(360), [10, 40]);
 	
 #define CrystalHeart_death
 
@@ -76,6 +76,7 @@
 	
 	 // Effects:
 	sleep(100);
+	
 	
 #define CrystalHeartProj_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -103,7 +104,7 @@
 #define CrystalHeartProj_step
 	
 	 // Effects:
-	if(chance_ct(2, 3)) with(scrFX([x, 6], [y, 6], [random(360), random(1)], LaserCharge)) alarm0 = 5 + random(15);
+	if(chance_ct(2, 3)) with(scrFX([x, 6], [y, 6], random(1), LaserCharge)) alarm0 = 5 + random(15);
 	if(current_frame_active) with(instance_create(x, y, DiscTrail)){
 		image_blend = make_color_rgb(253, 0, 67);
 	}
@@ -266,7 +267,8 @@
 	sound_play_hit_ext(sndNothing2Beam, 		0.7 + random(0.2), 1.0);
 	sound_play_hit_ext(sndHyperCrystalSearch,	0.6 + random(0.3), 0.4);
 	view_shake_max_at(x, y, 20);
-	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
+	with(instance_create(x, y, EBulletHit)) sprite_index = sprEFlakHit;
+	
 	
 #define InvMortar_create(_x, _y)
     with(obj_create(_x, _y, "Mortar")){
@@ -692,6 +694,7 @@
 		
 		return id;
 	}
+	
 
 #define Spiderling_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -906,15 +909,16 @@
 	script_bind_end_step(end_step, 0);
 	
 	 // Crystal Tunnel Particles:
-	if(chance(1, 40)){
+	if(chance_ct(1, 40)){
         do var i = irandom(maxp - 1);
         until player_is_active(i);
         
         var _floors = instances_matching(Floor, "sprite_index", spr.FloorCrystal),
         	_x = view_xview[i],
         	_y = view_yview[i];
+        	
         with(instance_random(instance_rectangle_bbox(_x, _y, _x + game_height, _y + game_width, _floors))){
-        	with(instance_create(x + random(32), y + random(32), LaserCharge)){
+        	with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
         		depth = -8;
         		alarm0 = 40 + random(40);
         		motion_set(random(360), random(0.2));
@@ -1024,13 +1028,16 @@
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
 	draw_primitive_begin(pr_trianglefan);
 	draw_vertex(x, y);
+	
 	for(var i = 0; i <= _vertices + 1; i++){
 		var _x = x + lengthdir_x(_radius, (360 / _vertices) * i),
 			_y = y + lengthdir_y(_radius, (360 / _vertices) * i);
+			
 		_x += sin(_x * 0.1) * _coefficient;
 		_y += sin(_y * 0.1) * _coefficient;
 		draw_vertex(_x, _y);
 	}
+	
 	draw_primitive_end();
 
 #define draw_bloom
@@ -1038,6 +1045,7 @@
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 	}
+	
 
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

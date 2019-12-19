@@ -871,15 +871,15 @@
 		//#endregion
 		
 		//#region CRYSTAL
-			
+		
 			//#region TILES
 			p = "areas/Crystal/";
 			
-	    		FloorCrystal		= sprite(p + "sprFloorCrystal",		1,	2,	2);
-	    		WallCrystalBot		= sprite(p + "sprWallCrystalBot",	2, 	0,	0);
-	    		WallCrystalTop		= sprite(p + "sprWallCrystalTop",	4,	0,	0);
-	    		WallCrystalOut		= sprite(p + "sprWallCrystalOut",	1,	4,	12);
-	    		WallCrystalTrans	= sprite(p + "sprWallCrystalTrans",	4,	0,	0);
+	    		FloorCrystal	 = sprite(p + "sprFloorCrystal",     1, 2,  2);
+	    		WallCrystalBot	 = sprite(p + "sprWallCrystalBot",   2, 0,  0);
+	    		WallCrystalTop	 = sprite(p + "sprWallCrystalTop",   4, 0,  0);
+	    		WallCrystalOut	 = sprite(p + "sprWallCrystalOut",   1, 4, 12);
+	    		WallCrystalTrans = sprite(p + "sprWallCrystalTrans", 4, 0,  0);
 			
 			//#endregion
 			
@@ -889,7 +889,7 @@
 				RedCrystalPropIdle = sprite(p + "sprRedCrystalPropIdle", 1, 12, 12);
 				RedCrystalPropHurt = sprite(p + "sprRedCrystalPropHurt", 3, 12, 12);
 				RedCrystalPropDead = sprite(p + "sprRedCrystalPropDead", 4, 12, 12);
-			
+				
 			//#endregion
 			
 			//#region ENEMIES
@@ -897,12 +897,11 @@
 			
 	    		 // Crystal Heart:
 	    		p = m + "CrystalHeart/"
-	    		CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle",	10,	24, 24);
-	    		CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",	3,	24, 24);
-	    		CrystalHeartDead = sprite(p + "sprCrystalHeartDead",	22, 24, 24);
-	    		
-	    		CrystalHeartProj = sprite(p + "sprCrystalHeartProj",	2,	10,	10);
-        	
+	    		CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle", 10, 24, 24);
+	    		CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
+	    		CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
+	    		CrystalHeartProj = sprite(p + "sprCrystalHeartProj",  2, 10, 10);
+        		
         	//#endregion
 			
 		//#endregion

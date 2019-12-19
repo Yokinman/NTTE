@@ -1712,8 +1712,8 @@
 	}
 	
 	 // Crystal Hearts:
-	with(GameCont) if(!(area == 7 && subarea == 3) || area != 0 || area != 106 || area != "coast"){
-		if(area == 104 || chance(hard, (hard + 80))){
+	if(_validArea && instance_exists(Wall)){
+		if(GameCont.area == 104 || chance(GameCont.hard, (GameCont.hard + 80))){
 			with(instance_random(enemy)) obj_create(x, y, "CrystalHeart");
 		}
 	}
