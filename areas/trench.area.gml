@@ -729,20 +729,22 @@
 				}
 				
 				 // Tentacle Outlines:
-				var a = instances_seen_nonsync(instances_matching(CustomEnemy, "name", "PitSquidArm"), 32, 32);
-				
+				var	_arms = instances_seen_nonsync(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), 32, 32),
+					_alpha = 0.3 + (0.2 * sin(current_frame / 10));
+					
 					 // Anti-Aliasing:
-					d3d_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
-					with(a) for(var i = -1; i <= 1; i += 2){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfx) + i, (y - _surfy) - 1, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha)
+					draw_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
+					with(_arms) for(var i = -1; i <= 1; i += 2){
+						draw_sprite_ext(sprite_index, image_index, ((teleport ? teleport_drawx : x) - _surfx) + i, ((teleport ? teleport_drawy : y) - _surfy) - 1, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha * (_alpha * 2))
 					}
 					
 					 // Outlines:
-					d3d_set_fog(true, make_color_rgb(110, 16, 51), 0, 0);
-					with(a)	for(var d = 0; d <= 180; d += 90){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfx) + lengthdir_x(1, d), (y - _surfy) + lengthdir_y(1, d), image_xscale * right, image_yscale, image_angle, image_blend, image_alpha)
+					draw_set_fog(true, make_color_rgb(235, 0, 67), 0, 0);
+					with(_arms)	for(var d = 0; d <= 180; d += 90){
+						draw_sprite_ext(sprite_index, image_index, ((teleport ? teleport_drawx : x) - _surfx) + lengthdir_x(1, d), ((teleport ? teleport_drawy : y) - _surfy) + lengthdir_y(1, d), image_xscale * right, image_yscale, image_angle, image_blend, image_alpha * _alpha)
 					}
-					d3d_set_fog(false, c_white, 0, 0);
+					
+					draw_set_fog(false, c_white, 0, 0);
 					
 				 // Pit Squid:
 				with(instances_matching(CustomEnemy, "name", "PitSquid")){
