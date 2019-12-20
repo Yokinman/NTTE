@@ -344,14 +344,10 @@
 				image_yscale *= 1.2;
 			}
 			
-			 // Sticky Floor:
-			with(floor_fill(_x - 32, _y, 2, 1)){
-				sprite_index = ((other.area == 104) ? sprFloor104B : sprFloor4B);
-				styleb = true;
-				traction = 2;
-				material = 5;
-				depth = 8;
-			}
+			 // Floorify:
+			floor_set_style(1, area);
+			floor_fill(_x - 32, _y, 2, 1);
+			floor_reset_style();
 			
 			 // Inhabitants:
 			repeat(irandom_range(2, 3)){
@@ -474,12 +470,9 @@
 			}
 			
 			 // Floorify:
-			with(floor_fill(_x - 32, _y, 2, 1)){
-				sprite_index = sprFloor101B;
-				styleb = true;
-				material = 4;
-				depth = 8;
-			}
+			floor_set_style(1, area);
+			floor_fill(_x - 32, _y, 2, 1);
+			floor_reset_style();
 
 			 // Effects:
 			repeat(20) instance_create(_x + orandom(24), _y + orandom(24), Bubble);
@@ -869,162 +862,170 @@
 		image_yscale = _h;
 		floor_num = -1;
 		layout = [];
+		layout_delay = 10;
 		area = 100;
-		
-		 // Away From Floors:
-		direction = random(360);
-		with(instance_nearest(_x - 16, _y - 16, Floor)){
-			other.direction = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_left + bbox_right + 1) / 2, _x, _y);
-		}
-		if(array_length(instances_matching(CustomHitme, "name", "PizzaDrain")) > 0){
-			direction = (direction % 180) + 180;
-		}
-		
-		var	_move = 32,
-			_dis = random_range(40, 80);
-			
-		while(distance_to_object(Floor) < _dis){
-			x = floor((x + lengthdir_x(_move, direction)) / 16) * 16;
-			y = floor((y + lengthdir_y(_move, direction)) / 16) * 16;
-		}
-		
-		 // Create TopSmalls/Decals:
-		var _tiles = [];
-		for(var _ox = 0; _ox < _w; _ox++){
-			for(var _oy = 0; _oy < _h; _oy++){
-				var	_sx = x + (_ox * 16),
-					_sy = y + (_oy * 16),
-					_center = (_ox > 0 && _ox < _w - 1 && _oy > 0 && _oy < _h - 1);
-					
-				if(_center || chance(1, 3)){
-					if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
-						with(instance_create(_sx, _sy, TopSmall)){
-							array_push(_tiles, id);
-						}
-					}
-				}
-			}
-		}
-		TopDecal_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), GameCont.area);
-		
-		 // Spriterize TopSmalls:
-		var _x1 = random_range(bbox_left, bbox_right),
-			_y1 = random_range(bbox_top, bbox_bottom),
-			_x2 = random_range(bbox_left + 16, bbox_right - 16),
-			_y2 = random_range(bbox_top + 16, bbox_bottom - 16);
-			
-		with(array_shuffle(_tiles)){
-			var _vault = collision_line(_x1, _y1, _x2, _y2, id, false, false);
-			sprite_index = area_get_sprite(
-				_vault
-					? other.area
-					: GameCont.area,
-				(position_meeting(_x2, _y2, id) || chance(2, 3))
-					? sprWall1Top
-					: sprWall1Trans
-			);
-			
-			if(_vault){
-				for(var _ox = bbox_left - 8; _ox < bbox_right + 1 + 8; _ox += 8){
-					for(var _oy = bbox_top - 8; _oy < bbox_bottom + 1 + 8; _oy += 8){
-						if(!position_meeting(_ox, _oy, id) && chance(1, 10)){
-							with(instance_create(_ox, _oy, TopPot)){ // TopPot is so epic
-								x = xstart;
-								y = ystart;
-								sprite_index = spr.BuriedVaultTopTiny;
-								image_index = irandom(image_number - 1);
-								image_speed = 0;
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		 // Generate Room Layout:
-		var	_fx = floor(((bbox_left + bbox_right + 1) / 2) / 16) * 16,
-			_fy = floor(((bbox_top + bbox_bottom + 1) / 2) / 16) * 16,
-			_num = irandom_range(6, 12),
-			_dir = direction,
-			_ped = true,
-			_tries = 1000;
-			
-		while(_num > 0 && _tries-- > 0){
-			var	_moveDis = 32,
-				_moveDir = round(_dir / 90) * 90;
-				
-			_fx += lengthdir_x(_moveDis, _moveDir);
-			_fy += lengthdir_y(_moveDis, _moveDir);
-			
-			var	_spawnPed = chance(_ped, 1 + ((_num - 1) * 2)),
-				_floorDis = 48 + (32 * _spawnPed),
-				n = instance_nearest(_fx, _fy, Floor);
-				
-			if(!instance_exists(n) || abs(_fx - n.x) > _floorDis || abs(_fy - n.y) > _floorDis){
-				_num--;
-				
-				 // Main Loot:
-				if(_spawnPed){
-					_ped = false;
-					
-					var _img = 0;
-					for(var _ox = -32; _ox <= 32; _ox += 32){
-						for(var _oy = -32; _oy <= 32; _oy += 32){
-							array_push(layout, {
-								x	 : _fx + _ox,
-								y	 : _fy + _oy,
-								obj	 : Floor,
-								vars : {
-									sprite_index : spr.VaultFlowerFloor,
-									image_index : _img++
-								}
-							})
-						}
-					}
-					
-					array_push(layout, {
-						x	: _fx + 16,
-						y	: _fy + 8,
-						obj	: "BuriedVaultPedestal"
-					});
-					
-					_fx += lengthdir_x(_moveDis, _moveDir);
-					_fy += lengthdir_y(_moveDis, _moveDir);
-				}
-				
-				 // Floor:
-				else{
-					array_push(layout, {
-						x	: _fx,
-						y	: _fy,
-						obj	: Floor
-					});
-					
-					 // Torch:
-					if(chance(1, 8)){
-						array_push(layout, {
-							x	: _fx + 16,
-							y	: _fy + 16,
-							obj	: Torch
-						});
-					}
-				}
-				
-				 // Turn:
-				_dir += orandom(60);
-			}
-			else{
-				_fx -= lengthdir_x(_moveDis, _moveDir);
-				_fy -= lengthdir_y(_moveDis, _moveDir);
-				_dir = direction;
-			}
-		}
 		
 		return id;
 	}
 	
 #define BuriedVault_step
-	if(floor_num != instance_number(Floor)){
+	 // Generate Layout:
+	if(array_length(layout) <= 0){
+		if(layout_delay > 0) layout_delay -= current_time_scale;
+		else{
+			 // Away From Floors:
+			direction = random(360);
+			with(instance_nearest(x - 16, y - 16, Floor)){
+				other.direction = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_left + bbox_right + 1) / 2, other.x, other.y);
+			}
+			if(array_length(instances_matching(CustomHitme, "name", "PizzaDrain")) > 0){
+				direction = (direction % 180) + 180;
+			}
+			
+			var	_move = 32,
+				_dis = random_range(40, 80);
+				
+			while(distance_to_object(Floor) < _dis){
+				x = floor((x + lengthdir_x(_move, direction)) / 16) * 16;
+				y = floor((y + lengthdir_y(_move, direction)) / 16) * 16;
+			}
+			
+			 // Create TopSmalls/Decals:
+			var _tiles = [];
+			for(var _ox = 0; _ox < image_xscale; _ox++){
+				for(var _oy = 0; _oy < image_xscale; _oy++){
+					var	_sx = x + (_ox * 16),
+						_sy = y + (_oy * 16),
+						_center = (_ox > 0 && _ox < image_xscale - 1 && _oy > 0 && _oy < image_xscale - 1);
+						
+					if(_center || chance(1, 3)){
+						if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
+							with(instance_create(_sx, _sy, TopSmall)){
+								array_push(_tiles, id);
+							}
+						}
+					}
+				}
+			}
+			TopDecal_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), GameCont.area);
+			
+			 // Spriterize TopSmalls:
+			var _x1 = random_range(bbox_left, bbox_right),
+				_y1 = random_range(bbox_top, bbox_bottom),
+				_x2 = random_range(bbox_left + 16, bbox_right - 16),
+				_y2 = random_range(bbox_top + 16, bbox_bottom - 16);
+				
+			with(array_shuffle(_tiles)){
+				var _vault = collision_line(_x1, _y1, _x2, _y2, id, false, false);
+				sprite_index = area_get_sprite(
+					_vault
+						? other.area
+						: GameCont.area,
+					(position_meeting(_x2, _y2, id) || chance(2, 3))
+						? sprWall1Top
+						: sprWall1Trans
+				);
+				
+				if(_vault){
+					for(var _ox = bbox_left - 8; _ox < bbox_right + 1 + 8; _ox += 8){
+						for(var _oy = bbox_top - 8; _oy < bbox_bottom + 1 + 8; _oy += 8){
+							if(!position_meeting(_ox, _oy, id) && chance(1, 10)){
+								with(instance_create(_ox, _oy, TopPot)){ // TopPot is so epic
+									x = xstart;
+									y = ystart;
+									sprite_index = spr.BuriedVaultTopTiny;
+									image_index = irandom(image_number - 1);
+									image_speed = 0;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			 // Generate Room Layout:
+			var	_fx = floor(((bbox_left + bbox_right + 1) / 2) / 16) * 16,
+				_fy = floor(((bbox_top + bbox_bottom + 1) / 2) / 16) * 16,
+				_num = irandom_range(6, 12),
+				_dir = direction,
+				_ped = true,
+				_tries = 1000;
+				
+			while(_num > 0 && _tries-- > 0){
+				var	_moveDis = 32,
+					_moveDir = round(_dir / 90) * 90;
+					
+				_fx += lengthdir_x(_moveDis, _moveDir);
+				_fy += lengthdir_y(_moveDis, _moveDir);
+				
+				var	_spawnPed = chance(_ped, 1 + ((_num - 1) * 2)),
+					_floorDis = 48 + (32 * _spawnPed),
+					n = instance_nearest(_fx, _fy, Floor);
+					
+				if(!instance_exists(n) || abs(_fx - n.x) > _floorDis || abs(_fy - n.y) > _floorDis){
+					_num--;
+					
+					 // Main Loot:
+					if(_spawnPed){
+						_ped = false;
+						
+						var _img = 0;
+						for(var _ox = -32; _ox <= 32; _ox += 32){
+							for(var _oy = -32; _oy <= 32; _oy += 32){
+								array_push(layout, {
+									x	 : _fx + _ox,
+									y	 : _fy + _oy,
+									obj	 : Floor,
+									vars : {
+										sprite_index : spr.VaultFlowerFloor,
+										image_index : _img++
+									}
+								})
+							}
+						}
+						
+						array_push(layout, {
+							x	: _fx + 16,
+							y	: _fy + 8,
+							obj	: "BuriedVaultPedestal"
+						});
+						
+						_fx += lengthdir_x(_moveDis, _moveDir);
+						_fy += lengthdir_y(_moveDis, _moveDir);
+					}
+					
+					 // Floor:
+					else{
+						array_push(layout, {
+							x	: _fx,
+							y	: _fy,
+							obj	: Floor
+						});
+						
+						 // Torch:
+						if(chance(1, 8)){
+							array_push(layout, {
+								x	: _fx + 16,
+								y	: _fy + 16,
+								obj	: Torch
+							});
+						}
+					}
+					
+					 // Turn:
+					_dir += orandom(60);
+				}
+				else{
+					_fx -= lengthdir_x(_moveDis, _moveDir);
+					_fy -= lengthdir_y(_moveDis, _moveDir);
+					_dir = direction;
+				}
+			}
+		}
+	}
+	
+	 // Create Vault:
+	else if(floor_num != instance_number(Floor)){
 		floor_num = instance_number(Floor);
 		
 		 // Check if Vault Uncovered:
@@ -4561,7 +4562,7 @@
     }
 
 #define VenomPellet_destroy
-    with(instance_create(x, y, BulletHit)) sprite_index = sprScorpionBulletHit;
+    instance_create(x, y, ScorpionBulletHit);
 
 
 #define WepPickupStick_create(_x, _y)
@@ -5370,7 +5371,7 @@
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
+#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -5434,6 +5435,8 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
