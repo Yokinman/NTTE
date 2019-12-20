@@ -147,8 +147,10 @@
 		
 		//#region ALERTS
 			p = "enemies/Alerts/";
-			GatorAlert	= sprite(p + "sprGatorAlert",	1,	8,	8);
-			SealAlert	= sprite(p + "sprSealAlert",	1,	8,	8);
+			SealAlert			= sprite(p + "sprSealAlert",		1,	7,	7);
+			ArcticSealAlert 	= sprite(p + "sprArcticSealAlert",	1,	7,	7);
+			GatorAlert			= sprite(p + "sprGatorAlert",		1,	7,	7);
+			GatorAlbinoAlert	= sprite(p + "sprAlbinoGatorAlert",	1,	7,	7);
 		
 		//#endregion
 		
@@ -369,6 +371,7 @@
 				SealWeap[3] = sprite(p + "sprBlunderbuss",  1,  7,  1);
 				SealWeap[4] = sprite(p + "sprRepeater",     1,  6,  2);
 				SealWeap[5] = sprBanditGun;
+				SealDisc	= sprite(p + "sprSealDisc",		2,	7,	7);
 	            ClamShield  = sprite(p + "sprClamShield",  14,  0,  7);
             	SkealIdle   = sprite(p + "sprSkealIdle",    6, 12, 12);
             	SkealWalk   = sprite(p + "sprSkealWalk",    7, 12, 12);

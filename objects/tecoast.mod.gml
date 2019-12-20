@@ -1242,6 +1242,15 @@
 					if(creator.active) kills = 0;
 					array_push(lq_defget(mod_variable_get("area", "coast", "surfSwim"), "inst_visible", []), id);
 				}
+				
+				 // Alert:
+				if(can_alert){
+					with(obj_create(_x, _y, "AlertIndicator")){
+						sprite_index = spr.SealAlert;
+						target = o;
+					}
+					can_alert = false;
+				}
     		}
     	}
     	else with(other){
@@ -1564,7 +1573,8 @@
     	x : _xstart,
     	y : _ystart,
     	num : seal_max,
-    	delay : _delay
+    	delay : _delay,
+    	can_alert : (intro_pan <= 0),
     };
     array_push(seal_spawn, s);
 
@@ -2792,6 +2802,9 @@
 		            		toss_time = 60;
 		            		toss_speed = random_range(7, 9);
 		            		toss = enemy_shoot(Disc, random(360), 0);
+		            		
+		            		 // Make it Pretty:
+		            		with(toss) sprite_index = spr.SealDisc;
 		            	}
 	            	}
 	            	
@@ -3245,7 +3258,7 @@
          // Effects:
         if(current_frame_active){
             with(instance_create(x, y, Dust)){
-                motion_add(gunangle, 2);
+                motion_add(other.gunangle, 2);
             }
             
              // Swoop Sounds:

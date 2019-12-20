@@ -3376,7 +3376,9 @@
 			_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
 			_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1);
 			
+		if(flash_active) d3d_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha) - fade);
+		if(flash_active) d3d_set_fog(false, c_white, 0, 0);
 	}
 	
 	draw_set_font(fntM);

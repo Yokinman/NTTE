@@ -35,6 +35,11 @@
 #macro surfPet global.surfPet
 
 #define AlertIndicator_create(_x, _y)
+	 // Sounds:
+	sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
+	sound_play(sndSlider);
+
+	 // YEa
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.GatorAlert;
@@ -44,9 +49,12 @@
 		fade = 0;
 		target = noone;
 		target_yoff = 16;
+		flash = 3;
+		flash_active = true;
 		
 		 // Alarms:
-		alarm0 = 90;
+		alarm0 = 2;
+		alarm1 = 90;
 		
 		return id;
 	}
@@ -62,7 +70,21 @@
 	image_alpha = abs(image_alpha) * -1;
 	
 #define AlertIndicator_alrm0
-	alarm0 = 1;
+	if(flash > 0){
+		if(!flash_active){
+			flash_active = true;
+		}
+		
+		else{
+			flash_active = false;
+			flash--;
+		}
+		
+		if(flash > 0) alarm0 = 2;
+	}
+	
+#define AlertIndicator_alrm1
+	alarm1 = 1;
 
 	 // Goodbye:
 	if(fade > 1) instance_destroy();
@@ -1827,7 +1849,7 @@
 		size = 3;
 		seal_count = 5 + irandom(3);
 		seal_alert = true;
-		health_threshold = 0;
+		health_threshold = -1;
 		setup = false;
 		
 		 // Alarms:
@@ -1853,7 +1875,7 @@
 	var _healthPool = 0;
 	with(instances_matching(enemy, "team", team)) _healthPool += my_health;
 	
-	if(_healthPool <= health_threshold){
+	if(_healthPool <= health_threshold || health_threshold == -1){
 		alarm1 = 1;
 	}
 	
@@ -1866,7 +1888,7 @@
 		_seal.type = irandom_range(4, 6);
 		if(seal_alert) with(obj_create(x, y, "AlertIndicator")){
 			target = _seal;
-			sprite_index = spr.SealAlert;
+			sprite_index = spr.ArcticSealAlert;
 		}
 		seal_alert = false;
 		
