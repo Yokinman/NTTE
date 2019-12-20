@@ -1022,7 +1022,7 @@
     	my_health = maxhealth;
         x = xstart;
         y = ystart;
-
+        
          // Begin Intro:
         if(alarm0 < 0){
             if(instance_exists(Player)){
@@ -1034,7 +1034,7 @@
                 }
             }
         }
-
+        
         if(instance_exists(Player) && intro_pan > 15){
              // Freeze Things:
             if(current_frame_active){
@@ -1047,14 +1047,14 @@
                 with(Seal){
                     var i = 1,
                 		a = alarm_get(i);
-
+                		
                 	if(a > 0) alarm_set(i, a + max(1, current_time_scale));
                 }
             }
-
+            
              // Just in case:
             with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")) my_health = 0;
-
+            
         	 // Attract Pickups:
             portal_pickups();
         }
@@ -4258,7 +4258,7 @@
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
+#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -4322,6 +4322,8 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');

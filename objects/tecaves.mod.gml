@@ -270,7 +270,7 @@
 	sound_play_hit_ext(sndNothing2Beam, 		0.7 + random(0.2), 1.0);
 	sound_play_hit_ext(sndHyperCrystalSearch,	0.6 + random(0.3), 0.4);
 	view_shake_max_at(x, y, 20);
-	with(instance_create(x, y, EBulletHit)) sprite_index = sprEFlakHit;
+	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
 	
 	
 #define InvMortar_create(_x, _y)
@@ -538,7 +538,12 @@
 	            }
 	
 	             // Unstick from walls by annihilating them:
-	            instance_create(x, y, PortalClear).mask_index = mask_index;
+	            if(place_meeting(x, y, Floor)){
+	            	instance_create(x, y, PortalClear).mask_index = mask_index;
+	            }
+	            else{
+	            	top_create(x, y, id, 0, 0);
+	            }
 	        }
 	    }
     }
@@ -1065,7 +1070,7 @@
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
+#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -1129,6 +1134,8 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');

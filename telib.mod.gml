@@ -6,6 +6,10 @@
 
     global.debug_lag = false;
 
+	 // floor_set():
+	global.floor_style = null;
+	global.floor_area = null;
+
 	 // sleep_max():
 	global.sleep_max = 0;
 	
@@ -1290,10 +1294,10 @@
     }
 
 #define portal_pickups()
-    with(CustomEndStep) if(array_equals(script, ["mod", mod_current, "portal_pickups"])){
+    with(CustomEndStep) if(array_equals(script, ["mod", mod_current, "portal_pickups_step"])){
     	return id;
     }
-    return script_bind_end_step(portal_pickups, 0);
+    return script_bind_end_step(portal_pickups_step, 0);
 
 #define portal_pickups_step
 	instance_destroy();
@@ -2335,6 +2339,8 @@
 	];
 	
 #define floor_set(_x, _y, _state) // imagine if floors and walls just used a ds_grid bro....
+	var _inst = noone;
+	
 	 // Create Floor:
 	if(_state){
 		var	_obj = ((_state >= 2) ? FloorExplo : Floor),
@@ -2342,20 +2348,39 @@
 			_w = ((sprite_get_bbox_right (_msk) + 1) - sprite_get_bbox_left(_msk)),
 			_h = ((sprite_get_bbox_bottom(_msk) + 1) - sprite_get_bbox_top (_msk));
 			
-		 // Align Axis w/ Adjacent Floors:
+		 // Align to Adjacent Floors:
 		var _gridPos = floor_align(_x, _y, _w, _h, _w, _h);
 		_x = _gridPos[0];
 		_y = _gridPos[1];
 		
 		 // Clear Floors:
 		if(!instance_exists(GenCont)){
-			with(instance_rectangle_bbox(_x, _y, _x + _w - 1, _y + _h - 1, _obj)){
-				instance_destroy();
+			with(instance_rectangle_bbox(_x, _y, _x + _w - 1, _y + _h - 1, [Floor, SnowFloor])){
+				if(instance_is(self, _obj)){
+					instance_destroy();
+				}
 			}
 		}
 		
+		 // Auto-Style:
+		var	_floormaker = noone,
+			_lastArea = GameCont.area;
+			
+		if(!is_undefined(global.floor_style)){
+			GameCont.area = 0;
+			with(instance_create(_x, _y, FloorMaker)){
+				with(instances_matching_gt(Floor, "id", id)) instance_delete(id);
+				styleb = global.floor_style;
+				_floormaker = self;
+			}
+			GameCont.area = _lastArea;
+		}
+		if(!is_undefined(global.floor_area)){
+			GameCont.area = global.floor_area;
+		}
+		
 		 // Floorify:
-		var _inst = instance_create(_x, _y, _obj);
+		_inst = instance_create(_x, _y, _obj);
 		with(_inst){
 			 // Clear Area:
 			if(!instance_exists(GenCont)){
@@ -2369,11 +2394,12 @@
 			}
 		}
 		
-		return _inst;
+		with(_floormaker) instance_destroy();
+		GameCont.area = _lastArea;
 	}
 	
 	 // Destroy Floor:
-	else with(instances_at(_x, _y, Floor)){
+	else with(instances_at(_x, _y, [Floor, SnowFloor])){
 		var	_x1 = bbox_left - 16,
 			_y1 = bbox_top - 16,
 			_x2 = bbox_right + 16,
@@ -2401,7 +2427,14 @@
 		}
 	}
 	
-	return noone;
+	return _inst;
+	
+#define floor_set_style(_style, _area)
+	global.floor_style = _style;
+	global.floor_area = _area;
+	
+#define floor_reset_style()
+	floor_set_style(null, null);
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){

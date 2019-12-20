@@ -729,20 +729,22 @@
 				}
 				
 				 // Tentacle Outlines:
-				var a = instances_seen_nonsync(instances_matching(CustomEnemy, "name", "PitSquidArm"), 32, 32);
-				
+				var	_arms = instances_seen_nonsync(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), 32, 32),
+					_alpha = 0.3 + (0.2 * sin(current_frame / 10));
+					
 					 // Anti-Aliasing:
-					d3d_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
-					with(a) for(var i = -1; i <= 1; i += 2){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfx) + i, (y - _surfy) - 1, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha)
+					draw_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
+					with(_arms) for(var i = -1; i <= 1; i += 2){
+						draw_sprite_ext(sprite_index, image_index, ((teleport ? teleport_drawx : x) - _surfx) + i, ((teleport ? teleport_drawy : y) - _surfy) - 1, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha * (_alpha * 2))
 					}
 					
 					 // Outlines:
-					d3d_set_fog(true, make_color_rgb(110, 16, 51), 0, 0);
-					with(a)	for(var d = 0; d <= 180; d += 90){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfx) + lengthdir_x(1, d), (y - _surfy) + lengthdir_y(1, d), image_xscale * right, image_yscale, image_angle, image_blend, image_alpha)
+					draw_set_fog(true, make_color_rgb(235, 0, 67), 0, 0);
+					with(_arms)	for(var d = 0; d <= 180; d += 90){
+						draw_sprite_ext(sprite_index, image_index, ((teleport ? teleport_drawx : x) - _surfx) + lengthdir_x(1, d), ((teleport ? teleport_drawy : y) - _surfy) + lengthdir_y(1, d), image_xscale * right, image_yscale, image_angle, image_blend, image_alpha * _alpha)
 					}
-					d3d_set_fog(false, c_white, 0, 0);
+					
+					draw_set_fog(false, c_white, 0, 0);
 					
 				 // Pit Squid:
 				with(instances_matching(CustomEnemy, "name", "PitSquid")){
@@ -917,7 +919,7 @@
 #define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _draw)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _draw);
+#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
@@ -981,6 +983,8 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
