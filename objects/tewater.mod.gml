@@ -3551,7 +3551,7 @@
 #define PitSquidArm_alrm1
 	alarm1 = 20 + irandom(20);
 	
-	if(enemy_target(posx, posy) && sprite_index != spr_appear){
+	if(enemy_target(x, y) && sprite_index != spr_appear){
 		if(in_sight(target) && (!instance_exists(creator) || !collision_line(x - creator.posx, y - creator.posy, target.x - creator.posx, target.y - creator.posy, creator, false, false))){
 			var _targetDir = point_direction(x, y, target.x, target.y);
 			

@@ -34,6 +34,40 @@
 #macro surfShadowTopMask global.surfShadowTopMask
 #macro surfPet global.surfPet
 
+#define AlertIndicator_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.GatorAlert;
+		image_alpha = -1;
+		
+		 // Vars:
+		fade = 0;
+		target = noone;
+		target_yoff = 16;
+		
+		 // Alarms:
+		alarm0 = 90;
+		
+		return id;
+	}
+	
+#define AlertIndicator_end_step
+	 // Follow the Leader:
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y - target_yoff;
+	}
+	
+	 // Stay Hidden:
+	image_alpha = abs(image_alpha) * -1;
+	
+#define AlertIndicator_alrm0
+	alarm0 = 1;
+
+	 // Goodbye:
+	if(fade > 1) instance_destroy();
+	else fade += 0.15;
+
 #define AllyFlakBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -1773,6 +1807,78 @@
 	}
 
 
+#define Igloo_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		var _front = chance(1, 3);
+		spr_idle = (_front ? spr.IglooFrontIdle : spr.IglooSideIdle);
+		spr_hurt = (_front ? spr.IglooFrontHurt : spr.IglooSideHurt);
+		spr_dead = (_front ? spr.IglooFrontDead : spr.IglooSideDead);
+		sprite_index = spr_idle;
+		depth = -1;
+		
+		 // Sound:
+		snd_hurt = sndHitRock;
+		snd_dead = sndSnowmanBreak;
+		
+		 // Vars:
+		mask_index = -1;
+		my_health = 30;
+		team = 0;
+		size = 3;
+		seal_count = 5 + irandom(3);
+		seal_alert = true;
+		health_threshold = 0;
+		setup = false;
+		
+		 // Alarms:
+		alarm0 = 90;
+		alarm1 = -1;
+		
+		return id;
+	}
+	
+#define Igloo_step
+	if(!setup){
+		setup = true;
+		
+		var _igloos = instances_matching(CustomProp, "name", "Igloo"),
+			_maxHealth = 0;
+		with(enemy) _maxHealth += maxhealth;
+		for(var i = 0; i < array_length(_igloos); i++) with(_igloos[i]){
+			health_threshold = _maxHealth * (2 / (i + 3));
+    	}
+	}
+	
+#define Igloo_alrm0
+	var _healthPool = 0;
+	with(instances_matching(enemy, "team", team)) _healthPool += my_health;
+	
+	if(_healthPool <= health_threshold){
+		alarm1 = 1;
+	}
+	
+	 // Carry On:
+	else alarm0 = 30 + random(30);
+	
+#define Igloo_alrm1
+	if(seal_count > 0){
+		var _seal = obj_create(x, y, "Seal");
+		_seal.type = irandom_range(4, 6);
+		if(seal_alert) with(obj_create(x, y, "AlertIndicator")){
+			target = _seal;
+			sprite_index = spr.SealAlert;
+		}
+		seal_alert = false;
+		
+		seal_count--;
+		if(seal_count > 0) alarm1 = 2 + random(3);
+	}
+	
+#define Igloo_death
+	if(seal_count > 0) repeat(seal_count)
+		with(obj_create(x, y, "Seal")) type = irandom_range(4, 6);
+	
 #define NetNade_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
          // Visual:

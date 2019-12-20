@@ -1023,6 +1023,43 @@
 				obj_create(x, y, "SawTrap");
 			}
 			
+			 // Sludge Pool:
+			if(GameCont.subarea = 2){
+				var _floors = instances_matching(Floor, "mask_index", mskFloor);
+				with(instance_random(_floors)){
+					with(instance_create(x, y, CustomObject)){
+						 // Vars:
+						var _size = 2;
+						mask_index = mskFloor;
+						image_xscale = _size;
+						image_yscale = _size;
+						direction = choose(0, 90, 270, 180);
+						
+						 // Find Space:
+						var o = 32;
+						while(array_length(instances_meeting(x, y, _floors)) > 0){
+							direction += choose(0, 0, 90, 270, 180);
+							x += lengthdir_x(o, direction);
+							y += lengthdir_y(o, direction);
+						}
+						
+						 // Create Room:
+						var a = floor_fill(x, y, _size, _size);
+						for(var i = 0; i < array_length(a); i++){
+							with(a[i]){
+								sprite_index = spr.SludgePool;
+								image_index = i;
+								material = 5; // slimy stone
+							}
+						}
+						obj_create(x, y, "SludgePool");
+						
+						 // Goodbye:
+						instance_delete(id);
+					}
+				}
+			}
+			
 			 // Top Spawns:
             _topChance *= (0.5 * (1 + instance_exists(BecomeScrapBoss) + _event));
             _topSpawn = [
@@ -1127,6 +1164,38 @@
             
         case 5: /// FROZEN CITY
         
+        	 // Igloos:
+        	repeat(1 + irandom(2)){
+				var _floors = instances_matching(Floor, "mask_index", mskFloor);
+				with(instance_random(_floors)){
+					with(instance_create(x, y, CustomObject)){
+						 // Vars:
+						var _size = 3;
+						mask_index = mskFloor;
+						image_xscale = _size;
+						image_yscale = _size;
+						direction = choose(0, 90, 270, 180);
+						
+						 // Find Space:
+						var o = 32;
+						while(array_length(instances_meeting(x, y, _floors)) > 0){
+							direction += choose(0, 0, 90, 270, 180);
+							x += lengthdir_x(o, direction);
+							y += lengthdir_y(o, direction);
+						}
+						
+						 // Create Room:
+						var _cx = x + o,
+							_cy = y + o;
+						floor_fill(_cx, _cy, _size, _size);
+						obj_create(_cx + 16, _cy + 16, "Igloo");
+						
+						 // Goodbye:
+						instance_delete(id);
+					}
+				}
+			}
+    
         	 // Top Spawns:
         	_topChance /= 1.5;
         	_topSpawn = [
@@ -3297,6 +3366,19 @@
 				}
 			}
 		}
+	}
+	
+	 // Alert Indicators:
+	with(instances_matching(CustomObject, "name", "AlertIndicator")) if(visible == true){
+		var _sprite = sprite_index,
+			_x1 = sprite_get_xoffset(_sprite),
+			_y1 = sprite_get_yoffset(_sprite),
+			_x2 = _x1 - sprite_get_width(_sprite) + game_width,
+			_y2 = _y1 - sprite_get_height(_sprite) + game_height,
+			_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
+			_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1);
+			
+		draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha) - fade);
 	}
 	
 	draw_set_font(fntM);

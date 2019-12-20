@@ -468,6 +468,14 @@
 	sound_stop(loop_snd);
 
 
+#define SludgePool_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mask_index = msk.SludgePool;
+		
+		return id;
+	}
+	
 #define Tunneler_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:

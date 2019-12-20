@@ -89,7 +89,7 @@
 		floor_goal = 10 + irandom(10);
 		damage = 3;
 		force = 12;
-		typ = 1;
+		typ = 0;
 		maxspeed = 12;
 		friction = 0.4;
 		wall_break = 3;
@@ -113,6 +113,9 @@
 	alarm0 = 1;
 	motion_add(direction, 0.8);
 	speed = min(speed, maxspeed);
+	
+	 // Deflectable:
+	if(typ == 0) typ = 1;
 	
 #define CrystalHeartProj_hit
 	if(projectile_canhit_melee(other)){

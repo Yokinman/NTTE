@@ -309,17 +309,32 @@
 		if(in_sight(target)){
 			scrAim(point_direction(x, y, target.x, target.y));
 			
-			 // Begin Attack:
-			if(in_distance(target, 192) && chance(2, 3)){
-				alarm1 = 1;
-				gonnafire = 30;
-				sound_play_pitchvol(sndCrossReload,  0.8 + random(0.2), 1.2);
-				sound_play_pitchvol(sndSnowTankAim,  1.5 + random(0.2), 0.6);
-				sound_play_pitchvol(sndSniperTarget, 1.4 + random(0.2), 0.5);
+			 // Grenades:
+			if(in_distance(target, 192) && chance(1, 5)){
+				alarm1 += 40;
+				
+				enemy_shoot("AlbinoGrenade", gunangle + orandom(30), 8);
+				
+				 // Effects:
+				motion_add(gunangle + 180, 2);
+				sound_play_hit_ext(sndIDPDNadeLoad, 	0.8 + random(0.3), 1);
+				sound_play_hit_ext(sndAssassinAttack,	1.0 + random(0.2), 1);
 			}
+			else{
+				
+				 // Begin Attack:
+				if(chance(2, 3)){
+					alarm1 = 1;
+					gonnafire = 30;
+					sound_play_pitchvol(sndCrossReload,  0.8 + random(0.2), 1.2);
+					sound_play_pitchvol(sndSnowTankAim,  1.5 + random(0.2), 0.6);
+					sound_play_pitchvol(sndSniperTarget, 1.4 + random(0.2), 0.5);
+				}
+				
 			
-			 // Approach Target:
-			else scrWalk(gunangle + orandom(15), [40, 60]);
+				 // Approach Target:
+				else scrWalk(gunangle + orandom(15), [40, 60]);
+			}
 		}
 		
 		 // Wander:
@@ -406,6 +421,56 @@
 	pickup_drop(80, 0);
 	pickup_drop(80, 0);
 	
+	enemy_shoot("AlbinoGrenade", random(360), 3);
+	
+#define AlbinoGrenade_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.AlbinoGrenade;
+		depth = -2;
+		
+		 // Vars:
+		mask_index = mskBigRad;
+		creator = noone;
+		damage = 4;
+		force = 4;
+		typ = 1;
+		friction = 0.1;
+		
+		 // Alarms:
+		alarm0 = 6;
+		alarm1 = 60;
+		
+		return id;
+	}
+	
+#define AlbinoGrenade_step
+	if(chance_ct(2, 3)) with(scrFX([x, 4], [y, 4], 0, PlasmaTrail)) sprite_index = spr.QuasarBeamTrail;
+	
+#define AlbinoGrenade_wall
+	speed *= 0.8;
+	move_bounce_solid(false);
+	
+	 // Effects:
+	sound_play_hit(sndGrenadeHitWall, 0);
+	
+#define AlbinoGrenade_alrm0
+	friction = 0.4;
+	
+#define AlbinoGrenade_alrm1
+	 // Quasars:
+	var l = 24;
+	for(var d = 0; d < 360; d += 90){
+		with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "QuasarBeam", d, 0)){
+			hold_x = xstart;
+			hold_y = ystart;
+			follow_creator = false;
+		}
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+
 #define BabyGator_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
