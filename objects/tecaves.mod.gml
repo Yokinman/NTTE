@@ -160,7 +160,7 @@
 			_y = _sy;
 			
 		while(_goal > 0){
-			if(!position_meeting(_x, _y, Floor) || position_meeting(_x, _y, FloorExplo)){
+			if(array_length(instances_at(_x, _y, instances_matching(Floor, "mask_index", mskFloor))) <= 0){
 				_goal--;
 				
 				 // Special - 3x3 Diamond:
