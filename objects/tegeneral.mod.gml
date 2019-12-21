@@ -328,13 +328,14 @@
             }
         }
     }
-
+    
      // Area-Specifics:
     var _x = x,
         _y = y + 16;
-
+        
     switch(area){
-        case 1: // Bones
+        case 1: /// Bones
+        
             repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
                 motion_set(irandom(359), random_range(3, 6));
                 wep = "crabbone";
@@ -345,27 +346,19 @@
             sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 1);
             
             break;
-
-        case 2: // Egg Vat
+            
+        case 2: /// Egg Vat
+        
             repeat(irandom_range(3, 5)){
-                with(instance_create(_x, _y, FrogEgg)){
+                with(instance_create(_x + orandom(16), _y + random(24), FrogEgg)){
                     alarm0 = irandom_range(20, 60);
                     nexthurt = current_frame + 6;
-                    
                     sprite_index = sprFrogEggSpawn;
                     image_speed = random_range(0.1, 0.4);
                     image_index = 0;
-
+                    
                      // Space Out Eggs:
-                    var _tries = 50;
-                    do{
-                        x = _x + orandom(24);
-                        y = _y + random(16);
-                        xprevious = x;
-                        yprevious = y;
-                        if(!place_meeting(x, y, FrogEgg)) break;
-                    }
-                    until (_tries-- <= 0);
+                    instance_budge(FrogEgg, 24);
                     
                      // FX:
                     repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
@@ -375,12 +368,16 @@
                     }
                 }
             }
+            
+             // Sound:
             sound_play_hit_ext(sndToxicBarrelGas, 0.5 + random(0.2), 2);
+            
             break;
-
-		case 3: // Nest Bits
+            
+		case 3: /// Nest Bits
+		
 			repeat(irandom_range(12, 14)){
-                with(instance_create(_x + orandom(24), _y + orandom(12) - random(8), Feather)){
+                with(instance_create(_x + orandom(24), _y - random(8) + orandom(12), Feather)){
                 	motion_add(point_direction(_x, _y, x, y), random(6));
                     sprite_index = spr.NestDebris;
                     image_index = irandom(irandom(image_number - 1));
@@ -389,51 +386,47 @@
                     depth = -1;
                 }
 			}
+			
+			 // Sound:
             sound_play_hit_ext(sndMoneyPileBreak, 0.6 + random(0.2), 3);
             sound_play_hit_ext(sndWallBreakJungle, 1.2 + random(0.2), 1);
+            
 			break;
-
+			
 		case 4:
-		case 104: // Spider Nest
+		case 104: /// Spider Nest
+		
+			 // Floorify:
+			floor_set_style(1, area);
+			floor_fill(_x - 32, _y, 2, 1);
+			floor_reset_style();
 			with(instance_create(_x, _y + 16, PortalClear)){
 				image_xscale *= 1.5;
 				image_yscale *= 1.2;
 			}
 			
-			 // Floorify:
-			floor_set_style(1, area);
-			floor_fill(_x - 32, _y, 2, 1);
-			floor_reset_style();
-			
 			 // Inhabitants:
 			repeat(irandom_range(2, 3)){
 				var e = "Spiderling";
-				if(chance(1, 3)) e = ((area == 104) ? InvSpider : Spider);
-
-				with(obj_create(_x, _y, e)){
+				
+				if(chance(1, 3)){
+					e = ((area == 104) ? InvSpider : Spider);
+				}
+				
+				with(obj_create(_x + orandom(32), _y + random(24), e)){
 					nexthurt = current_frame + 30;
-
-					 // Space Out:
-                    var _tries = 50;
-                    do{
-                        x = _x + orandom(24);
-                        y = _y + random(16);
-                        xprevious = x;
-                        yprevious = y;
-                        if(!place_meeting(x, y, enemy)) break;
-                    }
-                    until (_tries-- <= 0);
-
+                    
 					 // Props:
 					repeat(irandom_range(1, 2)){
-						with(instance_create(x + orandom(12), y + orandom(12), choose(InvCrystal, Cocoon))){
+						with(instance_create(x, y, choose(InvCrystal, Cocoon))){
 							nexthurt = current_frame + 30;
+							instance_budge(prop, 24);
 						}
 					}
 				}
 			}
 			
-			 // Webby:
+			 // Effects:
 			repeat(irandom_range(12, 14)){
                 with(instance_create(_x + orandom(32), _y - 12 + orandom(16), Feather)){
                 	motion_add(point_direction(_x, _y, x, y), random(6));
@@ -444,14 +437,13 @@
                     depth = -1;
                 }
 			}
-			
-			 // Sound:
 			sound_play_hit_ext(sndWallBreakScrap, 0.6 + random(0.2), 0.75);
 			sound_play_hit_ext(sndCocoonBreak, 0.5, 2);
 			
 			break;
 			
-		case 7: // Enormous Headphone Jack
+		case 7: /// Enormous Headphone Jack
+		
 			 // Explo:
 			var	_ang = random(360),
 				l = 12;
@@ -474,8 +466,9 @@
 			sound_play_hit(sndBigGeneratorBreak, 0.1);
 			
 			break;
-
-        case "pizza": // Pizza time
+			
+        case "pizza": /// Pizza time
+        
             repeat(irandom_range(4, 6)){
                 obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
                 with(obj_create(_x, _y, "WaterStreak")){
@@ -494,17 +487,24 @@
             sound_play_hit_ext(sndWallBreakBrick, 0.6 + random(0.2), 0.9);
             
             break;
-
-		case "oasis": // They livin in there u kno
+            
+		case "oasis": // Life
+			
+			 // Floorify:
+			floor_set_style(1, area);
+			floor_fill(_x - 32, _y, 2, 1);
+			floor_reset_style();
 			with(instance_create(_x, _y + 16, PortalClear)){
 				image_xscale *= 1.5;
 				image_yscale *= 1.2;
 			}
 			
+			 // They livin in there u kno:
 			repeat(4){
 				var _sx = _x + orandom(24),
-					_sy = _y + orandom(16);
-
+					_sy = _y + random(24);
+					
+				 // Enemy:
 				if(chance(1, 100)){
 					instance_create(_sx, _sy, Freak);
 				}
@@ -512,39 +512,35 @@
 					if(chance(1, 4)) obj_create(_sx, _sy, Crab);
 					else obj_create(_sx, _sy, choose(BoneFish, "Puffer"));
 				}
-
-				with(obj_create(_sx, _sy, choose(WaterPlant, WaterPlant, OasisBarrel))){
+				
+				 // Prop:
+				with(obj_create(_sx + orandom(4), _sy + orandom(4), choose(WaterPlant, WaterPlant, OasisBarrel))){
 					nexthurt = current_frame + 30;
-
-					 // Space Out:
-					var _tries = 50;
-					while(distance_to_object(prop) < 2 && _tries-- > 0){
-						x = _x + orandom(24);
-						y = _y + orandom(16);
-					}
+					instance_budge(prop, 24);
 				}
 			}
 			
-			 // Floorify:
-			floor_set_style(1, area);
-			floor_fill(_x - 32, _y, 2, 1);
-			floor_reset_style();
-
 			 // Effects:
 			repeat(20) instance_create(_x + orandom(24), _y + orandom(24), Bubble);
 			sound_play_hit_ext(sndOasisPortal, 2 + orandom(0.2), 2);
 			sound_play_hit_ext(sndOasisExplosion, 1 + orandom(0.2), 2);
+			
 			break;
-
-        case "trench": // Boom
+			
+        case "trench": /// Bubbles
+        
+        	 // Explo:
 			obj_create(_x, _y, "BubbleExplosion");
 			repeat(3) obj_create(_x, _y, "BubbleExplosionSmall");
+			
+			 // Effects:
 			repeat(150) scrFX([_x, 32], [_y, 24], random(2), Bubble);
 			sound_play_hit_ext(sndOasisExplosionSmall, 1 + orandom(0.2), 3);
+			
             break;
     }
-
-
+    
+    
 #define BoneArrow_create(_x, _y)
 	var _shotgunShoulders	= skill_get(mut_shotgun_shoulders),
 		_boltMarrow 		= skill_get(mut_bolt_marrow);
@@ -1121,7 +1117,7 @@
 					_y2 = y + 48 - 1;
 					
 				wall_clear(_x1, _y1, _x2, _y2);
-				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Floor)) instance_destroy();
+				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Floor, SnowFloor])) instance_destroy();
 			}
 			
 			 // Generate:
@@ -5586,6 +5582,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

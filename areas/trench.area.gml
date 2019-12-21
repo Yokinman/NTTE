@@ -502,18 +502,18 @@
     }
 
 #define area_pop_props
-     // Quarter Walls:
+     // Lone Walls:
     var _wallChance = (styleb ? 3 : 12); // higher chance of cover over pits
-    if(chance(1, _wallChance)){
-        if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
-            var _x = x + choose(0, 16),
-                _y = y + choose(0, 16);
-
-            if(!place_meeting(_x, _y, hitme)){
-                instance_create(_x, _y, Wall);
-                instance_create(x, y, NOWALLSHEREPLEASE);
-            }
-        }
+    if(
+    	chance(1, _wallChance)						&&
+		!place_meeting(x, y, NOWALLSHEREPLEASE)		&&
+		point_distance(GenCont.spawn_x, GenCont.spawn_y, x, y) > 100
+	){
+        var _x = x + choose(0, 16),
+            _y = y + choose(0, 16);
+            
+        instance_create(_x, _y, Wall);
+        instance_create(x, y, NOWALLSHEREPLEASE);
     }
 
      // Prop Spawns:
@@ -521,7 +521,7 @@
         var _x = x + 16,
             _y = y + 16,
         	_outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
-
+        	
 		if(_outOfSpawn){
 	    	if(chance(1, 10)){
 	    		obj_create(_x, _y, "EelSkull");
@@ -730,7 +730,7 @@
 				
 				 // Tentacle Outlines:
 				var	_arms = instances_seen_nonsync(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), 32, 32),
-					_alpha = 0.3 + (0.2 * sin(current_frame / 10));
+					_alpha = 0.3 + (0.25 * sin(current_frame / 10));
 					
 					 // Anti-Aliasing:
 					draw_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
@@ -1006,6 +1006,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

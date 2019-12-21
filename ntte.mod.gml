@@ -1986,7 +1986,7 @@
 		 // Map Icons:
 		var _list = [];
 		with(ntte_pet) if(instance_exists(self)){
-			array_push(_list, pet_get_mapicon(mod_type, mod_name, pet));
+			array_push(_list, pet_get_icon(mod_type, mod_name, pet));
 		}
 		global.petMapicon[index] = _list;
 	}
@@ -2695,42 +2695,6 @@
 
     instance_destroy();
 
-#define pet_get_mapicon(_modType, _modName, _name)
-	var	_icon = {
-		spr	: spr.PetParrotIcon,
-		img	: 0.4 * current_frame,
-		x	: 0,
-		y	: 0,
-		xsc	: 1,
-		ysc	: 1,
-		ang	: 0,
-		col	: c_white,
-		alp	: 1
-	};
-
-	 // Custom:
-	var _modScrt = _name + "_icon"
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _iconCustom = mod_script_call(_modType, _modName, _modScrt);
-
-		if(is_real(_iconCustom)){
-			_icon.spr = _iconCustom;
-		}
-
-		else{
-			for(var i = 0; i < min(array_length(_iconCustom), lq_size(_icon)); i++){
-				lq_set(_icon, lq_get_key(_icon, i), real(_iconCustom[i]));
-			}
-		}
-	}
-	
-	 // Default:
-	else if(_modType == "mod" && _modName == "petlib"){
-		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
-	}
-
-	return _icon;
-
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
 		instance_destroy();
@@ -3329,7 +3293,7 @@
 	with(instances_matching(CustomHitme, "name", "Pet")){
 		var _dead = (maxhealth > 0 && my_health <= 0);
 		if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || _dead)){
-			var _icon = pet_get_mapicon(mod_type, mod_name, pet);
+			var _icon = pet_get_icon(mod_type, mod_name, pet);
 			
 			if(sprite_exists(_icon.spr)){
 				var _x = x + _icon.x,
@@ -4029,7 +3993,7 @@
 								for(var i = 0; i < lq_size(_petList); i++){
 									var _pet = lq_get_key(_petList, i),
 										_info = lq_get_value(_petList, i),
-										_icon = pet_get_mapicon(_info.mod_type, _info.mod_name, _info.name),
+										_icon = pet_get_icon(_info.mod_type, _info.mod_name, _info.name),
 										_avail = _info.avail,
 										_hover = false,
 										_selected = (_petSlct[_index] == _pet && _avail);
@@ -5195,6 +5159,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

@@ -125,76 +125,78 @@
 #define CrystalHeartProj_wall
 	 // Melt Through a Few Walls:
 	if(wall_break > 0 && instance_is(other, Wall)){
-		with(other) with(instance_create(x, y, PortalClear)) mask_index = other.mask_index;
 		wall_break--;
+		with(other){
+			instance_create(x, y, FloorExplo);
+			instance_destroy();
+		}
 		
 		 // Sounds:
 		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
-		sound_stop(_snd - 1);
+		//?what this do sound_stop(_snd - 1);
 	}
 	
 	 // Tunnel Time:
 	else{
-	
-		var _minID = GameObject.id,
-			_fGoal = floor_goal,
-			_pDist = distance_to_object(instance_nearest(x, y, Player));
+		var	_minID = GameObject.id,
+			_goal = floor_goal,
+			_sx = x,
+			_sy = y;
 			
 		 // No Softlocks:
-		with(Floor) with(instance_create(x - 16, y - 16, NOWALLSHEREPLEASE)){
-			mask_index = mskFloor;
-			image_xscale = 2;
-			image_yscale = 2;
-		}
-			
-		 // Make Floors:
-		var _startDir = round(direction / 90) * 90;
-		with(instance_create((x + 16) - (x % 32), (y + 16) - (y % 32), CustomObject)){
-			
-			mask_index = mskFloor;
-			direction = _startDir;
-			
-			while(_fGoal > 0){
-				
-				 // Generate Floors:
-				if(!position_meeting(x, y, Floor) || instance_is(floor_get(x, y), FloorExplo)){
-					 // 3x3 Diamond:
-					if(chance(1, 7)){
-						floor_fill_round(x, y, 3, 3);
-					}
-					
-					 // Normal Tunnel:
-					else{
-						floor_set(x, y, true);
-					}
-					
-					 // Spawn Chests:
-					_fGoal--;
-					if(_fGoal <= 0){
-						obj_create(x + 16, y + 16, other.chest_type);
-					}
-				}
-				
-				 // Move:
-				var _turn = choose(0, 0, 0, 0, 90, 270, 180);
-				direction += _turn;
-				
-				var _x = x + lengthdir_x(32, direction),
-					_y = y + lengthdir_y(32, direction),
-					_dir = point_direction(xstart, ystart, _x, _y);
-					
-				if(abs(angle_difference(_startDir, _dir)) <= 45){
-					x = _x;
-					y = _y;
+		with(Floor){
+			with(instance_create(x, y, NOWALLSHEREPLEASE)){
+				if(instance_is(other, FloorExplo)){
+					image_xscale /= 2;
+					image_yscale /= 2;
 				}
 			}
-			instance_delete(id);
+		}
+		
+		 // Make Floors:
+		var	_dirStart = round(direction / 90) * 90,
+			_dir = _dirStart,
+			_x = _sx,
+			_y = _sy;
+			
+		while(_goal > 0){
+			if(!position_meeting(_x, _y, Floor) || position_meeting(_x, _y, FloorExplo)){
+				_goal--;
+				
+				 // Special - 3x3 Diamond:
+				if(chance(1, 7)){
+					floor_fill_round(_x, _y, 3, 3);
+				}
+				
+				 // Normal - Tunneling:
+				else{
+					floor_set(_x, _y, true);
+				}
+				
+				 // End + Chest:
+				if(_goal <= 0){
+					floor_make(_x, _y, chest_type);
+				}
+			}
+			
+			 // Turn:
+			if(chance(3, 7)){
+				_dir += choose(90, -90, 180);
+			}
+			
+			 // Move:
+			var _ox = lengthdir_x(32, _dir),
+				_oy = lengthdir_y(32, _dir);
+				
+			if(abs(angle_difference(_dirStart, point_direction(_sx, _sy, _x + _ox, _y + _oy))) <= 45){
+				_x += _ox;
+				_y += _oy;
+			}
 		}
 		
 		 // Beautify Floors:
-		var _floors = instances_matching_gt(Floor, "id", _minID),
-			_hard = GameCont.hard;
-		with(_floors){
+		var _hard = GameCont.hard;
+		with(instances_matching_gt(Floor, "id", _minID)){
 			sprite_index = spr.FloorCrystal;
 			material = 2; // Stone
 			depth = 8;
@@ -206,8 +208,7 @@
 					
 				 // Enemies:
 				if(chance(_hard, _hard + 10)){
-					if(_pDist >= 64 && chance(3, 5)){
-		
+					if(chance(3, 5)){
 						 // Big:
 						if(chance(1, 7)){
 							instance_create(_cx, _cy, RhinoFreak);
@@ -219,29 +220,28 @@
 						}
 					}
 				}
+				
 				else{
-					
 					 // Props:
 					if(chance(1, 7)){
 						obj_create(_cx, _cy, "RedCrystalProp");
 					}
 					
-					 // Walls:
-					else if(instance_exists(Wall) && chance(2, 3)){
-						var _wx = x + choose(0, 16),
-							_wy = y + choose(0, 16);
-						if(!position_meeting(_wx, _wy, NOWALLSHEREPLEASE)){
+					 // Lone Walls:
+					else if(
+						chance(2, 3)							&&
+						!place_meeting(x, y, NOWALLSHEREPLEASE)	&&
+						instance_exists(Wall)
+					){
+						var _wx = x + dfloor(random(bbox_right - bbox_left), 16),
+							_wy = y + dfloor(random(bbox_bottom - bbox_top), 16);
 							
-							instance_create(_wx - 8, _wy - 8, NOWALLSHEREPLEASE);
-							instance_create(_wx, _wy, Wall);
-						}
+						instance_create(_wx, _wy, Wall);
+						instance_create(x, y, NOWALLSHEREPLEASE);
 					}
 				}
 			}
 		}
-		
-		 // Goodbye:
-		with(NOWALLSHEREPLEASE) instance_delete(id);
 		
 		 // Prettify Walls:
 		with(instances_matching_gt(Wall, "id", _minID)){
@@ -249,17 +249,20 @@
 			topspr = spr.WallCrystalTop;
 			outspr = spr.WallCrystalOut;
 		}
-		with(instances_matching_gt(TopSmall, "id", _minID)) if(chance(3, 5)){
-			sprite_index = spr.WallCrystalTrans;
+		with(instances_matching_gt(TopSmall, "id", _minID)){
+			if(chance(3, 5)){
+				sprite_index = spr.WallCrystalTrans;
+			}
 		}
 		
-		/*
 		 // Reveal:
-		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 4)){
-			time = (point_distance(inst.x, inst.y, other.x, other.y) - 16) / 4;
+		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 6)){
+			flash = true;
+			move_dis = 0;
 		}
-		*/
 		
+		 // Goodbye:
+		with(instances_matching_gt(NOWALLSHEREPLEASE, "id", _minID)) instance_destroy();
 		instance_create(x, y, PortalClear);
 		instance_destroy();
 	}
@@ -1157,6 +1160,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

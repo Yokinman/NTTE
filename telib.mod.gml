@@ -2492,6 +2492,8 @@
 				x += lengthdir_x(l, d);
 				y += lengthdir_y(l, d);
 			}
+			xprevious = x;
+			yprevious = y;
 		}
 		
 		return place_meeting(x, y, _objAvoid);
@@ -2896,7 +2898,7 @@
 	        spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
 	        spr_dead = lq_defget(spr, "Pet" + pet + "Dead", mskNone);
         }
-        spr_icon = lq_defget(mod_script_call("mod", "ntte", "pet_get_mapicon", mod_type, mod_name, pet), "spr", spr_icon);
+        spr_icon = lq_defget(pet_get_icon(mod_type, mod_name, pet), "spr", spr_icon);
 
          // Custom Create Event:
     	var _scrt = pet + "_create";
@@ -2920,6 +2922,42 @@
 
 #define pet_spawn(_x, _y, _name)
 	return pet_create(_x, _y, _name, "mod", "petlib");
+	
+#define pet_get_icon(_modType, _modName, _name)
+	var	_icon = {
+		spr	: spr.PetParrotIcon,
+		img	: 0.4 * current_frame,
+		x	: 0,
+		y	: 0,
+		xsc	: 1,
+		ysc	: 1,
+		ang	: 0,
+		col	: c_white,
+		alp	: 1
+	};
+	
+	 // Custom:
+	var _modScrt = _name + "_icon"
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _iconCustom = mod_script_call(_modType, _modName, _modScrt);
+		
+		if(is_real(_iconCustom)){
+			_icon.spr = _iconCustom;
+		}
+		
+		else{
+			for(var i = 0; i < min(array_length(_iconCustom), lq_size(_icon)); i++){
+				lq_set(_icon, lq_get_key(_icon, i), real(_iconCustom[i]));
+			}
+		}
+	}
+	
+	 // Default:
+	else if(_modType == "mod" && _modName == "petlib"){
+		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
+	}
+	
+	return _icon;
 	
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)
 	var _inst = _obj;
