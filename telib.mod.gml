@@ -3397,6 +3397,8 @@
 			return self;
 		}
 	}
+	
+	return noone;
 
 #define floor_make(_x, _y, _obj)
     with(floor_set(_x, _y, true)){

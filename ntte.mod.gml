@@ -3333,18 +3333,30 @@
 	}
 	
 	 // Alert Indicators:
-	with(instances_matching(CustomObject, "name", "AlertIndicator")) if(visible == true){
-		var _sprite = sprite_index,
-			_x1 = sprite_get_xoffset(_sprite),
-			_y1 = sprite_get_yoffset(_sprite),
-			_x2 = _x1 - sprite_get_width(_sprite) + game_width,
-			_y2 = _y1 - sprite_get_height(_sprite) + game_height,
+	with(instances_matching(CustomObject, "name", "AlertIndicator")) if(visible){
+		var _spr = sprite_index,
+			_img = image_index,
+			_xsc = image_xscale,
+			_ysc = image_yscale,
+			_ang = image_angle,
+			_col = image_blend,
+			_alp = abs(image_alpha),
+			_x1 = sprite_get_xoffset(_spr),
+			_y1 = sprite_get_yoffset(_spr),
+			_x2 = _x1 - sprite_get_width(_spr) + game_width,
+			_y2 = _y1 - sprite_get_height(_spr) + game_height,
 			_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
 			_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1);
 			
-		if(flash_active) d3d_set_fog(true, image_blend, 0, 0);
-		draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha) - fade);
-		if(flash_active) d3d_set_fog(false, c_white, 0, 0);
+		if(flash > 0){
+			draw_set_fog(true, image_blend, 0, 0);
+			_ysc /= ceil(flash);
+			_y += (3 / flash) * (flash - 1);
+		}
+		
+		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		
+		if(flash > 0) draw_set_fog(false, 0, 0, 0);
 	}
 	
 	draw_set_font(fntM);
@@ -5159,7 +5171,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

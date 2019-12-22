@@ -2534,7 +2534,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		with(obj_create(0, 0, "Cat")){
 			active = false;
 			cantravel = true;
-			alarm1 = random_range(60, 300);
+			alarm1 = random_range(60, 150);
 		}
 	}
 
@@ -2608,7 +2608,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
                         with(enemy_shoot("CatBossAttack", gunangle, 0)){
                         	target = other.target;
                         	type = other.super;
-                        	other.alarm0 += alarm0;
+                        	other.alarm1 += alarm0;
                         }
                         
                          // Effects:
@@ -2842,7 +2842,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
          // Visual:
         image_yscale = 1.5;
 		hitid = [spr.CatIdle, "BIG CAT"];
-
+		
          // Vars:
         type = 0;
         team = 1;
@@ -2851,98 +2851,96 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         target = noone;
         creator = noone;
         fire_line = [];
-
+		
          // Alarms:
         alarm0 = 30;
         alarm0_max = alarm0;
-
-		 // Hitscan Lines:
-		if(fork()){
-			wait 0;
-
-		    var _num = (3 + GameCont.loops) * (type ? 2.5 : 1),
-		    	_off = 30 + (12 * GameCont.loops),
-		    	_offPos = (_num / 2) * type;
-
-		    repeat(_num) array_push(fire_line, {
-		        dir : (type ? orandom(_off) : 0),
-		        dis : 0,
-		        dir_goal : (type ? 0 : orandom(_off)),
-		        dis_goal : 1000,
-		        x :  0 + orandom(_offPos),
-		        y : -4 + orandom(_offPos)
-		    });
-
-			exit;
-		}
-
+		
         return id;
     }
-
+	
 #define CatBossAttack_step
+	 // Setup Fire Lines:
+	if(array_length(fire_line) <= 0){
+		var	_num = (3 + GameCont.loops) * (type ? 2.5 : 1),
+			_off = 30 + (12 * GameCont.loops),
+			_offPos = (_num / 2) * type;
+			
+		if(_num > 0) repeat(_num){
+			array_push(fire_line, {
+				dir : (type ? orandom(_off) : 0),
+				dis : 0,
+				dir_goal : (type ? 0 : orandom(_off)),
+				dis_goal : 1000,
+				x :  0 + orandom(_offPos),
+				y : -4 + orandom(_offPos)
+			});
+		}
+	}
+	
     if(creator == noone || instance_exists(creator)){
-    	 // Chargin Up:
-	    with(creator){
-	    	wkick = 5 * (1 - (other.alarm0 / other.alarm0_max));
-	    }
-
-	     // Aim:
-    	if(type && instance_exists(target) && target.team != team){
+		 // Chargin Up:
+		with(creator){
+			wkick = 5 * (1 - (other.alarm0 / other.alarm0_max));
+		}
+		
+		 // Aim:
+		if(type && instance_exists(target) && target.team != team){
 			var d = point_direction(x, y, target.x, target.y),
 				m = 60;
-
+				
 			with(creator){
 				scrAim(gunangle + ((clamp(angle_difference(d, gunangle), -m, m) / 20) * current_time_scale));
 			}
 			direction += (clamp(angle_difference(d, direction), -m, m) / 16) * current_time_scale;
-    	}
-
-    	 // Follow Creator:
-        if(instance_exists(creator)){
-    		var o = (type ? 28 : 16) - creator.wkick;
-	        x = creator.x + lengthdir_x(o, creator.gunangle);
-	        y = creator.y + lengthdir_y(o, creator.gunangle);
-        }
-
-	     // Hitscan Lines:
-	    with(fire_line){
-	        dir = angle_lerp(dir, dir_goal, current_time_scale / 7);
-	        
+		}
+		
+		 // Follow Creator:
+		if(instance_exists(creator)){
+			var o = (type ? 28 : 16) - creator.wkick;
+			x = creator.x + lengthdir_x(o, creator.gunangle);
+			y = creator.y + lengthdir_y(o, creator.gunangle);
+		}
+		
+		 // Hitscan Lines:
+		with(fire_line){
+			dir = angle_lerp(dir, dir_goal, current_time_scale / 7);
+			
 			 // Line Hitscan:
 			var _dir = dir + other.direction,
-	            _sx = other.x + x,
-		        _sy = other.y + y,
-		        _lx = _sx,
-		        _ly = _ly,
-		        _md = 1000,
-		        d = _md,
-		        m = 0; // Minor hitscan increment distance
-		        
-		    with(other) while(d > 0){
-		         // Major Hitscan Mode (Start at max, go back until no collision line):
-		        if(m <= 0){
-		            _lx = _sx + lengthdir_x(d, _dir);
-		            _ly = _sy + lengthdir_y(d, _dir);
-		            d -= sqrt(_md);
-		            
-		             // Enter minor hitscan mode:
-		            if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
-		            	if(position_meeting(_lx, _ly, Floor)){
-			                m = 2;
-			                d = sqrt(_md);
-		            	}
-		            }
-		        }
-		        
-		         // Minor Hitscan Mode (Move until collision):
-		        else{
-		            if(position_meeting(_lx, _ly, Wall)) break;
-		            _lx += lengthdir_x(m, _dir);
-		            _ly += lengthdir_y(m, _dir);
-		            d -= m;
-		        }
-		    }
-		    
+				_sx = other.x + x,
+				_sy = other.y + y,
+				_lx = _sx,
+				_ly = _ly,
+				_md = 1000,
+				d = _md,
+				m = 0; // Minor hitscan increment distance
+				
+			with(other) while(d > 0){
+				 // Major Hitscan Mode (Start at max, go back until no collision line):
+				if(m <= 0){
+					_lx = _sx + lengthdir_x(d, _dir);
+					_ly = _sy + lengthdir_y(d, _dir);
+					d -= sqrt(_md);
+					
+					 // Enter minor hitscan mode:
+					if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
+						if(position_meeting(_lx, _ly, Floor)){
+							m = 2;
+							d = sqrt(_md);
+						}
+					}
+				}
+				
+				 // Minor Hitscan Mode (Move until collision):
+				else{
+					if(position_meeting(_lx, _ly, Wall)) break;
+					_lx += lengthdir_x(m, _dir);
+					_ly += lengthdir_y(m, _dir);
+					d -= m;
+				}
+			}
+			
 			dis = point_distance(_sx, _sy, _lx, _ly);
 			
 			 // Effects:
@@ -2951,11 +2949,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					d = _dir;
 					
 				with(instance_create(_sx + lengthdir_x(l, d) + orandom(4), _sy + lengthdir_y(l, d) + orandom(4), EatRad)){
-                    sprite_index = choose(sprEatRadPlut, sprEatBigRad);
-                    motion_set(_dir + 180 + orandom(60), 2);
+					sprite_index = choose(sprEatRadPlut, sprEatBigRad);
+					motion_set(_dir + 180 + orandom(60), 2);
 				}
 			}
-	    }
+		}
     }
     else instance_destroy();
 
@@ -2966,19 +2964,19 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         _scale1 = image_yscale * (1 + (3 * (1 - (alarm0 / alarm0_max)))),
         _scale2 = 3 * (image_yscale * 3),
         _colors = [make_color_rgb(133, 249, 26), make_color_rgb(190, 253, 8)];
-
+        
     draw_set_color(_colors[current_frame % 2]);
-
+    
     with(fire_line){
-        var	_x = _cx + x,
-        	_y = _cy + y,
-        	_dir = dir + other.direction;
-
+		var	_x = _cx + x,
+			_y = _cy + y,
+			_dir = dir + other.direction;
+			
         draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), _scale1 / 2);
         if(other.type){
         	draw_circle(_x, _y, _scale1, false);
         }
-
+        
          // Bloom:
         draw_set_blend_mode(bm_add);
         draw_set_alpha(0.025);
@@ -2988,50 +2986,49 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         draw_line_width(_x, _y, _x + lengthdir_x(dis, _dir), _y + lengthdir_y(dis, _dir), _scale2);
         draw_set_alpha(1);
         draw_set_blend_mode(bm_normal);
-        
     }
-
+    
 #define CatBossAttack_alrm0
      // Hitscan Toxic:
     for(var i = 0; i < array_length(fire_line); i++){
-        var _line = fire_line[i],
-        	_x = x + _line.x,
-        	_y = y + _line.y,
+        var	_line = fire_line[i],
+			_x = x + _line.x,
+			_y = y + _line.y,
             _dis = _line.dis,
             _dir = _line.dir + direction;
-
+            
 		 // Wall Break:
 		if(type){
 			var o = 24;
-	    	instance_create(_x + lengthdir_x(_dis - o, _dir), _y + lengthdir_y(_dis - o, _dir), PortalClear);
-	    	instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), ToxicDelay);
+			instance_create(_x + lengthdir_x(_dis - o, _dir), _y + lengthdir_y(_dis - o, _dir), PortalClear);
+			instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), ToxicDelay);
 		}
-
+		
 		 // Create Toxic Rails:
         while(_dis > 0){
-        	var _lx = _x + lengthdir_x(_dis, _dir),
-        		_ly = _y + lengthdir_y(_dis, _dir),
+			var _lx = _x + lengthdir_x(_dis, _dir),
+				_ly = _y + lengthdir_y(_dis, _dir),
 				o = (12 + GameCont.loops) * type;
-
+				
              // Instadamage:
-            if(type && collision_circle(_lx, _ly, o / 2, hitme, false, false)){
-            	with(instances_matching_ne(hitme, "id", creator)) with(other){
-		    		if(projectile_canhit_melee(other)){
-            			if(collision_circle(_lx, _ly, o / 2, other, false, false)){
-		    				projectile_hit(other, damage, force, _dir);
-		    			}
-            		}
-            	}
-            }
-
+			if(type && collision_circle(_lx, _ly, o / 2, hitme, false, false)){
+				with(instances_matching_ne(hitme, "id", creator)) with(other){
+					if(projectile_canhit_melee(other)){
+						if(collision_circle(_lx, _ly, o / 2, other, false, false)){
+							projectile_hit(other, damage, force, _dir);
+						}
+					}
+				}
+			}
+			
              // Gas:
             with(instance_create(_lx + orandom(o), _ly + orandom(o), ToxicGas)){
-            	motion_add(_dir, 1 + random(1));
+				motion_add(_dir, 1 + random(1));
                 friction += random_range(0.1, 0.2);
                 growspeed *= _dis / _line.dis;
                 creator = other.creator;
                 hitid = other.hitid;
-
+                
 				 // Effects:
                 if(chance(1, 2)){
                     with(instance_create(x + orandom(8), y + orandom(8), AcidStreak)){
@@ -3040,37 +3037,37 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
                     }
                 }
             }
-
+            
             _dis -= 6;
         }
-
+        
 		 // Knockback gas:
         with(instance_create(_x, _y, ToxicGas)){
-        	motion_add(_dir + 180 + orandom(20), 3);
-        	move_contact_solid(_dir + 180, 20);
-        	friction = 0.1;
-        	creator = other.creator;
-        	hitid = other.hitid;
+			motion_add(_dir + 180 + orandom(20), 3);
+			move_contact_solid(_dir + 180, 20);
+			friction = 0.1;
+			creator = other.creator;
+			hitid = other.hitid;
         }
     }
-
+    
      // Effects:
     view_shake_at(x, y, 32);
     sound_play(sndToxicBarrelGas);
     if(type){
-    	sound_play_pitch(sndHyperSlugger, 0.4 + random(0.4));
-    	sound_play_pitch(sndUltraCrossbow, 2 + random(0.5));
+		sound_play_pitch(sndHyperSlugger, 0.4 + random(0.4));
+		sound_play_pitch(sndUltraCrossbow, 2 + random(0.5));
     }
     else{
-    	sound_play(sndHyperSlugger);
+		sound_play(sndHyperSlugger);
     }
-
+    
      // Cat knockback:
     with(creator){
         motion_add(other.direction + 180, 4);
         wkick = 16;
     }
-
+    
     instance_destroy();
 
 
@@ -3519,6 +3516,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
          // Vars:
         phase = 0;
+        target = noone;
 
          // Cool Light:
     	with(obj_create(x, y - 48, "CatLight")){
@@ -5132,7 +5130,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

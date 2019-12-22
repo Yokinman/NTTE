@@ -35,60 +35,52 @@
 #macro surfPet global.surfPet
 
 #define AlertIndicator_create(_x, _y)
-	 // Sounds:
-	sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
-	sound_play(sndSlider);
-
-	 // YEa
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.GatorAlert;
 		image_alpha = -1;
 		
 		 // Vars:
-		fade = 0;
 		target = noone;
-		target_yoff = 16;
+		target_x = 0;
+		target_y = -16;
+		blink = 30;
 		flash = 3;
-		flash_active = true;
 		
 		 // Alarms:
-		alarm0 = 2;
-		alarm1 = 90;
+		alarm0 = 90;
 		
 		return id;
+	}
+	
+#define AlertIndicator_begin_step
+	if(flash > 0){
+		flash -= current_time_scale;
+		
+		 // Sound:
+		if(flash <= 0){
+			sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
+			sound_play(sndSlider);
+		}
 	}
 	
 #define AlertIndicator_end_step
 	 // Follow the Leader:
 	if(instance_exists(target)){
-		x = target.x;
-		y = target.y - target_yoff;
+		x = target.x + target_x;
+		y = target.y + target_y;
 	}
 	
 	 // Stay Hidden:
-	image_alpha = abs(image_alpha) * -1;
+	image_alpha = -abs(image_alpha);
 	
 #define AlertIndicator_alrm0
-	if(flash > 0){
-		if(!flash_active){
-			flash_active = true;
-		}
-		
-		else{
-			flash_active = false;
-			flash--;
-		}
-		
-		if(flash > 0) alarm0 = 2;
-	}
+	alarm0 = 2;
 	
-#define AlertIndicator_alrm1
-	alarm1 = 1;
+	 // Blink Out:
+	visible = !visible;
+	if(blink-- <= 0) instance_destroy();
 
-	 // Goodbye:
-	if(fade > 1) instance_destroy();
-	else fade += 0.15;
 
 #define AllyFlakBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1847,7 +1839,7 @@
 		seal_count = 5 + irandom(3);
 		seal_alert = true;
 		health_threshold = -1;
-		setup = false;
+		setup = true;
 		
 		 // Alarms:
 		alarm0 = 90;
@@ -1855,47 +1847,64 @@
 		
 		return id;
 	}
+
+#define Igloo_setup
+	setup = false;
+	
+	 // :
+	var	_igloos = instances_matching(object_index, "name", name),
+		_maxHealth = 0;
+		
+	with(enemy) _maxHealth += maxhealth;
+	
+	for(var i = 0; i < array_length(_igloos); i++) with(_igloos[i]){
+		health_threshold = _maxHealth * (2 / (i + 3));
+	}
 	
 #define Igloo_step
-	if(!setup){
-		setup = true;
-		
-		var _igloos = instances_matching(CustomProp, "name", "Igloo"),
-			_maxHealth = 0;
-		with(enemy) _maxHealth += maxhealth;
-		for(var i = 0; i < array_length(_igloos); i++) with(_igloos[i]){
-			health_threshold = _maxHealth * (2 / (i + 3));
-    	}
+	if(setup) Igloo_setup();
+	
+	 // No Leaving Bro:
+	if(seal_count > 0 && !instance_exists(enemy)){
+		portal_poof();
 	}
 	
 #define Igloo_alrm0
-	var _healthPool = 0;
-	with(instances_matching(enemy, "team", team)) _healthPool += my_health;
-	
-	if(_healthPool <= health_threshold || health_threshold == -1){
-		alarm1 = 1;
+	if(alarm1 < 0){
+		 // Call in the Seals:
+		var _healthPool = 0;
+		with(enemy) _healthPool += my_health;
+		if(_healthPool <= max(0, health_threshold)){
+			alarm1 = 60;
+			
+			with(obj_create(x, y, "AlertIndicator")){
+				sprite_index = spr.ArcticSealAlert;
+				target = other;
+				target_y -= 3;
+				flash = 30;
+			}
+		}
+		
+		 // Carry On:
+		else alarm0 = 30 + random(30);
 	}
 	
-	 // Carry On:
-	else alarm0 = 30 + random(30);
-	
 #define Igloo_alrm1
-	if(seal_count > 0){
-		var _seal = obj_create(x, y, "Seal");
-		_seal.type = irandom_range(4, 6);
-		if(seal_alert) with(obj_create(x, y, "AlertIndicator")){
-			target = _seal;
-			sprite_index = spr.ArcticSealAlert;
-		}
-		seal_alert = false;
+	 // Seal Spew:
+	if(seal_count-- > 0){
+		alarm1 = 2 + random(3);
 		
-		seal_count--;
-		if(seal_count > 0) alarm1 = 2 + random(3);
+		with(obj_create(x, y, "Seal")){
+			type = irandom_range(4, 6);
+		}
 	}
 	
 #define Igloo_death
-	if(seal_count > 0) repeat(seal_count)
+	 // Seal Spew Pt.2:
+	if(seal_count > 0) repeat(seal_count){
 		with(obj_create(x, y, "Seal")) type = irandom_range(4, 6);
+	}
+	
 	
 #define NetNade_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -5582,7 +5591,7 @@
 #define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_nc('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
