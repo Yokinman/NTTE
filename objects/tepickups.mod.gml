@@ -2760,7 +2760,7 @@
 		with(scrFX(x, y, 0, "WaterStreak")){
 			direction = d;
 			image_angle = direction;
-			image_blend = merge_color(c_white, c_aqua, 0.1);
+			// image_blend = merge_color(c_white, c_aqua, 0.1); // this is fake
 		}
 	}
 	sound_play_hit_ext(sndPlantSnare, 0.8, 1.5);
