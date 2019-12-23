@@ -885,21 +885,21 @@
 		
 			//#region PROPS
 			p = "areas/Vault/";
-			VaultFlowerIdle 		= sprite(p + "sprVaultFlowerIdle",			4,	24, 24);
-			VaultFlowerHurt 		= sprite(p + "sprVaultFlowerHurt",			3,	24, 24);
-			VaultFlowerDead 		= sprite(p + "sprVaultFlowerDead",			6,	24, 24);
-			VaultFlowerWiltedIdle	= sprite(p + "sprVaultFlowerWiltedIdle",	1,	24, 24);
-			VaultFlowerWiltedHurt	= sprite(p + "sprVaultFlowerWiltedHurt",	3,	24, 24);
-			VaultFlowerWiltedDead	= sprite(p + "sprVaultFlowerWiltedDead",	6,	24, 24);
 			
-			VaultFlowerDebris		= sprite(p + "sprVaultFlowerDebris",		10, 4,	4);
-			VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris",	10, 4,	4);
-			
-			VaultFlowerFloor		= sprite(p + "sprVaultFlowerFloor",			9,	0,	0);
-			
-			 // Reroll Skill:
-			RerollHUDSmall = sprite("skills/Reroll/sprRerollHudSmall", 1, 4, 4);
-			
+				 // Vault Flower:
+				VaultFlowerIdle 		= sprite(p + "sprVaultFlowerIdle",          4, 24, 24);
+				VaultFlowerHurt 		= sprite(p + "sprVaultFlowerHurt",          3, 24, 24);
+				VaultFlowerDead 		= sprite(p + "sprVaultFlowerDead",          3, 24, 24);
+				VaultFlowerWiltedIdle	= sprite(p + "sprVaultFlowerWiltedIdle",    1, 24, 24);
+				VaultFlowerWiltedHurt	= sprite(p + "sprVaultFlowerWiltedHurt",    3, 24, 24);
+				VaultFlowerWiltedDead	= sprite(p + "sprVaultFlowerWiltedDead",    3, 24, 24);
+				VaultFlowerDebris		= sprite(p + "sprVaultFlowerDebris",       10,  4,  4);
+				VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris", 10,  4,  4);
+				VaultFlowerFloor		= sprite(p + "sprVaultFlowerFloor",         9,  0,  0);
+				
+				 // Reroll Skill:
+				SkillRerollHUDSmall = sprite("skills/Reroll/sprSkillRerollHUDSmall", 1, 4, 4);
+				
 			//#endregion
 			
 		//#endregion
@@ -1573,6 +1573,26 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		}
 	}
 
+	 // Locked Weapon Spriterize:
+	with(wepsList){
+		var _name = self;
+		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
+			var _spr = mod_variable_get("weapon", _name, "sprWep");
+			if(sprite_get_number(_spr) != 1 || sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
+				with(other) mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
+			}
+		}
+	}
+
+	 // Autosave:
+	if(global.sav_auto){
+		with(instances_matching(GameCont, "ntte_autosave", null)){
+			save();
+			ntte_autosave = true;
+		}
+	}
+	
+#define draw_gui_end
 	 // Surface Setup:
 	with(surfList){
 		 // Create/Resize:
@@ -1611,25 +1631,6 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		if(shad != -1){
 			shader_destroy(shad);
 			shad = -1;
-		}
-	}
-
-	 // Locked Weapon Spriterize:
-	with(wepsList){
-		var _name = self;
-		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
-			var _spr = mod_variable_get("weapon", _name, "sprWep");
-			if(sprite_get_number(_spr) != 1 || sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
-				with(other) mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
-			}
-		}
-	}
-
-	 // Autosave:
-	if(global.sav_auto){
-		with(instances_matching(GameCont, "ntte_autosave", null)){
-			save();
-			ntte_autosave = true;
 		}
 	}
 

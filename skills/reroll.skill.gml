@@ -1,21 +1,64 @@
 #define init
-	global.sprSkillHUD  = sprite_add("../sprites/skills/Reroll/sprSkillRerollHUD.png",  1,  8,  8);
+	global.sprSkillHUD = sprite_add("../sprites/skills/Reroll/sprSkillRerollHUD.png", 1, 8, 8);
 	game_start();
 	
 #define game_start
-	global.index = 0;
-
-#macro skill mod_variable_get("mod", "tepickups", "vFlowerSkill")
-#macro index mod_variable_get("mod", "tepickups", "vFlowerIndex")
+	global.skill = null;
+    global.last = skill_get(mod_current);
 	
 #define skill_name      return "FLOWER'S BLESSING";
-#define skill_text      return `@sREROLL @w${skill_get_name(skill)}`;
-#define skill_avail 	return false;
+#define skill_text      return `@sREROLL @w${skill_get_name(global.skill)}`;
+#define skill_tip		return "~";
 #define skill_icon      return global.sprSkillHUD;
+#define skill_avail 	return false;
 
+#define skill_take(_num)
+	if(is_undefined(global.skill)){
+		global.skill = 0;
+		for(var i = 0; true; i++){
+			var s = skill_get_at(i);
+			if(is_undefined(s)) break;
+			if(s != mod_current) global.skill = s;
+		}
+	}
+	
+	 // Replace Skill:
+	skill_set(mod_current, skill_get(global.skill));
+	skill_set(global.skill, 0);
+	
+	 // Give New Mutation:
+	if(skill_get(mod_current) == _num){
+		with(GameCont) skillpoints++;
+	}
+	
+    global.last = skill_get(mod_current);
+	
+#define skill_lose
+	if(!is_undefined(global.skill) && global.last != 0){
+		skill_set(global.skill, global.last);
+		with(GameCont) skillpoints--;
+	}
+	global.skill = null;
+    global.last = 0;
+	
 #define step
-	if(skill_get_at(index + 1)){
-		skill_set(mod_current, 0);
+	script_bind_end_step(end_step, 0);
+	
+#define end_step
+	instance_destroy();
+	
+	 // Detect Rerolled Mutation:
+	for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+		if(skill_get_at(i) == mod_current){
+			var _skillNext = skill_get_at(i + 1);
+			if(!is_undefined(_skillNext)){
+				global.skill = null;
+				skill_set(_skillNext, max(skill_get(_skillNext), skill_get(mod_current)));
+				skill_set(mod_current, 0);
+				mod_variable_set("mod", "ntte", "hud_reroll", _skillNext);
+			}
+			break;
+		}
 	}
 
 

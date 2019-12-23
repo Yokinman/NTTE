@@ -2645,34 +2645,13 @@
 	
 	instance_destroy();
 
+
 #define VaultFlower_create(_x, _y)
-	var a = [],
-		i = 0;
-		
-	while(skill_get_at(i) != null){
-		var c = skill_get_at(i);
-		if(c != mut_patience && c != "reroll"){
-			array_push(a, c);
-		}
-		i++;
-	}
-	
-	 // Determine Target Skill:
-	var w = (global.vFlowerWilted || array_length(a) <= 0),
-		s = mut_last_wish;
-	
-	if(!w && skill_get(mut_last_wish) <= 0){
-		s = a[irandom(array_length(a) - 1)];
-	}
-	
-	 // HUD Icon:
-	var _skillImg = sprSkillIconHUD,
-		_skillInd = real(s);
-	if(is_string(s)) _skillImg = mod_script_call("skill", s, "skill_icon");
-	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		VaultFlower_sprites(w);
+		spr_idle = spr.VaultFlowerIdle;
+		spr_hurt = spr.VaultFlowerHurt;
+		spr_dead = spr.VaultFlowerDead;
 		
 		 // Sounds:
 		snd_hurt = sndHitPlant;
@@ -2682,16 +2661,34 @@
 		mask_index = mskBigSkull;
 		maxhealth = 30;
 		size = 2;
-		skill = s;
-		wilted = w;
+		skill = mut_last_wish;
+		wilted = global.vFlowerWilted;
 		pickup_indicator = noone;
-		if(!w){
+		
+		 // Determine Skill:
+		if(!wilted){
+			if(skill_get(skill) == 0){
+				var _skillList = [];
+				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+					var s = skill_get_at(i);
+					if(s != mut_patience && s != "reroll") array_push(_skillList, s);
+				}
+				
+				if(array_length(_skillList) > 0){
+					skill = _skillList[irandom(array_length(_skillList) - 1)];
+				}
+			}
+			
+			wilted = (skill_get(skill) == 0);
+		}
+		
+		 // Pickup Indicator:
+		if(!wilted){
 			pickup_indicator = scrPickupIndicator("  REROLL");
 			with(pickup_indicator){
 				mask_index = mskLast;
 				xoff = -8;
 				yoff = -10;
-				icon = {sprite: _skillImg, index: _skillInd};
 				on_meet = script_ref_create(VaultFlower_PickupIndicator_meet);
 			}
 		}
@@ -2699,93 +2696,96 @@
 		return id;
 	}
 	
-#define VaultFlower_sprites(_wilted)
-	var w = (_wilted ? "Wilted" : "");
-	with(["Idle", "Hurt", "Dead"]){
-		var s = self;
-		variable_instance_set(other, "spr_" + string_lower(s), variable_instance_get(spr, "VaultFlower" + w + s));
-	}
-	
 #define VaultFlower_step
-	 // Stay Put:
 	x = xstart;
 	y = ystart;
 	
+	var _pickup = pickup_indicator;
+	
 	if(!wilted){
-		if(!global.vFlowerWilted){
+		 // Wilt:
+		if(global.vFlowerWilted || skill_get(skill) == 0){
+			wilted = true;
+		}
+		
+		 // Interact:
+		else if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+			global.vFlowerWilted = true;
 			
-			 // Effects:
-			if(chance_ct(1, 7)) instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle).depth = depth - 1;
+			 // Reroll:
+			mod_variable_set("skill", "reroll", "skill", skill);
+			skill_set("reroll", true);
 			
-			 // Interact:
-			var _pickup = pickup_indicator;
-			if(instance_exists(_pickup) && _pickup.pick != -1){
-				global.vFlowerWilted = true;
-				global.vFlowerSkill = skill;
-				
-				skill_set(skill, 0);
-				skill_set("reroll", 1);
-				
-				with(GameCont) skillpoints++;
-				
-				var i = 0;
-				while(skill_get_at(i) != null){
-					if(skill_get_at(i) == "reroll") global.vFlowerIndex = i;
-					i++;
-				}
-				
-				 // Sounds:
-				with(player_find(_pickup.pick)){
-					sound_play(snd_crwn);
-				}
+			 // Sounds:
+			with(player_find(_pickup.pick)){
+				sound_play(snd_crwn);
 			}
 		}
 		
-		 // Wilt:
-		if(global.vFlowerWilted){
-			wilted = true;
-			
-			VaultFlower_sprites(true);
-			instance_delete(pickup_indicator);
-			
-			// global.vFlowerWilted = false;
+		 // Effects:
+		if(chance_ct(1, 7)){
+			with(instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle)){
+				depth = other.depth - 1;
+			}
 		}
 	}
 	
-	 // Wilted Effects:
-	else if(chance_ct(1, 120)) scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0);
+	 // Wilted:
+	else{
+		 // Sprites:
+		if(spr_idle == spr.VaultFlowerIdle) spr_idle = spr.VaultFlowerWiltedIdle;
+		if(spr_hurt == spr.VaultFlowerHurt) spr_hurt = spr.VaultFlowerWiltedHurt;
+		if(spr_dead == spr.VaultFlowerDead) spr_dead = spr.VaultFlowerWiltedDead;
+		
+		 // Effects:
+		if(chance_ct(1, 120)){
+			scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0);
+		}
+	}
 	
 	 // Hurt Effects:
-	if(sprite_index == spr_hurt && image_index == image_speed) scrVaultFlowerDebris(x, y, direction + orandom(45), 3 + random(4));
+	if(sprite_index == spr_hurt){
+		if(image_index >= 1 && image_index < 1 + image_speed_raw){
+			scrVaultFlowerDebris(x, y, direction + orandom(random(180)), 2 + random(3.5));
+		}
+	}
+	
+	with(_pickup) visible = !other.wilted;
 
 #define VaultFlower_death
-
 	 // Effects:
 	repeat(8) scrVaultFlowerDebris(x, y, random(360), random(4));
 	repeat(4) scrVaultFlowerDebris(x, y, direction + orandom(45), 3 + random(4));
-	
-	for(var i = 0; i < 360; i += 360 / 3){
-		var d = direction + i;
-		with(instance_create(x, y, AcidStreak)){
-			sprite_index = spr.WaterStreak;
-			
-			direction	= d;
-			image_angle = d;
+	for(var d = direction; d < direction + 360; d += (360 / 3)){
+		with(scrFX(x, y, 0, "WaterStreak")){
+			direction = d;
+			image_angle = direction;
+			image_blend = merge_color(c_white, c_aqua, 0.1);
 		}
 	}
+	sound_play_hit_ext(sndPlantSnare, 0.8, 1.5);
 	
 	 // Secret:
 	if(!wilted)	pet_spawn(x, y, "Orchid");
 	
 #define VaultFlower_PickupIndicator_meet
-	script_bind_draw(VaultFlower_PickupIndicator_icon, -100, id, icon, other.index);
+	if(instance_exists(TopCont)){
+		script_bind_draw(VaultFlower_PickupIndicator_icon, TopCont.depth, self, other);
+	}
 	return true;
 	
-#define VaultFlower_PickupIndicator_icon(_id, _icon, _index)
-	var _pickup = player_find(_index).nearwep;
-	if(player_find_local_nonsync() == _index && (_pickup == noone || instance_is(_pickup, IceFlower))) 
-		with(_id) draw_sprite(_icon.sprite, _icon.index, x - xoff, (y - 13) + yoff);
-	instance_delete(id);
+#define VaultFlower_PickupIndicator_icon(_inst, _instMeet)
+	with(_instMeet){
+		if(player_get_show_prompts(index, player_find_local_nonsync())){
+			with(_inst){
+				if(nearwep == other.nearwep && "skill" in creator){
+					var _icon = skill_get_icon(creator.skill);
+					draw_sprite(_icon[0], _icon[1], x - xoff, (y - 13) + yoff);
+				}
+			}
+		}
+	}
+	instance_destroy();
 	
 #define scrVaultFlowerDebris(_x, _y, _dir, _spd)
 	with(instance_create(_x, _y, Feather)){
@@ -2794,9 +2794,10 @@
 		image_angle = orandom(30);
 		image_speed = 0;
 		depth = other.depth - 1;
+		direction = _dir;
+		speed = _spd;
 		rot *= 0.5;
-		// alarm0 = 60 + random(30);
-		motion_set(_dir, _spd);
+		//alarm0 = 60 + random(30);
 		
 		return id;
 	}
@@ -2811,8 +2812,6 @@
 	
 	 // Vault Flower:
 	global.vFlowerWilted = false;
-	global.vFlowerSkill = 0;
-	global.vFlowerIndex = 0;
 
 #define step
     script_bind_step(post_step, 0);
@@ -3439,6 +3438,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

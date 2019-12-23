@@ -55,7 +55,7 @@
         }
         for(var a = -1; a <= 1; a++){
             with(obj_create(x, y, "WaterStreak")){
-                motion_set(_dir + (((a * 24) + orandom(8)) * accuracy), 2 + random(4));
+                motion_set(_dir + (((a * 24) + orandom(8)) * other.accuracy), 2 + random(4));
                 y += vspeed;
                 image_angle = other.gunangle;
                 image_speed += orandom(0.2);

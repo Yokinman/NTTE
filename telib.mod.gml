@@ -1619,6 +1619,15 @@
 #define frame_active(_interval)
     return ((current_frame % _interval) < current_time_scale);
 
+#define skill_get_icon(_skill)
+    if(is_real(_skill)){
+        return [sprSkillIconHUD, _skill];
+    }
+    if(is_string(_skill) && mod_script_exists("skill", _skill, "skill_icon")){
+        return [mod_script_call("skill", _skill, "skill_icon"), 0];
+    }
+    return [sprEGIconHUD, 2];
+
 #define area_generate(_sx, _sy, _area)
 	if(is_real(_area) || mod_exists("area", _area)){
 	    GameCont.area = _area;
