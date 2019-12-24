@@ -38,7 +38,16 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.GatorAlert;
+		spr_alert = spr.AlertIndicator;
+		image_speed = 0.4;
 		image_alpha = -1;
+		alert_ang = 0;
+		alert_col = make_color_rgb(252, 56, 0);
+		alert_x = -5;
+		alert_y = 0;
+		
+		 // Sound:
+		snd_flash = sndSlider;
 		
 		 // Vars:
 		target = noone;
@@ -59,8 +68,8 @@
 		
 		 // Sound:
 		if(flash <= 0){
+			sound_play(snd_flash);
 			sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
-			sound_play(sndSlider);
 		}
 	}
 	
@@ -1877,11 +1886,14 @@
 		if(_healthPool <= max(0, health_threshold)){
 			alarm1 = 60;
 			
-			with(obj_create(x, y, "AlertIndicator")){
-				sprite_index = spr.ArcticSealAlert;
-				target = other;
-				target_y -= 3;
+			 // Alert:
+			with(scrAlert(spr.ArcticSealAlert, self)){
 				flash = 30;
+				if(chance(1, 10)){
+					spr_alert = sprBreath;
+					alert_col = c_white;
+					alert_x = 1;
+				}
 			}
 		}
 		
@@ -5556,7 +5568,6 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
@@ -5584,6 +5595,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5594,6 +5606,7 @@
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
+#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
