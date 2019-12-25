@@ -61,9 +61,6 @@
 				_x = x + lengthdir_x(_l, w.ang) - surfCenterW,
 				_y = y + lengthdir_y(_l, w.ang) - surfCenterH + w.height;
 
-			//d3d_set_fog(true, c_fuchsia, 0, 0);
-			//draw_sprite_ext(w.my_inst.mask_index, 0, _x + surfCenterW, _y + surfCenterH, 1, 1, w.ang, c_white, 1);
-
 			d3d_set_fog(true, c_black, 0, 0);
 			for(var i = 0; i < 360; i += 90){
 				draw_surface(w.my_surf, _x + lengthdir_x(1, i), _y + lengthdir_y(1, i));
@@ -106,6 +103,10 @@
 		_x = x + lengthdir_x(_len, w.ang),
 		_y = y + lengthdir_y(_len, w.ang);
 
+  with(instance_create(_x, _y, Bubble)){
+    motion_add(w.ang, random_range(1, 2));
+  }
+
 	with(instance_create(_x, _y, Slash)){
 		creator = other;
 		team	= other.team;
@@ -131,17 +132,17 @@
     with(w){
 
 	     // Adopt Leader Variables:
-	    myx = p.x + p.hspeed;
-	    myy = p.y + p.vspeed;
+	    myx = p.x;
+	    myy = p.y;
 	    kick = variable_instance_get(p, b + "wkick");
 
 	     // Retarget:
 	    var _goalDir = p.gunangle,
-	    	  _turnSpd = 45 / p.reloadspeed,
+	    	  _turnSpd = 45 * p.reloadspeed,
 	    	  _angDiff = 0;
 	    if(!_primary ^^ (p.race == "steroids" && wep_get(p.wep) != mod_current)){
 	    	  _goalDir += 180;
-	    	  _turnSpd = 45 / p.reloadspeed;
+	    	  _turnSpd = 45 * p.reloadspeed;
 	    }
 	    _angDiff = angle_difference(_goalDir, ang);
 	    ang += min(abs(_angDiff), _turnSpd) * sign(_angDiff);

@@ -204,11 +204,10 @@
 	}
 
 #define ClamShield_hit
-
    // Push around enemies:
   with other{
     if !instance_is(self, prop){
-    motion_add(other.wep.ang, 2 / max(size, 1));
+    motion_add(other.wep.ang, 3 / max(size, 1));
     }
   }
 
@@ -234,6 +233,12 @@
 		 // Effects:
 		sound_play_hit(sndCrystalRicochet, 0);
 		sleep(10);
+    with(instance_create(x, y, Bubble)){
+      motion_add(other.direction + random_range(10, 10), random_range(1, 3));
+    }
+    with creator{
+      motion_add(gunangle - 180, 1.5);
+    }
 
 		 // Destroyables:
 		if(p.typ == 2){
