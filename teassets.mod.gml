@@ -147,10 +147,11 @@
 		
 		//#region ALERTS
 			p = "enemies/Alerts/";
-			SealAlert			= sprite(p + "sprSealAlert",		1,	7,	7);
-			ArcticSealAlert 	= sprite(p + "sprArcticSealAlert",	1,	7,	7);
-			GatorAlert			= sprite(p + "sprGatorAlert",		1,	7,	7);
-			GatorAlbinoAlert	= sprite(p + "sprAlbinoGatorAlert",	1,	7,	7);
+			AlertIndicator   = sprite(p + "sprAlertIndicator",   1, 1, 6)
+			SealAlert        = sprite(p + "sprSealAlert",        1, 7, 7);
+			ArcticSealAlert  = sprite(p + "sprArcticSealAlert",  1, 7, 7);
+			GatorAlert       = sprite(p + "sprGatorAlert",       1, 7, 7);
+			GatorAlbinoAlert = sprite(p + "sprAlbinoGatorAlert", 1, 7, 7);
 		
 		//#endregion
 		
