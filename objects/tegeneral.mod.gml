@@ -1124,6 +1124,16 @@
 			 // Generate:
 			var	_minID = GameObject.id;
 			with(layout){
+				 // Clear Space for Special Floors:
+				if(obj == Floor && "vars" in self){
+					if(lq_get(vars, "sprite_index") == spr.VaultFlowerFloor){
+						with(instance_rectangle_bbox(x, y, x + 32 - 1, y + 32 - 1, [Floor, SnowFloor])){
+							instance_destroy();
+						}
+					}
+				}
+				
+				 // Create:
 				with(obj_create(x, y, obj)){
 					if("vars" in other){
 						for(var i = 0; i < lq_size(other.vars); i++){
