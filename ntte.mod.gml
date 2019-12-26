@@ -3383,76 +3383,95 @@
 				}
 			}
 			draw_set_alpha(1);
-		}
-		
-		 // Pet Indicator:
-		with(instances_matching(CustomHitme, "name", "Pet")){
-			var _dead = (maxhealth > 0 && my_health <= 0);
-			if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || _dead)){
-				var _icon = pet_get_icon(mod_type, mod_name, pet);
-				
-				if(sprite_exists(_icon.spr)){
-					var _x = x + _icon.x,
-						_y = y + _icon.y;
-							
-					 // Death Pointer:
-					if(_dead){
-						_y -= 20 + sin(wave / 10);
-						draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
-					}
+			
+			 // Pet Indicator:
+			with(instances_matching(CustomHitme, "name", "Pet")){
+				var _dead = (maxhealth > 0 && my_health <= 0);
+				if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || _dead)){
+					var _icon = pet_get_icon(mod_type, mod_name, pet);
 					
-					 // Icon:
-					var	_x1 = sprite_get_xoffset(_icon.spr),
-						_y1 = sprite_get_yoffset(_icon.spr),
-						_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
-						_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
+					if(sprite_exists(_icon.spr)){
+						var _x = x + _icon.x,
+							_y = y + _icon.y;
+								
+						 // Death Pointer:
+						if(_dead){
+							_y -= 20 + sin(wave / 10);
+							draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
+						}
 						
-					_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
-					_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
-					
-					draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
-					
-					 // Death Indicating:
-					if(_dead){
-						var _flashLength = 15,
-							_flashDelay = 10,
-							_flash = (current_frame % (_flashLength + _flashDelay));
+						 // Icon:
+						var	_x1 = sprite_get_xoffset(_icon.spr),
+							_y1 = sprite_get_yoffset(_icon.spr),
+							_x2 = _x1 - sprite_get_width(_icon.spr) + game_width,
+							_y2 = _y1 - sprite_get_height(_icon.spr) + game_height;
 							
-						if(_flash < _flashLength){
-							draw_set_blend_mode(bm_add);
-							draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
-							draw_set_blend_mode(bm_normal);
+						_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
+						_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
+						
+						draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
+						
+						 // Death Indicating:
+						if(_dead){
+							var _flashLength = 15,
+								_flashDelay = 10,
+								_flash = (current_frame % (_flashLength + _flashDelay));
+								
+							if(_flash < _flashLength){
+								draw_set_blend_mode(bm_add);
+								draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
+								draw_set_blend_mode(bm_normal);
+							}
 						}
 					}
 				}
 			}
-		}
-		
-		 // Alert Indicators:
-		with(instances_matching(CustomObject, "name", "AlertIndicator")) if(visible){
-			var _spr = sprite_index,
-				_img = image_index,
-				_xsc = image_xscale,
-				_ysc = image_yscale,
-				_ang = image_angle,
-				_col = image_blend,
-				_alp = abs(image_alpha),
-				_x1 = sprite_get_xoffset(_spr),
-				_y1 = sprite_get_yoffset(_spr),
-				_x2 = _x1 - sprite_get_width(_spr) + game_width,
-				_y2 = _y1 - sprite_get_height(_spr) + game_height,
-				_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
-				_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1);
+			
+			 // Alert Indicators:
+			with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "visible", true)){
+				var	_flash = max(1, flash),
+					_spr = sprite_index,
+					_img = image_index,
+					_xsc = image_xscale,
+					_ysc = image_yscale / _flash,
+					_ang = image_angle,
+					_col = image_blend,
+					_alp = abs(image_alpha),
+					_x1 = sprite_get_xoffset(_spr),
+					_y1 = sprite_get_yoffset(_spr),
+					_x2 = _x1 - sprite_get_width(_spr) + game_width,
+					_y2 = _y1 - sprite_get_height(_spr) + game_height,
+					_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
+					_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1) + ((3 / _flash) * (_flash - 1)),
+					_alertSpr = spr_alert,
+					_alertImg = current_frame * image_speed,
+					_alertX = _x + (alert_x * _xsc),
+					_alertY = _y + (alert_y * _ysc),
+					_alertAng = alert_ang,
+					_alertCol = alert_col,
+					_alertAlp = _alp;
+					
+				if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
 				
-			if(flash > 0){
-				draw_set_fog(true, image_blend, 0, 0);
-				_ysc /= ceil(flash);
-				_y += (3 / flash) * (flash - 1);
+				 // ! Shadow:
+				if(sprite_exists(_alertSpr)){
+					for(var	_sx = -1; _sx <= 1; _sx++){
+						for(var	_sy = -1; _sy <= 2; _sy++){
+							draw_sprite_ext(_alertSpr, _alertImg, _alertX + (_sx * _xsc), _alertY + (_sy * _ysc), _xsc, _ysc, _alertAng, c_black, _alertAlp);
+						}
+					}
+				}
+				
+				 // Main:
+				draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+				
+				 // !
+				if(sprite_exists(_alertSpr)){
+					draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _xsc, _ysc, _alertAng, _alertCol, _alertAlp);
+				}
+				
+				if(flash > 0) draw_set_fog(false, 0, 0, 0);
 			}
-			
-			draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-			
-			if(flash > 0) draw_set_fog(false, 0, 0, 0);
 		}
 	}
 	
@@ -5235,7 +5254,6 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
@@ -5263,6 +5281,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5273,6 +5292,7 @@
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
+#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);

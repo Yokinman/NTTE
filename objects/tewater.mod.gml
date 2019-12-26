@@ -5067,101 +5067,101 @@
     }
 
 
-#define YetiCrab_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
-        spr_idle = spr.YetiCrabIdle;
-        spr_walk = spr.YetiCrabIdle;
-        spr_hurt = spr.YetiCrabIdle;
-        spr_dead = spr.YetiCrabIdle;
-        spr_weap = mskNone;
-        spr_shadow = shd24;
-        spr_shadow_y = 6;
-        hitid = [spr_idle, "YETI CRAB"];
-        mask_index = mskFreak;
-        depth = -2;
-
-         // Sound:
-        snd_hurt = sndScorpionHit;
-        snd_dead = sndScorpionDie;
-
-         // Vars:
-        maxhealth = 12;
-        raddrop = 3;
-        size = 1;
-        walk = 0;
-        walkspeed = 1;
-        maxspeed = 4;
-        meleedamage = 2;
-        is_king = 0; // Decides leader
-        direction = random(360);
-
-         // Alarms:
-        alarm1 = 20 + irandom(10);
-
-        return id;
-    }
-
-#define YetiCrab_alrm1
-    alarm1 = 30 + random(10);
-    enemy_target(x, y);
-
-    if(is_king = 0) { // Is a follower:
-        if(instance_exists(instance_nearest_array(x, y, instances_matching(CustomEnemy, "is_king", 1)))) { // Track king:
-            var nearest_king = instance_nearest_array(x, y, instances_matching(CustomEnemy, "is_king", 1));
-            var king_dir = point_direction(x, y, nearest_king.x, nearest_king.y);
-            if(point_distance(x, y, nearest_king.x, nearest_king.y) > 16 and point_distance(x, y, target.x, target.y) < point_distance(x, y, nearest_king.x, nearest_king.y)) { // Check distance from king:
-                scrRight(king_dir);
-
-                 // Follow king in a jittery manner:
-                scrWalk(king_dir + orandom(5), 5);
-                alarm1 = 5 + random(5);
-            }
-
-             // Chase player instead:
-            else if(in_sight(target)) {
-                var _targetDir = point_direction(x, y, target.x, target.y);
-                scrRight(_targetDir);
-
-                 // Chase player:
-                scrWalk(_targetDir + orandom(10), 30);
-                scrRight(direction);
-            } else {
-                 // Crab rave:
-                scrWalk(random(360), 30);
-                scrRight(direction);
-            }
-        }
-         // No leader to follow:
-        else if(in_sight(target)) {
-            var _targetDir = point_direction(x, y, target.x, target.y);
-
-             // Sad chase :( :
-            if(fork()) {
-                repeat(irandom_range(4, 10)) {
-                    wait random_range(1, 3);
-                    if(!instance_exists(other)) exit; else instance_create(x, y, Sweat); // Its tears shhh
-                }
-
-                exit;
-            }
-            scrWalk(_targetDir + orandom(10), 30);
-            scrRight(direction);
-        } else {
-             // Crab rave:
-            scrWalk(random(360), 30);
-            scrRight(direction);
-        }
-    }
-
-     // Is a leader:
-    else {
-        var _targetDir = point_direction(x, y, target.x, target.y);
-
-         // Chase player:
-        scrWalk(_targetDir + orandom(10), 30);
-        scrRight(direction);
-    }
+//#define YetiCrab_create(_x, _y)
+//    with(instance_create(_x, _y, CustomEnemy)){
+//         // Visual:
+//        spr_idle = spr.YetiCrabIdle;
+//        spr_walk = spr.YetiCrabIdle;
+//        spr_hurt = spr.YetiCrabIdle;
+//        spr_dead = spr.YetiCrabIdle;
+//        spr_weap = mskNone;
+//        spr_shadow = shd24;
+//        spr_shadow_y = 6;
+//        hitid = [spr_idle, "YETI CRAB"];
+//        mask_index = mskFreak;
+//        depth = -2;
+//
+//         // Sound:
+//        snd_hurt = sndScorpionHit;
+//        snd_dead = sndScorpionDie;
+//
+//         // Vars:
+//        maxhealth = 12;
+//        raddrop = 3;
+//        size = 1;
+//        walk = 0;
+//        walkspeed = 1;
+//        maxspeed = 4;
+//        meleedamage = 2;
+//        is_king = 0; // Decides leader
+//        direction = random(360);
+//
+//         // Alarms:
+//        alarm1 = 20 + irandom(10);
+//
+//        return id;
+//    }
+//
+//#define YetiCrab_alrm1
+//    alarm1 = 30 + random(10);
+//    enemy_target(x, y);
+//
+//    if(is_king = 0) { // Is a follower:
+//        if(instance_exists(instance_nearest_array(x, y, instances_matching(CustomEnemy, "is_king", 1)))) { // Track king:
+//            var nearest_king = instance_nearest_array(x, y, instances_matching(CustomEnemy, "is_king", 1));
+//            var king_dir = point_direction(x, y, nearest_king.x, nearest_king.y);
+//            if(point_distance(x, y, nearest_king.x, nearest_king.y) > 16 and point_distance(x, y, target.x, target.y) < point_distance(x, y, nearest_king.x, nearest_king.y)) { // Check distance from king:
+//                scrRight(king_dir);
+//
+//                 // Follow king in a jittery manner:
+//                scrWalk(king_dir + orandom(5), 5);
+//                alarm1 = 5 + random(5);
+//            }
+//
+//             // Chase player instead:
+//            else if(in_sight(target)) {
+//                var _targetDir = point_direction(x, y, target.x, target.y);
+//                scrRight(_targetDir);
+//
+//                 // Chase player:
+//                scrWalk(_targetDir + orandom(10), 30);
+//                scrRight(direction);
+//            } else {
+//                 // Crab rave:
+//                scrWalk(random(360), 30);
+//                scrRight(direction);
+//            }
+//        }
+//         // No leader to follow:
+//        else if(in_sight(target)) {
+//            var _targetDir = point_direction(x, y, target.x, target.y);
+//
+//             // Sad chase :( :
+//            if(fork()) {
+//                repeat(irandom_range(4, 10)) {
+//                    wait random_range(1, 3);
+//                    if(!instance_exists(other)) exit; else instance_create(x, y, Sweat); // Its tears shhh
+//                }
+//
+//                exit;
+//            }
+//            scrWalk(_targetDir + orandom(10), 30);
+//            scrRight(direction);
+//        } else {
+//             // Crab rave:
+//            scrWalk(random(360), 30);
+//            scrRight(direction);
+//        }
+//    }
+//
+//     // Is a leader:
+//    else {
+//        var _targetDir = point_direction(x, y, target.x, target.y);
+//
+//         // Chase player:
+//        scrWalk(_targetDir + orandom(10), 30);
+//        scrRight(direction);
+//    }
 
 
 /// Mod Events
@@ -5914,7 +5914,6 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
@@ -5942,6 +5941,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5952,6 +5952,7 @@
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
+#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);

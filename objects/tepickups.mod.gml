@@ -2671,7 +2671,7 @@
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
 					var s = skill_get_at(i);
-					if(s != mut_patience && s != "reroll") array_push(_skillList, s);
+					if(s != mut_patience) array_push(_skillList, s);
 				}
 				
 				if(array_length(_skillList) > 0){
@@ -2716,10 +2716,18 @@
 			mod_variable_set("skill", "reroll", "skill", skill);
 			skill_set("reroll", true);
 			
-			 // Sounds:
-			with(player_find(_pickup.pick)){
-				sound_play(snd_crwn);
+			 // FX:
+			sprite_index = spr.VaultFlowerHurt;
+			with(scrAlert(skill_get_icon("reroll")[0], self)){
+				snd_flash = sndLevelUp;
+				spr_alert = -1;
 			}
+			repeat(8) with(scrFX([x, 16], [y - 4, 16], [90, random(2)], CaveSparkle)){
+				image_speed *= random_range(0.5, 1);
+				depth = other.depth - 1;
+			}
+			sound_play_pitchvol(sndStatueXP, 0.3, 2);
+			with(player_find(_pickup.pick)) sound_play(snd_crwn);
 		}
 		
 		 // Effects:
@@ -2732,14 +2740,23 @@
 	
 	 // Wilted:
 	else{
+		maxhealth = min(9, maxhealth);
+		my_health = min(my_health, maxhealth);
+		
 		 // Sprites:
 		if(spr_idle == spr.VaultFlowerIdle) spr_idle = spr.VaultFlowerWiltedIdle;
 		if(spr_hurt == spr.VaultFlowerHurt) spr_hurt = spr.VaultFlowerWiltedHurt;
 		if(spr_dead == spr.VaultFlowerDead) spr_dead = spr.VaultFlowerWiltedDead;
 		
 		 // Effects:
-		if(chance_ct(1, 120)){
-			scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0);
+		if(chance_ct(1, 150)){
+			with(scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0)){
+				with(scrFX(x, y, [270 + orandom(60), 0.5], Dust)){
+					image_blend = make_color_rgb(84, 58, 24);
+					image_xscale /= 2;
+					image_yscale /= 2;
+				}
+			}
 		}
 	}
 	
@@ -2754,19 +2771,29 @@
 
 #define VaultFlower_death
 	 // Effects:
-	repeat(8) scrVaultFlowerDebris(x, y, random(360), random(4));
-	repeat(4) scrVaultFlowerDebris(x, y, direction + orandom(45), 3 + random(4));
-	for(var d = direction; d < direction + 360; d += (360 / 3)){
-		with(scrFX(x, y, 0, "WaterStreak")){
-			direction = d;
-			image_angle = direction;
-			// image_blend = merge_color(c_white, c_aqua, 0.1); // this is fake
+	for(var d = direction; d < direction + 360; d += (360 / 6)){
+		scrFX(x, y, [d + orandom(45), 3], Dust);
+		scrVaultFlowerDebris(x, y - 6, d + orandom(45), 4 + random(2));
+		repeat(2){
+			with(scrVaultFlowerDebris(x, y - 6, d + orandom(45), random(4))){
+				vspeed--;
+			}
 		}
 	}
 	sound_play_hit_ext(sndPlantSnare, 0.8, 1.5);
 	
 	 // Secret:
-	if(!wilted)	pet_spawn(x, y, "Orchid");
+	if(!wilted){
+		pet_spawn(x, y, "Orchid");
+		
+		 // FX:
+		with(instance_create(x, y, BulletHit)){
+			sprite_index = sprSlugHit;
+			image_speed = 0.25;
+			depth = -3;
+		}
+		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 1), 0.5);
+	}
 	
 #define VaultFlower_PickupIndicator_meet
 	if(instance_exists(TopCont)){
@@ -3438,7 +3465,6 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
@@ -3466,6 +3492,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -3476,6 +3503,7 @@
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
+#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);

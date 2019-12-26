@@ -755,6 +755,47 @@
 		return id;
 	}
 	return noone;
+	
+#define scrAlert(_sprite, _inst)
+	 // Group:
+	if((is_real(_inst) && object_exists(_inst)) || is_array(_inst)){
+		var a = [];
+		with(_inst) array_push(a, scrAlert(_sprite, self));
+		return a;
+	}
+	
+	 // Normal:
+	else{
+		var	_x = 0,
+			_y = 0;
+			
+		if(instance_exists(_inst)){
+			_x = _inst.x;
+			_y = _inst.y;
+		}
+		else{
+			if("x" in self) _x = x;
+			if("y" in self) _y = y;
+		}
+		
+		with(obj_create(_x, _y, "AlertIndicator")){
+			sprite_index = _sprite;
+			target = _inst;
+			
+			 // Auto-Offset:
+			if(instance_exists(target)){
+				var	_h1 = abs((sprite_get_yoffset(target.sprite_index) - sprite_get_bbox_top(target.sprite_index)) * image_yscale),
+					_h2 = abs(((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_yoffset(sprite_index)) * image_yscale);
+					
+				target_y = -(1 + _h1 + _h2);
+				alert_x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
+			}
+			
+			return id;
+		}
+	}
+	
+	return noone;
 
 #define charm_instance(_instance, _charm)
     var c = {
