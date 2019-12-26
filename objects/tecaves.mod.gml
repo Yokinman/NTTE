@@ -5,6 +5,9 @@
     global.sav = mod_variable_get("mod", "teassets", "sav");
 
     global.debug_lag = false;
+    
+     // Surfaces:
+    global.surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -14,6 +17,8 @@
 #macro opt sav.option
 
 #macro DebugLag global.debug_lag
+
+#macro surfWallShine global.surfWallShine
 
 #define CrystalHeart_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -133,7 +138,7 @@
 		
 		 // Sounds:
 		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
-		//?what this do sound_stop(_snd - 1);
+		sound_stop(_snd - 1); // stops the wall break sound bro i didnt like how it sounded
 	}
 	
 	 // Tunnel Time:
@@ -216,7 +221,7 @@
 						
 						 // Small:
 						else{
-							instance_create(_cx, _cy, Spider);
+							obj_create(_cx, _cy, "RedSpider");
 						}
 					}
 				}
@@ -707,6 +712,34 @@
 	}
 	
 
+#define RedSpider_create(_x, _y)
+	with(instance_create(_x, _y, Spider)){
+		 // Visual:
+		spr_idle = spr.RedSpiderIdle;
+		spr_walk = spr.RedSpiderWalk;
+		spr_hurt = spr.RedSpiderHurt;
+		spr_dead = spr.RedSpiderDead;
+		sprite_index = spr_idle;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "CRYSTAL SPIDER?"];
+		depth = -2;
+		
+		 // Sounds:
+		snd_hurt = sndSpiderHurt;
+		snd_dead = sndSpiderDead;
+		snd_mele = sndSpiderMelee;
+		
+		 // Vars:
+		mask_index = mskSpider;
+		maxhealth = 14;
+		raddrop = 0; //9;
+		size = 1;
+		canmelee = true;
+		meleedamage = 3;
+		
+		return id;
+	}
+
 #define Spiderling_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -936,6 +969,59 @@
         	}
         }
 	}
+	
+	 // Crystal Wall Shine:
+	var a = [];
+	with(instances_matching(Wall,		"topspr",		spr.WallCrystalTop))	array_push(a, id);
+	with(instances_matching(TopSmall,	"sprite_index", spr.WallCrystalTrans))	array_push(a, id);
+	if(array_length(a) > 0) script_bind_draw(draw_wall_shine, -6.1, instances_seen_nonsync(a, 16, 16));
+	
+#define draw_wall_shine(_tiles)
+	 // Pit Surfaces Follow Screen:
+	var _vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_vw = game_width,
+		_vh = game_height,
+		_x = floor(_vx / _vw) * _vw,
+		_y = floor(_vy / _vh) * _vh;
+
+	with(surfWallShine){
+		if(_x != x || _y != y){
+			x = _x;
+			y = _y;
+		}
+		w = _vw * 2;
+		h = _vh * 2;
+		wave += current_time_scale;
+		
+		 // Draw, Peasant:
+		if(surface_exists(surf)){
+			surface_set_target(surf);
+			draw_clear_alpha(c_white, 0);
+			
+			with(instances_matching(_tiles, "", null)) draw_sprite(mskWall, 0, x - _vx, (y - 8) - _vy);
+			draw_set_color_write_enable(1, 1, 1, 0);
+			
+			 // The Good Shit:
+			var n = floor((wave * 0.4) % 20);
+			if(n < 7) draw_sprite(spr.WallShine, n % 7, 0, 0);
+			
+			draw_set_color_write_enable(1, 1, 1, 1);
+			surface_reset_target();
+			
+			draw_set_blend_mode(bm_add);
+			draw_set_alpha(0.1);
+			
+			 // Ship 'em Out:
+			draw_surface(surf, _vx, _vy);
+			
+			draw_set_blend_mode(bm_normal);
+			draw_set_alpha(1);
+		}
+	}
+
+	 // Goodbye:
+	instance_destroy();
 
 #define end_step
     if(DebugLag) trace_time();

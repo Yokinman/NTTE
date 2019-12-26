@@ -474,6 +474,17 @@
 		_spawny = y;
 	}
     
+     // Cool Vault Statues:
+    /*with(ProtoStatue) with(floor_get(x, y,)){
+    	var o = 32;
+    	for(var h = -1; h <= 1; h++) for(var v = -1; v <= 1; v++){
+    		with(floor_get(x + (h * o), y + (v * o))){
+    			sprite_index = spr.VaultFlowerFloor;
+    			image_index	 = ((h + 1) * 3) + (v + 1);
+    		}
+    	}
+    }*/
+    
      // Wepmimic Arena:
     if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
     	with(instance_furthest(_spawnx, _spawny, WeaponChest)){
@@ -1050,6 +1061,7 @@
 						}
 						
 						 // Create Room:
+						floor_fill_round(x, y, _size + 2, _size + 2);
 						var a = floor_fill(x, y, _size, _size);
 						for(var i = 0; i < array_length(a); i++){
 							with(a[i]){
@@ -1058,7 +1070,7 @@
 								material = 5; // slimy stone
 							}
 						}
-						obj_create(x, y, "SludgePool");
+						obj_create(x + o, y + o, "SludgePool");
 						
 						 // Goodbye:
 						instance_delete(id);
@@ -1790,7 +1802,7 @@
 	
 	 // Crystal Hearts:
 	if(_validArea && instance_exists(Wall)){
-		if(GameCont.area == 104 || chance(GameCont.hard, (GameCont.hard + 80))){
+		if(GameCont.area == 104 || chance(GameCont.hard, (GameCont.hard + 120))){
 			with(instance_random(enemy)) obj_create(x, y, "CrystalHeart");
 		}
 	}
@@ -2198,12 +2210,9 @@
 	}
 	
 	 // Goodbye, stupid mechanic:
-	with(instances_matching(instances_matching(Corpse, "sprite_index", sprIceFlowerDead), "no_reroll", null)) if(GameCont.area == 105 && position_meeting(x, y, Portal)){
-		GameCont.skillpoints--;
-		no_reroll = true;
-		
-		 // Give it back:
+	with(GameCont) if(junglevisits > 0){
 		skill_set(mut_last_wish, 1);
+		skillpoints--;
 	}
 	
     if(DebugLag) trace_time("ntte_step");
@@ -2412,6 +2421,9 @@
 		    	}
 		    }
 		}
+		
+		 // This is it:
+		with(instances_matching(Breath, "depth", -2)) depth = -3;
     }
     catch(_error){
     	trace_error(_error);

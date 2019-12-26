@@ -16,6 +16,264 @@
 
 #macro surfShadowTop global.surfShadowTop
 
+#define BoneRaven_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.BoneRavenIdle;
+		spr_walk = spr.BoneRavenWalk;
+		spr_hurt = spr.BoneRavenHurt;
+		spr_dead = spr.BoneRavenDead;
+		spr_lift = spr.BoneRavenLift;
+		spr_land = spr.BoneRavenLand;
+		spr_fly  = spr.BoneRavenFly;
+		sprite_index = spr_idle;
+		spr_shadow = shd24;
+		hitid = [spr_idle, "RAVEN"];
+		depth = -3;
+		
+		 // Sounds:
+		snd_hurt = sndRavenHit;
+		snd_dead = sndRavenDie;
+		
+		 // Vars:
+		mask_index = mskBandit;
+		maxhealth = 10;
+		raddrop = 5;
+		size = 1;
+		kills = 0;
+		max_kills = 0;
+		walk = 0;
+		walkspeed = 0.8;
+		maxspeed = 3.5;
+		target = noone;
+		active = false;
+		creator = noone;
+		fly_obj = noone;
+		
+		 // Alarms:
+		alarm1 = -1;
+		alarm2 = -1;
+		
+		 // NTTE:
+		ntte_anim = false;
+		
+		return id;
+	}
+	
+#define BoneRaven_step
+	 // Animate:
+	if(sprite_index != spr_lift && sprite_index != spr_fly && sprite_index != spr_land){
+		sprite_index = enemy_sprite;
+	}
+
+	if(instance_exists(fly_obj)){
+		 // Shadow Moment:
+		spr_shadow_x = fly_obj.x;
+		spr_shadow_y = fly_obj.y;
+		x = 0;
+		y = 0;
+		
+		 // Flying:
+		with(fly_obj){
+			var _zSpd = 3 * current_time_scale,
+				_fSpd = 6 * current_time_scale;
+			
+			if(x == x_target && y == y_target){
+				z -= _zSpd;
+				with(other){
+					if(sprite_index != spr_land){
+						sprite_index = spr_land;
+					}
+				}
+				
+				 // Land:
+				if(z <= 0){
+					with(other){
+						canfly = false;
+						alarm1 = 30;
+						x = other.x;
+						y = other.y;
+						xprevious = x;
+						yprevious = y;
+						spr_shadow_x = 0;
+						spr_shadow_y = 0;
+						sprite_index = spr_idle;
+					}
+					
+					 // Effects:
+					repeat(6) scrFX(x + orandom(8), y + random(16), 3 + random(1), Dust);
+					if(point_seen(x, y, -1)) sound_play_hit(sndRavenLift, 0.2);
+					 
+					 // Farewell:
+					instance_delete(id);
+				}
+			}
+			else{
+				
+				 // Lift:
+				if(z < z_max){
+					z += _zSpd;
+					with(other){
+						if(sprite_index != spr_lift){
+							sprite_index = spr_lift;
+						}
+					}
+				}
+				else{
+					z = z_max;
+					with(other){
+						if(sprite_index != spr_fly){
+							sprite_index = spr_fly;
+						}
+					}
+					
+					 // Later Sucker:
+					if(failed){
+						x += lengthdir_x(_fSpd, direction);
+						y += lengthdir_y(_fSpd, direction);
+						with(other) scrRight(direction);
+						
+						if(!place_meeting(x, y, Floor)){
+							var _canEnd = true;
+							for(var i = 0; i < maxp; i++) if(player_is_active(i) && point_seen(x, y, i) && point_seen(x, (y - z), i)){
+								_canEnd = false;
+							}
+							
+							 // Goodbye:
+							if(_canEnd){
+								instance_delete(other);
+								instance_delete(self);
+								exit;
+							}
+						}
+					}
+					
+					 // Fly:
+					else{
+						var l = min(_fSpd, point_distance(x, y, x_target, y_target)),
+							d = point_direction(x, y, x_target, y_target);
+						
+						x += lengthdir_x(l, d);
+						y += lengthdir_y(l, d);
+						with(other) scrRight(d);
+					}
+				}
+			}
+		}
+	}
+	
+#define BoneRaven_alrm1
+	alarm1 = 30 + random(30);
+	enemy_target(x, y);
+	
+	 // You Lose:
+	if(GameCont.kills > max_kills && instance_exists(creator)){
+		BoneRaven_fly(0, point_direction(creator.x, creator.y, x, y));
+		with(fly_obj) failed = true;
+	}
+	else{
+		
+		 // Back Away:
+		if(in_sight(target) && in_distance(target, 48)){
+			scrWalk(point_direction(target.x, target.y, x, y), 10 + random(20));
+			scrRight(direction + 180);
+			
+			alarm1 = walk;
+		}
+		else{
+			
+			 // Fly:
+			if(instance_exists(Floor) && chance(1, 3)){
+				BoneRaven_fly(64, random(360));
+			}
+			
+			 // Wander:
+			else{
+				scrWalk(random(360), 20 + random(40));
+			}
+		}
+	}
+	
+	
+#define BoneRaven_alrm2
+	alarm2 = -1;
+	active = true;
+	
+	if(enemy_target(x, y)) scrRight(point_direction(x, y, target.x, target.y));
+	BoneRaven_fly(128, random(360));
+	
+#define BoneRaven_fly(_len, _dir)
+	 // Effects:
+	repeat(6) scrFX(x + orandom(8), y + random(16), 3 + random(1), Dust);
+	if(point_seen(x, y, -1)) sound_play_hit(sndRavenLand, 0.2);
+
+	 // Find Floor:
+	var _tries = 100,
+		_x = x,
+		_y = y;
+		
+	do{
+		var l = _len,
+			d = lerp(random(360), _dir, (_tries / 100)),
+			f = instance_nearest(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Floor);
+		
+		_x = f.x + (instance_is(f, FloorExplo) ? 8 : 16);
+		_y = f.y + (instance_is(f, FloorExplo) ? 8 : 16);
+		
+		_tries--;
+	}
+	until(place_free(_x, _y) || _tries <= 0);
+	
+	 // We Have Liftoff:
+	BoneRaven_fly_init(_x, _y);
+	with(fly_obj) direction = _dir;
+
+#define BoneRaven_fly_init(_targetX, _targetY)
+	fly_obj = script_bind_draw(BoneRaven_fly_draw, -7, id);
+	with(fly_obj){
+		mask_index = other.mask_index;
+		x = other.x;
+		y = other.y;
+		z = 0;
+		z_max = 32;
+		failed = false;
+		x_target = _targetX;
+		y_target = _targetY;
+	}
+	
+	 // Hide:
+	canfly = true;
+	alarm1 = -1;
+	x = 0;
+	y = 0;
+
+#define BoneRaven_fly_draw(_inst)
+	var _x = x,
+		_y = y - z;
+	with(_inst) draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	
+#define BoneRaven_hurt(_hitdmg, _hitvel, _hitdir)
+	if(!active && instance_exists(creator)){
+		with(creator) active = true;
+	}
+	else enemy_hurt(_hitdmg, _hitvel, _hitdir);
+	
+#define BoneRaven_death
+	 // Return That Which You Stole:
+	if(instance_exists(creator)){
+		var _num = min(raddrop, 2);
+		rad_path(rad_drop(x, y, _num, direction, speed), creator);
+		raddrop -= _num;
+		
+		with(creator){
+			num_ravens--;
+			if(num_ravens <= 0) alarm0 = 90;
+		}
+	}
+	
+#define BoneRaven_cleanup
+	instance_delete(fly_obj);
+
 #define NestRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -472,8 +730,70 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
 		mask_index = msk.SludgePool;
+		active = false;
+		ravens = [];
+		num_ravens = 3;
+		repeat(num_ravens) array_push(ravens, obj_create(_x, _y, "BoneRaven"));
+		with(ravens) creator = other;
+		my_alert = noone;
+		fx_color = make_color_rgb(130, 189, 005);
+		
+		 // Alarms:
+		alarm0 = -1;
 		
 		return id;
+	}
+	
+#define SludgePool_step
+	 // Raven Time:
+	var t = instance_nearest(x, y, Player);
+	if(in_sight(t) && in_distance(t, 128)){
+		if(!active){
+			active = true;
+		}
+	}
+	if(active){
+		with(instances_matching(ravens, "active", false)){
+			max_kills = GameCont.kills;
+			alarm2 = 1 + random(5);
+			active = true;
+		}
+	}
+	
+	 // Alert:
+	if(num_ravens <= 0){
+		if(my_alert == noone){
+			my_alert = obj_create(x, y, "AlertIndicator");
+			with(my_alert){
+				sprite_index = spr.SludgePoolAlert;
+				target = other;
+				target_y = -32;
+			}
+		}
+		with(my_alert) if(sprite_index == spr.SludgePoolAlert){
+			alarm0 = 60;
+		}
+	}
+	
+	 // Bubblin':
+	if(chance_ct(1, 5)) with(scrFX([x, 20], [y, 10], 0, RainSplash)) image_blend = other.fx_color;
+
+#define SludgePool_end_step
+	 // Sticky Sludge:
+	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, [Player, hitme])){
+		x = lerp(xprevious, x, 0.8);
+		y = lerp(yprevious, y, 0.8);
+	}
+	
+#define SludgePool_alrm0
+	alarm0 = 30 + random(30);
+	var t = instance_nearest(x, y, Player);
+	
+	if(in_sight(t) && in_distance(t, 128)){
+		alarm0 = -1;
+		
+		pet_spawn(x, y, "Salamander");
+		with(my_alert) sprite_index = spr.PetSalamanderIcon;
 	}
 	
 #define Tunneler_create(_x, _y)

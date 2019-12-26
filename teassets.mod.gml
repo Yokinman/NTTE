@@ -151,6 +151,7 @@
 			ArcticSealAlert 	= sprite(p + "sprArcticSealAlert",	1,	7,	7);
 			GatorAlert			= sprite(p + "sprGatorAlert",		1,	7,	7);
 			GatorAlbinoAlert	= sprite(p + "sprAlbinoGatorAlert",	1,	7,	7);
+			SludgePoolAlert		= sprite(p + "sprSludgePoolAlert",	1,	7,	7);
 		
 		//#endregion
 		
@@ -785,7 +786,17 @@
 		
 			//#region ENEMIES
 			m = "enemies/";
-			
+				
+				 // Bone Raven:
+				p = m + "BoneRaven/";
+				BoneRavenIdle	= sprite(p + "sprBoneRavenIdle",	33, 12, 12);
+				BoneRavenWalk	= sprite(p + "sprBoneRavenWalk",	6,	12, 12);
+				BoneRavenHurt	= sprite(p + "sprBoneRavenHurt",	3,	12, 12);
+				BoneRavenDead	= sprite(p + "sprBoneRavenDead",	6,	12, 12);
+				BoneRavenLift	= sprite(p + "sprBoneRavenLift",	5,	32, 32);
+				BoneRavenLand	= sprite(p + "sprBoneRavenLand",	4,	32, 32);
+				BoneRavenFly	= sprite(p + "sprBoneRavenFly", 	5,	32, 32);
+				
 				 // Saw Trap:
 				p = m + "SawTrap/";
 				SawTrap       = sprite(p + "sprSawTrap",       1, 20, 20);
@@ -797,7 +808,7 @@
 			 // Sludge Pool:
 			m = "areas/Scrapyard/"
 			SludgePool		= sprite(m + "sprSludgePool",	4,	0,	0);
-			msk.SludgePool	= sprite(m + "mskSludgePool",	1,	0,	0);
+			msk.SludgePool	= sprite(m + "mskSludgePool",	1,	32,	32);
 			
 		//#endregion
 		
@@ -905,9 +916,12 @@
 		//#endregion
 		
 		//#region CRYSTAL
-		
+			m = "areas/Crystal/";
+			
+			WallShine = sprite_add_weapon("sprites/areas/Crystal/sprWallShine.png", 0, 0); // sorry yokinman
+			
 			//#region TILES
-			p = "areas/Crystal/";
+			p = m;
 			
 	    		FloorCrystal	 = sprite(p + "sprFloorCrystal",     1, 2,  2);
 	    		WallCrystalBot	 = sprite(p + "sprWallCrystalBot",   2, 0,  0);
@@ -918,7 +932,7 @@
 			//#endregion
 			
 			//#region PROPS
-			p = "areas/Crystal/Props/";
+			p = m + "Props/";
 			
 				RedCrystalPropIdle = sprite(p + "sprRedCrystalPropIdle", 1, 12, 12);
 				RedCrystalPropHurt = sprite(p + "sprRedCrystalPropHurt", 3, 12, 12);
@@ -935,6 +949,13 @@
 	    		CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
 	    		CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
 	    		CrystalHeartProj = sprite(p + "sprCrystalHeartProj",  2, 10, 10);
+	    		
+	    		 // Red Crystal Spider:
+	    		p = m + "RedSpider/";
+	    		RedSpiderIdle = sprite(p + "sprRedSpiderIdle", 8, 12, 12);
+	    		RedSpiderWalk = sprite(p + "sprRedSpiderWalk", 6, 12, 12);
+	    		RedSpiderHurt = sprite(p + "sprRedSpiderHurt", 3, 12, 12);
+	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 6, 12, 12);
         		
         	//#endregion
 			
@@ -1409,6 +1430,7 @@
             name    : _name,
             active  : true,
             surf    : -1,
+            wave	: 0,
             x       : 0,
             y       : 0,
             w       : 0,
