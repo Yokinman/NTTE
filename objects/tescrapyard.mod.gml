@@ -763,16 +763,15 @@
 	 // Alert:
 	if(num_ravens <= 0){
 		if(my_alert == noone){
-			my_alert = obj_create(x, y, "AlertIndicator");
+			my_alert = scrAlert(spr.SludgePoolAlert, id);
 			with(my_alert){
-				sprite_index = spr.SludgePoolAlert;
-				target = other;
+				spr_alert = spr.AlertIndicatorMystery;
+				alert_col = c_yellow;
 				target_y = -32;
+				alarm0 = -1;
 			}
 		}
-		with(my_alert) if(sprite_index == spr.SludgePoolAlert){
-			alarm0 = 60;
-		}
+		with(my_alert) if(sprite_index == spr.SludgePoolAlert) alert_ang = sin(current_frame * 0.1) * 20;
 	}
 	
 	 // Bubblin':
@@ -793,7 +792,13 @@
 		alarm0 = -1;
 		
 		pet_spawn(x, y, "Salamander");
-		with(my_alert) sprite_index = spr.PetSalamanderIcon;
+		with(my_alert){
+			sprite_index = spr.PetSalamanderIcon;
+			spr_alert = spr.AlertIndicator;
+			alert_ang = 0;
+			alarm0 = 90;
+			flash = 3;	
+		}
 	}
 	
 #define Tunneler_create(_x, _y)
