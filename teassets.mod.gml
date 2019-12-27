@@ -956,7 +956,7 @@
 	    		RedSpiderIdle = sprite(p + "sprRedSpiderIdle", 8, 12, 12);
 	    		RedSpiderWalk = sprite(p + "sprRedSpiderWalk", 6, 12, 12);
 	    		RedSpiderHurt = sprite(p + "sprRedSpiderHurt", 3, 12, 12);
-	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 6, 12, 12);
+	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 7, 12, 12);
         		
         	//#endregion
 
