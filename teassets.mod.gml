@@ -55,37 +55,34 @@
 
 		//#region WEAPONS
 		p = "weps/";
-
+		
 			 // Bone:
 			Bone	  = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
-
-			 // Clam Shield:
-			msk.ClamShield = sprite(p + "mskClamShield", 1, 12, 14);
-
+			
 			 // Trident:
 			Trident     = sprite(p + "sprTrident", 1, 11, 6, shnWep);
 			msk.Trident = sprite(p + "mskTrident", 1, 11, 6);
-
+			
 		//#endregion
-
+		
 		//#region PROJECTILES
 		p = "projectiles/";
-
+		
 			 // Albino Gator:
-	        AlbinoBolt  	= sprite(p + "sprAlbinoBolt",   	1,  8,	4);
-			AlbinoGrenade	= sprite(p + "sprAlbinoGrenade",	1,	4,	4);
-			AlbinoSplinter	= sprite(p + "sprAlbinoSplinter",	1, -6,	3);
-
+			AlbinoBolt      = sprite(p + "sprAlbinoBolt",     1,  8, 4);
+			AlbinoGrenade   = sprite(p + "sprAlbinoGrenade",  1,  4, 4);
+			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
+			
 			 // Bat Discs:
 			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
 			BatDiscBig   = sprite(p + "sprBatDiscBig",   2, 14, 14);
 			BigDiscTrail = sprite(p + "sprBigDiscTrail", 3, 12, 12);
-
+			
 			 // Bat Lightning:
 			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
-
+			
 			 // Bone:
 			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
 			msk.BoneSlashLight	= sprite(p + "mskBoneSlashLight", 3, 16, 16);
@@ -104,29 +101,33 @@
 			BubbleExplosionSmall = sprite(p + "sprBubbleExplosionSmall",  7, 12, 12);
 			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
 			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
-
+			
+			 // Clam Shield Slash:
+			ClamShieldSlash     = sprite(p + "sprClamShieldSlash", 4, 12, 12);
+			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash", 4, 12, 12);
+			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
 			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
-
+			
 			 // Harpoon:
 			Harpoon      = sprite(p + "sprHarpoon",      1, 4, 3, shnWep);
 			HarpoonOpen  = sprite(p + "sprHarpoonOpen",  5, 4, 3);
 			HarpoonFade  = sprite(p + "sprHarpoonFade",  5, 7, 3);
 			NetNade      = sprite(p + "sprNetNade",      1, 3, 3);
 			NetNadeBlink = sprite(p + "sprNetNadeBlink", 2, 3, 3);
-
+			
 			 // Mortar Plasma:
-	        MortarPlasma      = sprite(p + "sprMortarPlasma",      8,  8,  8);
-        	EnemyPlasmaImpact = sprite(p + "sprEnemyPlasmaImpact", 7, 16, 16);
-        	EnemyPlasmaTrail  = sprite(p + "sprEnemyPlasmaTrail",  3,  4,  4);
-
-        	 // Portal Guardian:
-        	PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
-        	PortalBulletSpawn = sprite(p + "sprPortalBulletSpawn", 7, 26, 26);
-
+			MortarPlasma      = sprite(p + "sprMortarPlasma",      8,  8,  8);
+			EnemyPlasmaImpact = sprite(p + "sprEnemyPlasmaImpact", 7, 16, 16);
+			EnemyPlasmaTrail  = sprite(p + "sprEnemyPlasmaTrail",  3,  4,  4);
+			
+			 // Portal Guardian:
+			PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
+			PortalBulletSpawn = sprite(p + "sprPortalBulletSpawn", 7, 26, 26);
+			
 			 // Quasar Beam:
 			QuasarBeam      = sprite(p + "sprQuasarBeam",      2,  0, 16);
 			QuasarBeamStart = sprite(p + "sprQuasarBeamStart", 2, 32, 16);
@@ -134,17 +135,17 @@
 			QuasarBeamHit   = sprite(p + "sprQuasarBeamHit",   6, 24, 24);
 			QuasarBeamTrail = sprite(p + "sprQuasarBeamTrail", 3,  4,  4);
 			msk.QuasarBeam  = sprite(p + "mskQuasarBeam",      1, 32, 16);
-
+			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
-
+			
 			 // Variants:
 			EnemyBullet      = sprite(p + "sprEnemyBullet",      2,  7,  7);
 			EnemyHeavyBullet = sprite(p + "sprEnemyHeavyBullet", 2, 12, 12);
             AllyBullet4      = sprite(p + "sprAllyBullet4",      2,  6,  8);
-
+            
 		//#endregion
-
+		
 		//#region ALERTS
 			p = "enemies/Alerts/";
 			AlertIndicator  		= sprite(p + "sprAlertIndicator",   		1, 1, 6);
@@ -956,7 +957,7 @@
 	    		RedSpiderIdle = sprite(p + "sprRedSpiderIdle", 8, 12, 12);
 	    		RedSpiderWalk = sprite(p + "sprRedSpiderWalk", 6, 12, 12);
 	    		RedSpiderHurt = sprite(p + "sprRedSpiderHurt", 3, 12, 12);
-	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 6, 12, 12);
+	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 7, 12, 12);
         		
         	//#endregion
 

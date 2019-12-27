@@ -346,6 +346,22 @@
 	surface_destroy(surf);
 	
 	
+#define ClamShieldSlash_create(_x, _y)
+	with(instance_create(_x, _y, Slash)){
+		 // Visual:
+		sprite_index = spr.ClamShieldSlash;
+		depth = -3;
+		
+		 // Vars:
+		mask_index = msk.ClamShieldSlash;
+		friction = 0.2;
+		damage = 10;
+		force = 16;
+		
+		return id;
+	}
+	
+	
 #define CoastBigDecal_create(_x, _y)
     with(obj_create(_x, _y, "CoastDecal")){
     	 // Visual:

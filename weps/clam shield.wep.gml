@@ -49,21 +49,21 @@
 		creator = f.creator;
 		team = other.team;
 		
-		var	l = 8 + (8 * skill_get(mut_long_arms)),
+		var	l = 8 + (6 * skill_get(mut_long_arms)),
 			d = image_angle,
 			_x = x + _ox + lengthdir_x(l, d),
 			_y = y + _oy + lengthdir_y(l, d);
 			
-		with(instance_create(_x, _y, Slash)){
+		with(obj_create(_x, _y, "ClamShieldSlash")){
 			projectile_init(other.team, other.creator);
 			motion_add(d, 2 + (2.5 * skill_get(mut_long_arms)));
 			image_angle = direction;
-			image_xscale = 0.3;
-			image_yscale = 0.5;
-			damage = 10;
 		}
 		
 		 // Effects:
+		repeat(2){
+			instance_create(_x + orandom(2), _y + orandom(2), Dust).speed += 2;
+		}
 		with(other){
 			weapon_post(-(4 + l), 12, 0);
 			motion_add(d, 2);
