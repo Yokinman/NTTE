@@ -85,6 +85,10 @@
 			 // Bat Lightning:
 			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
+			
+			 // Clam Shield Slash:
+			ClamShieldSlash 	= sprite(p + "sprClamShieldSlash", 4, 12, 12);
+			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash", 4, 12, 12);
 
 			 // Bone:
 			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);

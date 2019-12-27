@@ -1127,6 +1127,20 @@
     }
 
 
+#define ClamShieldSlash_create(_x, _y)
+	with(instance_create(_x, _y, Slash)){
+		 // Visual:
+		sprite_index = spr.ClamShieldSlash;
+		
+		 // Vars:
+		mask_index = msk.ClamShieldSlash;
+		friction = 0.2;
+		damage = 10;
+		force = 16;
+		
+		return id;
+	}
+
 #define Crack_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:

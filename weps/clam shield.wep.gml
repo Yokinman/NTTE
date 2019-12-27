@@ -107,14 +107,11 @@
     motion_add(w.ang, random_range(1, 2));
   }
 
-	with(instance_create(_x, _y, Slash)){
+	with(obj_create(_x, _y, "ClamShieldSlash")){
 		creator = other;
 		team	= other.team;
-		direction = w.ang;
-    damage = 10;
+		direction	= w.ang;
 		image_angle = direction;
-		image_xscale = 0.3;
-		image_yscale = 0.5;
 		motion_set(direction, 2 + (3 * skill_get(mut_long_arms)));
 	}
 
