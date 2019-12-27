@@ -1840,6 +1840,28 @@
                             		case "QuasarRing":
                             			ring_lasers = array_clone(ring_lasers);
                             			break;
+                            			
+                            		case "Trident":
+                            			with(other) if(!curse){
+	                            			curse = true;
+	                            			direction -= _off;
+	                            			image_angle -= _off;
+	                            			other.wep = wep_none;
+		                            		instance_delete(other);
+		                            		
+		                            		 // FX:
+		                            		for(var i = 0; i < 3; i++){
+		                            			with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
+			                            			image_angle = direction;
+			                            			sprite_index = spr.WaterStreak;
+			                            			image_speed = random_range(0.2, 0.4);
+			                            			image_blend = make_color_rgb(103, 27, 131);
+			                            			depth = -4;
+		                            			}
+		                            		}
+	                            			sound_play_pitch(sndCursedChest, 0.8);
+                            			}
+                            			break;
                             	}
                             }
                     }

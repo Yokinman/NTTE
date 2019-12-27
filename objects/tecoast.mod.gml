@@ -171,7 +171,7 @@
     repeat(2) instance_create(x + orandom(3), y + orandom(3), Explosion);
     repeat(2) instance_create(x + orandom(3), y + orandom(3), SmallExplosion);
     sound_play(sndExplosionCar);
-
+    
      // Break Floor:
     if(instance_exists(my_floor)){
         mod_variable_set("area", "coast", "surfFloorReset", true);
@@ -185,84 +185,167 @@
         }
         repeat(4) instance_create(x + orandom(8), y + orandom(8), Debris);
     }
-
-
+    
+    
 #define ClamShield_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.ClamShield;
+		
 		 // Vars:
-		mask_index = msk.ClamShield;
+		mask_index = mskExploder;
 		creator = noone;
 		damage = 0;
-		force = 0;
+		force = 3;
 		typ = 0;
-		wep = noone;
-
-		 // Script Override:
-		with(["wall", "anim"]) variable_instance_set(other, "on_" + self, script_ref_create(ClamShield_blank));
-
+		surf = -1;
+		surf_w = 64;
+		surf_h = 64;
+		wep = "clam shield";
+		
+		 // Scripts:
+		on_anim = [];
+		on_wall = [];
+		
 		return id;
 	}
-
-#define ClamShield_hit
-   // Push around enemies:
-  with other{
-    if !instance_is(self, prop){
-    motion_add(other.wep.ang, 3 / max(size, 1));
-    }
-  }
-
+	
 #define ClamShield_step
-
-	 // Goodbye:
-	if(!instance_exists(creator) || (creator.wep != wep && creator.bwep != wep)){
-		instance_destroy();
-		exit;
+	if(instance_exists(creator) && creator.visible && (!instance_is(creator, Player) || creator.wep == wep || creator.bwep == wep)){
+		var	_shieldList = instances_matching(object_index, "wep", wep),
+			_primary = (wep == variable_instance_get(creator, "wep")),
+			b = (_primary ? "" : "b");
+			
+		 // Aim:
+		if("gunangle" in creator){
+			var	_shieldNum = array_length(_shieldList),
+				_goalDir = creator.gunangle + (180 * ((array_find_index(_shieldList, id) - ((_shieldNum - 1) / 2)) / _shieldNum));
+				
+			if(!_primary && wep_get(variable_instance_get(creator, "wep")) == wep_get(variable_instance_get(creator, "bwep"))){
+				_goalDir += 180;
+			}
+			
+			image_angle = angle_lerp(image_angle, _goalDir, 0.5 * current_time_scale);
+			direction = image_angle;
+		}
+		
+		 // Follow Creator:
+		var	l = 14 - variable_instance_get(creator, b + "wkick", 0),
+			d = image_angle;
+			
+		x = creator.x + lengthdir_x(l, d);
+		y = creator.y + lengthdir_y(l, d);
+		xprevious = x;
+		yprevious = y;
+		depth = creator.depth + (0.1 * dsin(d));
+		
+		 // Draw:
+        var	_surfw = surfClamShieldW,
+            _surfh = surfClamShieldH,
+            _surfx = surfClamShieldX,
+            _surfy = surfClamShieldY;
+            
+		if(!surface_exists(surf)) surf = surface_create(_surfw, _surfh);
+		else with(instances_matching(instances_matching_ne(_shieldList, "id", id), "surf", surf)) surf = -1;
+		surface_set_target(surf);
+		draw_clear_alpha(0, 0);
+		
+			 // Shield:
+			for(var i = 0; i < image_number; i++){
+				var	l = 2 * (1 - sqr((i - 4) / ((image_number - 1) / 2))),
+					d = image_angle,
+					_x = (_surfw / 2) + lengthdir_x(l, d),
+					_y = (_surfh / 2) + lengthdir_y(l, d) - (i * 2/3);
+					
+				draw_sprite_ext(sprite_index, i, _x, _y, 1.5, 1, d, image_blend, image_alpha);
+			}
+			
+			 // Shine:
+			draw_set_color_write_enable(true, true, true, false);
+			draw_sprite(spr.Shine24, variable_instance_get(creator, "gunshine", 0), (_surfw / 2), (_surfh / 2));
+			draw_set_color_write_enable(true, true, true, true);
+			
+		surface_reset_target();
 	}
-
+	else instance_destroy();
+	
+#define ClamShield_draw
+	if(surface_exists(surf)){
+		var	_xsc = image_xscale,
+			_ysc = image_yscale,
+			_x = x + ((0 - (surfClamShieldW / 2)) * _xsc);
+			_y = y + ((5 - (surfClamShieldH / 2)) * _ysc);
+			
+		 // Outline:
+		draw_set_fog(true, c_black, 0, 0);
+		for(var i = 0; i < 360; i += 90){
+			draw_surface_ext(surf, _x + dcos(i), _y + dsin(i), _xsc, _ysc, 0, c_black, 1);
+		}
+		draw_set_fog(false, 0, 0, 0);
+		
+		 // Normal:
+		draw_surface_ext(surf, _x, _y, _xsc, _ysc, 0, c_white, 1);
+	}
+	
+#define ClamShield_hit
+	 // Push Enemies:
+	if(!instance_is(other, prop)) with(other){
+		motion_add(other.image_angle, other.force / max(size, 1));
+	}
+	
 #define ClamShield_projectile
-	var _primary = (creator.wep == wep),
-		b = (_primary ? "" : "b"),
-		p = other,
-		w = wep;
-
-	if(p.typ > 0 && p.speed > 0){
-
-		 // Recoil:
-		variable_instance_set(creator, b + "wkick", 4);
-
-		 // Effects:
-		sound_play_hit(sndCrystalRicochet, 0);
-		sleep(10);
-    with(instance_create(x, y, Bubble)){
-      motion_add(other.direction + random_range(10, 10), random_range(1, 3));
-    }
-    with creator{
-      motion_add(gunangle - 180, 1.5);
-    }
-
-		 // Destroyables:
-		if(p.typ == 2){
-			with(p) instance_destroy();
-			exit;
-		}
-
-		 // Reflect:
-		with(p){
-
-      direction = w.ang + random_range(-4, 4)
-    	image_angle = direction;
-      team = other.creator.team;
-      instance_create(x, y, Deflect);
-
+	with(other){
+		if((typ == 1 || typ == 2) && speed > 0){
+			with(other){
+				var	_primary = (wep == variable_instance_get(creator, "wep")),
+					b = (_primary ? "" : "b");
+					
+				 // Recoil:
+				with(creator){
+					if((b + "wkick") in self){
+						variable_instance_set(self, b + "wkick", min(4, variable_instance_get(self, b + "wkick") + 4));
+					}
+					motion_add(other.image_angle + 180, other.force / 2);
+				}
+				
+				 // Effects:
+				sound_play_hit(sndCrystalRicochet, 0);
+				scrFX(x, y, [image_angle + orandom(10), random_range(1, 3)], Bubble);
+				sleep(10);
+			}
+			
+			 // Deflect:
+			with(instance_create(x, y, Deflect)) image_angle = other.direction;
+			if(typ == 1){
+				team = other.team;
+				direction = lq_defget(other.wep, "ang", other.image_angle) + orandom(4);
+				image_angle = direction;
+			}
+			else instance_destroy();
 		}
 	}
-
+	
 #define ClamShield_grenade
-	ClamShield_projectile();
-
-#define ClamShield_blank
-	 // This Script is the Blank One:
-
+	 // Push Grenades:
+	/*with(other) if(speed <= 0){
+		var	l = 1,
+			d = other.image_angle + (180 * (abs(angle_difference(point_direction(other.x, other.y, x, y), other.image_angle)) > 90)),
+			_ax = lengthdir_x(l, d),
+			_ay = lengthdir_y(l, d),
+			_moveDis = 12;
+			
+		while(place_meeting(x, y, other) && !place_meeting(x + _ax, y + _ay, Wall)){
+			x += _ax;
+			y += _ay;
+		}
+		
+		if(chance_ct(1, 3)) instance_create(x, y, Dust);
+	}*/
+	
+#define ClamShield_cleanup
+	surface_destroy(surf);
+	
+	
 #define CoastBigDecal_create(_x, _y)
     with(obj_create(_x, _y, "CoastDecal")){
     	 // Visual:
@@ -298,26 +381,26 @@
         image_xscale = choose(-1, 1);
         spr_shadow = mskNone;
         depth = -y / 20000;
-
+        
          // Sound:
         snd_hurt = sndHitRock;
         snd_dead = sndWallBreakRock;
-
+        
          // Vars:
         mask_index = mskBandit;
         maxhealth = 50;
         size = 3;
         shell = false;
-
+        
          // Offset:
         x += orandom(10);
         y += orandom(10);
         xstart = x;
         ystart = y;
-
+        
          // Doesn't Use Coast Wading System:
         nowade = true;
-
+        
         return id;
     }
 
@@ -4143,7 +4226,7 @@
 	}
 
 	 // Drop Weapon:
-	else{
+	else if(w != wep_none){
 		 // Delete Existing:
 		with(instances_matching([WepPickup, ThrownWep], "wep", w)){
 			instance_destroy();
@@ -4200,14 +4283,13 @@
 /// Mod Events
 #define draw_shadows
 	 // Shield Shadows:
-	with(["wep", "bwep"]) with(Player){
-		var w = variable_instance_get(id, other);
-		if(lq_get(w, "wep") == "clam shield"){
-			var _len = (w.length - w.kick) - 12,
-				_x = x + lengthdir_x(_len, w.ang),
-				_y = y + lengthdir_y(_len, w.ang);
-			draw_sprite_ext(shd16, 0, _x, _y + 7, 1, 1, (w.ang + 90), c_white, 1);
-		}
+	with(instances_matching(CustomSlash, "name", "ClamShield")) if(visible){
+		var	l = 5,
+			d = image_angle,
+			_x = x + lengthdir_x(l, d),
+			_y = y + lengthdir_y(l, d) + 7;
+			
+		draw_sprite_ext(shd16, 0, _x, _y, image_xscale, image_yscale, image_angle - 90, c_white, 1);
 	}
 
 #define draw_dark // Drawing Grays

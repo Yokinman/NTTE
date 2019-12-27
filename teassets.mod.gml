@@ -2,20 +2,20 @@
 	 // SPRITES //
 	global.spr = {};
 	global.spr_load = [[spr, 0]];
-	global.spr_shine = [
-		sprite_add("sprites/chests/sprShine8.png",  7,  4,  4), // Rads
-		sprite_add("sprites/chests/sprShine10.png", 7,  5,  5), // Pickups
-		sprite_add("sprites/chests/sprShine12.png", 7,  6,  6), // Big Rads
-		sprite_add("sprites/chests/sprShine16.png", 7,  8,  8), // Normal Chests
-		sprite_add("sprites/chests/sprShine20.png", 7, 10, 10), // Heavy Chests (Steroids)
-		sprite_add("sprites/chests/sprShine24.png", 7, 12, 12), // Big Chests
-		sprite_add("sprites/chests/sprShine64.png", 7, 32, 32)  // Giant Chests (YV)
-	];
 	with(global.spr){
         var m, p;
         msk = {};
         shd = {};
-
+        
+         // Shine:
+		Shine8  = sprite_add("sprites/chests/sprShine8.png",  7,  4,  4); // Rads
+		Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
+		Shine12 = sprite_add("sprites/chests/sprShine12.png", 7,  6,  6); // Big Rads
+		Shine16 = sprite_add("sprites/chests/sprShine16.png", 7,  8,  8); // Normal Chests
+		Shine20 = sprite_add("sprites/chests/sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
+		Shine24 = sprite_add("sprites/chests/sprShine24.png", 7, 12, 12); // Big Chests
+		Shine64 = sprite_add("sprites/chests/sprShine64.png", 7, 32, 32); // Giant Chests (YV)
+		
          // Top Decals:
         TopDecal = {
             "trench" : sprite("areas/Trench/sprTopDecalTrench", 2, 19, 24)
@@ -1396,13 +1396,13 @@
 #macro sprLoad global.spr_load
 
 #macro shnWep true
-#macro shn8  global.spr_shine[0]
-#macro shn10 global.spr_shine[1]
-#macro shn12 global.spr_shine[2]
-#macro shn16 global.spr_shine[3]
-#macro shn20 global.spr_shine[4]
-#macro shn24 global.spr_shine[5]
-#macro shn64 global.spr_shine[6]
+#macro shn8   spr.Shine8
+#macro shn10  spr.Shine10
+#macro shn12  spr.Shine12
+#macro shn16  spr.Shine16
+#macro shn20  spr.Shine20
+#macro shn24  spr.Shine24
+#macro shn64  spr.Shine64
 
 #macro areaList global.area
 #macro raceList global.race
