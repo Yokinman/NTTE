@@ -191,10 +191,11 @@
 		spr_idle = spr.Backpacker;
 		spr_hurt = mskNone;
 		spr_dead = mskNone;
-		sprite_index = spr_idle;
-		image_index = irandom(image_number);
-		image_speed = 0;
 		spr_shadow_y = -2;
+		sprite_index = spr_idle;
+		image_index = irandom(image_number - 1);
+		image_speed = 0;
+		depth = -1;
 		
 		 // Sounds:
 		snd_dead = sndHitRock;
