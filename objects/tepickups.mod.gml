@@ -2835,8 +2835,6 @@
 		return id;
 	}
 
-
-/// Mod Events
 #define VaultFlowerSparkle_create(_x, _y)
 	with(instance_create(_x, _y, LaserCharge)){
 		 // Visual:
@@ -2850,6 +2848,7 @@
 		return id;
 	}
 
+/// Mod Events
 #define game_start
 	 // Special Pickups:
 	global.sPickupsMax = 4;
