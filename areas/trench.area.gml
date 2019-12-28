@@ -53,7 +53,7 @@
 
 	 // Pit Grid:
 	global.pit_grid = ds_grid_create(20000/16, 20000/16);
-	mod_variable_set("mod", "tewater", "pit_grid", global.pit_grid);
+	mod_variable_set("mod", "tetrench", "pit_grid", global.pit_grid);
 	with(Floor) trenchpit_check = null;
 
 #macro spr global.spr
@@ -729,7 +729,7 @@
 				}
 				
 				 // Tentacle Outlines:
-				var	_arms = instances_seen_nonsync(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), 32, 32),
+				var	_arms = instances_seen_nonsync(instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32),
 					_alpha = 0.3 + (0.25 * sin(current_frame / 10));
 					
 					 // Anti-Aliasing:

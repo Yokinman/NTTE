@@ -111,7 +111,7 @@
         	obj_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "OasisPetBecome");
 		}
     }
-
+    
 #define area_finish
     lastarea = area;
     lastsubarea = subarea;

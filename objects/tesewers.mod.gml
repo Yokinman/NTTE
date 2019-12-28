@@ -3837,7 +3837,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
          // Visual:
         spr_idle = spr.ChairFrontIdle;
         spr_hurt = spr.ChairFrontHurt;
-        spr_dead = spr.ChairDead;
+        spr_dead = spr.ChairFrontDead;
 
          // Sounds:
         snd_hurt = sndHitMetal;
@@ -3856,6 +3856,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
          // Visual:
         spr_idle = spr.ChairSideIdle;
         spr_hurt = spr.ChairSideHurt;
+        spr_dead = spr.ChairSideDead;
 
         return id;
     }
