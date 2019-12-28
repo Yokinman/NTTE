@@ -3,8 +3,64 @@
     global.snd = mod_variable_get("mod", "teassets", "snd");
     global.mus = mod_variable_get("mod", "teassets", "mus");
     global.sav = mod_variable_get("mod", "teassets", "sav");
-
+    
 	global.debug_lag = false;
+	
+	 // Sludge Pool:
+	global.surfSludgePool = surflist_set("SludgePool", 0, 0, game_width, game_height);
+	global.shadSludgePool = shadlist_set("SludgePool", 
+		/* Vertex Shader */"
+		struct VertexShaderInput
+		{
+			float4 vPosition : POSITION;
+			float2 vTexcoord : TEXCOORD0;
+		};
+		
+		struct VertexShaderOutput
+		{
+			float4 vPosition : SV_POSITION;
+			float2 vTexcoord : TEXCOORD0;
+		};
+		
+		uniform float4x4 matrix_world_view_projection;
+		
+		VertexShaderOutput main(VertexShaderInput INPUT)
+		{
+			VertexShaderOutput OUT;
+			
+			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+			OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+			
+			return OUT;
+		}
+		",
+		
+		/* Fragment/Pixel Shader */"
+		struct PixelShaderInput
+		{
+			float2 vTexcoord : TEXCOORD0;
+		};
+		
+		sampler2D s0;
+		uniform float2 pixelSize;
+		uniform float3 sludgeRGB;
+		
+		float4 main(PixelShaderInput INPUT) : SV_TARGET
+		{
+			 // Return if Above Sludge Pool Pixel:
+			float4 RGBA = tex2D(s0, INPUT.vTexcoord);
+			if(RGBA.r == sludgeRGB.r && RGBA.g == sludgeRGB.g && RGBA.b == sludgeRGB.b){
+				float4 southRGBA = tex2D(s0, INPUT.vTexcoord + float2(0.0, pixelSize.y));
+				if(southRGBA.r == (133.0 / 255.0) && southRGBA.g == (249.0 / 255.0) && southRGBA.b == (26.0 / 255.0)){
+					return RGBA;
+				}
+			}
+			
+			 // Return Blank Pixel:
+			return float4(0.0, 0.0, 0.0, 0.0);
+		}
+		"
+	);
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -14,7 +70,9 @@
 
 #macro DebugLag global.debug_lag
 
-#macro surfShadowTop global.surfShadowTop
+#macro surfSludgePool global.surfSludgePool
+
+#macro shadSludgePool global.shadSludgePool
 
 #define BoneRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -194,7 +252,6 @@
 		}
 	}
 	
-	
 #define BoneRaven_alrm2
 	alarm2 = -1;
 	active = true;
@@ -265,14 +322,12 @@
 		rad_path(rad_drop(x, y, _num, direction, speed), creator);
 		raddrop -= _num;
 		
-		with(creator){
-			num_ravens--;
-			if(num_ravens <= 0) alarm0 = 90;
-		}
+		with(creator) num--;
 	}
 	
 #define BoneRaven_cleanup
 	instance_delete(fly_obj);
+	
 
 #define NestRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -637,7 +692,6 @@
 	}
 	else audio_stop_sound(loop_snd);
 	
-
 	 // Hitme Collision:
 	var _scale = 0.55,
 		_sawtrapHit = false;
@@ -728,15 +782,18 @@
 
 #define SludgePool_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = msk.SludgePool;
+		spr_floor = spr.SludgePool;
+		depth = 4;
+		
 		 // Vars:
-		mask_index = msk.SludgePool;
-		active = false;
-		ravens = [];
-		num_ravens = 3;
-		repeat(num_ravens) array_push(ravens, obj_create(_x, _y, "BoneRaven"));
-		with(ravens) creator = other;
+		mask_index = -1;
+		fx_color = make_color_rgb(130 - 40, 189, 5);
 		my_alert = noone;
-		fx_color = make_color_rgb(130, 189, 005);
+		active = false;
+		setup = true;
+		num = -1;
 		
 		 // Alarms:
 		alarm0 = -1;
@@ -744,54 +801,140 @@
 		return id;
 	}
 	
-#define SludgePool_step
-	 // Raven Time:
-	var t = instance_nearest(x, y, Player);
-	if(in_sight(t) && in_distance(t, 128)){
-		if(!active){
-			active = true;
-		}
-	}
-	if(active){
-		with(instances_matching(ravens, "active", false)){
-			max_kills = GameCont.kills;
-			alarm2 = 1 + random(5);
-			active = true;
-		}
+#define SludgePool_setup
+	setup = false;
+	
+	 // Floorerize:
+	var	_w = ceil(abs(sprite_width) / 32),
+		_h = ceil(abs(sprite_height) / 32),
+		_cx = 0,
+		_cy = 0,
+		_num = 0;
+		
+	with(floor_fill(x, y, _w, _h)){
+		sprite_index = other.spr_floor;
+		image_index = _num++;
+		material = 5; // slimy stone
+		_cx += (bbox_left + (bbox_right + 1)) / 2;
+		_cy += (bbox_top + (bbox_bottom + 1)) / 2;
+		if(sprite_index = sprFloor3) image_index = 3;
 	}
 	
-	 // Alert:
-	if(num_ravens <= 0){
-		if(my_alert == noone){
+	 // Center Position:
+	x = (_cx / _num);
+	y = (_cy / _num);
+	
+	 // Ravens:
+	if(num > 0) repeat(num) with(obj_create(x, y, "BoneRaven")){
+		creator = other;
+	}
+	
+#define SludgePool_step
+	if(setup) SludgePool_setup();
+	
+	if(sprite_index == msk.SludgePool){
+		 // Raven Time:
+		if(!active){
+			if(in_sight(Player) && in_distance(Player, 128)){
+				active = true;
+			}
+		}
+		if(active){
+			var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
+			with(instances_matching(_ravens, "active", false)){
+				max_kills = GameCont.kills;
+				alarm2 = 1 + random(5);
+				active = true;
+			}
+		}
+		
+		 // Alert:
+		if(num == 0){
+			num = -1;
+			alarm0 = max(alarm0, 90);
+			
+			 // Alert:
+			with(my_alert) instance_destroy();
 			my_alert = scrAlert(spr.SludgePoolAlert, id);
 			with(my_alert){
 				spr_alert = spr.AlertIndicatorMystery;
 				alert_col = c_yellow;
-				target_y = -32;
+				target_y -= 4;
 				alarm0 = -1;
 			}
 		}
-		with(my_alert) if(sprite_index == spr.SludgePoolAlert) alert_ang = sin(current_frame * 0.1) * 20;
 	}
 	
-	 // Bubblin':
-	if(chance_ct(1, 5)) with(scrFX([x, 20], [y, 10], 0, RainSplash)) image_blend = other.fx_color;
+	 // Bubblin'
+	if(instance_exists(my_alert) && my_alert.sprite_index == spr.SludgePoolAlert){
+		my_alert.alert_ang = sin(current_frame * 0.1) * 20;
+		
+		if(chance_ct(1, 30) || frame_active(15)){
+			var	l = random_range(1/10, 1/3) * choose(-1, 1),
+				d = current_frame * 10,
+				_x = x + lengthdir_x(l * sprite_width,        d),
+				_y = y + lengthdir_y(l * sprite_height * 2/3, d);
+				
+			with(instance_create(_x, _y, RainSplash)){
+				image_blend = merge_color(other.fx_color, c_black, random(0.1));
+				with(instance_create(x, y, Bubble)){
+					gravity *= random_range(0.5, 0.8);
+					image_blend = other.image_blend;
+					image_index = irandom(2);
+					hspeed /= 3;
+					vspeed = 0;
+				}
+			}
+		}
+	}
 
 #define SludgePool_end_step
 	 // Sticky Sludge:
-	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, [Player, hitme])){
-		x = lerp(xprevious, x, 0.8);
-		y = lerp(yprevious, y, 0.8);
+	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching_lt(instances_matching_gt(hitme, "speed", 0), "size", 6))){
+		if(position_meeting(x, bbox_bottom, other)){
+			x = lerp(xprevious, x, 2/3);
+			y = lerp(yprevious, y, 2/3);
+			
+			 // FX:
+			if(chance_ct(speed, 12)){
+				var o = other;
+				with(instance_create(x + orandom(2), bbox_bottom + random(4), Dust)){
+					sprite_index = sprBoltTrail;
+					image_blend = o.fx_color;
+					image_xscale *= random_range(1, 3);
+					depth = o.depth - 1;
+				}
+			}
+		}
+	}
+	
+	 // Effects:
+	with(instances_matching(instances_meeting(x, y, RainSplash), "image_blend", c_white)){
+		var	l = 4,
+			d = point_direction(other.x, other.y, x, y);
+			
+		if(position_meeting(x + lengthdir_x(l, d), y + lengthdir_y(l * 2/3, d), other)){
+			image_blend = other.fx_color;
+		}
+	}
+	with(instances_matching(instances_meeting(x, y, Dust), "sprite_index", sprDust)){
+		if(position_meeting(x, y, other)){
+			sprite_index = sprSweat;
+			image_blend = other.fx_color;
+			speed /= 3;
+		}
 	}
 	
 #define SludgePool_alrm0
 	alarm0 = 30 + random(30);
-	var t = instance_nearest(x, y, Player);
 	
-	if(in_sight(t) && in_distance(t, 128)){
+	if(in_sight(Player) && in_distance(Player, 64)){
 		alarm0 = -1;
 		
+		 // Real Bro:
 		pet_spawn(x, y, "Salamander");
+		
+		 // Alert:
 		with(my_alert){
 			sprite_index = spr.PetSalamanderIcon;
 			spr_alert = spr.AlertIndicator;
@@ -800,6 +943,7 @@
 			flash = 3;	
 		}
 	}
+	
 	
 #define Tunneler_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -951,6 +1095,10 @@
 	
 	 // Bind Events:
 	script_bind_draw(draw_ravenflys, -8);
+	with(surfSludgePool){
+		active = (array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0);
+		if(active) script_bind_draw(draw_sludge, -3);
+	}
 	
 	 // Nest Raven Disable Portal:
 	if(!instance_exists(enemy)){
@@ -999,6 +1147,64 @@
     	draw_self();
 		y -= z;
 		image_xscale /= right;
+	}
+	instance_destroy();
+	
+#define draw_sludge
+	with(surfSludgePool) if(surface_exists(surf)){
+		x = view_xview_nonsync;
+		y = view_yview_nonsync;
+		w = game_width;
+		h = game_height;
+		
+		var	_surf = surf,
+			_surfw = w,
+			_surfh = h,
+			_surfx = x,
+			_surfy = y,
+			_inst = instances_matching(instances_seen_nonsync([hitme, Corpse, chestprop, ChestOpen, Crown], 24, 24), "visible", true);
+			
+		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool"), "visible", true)){
+			surface_set_target(_surf);
+			draw_clear_alpha(0, 0);
+			
+				 // Grab Screen for Shader:
+				if(shadSludgePool.shad != -1){
+					surface_screenshot(_surf);
+				}
+			
+				 // Stuff in Sludge:
+				draw_set_fog(true, fx_color, 0, 0);
+				with(instance_rectangle_bbox(bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, _inst)){
+					var	_spr = sprite_index,
+						_img = image_index,
+						_xsc = image_xscale * (("right" in self) ? right : 1),
+						_ysc = image_yscale,
+						_col = image_blend,
+						_alp = image_alpha,
+						_l = 0,
+						_t = sprite_get_bbox_bottom(_spr),
+						_w = sprite_get_width(_spr),
+						_h = 1,
+						_x = x - (sprite_get_xoffset(_spr) * _xsc) + _l,
+						_y = y - (sprite_get_yoffset(_spr) * _ysc) + _t;
+						
+					draw_sprite_part_ext(_spr, _img, _l, _t, _w, _h, _x - _surfx, _y - _surfy, _xsc, _ysc, _col, _alp);
+				}
+				draw_set_fog(false, 0, 0, 0);
+				
+				 // Cut Out:
+				draw_set_blend_mode_ext(bm_inv_src_alpha, bm_src_alpha);
+				draw_sprite_ext(sprite_index, image_index, x - _surfx, y - _surfy, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+				draw_set_blend_mode(bm_normal);
+				
+			surface_reset_target();
+			
+			 // Draw:
+			shadlist_setup(shadSludgePool, surface_get_texture(_surf), [_surfw, _surfh, fx_color]);
+			draw_surface_part(_surf, bbox_left - _surfx, bbox_top - _surfy, (bbox_right + 1) - bbox_left, (bbox_bottom + 1) - bbox_top, bbox_left, bbox_top);
+			shader_reset();
+		}
 	}
 	instance_destroy();
 

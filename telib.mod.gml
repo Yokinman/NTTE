@@ -593,6 +593,15 @@
 					
 				shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
 				break;
+				
+			case "SludgePool":
+				var	_w = _args[0],
+					_h = _args[1],
+					_color = _args[2];
+					
+				shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+				shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
+				break;
 		}
 		
 		shader_set(_shader.shad);

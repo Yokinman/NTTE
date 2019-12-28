@@ -39,20 +39,6 @@
 	global.surfMainHUD  = surflist_set("MainHUD",  0, 0, game_width, game_height);
 	global.surfSkillHUD = surflist_set("SkillHUD", 0, 0, game_width, game_height);
 
-	 // Loadout Crown System:
-    global.loadout_crown = {
-        size : [],
-        race : {},
-        camp : crwn_none
-    }
-    global.clock_fix = false;
-    if(instance_exists(LoadoutCrown)){
-	    with(loadbutton) instance_destroy();
-	    with(Loadout) selected = false;
-    }
-    global.surfCrownHide	   = surflist_set("CrownHide",		 0, 0, 32, 32);
-    global.surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
-
 	/// NTTE Menus:
 		global.menu = {
 			"open"			: false,
@@ -335,8 +321,6 @@
 
 #macro DebugLag global.debug_lag
 
-#macro surfCrownHide		global.surfCrownHide
-#macro surfCrownHideScreen	global.surfCrownHideScreen
 #macro surfMainHUD			global.surfMainHUD
 #macro surfSkillHUD			global.surfSkillHUD
 
@@ -374,18 +358,6 @@
 #macro cred_discord		`@(color:${make_color_rgb(160, 70, 200)})Discord: @w`
 #macro cred_yellow		"@y"
 
-#macro crownPlayer	player_find_local_nonsync()
-#macro crownSize	global.loadout_crown.size
-#macro crownRace	global.loadout_crown.race
-#macro crownCamp	global.loadout_crown.camp
-#macro crownIconW	28
-#macro crownIconH	28
-#macro crownPath	"crownCompare/"
-#macro crownPathD	""
-#macro crownPathA	"A"
-#macro crownPathB	"B"
-
-
 #define game_start
 	 // Reset:
 	global.pet_max = 1;
@@ -396,59 +368,6 @@
 	global.killsLast = GameCont.kills;
 	global.hud_reroll = null;
     with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
-	
-	 // Reset Haste Hands:
-    if(global.clock_fix){
-    	global.clock_fix = false;
-    	sprite_restore(sprClockParts);
-    }
-    
-     // Special Loadout Crown Selected:
-    var p = crownPlayer,
-        _crown = lq_get(crownRace, player_get_race_fix(p)),
-        _crownPoints = GameCont.crownpoints;
-        
-    if(!is_undefined(_crown)){
-    	if(_crown.custom.slct != -1 && crown_current == _crown.slct && _crown.custom.slct != _crown.slct){
-	    	switch(_crown.custom.slct){
-	        	case crwn_random:
-	        		 // Get Unlocked Crowns:
-	        		var _list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-	        		with(_crown.icon) if(locked){
-	        			_list = array_delete_value(_list, crwn);
-	        		}
-
-					 // Add Modded Crowns:
-					var _scrt = "crown_menu_avail";
-	        		with(mod_get_names("crown")){
-	        			if(!mod_script_exists("crown", self, _scrt) || mod_script_call("crown", self, _scrt)){
-	        				array_push(_list, self);
-	        			}
-	        		}
-
-					 // Pick Random Crown:
-		            var m = ((array_length(_list) > 0) ? _list[irandom(array_length(_list) - 1)] : crwn_none);
-		            if(m != crown_current){
-		                crown_current = m;
-
-		                 // Destiny Fix:
-		                if(crown_current == crwn_destiny){
-		                    GameCont.skillpoints--;
-		                }
-		            }
-		            break;
-
-	        	default:
-	        		crown_current = _crown.custom.slct;
-	        }
-
-	         // Death Fix:
-	        if(_crown.slct == crwn_death){
-	            with(Player) my_health = maxhealth;
-	        }
-    	}
-    }
-    GameCont.crownpoints = _crownPoints;
     
      // Race Runs Stat:
     for(var i = 0; i < maxp; i++){
@@ -475,7 +394,7 @@
 	}
     
      // Cool Vault Statues:
-    /*with(ProtoStatue) with(floor_get(x, y,)){
+    /*with(ProtoStatue) with(floor_get(x, y)){
     	var o = 32;
     	for(var h = -1; h <= 1; h++) for(var v = -1; v <= 1; v++){
     		with(floor_get(x + (h * o), y + (v * o))){
@@ -1044,37 +963,26 @@
 			if(GameCont.subarea = 2){
 				var _floors = instances_matching(Floor, "mask_index", mskFloor);
 				with(instance_random(_floors)){
-					with(instance_create(x, y, CustomObject)){
-						 // Vars:
-						var _size = 2;
-						mask_index = mskFloor;
-						image_xscale = _size;
-						image_yscale = _size;
-						direction = choose(0, 90, 270, 180);
+					with(obj_create(x, y, "SludgePool")){
+						num = 3;
 						
 						 // Find Space:
-						var o = 32;
-						while(array_length(instances_meeting(x, y, _floors)) > 0){
-							direction += choose(0, 0, 90, 270, 180);
-							x += lengthdir_x(o, direction);
-							y += lengthdir_y(o, direction);
+						direction = choose(0, 90, 270, 180);
+						while(array_length(instances_meeting(x + 32, y + 32, _floors)) > 0 || point_distance(x, y, _spawnx, _spawny) < 128){
+							x += lengthdir_x(32, direction);
+							y += lengthdir_y(32, direction);
+							direction += choose(0, 0, -90, 90, 180);
 						}
 						
 						 // Create Room:
-						floor_fill_round(x, y, _size + 2, _size + 2);
-						var a = floor_fill(x, y, _size, _size);
-						for(var i = 0; i < array_length(a); i++){
-							with(a[i]){
-								sprite_index = spr.SludgePool;
-								image_index = i;
-								material = 5; // slimy stone
-							}
-						}
-						obj_create(x + o, y + o, "SludgePool");
-						
-						 // Goodbye:
-						instance_delete(id);
+						floor_fill_round(x, y, 2 + (abs(sprite_width) / 32), 2 + (abs(sprite_height) / 32));
 					}
+				}
+			}
+			with(instances_matching(instances_matching(Floor, "sprite_index", sprFloor3), "image_index", 3)){
+				with(obj_create(x, y, "SludgePool")){
+					sprite_index = msk.SludgePoolSmall;
+					spr_floor = other.sprite_index;
 				}
 			}
 			
@@ -1894,81 +1802,7 @@
 	                }
 	            }
 	        }
-	
-			 // Loadout Crowns:
-	    	with([surfCrownHide, surfCrownHideScreen]) active = true;
-			with(Menu){
-	            with(Loadout) if(selected == false && openanim > 0){
-	            	openanim = 0; // Bro they actually forgot to reset this when the loadout is closed
-	            }
-	
-		    	 // Bind Drawing:
-			    script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 0.0001);
-			    if(instance_exists(Loadout)){
-			    	script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
-			    }
-	
-				 // Crown Thing:
-				if("NTTE_crown_check" not in self){
-					NTTE_crown_check = true;
-		    		if(crownCamp != crwn_none){
-						var _inst = instance_create(0, 0, Crown);
-						with(_inst){
-							alarm0 = -1;
-							event_perform(ev_alarm, 0);
-		
-							 // Place by Last Played Character:
-							with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
-								other.x = x + (random_range(12, 24) * choose(-1, 1));
-								other.y = y + orandom(8);
-							}
-		
-							 // Visual Setup:
-							var c = crownCamp;
-							if(is_string(c)){
-								mod_script_call("crown", c, "crown_object");
-							}
-							else if(is_real(c)){
-								spr_idle = asset_get_index(`sprCrown${c}Idle`);
-								spr_walk = asset_get_index(`sprCrown${c}Walk`);
-							}
-							depth = -2 - (y / 10000);
-						}
-		
-						 // Delete:
-						if(fork()){
-							wait 5;
-							with(instances_matching_ne(Crown, "id", _inst)){
-								instance_destroy();
-							}
-							exit;
-		    			}
-					}
-				}
-	
-		    	 // Initialize Crown Selection:
-		    	var _mods = mod_get_names("race");
-			    for(var i = 0; i <= 16 + array_length(_mods); i++){
-			        var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
-			        if(_race not in crownRace){
-			        	lq_set(crownRace, _race, {
-			        		icon : [],
-			        		slct : crwn_none,
-			        		custom : {
-			        			icon : [],
-			        			slct : -1
-			        		}
-			        	});
-			        }
-			    }
-		    }
     	}
-    }
-    else{
-    	with([surfCrownHide, surfCrownHideScreen]) active = false;
-
-		 // For CharSelection Crown Boy:
-	    crownCamp = crown_current;
     }
     
 	 // Pets:
@@ -2507,7 +2341,7 @@
 
 	        	 // Tiny Fix:
         		with(instance_create(0, 0, CustomDraw)){
-        			loadout_behind();
+        			mod_script_call("mod", "teassets", "loadout_behind");
         		}
 	        }
 		}
@@ -4686,495 +4520,7 @@
         return id;
     }
 
-#define loadout_behind
-    instance_destroy();
-
-    var p = crownPlayer,
-        _crown = lq_get(crownRace, player_get_race_fix(p));
-
-	if(is_undefined(_crown)) exit;
-
-	with(surfCrownHide) if(surface_exists(surf)){
-		var	_surf = surf,
-			_surfx = -60 - (w / 2),
-			_surfy = -39 - (h / 2);
-
-	    with(Loadout){
-	        _surfy += (introsettle - (introsettle > 0));
-			if(position_meeting(mouse_x[p], mouse_y[p], self)){
-				_surfx--;
-				_surfy--;
-			}
-
-			if(_crown.slct != crwn_none){
-				with(surfCrownHideScreen) if(surface_exists(surf)){
-					x = other.x - game_width;
-					y = other.y - (game_height - 36);
-					w = game_width;
-					h = game_height;
-	
-					 // Capture Screen:
-			        surface_set_target(surf);
-			        draw_clear(c_black);
-			        draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
-			        surface_screenshot(surf);
-			        draw_set_blend_mode(bm_normal);
-	
-					with(other){
-			        	surface_set_target(_surf);
-			        	draw_clear_alpha(0, 0);
-	
-						 // Draw Mask of What to Hide (The Currently Selected Crown):
-						draw_set_fog(true, c_black, 0, 0);
-				        draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
-						draw_set_fog(false, 0, 0, 0);
-	
-						 // Lay Screen + Loadout Sprite Over Mask:
-			        	draw_set_color_write_enable(true, true, true, false);
-			        	draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
-			        	draw_sprite(sprLoadoutSplat, image_index, -_surfx, -_surfy);
-			        	if(selected == true) draw_sprite(sprLoadoutOpen, openanim, -_surfx, -_surfy);
-			        	draw_set_color_write_enable(true, true, true, true);
-					}
-		        }
-
-	        	surface_reset_target();
-			}
-	    }
-
-	    x = _surfx;
-	    y = _surfy;
-	}
-
-	 // Fix Haste Hands:
-	if(global.clock_fix){
-		with(Loadout) if(selected == false){
-			global.clock_fix = false;
-			sprite_restore(sprClockParts);
-		}
-	}
-	
-	 // Cool Unused Splat:
-	with(instances_matching(Loadout, "visible", true)){
-		if(selected == true){
-			closeanim = 0;
-		}
-		else{
-			var _spr = sprLoadoutClose;
-			if("closeanim" in self && closeanim < sprite_get_number(_spr)){
-				draw_sprite(_spr, closeanim, view_xview_nonsync + game_width, view_yview_nonsync + game_height - 36);
-				closeanim += current_time_scale;
-				
-				image_index = 0;
-				image_speed_raw = image_number - 1;
-			}
-		}
-	}
-
-#define draw_crown
-    /*
-    var p = crownPlayer,
-		_crown = lq_get(crownRace, player_get_race_fix(p)),
-        _vx = view_xview_nonsync,
-        _vy = view_yview_nonsync,
-        _mx = mouse_x[p],
-        _my = mouse_y[p],
-        _surfScreen = -1,
-        _surfCrown = -1,
-        _w = 20,
-        _h = 20,
-        _cx = game_width - 102,
-        _cy = 75;
-
-	if(_crown == null){
-		instance_destroy();
-		exit;
-	}
-
-    for(var i = 0; i < array_length(_crown.icon); i++){
-        var _icon = _crown.icon[i];
-        if(instance_exists(_icon.inst)) with(_icon){
-            x = _vx + _cx + (dix * crownIconW);
-            y = _vy + _cy + (diy * crownIconH);
-
-            if(!visible){
-                addy = 2;
-
-                 // Initial Crown Reading:
-                with(inst) if(alarm_get(0) == 0) with(other){
-                    visible = true;
-
-                     // Capture Screen:
-                    if(!surface_exists(_surfScreen)){
-                        _surfScreen = surface_create(game_width, game_height);
-
-                        surface_set_target(_surfScreen);
-                        draw_clear(c_black);
-                        surface_reset_target();
-        
-                        draw_set_blend_mode_ext(bm_one, bm_one);
-                        surface_screenshot(_surfScreen);
-                        draw_set_blend_mode(bm_normal);
-                    }
-                    
-                     // Capture Crown Icon from Screen Capture:
-                    if(!surface_exists(_surfCrown)){
-                        _surfCrown = surface_create(_w, _h);
-                    }
-                    surface_set_target(_surfCrown);
-                    draw_clear_alpha(0, 0);
-                    draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
-                    surface_reset_target();
-    
-                     // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
-                    var f = crownPath + string(crwn) + crownPathD;
-                    surface_save(_surfCrown, f);
-                    surface_destroy(_surfCrown);
-                    file_load(f);
-                    if(fork()){
-                        wait 0;
-                        var _size = file_size(f);
-                        locked = (_size == crownSize[crwn].lock);
-                        if(_size == crownSize[crwn].slct){
-                            _crown.slct = crwn;
-                        }
-                        exit;
-                    }
-                }
-            }
-            else addy = 0;
-        }
-        else with(Loadout) if(selected == true){
-        	_crown.icon = [];
-        	_crown.custom.icon = [];
-        }
-    }
-
-     // Manually Keep Track of Crown's Status:
-    with(_crown.icon) if(visible){ 
-        blnd = c_gray;
-
-        with(other) if(instance_exists(other.inst)) with(other){
-        	if(position_meeting(_mx, _my, inst)){
-	             // Select:
-	            if(!locked && button_pressed(p, "fire")){
-	                if(_crown.custom.slct != -1 && crwn == _crown.slct){
-	                    sound_play(sndMenuCrown);
-	                }
-	                _crown.slct = crwn;
-	                _crown.custom.slct = -1;
-	            }
-	
-	             // Hovering Over Button:
-	            if(crwn != _crown.slct || _crown.custom.slct != -1){
-	                addy--;
-	                blnd = merge_color(c_gray, c_white, 0.6);
-	            }
-	        }
-	
-	         // Selected:
-	        if(crwn == _crown.slct && _crown.custom.slct == -1){
-	            addy -= 2;
-	            blnd = c_white;
-	        }
-        }
-    }
-
-     // Crown Loadout Setup:
-    if(instance_exists(LoadoutCrown)){
-        if(array_length(_crown.icon) <= 0){
-            var _crownList = array_flip(instances_matching(LoadoutCrown, "", null)),
-                _col = 2,  // crwn_none column
-                _row = -1; // crwn_none row
-
-            for(var i = 0; i < array_length(_crownList); i++){
-                array_push(_crown.icon, {
-                    inst : _crownList[i],
-                    crwn : (i + 1),
-                    locked : false,
-                    x    : 0,
-                    y    : 0,
-                    dix  : _col,
-                    diy  : _row,
-                    addy : 2,
-                    blnd : c_gray,
-                    visible : false
-                });
-
-                 // Determine Position on Screen:
-                _col++;
-                if((i % 4) == 0){
-                    _col = 0;
-                    _row++;
-                }
-
-                 // Delay Crowns (Necessary for scanning the image without any overlapping):
-                with(_crownList[i]){
-                	alarm_set(0, 4 - floor((i - 1) / 4));
-                }
-            }
-
-             // Another Hacky Fix:
-            if(fork()){
-            	wait 2;
-            	sprite_replace_base64(sprClockParts, "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==", 1);
-            	global.clock_fix = true;
-            	exit;
-            }
-        }
-
-         // Generate Comparison Sizes:
-        if(array_length(crownSize) <= 0){
-            var _x = _w / 2,
-                _y = _h / 2,
-                _surf = surface_create(_w, _h);
-
-            surface_set_target(_surf);
-
-            for(var i = 0; i <= 13; i++){
-                var a = crownPath + string(i) + crownPathA,
-                    b = crownPath + string(i) + crownPathB;
-
-                 // Selected:
-                draw_clear(c_black);
-                draw_sprite(sprLoadoutCrown, i, _x, _y - 2);
-                surface_save(_surf, a);
-
-                 // Locked:
-                draw_clear(c_black);
-                draw_sprite_ext(sprLockedLoadoutCrown, i, _x, _y, 1, 1, 0, c_gray, 1);
-                surface_save(_surf, b);
-
-                 // Store Sizes:
-                var _size = { slct:0, lock:0 };
-                array_push(crownSize, _size);
-                file_load(a);
-                file_load(b);
-                if(fork()){
-                    wait 0;
-                    _size.slct = file_size(a);
-                    _size.lock = file_size(b);
-                    exit;
-                }
-            }
-
-            surface_reset_target();
-            surface_destroy(_surf);
-        }
-
-         // Adding Custom Crowns:
-        if(array_length(_crown.custom.icon) <= 0){
-            with(array_combine(crwnList, [crwn_random])){
-                with({
-                    crwn : self,
-                    locked : false,
-                    x    : 0,
-                    y    : 0,
-                    dix  : 0,
-                    diy  : 0,
-                    addy : 2,
-                    blnd : c_gray,
-                    hover : false,
-                    alarm0 : 6,
-                    visible : false,
-                    sprite_index : sprLoadoutCrown,
-                    image_index  : 0
-                }){
-                	 // Modded:
-                    if(is_string(crwn)){
-                    	var _scrt = "crown_menu_avail";
-                        locked = (mod_script_exists("crown", crwn, _scrt) && !mod_script_call_nc("crown", crwn, _scrt));
-
-						var _scrt = "crown_menu_button";
-                        if(mod_script_exists("crown", crwn, _scrt)){
-                            with(instance_create(0, 0, GameObject)){
-                                for(var i = 0; i < lq_size(other); i++){
-                                    variable_instance_set(id, lq_get_key(other, i), lq_get_value(other, i));
-                                }
-                                mod_script_call("crown", crwn, _scrt);
-                                for(var i = 0; i < lq_size(other); i++){
-                                    lq_set(other, lq_get_key(other, i), variable_instance_get(id, lq_get_key(other, i)));
-                                }
-                                instance_delete(id);
-                            }
-                            array_push(_crown.custom.icon, self);
-                        }
-                    }
-
-                     // Other:
-                    else{
-                        switch(crwn){
-                            case crwn_random:
-                                dix = 1;
-                                diy = -1;
-                                sprite_index = spr.CrownRandomLoadout;
-                                break;
-                        }
-                        array_push(_crown.custom.icon, self);
-                    }
-                }
-            }
-        }
-
-         // Dull Normal Crown Selection:
-        if(_crown.custom.slct != -1){
-            with(_crown.icon) if(visible && crwn == _crown.slct){
-                draw_sprite_ext((locked ? sprLockedLoadoutCrown : sprLoadoutCrown), real(crwn), x, y + addy, 1, 1, 0, blnd, 1);
-            }
-        }
-
-         // Haste Fix:
-        with(_crown.icon) if(visible && crwn == crwn_haste && !locked){
-            if("time" not in self) time = current_frame / 12;
-
-            if(crwn == _crown.slct && _crown.custom.slct == -1){
-                time += current_time_scale / 12;
-            }
-
-            draw_sprite_ext(spr.ClockParts, 0, x - 2, y - 1 + addy, 1, 1, time, blnd, 1);
-            draw_sprite_ext(spr.ClockParts, 0, x - 2, y - 1 + addy, 1, 1, time * 12, blnd, 1);
-            draw_sprite_ext(spr.ClockParts, 1, x - 2, y - 1 + addy, 1, 1, 0, blnd, 1);
-        }
-
-         // Custom Crown Icons:
-        with(_crown.custom.icon){
-            x = _vx + _cx + (dix * crownIconW);
-            y = _vy + _cy + (diy * crownIconH);
-            blnd = c_gray;
-            addy = 0;
-
-             // Locked:
-            if(_crown.custom.slct == crwn && locked){
-                _crown.custom.slct = -1;
-            }
-
-             // Appear:
-            if(alarm0 > 0){
-                addy = 2;
-                alarm0 -= current_time_scale;
-                if(alarm0 <= 0) visible = true;
-            }
-
-            if(visible){
-                 // Hovering:
-                if(point_in_rectangle(_mx, _my, x - 10, y - 10, x + 10, y + 10)){
-                     // Sound:
-                    if(!hover) sound_play(sndHover);
-                    hover = min(hover + 1, 2);
-
-                     // Select:
-                    if(!locked && button_pressed(p, "fire") && _crown.custom.slct != crwn){
-                        _crown.custom.slct = crwn;
-                        sound_play(sndMenuCrown);
-                    }
-
-                     // Highlight:
-                    if(crwn != _crown.custom.slct){
-                        addy--;
-                        blnd = merge_color(c_gray, c_white, 0.6);
-                    }
-                }
-                else hover = false;
-
-                 // Selected:
-                if(crwn == _crown.custom.slct){
-                    addy -= 2;
-                    blnd = c_white;
-                }
-
-                 // Draw:
-                with(other) draw_sprite_ext(other.sprite_index, other.image_index, other.x, other.y + other.addy, 1, 1, 0, other.blnd, 1);
-            }
-        }
-
-         // Custom Crown Tooltip:
-        with(_crown.custom.icon) if(visible && hover){
-            draw_set_font(fntM);
-
-            var _text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn)),
-                _x = x,
-                _y = max(y - 5, _vy + 24 + string_height(_text)/*can only draw over YAL's header in draw_gui_end and draw_tooltip breaks there so*) - hover;
-
-            draw_tooltip(_x, _y, _text);
-        }
-    }
-	else crownSize = [];
-
-     // Drawing Custom Crown on Collapsed Loadout:
-    if(_crown.custom.slct != -1){
-    	with(surfCrownHide) if(surface_exists(surf)){
-            with(Loadout) if(visible && (selected == false || openanim < 3)){
-            	var _x = x + other.x,
-            		_y = y + other.y;
-
-                 // Hide Normal Crown:
-                if(_crown.slct != crwn_none){
-					draw_surface(other.surf, _x, _y);
-                }
-
-                 // Draw Custom:
-                with(_crown.custom.icon) if(crwn == _crown.custom.slct){
-                	with(other) draw_sprite(other.sprite_index, other.image_index, _x + 16, _y + 16);
-                }
-            }
-    	}
-    }
-    */
-
-    instance_destroy();
-
-#define player_get_race_fix(p) /// Used for custom crown loadout
-	var _race = player_get_race(p);
-
-	 // Fix 1 Frame Delay Thing:
-	var _raceChange = (button_pressed(p, "east") - button_pressed(p, "west"));
-	if(_raceChange != 0){
-		var _new = _race;
-
-		with(instances_matching(CharSelect, "race", _race)){
-			var _slct = instances_matching_ne(instances_matching_ne(CharSelect, "id", id), "race", 16/*==Locked in game logic??*/),
-				_inst = _slct;
-
-			if(_raceChange > 0){
-				_inst = instances_matching_gt(_slct, "xstart", xstart);
-			}
-			else{
-				_inst = instances_matching_lt(_slct, "xstart", xstart);
-			}
-
-			 // Find Next CharSelect:
-			if(array_length(_inst) > 0){
-				var _min = 0;
-				with(_inst){
-					var _x = (xstart - other.xstart);
-					if(_min <= 0 || abs(_x) < _min){
-						_min = abs(_x);
-						_new = race;
-					}
-				}
-			}
-
-			 // Loop Around to Farthest CharSelect:
-			else{
-				var _max = 0;
-				with(_slct){
-					var _x = (xstart - other.xstart);
-					if(_max <= 0 || abs(_x) > _max){
-						_max = abs(_x);
-						_new = race;
-					}
-				}
-			}
-		}
-
-		_race = _new;
-	}
-
-	return _race;
-
 #define cleanup
-    if(global.clock_fix) sprite_restore(sprClockParts);
-
 	 // Fix Options:
 	if(MenuOpen){
 		with(Menu) mode = 0;
