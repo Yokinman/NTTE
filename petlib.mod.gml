@@ -264,7 +264,10 @@
 	
 #define Orchid_step
 	 // Effects:
-	if(chance_ct(1, 30)) scrFX([x, 8], [y, 8], 0, CaveSparkle).depth = depth - 1;
+	if(chance_ct(1, 15)) with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
+		image_angle = random(360);
+		depth = other.depth + choose(-1, 1);
+	}
 	
 	
 #define Mimic_create

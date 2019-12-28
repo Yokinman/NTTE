@@ -909,6 +909,7 @@
 				VaultFlowerDebris		= sprite(p + "sprVaultFlowerDebris",       10,  4,  4);
 				VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris", 10,  4,  4);
 				VaultFlowerFloor		= sprite(p + "sprVaultFlowerFloor",         9,  0,  0);
+				VaultFlowerSparkle		= sprite(p + "sprVaultFlowerSparkle",		4,	3,	3);
 
 				 // Reroll Skill:
 				SkillRerollHUDSmall = sprite("skills/Reroll/sprSkillRerollHUDSmall", 1, 4, 4);

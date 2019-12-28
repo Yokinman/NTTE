@@ -2722,19 +2722,17 @@
 				snd_flash = sndLevelUp;
 				spr_alert = -1;
 			}
-			repeat(8) with(scrFX([x, 16], [y - 4, 16], [90, random(2)], CaveSparkle)){
+			repeat(12) with(scrFX([x, 16], [(y - 4), 12], [90, random(2)], "VaultFlowerSparkle")){
 				image_speed *= random_range(0.5, 1);
-				depth = other.depth - 1;
+				depth = -7;
 			}
 			sound_play_pitchvol(sndStatueXP, 0.3, 2);
 			with(player_find(_pickup.pick)) sound_play(snd_crwn);
 		}
 		
 		 // Effects:
-		if(chance_ct(1, 7)){
-			with(instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle)){
-				depth = other.depth - 1;
-			}
+		if(chance_ct(1, 10)){
+			with(scrFX([x, 12], [(y - 4), 8], [90, 0.1], "VaultFlowerSparkle")) depth = other.depth + choose(-1, -1, 1);
 		}
 	}
 	
@@ -2787,12 +2785,19 @@
 		pet_spawn(x, y, "Orchid");
 		
 		 // FX:
-		with(instance_create(x, y, BulletHit)){
+		repeat(20) with(scrFX(x, (y - 6), [random(180), random(4)], "VaultFlowerSparkle")){
+			depth = -7;
+			friction = 0.1;
+			alarm0 = (speed / friction) + random(20);
+		}
+		sound_play(sndUncurse);
+		sound_play(sndCursedChest);
+		/*with(instance_create(x, y, BulletHit)){
 			sprite_index = sprSlugHit;
 			image_speed = 0.25;
 			depth = -3;
 		}
-		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 1), 0.5);
+		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 1), 0.5);*/
 	}
 	
 #define VaultFlower_PickupIndicator_meet
@@ -2831,6 +2836,19 @@
 
 
 /// Mod Events
+#define VaultFlowerSparkle_create(_x, _y)
+	with(instance_create(_x, _y, LaserCharge)){
+		 // Visual:
+		sprite_index = spr.VaultFlowerSparkle;
+		image_angle  = random(360);
+		depth = -3;
+		
+		 // Alarms:
+		alarm0 = 20 + random(60);
+		
+		return id;
+	}
+
 #define game_start
 	 // Special Pickups:
 	global.sPickupsMax = 4;
