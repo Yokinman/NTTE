@@ -6,6 +6,8 @@
 
     global.debug_lag = false;
     
+    global.floor_num = 0;
+    
      // Surfaces:
     global.surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
 
@@ -27,11 +29,11 @@
 		spr_walk = spr.CrystalHeartIdle;
 		spr_hurt = spr.CrystalHeartHurt;
 		spr_dead = spr.CrystalHeartDead;
-		sprite_index = spr_idle;
-		hitid = [spr_idle, "CRYSTAL HEART"];
-		depth = -4;
 		spr_shadow = shd24;
 		spr_shadow_y = 4;
+		hitid = [spr_idle, "CRYSTAL HEART"];
+		sprite_index = spr_idle;
+		depth = -4;
 		
 		 // Sounds:
 		snd_hurt = sndHyperCrystalHurt;
@@ -39,13 +41,13 @@
 		
 		 // Vars:
 		mask_index = mskLaserCrystal;
+		friction = 0.1;
 		maxhealth = 50;
+		meleedamage = 10;
 		size = 3;
 		walk = 0;
-		friction = 0.1;
 		walkspeed = 0.3;
 		maxspeed = 2;
-		meleedamage = 10;
 		
 		 // Alarms:
 		alarm1 = 30;
@@ -200,8 +202,11 @@
 		}
 		
 		 // Beautify Floors:
-		var _hard = GameCont.hard;
-		with(instances_matching_gt(Floor, "id", _minID)){
+		var _hard = GameCont.hard,
+			_enemyMin = 3,
+			_enemyNum = 0;
+			
+		with(array_shuffle(instances_matching_gt(Floor, "id", _minID))){
 			sprite_index = spr.FloorCrystal;
 			material = 2; // Stone
 			depth = 8;
@@ -212,8 +217,10 @@
 					_cy = y + 16;
 					
 				 // Enemies:
-				if(chance(_hard, _hard + 10)){
-					if(chance(3, 5)){
+				if(chance(_hard, _hard + 10) || _enemyNum < _enemyMin){
+					if(chance(1, 2) || _enemyNum < _enemyMin){
+						_enemyNum++;
+						
 						 // Big:
 						if(chance(1, 7)){
 							instance_create(_cx, _cy, RhinoFreak);
@@ -740,6 +747,7 @@
 		return id;
 	}
 
+
 #define Spiderling_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -950,7 +958,11 @@
 
 /// Mod Events:
 #define step
+	if(DebugLag) trace_time();
+	
+	 // Bind Events:
 	script_bind_end_step(end_step, 0);
+	script_bind_draw(draw_wall_shine, -6.0001);
 	
 	 // Crystal Tunnel Particles:
 	if(chance_ct(1, 40)){
@@ -970,58 +982,7 @@
         }
 	}
 	
-	 // Crystal Wall Shine:
-	var a = [];
-	with(instances_matching(Wall,		"topspr",		spr.WallCrystalTop))	array_push(a, id);
-	with(instances_matching(TopSmall,	"sprite_index", spr.WallCrystalTrans))	array_push(a, id);
-	if(array_length(a) > 0) script_bind_draw(draw_wall_shine, -6.1, instances_seen_nonsync(a, 16, 16));
-	
-#define draw_wall_shine(_tiles)
-	 // Pit Surfaces Follow Screen:
-	var _vx = view_xview_nonsync,
-		_vy = view_yview_nonsync,
-		_vw = game_width,
-		_vh = game_height,
-		_x = floor(_vx / _vw) * _vw,
-		_y = floor(_vy / _vh) * _vh;
-
-	with(surfWallShine){
-		if(_x != x || _y != y){
-			x = _x;
-			y = _y;
-		}
-		w = _vw * 2;
-		h = _vh * 2;
-		wave += current_time_scale;
-		
-		 // Draw, Peasant:
-		if(surface_exists(surf)){
-			surface_set_target(surf);
-			draw_clear_alpha(c_white, 0);
-			
-			with(instances_matching(_tiles, "", null)) draw_sprite(mskWall, 0, x - _vx, (y - 8) - _vy);
-			draw_set_color_write_enable(1, 1, 1, 0);
-			
-			 // The Good Shit:
-			var n = floor((wave * 0.4) % 20);
-			if(n < 7) draw_sprite(spr.WallShine, n % 7, 0, 0);
-			
-			draw_set_color_write_enable(1, 1, 1, 1);
-			surface_reset_target();
-			
-			draw_set_blend_mode(bm_add);
-			draw_set_alpha(0.1);
-			
-			 // Ship 'em Out:
-			draw_surface(surf, _vx, _vy);
-			
-			draw_set_blend_mode(bm_normal);
-			draw_set_alpha(1);
-		}
-	}
-
-	 // Goodbye:
-	instance_destroy();
+	if(DebugLag) trace_time("tecaves_step");
 
 #define end_step
     if(DebugLag) trace_time();
@@ -1050,6 +1011,12 @@
 				}
 			}
     	}
+	}
+	
+	 // New Floors, Reset Wall Shine Mask:
+	if(global.floor_num != instance_number(Floor)){
+		global.floor_num = instance_number(Floor);
+		with(surfWallShine) reset = true;
 	}
     
     if(DebugLag) trace_time("tecaves_end_step");
@@ -1121,6 +1088,12 @@
     }
 
 	if(DebugLag) trace_time("tecaves_draw_dark_end");
+
+#define draw_bloom
+	 // Crystal Heart Projectile:
+	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	}
 	
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
 	draw_primitive_begin(pr_trianglefan);
@@ -1136,12 +1109,77 @@
 	}
 	
 	draw_primitive_end();
-
-#define draw_bloom
-	 // Crystal Heart Projectile:
-	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	
+#define draw_wall_shine
+	var _vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_gw = game_width,
+		_gh = game_height;
+		
+	with(surfWallShine){
+		var _x = floor(_vx / _gw) * _gw,
+			_y = floor(_vy / _gh) * _gh;
+			
+		if(_x != x || _y != y){
+			reset = true;
+			x = _x;
+			y = _y;
+		}
+		w = _gw * 2;
+		h = _gh * 2;
+		
+		wave += current_time_scale * random_range(1, 2);
+		
+		if(surface_exists(surf)){
+			surface_set_target(surf);
+			
+				 // Reset Wall Mask:
+				if(reset){
+					reset = false;
+					
+					draw_clear_alpha(0, 0);
+					
+					with(instances_matching(TopSmall, "sprite_index", spr.WallCrystalTrans)){
+						draw_sprite(sprite_index, image_index, x - _x, y - 8 - _y);
+					}
+					with(instances_matching(Wall, "topspr", spr.WallCrystalTop)){
+						draw_sprite(topspr, topindex, x - _x, y - 8 - _y);
+					}
+				}
+				
+				draw_set_color_write_enable(true, true, true, false);
+				
+					 // Flatten Mask:
+					draw_set_color(c_black);
+					draw_rectangle(0, 0, w, h, false);
+					
+					 // Shine:
+					var	_angle = 45,
+						_width = 30 + orandom(2),
+						_height = sqrt(2 * sqr(max(_gw, _gh))),
+						_speed = 10,
+						_interval = min(max(_height, 1500), 3 * _height),
+						_dis = (_speed * wave) % _interval,
+						_x = _vx - x       + lengthdir_x(_dis, _angle),
+						_y = _vy - y + _gh + lengthdir_y(_dis, _angle);
+						
+					draw_set_color(c_white);
+					draw_line_width(_x + lengthdir_x(_height, _angle + 90), _y + lengthdir_y(_height, _angle + 90), _x - lengthdir_x(_height, _angle + 90), _y - lengthdir_y(_height, _angle + 90), _width);
+					
+				draw_set_color_write_enable(true, true, true, true);
+				
+			surface_reset_target();
+			
+			 // Ship 'em Out:
+			draw_set_alpha(0.1);
+			draw_set_blend_mode_ext(bm_src_alpha, bm_one);
+			draw_surface(surf, x, y);
+			draw_set_blend_mode(bm_normal);
+			draw_set_alpha(1);
+		}
 	}
+	
+	instance_destroy();
 	
 
 /// Scripts
