@@ -766,11 +766,11 @@
 	}
 	return noone;
 	
-#define scrAlert(_sprite, _inst)
+#define scrAlert(_inst, _sprite)
 	 // Group:
 	if((is_real(_inst) && object_exists(_inst)) || is_array(_inst)){
 		var a = [];
-		with(_inst) array_push(a, scrAlert(_sprite, self));
+		with(_inst) array_push(a, scrAlert(self, _sprite));
 		return a;
 	}
 	
@@ -789,8 +789,8 @@
 		}
 		
 		with(obj_create(_x, _y, "AlertIndicator")){
-			sprite_index = _sprite;
 			target = _inst;
+			sprite_index = _sprite;
 			
 			 // Auto-Offset:
 			if(instance_exists(target)){

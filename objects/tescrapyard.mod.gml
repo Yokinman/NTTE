@@ -855,7 +855,7 @@
 			
 			 // Alert:
 			with(my_alert) instance_destroy();
-			my_alert = scrAlert(spr.SludgePoolAlert, id);
+			my_alert = scrAlert(self, spr.SludgePoolAlert);
 			with(my_alert){
 				spr_alert = spr.AlertIndicatorMystery;
 				alert_col = c_yellow;
@@ -1314,7 +1314,7 @@
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
+#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
