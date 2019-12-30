@@ -1902,7 +1902,7 @@
         if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		     // Underwater Area:
 		    if(area_get_underwater(_area)){
-		    	mod_script_call("mod", "tewater", "underwater_step");
+		    	mod_script_call("mod", "teoasis", "underwater_step");
 		    }
 
              // Step(s):

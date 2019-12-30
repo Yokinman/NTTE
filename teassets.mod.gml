@@ -470,6 +470,12 @@
 	            PufferFire[2, 1] = sprite(p + "sprPufferBlowB2",  2, 15, 16);
 	            PufferFire[3, 0] = sprite(p + "sprPufferBlow3",   2, 15, 16);
 	            PufferFire[3, 1] = sprite(p + "sprPufferBlowB3",  2, 15, 16);
+	            
+	             // Crab Tank:
+	            CrabTankIdle = sprCrabIdle;
+	            CrabTankWalk = sprCrabWalk;
+	            CrabTankHurt = sprCrabHurt;
+	            CrabTankDead = sprCrabDead;
 
         	//#endregion
 
@@ -492,7 +498,7 @@
 	             // Eel Skeleton (big fat eel edition):
 	            EelSkullIdle = sprite(p + "sprEelSkeletonIdle", 1, 24, 24);
 	            EelSkullHurt = sprite(p + "sprEelSkeletonHurt", 3, 24, 24);
-	            EelSkullDead = sprite(p + "sprEelSkeletonDead", 6, 24, 24);
+	            EelSkullDead = sprite(p + "sprEelSkeletonDead", 3, 24, 24);
 
 	             // Kelp:
 	            KelpIdle = sprite(p + "sprKelpIdle", 6, 16, 22);
@@ -502,7 +508,7 @@
 	             // Vent:
 	            VentIdle = sprite(p + "sprVentIdle", 1, 12, 14);
 	            VentHurt = sprite(p + "sprVentHurt", 3, 12, 14);
-	            VentDead = sprite(p + "sprVentDead", 6, 12, 14);
+	            VentDead = sprite(p + "sprVentDead", 3, 12, 14);
 
         	//#endregion
 
@@ -641,15 +647,16 @@
             	Paper		= sprite(p + "sprPaper",       3,  5,  6);
 
 	             // Chairs:
-	                ChairDead      = sprite(p + "sprChairDead",      3, 12, 12);
 
 	                 // Side:
 	                ChairSideIdle  = sprite(p + "sprChairSideIdle",  1, 12, 12);
 	                ChairSideHurt  = sprite(p + "sprChairSideHurt",  3, 12, 12);
+	                ChairSideDead  = sprite(p + "sprChairSideDead",  3, 12, 12);
 
 	                 // Front:
 	                ChairFrontIdle = sprite(p + "sprChairFrontIdle", 1, 12, 12);
 	                ChairFrontHurt = sprite(p + "sprChairFrontHurt", 3, 12, 12);
+	                ChairFrontDead = sprite(p + "sprChairFrontDead", 3, 12, 12);
 
                  // Couch:
                 CouchIdle = sprite(p + "sprCouchIdle", 1, 32, 32);
@@ -1138,7 +1145,7 @@
             PetScorpionIdle   = sprite(p + "sprPetScorpionIdle",   4, 16, 16);
             PetScorpionWalk   = sprite(p + "sprPetScorpionWalk",   6, 16, 16);
             PetScorpionHurt   = sprite(p + "sprPetScorpionHurt",   3, 16, 16);
-            PetScorpionDead   = sprite(p + "sprPetScorpionDead",   6, 16, 16);
+            PetScorpionDead   = sprite(p + "sprPetScorpionDead",   3, 16, 16);
             PetScorpionFire   = sprite(p + "sprPetScorpionFire",   6, 16, 16);
             PetScorpionShield = sprite(p + "sprPetScorpionShield", 6, 16, 16);
 
