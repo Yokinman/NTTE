@@ -2704,6 +2704,11 @@
 	var _pickup = pickup_indicator;
 	
 	if(!wilted){
+		 // Sprites:
+		if(spr_idle == spr.VaultFlowerWiltedIdle) spr_idle = spr.VaultFlowerIdle;
+		if(spr_hurt == spr.VaultFlowerWiltedHurt) spr_hurt = spr.VaultFlowerHurt;
+		if(spr_dead == spr.VaultFlowerWiltedDead) spr_dead = spr.VaultFlowerDead;
+		
 		 // Wilt:
 		if(global.vFlowerWilted || skill_get(skill) == 0){
 			wilted = true;
@@ -2718,23 +2723,51 @@
 			skill_set("reroll", true);
 			
 			 // FX:
+			image_index = 0;
 			sprite_index = spr.VaultFlowerHurt;
 			with(scrAlert(self, skill_get_icon("reroll")[0])){
 				snd_flash = sndLevelUp;
 				spr_alert = -1;
 			}
-			repeat(12) with(scrFX([x, 16], [(y - 4), 12], [90, random(2)], "VaultFlowerSparkle")){
-				image_speed *= random_range(0.5, 1);
-				depth = -7;
+			for(var a = 0; a < 360; a += (360 / 10)){
+				var	l = 8 + (8 * dcos(a * 4)),
+					d = a + orandom(60);
+					
+				with(scrFX(
+					x + lengthdir_x(l, d),
+					y + lengthdir_y(l, d),
+					[90, random_range(0.25, 1.5)],
+					"VaultFlowerSparkle"
+				)){
+					depth = -8;
+				}
 			}
+			/*repeat(8) with(scrFX([x, 16], [y - 4, 16], [90, random(2)], CaveSparkle)){
+				depth = -8;
+			}*/
 			sound_play_pitchvol(sndStatueXP, 0.3, 2);
 			with(player_find(_pickup.pick)) sound_play(snd_crwn);
+			
+			/*if(fork()){
+				wilted = true;
+				while(button_check(0, "pick")) wait 0;
+				if(instance_exists(self)){
+					wilted = false;
+					with(instances_matching(CustomObject, "name", "AlertIndicator")) if(target == other) instance_destroy();
+				}
+				exit;
+			}*/
 		}
 		
 		 // Effects:
-		if(chance_ct(1, 10)){
-			with(scrFX([x, 12], [(y - 4), 8], [90, 0.1], "VaultFlowerSparkle")) depth = other.depth + choose(-1, -1, 1);
+		if(chance_ct(1, 12)){
+			with(instance_create(x + orandom(12), (y - 6) + orandom(8), CaveSparkle)){
+				depth = other.depth - 1;
+			}
 		}
+		/*if(chance_ct(1, 10)){
+			with(scrFX([x, 12], [(y - 4), 8], [90, 0.1], "VaultFlowerSparkle")) depth = other.depth + choose(-1, -1, 1);
+		}*/
 	}
 	
 	 // Wilted:
@@ -2786,19 +2819,19 @@
 		pet_spawn(x, y, "Orchid");
 		
 		 // FX:
-		repeat(20) with(scrFX(x, (y - 6), [random(180), random(4)], "VaultFlowerSparkle")){
+		repeat(20) with(scrFX(x, (y - 6), [90 + orandom(100), random(4)], "VaultFlowerSparkle")){
 			depth = -7;
 			friction = 0.1;
 			alarm0 = (speed / friction) + random(20);
 		}
-		sound_play(sndUncurse);
-		sound_play(sndCursedChest);
+		sound_play_pitch(sndCrystalPropBreak, 1.2 + random(0.1));
+		audio_sound_set_track_position(sound_play_pitchvol(sndUncurse, 0.5, 5), 0.66);
 		/*with(instance_create(x, y, BulletHit)){
 			sprite_index = sprSlugHit;
 			image_speed = 0.25;
 			depth = -3;
 		}
-		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 1), 0.5);*/
+		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 0.5), 0.5);*/
 	}
 	
 #define VaultFlower_PickupIndicator_meet
@@ -2834,19 +2867,52 @@
 		
 		return id;
 	}
+	
 
 #define VaultFlowerSparkle_create(_x, _y)
 	with(instance_create(_x, _y, LaserCharge)){
 		 // Visual:
 		sprite_index = spr.VaultFlowerSparkle;
 		image_angle  = random(360);
+		image_xscale = 0;
+		image_yscale = 0;
 		depth = -3;
 		
 		 // Alarms:
-		alarm0 = 20 + random(60);
+		alarm0 = random_range(10, 45);
+		
+		 // Grow & Shrink & Spin:
+		if(fork()){
+			wait 0;
+			
+			if(instance_exists(self)){
+				var	_rot = orandom(4),
+					_alarmMax = alarm0,
+					_scaleAlarm = 5 + (alarm0 / 3),
+					_scaleMax = random_range(1, 1.25);
+					
+				while(instance_exists(self)){
+					image_angle += _rot * current_time_scale;
+					
+					image_xscale = _scaleMax;
+					if(alarm0 > _scaleAlarm){
+						image_xscale *= 1 - (abs(alarm0 - _scaleAlarm) / max(1, abs(_alarmMax - _scaleAlarm)));
+					}
+					else{
+						image_xscale *= alarm0 / _scaleAlarm;
+					}
+					image_yscale = image_xscale;
+					
+					wait 0;
+				}
+			}
+			
+			exit;
+		}
 		
 		return id;
 	}
+	
 
 /// Mod Events
 #define game_start

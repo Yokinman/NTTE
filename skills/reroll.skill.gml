@@ -24,7 +24,12 @@
 	
 	 // Replace Skill:
 	skill_set(mod_current, skill_get(global.skill));
+	var _playerHealth = [];
+	with(Player) array_push(_playerHealth, [id, my_health]);
 	skill_set(global.skill, 0);
+	with(_playerHealth) with(self[0]){
+		if(my_health < other[1]) lasthit = [skill_icon(), skill_name()];
+	}
 	
 	 // Give New Mutation:
 	if(skill_get(mod_current) == _num){
