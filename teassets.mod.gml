@@ -1,8 +1,8 @@
 #define init
 	 // SPRITES //
-	global.spr = {};
-	global.spr_load = [[spr, 0]];
-	with(global.spr){
+	spr = {};
+	sprLoad = [[spr, 0]];
+	with(spr){
         var m, p;
         msk = {};
         shd = {};
@@ -120,9 +120,7 @@
 			NetNadeBlink = sprite(p + "sprNetNadeBlink", 2, 3, 3);
 			
 			 // Mortar Plasma:
-			MortarPlasma      = sprite(p + "sprMortarPlasma",      8,  8,  8);
-			EnemyPlasmaImpact = sprite(p + "sprEnemyPlasmaImpact", 7, 16, 16);
-			EnemyPlasmaTrail  = sprite(p + "sprEnemyPlasmaTrail",  3,  4,  4);
+			MortarPlasma = sprite(p + "sprMortarPlasma", 8, 8, 8);
 			
 			 // Portal Guardian:
 			PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
@@ -140,9 +138,24 @@
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Variants:
-			EnemyBullet      = sprite(p + "sprEnemyBullet",      2,  7,  7);
-			EnemyHeavyBullet = sprite(p + "sprEnemyHeavyBullet", 2, 12, 12);
-            AllyBullet4      = sprite(p + "sprAllyBullet4",      2,  6,  8);
+			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
+			EnemyHeavyBullet        = sprite(p + "sprEnemyHeavyBullet",        2, 12, 12);
+			EnemyHeavyBulletHit     = sprite(p + "sprEnemyHeavyBulletHit",     4, 12, 12);
+			EnemySlug               = sprite(p + "sprEnemySlug",               2, 12, 12);
+			EnemySlugHit            = sprite(p + "sprEnemySlugHit",            4, 16, 16);
+			EnemySlugDisappear      = sprite(p + "sprEnemySlugDisappear",      6, 12, 12);
+			EnemyHeavySlug          = sprite(p + "sprEnemyHeavySlug",          2, 16, 16);
+			EnemyHeavySlugHit       = sprite(p + "sprEnemyHeavySlugHit",       4, 24, 24);
+			EnemyHeavySlugDisappear = sprite(p + "sprEnemyHeavySlugDisappear", 6, 16, 16);
+			EnemySuperFlak          = sprite(p + "sprEnemySuperFlak",          2, 12, 12);
+			EnemySuperFlakHit       = sprite(p + "sprEnemySuperFlakHit",       9, 24, 24);
+			EnemyPlasmaBall         = sprite(p + "sprEnemyPlasmaBall",         2, 12, 12);
+			EnemyPlasmaBig          = sprite(p + "sprEnemyPlasmaBig",          2, 16, 16);
+			EnemyPlasmaHuge         = sprite(p + "sprEnemyPlasmaHuge",         2, 24, 24);
+			EnemyPlasmaImpact       = sprite(p + "sprEnemyPlasmaImpact",       7, 16, 16);
+			EnemyPlasmaTrail        = sprite(p + "sprEnemyPlasmaTrail",        3,  4,  4);
+            AllySniperBullet        = sprite(p + "sprAllySniperBullet",        2,  6,  8);
+            PlayerLaserCharge       = sprite(p + "sprPlayerLaserCharge",       4,  3,  3);
             
 		//#endregion
 		
@@ -1248,8 +1261,8 @@
     }
 
      // SOUNDS //
-    global.snd = {};
-    with(global.snd){
+    snd = {};
+    with(snd){
     	var m = "sounds/enemies/",
     		p;
 
@@ -1268,8 +1281,8 @@
     }
 
      // MUSIC //
-    global.mus = {};
-    with(global.mus){
+    mus = {};
+    with(mus){
     	var p = "sounds/music/";
         amb = {};
 
@@ -1290,7 +1303,7 @@
 
      // SAVE FILE //
     global.sav_auto = false;
-    global.sav = {
+    sav = {
         option : {
             "allowShaders"     : true,
             "remindPlayer"     : true,
@@ -1348,16 +1361,16 @@
     }
 
      // Surface Storage:
-    global.surf = [];
+    surfList = [];
 
      // Shader Storage:
-    global.shad = [];
+    shadList = [];
 
 	 // Mod Lists:
-    global.area = ["coast", "oasis", "trench", "pizza", "lair"];
-    global.race = ["parrot", "bee"];
-    global.crwn = ["crime", "bonus"];
-    global.weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+    areaList = ["coast", "oasis", "trench", "pizza", "lair"];
+    raceList = ["parrot", "bee"];
+    crwnList = ["crime", "bonus"];
+    wepsList = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 
      // Reminders:
     global.remind = [];
@@ -1412,8 +1425,8 @@
 	    with(loadbutton) instance_destroy();
 	    with(Loadout) selected = false;
     }
-    global.surfCrownHide	   = surflist_set("CrownHide",		 0, 0, 32, 32);
-    global.surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
+    surfCrownHide       = surflist_set("CrownHide",       0, 0, 32, 32);
+    surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
     
 #macro spr global.spr
 #macro msk spr.msk
@@ -2602,7 +2615,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
     with(shadList) if(shad != -1) shader_destroy(shad);
 
      // No Crash:
-    with(global.race){
+    with(raceList){
         with(instances_matching([CampChar, CharSelect], "race", self)){
         	repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
         		motion_add(random(360), random(random(8)));

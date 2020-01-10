@@ -1,10 +1,10 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
 
-    global.debug_lag = false;
+    DebugLag = false;
 
      // Sprites:
     with(spr){
@@ -15,13 +15,13 @@
     }
 
 	 // Surfaces:
-	global.surfTrans	= surflist_set("CoastTrans",	0, 0, 0, 0);
-	global.surfFloor	= surflist_set("CoastFloor",	0, 0, 0, 0);
-	global.surfWaves	= surflist_set("CoastWaves",	0, 0, game_width, game_height);
-	global.surfWavesSub	= surflist_set("CoastWavesSub",	0, 0, game_width, game_height);
-	global.surfSwim		= surflist_set("CoastSwim",		0, 0, 200, 200);
-	global.surfSwimBot	= surflist_set("CoastSwimBot",	0, 0, 0, 0);
-	global.surfSwimTop	= surflist_set("CoastSwimTop",	0, 0, 0, 0);
+	surfTrans	= surflist_set("CoastTrans",	0, 0, 0, 0);
+	surfFloor	= surflist_set("CoastFloor",	0, 0, 0, 0);
+	surfWaves	= surflist_set("CoastWaves",	0, 0, game_width, game_height);
+	surfWavesSub	= surflist_set("CoastWavesSub",	0, 0, game_width, game_height);
+	surfSwim		= surflist_set("CoastSwim",		0, 0, 200, 200);
+	surfSwimBot	= surflist_set("CoastSwimBot",	0, 0, 0, 0);
+	surfSwimTop	= surflist_set("CoastSwimTop",	0, 0, 0, 0);
 	with([surfTrans, surfFloor]) reset = true;
     with(surfSwim){
 	    inst_visible = [];
@@ -81,18 +81,32 @@
     ];
 
 #define area_sprite(_spr)
+	 // No Walls:
+	if(instance_is(other, Wall) && instance_number(Wall) <= 1){
+		instance_delete(other);
+	}
+	
+	 // Rocks:
+	else if(instance_is(other, TopSmall) && instance_number(TopSmall) <= 1){
+		if(chance(1, 80)){
+			obj_create(other.x + 8, other.y + 8, "CoastDecal");
+		}
+		instance_delete(other);
+	}
+	
+	 // Sprites:
     switch(_spr){
          // Floors:
         case sprFloor1      : return spr.FloorCoast;
         case sprFloor1B     : return spr.FloorCoastB;
         case sprFloor1Explo : return sprFloor1Explo;
-
+        
          // Walls:
         case sprWall1Trans  : return sprWall1Trans;
         case sprWall1Bot    : return sprWall1Bot;
         case sprWall1Out    : return sprWall1Out;
         case sprWall1Top    : return sprWall1Top;
-
+        
          // Misc:
         case sprDebris1     : return sprDebris1;
         case sprDetail1     : return spr.DetailCoast;
@@ -100,7 +114,7 @@
 
 #define area_setup
     goal = 100;
-
+    
     background_color = area_background_color();
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
@@ -108,16 +122,23 @@
 #define area_start
 	 // Remember you were here:
 	with(GameCont) visited_coast = true;
-
-     // No Walls:
-    with(Wall) instance_destroy();
-    with(FloorExplo) instance_destroy();
-
+	
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
 	    case 1: // Shell
-	        with(instance_random(TopSmall)){
-	            with(obj_create(x, y, "CoastBigDecal")){
+	        with(instance_random(Floor)){
+	            with(obj_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "CoastBigDecal")){
+			    	 // Avoid Floors:
+			    	direction = random(360);
+			    	var l = random_range(16, 32);
+			    	while(collision_rectangle(bbox_left + 20, bbox_top + 6, bbox_right - 20, bbox_bottom - 6, Floor, false, false)){
+			    		x += lengthdir_x(l, direction);
+			    		y += lengthdir_y(l, direction);
+			    	}
+			    	xstart = x;
+			    	ystart = y;
+			    	
+			    	 // Friend:
                 	with(pet_spawn(x, y, "Parrot")){
 	                    perched = other;
     					can_take = false;
@@ -155,13 +176,7 @@
 			instance_delete(id);
 		}
 	}
-
-	 // Rock Props:
-    with(TopSmall){
-        if(chance(1, 80)) obj_create(x, y, "CoastDecal");
-        instance_destroy();
-    }
-
+    
      // Spawn Thing:
     if(GameCont.subarea != 3){
         var _forcespawn = false;
@@ -169,13 +184,13 @@
         for(var i = 0; i < maxp; i++){
             if(player_get_alias(i) == "blaac") _forcespawn = true;
         }
-
+        
         if(chance(1 + GameCont.loops, 25) || _forcespawn){
             var _n = 10016,
                 _f = instance_furthest(_n,_n,Floor),
                 _l = 1.75*point_distance(_n,_n,_f.x,_f.y),
                 _d = 180+point_direction(_n,_n,_f.x,_f.y);
-
+                
             obj_create(_n + lengthdir_x(_l,_d), _n + lengthdir_y(_l,_d), "Creature");
             
             var _tries = 100,
@@ -195,13 +210,13 @@
             }
         }
     }
-
+    
 	 // Anglers:
 	with(RadChest) if(chance(1, 40)){
 		obj_create(x, y, "Angler");
 		instance_delete(id);
 	}
-
+	
      // Bind Sea Drawing Scripts:
 	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){
 		with(script_bind_draw(darksea_draw, global.seaDepth)){
@@ -215,20 +230,20 @@
 	if(array_length(instances_matching(CustomDraw, "name", "swimtop_draw")) <= 0){
 		with(script_bind_draw(swimtop_draw, -1)) name = script[2];
 	}
-
+	
      // who's that bird?
     unlock_call("parrot");
-
+    
 	 // Reset Surfaces:
 	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
 		active = true;
 		if("reset" in self) reset = true;
 	}
-
+	
 #define area_finish
     lastarea = area;
     lastsubarea = subarea;
-
+    
      // Area End:
     if(subarea >= area_subarea()){
         var n = area_next();
@@ -238,7 +253,7 @@
         area = n[0];
         subarea = n[1];
     }
-
+    
      // Next Subarea: 
     else subarea++;
 
@@ -1092,27 +1107,26 @@
 		global.floor_num = instance_number(Floor);
 		with(surfFloor) reset = true;
 	}
-
+	
      // Draw Floors to Surface:
 	with(surfFloor) if(surface_exists(surf)){
 		if(reset){
 			reset = false;
 			with(surfTrans) reset = true;
-
+			
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
-
+			
 			 // Draw Floors in White:
 			with(instance_rectangle_bbox(x, y, x + (w / _surfScale), y + (h / _surfScale), instances_matching(Floor, "visible", true))){
-				var _spr = sprite_index;
-				if(_spr == spr.FloorCoastB) _spr = spr.FloorCoast;
+				var _spr = ((sprite_index == spr.FloorCoastB) ? spr.FloorCoast : sprite_index);
 				draw_sprite_ext(_spr, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
-
+			
 			surface_reset_target();
 		}
 	}
-
+	
 	 // Underwater Transition Tile Surface:
 	with(surfTrans) if(surface_exists(surf)){
 		if(reset){
@@ -1414,6 +1428,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1457,6 +1472,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -1483,6 +1499,9 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);

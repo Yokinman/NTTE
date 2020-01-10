@@ -17,7 +17,7 @@
     global.sprWepLocked	= mskNone;
     
      // LWO:
-	global.lwoWep = {
+	lwoWep = {
         wep   : mod_current,
         ammo  : 0,
         amax  : 55,
@@ -29,7 +29,7 @@
     };
     
 	 // Mode Info:
-	global.wepModes = [
+	wepModes = [
 		{
 			name : "BONE SCYTHE",
 			sprt : global.sprWep,

@@ -2,7 +2,7 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
     global.sprWepLocked = mskNone;
 
-	global.lwoWep = {
+	lwoWep = {
 		wep  : mod_current,
 		beam : noone
 	};

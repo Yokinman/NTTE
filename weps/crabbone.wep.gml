@@ -1,7 +1,7 @@
 #define init
     global.sprWep = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
 	
-	global.lwoWep = {
+	lwoWep = {
         wep  : mod_current,
         ammo : 1
     };

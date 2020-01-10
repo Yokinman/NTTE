@@ -1,10 +1,10 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
 
-	global.debug_lag = false;
+	DebugLag = false;
 
      // Sprites:
     with(spr){
@@ -24,17 +24,11 @@
         TopDecalLair =      sprite_add("../sprites/areas/Lair/sprTopDecalLair.png",        2, 0,  0);
     }
 
-     // Carpet Surface:
-    global.resetSurf = true;
-    global.surfW = 2000;
-    global.surfH = 2000;
-    global.surf = noone;
-
      // Rooms:
     var L = true;
-    global.room_center = [10000, 10000];
-    global.room_list = [];
-    global.room_type = {
+    RoomCenter = [10000, 10000];
+    RoomList = [];
+    RoomType = {
          // SPECIAL:
         "Start" : {
             w : 3,
@@ -205,7 +199,7 @@
 
     };
 
-     // Set Defaults:
+     // Set Room Defaults:
     for(var i = 0; i < lq_size(RoomType); i++){
         var t = lq_get_value(RoomType, i),
             _default = { w : 1, h : 1, carpet : 0, special : 0 };
@@ -217,6 +211,12 @@
             }
         }
     }
+    
+     // Carpet Surface:
+    global.resetSurf = true;
+    global.surfW = 2000;
+    global.surfH = 2000;
+    global.surf = noone;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -229,6 +229,7 @@
 #macro RoomDebug false
 #macro RoomList global.room_list
 #macro RoomType global.room_type
+#macro RoomCenter global.room_center
 
 #define area_subarea            return 1;
 #define area_next               return 3;
@@ -254,43 +255,41 @@
 #define area_sprite(_spr)
     switch(_spr){
          // Floors:
-        case sprFloor1      : return spr.FloorLair;
-        case sprFloor1B     : return spr.FloorLairB;
+        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLair;
+        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLairB;
         case sprFloor1Explo : return spr.FloorLairExplo;
-
+        
          // Walls:
         case sprWall1Trans  : return spr.WallLairTrans;
         case sprWall1Bot    : return spr.WallLairBot;
         case sprWall1Out    : return spr.WallLairOut;
         case sprWall1Top    : return spr.WallLairTop;
-
+        
          // Misc:
         case sprDebris1     : return spr.DebrisLair;
         case sprDetail1     : return sprDetail2;
     }
-
+    
 #define area_setup
     goal = 110;
     safespawn = false;
-
+    
     background_color = area_background_color();
     BackCont.shadcol = area_shadow_color();
     TopCont.darkness = area_darkness();
     TopCont.fog = sprFog102;
-
+    
     RoomList = [];
-
+    
     if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
-
-#define area_setup_floor(_explo)
-    if(!_explo){
-         // Fix Depth:
-        if(styleb) depth = 8;
-
-         // Footsteps:
-        material = (styleb ? 3 : 2);
-    }
-
+    
+#define area_setup_floor
+     // Fix Depth:
+    if(styleb) depth = 8;
+    
+     // Footsteps:
+    material = (styleb ? 3 : 2);
+    
 #define area_finish
     lastarea = area;
     lastsubarea = subarea;
@@ -345,7 +344,7 @@
     var _x = GenCont.spawn_x - 16,
         _y = GenCont.spawn_y - 16;
 
-    global.room_center = [_x, _y];
+    RoomCenter = [_x, _y];
 
      // Spawn Rooms:
     if(array_length(RoomList) < 4){
@@ -661,8 +660,8 @@
 
 #define room_pop
     var o = 32,
-        _x = global.room_center[0] + (x * o), // Left
-        _y = global.room_center[1] + (y * o), // Top
+        _x = RoomCenter[0] + (x * o), // Left
+        _y = RoomCenter[1] + (y * o), // Top
         _cx = _x + (w/2 * o), // Center X
         _cy = _y + (h/2 * o); // Center Y
 
@@ -1025,8 +1024,8 @@
         
 #define draw_rugs
     if(!instance_exists(GenCont)){
-        var _surfX = global.room_center[0] - (global.surfW / 2),
-            _surfY = global.room_center[1] - (global.surfH / 2),
+        var _surfX = RoomCenter[0] - (global.surfW / 2),
+            _surfY = RoomCenter[1] - (global.surfH / 2),
             o = 32;
 
          // Reset surfaces:
@@ -1087,7 +1086,7 @@
                             }
                             
                             with(other){ // cant call draw_sprite in lightweight object, sad
-                                draw_sprite(_s[n], _i, global.room_center[0] + ((other.x + xx) * o) - _surfX, global.room_center[1] + ((other.y + yy) * o) - _surfY);
+                                draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * o) - _surfX, RoomCenter[1] + ((other.y + yy) * o) - _surfY);
                             }
                         }
                     }
@@ -1241,6 +1240,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1284,6 +1284,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -1310,6 +1311,9 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);

@@ -5,25 +5,21 @@
     }
 
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
 
-	global.area = mod_variable_get("mod", "teassets", "area");
-	global.race = mod_variable_get("mod", "teassets", "race");
-	global.crwn = mod_variable_get("mod", "teassets", "crwn");
-	global.weps = mod_variable_get("mod", "teassets", "weps");
+	areaList = mod_variable_get("mod", "teassets", "area");
+	raceList = mod_variable_get("mod", "teassets", "race");
+	crwnList = mod_variable_get("mod", "teassets", "crwn");
+	wepsList = mod_variable_get("mod", "teassets", "weps");
 
-    global.debug_lag = false;
-
+    DebugLag = false;
+    
 	 // level_start():
     global.newLevel = instance_exists(GenCont);
-
-	 // Area Stuff:
-	global.setup_floor_num = 0;
-    global.effect_timer = 0;
-
+    
 	 // Map:
 	global.mapAreaCheck = false;
 	global.mapArea = [];
@@ -36,11 +32,11 @@
     };
 
 	 // HUD Surface, for Pause Screen:
-	global.surfMainHUD  = surflist_set("MainHUD",  0, 0, game_width, game_height);
-	global.surfSkillHUD = surflist_set("SkillHUD", 0, 0, game_width, game_height);
+	surfMainHUD  = surflist_set("MainHUD",  0, 0, game_width, game_height);
+	surfSkillHUD = surflist_set("SkillHUD", 0, 0, game_width, game_height);
 
 	/// NTTE Menus:
-		global.menu = {
+		NTTEMenu = {
 			"open"			: false,
 			"slct"			: array_create(maxp, menu_base),
 			"pop"			: array_create(maxp, 0),
@@ -321,8 +317,8 @@
 
 #macro DebugLag global.debug_lag
 
-#macro surfMainHUD			global.surfMainHUD
-#macro surfSkillHUD			global.surfSkillHUD
+#macro surfMainHUD	global.surfMainHUD
+#macro surfSkillHUD	global.surfSkillHUD
 
 #macro cMusic	 global.sound_current.mus
 #macro cAmbience global.sound_current.amb
@@ -405,45 +401,40 @@
     }*/
     
      // Wepmimic Arena:
-    if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
-    	with(instance_furthest(_spawnx, _spawny, WeaponChest)){
-	    	with(obj_create(x, y, "PetWeaponBecome")){
-	    		switch(type){
-	    			case 2:
-	    				floor_fill(x, y, 5, 1);
-	    				floor_fill(x, y, 1, 5);
-	    				break;
-	    				
-	    			case 3:
-	    				floor_fill(x, y, 5, 5);
-	    				
-	    				 // Cover Zones:
-	    				if(fork()){
-	    					wait 0;
-		    				for(var	_x = x - 32; _x <= x + 32; _x += 64){
-		    					for(var	_y = y - 32; _y <= y + 32; _y += 64){
-		    						var _cover = true;
-		    						with(instances_at(_x, _y, instances_matching_ne(Floor, "mask_index", mskFloor))){
-			    						if(place_meeting(x, y, hitme) || place_meeting(x, y, chestprop)){
-			    							_cover = false;
-			    						}
-		    						}
-		    						if(_cover){
-		    							floor_set(_x, _y, false);
-		    						}
-		    					}
-		    				}
-		    				exit;
-	    				}
-	    				break;
-	    				
-	    			default:
-	    				floor_fill_round(x, y, 5, 5);
-	    		}
-	    	}
-	    	instance_delete(id);
-    	}
-    }
+	if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
+		with(instance_furthest(_spawnx, _spawny, WeaponChest)){
+			with(obj_create(x, y, "PetWeaponBecome")){
+				switch(type){
+					case 0: // MELEE
+						floor_fill(x, y, 3, 3);
+						break;
+						
+					case 1: // BULLET
+						floor_fill_round(x, y, 5, 5);
+						break;
+						
+					case 2: // SHELL
+						floor_fill_round(x, y, 3, 3);
+						break;
+						
+					case 3: // BOLT
+						floor_fill_round(x, y, 3, 3);
+						floor_fill_ring(x, y, 5, 5);
+						break;
+						
+					case 4: // EXPLOSIVE
+						floor_fill(x, y, 5, 1);
+						floor_fill(x, y, 1, 5);
+						break;
+						
+					case 5: // ENERGY
+						floor_fill_ring(x, y, 5, 5);
+						break;
+				}
+			}
+			instance_delete(id);
+		}
+	}
     
      // Area-Specific:
     switch(GameCont.area){
@@ -1508,7 +1499,7 @@
 							}
 							break;
 							
-						case Hydrant: // Seal Squads
+						/*case Hydrant: // Seal Squads
 							var	_type = choose(5, 6),
 								_time = 30 * random_range(5, 1 + instance_number(enemy)),
 								_num = 3 + irandom(2 + (crown_current == crwn_blood)) + ceil(GameCont.loops / 2);
@@ -1524,7 +1515,7 @@
 									}
 								}
 							}
-							break;
+							break;*/
 							
 						/*case ToxicBarrel: // Cat Dudes
 							repeat(choose(1, 1, 2)){
@@ -1869,9 +1860,6 @@
      // Wait for Level Start:
     if(instance_exists(GenCont) || instance_exists(Menu)){
     	global.newLevel = true;
-
-    	 // Reset Things:
-    	global.setup_floor_num = 0;
     }
     else if(global.newLevel){
         global.newLevel = false;
@@ -1883,28 +1871,13 @@
     if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
     if(a >= 0){
         var _area = areaList[a];
-
-         // Floor Setup:
-        if(GameCont.area != 100){
-	        var	_scrt = "area_setup_floor";
-	        if(mod_script_exists("area", _area, _scrt)){
-		        var _num = instance_number(Floor);
-		        if(global.setup_floor_num != _num){
-		        	global.setup_floor_num = _num;
-		            with(instances_matching(Floor, "ntte_setup", null)){
-		                ntte_setup = true;
-		                mod_script_call("area", _area, _scrt, (object_index == FloorExplo));
-		            }
-		        }
-	        }
-        }
-
+        
         if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		     // Underwater Area:
 		    if(area_get_underwater(_area)){
 		    	mod_script_call("mod", "teoasis", "underwater_step");
 		    }
-
+		    
              // Step(s):
             mod_script_call("area", _area, "area_step");
             if(mod_script_exists("area", _area, "area_begin_step")){
@@ -1913,27 +1886,23 @@
             if(mod_script_exists("area", _area, "area_end_step")){
                 script_bind_end_step(area_step, 0);
             }
-
+            
              // Floor FX:
-            if(global.effect_timer <= 0){
-                global.effect_timer = random(60);
-
+            with(BackCont) if(alarm0 > 0 && alarm0 <= ceil(current_time_scale)){
                 var _scrt = "area_effect";
                 if(mod_script_exists("area", _area, _scrt)){
                      // Pick Random Player's Screen:
                     do var i = irandom(maxp - 1);
                     until player_is_active(i);
                     var _vx = view_xview[i], _vy = view_yview[i];
-
+                    
                      // FX:
                     var t = mod_script_call("area", _area, _scrt, _vx, _vy);
-                    if(!is_undefined(t) && t > 0) global.effect_timer = t;
+                    if(!is_undefined(t) && t != 0) alarm0 = t + current_time_scale;
                 }
             }
-            else global.effect_timer -= current_time_scale;
         }
-        else global.effect_timer = 0;
-
+        
          // Music / Ambience:
         if(GameCont.area != 100){
 	        if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
@@ -4568,6 +4537,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -4611,6 +4581,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -4637,6 +4608,9 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);

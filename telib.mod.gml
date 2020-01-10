@@ -1,43 +1,149 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
-
-    global.debug_lag = false;
-
-	 // floor_set():
-	global.floor_style = null;
-	global.floor_area = null;
-
-	 // sleep_max():
-	global.sleep_max = 0;
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
+    
+    DebugLag = false;
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
-    global.objectList = {
-		"tegeneral"	  : ["AlertIndicator", "AllyFlakBullet", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "FlakBall", "Harpoon", "HarpoonStick", "Igloo", "NetNade", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
+    objList = {
+		"tegeneral"	  : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
-		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
+		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"	  : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
 		"tesewers"	  : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "NestRaven", "SawTrap", "SludgePool", "Tunneler"],
-	    "tecaves"	  : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "RedSpider", "Spiderling", "SpiderWall"]
+		"tecaves"	  : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "RedSpider", "Spiderling", "SpiderWall"]
     };
     
 	 // Auto Create Event Script References:
-    global.objectScrt = {}
+    objScrt = {}
 	for(var i = 0; i < lq_size(objList); i++){
 		var _modName = lq_get_key(objList, i),
 			_modObjs = lq_get_value(objList, i);
-
+			
 		with(_modObjs){
 			var _name = self;
 			lq_set(objScrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
 		}
 	}
-
+	
+	 // Projectile Team Variants:
+	var _teamGrid = [
+		[[spr.EnemyBullet,				EnemyBullet4	],	[sprBullet1,			Bullet1				],	[sprIDPDBullet,			IDPDBullet		]], // Bullet
+		[[sprEnemyBulletHit								],	[sprBulletHit								],	[sprIDPDBulletHit						]], // Bullet Hit
+		[[spr.EnemyHeavyBullet,			"CustomBullet"	],	[sprHeavyBullet,		HeavyBullet			],	[										]], // Heavy Bullet
+		[[spr.EnemyHeavyBulletHit						],	[sprHeavyBulletHit							],	[										]], // Heavy Bullet Hit
+		[[sprLHBouncer,					LHBouncer		],	[sprBouncerBullet,		BouncerBullet		],	[										]], // Bouncer Bullet
+		[[sprLHBouncer,					LHBouncer		],	[sprBouncerShell,		BouncerBullet		],	[										]], // Bouncer Bullet 2
+		[[sprEnemyBullet1,				EnemyBullet1	],	[sprAllyBullet,			AllyBullet			],	[										]], // Bandit Bullet
+		[[sprEnemyBulletHit								],	[sprAllyBulletHit							],	[sprIDPDBulletHit						]], // Bandit Bullet Hit
+		[[sprEnemyBullet4,				EnemyBullet4	],	[spr.AllySniperBullet,	AllyBullet			],	[										]], // Sniper Bullet
+		[[sprEBullet3,					EnemyBullet3	],	[sprBullet2,			Bullet2				],	[										]], // Shell
+		[[sprEBullet3Disappear,			EnemyBullet3	],	[sprBullet2Disappear,	Bullet2				],	[										]], // Shell Disappear
+		[[spr.EnemySlug,				"CustomShell"	],	[sprSlugBullet,			Slug				],	[sprPopoSlug,			PopoSlug		]], // Slug
+		[[spr.EnemySlugDisappear,		"CustomShell"	],	[sprSlugDisappear,		Slug				],	[sprPopoSlugDisappear,	PopoSlug		]], // Slug Disappear
+		[[spr.EnemySlugHit								],	[sprSlugHit									],	[sprIDPDBulletHit						]], // Slug Hit
+		[[spr.EnemyHeavySlug,			"CustomShell"	],	[sprHeavySlug,			HeavySlug			],	[										]], // Heavy Slug
+		[[spr.EnemyHeavySlugDisappear,	"CustomShell"	],	[sprHeavySlugDisappear,	HeavySlug			],	[										]], // Heavy Slug Disappear
+		[[spr.EnemyHeavySlugHit							],	[sprHeavySlugHit,							],	[										]], // Heavy Slug Hit
+		[[sprEFlak,						"CustomFlak"	],	[sprFlakBullet,			FlakBullet			],	[										]], // Flak
+		[[sprEFlakHit									],	[sprFlakHit									],	[										]], // Flak Hit
+		[[spr.EnemySuperFlak,			"CustomFlak"	],	[sprSuperFlakBullet,	SuperFlakBullet		],	[										]], // Super Flak
+		[[spr.EnemySuperFlakHit							],	[sprSuperFlakHit							],	[										]], // Super Flak Hit
+		[[sprEFlak,						EFlakBullet		],	[sprFlakBullet,			"CustomFlak"		],	[										]], // Gator Flak
+		[[sprTrapFire									],	[sprWeaponFire								],	[sprFireLilHunter						]], // Fire
+		[[sprSalamanderBullet							],	[sprDragonFire								],	[sprFireLilHunter						]], // Fire 2
+		[[sprTrapFire									],	[sprCannonFire								],	[sprFireLilHunter						]], // Fire 3
+		//[[sprFireBall									],	[sprFireBall								],	[										]], // Fire Ball
+		//[[sprFireShell								],	[sprFireShell								],	[										]], // Fire Shell
+		[[sprEnemyLaser,				EnemyLaser		],	[sprLaser,				Laser				],	[										]], // Laser
+		[[sprEnemyLaserStart							],	[sprLaserStart								],	[										]], // Laser Start
+		[[sprEnemyLaserEnd								],	[sprLaserEnd								],	[										]], // Laser End
+		[[sprLaserCharge								],	[spr.PlayerLaserCharge						],	[										]], // Laser Particle
+		[[sprEnemyLightning								],	[sprLightning								],	[										]], // Lightning
+		//[[sprLightningHit								],	[sprLightningHit							],	[										]], // Lightning Hit
+		//[[sprLightningSpawn							],	[sprLightningSpawn							],	[										]], // Lightning Particle
+		[[spr.EnemyPlasmaBall,			"CustomPlasma"	],	[sprPlasmaBall,			PlasmaBall			],	[sprPopoPlasma,			PopoPlasmaBall	]], // Plasma
+		[[spr.EnemyPlasmaBig,			"CustomPlasma"	],	[sprPlasmaBallBig,		PlasmaBig			],	[										]], // Plasma Big
+		[[spr.EnemyPlasmaHuge,			"CustomPlasma"	],	[sprPlasmaBallHuge,		PlasmaHuge			],	[										]], // Plasma Huge
+		[[spr.EnemyPlasmaImpact							],	[sprPlasmaImpact							],	[sprPopoPlasmaImpact					]], // Plasma Impact
+		[[spr.EnemyPlasmaTrail							],	[sprPlasmaTrail								],	[sprPopoPlasmaTrail						]], // Plasma Particle
+		[[sprEnemySlash									],	[sprSlash									],	[sprEnemySlash							]]  // Slash
+	];
+	
+	spriteTeamMap = ds_map_create();
+	teamSpriteMap = ds_map_create();
+	teamSpriteObjectMap = ds_map_create();
+	
+	with(_teamGrid){
+		var	_teamList = self,
+			_teamSize = array_length(_teamList),
+			_sprtList = array_create(_teamSize, -1),
+			_objsList = array_create(_teamSize, -1);
+			
+		for(var i = 0; i < _teamSize; i++){
+			var _team = _teamList[i];
+			if(array_length(_team) > 0) _sprtList[i] = _team[0];
+			if(array_length(_team) > 1) _objsList[i] = _team[1];
+		}
+		
+		 // Compiling Sprite Maps:
+		with(_sprtList){
+			var _sprt = self;
+			if(sprite_exists(_sprt)){
+				if(!ds_map_exists(teamSpriteMap, _sprt)){
+					teamSpriteMap[? _sprt] = _sprtList;
+				}
+				if(!ds_map_exists(spriteTeamMap, _sprt)){
+					spriteTeamMap[? _sprt] = spriteTeamStart + array_find_index(_sprtList, _sprt);
+				}
+			}
+		}
+		
+		 // Compiling Object~Object Map:
+		with(_objsList){
+			var _obj = self;
+			if(!is_real(_obj) || object_exists(_obj)){
+				if(!ds_map_exists(teamSpriteObjectMap, _obj)){
+					var _map = ds_map_create();
+					
+					with(_teamGrid){
+						var	_tList = self,
+							_tSize = array_length(_tList),
+							_sList = array_create(_tSize, -1),
+							_oList = array_create(_tSize, -1);
+							
+						for(var i = 0; i < _tSize; i++){
+							var _team = _tList[i];
+							if(array_length(_team) > 0) _sList[i] = _team[0];
+							if(array_length(_team) > 1) _oList[i] = _team[1];
+						}
+						
+						for(var i = 0; i < _tSize; i++){
+							if(_oList[i] == _obj){
+								var _sprt = _sList[i];
+								if(!ds_map_exists(_map, _sprt)) _map[? _sprt] = _oList;
+							}
+						}
+					}
+					
+					teamSpriteObjectMap[? _obj] = _map;
+				}
+			}
+		}
+	}
+	
+	 // floor_set():
+	global.floor_style = null;
+	global.floor_area = null;
+	
+	 // sleep_max():
+	global.sleep_max = 0;
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -49,9 +155,13 @@
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
 #macro anim_end (image_index + image_speed_raw >= image_number)
 
-#macro objList global.objectList
-#macro objScrt global.objectScrt
+#macro objList global.object_list
+#macro objScrt global.object_scrt
 
+#macro spriteTeamStart 1
+#macro spriteTeamMap global.sprite_team_map
+#macro teamSpriteMap global.team_sprite_map
+#macro teamSpriteObjectMap global.team_sprite_object_map
 
 #define obj_create(_x, _y, _name)
 	if(is_real(_name) && object_exists(_name)){
@@ -839,7 +949,7 @@
         			with(instances_matching(instances_matching(projectile, "creator", id), "team", c.team)){
         				if(place_meeting(x, y, other)){
         					team = other.team;
-                			charm_allyize(true);
+                			team_instance_sprite(team, self);
         				}
         			}
                 }
@@ -905,7 +1015,7 @@
                 			with(instances_matching(instances_matching(projectile, "creator", id), "team", team)){
                 				if(place_meeting(x, y, other)){
                 					team = c.team;
-                					charm_allyize(false);
+                					team_instance_sprite(team, self);
                 				}
                 			}
 
@@ -949,135 +1059,6 @@
         }
     }
     return c;
-
-#define charm_allyize(_bool)
-	var _inst = noone;
-	
-	/*
-		[[EnemyBullet4, spr.EnemyBullet0], Bullet1],
-		[EnemyBullet1,                     AllyBullet],
-		[EnemyBullet3,                     Bullet2],
-		[EnemyBullet4,                     [AllyBullet, spr.AllyBullet4]],
-		[EFlakBullet,                      ["AllyFlakBullet", sprFlakBullet]],
-		[LHBouncer,                        BouncerBullet],
-		[EnemyLaser,                       Laser],
-		[EnemyLightning,                   Lightning]
-	*/
-	
-	
-	 // Become Allied:
-	if(_bool){
-		switch(sprite_index){
-			case sprEnemyBullet1:
-				if(instance_is(self, EnemyBullet1)){
-	    			_inst = instance_create(x, y, AllyBullet);
-				}
-	    		sprite_index = sprAllyBullet;
-				break;
-
-			case sprEBullet3:
-				if(instance_is(self, EnemyBullet3)){
-	    			_inst = instance_create(x, y, Bullet2);
-	    			with(_inst) bonus = false;
-				}
-	    		sprite_index = sprBullet2;
-				break;
-
-			case sprEnemyBullet4:
-				if(instance_is(self, EnemyBullet4)){
-	    			_inst = instance_create(x, y, AllyBullet);
-				}
-	    		sprite_index = spr.AllyBullet4;
-				break;
-
-			case sprLHBouncer:
-				if(instance_is(self, LHBouncer)){
-	    			_inst = instance_create(x, y, BouncerBullet);
-				}
-	    		sprite_index = sprBouncerBullet;
-				break;
-
-			case sprEFlak:
-				if(instance_is(self, EFlakBullet)){
-					_inst = obj_create(x, y, "AllyFlakBullet");
-				}
-				sprite_index = sprFlakBullet;
-				break;
-
-			case sprEnemyLaser:
-				if(!instance_is(self, EnemyLaser)){
-					sprite_index = sprLaser;
-				}
-				break;
-
-			case sprEnemyLightning:
-				sprite_index = sprLightning;
-				break;
-		}
-	}
-
-	 // Become Enemied:
-	else{
-		switch(sprite_index){
-			case sprAllyBullet:
-				if(instance_is(self, AllyBullet)){
-	    			_inst = instance_create(x, y, EnemyBullet1);
-				}
-	    		sprite_index = sprEnemyBullet1;
-				break;
-
-			case sprBullet2:
-				if(instance_is(self, Bullet2)){
-	    			_inst = instance_create(x, y, EnemyBullet3);
-	    			with(_inst) bonus = false;
-				}
-	    		sprite_index = sprEBullet3;
-				break;
-
-			case sprBouncerBullet:
-				if(instance_is(self, BouncerBullet)){
-	    			_inst = instance_create(x, y, LHBouncer);
-				}
-	    		sprite_index = sprLHBouncer;
-				break;
-
-			case sprLaser:
-				if(!instance_is(self, EnemyLaser)){
-					sprite_index = sprEnemyLaser;
-				}
-				break;
-
-			case sprLightning:
-				sprite_index = sprEnemyLightning;
-				break;
-
-			default:
-				if(sprite_index == spr.AllyBullet4){
-					if(instance_is(self, AllyBullet)){
-	    				_inst = instance_create(x, y, EnemyBullet4);
-					}
-		    		sprite_index = sprEnemyBullet4;
-				}
-
-				else if(sprite_index == sprFlakBullet){
-					if(instance_is(self, CustomProjectile) && "name" in self && name == "AllyFlakBullet"){
-						sprite_index = sprEFlak;
-					}
-				}
-		}
-	}
-	
-	 // Better than instance_change:
-	if(instance_exists(_inst) && instance_exists(self)){
-		with(variable_instance_get_names(id)){
-			if(!variable_is_read_only(other, self)){
-				variable_instance_set(_inst, self, variable_instance_get(other, self));
-			}
-		}
-		instance_delete(id);
-	}
-	
-	return _inst;
 
 #define boss_hp(_hp)
     var n = 0;
@@ -1539,18 +1520,42 @@
 		_instNew = obj_create(_x, _y, _obj);
 		
 	if(instance_exists(_instNew)){
+		var _isCustom = (string_pos("Custom", object_get_name(_instNew.object_index)) == 1);
+		
 		with(variable_instance_get_names(_inst)){
-			if(!variable_is_read_only(_instNew, self)){
-				if(!array_exists(["x", "y", "xstart", "ystart", "xprevious", "yprevious"], self)){
+			if(!variable_is_readonly(_instNew, self)){
+				if(!_isCustom || string_pos("on_", self) != 1 || is_array(variable_instance_get(_inst, self))){
 					variable_instance_set(_instNew, self, variable_instance_get(_inst, self));
 				}
 			}
+		}
+		
+		with(_instNew){
+			x = _x;
+			y = _y;
+			xprevious = x;
+			yprevious = y;
 		}
 	}
 	
 	return _instNew;
 
-#define variable_is_read_only(_inst, _varName)
+#define instance_create_lq(_x, _y, _lq)
+	var	_inst = obj_create(_x, _y, lq_defget(_lq, "object_index", (is_real(_lq) ? _lq : GameObject))),
+		_lqSize = lq_size(_lq);
+		
+	if(instance_exists(_inst)){
+		for(var i = 0; i < _lqSize; i++){
+			var k = lq_get_key(_lq, i);
+			if(!variable_is_readonly(_inst, k)){
+				variable_instance_set(_inst, k, lq_get_value(_lq, i));
+			}
+		}
+	}
+	
+	return _inst;
+
+#define variable_is_readonly(_inst, _varName)
 	if(array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _varName)){
 		return true;
 	}
@@ -3509,6 +3514,28 @@
     }
     return r;
 
+#define floor_fill_ring(_x, _y, _w, _h)
+    var	o = 32,
+    	_gridPos = floor_align(_x, _y, _w * o, _h * o, o, o);
+    	
+	_x = _gridPos[0];
+	_y = _gridPos[1];
+	
+     // Center Around x,y:
+    _x -= floor((_w - 1) / 2) * o;
+    _y -= floor((_h - 1) / 2) * o;
+    
+     // Floors:
+    var r = [];
+    for(var _ox = 0; _ox < _w; _ox++){
+        for(var _oy = 0; _oy < _h; _oy++){
+        	if(_ox == 0 || _oy == 0 || _ox == _w - 1 || _oy == _h - 1){ // Don't Make Inner Floors
+        		array_push(r, floor_set(_x + (_ox * o), _y + (_oy * o), true));
+        	}
+        }
+    }
+    return r;
+    
 #define trace_lag()
     if(mod_variable_exists("mod", mod_current, "lag")){
         for(var i = 0; i < array_length(global.lag); i++){
@@ -3797,4 +3824,158 @@
 		list = _list;
 	}
 	else instance_destroy();
+	
+#define sprite_get_team(_sprite)
+	/*
+		Returns what team a sprite is based on
+		
+		Example:
+			sprite_get_team(sprAllyBullet) == 2
+	*/
+	
+	if(ds_map_exists(spriteTeamMap, _sprite)){
+		return spriteTeamMap[? _sprite];
+	}
+	
+	return -1;
+	
+#define team_get_sprite(_team, _sprite)
+	/*
+		Returns the given team's variant of a sprite, returns _sprite if none exists
+		
+		Example:
+			team_get_sprite(1, sprFlakBullet) == sprEFlak
+	*/
+	
+	var	_spriteList = teamSpriteMap[? _sprite],
+		_spriteIndex = _team - spriteTeamStart;
+		
+	if(_spriteIndex >= 0 && _spriteIndex < array_length(_spriteList)){
+		return _spriteList[_spriteIndex];
+	}
+	
+	return _sprite;
+	
+#define team_instance_sprite(_team, _inst)
+	/*
+		Visually changes a projectile to a given team's variant, if it exists
+	*/
+	
+	var	_newInst = [_inst];
+		
+	with(_inst){
+		var	_spr = sprite_index,
+			_obj = (("name" in self && string_pos("Custom", object_get_name(object_index)) == 1) ? name : object_index);
+			
+		 // Sprite:
+		sprite_index = team_get_sprite(_team, _spr);
+		
+		 // Object, for hardcoded stuff:
+		if(ds_map_exists(teamSpriteObjectMap, _obj)){
+			var	_objList = teamSpriteObjectMap[? _obj][? _spr],
+				_objIndex = _team - spriteTeamStart;
+				
+			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
+				var _newObj = _objList[_objIndex];
+				if(_obj != _newObj){
+					with(instance_create_copy(x, y, _newObj)){
+						array_push(_newInst, id);
+						instance_delete(other);
+						
+						if(array_exists(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj)){
+							var _sprAlly = team_get_sprite(2, sprite_index);
+							
+							 // Destruction Sprite:
+							switch(_sprAlly){
+								case sprHeavyBullet:		spr_dead = sprHeavyBulletHit;	break;
+								case sprAllyBullet:			spr_dead = sprAllyBulletHit;	break;
+								case sprBullet2:
+								case sprBullet2Disappear:	spr_dead = sprBullet2Disappear;	break;
+								case sprSlugBullet:
+								case sprSlugDisappear:		spr_dead = sprSlugHit;			break;
+								case sprHeavySlug:
+								case sprHeavySlugDisappear:	spr_dead = sprHeavySlugHit;		break;
+								case sprFlakBullet:			spr_dead = sprFlakHit;			break;
+								case sprSuperFlakBullet:	spr_dead = sprSuperFlakHit;		break;
+								case sprPlasmaBall:			spr_dead = sprPlasmaImpact;		break;
+								default:					spr_dead = sprBulletHit;
+							}
+							spr_dead = team_get_sprite(_team, spr_dead);
+							
+							 // Specifics:
+							switch(_newObj){
+								case "CustomFlak":
+								
+									 // Specifics:
+									switch(_obj){
+										case SuperFlakBullet:
+											snd_dead = sndSuperFlakExplode;
+											bonus_damage = 5;
+											flak = array_create(5, FlakBullet);
+											super = true;
+											break;
+											
+										case EFlakBullet:
+											bonus_damage = 0;
+											flak = array_create(10);
+											for(var i = 0; i < array_length(flak); i++){
+												flak[i] = {
+													object_index : EnemyBullet3,
+													speed : random_range(9, 12)
+												};
+											}
+											break;
+									}
+									
+									break;
+									
+								case "CustomShell":
+								
+									 // Disappear Sprite:
+									switch(_sprAlly){
+										case sprSlugBullet:
+										case sprSlugDisappear:		spr_dead = sprSlugDisappear;		break;
+										case sprHeavySlug:
+										case sprHeavySlugDisappear:	spr_dead = sprHeavySlugDisappear;	break;
+										default:					spr_dead = sprBullet2Disappear;
+									}
+									spr_fade = team_get_sprite(_team, spr_dead);
+									
+									 // Specifics:
+									switch(_obj){
+										case Slug:		bonus_damage = 2;	break;
+										case HeavySlug:	bonus_damage = 10;	break;
+										case PopoSlug:	bonus_damage = 0;	break;
+									}
+									
+									break;
+									
+								case "CustomPlasma":
+									
+									 // Trail Sprite:
+									spr_trail = team_get_sprite(_team, sprPlasmaTrail);
+									
+									 // Specifics:
+									switch(_obj){
+										case PlasmaBig:
+										case PlasmaHuge:
+											snd_dead = sndPlasmaBigExplode;
+											minspeed = 6;
+											flak = ((_obj == PlasmaHuge) ? array_create(4, PlasmaBig) : array_create(10, PlasmaBall));
+											break;
+									}
+									
+									break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	_newInst = instances_matching(_newInst, "", null);
+	
+	if(array_length(_newInst) <= 0) return noone;
+	return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
 	

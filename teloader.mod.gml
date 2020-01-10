@@ -22,7 +22,7 @@
         ["objects/tegeneral.mod.gml",               0 + _coop, "Objects"],
         ["objects/tepickups.mod.gml",               1 + _coop],
         ["objects/tedesert.mod.gml",                0 + _coop],
-        ["objects/tecoast.mod.gml",                 0 + _coop],
+        ["objects/tecoast.mod.gml",                 1 + _coop],
         ["objects/teoasis.mod.gml",                 0 + _coop],
         ["objects/tetrench.mod.gml",                1 + _coop],
         ["objects/tesewers.mod.gml",                0 + _coop],

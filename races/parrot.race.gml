@@ -4,16 +4,16 @@
 		with(loadbutton) instance_destroy();
 	}
 
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
 
-	global.debug_lag = false;
+	DebugLag = false;
 
      // Charm:
-    global.surfCharm = surflist_set("Charm", 0, 0, game_width, game_height);
-    global.shadCharm = shadlist_set("Charm", 
+    surfCharm = surflist_set("Charm", 0, 0, game_width, game_height);
+    shadCharm = shadlist_set("Charm", 
 		/* Vertex Shader */"
 		struct VertexShaderInput
 		{
@@ -1001,9 +1001,7 @@
 						}
 						
 						 // Ally-ify Projectiles:
-						with(instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone)){
-							mod_script_call("mod", "telib", "charm_allyize", true);
-						}
+						team_instance_sprite(team, instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone));
 					}
 					
 					 // Enemy Stuff:
@@ -1092,7 +1090,7 @@
 	                    case RadMaggotChest:
 	                    case FiredMaggot:
 	                    case RatkingRage:
-	                    case InvSpider:			/// Charm Spawned Bros
+	                    case InvSpider: /// Charm Spawned Bros
 							if(
 								my_health <= 0
 								||
@@ -1109,7 +1107,7 @@
 							break;
 	                        
 	                    case MeleeBandit:
-	                    case JungleAssassin:    /// Overwrite Movement
+	                    case JungleAssassin: /// Overwrite Movement
 	                        if(walk > 0){
 	                            other.walk = walk;
 	                            walk = 0;
@@ -1129,13 +1127,13 @@
 	                        if(speed > m) speed = m;
 	                        break;
 	                        
-	                    case Sniper:            /// Aim at Target
+	                    case Sniper: /// Aim at Target
 	                        if(alarm2 > 5){
 	                            gunangle = point_direction(x, y, _target.x, _target.y);
 	                        }
 	                        break;
 	                        
-	                    case ScrapBoss:         /// Override Movement
+	                    case ScrapBoss: /// Override Movement
 	                        if(walk > 0){
 	                            other.walk = walk;
 	                            walk = 0;
@@ -1156,7 +1154,7 @@
 	                        }
 	                        break;
 	
-	                    case ScrapBossMissile:  /// Don't Move Towards Player
+	                    case ScrapBossMissile: /// Don't Move Towards Player
 	                        if(sprite_index != spr_hurt){
 	                            if(instance_exists(Player)){
 	                                var n = instance_nearest(x, y, Player);
@@ -1171,9 +1169,30 @@
 	                        }
 	                        break;
 	                        
-	                    case LightningCrystal:  /// Ally-ify Lightning
-							with(instances_matching(EnemyLightning, "charmally_check", null)){
-								charmally_check = true;
+	                    case LaserCrystal:
+	                    case InvLaserCrystal: /// Ally-ify Laser Charge
+	                    	var n = "charmally_check_" + string(id);
+	                    	with(instances_matching(LaserCharge, n, null)){
+	                    		variable_instance_set(self, n, true);
+	                    		
+	                    		var	_x1 = xstart,
+	                    			_y1 = ystart,
+	                    			_x2 = other.xprevious,
+	                    			_y2 = other.yprevious,
+	                    			_dis = point_distance(_x1, _y1, _x2, _y2),
+	                    			_dir = point_direction(_x1, _y1, _x2, _y2);
+                    				
+	                    		if(_dis < 5 || (alarm0 == round(1 + (_dis / speed)) && abs(angle_difference(direction, _dir)) < 0.1)){
+	                    			team_instance_sprite(other.team, self);
+	                    		}
+	                    	}
+	                    	break;
+	                        
+	                    case LightningCrystal: /// Ally-ify Lightning
+	                    	var n = "charmally_check_" + string(id);
+							with(instances_matching(EnemyLightning, n, null)){
+								variable_instance_set(self, n, true);
+								
 								if(sprite_index == sprEnemyLightning){
 									if(team == other.team){
 										if(!instance_exists(creator) || creator == other){
@@ -1186,7 +1205,7 @@
 	                        }
 	                        break;
 	                        
-	                    case LilHunterFly:      /// Land on Enemies
+	                    case LilHunterFly: /// Land on Enemies
 	                        if(sprite_index == sprLilHunterLand && z < -160){
 	                            if(instance_exists(_target)){
 	                                x = _target.x;
@@ -1196,7 +1215,7 @@
 	                        break;
 	                        
 	                    case ExploFreak:
-	                    case RhinoFreak:        /// Don't Move Towards Player
+	                    case RhinoFreak: /// Don't Move Towards Player
 	                        if(instance_exists(Player)){
 	                            x -= lengthdir_x(current_time_scale, direction);
 	                            y -= lengthdir_y(current_time_scale, direction);
@@ -1207,12 +1226,12 @@
 	                        break;
 	                        
 	                    case Shielder:
-	                    case EliteShielder:     /// Fix Shield Team
+	                    case EliteShielder: /// Fix Shield Team
 	                        with(instances_matching(PopoShield, "creator", id)) team = other.team;
 	                        break;
 	                        
 						case Inspector:
-						case EliteInspector:	/// Fix Telekinesis Pull
+						case EliteInspector: /// Fix Telekinesis Pull
 							if("charm_control_last" in self && charm_control_last){
 								var _pull = (1 + (object_index == EliteInspector)) * current_time_scale;
 								with(instances_matching(Player, "team", team)){
@@ -1229,7 +1248,7 @@
 							charm_control_last = control;
 							break;
 							
-	                    case EnemyHorror:       /// Don't Shoot Beam at Player
+	                    case EnemyHorror: /// Don't Shoot Beam at Player
 	                        if(instance_exists(_target)){
 	                            gunangle = point_direction(x, y, _target.x, _target.y);
 	                        }
@@ -1472,6 +1491,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1515,6 +1535,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -1541,6 +1562,9 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);

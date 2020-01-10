@@ -2,7 +2,7 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 3, 4);
     global.sprWepLocked = mskNone;
     
-    global.lwoWep = {
+    lwoWep = {
         wep  : mod_current,
         rope : noone
     };
@@ -38,7 +38,7 @@
          // Link Harpoon:
         if(f.wepheld){
             if(!instance_exists(lq_defget(w.rope, "link1", noone)) || lq_defget(w.rope, "broken", true)){
-                w.rope = scrHarpoonRope(id, f.creator);
+                w.rope = Harpoon_rope(id, f.creator);
             }
             else{
                 array_push(rope, w.rope);
@@ -60,4 +60,4 @@
 #define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
-#define scrHarpoonRope(_link1, _link2)                                                  return  mod_script_call(   'mod', 'tegeneral', 'scrHarpoonRope', _link1, _link2);
+#define Harpoon_rope(_link1, _link2)                                                    return  mod_script_call(   'mod', 'tecoast', 'Harpoon_rope', _link1, _link2);

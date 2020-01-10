@@ -1,15 +1,16 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
 
-    global.debug_lag = false;
-    
-    global.floor_num = 0;
+    DebugLag = false;
     
      // Surfaces:
-    global.surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+    surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
+    surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+    
+    global.floor_num = 0;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -20,6 +21,7 @@
 
 #macro DebugLag global.debug_lag
 
+#macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
 
 #define CrystalHeart_create(_x, _y)
@@ -274,6 +276,7 @@
 		}
 		
 		 // Goodbye:
+		portal_poof();
 		with(instances_matching_gt(NOWALLSHEREPLEASE, "id", _minID)) instance_destroy();
 		instance_create(x, y, PortalClear);
 		instance_destroy();
@@ -643,7 +646,7 @@
     }
 
      // Effects:
-    view_shake_at(x, y, 8);
+    view_shake_at(x, y, 2);
     sound_play(sndPlasmaHit);
 
 
@@ -720,7 +723,7 @@
 	
 
 #define RedSpider_create(_x, _y)
-	with(instance_create(_x, _y, Spider)){
+	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		spr_idle = spr.RedSpiderIdle;
 		spr_walk = spr.RedSpiderWalk;
@@ -958,11 +961,9 @@
 
 /// Mod Events:
 #define step
-	if(DebugLag) trace_time();
-	
-	 // Bind Events:
 	script_bind_end_step(end_step, 0);
-	script_bind_draw(draw_wall_shine, -6.0001);
+	
+	if(DebugLag) trace_time();
 	
 	 // Crystal Tunnel Particles:
 	if(chance_ct(1, 40)){
@@ -980,6 +981,23 @@
         		motion_set(random(360), random(0.2));
         	}
         }
+	}
+	
+	 // Wall Shine:
+	if(global.floor_num != instance_number(Floor)){
+		global.floor_num = instance_number(Floor);
+		
+		 // New Floors, Reset Wall Mask:
+		with(surfWallShineMask){
+			reset = true;
+			inst_tops = instances_matching(TopSmall, "sprite_index", spr.WallCrystalTrans);
+			inst_wall = instances_matching(Wall, "topspr", spr.WallCrystalTop);
+			active = (array_length(inst_tops) + array_length(inst_wall) > 0);
+		}
+	}
+	with(surfWallShine){
+		active = surfWallShineMask.active;
+		if(active) script_bind_draw(draw_wall_shine, -6.0001);
 	}
 	
 	if(DebugLag) trace_time("tecaves_step");
@@ -1011,12 +1029,6 @@
 				}
 			}
     	}
-	}
-	
-	 // New Floors, Reset Wall Shine Mask:
-	if(global.floor_num != instance_number(Floor)){
-		global.floor_num = instance_number(Floor);
-		with(surfWallShine) reset = true;
 	}
     
     if(DebugLag) trace_time("tecaves_end_step");
@@ -1116,7 +1128,7 @@
 		_gw = game_width,
 		_gh = game_height;
 		
-	with(surfWallShine){
+	with(surfWallShineMask){
 		var _x = floor(_vx / _gw) * _gw,
 			_y = floor(_vy / _gh) * _gh;
 			
@@ -1128,54 +1140,87 @@
 		w = _gw * 2;
 		h = _gh * 2;
 		
+		if(surface_exists(surf) && reset){
+			reset = false;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			 // Crystal Wall Tops:
+			with(inst_tops) if(instance_exists(self)){
+				draw_sprite(sprite_index, image_index, x - _x, y - 8 - _y);
+			}
+			with(inst_wall) if(instance_exists(self)){
+				draw_sprite(topspr, topindex, x - _x, y - 8 - _y);
+			}
+			
+			surface_reset_target();
+		}
+	}
+	
+	with(surfWallShine){
+		x = _vx;
+		y = _vy;
+		w = _gw;
+		h = _gh;
+		
 		wave += current_time_scale * random_range(1, 2);
 		
 		if(surface_exists(surf)){
-			surface_set_target(surf);
-			
-				 // Reset Wall Mask:
-				if(reset){
-					reset = false;
-					
+			var	_x = x,
+				_y = y,
+				_shineAng = 45,
+				_shineSpeed = 10,
+				_shineWidth = 30 + orandom(2),
+				_shineInterval = 240, // 4-8 Seconds
+				_shineDisMax = sqrt(2 * sqr(max(_gw, _gh))),
+				_shineDis = (_shineSpeed * wave) % (_shineDisMax + (_shineInterval * _shineSpeed)),
+				_shineX = _vx - _x       + lengthdir_x(_shineDis, _shineAng),
+				_shineY = _vy - _y + _gh + lengthdir_y(_shineDis, _shineAng),
+				_shineXOff = lengthdir_x(_shineDisMax, _shineAng + 90),
+				_shineYOff = lengthdir_y(_shineDisMax, _shineAng + 90);
+				
+			if(_shineDis < _shineDisMax){
+				surface_set_target(surf);
+				
 					draw_clear_alpha(0, 0);
 					
-					with(instances_matching(TopSmall, "sprite_index", spr.WallCrystalTrans)){
-						draw_sprite(sprite_index, image_index, x - _x, y - 8 - _y);
+					 // Mask:
+					draw_set_fog(true, c_black, 0, 0);
+					with(surfWallShineMask) if(surface_exists(surf)){
+						draw_surface(surf, x - _x, y - _y);
 					}
-					with(instances_matching(Wall, "topspr", spr.WallCrystalTop)){
-						draw_sprite(topspr, topindex, x - _x, y - 8 - _y);
+					with(instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true)){
+						x -= _x;
+						y -= _y;
+						event_perform(ev_draw, 0);
+						x += _x;
+						y += _y;
 					}
-				}
-				
-				draw_set_color_write_enable(true, true, true, false);
-				
-					 // Flatten Mask:
-					draw_set_color(c_black);
-					draw_rectangle(0, 0, w, h, false);
+					with(instances_matching(instances_matching(CrystalProp, "name", "RedCrystalProp"), "visible", true)){
+						x -= _x;
+						y -= _y;
+						draw_self();
+						x += _x;
+						y += _y;
+					}
+					draw_set_fog(false, 0, 0, 0);
 					
 					 // Shine:
-					var	_angle = 45,
-						_width = 30 + orandom(2),
-						_height = sqrt(2 * sqr(max(_gw, _gh))),
-						_speed = 10,
-						_interval = min(max(_height, 1500), 3 * _height),
-						_dis = (_speed * wave) % _interval,
-						_x = _vx - x       + lengthdir_x(_dis, _angle),
-						_y = _vy - y + _gh + lengthdir_y(_dis, _angle);
-						
 					draw_set_color(c_white);
-					draw_line_width(_x + lengthdir_x(_height, _angle + 90), _y + lengthdir_y(_height, _angle + 90), _x - lengthdir_x(_height, _angle + 90), _y - lengthdir_y(_height, _angle + 90), _width);
+					draw_set_color_write_enable(true, true, true, false);
+					draw_line_width(_shineX + _shineXOff, _shineY + _shineYOff, _shineX - _shineXOff, _shineY - _shineYOff, _shineWidth);
+					draw_set_color_write_enable(true, true, true, true);
 					
-				draw_set_color_write_enable(true, true, true, true);
+				surface_reset_target();
 				
-			surface_reset_target();
-			
-			 // Ship 'em Out:
-			draw_set_alpha(0.1);
-			draw_set_blend_mode_ext(bm_src_alpha, bm_one);
-			draw_surface(surf, x, y);
-			draw_set_blend_mode(bm_normal);
-			draw_set_alpha(1);
+				 // Ship 'em Out:
+				draw_set_alpha(0.1);
+				draw_set_blend_mode_ext(bm_src_alpha, bm_one);
+				draw_surface(surf, x, y);
+				draw_set_blend_mode(bm_normal);
+				draw_set_alpha(1);
+			}
 		}
 	}
 	
@@ -1217,6 +1262,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1260,6 +1306,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -1286,6 +1333,9 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);

@@ -2,7 +2,7 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprBatDiscCannon.png", 13, 6);
     global.sprWepLocked = mskNone;
     
-    global.lwoWep = {
+    lwoWep = {
         wep : mod_current,
         ammo : 14,
         amax : 14,

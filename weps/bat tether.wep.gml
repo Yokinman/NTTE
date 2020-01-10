@@ -2,7 +2,7 @@
     global.sprWep = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
     global.sprWepLocked = mskNone;
 
-    global.lwoWep = {
+    lwoWep = {
         wep  : mod_current,
         ammo : 6,
         amax : 6,

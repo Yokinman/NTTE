@@ -1,20 +1,21 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
     
-    global.debug_lag = false;
-    
-	global.pit_grid = mod_variable_get("area", "trench", "pit_grid");
+    DebugLag = false;
 
 	 // Surfaces:
-	global.surfAnglerTrail = surflist_set("AnglerTrail", 0, 0, 0, 0);
-	global.surfAnglerClear = surflist_set("AnglerClear", 0, 0, 0, 0);
+	surfAnglerTrail = surflist_set("AnglerTrail", 0, 0, 0, 0);
+	surfAnglerClear = surflist_set("AnglerClear", 0, 0, 0, 0);
 	with(surfAnglerTrail){
 		if("frame" not in self) frame = 0;
 		reset = true;
 	}
+    
+     // Pit Grid:
+	global.pit_grid = mod_variable_get("area", "trench", "pit_grid");
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -291,6 +292,7 @@
         }
     }
 
+
 #define Eel_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -546,6 +548,7 @@
             }
             break;
     }
+
 
 #define EelSkull_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
@@ -804,6 +807,7 @@
 		return id;
 	}
 
+
 #define Jelly_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -960,6 +964,7 @@
 #define Kelp_step
 	 // Over Pit:
 	if(pit_get(x, y)) my_health = 0;
+
 
 #define LightningDisc_create(_x, _y)
     with(instance_create(_x, _y, CustomProjectile)){
@@ -1324,6 +1329,7 @@
         return id;
     }
 
+
 #define PitSpark_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -1364,6 +1370,7 @@
 
 #define PitSpark_alrm0
 	instance_destroy();
+
 
 #define PitSquid_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
@@ -1838,7 +1845,7 @@
                     with(instances_meeting(posx, posy - 16, _floors)){
                         styleb = true;
                         sprite_index = spr.FloorTrenchB;
-                        mod_script_call("area", "trench", "area_setup_floor", false);
+                        mod_script_call("area", "trench", "area_setup_floor");
 
                          // Effects:
                         sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
@@ -2156,6 +2163,7 @@
      // Boss Win Music:
     with(MusCont) alarm_set(1, 1);
 
+
 #define PitSquidArm_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -2309,7 +2317,7 @@
         with(instances_meeting(x, y, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB))){
             styleb = true;
             sprite_index = spr.FloorTrenchB;
-            mod_script_call("area", "trench", "area_setup_floor", false);
+            mod_script_call("area", "trench", "area_setup_floor");
             sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
             repeat(sprite_width / 16){
                 instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Debris);
@@ -2552,6 +2560,7 @@
 		}
 	}
 
+
 #define PitSquidBomb_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2673,6 +2682,7 @@
 	sound_play_hit(sndEliteShielderFire, 0.6);
 	sound_play_hit(sndOasisExplosionSmall, 0.4);
 
+
 #define PitSquidDeath_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2764,6 +2774,7 @@
 #define PitSquidDeath_destroy
 	instance_create(x, y, Bubble);
 	with(instance_create(xstart, ystart, Corpse)) alarm0 = 10;
+
 
 #define QuasarBeam_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -3358,6 +3369,7 @@
 	}
 	else instance_destroy();
 
+
 #define QuasarRing_create(_x, _y)
 	with(obj_create(_x, _y, "QuasarBeam")){
 		 // Visual:
@@ -3378,6 +3390,7 @@
 
 		return id;
 	}
+
 
 #define TrenchFloorChunk_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
@@ -3471,6 +3484,7 @@
         }
     }
 
+
 #define Vent_create(_x, _y)
     with(instance_create(_x, _y, CustomProp)){
          // Visual:
@@ -3508,6 +3522,7 @@
 
 #define Vent_death
     if(!instance_exists(Spiral)) obj_create(x, y, "BubbleExplosion");
+
 
 #define WantEel_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -3677,101 +3692,8 @@
 #define pit_set(_x, _y, _bool)
 	mod_script_call_nc("area", "trench", "pit_set", _x, _y, _bool);
 
-#define draw_anglertrail
-    var _surfTrail = surfAnglerTrail,
-    	_surfClear = surfAnglerClear;
 
-	if(surface_exists(_surfTrail.surf) && surface_exists(_surfClear.surf)){
-		if(DebugLag) trace_time();
-
-		 // Surface Follow Screen:
-		with(_surfTrail){
-			x = floor(view_xview_nonsync / game_width) * game_width;
-			y = floor(view_yview_nonsync / game_height) * game_height;
-			w = game_width * 2;
-			h = game_height * 2;
-			with(_surfClear){
-				w = other.w;
-				h = other.h;
-			}
-			
-			 // Make sure it clear bro:
-			if(reset){
-				reset = false;
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-				surface_reset_target();
-			}
-		}
-
-	     // Clear Trail Surface Over Time:
-	    if(frame_active(1)){
-	    	with(_surfClear){
-		        surface_set_target(surf);
-		        draw_clear(c_black);
-	
-		        draw_set_blend_mode(bm_subtract);
-		        draw_surface(_surfTrail.surf, 0, 0);
-		        with(other) draw_sprite_tiled(sprStreetLight, 0, irandom(128), irandom(128));
-	
-		        surface_set_target(_surfTrail.surf);
-		        for(var a = 0; a < 360; a += 90){
-		            draw_surface(surf, lengthdir_x(1, a), lengthdir_y(1, a));
-		        }
-		        draw_set_blend_mode(bm_normal);
-		    	surface_reset_target();
-	    	}
-	    }
-	
-	     // Main Trail Surface:
-	    with(_surfTrail){
-	    	 // Draw Trails:
-		    surface_set_target(surf);
-		    //d3d_set_fog(1, c_black, 0, 0);
-		    with(instances_matching_ge(instances_matching(CustomEnemy, "name", "Angler"), "ammo", 0)){
-		        if(visible && sprite_index != spr_appear){
-		            var _x1 = xprevious,
-		                _y1 = yprevious,
-		                _x2 = x,
-		                _y2 = y,
-		                _dis = point_distance(_x1, _y1, _x2, _y2),
-		                _dir = point_direction(_x1, _y1, _x2, _y2),
-		                _spr = spr.AnglerTrail,
-		                _img = image_index,
-		                _xscal = image_xscale * right,
-		                _yscal = image_yscale,
-		                _angle = image_angle,
-		                _blend = image_blend,
-		                _alpha = image_alpha,
-						_charm = (_blend == c_white && "charm" in self && lq_defget(charm, "charmed", true));
-	
-		        	if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
-	
-		            for(var o = 0; o <= _dis; o++){
-		                draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - other.x, _y1 + lengthdir_y(o, _dir) - other.y, _xscal, _yscal, _angle, _blend, _alpha);
-		            }
-	
-		            if(_charm) draw_set_fog(false, 0, 0, 0);
-		        }
-		    }
-		    //d3d_set_fog(0, 0, 0, 0);
-		    surface_reset_target();
-
-	    	 // Draw Surface:
-		    //d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
-		    draw_set_blend_mode(bm_add);
-		    draw_surface(surf, x, y);
-		    draw_set_blend_mode(bm_normal);
-		    //d3d_set_fog(0, 0, 0, 0);
-	    }
-
-		if(DebugLag) trace_time("tetrench_draw_anglertrail");
-	}
-
-    instance_destroy();
-
-
-/// MOD EVENTS
+/// Mod Events
 #define step
     if(DebugLag) trace_time();
 
@@ -4079,6 +4001,100 @@
     draw_set_fog(false, 0, 0, 0);
 
 	if(DebugLag) trace_time("tetrench_draw_dark_end");
+	
+#define draw_anglertrail
+    var _surfTrail = surfAnglerTrail,
+    	_surfClear = surfAnglerClear;
+
+	if(surface_exists(_surfTrail.surf) && surface_exists(_surfClear.surf)){
+		if(DebugLag) trace_time();
+
+		 // Surface Follow Screen:
+		with(_surfTrail){
+			x = floor(view_xview_nonsync / game_width) * game_width;
+			y = floor(view_yview_nonsync / game_height) * game_height;
+			w = game_width * 2;
+			h = game_height * 2;
+			with(_surfClear){
+				w = other.w;
+				h = other.h;
+			}
+			
+			 // Make sure it clear bro:
+			if(reset){
+				reset = false;
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				surface_reset_target();
+			}
+		}
+
+	     // Clear Trail Surface Over Time:
+	    if(frame_active(1)){
+	    	with(_surfClear){
+		        surface_set_target(surf);
+		        draw_clear(c_black);
+	
+		        draw_set_blend_mode(bm_subtract);
+		        draw_surface(_surfTrail.surf, 0, 0);
+		        with(other) draw_sprite_tiled(sprStreetLight, 0, irandom(128), irandom(128));
+	
+		        surface_set_target(_surfTrail.surf);
+		        for(var a = 0; a < 360; a += 90){
+		            draw_surface(surf, lengthdir_x(1, a), lengthdir_y(1, a));
+		        }
+		        draw_set_blend_mode(bm_normal);
+		    	surface_reset_target();
+	    	}
+	    }
+	
+	     // Main Trail Surface:
+	    with(_surfTrail){
+	    	 // Draw Trails:
+		    surface_set_target(surf);
+		    //d3d_set_fog(1, c_black, 0, 0);
+		    with(instances_matching_ge(instances_matching(CustomEnemy, "name", "Angler"), "ammo", 0)){
+		        if(visible && sprite_index != spr_appear){
+		            var _x1 = xprevious,
+		                _y1 = yprevious,
+		                _x2 = x,
+		                _y2 = y,
+		                _dis = point_distance(_x1, _y1, _x2, _y2),
+		                _dir = point_direction(_x1, _y1, _x2, _y2),
+		                _spr = spr.AnglerTrail,
+		                _img = image_index,
+		                _xscal = image_xscale * right,
+		                _yscal = image_yscale,
+		                _angle = image_angle,
+		                _blend = image_blend,
+		                _alpha = image_alpha,
+						_charm = (_blend == c_white && "charm" in self && lq_defget(charm, "charmed", true));
+	
+		        	if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
+	
+		            for(var o = 0; o <= _dis; o++){
+		                draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - other.x, _y1 + lengthdir_y(o, _dir) - other.y, _xscal, _yscal, _angle, _blend, _alpha);
+		            }
+	
+		            if(_charm) draw_set_fog(false, 0, 0, 0);
+		        }
+		    }
+		    //d3d_set_fog(0, 0, 0, 0);
+		    surface_reset_target();
+
+	    	 // Draw Surface:
+		    //d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
+		    draw_set_blend_mode(bm_add);
+		    draw_surface(surf, x, y);
+		    draw_set_blend_mode(bm_normal);
+		    //d3d_set_fog(0, 0, 0, 0);
+	    }
+
+		if(DebugLag) trace_time("tetrench_draw_anglertrail");
+	}
+
+    instance_destroy();
+    
 
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
@@ -4115,6 +4131,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -4158,6 +4175,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -4184,8 +4202,11 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
+#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);

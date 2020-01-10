@@ -1,10 +1,10 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
+    spr = mod_variable_get("mod", "teassets", "spr");
     
     global.sprWep = spr.Trident;
     global.sprWepLocked = mskNone;
 
-	global.lwoWep = {
+	lwoWep = {
 		wep 	 : mod_current,
 		chrg	 : false,
 		chrg_num : 0,
@@ -235,7 +235,7 @@
         variable_instance_set(self, b + "wep", w);
     }
     
-     // Curse Harpoon Grab Reorient:
+     // Cursed Trident Grab Reorient:
     if(w.wepangle != 0){
     	script_bind_end_step(end_step, 0, _primary, self);
     }

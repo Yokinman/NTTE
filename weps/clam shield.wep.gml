@@ -3,7 +3,7 @@
 	global.sprWepHUD	= sprite_add(       "../sprites/weps/sprWepClamShieldHUD.png",    1, 0, 6);
 	global.sprWepLocked = mskNone;
 	
-	global.lwoWep = {
+	lwoWep = {
 		wep : mod_current,
 		inst : noone
 	};

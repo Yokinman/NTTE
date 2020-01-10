@@ -1,10 +1,10 @@
 #define init
-    global.spr = mod_variable_get("mod", "teassets", "spr");
-    global.snd = mod_variable_get("mod", "teassets", "snd");
-    global.mus = mod_variable_get("mod", "teassets", "mus");
-    global.sav = mod_variable_get("mod", "teassets", "sav");
-
-    global.debug_lag = false;
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
+    
+    DebugLag = false;
 	
 	 // Underwater Stuff:
     global.waterBubblePop = [];
@@ -218,7 +218,7 @@
             sndVenuz
             ]
     };
-
+    
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -583,245 +583,6 @@
 	}
 
 
-/*#define ChaserTentacle_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
-        spr_spwn = spr.TentacleSpwn;
-        spr_idle = spr.TentacleIdle;
-        spr_walk = spr.TentacleIdle;
-        spr_hurt = spr.TentacleHurt;
-        spr_dead = spr.TentacleDead;
-        spr_cntr = spr.TentacleHurt;
-        spr_fire = spr.TentacleHurt;
-        depth = -2 - (y / 20000);
-        hitid = [spr_idle, "PIT SQUID"];
-        sprite_index = spr_spwn;
-        
-         // Sound:
-        snd_hurt = sndHitFlesh;
-        snd_dead = sndMaggotSpawnDie;
-        snd_mele = sndPlantSnare;
-
-         // Vars:
-        mask_index = mskBandit;
-        meleedamage = 3;
-        maxhealth = 40;
-        raddrop = 0;
-        size = 3;
-        creator = noone;
-        canfly = true;
-        kills = 0;
-        walk = 0;
-        walkspeed = 1;
-        maxspeed = 3.5;
-        minCounter = 0; // grace period before counters are active
-        counterTime = 0;
-        doCounter = false; // tracks if the counter is successful
-        armor = 0.5; // percent damage negated from creator's health
-
-		 // Alarms:
-        alarm0 = 30; // move, start counterattack
-        alarm1 = -1; // execute counterattack
-        alarm2 = 1; // teleport
-
-        return id;
-    }*/
-    
-/*#define ChaserTentacle_step
-    if place_meeting(x + hspeed, y, Wall) hspeed *= -1;
-    if place_meeting(x, y + vspeed, Wall) vspeed *= -1;
-    
-    depth = -2 - (y / 20000);*/
-
-/*#define ChaserTentacle_alrm0
-    alarm0 = 10 + irandom(10);
-    maxspeed = 3.5;
-    enemy_target(x, y);
-    
-    if instance_exists(creator) || true{
-        if counterTime > 0{
-             // Decrement counter startup timer:
-            if minCounter > 0{
-                minCounter--;
-            }
-            else{
-                alarm0 = 1;
-                counterTime--;
-                
-                 // End counterattack:
-                if counterTime <= 0{
-                    sound_play_pitchvol(sndOasisChest, 2, 0.5);
-                }
-            }
-        }
-        else{
-            if instance_exists(target){
-                if(in_sight(target)){
-                     // Prepare counterattack:
-                    if(chance(2, 7)){
-                        alarm0 = 1;
-                        minCounter = 1;
-                        counterTime = 15;
-                        
-                        sprite_index = spr_cntr;
-                        
-                         // Effects:
-                        instance_create(x, y, ThrowHit);
-                        
-                         // Sounds:
-                        sound_play_pitchvol(sndCrystalShield, 1.4, 0.6);
-                        sound_play_pitchvol(sndOasisChest, 2, 1);
-                    }
-                    
-                     // Move to player:
-                    else{
-                        scrWalk(point_direction(x, y, target.x, target.y), [8, 10]);
-                        scrRight(direction);
-                    }
-                }
-                else{
-                     // Teleport to player:
-                    if(chance(2, 7)){
-                        alarm2 = 20;
-                        
-                        sprite_index = spr_dead;
-                    }
-                    
-                     // Move aimlessly:
-                    else{
-                        scrWalk(random(360), [4, 10]);
-                        scrRight(direction);
-                    }
-                }
-            }
-            
-             // Despawn:
-            else{
-                if(chance(1, 5)){
-                    // code later lol
-                }
-            }
-        }
-    }
-    
-     // Despawn:
-    else{
-        alarm0 = -1;
-        sprite_index = spr_dead;
-    }*/
-    
-/*#define ChaserTentacle_alrm1
-    alarm0 = 10;
-    alarm1 = -1;
-    maxspeed = 5.5;
-    doCounter = false;
-    
-    if enemy_target(x, y){
-        var dir = point_direction(x, y, target.x, target.y);
-        with instance_create(x, y, Slash){
-            team = other.team;
-            creator = other;
-            motion_set(dir, 6);
-            image_angle = direction;
-            image_xscale = 1.2;
-            image_yscale = 0.6;
-        }
-        motion_set(dir, maxspeed);
-        scrWalk(direction, alarm0);
-        
-         // Effects:
-        sleep(60);
-        view_shake_max_at(x, y, 30);
-        
-         // Sounds:
-        sound_play_pitchvol(sndCrystalJuggernaut, 1.2, 0.8);
-        sound_play_pitchvol(sndOasisMelee, 1.0, 1.0);
-    }*/
-    
-/*#define ChaserTentacle_alrm2
-    alarm0 = 40 + irandom(20);
-    alarm2 = -1;
-    
-    if enemy_target(x, y){
-        var tile = noone,
-            dist = 10000;
-        with instances_matching(Floor, "styleb", true){
-            var _x = x + 16,
-                _y = y + 16,
-                _t = other.target,
-                _d = point_distance(_x, _y, _t.x, _t.y);
-
-            if _d > 64 && _d <= 256 && _d < dist{
-                dist = _d;
-                tile = id;
-            }
-        }
-        if instance_exists(tile){
-            x = tile.x + 16;
-            y = tile.y + 16;
-        }
-    }
-    
-    sprite_index = spr_spwn;*/
-
-/*#define ChaserTentacle_hurt(_hitdmg, _hitvel, _hitdir)
-     // Counterattack:
-    if counterTime > 0{
-        if minCounter <= 0{
-            alarm0 = -1;
-            alarm1 = 4;
-            minCounter = 0;
-            counterTime = 0;
-            doCounter = true;
-            
-            sprite_index = spr_fire;
-            
-             // Effects:
-            sleep(20);
-            motion_add(_hitdir, _hitvel);
-            
-             // Sounds:
-            sound_play_pitchvol(sndOasisCrabAttack, 1.2, 1.4);
-        }
-    }
-    
-     // Don't counterattack:
-    else{
-        my_health -= _hitdmg;
-        nexthurt = current_frame + 6;
-        sound_play_hit(snd_hurt, 0.3);
-    
-         // Hurt Papa Squid:
-        with(creator){
-            my_health -= _hitdmg;
-            nexthurt = current_frame + 6;
-            sound_play_hit(snd_hurt, 0.3);
-        }
-    
-         // Hurt Sprite:
-        if(sprite_index != spr_spwn){
-            sprite_index = spr_hurt;
-            image_index = 0;
-        }
-    }*/
-
-
-#define Crack_create(_x, _y)
-    with(instance_create(_x, _y, CustomObject)){
-         // Visual:
-        sprite_index = spr.Crack;
-        image_speed = 0;
-
-         // Vars:
-        mask_index = mskWepPickup;
-
-		 // Notice me bro:
-		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 4);
-		repeat(3) scrFX(x, y, 2, Smoke);
-
-        return id;
-    }
-
 #define CrabTank_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
         boss = true;
@@ -860,6 +621,23 @@
 		
 		return id;
 	}
+
+
+#define Crack_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+         // Visual:
+        sprite_index = spr.Crack;
+        image_speed = 0;
+
+         // Vars:
+        mask_index = mskWepPickup;
+
+		 // Notice me bro:
+		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 4);
+		repeat(3) scrFX(x, y, 2, Smoke);
+
+        return id;
+    }
 	
 #define Crack_step
     if(image_index < 1){
@@ -1806,6 +1584,7 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
+#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
@@ -1849,6 +1628,7 @@
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
@@ -1875,8 +1655,11 @@
 #define portal_pickups()                                                                return  mod_script_call_nc('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc('mod', 'telib', 'pet_spawn', _x, _y, _name);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
+#define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
+#define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_sprite, _inst)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _sprite, _inst);
+#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);

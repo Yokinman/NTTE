@@ -17,7 +17,7 @@
     var f = wepfire_init(w);
     w = f.wep;
     
-     // Shoot Harpoon:
+     // Projectile:
     with(obj_create(x, y, "NetNade")){
         motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
         image_angle = direction;
