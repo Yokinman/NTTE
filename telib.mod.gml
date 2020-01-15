@@ -163,6 +163,8 @@
 #macro teamSpriteMap global.team_sprite_map
 #macro teamSpriteObjectMap global.team_sprite_object_map
 
+#macro WallObject [Wall, TopSmall, TopPot, Bones, InvisiWall]
+
 #define obj_create(_x, _y, _name)
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
@@ -1683,208 +1685,248 @@
         return [mod_script_call("skill", _skill, "skill_icon"), 0];
     }
     return [sprEGIconHUD, 2];
-
-#define area_generate(_sx, _sy, _area)
-	if(is_real(_area) || mod_exists("area", _area)){
-	    GameCont.area = _area;
-
-	     // Store Player Positions:
-	    var _playerPos = [];
-	    with(Player){
-	    	array_push(_playerPos, {
-	    		inst : id,
-	    		x : x,
-	    		y : y
-	    	});
-	    }
-
-	     // Remember View:
-	    var _viewPos = [];
-	    for(var i = 0; i < maxp; i++){
-	    	_viewPos[i] = [view_xview[i], view_yview[i]];
-	    }
-
-	     // No Duplicates:
-	    var _fogscroll = 0;
-	    with(TopCont){
-	    	_fogscroll = fogscroll;
-	    	instance_destroy();
-	    }
-	    with(SubTopCont) instance_destroy();
-	    with(BackCont) instance_destroy();
-
-	     // Generate Level:
-	    var _minID = GameObject.id,
-	    	_chest = [WeaponChest, AmmoChest, RadChest, HealthChest];
-	    	
-	    with(instance_create(0, 0, GenCont)){
-	        var _hard = GameCont.hard;
-	        spawn_x = _sx + 16;
-	        spawn_y = _sy + 16;
-
-	         // FloorMaker Fixes:
-	        goal += instance_number(Floor);
-	        var _floored = instance_nearest(10000, 10000, Floor);
-	        with(FloorMaker){
-	            goal = other.goal;
-	            if(!position_meeting(x, y, _floored)){
-	                with(instance_nearest(x, y, Floor)) instance_destroy();
-	            }
-	            x = _sx;
-	            y = _sy;
-	            instance_create(x, y, Floor);
-	        }
-
-	         // Floor & Chest Gen:
-	        while(instance_exists(FloorMaker)){
-	            with(FloorMaker) if(instance_exists(self)){
-	                event_perform(ev_step, ev_step_normal);
-	            }
-	        }
-
-	         // Find Newly Generated Things:
-	        var _newFloor = instances_matching_gt(Floor, "id", _minID),
-	            _newChest = [];
-
-	        for(var i = 0; i < array_length(_chest); i++){
-	            _newChest[i] = instances_matching_gt(_chest[i], "id", _minID);
-	        }
-
-	         // Make Walls:
-	        with(_newFloor) floor_walls();
-
-	         // Spawn Enemies:
-	        with(_newFloor){
-	            if(chance(_hard, _hard + 10)){
-	                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-	                    // (distance to spawn coordinates > 120) check
-	                    mod_script_call("area", _area, "area_pop_enemies");
-	                }
-	            }
-	        }
-	        with(_newFloor){
-	             // Minimum Enemy Count:
-	            if(instance_number(enemy) < (3 + (_hard / 1.5))){
-	                if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-	                    // (distance to spawn coordinates > 120) check
-	                    mod_script_call("area", _area, "area_pop_enemies");
-	                }
-	            }
-	            
-	              // Crown of Blood:
-	            if(GameCont.crown = crwn_blood){
-	                if(chance(_hard, _hard + 8)){
-	                    if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, RadChest)){
-	                        // (distance to spawn coordinates > 120) check
-	                        mod_script_call("area", _area, "area_pop_enemies");
-	                    }
-	                }
-	            }
-	            
-	             // Props:
-	            mod_script_call("area", _area, "area_pop_props");
-	        }
-	        
-	         // Find # of Chests to Keep:
-	        gol = 1;
-	        wgol = 0;
-	        agol = 0;
-	        rgol = 0;
-	        if(skill_get(mut_open_mind)){
-	            var m = choose(0, 1, 2);
-	            switch(m){
-	                case 0: wgol++; break;
-	                case 1: agol++; break;
-	                case 2: rgol++; break;
-	            }
-	        }
-	        mod_script_call("area", _area, "area_pop_chests");
-	        
-	         // Clear Extra Chests:
-	        var _extra = [wgol, agol, rgol, rgol, 0];
-	        for(var i = 0; i < array_length(_newChest); i++){
-	            var n = array_length(_newChest[i]);
-	            if(n > 0 && gol + _extra[i] > 0){
-	                while(n-- > gol + _extra[i]){
-	                    instance_delete(instance_nearest_array(_sx + random_range(-250, 250), _sy + random_range(-250, 250), _newChest[i]));
-	                }
-	            }
-	        }
-	        
-	         // Crown of Love:
-	        if(GameCont.crown = crwn_love){
-	            for(var i = 0; i < array_length(_newChest); i++) with(_newChest[i]){
-	                if(instance_exists(self)){
-	                    instance_create(x, y, AmmoChest);
-	                    instance_delete(id);
-	                }
-	            }
-	        }
-	        
-	         // Rad Can -> Health Chest:
-	        else{
-	            var _lowHP = false;
-	            with(Player) if(my_health < maxhealth / 2) _lowHP = true;
-	            with(_newChest[2]) if(instance_exists(self)){
-	                if((_lowHP && chance(1, 2)) || (GameCont.crown == crwn_life && chance(2, 3))){
-	                    array_push(_newChest[3], instance_create(x, y, HealthChest));
-	                    instance_destroy();
-	                    break;
-	                }
-	            }
-	        }
-	        
-	         // Rogue:
-	        for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-		        with(RadChest){
-		        	instance_create(x, y, RogueChest);
-		        	instance_delete(id);
-		        }
-		        break;
-	        }
-	        
-	         // Mimics:
-	        with(_newChest[1]) if(instance_exists(self) && chance(1, 11)){
-	            instance_create(x, y, Mimic);
-	            instance_delete(id);
-	        }
-	        with(_newChest[3]) if(instance_exists(self) && chance(1, 51)){
-	            instance_create(x, y, SuperMimic);
-	            instance_delete(id);
-	        }
-	        
-	         // Extras:
-	        mod_script_call("area", _area, "area_pop_extras");
-	        
-	         // Done + Fix Random Wall Spawn:
-	        var n = Wall.id;
-	        event_perform(ev_alarm, 1);
-	        with(instances_matching_gt(Wall, "id", n)) instance_delete(id);
-	    }
-	    with(TopCont) fogscroll = _fogscroll;
-	    
-	     // Remove Portal FX:
-	    with(instances_matching([Spiral, SpiralCont], "", null)) instance_destroy();
-	    repeat(4) with(instance_nearest(10016, 10016, PortalL)) instance_destroy();
-	    with(instance_nearest(10016, 10016, PortalClear)) instance_destroy();
-	    sound_stop(sndPortalOpen);
-	    
-	     // Reset Player & Camera Pos:
-	    with(Player) sound_stop(snd_wrld);
-	    with(_playerPos) with(inst){
-    		x = other.x;
-    		y = other.y;
-	    }
-	    for(var i = 0; i < array_length(_viewPos); i++){
-	    	var _vx = _viewPos[i, 0],
-	    		_vy = _viewPos[i, 1];
-	    		
-	    	view_shift(i, point_direction(0, 0, _vx, _vy), point_distance(0, 0, _vx, _vy) / current_time_scale);
-	    }
-	    
-	     // Force Music Transition:
-	    mod_variable_set("mod", "ntte", "musTrans", true);
+    
+#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)
+	if(instance_exists(Player) && (is_real(_area) || is_string(_area))){
+		var	_lastArea = GameCont.area,
+			_lastSubarea = GameCont.subarea,
+			_lastBackgroundColor = background_color,
+			_lastLetterbox = game_letterbox,
+			_lastObjVars = [],
+			_lastFloor = [],
+			_lastSolid = [],
+			_lastView = [];
+			
+		/// Remember Stuff:
+			 // BackCont/TopCont:
+			with([BackCont, TopCont]){
+				var	_obj = self,
+					_vars = [];
+					
+				if(instance_exists(_obj)){
+					with(variable_instance_get_names(_obj)){
+						if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self) < 0){
+							array_push(_vars, [self, variable_instance_get(_obj, self)]);
+						}
+					}
+					array_push(_lastObjVars, [_obj, _vars]);
+				}
+			}
+			
+			 // Floor Bounding Boxes:
+			if(!_floorOverlap){
+				with(instances_matching(Floor, "object_index", Floor)){
+					array_push(_lastFloor, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
+				}
+			}
+			
+			 // Solid Instances (Fix Ghost Collision):
+			with(instances_matching(all, "solid", true)){
+				solid = false;
+				array_push(_lastSolid, self);
+			}
+			
+			 // Views:
+			for(var i = 0; i < maxp; i++){
+				_lastView[i] = [view_xview[i], view_yview[i]];
+			}
+			
+		 // Clamp to Grid:
+		with(instance_nearest(_x - 16, _y - 16, Floor)){
+			_x = x + (floor((_x - x) / 16) * 16);
+			_y = y + (floor((_y - y) / 16) * 16);
+		}
+		
+		 // No Duplicates:
+		with(BackCont) instance_destroy();
+		with(TopCont) instance_destroy();
+		with(SubTopCont) instance_destroy();
+		
+		 // Force Object Deactivation Using Boss Intro:
+		var	_lastIntro = UberCont.opt_bossintros,
+			_lastLoop = GameCont.loops;
+			
+		UberCont.opt_bossintros = true;
+		GameCont.loops = 0;
+		with(instance_create(0, 0, GameObject)){
+			instance_change(BanditBoss, false);
+			event_perform(ev_alarm, 6);
+			sound_stop(sndBigBanditIntro);
+			instance_delete(id);
+		}
+		UberCont.opt_bossintros = _lastIntro;
+		GameCont.loops = _lastLoop;
+		
+		with(UberCont){
+			alarm2 = -1;
+			event_perform(ev_draw, ev_draw_post);
+		}
+		
+		 // Generate Level:
+		GameCont.area = _area;
+		GameCont.subarea = _subarea;
+		
+		var	_genID = instance_create(0, 0, GenCont),
+			_floorFill = [];
+			
+		with(_genID) with(self){
+			var	_ox = (_x - spawn_x),
+				_oy = (_y - spawn_y);
+				
+			 // Delete Loading Spirals:
+			with(SpiralCont) instance_destroy();
+			with(Spiral) instance_destroy();
+			with(SpiralStar) instance_destroy();
+			with(SpiralDebris) instance_destroy(); // *might play a 0.1 pitched sound
+			
+			 // Override Vars:
+			if(!is_undefined(_goal)){
+				goal = _goal;
+				with(FloorMaker) goal = _goal;
+			}
+			if(!is_undefined(_safeDist)){
+				safedist = _safeDist;
+			}
+			
+			 // Floors:
+			var _tries = 1,
+				_floorNum = 0;
+				
+			while(instance_exists(FloorMaker) && _tries-- > 0){
+				with(FloorMaker) event_perform(ev_step, ev_step_normal);
+				if(instance_number(Floor) > _floorNum){
+					_floorNum = instance_number(Floor);
+					_tries = 100;
+				}
+			}
+			
+			 // Safe Spawns & Misc:
+			event_perform(ev_alarm, 2);
+			
+			 // Remove Overlapping Floors:
+			with(_lastFloor){
+				var	_x1 = self[0] - _ox,
+					_y1 = self[1] - _oy,
+					_x2 = self[2] - _ox,
+					_y2 = self[3] - _oy;
+					
+				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Floor)){
+					array_push(_floorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
+					instance_delete(id);
+				}
+				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [SnowFloor, chestprop, RadChest])){
+					instance_delete(id);
+				}
+			}
+			
+			 // Populate Level:
+			with(KeyCont) event_perform(ev_create, 0); // reset player index counter
+			event_perform(ev_alarm, 0);
+			event_perform(ev_alarm, 1);
+			
+			 // Player Reset:
+			with(Player){
+				gunangle = point_direction(x - (game_width / 2), y - (game_height / 2), _lastView[index, 0], _lastView[index, 1]);
+				weapon_post(0, point_distance(x - (game_width / 2), y - (game_height / 2), _lastView[index, 0], _lastView[index, 1]), 0);
+				with(instances_matching_gt([PortalClear, PortalL], "id", id)) instance_destroy();
+				instance_delete(id);
+			}
+			
+			 // Move Objects:
+			with(instances_matching_ne(instances_matching_ne(instances_matching_gt(all, "id", _genID), "x", null), "y", null)){
+				if(x != 0 || y != 0){
+					x += _ox;
+					y += _oy;
+					xprevious += _ox;
+					yprevious += _oy;
+					xstart += _ox;
+					ystart += _oy;
+				}
+			}
+		}
+		
+		 // Call Funny Mod Scripts:
+		if(_area == _lastArea && _subarea == _lastSubarea){
+			with(mod_get_names("mod")){
+				mod_script_call_nc("mod", self, "level_start");
+			}
+		}
+		
+		 // Reactivate Objects:
+		with(UberCont) with(self) event_perform(ev_alarm, 2);
+		with(_lastSolid) solid = true;
+		
+		 // Overlap Fixes:
+		var	_wallNew = instances_matching_gt(WallObject, "id", _genID),
+			_wallOld = instances_matching_lt(WallObject, "id", _genID),
+			_floorNew = instances_matching_gt(Floor, "id", _genID),
+			_floorOld = instances_matching_lt(Floor, "id", _genID);
+			
+		with(instances_matching_lt(Wall, "id", _genID)){
+			with(instances_matching(instances_matching(instances_matching_gt(Wall, "id", _genID), "x", x), "y", y)){
+				instance_destroy();
+			}
+		}
+		with(_floorOld){
+			with(instances_meeting(x, y, _wallNew)) instance_destroy();
+		}
+		with(_floorNew){
+			with(instances_meeting(x, y, _wallOld)) instance_destroy();
+			with(instances_meeting(x, y, instances_matching_lt(FloorExplo, "id", _genID))) instance_destroy();
+		}
+		
+		 // Fill Gaps:
+		with(_floorFill){
+			var	_x1 = self[0],
+				_y1 = self[1],
+				_x2 = self[2] + 1,
+				_y2 = self[3] + 1;
+				
+			with(other){
+				for(var _fx = _x1; _fx < _x2; _fx += 16){
+					for(var _fy = _y1; _fy < _y2; _fy += 16){
+						if(!position_meeting(_fx, _fy, Floor)){
+							with(instance_create(_fx, _fy, FloorExplo)){
+								with(instances_meeting(x, y, WallObject)){
+									instance_destroy();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		 // Reset Area:
+		if(_area != _lastArea || _subarea != _lastSubarea){
+			GameCont.area = _lastArea;
+			GameCont.subarea = _lastSubarea;
+			background_color = _lastBackgroundColor;
+			game_letterbox = _lastLetterbox;
+			with(_lastObjVars){
+				var	_obj = self[0],
+					_vars = self[1];
+					
+				with(_obj) with(_vars){
+					variable_instance_set(other, self[0], self[1]);
+				}
+			}
+		}
+		with(_lastObjVars) if(self[0] == TopCont){
+			with(self[1]) if(self[0] == "fogscroll"){
+				with(other[0]) variable_instance_set(self, other[0], other[1]);
+				break;
+			}
+			break;
+		}
+		
+		return _genID;
 	}
+	return null;
+	
+ // Generates a Given Area, Simpler Edition:
+#define area_generate(_area, _subarea, _x, _y)
+	area_generate_ext(_area, _subarea, _x, _y, null, null, false);
 
 #define area_get_name(_area, _subarea, _loop)
 	var a = [_area, "-", _subarea];
@@ -1986,8 +2028,8 @@
 	var	_x1 = bbox_left - 16,
 		_y1 = bbox_top - 16,
 		_x2 = bbox_right + 16 + 1,
-		_y2 = bbox_bottom + 16 + 1/*,
-		_minID = GameObject.id*/;
+		_y2 = bbox_bottom + 16 + 1,
+		_minID = GameObject.id;
 		
 	for(var _x = _x1; _x < _x2; _x += 16){
 		for(var _y = _y1; _y < _y2; _y += 16){
@@ -1999,7 +2041,7 @@
 		}
 	}
 	
-	//return instances_matching_gt(Wall, "id", _minID);
+	return _minID;
 
 #define floor_reveal(_floors, _maxTime)
     with(script_bind_draw(floor_reveal_draw, -6.00001)){
@@ -2264,15 +2306,6 @@
 	 // Hide Wall Shadows:
 	with(instances_matching_gt(Wall, "bbox_bottom", _y + _caveDis - 32)) outspr = -1;
 
-	 // Lights:
-	var _light = mod_variable_get("mod", "tesewers", "catLight");
-	with(_light){
-		if(y > _y + _caveDis){
-			_light = array_delete_value(_light, self);
-			mod_variable_set("mod", "tesewers", "catLight", _light);
-		}
-	}
-
 	instance_destroy();
 
 #define area_get_sprite(_area, _spr)
@@ -2502,7 +2535,7 @@
 	floor_set_style(null, null);
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
-	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, WallObject)){
 		instance_destroy();
 	}
 	

@@ -1,14 +1,9 @@
 #define init
-	with(Loadout){
-		instance_destroy();
-		with(loadbutton) instance_destroy();
-	}
-	
     spr = mod_variable_get("mod", "teassets", "spr");
     snd = mod_variable_get("mod", "teassets", "snd");
     mus = mod_variable_get("mod", "teassets", "mus");
     sav = mod_variable_get("mod", "teassets", "sav");
-    
+
 	DebugLag = false;
 
 #macro spr global.spr
@@ -19,202 +14,169 @@
 
 #macro DebugLag global.debug_lag
 
-#define race_name			return "BEE";
-#define race_text			return "PASSIVE#ACTIVE";
-#define race_lock			return "???";
-#define race_tb_text		return "???";
-#define race_portrait(p, b)	return race_sprite_raw("Portrait", b);
-#define race_mapicon(p, b)	return race_sprite_raw("Map",      b);
-#define race_avail			return unlock_get(mod_current);
+#define area_subarea			return 1;
+#define area_next				return 0;
+#define area_music				return mus101;
+#define area_ambience			return amb101;
+#define area_background_color	return make_color_rgb(235, 0, 67);
+#define area_shadow_color		return make_color_rgb(16, 0, 24);
+#define area_darkness			return false;
+#define area_secret				return true;
 
-#define race_ttip
-    if(GameCont.level >= 10 && chance(1, 5)){
-        return choose("ULTRA TIP");
-    }
-    else{
-        return choose("BASIC TIP");
-    }
-    
-#define race_sprite(_spr)
-    var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
+#define area_name(_subarea, _loop)
+    return `@q@(color:${area_background_color()})???`;
+
+#define area_text
+	return choose("INSERT TIPS HERE NEED TIPS DONT FORGET TO PUT TIPS HERE OK THANK YOU FOR THE TIPS");
+
+#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
+    return [_lastx, 9, (_subarea == 1)];
+
+#define area_sprite(_spr)
     switch(_spr){
-        case sprMutant1Idle:		return race_sprite_raw("Idle",  b);
-        case sprMutant1Walk:		return race_sprite_raw("Walk",  b);
-        case sprMutant1Hurt:		return race_sprite_raw("Hurt",  b);
-        case sprMutant1Dead:		return race_sprite_raw("Dead",  b);
-        case sprMutant1GoSit:		return race_sprite_raw("GoSit", b);
-        case sprMutant1Sit:			return race_sprite_raw("Sit",   b);
-        case sprFishMenu:			return race_sprite_raw("Idle",  b);
-        case sprFishMenuSelected:	return race_sprite_raw("Walk",  b);
-        case sprFishMenuSelect:		return race_sprite_raw("Idle",  b);
-        case sprFishMenuDeselect:	return race_sprite_raw("Idle",  b);
-		case shd24:					return shd16;
-    }
-    return mskNone;
-    
-#define race_sound(_snd)
-	switch(_snd){
-		case sndMutant1Wrld: return -1;
-		case sndMutant1Hurt: return -1;
-		case sndMutant1Dead: return -1;
-		case sndMutant1LowA: return -1;
-		case sndMutant1LowH: return -1;
-		case sndMutant1Chst: return -1;
-		case sndMutant1Valt: return -1;
-		case sndMutant1Crwn: return -1;
-		case sndMutant1Spch: return -1;
-		case sndMutant1IDPD: return -1;
-		case sndMutant1Cptn: return -1;
-		case sndMutant1Thrn: return -1;
-	}
-	return -1;
-    
-#define race_sprite_raw(_spr, _skin)
-	var s = lq_defget(spr.Race, mod_current, []);
-	if(_skin >= 0 && _skin < array_length(s)){
-		return lq_defget(s[_skin], _spr, -1);
-	}
-	return -1;
-	
-
-/// Menu
-#define race_menu_select
-	return sndMutant1Slct;
-	
-#define race_menu_confirm
-	return sndMutant1Cnfm;
-	
-#define race_menu_button
-    sprite_index = race_sprite_raw("Select", 0);
-    image_index = !race_avail();
-    
-
-/// Skins
-#define race_skins
-	var _playersActive = 0;
-	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
-	if(_playersActive <= 1){
-    	return 2;
-	}
-	else{ // Fix co-op bugginess
-		var n = 1;
-		while(unlock_get(mod_current + chr(65 + n))) n++;
-		return n;
-	}
-	
-#define race_skin_avail(_skin)
-	var _playersActive = 0;
-	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
-	if(_playersActive <= 1){
-		if(_skin == 0) return true;
-    	return unlock_get(mod_current + chr(65 + real(_skin)));
-	}
-	else{ // Fix co-op bugginess
-		return true;
-	}
-	
-#define race_skin_name(_skin)
-    if(race_skin_avail(_skin)){
-        return chr(65 + _skin) + " SKIN";
-    }
-    else switch(_skin){
-        case 0: return "EDIT THE SAVE FILE LMAO";
-        case 1: return "??";
+         // Floors:
+        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorCrystal;
+        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorCrystal;
+        case sprFloor1Explo : return sprFloor4Explo;
+        
+         // Walls:
+        case sprWall1Trans  : return spr.WallCrystalTrans;
+        case sprWall1Bot    : return spr.WallCrystalBot;
+        case sprWall1Out    : return spr.WallCrystalOut;
+        case sprWall1Top    : return spr.WallCrystalTop;
+        
+         // Misc:
+        case sprDebris1     : return sprDebris4;
+        case sprDetail1     : return sprDetail4;
     }
     
-#define race_skin_button(_skin)
-    sprite_index = race_sprite_raw("Loadout", _skin);
-    image_index = !race_skin_avail(_skin);
+#define area_setup
+    background_color = area_background_color();
+    BackCont.shadcol = area_shadow_color();
+    TopCont.darkness = area_darkness();
     
-
-/// Ultras
-#macro ultA 1
-#macro ultB 2
-
-#define race_ultra_name(_ultra)
-    switch(_ultra){
-        case ultA: return "ULTRA A";
-        case ultB: return "ULTRA B";
-    }
-    return "";
+#define area_setup_floor
+     // Fix Depth:
+    if(styleb) depth = 8;
     
-#define race_ultra_text(_ultra)
-    switch(_ultra){
-        case ultA: return "???";
-        case ultB: return "???";
+     // Footsteps:
+    material = (styleb ? 2 : 2);
+    
+#define area_start
+    
+#define area_finish
+    lastarea = area;
+    lastsubarea = subarea;
+    
+     // Area End:
+    if(subarea >= area_subarea()){
+        var n = area_next();
+        if(!is_array(n)) n = [n];
+        if(array_length(n) < 1) array_push(n, mod_current);
+        if(array_length(n) < 2) array_push(n, 1);
+        area = n[0];
+        subarea = n[1];
     }
-    return "";
+    
+     // Next Subarea: 
+    else subarea++;
 
-#define race_ultra_button(_ultra)
-	sprite_index = race_sprite_raw("UltraIcon", 0);
-	image_index = _ultra - 1; // why are ultras 1-based bro
+#define area_effect(_vx, _vy)
+	 // Cool Particles:
+	var _floor = instances_matching(Floor, "sprite_index", spr.FloorCrystal);
+    with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
+    	with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+    		depth = -8;
+    		alarm0 = 40 + random(40);
+    		motion_set(random(360), random(0.2));
+    	}
+    }
+    
+	return irandom(40);
 
-#define race_ultra_icon(_ultra)
-	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);
-
-#define race_ultra_take(_ultra, _state)
-	 // Ultra Sound:
-	if(_state && instance_exists(EGSkillIcon)){
-		sound_play(sndBasicUltra);
+#define area_make_floor
+    var _x = x,
+        _y = y,
+        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
+        
+	if("directionstart" not in self) directionstart = direction;
+	
+    /// Make Floors:
+		 // Normal:
+		instance_create(_x, _y, Floor);
 		
-		switch(_ultra){
-			case ultA:
-				break;
+		 // Special - Diamond:
+		if(chance(1, 7)){
+			floor_fill_round(_x, _y, 3, 3);
+		}
+		
+	/// Turn:
+		var _trn = 0;
+		if(chance(3, 7)){
+			_trn = choose(90, -90, 180);
+		}
+		direction += _trn;
+		
+	/// Don't Move:
+		var _ox = lengthdir_x(32, direction),
+			_oy = lengthdir_y(32, direction);
+			
+		if(abs(angle_difference(directionstart, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
+			_x -= _ox;
+			_y -= _oy;
+		}
+	
+	/*
+    /// Chests & Branching:
+         // Turn Arounds (Weapon Chests):
+        if(_trn == 180 && _outOfSpawn){
+            floor_make(_x, _y, WeaponChest);
+        }
 
-			case ultB:
-				break;
+         // Dead Ends (Ammo Chests):
+        var n = instance_number(FloorMaker);
+    	if(!chance(20, 19 + n)){
+    		if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+    		instance_destroy();
+    	}
+
+    	 // Branch:
+    	if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
+    	*/
+
+#define area_pop_enemies
+    var _x = x + 16,
+        _y = y + 16;
+        
+    if(chance(1, 2)){
+		 // Big:
+		if(chance(1, 7)){
+			instance_create(_x, _y, RhinoFreak);
+		}
+		
+		 // Small:
+		else{
+			obj_create(_x, _y, "RedSpider");
 		}
 	}
 
-
-#define create
-	 // Random lets you play locked characters: (Remove once 9941+ gets stable build)
-	if(!unlock_get(mod_current)){
-		race = "fish";
-		player_set_race(index, race);
-		exit;
+#define area_pop_props
+	 // Props:
+	if(chance(1, 7)){
+		obj_create(x + 16, y + 16, "RedCrystalProp");
 	}
 	
-	 // Shadow:
-	spr_shadow = race_sprite(shd24);
-	spr_shadow_y = 7;
-	
-     // Sound:
-    snd_wrld = race_sound(sndMutant1Wrld);
-	snd_hurt = race_sound(sndMutant1Hurt);
-	snd_dead = race_sound(sndMutant1Dead);
-	snd_lowa = race_sound(sndMutant1LowA);
-	snd_lowh = race_sound(sndMutant1LowH);
-	snd_chst = race_sound(sndMutant1Chst);
-	snd_valt = race_sound(sndMutant1Valt);
-	snd_crwn = race_sound(sndMutant1Crwn);
-	snd_spch = race_sound(sndMutant1Spch);
-	snd_idpd = race_sound(sndMutant1IDPD);
-	snd_cptn = race_sound(sndMutant1Cptn);
-	snd_thrn = race_sound(sndMutant1Thrn);
-	footkind = 1; // Sho
-	
-     // Perching Parrot:
-    parrot_bob = [0];
-    
-     // Re-Get Ultras When Revived:
-    for(var i = 0; i < ultra_count(mod_current); i++){
-    	if(ultra_get(mod_current, i)){
-    		race_ultra_take(i, true);
-    	}
-    }
-
-#define step
-	if(DebugLag) trace_time();
-	
-	
-	
-	if(DebugLag) trace_time(mod_current + "_step");
-
-#define cleanup
-	with(Loadout){
-		instance_destroy();
-		with(loadbutton) instance_destroy();
+	 // Lone Walls:
+	else if(
+		chance(2, 3)							&&
+		!place_meeting(x, y, NOWALLSHEREPLEASE)	&&
+		instance_exists(Wall)
+	){
+		var _wx = x + dfloor(random(bbox_right - bbox_left), 16),
+			_wy = y + dfloor(random(bbox_bottom - bbox_top), 16);
+			
+		instance_create(_wx, _wy, Wall);
+		instance_create(x, y, NOWALLSHEREPLEASE);
 	}
 
 

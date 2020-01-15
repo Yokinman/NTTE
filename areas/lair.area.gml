@@ -290,6 +290,14 @@
      // Footsteps:
     material = (styleb ? 3 : 2);
     
+#define area_start
+	 // Delete SpawnWall:
+	if(instance_exists(Wall)){
+		with(Wall.id) if(place_meeting(x, y, Floor)){
+			instance_destroy();
+		}
+	}
+    
 #define area_finish
     lastarea = area;
     lastsubarea = subarea;
@@ -337,15 +345,18 @@
 		spr_fire = spr.LairTurretFire;
 		sprite_index = spr_idle;
 	}
-
+	
 	if(DebugLag) trace_time("lair_area_step");
 	
 #define area_make_floor
     var _x = GenCont.spawn_x - 16,
         _y = GenCont.spawn_y - 16;
-
+		
     RoomCenter = [_x, _y];
-
+    
+     // Remove Starter Floor:
+	with(id + 1) instance_destroy();
+	
      // Spawn Rooms:
     if(array_length(RoomList) < 4){
         var k = "";
@@ -599,7 +610,7 @@
     }
         
      // Light up specific things:
-    with(instances_matching_ne([chestprop, RadChest], "name", "Backpack")){
+    with(instances_matching([chestprop, RadChest], "", null)){
         obj_create(x, y - 32, "CatLight");
     }
     with(obj_create(spawn_x, spawn_y - 60, "CatLight")){
@@ -1278,8 +1289,9 @@
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
-#define area_generate(_x, _y, _area)                                                    return  mod_script_call_nc('mod', 'telib', 'area_generate', _x, _y, _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
+#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
+#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);

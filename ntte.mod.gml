@@ -1591,7 +1591,7 @@
     }
     
 	 // Bab:
-	if(instance_exists(CrystalProp) || instance_exists(InvCrystal)){
+	if(GameCont.area == 4 || GameCont.area == 104){
 		with(instances_matching([CrystalProp, InvCrystal, chestprop], "", null)){
 			if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
 				repeat(irandom_range(1, 3)){
@@ -1600,7 +1600,7 @@
 			}
 		}
 	}
-
+	
      // Visibilize Pets:
     with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
 
@@ -4575,8 +4575,9 @@
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
-#define area_generate(_x, _y, _area)                                                    return  mod_script_call_nc('mod', 'telib', 'area_generate', _x, _y, _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
+#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
+#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);

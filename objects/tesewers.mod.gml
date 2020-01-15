@@ -6,8 +6,6 @@
 
     DebugLag = false;
 
-    global.catLight = [];
-
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -3636,9 +3634,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		    		}
 
 		    		 // Remove Light:
-		    		with(global.catLight){
+		    		with(instances_matching(CustomObject, "name", "CatLight")){
 		    			if(point_distance(x, y, other.x, other.y) < 64){
-		    				global.catLight = array_delete_value(global.catLight, self);
+		    				instance_destroy();
 		    			}
 		    		}
 	    		}
@@ -3795,22 +3793,24 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 
 #define CatLight_create(_x, _y)
-	var o = {
-		x : _x,
-		y : _y,
-		w1 : 12,
-		w2 : 32,
-		h1 : 32,
-		h2 : 8,
-		offset : 0,
-		active : true
-	};
+	with(instance_create(_x, _y, CustomObject)){
+		w1 = 12;
+		w2 = 32;
+		h1 = 32;
+		h2 = 8;
+		offset = 0;
+		return id;
+	}
+	
+#define CatLight_step
+	offset = orandom(1);
+	
+	 // Flicker:
+	if(current_frame_active){
+		visible = !chance(1, 60);
+	}
 
-    array_push(global.catLight, o);
-
-    return o;
-
-#define CatLight_draw(_x, _y, _w1, _w2, _h1, _h2, _offset)
+#define draw_catlight(_x, _y, _w1, _w2, _h1, _h2, _offset)
 	if(point_seen_ext(_x, _y, max(_w1, _w2), (_h1 + _h2), player_find_local_nonsync())){
 		var _x1a = _x - (_w1 / 2),
 		    _x2a = _x1a + _w1,
@@ -4198,21 +4198,24 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
             _sx += lengthdir_x(32, _dir);
             _sy += lengthdir_y(32, _dir);
         }
-
+        
          // Generate the Realm:
 		if(!instance_exists(Portal)){
-        	area_generate(_sx, _sy - 32, "lair");
+			GameCont.area = "lair";
+			GameCont.subarea = 1;
+        	area_generate(GameCont.area, GameCont.subarea, _sx + 16, _sy - 16);
 		}
-
+		
          // Finish Path:
+        var _minID = GameObject.id;
         with(_path){
         	styleb = true;
             sprite_index = area_get_sprite("lair", sprFloor1B);
             floor_walls();
         }
-        with(instances_matching_gt(instances_matching_gt(TopSmall, "alarm0", 0), "y", _borderY)){
-        	event_perform(ev_alarm, 0);
-        }
+		with(instances_matching_gt(Wall, "id", _minID)) wall_tops();
+		
+		 // Reveal Path:
         with(floor_reveal(instances_matching_gt(_path, "bbox_bottom", _borderY), 8)){
         	oy = max(oy, _borderY - inst.y);
         	bx = 16;
@@ -4755,12 +4758,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	script_bind_step(post_step, 0);
 	
 	if(DebugLag) trace_time();
-
-     // Reset Lights:
-    with(instances_matching(GenCont, "catlight_reset", null)){
-        catlight_reset = true;
-        global.catLight = [];
-    }
 	
 	 // Crown of Crime:
 	if(!(GameCont.area == 7 && GameCont.subarea == 3)){
@@ -4941,19 +4938,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(DebugLag) trace_time();
 
      // Cat Light:
-    with(global.catLight){
-        offset = orandom(1);
-
-         // Flicker:
-        if(current_frame_active){
-            if(chance(1, 60)) active = false;
-            else active = true;
-        }
-
-        if(active){
-            var b = 2; // Border Size
-            CatLight_draw(x, y, w1 + b, w2 + (3 * (2 * b)), h1 + (2 * b), h2 + b, offset);
-        }
+    var _border = 2;
+    with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
+        draw_catlight(x, y, w1 + _border, w2 + (3 * (2 * _border)), h1 + (2 * _border), h2 + _border, offset);
     }
 
 	 // Manhole Cover:
@@ -4984,21 +4971,21 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(DebugLag) trace_time();
 
      // Cat Light:
-    with(global.catLight) if(active){
-        CatLight_draw(x, y, w1, w2, h1, h2, offset);
+    with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
+        draw_catlight(x, y, w1, w2, h1, h2, offset);
     }
 
 	 // Manhole Cover:
 	with(instances_matching(CustomObject, "name", "PizzaManholeCover")) if(visible){
 		var o = 0;
 		if(chance(1, 2)) o = orandom(1);
-		CatLight_draw(xstart, ystart - 32, 16, 19, 28, 8, o);
+		draw_catlight(xstart, ystart - 32, 16, 19, 28, 8, o);
 	}
 
      // TV:
     with(TV) if(visible){
         var o = orandom(1);
-        CatLight_draw(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
+        draw_catlight(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
     }
 
      // Big Bat:
@@ -5102,8 +5089,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
-#define area_generate(_x, _y, _area)                                                    return  mod_script_call_nc('mod', 'telib', 'area_generate', _x, _y, _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
+#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
+#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
