@@ -349,8 +349,8 @@
 	if(DebugLag) trace_time("lair_area_step");
 	
 #define area_make_floor
-    var _x = GenCont.spawn_x - 16,
-        _y = GenCont.spawn_y - 16;
+    var _x = 10016 - 16,
+        _y = 10016 - 16;
 		
     RoomCenter = [_x, _y];
     
@@ -554,8 +554,8 @@
      // Populate Rooms:
     with(RoomList){
         room_pop();
-
-    	 // Cat Spawners:
+        
+		// Cat Spawners:
         with(floors) if(instance_exists(self)){
             if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
                 if(
@@ -570,27 +570,27 @@
             }
         }
     }
-
+    
      // Emergency Enemy Reserves:
-    while(instance_number(enemy) < 24){
-    	with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorLair))){
-    		if(!place_meeting(x, y, Wall)){
-    			create_enemies(x + 16, y + 16, 1);
-    		}
-    	}
-    }
-
+	while(instance_number(enemy) < 24){
+		with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorLair))){
+			if(!place_meeting(x, y, Wall)){
+				create_enemies(x + 16, y + 16, 1);
+			}
+		}
+	}
+    
      // Important Door Stuff:
     with(instances_matching(CustomHitme, "name", "CatDoor")){
          // Remove Blocking Walls:
         var a = image_angle - (90 * image_yscale),
             _x = floor((x + lengthdir_x(8, a) + lengthdir_x(16, image_angle)) / 16) * 16,
             _y = floor((y + lengthdir_y(8, a) + lengthdir_y(16, image_angle)) / 16) * 16;
-
+			
         if(position_meeting(_x, _y, Wall)){
             with(instance_nearest(_x, _y, Wall)) instance_destroy();
         }
-
+		
          // Make sure door isn't placed weirdly:
         with(instances_at((bbox_left + bbox_right + 1) / 2, bbox_bottom - 5, Floor)){
             for(var i = 0; i <= 180; i += 180){
@@ -603,17 +603,17 @@
             break;
         }
     }
-
+	
      // Delete stuck dudes:
     with(enemy) if place_meeting(x, y, Wall){
         instance_delete(id);
     }
-        
+    
      // Light up specific things:
     with(instances_matching([chestprop, RadChest], "", null)){
         obj_create(x, y - 32, "CatLight");
     }
-    with(obj_create(spawn_x, spawn_y - 60, "CatLight")){
+    with(obj_create(10016, 10016 - 60, "CatLight")){
 		w1 = 24;
 		w2 = 60;
 		h1 = 64;
@@ -1291,7 +1291,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -1301,6 +1301,7 @@
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

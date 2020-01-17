@@ -167,7 +167,7 @@
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
+        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
 
     /// Make Floors:
          // Normal:
@@ -244,61 +244,53 @@
     }
 
 #define area_pop_props
-     // Coral Wall Decal:
-    if(!place_free(x - 32, y) && !place_free(x + 32, y)){
-        for(var _x = -1; _x <= 1; _x += 2){
-            for(var _y = 0; _y <= 1; _y++){
-                if(chance(1, 10)){
-                    with(instance_create(x + ((1 - _x) * 16), y + (16 * _y), Bones)){
-                        image_xscale = _x;
-                        sprite_index = sprCoral;
-                    }
-                }
-            }
+     // Lone Walls:
+    if(
+    	chance(1, 14)
+    	&& point_distance(x, y, 10000, 10000) > 96
+    	&& !place_meeting(x, y, NOWALLSHEREPLEASE)
+    ){
+        var	_x = x + choose(0, 16),
+        	_y = y + choose(0, 16);
+        	
+        if(!place_meeting(_x, _y, hitme)){
+            instance_create(_x, _y, Wall);
+            instance_create(x, y, NOWALLSHEREPLEASE);
         }
     }
-    with(Bones) if(!place_meeting(x, y, Wall)){
-        instance_destroy();
-    }
-
-     // Quarter Walls:
-    if(chance(1, 14)){
-        if(point_distance(x, y, 10016, 10016) > 100 && !place_meeting(x, y, NOWALLSHEREPLEASE)){
-            var _x = x + choose(0, 16),
-                _y = y + choose(0, 16);
-
-            if(!place_meeting(_x, _y, hitme)){
-                instance_create(_x, _y, Wall);
-                instance_create(x, y, NOWALLSHEREPLEASE);
-            }
-        }
-    }
-
-     // Prop Spawns:
+	
+     // Props:
     else if(chance(1, 10)){
-        var _x = x + 16 + orandom(2),
-            _y = y + 16 + orandom(2),
-        	_outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
-
-		if(_outOfSpawn){
-			if(chance(1, 30) && !place_meeting(x - 32, y, Wall) && !place_meeting(x + 32, y, Wall)){
-				instance_create(_x, _y, Anchor);
-			}
-			else{
-				with(instance_create(_x, _y, choose(LightBeam, WaterPlant, choose(WaterMine, WaterMine, OasisBarrel)))){
-					if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
-						if(!place_meeting(x, y + 32, Wall)){
-							y += 32;
-							yprevious = y;
-						}
-						depth = -1;
+        var _x = x + 16,
+            _y = y + 16,
+			_spawnDis = point_distance(_x, _y, 10016, 10016);
+			
+		 // Special:
+		if(chance(1, 40) && !place_meeting(x - 32, y, Wall) && !place_meeting(x + 32, y, Wall)){
+			instance_create(_x, _y, Anchor);
+		}
+		
+		 // Basic:
+		else if(_spawnDis > 96){
+			with(instance_create(_x, _y, choose(LightBeam, LightBeam, WaterPlant, WaterPlant, WaterMine, WaterMine, OasisBarrel))){
+				 // Offset Mine:
+				if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
+					if(!place_meeting(x, y + 32, Wall)){
+						y += 32;
+						yprevious = y;
 					}
+					depth = -1;
 				}
 			}
 		}
-    }
-
+	}
+	
 #define area_pop_extras
+	 // Bone Decals:
+	with(Floor){
+		floor_bones(sprCoral, 2, 1/9, false);
+	}
+	
      // The new bandits
     with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
         obj_create(x, y, "Diver");
@@ -380,7 +372,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -390,6 +382,7 @@
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

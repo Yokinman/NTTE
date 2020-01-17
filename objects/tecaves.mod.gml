@@ -11,6 +11,7 @@
     surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
     
     global.floor_num = 0;
+    global.wall_num = 0;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -103,6 +104,9 @@
 		friction = 0.4;
 		wall_break = 3;
 		chest_type = AmmoChest;
+		area = "red";
+		subarea = 1;
+        areaseed = random_get_seed();
 		
 		 // Alarms:
 		alarm0 = 12;
@@ -111,11 +115,15 @@
 	}
 	
 #define CrystalHeartProj_step
-	
 	 // Effects:
 	if(chance_ct(2, 3)) with(scrFX([x, 6], [y, 6], random(1), LaserCharge)) alarm0 = 5 + random(15);
 	if(current_frame_active) with(instance_create(x, y, DiscTrail)){
 		image_blend = make_color_rgb(253, 0, 67);
+	}
+	
+	 // Coast:
+	if(!place_meeting(x, y, Floor)){
+		instance_destroy();
 	}
 	
 #define CrystalHeartProj_alrm0
@@ -146,141 +154,7 @@
 	}
 	
 	 // Tunnel Time:
-	else{
-		var	_minID = GameObject.id,
-			_goal = floor_goal,
-			_sx = x,
-			_sy = y;
-			
-		 // No Softlocks:
-		with(Floor){
-			with(instance_create(x, y, NOWALLSHEREPLEASE)){
-				if(instance_is(other, FloorExplo)){
-					image_xscale /= 2;
-					image_yscale /= 2;
-				}
-			}
-		}
-		
-		 // Make Floors:
-		var	_dirStart = round(direction / 90) * 90,
-			_dir = _dirStart,
-			_x = _sx,
-			_y = _sy;
-			
-		while(_goal > 0){
-			if(array_length(instances_at(_x, _y, instances_matching(Floor, "mask_index", mskFloor))) <= 0){
-				_goal--;
-				
-				 // Special - 3x3 Diamond:
-				if(chance(1, 7)){
-					floor_fill_round(_x, _y, 3, 3);
-				}
-				
-				 // Normal - Tunneling:
-				else{
-					floor_set(_x, _y, true);
-				}
-				
-				 // End + Chest:
-				if(_goal <= 0){
-					floor_make(_x, _y, chest_type);
-				}
-			}
-			
-			 // Turn:
-			if(chance(3, 7)){
-				_dir += choose(90, -90, 180);
-			}
-			
-			 // Move:
-			var _ox = lengthdir_x(32, _dir),
-				_oy = lengthdir_y(32, _dir);
-				
-			if(abs(angle_difference(_dirStart, point_direction(_sx, _sy, _x + _ox, _y + _oy))) <= 45){
-				_x += _ox;
-				_y += _oy;
-			}
-		}
-		
-		 // Beautify Floors:
-		var _hard = GameCont.hard,
-			_enemyMin = 3,
-			_enemyNum = 0;
-			
-		with(array_shuffle(instances_matching_gt(Floor, "id", _minID))){
-			sprite_index = spr.FloorCrystal;
-			material = 2; // Stone
-			depth = 8;
-			
-			 // Populate Tunnels:
-			if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
-				var _cx = x + 16,
-					_cy = y + 16;
-					
-				 // Enemies:
-				if(chance(_hard, _hard + 10) || _enemyNum < _enemyMin){
-					if(chance(1, 2) || _enemyNum < _enemyMin){
-						_enemyNum++;
-						
-						 // Big:
-						if(chance(1, 7)){
-							instance_create(_cx, _cy, RhinoFreak);
-						}
-						
-						 // Small:
-						else{
-							obj_create(_cx, _cy, "RedSpider");
-						}
-					}
-				}
-				
-				else{
-					 // Props:
-					if(chance(1, 7)){
-						obj_create(_cx, _cy, "RedCrystalProp");
-					}
-					
-					 // Lone Walls:
-					else if(
-						chance(2, 3)							&&
-						!place_meeting(x, y, NOWALLSHEREPLEASE)	&&
-						instance_exists(Wall)
-					){
-						var _wx = x + dfloor(random(bbox_right - bbox_left), 16),
-							_wy = y + dfloor(random(bbox_bottom - bbox_top), 16);
-							
-						instance_create(_wx, _wy, Wall);
-						instance_create(x, y, NOWALLSHEREPLEASE);
-					}
-				}
-			}
-		}
-		
-		 // Prettify Walls:
-		with(instances_matching_gt(Wall, "id", _minID)){
-			sprite_index = spr.WallCrystalBot;
-			topspr = spr.WallCrystalTop;
-			outspr = spr.WallCrystalOut;
-		}
-		with(instances_matching_gt(TopSmall, "id", _minID)){
-			if(chance(3, 5)){
-				sprite_index = spr.WallCrystalTrans;
-			}
-		}
-		
-		 // Reveal:
-		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 6)){
-			flash = true;
-			move_dis = 0;
-		}
-		
-		 // Goodbye:
-		portal_poof();
-		with(instances_matching_gt(NOWALLSHEREPLEASE, "id", _minID)) instance_destroy();
-		instance_create(x, y, PortalClear);
-		instance_destroy();
-	}
+	else instance_destroy();
 	
 #define CrystalHeartProj_destroy
 	 // Effects:
@@ -289,6 +163,71 @@
 	sound_play_hit_ext(sndHyperCrystalSearch,	0.6 + random(0.3), 0.4);
 	view_shake_max_at(x, y, 20);
 	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
+	
+	 // Tunnel Time:
+	var	_scrt = script_ref_create(CrystalHeartProj_area_generate_setup, floor_goal, direction, areaseed),
+		_genID = area_generate_ext(area, subarea, x, y, false, _scrt);
+		
+	if(is_real(_genID)){
+		 // Chest:
+		var	_disMin = -1,
+			_chestX = x,
+			_chestY = y;
+			
+		with(instances_matching_gt(RadChest, "id", _genID)){
+			instance_delete(id);
+		}
+		
+		with(instances_matching(instances_matching_gt(Floor, "id", _genID), "mask_index", mskFloor)){
+			var	_x = (bbox_left + bbox_right + 1) / 2,
+				_y = (bbox_top + bbox_bottom + 1) / 2,
+				_dis = point_distance(other.x, other.y, _x, _y);
+				
+			if(_dis > _disMin){
+				if(!place_meeting(x, y, Wall)){
+					_disMin = _dis;
+					_chestX = _x;
+					_chestY = _y;
+				}
+			}
+		}
+		
+		with(instance_create(_chestX, _chestY, chest_type)){
+			with(instances_meeting(x, y, CrystalProp)){
+				instance_delete(id);
+			}
+		}
+		
+		 // Prettify:
+		with(instances_matching_gt(Floor, "id", _genID)){
+			depth = 8;
+		}
+		with(instances_matching_gt(TopSmall, "id", _genID)){
+			if(chance(2, 5)) event_perform(ev_create, 0);
+		}
+		
+		 // Reveal:
+		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID), 6)){
+			flash = true;
+			move_dis = 0;
+		}
+		
+		 // Goodbye:
+		portal_poof();
+		instance_create(x, y, PortalClear);
+		instance_destroy();
+	}
+	
+#define CrystalHeartProj_area_generate_setup(_goal, _direction, _seed)
+	with(GenCont){
+		goal = _goal;
+	}
+	with(FloorMaker){
+		goal = _goal;
+		direction = round(_direction / 90) * 90;
+		directionstart = direction;
+	}
+	random_set_seed(_seed);
 	
 	
 #define InvMortar_create(_x, _y)
@@ -742,15 +681,101 @@
 		 // Vars:
 		mask_index = mskSpider;
 		maxhealth = 14;
-		raddrop = 0; //9;
+		raddrop = 4;
 		size = 1;
+		walk = 0;
+		walkspeed = 0.6;
+		maxspeed = 4;
 		canmelee = true;
-		meleedamage = 3;
+		meleedamage = 2;
+		cantunnel = false;
+		
+		 // Alarms:
+		alarm1 = irandom_range(30, 60);
 		
 		return id;
 	}
-
-
+	
+#define RedSpider_alrm1
+	alarm1 = irandom_range(10, 30);
+	
+	if(enemy_target(x, y)){
+		var	_targetDir = point_direction(x, y, target.x, target.y),
+			_targetSeen = in_sight(target);
+			
+		if(_targetSeen) cantunnel = true;
+		
+		 // Attack:
+		if(
+			(chance(2, 3) && in_distance(target, 64))
+			||
+			(!_targetSeen && cantunnel && collision_circle(x + lengthdir_x(8, _targetDir), y + lengthdir_y(8, _targetDir), 8, Wall, false, false))
+		){
+			alarm1 = 45;
+			walk = 0;
+			speed /= 2;
+			scrRight(_targetDir);
+			
+			 // Plasma Bite:
+			for(var _spd = 0; _spd < (_targetSeen ? 4 : 2); _spd += random_range(1, 1.5)){
+				var _dis = 12,
+					_dir = _targetDir + orandom(lerp(20, 10, _spd / 4)),
+					_x = x + lengthdir_x(_dis, _dir),
+					_y = y + lengthdir_y(_dis, _dir);
+					
+				with(team_instance_sprite(1, enemy_shoot_ext(_x, _y, PlasmaImpact, _dir, _spd))){
+					damage = 4;
+					mask_index = -1;
+					image_xscale = lerp(0.7, 0.2, _spd / 4);
+					image_yscale = image_xscale;
+					image_speed += orandom(0.1);
+					friction = 0.1;
+					
+					 // Tunnel Time:
+					if(!_targetSeen){
+						with(instance_create_copy(x, y, PortalClear)) visible = false;
+					}
+				}
+			}
+			
+			 // Effects:
+			sound_play_hit_ext(sndSharpTeeth, 1 + orandom(0.2), 0.25);
+			sound_play_hit_ext(sndPlasmaHit, 1 + orandom(0.5), 1);
+			sprite_index = spr_hurt;
+			image_index = 0;
+			
+			 // Debris Protection:
+			if(!_targetSeen){
+				nexthurt = current_frame + 6;
+			}
+		}
+		
+		 // Towards Target:
+		else if(_targetSeen || cantunnel){
+			scrWalk(_targetDir + orandom(10), 15);
+		}
+		
+		 // Wander:
+		else scrWalk(random(360), 10);
+	}
+	
+	 // Wander:
+	else{
+		scrWalk(random(360), random_range(5, 10));
+		alarm1 += walk;
+	}
+	
+#define RedSpider_death
+	pickup_drop(20, 0);
+	
+	 // Plasma:
+	with(team_instance_sprite(1, enemy_shoot(PlasmaImpact, 0, 0))){
+		mask_index = mskPopoPlasmaImpact;
+		with(instance_create_copy(x, y, PortalClear)) visible = false;
+	}
+	sound_play_hit_big(sndPlasmaHit, 0.2);
+	
+	
 #define Spiderling_create(_x, _y)
     with(instance_create(_x, _y, CustomEnemy)){
          // Visual:
@@ -965,27 +990,10 @@
 	
 	if(DebugLag) trace_time();
 	
-	 // Crystal Tunnel Particles:
-	if(chance_ct(1, 40)){
-        do var i = irandom(maxp - 1);
-        until player_is_active(i);
-        
-        var _floors = instances_matching(Floor, "sprite_index", spr.FloorCrystal),
-        	_x = view_xview[i],
-        	_y = view_yview[i];
-        	
-        with(instance_random(instance_rectangle_bbox(_x, _y, _x + game_height, _y + game_width, _floors))){
-        	with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
-        		depth = -8;
-        		alarm0 = 40 + random(40);
-        		motion_set(random(360), random(0.2));
-        	}
-        }
-	}
-	
 	 // Wall Shine:
-	if(global.floor_num != instance_number(Floor)){
+	if(global.floor_num != instance_number(Floor) || global.wall_num != instance_number(Wall)){
 		global.floor_num = instance_number(Floor);
+		global.wall_num = instance_number(Wall);
 		
 		 // New Floors, Reset Wall Mask:
 		with(surfWallShineMask){
@@ -998,6 +1006,17 @@
 	with(surfWallShine){
 		active = surfWallShineMask.active;
 		if(active) script_bind_draw(draw_wall_shine, -6.0001);
+	}
+	
+	 // Crystal Tunnel Particles:
+	if(GameCont.area != "red"){
+		with(surfWallShineMask) if(active){
+			if(chance_ct(1, 40)){
+				do var i = irandom(maxp - 1);
+				until player_is_active(i);
+				mod_script_call_nc("area", "red", "area_effect", view_xview[i], view_yview[i]);
+			}
+		}
 	}
 	
 	if(DebugLag) trace_time("tecaves_step");
@@ -1146,6 +1165,33 @@
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 			
+			 // Background:
+			if(background_color == mod_script_call_nc("area", "red", "area_background_color")){
+				draw_clear(background_color);
+				draw_set_blend_mode_ext(bm_inv_src_alpha, bm_inv_src_alpha);
+				
+				with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
+					x -= _x;
+					y -= _y;
+					draw_self();
+					x += _x;
+					y += _y;
+				}
+				with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
+					x -= _x;
+					y -= _y;
+					draw_self();
+					draw_sprite(topspr, topindex, x, y - 8);
+					x += _x;
+					y += _y;
+				}
+				with(instance_rectangle_bbox(x, y, x + w, y + h, TopSmall)){
+					draw_sprite(sprite_index, image_index, x - _x, y - 8 - _y);
+				}
+				
+				draw_set_blend_mode(bm_normal);
+			}
+			
 			 // Crystal Wall Tops:
 			with(inst_tops) if(instance_exists(self)){
 				draw_sprite(sprite_index, image_index, x - _x, y - 8 - _y);
@@ -1190,7 +1236,7 @@
 					with(surfWallShineMask) if(surface_exists(surf)){
 						draw_surface(surf, x - _x, y - _y);
 					}
-					with(instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true)){
+					with(other) with(instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true)){
 						x -= _x;
 						y -= _y;
 						event_perform(ev_draw, 0);
@@ -1302,7 +1348,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -1312,6 +1358,7 @@
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

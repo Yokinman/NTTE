@@ -63,6 +63,12 @@
     material = (styleb ? 2 : 2);
     
 #define area_start
+	 // Delete SpawnWall:
+	if(instance_exists(Wall)){
+		with(Wall.id) if(place_meeting(x, y, Floor)){
+			instance_destroy();
+		}
+	}
     
 #define area_finish
     lastarea = area;
@@ -97,10 +103,8 @@
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
+        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
         
-	if("directionstart" not in self) directionstart = direction;
-	
     /// Make Floors:
 		 // Normal:
 		instance_create(_x, _y, Floor);
@@ -118,14 +122,16 @@
 		direction += _trn;
 		
 	/// Don't Move:
-		var _ox = lengthdir_x(32, direction),
-			_oy = lengthdir_y(32, direction);
-			
-		if(abs(angle_difference(directionstart, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
-			_x -= _ox;
-			_y -= _oy;
+		if("directionstart" in self){
+			var _ox = lengthdir_x(32, direction),
+				_oy = lengthdir_y(32, direction);
+				
+			if(abs(angle_difference(directionstart, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
+				x -= _ox;
+				y -= _oy;
+			}
 		}
-	
+		
 	/*
     /// Chests & Branching:
          // Turn Arounds (Weapon Chests):
@@ -159,24 +165,24 @@
 			obj_create(_x, _y, "RedSpider");
 		}
 	}
-
-#define area_pop_props
-	 // Props:
-	if(chance(1, 7)){
-		obj_create(x + 16, y + 16, "RedCrystalProp");
-	}
 	
+#define area_pop_props
 	 // Lone Walls:
-	else if(
-		chance(2, 3)							&&
-		!place_meeting(x, y, NOWALLSHEREPLEASE)	&&
-		instance_exists(Wall)
+	if(
+		chance(1, 5)
+		&& point_distance(x, y, 10000, 10000) > 16
+		&& !place_meeting(x, y, NOWALLSHEREPLEASE)
 	){
 		var _wx = x + dfloor(random(bbox_right - bbox_left), 16),
 			_wy = y + dfloor(random(bbox_bottom - bbox_top), 16);
 			
 		instance_create(_wx, _wy, Wall);
 		instance_create(x, y, NOWALLSHEREPLEASE);
+	}
+	
+	 // Props:
+	else if(chance(1, 4)){
+		obj_create(x + 16, y + 16, "RedCrystalProp");
 	}
 
 
@@ -255,7 +261,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -265,6 +271,7 @@
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

@@ -212,7 +212,7 @@
 	        	ScorpionRockEnemy   = sprite(p + "sprScorpionRockEnemy",  6, 16, 16);
 	        	ScorpionRockFriend  = sprite(p + "sprScorpionRockFriend", 6, 16, 16);
 	        	ScorpionRockHurt    = sprite(p + "sprScorpionRockHurt",   3, 16, 16);
-	        	ScorpionRockDead    = sprite(p + "sprScorpionRockDead",   6, 16, 16);
+	        	ScorpionRockDead    = sprite(p + "sprScorpionRockDead",   3, 16, 16);
 
         	//#endregion
 
@@ -1163,7 +1163,7 @@
             PetScorpionIdle   = sprite(p + "sprPetScorpionIdle",   4, 16, 16);
             PetScorpionWalk   = sprite(p + "sprPetScorpionWalk",   6, 16, 16);
             PetScorpionHurt   = sprite(p + "sprPetScorpionHurt",   3, 16, 16);
-            PetScorpionDead   = sprite(p + "sprPetScorpionDead",   3, 16, 16);
+            PetScorpionDead   = sprite(p + "sprPetScorpionDead",   6, 16, 16);
             PetScorpionFire   = sprite(p + "sprPetScorpionFire",   6, 16, 16);
             PetScorpionShield = sprite(p + "sprPetScorpionShield", 6, 16, 16);
 

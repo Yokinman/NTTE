@@ -163,8 +163,6 @@
 #macro teamSpriteMap global.team_sprite_map
 #macro teamSpriteObjectMap global.team_sprite_object_map
 
-#macro WallObject [Wall, TopSmall, TopPot, Bones, InvisiWall]
-
 #define obj_create(_x, _y, _name)
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
@@ -1686,55 +1684,60 @@
     }
     return [sprEGIconHUD, 2];
     
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)
-	if(instance_exists(Player) && (is_real(_area) || is_string(_area))){
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)
+	if(is_real(_area) || is_string(_area)){
 		var	_lastArea = GameCont.area,
 			_lastSubarea = GameCont.subarea,
 			_lastBackgroundColor = background_color,
 			_lastLetterbox = game_letterbox,
+			_lastViewObj = [],
+			_lastViewPan = [],
+			_lastViewShk = [],
 			_lastObjVars = [],
-			_lastFloor = [],
-			_lastSolid = [],
-			_lastView = [];
+			_lastSolid = [];
 			
-		/// Remember Stuff:
-			 // BackCont/TopCont:
-			with([BackCont, TopCont]){
-				var	_obj = self,
-					_vars = [];
-					
-				if(instance_exists(_obj)){
-					with(variable_instance_get_names(_obj)){
-						if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self) < 0){
-							array_push(_vars, [self, variable_instance_get(_obj, self)]);
-						}
+		 // Remember Stuff:
+		for(var i = 0; i < maxp; i++){
+			_lastViewObj[i] = view_object[i];
+			_lastViewPan[i] = view_pan_factor[i];
+			_lastViewShk[i] = view_shake[i];
+		}
+		with([BackCont, TopCont]){
+			var	_obj = self,
+				_vars = {};
+				
+			if(instance_exists(_obj)){
+				with(variable_instance_get_names(_obj)){
+					if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self) < 0){
+						lq_set(_vars, self, variable_instance_get(_obj, self));
 					}
-					array_push(_lastObjVars, [_obj, _vars]);
 				}
+				array_push(_lastObjVars, [_obj, _vars]);
 			}
-			
-			 // Floor Bounding Boxes:
-			if(!_floorOverlap){
-				with(instances_matching(Floor, "object_index", Floor)){
-					array_push(_lastFloor, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
-				}
-			}
-			
-			 // Solid Instances (Fix Ghost Collision):
-			with(instances_matching(all, "solid", true)){
-				solid = false;
-				array_push(_lastSolid, self);
-			}
-			
-			 // Views:
-			for(var i = 0; i < maxp; i++){
-				_lastView[i] = [view_xview[i], view_yview[i]];
-			}
-			
+		}
+		
+		 // Fix Ghost Collision:
+		with(instances_matching(all, "solid", true)){
+			solid = false;
+			array_push(_lastSolid, self);
+		}
+		
 		 // Clamp to Grid:
 		with(instance_nearest(_x - 16, _y - 16, Floor)){
 			_x = x + (floor((_x - x) / 16) * 16);
 			_y = y + (floor((_y - y) / 16) * 16);
+		}
+		
+		 // Floor Overlap Fixing:
+		var	_overlapFloorBBox = [],
+			_overlapFloorFill = [];
+			
+		if(_overlapFloor < 1){
+			with(instances_matching(Floor, "object_index", Floor)){
+				if(_overlapFloor <= 0 || random(1) >= _overlapFloor){
+					array_push(_overlapFloorBBox, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
+				}
+			}
 		}
 		
 		 // No Duplicates:
@@ -1742,22 +1745,31 @@
 		with(TopCont) instance_destroy();
 		with(SubTopCont) instance_destroy();
 		
-		 // Force Object Deactivation Using Boss Intro:
-		var	_lastIntro = UberCont.opt_bossintros,
-			_lastLoop = GameCont.loops;
-			
-		UberCont.opt_bossintros = true;
-		GameCont.loops = 0;
+		 // Deactivate Objects:
 		with(instance_create(0, 0, GameObject)){
+			var	_lastIntro = UberCont.opt_bossintros,
+				_lastLoop = GameCont.loops,
+				_player = noone;
+				
+			 // Ensure Intro Plays:
+			UberCont.opt_bossintros = true;
+			GameCont.loops = 0;
+			if(!instance_exists(Player)){
+				_player = instance_create(0, 0, GameObject);
+				with(_player) instance_change(Player, false);
+			}
+			
+			 // Call Boss Intro:
 			instance_change(BanditBoss, false);
 			event_perform(ev_alarm, 6);
 			sound_stop(sndBigBanditIntro);
 			instance_delete(id);
+			
+			UberCont.opt_bossintros = _lastIntro;
+			GameCont.loops = _lastLoop;
+			with(_player) instance_delete(id);
 		}
-		UberCont.opt_bossintros = _lastIntro;
-		GameCont.loops = _lastLoop;
-		
-		with(UberCont){
+		with(UberCont) with(self){
 			alarm2 = -1;
 			event_perform(ev_draw, ev_draw_post);
 		}
@@ -1765,13 +1777,10 @@
 		 // Generate Level:
 		GameCont.area = _area;
 		GameCont.subarea = _subarea;
-		
-		var	_genID = instance_create(0, 0, GenCont),
-			_floorFill = [];
-			
+		var _genID = instance_create(0, 0, GenCont);
 		with(_genID) with(self){
-			var	_ox = (_x - spawn_x),
-				_oy = (_y - spawn_y);
+			var	_ox = (_x - 10016),
+				_oy = (_y - 10016);
 				
 			 // Delete Loading Spirals:
 			with(SpiralCont) instance_destroy();
@@ -1779,17 +1788,13 @@
 			with(SpiralStar) instance_destroy();
 			with(SpiralDebris) instance_destroy(); // *might play a 0.1 pitched sound
 			
-			 // Override Vars:
-			if(!is_undefined(_goal)){
-				goal = _goal;
-				with(FloorMaker) goal = _goal;
-			}
-			if(!is_undefined(_safeDist)){
-				safedist = _safeDist;
+			 // Custom Code:
+			if(is_array(_scriptSetup)){
+				script_ref_call(_scriptSetup);
 			}
 			
 			 // Floors:
-			var _tries = 1,
+			var _tries = 100,
 				_floorNum = 0;
 				
 			while(instance_exists(FloorMaker) && _tries-- > 0){
@@ -1804,15 +1809,15 @@
 			event_perform(ev_alarm, 2);
 			
 			 // Remove Overlapping Floors:
-			with(_lastFloor){
+			with(_overlapFloorBBox){
 				var	_x1 = self[0] - _ox,
 					_y1 = self[1] - _oy,
 					_x2 = self[2] - _ox,
 					_y2 = self[3] - _oy;
 					
 				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Floor)){
-					array_push(_floorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
-					instance_delete(id);
+					array_push(_overlapFloorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
+					instance_destroy();
 				}
 				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [SnowFloor, chestprop, RadChest])){
 					instance_delete(id);
@@ -1820,16 +1825,37 @@
 			}
 			
 			 // Populate Level:
-			with(KeyCont) event_perform(ev_create, 0); // reset player index counter
+			with(KeyCont) event_perform(ev_create, 0); // reset player counter
 			event_perform(ev_alarm, 0);
 			event_perform(ev_alarm, 1);
 			
 			 // Player Reset:
-			with(Player){
-				gunangle = point_direction(x - (game_width / 2), y - (game_height / 2), _lastView[index, 0], _lastView[index, 1]);
-				weapon_post(0, point_distance(x - (game_width / 2), y - (game_height / 2), _lastView[index, 0], _lastView[index, 1]), 0);
-				with(instances_matching_gt([PortalClear, PortalL], "id", id)) instance_destroy();
-				instance_delete(id);
+			if(game_letterbox == false) game_letterbox = _lastLetterbox;
+			for(var i = 0; i < maxp; i++){
+				if(view_object[i] == noone) view_object[i] = _lastViewObj[i];
+				if(view_pan_factor[i] == null) view_pan_factor[i] = _lastViewPan[i];
+				if(view_shake[i] == 0) view_shake[i] = _lastViewShk[i];
+				
+				with(instances_matching(Player, "index", i)){
+					 // Fix View:
+					var	_vx1 = x - (game_width / 2),
+						_vy1 = y - (game_height / 2),
+						_vx2 = view_xview[i],
+						_vy2 = view_yview[i],
+						_shake = UberCont.opt_shake;
+						
+					UberCont.opt_shake = 1;
+					gunangle = point_direction(_vx1, _vy1, _vx2, _vy2);
+					weapon_post(0, point_distance(_vx1, _vy1, _vx2, _vy2), 0);
+					UberCont.opt_shake = _shake;
+					
+					 // Delete:
+					repeat(4) with(instance_nearest(x, y, PortalL)) instance_destroy();
+					with(instance_nearest(x, y, PortalClear)) instance_destroy();
+					instance_delete(id);
+					
+					break;
+				}
 			}
 			
 			 // Move Objects:
@@ -1857,26 +1883,35 @@
 		with(_lastSolid) solid = true;
 		
 		 // Overlap Fixes:
-		var	_wallNew = instances_matching_gt(WallObject, "id", _genID),
-			_wallOld = instances_matching_lt(WallObject, "id", _genID),
-			_floorNew = instances_matching_gt(Floor, "id", _genID),
-			_floorOld = instances_matching_lt(Floor, "id", _genID);
+		var	_overlapObject = [Floor, Wall, InvisiWall, TopSmall, TopPot, Bones],
+			_overlapObj = array_clone(_overlapObject);
 			
-		with(instances_matching_lt(Wall, "id", _genID)){
-			with(instances_matching(instances_matching(instances_matching_gt(Wall, "id", _genID), "x", x), "y", y)){
-				instance_destroy();
+		while(array_length(_overlapObj) > 0){
+			var _obj = _overlapObj[0];
+			
+			 // New Overwriting Old:
+			var _objNew = instances_matching_gt(_obj, "id", _genID);
+			with(instances_matching_lt(_overlapObj, "id", _genID)){
+				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objNew)) > 0){
+					if(object_index == Floor) array_push(_overlapFloorFill, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
+					instance_delete(id);
+				}
 			}
-		}
-		with(_floorOld){
-			with(instances_meeting(x, y, _wallNew)) instance_destroy();
-		}
-		with(_floorNew){
-			with(instances_meeting(x, y, _wallOld)) instance_destroy();
-			with(instances_meeting(x, y, instances_matching_lt(FloorExplo, "id", _genID))) instance_destroy();
+			
+			 // Advance:
+			_overlapObj = array_slice(_overlapObj, 1, array_length(_overlapObj) - 1);
+			
+			 // Old Overwriting New:
+			var _objOld = instances_matching_lt(_obj, "id", _genID);
+			with(instances_matching_gt(_overlapObj, "id", _genID)){
+				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objOld)) > 0){
+					instance_delete(id);
+				}
+			}
 		}
 		
 		 // Fill Gaps:
-		with(_floorFill){
+		with(_overlapFloorFill){
 			var	_x1 = self[0],
 				_y1 = self[1],
 				_x2 = self[2] + 1,
@@ -1887,8 +1922,8 @@
 					for(var _fy = _y1; _fy < _y2; _fy += 16){
 						if(!position_meeting(_fx, _fy, Floor)){
 							with(instance_create(_fx, _fy, FloorExplo)){
-								with(instances_meeting(x, y, WallObject)){
-									instance_destroy();
+								with(instances_meeting(x, y, _overlapObject)){
+									instance_delete(id);
 								}
 							}
 						}
@@ -1902,22 +1937,24 @@
 			GameCont.area = _lastArea;
 			GameCont.subarea = _lastSubarea;
 			background_color = _lastBackgroundColor;
-			game_letterbox = _lastLetterbox;
 			with(_lastObjVars){
 				var	_obj = self[0],
 					_vars = self[1];
 					
-				with(_obj) with(_vars){
-					variable_instance_set(other, self[0], self[1]);
+				with(_obj){
+					for(var i = 0; i < lq_size(_vars); i++){
+						variable_instance_set(self, lq_get_key(_vars, i), lq_get_value(_vars, i));
+					}
 				}
 			}
 		}
-		with(_lastObjVars) if(self[0] == TopCont){
-			with(self[1]) if(self[0] == "fogscroll"){
-				with(other[0]) variable_instance_set(self, other[0], other[1]);
-				break;
+		with(_lastObjVars){
+			var	_obj = self[0],
+				_vars = self[1];
+				
+			if(_obj == TopCont && "fogscroll" in _vars){
+				with(_obj) fogscroll = _vars.fogscroll;
 			}
-			break;
 		}
 		
 		return _genID;
@@ -1926,8 +1963,8 @@
 	
  // Generates a Given Area, Simpler Edition:
 #define area_generate(_area, _subarea, _x, _y)
-	area_generate_ext(_area, _subarea, _x, _y, null, null, false);
-
+	area_generate_ext(_area, _subarea, _x, _y, false, null);
+	
 #define area_get_name(_area, _subarea, _loop)
 	var a = [_area, "-", _subarea];
 
@@ -2042,6 +2079,27 @@
 	}
 	
 	return _minID;
+
+#define floor_bones(_sprite, _num, _chance, _linked)
+	var r = [];
+	if(!place_free(x - 32, y) && !place_free(x + 32, y) && place_free(x, y)){
+		for(var _y = y; _y < y + 32; _y += (32 / _num)){
+			var _create = true;
+			for(var _side = -1; _side <= 1; _side += 2){
+				if(_side < 0 || !_linked){
+					_create = (random(1) < _chance);
+				}
+				if(_create){
+					with(instance_create(x + 16 - (16 * _side), _y, Bones)){
+						sprite_index = _sprite;
+						image_xscale = _side;
+						array_push(r, id);
+					}
+				}
+			}
+		}
+	}
+	return r;
 
 #define floor_reveal(_floors, _maxTime)
     with(script_bind_draw(floor_reveal_draw, -6.00001)){
@@ -2535,7 +2593,7 @@
 	floor_set_style(null, null);
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
-	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, WallObject)){
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
 		instance_destroy();
 	}
 	

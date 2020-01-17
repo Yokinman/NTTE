@@ -221,6 +221,7 @@
     return random(120);
 
 #define area_make_floor
+     // Generating:
     var _den = GenCont.turtle_den;
     if(_den.cols <= 0){
         x = xstart - 48;
@@ -231,9 +232,8 @@
     }
     direction = 90;
     styleb = false;
-
     instance_create(x, y, Floor);
-   
+    
      // Important Tiles:
     var _tile = `${_den.cols},${_den.rows}`;
     switch(_tile){
@@ -242,29 +242,33 @@
         case "0,5": instance_create(x,      y,      Wall);  break;
         case "7,0": instance_create(x + 16, y + 16, Wall);  break;
         case "7,5": instance_create(x + 16, y,      Wall);  break;
-
+        
         case "3,3": /// Toons Viewer
             obj_create(x, y - 16, "PizzaTV");
             break;
-
+            
         case "6,5": /// Sewage Hole
             obj_create(x, y, "PizzaDrain");
             break;
     }
-
-    if(++_den.rows >= _den.rows_max){
+    
+     // Next:
+    _den.rows++;
+    if(_den.rows >= _den.rows_max){
         x += 32;
         _den.rows = 0;
-        if(++_den.cols >= _den.cols_max){
-            instance_destroy();
-        }
+        _den.cols++;
+        if(_den.cols >= _den.cols_max) instance_destroy();
     }
-    /*var _x = 10000 - 32,
+    
+    /*
+    var _x = 10000 - 32,
         _y = 10000,
-        _outOfSpawn = (point_distance(_x, _y, GenCont.spawn_x, GenCont.spawn_y) > 48);
+        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
 
     styleb = 0;
-    floor_fill(_x, _y, 8, 6);*/
+    floor_fill(_x, _y, 8, 6);
+    */
 
 #define area_pop_props
     var _x = x + 16,
@@ -362,7 +366,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap)     return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _goal, _safeDist, _floorOverlap);
+#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -372,6 +376,7 @@
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
