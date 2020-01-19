@@ -1728,6 +1728,109 @@
     }
 
 
+#define WallEnemy_create(_x, _y)
+    with(instance_create(_x, _y, CustomObject)){
+    	 // Eye:
+        eyedir = 90;
+        eyeblink = random(10000);
+        
+         // Top Decal:
+        target = instance_create(x, y, TopDecalDesert);
+        with(target){
+        	sprite_index = spr.WallEnemy;
+        	image_xscale = choose(-1, 1);
+        	x = xstart;
+        	y = ystart;
+        }
+        
+        return id;
+    }
+    
+#define WallEnemy_step
+	eyeblink += current_time_scale;
+	
+	 // Follow Target:
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y;
+		
+		 // Lookin'
+		var	n = instance_nearest(x, y, Player),
+			_dir = 90;
+			
+		if(instance_exists(n) && (point_distance(x, y, n.x, n.y) < 140 || !position_meeting(x, y, Wall))){
+			if(n.y < y - 8){
+				_dir = 270 + (30 * sin(eyeblink / 40));
+			}
+			else{
+				_dir = point_direction(x, y - 8, n.x, n.y);
+			}
+		}
+		
+		eyedir = angle_lerp(eyedir, _dir, 0.2 * current_time_scale);
+		eyedir = (eyedir + 360) % 360;
+		
+		 // Target Eye Control:
+		var	_num = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
+			_blink = ((eyeblink % 250) < 6 || (eyeblink % 300) < 6);
+			
+		with(target){
+			image_index = 0;
+			
+			 // Flinch:
+			if(distance_to_object(projectile) < 8){
+				other.eyeblink = -random_range(3, 6);
+			}
+			
+			 // Lookin'
+			else if(in_range(_num, 0, 1) && !_blink){
+				if(sign(image_xscale) < 0) _num = 1 - _num;
+				image_index = round(lerp(1, image_number - 1, _num));
+			}
+		}
+	}
+	
+	 // Spawn Bandit:
+	else{
+		if(position_meeting(x, y, Floor)){
+			 // Boy:
+			with(instance_create(x, y, Bandit)){
+				wkick = 8;
+				with(obj_create(x, y, "BackpackPickup")){
+					with(instance_furthest(x, y, Floor)){
+						other.direction = point_direction(other.x, other.y, x, y) + orandom(30);
+					}
+					zspeed *= 1.2;
+					speed /= 1.2;
+					target = other;
+					event_perform(ev_step, ev_step_end);
+				}
+			}
+			
+			 // Pickup:
+			var _minID = GameObject.id;
+			pickup_drop(1000, 0);
+			with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
+				with(obj_create(x, y, "BackpackPickup")){
+					target = other;
+					event_perform(ev_step, ev_step_end);
+				}
+			}
+			
+			 // Effects:
+			if(chance(1, 15)){
+				with(scrFX(x, y, 3, Shell)){
+					sprite_index = sprSodaCan;
+					image_index = irandom(image_number - 1);
+					image_speed = 0;
+				}
+			}
+			sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 0.4);
+		}
+		instance_destroy();
+	}
+	
+	
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
@@ -1897,7 +2000,7 @@
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);

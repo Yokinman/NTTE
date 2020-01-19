@@ -6,8 +6,10 @@
     
     DebugLag = false;
     
-    global.pickup_custom = [];
+     // Surfaces:
+	surfWepPickupGrounded = surflist_set("WepPickupGrounded", 0, 0, 32, 64);
     
+    global.pickup_custom = [];
 	game_start();
 
 #macro spr global.spr
@@ -17,6 +19,8 @@
 #macro sav global.sav
 
 #macro DebugLag global.debug_lag
+
+#macro surfWepPickupGrounded global.surfWepPickupGrounded
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -260,6 +264,10 @@
 				 // Important:
 				if(instance_is(self, enemy)){
 					sprite_index = spr_hurt;
+					if(!canfly){
+						other.canfly = canfly;
+						canfly = true;
+					}
 				}
 				
 				 // Disable Collision:
@@ -303,6 +311,7 @@
         mask_index = other.mask_index;
 		direction = other.direction;
 		speed = other.speed;
+		if("canfly" in other) canfly = other.canfly;
 		
 	     // Effects:
 	    repeat(3){
@@ -665,8 +674,7 @@
 		friction = 0.4;
 		creator = noone;
 		pickup_indicator = scrPickupIndicator("");
-		shine = true;
-		shine_speed = 0.025;
+		shine = 0.025;
 		open_state = 0;
 		open = 1;
 		wave = random(100);
@@ -805,7 +813,7 @@
 					
 					 // Visual:
 					sprite_index = sprFishA;
-					shine = false;
+					shine = 0;
 					break;
 					
 				case "spirit":
@@ -930,8 +938,8 @@
 	if(setup) ChestShop_setup();
 
 	 // Shine Delay:
-	if(shine && image_index < 1){
-		image_index += image_speed_raw * (random(shine_speed) - 1);
+	if(image_index < 1 && shine > 0){
+		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 
 	 // Particles:
@@ -1536,27 +1544,27 @@
 
 #define CustomPickup_step
 	array_push(global.pickup_custom, id); // For step event management
-
+	
      // Call Chest Step Event:
     var e = on_step;
     if(mod_script_exists(e[0], e[1], e[2])){
         mod_script_call(e[0], e[1], e[2]);
     }
-
+    
      // Animate:
     if(image_index < 1 && shine > 0){
-		image_index += random(shine) - image_speed_raw;
+		image_index += random(shine * current_time_scale) - image_speed_raw;
     }
-
+    
      // Find Nearest Attractable Player:
     var _nearest = noone,
     	_disMax = (instance_exists(Portal) ? 1000000 : pull_dis),
     	e = on_pull;
-
+    	
 	if(!mod_script_exists(e[0], e[1], e[2])){
 		e = script_ref_create(CustomPickup_pull);
 	}
-
+	
     with(Player){
     	var _dis = point_distance(x, y, other.x, other.y);
     	if(_dis < _disMax){
@@ -1566,7 +1574,7 @@
 	    	}
     	}
     }
-
+    
      // Attraction:
     if(_nearest != noone){
         var l = pull_spd * current_time_scale,
@@ -1577,7 +1585,7 @@
         if(place_free(_x, y)) x = _x;
         if(place_free(x, _y)) y = _y;
     }
-
+    
 	 // Pickup Collision:
 	if(mask_index == mskPickup && place_meeting(x, y, Pickup)){
 		with(instances_meeting(x, y, instances_matching(Pickup, "mask_index", mskPickup))){
@@ -1591,13 +1599,13 @@
 			}
 		}
 	}
-
+	
      // Wall Collision:
     if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
     	if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
     	if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
     }
-
+    
      // Fading:
 	if(time > 0){
 		time -= time_tick * (1 + (time_loop * GameCont.loops)) * current_time_scale;
@@ -2914,6 +2922,207 @@
 		return id;
 	}
 	
+	
+#define WepPickupGrounded_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_shadow = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = -9;
+		image_xscale = -1;
+		image_yscale = choose(-1, 1);
+		depth = -1;
+		
+		 // Vars:
+		mask_index = mskWepPickup;
+		target = instance_create(x, y, WepPickup);
+		target_x = 0;
+		target_y = 0;
+		top_object = noone;
+		
+		 // Weapon:
+		with(target){
+			//wep = weapon_decide(0, GameCont.hard, false, null);
+			rotation = 90 + (random_range(10, 20) * choose(-1, 1));
+			ammo = true;
+		}
+		
+		return id;
+	}
+	
+#define WepPickupGrounded_end_step
+	if(instance_exists(target)){
+		with(target){
+			image_alpha = 0;
+			
+			 // Spin:
+			if(instance_exists(other.top_object) && other.top_object.zfriction != 0){
+				rotation += 4 * rotspeed * current_time_scale;
+			}
+			
+			 // Wobble:
+			else if(x != xprevious || y != yprevious){
+				rotation += sin(current_frame * 0.7) * rotspeed * sign(other.image_yscale) * current_time_scale;
+			}
+			
+			 // Offset:
+			var	_uvs = sprite_get_uvs(sprite_index, 0),
+				_off = sprite_get_xoffset(sprite_index),
+				_ang = other.image_angle + rotation,
+				_xsc = other.image_xscale;
+				
+			if(_xsc < 0) _off = (sprite_get_bbox_right(sprite_index) + 1) - _off;
+			else _off -= sprite_get_bbox_left(sprite_index);
+			_off *= abs(_xsc);
+			
+			other.target_x = lengthdir_x(_off, _ang);
+			other.target_y = lengthdir_y(_off, _ang) + ((_ang > 180) ? -2 : 2);
+			
+			 // Hold:
+			x = other.x;
+			y = other.y - 8;
+			xprevious = x;
+			yprevious = y;
+			speed = 0;
+			
+			 // Less Shine:
+			var _shineSlow = random(0.02 * current_time_scale);
+			if(image_index > _shineSlow && image_index < 1){
+				image_index -= _shineSlow;
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define WepPickupGrounded_draw
+	if(instance_exists(target)){
+		var	_spr = target.sprite_index,
+			_img = target.image_index,
+			_xsc = image_xscale,
+			_ysc = image_yscale,
+			_ang = image_angle + target.rotation,
+			_col = image_blend,
+			_alp = image_alpha,
+			_x = x + target_x,
+			_y = y + target_y;
+			
+		 // Draw Normal:
+		if(instance_exists(top_object) && top_object.zfriction != 0){
+			draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		}
+		
+		 // Draw w/ End Clipped Off:
+		else with(surfWepPickupGrounded) if(surface_exists(surf)){
+			x = other.x - (w / 2);
+			y = other.y - h;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			with(other){
+				draw_sprite_ext(_spr, _img, _x - other.x, _y - other.y, _xsc, _ysc, _ang, _col, _alp);
+			}
+			
+			surface_reset_target();
+			draw_surface(surf, x, y);
+		}
+	}
+	
+#define WepPickupGrounded_destroy
+	with(target){
+		image_alpha = 1;
+		x = other.x + other.target_x;
+		y = other.y + other.target_y;
+		rotation += other.image_angle + (180 * (other.image_xscale < 0));
+		
+		 // Fix:
+		if("top_object" in self){
+			with(top_object) instance_destroy();
+		}
+		
+		 // Effects:
+		repeat(3) scrFX([x, 4], [y, 4], random(1), Dust);
+		sound_play_hit_ext(sndWeaponPickup, 0.7, 0.5);
+	}
+	with(instance_create(x, y, WepSwap)){
+		depth = other.depth - 1;
+	}
+	
+	/*with(instance_create(x, y, WepPickup)){
+		ammo = true;
+		wep = other.wep;
+		curse = other.curse;
+		rotation = other.rotation + other.image_angle + (90 + (90 * sign(other.image_xscale)));
+	}*/
+
+
+#define WepPickupStick_create(_x, _y)
+	with(instance_create(_x, _y, WepPickup)){
+		 // Vars:
+		stick_target = noone;
+		stick_x = 0;
+		stick_y = 0;
+		stick_damage = 0;
+
+		return id;
+	}
+
+#define WepPickupStick_step
+	var t = stick_target;
+	if(instance_exists(t)){
+		speed = 0;
+		nowade = true;
+		rotspeed = 0;
+
+		 // Stick in Target:
+		var	l = 24,
+			d = rotation;
+
+		x = t.x + t.hspeed_raw + stick_x;
+		y = t.y + t.vspeed_raw + stick_y;
+		if("z" in t){
+			if(t.object_index == RavenFly || t.object_index == LilHunterFly){
+				y += t.z;
+			}
+			else y -= t.z;
+		}
+		visible = t.visible;
+		xprevious = x;
+		yprevious = y;
+
+		 // Deal Damage w/ Taken Out:
+		if(stick_damage != 0 && fork()){
+			var _damage = stick_damage,
+				_creator = creator,
+				_ang = rotation,
+				_wep = wep,
+				_x = x,
+				_y = y;
+
+			wait 0;
+			if(!instance_exists(self)){
+				with(t){
+					repeat(3) instance_create(x, y, AllyDamage);
+					projectile_hit_raw(self, _damage, true);
+
+					with(instance_nearest_array(_x, _y, array_combine(instances_matching(Player, "wep", _wep), instances_matching(Player, "bwep", _wep)))){
+						if(wep == _wep){
+							wkick = 10;
+						}
+						else if(bwep == _wep){
+							bwkick = 10;
+						}
+					}
+				}
+			}
+			exit;
+		}
+	}
+	else{
+		nowade = false;
+		if(rotspeed == 0) rotspeed = random_range(1, 2) * choose(-1, 1);
+	}
+	
 
 /// Mod Events
 #define game_start
@@ -3382,7 +3591,17 @@
 	if(DebugLag) trace_time("tepickups_end_step");
 	
 	instance_destroy();
-
+	
+#define draw_shadows
+	if(DebugLag) trace_time();
+	
+	 // Weapons Stuck in Ground:
+	with(instances_matching(CustomObject, "name", "WepPickupGrounded")){
+		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+	}
+	
+	if(DebugLag) trace_time("tepickups_draw_shadows");
+	
 #define draw_dark // Drawing Grays
     draw_set_color(c_gray);
     
@@ -3580,7 +3799,7 @@
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);

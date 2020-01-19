@@ -269,6 +269,9 @@
 	         // Fly:
 	        p = "areas/Desert/"
 	        FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
+        	
+        	 // Wall Dude:
+        	WallEnemy = sprite(p + "sprWallEnemy", 9, 8, 8);
 
         //#endregion
 

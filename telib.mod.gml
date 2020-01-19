@@ -9,8 +9,8 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     objList = {
 		"tegeneral"	  : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle"],
-		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"	  : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
@@ -20,7 +20,7 @@
     };
     
 	 // Auto Create Event Script References:
-    objScrt = {}
+    objScrt = {};
 	for(var i = 0; i < lq_size(objList); i++){
 		var _modName = lq_get_key(objList, i),
 			_modObjs = lq_get_value(objList, i);
@@ -2745,42 +2745,63 @@
 #define wep_merge_decide(_hardMin, _hardMax)
 	return mod_script_call_nc("weapon", "merge", "weapon_merge_decide", _hardMin, _hardMax);
 
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)
-    var _list = ds_list_create(),
-        s = weapon_get_list(_list, _minhard, _maxhard);
-        
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)
+	 // Robot:
+	for(var i = 0; i < maxp; i++) if(player_get_race(i) == "robot") _hardMax++;
+	_hardMin += (5 * ultra_get("robot", 1));
+	
+	 // Just in Case:
+	_hardMax = max(0, _hardMax);
+	_hardMin = min(_hardMin, _hardMax);
+	
+	 // Default:
+	var _wepDecide = wep_screwdriver;
+	if(_gold != 0){
+		_wepDecide = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
+		if(GameCont.loops > 0 && random(2) < 1){
+			_wepDecide = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
+		}
+	}
+	
+	 // Decide:
+	var _list = ds_list_create(),
+	    _listMax = weapon_get_list(_list, _hardMin, _hardMax);
+	    
 	ds_list_shuffle(_list);
 	
-    for(i = 0; i < s; i++) {
-        var w = ds_list_find_value(_list, i),
-            c = 0;
-            
-         // Weapon Exceptions:
-        if(is_array(_nowep) && array_exists(_nowep, w)) c = true;
-        if(w == _nowep) c = true;
-        
-         // Specific Weapon Spawn Conditions:
-        if(
-            !weapon_get_gold(w)             ||
-            w == wep_golden_nuke_launcher   ||
-            w == wep_golden_disc_gun        ||
-            w == wep_golden_frog_pistol
-        ){
-            c = true;
-        }
-        
-        if(c) continue;
-        break;
-    }
-    
-    ds_list_destroy(_list);
-    
-     // Set Weapon:
-    if(!c) return w;
-    
-     // Default:
-    return choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
-
+	for(var i = 0; i < _listMax; i++){
+		var	_wep = ds_list_find_value(_list, i),
+			_canWep = true;
+			
+		 // Weapon Exceptions:
+		if(_wep == _noWep || (is_array(_noWep) && array_exists(_noWep, _wep))){
+			_canWep = false;
+		}
+		
+		 // Gold Check:
+		else if((_gold > 0 && !weapon_get_gold(_wep)) || (_gold < 0 && weapon_get_gold(_wep) == 0)){
+			_canWep = false;
+		}
+		
+		 // Specific Spawn Conditions:
+		else switch(_wep){
+			case wep_super_disc_gun:       if("curse" not in self || curse <= 0) _canWep = false; break;
+			case wep_golden_nuke_launcher: if(!UberCont.hardmode)                _canWep = false; break;
+			case wep_golden_disc_gun:      if(!UberCont.hardmode)                _canWep = false; break;
+			case wep_gun_gun:              if(crown_current != crwn_guns)        _canWep = false; break;
+		}
+		
+		 // Success:
+		if(_canWep){
+			_wepDecide = _wep;
+			break;
+		}
+	}
+	
+	ds_list_destroy(_list);
+	
+	return _wepDecide;
+	
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)
      // Auto-Determine Grid Size:
     var _tileSize = 16,
@@ -3296,12 +3317,12 @@
 					case Cactus:
 						with(target){
 							var t = choose("", "3");
-							if(chance(2, 3)) t = "B" + t; // Rotten epic
+							if(true || chance(2, 3)) t = "B" + t; // Rotten epic
 							spr_idle = asset_get_index("sprCactus" + t);
 							spr_hurt = asset_get_index("sprCactus" + t + "Hurt");
 							spr_dead = asset_get_index("sprCactus" + t + "Dead");
 						}
-					//case NightCactus:
+						//case NightCactus:
 						spr_shadow = sprMine;
 						spr_shadow_y = 9;
 						break;
@@ -3394,6 +3415,13 @@
 					case Tires:
 						spawn_dis = random_range(24, 80);
 						spr_shadow_y = -1;
+						break;
+						
+					 /// OTHER ///
+					case "WepPickupGrounded":
+						jump = 3;
+						wobble = 8;
+						unstick = true;
 						break;
 				}
 				

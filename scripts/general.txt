@@ -103,7 +103,7 @@
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -137,25 +137,5 @@
 ],
 
 "rename" : {
-	"enemyWalk"          : "enemy_walk",
-	"enemyHurt"          : "enemy_hurt",
-	"scrEnemyShoot"      : "enemy_shoot",
-	"scrEnemyShootExt"   : "enemy_shoot_ext",
-	"nearest_instance"   : "instance_nearest_array",
-	"scrBossHP"          : "boss_hp",
-	"scrBossIntro"       : "boss_intro",
-	"scrSwap"            : "player_swap",
-	"scrTopDecal"        : "TopDecal_create",
-	"scrCharm"           : "charm_instance",
-	"scrCorpse"          : "corpse_drop",
-	"scrFloorWalls"      : "floor_walls",
-	"scrPortalPoof"      : "portal_poof",
-	"floor_ext"          : "dfloor",
-	"scrPickupPortalize" : "portal_pickups",
-	"scrFloorMake"       : "floor_make",
-	"scrFloorFill"       : "floor_fill",
-	"scrFloorFillRound"  : "floor_fill_round",
-	"scrUnlock"          : "unlock_splat",
-	"decide_wep_gold"    : "weapon_decide_gold",
-	"Pet_spawn"          : "pet_spawn"
+	"weapon_decide_gold" : "weapon_decide"
 }

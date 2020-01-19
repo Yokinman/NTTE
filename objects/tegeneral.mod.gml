@@ -31,9 +31,9 @@
 
 #macro DebugLag global.debug_lag
 
-#macro surfShadowTop global.surfShadowTop
+#macro surfShadowTop     global.surfShadowTop
 #macro surfShadowTopMask global.surfShadowTopMask
-#macro surfPet global.surfPet
+#macro surfPet           global.surfPet
 
 #macro TopObjectSearch [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
 #macro TopObjectSearchMap global.top_object_search_map
@@ -4480,6 +4480,15 @@
 				sound_play_hit_ext(sndWeaponChest, 0.5 + random(0.2), 0.8);
 			}
 		}
+		
+		 // Other Stuff:
+		if(instance_is(self, CustomObject) && "name" in self){
+			switch(name){
+				case "WepPickupGrounded":
+					instance_destroy();
+					break;
+			}
+		}
 	}
 	
 	
@@ -4757,74 +4766,6 @@
 
 #define VenomPellet_destroy
     instance_create(x, y, ScorpionBulletHit);
-
-
-#define WepPickupStick_create(_x, _y)
-	with(instance_create(_x, _y, WepPickup)){
-		 // Vars:
-		stick_target = noone;
-		stick_x = 0;
-		stick_y = 0;
-		stick_damage = 0;
-
-		return id;
-	}
-
-#define WepPickupStick_step
-	var t = stick_target;
-	if(instance_exists(t)){
-		speed = 0;
-		nowade = true;
-		rotspeed = 0;
-
-		 // Stick in Target:
-		var	l = 24,
-			d = rotation;
-
-		x = t.x + t.hspeed_raw + stick_x;
-		y = t.y + t.vspeed_raw + stick_y;
-		if("z" in t){
-			if(t.object_index == RavenFly || t.object_index == LilHunterFly){
-				y += t.z;
-			}
-			else y -= t.z;
-		}
-		visible = t.visible;
-		xprevious = x;
-		yprevious = y;
-
-		 // Deal Damage w/ Taken Out:
-		if(stick_damage != 0 && fork()){
-			var _damage = stick_damage,
-				_creator = creator,
-				_ang = rotation,
-				_wep = wep,
-				_x = x,
-				_y = y;
-
-			wait 0;
-			if(!instance_exists(self)){
-				with(t){
-					repeat(3) instance_create(x, y, AllyDamage);
-					projectile_hit_raw(self, _damage, true);
-
-					with(instance_nearest_array(_x, _y, array_combine(instances_matching(Player, "wep", _wep), instances_matching(Player, "bwep", _wep)))){
-						if(wep == _wep){
-							wkick = 10;
-						}
-						else if(bwep == _wep){
-							bwkick = 10;
-						}
-					}
-				}
-			}
-			exit;
-		}
-	}
-	else{
-		nowade = false;
-		if(rotspeed == 0) rotspeed = random_range(1, 2) * choose(-1, 1);
-	}
 
 
 /// Mod Events
@@ -5600,7 +5541,7 @@
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);

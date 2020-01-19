@@ -27,25 +27,5 @@
 ],
 
 "rename" : {
-	"enemyWalk"          : "enemy_walk",
-	"enemyHurt"          : "enemy_hurt",
-	"scrEnemyShoot"      : "enemy_shoot",
-	"scrEnemyShootExt"   : "enemy_shoot_ext",
-	"nearest_instance"   : "instance_nearest_array",
-	"scrBossHP"          : "boss_hp",
-	"scrBossIntro"       : "boss_intro",
-	"scrSwap"            : "player_swap",
-	"scrTopDecal"        : "TopDecal_create",
-	"scrCharm"           : "charm_instance",
-	"scrCorpse"          : "corpse_drop",
-	"scrFloorWalls"      : "floor_walls",
-	"scrPortalPoof"      : "portal_poof",
-	"floor_ext"          : "dfloor",
-	"scrPickupPortalize" : "portal_pickups",
-	"scrFloorMake"       : "floor_make",
-	"scrFloorFill"       : "floor_fill",
-	"scrFloorFillRound"  : "floor_fill_round",
-	"scrUnlock"          : "unlock_splat",
-	"decide_wep_gold"    : "weapon_decide_gold",
-	"Pet_spawn"          : "pet_spawn"
+	"weapon_decide_gold" : "weapon_decide"
 }

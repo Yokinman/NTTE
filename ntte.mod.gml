@@ -378,15 +378,15 @@
     global.sPromptIndex = 0;
 
 #define level_start // game_start but every level
-	var	_spawnx = 10016,
-		_spawny = 10016,
+	var	_spawnX = 10016,
+		_spawnY = 10016,
 		_validArea = (GameCont.hard > 1 && instance_number(enemy) > array_length(instances_matching(CustomEnemy, "name", "PortalPrevent"))),
 		_topChance = 1/100,
 		_topSpawn = [];
 		
 	with(Player){
-		_spawnx = x;
-		_spawny = y;
+		_spawnX = x;
+		_spawnY = y;
 	}
     
      // Cool Vault Statues:
@@ -402,7 +402,7 @@
     
      // Wepmimic Arena:
 	if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
-		with(instance_furthest(_spawnx, _spawny, WeaponChest)){
+		with(instance_furthest(_spawnX, _spawnY, WeaponChest)){
 			with(obj_create(x, y, "PetWeaponBecome")){
 				switch(type){
 					case 0: // MELEE
@@ -435,6 +435,14 @@
 			instance_delete(id);
 		}
 	}
+	
+     // Flavor big cactus:
+    if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
+    	with(instance_random([Cactus, NightCactus])){
+	        obj_create(x, y, "BigCactus");
+	        instance_delete(id);
+    	}
+    }
     
      // Area-Specific:
     switch(GameCont.area){
@@ -478,7 +486,7 @@
 				var _x = (bbox_left + bbox_right + 1) / 2,
 					_y = (bbox_top + bbox_bottom + 1) / 2;
 					
-				if(point_distance(_x, _y, _spawnx, _spawny) > 48){
+				if(point_distance(_x, _y, _spawnX, _spawnY) > 48){
 					if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
 						array_push(_spawnFloor, {
 							inst : id,
@@ -494,8 +502,8 @@
     	     // Sharky Skull:
     		with(BigSkull) instance_delete(id);
     		if(GameCont.subarea == 3){
-				var _sx = _spawnx,
-    				_sy = _spawny;
+				var _sx = _spawnX,
+    				_sy = _spawnY;
     				
 			    if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
 	                _sx = cenx;
@@ -672,15 +680,15 @@
 					
 				with(Wall){
 					if(
-						abs(((bbox_left + bbox_right + 1) / 2) - _spawnx) > 48 + (_w / 2) &&
-						abs(((bbox_top + bbox_bottom + 1) / 2) - _spawny) > 48 + (_h / 2)
+						abs(((bbox_left + bbox_right + 1) / 2) - _spawnX) > 48 + (_w / 2) &&
+						abs(((bbox_top + bbox_bottom + 1) / 2) - _spawnY) > 48 + (_h / 2)
 					){
 						array_push(_instSpawn, id);
 					}
 				}
 				
 				with(instance_random(_instSpawn)){
-					var	_dir = point_direction(_spawnx, _spawny, x, y),
+					var	_dir = point_direction(_spawnX, _spawnY, x, y),
 						_dis = 1/3,
 						_campX = x + lengthdir_x(_w * _dis, _dir),
 						_campY = y + lengthdir_y(_h * _dis, _dir),
@@ -736,7 +744,7 @@
 									_fx = x + (_fw / 2),
 									_fy = y + (_fh / 2);
 									
-								if(point_distance(_fx, _fy, _spawnx, _spawny) > 64){
+								if(point_distance(_fx, _fy, _spawnX, _spawnY) > 64){
 									var	_sideStart = choose(-1, 1),
 										_spawn = true;
 										
@@ -769,84 +777,122 @@
 			}
             
              // Top Spawns:
-            _topChance *= (0.5 + (0.5 * GameCont.loops)) * (1 + _eventScorp);
-            _topSpawn = [
-            	[Cactus,			1],
-            	["BabyScorpion",	(_eventScorp ? (1 + GameCont.loops) : 1/20)]
-            ];
-            if(GameCont.subarea == 3){
-            	_topChance *= 2;
-            	
-             	if(!_eventScorp){
-             		array_push(_topSpawn, [Bandit, 1 + GameCont.loops]);
-             	}
-            	array_push(_topSpawn, [Barrel, 1/5]);
-            	
-            	 // Bandit Camp:
-            	/*
-            	if(chance(1, 50)){
-            		with(_topSpawn){
-            			switch(self[0]){
-            				case Cactus:
-            					self[@0] = Bandit;
-            					break;
-            					
-            				case Barrel:
-            					self[@1] = 1 + GameCont.loops;
-            					if(_eventScorp) self[@1] /= 2;
-            					break;
-            			}
-            		}
-            		
-            		 // More Bandit:
-            		with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
-            			corpse_drop(direction, 0);
-            			
-        				mask_index = sprBarrel;
-        				if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop)){
-	            			with(instance_create(x, y, Barrel)){
-	            				x += irandom_range(-2, 2);
-	            				y -= irandom(2);
-	            				repeat(2) instance_create(x, y, Bandit);
-	            			}
-        				}
-        				
-            			instance_delete(id);
-            		}
-            		with(WantBoss) number++;
-            		
-            		 // Sound:
-            		sound_play_pitchvol(sndVlambeer, 0.7, 2);
-            		sound_play_pitchvol(sndHitPlant, 0.5, 2);
-            		sound_play_pitchvol(sndSelectUp, 0.7, 2);
-            		sound_play_pitchvol(sndBigBanditTaunt, 1 + orandom(0.2), 0.5);
-            	}
-            	*/
-            }
-            else{
-            	array_push(_topSpawn, [JungleFly, GameCont.loops]);
-            }
-            if(chance(1, 3)){
-            	with(instance_random(TopSmall)){
-            		with(top_create(x, y, BonePile, random(360), random_range(128, 160))){
-						var d = random(360);
-						repeat(choose(1, 1, 2)){
-							top_create(x, y, Cactus, d, -1);
-							d += 180 + orandom(90);
+			if(chance(1, 5)){
+				with(instance_random(TopPot)){
+					var	_x = x,
+						_y = y,
+						_dis = 64,
+						_dir = random(360),
+						_type = choose("Bandit", "Cactus", "Chest", "Wep"); // Loop JungleFly/maggot nest?
+						
+					 // Avoid Floors:
+					if(instance_exists(Floor)){
+						var	f = instance_nearest(_x, _y, Floor),
+							l = 8,
+							d = point_direction((f.bbox_left + f.bbox_right + 1) / 2, (f.bbox_top + f.bbox_bottom + 1) / 2, _x, _y);
+							
+						while(collision_circle(_x, _y, _dis, Floor, false, false)){
+							_x += lengthdir_x(l, d);
+							_y += lengthdir_y(l, d);
 						}
 						
-						 // Hmmm:
-						var	l = 128,
-							d = spawn_dir;
+						_dir = d;
+					}
+					
+					 // Create:
+					var	_num = 3,
+						_ang = random(360),
+						_decalNum = _num,
+						_cactusNum = irandom_range(1, _num),
+						_banditNum = 0;
+						
+					switch(_type){
+						case "Bandit":
+							_banditNum = irandom_range(1, _num);
+							_cactusNum = max(_cactusNum, _banditNum - 1);
+							obj_create(_x, _y - 4, "WallEnemy");
+							break;
 							
-						with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest), -1, -1)){
-							top_create(x + orandom(24), y + orandom(24), AmmoChest, -1, -1);
-							top_create(x, y, Cactus, random(360), -1);
+						case "Cactus":
+							_cactusNum = _num;
+							top_create(_x, _y - 28, BonePile, 0, 0);
 							
-							 // Skipping Doesn't Count:
-							if(instance_is(target, BigWeaponChest)) GameCont.nochest -= 2;
+							 // Hmmm:
+							var	l = 160,
+								d = _dir;
+								
+							with(top_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest), d, l)){
+								top_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest, -1, -1);
+								top_create(x, y, Cactus, d + 180 + orandom(90), -1);
+								
+								 // Skipping Doesn't Count:
+								if(instance_is(target, BigWeaponChest)) GameCont.nochest -= 2;
+							}
+							break;
+							
+						case "Chest":
+							var _obj = AmmoChest;
+							if(crown_current != crwn_love){
+								if(crown_current == crwn_life && chance(2, 3)){
+									_obj = HealthChest;
+								}
+								else with(Player) if(my_health < maxhealth / 2 && chance(1, 2)){
+									_obj = HealthChest;
+								}
+							}
+							with(top_create(_x, _y - 16, _obj, 0, 0)) spr_shadow_y--;
+							break;
+							
+						case "Wep":
+							_cactusNum = irandom_range(2, _num);
+							with(top_create(_x, _y - 16, "WepPickupGrounded", 0, 0)){
+								with(target) with(target){
+									wep = weapon_decide(3, GameCont.hard + 2, false, null);
+								}
+							}
+							break;
+					}
+					
+					for(var a = _ang; a < _ang + 360; a += (360 / _num)){
+						var l = _dis * random_range(0.3, 0.7),
+							d = a + orandom(15);
+							
+						 // Rocks:
+						if(_decalNum > 0){
+							_decalNum--;
+							with(TopDecal_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), GameCont.area)){
+								x = xstart;
+								y = ystart;
+								instance_create(dfloor(x - 16, 16), dfloor(y - 16, 16), Top);
+							}
 						}
-            		}
+						d += (360 / _num) / 2;
+						
+						 // Enemy:
+						if(_banditNum > 0){
+							_banditNum--;
+							obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "WallEnemy");
+						}
+						
+						 // Cacti:
+						if(_cactusNum > 0){
+							_cactusNum--;
+							l *= random_range(0.4, 0.7);
+							top_create(_x + lengthdir_x(l, d), _y - 20 + lengthdir_y(l, d), Cactus, 0, 0);
+						}
+					}
+					
+					instance_delete(id);
+				}
+            }
+            else with(TopPot){
+            	top_create(x, y - 8, Cactus, random(360), -1);
+            }
+            
+             // Wall Bandits:
+            with(Wall) if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
+            	if(chance(1, 400)){
+            		obj_create(x + 8, y + 8, "WallEnemy");
             	}
             }
             
@@ -959,7 +1005,7 @@
 						
 						 // Find Space:
 						direction = choose(0, 90, 270, 180);
-						while(array_length(instances_meeting(x + 32, y + 32, _floors)) > 0 || point_distance(x, y, _spawnx, _spawny) < 128){
+						while(array_length(instances_meeting(x + 32, y + 32, _floors)) > 0 || point_distance(x, y, _spawnX, _spawnY) < 128){
 							x += lengthdir_x(32, direction);
 							y += lengthdir_y(32, direction);
 							direction += choose(0, 0, -90, 90, 180);
@@ -1244,10 +1290,10 @@
         	
         	 // Vault Flower Room:
         	if(instance_exists(Floor)){
-				var	_farFloor = instance_furthest(_spawnx, _spawny, Floor),
-					_floorDir = point_direction(_spawnx, _spawny, _farFloor.x, _farFloor.y),
-					_floorDis = point_distance(_spawnx, _spawny, _farFloor.x, _farFloor.y) / 2,
-					_midFloor = instance_nearest_array(_spawnx + lengthdir_x(_floorDis, _floorDir), _spawny + lengthdir_y(_floorDis, _floorDir), instances_matching(Floor, "mask_index", mskFloor));
+				var	_farFloor = instance_furthest(_spawnX, _spawnY, Floor),
+					_floorDir = point_direction(_spawnX, _spawnY, _farFloor.x, _farFloor.y),
+					_floorDis = point_distance(_spawnX, _spawnY, _farFloor.x, _farFloor.y) / 2,
+					_midFloor = instance_nearest_array(_spawnX + lengthdir_x(_floorDis, _floorDir), _spawnY + lengthdir_y(_floorDis, _floorDir), instances_matching(Floor, "mask_index", mskFloor));
 					
 				with(instance_random(instances_matching(Floor, "mask_index", mskFloor))){
 					with(instance_create(x, y, CustomObject)){
@@ -1324,9 +1370,9 @@
         case 103: /// MANSIOM  its MANSION idiot, who wrote this
         
              // Spawn Gold Mimic:
-            with(instance_nearest(_spawnx, _spawny, GoldChest)){
+            with(instance_nearest(_spawnX, _spawnY, GoldChest)){
                 with(pet_spawn(x, y, "Mimic")){
-                    wep = weapon_decide_gold(18, 18 + GameCont.loops, 0);
+                    wep = weapon_decide(0, GameCont.hard, true, null);
                 }
                 instance_delete(self);
             }
@@ -1603,14 +1649,6 @@
 	
      // Visibilize Pets:
     with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
-
-     // Flavor big cactus:
-    if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
-    	with(instance_random([Cactus, NightCactus])){
-	        obj_create(x, y, "BigCactus");
-	        instance_delete(id);
-    	}
-    }
 
 	 // Sewer manhole:
 	with(PizzaEntrance){
@@ -4599,7 +4637,7 @@
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
-#define weapon_decide_gold(_minhard, _maxhard, _nowep)                                  return  mod_script_call_nc('mod', 'telib', 'weapon_decide_gold', _minhard, _maxhard, _nowep);
+#define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
