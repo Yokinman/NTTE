@@ -1,1 +1,3 @@
 /loadcrown crime
+/loadcrown bonus
+/loadcrown red

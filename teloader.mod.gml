@@ -33,10 +33,13 @@
         ["areas/pizza.area.gml",                    1 + _coop],
         ["areas/lair.area.gml",                     1 + _coop],
         ["areas/trench.area.gml",                   1 + _coop],
+        ["areas/red.area.gml",                      1 + _coop],
         ["races/parrot.race.gml",                   1 + _coop, "Characters"],
         ["skills/compassion.skill.gml",             1 + _coop, "Mutations"],
         ["skills/reroll.skill.gml",                 1 + _coop],
         ["crowns/crime.crown.gml",                  1 + _coop, "Crowns"],
+        ["crowns/bonus.crown.gml",                  1 + _coop, "Crowns"],
+        ["crowns/red.crown.gml",                    1 + _coop, "Crowns"],
         ["weps/merge.wep.gml",                      1 + _coop, "Weapons"],
         ["weps/crabbone.wep.gml",                   1],
         ["weps/scythe.wep.gml",                     1],
@@ -177,7 +180,7 @@
         }
     }
     draw_set_blend_mode(bm_normal);
-    
+
      // % Text:
     draw_set_font(fntM);
     draw_set_halign(fa_center);
@@ -204,7 +207,7 @@
         else if(!mod_sideload()){
             _text = `/@yallowmod @w${mod_current}.mod`;
         }
-        
+
         if(_text != ""){
             draw_set_font(fntSmall);
             draw_set_halign(fa_center);
@@ -212,4 +215,3 @@
             draw_text_nt(_x, _y + 12, _text);
         }
     }
-    

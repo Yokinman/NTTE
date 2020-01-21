@@ -6,11 +6,9 @@
 	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",		  6,	8,	8);
 	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png",  2, 16, 16);
 
-	global.Chests = [AmmoChest, AmmoChestMystery];
-
 #define crown_name			return "CROWN OF BONUS";
-#define crown_text			return "???";
-#define crown_tip			return "";
+#define crown_text			return "@bBONUS @rHEALTH @sAND @yAMMO @sONLY";
+#define crown_tip			return "ALL EXTRA";
 #define crown_avail			return true;//unlock_get("lairCrown");
 #define crown_menu_avail	return true;//unlock_get("crownBonus");
 
@@ -44,6 +42,14 @@
 	if !instance_exists(GenCont)
 	{
 		 // Only Bonus Ammo/HP:
+		 with(instances_matching(CustomObject, "sprite_index", spr.CursedAmmoChest)){
+ 			obj_create(x, y, "OverstockChest");
+ 			instance_delete(id);
+ 		}
+		with(instances_matching(AmmoChest, "sprite_index", sprIDPDChest)){
+			obj_create(x, y, "OverstockChest");
+			instance_delete(id);
+		}
 		with(instances_matching(AmmoChest, "sprite_index", sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery)){
 			obj_create(x, y, "OverstockChest");
 			instance_delete(id);

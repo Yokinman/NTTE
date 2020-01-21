@@ -3,3 +3,4 @@
 /loadarea pizza
 /loadarea lair
 /loadarea trench
+/loadarea red
