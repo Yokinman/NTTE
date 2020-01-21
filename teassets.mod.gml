@@ -6,7 +6,7 @@
         var m, p;
         msk = {};
         shd = {};
-        
+
          // Shine:
 		Shine8  = sprite_add("sprites/chests/sprShine8.png",  7,  4,  4); // Rads
 		Shine10 = sprite_add("sprites/chests/sprShine10.png", 7,  5,  5); // Pickups
@@ -15,7 +15,7 @@
 		Shine20 = sprite_add("sprites/chests/sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
 		Shine24 = sprite_add("sprites/chests/sprShine24.png", 7, 12, 12); // Big Chests
 		Shine64 = sprite_add("sprites/chests/sprShine64.png", 7, 32, 32); // Giant Chests (YV)
-		
+
          // Top Decals:
         TopDecal = {
             "trench" : sprite("areas/Trench/sprTopDecalTrench", 2, 19, 24)
@@ -55,34 +55,34 @@
 
 		//#region WEAPONS
 		p = "weps/";
-		
+
 			 // Bone:
 			Bone	  = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
-			
+
 			 // Trident:
 			Trident     = sprite(p + "sprTrident", 1, 11, 6, shnWep);
 			msk.Trident = sprite(p + "mskTrident", 1, 11, 6);
-			
+
 		//#endregion
-		
+
 		//#region PROJECTILES
 		p = "projectiles/";
-		
+
 			 // Albino Gator:
 			AlbinoBolt      = sprite(p + "sprAlbinoBolt",     1,  8, 4);
 			AlbinoGrenade   = sprite(p + "sprAlbinoGrenade",  1,  4, 4);
 			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
-			
+
 			 // Bat Discs:
 			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
 			BatDiscBig   = sprite(p + "sprBatDiscBig",   2, 14, 14);
 			BigDiscTrail = sprite(p + "sprBigDiscTrail", 3, 12, 12);
-			
+
 			 // Bat Lightning:
 			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
-			
+
 			 // Bone:
 			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
 			msk.BoneSlashLight	= sprite(p + "mskBoneSlashLight", 3, 16, 16);
@@ -101,31 +101,31 @@
 			BubbleExplosionSmall = sprite(p + "sprBubbleExplosionSmall",  7, 12, 12);
 			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
 			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
-			
+
 			 // Clam Shield Slash:
 			ClamShieldSlash     = sprite(p + "sprClamShieldSlash", 4, 12, 12);
 			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash", 4, 12, 12);
-			
+
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
 			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
-			
+
 			 // Harpoon:
 			Harpoon      = sprite(p + "sprHarpoon",      1, 4, 3, shnWep);
 			HarpoonOpen  = sprite(p + "sprHarpoonOpen",  5, 4, 3);
 			HarpoonFade  = sprite(p + "sprHarpoonFade",  5, 7, 3);
 			NetNade      = sprite(p + "sprNetNade",      1, 3, 3);
 			NetNadeBlink = sprite(p + "sprNetNadeBlink", 2, 3, 3);
-			
+
 			 // Mortar Plasma:
 			MortarPlasma = sprite(p + "sprMortarPlasma", 8, 8, 8);
-			
+
 			 // Portal Guardian:
 			PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
 			PortalBulletSpawn = sprite(p + "sprPortalBulletSpawn", 7, 26, 26);
-			
+
 			 // Quasar Beam:
 			QuasarBeam      = sprite(p + "sprQuasarBeam",      2,  0, 16);
 			QuasarBeamStart = sprite(p + "sprQuasarBeamStart", 2, 32, 16);
@@ -133,10 +133,10 @@
 			QuasarBeamHit   = sprite(p + "sprQuasarBeamHit",   6, 24, 24);
 			QuasarBeamTrail = sprite(p + "sprQuasarBeamTrail", 3,  4,  4);
 			msk.QuasarBeam  = sprite(p + "mskQuasarBeam",      1, 32, 16);
-			
+
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
-			
+
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
 			EnemyHeavyBullet        = sprite(p + "sprEnemyHeavyBullet",        2, 12, 12);
@@ -156,23 +156,23 @@
 			EnemyPlasmaTrail        = sprite(p + "sprEnemyPlasmaTrail",        3,  4,  4);
             AllySniperBullet        = sprite(p + "sprAllySniperBullet",        2,  6,  8);
             PlayerLaserCharge       = sprite(p + "sprPlayerLaserCharge",       4,  3,  3);
-            
+
 		//#endregion
-		
+
 		//#region ALERTS
 		p = "enemies/Alerts/";
-		
+
 			 // Alert Indicators:
 			AlertIndicator          = sprite(p + "sprAlertIndicator",         1, 1, 6);
 			AlertIndicatorMystery   = sprite(p + "sprAlertIndicatorMystery",  1, 2, 6);
-			
+
 			 // Alert Icons:
 			SealAlert       		= sprite(p + "sprSealAlert",              1, 7, 7);
 			ArcticSealAlert 		= sprite(p + "sprArcticSealAlert",        1, 7, 7);
 			GatorAlert      		= sprite(p + "sprGatorAlert",             1, 7, 7);
 			GatorAlbinoAlert		= sprite(p + "sprAlbinoGatorAlert",       1, 7, 7);
 			SludgePoolAlert			= sprite(p + "sprSludgePoolAlert",        1, 7, 7);
-			
+
 		//#endregion
 
         //#region CAMPFIRE
@@ -269,7 +269,7 @@
 	         // Fly:
 	        p = "areas/Desert/"
 	        FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
-        	
+
         	 // Wall Dude:
         	WallEnemy = sprite(p + "sprWallEnemy", 9, 8, 8);
 
@@ -491,7 +491,7 @@
 	            PufferFire[2, 1] = sprite(p + "sprPufferBlowB2",  2, 15, 16);
 	            PufferFire[3, 0] = sprite(p + "sprPufferBlow3",   2, 15, 16);
 	            PufferFire[3, 1] = sprite(p + "sprPufferBlowB3",  2, 15, 16);
-	            
+
 	             // Crab Tank:
 	            CrabTankIdle = sprCrabIdle;
 	            CrabTankWalk = sprCrabWalk;
@@ -816,7 +816,7 @@
 
 			//#region ENEMIES
 			m = "enemies/";
-				
+
 				 // Bone Raven:
 				p = m + "BoneRaven/";
 				BoneRavenIdle	= sprite(p + "sprBoneRavenIdle",	33, 12, 12);
@@ -826,7 +826,7 @@
 				BoneRavenLift	= sprite(p + "sprBoneRavenLift",	5,	32, 32);
 				BoneRavenLand	= sprite(p + "sprBoneRavenLand",	4,	32, 32);
 				BoneRavenFly	= sprite(p + "sprBoneRavenFly", 	5,	32, 32);
-				
+
 				 // Saw Trap:
 				p = m + "SawTrap/";
 				SawTrap       = sprite(p + "sprSawTrap",       1, 20, 20);
@@ -949,9 +949,9 @@
 
 		//#region CRYSTAL
 			m = "areas/Crystal/";
-			
+
 			WallShine = sprite_add_weapon("sprites/areas/Crystal/sprWallShine.png", 0, 0); // sorry yokinman
-			
+
 			//#region TILES
 			p = m;
 
@@ -981,14 +981,14 @@
 	    		CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
 	    		CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
 	    		CrystalHeartProj = sprite(p + "sprCrystalHeartProj",  2, 10, 10);
-	    		
+
 	    		 // Red Crystal Spider:
 	    		p = m + "RedSpider/";
 	    		RedSpiderIdle = sprite(p + "sprRedSpiderIdle", 8, 12, 12);
 	    		RedSpiderWalk = sprite(p + "sprRedSpiderWalk", 6, 12, 12);
 	    		RedSpiderHurt = sprite(p + "sprRedSpiderHurt", 3, 12, 12);
 	    		RedSpiderDead = sprite(p + "sprRedSpiderDead", 7, 12, 12);
-        		
+
         	//#endregion
 
 		//#endregion
@@ -1027,6 +1027,14 @@
             BatChestBigOpen       = sprite(p + "sprBatChestBigOpen",       1, 12, 12);
             BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
             CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
+
+				// Crown of Bonus Chests:
+						OverhealChest 						 = sprite(p + "sprOverhealChest", 						 15,  8,  8);
+						OverstockChest 						 = sprite(p + "sprOverstockChest",						 15,  8,  8);
+						OverstockChestSteroids 		 = sprite(p + "sprOverstockChestSteroids",		 15, 12, 12);
+						OverhealChestOpen 				 = sprite(p + "sprOverhealChestOpen", 				  1,  8,  8);
+						OverstockChestOpen 				 = sprite(p + "sprOverstockChestOpen", 				1,  8,  8);
+						OverstockChestSteroidsOpen = sprite(p + "sprOverstockChestSteroidsOpen", 1, 12, 12);
 
              // Bone:
 			BonePickup	  =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
@@ -1416,7 +1424,7 @@
         }
         exit;
     }
-    
+
 	 // Loadout Crown System:
     global.loadout_crown = {
         size : [],
@@ -1430,7 +1438,7 @@
     }
     surfCrownHide       = surflist_set("CrownHide",       0, 0, 32, 32);
     surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
-    
+
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -1560,12 +1568,12 @@ var _shine = argument_count > 4 ? argument[4] : false;
     	global.clock_fix = false;
     	sprite_restore(sprClockParts);
     }
-    
+
      // Special Loadout Crown Selected:
     var p = crownPlayer,
         _crown = lq_get(crownRace, player_get_race_fix(p)),
         _crownPoints = GameCont.crownpoints;
-        
+
     if(!is_undefined(_crown)){
     	if(_crown.custom.slct != -1 && crown_current == _crown.slct && _crown.custom.slct != _crown.slct){
 	    	switch(_crown.custom.slct){
@@ -1573,7 +1581,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	        		 // Get Unlocked Crowns:
 	        		var	_listLocked = [],
 	        			_list = [];
-	        			
+
 	        		with(_crown.icon) if(locked){
 	        			array_push(_listLocked, crwn);
 	        		}
@@ -1732,7 +1740,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 			ntte_autosave = true;
 		}
 	}
-	
+
 	 // Loadout Crowns:
 	if(instance_exists(Menu)){
     	with([surfCrownHide, surfCrownHideScreen]) active = true;
@@ -1755,13 +1763,13 @@ var _shine = argument_count > 4 ? argument[4] : false;
 					with(_inst){
 						alarm0 = -1;
 						event_perform(ev_alarm, 0);
-	
+
 						 // Place by Last Played Character:
 						with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
 							other.x = x + (random_range(12, 24) * choose(-1, 1));
 							other.y = y + random_range(-8, 8);
 						}
-	
+
 						 // Visual Setup:
 						var c = crownCamp;
 						if(is_string(c)){
@@ -1773,7 +1781,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 						}
 						depth = -2 - (y / 10000);
 					}
-	
+
 					 // Delete:
 					if(fork()){
 						wait 5;
@@ -1804,7 +1812,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	else{
     	with([surfCrownHide, surfCrownHideScreen]) active = false;
-    	
+
 		 // For CharSelection Crown Boy:
 	    crownCamp = crown_current;
 	}
@@ -1952,12 +1960,12 @@ var _shine = argument_count > 4 ? argument[4] : false;
         _h = 20,
         _cx = game_width - 102,
         _cy = 75;
-        
+
 	if(_crown == null){
 		instance_destroy();
 		exit;
 	}
-	
+
     for(var i = 0; i < array_length(_crown.icon); i++){
         var _icon = _crown.icon[i];
         if(instance_exists(_icon.inst)) with(_icon){
@@ -1978,12 +1986,12 @@ var _shine = argument_count > 4 ? argument[4] : false;
                         surface_set_target(_surfScreen);
                         draw_clear(c_black);
                         surface_reset_target();
-        
+
                         draw_set_blend_mode_ext(bm_one, bm_one);
                         surface_screenshot(_surfScreen);
                         draw_set_blend_mode(bm_normal);
                     }
-                    
+
                      // Capture Crown Icon from Screen Capture:
                     if(!surface_exists(_surfCrown)){
                         _surfCrown = surface_create(_w, _h);
@@ -1992,7 +2000,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
                     draw_clear_alpha(0, 0);
                     draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
                     surface_reset_target();
-    
+
                      // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
                     var f = crownPath + string(crwn) + crownPathD;
                     surface_save(_surfCrown, f);
@@ -2016,9 +2024,9 @@ var _shine = argument_count > 4 ? argument[4] : false;
         	_crown.custom.icon = [];
         }
     }
-    
+
      // Manually Keep Track of Crown's Status:
-    with(_crown.icon) if(visible){ 
+    with(_crown.icon) if(visible){
         blnd = c_gray;
 
         with(other) if(instance_exists(other.inst)) with(other){
@@ -2031,14 +2039,14 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	                _crown.slct = crwn;
 	                _crown.custom.slct = -1;
 	            }
-	
+
 	             // Hovering Over Button:
 	            if(crwn != _crown.slct || _crown.custom.slct != -1){
 	                addy--;
 	                blnd = merge_color(c_gray, c_white, 0.6);
 	            }
 	        }
-	
+
 	         // Selected:
 	        if(crwn == _crown.slct && _crown.custom.slct == -1){
 	            addy -= 2;
@@ -2046,7 +2054,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	        }
         }
     }
-    
+
      // Crown Loadout Setup:
     if(instance_exists(LoadoutCrown)){
         if(array_length(_crown.icon) <= 0){
@@ -2056,7 +2064,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 
             for(var i = array_length(_crownList) - 1; i >= 0; i--){
             	var n = ((array_length(_crownList) - 1) - i);
-            	
+
                 array_push(_crown.icon, {
                     inst : _crownList[i],
                     crwn : n + 1,
@@ -2268,7 +2276,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
         }
     }
 	else crownSize = [];
-	
+
      // Drawing Custom Crown on Collapsed Loadout:
     if(_crown.custom.slct != -1){
     	with(surfCrownHide) if(surface_exists(surf)){
@@ -2288,52 +2296,52 @@ var _shine = argument_count > 4 ? argument[4] : false;
             }
     	}
     }
-    
+
     instance_destroy();
 
 #define loadout_behind
     instance_destroy();
-    
+
     var p = crownPlayer,
         _crown = lq_get(crownRace, player_get_race_fix(p));
-        
+
 	if(is_undefined(_crown)) exit;
-	
+
 	with(surfCrownHide) if(surface_exists(surf)){
 		var	_surf = surf,
 			_surfx = -60 - (w / 2),
 			_surfy = -39 - (h / 2);
-			
+
 	    with(Loadout){
 	        _surfy += (introsettle - (introsettle > 0));
 			if(position_meeting(mouse_x[p], mouse_y[p], self)){
 				_surfx--;
 				_surfy--;
 			}
-			
+
 			if(_crown.slct != crwn_none){
 				with(surfCrownHideScreen) if(surface_exists(surf)){
 					x = other.x - game_width;
 					y = other.y - (game_height - 36);
 					w = game_width;
 					h = game_height;
-					
+
 					 // Capture Screen:
 			        surface_set_target(surf);
 			        draw_clear(c_black);
 			        draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
 			        surface_screenshot(surf);
 			        draw_set_blend_mode(bm_normal);
-			        
+
 					with(other){
 			        	surface_set_target(_surf);
 			        	draw_clear_alpha(0, 0);
-			        	
+
 						 // Draw Mask of What to Hide (The Currently Selected Crown):
 						draw_set_fog(true, c_black, 0, 0);
 				        draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
 						draw_set_fog(false, 0, 0, 0);
-						
+
 						 // Lay Screen + Loadout Sprite Over Mask:
 			        	draw_set_color_write_enable(true, true, true, false);
 			        	draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
@@ -2342,15 +2350,15 @@ var _shine = argument_count > 4 ? argument[4] : false;
 			        	draw_set_color_write_enable(true, true, true, true);
 					}
 		        }
-		        
+
 	        	surface_reset_target();
 			}
 	    }
-	    
+
 	    x = _surfx;
 	    y = _surfy;
 	}
-	
+
 	 // Fix Haste Hands:
 	if(global.clock_fix){
 		with(Loadout) if(selected == false){
@@ -2358,7 +2366,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 			sprite_restore(sprClockParts);
 		}
 	}
-	
+
 	 // Cool Unused Splat:
 	with(instances_matching(Loadout, "visible", true)){
 		if(selected == true){
@@ -2369,32 +2377,32 @@ var _shine = argument_count > 4 ? argument[4] : false;
 			if("closeanim" in self && closeanim < sprite_get_number(_spr)){
 				draw_sprite(_spr, closeanim, view_xview_nonsync + game_width, view_yview_nonsync + game_height - 36);
 				closeanim += current_time_scale;
-				
+
 				image_index = 0;
 				image_speed_raw = image_number - 1;
 			}
 		}
 	}
-	
+
 #define player_get_race_fix(p) /// Used for custom crown loadout
 	var _race = player_get_race(p);
-	
+
 	 // Fix 1 Frame Delay Thing:
 	var _raceChange = (button_pressed(p, "east") - button_pressed(p, "west"));
 	if(_raceChange != 0){
 		var _new = _race;
-		
+
 		with(instances_matching(CharSelect, "race", _race)){
 			var _slct = instances_matching_ne(instances_matching_ne(CharSelect, "id", id), "race", 16/*==Locked in game logic??*/),
 				_inst = _slct;
-				
+
 			if(_raceChange > 0){
 				_inst = instances_matching_gt(_slct, "xstart", xstart);
 			}
 			else{
 				_inst = instances_matching_lt(_slct, "xstart", xstart);
 			}
-			
+
 			 // Find Next CharSelect:
 			if(array_length(_inst) > 0){
 				var _min = 0;
@@ -2406,7 +2414,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 					}
 				}
 			}
-			
+
 			 // Loop Around to Farthest CharSelect:
 			else{
 				var _max = 0;
@@ -2419,12 +2427,12 @@ var _shine = argument_count > 4 ? argument[4] : false;
 				}
 			}
 		}
-		
+
 		_race = _new;
 	}
-	
+
 	return _race;
-	
+
 #define array_combine(_array1, _array2)
 	var a = array_clone(_array1);
 	array_copy(a, array_length(a), _array2, 0, array_length(_array2));
@@ -2626,6 +2634,6 @@ var _shine = argument_count > 4 ? argument[4] : false;
         	instance_delete(id);
         }
     }
-    
+
      // Reset Clock Parts:
     if(global.clock_fix) sprite_restore(sprClockParts);
