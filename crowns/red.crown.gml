@@ -7,7 +7,7 @@
 	global.Spawned = false;
 
 #define crown_name			return "RED CROWN";
-#define crown_text			return "MORE @rHEARTS# qsSMALLER @wAREAS";
+#define crown_text			return "MORE @rHEARTS# @sSMALLER @wAREAS";
 #define crown_tip			return "";
 #define crown_avail			return true;//unlock_get("lairCrown");
 #define crown_menu_avail	return true;//unlock_get("crownRed");
@@ -42,7 +42,9 @@
 	 // Make areas smaller:
 	with instances_matching_ne(FloorMaker, "crowned", true){
 		crowned = true;
-		goal = round(goal * .35);
+		if GameCont.area != 0 && GameCont.area != 100 && GameCont.area != 107 && GameCont.area != "pizza" && GameCont.area != "lair"{
+			goal = round(goal * .35);
+		}
 		global.Spawned = false;
 	}
 
@@ -56,6 +58,9 @@
 								_floorq = ds_list_create(),
 			         			 _i = 0;
 
+	    if GameCont.area = 0 || GameCont.area = 100 || GameCont.area = 107 || GameCont.area = "pizza" || GameCont.area = "lair"{
+				_heart_amount = 0;
+		  }
 			 // Add eligible floor tiles to the list:
 			with Floor
 			{
@@ -76,7 +81,7 @@
 			}
 			ds_list_shuffle(_floorq);
 
-			repeat(_heart_amount){
+			if (ds_list_size(_floorq) > 0 && _heart_amount > 0) repeat(_heart_amount){
 				with obj_create(_floorq[| 0].x + 16, _floorq[| 0].y + 18, "CrystalHeart"){
 					do{
 						if place_meeting(x, y, Wall)
