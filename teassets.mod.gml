@@ -1029,12 +1029,22 @@
             CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
 
 				// Crown of Bonus Chests:
-						OverhealChest 						 = sprite(p + "sprOverhealChest", 						 15,  8,  8);
-						OverstockChest 						 = sprite(p + "sprOverstockChest",						 15,  8,  8);
-						OverstockChestSteroids 		 = sprite(p + "sprOverstockChestSteroids",		 15, 12, 12);
-						OverhealChestOpen 				 = sprite(p + "sprOverhealChestOpen", 				  1,  8,  8);
-						OverstockChestOpen 				 = sprite(p + "sprOverstockChestOpen", 				1,  8,  8);
+						OverhealChest 						 = sprite(p + "sprOverhealChest", 						15,  8,  8);
+						OverstockChest 						 = sprite(p + "sprOverstockChest",						15,  8,  8);
+						OverstockChestSteroids 		 = sprite(p + "sprOverstockChestSteroids",		15, 12, 12);
+						OverhealChestOpen 				 = sprite(p + "sprOverhealChestOpen", 				 1,  8,  8);
+						OverstockChestOpen 				 = sprite(p + "sprOverstockChestOpen", 				 1,  8,  8);
 						OverstockChestSteroidsOpen = sprite(p + "sprOverstockChestSteroidsOpen", 1, 12, 12);
+						OverstockMimicIdle = sprite(p + "sprOverstockMimicIdle",  1, 16, 16);
+						OverstockMimicTell = sprite(p + "sprOverstockMimicTell", 12, 16, 16);
+						OverstockMimicHurt = sprite(p + "sprOverstockMimicHurt",  3, 16, 16);
+						OverstockMimicDead = sprite(p + "sprOverstockMimicDead",  6, 16, 16);
+						OverstockMimicFire = sprite(p + "sprOverstockMimicFire",  4, 16, 16);
+						OverhealMimicIdle = sprite(p + "sprOverhealMimicIdle",  1, 16, 16);
+						OverhealMimicTell = sprite(p + "sprOverhealMimicTell", 10, 16, 16);
+						OverhealMimicHurt = sprite(p + "sprOverhealMimicHurt",  3, 16, 16);
+						OverhealMimicDead = sprite(p + "sprOverhealMimicDead",  6, 16, 16);
+						OverhealMimicFire = sprite(p + "sprOverhealMimicFire",  4, 16, 16);
 
              // Bone:
 			BonePickup	  =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),

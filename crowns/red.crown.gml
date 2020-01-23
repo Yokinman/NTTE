@@ -39,6 +39,8 @@
 	}
 
 #define step
+	if instance_exists(Menu) exit
+
 	 // Make areas smaller:
 	with instances_matching_ne(FloorMaker, "crowned", true){
 		crowned = true;

@@ -23,6 +23,124 @@
 #macro surfWepPickupGrounded global.surfWepPickupGrounded
 
 
+#define OverstockMimic_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.OverstockMimicIdle;
+		spr_walk = spr.OverstockMimicFire;
+		spr_hurt = spr.OverstockMimicHurt;
+		spr_dead = spr.OverstockMimicDead;
+		spr_chrg = spr.OverstockMimicTell;
+		spr_shadow = shd24;
+		hitid = [spr.OverstockMimicFire, "OVERSTOCK MIMIC"];
+
+		 // Sound:
+		snd_hurt = sndMimicHurt;
+		snd_dead = sndMimicDead;
+		snd_mele = sndMimicMelee;
+		snd_tell = sndMimicSlurp;
+
+		 // Vars:
+		mask_index = -1;
+		maxhealth = 12;
+		raddrop = 6;
+		size = 1;
+		maxspeed = 2;
+		meleedamage = 3;
+		num = 2;
+    spr_shadow_y = -1;
+
+		 // Alarms:
+		alarm1 = irandom_range(90, 240);
+
+		return id;
+	}
+
+#define OverstockMimic_step
+	if(speed > maxspeed) speed = maxspeed;
+
+	 // Animate:
+	if(sprite_index == spr_chrg && anim_end){
+		sprite_index = spr_idle;
+	}
+	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+		sprite_index = spr_walk;
+	}
+
+#define OverstockMimic_alrm1
+	alarm1 = irandom_range(90, 240);
+
+	sprite_index = spr_chrg;
+	image_index = 0;
+
+	sound_play_hit(snd_tell, 0.1);
+
+#define OverstockMimic_death
+	 // Pickups:
+   repeat(num){
+     obj_create(x, y, "OverstockPickup");
+   }
+
+
+#define OverhealMimic_create(_x, _y)
+   	with(instance_create(_x, _y, CustomEnemy)){
+   		 // Visual:
+   		spr_idle = spr.OverhealMimicIdle;
+   		spr_walk = spr.OverhealMimicFire;
+   		spr_hurt = spr.OverhealMimicHurt;
+   		spr_dead = spr.OverhealMimicDead;
+   		spr_chrg = spr.OverhealMimicTell;
+   		spr_shadow = shd24;
+   		hitid = [spr.OverhealMimicFire, "OVERHEAL MIMIC"];
+
+   		 // Sound:
+   		snd_hurt = sndMimicHurt;
+   		snd_dead = sndMimicDead;
+   		snd_mele = sndMimicMelee;
+   		snd_tell = sndMimicSlurp;
+
+   		 // Vars:
+   		mask_index = -1;
+   		maxhealth = 12;
+   		raddrop = 15;
+   		size = 1;
+   		maxspeed = 2;
+   		meleedamage = 4;
+   		num = 2;
+      spr_shadow_y = -1;
+
+   		 // Alarms:
+   		alarm1 = irandom_range(180, 480);
+
+   		return id;
+   	}
+
+#define OverhealMimic_step
+  if(speed > maxspeed) speed = maxspeed;
+
+   	 // Animate:
+   if(sprite_index == spr_chrg && anim_end){
+   	 sprite_index = spr_idle;
+   	}
+   	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+   	  sprite_index = spr_walk;
+   	}
+
+#define OverhealMimic_alrm1
+  alarm1 = irandom_range(180, 480);
+
+   sprite_index = spr_chrg;
+   image_index = 0;
+
+   sound_play_hit(snd_tell, 0.1);
+
+#define OverhealMimic_death
+   // Pickups:
+   repeat(num){
+      obj_create(x, y, "OverhealPickup");
+    }
+
+
 #define OverhealChest_create(_x, _y)
   with(obj_create(_x, _y, "CustomChest")){
      // Visual:
@@ -43,7 +161,6 @@
   }
 
 #define OverhealChest_step
-
    // FX:
   wave += current_time_scale;
   if((wave % 30) < current_time_scale){
@@ -89,7 +206,6 @@
   }
 
 #define OverstockChest_step
-
    // FX:
   wave += current_time_scale;
   if((wave % 30) < current_time_scale){

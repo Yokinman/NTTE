@@ -1,10 +1,10 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 
-	global.sprCrownIcon	    = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIcon.png",		  1, 12, 16);
-	global.sprCrownIdle	    = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIdle.png",	   15,  8,	8);
-	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",		  6,	8,	8);
-	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png",  2, 16, 16);
+	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIcon.png",		1, 12, 16);
+	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIdle.png",	 15,  8,  8);
+	global.sprCrownWalk	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",		6,	 8,	8);
+	global.sprCrownLoadout = sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png", 2, 16, 16);
 
 #define crown_name			return "CROWN OF BONUS";
 #define crown_text			return "@bBONUS @rHEALTH @sAND @yAMMO @sONLY";
@@ -68,6 +68,15 @@
 		instance_delete(id);
 	}
 
+	 // Give Mimics a new paint job:
+	with instances_matching(Mimic, "spr_idle", sprMimicIdle){
+		obj_create(x, y, "OverstockMimic");
+		instance_delete(id);
+	}
+	with instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle){
+		obj_create(x, y, "OverhealMimic");
+		instance_delete(id);
+	}
 
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
