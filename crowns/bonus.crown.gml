@@ -7,7 +7,7 @@
 	global.sprCrownLoadout = sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png", 2, 16, 16);
 
 #define crown_name			return "CROWN OF BONUS";
-#define crown_text			return "@bBONUS @rHEALTH @sAND @yAMMO @sONLY";
+#define crown_text			return "@yPICKUPS @sARE @wBETTER# @sBUT SCARCE";
 #define crown_tip			return "ALL EXTRA";
 #define crown_avail			return true;//unlock_get("lairCrown");
 #define crown_menu_avail	return true;//unlock_get("crownBonus");
@@ -60,11 +60,11 @@
 		}
 	}
 	with(instances_matching(HPPickup, "sprite_index", sprHP)){
-		obj_create(x, y, "OverhealPickup");
+		if (!irandom(2)) obj_create(x, y, "OverhealPickup");
 		instance_delete(id);
 	}
 	with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
-		obj_create(x, y, "OverstockPickup");
+		if (!irandom(2)) obj_create(x, y, "OverstockPickup");
 		instance_delete(id);
 	}
 
