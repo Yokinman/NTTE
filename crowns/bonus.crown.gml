@@ -60,11 +60,21 @@
 		}
 	}
 	with(instances_matching(HPPickup, "sprite_index", sprHP)){
-		if (!irandom(2)) obj_create(x, y, "OverhealPickup");
+		if (!irandom(2)) obj_create(x, y, "OverstockPickup");
 		instance_delete(id);
 	}
 	with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
-		if (!irandom(2)) obj_create(x, y, "OverstockPickup");
+		var _ammo_bonus = 0,
+				_mult       = 0,
+				_chance     = 50;
+		for (var i = 0; i < maxp; i++){
+			with instances_matching_gt(Player, "ammo_bonus", 0){
+				_ammo_bonus += ammo_bonus;
+				_mult++;
+			}
+		}
+		_chance += min(39, 39 * ((_ammo_bonus / _mult) / 120) - (skill_get(mut_rabbit_paw) * 15));
+		if (irandom(99) > _chance) obj_create(x, y, "OverstockPickup");
 		instance_delete(id);
 	}
 

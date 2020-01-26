@@ -22,7 +22,6 @@
 
 #macro surfWepPickupGrounded global.surfWepPickupGrounded
 
-
 #define OverstockMimic_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -903,6 +902,27 @@
 	sprite_index = sprAmmo;
 	image_blend = c_white;
 
+   // Crown of Bonus interaction:
+  if (crown_current = "bonus"){
+    switch(drop){
+      case "ammo":
+        drop = "ammo_bonus";
+        break;
+
+      case "health":
+        drop = "health_bonus";
+        break;
+
+      case "health_chest":
+        drop = "health_bonus_chest";
+        break;
+
+      case "health_chest":
+        drop = "health_bonus_chest";
+        break;
+    }
+  }
+
 	 // Shop Setup:
 	switch(type){
 		case ChestShop_basic:
@@ -946,6 +966,15 @@
 					image_blend = make_color_rgb(255, 255, 0);
 					break;
 
+        case "ammo_bonus_chest":
+  				text = "OVERSTOCK";
+  				desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+
+  					// Visual:
+  				sprite_index = (ultra_get("steroids", 2) ? spr.OverstockChestSteroids : spr.OverstockChest);
+  				image_blend = make_color_rgb(33, 80, 222);
+  				break;
+
 				case "health_chest":
 					text = "HEALTH";
 					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
@@ -954,6 +983,15 @@
 					sprite_index = sprHealthChest;
 					image_blend = make_color_rgb(255, 255, 255);
 					break;
+
+          case "health_bonus_chest":
+          text = "OVERHEAL";
+          desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+
+             // Visual:
+          sprite_index = spr.OverhealChest;
+          image_blend = make_color_rgb(33, 80, 222);
+          break;
 
 				case "rads_chest":
 					text = "RADS";
