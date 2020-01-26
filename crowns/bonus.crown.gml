@@ -1,5 +1,5 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	global.spr = mod_variable_get("mod", "teassets", "spr");
 
 	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIcon.png",		1, 12, 16);
 	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIdle.png",	 15,  8,  8);
@@ -11,6 +11,8 @@
 #define crown_tip			return "ALL EXTRA";
 #define crown_avail			return true;//unlock_get("lairCrown");
 #define crown_menu_avail	return true;//unlock_get("crownBonus");
+
+#macro spr global.spr
 
 #define crown_menu_button
     sprite_index = global.sprCrownLoadout;
@@ -64,16 +66,24 @@
 		instance_delete(id);
 	}
 	with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
-		var _ammo_bonus = 0,
-				_mult       = 0,
-				_chance     = 50;
+		var _ammo_bonus = 1,
+				_mult       = 1,
+				_chance     = 30;
 		for (var i = 0; i < maxp; i++){
 			with instances_matching_gt(Player, "ammo_bonus", 0){
 				_ammo_bonus += ammo_bonus;
 				_mult++;
 			}
 		}
-		_chance += min(39, 39 * ((_ammo_bonus / _mult) / 120) - (skill_get(mut_rabbit_paw) * 15));
+		with(instances_matching(Pickup, "sprite_index", spr.OverstockPickup)){
+			_ammo_bonus += 200;
+		}
+		with(instances_matching(Pickup, "sprite_index", spr.OverstockChest, spr.OverstockChestSteroids)){
+			_ammo_bonus += 320;
+		}
+		_ammo_bonus--;
+		_mult--;
+		_chance += min(94, 94 * ((_ammo_bonus / _mult) / 100) - (skill_get(mut_rabbit_paw) * 15));
 		if (irandom(99) > _chance) obj_create(x, y, "OverstockPickup");
 		instance_delete(id);
 	}
