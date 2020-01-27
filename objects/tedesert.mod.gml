@@ -1793,39 +1793,48 @@
 	 // Spawn Bandit:
 	else{
 		if(position_meeting(x, y, Floor)){
-			 // Boy:
 			with(instance_create(x, y, Bandit)){
 				wkick = 8;
+				
+				 // Alert:
+				with(scrAlert(self, spr.BanditAlert)){
+					flash = 6;
+					alarm0 = 60;
+					blink = 15;
+				}
+				
+				 // Launch:
+				with(instance_nearest_array(x - 16, y - 16, instances_matching_ne(Floor, "mask_index", mskFloorExplo))){
+					other.direction = point_direction(other.x, other.y, (bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2) + orandom(30);
+				}
 				with(obj_create(x, y, "BackpackPickup")){
-					with(instance_furthest(x, y, Floor)){
-						other.direction = point_direction(other.x, other.y, x, y) + orandom(30);
-					}
 					zspeed *= 1.2;
 					speed /= 1.2;
 					target = other;
+					direction = other.direction;
 					event_perform(ev_step, ev_step_end);
 				}
-			}
-			
-			 // Pickup:
-			var _minID = GameObject.id;
-			pickup_drop(1000, 0);
-			with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
-				with(obj_create(x, y, "BackpackPickup")){
-					target = other;
-					event_perform(ev_step, ev_step_end);
+				
+				 // Pickup:
+				pickup_drop(1000, 0);
+				with(instances_matching_gt([Pickup, chestprop], "id", id)){
+					with(obj_create(x, y, "BackpackPickup")){
+						target = other;
+						direction = other.direction + orandom(60);
+						event_perform(ev_step, ev_step_end);
+					}
 				}
-			}
-			
-			 // Effects:
-			if(chance(1, 15)){
-				with(scrFX(x, y, 3, Shell)){
-					sprite_index = sprSodaCan;
-					image_index = irandom(image_number - 1);
-					image_speed = 0;
+				
+				 // Effects:
+				if(chance(1, 15)){
+					with(scrFX(x, y, [direction + orandom(60), 4], Shell)){
+						sprite_index = sprSodaCan;
+						image_index = irandom(image_number - 1);
+						image_speed = 0;
+					}
 				}
+				sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 0.4);
 			}
-			sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 0.4);
 		}
 		instance_destroy();
 	}
@@ -1861,8 +1870,12 @@
     
      // Hiker Backpacker:
     with(instances_matching_le(instances_matching(Bandit, "name", "BanditHiker"), "my_health", 0)){
-    	obj_create(x, y, "Backpack");
-    	spr_dead = sprBanditDead;
+		speed /= 2;
+		with(obj_create(x, y, "BackpackPickup")){
+			target = obj_create(x, y, "Backpack");
+			direction = other.direction + orandom(10);
+			event_perform(ev_step, ev_step_end);
+		}
     	repeat(5) scrFX(x, y, 4, Dust);
     	sound_play_pitchvol(sndMenuASkin, 1.2, 0.6);
     }
@@ -1978,7 +1991,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -1986,7 +1999,9 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
+#define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
@@ -2019,3 +2034,4 @@
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

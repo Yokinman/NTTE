@@ -3094,7 +3094,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         my_surf = -1;
         my_surf_w = 32;
         my_surf_h = 50;
-
+		
+		 // Auto-Sprite:
+        switch(GameCont.area){
+        	case 102:
+        	case "pizza":
+        		sprite_index = spr.PizzaDoor;
+        		break;
+        }
+        
         return id;
     }
 
@@ -3125,17 +3133,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     if(distance_to_object(Player) <= 0 || distance_to_object(enemy) <= 0 || distance_to_object(Ally) <= 0){
     	with(
 			instances_matching_ne(
-    		instances_matching_le(
-    		instances_matching_ge(
-    		instances_matching_le(
-    		instances_matching_ge(
-			
+			instances_matching_le(
+			instances_matching_ge(
+			instances_matching_le(
+			instances_matching_ge(
 			hitme,
-			
 			"bbox_right", bbox_left),
-    		"bbox_left", bbox_right),
-	    	"bbox_bottom", bbox_top),
-	    	"bbox_top", bbox_bottom),
+			"bbox_left", bbox_right),
+			"bbox_bottom", bbox_top),
+			"bbox_top", bbox_bottom),
 			"team", team)
 		){
             var _sx = lengthdir_x(hspeed, other.image_angle),
@@ -3166,12 +3172,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
      // Block Line of Sight:
     if(!instance_exists(my_wall)){
-    	my_wall = instance_create(x, y, Wall);
-    	with(my_wall){
-        	image_xscale = other.image_xscale;
-        	image_yscale = other.image_yscale;
-        	image_angle  = other.image_angle;
-        }
+    	var _off = 0;
+    	while(!instance_exists(my_wall)){
+	    	my_wall = instance_create(x, y + _off, Wall);
+	    	with(my_wall){
+	        	image_xscale = other.image_xscale;
+	        	image_yscale = other.image_yscale;
+	        	image_angle  = other.image_angle;
+	    		x = other.x;
+	    		y = other.y;
+	    		xstart = x;
+	    		xstart = y;
+	    		xprevious = x;
+	    		yprevious = y;
+	        }
+	        _off += 100;
+    	}
     }
     with(my_wall){
         if(other.mask_index == mskNone) mask_index = -1;
@@ -3880,6 +3896,97 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     }
 
 
+#define GatorIdler_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		inst = [];
+		return id;
+	}
+	
+#define GatorIdler_step
+	if(array_length(inst) > 0){
+		with(inst){
+			 // Deactivate:
+			if(instance_exists(self) && !in_sight(Player) && sprite_index != spr_hurt){
+				alarm1 = -1;
+				if(instance_is(self, GatorSmoke)) timer = 0;
+			}
+			
+			 // Reactivate:
+			else{
+				with(other) instance_destroy();
+				exit;
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define GatorIdler_destroy
+	var _alert = false;
+	
+	with(inst){
+		 // Stop Smoking:
+		if(instance_is(self, GatorSmoke)){
+			var	_x = x,
+				_y = y;
+				
+			with(instance_create(x, y, Shell)) sprite_index = sprCigarette;
+			instance_change(Gator, true);
+			x = _x;
+			y = _y;
+		}
+		
+		 // Reactivate:
+		if(instance_is(self, enemy)){
+			if(alarm1 < 0) alarm1 = 25 + random(10);
+			
+			 // Alerted:
+			if(enemy_target(x, y) && in_sight(target) && my_health > 0){
+				_alert = true;
+				
+				var _ready = (sign(right) == sign(dcos(gunangle)));
+				scrAim(point_direction(x, y, target.x, target.y) + orandom(20));
+				
+				 // Move:
+				if(_ready){
+					alarm1 /= 2;
+					scrWalk(gunangle + 180 + orandom(30), random(15));
+				}
+				
+				 // Reload:
+				else{
+					wkick = -4;
+					instance_create(x + lengthdir_x(4, gunangle), y + lengthdir_y(4, gunangle), WepSwap);
+					if(variable_instance_get(self, "spr_weap") != spr.AlbinoGatorWeap){
+						with(scrFX(x, y, [gunangle + (90 * right), 2 + random(2)], Shell)){
+							sprite_index = sprShotShell;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	 // Alert:
+	if(_alert){
+		with(scrAlert(self, spr.GatorAlert)){
+			y -= 16;
+			vspeed = -2;
+			snd_flash = sndBuffGatorHit;
+		}
+	}
+	
+	 // ?
+	else with(inst) if(instance_is(self, enemy) && my_health > 0){
+		with(scrAlert(self, -1)){
+			spr_alert = spr.AlertIndicatorMystery;
+			alert_col = c_yellow;
+			target_y -= 2;
+			alarm1 = 30;
+			blink = 15;
+		}
+	}
+
+
 #define Manhole_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
@@ -4175,7 +4282,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         
          // Path Gen:
         var	_dir = 90,
-        	_path = [];
+			_path = [];
             
         instance_create(_sx + 16, _sy + 16, PortalClear);
         
@@ -4201,9 +4308,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         
          // Generate the Realm:
 		if(!instance_exists(Portal)){
-			GameCont.area = "lair";
-			GameCont.subarea = 1;
-        	area_generate(GameCont.area, GameCont.subarea, _sx + 16, _sy - 16);
+        	area_generate("lair", 1, _sx + 16, _sy - 16);
 		}
 		
          // Finish Path:
@@ -5091,7 +5196,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -5099,7 +5204,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
+#define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
@@ -5132,3 +5239,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

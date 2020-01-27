@@ -467,7 +467,7 @@
 
 
 #define BonePickup_create(_x, _y)
-	with(obj_create(_x, _y, "CustomPickup")){ 
+	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
 		image_index = random(image_number - 1);
@@ -700,6 +700,14 @@
 	sprite_index = sprAmmo;
 	image_blend = c_white;
 	
+	 // Crown of Bonus:
+	if(crown_current == "bonus") switch(drop){
+		case "ammo":         drop = "ammo_bonus";         break;
+		case "health":       drop = "health_bonus";       break;
+		case "ammo_chest":   drop = "ammo_bonus_chest";   break;
+		case "health_chest": drop = "health_bonus_chest"; break;
+	}
+	
 	 // Shop Setup:
 	switch(type){
 		case ChestShop_basic:
@@ -770,12 +778,30 @@
 					image_blend = make_color_rgb(100, 255, 255);
 					break;
 					
+				case "ammo_bonus_chest":
+					text = "OVERSTOCK";
+					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					
+					 // Visual:
+					sprite_index = (ultra_get("steroids", 2) ? spr.OverstockChestSteroids : spr.OverstockChest);
+					image_blend = make_color_rgb(100, 255, 255);
+					break;
+					
 				case "health_bonus":
 					text = "OVERHEAL";
 					desc = `@5(${spr.BonusText}:0) HEALTH`;
 					
 					 // Visual:
 					sprite_index = spr.OverhealPickup;
+					image_blend = make_color_rgb(200, 160, 255);
+					break;
+					
+				case "health_bonus_chest":
+					text = "OVERHEAL";
+					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					
+					 // Visual:
+					sprite_index = spr.OverhealChest;
 					image_blend = make_color_rgb(200, 160, 255);
 					break;
 					
@@ -876,7 +902,7 @@
 					break;
 			}
 			break;
-
+			
 		case ChestShop_wep:
 			var _merged = (wep_get(drop) == "merge");
 			
@@ -1047,9 +1073,23 @@
 									instance_create(_x, _y, GunWarrantEmpty);
 									break;
 									
+								case "ammo_bonus_chest":
+									obj_create(_x, _y - 2, "OverstockChest");
+									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+									instance_create(_x, _y, GunWarrantEmpty);
+									sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
+									break;
+									
 								case "health_bonus":
 									with(obj_create(_x, _y, "OverhealPickup")) pull_delay = 0;
 								    instance_create(_x, _y, GunWarrantEmpty);
+								    break;
+								    
+								case "health_bonus_chest":
+									obj_create(_x, _y - 2, "OverhealChest");
+									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+									instance_create(_x, _y, GunWarrantEmpty);
+									sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
 								    break;
 								    
 								case "rogue":
@@ -1132,7 +1172,7 @@
 							sound_play_pitchvol(sndGunGun,    1.2 + random(0.4), 0.5);
 							sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
 							break;
-	
+							
 						case ChestShop_wep:
 							with(instance_create(_x, _y, WepPickup)){
 								motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
@@ -1281,7 +1321,6 @@
 		 // Visual:
 		sprite_index = spr.CursedAmmoChest;
 		spr_dead = spr.CursedAmmoChestOpen;
-		spr_shadow_y = -1;
 		
 		 // Sound:
 		snd_open = sndAmmoChest;
@@ -1772,8 +1811,104 @@
         	target = other.index;
         }
 	}
+	
+	
+#define OverhealChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.OverhealChest;
+		spr_dead = spr.OverhealChestOpen;
+		
+		 // Vars:
+		num = 4 * (1 + skill_get(mut_second_stomach));
+		wave = random(90);
+		
+		 // Events:
+		on_step = script_ref_create(OverhealChest_step);
+		on_open = script_ref_create(OverhealChest_open);
+		
+		return id;
+	}
+	
+#define OverhealChest_step
+	 // FX:
+	wave += current_time_scale;
+	if((wave % 30) < current_time_scale){
+		with(scrFX([x, 4], [y, 4], 0, FireFly)){
+			sprite_index = spr.OverstockFX;
+			depth = other.depth - 1;
+		}
+	}
+	
+#define OverhealChest_open
+	if(instance_is(other, Player)){
+		OverhealPickup_open();
+	}
+	else repeat(2){
+		with(obj_create(x, y, "OverhealPickup")){
+			num = other.num / 2;
+		}
+	}
+	
+	
+#define OverhealMimic_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.OverhealMimicIdle;
+		spr_walk = spr.OverhealMimicFire;
+		spr_hurt = spr.OverhealMimicHurt;
+		spr_dead = spr.OverhealMimicDead;
+		spr_chrg = spr.OverhealMimicTell;
+		spr_shadow = shd24;
+		hitid = [spr.OverhealMimicFire, "OVERHEAL MIMIC"];
+		
+		 // Sound:
+		snd_hurt = sndMimicHurt;
+		snd_dead = sndMimicDead;
+		snd_mele = sndMimicMelee;
+		snd_tell = sndMimicSlurp;
+		
+		 // Vars:
+		mask_index = -1;
+		maxhealth = 12;
+		raddrop = 15;
+		size = 1;
+		maxspeed = 2;
+		meleedamage = 4;
+		num = 2;
+		
+		 // Alarms:
+		alarm1 = irandom_range(180, 480);
+		
+		return id;
+	}
 
-
+#define OverhealMimic_step
+	if(speed > maxspeed) speed = maxspeed;
+	
+	 // Animate:
+	if(sprite_index == spr_chrg && anim_end){
+		sprite_index = spr_idle;
+	}
+	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+		sprite_index = spr_walk;
+	}
+	
+#define OverhealMimic_alrm1
+	alarm1 = irandom_range(180, 480);
+	
+	sprite_index = spr_chrg;
+	image_index = 0;
+	
+	sound_play_hit(snd_tell, 0.1);
+	
+#define OverhealMimic_death
+	 // Pickups:
+	repeat(num){
+		obj_create(x, y, "OverhealPickup");
+	}
+	
+	
 #define OverhealPickup_create(_x, _y)
     var _skill = skill_get(mut_second_stomach);
 	with(obj_create(_x, _y, "CustomPickup")){
@@ -1800,14 +1935,14 @@
 		on_open = script_ref_create(OverhealPickup_open);
 		on_fade = script_ref_create(BonusPickup_fade);
 		
-		return id;	
+		return id;
 	}
 	
 #define OverhealPickup_open
 	 // Determine Handouts:
 	var _inst = other;
 	if(!instance_is(other, Player)) _inst = Player;
-
+	
 	 // Bonus HP:
     var _num = num,
     	_max = 8;
@@ -1835,19 +1970,111 @@
 	 // Effects:
 	sound_play_pitchvol(sndRogueCanister, 1.3, 0.7);
 	BonusPickup_open();
-
-
+	
+	
+#define OverstockChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.OverstockChest;
+		spr_dead = spr.OverstockChestOpen;
+		
+		 // Vars:
+		num = 2;
+		wave = random(90);
+		
+		 // Get Loaded:
+		if(ultra_get("steroids", 2) != 0){
+			sprite_index = spr.OverstockChestSteroids;
+			spr_dead = spr.OverstockChestSteroidsOpen;
+			num *= power(2, ultra_get("steroids", 2));
+		}
+		
+		 // Events:
+		on_step = script_ref_create(OverhealChest_step);
+		on_open = script_ref_create(OverstockChest_open);
+		
+		return id;
+	}
+	
+#define OverstockChest_open
+	if(instance_is(other, Player)){
+		num *= 24;
+		OverstockPickup_open();
+	}
+	else repeat(num){
+		obj_create(x, y, "OverstockPickup");
+	}
+	
+	
+#define OverstockMimic_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.OverstockMimicIdle;
+		spr_walk = spr.OverstockMimicFire;
+		spr_hurt = spr.OverstockMimicHurt;
+		spr_dead = spr.OverstockMimicDead;
+		spr_chrg = spr.OverstockMimicTell;
+		spr_shadow = shd24;
+		hitid = [spr.OverstockMimicFire, "OVERSTOCK MIMIC"];
+		
+		 // Sound:
+		snd_hurt = sndMimicHurt;
+		snd_dead = sndMimicDead;
+		snd_mele = sndMimicMelee;
+		snd_tell = sndMimicSlurp;
+		
+		 // Vars:
+		mask_index = -1;
+		maxhealth = 12;
+		raddrop = 6;
+		size = 1;
+		maxspeed = 2;
+		meleedamage = 3;
+		num = 2;
+		
+		 // Alarms:
+		alarm1 = irandom_range(90, 240);
+		
+		return id;
+	}
+	
+#define OverstockMimic_step
+	if(speed > maxspeed) speed = maxspeed;
+	
+	 // Animate:
+	if(sprite_index == spr_chrg && anim_end){
+		sprite_index = spr_idle;
+	}
+	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+		sprite_index = spr_walk;
+	}
+	
+#define OverstockMimic_alrm1
+	alarm1 = irandom_range(90, 240);
+	
+	sprite_index = spr_chrg;
+	image_index = 0;
+	
+	sound_play_hit(snd_tell, 0.1);
+	
+#define OverstockMimic_death
+	 // Pickups:
+	repeat(num){
+		obj_create(x, y, "OverstockPickup");
+	}
+	
+	
 #define OverstockPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visuals:
 		sprite_index = spr.OverstockPickup;
 		spr_open = -1;
 		spr_fade = -1;
-
+		
 		 // Sounds:
 		snd_open = sndAmmoPickup;
 		snd_fade = sndPickupDisappear;
-
+		
 		 // Vars:
 		mask_index = mskPickup;
 		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
@@ -1855,7 +2082,7 @@
 		pull_delay = 9;
 		num = 24 + (crown_current == crwn_haste);
 		wave = random(90);
-
+		
 		 // Events:
 		on_step = script_ref_create(BonusPickup_step);
 		on_pull = script_ref_create(BonusPickup_pull);
@@ -1869,12 +2096,12 @@
 	 // Determine Handouts:
 	var _inst = other;
 	if(!instance_is(other, Player)) _inst = Player;
-
+	
 	 // Bonus Ammo:
 	var _num = num;
 	with(_inst){
 		ammo_bonus = variable_instance_get(id, "ammo_bonus", 0) + _num;
-
+		
 		 // Text:
 		with(instance_create(x, y, PopupText)){
 			text = `+${_num} @5(${spr.BonusText}:-0.3) AMMO`;
@@ -3777,7 +4004,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -3785,7 +4012,9 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
+#define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
@@ -3818,3 +4047,4 @@
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

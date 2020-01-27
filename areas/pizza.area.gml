@@ -91,6 +91,17 @@
     }
     with(HPPickup) alarm0 *= 2;
 
+     // Spawn Stuff:
+    if(instance_exists(Player)) with(Player.id){
+         // Open Manhole:
+        obj_create(x, y, "PizzaManholeCover");
+
+         // Door:
+        with(instance_nearest(x, y, Floor)){
+            door_create(x + 16, y - 16, 90);
+        }
+    }
+
      // Turt Squad:
     with(TV){
         x += random(32);
@@ -103,7 +114,12 @@
             var _dis = 20 + random(4),
                 _dir = a + (i * (360 / array_length(c))) + orandom(10);
     
-            with(obj_create(x + lengthdir_x(_dis, _dir), y + 64 + lengthdir_y(_dis, _dir), "TurtleCool")){
+            with(obj_create(x, y + 32, "TurtleCool")){
+                var _ox = lengthdir_x(_dis, _dir),
+                    _oy = lengthdir_y(_dis, _dir) + 32;
+                    
+                move_contact_solid(point_direction(0, 0, _ox, _oy), point_distance(0, 0, _ox, _oy));
+                
                 snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
                 scrRight(_dir + 180);
             }
@@ -134,30 +150,6 @@
             with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
                 snd_dead = sndTurtleDead3;
                 right = 1;
-            }
-        }
-    }
-
-     // Spawn Stuff:
-    if(instance_exists(Player)) with(Player.id){
-         // Open Manhole:
-        obj_create(x, y, "PizzaManholeCover");
-
-         // Door:
-        with(instance_nearest(x, y, Floor)){
-            var p = noone;
-            for(var i = -1; i <= 1; i += 2){
-                with(obj_create(x + 16 - (16 * i), y - 32 + 3, "CatDoor")){
-                    sprite_index = spr.PizzaDoor;
-                    image_angle = 90;
-                    image_yscale = i;
-                    y += 3;
-                    
-                     // Link Doors:
-                    partner = p;
-                    with(partner) partner = other;
-                    p = id;
-                }
             }
         }
     }
@@ -221,8 +213,10 @@
     return random(120);
 
 #define area_make_floor
+    var _den = GenCont.turtle_den,
+        _scale = (goal / ((_den.cols_max * _den.rows_max) + 2));
+        
      // Generating:
-    var _den = GenCont.turtle_den;
     if(_den.cols <= 0){
         x = xstart - 48;
         instance_create(xstart, ystart - 32, Floor);
@@ -234,41 +228,16 @@
     styleb = false;
     instance_create(x, y, Floor);
     
-     // Important Tiles:
-    var _tile = `${_den.cols},${_den.rows}`;
-    switch(_tile){
-         /// Corner Walls:
-        case "0,0": instance_create(x,      y + 16, Wall);  break;
-        case "0,5": instance_create(x,      y,      Wall);  break;
-        case "7,0": instance_create(x + 16, y + 16, Wall);  break;
-        case "7,5": instance_create(x + 16, y,      Wall);  break;
-        
-        case "3,3": /// Toons Viewer
-            obj_create(x, y - 16, "PizzaTV");
-            break;
-            
-        case "6,5": /// Sewage Hole
-            obj_create(x, y, "PizzaDrain");
-            break;
-    }
-    
      // Next:
     _den.rows++;
-    if(_den.rows >= _den.rows_max){
+    if(_den.rows >= _den.rows_max * _scale){
         x += 32;
         _den.rows = 0;
         _den.cols++;
-        if(_den.cols >= _den.cols_max) instance_destroy();
+        if(_den.cols >= _den.cols_max * _scale){
+            instance_destroy();
+        }
     }
-    
-    /*
-    var _x = 10000 - 32,
-        _y = 10000,
-        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
-
-    styleb = 0;
-    floor_fill(_x, _y, 8, 6);
-    */
 
 #define area_pop_props
     var _x = x + 16,
@@ -281,16 +250,41 @@
      // Gimme pizza:
     if(!_nort && !_sout && !_west && _east){
         repeat(irandom_range(1, 4)){
-            if(true || chance(2, 3)){
-                obj_create(_x + orandom(4), _y + orandom(4), choose("Pizza", PizzaBox, "PizzaChest"));
-            }
-            else{
-                top_create(_x + 16, _y, "PizzaStack", orandom(60), -1);
-            }
+            obj_create(_x + orandom(4), _y + orandom(4), choose("Pizza", PizzaBox, "PizzaChest"));
         }
     }
-
-
+    
+#define area_pop_extras
+    var _x1 = null,
+        _y1 = null,
+        _x2 = null,
+        _y2 = null;
+        
+    with(instances_matching_lt(Floor, "y", spawn_y - 32)){
+        if(_x1 == null || bbox_left       < _x1) _x1 = bbox_left;
+        if(_y1 == null || bbox_top        < _y1) _y1 = bbox_top;
+        if(_x2 == null || bbox_right + 1  > _x2) _x2 = bbox_right + 1;
+        if(_y2 == null || bbox_bottom + 1 > _y2) _y2 = bbox_bottom + 1;
+    }
+    
+     // Sewage Hole:
+    with(instance_nearest(lerp(_x1, _x2, 0.8), _y1, Floor)){
+        obj_create(x, y, "PizzaDrain");
+    }
+    
+     // Toons Viewer:
+    with(instance_nearest(lerp(_x1, _x2, 0.5) - 16, lerp(_y1, _y2, 0.3), Floor)){
+        obj_create(x, y - 16, "PizzaTV");
+    }
+    
+     // Corner Walls:
+    with(Floor){
+             if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x,      y,      Wall);
+        else if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x + 16, y,      Wall);
+        else if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x,      y + 16, Wall);
+        else if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
+    }
+    
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -366,7 +360,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -374,7 +368,9 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
+#define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
@@ -407,3 +403,4 @@
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

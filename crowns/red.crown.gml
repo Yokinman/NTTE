@@ -1,39 +1,49 @@
 #define init
-	global.sprCrownIcon	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",		1, 12, 16);
-	global.sprCrownIdle	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
-	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
-	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
-
-#define crown_name			return "CROWN OF CRIME";
-#define crown_text			return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
-#define crown_tip			return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
-#define crown_avail			return unlock_get("lairCrown");
-#define crown_menu_avail	return unlock_get("crownCrime");
+	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Red/sprCrownRedIcon.png",     1, 12, 16);
+	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Red/sprCrownRedIdle.png",    10,  8,  8);
+	global.sprCrownWalk    = sprite_add("../sprites/crowns/Red/sprCrownRedWalk.png",     6,  8,  8);
+	global.sprCrownLoadout = sprite_add("../sprites/crowns/Red/sprCrownRedLoadout.png",  2, 16, 16);
+	
+#define crown_name      	return "RED CROWN";
+#define crown_text      	return "MORE @rHEARTS#@sSMALLER @wAREAS";
+#define crown_tip       	return choose("FULL OF LIFE", "SO CRAMPED");
+#define crown_avail     	return (GameCont.loops > 0);//unlock_get("lairCrown");
+#define crown_menu_avail	return true;//unlock_get("crownRed");
 
 #define crown_menu_button
     sprite_index = global.sprCrownLoadout;
     image_index = !crown_menu_avail();
     dix = -1;
-    diy = 0;
-
+    diy = 2;
+    
 #define crown_button
 	sprite_index = global.sprCrownIcon;
-
+	
 #define crown_object
 	 // Visual:
 	spr_idle = global.sprCrownIdle;
 	spr_walk = global.sprCrownWalk;
 	sprite_index = spr_idle;
-
-	 // Vars:
-	ntte_crown = "crime";
-	enemy_time = 0;
-	enemies = 0;
 	
 	 // Sound:
 	if(instance_is(other, CrownIcon)){
-		sound_play_pitch(sndCrownLove, 1.1);
-		sound_play_pitchvol(sndBigWeaponChest, 0.2, 1.5);
+		sound_play_pitch(sndCrownCurses, 1.1);
+		sound_play_pitchvol(sndLaserCrystalDeath, 0.35, 2);
+	}
+	
+#define step
+	 // Smaller Levels:
+	with(instances_matching(FloorMaker, "crownredsmallerlevels", null)){
+		crownredsmallerlevels = true;
+		goal = round(goal * 0.4);
+		
+		 // Fix:
+		if(instance_number(Floor) > goal){
+			with(GenCont){
+				if(alarm0 < 0) alarm0 = 3;
+				if(alarm2 < 0) alarm2 = 2;
+			}
+		}
 	}
 	
 	

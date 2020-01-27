@@ -1,24 +1,26 @@
 #define init
-	global.sprCrownIcon	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",		1, 12, 16);
-	global.sprCrownIdle	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
-	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
-	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
-
-#define crown_name			return "CROWN OF BONUS";
-#define crown_text			return "???";
-#define crown_tip			return "";
-#define crown_avail			return true;//unlock_get("lairCrown");
-#define crown_menu_avail	return unlock_get("crownBonus");
+	spr = mod_variable_get("mod", "teassets", "spr");
+	
+	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIcon.png",     1, 12, 16);
+	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIdle.png",    15,  8,  8);
+	global.sprCrownWalk	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",     6,  8,  8);
+	global.sprCrownLoadout = sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png",  2, 16, 16);
+	
+#define crown_name      	return "CROWN OF BONUS";
+#define crown_text      	return "@bBONUS PICKUPS#@sLOWER @wDROP RATE";
+#define crown_tip       	return "ALL EXTRA";
+#define crown_avail     	return (GameCont.loops <= 0);//unlock_get("lairCrown");
+#define crown_menu_avail	return true;//unlock_get("crownBonus");
 
 #define crown_menu_button
     sprite_index = global.sprCrownLoadout;
     image_index = !crown_menu_avail();
-    dix = 3;
-    diy = -1;
-
+    dix = -1;
+    diy = 1;
+    
 #define crown_button
 	sprite_index = global.sprCrownIcon;
-
+	
 #define crown_object
 	 // Visual:
 	spr_idle = global.sprCrownIdle;
@@ -26,25 +28,55 @@
 	sprite_index = spr_idle;
 	
 	 // Sound:
-	if(instance_exists(CrownIcon)){
-		if(fork()){
-			wait 0;
-			if(!instance_exists(CrownIcon)){
-				sound_play_pitch(sndCrownLove, 0.95);
-			}
-			exit;
-		}
+	if(instance_is(other, CrownIcon)){
+		sound_play_pitch(sndCrownProtection, 0.9);
+		sound_play_pitchvol(sndRogueCanister, 0.7, 1.4);
 	}
-
+	
 #define step
 	 // Only Bonus Ammo/HP:
-	with(instances_matching(HPPickup, "sprite_index", sprHP)){
-		obj_create(x, y, "OverhealPickup");
-		instance_delete(id);
-	}
-	with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
-		obj_create(x, y, "OverstockPickup");
-		instance_delete(id);
+	if(!instance_exists(GenCont) && !instance_exists(MenuGen)){
+		 // Overheal:
+		with(instances_matching(HPPickup, "sprite_index", sprHP)){
+			if(chance(1, 2)){
+				obj_create(x, y, "OverhealPickup");
+			}
+			instance_delete(id);
+		}
+		with(instances_matching(HealthChest, "sprite_index", sprHealthChest)){
+			obj_create(x, y, "OverhealChest");
+			instance_delete(id);
+		}
+		with(instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle)){
+			obj_create(x, y, "OverhealMimic");
+			instance_delete(id);
+		}
+		
+		 // Overstock:
+		with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
+			 // Get Average Bonus Ammo:
+			var _ammoBonus = 0;
+			with(instances_matching_gt(Player, "ammo_bonus", 0)){
+				_ammoBonus += ammo_bonus;
+			}
+			_ammoBonus /= instance_number(Player);
+			
+			 // Chance to Spawn:
+			var _chance = 50 - min(40, (_ammoBonus / 3) - (15 * skill_get(mut_rabbit_paw)));
+			if(chance(_chance, 100)){
+				obj_create(x, y, "OverstockPickup");
+			}
+			
+			instance_delete(id);
+		}
+		with(instances_matching(AmmoChest, "sprite_index", sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery, sprIDPDChest)){
+			obj_create(x, y, "OverstockChest");
+			instance_delete(id);
+		}
+		with(instances_matching(Mimic, "spr_idle", sprMimicIdle)){
+			obj_create(x, y, "OverstockMimic");
+			instance_delete(id);
+		}
 	}
 	
 	

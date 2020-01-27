@@ -167,11 +167,12 @@
 			AlertIndicatorMystery   = sprite(p + "sprAlertIndicatorMystery",  1, 2, 6);
 			
 			 // Alert Icons:
-			SealAlert       		= sprite(p + "sprSealAlert",              1, 7, 7);
-			ArcticSealAlert 		= sprite(p + "sprArcticSealAlert",        1, 7, 7);
-			GatorAlert      		= sprite(p + "sprGatorAlert",             1, 7, 7);
-			GatorAlbinoAlert		= sprite(p + "sprAlbinoGatorAlert",       1, 7, 7);
-			SludgePoolAlert			= sprite(p + "sprSludgePoolAlert",        1, 7, 7);
+			BanditAlert             = sprite(p + "sprBanditAlert",      1, 7, 7);
+			SealAlert       		= sprite(p + "sprSealAlert",        1, 7, 7);
+			ArcticSealAlert 		= sprite(p + "sprArcticSealAlert",  1, 7, 7);
+			GatorAlert      		= sprite(p + "sprGatorAlert",       1, 7, 7);
+			GatorAlbinoAlert		= sprite(p + "sprAlbinoGatorAlert", 1, 7, 7);
+			SludgePoolAlert			= sprite(p + "sprSludgePoolAlert",  1, 7, 7);
 			
 		//#endregion
 
@@ -1043,30 +1044,46 @@
 			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
 			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
 			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12)
-
+			
 			 // Overstock/Overheal:
-			OverstockPickup	= sprite(p + "sprOverstockPickup",   1,  5,  5, shn10);
-			OverhealPickup	= sprite(p + "sprOverhealPickup",    1,  5,  5, shn10);
-	        BonusShell  	= sprite(p + "sprBonusShell",       1,  1,  2);
-	        BonusShellHeavy	= sprite(p + "sprBonusShellHeavy",  1,  2,  3);
-	        BonusText		= sprite(p + "sprBonusText",       12,  0,  0);
-			OverstockFX 	= sprite(p + "sprOverstockFX",     13,  4, 12);
-	        OverhealFX		= sprite(p + "sprOverhealFX",       7,  8, 10);
-	        OverhealBigFX	= sprite(p + "sprOverhealBigFX",    8, 12, 24);
-
+			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
+			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
+			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
+			OverhealFX                 = sprite(p + "sprOverhealFX",                  7,  8, 10);
+			OverhealBigFX              = sprite(p + "sprOverhealBigFX",               8, 12, 24);
+			OverstockFX                = sprite(p + "sprOverstockFX",                13,  4, 12);
+			OverhealPickup             = sprite(p + "sprOverhealPickup",              1,  5,  5, shn10);
+			OverstockPickup            = sprite(p + "sprOverstockPickup",             1,  5,  5, shn10);
+			OverhealChest              = sprite(p + "sprOverhealChest",              15,  8,  8);
+			OverstockChest             = sprite(p + "sprOverstockChest",             15,  8,  8);
+			OverstockChestSteroids     = sprite(p + "sprOverstockChestSteroids",     15, 12, 12);
+			OverhealChestOpen          = sprite(p + "sprOverhealChestOpen",           1,  8,  8);
+			OverstockChestOpen         = sprite(p + "sprOverstockChestOpen",          1,  8,  8);
+			OverstockChestSteroidsOpen = sprite(p + "sprOverstockChestSteroidsOpen",  1, 12, 12);
+			OverhealMimicIdle          = sprite(p + "sprOverhealMimicIdle",           1, 16, 16);
+			OverhealMimicTell          = sprite(p + "sprOverhealMimicTell",          10, 16, 16);
+			OverhealMimicHurt          = sprite(p + "sprOverhealMimicHurt",           3, 16, 16);
+			OverhealMimicDead          = sprite(p + "sprOverhealMimicDead",           6, 16, 16);
+			OverhealMimicFire          = sprite(p + "sprOverhealMimicFire",           4, 16, 16);
+			OverstockMimicIdle         = sprite(p + "sprOverstockMimicIdle",          1, 16, 16);
+			OverstockMimicTell         = sprite(p + "sprOverstockMimicTell",         12, 16, 16);
+			OverstockMimicHurt         = sprite(p + "sprOverstockMimicHurt",          3, 16, 16);
+			OverstockMimicDead         = sprite(p + "sprOverstockMimicDead",          6, 16, 16);
+			OverstockMimicFire         = sprite(p + "sprOverstockMimicFire",          4, 16, 16);
+			
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
-
+			
 			 // Hammerhead Pickup:
 			HammerHeadPickup		= sprite(p  + "sprHammerHeadPickup",		1, 5, 5, shn10);
 			HammerHeadPickupEffect	= sprite(p + "sprHammerHeadPickupEffect",	3, 16, 8);
-
+			
              // Sunken Chest:
             SunkenChest 	= sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
             SunkenChestOpen = sprite(p + "sprSunkenChestOpen", 1, 12, 12);
             SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
             SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
-
+			
 			 // Merged Weapon Sprite Storage:
 	        MergeWep = {};
 	        MergeWepText = {};
@@ -1370,9 +1387,9 @@
     shadList = [];
 
 	 // Mod Lists:
-    areaList = ["coast", "oasis", "trench", "pizza", "lair"];
+    areaList = ["coast", "oasis", "lair", "pizza", "red", "trench"];
     raceList = ["parrot", "bee"];
-    crwnList = ["crime", "bonus"];
+    crwnList = ["bonus", "crime", "red"];
     wepsList = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 
      // Reminders:
@@ -1742,7 +1759,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
             }
 
 	    	 // Bind Drawing:
-		    script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 0.0001);
+		    script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 1);
 		    if(instance_exists(Loadout)){
 		    	script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
 		    }
@@ -2144,7 +2161,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
                     addy : 2,
                     blnd : c_gray,
                     hover : false,
-                    alarm0 : 6,
+                    alarm0 : -1,
                     visible : false,
                     sprite_index : sprLoadoutCrown,
                     image_index  : 0
@@ -2181,6 +2198,8 @@ var _shine = argument_count > 4 ? argument[4] : false;
                         }
                         array_push(_crown.custom.icon, self);
                     }
+                    
+                    if(alarm0 < 0) alarm0 = max(1, 5 - diy);
                 }
             }
         }
@@ -2287,6 +2306,12 @@ var _shine = argument_count > 4 ? argument[4] : false;
                 }
             }
     	}
+    }
+    
+     // LoadoutSkin Offset:
+    with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
+    	ntte_crown_xoffset = -22;
+    	xstart += ntte_crown_xoffset;
     }
     
     instance_destroy();

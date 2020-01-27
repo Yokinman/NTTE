@@ -41,7 +41,7 @@
 #define AlertIndicator_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index = spr.GatorAlert;
+		sprite_index = spr.BanditAlert;
 		spr_alert = spr.AlertIndicator;
 		image_speed = 0.4;
 		image_alpha = -1;
@@ -74,6 +74,7 @@
 		if(flash <= 0){
 			sound_play(snd_flash);
 			sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
+			if(friction <= 0) friction = 0.5;
 		}
 	}
 	
@@ -82,6 +83,8 @@
 	if(instance_exists(target)){
 		x = target.x + target_x;
 		y = target.y + target_y;
+		target_x += hspeed_raw;
+		target_y += vspeed_raw;
 	}
 	
 	 // Stay Hidden:
@@ -5161,12 +5164,14 @@
 			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
 				if(sprite_get_team(sprite_index) != 3 && fork()){
 					var	t = other.team,
-						h = other.hitid;
+						h = variable_instance_get(other, "hitid");
 						
 					wait 0;
 					
 					if(instance_exists(self) && team == t){
-						if(hitid == -1) hitid = h;
+						if(hitid == -1 && !is_undefined(h)){
+							hitid = h;
+						}
 						team_instance_sprite(((team == 3) ? 1 : team), self);
 					}
 					
@@ -5367,17 +5372,17 @@
 			with(instances_seen_nonsync(_inst, 8, 8)){
 				switch(name){
 					case "MortarPlasma":
-				        var _percent = clamp(96 / (z - 8), 0.1, 1),
-				            _w = ceil(18 * _percent),
-				            _h = ceil(6 * _percent),
-				            _x = x - other.x,
-				            _y = y - 8 - other.y;
-				            
-				        draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
-				        
-				        break;
-				        
-				    default:
+						var _percent = clamp(96 / (z - 8), 0.1, 1),
+							_w = ceil(18 * _percent),
+							_h = ceil(6 * _percent),
+							_x = x - other.x,
+							_y = y - 8 - other.y;
+							
+						draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+						
+						break;
+						
+					default:
 						var _x = x + spr_shadow_x,
 							_y = y + spr_shadow_y - 8;
 							
@@ -5396,10 +5401,10 @@
 			
 			 // Draw Surface:
 			draw_set_fog(true, BackCont.shadcol, 0, 0);
-			draw_set_alpha(BackCont.shadalpha);
+			draw_set_alpha(BackCont.shadalpha * 0.8);
 			draw_surface(surf, x, y);
-			draw_set_fog(false, 0, 0, 0);
 			draw_set_alpha(1);
+			draw_set_fog(false, 0, 0, 0);
 		}
 	}
 	
@@ -5519,7 +5524,7 @@
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)         return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _overlapFloor, _scriptSetup);
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
@@ -5527,7 +5532,9 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
+#define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
@@ -5560,3 +5567,4 @@
 #define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

@@ -9,12 +9,12 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
     objList = {
 		"tegeneral"	  : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealPickup", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"	  : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy"],
 		"tecoast"	  : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"	  : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"	  : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
-		"tesewers"	  : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
+		"tesewers"	  : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorIdler", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "NestRaven", "SawTrap", "SludgePool", "Tunneler"],
 		"tecaves"	  : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "RedSpider", "Spiderling", "SpiderWall"]
     };
@@ -138,8 +138,8 @@
 	}
 	
 	 // floor_set():
-	global.floor_style = null;
-	global.floor_area = null;
+	floor_reset_style();
+	floor_reset_align();
 	
 	 // sleep_max():
 	global.sleep_max = 0;
@@ -908,8 +908,8 @@
 					_h2 = abs(((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_yoffset(sprite_index)) * image_yscale);
 					
 				target_y = -(1 + _h1 + _h2);
-				alert_x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
 			}
+			alert_x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
 			
 			return id;
 		}
@@ -1684,7 +1684,7 @@
     }
     return [sprEGIconHUD, 2];
     
-#define area_generate_ext(_area, _subarea, _x, _y, _overlapFloor, _scriptSetup)
+#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)
 	if(is_real(_area) || is_string(_area)){
 		var	_lastArea = GameCont.area,
 			_lastSubarea = GameCont.subarea,
@@ -1789,8 +1789,8 @@
 			with(SpiralDebris) instance_destroy(); // *might play a 0.1 pitched sound
 			
 			 // Custom Code:
-			if(is_array(_scriptSetup)){
-				script_ref_call(_scriptSetup);
+			if(is_array(_scrSetup)){
+				script_ref_call(_scrSetup);
 			}
 			
 			 // Floors:
@@ -1872,7 +1872,7 @@
 		}
 		
 		 // Call Funny Mod Scripts:
-		if(_area == _lastArea && _subarea == _lastSubarea){
+		if(_setArea){
 			with(mod_get_names("mod")){
 				mod_script_call_nc("mod", self, "level_start");
 			}
@@ -1933,7 +1933,7 @@
 		}
 		
 		 // Reset Area:
-		if(_area != _lastArea || _subarea != _lastSubarea){
+		if(!_setArea){
 			GameCont.area = _lastArea;
 			GameCont.subarea = _lastSubarea;
 			background_color = _lastBackgroundColor;
@@ -1961,9 +1961,8 @@
 	}
 	return null;
 	
- // Generates a Given Area, Simpler Edition:
 #define area_generate(_area, _subarea, _x, _y)
-	area_generate_ext(_area, _subarea, _x, _y, false, null);
+	area_generate_ext(_area, _subarea, _x, _y, true, false, null);
 	
 #define area_get_name(_area, _subarea, _loop)
 	var a = [_area, "-", _subarea];
@@ -2465,29 +2464,61 @@
 		material			: 0
 	};
 	
-#define floor_align(_x, _y, _w, _h, _bw, _bh)
-	var	_gridX = 10000,
-		_gridY = 10000,
-		_gridW = 16,
-		_gridH = 16,
-		_floorAdjacent = instance_rectangle_bbox(_x - _bw, _y - _bh, _x + _w + _bw - 1, _y + _h + _bh - 1, instances_matching_ne(Floor, "object_index", FloorExplo));
-		
-	if(array_length(_floorAdjacent) <= 0){
-		instance_rectangle_bbox(_x - _bw, _y - _bh, _x + _w + _bw - 1, _y + _h + _bh - 1, FloorExplo);
-	}
+#define floor_set_style(_style, _area)
+	global.floor_style = _style;
+	global.floor_area = _area;
 	
-	if(array_length(_floorAdjacent) > 0){
-		with(instance_nearest_array(_x, _y, _floorAdjacent)){
-			_gridX = x;
-			_gridY = y;
-			_gridW = min(_bw, ((bbox_right + 1) - bbox_left));
-			_gridH = min(_bh, ((bbox_bottom + 1) - bbox_top));
-		}
-	}
-	else with(instance_nearest(_x, _y, Floor)){
+#define floor_reset_style()
+	floor_set_style(null, null);
+	
+#define floor_set_align(_alignW, _alignH, _alignX, _alignY)
+	global.floor_align_w = _alignW;
+	global.floor_align_h = _alignH;
+	global.floor_align_x = _alignX;
+	global.floor_align_y = _alignY;
+	
+#define floor_reset_align()
+	floor_set_align(null, null, null, null);
+	
+#define floor_align(_x, _y, _w, _h)
+	var	_gridW = 16,
+		_gridH = 16,
+		_gridX = 10000,
+		_gridY = 10000;
+		
+	 // Align to Nearest Floor:
+	with(instance_nearest(
+		_x + dfloor(max(0, _w - 32) / 2, 32),
+		_y + dfloor(max(0, _h - 32) / 2, 32),
+		Floor
+	)){
 		_gridX = x;
 		_gridY = y;
 	}
+	
+	 // Align to Largest Colliding Floor:
+	var	_fx = _gridX + dfloor(_x - _gridX, _gridW),
+		_fy = _gridY + dfloor(_y - _gridY, _gridH);
+	
+	with(instance_rectangle_bbox(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor)){
+		var	_floorW = ((bbox_right + 1) - bbox_left),
+			_floorH = ((bbox_bottom + 1) - bbox_top);
+			
+		if(_floorW > _gridW){
+			_gridW = _floorW;
+			_gridX = x;
+		}
+		if(_floorH > _gridH){
+			_gridH = _floorH;
+			_gridY = y;
+		}
+	}
+	
+	 // Override:
+	if(!is_undefined(global.floor_align_w)) _gridW = global.floor_align_w;
+	if(!is_undefined(global.floor_align_h)) _gridH = global.floor_align_h;
+	if(!is_undefined(global.floor_align_x)) _gridX = global.floor_align_x;
+	if(!is_undefined(global.floor_align_y)) _gridY = global.floor_align_y;
 	
 	return [
 		_gridX + dfloor(_x - _gridX, _gridW),
@@ -2505,16 +2536,17 @@
 			_h = ((sprite_get_bbox_bottom(_msk) + 1) - sprite_get_bbox_top (_msk));
 			
 		 // Align to Adjacent Floors:
-		var _gridPos = floor_align(_x, _y, _w, _h, _w, _h);
+		var _gridPos = floor_align(_x, _y, _w, _h);
 		_x = _gridPos[0];
 		_y = _gridPos[1];
 		
 		 // Clear Floors:
 		if(!instance_exists(GenCont)){
-			with(instance_rectangle_bbox(_x, _y, _x + _w - 1, _y + _h - 1, [Floor, SnowFloor])){
-				if(instance_is(self, _obj)){
-					instance_destroy();
-				}
+			if(_obj == FloorExplo){
+				with(instances_matching(instances_matching(_obj, "x", _x), "y", _y)) instance_delete(id);
+			}
+			else{
+				floor_clear(_x, _y, _x + _w - 1, _y + _h - 1);
 			}
 		}
 		
@@ -2544,6 +2576,7 @@
 			}
 			
 			 // Wallerize:
+			GameCont.area = _lastArea;
 			if(instance_exists(Wall)){
 				floor_walls();
 				wall_update(bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16);
@@ -2585,16 +2618,43 @@
 	
 	return _inst;
 	
-#define floor_set_style(_style, _area)
-	global.floor_style = _style;
-	global.floor_area = _area;
-	
-#define floor_reset_style()
-	floor_set_style(null, null);
+#define floor_clear(_x1, _y1, _x2, _y2)
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Floor)){
+		for(var	_x = bbox_left; _x < bbox_right + 1; _x += 16){
+			for(var	_y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+				if(
+					!rectangle_in_rectangle(_x, _y, _x + 15, _y + 15, _x1, _y1, _x2, _y2)
+					&& !collision_rectangle(_x, _y, _x + 15, _y + 15, Floor, false, true)
+				){
+					var	_shake = UberCont.opt_shake,
+						_sleep = UberCont.opt_freeze,
+						_sound = sound_play_pitchvol(0, 0, 0);
+						
+					UberCont.opt_shake = 0;
+					UberCont.opt_freeze = 0;
+					
+					with(instances_matching_gt(GameObject, "id", instance_create(_x, _y, FloorExplo))){
+						instance_delete(id);
+					}
+					
+					UberCont.opt_shake = _shake;
+					UberCont.opt_freeze = _sleep;
+					
+					for(var i = _sound; audio_is_playing(i); i++){
+						sound_stop(i);
+					}
+				}
+			}
+		}
+		instance_delete(id);
+	}
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, SnowFloor)){
+		instance_delete(id);
+	}
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
-		instance_destroy();
+		instance_delete(id);
 	}
 	
 #define wall_tops()
@@ -3165,64 +3225,77 @@
 				spawn_dis = random_range(16, 48);
 				
 				 // Object-General Setup:
-				if(instance_is(target, projectile)){
-					is_damage = true;
-				}
-				if(instance_is(target, hitme) || instance_is(target, chestprop) || instance_is(target, WepPickup)){
+				if(instance_is(target, hitme)){
 					unstick = true;
+					
+					 // Enemy:
+					if(instance_is(target, enemy)){
+						is_enemy = true;
+						idle_time = 90 + random(90);
+						
+						with(target){
+							 // Fix Facing:
+							if(direction == 0 && "walk" not in self && "right" in self){
+								direction = random(360);
+								scrRight(direction);
+							}
+							
+							 // Disable AI:
+							for(var i = 0; i <= 10; i++){
+								lq_set(other.target_save, `alarm${i}`, alarm_get(i));
+								alarm_set(i, -1);
+							}
+						}
+					}
+					
+					 // Prop:
+					else if(instance_is(target, prop)){
+						spawn_dis = random_range(4, 16);
+						
+						 // Death on Impact:
+						if(target.team == 0 && target.size <= 1 && target.maxhealth < 50){
+							target_save.my_health = 0;
+						}
+					}
 				}
-				if(instance_is(target, Pickup) || instance_is(target, projectile)){
-					jump = 0;
-				}
-				if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
-					grav = 0;
-					override_depth = false;
-					depth = -6.01;
-				}
-				if(instance_is(target, chestprop) || instance_is(target, Pickup)){
-					wobble = 8;
-					spawn_dis = 8;
-				}
-				if(instance_is(target, Effect) || instance_is(target, Corpse) || instance_is(target, Pickup)){
+				else if(instance_is(target, Effect) || instance_is(target, Corpse)){
 					override_depth = false;
 					depth = -6.01;
 					if(instance_is(target, Corpse)) depth -= 0.001;
-					if(instance_is(target, Pickup)) depth -= 0.002;
 				}
-				if(instance_is(target, Explosion) || instance_is(target, MeatExplosion) || instance_is(target, PlasmaImpact)){
+				else if(instance_is(target, chestprop) || instance_is(target, Pickup)){
+					wobble = 8;
+					spawn_dis = 8;
+					if(instance_is(target, Pickup)){
+						override_depth = false;
+						depth = -6.0111;
+						jump = 0;
+					}
+					if(instance_is(target, chestprop) || instance_is(target, WepPickup)){
+						unstick = true;
+					}
+				}
+				else if(instance_is(target, projectile)){
+					jump = 0;
+					is_damage = true;
+				}
+				else if(instance_is(target, Explosion) || instance_is(target, MeatExplosion) || instance_is(target, PlasmaImpact)){
 					grav = 0;
 					is_damage = true;
 					override_mask = false;
 					override_depth = false;
 					depth = -8;
 				}
-				if(instance_is(target, ReviveArea) || instance_is(target, NecroReviveArea) || instance_is(target, RevivePopoFreak)){
+				else if(instance_is(target, ReviveArea) || instance_is(target, NecroReviveArea) || instance_is(target, RevivePopoFreak)){
 					grav = 0;
 					override_mask = false;
 					override_depth = false;
 					depth = -6.01;
 				}
-				if(instance_is(target, prop)){
-					spawn_dis = random_range(4, 16);
-					
-					 // Death on Impact:
-					if(target.team == 0 && target.size <= 1 && target.maxhealth < 50){
-						target_save.my_health = 0;
-					}
-				}
-				if(instance_is(target, enemy)){
-					is_enemy = true;
-					idle_time = 90 + random(90);
-					if(direction == 0 && "walk" not in self && "right" in self){
-						direction = random(360);
-						scrRight(direction);
-					}
-					
-					 // Disable AI:
-					with(target) for(var i = 0; i <= 10; i++){
-						lq_set(other.target_save, `alarm${i}`, alarm_get(i));
-						alarm_set(i, -1);
-					}
+				else if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
+					grav = 0;
+					override_depth = false;
+					depth = -6.01;
 				}
 				
 				 // Object-Specific Setup:
@@ -3417,7 +3490,6 @@
 						spr_shadow_y = -1;
 						break;
 						
-					 /// OTHER ///
 					case "WepPickupGrounded":
 						jump = 3;
 						wobble = 8;
@@ -3498,12 +3570,6 @@
 						
 					case JungleFly: // Bro hes actually flying real
 						z += random_range(4, 16 + (distance_to_object(Floor) / 2));
-						break;
-						
-					case Pipe: // eat smash br
-						with(target) with(instances_meeting(x, y, Wall)){
-							topindex = 0;
-						}
 						break;
 				}
 				
@@ -3592,68 +3658,111 @@
     return instance_create(_x + 16, _y + 16, _obj);
 
 #define floor_fill(_x, _y, _w, _h)
-    var	o = 32,
-    	_gridPos = floor_align(_x, _y, _w * o, _h * o, o, o);
-    	
+    var o = 32;
+    
+     // Center:
+    _x -= floor((_w - 1) / 2) * o;
+    _y -= floor((_h - 1) / 2) * o;
+    _w *= o;
+    _h *= o;
+    
+     // Align:
+    var _gridPos = floor_align(_x, _y, _w, _h);
 	_x = _gridPos[0];
 	_y = _gridPos[1];
 	
-     // Center Around x,y:
-    _x -= floor((_w - 1) / 2) * o;
-    _y -= floor((_h - 1) / 2) * o;
+	 // Clear:
+	floor_clear(_x, _y, _x + _w - 1, _y + _h - 1);
     
      // Floors:
     var r = [];
-    for(var _ox = 0; _ox < _w; _ox++){
-        for(var _oy = 0; _oy < _h; _oy++){
-        	array_push(r, floor_set(_x + (_ox * o), _y + (_oy * o), true));
+    for(var _ox = 0; _ox < _w; _ox += o){
+        for(var _oy = 0; _oy < _h; _oy += o){
+        	array_push(r, floor_set(_x + _ox, _y + _oy, true));
         }
     }
     return r;
-
-#define floor_fill_round(_x, _y, _w, _h)
-    var	o = 32,
-    	_gridPos = floor_align(_x, _y, _w * o, _h * o, o, o);
-    	
-	_x = _gridPos[0];
-	_y = _gridPos[1];
 	
-     // Center Around x,y:
+#define floor_fill_round(_x, _y, _w, _h)
+    var o = 32;
+    
+     // Center:
     _x -= floor((_w - 1) / 2) * o;
     _y -= floor((_h - 1) / 2) * o;
+    _w *= o;
+    _h *= o;
+    
+     // Align:
+    var _gridPos = floor_align(_x, _y, _w, _h);
+	_x = _gridPos[0];
+	_y = _gridPos[1];
     
      // Floors:
     var r = [];
-    for(var _ox = 0; _ox < _w; _ox++){
-        for(var _oy = 0; _oy < _h; _oy++){
-            if((_ox != 0 && _ox != _w - 1) || (_oy != 0 && _oy != _h - 1)){ // Don't Make Corner Floors
-                array_push(r, floor_set(_x + (_ox * o), _y + (_oy * o), true));
+    for(var _ox = 0; _ox < _w; _ox += o){
+        for(var _oy = 0; _oy < _h; _oy += o){
+            if((_ox != 0 && _ox != _w - o) || (_oy != 0 && _oy != _h - o)){ // Don't Make Corner Floors
+				if(!instance_exists(GenCont)){
+					floor_clear(_x + _ox, _y + _oy, _x + _ox + 31, _y + _oy + 31);
+				}
+                array_push(r, floor_set(_x + _ox, _y + _oy, true));
             }
         }
     }
     return r;
 
 #define floor_fill_ring(_x, _y, _w, _h)
-    var	o = 32,
-    	_gridPos = floor_align(_x, _y, _w * o, _h * o, o, o);
-    	
-	_x = _gridPos[0];
-	_y = _gridPos[1];
-	
-     // Center Around x,y:
+    var o = 32;
+    
+     // Center:
     _x -= floor((_w - 1) / 2) * o;
     _y -= floor((_h - 1) / 2) * o;
+    _w *= o;
+    _h *= o;
+    
+     // Align:
+    var _gridPos = floor_align(_x, _y, _w, _h);
+	_x = _gridPos[0];
+	_y = _gridPos[1];
     
      // Floors:
     var r = [];
-    for(var _ox = 0; _ox < _w; _ox++){
-        for(var _oy = 0; _oy < _h; _oy++){
-        	if(_ox == 0 || _oy == 0 || _ox == _w - 1 || _oy == _h - 1){ // Don't Make Inner Floors
-        		array_push(r, floor_set(_x + (_ox * o), _y + (_oy * o), true));
+    for(var _ox = 0; _ox < _w; _ox += o){
+        for(var _oy = 0; _oy < _h; _oy += o){
+        	if(_ox == 0 || _oy == 0 || _ox == _w - o || _oy == _h - o){ // Don't Make Inner Floors
+				if(!instance_exists(GenCont)){
+					floor_clear(_x + _ox, _y + _oy, _x + _ox + 31, _y + _oy + 31);
+				}
+        		array_push(r, floor_set(_x + _ox, _y + _oy, true));
         	}
         }
     }
     return r;
+    
+#define door_create(_x, _y, _dir)
+	var	_dx = _x + lengthdir_x(16 - 2, _dir),
+		_dy = _y + lengthdir_y(16 - 2, _dir) + 1,
+		_partner = noone,
+		_inst = [];
+		
+	for(var _side = -1; _side <= 1; _side += 2){
+		with(obj_create(_dx + lengthdir_x(16 * _side, _dir - 90), _dy + lengthdir_y(16 * _side, _dir - 90), "CatDoor")){
+			image_angle = _dir;
+			image_yscale = -_side;
+			
+			 // Link Doors:
+			partner = _partner;
+			with(partner) partner = other;
+			_partner = id;
+			
+			 // Ensure LoS Wall Creation:
+			with(self) event_perform(ev_step, ev_step_normal);
+			
+			array_push(_inst, id);
+		}
+	}
+	
+	return _inst;
     
 #define trace_lag()
     if(mod_variable_exists("mod", mod_current, "lag")){
