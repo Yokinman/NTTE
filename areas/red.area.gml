@@ -1,4 +1,4 @@
- mak#define init
+#define init
     spr = mod_variable_get("mod", "teassets", "spr");
     snd = mod_variable_get("mod", "teassets", "snd");
     mus = mod_variable_get("mod", "teassets", "mus");
