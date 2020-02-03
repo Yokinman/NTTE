@@ -1,6 +1,4 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	
 	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIcon.png",     1, 12, 16);
 	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusIdle.png",    15,  8,  8);
 	global.sprCrownWalk	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",     6,  8,  8);
@@ -34,6 +32,11 @@
 	}
 	
 #define step
+	script_bind_step(step_post, 0);
+	
+#define step_post
+	instance_destroy();
+	
 	 // Only Bonus Ammo/HP:
 	if(!instance_exists(GenCont) && !instance_exists(MenuGen)){
 		 // Overheal:

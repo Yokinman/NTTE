@@ -1,289 +1,33 @@
-#define chat_command(_cmd, _arg, _ind)
-    if(string_upper(_cmd) == "NTTE"){
-		NTTEMenu.open = !NTTEMenu.open;
-		return true;
-    }
-
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
 
 	areaList = mod_variable_get("mod", "teassets", "area");
 	raceList = mod_variable_get("mod", "teassets", "race");
 	crwnList = mod_variable_get("mod", "teassets", "crwn");
 	wepsList = mod_variable_get("mod", "teassets", "weps");
 
-    DebugLag = false;
-    
+	DebugLag = false;
+	
 	 // level_start():
-    global.newLevel = instance_exists(GenCont);
-    
+	global.newLevel = instance_exists(GenCont);
+	
 	 // Map:
 	global.mapAreaCheck = false;
 	global.mapArea = [];
 
 	 // Fix for custom music/ambience:
 	global.musTrans = false;
-    global.sound_current = {
-        mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
-        amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
-    };
+	global.sound_current = {
+		mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
+		amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
+	};
 
 	 // HUD Surface, for Pause Screen:
 	surfMainHUD  = surflist_set("MainHUD",  0, 0, game_width, game_height);
 	surfSkillHUD = surflist_set("SkillHUD", 0, 0, game_width, game_height);
-
-	/// NTTE Menus:
-		NTTEMenu = {
-			"open"			: false,
-			"slct"			: array_create(maxp, menu_base),
-			"pop"			: array_create(maxp, 0),
-			"splat"			: 0,
-			"splat_blink"	: 0,
-			"splat_options"	: 0,
-			
-			"list" : {
-				"options" : {
-					"x" : 0,
-					"y" : -64,
-					"slct" : array_create(maxp, -1),
-					"list" : [
-						{	name : "Use Shaders",
-							type : opt_toggle,
-							text : "Used for certain visuals#@sShaders may cause the game# to @rcrash @son certain systems!",
-							sync : false,
-							varname : "allowShaders"
-							},
-						{	name : "Reminders",
-							type : opt_toggle,
-							text : "@sRemind you to enable#@wboss intros @s& @wmusic",
-							varname : "remindPlayer"
-							},
-						{	name : "NTTE Intros",
-							type : opt_toggle,
-							pick : ["OFF", "ON", "AUTO"],
-							text : "@sSet @wAUTO @sto obey the#@wboss intros @soption",
-							varname : "intros"
-							},
-						{	name : "NTTE Outlines :",
-							type : opt_title,
-							text : "@sSet @wAUTO @sto#obey @w/outlines"
-							},
-						{	name : "Pets",
-							type : opt_toggle,
-							pick : ["OFF", "ON", "AUTO"],
-							sync : false,
-							varname : "outlinePets"
-							},
-						{	name : "Charm",
-							type : opt_toggle,
-							pick : ["OFF", "ON", "AUTO"],
-							sync : false,
-							varname : "outlineCharm"
-							},
-						{	name : "Water Quality :",
-							type : opt_title,
-							text : `@sAdjust @sfor @wperformance#@sat the @(color:${make_color_rgb(55, 253, 225)})Coast`
-							},
-						{	name : "Wading",
-							type : opt_slider,
-							text : "Objects in the water",
-							sync : false,
-							varname : "waterQualityTop"
-							},
-						{	name : "Main",
-							type : opt_slider,
-							text : "Water foam,#underwater visuals,#etc.",
-							sync : false,
-							varname : "waterQualityMain"
-							}
-					]
-				},
-				
-				"stats" : {
-					"slct" : array_create(maxp, 0),
-					"list" : {
-						"mutants" : {
-							"x" : 56,
-							"y" : -48,
-							"slct" : array_create(maxp, 0),
-							"list" : {/*Filled in Later*/}
-						},
-						
-						"pets" : {
-							"x" : 56,
-							"y" : -16,
-							"slct" : array_create(maxp, ""),
-							"list" : [ // Pets that show up by default
-								"Scorpion"		+ ".petlib.mod",
-								"Parrot"		+ ".petlib.mod",
-								"CoolGuy"		+ ".petlib.mod",
-								"Salamander"	+ ".petlib.mod",
-								"Mimic"			+ ".petlib.mod",
-								"Slaughter"		+ ".petlib.mod",
-								"Octo"			+ ".petlib.mod",
-								"Spider"		+ ".petlib.mod",
-								"Prism"			+ ".petlib.mod",
-								"Weapon"		+ ".petlib.mod",
-								"Orchid"		+ ".petlib.mod"
-							]
-						},
-						
-						"other" : {
-							"slct" : array_create(maxp, 0),
-							"list" : [
-								{	name : "AREA UNLOCKS",
-									list : [
-										["coastWep",	["harpoon launcher.wep", "net launcher.wep", "clam shield.wep", "trident.wep"]],
-										["oasisWep",	["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
-										["trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
-										["lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
-										["lairCrown",	["crime.crown"]]
-										]
-									},
-								{	name : "MISC",
-									list : [
-										["Time",  "time", stat_time],
-										["Bones", "bone", stat_base]
-										]
-									}
-							]
-						}
-					}
-				},
-				
-				"credits" : {
-					"x" : 0,
-					"y" : -79,
-					"slct" : array_create(maxp, false),
-					"list" : [
-						{	name : "Yokin",
-							role : [[cred_coder, "Lead Programmer"]],
-							link : [[cred_twitter, "Yokinman"], [cred_discord, "Yokin\#1322"]]
-							},
-						{	name : "THX",
-							role : [[cred_artist, "Sprite Artist"]],
-							link : [[cred_twitter, "thxsprites"], [cred_discord, "THX\#0011"]]
-							}
-						{	name : "smash brothers",
-							role : [[cred_artist, "Sprite Artist"], [cred_coder, "Programmer"]],
-							link : [[cred_twitter, "attfooy"], [cred_discord, "smash brothers\#5026"]]
-							},
-						{	name : "peas",
-							role : [[cred_artist, "Sprite Artist"]],
-							link : [[cred_twitter, "realestpeas"], [cred_discord, "peas\#8304"]]
-							},
-						{	name : "jsburg",
-							role : [[cred_coder, "Programmer?"]],
-							link : [[cred_itchio, "jsburg"], [cred_discord, "Jsburg\#1045"]]
-							},
-						{	name : "karmelyth",
-							role : [[cred_artist, "Weapon Sprites"], [cred_coder, "Weapon Programming"]],
-							link : [[cred_twitter, "karmelyth"], [cred_discord, "Karmelyth\#7168"]]
-							},
-						{	name : "Mista Jub",
-							role : [[cred_music, "Music"]],
-							link : [[cred_twitter, "JDubbsishere"], [cred_soundcloud, "jdubmmusic"], [cred_discord, "Mista Jub\#8521"]]
-							},
-						{	name : "BioOnPC",
-							role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailer"],
-							link : [[cred_twitter, "HitregOnPC"], [cred_discord, "BioOnPC\#6521"]]
-							},
-						{	name : "Special Thanks",
-							role : [[cred_yellow, "blaac"], "Bub", "Emffles", "minichibis"],
-							link : [[cred_twitter + cred_yellow, "blaac_"], [cred_twitter, "Bubonto"], [cred_twitter, "EmfflesTWO"], [cred_twitter, "minichibisart"]]
-							}
-					]
-				}
-			}
-		}
-		
-		 // Menu Defaulterize:
-		for(var i = 0; i < lq_size(MenuList); i++){
-			var o = lq_get_value(MenuList, i);
-			if("slct" in o && array_length(o.slct) > 0){
-				if("slct_default" not in o){
-					o.slct_default = o.slct[0];
-				}
-			}
-		}
-		with(MenuList.options.list){
-			if("name" not in self) name = "";
-			if("type" not in self) type = opt_title;
-			if("pick" not in self){
-	        	switch(type){
-	        		case opt_toggle:	pick = ["OFF", "ON"];	break;
-	        		case opt_slider:	pick = [0, 1];			break;
-	        		default:			pick = [];				break;
-	        	}
-	        }
-			if("sync" not in self) sync = true;
-			if("splat" not in self) splat = 0;
-			if("varname" not in self) varname = name;
-			if("clicked" not in self) clicked = array_create(maxp, false);
-			if(type >= 0 && varname not in sav.option){
-	            option_set(varname, 0);
-	        }
-		}
-		with(MenuList.credits.list){
-			if("name" not in self) name = "";
-			if("role" not in self) role = [];
-			if("link" not in self) link = [];
-			
-			if(!is_array(role)) role = [role];
-			for(var i = 0; i < array_length(role); i++){
-				if(!is_array(role[i])) role[i] = [role[i]];
-			}
-			
-			if(!is_array(link)) link = [link];
-			for(var i = 0; i < array_length(link); i++){
-				if(!is_array(link[i])) link[i] = [link[i]];
-			}
-			if(array_length(link) >= 4){
-				with(link){
-					for(var i = 0; i < array_length(self); i++){
-						self[@i] = string_replace(self[i], "Twitter: ", "@@");
-					}
-				}
-			}
-		}
-		
-		 // Race Stats:
-		with(raceList){
-			var _race = self,
-				_path = "race/" + _race + "/",
-				_stat = [
-					{	name : "",
-						list : [
-							["Kills",	_path + "kill", stat_base],
-							["Loops",	_path + "loop", stat_base],
-							["Runs",	_path + "runs", stat_base],
-							["Deaths",	_path + "lost", stat_base],
-							["Wins",	_path + "wins", stat_base],
-							["Time",	_path + "time", stat_time]
-							]
-						},
-					{	name : "Best Run",
-						list : [
-							["Area",	_path + "bestArea",	stat_base],
-							["Kills",	_path + "bestKill", stat_base]
-							]
-						}
-				];
-				
-			switch(_race){
-				case "parrot":
-					array_push(_stat[0].list, ["Charmed", _path + "spec", stat_base]);
-					break;
-			}
-			
-			lq_set(MenuList.stats.list.mutants.list, _race, _stat);
-		}
-		
-		global.mouse_x_previous = array_create(maxp);
-		global.mouse_y_previous = array_create(maxp);
 	
 	 // Pets:
 	global.pet_max = 1;
@@ -296,10 +40,10 @@
 
 	 // Kills:
 	global.killsLast = GameCont.kills;
-    
-     // Scythe Tippage:
-    global.sPromptIndex = 0;
-    global.scythePrompt = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
+	
+	 // Scythe Tippage:
+	global.sPromptIndex = 0;
+	global.scythePrompt = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
 
 	 // Flower Reroll:
 	global.hud_reroll = null;
@@ -323,84 +67,53 @@
 #macro cMusic	 global.sound_current.mus
 #macro cAmbience global.sound_current.amb
 
-#macro NTTEMenu			global.menu
-#macro MenuOpen			NTTEMenu.open
-#macro MenuSlct			NTTEMenu.slct
-#macro MenuPop			NTTEMenu.pop
-#macro MenuList			NTTEMenu.list
-#macro MenuSplat		NTTEMenu.splat
-#macro MenuSplatBlink	NTTEMenu.splat_blink
-#macro MenuSplatOptions	NTTEMenu.splat_options
-
-#macro menu_options	0
-#macro menu_stats	1
-#macro menu_credits	2
-#macro menu_base	menu_options
-
-#macro opt_title -1
-#macro opt_toggle 0
-#macro opt_slider 1
-
-#macro stat_base	0
-#macro stat_time	1
-#macro stat_display	2
-
-#macro cred_artist		`@(color:${make_color_rgb(30, 160, 240)})`
-#macro cred_coder		`@(color:${make_color_rgb(250, 170, 0)})`
-#macro cred_music		`@(color:${make_color_rgb(255, 60, 0)})`
-#macro cred_twitter		cred_artist	+ "Twitter: @w"
-#macro cred_itchio		cred_coder	+ "Itch.io: @w"
-#macro cred_soundcloud	cred_music	+ "Soundcloud: @w"
-#macro cred_discord		`@(color:${make_color_rgb(160, 70, 200)})Discord: @w`
-#macro cred_yellow		"@y"
-
 #define game_start
 	 // Reset:
 	global.pet_max = 1;
-    for(var i = 0; i < array_length(global.petMapicon); i++){
-    	global.petMapicon[i] = [];
-    }
-    global.mapArea = [];
+	for(var i = 0; i < array_length(global.petMapicon); i++){
+		global.petMapicon[i] = [];
+	}
+	global.mapArea = [];
 	global.killsLast = GameCont.kills;
 	global.hud_reroll = null;
-    with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
-    
-     // Race Runs Stat:
-    for(var i = 0; i < maxp; i++){
-    	var _race = player_get_race(i);
-    	if(array_exists(raceList, _race)){
+	with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
+	
+	 // Race Runs Stat:
+	for(var i = 0; i < maxp; i++){
+		var _race = player_get_race(i);
+		if(array_exists(raceList, _race)){
 			var _stat = "race/" + _race + "/runs";
 			stat_set(_stat, stat_get(_stat) + 1);
-    	}
-    }
-    
-     // Yeah:
-    global.sPromptIndex = 0;
+		}
+	}
+	
+	 // Yeah:
+	global.sPromptIndex = 0;
 
 #define level_start // game_start but every level
 	var	_spawnX = 10016,
 		_spawnY = 10016,
-		_validArea = (GameCont.hard > 1 && instance_number(enemy) > array_length(instances_matching(CustomEnemy, "name", "PortalPrevent"))),
+		_validArea = (GameCont.hard > 1 && instance_exists(enemy)),
 		_topChance = 1/100,
 		_topSpawn = [];
 		
-	with(Player){
+	with(instance_nearest(_spawnX, _spawnY, Player)){
 		_spawnX = x;
 		_spawnY = y;
 	}
-    
-     // Cool Vault Statues:
-    /*with(ProtoStatue) with(floor_get(x, y)){
-    	var o = 32;
-    	for(var h = -1; h <= 1; h++) for(var v = -1; v <= 1; v++){
-    		with(floor_get(x + (h * o), y + (v * o))){
-    			sprite_index = spr.VaultFlowerFloor;
-    			image_index	 = ((h + 1) * 3) + (v + 1);
-    		}
-    	}
-    }*/
-    
-     // Wepmimic Arena:
+	
+	 // Cool Vault Statues:
+	/*with(ProtoStatue) with(floor_get(x, y)){
+		var o = 32;
+		for(var h = -1; h <= 1; h++) for(var v = -1; v <= 1; v++){
+			with(floor_get(x + (h * o), y + (v * o))){
+				sprite_index = spr.VaultFlowerFloor;
+				image_index	 = ((h + 1) * 3) + (v + 1);
+			}
+		}
+	}*/
+	
+	 // Wepmimic Arena:
 	if(_validArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
 		with(instance_furthest(_spawnX, _spawnY, WeaponChest)){
 			with(obj_create(x, y, "PetWeaponBecome")){
@@ -439,7 +152,7 @@
 		}
 	}
 	
-     // Flavor Big Cactus:
+	 // Flavor Big Cactus:
 	if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
 		with(instance_random([Cactus, NightCactus])){
 			obj_create(x, y, "BigCactus");
@@ -447,7 +160,7 @@
 		}
 	}
 	
-     // Area-Specific:
+	 // Area-Specific:
 	switch(GameCont.area){
 		case 0: /// CAMPFIRE
 			
@@ -463,18 +176,29 @@
 			
 			break;
 			
-        case 1: /// DESERT
+		case 1: /// DESERT
 			
-             // Disable Oasis Skip:
+			 // Event Conditions:
+			var	_eventMaggot = ((GameCont.subarea > 1 || GameCont.loops > 0) && chance(1, 60)),
+				_eventScorp  = false,
+				_eventBandit = ((GameCont.subarea == 3 && chance(1, 10)) || (GameCont.subarea != 3 && GameCont.loops > 0 && chance(1, 20)));
+				
+			with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")){
+				if(scorpion_city){
+					scorpion_city = false;
+					_eventScorp = true;
+					
+					 // Alert:
+					with(scrAlert(self, spr_icon)){
+						snd_flash = sndScorpionMelee;
+					}
+				}
+			}
+			
+			 // Disable Oasis Skip:
 			with(instance_create(0, 0, chestprop)){
 				visible = false;
 				mask_index = mskNone;
-			}
-			
-			 // Big Nests:
-			with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
-				obj_create(x, y, "BigMaggotSpawn");
-				instance_delete(id);
 			}
 			
 			 // Find Prop-Spawnable Floors:
@@ -482,7 +206,7 @@
 				_spawnIndex = -1;
 				
 			with(Floor){
-				var _x = (bbox_left + bbox_right + 1) / 2,
+				var	_x = (bbox_left + bbox_right + 1) / 2,
 					_y = (bbox_top + bbox_bottom + 1) / 2;
 					
 				if(point_distance(_x, _y, _spawnX, _spawnY) > 48){
@@ -512,175 +236,317 @@
 				obj_create(_sx, _sy, "CoastBossBecome");
 			}
 			
-             // Consistently Spawn Crab Skeletons:
-            if(!instance_exists(BonePile)){
+			 // Consistent Crab Skeletons:
+			if(!_eventScorp && !instance_exists(BonePile)){
 				if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
 					obj_create(cenx, ceny, BonePile);
 				}
-            }
+			}
 			
-             // Spawn scorpion rocks occasionally:
-            if(chance(3, 5)){
+			 // Scorpion Rocks:
+			if(GameCont.subarea < area_get_subarea(GameCont.area) && chance(2, 5)){
 				if(_spawnIndex >= 0) with(_spawnFloor[_spawnIndex--]){
-                    with(obj_create(cenx, ceny - 2, "ScorpionRock")){
-						 // This part is irrelevant don't worry:
-						var _friendChance = 0;
-						with(instances_matching_le(Player, "my_health", 3)){
-							if(my_health < maxhealth || my_health <= 1){
-								if(_friendChance <= 0 || my_health <= _friendChance) _friendChance = my_health;
-							}
-						}
-                    	if(_friendChance > 0) friendly = chance(1, _friendChance);
-                    }
+					with(obj_create(cenx, ceny - 2, "ScorpionRock")){
+						if(_eventScorp) friendly = -1;
+					}
 				}
 			}
 			
 			 // Maggot Park:
-			if(GameCont.subarea > 1 || GameCont.loops > 0){
-				with(instances_matching([RadChest, RadMaggotChest], "", null)) if(instance_exists(self)){
-					if(distance_to_object(Player) > 196){
-						if(chance(1, 60 + (20 * (object_index != RadMaggotChest)))){
-							var _sx = x + (irandom_range(-2, 2) * 32),
-								_sy = y + (irandom_range(-2, 2) * 32),
-								_ang = random(360),
-								_copy = {};
-								
-							 // Copy Origin Floor's Vars:
-							with(instance_nearest_array(_sx - 16, _sy - 16, instances_matching_ne(Floor, "object_index", FloorExplo))){
-								_copy.sprite_index = sprite_index;
-								_copy.depth        = depth;
-								_copy.material     = material;
-								_copy.traction     = traction;
-								_copy.styleb       = styleb;
-								_copy.area         = area;
-							}
+			if(_eventMaggot){
+				var	_sx = _spawnX,
+					_sy = _spawnY;
+					
+				 // Find Spawn Location:
+				with(instance_furthest(_spawnX, _spawnY, RadChest)){
+					_sx = x;
+					_sy = y;
+					with(instances_at(_sx, _sy, instances_matching(Floor, "object_index", Floor))){
+						_sx = (bbox_left + bbox_right + 1) / 2;
+						_sy = (bbox_top + bbox_bottom + 1) / 2;
+					}
+					instance_delete(id);
+				}
+				if(point_distance(_sx, _sy, _spawnX, _spawnY) < 192){
+					with(array_shuffle(instances_matching(Floor, "mask_index", mskFloor))){
+						var	_x = (bbox_left + bbox_right + 1) / 2,
+							_y = (bbox_top + bbox_bottom + 1) / 2;
 							
-							 // Delete RadChest:
+						if(point_distance(_x, _y, _spawnX, _spawnY) > 192){
+							_sx = _x;
+							_sy = _y;
+							break;
+						}
+					}
+				}
+				
+				 // Generate Area:
+				var	_num = 3,
+					_ang = point_direction(_spawnX, _spawnY, _sx, _sy),
+					_nestNum = _num,
+					_nestDir = _ang,
+					_nestDis = 12 + (4 * _nestNum),
+					_areaW = ceil(((2 * (_nestDis + 32)) + 32) / 32) * 32,
+					_areaH = ceil(((2 * (_nestDis + 32)) + 32) / 32) * 32,
+					_minID = GameObject.id;
+					
+				floor_fill_set_center(false);
+				floor_set_style(true, GameCont.area);
+				with(instance_nearest(_sx - 16, _sy - 16, Floor)){
+					floor_set_align(32, 32, x, y);
+				}
+				
+				floor_fill_round(
+					_sx - (_areaW / 2),
+					_sy - (_areaH / 2),
+					_areaW / 32,
+					_areaH / 32
+				);
+				
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+					var	_x = _sx + lengthdir_x((_areaW / 2) - 32, _dir),
+						_y = _sy + lengthdir_y((_areaH / 2) - 32, _dir),
+						_off = 0;
+						
+					for(var _size = 3; _size > 0; _size--){
+						var	_w = ceil(_size) * 32,
+							_h = ceil(_size) * 32,
+							d = round((_dir + _off) / 90) * 90;
+							
+						_x += lengthdir_x(_w / 2, d);
+						_y += lengthdir_y(_h / 2, d);
+						
+						floor_fill(_x - (_w / 2), _y - (_h / 2), _w / 32, _h / 32);
+						
+						_x += lengthdir_x(_w / 2, d);
+						_y += lengthdir_y(_h / 2, d);
+						
+						_off += orandom(60);
+					}
+				}
+				
+				floor_fill_set_center(true);
+				floor_reset_style();
+				floor_reset_align();
+				
+				 // Nests:
+				for(var d = _nestDir; d < _nestDir + 360; d += (360 / _nestNum)){
+					var l = _nestDis + random(4 * _nestNum);
+					obj_create(round(_sx + lengthdir_x(l, d)), round(_sy + lengthdir_y(l, d)), "BigMaggotSpawn");
+				}
+				
+				 // Floor Setup:
+				var	_nestTinyNum = random_range(5, 6),
+					_burrowNum = random_range(3, 4);
+					
+				with(array_shuffle(instances_matching_gt(Floor, "id", _minID))){
+					var	_x = (bbox_left + bbox_right + 1) / 2,
+						_y = (bbox_top + bbox_bottom + 1) / 2;
+						
+					 // Enemies:
+					if(!place_meeting(x, y, enemy)){
+						if(_nestTinyNum > 0){
+							_nestTinyNum--;
+							with(instance_create(_x, _y, MaggotSpawn)){
+								x = xstart;
+								y = ystart;
+								move_contact_solid(random(360), random(16));
+								instance_create(x, y, Maggot);
+							}
+						}
+						else if(_burrowNum > 0){
+							_burrowNum--;
+							obj_create(_x, _y, "WantBigMaggot");
+						}
+					}
+					
+					 // Remove Details:
+					with(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Detail)){
+						instance_destroy();
+					}
+				}
+				
+				 // Sound:
+				sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
+			}
+			
+			 // Big Maggot Nests:
+			else with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
+				obj_create(x, y, "BigMaggotSpawn");
+				instance_delete(id);
+			}
+			
+			 // Scorpion City:
+			if(_eventScorp){
+				 // Delete Lone Walls:
+				with(Wall) if(place_meeting(x, y, Floor)){
+					var _delete = true;
+					for(var d = 0; d < 360; d += 90){
+						if(place_meeting(x + lengthdir_x(16, d), y + lengthdir_y(16, d), Wall)){
+							_delete = false;
+							break;
+						}
+					}
+					if(_delete) instance_delete(id);
+				}
+				
+				 // More Scorpions:
+				with(instances_matching_lt(enemy, "size", 4)){
+					if(!floor_get(x, y).styleb){
+						if(!instance_is(self, Bandit) || chance(1, 2)){
+							var	_scorp = [[Scorpion, "BabyScorpion"], [GoldScorpion, "BabyScorpionGold"]],
+								_gold = chance(size, 5),
+								_baby = (size <= 1);
+								
+							obj_create(x, y, _scorp[_gold, _baby]);
 							instance_delete(id);
-							
-							 // Generate Area:
-							var _minID = GameObject.id;
-							floor_set_align(32, 32, null, null);
-							
-							for(var d = _ang; d < _ang + 360; d += (360 / 8)){
-								var l = 0;
-								repeat(4 + GameCont.loops){
-									floor_fill(_sx + lengthdir_x(l, d), _sy + lengthdir_y(l, d), 3, 3);
-									l += random_range(8, 24);
-								}
-							}
-							
-							floor_reset_align();
-							var _floors = instances_matching_gt(Floor, "id", _minID);
-							
-							 // Setup:
-							with(_floors){
-								for(var i = 0; i < lq_size(_copy); i++){
-									variable_instance_set(id, lq_get_key(_copy, i), lq_get_value(_copy, i));
+						}
+					}
+				}
+				with(instances_matching(CustomEnemy, "name", "BigMaggotSpawn")){
+					scorp_drop++;
+				}
+				
+				 // Scorpion Nests:
+				var	_nestNum = 3,
+					_minID = GameObject.id;
+					
+				with(array_shuffle(instances_matching(Floor, "mask_index", mskFloor))){
+					if(_nestNum > 0){
+						if(instance_exists(self)){
+							var	_w = irandom_range(3, 5) * 32,
+								_h = _w,
+								_x = (bbox_left + bbox_right + 1) / 2,
+								_y = (bbox_top + bbox_bottom + 1) / 2;
+								
+							if(point_distance(_spawnX, _spawnY, _x, _y) > 64 + (max(_w, _h) / 2)){
+								_nestNum--;
+								
+								 // Avoid Floors:
+								while(
+									collision_rectangle(
+										_x - (_w / 2) + 63,
+										_y - (_h / 2) + 31,
+										_x + (_w / 2) - 63 - 1,
+										_y + (_h / 2) - 31 - 1,
+										Floor,
+										false,
+										false
+									)
+									||
+									collision_rectangle(
+										_x - (_w / 2) + 31,
+										_y - (_h / 2) + 63,
+										_x + (_w / 2) - 31 - 1,
+										_y + (_h / 2) - 63 - 1,
+										Floor,
+										false,
+										false
+									)
+								){
+									var _dir = (round(point_direction(_spawnX, _spawnY, _x, _y) / 90) * 90) + choose(-90, 0, 90);
+									_x += lengthdir_x(32, _dir);
+									_y += lengthdir_y(32, _dir);
 								}
 								
-								 // Cut Corners:
-								if(chance(1, 3)){
-									with(instance_create(x + 16, y + 16, PortalClear)){
-										mask_index = mskPlasmaImpact;
+								 // Generate Nest:
+								var	_floors = [],
+									_fw = _w / 32,
+									_fh = _h / 32;
+									
+								floor_fill_set_center(false);
+								floor_set_align(32, 32, null, null);
+								
+								if(min(_fw, _fh) > 3){
+									_floors = floor_fill_round(_x - (_w / 2), _y - (_h / 2), _fw, _fh);
+								}
+								else{
+									_floors = floor_fill(_x - (_w / 2), _y - (_h / 2), _fw, _fh);
+								}
+								
+								floor_fill_set_center(true);
+								floor_reset_align();
+								
+								 // Populate:
+								if(array_length(_floors) > 0){
+									var _tx = 0, _ty = 0;
+									with(_floors){
+										_tx += x + 16;
+										_ty += y + 16;
 									}
-								}
-							}
-							
-							 // Nests:
-							var _ang = random(360),
-								_num = 2 + GameCont.loops;
-								
-							for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-								var l = 12 + (random_range(4, 12) * _num);
-								obj_create(round(_sx + lengthdir_x(l, d)), round(_sy + lengthdir_y(l, d)), "BigMaggotSpawn");
-							}
-							with(_floors){
-								if(!place_meeting(x, y, enemy)){
-									if(chance(2, 3)){
-										with(instance_create(x + 16, y + 16, MaggotSpawn)){
-											x = xstart;
-											y = ystart;
-											move_contact_solid(random(360), random(16));
-											instance_create(x, y, Maggot);
+									_x = _tx / array_length(_floors);
+									_y = _ty / array_length(_floors);
+									
+									 // Family:
+									repeat(max(1, ((_fw + _fh) / 2) - 2)){
+										instance_create(_x, _y, (chance(1, 5) ? GoldScorpion : Scorpion));
+									}
+									
+									 // Props:
+									var	_boneNum = round(((_fw * _fh) / 16) + orandom(1)),
+										_ang = random(360);
+										
+									for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _boneNum)){
+										var	d = _dir + orandom(30),
+											_obj = choose("Backpacker", LightBeam, WepPickup);
+											
+										with(obj_create(round(_x + lengthdir_x((_w / 2) - 24, d)), round(_y + lengthdir_y((_h / 2) - 24, d)), _obj)){
+											if(_obj == WepPickup) wep = "crabbone";
 										}
 									}
-								}
-								else with(instances_meeting(x, y, instances_matching_ne(enemy, "object_index", MaggotSpawn, CustomEnemy, Maggot))){
-									if(chance(2, 3)){
-										if(!place_meeting(x, y, BigMaggot) && !place_meeting(x, y, JungleFly)){
-											if(GameCont.loops > 0 && chance(1, 2)){
-												instance_create(x, y, JungleFly);
+									
+									 // Details:
+									for(var d = 0; d < 360; d += random_range(4, 10)){
+										var l = (chance(1, 3) ? random_range(1/3, 1/2) : random(1/4));
+										with(instance_create(round(_x + lengthdir_x(_w * l, d)), round(_y + lengthdir_y(_h * l, d)), Detail)){
+											if(image_index < 4 && chance(1, 4)){
+												image_index = 4;
 											}
-											else instance_create(x, y, BigMaggot);
 										}
 									}
 								}
 							}
-							
-							 // Sound:
-							sound_play_pitchvol(sndBigMaggotBite, 0.4 + random(0.1), 1.5);
-							sound_play_pitchvol(sndBigMaggotBurrow, 0.6, 2);
-							sound_play_pitchvol(sndBigMaggotUnburrow, 0.6, 3);
-							sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
 						}
+					}
+					else break;
+				}
+				
+				 // Nest Corner Walls:
+				with(array_shuffle(instances_matching_gt(Floor, "id", _minID))){
+					var	_x1 = bbox_left,
+						_y1 = bbox_top,
+						_x2 = bbox_right + 1,
+						_y2 = bbox_bottom + 1,
+						_cx = (_x1 + _x2) / 2,
+						_cy = (_y1 + _y2) / 2,
+						_w = _x2 - _x1,
+						_h = _y2 - _y1,
+						_break = false;
+						
+					for(var	_x = _x1; _x < _x2; _x += _w - 16){
+						for(var	_y = _y1; _y < _y2; _y += _h - 16){
+							var	_sideX = sign((_x + 8) - _cx),
+								_sideY = sign((_y + 8) - _cy);
+								
+							if(!place_meeting(_x1 + (_w * _sideX), _y1, Floor) && !place_meeting(_x1, _y1 + (_h * _sideY), Floor)){
+								instance_create(_x, _y, Wall);
+								
+								 // Bone Decals:
+								with(instance_create(_x + 8 - (8 * _sideX), _y, Bones)){
+									image_xscale = -_sideX;
+								}
+								
+								_break = true;
+								break;
+							}
+						}
+						if(_break) break;
 					}
 				}
-        	}
+			}
 			
-             // Spawn Baby Scorpions:
-            with(Scorpion) if(chance(1, 4)){
-                repeat(irandom_range(1, 3)) obj_create(x, y, "BabyScorpion");
-            }
-            with(GoldScorpion) if(chance(1, 4)){
-            	repeat(irandom_range(1, 3)) obj_create(x, y, "BabyScorpionGold");
-            }
-            with(MaggotSpawn){
-            	babyscorp_drop = chance(1, 8);
-            }
-			
-			 // Scorpion Desert:
-			var _eventScorp = false;
-			if(GameCont.subarea > 1 || GameCont.loops > 0){
-				if(chance(1, 80) || (chance(1, 40) && array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")) > 0)){
-					_eventScorp = true;
-					
-					with(instances_matching_lt(instances_matching_ge(enemy, "size", 1), "size", 4)) if(chance(1, 2)){
-						var _gold = chance(1, 5);
-						
-						 // Normal scorpion:
-						if(chance(2, 5)){
-							instance_create(x, y, (!_gold ? Scorpion : GoldScorpion));
-						}
-						
-						 // Baby scorpions:
-						else repeat(1 + irandom(2)){
-							obj_create(x, y, (!_gold ? "BabyScorpion" : "BabyScorpionGold"));
-						}
-						
-						instance_delete(id);
-					}
-					
-					 // Sneaky Scorps:
-					with(MaggotSpawn) babyscorp_drop++;
-					with(instances_matching(CustomEnemy, "name", "BigMaggotSpawn")){
-						if(chance(1, 2)) scorp_drop++;
-					}
-					
-					 // More Big Cactus:
-					with(Cactus) if(chance(1, 2)){
-						obj_create(x, y, "BigCactus");
-						instance_delete(id);
-					}
-					
-					 // Scary sound:
-					sound_play_pitchvol(sndGoldTankShoot, 1, 0.6);
-					sound_play_pitchvol(sndGoldScorpionFire, 0.8, 1.4);
-				}
-            }
-            
 			 // Bandit Camp:
-			if((GameCont.subarea = 3 || GameCont.loops > 0) && chance(1, 10)){
+			if(_eventBandit){
 				var	_spawnWall = [],
 					_w = 5 * 32,
 					_h = 4 * 32;
@@ -695,23 +561,33 @@
 				}
 				
 				with(instance_random(_spawnWall)){
-					var	_dir = point_direction(_spawnX, _spawnY, x, y),
+					floor_fill_set_center(false);
+					
+					var	_dir = point_direction(_spawnX, _spawnY, x + 8, y + 8),
 						_dis = 1/3,
-						_campX = x + lengthdir_x(_w * _dis, _dir),
-						_campY = y + lengthdir_y(_h * _dis, _dir),
-						_floor = floor_fill(_campX, _campY, _w / 32, _h / 32);
+						_cx = x + 8 + lengthdir_x(_w * _dis, _dir),
+						_cy = y + 8 + lengthdir_y(_h * _dis, _dir),
+						_floor = floor_fill(_cx - (_w / 2), _cy - (_h / 2), _w / 32, _h / 32);
 						
+					floor_fill_set_center(true);
+					
 					 // Main Campsite:
-					if(array_length(_floor) > 0) with(_floor[0]){
-						var	_x = x + (_w / 2),
-							_y = y + (_h / 2);
-							
+					if(array_length(_floor) > 0){
+						_cx = 0;
+						_cy = 0;
+						with(_floor){
+							_cx += (bbox_left + bbox_right + 1) / 2;
+							_cy += (bbox_top + bbox_bottom + 1) / 2;
+						}
+						_cx /= array_length(_floor);
+						_cy /= array_length(_floor);
+						
 						 // Dying Campfire:
-						with(instance_create(_x, _y, Detail)){
+						with(instance_create(_cx, _cy, Effect)){
 							sprite_index = spr.BanditCampfire;
-							with(instance_create(_x, _y - 2, GroundFlame)){
-								alarm0 *= 4;
-							}
+							image_xscale = choose(-1, 1);
+							depth = 8;
+							with(instance_create(x, y - 2, GroundFlame)) alarm0 *= 4;
 						}
 						
 						 // Main Tents:
@@ -720,7 +596,7 @@
 							var	l = 40,
 								d = _dir + orandom(10);
 								
-							with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "BanditTent")){
+							with(obj_create(_cx + lengthdir_x(l, d), _cy + lengthdir_y(l, d), "BanditTent")){
 								 // Grab Chests:
 								with(instance_nearest_array(x, y, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
 									with(other){
@@ -732,19 +608,24 @@
 						}
 						
 						 // Bro:
-						obj_create(_x, _y, "BanditHiker");
+						obj_create(_cx, _cy, "BanditHiker");
 					}
 					
 					 // Reduce Nearby Non-Bandits:
-					with(instances_matching([MaggotSpawn, BigMaggot, Scorpion, GoldScorpion], "", null)){
-						if(chance(1, point_distance(x, y, _campX, _campY) / 160)){
+					with(instances_matching([MaggotSpawn, BigMaggot], "", null)){
+						if(chance(1, point_distance(x, y, _cx, _cy) / (_eventMaggot ? 64 : 160))){
+							instance_delete(id);
+						}
+					}
+					with(instances_matching([Scorpion, GoldScorpion], "", null)){
+						if(chance(1, point_distance(x, y, _cx, _cy) / (_eventScorp ? 32 : 160))){
 							instance_delete(id);
 						}
 					}
 					
 					 // Random Tent Spawns:
 					with(array_shuffle(instances_matching(instances_matching(Floor, "mask_index", mskFloor), "styleb", false))){
-						if(chance(1, point_distance(x, y, _campX, _campY) / 24)){
+						if(chance(1, point_distance(x, y, _cx, _cy) / 24)){
 							if(!place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
 								var	_fw = ((bbox_right + 1) - bbox_left),
 									_fh = ((bbox_bottom + 1) - bbox_top),
@@ -772,6 +653,7 @@
 									if(_spawn){
 										if(!collision_rectangle(_fx - 32, _fy - 32, _fx + 32, _fy + 32, Wall, false, false)){
 											if(!collision_rectangle(bbox_left - 4, bbox_top - 4, bbox_right + 4, bbox_bottom + 4, hitme, false, false)){
+												_spawn = false;
 												obj_create(_fx + orandom(8), _fy + orandom(8), (chance(1, 3) ? Barrel : "BanditTent"));
 											}
 										}
@@ -780,19 +662,50 @@
 							}
 						}
 					}
+					
+					 // Riders:
+					if(_eventScorp){
+						var	_rideList = array_shuffle(instances_matching([Scorpion, GoldScorpion], "", null)),
+							_rideNum = 0;
+							
+						with(instances_matching(Bandit, "name", "BanditCamper")){
+							if(_rideNum >= array_length(_rideList)) break;
+							if(chance(1, 2)){
+								rider_target = _rideList[_rideNum++];
+							}
+						}
+					}
 				}
 			}
-            
-             // Wall Bandits:
-            with(Wall) if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
-            	if(chance(1, 400)){
-            		obj_create(x + 8, y + 8, "WallEnemy");
-            	}
-            }
-            
-            break;
-            
-        case 2: /// SEWERS
+			
+			 // Baby Scorpions:
+			with(Scorpion) if(chance(1 + _eventScorp, 4)){
+				repeat(irandom_range(1, 3)){
+					obj_create(x, y, "BabyScorpion");
+				}
+			}
+			with(GoldScorpion) if(chance(_eventScorp, 4)){
+				repeat(irandom_range(1, 3)){
+					obj_create(x, y, "BabyScorpionGold");
+				}
+			}
+			with(MaggotSpawn){
+				babyscorp_drop = chance(1, 8) + _eventScorp;
+			}
+			
+			 // Wall Bandits:
+			with(Wall) if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
+				if(chance(1, 400)){
+					obj_create(x + 8, y + 8, "WallEnemy");
+				}
+			}
+			
+			break;
+			
+		case 2: /// SEWERS
+			
+			 // Event Conditions:
+			var _eventGator = ((unlock_get("lairCrown") && chance(1, 5)) || crown_current == "crime");
 			
 			// Cats:
 			with(ToxicBarrel){
@@ -801,8 +714,52 @@
 				}
 			}
 			
+			 // Frog Nest:
+			with(FrogQueen){
+				var	_total = 0,
+					_queen = self;
+					
+				with(array_shuffle(floor_fill_round(x - 16, y - 16, 5, 5))){
+					var _chance = 0;
+					
+					for(var _checkDir = 0; _checkDir < 360; _checkDir += 90){
+						if(!place_meeting(x + lengthdir_x(32, _checkDir), y + lengthdir_y(32, _checkDir), Floor)){
+							_chance++;
+						}
+					}
+					
+					if(chance(_chance, 1 + _total)){
+						_total++;
+						
+						var	_dis = 8,
+							_ang = random(360),
+							_num = choose(1, 3);
+							
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+							var	_x = ((bbox_left + bbox_right + 1) / 2) + lengthdir_x(_dis, _dir) + orandom(2),
+								_y = ((bbox_top + bbox_bottom + 1) / 2) + lengthdir_y(_dis, _dir) - random(4);
+								
+							with(instance_create(_x, _y, FrogEgg)){
+								alarm0 *= random_range(1, 2);
+								depth = -1;
+								
+								 // Wait for Boss Intro:
+								if(fork()){
+									var a = alarm0;
+									while(instance_exists(self) && instance_exists(_queen) && _queen.intro == false){
+										alarm0 = a;
+										wait 0;
+									}
+									exit;
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			 // Bounty Hunter Den:
-			if(unlock_get("lairCrown") && (chance(1, 5) || crown_current == "crime")){
+			if(_eventGator){
 				with(array_shuffle(instances_matching(Floor, "mask_index", mskFloor))){
 					if(!place_meeting(x, y, Wall)){
 						var	_fx = x,
@@ -819,27 +776,21 @@
 									var	_hallXOff = lengthdir_x(_dis - _border, _dir + 180),
 										_hallYOff = lengthdir_y(_dis - _border, _dir + 180),
 										_cx = _fx + 16 + lengthdir_x(16 + _dis + (_w / 2), _dir),
-										_cy = _fy + 16 + lengthdir_y(16 + _dis + (_h / 2), _dir),
-										_x1 = _cx - (_w / 2),
-										_y1 = _cy - (_h / 2),
-										_x2 = _cx + (_w / 2),
-										_y2 = _cy + (_h / 2);
+										_cy = _fy + 16 + lengthdir_y(16 + _dis + (_h / 2), _dir);
 										
 									if(!collision_rectangle(
-										_x1 - _border + min(0, _hallXOff),
-										_y1 - _border + min(0, _hallYOff),
-										_x2 + _border + max(0, _hallXOff) - 1,
-										_y2 + _border + max(0, _hallYOff) - 1,
+										_cx - (_w / 2) - _border + min(0, _hallXOff),
+										_cy - (_h / 2) - _border + min(0, _hallYOff),
+										_cx + (_w / 2) + _border + max(0, _hallXOff) - 1,
+										_cy + (_h / 2) + _border + max(0, _hallYOff) - 1,
 										Floor,
 										false,
 										false
 									)){
 										 // Floors:
-										for(var _x = _x1; _x < _x2; _x += 32){
-											for(var _y = _y1; _y < _y2; _y += 32){
-												floor_set(_x, _y, true);
-											}
-										}
+										floor_fill_set_center(false);
+										floor_fill(_cx - (_w / 2), _cy - (_h / 2), _w / 32, _h / 32);
+										floor_fill_set_center(true);
 										
 										 // Entrance:
 										floor_set_style(1, "lair");
@@ -875,7 +826,7 @@
 											
 											 // Rug:
 											if(chance(1, 2)){
-												with(instance_create(x, y, CustomObject)){
+												with(instance_create(x, y, Effect)){
 													sprite_index = spr.Rug;
 													image_index = irandom(image_number - 1);
 													image_speed = 0;
@@ -964,8 +915,8 @@
 										}
 										
 										 // Corner Prop:
-										var	_x = choose(_x1 + 16, _x2 - 16),
-											_y = choose(_y1 + 16, _y2 - 16),
+										var	_x = choose(_cx - (_w / 2) + 16, _cx + (_w / 2) - 16),
+											_y = choose(_cy - (_h / 2) + 16, _cy + (_h / 2) - 16),
 											_obj = MoneyPile;
 											
 										if(abs(angle_difference(_dir + 180, point_direction(_cx, _cy, _x, _y))) < 90){
@@ -1022,50 +973,6 @@
 				}
 			}
 			
-             // Frog Nest:
-            with(FrogQueen){
-            	var	_total = 0,
-            		_queen = self;
-            		
-            	with(floor_fill_round(x - 16, y - 16, 5, 5)){
-            		var _chance = 0;
-            		
-            		for(var _checkDir = 0; _checkDir < 360; _checkDir += 90){
-            			if(!place_meeting(x + lengthdir_x(32, _checkDir), y + lengthdir_y(32, _checkDir), Floor)){
-            				_chance++;
-            			}
-            		}
-            		
-            		if(chance(_chance, 1 + _total)){
-            			_total++;
-            			
-        				var	_dis = 8,
-        					_ang = random(360),
-        					_num = choose(1, 3);
-        					
-        				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-        					var	_x = ((bbox_left + bbox_right + 1) / 2) + lengthdir_x(_dis, _dir) + orandom(2),
-        						_y = ((bbox_top + bbox_bottom + 1) / 2) + lengthdir_y(_dis, _dir) - random(4);
-        						
-        					with(instance_create(_x, _y, FrogEgg)){
-        						alarm0 *= random_range(1, 2);
-        						depth = -1;
-        						
-        						 // Wait for Boss Intro:
-        						if(fork()){
-        							var a = alarm0;
-        							while(instance_exists(self) && instance_exists(_queen) && _queen.intro == false){
-        								alarm0 = a;
-        								wait 0;
-        							}
-        							exit;
-        						}
-        					}
-        				}
-            		}
-            	}
-			}
-			
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				with(Ratking) if(chance(1, 3) || floor_get(x, y).styleb){
@@ -1077,7 +984,7 @@
 			break;
 			
 		case 3: /// SCRAPYARDS
-		
+			
 			 // Raven Spectators:
 			var	_event = chance(1, 60),
 				_ravenChance = (_event ? 1 : 0.1) * (1 + (0.5 * GameCont.loops));
@@ -1152,111 +1059,111 @@
 			}
 			
 			 // Top Spawns:
-            _topChance *= (0.5 * (1 + instance_exists(BecomeScrapBoss) + _event));
-            _topSpawn = [
-            	[Tires,			1],
-            	[Car,			1/3],
-            	[MeleeFake,		1/8]
-            ];
-        	var _num = irandom_range(-2, 1) + (3 * GameCont.loops);
-        	if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
-    			top_create(
-    				random_range(bbox_left, bbox_right),
-    				random_range(bbox_top, bbox_bottom),
-    				MeleeBandit,
-    				-1,
-    				random_range(32, 80)
-    			);
-        	}
+			_topChance *= (0.5 * (1 + instance_exists(BecomeScrapBoss) + _event));
+			_topSpawn = [
+				[Tires,			1],
+				[Car,			1/3],
+				[MeleeFake,		1/8]
+			];
+			var _num = irandom_range(-2, 1) + (3 * GameCont.loops);
+			if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
+				top_create(
+					random_range(bbox_left, bbox_right),
+					random_range(bbox_top, bbox_bottom),
+					MeleeBandit,
+					-1,
+					random_range(32, 80)
+				);
+			}
 			
-    	     // Loop Spawns:
-    	    if(GameCont.loops > 0){
-    	    	with(Raven) if(chance(4 - GameCont.subarea, 12)){
-    	    		obj_create(x, y, "Pelican");
-    	    		instance_delete(id);
-    	    	}
-    	    }
-    	    
+			 // Loop Spawns:
+			if(GameCont.loops > 0){
+				with(Raven) if(chance(4 - GameCont.subarea, 12)){
+					obj_create(x, y, "Pelican");
+					instance_delete(id);
+				}
+			}
+			
 			break;
 
-        case 4: /// CAVES
-            
-             // Spawn Mortars:
-        	with(instances_matching(LaserCrystal, "mortar_check", null)){
-        	    mortar_check = true;
-        	    if(chance(1, 4)){
-        	        obj_create(x, y, "Mortar");
-        	        instance_delete(self);
-        	    }
-        	}
-        	
-        	 // Baby:
-        	with(instances_matching(Spider, "spiderling_check", null)){
-        		spiderling_check = true;
-        		if(chance(1, 4)){
-        			obj_create(x, y, "Spiderling");
-        			instance_delete(id);
-        		}
-        	}
-        	
-        	 // Spawn Lightning Crystals:
-        	if(GameCont.loops <= 0){
-	        	with(LaserCrystal) if(chance(1, 40)){
-	        		instance_create(x, y, LightningCrystal);
-	        		instance_delete(id);
-	        	}
-        	}
-        	
-        	 // Spawn Spider Walls:
-        	if(instance_exists(Wall)){
-    	    	var _spawnWall = [];
-    	    	with(Wall) if(distance_to_object(PortalClear) > 16){
-    	    		array_push(_spawnWall, id);
-    	    	}
-    	    	
-    	    	 // Central Mass:
-    	        with(instance_random(_spawnWall)){
-    	        	var _dis = 48 + (32 * GameCont.loops);
-    	        	
-    	             // Spawn Main Wall:
-    	            with(obj_create(x, y, "SpiderWall")){
-    	                creator = other;
-    	                special = true;
-    	            }
-    	            
-    	             // Spawn fake walls:
-    	            with(_spawnWall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(2, 3)){
-    	                with(obj_create(x, y, "SpiderWall")){
-    	                    creator = other;
-    	                }
-    	            }
-    	            
-    	             // Change TopSmalls:
-    	            with(TopSmall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(1, 3)){
-    	                sprite_index = spr.SpiderWallTrans;
-    	            }
-    	        }
-    	    	
-        	     // Strays:
-        	    repeat((8 + irandom(4)) * (1 + GameCont.loops)) with(instance_random(_spawnWall)){
-        	        with(obj_create(x, y, "SpiderWall")){
-        	            creator = other;
-        	        }
-        	    }
-        	}
-        
+		case 4: /// CAVES
+			
+			 // Spawn Mortars:
+			with(instances_matching(LaserCrystal, "mortar_check", null)){
+				mortar_check = true;
+				if(chance(1, 4)){
+					obj_create(x, y, "Mortar");
+					instance_delete(self);
+				}
+			}
+			
+			 // Baby:
+			with(instances_matching(Spider, "spiderling_check", null)){
+				spiderling_check = true;
+				if(chance(1, 4)){
+					obj_create(x, y, "Spiderling");
+					instance_delete(id);
+				}
+			}
+			
+			 // Spawn Lightning Crystals:
+			if(GameCont.loops <= 0){
+				with(LaserCrystal) if(chance(1, 40)){
+					instance_create(x, y, LightningCrystal);
+					instance_delete(id);
+				}
+			}
+			
+			 // Spawn Spider Walls:
+			if(instance_exists(Wall)){
+				var _spawnWall = [];
+				with(Wall) if(distance_to_object(PortalClear) > 16){
+					array_push(_spawnWall, id);
+				}
+				
+				 // Central Mass:
+				with(instance_random(_spawnWall)){
+					var _dis = 48 + (32 * GameCont.loops);
+					
+					 // Spawn Main Wall:
+					with(obj_create(x, y, "SpiderWall")){
+						creator = other;
+						special = true;
+					}
+					
+					 // Spawn fake walls:
+					with(_spawnWall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(2, 3)){
+						with(obj_create(x, y, "SpiderWall")){
+							creator = other;
+						}
+					}
+					
+					 // Change TopSmalls:
+					with(TopSmall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(1, 3)){
+						sprite_index = spr.SpiderWallTrans;
+					}
+				}
+				
+				 // Strays:
+				repeat((8 + irandom(4)) * (1 + GameCont.loops)) with(instance_random(_spawnWall)){
+					with(obj_create(x, y, "SpiderWall")){
+						creator = other;
+					}
+				}
+			}
+		
 			 // Top Spawns:
-            _topSpawn = [
-            	[CrystalProp,	1],
-            	["NewCocoon",	1/2]
-            ];
-        	
-            break;
-            
-        case 5: /// FROZEN CITY
-        
-        	 // Igloos:
-        	repeat(1 + irandom(2)){
+			_topSpawn = [
+				[CrystalProp,	1],
+				["NewCocoon",	1/2]
+			];
+			
+			break;
+			
+		case 5: /// FROZEN CITY
+		
+			 // Igloos:
+			repeat(1 + irandom(2)){
 				var _floors = instances_matching(Floor, "mask_index", mskFloor);
 				with(instance_random(_floors)){
 					with(instance_create(x, y, CustomObject)){
@@ -1276,7 +1183,7 @@
 						}
 						
 						 // Create Room:
-						var _cx = x + o,
+						var	_cx = x + o,
 							_cy = y + o;
 						floor_fill(_cx, _cy, _size, _size);
 						obj_create(_cx + 16, _cy + 16, "Igloo");
@@ -1286,138 +1193,138 @@
 					}
 				}
 			}
-    
-        	 // Top Spawns:
-        	_topChance /= 1.5;
-        	_topSpawn = [
-        		[Hydrant, 1],
-        		[SnowMan, 1/20]
-        	];
-        	
-    	     // Loop Spawns:
-    	    if(GameCont.loops > 0){
-    	    	with(SnowTank) if(chance(1, 4)){
-    	    		obj_create(x, y, "SawTrap");
-    	    	}
-    	    	with(Necromancer) if(chance(1, 2)){
-    	    		obj_create(x, y, "Cat");
-    	    		instance_delete(id);
-    	    	}
-    	    	
-    	    	 // Charging Wall-Top Bots:
-	        	var _num = (3 * GameCont.loops) + random_range(1, 3);
-	        	if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
-	    			with(top_create(x, y, SnowBot, random(360), random_range(80, 192))){
+	
+			 // Top Spawns:
+			_topChance /= 1.5;
+			_topSpawn = [
+				[Hydrant, 1],
+				[SnowMan, 1/20]
+			];
+			
+			 // Loop Spawns:
+			if(GameCont.loops > 0){
+				with(SnowTank) if(chance(1, 4)){
+					obj_create(x, y, "SawTrap");
+				}
+				with(Necromancer) if(chance(1, 2)){
+					obj_create(x, y, "Cat");
+					instance_delete(id);
+				}
+				
+				 // Charging Wall-Top Bots:
+				var _num = (3 * GameCont.loops) + random_range(1, 3);
+				if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
+					with(top_create(x, y, SnowBot, random(360), random_range(80, 192))){
 						jump = 0.5;
 						idle_walk_chance = 0;
 						target_save.alarm1 = irandom_range(3, 10);
 						with(target) spr_walk = sprSnowBotFire;
-	    			}
-	        	}
-    	    }
-	    	with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 200))){
-	    		with(obj_create(x, y, "Cat")){
-	    			sit = other; // It fits
-	    			depth = other.depth - 0.1;
-	    		}
-	    	}
-	    	
-        	break;
-            
-        case 6: /// LABS
-        
-        	 // Top Spawns:
-        	_topChance *= (1 + (0.5 * GameCont.loops));
-        	_topSpawn = [
-        		[Freak,			1],
-        		[ExploFreak,	1/5]
-        	];
-        	with(TechnoMancer){
-        		var	_spawnAng = random(360),
-        			_spawnNum = irandom_range(3, 5);
-        			
-        		for(var _spawnDir = _spawnAng; _spawnDir < _spawnAng + 360; _spawnDir += (360 / _spawnNum)){
-        			with(top_create(x, y, choose(Server, Terminal), _spawnDir, 32)){
-	        			if(instance_is(target, Terminal) && distance_to_object(Floor) > 16){
-	        				var	l = 16,
-	        					d = 270 + orandom(70);
-	        					
-	        				with(top_create(target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d), Necromancer, d, 0)){
-	        					with(target){
-	        						gunangle = d + 180;
-	        						scrRight(gunangle);
-	        					}
-	        				}
-	        			}
-        			}
-        		}
-        	}
-        	
-    	     // Loop Spawns:
-    	    if(GameCont.loops > 0){
-    	    	with(Freak) if(chance(1, 5)){
-    	    		instance_create(x, y, BoneFish);
-    	    		instance_delete(id);
-    	    	}
-    	    	with(RhinoFreak) if(chance(1, 3)){
-    	    		obj_create(x, y, "Bat");
-    	    		instance_delete(id);
-    	    	}
-    	    	with(Ratking) if(chance(1, 5)){
-    	    		obj_create(x, y, "Bat");
-    	    		instance_delete(id);
-    	    	}
-    	    	with(LaserCrystal) if(chance(1, 2)){
-    	    		obj_create(x, y, "PortalGuardian");
-    	    		instance_delete(id);
-    	    	}
-    	    }
-    	    
-        	break;
-            
-        case 7: /// PALACE
-        
-    		 // Cool Dudes:
-    		with(Guardian) if(chance(1, 20)){
-    			obj_create(x, y, "PortalGuardian");
-    			instance_delete(id);
-    		}
-    		
-        	 // Top Spawns
-        	if(GameCont.subarea != 3){
-            	_topChance /= 1.2;
-        		_topSpawn = [
-	        		[Pillar,	1],
-	        		[Generator,	1/50]
-	        	];
-        	}	
-        	/*else with(ThroneStatue){
-    			var f = instance_nearest(x, y, Carpet);
-    			top_create(x + (72 * sign(x - f.x)), y - 8, ThroneStatue, -1, 0);
-    		}*/
-        	
-    	     // Loop Spawns:
-    	    if(GameCont.loops > 0){
-    	    	with(JungleBandit){
-    	    		repeat(chance(1, 5) ? 5 : 1) obj_create(x, y, "Gull");
-    	    		
-    	    		 // Move to Wall:
-    	    		top_create(x, y, id, -1, -1);
-    	    	}
-    	    	
-    	    	 // More Cool Dudes:
-	    		with(ExploGuardian) if(chance(1, 10)){
-	    			obj_create(x, y, "PortalGuardian");
-	    			instance_delete(id);
-	    		}
-    	    }
-    	    
-        	break;
-        	
-        case 100: /// CROWN VAULT
-        	
-        	 // Vault Flower Room:
-        	if(instance_exists(Floor)){
+					}
+				}
+			}
+			with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 200))){
+				with(obj_create(x, y, "Cat")){
+					sit = other; // It fits
+					depth = other.depth - 0.1;
+				}
+			}
+			
+			break;
+			
+		case 6: /// LABS
+		
+			 // Top Spawns:
+			_topChance *= (1 + (0.5 * GameCont.loops));
+			_topSpawn = [
+				[Freak,			1],
+				[ExploFreak,	1/5]
+			];
+			with(TechnoMancer){
+				var	_spawnAng = random(360),
+					_spawnNum = irandom_range(3, 5);
+					
+				for(var _spawnDir = _spawnAng; _spawnDir < _spawnAng + 360; _spawnDir += (360 / _spawnNum)){
+					with(top_create(x, y, choose(Server, Terminal), _spawnDir, 32)){
+						if(instance_is(target, Terminal) && distance_to_object(Floor) > 16){
+							var	l = 16,
+								d = 270 + orandom(70);
+								
+							with(top_create(target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d), Necromancer, d, 0)){
+								with(target){
+									gunangle = d + 180;
+									scrRight(gunangle);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			 // Loop Spawns:
+			if(GameCont.loops > 0){
+				with(Freak) if(chance(1, 5)){
+					instance_create(x, y, BoneFish);
+					instance_delete(id);
+				}
+				with(RhinoFreak) if(chance(1, 3)){
+					obj_create(x, y, "Bat");
+					instance_delete(id);
+				}
+				with(Ratking) if(chance(1, 5)){
+					obj_create(x, y, "Bat");
+					instance_delete(id);
+				}
+				with(LaserCrystal) if(chance(1, 2)){
+					obj_create(x, y, "PortalGuardian");
+					instance_delete(id);
+				}
+			}
+			
+			break;
+			
+		case 7: /// PALACE
+		
+			 // Cool Dudes:
+			with(Guardian) if(chance(1, 20)){
+				obj_create(x, y, "PortalGuardian");
+				instance_delete(id);
+			}
+			
+			 // Top Spawns
+			if(GameCont.subarea != 3){
+				_topChance /= 1.2;
+				_topSpawn = [
+					[Pillar,	1],
+					[Generator,	1/50]
+				];
+			}	
+			/*else with(ThroneStatue){
+				var f = instance_nearest(x, y, Carpet);
+				top_create(x + (72 * sign(x - f.x)), y - 8, ThroneStatue, -1, 0);
+			}*/
+			
+			 // Loop Spawns:
+			if(GameCont.loops > 0){
+				with(JungleBandit){
+					repeat(chance(1, 5) ? 5 : 1) obj_create(x, y, "Gull");
+					
+					 // Move to Wall:
+					top_create(x, y, id, -1, -1);
+				}
+				
+				 // More Cool Dudes:
+				with(ExploGuardian) if(chance(1, 10)){
+					obj_create(x, y, "PortalGuardian");
+					instance_delete(id);
+				}
+			}
+			
+			break;
+			
+		case 100: /// CROWN VAULT
+			
+			 // Vault Flower Room:
+			if(instance_exists(Floor)){
 				var	_farFloor = instance_furthest(_spawnX, _spawnY, Floor),
 					_floorDir = point_direction(_spawnX, _spawnY, _farFloor.x, _farFloor.y),
 					_floorDis = point_distance(_spawnX, _spawnY, _farFloor.x, _farFloor.y) / 2,
@@ -1450,7 +1357,7 @@
 						}
 						
 						 // The Star of the Show:
-	 					var cx = x + (floor(_size / 2) * o) + 16,
+	 					var	cx = x + (floor(_size / 2) * o) + 16,
 							cy = y + (floor(_size / 2) * o) + 16,
 							yoff = -8;
 							
@@ -1470,97 +1377,97 @@
 						instance_destroy();
 					}
 				}
-    		}
-        	
-        	 // Top Spawns:
-        	_topChance = 1/40;
-        	_topSpawn = [
-        		[Torch, 1]
-        	];
-        	
-        	break;
-        	
-        case 101:
-        case "oasis":
-        
-        	 // Top Spawns:
-        	_topSpawn = [
-        		[BoneFish,		1],
-        		["Puffer",		1],
-        		["Hammerhead",	(GameCont.loops > 0)],
-        		[Freak,			(GameCont.loops > 0) / 2],
-        		[OasisBarrel,	1],
-        		[Anchor,		1/4]
-        	];
-        	
-        	break;
-
-        case 103: /// MANSIOM  its MANSION idiot, who wrote this
-        
-             // Spawn Gold Mimic:
-            with(instance_nearest(_spawnX, _spawnY, GoldChest)){
-                with(pet_spawn(x, y, "Mimic")){
-                    wep = weapon_decide(0, GameCont.hard, true, null);
-                }
-                instance_delete(self);
-            }
-            
-             // Top Spawns:
-            _topChance *= (1.5 + GameCont.loops);
-            _topSpawn = [
-            	[MoneyPile,			1],
-            	[GoldBarrel,		1/3],
-            	[FireBaller,		2/3 * (1 + GameCont.loops)],
-            	[SuperFireBaller,	1/3 * (1 + GameCont.loops)]
-            ];
-            
-            break;
-
-        case 104: /// CURSED CAVES
-        
-             // Spawn Cursed Mortars:
-        	with(instances_matching(InvLaserCrystal, "mortar_check", null)){
-        	    mortar_check = chance(1, 4);
-        	    if(mortar_check){
-        	        obj_create(x, y, "InvMortar");
-        	        instance_delete(id);
-        	    }
-        	}
-
-             // Spawn Prism:
-            with(BigCursedChest) pet_spawn(x, y, "Prism");
-        	
+			}
+			
 			 // Top Spawns:
-            _topSpawn = [
-            	[InvCrystal,	1],
-            	["NewCocoon",	1/2]
-            ];
-            
-            break;
-            
-        case 105: /// JUNGLE where is the hive ?
-        
-        	 // Top Spawns:
-        	_topSpawn = [
-        		[Bush,					1],
-        		[JungleAssassinHide,	1/3],
-        		[BigFlower,				1/3]
-        	];
-        	with(instances_matching([JungleBandit, JungleFly], "", null)){
-        		if(chance(1, 3)) top_create(x, y, id, -1, -1);
-        	}
-        	
-        	break;
-            
-        case 107: /// CRIB
-        
-        	 // Top Spawns
-        	_topSpawn = [
-        		[MoneyPile, 1]
-        	];
-        	
-        	break;
-    }
+			_topChance = 1/40;
+			_topSpawn = [
+				[Torch, 1]
+			];
+			
+			break;
+			
+		case 101:
+		case "oasis":
+		
+			 // Top Spawns:
+			_topSpawn = [
+				[BoneFish,		1],
+				["Puffer",		1],
+				["Hammerhead",	(GameCont.loops > 0)],
+				[Freak,			(GameCont.loops > 0) / 2],
+				[OasisBarrel,	1],
+				[Anchor,		1/4]
+			];
+			
+			break;
+
+		case 103: /// MANSIOM  its MANSION idiot, who wrote this
+		
+			 // Spawn Gold Mimic:
+			with(instance_nearest(_spawnX, _spawnY, GoldChest)){
+				with(pet_spawn(x, y, "Mimic")){
+					wep = weapon_decide(0, GameCont.hard, true, null);
+				}
+				instance_delete(self);
+			}
+			
+			 // Top Spawns:
+			_topChance *= (1.5 + GameCont.loops);
+			_topSpawn = [
+				[MoneyPile,			1],
+				[GoldBarrel,		1/3],
+				[FireBaller,		2/3 * (1 + GameCont.loops)],
+				[SuperFireBaller,	1/3 * (1 + GameCont.loops)]
+			];
+			
+			break;
+
+		case 104: /// CURSED CAVES
+		
+			 // Spawn Cursed Mortars:
+			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
+				mortar_check = chance(1, 4);
+				if(mortar_check){
+					obj_create(x, y, "InvMortar");
+					instance_delete(id);
+				}
+			}
+
+			 // Spawn Prism:
+			with(BigCursedChest) pet_spawn(x, y, "Prism");
+			
+			 // Top Spawns:
+			_topSpawn = [
+				[InvCrystal,	1],
+				["NewCocoon",	1/2]
+			];
+			
+			break;
+			
+		case 105: /// JUNGLE where is the hive ?
+		
+			 // Top Spawns:
+			_topSpawn = [
+				[Bush,					1],
+				[JungleAssassinHide,	1/3],
+				[BigFlower,				1/3]
+			];
+			with(instances_matching([JungleBandit, JungleFly], "", null)){
+				if(chance(1, 3)) top_create(x, y, id, -1, -1);
+			}
+			
+			break;
+			
+		case 107: /// CRIB
+		
+			 // Top Spawns
+			_topSpawn = [
+				[MoneyPile, 1]
+			];
+			
+			break;
+	}
 	
 	 // Top Spawns:
 	var _topSpecial = chance(1, 5);
@@ -1706,9 +1613,9 @@
 				
 		}
 	}
-    
-     // Big Decals:
-    var _chance = 1/8;
+	
+	 // Big Decals:
+	var _chance = 1/8;
 	if(area_get_subarea(GameCont.area) <= 1){
 		 // Secret Levels:
 		if(is_real(GameCont.area) && GameCont.area >= 100){
@@ -1721,16 +1628,16 @@
 	if(GameCont.area == 3 && array_length(instances_matching(CustomObject, "name", "NestRaven")) > 24){
 		_chance = 1;
 	}
-    if(chance(_chance, 1) && instance_exists(Player)){
-        with(instance_random(TopSmall)){
-            obj_create(x, y, "BigDecal");
-        }
-    }
-    
-     // Top Spawns:
+	if(chance(_chance, 1) && instance_exists(Player)){
+		with(instance_random(TopSmall)){
+			obj_create(x, y, "BigDecal");
+		}
+	}
+	
+	 // Top Spawns:
 	var _rollMax = 0;
 	with(_topSpawn) _rollMax += self[1];
-    if(array_length(_topSpawn) > 0){
+	if(array_length(_topSpawn) > 0){
 		with(instances_matching([TopSmall, Wall], "", null)) if(chance(_topChance, 1)){
 			var _roll = random(_rollMax);
 			if(_roll > 0){
@@ -1762,7 +1669,7 @@
 						case BoneFish: // Fish Schools
 						case "Puffer":
 						case "Hammerhead":
-							var _num = irandom_range(1, 4) + (3 * GameCont.loops),
+							var	_num = irandom_range(1, 4) + (3 * GameCont.loops),
 								_ang = random(360);
 								
 							if(_obj == "Hammerhead"){
@@ -1828,9 +1735,9 @@
 									jump_time = _time + random(30);
 									with(target) if(variable_instance_get(self, "name") == "Seal"){
 										type = (chance(1, 2) ? _type : 4);
-								        spr_idle = spr.SealIdle[type];
-								        spr_walk = spr.SealWalk[type];
-									    spr_weap = spr.SealWeap[type];
+										spr_idle = spr.SealIdle[type];
+										spr_walk = spr.SealWalk[type];
+										spr_weap = spr.SealWeap[type];
 									}
 								}
 							}
@@ -1845,40 +1752,40 @@
 				}
 			}
 		}
-    }
-    
-     // Top Chests:
-    if(_validArea && (GameCont.area != 1 || GameCont.loops > 0)){
-    	var _obj = -1;
-    	
-    	 // Health:
-    	if(chance(1, 2) || crown_current == crwn_life){
+	}
+	
+	 // Top Chests:
+	if(_validArea && (GameCont.area != 1 || GameCont.loops > 0)){
+		var _obj = -1;
+		
+		 // Health:
+		if(chance(1, 2) || crown_current == crwn_life){
 			with(Player) if(!chance(my_health, maxhealth)){
 				_obj = ((crown_current == crwn_love) ? AmmoChest : HealthChest);
 			} 
 		}
 		
-    	 // Ammo:
-    	if(_obj == -1 && chance(1, 2)){
-		    var	_chance = 0,
-		    	_chanceMax = 0;
-		    	
-		    with(Player) with([wep, bwep]){
-		    	var t = weapon_get_type(self);
-		    	if(t != 0){
-		    		_chance += other.ammo[t];
-			    	_chanceMax += other.typ_amax[t] * 0.8;
-		    	}
-		    	else{
-		    		_chance += 200;
-		    		_chanceMax += 200;
-		    	}
-		    }
-		    
+		 // Ammo:
+		if(_obj == -1 && chance(1, 2)){
+			var	_chance = 0,
+				_chanceMax = 0;
+				
+			with(Player) with([wep, bwep]){
+				var t = weapon_get_type(self);
+				if(t != 0){
+					_chance += other.ammo[t];
+					_chanceMax += other.typ_amax[t] * 0.8;
+				}
+				else{
+					_chance += 200;
+					_chanceMax += 200;
+				}
+			}
+			
 			if(!chance(_chance, _chanceMax)){
 				_obj = AmmoChest;
 			}
-    	}
+		}
 		
 		 // Rads:
 		if(_obj == -1 && chance(1, 15)){
@@ -1891,24 +1798,24 @@
 				with(instances_matching_gt(RadMaggotChest, "id", target)) instance_delete(id);
 			}
 		}
-    }
-    
-     // Buried Vault:
-    if(_validArea || instance_exists(IDPDSpawn) || instance_exists(CrownPed)){
-	    if(chance(
-	    	1 + (2 * GameCont.vaults * (GameCont.area == 100)),
-	    	8 + variable_instance_get(GameCont, "buried_vaults", 0)
-	    )){
-	    	with(instance_random(Wall)){
-		    	obj_create(x, y, "BuriedVault");
-		    	
-		    	 // Hint:
-		    	sound_play_pitchvol(sndWallBreakBrick, 0.5 + random(0.1), 0.6);
+	}
+	
+	 // Buried Vault:
+	if(_validArea || instance_exists(IDPDSpawn) || instance_exists(CrownPed)){
+		if(chance(
+			1 + (2 * GameCont.vaults * (GameCont.area == 100)),
+			8 + variable_instance_get(GameCont, "buried_vaults", 0)
+		)){
+			with(instance_random(Wall)){
+				obj_create(x, y, "BuriedVault");
+				
+				 // Hint:
+				sound_play_pitchvol(sndWallBreakBrick, 0.5 + random(0.1), 0.6);
 				sound_play_pitchvol(sndStatueXP, 0.3 + random(0.1), 5);
-	    	}
-	    }
-    }
-    
+			}
+		}
+	}
+	
 	 // Bab:
 	if(GameCont.area == 4 || GameCont.area == 104){
 		with(instances_matching([CrystalProp, InvCrystal, chestprop], "", null)){
@@ -1920,20 +1827,20 @@
 		}
 	}
 	
-     // Visibilize Pets:
-    with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
+	 // Visibilize Pets:
+	with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
 
 	 // Sewer manhole:
 	with(PizzaEntrance){
-	    with(obj_create(x, y, "Manhole")) toarea = "pizza";
-	    instance_delete(id);
+		with(obj_create(x, y, "Manhole")) toarea = "pizza";
+		instance_delete(id);
 	}
-    
-     // Backpack Setpieces:
-    var	_canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
-    	_forceSpawn = (GameCont.area == 0);
-    	
-    if(GameCont.hard > 4 && ((_canBackpack && _validArea && GameCont.area != 106) || _forceSpawn)){
+	
+	 // Backpack Setpieces:
+	var	_canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
+		_forceSpawn = (GameCont.area == 0);
+		
+	if(GameCont.hard > 4 && ((_canBackpack && _validArea && GameCont.area != 106) || _forceSpawn)){
 		 // Compile Potential Floors:
 		var _potentialFloors = [];
 		with(instances_matching_ne(Floor, "object_index", FloorExplo)){
@@ -1968,15 +1875,15 @@
 			
 			instance_create(x + 16, y + 16, PortalClear);
 		}
-    }
-    
-     // Lair Chests:
-    var	_crime = (crown_current == "crime"),
-    	_lair = variable_instance_get(GameCont, "visited_lair", false);
-    	
-    if(_lair || _crime){
-    	var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
-    	
+	}
+	
+	 // Lair Chests:
+	var	_crime = (crown_current == "crime"),
+		_lair = variable_instance_get(GameCont, "visited_lair", false);
+		
+	if(_lair || _crime){
+		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
+		
 		 // Cat Chests:
 		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
 			if(instance_is(self, _crimePick) || chance(_lair, 5)){
@@ -1995,7 +1902,7 @@
 				instance_delete(id);
 			}
 		}
-    }
+	}
 	
 	 // Flies:
 	with(MaggotSpawn){
@@ -2047,67 +1954,66 @@
 	}
 	
 #define step
-    if(DebugLag) trace_time();
-    
-	 // Bind Events:
-    script_bind_end_step(end_step, 0);
-    script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 0.1);
-    
-     // Character Selection Menu:
-    if(instance_exists(Menu)){
-    	if(!mod_exists("mod", "teloader")){
-	    	 // Custom Character Stuff:
-	        with(raceList){
-	            var _name = self;
+	if(DebugLag) trace_time();
 	
-	        	 // Create Custom CampChars:
-	            if(mod_exists("race", _name) && unlock_get(_name)){
-	                if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
-	                    with(CampChar_create(64, 48, _name)){
-	                         // Poof in:
-	                        repeat(8) with(instance_create(x, y + 4, Dust)){
-	                            motion_add(random(360), 3);
-	                            depth = other.depth - 1;
-	                        }
-	                    }
-	                }
-	            }
+	 // Bind Events:
+	script_bind_end_step(end_step, 0);
+	
+	 // Character Selection Menu:
+	if(instance_exists(Menu)){
+		if(!mod_exists("mod", "teloader")){
+			 // Custom Character Stuff:
+			with(raceList){
+				var _name = self;
+	
+				 // Create Custom CampChars:
+				if(mod_exists("race", _name) && unlock_get(_name)){
+					if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
+						with(CampChar_create(64, 48, _name)){
+							 // Poof in:
+							repeat(8) with(instance_create(x, y + 4, Dust)){
+								motion_add(random(360), 3);
+								depth = other.depth - 1;
+							}
+						}
+					}
+				}
 
 				 // CharSelect:
-		        with(instances_matching(CharSelect, "race", _name)){
-	            	 // race_avail Fix:
-	            	if(mod_script_exists("race", _name, "race_avail") && !mod_script_call_nc("race", _name, "race_avail")){
-		            	noinput = 10;
-		            }
-		            
-		             // New:
-	    			else if(stat_get("race/" + _name + "/runs") <= 0){
-			            script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
-	    			}
-		        }
-	        }
+				with(instances_matching(CharSelect, "race", _name)){
+					 // race_avail Fix:
+					if(mod_script_exists("race", _name, "race_avail") && !mod_script_call_nc("race", _name, "race_avail")){
+						noinput = 10;
+					}
+					
+					 // New:
+					else if(stat_get("race/" + _name + "/runs") <= 0){
+						script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
+					}
+				}
+			}
 	
-	         // CampChar Management:
-	        var _playersTotal = 0,
-	        	_playersLocal = 0;
-	        	
-	        for(var i = 0; i < maxp; i++){
-	        	_playersTotal += player_is_active(i);
-	        	_playersLocal += player_is_local_nonsync(i);
-	        }
-	        for(var i = 0; i < maxp; i++) if(player_is_active(i)){
-	            var _race = player_get_race(i);
-	            if(array_exists(raceList, _race)){
-	                with(instances_matching(CampChar, "race", _race)){
-	                     // Pan Camera:
-	                    if(_playersLocal <= 1 || _playersTotal > _playersLocal){
-		                    with(instances_matching(CampChar, "num", 17)){
-								var _x1 = x,
+			 // CampChar Management:
+			var	_playersTotal = 0,
+				_playersLocal = 0;
+				
+			for(var i = 0; i < maxp; i++){
+				_playersTotal += player_is_active(i);
+				_playersLocal += player_is_local_nonsync(i);
+			}
+			for(var i = 0; i < maxp; i++) if(player_is_active(i)){
+				var _race = player_get_race(i);
+				if(array_exists(raceList, _race)){
+					with(instances_matching(CampChar, "race", _race)){
+						 // Pan Camera:
+						if(_playersLocal <= 1 || _playersTotal > _playersLocal){
+							with(instances_matching(CampChar, "num", 17)){
+								var	_x1 = x,
 									_y1 = y,
 									_x2 = other.x,
 									_y2 = other.y,
-					        		_pan = 4;
-					        		
+									_pan = 4;
+									
 								view_shift(
 									i,
 									point_direction(_x1, _y1, _x2, _y2),
@@ -2115,27 +2021,27 @@
 								);
 								
 								break;
-		                    }
-	                    }
+							}
+						}
 	
-	                     // Manually Animate:
-	                    if(anim_end){
-	                        if(sprite_index != spr_menu){
-	                            if(sprite_index == spr_to){
-	                                sprite_index = spr_menu;
-	                            }
-	                            else{
-	                                sprite_index = spr_to;
-	                            }
-	                        }
-	                        image_index = 0;
-	                    }
-	                }
-	            }
-	        }
-    	}
-    }
-    
+						 // Manually Animate:
+						if(anim_end){
+							if(sprite_index != spr_menu){
+								if(sprite_index == spr_to){
+									sprite_index = spr_menu;
+								}
+								else{
+									sprite_index = spr_to;
+								}
+							}
+							image_index = 0;
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	 // Pets:
 	with(Player){
 		if("ntte_pet" not in self){
@@ -2161,7 +2067,7 @@
 	 // Player Death:
 	with(instances_matching_le(Player, "my_health", 0)){
 		if(fork()){
-			var _x = x,
+			var	_x = x,
 				_y = y,
 				_save = ["ntte_pet", "feather_ammo", "ammo_bonus"],
 				_vars = {},
@@ -2188,99 +2094,99 @@
 				}
 
 				 // Race Deaths Stat:
-		    	if(array_exists(raceList, _race)){
-			    	var _stat = "race/" + _race + "/lost";
+				if(array_exists(raceList, _race)){
+					var _stat = "race/" + _race + "/lost";
 					stat_set(_stat, stat_get(_stat) + 1);
-		    	}
+				}
 			}
 			exit;
 		}
 	}
 
-     // Wait for Level Start:
-    if(instance_exists(GenCont) || instance_exists(Menu)){
-    	global.newLevel = true;
-    }
-    else if(global.newLevel){
-        global.newLevel = false;
-        level_start();
-    }
-    
-     // Call Area Events (Not built into area mods):
-    var a = array_find_index(areaList, GameCont.area);
-    if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
-    if(a >= 0){
-        var _area = areaList[a];
-        
-        if(!instance_exists(GenCont) && !instance_exists(LevCont)){
-		     // Underwater Area:
-		    if(area_get_underwater(_area)){
-		    	mod_script_call("mod", "teoasis", "underwater_step");
-		    }
-		    
-             // Step(s):
-            mod_script_call("area", _area, "area_step");
-            if(mod_script_exists("area", _area, "area_begin_step")){
-                script_bind_begin_step(area_step, 0);
-            }
-            if(mod_script_exists("area", _area, "area_end_step")){
-                script_bind_end_step(area_step, 0);
-            }
-            
-             // Floor FX:
-            with(BackCont) if(alarm0 > 0 && alarm0 <= ceil(current_time_scale)){
-                var _scrt = "area_effect";
-                if(mod_script_exists("area", _area, _scrt)){
-                     // Pick Random Player's Screen:
-                    do var i = irandom(maxp - 1);
-                    until player_is_active(i);
-                    var _vx = view_xview[i], _vy = view_yview[i];
-                    
-                     // FX:
-                    var t = mod_script_call("area", _area, _scrt, _vx, _vy);
-                    if(!is_undefined(t) && t != 0) alarm0 = t + current_time_scale;
-                }
-            }
-        }
-        
-         // Music / Ambience:
-        if(GameCont.area != 100){
-	        if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
-	        	global.musTrans = false;
-	            var _scrt = ["area_music", "area_ambience"];
-	            for(var i = 0; i < lq_size(global.sound_current); i++){
-	                var _type = lq_get_key(global.sound_current, i);
-	                if(mod_script_exists("area", _area, _scrt[i])){
-	                    var s = mod_script_call("area", _area, _scrt[i]);
-	                    if(!is_array(s)) s = [s];
+	 // Wait for Level Start:
+	if(instance_exists(GenCont) || instance_exists(Menu)){
+		global.newLevel = true;
+	}
+	else if(global.newLevel){
+		global.newLevel = false;
+		level_start();
+	}
 	
-	                    while(array_length(s) < 3) array_push(s, -1);
-	                    if(s[1] == -1) s[1] = 1;
-	                    if(s[2] == -1) s[2] = 0;
+	 // Call Area Events (Not built into area mods):
+	var a = array_find_index(areaList, GameCont.area);
+	if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
+	if(a >= 0){
+		var _area = areaList[a];
+		
+		if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+			 // Underwater Area:
+			if(area_get_underwater(_area)){
+				mod_script_call("mod", "teoasis", "underwater_step");
+			}
+			
+			 // Step(s):
+			mod_script_call("area", _area, "area_step");
+			if(mod_script_exists("area", _area, "area_begin_step")){
+				script_bind_begin_step(area_step, 0);
+			}
+			if(mod_script_exists("area", _area, "area_end_step")){
+				script_bind_end_step(area_step, 0);
+			}
+			
+			 // Floor FX:
+			with(BackCont) if(alarm0 > 0 && alarm0 <= ceil(current_time_scale)){
+				var _scrt = "area_effect";
+				if(mod_script_exists("area", _area, _scrt)){
+					 // Pick Random Player's Screen:
+					do var i = irandom(maxp - 1);
+					until player_is_active(i);
+					var _vx = view_xview[i], _vy = view_yview[i];
+					
+					 // FX:
+					var t = mod_script_call("area", _area, _scrt, _vx, _vy);
+					if(!is_undefined(t) && t != 0) alarm0 = t + current_time_scale;
+				}
+			}
+		}
+		
+		 // Music / Ambience:
+		if(GameCont.area != 100){
+			if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
+				global.musTrans = false;
+				var _scrt = ["area_music", "area_ambience"];
+				for(var i = 0; i < lq_size(global.sound_current); i++){
+					var _type = lq_get_key(global.sound_current, i);
+					if(mod_script_exists("area", _area, _scrt[i])){
+						var s = mod_script_call("area", _area, _scrt[i]);
+						if(!is_array(s)) s = [s];
 	
-	                    with(sound_play_ntte(_type, s[0])){
-	                    	vol = s[1];
-	                    	pos = s[2];
-	                    }
-	                }
-	            }
-	        }
-        }
-    }
-    
-     // Fix for Custom Music/Ambience:
-    for(var i = 0; i < lq_size(global.sound_current); i++){
-        var _type = lq_get_key(global.sound_current, i),
-            c = lq_get_value(global.sound_current, i);
+						while(array_length(s) < 3) array_push(s, -1);
+						if(s[1] == -1) s[1] = 1;
+						if(s[2] == -1) s[2] = 0;
+	
+						with(sound_play_ntte(_type, s[0])){
+							vol = s[1];
+							pos = s[2];
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	 // Fix for Custom Music/Ambience:
+	for(var i = 0; i < lq_size(global.sound_current); i++){
+		var	_type = lq_get_key(global.sound_current, i),
+			c = lq_get_value(global.sound_current, i);
 
-        if(audio_is_playing(c.hold)){
-            if(!audio_is_playing(c.snd)){
-                audio_sound_set_track_position(audio_play_sound(c.snd, 0, true), c.pos);
-            }
-        }
-        else audio_stop_sound(c.snd);
-    }
-    
+		if(audio_is_playing(c.hold)){
+			if(!audio_is_playing(c.snd)){
+				audio_sound_set_track_position(audio_play_sound(c.snd, 0, true), c.pos);
+			}
+		}
+		else audio_stop_sound(c.snd);
+	}
+	
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
@@ -2336,19 +2242,19 @@
 		with(WepPickup){
 			if(!instance_exists(variable_instance_get(self, "portal_inst", noone))){
 				portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
-	    		with(portal_inst){
+				with(portal_inst){
 					sprite_index = other.sprite_index;
 					image_index = 0;
 					turnspeed = orandom(1);
 					rotspeed = orandom(15);
 					dist = random_range(80, 120);
-	    		}
-	    	}
-	    	with(portal_inst){
+				}
+			}
+			with(portal_inst){
 				image_xscale = 0.7 + (0.1 * sin((-image_angle / 2) / 200));
 				image_yscale = image_xscale;
 				grow = 0;
-	    	}
+			}
 		}
 	}
 	
@@ -2358,7 +2264,7 @@
 		skillpoints--;
 	}
 	
-    if(DebugLag) trace_time("ntte_step");
+	if(DebugLag) trace_time("ntte_step");
 
 #define end_step
 	if(DebugLag) trace_time();
@@ -2373,11 +2279,11 @@
 	}
 
 	try{
-	     // Labs Merged Weapons:
-	    with(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale))){
-	    	if(place_meeting(x, y, WepPickup)){
-	    		with(instances_meeting(x, y, WepPickup)){
-	    			if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4) && weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
+		 // Labs Merged Weapons:
+		with(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale))){
+			if(place_meeting(x, y, WepPickup)){
+				with(instances_meeting(x, y, WepPickup)){
+					if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4) && weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
 						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
 						if(array_length(_part) >= 2){
 							wep = wep_merge(_part[0], _part[1]);
@@ -2396,37 +2302,37 @@
 								depth = -2;
 							}
 						}
-	    			}
-	    		}
-	    	}
-	    }
+					}
+				}
+			}
+		}
 		
-	     // Merged Wep Pickup Indicator:
-	    with(instances_matching(WepPickup, "mergewep_indicator", null)){
-	    	mergewep_indicator = true;
+		 // Merged Wep Pickup Indicator:
+		with(instances_matching(WepPickup, "mergewep_indicator", null)){
+			mergewep_indicator = true;
 	
-	    	if(wep_get(wep) == "merge" && is_object(wep)){
-	    		if("stock" in wep.base && "front" in wep.base){
-	    			var n = name;
-			    	name += `#@(${mod_script_call("mod", "teassets", "weapon_merge_subtext", wep.base.stock, wep.base.front)})`;
-			    	array_push(global.wepMergeName, { inst:id, name:name, orig:n });
-	    		}
-	    	}
-	    }
-	    var _pop = instances_matching(PopupText, "mergewep_indicator", null);
-	    if(array_length(_pop) > 0){
-		    with(global.wepMergeName){
+			if(wep_get(wep) == "merge" && is_object(wep)){
+				if("stock" in wep.base && "front" in wep.base){
+					var n = name;
+					name += `#@(${mod_script_call("mod", "teassets", "weapon_merge_subtext", wep.base.stock, wep.base.front)})`;
+					array_push(global.wepMergeName, { inst:id, name:name, orig:n });
+				}
+			}
+		}
+		var _pop = instances_matching(PopupText, "mergewep_indicator", null);
+		if(array_length(_pop) > 0){
+			with(global.wepMergeName){
 				with(instances_matching(_pop, "text", name + "!")){
 					text = other.orig + "!";
 				}
-		    	if(!instance_exists(inst)){
-		    		global.wepMergeName = array_delete_value(global.wepMergeName, self);
-		    	}
-		    }
-	    	with(_pop) mergewep_indicator = true;
-	    }
+				if(!instance_exists(inst)){
+					global.wepMergeName = array_delete_value(global.wepMergeName, self);
+				}
+			}
+			with(_pop) mergewep_indicator = true;
+		}
 	
-	     // Weapon Unlock Stuff:
+		 // Weapon Unlock Stuff:
 		with(Player){
 			var w = 0;
 			with([wep_get(wep), wep_get(bwep)]){
@@ -2487,7 +2393,7 @@
 
 				 // General Stats:
 				for(var i = 0; i < lq_size(_statList); i++){
-					var _stat = _statPath + lq_get_key(_statList, i),
+					var	_stat = _statPath + lq_get_key(_statList, i),
 						_add = lq_get_value(_statList, i);
 	
 					if(_add > 0){
@@ -2554,21 +2460,21 @@
 		
 		 // Loop Labs:
 		if(GameCont.loops > 0 && GameCont.area == 6){
-		    with(instances_matching(Freak, "fish_freak", null)){
-		    	fish_freak = chance(1, 7);
-		    	if(fish_freak){
-			    	spr_idle = spr.FishFreakIdle;
-			    	spr_walk = spr.FishFreakWalk;
-			    	spr_hurt = spr.FishFreakHurt;
-			    	spr_dead = spr.FishFreakDead;
-		    	}
-		    }
+			with(instances_matching(Freak, "fish_freak", null)){
+				fish_freak = chance(1, 7);
+				if(fish_freak){
+					spr_idle = spr.FishFreakIdle;
+					spr_walk = spr.FishFreakWalk;
+					spr_hurt = spr.FishFreakHurt;
+					spr_dead = spr.FishFreakDead;
+				}
+			}
 		}
 		
-	     // Custom Loading Screens:
-	    with(instances_matching(SpiralCont, "ntte_spiral", null)){
-	        ntte_spiral = true;
-	        
+		 // Custom Loading Screens:
+		with(instances_matching(SpiralCont, "ntte_spiral", null)){
+			ntte_spiral = true;
+			
 			switch(GameCont.area){
 				case "pizza": // Falling Through Manhole
 					type = 4;
@@ -2607,149 +2513,32 @@
 					
 					break;
 			}
-	    }
+		}
 		
 		 // This is it:
 		with(instances_matching(Breath, "depth", -2)) depth = -3;
-    }
-    catch(_error){
-    	trace_error(_error);
-    }
-    
-     // Bind HUD Event:
-    var _HUDDepth = 0,
-    	_HUDVisible = false;
-    	
-    with(instances_matching(TopCont, "visible", true)){
-    	_HUDDepth = depth - 0.1;
-    	_HUDVisible = true;
-    }
+	}
+	catch(_error){
+		trace_error(_error);
+	}
+	
+	 // Bind HUD Event:
+	var	_HUDDepth = 0,
+		_HUDVisible = false;
+		
+	with(instances_matching(TopCont, "visible", true)){
+		_HUDDepth = depth - 0.1;
+		_HUDVisible = true;
+	}
 	if(instance_exists(GenCont) || instance_exists(LevCont)){
 		with(instances_matching(UberCont, "visible", true)){
-    		_HUDDepth = min(depth - 0.1, _HUDDepth);
-    		_HUDVisible = true;
+			_HUDDepth = min(depth - 0.1, _HUDDepth);
+			_HUDVisible = true;
 		}
 	}
-    script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
+	script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
 
 	if(DebugLag) trace_time("ntte_end_step");
-
-    instance_destroy();
-
-#define draw_menu
-	 // Campfire Menu:
-    MenuSplat += current_time_scale * (mod_exists("mod", "teloader") ? -1 : 1);
-	MenuSplat = clamp(MenuSplat, 0, sprite_get_number(sprBossNameSplat) - 1);
-	if(instance_exists(Menu)){
-    	draw_set_projection(0);
-
-		if(MenuOpen){
-	         // Hide Things:
-	        with(Menu){
-	        	mode = 0;
-	            charsplat = 1;
-	            for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
-	        	sound_volume(sndMenuCharSelect, 0);
-	        }
-	        with(Loadout) instance_destroy();
-	        with(loadbutton) instance_destroy();
-	        with(menubutton) instance_destroy();
-	        with(BackFromCharSelect) noinput = 10;
-
-	         // Dim Screen:
-	        draw_set_color(c_black);
-	        draw_set_alpha(0.75);
-	        draw_rectangle(0, 0, game_width, game_height, 0);
-	        draw_set_alpha(1);
-
-	         // Leave:
-	        for(var i = 0; i < maxp; i++){
-	        	with(BackFromCharSelect){
-	        		if(position_meeting((mouse_x[i] - (view_xview[i] + xstart)) + x, (mouse_y[i] - (view_yview[i] + ystart)) + y, id)){
-		        		if(button_pressed(i, "fire")){
-		        			MenuOpen = false;
-		        			break;
-		        		}
-	        		}
-	        	}
-	        	if(button_pressed(i, "spec") || button_pressed(i, "paus")){
-		        	MenuOpen = false;
-	        		break;
-	        	}
-	        }
-	        if(!MenuOpen || mod_exists("mod", "teloader")){
-	        	MenuOpen = false;
-            	MenuSplat = 1;
-	        	sound_play(sndClickBack);
-
-	        	 // Reset Menu:
-	        	with(Menu){
-	        		mode = 0;
-	        		event_perform(ev_step, ev_step_end);
-	        		sound_volume(sndMenuCharSelect, 1);
-	        		sound_stop(sndMenuCharSelect);
-	        		with(CharSelect) alarm0 = 2;
-	        	}
-	        	with(Loadout) selected = 0;
-
-	        	 // Tiny Fix:
-        		with(instance_create(0, 0, CustomDraw)){
-        			mod_script_call("mod", "teassets", "loadout_behind");
-        		}
-	        }
-		}
-
-		 // Open:
-		else{
-			var _hover = false,
-				_x1 = game_width - 40,
-				_y1 = 40,
-				_max = 0;
-
-			 // Offset for Co-op:
-			for(var i = 0; i < array_length(Menu.charx); i++){
-				if(Menu.charx[i] != 0) _max = i;
-			}
-			if(_max >= 2){
-				_x1 = (game_width / 2) - 20;
-				_y1 += 2;
-			}
-
-			var _x2 = _x1 + 40,
-				_y2 = _y1 + 24;
-
-			 // Player Clicky:
-			if(!instance_exists(Loadout) || !Loadout.selected){
-				for(var i = 0; i < maxp; i++){
-					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x1, _y1 - 8, _x2, _y2)){
-						_hover = true;
-						if(button_pressed(i, "fire")){
-							sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
-							MenuOpen = true;
-            				MenuSplat = 1;
-							break;
-						}
-					}
-				}
-			}
-
-			 // Button Visual:
-			draw_sprite_ext(sprBossNameSplat, MenuSplat, _x1 + 17, _y1 + 12 + MenuSplat, 1, 1, 90, c_white, 1);
-			if(!MenuOpen && MenuSplat > 0){
-				var w = (MenuSplatBlink % 300) - 120;
-				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, ((_hover || in_range(w, 0, 5) || in_range(w, 8, 10)) ? c_white : c_silver), 1);
-			}
-			if(MenuSplatBlink >= 0){
-				MenuSplatBlink += current_time_scale;
-				if(_hover || !option_get("remindPlayer", true)) MenuSplatBlink = -1;
-			}
-		}
-
-		draw_reset_projection();
-	}
-
-	 // Main Code:
-	ntte_menu();
 
 	instance_destroy();
 
@@ -2791,75 +2580,14 @@
 		global.petMapiconPause++;
 	}
 	global.petMapiconPauseForce = false;
-
-     // NTTE Menu:
-    draw_set_projection(0);
-
-    if(!MenuOpen){
-    	if(instance_exists(OptionMenuButton)){
-	        var _draw = true;
-	        with(OptionMenuButton) if(alarm_get(0) >= 1 || alarm_get(1) >= 1) _draw = false;
-	        if(_draw){
-	            var _x = (game_width / 2),
-	                _y = (game_height / 2) + 59,
-	                _hover = false;
 	
-	             // Button Clicking:
-		        for(var i = 0; i < maxp; i++){
-		            if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x - 57, _y - 12, _x + 57, _y + 12)){
-		                _hover = true;
-		                if(button_pressed(i, "fire")){
-		                	MenuOpen = true;
-		                    with(OptionMenuButton) instance_destroy();
-		                    sound_play(sndClick);
-		                    break;
-		                }
-		            }
-		        }
-	
-	             // Splat:
-	            MenuSplatOptions += (_hover ? 1 : -1) * current_time_scale;
-	            MenuSplatOptions = clamp(MenuSplatOptions, 0, sprite_get_number(sprMainMenuSplat) - 1);
-	            draw_sprite(sprMainMenuSplat, MenuSplatOptions, (game_width / 2), _y);
-	
-	             // Gray Out Other Options:
-	            if(MenuSplatOptions > 0){
-	                var _spr = sprOptionsButtons;
-	                for(var j = 0; j < sprite_get_number(_spr); j++){
-	                    var _dx = (game_width / 2),
-	                        _dy = (game_height / 2) - 36 + (j * 24);
-	
-	                    draw_sprite_ext(_spr, j, _dx, _dy, 1, 1, 0, make_color_rgb(155, 155, 155), 1);
-	                }
-	            }
-	
-	             // Button:
-	            draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_rgb(155, 155, 155)), 1);
-	        }
-    		else MenuSplatOptions = 0;
-    	}
-    }
-	else if(instance_exists(menubutton)){
-		MenuOpen = false;
-	}
-
-	draw_reset_projection();
-
-	ntte_menu();
-
 #define draw_gui_end
-     // Custom Sound Volume:
-    for(var i = 0; i < array_length(global.sound_current); i++){
-        var c = lq_get_value(global.sound_current, i);
-        if(c.snd != -1){
-            audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
-        }
-    }
-
-	 // For Options Menu:
-	for(var i = 0; i < maxp; i++){
-		global.mouse_x_previous[i] = mouse_x[i];
-		global.mouse_y_previous[i] = mouse_y[i];
+	 // Custom Sound Volume:
+	for(var i = 0; i < array_length(global.sound_current); i++){
+		var c = lq_get_value(global.sound_current, i);
+		if(c.snd != -1){
+			audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
+		}
 	}
 
 	 // Draw on Pause Screen but Below draw_pause Depth:
@@ -2894,38 +2622,38 @@
 
 #define area_step
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
-	    var a = array_find_index(areaList, GameCont.area);
-	    if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
-	    if(a >= 0){
-	        var _area = areaList[a],
-		    	_scrt = "step";
-
-		    switch(object_index){
-		        case CustomBeginStep:
-		            _scrt = "begin_step";
-		            break;
+		var a = array_find_index(areaList, GameCont.area);
+		if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
+		if(a >= 0){
+			var	_area = areaList[a],
+				_scrt = "step";
+				
+			switch(object_index){
+				case CustomBeginStep:
+					_scrt = "begin_step";
+					break;
 		
-		        case CustomEndStep:
-		            _scrt = "end_step";
-		            break;
-		    }
-		
-		    try{
-		        mod_script_call("area", _area, "area_" + _scrt);
-		    }
-		    catch(_error){
-		    	trace_error(_error);
-		    }
-	    }
-    }
-
-    instance_destroy();
-
+				case CustomEndStep:
+					_scrt = "end_step";
+					break;
+			}
+			
+			try{
+				mod_script_call("area", _area, "area_" + _scrt);
+			}
+			catch(_error){
+				trace_error(_error);
+			}
+		}
+	}
+	
+	instance_destroy();
+	
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
 		instance_destroy();
 	}
-
+	
 	 // Map Index:
 	var _mapIndex = GameCont.waypoints;
 	if(instance_exists(_mapObj) && _mapObj == TopCont){
@@ -2935,14 +2663,14 @@
 
 		_mapIndex = clamp(min(_last, _mapObj.mapanim), 0, _mapIndex);
 	}
-
+	
 	 // Exit Conditions:
 	if(instance_exists(_mapObj) || object_exists(_mapObj)){
 		 // Check if Can Draw:
 		if(array_length(instances_matching(_mapObj, "visible", true)) <= 0){
 			exit;
 		}
-
+		
 		 // Extra Checks:
 		switch(_mapObj){
 			case UberCont:
@@ -2955,24 +2683,24 @@
 					}
 				}
 				break;
-
+				
 			case TopCont:
 				var _last = _mapObj.go_addy1;
 				if("go_addy1_petmapicon_last" in _mapObj) _last = _mapObj.go_addy1_petmapicon_last;
 				_mapObj.go_addy1_petmapicon_last = _mapObj.go_addy1;
-	
+				
 				if(instance_exists(Player) || _mapObj.go_addy1 != 0 || _last != 0){
 					exit;
 				}
 				break;
 		}
 	}
-
+	
 	 // Map Position:
-	var _mapEnd = mapdata_get(_mapIndex),
+	var	_mapEnd = mapdata_get(_mapIndex),
 		_mapX = (game_width  / 2) - 70,
 		_mapY = (game_height / 2) + 7;
-
+		
 	if(_mapObj == TopCont){
 		_mapX -= 50;
 		_mapY -= 3;
@@ -2980,45 +2708,45 @@
 			_mapY -= min(2, _mapObj.go_stage);
 		}
 	}
-
+	
 	 // Draw Icons:
 	if(_mapIndex == 0 || (is_real(_mapEnd.area) && _mapEnd.area >= 0) || (is_string(_mapEnd.area) && mod_exists("area", _mapEnd.area))){
 		draw_set_projection(0);
-
+		
 		var _playerMax = 0;
 		for(var i = 0; i < maxp; i++) if(player_is_active(i)){
 			_playerMax = i + 1;
 		}
-
+		
 		for(var i = 0; i < _playerMax; i++){
-			var _px = _mapX + _mapEnd.x,
+			var	_px = _mapX + _mapEnd.x,
 				_py = _mapY + _mapEnd.y,
 				_iconAng = 30,
 				_iconDir = 0,
 				_iconDis = 10;
-
+				
 			 // Co-op Offset:
 			if(_playerMax > 1){
-				var l = 2 * _playerMax,
+				var	l = 2 * _playerMax,
 					d = 90 - ((360 / _playerMax) * i);
-	
+					
 				if(_playerMax == 2) d += 45;
-	
+				
 				_px += lengthdir_x(l, d);
 				_py += lengthdir_y(l, d);
-
+				
 				_iconAng = d;
 			}
-
+			
 			 // Pet Icons:
 			for(var _petNum = 0; _petNum < array_length(global.petMapicon[i]); _petNum++){
 				var _icon = global.petMapicon[i, _petNum];
-
+				
 				 // Dim:
 				if(instance_exists(BackMainMenu)){
 					_icon.col = merge_color(_icon.col, c_black, 0.9);
 				}
-
+				
 				 // Draw:
 				if(sprite_exists(_icon.spr)){
 					draw_sprite_ext(
@@ -3033,12 +2761,12 @@
 						_icon.alp
 					);
 				}
-
+				
 				_iconDir += 60 / (1 + floor(_iconDir / 360));
 				if((_iconDir % 360) == 0) _iconDis += 8;
 			}
 		}
-
+		
 		draw_reset_projection();
 	}
 
@@ -3056,7 +2784,7 @@
 		};
 		
 		if(i >= 0 && i < array_length(global.mapArea)){
-			var _last = _map[i],
+			var	_last = _map[i],
 				a = global.mapArea[i];
 
 			if(is_array(a)){
@@ -3090,7 +2818,7 @@
 			 // Modded:
 			else if(is_string(_data.area)){
 				with(UberCont){
-					var d = mod_script_call("area", _data.area, "area_mapdata", _last.x, _last.y, _last.area, _last.subarea, _data.subarea, _data.loop),
+					var	d = mod_script_call("area", _data.area, "area_mapdata", _last.x, _last.y, _last.area, _last.subarea, _data.subarea, _data.loop),
 						n = array_length(d);
 
 					if(n >= 2){
@@ -3114,8 +2842,8 @@
 	return _map;
 
 #define ntte_hud(_visible)
-    var _players = 0,
-    	_pause = false,
+	var	_players = 0,
+		_pause = false,
 		_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_ox = _vx,
@@ -3148,11 +2876,11 @@
 	}
 	
 	 // Co-op Rad Canister Offset:
-    for(var i = 0; i < maxp; i++) _players += player_is_active(i);
-    if(_players > 1) _ox -= 17;
-    
+	for(var i = 0; i < maxp; i++) _players += player_is_active(i);
+	if(_players > 1) _ox -= 17;
+	
 	 // Determine which sides of the screen player HUD is On:
-	var _hudSide = array_create(maxp, 0),
+	var	_hudSide = array_create(maxp, 0),
 		n = 0;
 		
 	for(var i = 0; i < maxp; i++) if(player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
@@ -3163,7 +2891,7 @@
 		global.hud_reroll = GameCont.hud_patience;
 	}
 	if(skill_get(global.hud_reroll) != 0){
-		var _sx = game_width - 11,
+		var	_sx = game_width - 11,
 			_sy = 12,
 			_x = _sx,
 			_y = _sy,
@@ -3224,7 +2952,7 @@
 	
 	 // Player HUD:
 	for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
-		var _player = player_find(_index),
+		var	_player = player_find(_index),
 			_side = _hudSide[_index],
 			_flip = (_side ? -1 : 1),
 			_HUDVisible = (_visible && player_get_show_hud(_index, player_find_local_nonsync())),
@@ -3284,7 +3012,7 @@
 				
 				 // Bonus HP HUD:
 				with(instances_matching_ne(_player, "my_health_bonus", null)){
-					var _x1 = _ox + 106 - (85 * _side),
+					var	_x1 = _ox + 106 - (85 * _side),
 						_y1 = _oy + 5,
 						_x2 = _x1 + (3 * my_health_bonus_hud * _flip),
 						_y2 = _y1 + 10;
@@ -3336,7 +3064,7 @@
 						draw_rectangle(_x, _y, _x + _w, _y + _h, false);
 							
 						/// Charmed HP:
-							var _x1 = _x + _HPw + 2,
+							var	_x1 = _x + _HPw + 2,
 								_x2 = _x + _w;
 								
 							if(_x1 < _x2){
@@ -3418,7 +3146,7 @@
 					}
 					
 					 // Parrot Feathers:
-					var _x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
+					var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
 						_y = _oy + 11,
 						_spr = spr_feather,
 						_output = feather_num_mult,
@@ -3431,7 +3159,7 @@
 					}
 					
 					for(var i = 0; i < array_length(feather_ammo_hud); i++){
-						var _hud = feather_ammo_hud[i],
+						var	_hud = feather_ammo_hud[i],
 							_xsc = _flip,
 							_ysc = 1,
 							_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
@@ -3464,7 +3192,7 @@
 						_dy -= sprite_get_yoffset(_spr) * _ysc;
 						for(var j = 0; j < array_length(_hud); j++){
 							if(_hud[j] > 0){
-								var _l = 0,
+								var	_l = 0,
 									_t = 0,
 									_w = max(1, sprite_get_width(_spr) * _hud[j]),
 									_h = sprite_get_height(_spr);
@@ -3548,7 +3276,7 @@
 					with(player_find(p)){
 						draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
 						
-						var l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
+						var	l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
 							d = point_direction(_x, _y, x, y);
 							
 						_x += lengthdir_x(l, d);
@@ -3578,7 +3306,7 @@
 					var _icon = pet_get_icon(mod_type, mod_name, pet);
 					
 					if(sprite_exists(_icon.spr)){
-						var _x = x + _icon.x,
+						var	_x = x + _icon.x,
 							_y = y + _icon.y;
 								
 						 // Death Pointer:
@@ -3600,7 +3328,7 @@
 						
 						 // Death Indicating:
 						if(_dead){
-							var _flashLength = 15,
+							var	_flashLength = 15,
 								_flashDelay = 10,
 								_flash = (current_frame % (_flashLength + _flashDelay));
 								
@@ -3668,1224 +3396,51 @@
 	
 	instance_destroy();
 	
-#define ntte_menu()
-	if(MenuOpen){
-		for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
-			if(player_is_local_nonsync(_index) && _index != player_find_local_nonsync()){
-				continue; // Only Allow the Main Local Player / Non-Local Players Through
-			}
-			
-			draw_set_visible_all(false);
-			draw_set_visible(_index, true);
-
-			draw_set_projection(0);
-			
-			var	_menuCurrent = MenuSlct[_index],
-				_vx = view_xview[_index],
-				_vy = view_yview[_index],
-				_mx = mouse_x[_index],
-				_my = mouse_y[_index],
-				_local = player_is_local_nonsync(_index),
-				_tooltip = "";
-				
-			/// Menu Swap:
-				var _tx = game_width - 3,
-					_ty = 35 + min(3, 2 * MenuSplat);
-					
-				draw_set_halign(fa_right);
-				draw_set_valign(fa_top);
-				draw_set_font(fntSmall);
-				
-				 // Splat:
-				draw_sprite_ext(sprBossNameSplat, MenuSplat, _tx - 15 - MenuSplat, _ty + 17, 1, 1, 90, c_white, 1);
-				
-				 // Cycle Through Menus:
-				if(button_pressed(_index, "swap")){
-					_menuCurrent = ((_menuCurrent + 1) % lq_size(MenuList));
-				}
-				
-				 // Menu List:
-				for(var m = 0; m < lq_size(MenuList); m++){
-					var _text = lq_get_key(MenuList, m),
-						_hover = false,
-						_current = (MenuSlct[_index] == m);
-						
-					 // Selecting:
-					if(!_current){
-						if(point_in_rectangle(
-							_mx - _vx,
-							_my - _vy,
-							_tx - 40,
-							_ty,
-							_tx + 2,
-							_ty + 1 + string_height(_text)
-						)){
-							_hover = true;
-							if(MenuPop[_index] >= 3 && button_pressed(_index, "fire")){
-								_menuCurrent = m;
-							}
-						}
-					}
-					
-					 // Text:
-					draw_text_nt(_tx - _current, _ty, (_current ? "" : (_hover ? "@s" : "@d")) + _text);
-					_ty += string_height(_text) + 2;
-				}
-				
-				 // Menu Swapped:
-				if(_menuCurrent != MenuSlct[_index]){
-					MenuPop[_index] = 0;
-					
-					 // Sound:
-					switch(_menuCurrent){
-						case menu_options:	sound_play(sndMenuOptions);	break;
-						case menu_stats:	sound_play(sndMenuStats);	break;
-						case menu_credits:	sound_play(sndMenuCredits);	break;
-						default:			sound_play(sndClick);
-					}
-				}
-				
-			 // Menu Code:
-			var _menu = lq_get_value(MenuList, _menuCurrent),
-				_menuList = lq_defget(_menu, "list", []),
-				_menuSlct = lq_defget(_menu, "slct", []),
-				_menuX = (game_width  / 2) + lq_defget(_menu, "x", 0),
-				_menuY = (game_height / 2) + lq_defget(_menu, "y", 0);
-				
-			draw_set_font(fntM);
-			
-			MenuPop[_index] += current_time_scale;
-			var _pop = floor(MenuPop[_index]);
-			
-			switch(_menuCurrent){
-				case menu_options:
-					draw_set_halign(fa_left);
-					draw_set_valign(fa_middle);
-					
-					 // Arrow Key Selection Change:
-					var _moveOption = sign(button_pressed(_index, "sout") - button_pressed(_index, "nort"));
-					if(_moveOption != 0){
-						var m = _menuSlct[_index];
-						do{
-							m += _moveOption;
-							m = ((m + array_length(_menuList)) % array_length(_menuList));
-						}
-						until (_menuList[m].type >= 0);
-						_menuSlct[_index] = m;
-					}
-					
-					 // Option Selecting & Splat:
-					for(var i = 0; i < array_length(_menuList); i++){
-						var _option = _menuList[i];
-						with(_option) appear = (i + 3);
-						
-						 // Select:
-						var	_hover = (point_in_rectangle(_mx - _vx, _my - _vy, _menuX - 80, _menuY - 8, _menuX + 159, _menuY + 6) && (_mx < _vx + game_width - 48 || _my > _vy + 64)),
-							_selected = (_menuSlct[_index] == i);
-							
-						if(_hover || _selected){
-							if(_option.type >= 0){
-								if(
-									!_hover
-									|| _mx != global.mouse_x_previous[_index]
-									|| _my != global.mouse_y_previous[_index]
-								){
-									_menuSlct[_index] = i;
-								}
-							}
-							
-							with(_option) if(_pop >= appear){
-								var	_click = button_pressed(_index, "fire"),
-									_confirm = ((_click && _hover) || button_pressed(_index, "okay"));
-									
-								 // Click:
-								if(type >= 0){
-									if(!clicked[_index]){
-										if(_confirm){
-											if(_click) clicked[_index] = true;
-											if(_selected) switch(type){
-												case opt_slider:
-													if(_click) sound_play(sndSlider);
-													break;
-													
-												default:
-													sound_play(sndClick);
-													break;
-											}
-										}
-									}
-									else if(!button_check(_index, "fire")){
-										clicked[_index] = false;
-										if(_selected) switch(type){
-											case opt_slider:
-												sound_play(sndSliderLetGo);
-												break;
-										}
-									}
-								}
-								
-								 // Option Specifics:
-								if(_selected && (sync || _local)) switch(type){
-									case opt_toggle:
-										if(_confirm){
-											option_set(varname, (option_get(varname, 0) + 1) % array_length(pick));
-										}
-										break;
-										
-									case opt_slider:
-										if(_hover && button_check(_index, "fire") && clicked[_index]){
-											var _slider = clamp(round((_mx - _vx) - (_menuX + 40)) / 100, 0, 1);
-											option_set(varname, _slider);
-										}
-										else{
-											var _adjust = 0.1 * sign(button_pressed(_index, "east") - button_pressed(_index, "west"));
-											if(_adjust != 0){
-												option_set(varname, clamp(option_get(varname, 0) + _adjust, pick[0], pick[1]));
-											}
-										}
-										break;
-								}
-								
-								 // Description on Hover:
-								if(_hover && "text" in self){
-									//if(!button_check(_index, "fire") || type == opt_title){
-										if(_mx < _vx + (game_width / 2) + 32){
-											_tooltip = text;
-										}
-									//}
-								}
-							}
-						}
-						else _option.clicked[_index] = false;
-						
-						with(_option){
-							if(type == opt_title) _menuY += 2;
-							x = _menuX;
-							y = _menuY;
-							
-							if(_pop >= appear){
-								 // Appear Pop:
-								if(_pop == appear && MenuPop[_index] - _pop <= current_time_scale){
-									sound_play_pitch(sndAppear, random_range(0.5, 1.5));
-								}
-								
-								 // Selection Splat:
-								if(_local){
-									if(_moveOption == 0){
-										splat += ((_menuSlct[_index] == i) ? 1 : -1) * current_time_scale;
-										splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
-									}
-									if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _menuX, _menuY);
-								}
-							}
-						}
-						_menuY += 16;
-					}
-					
-					 // Option Text:
-					if(_local){
-						var _titleFound = false;
-						for(var i = 0; i < array_length(_menuList); i++){
-							var _option = _menuList[i],
-								_selected = (_local && _menuSlct[_index] == i);
-								
-							with(_option) if(_pop >= appear){
-								 // Option Name:
-								var	_x = x - 80,
-									_y = y,
-									_name = name;
-									
-								if(type == opt_title){
-									_titleFound = true;
-									draw_set_color(c_white);
-								}
-								else if(_titleFound){
-									_name = " " + _name;
-								}
-								
-								if(_selected){
-									_y--;
-									draw_set_color(c_white);
-								}
-								else draw_set_color(make_color_rgb(125, 131, 141));
-								if(_pop < (appear + 1)) _y++;
-								
-								draw_text_shadow(_x, _y, _name);
-								
-								 // Option Specifics:
-								_x += 124;
-								var _value = option_get(varname, 0);
-								with(other){
-									switch(other.type){
-										case opt_toggle:
-											draw_text_shadow(_x, _y, other.pick[clamp(_value, 0, array_length(other.pick) - 1)]);
-											break;
-											
-										case opt_slider:
-											var	_dx = _x - 5,
-												_dy = _y - 2,
-												w = 6 + (100 * _value),
-												h = sprite_get_height(sprOptionSlider);
-												
-											 // Slider:
-											draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
-											draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);
-											draw_sprite(sprSliderEnd,         1,             _dx + w - 2,   _y);
-											
-											 // Text:
-											draw_set_color(c_white);
-											draw_text_shadow(_x, _y + 1, string_format(_value * 100, 0, 0) + "%");
-											break;
-									}
-									switch(_name){
-										case "Water Quality :": // Water Quality Visual
-											var	_active = in_range(_menuSlct[_index], i, i + 2),
-												_spr = spr.GullIdle,
-												_img = (current_frame * 0.4),
-												_scale = [
-													1/3 + (2/3 * option_get("waterQualityMain", 1)),
-													1/2 + (1/2 * option_get("waterQualityTop", 1))
-												],
-												_sx = _x - 32,
-												_sy = _y + 12;
-												
-											for(var s = 0; s < array_length(_scale); s++){
-												var	_sw = sprite_get_width(_spr) * _scale[s],
-													_sh = sprite_get_height(_spr) * _scale[s],
-													_surf = surface_create(_sw, _sh);
-													
-												 // Quality Visual:
-												surface_set_target(_surf);
-												draw_clear_alpha(0, 0);
-												
-												var	_dx = (_sw / 2),
-													_dy = (_sh / 2) - ((2 + sin(current_frame / 10)) * _scale[s]);
-													
-												draw_sprite_ext(_spr, _img, _dx, _dy, _scale[s], _scale[s], 0, (_active ? c_white : c_gray), 1);
-												
-												surface_reset_target();
-												draw_set_projection(0);
-												
-												 // Draw Clipped/Colored Surface:
-												if(s == 0){
-													var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
-													draw_set_fog(true, (_active ? b : merge_color(b, c_black, 0.5)), 0, 0);
-													draw_surface_part_ext(_surf, 0, (_sh / 2), _sw, (_sh / 2), _sx, _sy + ((_sh / 2) / _scale[s]), 1 / _scale[s], 1 / _scale[s], c_white, 1);
-													draw_set_fog(false, 0, 0, 0);
-												}
-												else{
-													draw_surface_part_ext(_surf, 0, 0, _sw, (_sh / 2) + 1, _sx,	_sy, 1/_scale[s], 1/_scale[s], c_white, 1);
-													draw_set_fog(true, (_active ? c_white : c_gray), 0, 0);
-													draw_surface_part_ext(_surf, 0,	(_sh / 2), _sw, 1, _sx, _sy + ((_sh / 2) / _scale[s]), 1/_scale[s], 1/_scale[s], c_white, 0.8);
-													draw_set_fog(false, 0, 0, 0);
-												}
-												
-												surface_destroy(_surf);
-											}
-											break;
-									}
-								}
-							}
-						}
-					}
-					
-					break;
-					
-				case menu_stats:
-					
-					var _statSlct = _menuSlct[_index];
-					
-					/// Stat Menu Swap:
-						var _tx = game_width,
-							_ty = game_height - 36;
-							
-						 // Splat:
-						var _spr = sprLoadoutSplat;
-						draw_sprite(_spr, min(_pop, sprite_get_number(_spr) - 1), _tx, _ty);
-						
-						 // Cycle Through:
-						if(button_pressed(_index, "pick")){
-							_statSlct = ((_statSlct + 1) % lq_size(_menuList));
-						}
-						
-						 // Tabs:
-						_tx -= 4;
-						_ty -= 4;
-						draw_set_halign(fa_right);
-						draw_set_valign(fa_bottom);
-						for(var i = lq_size(_menuList) - 1; i >= 0; i--){
-							var _text = lq_get_key(_menuList, i),
-								_hover = false,
-								_selected = (_menuSlct[_index] == i);
-							
-							 // Selecting:
-							if(!_selected && point_in_rectangle(
-								_mx - _vx,
-								_my - _vy,
-								_tx - 68,
-								_ty - string_height(_text) - 1,
-								_tx + 4,
-								_ty
-							)){
-								_hover = true;
-								
-								 // Select:
-								if(button_pressed(_index, "fire")){
-									_statSlct = i;
-								}
-							}
-							
-							draw_text_nt(_tx - _selected, _ty + (_pop <= 1), (_selected ? "" : (_hover ? "@s" : "@d")) + _text);
-							
-							_ty -= string_height(_text) + 2;
-						}
-						
-						 // Swapped:
-						if(_statSlct != _menuSlct[_index]){
-							_menuSlct[_index] = _statSlct;
-							
-							_pop = 2;
-							MenuPop[_index] = _pop;
-
-							switch(lq_get_key(_menuList, _statSlct)){
-								case "pets":	sound_play_pitch(sndMenuStats, 1.2);	break;
-								case "other":	sound_play_pitch(sndMenuScores, 1.1);	break;
-								default:		sound_play(sndMenuStats);
-							}
-						}
-					
-					 // Stat Menus:
-					var _statMenu = lq_get_value(_menuList, _statSlct),
-						_statX = _menuX + lq_defget(_statMenu, "x", 0),
-						_statY = _menuY + lq_defget(_statMenu, "y", 0),
-						_statDraw = [];
-
-					switch(lq_get_key(_menuList, _statSlct)){
-						case "mutants":
-						
-							var	_raceList = _statMenu.list,
-								_raceSlct = _statMenu.slct,
-								_raceCurrent = lq_get_key(_raceList, _raceSlct[_index]);
-								
-							if(is_undefined(_raceCurrent)) _raceCurrent = "";
-							
-							 // Locked:
-							if(mod_script_exists("race", _raceCurrent, "race_avail")){
-								var a = mod_script_call("race", _raceCurrent, "race_avail");
-								if(is_real(a) && !a){
-									_raceCurrent = "";
-								}
-							}
-							
-							/// Character Swap:
-								 // Splat:
-								var _x = 0,
-									_y = 36,
-									_spr = sprUnlockPopupSplat;
-									
-								if(!instance_exists(BackMainMenu)){
-									draw_sprite_ext(_spr, clamp(_pop - 2, 0, sprite_get_number(_spr) - 1), _x, _y, 1, 1, 180, c_white, 1);
-								}
-								else _x -= 16;
-								
-								 // Icons:
-								if(_pop >= 4){
-									_x += 40;
-									_y += 10;
-									for(var i = 0; i < lq_size(_raceList); i++){
-										var	_race = lq_get_key(_raceList, i),
-											_avail = true;
-											
-										 // Locked:
-										if(mod_script_exists("race", _race, "race_avail")){
-											_avail = mod_script_call("race", _race, "race_avail");
-											if(!is_real(_avail)) _avail = true;
-										}
-										
-										var	_selected = (_raceSlct[_index] == i && _avail),
-											_sprt = mod_script_call("race", _race, "race_mapicon", _index, 0);
-											
-										if(!is_real(_sprt) || !sprite_exists(_sprt)) _sprt = sprMapIconChickenHeadless;
-										
-										 // Selection:
-										var _hover = false;
-										if(!_selected && point_in_rectangle(
-											_mx - _vx,
-											_my - _vy,
-											_x - 8,
-											_y - 8,
-											_x + 8,
-											_y + 8
-										)){
-											_hover = true;
-											if(!_avail) _tooltip = "LOCKED";
-											
-											 // Select:
-											if(button_pressed(_index, "fire")){
-												if(_avail){
-													_raceSlct[_index] = i;
-													_pop = 4;
-													MenuPop[_index] = _pop;
-													sound_play((i & 1) ? sndMenuBSkin : sndMenuASkin);
-												}
-												
-												 // Locked:
-												else{
-													sound_play(sndNoSelect);
-													_selected = true;
-												}
-											}
-										}
-										
-										if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
-										draw_sprite_ext(_sprt, 0.4 * current_frame, _x, _y - _selected, 1, 1, 0, (_selected ? c_white : (_hover ? c_silver : c_gray)), 1);
-										if(!_avail) draw_set_fog(false, 0, 0, 0);
-										
-										_x += 32;
-									}
-									
-									 // Temporary:
-									if(instance_exists(Menu) && unlock_get("parrot")){
-										_y -= 2;
-										
-										var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 12, _y - 8, _x + 12, _y + 8);
-										
-										if(_hover && button_pressed(_index, "fire")){
-											sound_play(sndNoSelect);
-											_y += choose(-1, 1);
-										}
-										
-										draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
-										draw_sprite(sprMapIcon, 4, _x, _y - _hover)
-										draw_set_fog(false, 0, 0, 0);
-										
-										//draw_set_halign(fa_center);
-										//draw_set_valign(fa_middle);
-										//draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
-										
-										if(_hover) _tooltip = "@sCOMING#SOON@w?";
-									}
-								}
-								
-								 // Get Stats to Display:
-								with(lq_defget(_raceList, _raceCurrent, [])){
-									with(list) if(stat_get(self[1]) != 0){
-										array_push(_statDraw, other);
-										break;
-									}
-								}
-								
-							/// Portrait:
-								var	_sprt = sprBigPortraitChickenHeadless,
-									_x = 0,
-									_y = game_height,
-									_portX = (90 * min(0, _pop - 5)) - min(2, (_pop - 5) * 2);
-									
-								if(mod_script_exists("race", _raceCurrent, "race_portrait")){
-									_sprt = mod_script_call("race", _raceCurrent, "race_portrait", _index, 0)
-									if(sprite_exists(_sprt)){
-										draw_sprite(_sprt, 0.4 * current_frame, _x + _portX, _y);
-									}
-								}
-								
-								 // Splat:
-								var _spr = sprCharSplat;
-								draw_sprite(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y - 36);
-								
-								 // Name:
-								draw_set_color(c_white);
-								draw_set_font(fntBigName);
-								draw_set_halign(fa_left);
-								draw_set_valign(fa_top);
-								if(mod_script_exists("race", _raceCurrent, "race_name")){
-									var _text = mod_script_call("race", _raceCurrent, "race_name");
-									if(is_string(_text)){
-										draw_text_bn(_x + 6 + (_portX * 1.5), _y - 80, _text, 1.5);
-									}
-								}
-								else{
-									draw_text_bn(_x + 16 + (_portX * 0.6), _y - 80, "NONE", 1.5);
-								}
-								
-							break;
-							
-						case "pets":
-							
-							var _petSlct = _statMenu.slct;
-							
-							 // Add Any Pets Found in Stats:
-							var _petStatList = lq_defget(lq_defget(sav, "stat", {}), "pet", {}),
-								_list = array_clone(_statMenu.list);
-								
-							for(var i = 0; i < lq_size(_petStatList); i++){
-								var k = lq_get_key(_petStatList, i);
-								if(!array_exists(_list, k)) array_push(_list, k);
-							}
-							
-							 // Compile Pet List:
-							var _petList = {};
-							with(_list){
-								var _pet = self,
-									_split = string_split(_pet, ".");
-									
-								if(array_length(_split) >= 3){
-									var _petName = _split[0],
-										_modName = array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
-										_modType = _split[array_length(_split) - 1],
-										_petStat = lq_defget(_petStatList, _pet, {});
-										
-									if(mod_exists(_modType, _modName)){
-										var _avail = (lq_defget(_petStat, "found", 0) > 0 || lq_defget(_petStat, "owned", 0) > 0);
-										
-										 // Auto-Select First Unlocked Pet:
-										if(_avail && _petSlct[_index] == ""){
-											_petSlct[_index] = _pet;
-										}
-										
-										lq_set(_petList, _pet, {
-											"name"		: _split[0],
-											"mod_name"	: array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
-											"mod_type"	: _split[array_length(_split) - 1],
-											"stat"		: _petStat,
-											"avail"		: _avail
-										});
-									}
-								}
-							}
-							
-							 // Splat:
-							var _x = (instance_exists(BackMainMenu) ? -48 : -96),
-								_y = game_height - 36,
-								_spr = sprLoadoutOpen;
-								
-							draw_sprite_ext(_spr, clamp(_pop - 1, 0, (instance_exists(BackMainMenu) ? 1 : sprite_get_number(_spr) - 1)), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
-							
-							 // Icons:
-							if(_pop >= 3){
-								var	_col = min(4, floor(sqrt(lq_size(_petList)))),
-									_w = 13,
-									_h = 13,
-									_x = 40 - round(_w * ((_col - 1) / 2)) - (2 * (_pop <= 3)) + (_pop == 4),
-									_y = 96;
-									
-								 // Arrow Key Selection:
-								var _swaph = (button_pressed(_index, "east") - button_pressed(_index, "west")),
-									_swapv = (button_pressed(_index, "sout") - button_pressed(_index, "nort")) * _col;
-									
-								if(_swaph != 0 || _swapv != 0){
-									 // Get Current Pet Index:
-									var _slct = -1;
-									for(var i = 0; i < lq_size(_petList); i++){
-										if(lq_get_key(_petList, i) == _petSlct[_index]){
-											_slct = i;
-											break;
-										}
-									}
-									
-									 // Swap:
-									if(_slct >= 0) while(true){
-										var _max = ceil(lq_size(_petList) / _col) * _col;
-										_slct = (_slct + _swaph + _swapv + _max) % _max;
-										
-										 // Back at Start:
-										if(lq_get_key(_petList, _slct) == _petSlct[_index]){
-											break;
-										}
-										
-										 // New Selection:
-										if(lq_defget(lq_get_value(_petList, _slct), "avail", false)){
-											_petSlct[_index] = lq_get_key(_petList, _slct);
-											
-											_pop = 4;
-											MenuPop[_index] = _pop;
-											sound_play((_slct & 1) ? sndMenuBSkin : sndMenuASkin);
-											
-											break;
-										}
-									}
-								}
-								
-								for(var i = 0; i < lq_size(_petList); i++){
-									var _pet = lq_get_key(_petList, i),
-										_info = lq_get_value(_petList, i),
-										_icon = pet_get_icon(_info.mod_type, _info.mod_name, _info.name),
-										_avail = _info.avail,
-										_hover = false,
-										_selected = (_petSlct[_index] == _pet && _avail);
-										
-									 // Selecting:
-									if(!_selected && point_in_rectangle(
-										_mx - _vx,
-										_my - _vy,
-										_x - 6,
-										_y - 6,
-										_x + 6,
-										_y + 6
-									)){
-										_hover = true;
-										_tooltip = (_avail ? _info.name : "UNKNOWN");
-										
-										 // Select:
-										if(button_pressed(_index, "fire")){
-											if(_avail){
-												_petSlct[_index] = _pet;
-												
-												_pop = 4;
-												MenuPop[_index] = _pop;
-												sound_play((i & 1) ? sndMenuBSkin : sndMenuASkin);
-											}
-											
-											 // No:
-											else{
-												sound_play(sndNoSelect);
-												_selected = true;
-											}
-										}
-									}
-									
-									if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
-									
-									draw_sprite_ext(_icon.spr, _icon.img, _x + _icon.x, _y + _icon.y - _selected, _icon.xsc, _icon.ysc, _icon.ang, merge_color(_icon.col, c_black, (_selected || _hover) ? 0 : 0.5), _icon.alp);
-									
-									if(!_avail) draw_set_fog(false, 0, 0, 0);
-									
-									_x += _w;
-									if((i % _col) == _col - 1){
-										_x -= (_w * _col);
-										_y += _h;
-									}
-								}
-							}
-							
-							var	_pet = lq_get(_petList, _petSlct[_index]);
-							
-							 // Name:
-							var _appear = 5;
-							if(_pop >= _appear){
-								draw_set_color(c_white);
-								draw_set_font(fntBigName);
-								draw_set_halign(fa_left);
-								draw_set_valign(fa_top);
-								draw_text_bn(28 + (2 * max(0, (_appear + 1) - _pop)), 46, (_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"), 1.5);
-							}
-							
-							 // Get Stats to Display:
-							if(_pet != null && _pet.avail){
-								var	_stat = { name : "", list : [] },
-									_scrt = _pet.name + "_stat",
-									_statPath = `pet/${_pet.name}.${_pet.mod_name}.${_pet.mod_type}/`;
-									
-								for(var i = -1; i < lq_size(_pet.stat); i++){
-									var	_name = ((i < 0) ? "" : lq_get_key(_pet.stat, i)),
-										_value = lq_get_value(_pet.stat, i),
-										_type = ((_name == "owned") ? stat_time : stat_base);
-										
-									 // Call Stats Script:
-									if(mod_script_exists(_pet.mod_type, _pet.mod_name, _scrt)){
-										var s = mod_script_call(_pet.mod_type, _pet.mod_name, _scrt, _name, _value);
-										if(s != 0){
-											if(is_array(s)){
-												if(array_length(s) > 0) _name = s[0];
-												if(array_length(s) > 1){
-													_value = s[1];
-													_type = stat_display;
-												}
-											}
-											else _name = s;
-										}
-									}
-									
-									if(_name != ""){
-										 // Title:
-										if(i < 0){
-											if(is_real(_name) && sprite_exists(_name)){
-												_name = `@(${s}:-0.4)# `;
-											}
-											_stat.name = string(_name);
-										}
-										
-										 // Stat:
-										else array_push(_stat.list, [
-											string(_name),
-											((_type == stat_display) ? _value : (_statPath + lq_get_key(_pet.stat, i))),
-											_type
-										]);
-									}
-								}
-								
-								array_push(_statDraw, _stat);
-							}
-								
-							break;
-							
-						case "other":
-						
-							var _otherList = _statMenu.list;
-							
-							 // Splat:
-							var _x = -64,
-								_y = game_height - 36,
-								_spr = sprLoadoutOpen;
-								
-							draw_sprite_ext(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
-							
-							 // Draw Categories:
-							var	_appear = 5,
-								_sx = 6 + (2 * max(0, (_appear + 1) - _pop)),
-								_sy = 44;
-								
-							draw_set_halign(fa_left);
-							draw_set_valign(fa_top);
-							
-							with(_otherList){
-								 // Name:
-								draw_set_font(fntBigName);
-								if(_pop >= _appear){
-									var _scale = 0.95;
-									draw_set_color(c_black);
-									draw_text_transformed(_sx + 1, _sy,     name, _scale, _scale, 0);
-									draw_text_transformed(_sx,     _sy + 2, name, _scale, _scale, 0);
-									draw_text_transformed(_sx + 1, _sy + 2, name, _scale, _scale, 0);
-									draw_set_color(c_white);
-									draw_text_transformed(_sx,     _sy,     name, _scale, _scale, 0);
-								}
-								_sy += string_height(name) + 4;
-								
-								 // Main Drawing:
-								switch(name){
-									case "AREA UNLOCKS":
-										
-										if(_pop >= _appear){
-											draw_set_font(fntM);
-											
-											var _slct = _statMenu.slct
-											
-											 // Auto Select First Unlocked:
-											if(!unlock_get(list[_slct[_index], 0])){
-												for(var i = 0; i < array_length(list); i++){
-													if(unlock_get(list[i, 0])){
-														_slct[_index] = i;
-														break;
-													}
-												}
-											}
-											
-											 // Up/Down Select:
-											var	_slctSwap = _slct[_index],
-												s = ((button_pressed(_index, "sout") || button_pressed(_index, "east")) - (button_pressed(_index, "nort") || button_pressed(_index, "west")));
-												
-											while(s != 0){
-												_slctSwap = (_slctSwap + s + array_length(list)) % array_length(list);
-												if(unlock_get(list[_slctSwap, 0]) || _slctSwap == _slct[_index]){
-													break;
-												}
-											}
-											
-											with(list){
-												var	_unlock = unlock_get(self[0]),
-													_unlockList = self[1],
-													_name = (_unlock ? mod_script_call_nc("mod", "telib", "unlock_get_name", self[0]) : "LOCKED"),
-													_selected = (_unlock && _slct[_index] == array_find_index(other.list, self)),
-													_hover = false;
-													
-												if(_selected){
-													with(UberCont){
-														var _dx = _sx + 116,
-															_dy = _sy;
-															
-														 // Splat:
-														var	_spr = sprKilledBySplat,
-															_img = min(_pop - (_appear + 1), sprite_get_number(_spr) - 1);
-															
-														if(_img >= 0){
-															draw_sprite(_spr, _img, _dx + 32, _dy - (string_height(_name) / 2));
-														}
-														
-														 // Unlocks:
-														_dy += 2;
-														for(var i = 0; i < array_length(_unlockList); i++){
-															var _unlockAppear = _appear + 2 + i;
-															if(_pop >= _unlockAppear){
-																var	_split = string_split(_unlockList[i], "."),
-																	_modType = _split[array_length(_split) - 1],
-																	_modName = array_join(array_slice(_split, 0, array_length(_split) - 1), "."),
-																	_found = unlock_get("found(" + _unlockList[i] + ")");
-																	
-																if(_modType == "wep") _modType = "weapon";
-																
-																 // Get Sprite:
-																var	_spr = -1,
-																	_img = (_found ? ((_pop * 0.4) - (3 * i)) : 0);
-																	
-																if(mod_exists(_modType, _modName)){
-																	switch(_modType){
-																		case "weapon":
-																			_spr = mod_variable_get(_modType, _modName, "sprWep");
-																			if((_img % sprite_get_number(_spr)) < 2) _img = 0;
-																			break;
-																			
-																		case "crown":
-																			_spr = mod_variable_get(_modType, _modName, "sprCrownIdle");
-																			break;
-																	}
-																}
-																if((_img + sprite_get_number(_spr)) % ((1 + array_length(_unlockList)) * sprite_get_number(_spr)) >= sprite_get_number(_spr)){
-																	_img = 0;
-																}
-																
-																 // Loop Over:
-																if(_dx + sprite_get_width(_spr) > game_width){
-																	_dx = _sx + 124;
-																	_dy += 16;
-																}
-																
-																if(is_real(_spr) && sprite_exists(_spr)){
-																	if(!_found){
-																		 // Shadow:
-																		draw_set_fog(true, c_black, 0, 0);
-																		draw_sprite(
-																			_spr,
-																			_img,
-																			_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
-																			_dy + 1
-																		);
-																		
-																		 // Draw in Flat Gray:
-																		draw_set_fog(true, make_color_hsv(0, 0, 28 + (10 * instance_exists(BackMainMenu))), 0, 0);
-																	}
-																	
-																	draw_sprite(
-																		_spr,
-																		_img,
-																		_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
-																		_dy
-																	);
-																	
-																	_dx += 1 + sprite_get_width(_spr);
-																	
-																	if(!_found) draw_set_fog(false, 0, 0, 0);
-																}
-																
-																 // Sound:
-																if(_pop == _unlockAppear){
-																	sound_play_pitch(sndAppear, 1 + (i * 0.05));
-																}
-															}
-														}
-													}
-												}
-												
-												 // Selection:
-												if(point_in_rectangle(_mx - _vx, _my - _vy, _sx, _sy, _sx + 120, _sy + string_height(_name))){
-													_hover = true;
-													if(button_pressed(_index, "fire")){
-														_selected = true;
-														
-														if(_unlock){
-															_slctSwap = array_find_index(other.list, self);
-														}
-														
-														 // No:
-														else sound_play(sndNoSelect);
-													}
-												}
-												
-												 // Name:
-												draw_text_nt(
-													_sx + (2 * _selected) - !_unlock,
-													_sy,
-													(_unlock ? (_selected ? "" : (_hover ? "@s" : "@d")) : `@(color:${make_color_hsv(0, 0, 25 + (15 * (_hover && !_selected)))})`) + _name
-												);
-												
-												_sy += 1 + string_height(_name);
-											}
-											
-											 // Selection Swapped:
-											if(_slctSwap != _slct[_index]){
-												_slct[_index] = _slctSwap;
-												
-												_pop = _appear + 1;
-												MenuPop[_index] = _pop;
-												sound_play_pitchvol(sndClick, 1 + (0.2 * _slct[_index]), 2/3);
-											}
-										}
-										
-										break;
-										
-									case "MISC":
-									
-										_statX = _sx + 44;
-										_statY = _sy;
-										_statDraw = { name : "", list : ((_pop >= _appear) ? list : []) };
-										
-										break;
-								}
-								
-								_sy += 16;
-							}
-							
-							break;
-					}
-					
-					 // Draw Stats:	
-					draw_set_font(fntM);
-					draw_set_valign(fa_top);
-					
-					var	_x = _statX,
-						_y = _statY,
-						_appear = 5;
-						
-					if(is_object(_statDraw)) _statDraw = [_statDraw];
-					
-					if(array_length(_statDraw) > 0){
-						with(_statDraw){
-							if(_pop >= _appear){
-								if(_pop == _appear) _x--;
-								
-								 // Category Name:
-								draw_set_halign(fa_center);
-								draw_text_nt(_x, _y, name);
-								_y += string_height(name);
-								
-								 // Stats:
-								with(list){
-									var _name = self[0],
-										_stat = self[1],
-										_type = self[2];
-										
-									if(_type != stat_display){
-										_stat = stat_get(_stat);
-									}
-									switch(_type){
-										case stat_time:
-											var t = "";
-											t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
-											t += ":";
-											t += string_lpad(string(floor((_stat / power(60, 1)) % 60)), "0", 2); // Minutes
-											t += ":";
-											t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
-											_stat = t;
-											break;
-									}
-									_stat = string(_stat);
-									
-									draw_set_halign(fa_right);
-									draw_text_nt(_x - 1, _y, "@s" + _name);
-									
-									draw_set_halign(fa_left);
-									draw_text_nt(_x + 1, _y, _stat);
-									
-									_y += max(string_height(_name), string_height(_stat));
-								}
-								
-								_y += string_height("A");
-							}
-							_appear += 2;
-						}
-					}
-					
-					 // No Stats to Display:
-					else if(_pop >= _appear){
-						draw_set_halign(fa_center);
-						draw_set_valign(fa_middle);
-						draw_text_nt(_x - 4 - (_pop == _appear), (game_height / 2), "@sNOTHING TO# DISPLAY YET!")
-					}
-					
-					break;
-					
-				case menu_credits:
-				
-					var _links = _menuSlct[_index];
-					
-					for(var i = 0; i <= array_length(_menuList); i++){
-						var _appear = 1 + floor(i / 2);
-						if(_pop >= _appear){
-							var	_side = ((i & 1) ? 1 : -1),
-								_tx = _menuX + (_side * 8),
-								_ty = _menuY + (32 * floor(i / 2)) - (_pop == _appear);
-								
-							draw_set_halign(_side ? fa_left : fa_right);
-							draw_set_valign(fa_top);
-							
-							 // Link Mode Left Align:
-							if(_links && !_side){
-								_tx -= 128;
-								draw_set_halign(fa_left);
-							}
-							
-							 // Draw Credits:
-							if(i < array_length(_menuList)){
-								 // Name:
-								draw_set_font(fntM);
-								if(!_links || i < array_length(_menuList) - 1){ // No "Special Thanks" Name for Links
-									draw_text_nt(_tx, _ty, _menuList[i].name);
-								}
-								_ty += string_height(_menuList[i].name);
-								
-								 // Links:
-								if(_links){
-									var	_link = _menuList[i].link,
-										_font = fntChat;
-										
-									if(array_length(_link) >= 4) _font = fntSmall;
-									
-									if(_font == fntChat) _ty -= 3;
-									
-									draw_set_font(_font);
-									
-									with(_link){
-										var _text = array_join(self, "");
-										draw_text_nt(_tx, _ty, _text);
-										_ty += string_height(_text) - (4 * (_font == fntChat));
-									}
-								}
-								
-								 // Roles:
-								else{
-									var _text = "";
-									with(_menuList[i].role){
-										_text += array_join(self, "") + "#@w";
-									}
-									
-									draw_set_font(fntSmall);
-									draw_text_nt(_tx, _ty, _text);
-								}
-							}
-							
-							 // Links/Roles Button:
-							else{
-								_tx += 32;
-								_ty += 16;
-								
-								 // Hovering:
-								var _hover = false;
-								if(point_in_rectangle(
-									mouse_x[_index] - view_xview[_index],
-									mouse_y[_index] - view_yview[_index],
-									_tx - 32,
-									_ty - 20,
-									_tx + 32,
-									_ty + 20
-								)){
-									_hover = true;
-								}
-								
-								 // Splat:
-								var _spr = sprKilledBySplat;
-								draw_sprite(_spr, min(_pop - _appear, sprite_get_number(_spr) - 1), _tx + 4, _ty - 6);
-								
-								 // Text:
-								draw_set_font(fntM);
-								draw_set_halign(fa_center);
-								draw_set_valign(fa_middle);
-								draw_text_nt(_tx - _hover + (!instance_exists(BackMainMenu) && _pop > _appear + 1), _ty, (_hover ? "" : "@s") + (_links ? "Roles" : "Links"));
-							}
-						}
-					}
-					
-					 // Switch Between Roles/Links:
-					if(_pop >= 3){
-						if(button_pressed(_index, "fire")){
-							_menuSlct[_index] = !_menuSlct[_index];
-							sound_play_pitch(sndMenuCredits, (_menuSlct[_index] ? 1.3 : 1));
-							MenuPop[_index] = 0;
-						}
-					}
-					
-					break;
-			}
-
-			draw_reset_projection();
-			
-			 // Tooltips:
-			if(_local && _tooltip != ""){
-				draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
-			}
-			
-			MenuSlct[_index] = _menuCurrent;
-		}
-		
-		draw_set_visible_all(true);
-		draw_reset_projection();
-    }
-    
-	 // Closed:
-	else{
-		MenuSplatOptions = 0;
-		
-		 // Reset Menus:
-		for(var i = 0; i < maxp; i++){
-			MenuSlct[i] = menu_base;
-			MenuPop[i] = 0;
-		}
-		for(var i = 0; i < lq_size(MenuList); i++){
-			var o = lq_get_value(MenuList, i);
-			
-			 // Selection:
-			for(var j = 0; j < array_length(o.slct); j++){
-				o.slct[j] = o.slct_default;
-			}
-			
-			 // Options Splat:
-			if(o == MenuList.options){
-				for(var j = 0; j < array_length(o.list); j++){
-					o.list[j].splat = 0;
-				}
-			}
-		}
-	}
-
 #define CharSelect_draw_new(_inst)
 	with(_inst) if(visible){
 		draw_sprite(sprNew, image_index, view_xview_nonsync + xstart + (alarm1 > 0), view_yview_nonsync + ystart - mouseover);
 	}
 	instance_destroy();
-
+	
 #define CampChar_create(_x, _y, _race)
-    _race = race_get_name(_race);
-    with(instance_create(_x, _y, CampChar)){
-        num = _race;
-        race = _race;
-
-         // Visual:
-        spr_slct = race_get_sprite(_race, sprFishMenu);
-        spr_menu = race_get_sprite(_race, sprFishMenuSelected);
-        spr_to   = race_get_sprite(_race, sprFishMenuSelect);
-        spr_from = race_get_sprite(_race, sprFishMenuDeselect);
-        sprite_index = spr_slct;
-
-         // Auto Offset:
-        var _tries = 1000;
-        while(_tries-- > 0){
-             // Move Somewhere:
-            x = xstart;
-            y = ystart;
-            move_contact_solid(random(360), random_range(32, 64) + random(random(64)));
-            x = round(x);
-            y = round(y);
-
-             // Safe:
-            if(!collision_circle(x, y, 12, CampChar, true, true) && !place_meeting(x, y, TV)){
-                break;
-            }
-        }
-
-        return id;
-    }
-
-#define cleanup
-	 // Fix Options:
-	if(MenuOpen){
-		with(Menu) mode = 0;
-		sound_volume(sndMenuCharSelect, 1);
+	_race = race_get_name(_race);
+	with(instance_create(_x, _y, CampChar)){
+		num = _race;
+		race = _race;
+		
+		 // Visual:
+		spr_slct = race_get_sprite(_race, sprFishMenu);
+		spr_menu = race_get_sprite(_race, sprFishMenuSelected);
+		spr_to   = race_get_sprite(_race, sprFishMenuSelect);
+		spr_from = race_get_sprite(_race, sprFishMenuDeselect);
+		sprite_index = spr_slct;
+		
+		 // Auto Offset:
+		var _tries = 1000;
+		while(_tries-- > 0){
+			 // Move Somewhere:
+			x = xstart;
+			y = ystart;
+			move_contact_solid(random(360), random_range(32, 64) + random(random(64)));
+			x = round(x);
+			y = round(y);
+			
+			 // Safe:
+			if(!collision_circle(x, y, 12, CampChar, true, true) && !place_meeting(x, y, TV)){
+				break;
+			}
+		}
+		
+		return id;
 	}
-
-     // Stop Area Music/Ambience:
-    for(var i = 0; i < lq_size(global.sound_current); i++){
-        audio_stop_sound(lq_get_value(global.sound_current, i).snd);
-    }
-
-
+	
+#define cleanup
+	 // Stop Area Music/Ambience:
+	for(var i = 0; i < lq_size(global.sound_current); i++){
+		audio_stop_sound(lq_get_value(global.sound_current, i).snd);
+	}
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -4930,7 +3485,6 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
-#define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -4964,14 +3518,15 @@
 #define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
-#define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
-#define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
-#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
+#define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
+#define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
+#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
+#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
+#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
