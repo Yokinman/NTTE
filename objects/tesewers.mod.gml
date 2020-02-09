@@ -3985,8 +3985,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			blink = 15;
 		}
 	}
-
-
+	
+	
 #define Manhole_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
@@ -4119,25 +4119,25 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         image_xscale = choose(-1, 1);
         image_speed = 0.4;
         depth = -1;
-
+        
          // Sound:
         snd_hurt = sndHitMetal;
         snd_dead = sndStatueDead;
-
+        
          // Vars:
         mask_index = msk.PizzaDrain;
         maxhealth = 40;
         team = 0;
         size = 3;
-
+        
 		 // Cool Floor:
-		with(instance_nearest(_x - 16, _y, Floor)){
+		with(instance_nearest_bbox(_x - 16, _y, Floor)){
 			image_index = 3;
 		}
 
         return id;
     }
-
+    
 #define PizzaDrain_step
 	 // Manual Collision for Projectiles Hitting Wall:
 	if(place_meeting(x, y, projectile)){
@@ -4147,17 +4147,17 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
      // Stay Still:
     x = (round(xstart / 16) * 16) - 16;
     y = (round(ystart / 16) * 16);
     speed = 0;
-
+    
 	if(!instance_exists(GenCont)){
 	     // Floorerize:
-	    var _x = x - 16,
+	    var	_x = x - 16,
 	    	_y = y - 32;
-
+	    	
 	    if(!position_meeting(_x, _y, Floor)){
 	    	with(instance_create(_x, _y, Floor)){
 	    		sprite_index = area_get_sprite("lair", sprFloor1B);
@@ -4167,7 +4167,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	    		instance_create(bbox_right - 15, _y, FloorExplo);
 	    	}
 	    }
-
+	    
 		 // Takeover Walls:
 		if(place_meeting(x, y, Wall)){
 			with(instance_nearest(bbox_left - 16, y - 16, Wall)) outindex = 0;
@@ -4184,7 +4184,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		    }
 		}
 	}
-
+	
 	 // Push:
 	if(place_meeting(x, y, hitme)){
 		var _x = x,
@@ -4196,7 +4196,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
      // Animate:
     if(sprite_index == spr_idle){
     	if(image_index < 1){
@@ -4207,7 +4207,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     	sprite_index = spr_idle;
     	image_index = 0;
     }
-
+    
      // Break:
     if(place_meeting(x, y, Explosion)){
     	my_health = 0;
@@ -4220,7 +4220,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         instance_create(x, y, PortalClear);
         other.my_health = 0;
     }
-
+    
      // Death:
     if(my_health <= 0) instance_destroy();
 
@@ -4272,8 +4272,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     }
     
     /// Entrance:
-        var _sx = dfloor(x, 32),
-            _sy = dfloor(y, 32) - 16,
+        var _sx = pfloor(x, 32),
+            _sy = pfloor(y, 32) - 16,
             _bgColor = background_color;
             
          // Borderize Area:
@@ -4529,8 +4529,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
         instance_delete(id);
     }
-
-
+	
+	
+#define SewerRug_create(_x, _y)
+	with(instance_create(_x, _y, Effect)){
+		sprite_index = spr.Rug;
+		image_index = irandom(image_number - 1);
+		image_speed = 0;
+		depth = 8;
+		return id;
+	}
+	
+	
 #define TurtleCool_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -5128,6 +5138,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -5150,7 +5161,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
 #define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
@@ -5158,6 +5168,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -5205,7 +5216,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);

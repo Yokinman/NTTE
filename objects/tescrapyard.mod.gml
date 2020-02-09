@@ -1,9 +1,9 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-    
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 	DebugLag = false;
 	
 	 // Sludge Pool:
@@ -70,6 +70,11 @@
 
 #macro DebugLag global.debug_lag
 
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
 #macro surfSludgePool global.surfSludgePool
 
 #macro shadSludgePool global.shadSludgePool
@@ -83,30 +88,31 @@
 		spr_dead = spr.BoneRavenDead;
 		spr_lift = spr.BoneRavenLift;
 		spr_land = spr.BoneRavenLand;
-		spr_fly  = spr.BoneRavenFly;
+		spr_wing = spr.BoneRavenFly;
 		sprite_index = spr_idle;
+		image_index = irandom(image_number - 1);
 		spr_shadow = shd24;
 		hitid = [spr_idle, "RAVEN"];
-		depth = -3;
+		depth = -2;
 		
 		 // Sounds:
-		snd_hurt = sndRavenHit;
-		snd_dead = sndRavenDie;
+		snd_hurt = sndTurtleHurt;
+		snd_dead = sndMutant14Hurt;
 		
 		 // Vars:
-		mask_index = mskBandit;
+		mask_index = mskRat;
 		maxhealth = 10;
 		raddrop = 5;
 		size = 1;
 		kills = 0;
 		max_kills = 0;
 		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3.5;
-		target = noone;
-		active = false;
+		walkspeed = 0.6;
+		maxspeed = 2.5;
 		creator = noone;
-		fly_obj = noone;
+		top_object = noone;
+		active = false;
+		failed = false;
 		
 		 // Alarms:
 		alarm1 = -1;
@@ -120,432 +126,249 @@
 	
 #define BoneRaven_step
 	 // Animate:
-	if(sprite_index != spr_lift && sprite_index != spr_fly && sprite_index != spr_land){
-		sprite_index = enemy_sprite;
+	if(!instance_exists(top_object) || (top_object.speed == 0 && top_object.zspeed == 0)){
+		if(!active) speed = 0;
+		if(sprite_index != spr_chrg || anim_end){
+			sprite_index = enemy_sprite;
+		}
 	}
-
-	if(instance_exists(fly_obj)){
-		 // Shadow Moment:
-		spr_shadow_x = fly_obj.x;
-		spr_shadow_y = fly_obj.y;
-		x = 0;
-		y = 0;
+	
+	 // Flight:
+	else{
+		alarm1 = max(alarm1, 30 + current_time_scale);
+		
+		 // Landing:
+		if(top_object.zspeed < 0){
+			if(top_object.z > 8)
+			if(sprite_index != spr_land){
+				image_index = max(2, image_index);
+				if(anim_end) spr_chrg = spr_land;
+			}
+		}
 		
 		 // Flying:
-		with(fly_obj){
-			var _zSpd = 3 * current_time_scale,
-				_fSpd = 6 * current_time_scale;
-			
-			if(x == x_target && y == y_target){
-				z -= _zSpd;
-				with(other){
-					if(sprite_index != spr_land){
-						sprite_index = spr_land;
-					}
-				}
-				
-				 // Land:
-				if(z <= 0){
-					with(other){
-						canfly = false;
-						alarm1 = 30;
-						x = other.x;
-						y = other.y;
-						xprevious = x;
-						yprevious = y;
-						spr_shadow_x = 0;
-						spr_shadow_y = 0;
-						sprite_index = spr_idle;
-					}
-					
-					 // Effects:
-					repeat(6) scrFX(x + orandom(8), y + random(16), 3 + random(1), Dust);
-					if(point_seen(x, y, -1)) sound_play_hit(sndRavenLift, 0.2);
-					 
-					 // Farewell:
-					instance_delete(id);
-				}
+		else if(sprite_index != spr_wing){
+			if(sprite_index != spr_lift) spr_chrg = spr_lift;
+			else if(anim_end) spr_chrg = spr_wing;
+		}
+		
+		 // Manual Spriting:
+		if(sprite_index != spr_chrg){
+			sprite_index = spr_chrg;
+			image_index = 0;
+		}
+		
+		 // Later Sucker:
+		if(failed){
+			with(top_object){
+				jump_x += hspeed_raw;
+				jump_y += vspeed_raw;
 			}
-			else{
-				
-				 // Lift:
-				if(z < z_max){
-					z += _zSpd;
-					with(other){
-						if(sprite_index != spr_lift){
-							sprite_index = spr_lift;
-						}
-					}
-				}
-				else{
-					z = z_max;
-					with(other){
-						if(sprite_index != spr_fly){
-							sprite_index = spr_fly;
-						}
-					}
-					
-					 // Later Sucker:
-					if(failed){
-						x += lengthdir_x(_fSpd, direction);
-						y += lengthdir_y(_fSpd, direction);
-						with(other) scrRight(direction);
-						
-						if(!place_meeting(x, y, Floor)){
-							var _canEnd = true;
-							for(var i = 0; i < maxp; i++) if(player_is_active(i) && point_seen(x, y, i) && point_seen(x, (y - z), i)){
-								_canEnd = false;
-							}
-							
-							 // Goodbye:
-							if(_canEnd){
-								instance_delete(other);
-								instance_delete(self);
-								exit;
-							}
-						}
-					}
-					
-					 // Fly:
-					else{
-						var l = min(_fSpd, point_distance(x, y, x_target, y_target)),
-							d = point_direction(x, y, x_target, y_target);
-						
-						x += lengthdir_x(l, d);
-						y += lengthdir_y(l, d);
-						with(other) scrRight(d);
-					}
-				}
+			if(!point_seen_ext(x, y + (top_object.z / 2), sprite_width, sprite_height + (top_object.z / 2), -1)){
+				instance_delete(id);
 			}
 		}
 	}
 	
 #define BoneRaven_alrm1
 	alarm1 = 30 + random(30);
-	enemy_target(x, y);
 	
 	 // You Lose:
-	if(GameCont.kills > max_kills && instance_exists(creator)){
-		BoneRaven_fly(0, point_direction(creator.x, creator.y, x, y));
-		with(fly_obj) failed = true;
+	if(GameCont.kills > max_kills || failed){
+		failed = true;
+		BoneRaven_fly(-1, -1);
 	}
+	
 	else{
-		
 		 // Back Away:
-		if(in_sight(target) && in_distance(target, 48)){
-			scrWalk(point_direction(target.x, target.y, x, y), 10 + random(20));
+		if(enemy_target(x, y) && in_sight(target) && in_distance(target, 48)){
+			scrWalk(point_direction(target.x, target.y, x, y), random_range(10, 30));
 			scrRight(direction + 180);
-			
 			alarm1 = walk;
 		}
-		else{
+		
+		 // Wander:
+		else if(chance(2, 3)){
+			scrWalk(random(360), random_range(20, 60));
 			
 			 // Fly:
-			if(instance_exists(Floor) && chance(1, 3)){
-				BoneRaven_fly(64, random(360));
-			}
-			
-			 // Wander:
-			else{
-				scrWalk(random(360), 20 + random(40));
+			if(chance(1, 3)){
+				BoneRaven_fly(96, 160);
 			}
 		}
 	}
 	
 #define BoneRaven_alrm2
-	alarm2 = -1;
+	 // Activate:
 	active = true;
-	
 	if(enemy_target(x, y)) scrRight(point_direction(x, y, target.x, target.y));
-	BoneRaven_fly(128, random(360));
-	
-#define BoneRaven_fly(_len, _dir)
-	 // Effects:
-	repeat(6) scrFX(x + orandom(8), y + random(16), 3 + random(1), Dust);
-	if(point_seen(x, y, -1)) sound_play_hit(sndRavenLand, 0.2);
-
-	 // Find Floor:
-	var _tries = 100,
-		_x = x,
-		_y = y;
-		
-	do{
-		var l = _len,
-			d = lerp(random(360), _dir, (_tries / 100)),
-			f = instance_nearest(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Floor);
-		
-		_x = f.x + (instance_is(f, FloorExplo) ? 8 : 16);
-		_y = f.y + (instance_is(f, FloorExplo) ? 8 : 16);
-		
-		_tries--;
-	}
-	until(place_free(_x, _y) || _tries <= 0);
-	
-	 // We Have Liftoff:
-	BoneRaven_fly_init(_x, _y);
-	with(fly_obj) direction = _dir;
-
-#define BoneRaven_fly_init(_targetX, _targetY)
-	fly_obj = script_bind_draw(BoneRaven_fly_draw, -7, id);
-	with(fly_obj){
-		mask_index = other.mask_index;
-		x = other.x;
-		y = other.y;
-		z = 0;
-		z_max = 32;
-		failed = false;
-		x_target = _targetX;
-		y_target = _targetY;
-	}
-	
-	 // Hide:
-	canfly = true;
-	alarm1 = -1;
-	x = 0;
-	y = 0;
-
-#define BoneRaven_fly_draw(_inst)
-	var _x = x,
-		_y = y - z;
-	with(_inst) draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	BoneRaven_fly(96, 256);
 	
 #define BoneRaven_hurt(_hitdmg, _hitvel, _hitdir)
-	if(!active && instance_exists(creator)){
-		with(creator) active = true;
-	}
-	else enemy_hurt(_hitdmg, _hitvel, _hitdir);
+	if(!active) alarm2 = 1;
+	with(creator) active = true;
+	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 	
 #define BoneRaven_death
+	with(top_object) instance_destroy();
+	
 	 // Return That Which You Stole:
 	if(instance_exists(creator)){
-		var _num = min(raddrop, 2);
-		rad_path(rad_drop(x, y, _num, direction, speed), creator);
-		raddrop -= _num;
-		
-		with(creator) num--;
+		creator.num--;
+		rad_path(rad_drop(x, y, raddrop, direction, speed), creator);
+		raddrop = 0;
 	}
 	
-#define BoneRaven_cleanup
-	instance_delete(fly_obj);
+#define BoneRaven_fly(_disMin, _disMax)
+	var	_x = x,
+		_y = y;
+		
+	if(_disMax < 0) _disMax = 1000000000;
 	
-
-#define NestRaven_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		spr_idle = sprRavenIdle;
-		spr_walk = sprRavenWalk;
-		spr_hurt = sprRavenHurt;
-		spr_dead = sprRavenDead;
-		spr_lift = sprRavenLift;
-		spr_land = sprRavenLand;
-		spr_wing = sprRavenFly;
-		spr_shadow = shd24;
-		spr_shadow_x = 0;
-		spr_shadow_y = -1;
-		sprite_index = spr_idle;
-		image_index = irandom(image_number - 1);
-		image_speed = 0.4;
-		depth = -6 - ((y - 8) / 10000);
-		
-		 // Vars:
-		mask_index = object_get_mask(Raven);
-		right = choose(-1, 1);
-		targetx = x;
-		targety = y;
-		z = 8;
-		force_spawn = false;
-		teeth = 0;
-		
-		 // HP:
-		maxhealth = 10;
-		with(instance_create(x, y, CustomEnemy)){
-			maxhealth = other.maxhealth;
-			other.maxhealth = maxhealth;
-			instance_delete(id);
+	with(array_shuffle(instances_matching(Floor, "", null))){
+		if(in_range(point_distance(_x, _y, clamp(_x, bbox_left, bbox_right + 1), clamp(_y, bbox_top, bbox_bottom + 1)), _disMin, _disMax)){
+			if(!place_meeting(x, y, Wall)){
+				var	_tx = bbox_center_x + orandom(bbox_width / 8),
+					_ty = bbox_center_y + orandom(bbox_height / 8);
+					
+				 // We Have Liftoff:
+				with(other){
+					with(top_create(x, y, self, 0, 0)){
+						jump_time = 0;
+						jump_x = _tx;
+						jump_y = _ty;
+						zspeed = jump;
+						zfriction = grav;
+					}
+					scrRight(point_direction(x, y, _tx, _ty));
+					
+					 // Effects:
+					if(point_seen(x, y, -1)){
+						sound_play(sndRavenLand);
+						repeat(4){
+							with(scrFX([x, 8], y + random(16), random_range(3, 4), Dust)){
+								depth = other.depth;
+							}
+						}
+					}
+					
+					return true;
+				}
+			}
 		}
-		my_health = maxhealth;
+	}
+	
+	return false;
+	
+	
+#define RavenArenaCont_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Front Row Seating:
+		with(Wall) if(place_meeting(x, y, Floor) && !collision_line(bbox_center_x, bbox_center_y, other.x, other.y, Wall, false, true)){
+			if(chance(1, 4)){
+				top_create(bbox_center_x + orandom(2), y - 8 + orandom(2), "TopRaven", 0, 0);
+			}
+		}
 		
-		 // Alarms:
-		alarm0 = 1;
-		alarm1 = irandom_range(90, 1500);
+		 // Back Row Seating:
+		var	_ang = random(360),
+			_num = 3 + ceil(GameCont.loops / 4);
+			
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+			with(top_create(x, y, ((GameCont.loops > 0 && chance(1, 2)) ? MeleeFake : Tires), _dir + orandom(40), 16)){
+				with(target){
+					 // Perched Raven:
+					with(top_create(x, y + 1, "TopRaven", 0, 0)){
+						z += max(0, ((sprite_get_bbox_bottom(other.spr_idle) + 1) - sprite_get_bbox_top(other.spr_idle)) - 5);
+					}
+					
+					 // Ravens:
+					var	_num = 3 + ceil(GameCont.loops / 2),
+						l = 24;
+						
+					for(var d = _dir; d < _dir + 360; d += (360 / _num)){
+						top_create(x + lengthdir_x(l, d), y + lengthdir_x(l, d), "TopRaven", d + orandom(40), -1);
+					}
+				}
+			}
+		}
+		
+		 // Grab Top Dudes:
+		inst = [];
+		with(instances_matching_gt(instances_matching(CustomEnemy, "name", "TopRaven"), "id", id)){
+			array_push(other.inst, top_object);
+			with(top_object) jump_time = -1;
+		}
+		
+		 // Generic Enemies:
+		var	_obj = [choose(Raven, Salamander, Exploder), choose(Sniper, MeleeFake)],
+			_ang = random(360),
+			_num = 4 * (1 + GameCont.loops);
+			
+		if(GameCont.loops > 0){
+			array_push(_obj, choose(SnowBot, BuffGator));
+		}
+		
+		inst_idle = [];
+		
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+			var _objNum = array_length(inst_idle);
+			if(_objNum >= array_length(_obj)){
+				_objNum = irandom(array_length(_obj) - 1);
+			}
+			with(obj_create(x, y, _obj[_objNum])){
+				move_contact_solid(_dir + orandom(20), random_range(16, 64));
+				array_push(other.inst_idle, id);
+				
+				 // Loop Groups:
+				if(chance(GameCont.loops, 60)){
+					repeat(3 + GameCont.loops){
+						array_push(other.inst_idle, instance_copy(false));
+					}
+				}
+			}
+		}
+		
+		 // Weapon:
+		with(obj_create(x + orandom(8), y + orandom(8), "WepPickupGrounded")){
+			with(target){
+				var _noWep = [];
+				with(Player){
+					array_push(_noWep, wep);
+					array_push(_noWep, bwep);
+				}
+				wep = weapon_decide(2, GameCont.hard, false, _noWep);
+			}
+		}
 		
 		return id;
 	}
-
-#define NestRaven_step
-	 // Flight:
-	if(sprite_index = spr_wing){
-		var l = 6 * current_time_scale,
-			d = point_direction(x, y, targetx, targety);
-			
-		if(point_distance(x, y, targetx, targety) > l){
-			x += lengthdir_x(l, d);
-			y += lengthdir_y(l, d);
-		}
-		
-		 // Land:
-		else{
-			image_index = max(2, image_index);
-			if(anim_end){
-				sprite_index = spr_land;
-				image_index = 0;
-			}
-		}
-	}
 	
-	 // Lifting:
-	else if(sprite_index = spr_lift){
-		z += 2 * current_time_scale;
-		
-		 // Fly Away:
-		if(anim_end) sprite_index = spr_wing;
-	}
-	
-	 // Landing:
-	else if(sprite_index = spr_land){
-		z -= 3 * current_time_scale;
-		
-		 // Attempt Landing:
-		if(anim_end || z <= 0){
-			z = 0;
-			
-			 // Try Again:
-			if(!place_meeting(x, y, Floor)){
-				alarm1 = 1;
+#define RavenArenaCont_step
+	 // Hold Enemies:
+	with(inst_idle){
+		if(instance_exists(self) && sprite_index != spr_hurt){
+			if("walk" in self){
+				if(walk > 0) walk -= 4 * current_time_scale;
 			}
-			
-			 // Landed:
 			else{
-				with(instance_create(x, y, Raven)){
-					x = xstart;
-					y = ystart;
-					alarm1 = 20 + random(10);
-					right = other.right;
-					
-					 // Target:
-					var n = instance_nearest(x, y, Player);
-					if(in_sight(n) && sign(right) == sign(n.x - x)){
-						scrAim(point_direction(x, y, n.x, n.y));
-					}
-					
-					 // Swappin:
-					var l = 4,
-						d = gunangle;
-						
-					instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
-					wkick = 4;
-					
-					 // Effects:
-					if(point_seen(x, y, -1)) sound_play(sndRavenLand);
-					repeat(6){
-						with(instance_create(x + orandom(8), y + random(16), Dust)){
-							motion_add(random(360), 3 + random(1));
-						}
-					}
-				}
-				instance_destroy();
+				direction = angle_lerp(direction, point_direction(x, y, other.x, other.y), 0.04 * current_time_scale);
 			}
 		}
+		else other.inst_idle = array_delete_value(other.inst_idle, self);
 	}
 	
-#define NestRaven_draw
-	image_alpha = abs(image_alpha);
-	y -= z;
-	image_xscale *= right;
-	draw_self();
-	y += z;
-	image_xscale /= right;
-	image_alpha = -image_alpha;
-
-#define NestRaven_alrm0
-	alarm0 = irandom_range(1, 80);
-	
-	 // Lookin:
-	if(sprite_index == spr_idle){
-		right = choose(-1, 1);
-		if(instance_exists(Player)){
-			var t = instance_nearest(x, y, Player);
-			scrRight(point_direction(x, y, t.x, t.y));
+	 // Activate Ravens:
+	if(in_distance(Player, 96)){
+		var _time = 60;
+		with(instances_matching_lt(inst, "jump_time", 0)){
+			jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
+			_time += random_range(15 + (2400 / _time), 60);
 		}
+		instance_destroy();
 	}
 	
-	 // Sharp Teeth:
-	if(teeth != 0){
-		my_health = min(my_health - teeth, maxhealth);
-		if(my_health <= 0){
-			with(top_create(x, y, Raven, 0, 0)){
-				target.my_health = other.my_health;
-			}
-			instance_destroy();
-		}
-	}
-
-#define NestRaven_alrm1
-	alarm1 = irandom_range(1, 100);
 	
-	var t = instance_nearest(x, y, Player);
-	if(force_spawn || in_distance(t, 128)){
-		var _x = x,
-			_y = y;
-			
-		 // Search Floors by Player:
-		if(instance_exists(t) && !chance(force_spawn, 2)){
-			scrRight(point_direction(x, y, t.x, t.y));
-			
-			_x = t.x;
-			_y = t.y;
-			
-			with(array_shuffle(instance_rectangle_bbox(t.x - 64, t.y - 64, t.x + 64, t.y + 64, Floor))){
-				var	_fx = ((bbox_left + bbox_right + 1) / 2) + orandom(4),
-					_fy = ((bbox_top + bbox_bottom + 1) / 2) + orandom(4),
-					b = false;
-					
-				with(other){
-					if(!place_meeting(_fx, _fy, Wall)){
-						_x = _fx;
-						_y = _fy;
-						b = true;
-					}
-				}
-				if(b) break;
-			}
-		}
-		
-		 // Random Nearby Floor:
-		else{
-			alarm1 = 1;
-			
-			var r = 64;
-			with(instance_random(instance_rectangle_bbox(x - r, y - r, x + r, y + r, Floor))){
-				_x = (bbox_left + bbox_right + 1) / 2;
-				_y = (bbox_top + bbox_bottom + 1) / 2;
-			}
-		}
-		
-		 // Take Off:
-		if(!place_meeting(_x, _y, Wall)){
-			if(!instance_exists(t) || !collision_line(_x, _y, t.x, t.y, Wall, false, false)){
-				sprite_index = spr_lift;
-				image_index = 0;
-				depth = -8;
-				alarm1 = -1;
-				targetx = _x;
-				targety = _y;
-				
-				 // Effects:
-				if(force_spawn) sound_play(sndRavenScreech);
-				sound_play(sndRavenLift);
-				repeat(6){
-					with(instance_create(x + orandom(8), y + random(16), Dust)){
-						motion_add(random(360), 3 + random(1));
-						depth = other.depth;
-					}
-				}
-			}
-		}
-	}
-
-
 #define SawTrap_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -555,12 +378,12 @@
 		hitid = [spr_idle, "SAWBLADE TRAP"];
 		image_speed = 0.4;
 		depth = 0;
-
+		
 		 // Sound:
 		snd_hurt = sndHitMetal;
 		snd_dead = sndHydrantBreak;
 		snd_mele = sndDiscHit;
-
+		
 		 // Vars:
 		mask_index = mskShield;
 		friction = 0.2;
@@ -578,15 +401,15 @@
 		active = false;
 		loop_snd = -1;
 		sawtrap_hit = false;
-
-		if(instance_exists(Wall)){
-			var n = instance_nearest(x - 8, y - 8, Wall);
-			dir = point_direction(x, y, n.x + 8, n.y + 8);
+		
+		 // Move Towards Nearest Wall:
+		with(instance_nearest_bbox(x, y, Wall)){
+			dir = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
 		}
-
+		
 		 // Alarms:
 		alarm0 = random_range(30, 60);
-
+		
 		return id;
 	}
 
@@ -761,20 +584,20 @@
 	active = true;
 
 #define SawTrap_hurt(_hitdmg, _hitvel, _hitdir)
-    my_health -= _hitdmg;			// Damage
-    nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 0.3);	// Sound
+	my_health -= _hitdmg;			// Damage
+	nexthurt = current_frame + 6;	// I-Frames
+	sound_play_hit(snd_hurt, 0.3);	// Sound
 
-     // Hurt Sprite:
-    sprite_index = spr_hurt;
-    image_index = 0;
+	 // Hurt Sprite:
+	sprite_index = spr_hurt;
+	image_index = 0;
 
-     // Push:
-    if(active) spd /= 2;
-    else{
-    	spd = _hitvel / 4;
-    	dir = _hitdir;
-    }
+	 // Push:
+	if(active) spd /= 2;
+	else{
+		spd = _hitvel / 4;
+		dir = _hitdir;
+	}
 
 #define SawTrap_cleanup
 	sound_stop(loop_snd);
@@ -791,6 +614,7 @@
 		mask_index = -1;
 		fx_color = make_color_rgb(130 - 40, 189, 5);
 		my_alert = noone;
+		right = choose(-1, 1);
 		active = false;
 		setup = true;
 		num = -1;
@@ -813,11 +637,11 @@
 		
 	with(floor_fill(x, y, _w, _h)){
 		sprite_index = other.spr_floor;
-		image_index = _num++;
+		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
 		material = 5; // slimy stone
-		_cx += (bbox_left + (bbox_right + 1)) / 2;
-		_cy += (bbox_top + (bbox_bottom + 1)) / 2;
-		if(sprite_index = sprFloor3) image_index = 3;
+		_cx += bbox_center_x;
+		_cy += bbox_center_y;
+		_num++;
 	}
 	
 	 // Center Position:
@@ -825,8 +649,20 @@
 	y = (_cy / _num);
 	
 	 // Ravens:
-	if(num > 0) repeat(num) with(obj_create(x, y, "BoneRaven")){
-		creator = other;
+	if(num > 0){
+		var	_ang = random(360),
+			_dis = 12;
+			
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / num)){
+			with(obj_create(round(x + lengthdir_x(_dis, _dir)), round(y + lengthdir_y(_dis, _dir)), "BoneRaven")){
+				x = xstart;
+				y = ystart;
+				y -= round(bbox_bottom - y);
+				creator = other;
+				scrRight(_dir);
+				instance_budge(enemy, 4);
+			}
+		}
 	}
 	
 #define SludgePool_step
@@ -835,7 +671,7 @@
 	if(sprite_index == msk.SludgePool){
 		 // Raven Time:
 		if(!active){
-			if(in_sight(Player) && in_distance(Player, 128)){
+			if(in_sight(Player) && in_distance(Player, 96)){
 				active = true;
 			}
 		}
@@ -851,7 +687,6 @@
 		 // Alert:
 		if(num == 0){
 			num = -1;
-			alarm0 = max(alarm0, 90);
 			
 			 // Alert:
 			with(my_alert) instance_destroy();
@@ -869,6 +704,7 @@
 	if(instance_exists(my_alert) && my_alert.sprite_index == spr.SludgePoolAlert){
 		my_alert.alert_ang = sin(current_frame * 0.1) * 20;
 		
+		 // Bubbles:
 		if(chance_ct(1, 30) || frame_active(15)){
 			var	l = random_range(1/10, 1/3) * choose(-1, 1),
 				d = current_frame * 10,
@@ -886,8 +722,26 @@
 				}
 			}
 		}
+		
+		 // Sounds:
+		var	_sndInterval = (point_seen(x, y, -1) ? 8 : 12),
+			_snd = [sndOasisMelee, sndOasisCrabAttack, sndOasisChest];
+			
+		if(frame_active(_sndInterval) || chance(1, 12)){
+			sound_play_hit(_snd[((current_frame / _sndInterval) / 1.5) % array_length(_snd)], 0.4);
+		}
+		
+		 // Activate Saladman:
+		if(alarm0 < 0 && in_sight(Player)){
+			if(point_seen_ext(x, y, -32, -32, -1) || in_distance(Player, 64)){
+				alarm0 = 150;
+				with(instance_nearest(x, y, Player)){
+					with(other) scrRight(point_direction(x, y, other.x, other.y));
+				}
+			}
+		}
 	}
-
+	
 #define SludgePool_end_step
 	 // Sticky Sludge:
 	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching_lt(instances_matching_gt(hitme, "speed", 0), "size", 6))){
@@ -925,29 +779,177 @@
 		}
 	}
 	
-#define SludgePool_alrm0
-	alarm0 = 30 + random(30);
+#define SludgePool_draw
+	 // Silhouette:
+	if(alarm0 > 0){
+		var	_spr = spr.PetSalamanderIdle,
+			_img = 0.4 * current_frame,
+			_x = x,
+			_y = y + (max(0, alarm0 - 40) / 6) + (min(1, alarm0 / 10) * sin(current_frame / 10)),
+			_xsc = image_xscale * right,
+			_ysc = image_yscale,
+			_ang = image_angle,
+			_col = image_blend,
+			_alp = image_alpha / max(1, 0.5 * (alarm0 - 55));
+			
+		draw_set_fog(true, fx_color, 0, 0);
+		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		draw_set_fog(false, 0, 0, 0);
+	}
 	
-	if(in_sight(Player) && in_distance(Player, 64)){
-		alarm0 = -1;
-		
-		 // Real Bro:
-		pet_spawn(x, y, "Salamander");
-		
-		 // Alert:
-		with(my_alert){
-			sprite_index = spr.PetSalamanderIcon;
-			spr_alert = spr.AlertIndicator;
-			alert_ang = 0;
-			alarm0 = 90;
-			flash = 3;	
+#define SludgePool_alrm0
+	with(pet_spawn(x, y, "Salamander")){
+		right = other.right;
+	}
+	
+	 // Splash:
+	for(var _dir = 0; _dir < 360; _dir += (360 / 3)){
+		with(scrFX([x, 8], [y, 4], [_dir + 90, 2], AcidStreak)){
+			image_angle = direction + orandom(30);
+			image_blend = merge_color(image_blend, c_lime, random(0.1));
 		}
+	}
+	repeat(8){
+		with(scrFX(x, y, [90 + orandom(60), random(1)], Sweat)){
+			image_blend = merge_color(other.fx_color, c_lime, random(0.3));
+		}
+	}
+	sound_play_pitch(sndCorpseExplo, 1 + orandom(0.1));
+	sound_play(sndOasisMelee);
+	
+	 // Alert:
+	with(my_alert){
+		sprite_index = spr.PetSalamanderIcon;
+		spr_alert = spr.AlertIndicator;
+		snd_flash = sndSalamanderEndFire;
+		alert_ang = 0;
+		alarm0 = 90;
+		flash = 3;	
+	}
+	
+	
+#define TopRaven_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = sprRavenIdle;
+		spr_walk = sprRavenWalk;
+		spr_hurt = sprRavenHurt;
+		spr_dead = sprRavenDead;
+		spr_lift = sprRavenLift;
+		spr_land = sprRavenLand;
+		spr_wing = sprRavenFly;
+		spr_shadow = shd24;
+		hitid = 15;
+		sprite_index = spr_idle;
+		image_index = irandom(image_number - 1);
+		depth = object_get_depth(Raven);
+		
+		 // Sound:
+		snd_hurt = sndRavenHit;
+		snd_dead = sndRavenDie;
+		
+		 // Vars:
+		mask_index = object_get_mask(Raven);
+		maxhealth = 10;
+		raddrop = 4;
+		size = 1;
+		top_object = noone;
+		setup = true;
+		
+		return id;
+	}
+	
+#define TopRaven_setup
+	setup = false;
+	
+	 // Top Object Setup:
+	if(!instance_exists(top_object)){
+		top_object = top_create(x, y, self, -1, -1);
+	}
+	with(top_object) if(z > 8){
+		canmove = false;
+	}
+	
+#define TopRaven_step
+	if(setup) TopRaven_setup();
+	
+	 // Animate:
+	if(instance_exists(top_object)){
+		if(top_object.speed == 0 && (top_object.zspeed == 0 || spr_chrg = spr_land)){
+			if(sprite_index == spr_chrg && anim_end){
+				sprite_index = spr_idle;
+			}
+		}
+		else{
+			 // Landing:
+			if(top_object.zspeed < 0){
+				if(sprite_index != spr_land){
+					image_index = max(2, image_index);
+					if(anim_end) spr_chrg = spr_land;
+				}
+			}
+			
+			 // Flying:
+			else if(sprite_index != spr_wing){
+				if(sprite_index != spr_lift){
+					spr_chrg = spr_lift;
+					
+					 // Effects:
+					if(point_seen(x, y, -1)){
+						sound_play(sndRavenLift);
+						repeat(6){
+							with(scrFX([x, 8], y + random(16), random_range(3, 4), Dust)){
+								depth = other.depth;
+							}
+						}
+					}
+				}
+				else if(anim_end) spr_chrg = spr_wing;
+			}
+			
+			 // Manual Spriting:
+			if(sprite_index != spr_chrg){
+				sprite_index = spr_chrg;
+				image_index = 0;
+			}
+		}
+	}
+	
+	 // Goodbye:
+	else{
+		if(sprite_index == spr_chrg) sprite_index = spr_idle;
+		spr_chrg = -1;
+		instance_destroy();
+	}
+	
+#define TopRaven_destroy
+	 // Become Raven:
+	if(my_health > 0){
+		with(instance_create_copy(x, y, Raven)){
+			alarm1 = 20 + random(10);
+			
+			 // Target:
+			if(enemy_target(x, y) && in_sight(target) && sign(right) == sign(target.x - x)){
+				scrAim(point_direction(x, y, target.x, target.y));
+			}
+			
+			 // Swappin:
+			var l = 4,
+				d = gunangle;
+				
+			instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+			wkick = 4;
+			
+			 // Effects:
+			if(point_seen(x, y, -1)) sound_play(sndRavenLand);
+		}
+		instance_delete(id);
 	}
 	
 	
 #define Tunneler_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
 		spr_idle = sprBanditIdle;
 		spr_walk = sprBanditWalk;
 		spr_hurt = sprBanditHurt;
@@ -976,7 +978,7 @@
 		tunneling = 0;
 		tunnel_wall = noone;
 
-         // Alarms:
+		 // Alarms:
 		alarm1 = 20 + irandom(30);
 
 		 // NTTE:
@@ -987,106 +989,106 @@
 	}
 	
 #define Tunneler_step
-    sprite_index = enemy_sprite;
-    if(!tunneling) enemy_walk(walkspeed, maxspeed);
+	sprite_index = enemy_sprite;
+	if(!tunneling) enemy_walk(walkspeed, maxspeed);
 
 #define Tunneler_end_step
-    if(tunneling) {
-        x = tunnel_wall.x + 8;
-        y = tunnel_wall.y;
-    }
-    
+	if(tunneling) {
+		x = tunnel_wall.x + 8;
+		y = tunnel_wall.y;
+	}
+	
 #define Tunneler_alrm1
-    alarm1 = 20 + irandom(10);
-    enemy_target(x, y);
-    
-     // Tunneling AI:
-    if(tunneling) {
-         // Speedwalk:
-        if(walk > 0) {
-            alarm1 = 2 + irandom(4);
-            
-             // Target is near/alive:
-            if(in_distance(target, 256)) {
-                var _targetDir = ceil(point_direction(x, y, target.x, target.y)/90) * 90;
-            }
-            
-             // Target is far/dead:
-            else {
-                var _targetDir = irandom_range(1, 4) * 90;
-            }
-            
-            var _targetWall = instance_place(x + lengthdir_x(16, _targetDir), y + lengthdir_y(16, _targetDir), Wall);
-            
-            if(_targetWall != noone) {
-                tunnel_wall = _targetWall;
-            }
-            
-            else {
-                x += lengthdir_x(24, _targetDir);
-                y += lengthdir_y(24, _targetDir);
-                Tunneler_tunnel(0, noone);
-            }
-            
-            walk -= 1;
-        }
-        
-        else {
-            alarm1 = 10 + irandom(5);
-            walk = 10;
-        }
-    } 
-    
-     // Normal AI:
-    else {
-        if(in_distance(target, 256)) {
-            scrAim(point_direction(x, y, target.x, target.y));
-            
-            if(in_sight(target) && chance(2, 3)) {
-                enemy_shoot(EnemyBullet1, gunangle, 6);
-            }
-            
-            else {
-                var _targetWall = instance_nearest(x, y, Wall);
-                var _targetDist = point_distance(x, y, _targetWall.x + 8, _targetWall.y + 8);
-                
-                if(_targetDist < 8) {
-                    alarm1 = 5 + random(5);
-                    scrWalk(point_direction(x, y, _targetWall.x, _targetWall.y) + orandom(5), _targetDist/walkspeed);
-                }
-                
-                else {
-                    Tunneler_tunnel(1, _targetWall);
-                }
-            }
-        } 
-        
-        else {
-            scrWalk(random(360), [10, 20]);
-            scrAim(direction);
-        }
-    }
-    
+	alarm1 = 20 + irandom(10);
+	enemy_target(x, y);
+	
+	 // Tunneling AI:
+	if(tunneling) {
+		 // Speedwalk:
+		if(walk > 0) {
+			alarm1 = 2 + irandom(4);
+			
+			 // Target is near/alive:
+			if(in_distance(target, 256)) {
+				var _targetDir = ceil(point_direction(x, y, target.x, target.y)/90) * 90;
+			}
+			
+			 // Target is far/dead:
+			else {
+				var _targetDir = irandom_range(1, 4) * 90;
+			}
+			
+			var _targetWall = instance_place(x + lengthdir_x(16, _targetDir), y + lengthdir_y(16, _targetDir), Wall);
+			
+			if(_targetWall != noone) {
+				tunnel_wall = _targetWall;
+			}
+			
+			else {
+				x += lengthdir_x(24, _targetDir);
+				y += lengthdir_y(24, _targetDir);
+				Tunneler_tunnel(0, noone);
+			}
+			
+			walk -= 1;
+		}
+		
+		else {
+			alarm1 = 10 + irandom(5);
+			walk = 10;
+		}
+	} 
+	
+	 // Normal AI:
+	else {
+		if(in_distance(target, 256)) {
+			scrAim(point_direction(x, y, target.x, target.y));
+			
+			if(in_sight(target) && chance(2, 3)) {
+				enemy_shoot(EnemyBullet1, gunangle, 6);
+			}
+			
+			else {
+				var _targetWall = instance_nearest_bbox(x, y, Wall);
+				var _targetDist = point_distance(x, y, _targetWall.x + 8, _targetWall.y + 8);
+				
+				if(_targetDist < 8) {
+					alarm1 = 5 + random(5);
+					scrWalk(point_direction(x, y, _targetWall.x, _targetWall.y) + orandom(5), _targetDist/walkspeed);
+				}
+				
+				else {
+					Tunneler_tunnel(1, _targetWall);
+				}
+			}
+		} 
+		
+		else {
+			scrWalk(random(360), [10, 20]);
+			scrAim(direction);
+		}
+	}
+	
 
 #define Tunneler_hurt(_hitdmg, _hitvel, _hitdir)
-    my_health -= _hitdmg;           // Damage
-    nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 0.3);	// Sound
-    sprite_index = spr_hurt;
-    
-    if(tunneling) {
-        with(instance_create(x, y, PortalClear)) {
-            mask_index = other.mask_index;
-        }
-        Tunneler_tunnel(0, noone);
-    }
+	my_health -= _hitdmg;           // Damage
+	nexthurt = current_frame + 6;	// I-Frames
+	sound_play_hit(snd_hurt, 0.3);	// Sound
+	sprite_index = spr_hurt;
+	
+	if(tunneling) {
+		with(instance_create(x, y, PortalClear)) {
+			mask_index = other.mask_index;
+		}
+		Tunneler_tunnel(0, noone);
+	}
 
 #define Tunneler_tunnel(_tf, _wall)
-    tunneling = _tf;
-    tunnel_wall = _wall;
-    canfly = _tf;
-    if(_tf = 1) mask_index = mskBanditBoss; 
-    else mask_index = mskBandit;
+	tunneling = _tf;
+	tunnel_wall = _wall;
+	canfly = _tf;
+	if(_tf = 1) mask_index = mskBanditBoss; 
+	else mask_index = mskBandit;
 
 
 /// Mod Events
@@ -1097,32 +1099,7 @@
 	script_bind_draw(draw_ravenflys, -8);
 	with(surfSludgePool){
 		active = (array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0);
-		if(active) script_bind_draw(draw_sludge, -3);
-	}
-	
-	 // Nest Raven Disable Portal:
-	if(!instance_exists(enemy)){
-		if(array_length(instances_matching(CustomObject, "name", "NestRaven")) > 0){
-			with(instances_matching_gt(Corpse, "alarm0", -1)) alarm0 = -1;
-		}
-	}
-	
-	 // Nest Raven Manual Sharp Teeth:
-	if(skill_get(mut_sharp_teeth) != 0){
-		with(Player) if(lsthealth > my_health){
-			var _damage = (lsthealth - my_health) * 2.5 * skill_get(mut_sharp_teeth);
-			with(instance_rectangle(view_xview[index], view_yview[index], view_xview[index] + game_width, view_yview[index] + game_height, instances_matching(CustomObject, "name", "NestRaven"))){
-				teeth += _damage;
-				alarm0 = round(1 + (point_distance(x, y, 0.x, 0.y) / 8));
-				
-				 // Just Visual:
-				with(instance_create(x, y - z, SharpTeeth)){
-					depth = -8;
-					damage = other.teeth;
-					alarm0 = other.alarm0;
-				}
-			}
-		}
+		if(active) script_bind_draw(draw_sludge, -4);
 	}
 	
 	 // Variant Car Decal:
@@ -1144,7 +1121,7 @@
 	with(RavenFly){
 		y += z;
 		image_xscale *= right;
-    	draw_self();
+		draw_self();
 		y -= z;
 		image_xscale /= right;
 	}
@@ -1162,17 +1139,23 @@
 			_surfh = h,
 			_surfx = x,
 			_surfy = y,
-			_inst = instances_matching(instances_seen_nonsync([hitme, Corpse, chestprop, ChestOpen, Crown], 24, 24), "visible", true);
+			_canShader = (lq_defget(shadSludgePool, "shad", -1) != -1),
+			_inst = instances_seen_nonsync([hitme, Corpse, chestprop, ChestOpen, Crown], 24, 24);
 			
+		if(_canShader){
+			_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
+		}
+		_inst = instances_matching(_inst, "visible", true);
+		
 		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool"), "visible", true)){
 			surface_set_target(_surf);
 			draw_clear_alpha(0, 0);
-			
+				
 				 // Grab Screen for Shader:
 				if(shadSludgePool.shad != -1){
 					surface_screenshot(_surf);
 				}
-			
+				
 				 // Stuff in Sludge:
 				draw_set_fog(true, fx_color, 0, 0);
 				with(instance_rectangle_bbox(bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, _inst)){
@@ -1182,10 +1165,15 @@
 						_ysc = image_yscale,
 						_col = image_blend,
 						_alp = image_alpha,
+						_sludgeHeight = (
+							(_canShader && (instance_is(self, Corpse) || instance_is(self, Pickup) || instance_is(self, chestprop) || instance_is(self, prop)))
+							? (sprite_get_bbox_bottom(_spr) + 1) - sprite_get_yoffset(_spr)
+							: 1 + (_spr == sprRavenIdle || _spr == spr.BoneRavenIdle)
+						),
 						_l = 0,
-						_t = sprite_get_bbox_bottom(_spr),
+						_t = sprite_get_bbox_bottom(_spr) + 1 - _sludgeHeight,
 						_w = sprite_get_width(_spr),
-						_h = 1,
+						_h = _sludgeHeight,
 						_x = x - (sprite_get_xoffset(_spr) * _xsc) + _l,
 						_y = y - (sprite_get_yoffset(_spr) * _ysc) + _t;
 						
@@ -1202,7 +1190,7 @@
 			
 			 // Draw:
 			shadlist_setup(shadSludgePool, surface_get_texture(_surf), [_surfw, _surfh, fx_color]);
-			draw_surface_part(_surf, bbox_left - _surfx, bbox_top - _surfy, (bbox_right + 1) - bbox_left, (bbox_bottom + 1) - bbox_top, bbox_left, bbox_top);
+			draw_surface_part(_surf, bbox_left - _surfx, bbox_top - _surfy, bbox_width, bbox_height, bbox_left, bbox_top);
 			shader_reset();
 		}
 	}
@@ -1216,6 +1204,7 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -1238,7 +1227,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
 #define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
@@ -1246,6 +1234,7 @@
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -1293,7 +1282,6 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);

@@ -175,6 +175,7 @@
 			SealAlert        = sprite(p + "sprSealAlert",        1, 7, 7);
 			SealArcticAlert  = sprite(p + "sprArcticSealAlert",  1, 7, 7);
 			SludgePoolAlert  = sprite(p + "sprSludgePoolAlert",  1, 7, 7);
+			VanAlert         = sprite(p + "sprVanAlert",         1, 7, 7)
 			
 		//#endregion
 		
@@ -823,9 +824,9 @@
 				 // Bone Raven:
 				p = m + "BoneRaven/";
 				BoneRavenIdle	= sprite(p + "sprBoneRavenIdle", 33, 12, 12);
-				BoneRavenWalk	= sprite(p + "sprBoneRavenWalk",  6, 12, 12);
+				BoneRavenWalk	= sprite(p + "sprBoneRavenWalk",  7, 12, 12);
 				BoneRavenHurt	= sprite(p + "sprBoneRavenHurt",  3, 12, 12);
-				BoneRavenDead	= sprite(p + "sprBoneRavenDead",  6, 12, 12);
+				BoneRavenDead	= sprite(p + "sprBoneRavenDead", 11, 12, 12);
 				BoneRavenLift	= sprite(p + "sprBoneRavenLift",  5, 32, 32);
 				BoneRavenLand	= sprite(p + "sprBoneRavenLand",  4, 32, 32);
 				BoneRavenFly	= sprite(p + "sprBoneRavenFly",   5, 32, 32);

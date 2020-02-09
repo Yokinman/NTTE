@@ -97,7 +97,7 @@
         obj_create(x, y, "PizzaManholeCover");
 
          // Door:
-        with(instance_nearest(x, y, Floor)){
+        with(instance_nearest_bbox(x, y, Floor)){
             door_create(x + 16, y - 16, 90);
         }
     }
@@ -106,25 +106,28 @@
     with(TV){
         x += random(32);
         xstart = x;
-
-        var c = [1, 2, 4],
-            a = random(360);
-    
-        for(var i = 0; i < array_length(c); i++){
-            var _dis = 20 + random(4),
-                _dir = a + (i * (360 / array_length(c))) + orandom(10);
-    
-            with(obj_create(x, y + 32, "TurtleCool")){
-                var _ox = lengthdir_x(_dis, _dir),
-                    _oy = lengthdir_y(_dis, _dir) + 32;
-                    
-                move_contact_solid(point_direction(0, 0, _ox, _oy), point_distance(0, 0, _ox, _oy));
+        
+         // Viewing Carpet:
+        with(obj_create(x, y + 16, "SewerRug")){
+            var _steps = 12;
+            while(!collision_circle(x, y, 24, Wall, false, false) && _steps-- > 0){
+                y += 4;
+            }
+            
+             // Squad:
+            var _color = [1, 2, 4],
+                _dir = random(360);
                 
-                snd_dead = asset_get_index(`sndTurtleDead${c[i]}`);
-                scrRight(_dir + 180);
+            for(var i = 0; i < array_length(_color); i++){
+                with(obj_create(x, y, "TurtleCool")){
+                    move_contact_solid(_dir + orandom(10), 20 + random(4));
+                    snd_dead = asset_get_index(`sndTurtleDead${_color[i]}`);
+                    scrRight(_dir + 180);
+                }
+                _dir += (360 / array_length(_color));
             }
         }
-
+        
          // The man himself:
         with(obj_create(x + orandom(4), y + orandom(4), "TurtleCool")){
             move_contact_solid(random(180), random_range(12, 64));
@@ -292,6 +295,7 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -314,7 +318,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
 #define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
@@ -322,6 +325,7 @@
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -369,7 +373,6 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);

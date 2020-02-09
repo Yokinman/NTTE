@@ -156,7 +156,7 @@
 		 // Vars:
 		size = 2;
 		maxhealth = 20;
-		my_floor = instance_nearest(x - 16, y - 16, Floor);
+		my_floor = instance_nearest_bbox(x, y, Floor);
 		
 		return id;
 	}
@@ -462,17 +462,14 @@
 		image_xscale = other.image_xscale;
 		if(other.shell){
 			depth -= 2;
-			mask_index = mskSalamander;
+			with(my_floor) mask_index = mskSalamander;
 		}
 	}
 	spr_dead = -1;
 
 
 #define CoastDecalCorpse_create(_x, _y)
-	with(instance_create(0, 0, Floor)){
-		x = _x;
-		y = _y;
-
+	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.RockDead[0];
 		spr_bott = spr.RockBott[0];
@@ -480,24 +477,32 @@
 		depth = 8 + (-y / 20000);
 		image_speed = 0.4;
 		image_index = 0;
-		visible = false;
-
-		 // Vars:
-		mask_index = mskAlly;
-		material = 2;
-
+		
+		 // Floor:
+		var _off = 0;
+		do{
+			my_floor = instance_create(x + _off, y, Floor);
+			with(my_floor){
+				x = other.x;
+				y = other.y;
+				instance_change(FloorExplo, false);
+				mask_index = mskAlly;
+				visible = false;
+				material = 2;
+			}
+			_off += 100;
+		}
+		until instance_exists(my_floor);
+		
 		return id;
 	}
-
-#define CoastDecalCorpse_draw
+	
+#define CoastDecalCorpse_step
 	 // Animate:
 	if(image_speed != 0 && anim_end){
 		image_speed = 0;
 		image_index = image_number - 1;
 	}
-
-	 // Draw Self:
-	draw_self();
 
 
 #define Creature_create(_x, _y)
@@ -545,8 +550,8 @@
 
 	 // Pushed away from floors:
 	if(in_distance(Floor, 128)){
-		var f = instance_nearest(x - 16, y - 16, Floor);
-		motion_add_ct(point_direction(f.x, f.y, x, y), 3);
+		var f = instance_nearest_bbox(x, y, Floor);
+		motion_add_ct(point_direction((f.bbox_left + f.bbox_right + 1) / 2, (f.bbox_top + f.bbox_bottom + 1) / 2, x, y), 3);
 	}
 
 	 // Push Player:
@@ -736,7 +741,7 @@
 
 			 // Go to Nearest Non-Pit Floor:
 			if(array_length(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)) > 0){
-				var f = instance_nearest_array(x - 8 + (hspeed * 4), y - 8 + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+				var f = instance_nearest_bbox(x + (hspeed * 4), y + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
 				if(!place_meeting(x, y, f) && instance_exists(f)){
 					direction = point_direction(x, y, f.x, f.y) + orandom(20);
 				}
@@ -1322,7 +1327,7 @@
 
 	 // Break Walls:
 	while(distance_to_object(Wall) < 32){
-		with(instance_nearest(x, y, Wall)){
+		with(instance_nearest(x - 8, y - 8, Wall)){
 			instance_create(x, y, FloorExplo);
 			instance_destroy();
 		}
@@ -1762,8 +1767,8 @@
 						if(GameCont.loops > 0 && chance(1, 2)){
 							with(obj_create(x, y, "PalankingToss")){
 								if(instance_exists(Floor)){
-									var n = instance_nearest(x - 16, y - 16, Floor);
-									direction = point_direction(x, y, n.x + 16, n.y + 16) + orandom(30);
+									var n = instance_nearest_bbox(x, y, Floor);
+									direction = point_direction(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2) + orandom(30);
 								}
 								speed = 4 + random(4);
 								creator = other;
@@ -2641,20 +2646,20 @@
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 
 #define Pelican_death
+	var _minID = GameObject.id;
+	
 	pickup_drop(80, 0);
 	pickup_drop(60, 5);
 
 	 // Hmm:
-	if(place_meeting(x, y, WepPickup)){
-		with(instance_nearest(x, y, WepPickup)){
-			if(wep == wep_sledgehammer){
-				sprite_index = other.spr_weap;
-
-				var	_dis = 16,
-					_dir = rotation;
-
-				instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), ThrowHit).image_speed = 0.35;
-			}
+	with(instances_matching(instances_matching_gt(WepPickup, "id", _minID), "wep", wep_sledgehammer)){
+		sprite_index = other.spr_weap;
+		
+		var	_dis = 16,
+			_dir = rotation;
+			
+		with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), ThrowHit)){
+			image_speed = 0.35;
 		}
 	}
 
@@ -2921,11 +2926,11 @@
 			 // Tossing:
 			if(instance_exists(toss)){
 				 // Move Away from Walls:
-				var n = instance_nearest(x - 8, y - 8, Wall);
+				var n = instance_nearest_bbox(x, y, Wall);
 				if(instance_exists(n)){
 					with(n) if(distance_to_point(other.x, other.y) < other.toss_speed + (max(other.toss.sprite_height, other.toss.sprite_width) / 2)){
 						with(other){
-							motion_add_ct(point_direction(other.x + 8, other.y + 8, x, y), 1);
+							motion_add_ct(point_direction((other.bbox_left + other.bbox_right + 1) / 2, (other.bbox_top + other.bbox_bottom + 1) / 2, x, y), 1);
 						}
 					}
 				}
@@ -4687,7 +4692,7 @@
 		 // Walled:
 		if(!visible && !place_meeting(x, y, Floor)){
 			if(instance_exists(Floor)){
-				var n = instance_nearest(x, y, Floor);
+				var n = instance_nearest_bbox(x, y, Floor);
 				x = (n.bbox_left + n.bbox_right + 1) / 2;
 				y = (n.bbox_top + n.bbox_bottom + 1) / 2;
 				repeat(4) instance_create(x, y, Smoke);
@@ -4906,6 +4911,7 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -4928,7 +4934,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
 #define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
@@ -4936,6 +4941,7 @@
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -4983,7 +4989,6 @@
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);

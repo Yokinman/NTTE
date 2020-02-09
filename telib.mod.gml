@@ -10,12 +10,12 @@
 	objList = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
-		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
+		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorIdler", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "TurtleCool", "VenomFlak"],
-		"tescrapyard" : ["BoneRaven", "NestRaven", "SawTrap", "SludgePool", "Tunneler"],
+		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorIdler", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
+		"tescrapyard" : ["BoneRaven", "RavenArenaCont", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "RedSpider", "Spiderling", "SpiderWall"]
 	};
 	
@@ -140,7 +140,6 @@
 	 // floor_set():
 	floor_reset_style();
 	floor_reset_align();
-	floor_fill_set_center(true);
 	
 	 // sleep_max():
 	global.sleep_max = 0;
@@ -155,6 +154,13 @@
 
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
 #macro anim_end (image_index + image_speed_raw >= image_number)
+
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
+#macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #macro objList global.object_list
 #macro objScrt global.object_scrt
@@ -491,13 +497,13 @@
 
 #define step
 	if(DebugLag) script_bind_end_step(end_step_trace_lag, 0);
-
+	
 	 // sleep_max():
 	if(global.sleep_max > 0){
 		sleep(global.sleep_max);
 		global.sleep_max = 0;
 	}
-
+	
 #define end_step_trace_lag
 	trace("");
 	trace("Frame", current_frame, "Lag:")
@@ -1377,10 +1383,16 @@
 
 #define orandom(n) // For offsets
 	return random_range(-n, n);
-
-#define dfloor(_num, _round)
-	return floor(_num / _round) * _round;
-
+	
+#define pfloor(_num, _precision)
+	return floor(_num / _precision) * _precision;
+	
+#define pround(_num, _precision)
+	return round(_num / _precision) * _precision;
+	
+#define pceil(_num, _precision)
+	return ceil(_num / _precision) * _precision;
+	
 #define array_exists(_array, _value)
 	return (array_find_index(_array, _value) >= 0);
 
@@ -1468,18 +1480,32 @@
 
 #define instance_nearest_array(_x, _y, _inst)
 	var	_nearest = noone,
-		d = 1000000;
-
+		_disMax = 1000000;
+		
 	with(_inst) if(instance_exists(self)){
 		var _dis = point_distance(_x, _y, x, y);
-		if(_dis < d){
+		if(_dis < _disMax){
+			_disMax = _dis;
 			_nearest = id;
-			d = _dis;
 		}
 	}
-
+	
 	return _nearest;
-
+	
+#define instance_nearest_bbox(_x, _y, _inst)
+	var	_nearest = noone,
+		_disMax = 1000000;
+		
+	with(_inst) if(instance_exists(self)){
+		var _dis = point_distance(_x, _y, clamp(_x, bbox_left, bbox_right + 1), clamp(_y, bbox_top, bbox_bottom + 1));
+		if(_dis < _disMax){
+			_disMax = _dis;
+			_nearest = id;
+		}
+	}
+	
+	return _nearest;
+	
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)
 	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "x", _x1), "x", _x2), "y", _y1), "y", _y2);
 
@@ -1724,7 +1750,7 @@
 		}
 		
 		 // Clamp to Grid:
-		with(instance_nearest(_x - 16, _y - 16, Floor)){
+		with(instance_nearest_bbox(_x, _y, Floor)){
 			_x = x + (floor((_x - x) / 16) * 16);
 			_y = y + (floor((_y - y) / 16) * 16);
 		}
@@ -1734,7 +1760,7 @@
 			_overlapFloorFill = [];
 			
 		if(_overlapFloor < 1){
-			with(instances_matching(Floor, "object_index", Floor)){
+			with(FloorNormal){
 				if(_overlapFloor <= 0 || random(1) >= _overlapFloor){
 					array_push(_overlapFloorBBox, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
 				}
@@ -1828,6 +1854,10 @@
 			 // Populate Level:
 			with(KeyCont) event_perform(ev_create, 0); // reset player counter
 			event_perform(ev_alarm, 0);
+			if(!_setArea){
+				with(WantPopo) instance_delete(id);
+				with(WantVan) instance_delete(id);
+			}
 			event_perform(ev_alarm, 1);
 			
 			 // Player Reset:
@@ -1908,6 +1938,12 @@
 				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objOld)) > 0){
 					instance_delete(id);
 				}
+			}
+		}
+		var _wallOld = instances_matching_lt(Wall, "id", _genID);
+		with(instances_matching_lt(hitme, "id", _genID)){
+			if(place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, _wallOld)) <= 0){
+				instance_budge(Wall, -1);
 			}
 		}
 		
@@ -2185,7 +2221,7 @@
 			
 			 // Debris:
 			var _floor = instances_matching_gt(Floor, "bbox_bottom", _y);
-			with(_floor) if(point_seen_ext((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, 16, 16, -1)){
+			with(_floor) if(point_seen_ext(bbox_center_x, bbox_center_y, 16, 16, -1)){
 				var n = 2 * array_length(instances_matching_gt(Floor, "y", y));
 				if(chance_ct(1, n) && (object_index != FloorExplo || chance(1, 10))){
 					with(instance_create(choose(bbox_left + 4, bbox_right - 4), choose(bbox_top + 4, bbox_bottom - 4), Debris)){
@@ -2222,7 +2258,7 @@
 				if(instance_exists(self)){
 					visible = false;
 					y = _y + 16 + other.cavein_dis;
-					if(instance_exists(f)) x += (((f.bbox_left + f.bbox_right + 1) / 2) - x) * 0.1 * current_time_scale;
+					with(f) other.x += (bbox_center_x - other.x) * 0.1 * current_time_scale;
 
 					 // Why do health chests break walls again
 					if(instance_is(self, HealthChest)) mask_index = mskNone;
@@ -2264,17 +2300,17 @@
 			with(_caveInst) if(instance_exists(self)){
 				visible = true;
 			}
-			with(instances_matching(instances_matching_gt(Floor, "bbox_bottom", _y), "object_index", Floor)){
+			with(instances_matching_gt(FloorNormal, "bbox_bottom", _y)){
 				with(obj_create(x + 16, _y, "PizzaRubble")){
 					inst = _caveInst;
 					event_perform(ev_step, ev_step_normal);
 				}
 				
 				 // Fix Potential Softlockyness:
+				var _x2 = bbox_center_x;
 				with(instances_matching_lt(instances_matching_gt(FloorExplo, "bbox_bottom", _y - 4), "bbox_top", _y - 4)){
-					var	_x1 = (bbox_left + bbox_right + 1) / 2,
-						_y1 = (bbox_top + bbox_bottom + 1) / 2,
-						_x2 = (other.bbox_left + other.bbox_right + 1) / 2;
+					var	_x1 = bbox_center_x,
+						_y1 = bbox_center_y;
 						
 					if(collision_line(_x1, _y1, _x2, _y1, Wall, false, false)){
 						with(instance_create(_x1, _y - 24, PortalClear)){
@@ -2481,50 +2517,105 @@
 #define floor_reset_align()
 	floor_set_align(null, null, null, null);
 	
-#define floor_align(_x, _y, _w, _h)
-	var	_gridW = 16,
-		_gridH = 16,
-		_gridX = 10000,
-		_gridY = 10000;
+#define floor_align(_w, _h, _x, _y)
+	var	_gridWAuto = is_undefined(global.floor_align_w),
+		_gridHAuto = is_undefined(global.floor_align_h),
+		_gridXAuto = is_undefined(global.floor_align_x),
+		_gridYAuto = is_undefined(global.floor_align_y),
+		_gridW = (_gridWAuto ? 16    : global.floor_align_w),
+		_gridH = (_gridHAuto ? 16    : global.floor_align_h),
+		_gridX = (_gridXAuto ? 10000 : global.floor_align_x),
+		_gridY = (_gridYAuto ? 10000 : global.floor_align_y),
+		_gridXBias = 0,
+		_gridYBias = 0;
 		
-	 // Align to Nearest Floor:
-	with(instance_nearest(
-		_x + dfloor(max(0, _w - 32) / 2, 32),
-		_y + dfloor(max(0, _h - 32) / 2, 32),
-		Floor
-	)){
-		_gridX = x;
-		_gridY = y;
-	}
-	
-	 // Align to Largest Colliding Floor:
-	var	_fx = _gridX + dfloor(_x - _gridX, _gridW),
-		_fy = _gridY + dfloor(_y - _gridY, _gridH);
-	
-	with(instance_rectangle_bbox(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor)){
-		var	_floorW = ((bbox_right + 1) - bbox_left),
-			_floorH = ((bbox_bottom + 1) - bbox_top);
+	if(_gridWAuto || _gridHAuto || _gridXAuto || _gridYAuto){
+		if(!instance_exists(FloorMaker)){
+			 // Align to Nearest Floor:
+			with(instance_nearest_bbox(_x + (_w / 2), _y + (_h / 2), Floor)){
+				if(_gridXAuto){
+					_gridX = x;
+					_gridXBias = bbox_center_x - (_x + (_w / 2));
+				}
+				if(_gridYAuto){
+					_gridY = y;
+					_gridYBias = bbox_center_y - (_y + (_h / 2));
+				}
+			}
 			
-		if(_floorW > _gridW){
-			_gridW = _floorW;
-			_gridX = x;
+			 // Align to Largest Colliding Floor:
+			var	_fwMax = _gridW,
+				_fhMax = _gridH,
+				_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
+				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
+				
+			with(instance_rectangle_bbox(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor)){
+				var	_fw = bbox_width,
+					_fh = bbox_height;
+					
+				if(_fw >= _fwMax){
+					_fwMax = _fw;
+					if(_gridWAuto) _gridW = _fwMax;
+					if(_gridXAuto){
+						_gridX = x;
+						_gridXBias = bbox_center_x - (_x + (_w / 2));
+					}
+				}
+				if(_fh >= _fhMax){
+					_fhMax = _fh;
+					if(_gridHAuto) _gridH = _fhMax;
+					if(_gridYAuto){
+						_gridY = y;
+						_gridYBias = bbox_center_y - (_y + (_h / 2));
+					}
+				}
+			}
+			
+			 // No Unnecessary Bias:
+			if(_gridXBias != 0 || _gridYBias != 0){
+				var	_fx = _gridX + floor_align_round(_x - _gridX, _gridW, 0),
+					_fy = _gridY + floor_align_round(_y - _gridY, _gridH, 0);
+					
+				if(collision_rectangle(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor, false, false)){
+					_gridXBias = 0;
+					_gridYBias = 0;
+				}
+			}
 		}
-		if(_floorH > _gridH){
-			_gridH = _floorH;
-			_gridY = y;
+		
+		 // FloorMaker:
+		else with(instance_nearest(_x + max(0, (_w / 2) - 16), _y + max(0, (_h / 2) - 16), FloorMaker)){
+			if(_gridXAuto) _gridW = min(_w, 32);
+			if(_gridYAuto) _gridH = min(_h, 32);
+			if(_gridWAuto) _gridX = x;
+			if(_gridHAuto) _gridY = y;
 		}
 	}
-	
-	 // Override:
-	if(!is_undefined(global.floor_align_w)) _gridW = global.floor_align_w;
-	if(!is_undefined(global.floor_align_h)) _gridH = global.floor_align_h;
-	if(!is_undefined(global.floor_align_x)) _gridX = global.floor_align_x;
-	if(!is_undefined(global.floor_align_y)) _gridY = global.floor_align_y;
 	
 	 // Align:
-	if(_gridW > 0) _x = _gridX + dfloor(_x - _gridX, _gridW);
-	if(_gridH > 0) _y = _gridY + dfloor(_y - _gridY, _gridH);
-	return [_x, _y];
+	return [
+		_gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
+		_gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias)
+	];
+	
+#define floor_align_round(_num, _precision, _bias)
+	var _value = _num;
+	if(_precision != 0){
+		_value /= _precision;
+		
+		if(_bias < 0){
+			_value = floor(_value);
+		}
+		else if(_bias > 0 || frac(_value) == 0.5){ // No sig-fig rounding
+			_value = ceil(_value);
+		}
+		else{
+			_value = round(_value);
+		}
+		
+		_value *= _precision;
+	}
+	return _value;
 	
 #define floor_set(_x, _y, _state) // imagine if floors and walls just used a ds_grid bro....
 	var _inst = noone;
@@ -2537,7 +2628,7 @@
 			_h = ((sprite_get_bbox_bottom(_msk) + 1) - sprite_get_bbox_top (_msk));
 			
 		 // Align to Adjacent Floors:
-		var _gridPos = floor_align(_x, _y, _w, _h);
+		var _gridPos = floor_align(_w, _h, _x, _y);
 		_x = _gridPos[0];
 		_y = _gridPos[1];
 		
@@ -2680,40 +2771,65 @@
 	}
 
 #define instance_budge(_objAvoid, _disMax)
-	if(place_meeting(x, y, _objAvoid)){
-		 // Find Nearby Open Space:
-		var	_goalx = null,
-			_goaly = null;
+	var	_isArray = is_array(_objAvoid),
+		_canWall = (!place_meeting(x, y, Floor) || (_isArray ? array_exists(_objAvoid, Wall) : (_objAvoid == Wall)));
+		
+	 // Auto Max Distance:
+	if(_disMax < 0){
+		var	_w = 0,
+			_h = 0;
 			
-		with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
-			for(var _x = bbox_left; _x < bbox_right + 1; _x += 8){
-				for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 8){
-					var _dis = point_distance(other.x, other.y, _x, _y);
-					if(_dis < _disMax){
-						with(other) if(!place_meeting(_x, _y, _objAvoid)){
-							_disMax = _dis;
-							_goalx = _x;
-							_goaly = _y;
-						}
-					}
+		with(_isArray ? _objAvoid : [_objAvoid]){
+			if(object_exists(self)){
+				var _mask = object_get_mask(self);
+				if(_mask == -1) _mask = object_get_sprite(self);
+				_w = max(_w, (sprite_get_bbox_right(_mask) + 1) - sprite_get_bbox_left(_mask));
+				_h = max(_h, (sprite_get_bbox_bottom(_mask) + 1) - sprite_get_bbox_top(_mask));
+			}
+			else{
+				_w = max(_w, bbox_width);
+				_h = max(_h, bbox_height);
+			}
+		}
+		
+		_disMax = (sqrt(sqr(bbox_width + _w) + sqr(bbox_height + _h)) / 2) + _disAdd;
+	}
+	
+	 // Starting Direction:
+	var _dirStart = 0;
+	if(x != xprevious || y != yprevious){
+		_dirStart = point_direction(x, y, xprevious, yprevious);
+	}
+	else{
+		_dirStart = point_direction(hspeed, vspeed, 0, 0);
+	}
+	
+	 // Search for Open Space:
+	var	_dis = 0,
+		_disAdd = 4;
+		
+	while(_dis <= _disMax){
+		 // Look Around:
+		var _dirAdd = 360 / max(1, 4 * _dis);
+		for(var _dir = _dirStart; _dir < _dirStart + 360; _dir += _dirAdd){
+			var	_x = x + lengthdir_x(_dis, _dir),
+				_y = y + lengthdir_y(_dis, _dir);
+				
+			if(_isArray ? (array_length(instances_meeting(_x, _y, _objAvoid)) <= 0) : !place_meeting(_x, _y, _objAvoid)){
+				if(_canWall || (place_free(_x, _y) && (position_meeting(_x, _y, Floor) || place_meeting(_x, _y, Floor)))){
+					x = _x;
+					y = _y;
+					xprevious = x;
+					yprevious = y;
+					
+					return true;
 				}
 			}
 		}
 		
-		 // Move Toward Open Space:
-		if(_goalx != null && _goaly != null){
-			while(place_meeting(x, y, _objAvoid)){
-				var	l = min(1, point_distance(x, y, _goalx, _goalx)),
-					d = point_direction(x, y, _goalx, _goaly);
-					
-				x += lengthdir_x(l, d);
-				y += lengthdir_y(l, d);
-			}
-			xprevious = x;
-			yprevious = y;
-		}
-		
-		return place_meeting(x, y, _objAvoid);
+		 // Go Outward:
+		if(_dis >= _disMax) break;
+		_dis = min(_dis + clamp(_dis, 1, _disAdd), _disMax);
 	}
 	
 	return false;
@@ -3231,27 +3347,21 @@
 					
 					 // Enemy:
 					if(instance_is(target, enemy)){
-						is_enemy = true;
+						type = enemy;
 						idle_time = 90 + random(90);
 						
-						with(target){
-							 // Fix Facing:
-							if(direction == 0 && "walk" not in self && "right" in self){
+						 // Fix Facing:
+						if(target.direction == 0 && "walk" not in target && "right" in target){
+							with(target){
 								direction = random(360);
 								scrRight(direction);
-							}
-							
-							 // Disable AI:
-							for(var i = 0; i <= 10; i++){
-								lq_set(other.target_save, `alarm${i}`, alarm_get(i));
-								alarm_set(i, -1);
 							}
 						}
 					}
 					
 					 // Prop:
 					else if(instance_is(target, prop)){
-						spawn_dis = random_range(4, 16);
+						spawn_dis = random_range(8, 16);
 						
 						 // Death on Impact:
 						if(target.team == 0 && target.size <= 1 && target.maxhealth < 50){
@@ -3278,22 +3388,25 @@
 				}
 				else if(instance_is(target, projectile)){
 					jump = 0;
-					is_damage = true;
+					type = projectile;
 				}
 				else if(instance_is(target, Explosion) || instance_is(target, MeatExplosion) || instance_is(target, PlasmaImpact)){
+					jump = 0;
 					grav = 0;
-					is_damage = true;
+					type = projectile;
 					override_mask = false;
 					override_depth = false;
 					depth = -8;
 				}
 				else if(instance_is(target, ReviveArea) || instance_is(target, NecroReviveArea) || instance_is(target, RevivePopoFreak)){
+					jump = 0;
 					grav = 0;
 					override_mask = false;
 					override_depth = false;
 					depth = -6.01;
 				}
 				else if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
+					jump = 0;
 					grav = 0;
 					override_depth = false;
 					depth = -6.01;
@@ -3353,6 +3466,15 @@
 					case "Spiderling":
 						jump *= 4/5;
 						idle_walk_chance = 1/4;
+						break;
+						
+					case "TopRaven":
+					case "BoneRaven":
+						type = RavenFly;
+						jump = 2;
+						grav = 0;
+						canmove = true;
+						spr_shadow_y--;
 						break;
 						
 					 /// PROPS ///
@@ -3487,7 +3609,7 @@
 						break;
 						
 					case Tires:
-						spawn_dis = random_range(24, 80);
+						spawn_dis = random_range(16, 32);
 						spr_shadow_y = -1;
 						break;
 						
@@ -3524,10 +3646,10 @@
 				
 				 // Push Away From Floors:
 				if(_spawnDir >= 0){
-					spawn_dir = _spawnDir;
+					spawn_dir = ((_spawnDir % 360) + 360) % 360;
 				}
-				else with(instance_nearest(x - 16, y - 16, Floor)){
-					other.spawn_dir = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, other.x, other.y);
+				else with(instance_nearest_bbox(x, y, Floor)){
+					other.spawn_dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
 				}
 				if(_spawnDis >= 0){
 					spawn_dis = _spawnDis;
@@ -3535,11 +3657,11 @@
 				if(spawn_dis > 0){
 					var l = 4;
 					while(
-						distance_to_object(Floor)			< spawn_dis			||
-						distance_to_object(PortalClear)		< spawn_dis + 16	||
-						distance_to_object(Bones)			< 16				||
-						distance_to_object(TopPot)			< 8					||
-						distance_to_object(CustomObject)	< 8
+						distance_to_object(Floor)        < spawn_dis      ||
+						distance_to_object(PortalClear)  < spawn_dis + 16 ||
+						distance_to_object(Bones)        < 16             ||
+						distance_to_object(TopPot)       < 8              ||
+						distance_to_object(CustomObject) < 8
 					){
 						x += lengthdir_x(l, spawn_dir);
 						y += lengthdir_y(l, spawn_dir);
@@ -3548,32 +3670,58 @@
 				x = round(x);
 				y = round(y);
 				
-				 // Object-Specific Post-Setup:
-				if(instance_is(target, enemy) && jump_time == 0){
-					with(instance_nearest(x - 16, y - 16, Floor)){
-						other.jump_time = 90 + (distance_to_object(Player) * (2 + GameCont.loops));
-					}
-				}
-				switch(target.object_index){
-					case BoneFish:
-					case Freak:
-					case "Puffer":
-					case "Hammerhead": // Swimming bro
-						if(area_get_underwater(GameCont.area)){
-							z += random_range(8, distance_to_object(Floor) / 2) * ((target.object_index == "Puffer") ? 0.5 : 1);
+				/// Post-Setup:
+					 // Enemy:
+					if(instance_is(target, enemy)){
+						 // Setup Time Until Jump Mode:
+						if(jump_time == 0){
+							with(instance_nearest_bbox(x, y, Floor)){
+								other.jump_time = 90 + (distance_to_object(Player) * (2 + GameCont.loops));
+							}
 						}
-						break;
 						
-					case FrogEgg: // Hatch
-						target.alarm0 = irandom(150) + (distance_to_object(Player) * (1 + GameCont.loops));
-						target_save.alarm0 = random_range(10, 30);
-						break;
-						
-					case JungleFly: // Bro hes actually flying real
-						z += random_range(4, 16 + (distance_to_object(Floor) / 2));
-						break;
-				}
-				
+						 // No Movin:
+						if("walk" not in target && type != RavenFly){
+							canmove = false;
+						}
+					}
+					
+					 // Object-Specific Post-Setup:
+					switch(target.object_index){
+						case BoneFish:
+						case Freak:
+						case "Puffer":
+						case "Hammerhead": // Swimming bro
+							if(area_get_underwater(GameCont.area)){
+								z += random_range(8, distance_to_object(Floor) / 2) * ((target.object_index == "Puffer") ? 0.5 : 1);
+							}
+							break;
+							
+						case FrogEgg: // Hatch
+							target.alarm0 = irandom(150) + (distance_to_object(Player) * (1 + GameCont.loops));
+							target_save.alarm0 = random_range(10, 30);
+							break;
+							
+						case JungleFly: // Bro hes actually flying real
+							z += random_range(4, 16 + (distance_to_object(Floor) / 2));
+							break;
+					}
+					
+					 // Type-Specific:
+					switch(type){
+						case enemy:
+							
+							 // Disable AI:
+							with(target){
+								for(var i = 0; i <= 10; i++){
+									lq_set(other.target_save, `alarm${i}`, alarm_get(i));
+									alarm_set(i, -1);
+								}
+							}
+							
+							break;
+					}
+					
 				 // Underwater Time:
 				if(area_get_underwater(GameCont.area)){
 					jump /= 6;
@@ -3581,12 +3729,12 @@
 				}
 				
 				 // Insta-Land:
-				var n = instance_nearest(x - 16, y - 16, Floor);
+				var n = instance_nearest_bbox(x, y, Floor);
 				if(
-					instance_exists(n)																											&&
-					!instance_exists(NothingSpiral)																								&&
-					!collision_line(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, Wall,     false, false)	&&
-					!collision_line(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, TopSmall, false, false)
+					instance_exists(n)                                                                                                            &&
+					!instance_exists(NothingSpiral)                                                                                               &&
+					!collision_line(x, y + 8, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, Wall,     false, false) &&
+					!collision_line(x, y + 8, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2, TopSmall, false, false)
 				){
 					zspeed = jump;
 					zfriction = grav;
@@ -3627,6 +3775,7 @@
 				 // Depth:
 				if(override_depth) depth = -6 - ((y - 8) / 10000);
 				
+				 // Search Zone:
 				with(target){
 					var m = mask_index;
 					mask_index = -1;
@@ -3638,12 +3787,7 @@
 				}
 			}
 			
-			if(instance_exists(other)){
-				event_perform(ev_step, ev_step_end);
-			}
-			else{ // bro wtf
-				mod_script_call(on_end_step[0], on_end_step[1], on_end_step[2]);
-			}
+			with(self) event_perform(ev_step, ev_step_end);
 			
 			return self;
 		}
@@ -3658,27 +3802,17 @@
 	}
 	return instance_create(_x + 16, _y + 16, _obj);
 	
-#define floor_fill_set_center(_active)
-	global.floor_fill_center = _active;
-	
 #define floor_fill(_x, _y, _w, _h)
 	var o = 32;
-	
-	 // Center:
-	if(global.floor_fill_center){
-		_x -= floor((_w - 1) / 2) * o;
-		_y -= floor((_h - 1) / 2) * o;
-	}
-	
-	 // Align:
 	_w *= o;
 	_h *= o;
-	var _gridPos = floor_align(_x, _y, _w, _h);
+	
+	 // Center & Align:
+	_x -= (_w / 2);
+	_y -= (_h / 2);
+	var _gridPos = floor_align(_w, _h, _x, _y);
 	_x = _gridPos[0];
 	_y = _gridPos[1];
-	
-	 // Clear:
-	floor_clear(_x, _y, _x + _w - 1, _y + _h - 1);
 	
 	 // Floors:
 	var	_aw = global.floor_align_w,
@@ -3699,19 +3833,15 @@
 	
 	return r;
 	
-#define floor_fill_round(_x, _y, _w, _h) /// 2004631072, 1-2
+#define floor_fill_round(_x, _y, _w, _h)
 	var o = 32;
-	
-	 // Center:
-	if(global.floor_fill_center){
-		_x -= floor((_w - 1) / 2) * o;
-		_y -= floor((_h - 1) / 2) * o;
-	}
-	
-	 // Align:
 	_w *= o;
 	_h *= o;
-	var _gridPos = floor_align(_x, _y, _w, _h);
+	
+	 // Center & Align:
+	_x -= (_w / 2);
+	_y -= (_h / 2);
+	var _gridPos = floor_align(_w, _h, _x, _y);
 	_x = _gridPos[0];
 	_y = _gridPos[1];
 	
@@ -3738,17 +3868,13 @@
 	
 #define floor_fill_ring(_x, _y, _w, _h)
 	var o = 32;
-	
-	 // Center:
-	if(global.floor_fill_center){
-		_x -= floor((_w - 1) / 2) * o;
-		_y -= floor((_h - 1) / 2) * o;
-	}
-	
-	 // Align:
 	_w *= o;
 	_h *= o;
-	var _gridPos = floor_align(_x, _y, _w, _h);
+	
+	 // Center & Align:
+	_x -= (_w / 2);
+	_y -= (_h / 2);
+	var _gridPos = floor_align(_w, _h, _x, _y);
 	_x = _gridPos[0];
 	_y = _gridPos[1];
 	

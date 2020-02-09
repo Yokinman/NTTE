@@ -15,13 +15,13 @@
     }
 
 	 // Surfaces:
-	surfTrans	= surflist_set("CoastTrans",	0, 0, 0, 0);
-	surfFloor	= surflist_set("CoastFloor",	0, 0, 0, 0);
-	surfWaves	= surflist_set("CoastWaves",	0, 0, game_width, game_height);
-	surfWavesSub	= surflist_set("CoastWavesSub",	0, 0, game_width, game_height);
-	surfSwim		= surflist_set("CoastSwim",		0, 0, 200, 200);
-	surfSwimBot	= surflist_set("CoastSwimBot",	0, 0, 0, 0);
-	surfSwimTop	= surflist_set("CoastSwimTop",	0, 0, 0, 0);
+	surfTrans    = surflist_set("CoastTrans",    0, 0, 0, 0);
+	surfFloor    = surflist_set("CoastFloor",    0, 0, 0, 0);
+	surfWaves    = surflist_set("CoastWaves",    0, 0, game_width, game_height);
+	surfWavesSub = surflist_set("CoastWavesSub", 0, 0, game_width, game_height);
+	surfSwim     = surflist_set("CoastSwim",     0, 0, 200, 200);
+	surfSwimBot	 = surflist_set("CoastSwimBot",	 0, 0, 0, 0);
+	surfSwimTop	 = surflist_set("CoastSwimTop",	 0, 0, 0, 0);
 	with([surfTrans, surfFloor]) reset = true;
     with(surfSwim){
 	    inst_visible = [];
@@ -32,13 +32,17 @@
     with([surfWaves, surfWavesSub]){
     	border = 8;
     }
-
 	global.floor_num = 0;
-
+	
+	 // Ocean Depth:
     global.seaDepth = 10.1;
-
+    
+     // area_pop_enemies Counter:
     global.spawn_enemy = 0;
-
+    
+     // Ultra Bolt Fix:
+    global.ultraboltfix_floors = [];
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -698,6 +702,7 @@
 	    }
 	
 	     // Weird fix for ultra bolts destroying themselves when not touching a floor:
+	    global.ultraboltfix_floors = [];
 	    with(UltraBolt){
 	    	var _x = x,
 	    		_y = y;
@@ -720,6 +725,7 @@
 	                mask_index = sprBoltTrail;
 	                visible = false;
 	                creator = other;
+	                array_push(global.ultraboltfix_floors, id);
 	            }
 	        }
 	    }
@@ -861,7 +867,9 @@
 	    }
 
 		 // Ultra Bolt Fix Pt.2:
-	    with(instances_matching(Floor, "name", "UltraBoltCoastFix")) instance_destroy();
+		with(global.ultraboltfix_floors) if(instance_exists(self)){
+			instance_delete(id);
+		}
 	}
 
 	if(DebugLag) trace_time("coast_area_end_step");
@@ -881,16 +889,16 @@
 #define area_make_floor
     var _x = x,
         _y = y,
-        _outOfSpawn = (point_distance(_x, _y, 10016, 10016) > 48);
+        _outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
 		
     /// Make Floors:
          // Special - 4x4 to 6x6 Rounded Fills:
         if(chance(1, 5)){
-            floor_fill_round(_x, _y, irandom_range(4, 6), irandom_range(4, 6));
+            floor_fill_round(_x + 16, _y + 16, irandom_range(4, 6), irandom_range(4, 6));
         }
 		
          // Normal - 2x1 Fills:
-        else floor_fill(_x, _y, 2, 1);
+        else floor_fill(_x + 16, _y + 16, 2, 1);
 		
 	/// Turn:
         var _trn = 0;
@@ -909,7 +917,11 @@
                 var d = direction + 180;
                 _x += lengthdir_x(96, d);
                 _y += lengthdir_y(96, d);
-                with(instance_create(_x, _y, FloorMaker)) direction = d + choose(-90, 0, 90);
+                
+                with(instance_create(_x, _y, FloorMaker)){
+                	direction = d + choose(-90, 0, 90);
+                }
+                
                 if(_outOfSpawn){
                     instance_create(_x + 16, _y + 16, choose(AmmoChest, WeaponChest, RadChest));
                 }
@@ -1156,22 +1168,22 @@
 			 // Fill in Gaps (Cardinal Directions Only):
 			var	_spr = spr.FloorCoast,
 				_sprNum = sprite_get_number(_spr);
-
+				
 			with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis + (w / _surfScale), y + _dis + (h / _surfScale), instances_matching(Floor, "visible", true))){
 				var	_x = x - other.x,
 					_y = y - other.y;
-
+					
 				for(var a = 0; a < 360; a += 90){
 					var	_ox = lengthdir_x(_dis, a),
 						_oy = lengthdir_y(_dis, a);
-
+						
 					for(var f = 1; f <= 5; f++){
-						if(position_meeting(x + (_ox * f), y + (_oy * f), Floor)){
+						if(variable_instance_get(instance_place(x + (_ox * f), y + (_oy * f), Floor), "visible", false)){
 							for(var i = 2; i <= f; i++){
 								var	_dx = _x + (_ox * i),
 									_dy = _y + (_oy * i),
 									_img = floor((_dx + other.x + _dy + other.y) / 32) % _sprNum;
-
+									
 								draw_sprite_ext(_spr, _img, _dx * _surfScale, _dy * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 							}
 							break;
@@ -1230,7 +1242,7 @@
 			with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
-			with(instances_matching(instances_matching(Floor, "name", "CoastDecalCorpse"), "visible", false)){
+			with(instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true)){
 				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 			}
 
@@ -1274,7 +1286,7 @@
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		if(_hurt) draw_set_fog(false, 0, 0, 0);
 	}
-	with(instances_matching(instances_matching(Floor, "name", "CoastDecalCorpse"), "visible", false)){
+	with(instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true)){
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	}
 
@@ -1403,6 +1415,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -1425,7 +1438,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define dfloor(_num, _div)                                                              return  mod_script_call_nc('mod', 'telib', 'dfloor', _num, _div);
 #define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
@@ -1433,6 +1445,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
+#define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -1480,7 +1493,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
-#define floor_fill_set_center(_active)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_fill_set_center', _active);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
