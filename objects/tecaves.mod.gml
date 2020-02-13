@@ -151,7 +151,7 @@
 		}
 		
 		 // Sounds:
-		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 0.5);
+		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 1.5);
 		sound_stop(_snd - 1); // stops the wall break sound bro i didnt like how it sounded
 	}
 	
@@ -160,9 +160,9 @@
 	
 #define CrystalHeartProj_destroy
 	 // Effects:
-	sound_play_hit_ext(sndGammaGutsKill,		0.8 + random(0.3), 1.2);
-	sound_play_hit_ext(sndNothing2Beam, 		0.7 + random(0.2), 1.0);
-	sound_play_hit_ext(sndHyperCrystalSearch,	0.6 + random(0.3), 0.4);
+	sound_play_hit_ext(sndGammaGutsKill,      0.8 + random(0.3), 3);
+	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3);
+	sound_play_hit_ext(sndHyperCrystalSearch, 0.6 + random(0.3), 1.5);
 	view_shake_max_at(x, y, 20);
 	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
 	
@@ -741,8 +741,8 @@
 			}
 			
 			 // Effects:
-			sound_play_hit_ext(sndSharpTeeth, 1 + orandom(0.2), 0.25);
-			sound_play_hit_ext(sndPlasmaHit, 1 + orandom(0.5), 1);
+			sound_play_hit_ext(sndSharpTeeth, 1 + orandom(0.2), 0.8);
+			sound_play_hit_ext(sndPlasmaHit, 1 + orandom(0.5), 1.5);
 			sprite_index = spr_hurt;
 			image_index = 0;
 			
@@ -965,7 +965,7 @@
 	        if(special){
 	        	with(pet_spawn(x + 8, y + 8, "Spider")){
 	        		sprite_index = spr_hurt;
-    				sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 2);
+    				sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
 	        	}
 	        }
 	        
@@ -974,7 +974,7 @@
 	        	if(chance(3, 5)){
 	        		with(obj_create(x + 8, y + 8, "Spiderling")){
 	        			sprite_index = spr_hurt;
-    					sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 2);
+    					sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 1.5);
 	        		}
 	        	}
 	        	

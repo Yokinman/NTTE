@@ -201,8 +201,12 @@
 #define BoneRaven_alrm2
 	 // Activate:
 	active = true;
-	if(enemy_target(x, y)) scrRight(point_direction(x, y, target.x, target.y));
-	BoneRaven_fly(96, 256);
+	var _disMin = 96;
+	if(enemy_target(x, y)){
+		_disMin += point_distance(x, y, target.x, target.y);
+		scrRight(point_direction(x, y, target.x, target.y));
+	}
+	BoneRaven_fly(_disMin, _disMin + 160);
 	
 #define BoneRaven_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!active) alarm2 = 1;
@@ -415,28 +419,28 @@
 
 #define SawTrap_step
 	speed = 0;
-
+	
 	 // Start/Stop:
 	if(instance_exists(Portal)) active = false;
 	var _goal = (active * maxspeed);
 	spd += (_goal - spd) * friction * current_time_scale;
-
+	
 	 // Stick to Wall:
 	var _x = x,
 		_y = y,
 		_sideDis = 8,
 		_sideDir = dir + (90 * side),
 		_walled = collision_circle(_x + lengthdir_x(_sideDis, _sideDir), _y + lengthdir_y(_sideDis, _sideDir), 1, Wall, false, false);
-
+		
 	if(!_walled && walled){
 		dir += 90 * side;
 	}
 	walled = _walled;
-
+	
 	 // Movement/Wall Collision:
 	var l = spd * current_time_scale,
 		d = dir;
-
+		
 	if(!collision_circle(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), 1, Wall, false, false)){
 		x += lengthdir_x(l, d);
 		y += lengthdir_y(l, d);
@@ -444,18 +448,18 @@
 		y = round(y);
 	}
 	else dir -= 90 * side;
-
+	
 	dir = round(dir / 90) * 90;
 	dir = (dir + 360) % 360;
-
+	
 	 // Animate:
 	if(sprite_index == spr_hurt && anim_end){
 		sprite_index = spr_idle;
 	}
-
+	
 	 // Spin:
 	image_angle += 4 * spd * side * current_time_scale;
-
+	
 	 // Effects:
 	if(spd > 1 && point_seen(x, y, -1)){
 		if(chance_ct(1, 2)){
@@ -493,7 +497,7 @@
 			}
 		}
 	}
-
+	
 	 // Sound:
 	var _volGoal = (spd / maxspeed);
 	if(_volGoal > 0 && point_in_rectangle(x, y, view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height)){
@@ -518,7 +522,7 @@
 	 // Hitme Collision:
 	var _scale = 0.55,
 		_sawtrapHit = false;
-
+		
 	image_xscale *= _scale;
 	image_yscale *= _scale;
 	if(place_meeting(x, y, hitme)){
@@ -529,22 +533,22 @@
 					if(!instance_is(self, prop) && (size < other.size || instance_is(self, Player))){
 						motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
 					}
-	
+					
 					 // Contact Damage:
 					with(other) if(active && canmelee && projectile_canhit_melee(other)){
 						projectile_hit_raw(other, meleedamage, true);
-	
+						
 						 // Effects:
-						sound_play_hit_ext(snd_mele, 0.7 + random(0.2), 0.6);
+						sound_play_hit_ext(snd_mele, 0.7 + random(0.2), 1);
 					}
 				}
-
+				
 				 // Epic FX:
-				if(instance_is(self, other.object_index) && "name" in self && name == other.name){
-					if(active && side != other.side){
+				if(other.walled && instance_is(self, other.object_index) && "name" in self && name == other.name){
+					if(active && side != other.side && walled){
 						_sawtrapHit = true;
 						if(!sawtrap_hit || chance_ct(1, 30)){
-							sound_play_hit_ext(sndDiscBounce, 0.6 + random(0.2), 0.5);
+							sound_play_hit_ext(sndDiscBounce, 0.6 + random(0.2), 0.8);
 							with(instance_create(x, y, MeleeHitWall)){
 								motion_add(other.dir - random(120 * other.side), random(1));
 								image_angle = direction + 180;
@@ -559,27 +563,27 @@
 	image_xscale /= _scale;
 	image_yscale /= _scale;
 	sawtrap_hit = _sawtrapHit;
-
+	
 	 // Die:
 	if(my_health <= 0 || place_meeting(x, y, PortalShock)){
 		 // Explo:
 		instance_create(x, y, Explosion);
 		repeat(3) instance_create(x, y, SmallExplosion);
-
+		
 		 // Effects:
 		repeat(3) instance_create(x + orandom(16), y + orandom(16), GroundFlame);
 		repeat(3 + irandom(3)) instance_create(x, y, Debris).sprite_index = spr.SawTrapDebris;
-
+		
 		 // Sounds:
 		sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
 		sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
-
+		
 		 // Pickups:
 		pickup_drop(50, 0);
-
+		
 		instance_destroy();
 	}
-
+	
 #define SawTrap_alrm0
 	active = true;
 
@@ -639,6 +643,7 @@
 		sprite_index = other.spr_floor;
 		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
 		material = 5; // slimy stone
+		instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Detail);
 		_cx += bbox_center_x;
 		_cy += bbox_center_y;
 		_num++;
@@ -749,6 +754,11 @@
 			x = lerp(xprevious, x, 2/3);
 			y = lerp(yprevious, y, 2/3);
 			
+			 // Somethins comin up bro:
+			if(other.alarm0 > 0){
+				motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
+			}
+			
 			 // FX:
 			if(chance_ct(speed, 12)){
 				var o = other;
@@ -785,12 +795,12 @@
 		var	_spr = spr.PetSalamanderIdle,
 			_img = 0.4 * current_frame,
 			_x = x,
-			_y = y + (max(0, alarm0 - 40) / 6) + (min(1, alarm0 / 10) * sin(current_frame / 10)),
+			_y = y + (max(0, alarm0 - 60) / 8) + (min(1, alarm0 / 10) * sin(current_frame / 10)),
 			_xsc = image_xscale * right,
 			_ysc = image_yscale,
 			_ang = image_angle,
 			_col = image_blend,
-			_alp = image_alpha / max(1, 0.5 * (alarm0 - 55));
+			_alp = image_alpha / max(1, 0.1 * (alarm0 - 50));
 			
 		draw_set_fog(true, fx_color, 0, 0);
 		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);

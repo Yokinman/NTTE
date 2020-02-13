@@ -191,7 +191,7 @@
 		sound_play_hit(sndBoltHitWall, 0.2);
 		instance_create(x, y, Smoke);
 		if(!small){
-			sound_play_hit_ext(sndHammer, 1.3 + random(0.2), 0.7);
+			sound_play_hit_ext(sndHammer, 1.3 + random(0.2), 1.2);
 			view_shake_at(x, y, 20);
 		}
 	}
@@ -315,11 +315,11 @@
 				
 				 // Effects:
 				motion_add(gunangle + 180, 2);
-				sound_play_hit_ext(sndIDPDNadeLoad, 	0.8 + random(0.3), 1);
-				sound_play_hit_ext(sndAssassinAttack,	1.0 + random(0.2), 1);
+				sound_play_hit_ext(sndIDPDNadeLoad,   0.8 + random(0.3), 3);
+				sound_play_hit_ext(sndAssassinAttack, 1.0 + random(0.2), 3);
 			}
+			
 			else{
-				
 				 // Begin Attack:
 				if(chance(2, 3)){
 					alarm1 = 1;
@@ -981,12 +981,14 @@
 
 		 // Morphing Back:
 		else{
-			var _bat = instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id);
-			with(_bat){
+			with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
 				walk = 0;
 				speed = 0;
 				alarm1 = 20 + random(20);
 				image_blend = merge_color(image_blend, c_black, 0.1 * current_time_scale);
+			}
+			with(instances_matching(instances_matching(CustomObject, "name", "BatCloud"), "creator", id)){
+				instance_destroy();
 			}
 		}
 	}
@@ -1034,17 +1036,17 @@
 		 // Sound:
 		sound_play_pitchvol(sndBloodHurt, 0.7 + random(0.2), 0.8);
 	}
-
+	
 	 // Reappear:
 	else{
 		active = true;
-
+		
 		alarm1 += 30;
         mask_index = mskBanditBoss;
         visible = true;
         canfly = false;
         instance_create(x, y, PortalClear);
-
+        
          // Poof:
         with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
         	repeat(8) with(scrFX(x, y, 3, Dust)){
@@ -1052,7 +1054,10 @@
         	}
         	instance_delete(id);
         }
-
+        with(instances_matching(instances_matching(CustomObject, "name", "BatCloud"), "creator", id)){
+        	instance_delete(id);
+        }
+        
          // Effects:
 		sound_play_pitchvol(sndBloodHammer, 0.5 + random(0.2), 0.8);
 	}
@@ -1140,7 +1145,7 @@
 
 	 // More Aggressive Bats:
 	else with(instances_matching(instances_matching(CustomEnemy, "name", "Bat"), "creator", id)){
-		alarm1 = ceil(alarm1 / 2);
+		if(current_frame_active) alarm1 = ceil(alarm1 / 2);
 		
 		if(enemy_target(x, y)){
 			if(in_sight(target) && in_distance(target, 128)){
@@ -1160,7 +1165,7 @@
 				 // Effects:
 				sound_play_pitchvol(sndBloodHammer, 1.4 + random(0.2), 0.5);
 				repeat(10){
-					with(scrFX([x, 8], y + orandom(8), random(3), Smoke)){
+					with(scrFX([x, 8], [y, 8], random(3), Smoke)){
 						image_blend = c_black;
 					}
 				}
@@ -1178,11 +1183,13 @@
         
          // Pitch Hurt:
         if(snd_hurt == sndMutant10Hurt){
-        	var s = sound_play_hit_ext(snd_hurt, 0.6 + random(0.2), 0.5 + random(0.1));
-        	audio_sound_set_track_position(s, 0.07);
-        	sound_play_hit_ext(sndHitFlesh, 1 + orandom(0.3), 1.3);
+        	audio_sound_set_track_position(
+        		sound_play_hit_ext(snd_hurt, 0.6 + random(0.2), 1),
+        		0.07
+        	);
+        	sound_play_hit_ext(sndHitFlesh, 1 + orandom(0.3), 1.4);
         }
-
+        
          // Half HP:
         var h = (maxhealth / 2);
         if(in_range(my_health, h - _hitdmg + 1, h)){
@@ -1195,15 +1202,15 @@
         	scrBatBossScreech(5);
         }
     }
-
+    
      // Screech:
     else{
         stress -= 4;
         nexthurt = current_frame + 5;
-
+        
         scrBatBossScreech(1);
     }
-
+    
 #define BatBoss_death
     instance_create(x, y, PortalClear);
     
@@ -1214,7 +1221,7 @@
 
 	 // Pitch Death:
 	if(snd_dead == sndMutant10Dead){
-		sound_play_hit_ext(snd_dead, 0.55 + random(0.1), 1);
+		sound_play_hit_ext(snd_dead, 0.55 + random(0.1), 1.5);
 	}
 
 	 // Pickups:
@@ -1887,7 +1894,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define BoneGator_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!instance_is(other, Explosion)){
 		enemy_hurt(_hitdmg, _hitvel, _hitdir);
-		sound_play_hit_ext(sndBloodHurt, 0.8 + orandom(0.2), 0.6);
+		sound_play_hit_ext(sndBloodHurt, 0.8 + orandom(0.2), 0.9);
 	}
 	
 	 // Boiling Veins:
@@ -2730,7 +2737,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
     	
     	 // Pitch Hurt:
     	if(snd_hurt == sndBuffGatorHit){
-    		sound_play_hit_ext(snd_hurt, 0.6 + random(0.3), 2);
+    		sound_play_hit_ext(snd_hurt, 0.6 + random(0.3), 3);
     	}
 
          // Half HP:

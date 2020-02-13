@@ -3,7 +3,7 @@
 	global.sprCrownIdle	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",	   20,  8,	8);
 	global.sprCrownWalk	    = sprite_add("../sprites/crowns/Crime/sprCrownCrimeWalk.png",		6,	8,	8);
 	global.sprCrownLoadout	= sprite_add("../sprites/crowns/Crime/sprCrownCrimeLoadout.png",	2, 16, 16);
-
+	
 #define crown_name			return "CROWN OF CRIME";
 #define crown_text			return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip			return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
@@ -15,10 +15,10 @@
     image_index = !crown_menu_avail();
     dix = -1;
     diy = 0;
-
+	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
-
+	
 #define crown_object
 	 // Visual:
 	spr_idle = global.sprCrownIdle;

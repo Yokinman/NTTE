@@ -92,15 +92,15 @@
 						"list" : [ // Pets that show up by default
 							"Scorpion"		+ ".petlib.mod",
 							"Parrot"		+ ".petlib.mod",
+							"Slaughter"		+ ".petlib.mod",
 							"CoolGuy"		+ ".petlib.mod",
 							"Salamander"	+ ".petlib.mod",
 							"Mimic"			+ ".petlib.mod",
-							"Slaughter"		+ ".petlib.mod",
 							"Octo"			+ ".petlib.mod",
 							"Spider"		+ ".petlib.mod",
 							"Prism"			+ ".petlib.mod",
-							"Weapon"		+ ".petlib.mod",
-							"Orchid"		+ ".petlib.mod"
+							"Orchid"		+ ".petlib.mod",
+							"Weapon"		+ ".petlib.mod"
 						]
 					},
 					
@@ -1837,7 +1837,7 @@
 									
 									_x += _w;
 									if((i % _col) == _col - 1){
-										_x -= (_w * _col);
+										_x -= ceil(_w * (_col - max(0, (_col - ((lq_size(_petList) - 1) - i)) / 2)));
 										_y += _h;
 									}
 								}

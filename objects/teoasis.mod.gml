@@ -621,21 +621,21 @@
 		
 		return id;
 	}
-
-
+	
+	
 #define Crack_create(_x, _y)
     with(instance_create(_x, _y, CustomObject)){
          // Visual:
         sprite_index = spr.Crack;
         image_speed = 0;
-
+		
          // Vars:
         mask_index = mskWepPickup;
-
+		
 		 // Notice me bro:
-		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 4);
+		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 8);
 		repeat(3) scrFX(x, y, 2, Smoke);
-
+		
         return id;
     }
 	
@@ -942,7 +942,7 @@
 			GameCont.rad -= _cost;
 			var r = instance_create(x, y, BigRad);
 			with(r){
-				sound_play_hit_ext(sndHitFlesh, 2.5, 0.15);
+				sound_play_hit_ext(sndHitFlesh, 2.5, 0.5);
 				motion_add(random(360), 4);
 				depth = -2;
 			}
@@ -952,7 +952,7 @@
 
 	 // Eye Recieved:
 	if(raddrop > 0){
-		sound_play_hit_ext(sndRadPickup, 0.5 + orandom(0.1), 4);
+		sound_play_hit_ext(sndRadPickup, 0.5 + orandom(0.1), 6);
 		with(instance_nearest(x, y, EatRad)){
 			x = other.x;
 			y = other.y;

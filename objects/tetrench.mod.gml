@@ -2110,7 +2110,7 @@
 	
 	my_health -= _hitdmg;
 	nexthurt = current_frame + 6;
-	sound_play_hit_ext(snd_hurt, 1.4 + orandom(0.4), 2.5);
+	sound_play_hit_ext(snd_hurt, 1.4 + orandom(0.4), 3);
 	
 	 // Half HP:
 	var h = (maxhealth / 2);
@@ -3251,7 +3251,8 @@
 			repeat(3) instance_create(x, y, Smoke);
 			if(other.blast_hit){
 				sleep_max(30);
-				sound_play_hit_ext(sndPlasmaHit, 0.6 + random(0.1), 2);
+				sound_play_hit_ext(sndExplosionS, 0.7 + random(0.1), 1.2);
+				sound_play_hit_ext(sndMeatExplo, 1.2 + random(0.1), 1.4);
 			}
 		}
 	

@@ -14,6 +14,11 @@
 
 #macro DebugLag global.debug_lag
 
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
 #macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #define BabyScorpion_create(_x, _y)
@@ -672,7 +677,7 @@
 	if(!instance_exists(self)) exit;
 
 	 // Sound:
-	sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 1.5);
+	sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 3);
 
 	 // Break:
 	var i = instance_nearest_array(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"));
@@ -697,7 +702,7 @@
 
 	 // Darn:
 	if(broken){
-		sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2);
+		sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2.5);
 		
 		var p = false;
 		with(["wep", "bwep"]){
@@ -1004,7 +1009,7 @@
 						image_speed *= random_range(0.8, 1.2);
 					}
 				}
-				sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 0.4);
+				sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 1.2);
 				
 				 // Intro:
 				if(!intro){
@@ -1079,13 +1084,14 @@
 			speed *= 2/3;
 			
 			 // Effects:
-			var	_wall = instance_nearest_bbox(x, y, Wall),
-				_wallX = (w.bbox_left + w.bbox_right + 1) / 2,
-				_wallY = (w.bbox_top + w.bbox_bottom + 1) / 2;
-				
-			with(instance_create(_wallX, _wallY, MeleeHitWall)){
-				motion_add(point_direction(x, y, _wallX, _wallY), 1);
-				image_angle = direction + 180;
+			with(instance_nearest_bbox(x, y, Wall)){
+				var	_cx = bbox_center_x,
+					_cy = bbox_center_y;
+					
+				with(instance_create(_cx, _cy, MeleeHitWall)){
+					motion_add(point_direction(x, y, _cx, _cy), 1);
+					image_angle = direction + 180;
+				}
 			}
 			sound_play_pitchvol(sndHammerHeadProc, 1.4 + random(0.2), 0.5);
 			
@@ -1597,7 +1603,7 @@
 			image_yscale += charge_speed * current_time_scale;
 			
 			 // Effects:
-			sound_play_hit_ext(sndScorpionFire, 0.5 + (1.5 * (image_xscale / charge_goal)), 1.5);
+			sound_play_hit_ext(sndScorpionFire, 0.5 + (1.5 * (image_xscale / charge_goal)), 4);
 			if(chance_ct(1, 4)){
 				var	l = random(sprite_width),
 					d = random(360);
@@ -1683,8 +1689,8 @@
 	}
 
 	 // Sounds:
-	sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 1);
-	sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 1);
+	sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 2.5);
+	sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 2.5);
 
 
 #define ScorpionRock_create(_x, _y)
@@ -1738,29 +1744,29 @@
 	}
 	
 #define ScorpionRock_death
-	repeat(3 + irandom(3))
-		with instance_create(x, y, Debris)
+	 // Debris:
+	repeat(3 + irandom(3)){
+		with(instance_create(x, y, Debris)){
 			motion_set(random(360), 4 + random(4));
-			
-	if(friendly){
-		 // pet time:
-		pet_spawn(x, y, "Scorpion");
+		}
 	}
-	else{
-		 // Homeowner:
-		obj_create(x, y, "BabyScorpion");
-		
-		 // Light Snack:
-		repeat(3) if(chance(1, 2))
-			instance_create(x, y, Maggot);
-			
-		 // Play Date:
-		if(chance(1, 100))
-			obj_create(x, y, "Spiderling");
-			
-		 // Possessions:
-		pickup_drop(60, 10);
+	
+	 // Homeowner:
+	if(friendly) pet_spawn(x, y, "Scorpion");
+	else obj_create(x, y, "BabyScorpion");
+	
+	 // Light Snack:
+	repeat(3) if(chance(1, 2)){
+		instance_create(x, y, Maggot);
 	}
+	
+	 // Play Date:
+	if(chance(1, 100)){
+		obj_create(x, y, "Spiderling");
+	}
+	
+	 // Possessions:
+	pickup_drop(60, 10);
 	
 	
 #define WallEnemy_create(_x, _y)
@@ -1842,7 +1848,7 @@
 				
 				 // Launch:
 				with(instance_nearest_bbox(x, y, FloorNormal)){
-					other.direction = point_direction(other.x, other.y, (bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2) + orandom(30);
+					other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
 				}
 				with(obj_create(x, y, "BackpackPickup")){
 					zspeed *= 1.2;
@@ -1870,7 +1876,7 @@
 						image_speed = 0;
 					}
 				}
-				sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 0.4);
+				sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 1.6);
 			}
 		}
 		instance_destroy();

@@ -8,8 +8,8 @@
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
@@ -575,14 +575,112 @@
 #define draw_text_bn(_x, _y, _string, _angle)
 	var _col = draw_get_color();
 	_string = string_upper(_string);
-
+	
 	draw_set_color(c_black);
 	draw_text_transformed(_x + 1, _y,     _string, 1, 1, _angle);
 	draw_text_transformed(_x,     _y + 2, _string, 1, 1, _angle);
 	draw_text_transformed(_x + 1, _y + 2, _string, 1, 1, _angle);
 	draw_set_color(_col);
 	draw_text_transformed(_x,     _y,     _string, 1, 1, _angle);
-
+	
+#define string_delete_nt(_string)
+	/*
+		Returns a given string with "draw_text_nt()" formatting removed
+		
+		Ex:
+			string_delete_nt("@2(sprBanditIdle:0)@rBandit") == "  Bandit"
+			string_width(string_delete_nt("@rHey")) == 3
+	*/
+	
+	var	_split = "@",
+		_stringSplit = string_split(_string, _split),
+		_stringSplitMax = array_length(_stringSplit);
+		
+	for(var i = 1; i < _stringSplitMax; i++){
+		if(_stringSplit[i - 1] != _split){
+			var	_current = _stringSplit[i],
+				_char = string_upper(string_char_at(_current, 1));
+				
+			switch(_char){
+				case "": // CANCEL : "@@rHey" -> "@rHey"
+					
+					if(i < _stringSplitMax - 1){
+						_current = _split;
+					}
+					
+					break;
+					
+				case "W":
+				case "S":
+				case "D":
+				case "R":
+				case "G":
+				case "B":
+				case "P":
+				case "Y":
+				case "Q": // BASIC : "@qHey" -> "Hey"
+					
+					_current = string_delete(_current, 1, 1);
+					
+					break;
+					
+				case "0":
+				case "1":
+				case "2":
+				case "3":
+				case "4":
+				case "5":
+				case "6":
+				case "7":
+				case "8":
+				case "9": // SPRITE OFFSET : "@2(sprBanditIdle:1)Hey" -> "  Hey"
+					
+					if(string_char_at(_current, 2) == "("){
+						_current = string_delete(_current, 1, 1);
+						
+						 // Offset if Drawing Sprite:
+						var _spr = string_split(string_copy(_current, 2, string_pos(")", _current) - 2), ":")[0];
+						if(
+							real(_spr) > 0                       ||
+							sprite_exists(asset_get_index(_spr)) ||
+							_spr == "sprKeySmall"                ||
+							_spr == "sprButSmall"                ||
+							_spr == "sprButBig"
+						){
+							// draw_text_nt uses width of "A" instead of " ", so this is slightly off on certain fonts
+							if(string_width(" ") > 0){
+								_current = string_repeat(" ", real(_char) * (string_width("A") / string_width(" "))) + _current;
+							}
+						}
+					}
+					
+					 // NONE : "@2Hey" -> "@2Hey"
+					else{
+						_current = _split + _current;
+						break;
+					}
+					
+				case "(": // ADVANCED : "@(sprBanditIdle:1)Hey" -> "Hey"
+					
+					var	_bgn = string_pos("(", _current),
+						_end = string_pos(")", _current);
+						
+					if(_bgn < _end){
+						_current = string_delete(_current, _bgn, 1 + _end - _bgn);
+						break;
+					}
+					
+				default: // NONE : "@Hey" -> "@Hey"
+					
+					_current = _split + _current;
+			}
+			
+			_stringSplit[i] = _current;
+		}
+	}
+	
+	return array_join(_stringSplit, "");
+	
 #define scrWalk(_dir, _walk)
 	walk = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
 	speed = max(speed, friction);
@@ -2118,7 +2216,7 @@
 
 #define floor_bones(_sprite, _num, _chance, _linked)
 	var r = [];
-	if(!place_free(x - 32, y) && !place_free(x + 32, y) && place_free(x, y)){
+	if(!collision_rectangle(bbox_left - 16, bbox_top, bbox_right + 16, bbox_bottom, Floor, false, true) && place_free(x, y)){
 		for(var _y = y; _y < y + 32; _y += (32 / _num)){
 			var _create = true;
 			for(var _side = -1; _side <= 1; _side += 2){
@@ -4043,7 +4141,7 @@
 #define sound_play_hit_ext(_snd, _pit, _vol)
 	var s = sound_play_hit(_snd, 0);
 	sound_pitch(s, _pit);
-	sound_volume(s, _vol);
+	sound_volume(s, audio_sound_get_gain(s) * _vol);
 	return s;
 
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)
@@ -4204,7 +4302,7 @@
 							vspeed -= 1;
 						}
 						with(instance_create(x, y, LevelUp)) creator = other;
-						sound_play_hit_ext(sndLevelUltra, 2 + orandom(0.1), 0.6);
+						sound_play_hit_ext(sndLevelUltra, 2 + orandom(0.1), 1.7);
 					}
 				}
 			}

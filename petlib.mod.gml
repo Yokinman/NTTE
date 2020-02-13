@@ -364,10 +364,10 @@
 				}
 				
 				 // Effects:
-				sound_play_hit_ext(sndGoldChest,  0.9 + random(0.2), 0.6 - hush);
-				sound_play_hit_ext(sndMimicSlurp, 0.9 + random(0.2), 0.6 - hush);
+				sound_play_hit_ext(sndGoldChest,  0.9 + random(0.2), 0.8 - hush);
+				sound_play_hit_ext(sndMimicSlurp, 0.9 + random(0.2), 0.8 - hush);
 				with(instance_create(x, y, FXChestOpen)) depth = other.depth - 1;
-				hush = min(hush + 0.2, 0.4);
+				hush = min(hush + 0.2, 0.3);
 				hushtime = 60;
 			}
 
@@ -711,7 +711,7 @@
 		 // Real Parrot:
 		else if(chance(1, 4)){
 			with(leader){
-				sound_play_hit_ext(sndSaplingSpawn,                      1.8 + random(0.2), 0.3);
+				sound_play_hit_ext(sndSaplingSpawn,                      1.8 + random(0.2), 0.33);
 				sound_play_hit_ext(choose(snd_wrld, snd_chst, snd_crwn), 1.6,               0.4);
 			}
 			
@@ -762,8 +762,8 @@
 	
 #define Salamander_ttip
 	return [""];
-
-
+	
+	
 #define Scorpion_create
 	 // Visual:
 	spr_fire   = spr.PetScorpionFire;
@@ -863,7 +863,7 @@
 				if(instance_exists(target) && !instance_exists(my_venom)){
 					if(in_sight(target) && _leaderSeeTarget && _leaderDis <= 96){
 						if(chance(2, 3)){
-							sound_play_hit_ext(sndScorpionFireStart, 1.2, 2);
+							sound_play_hit_ext(sndScorpionFireStart, 1.2, 3);
 
 							 // Venom Ball:
 							var _targetDir = point_direction(x, y, target.x, target.y);
@@ -900,15 +900,15 @@
 		stat.blocked++;
 
 		 // Effects:
-		sound_play_hit_ext(sndGoldScorpionHurt,		 1.4 + random(0.4), 1);
-		sound_play_hit_ext(sndCursedPickupDisappear, 0.8 + random(0.4), 1);
+		sound_play_hit_ext(sndGoldScorpionHurt,		 1.4 + random(0.4), 1.8);
+		sound_play_hit_ext(sndCursedPickupDisappear, 0.8 + random(0.4), 1.8);
 		with(instance_create(x, y, ThrowHit)) depth = other.depth - 1;
 	}
 
 #define Scorpion_death
 	 // Sound:
-	sound_play_hit_ext(snd_dead, 0.8 + random(0.1), 1);
-	sound_play_hit_ext(sndGoldScorpionDead, 1.2 + random(0.2), 2);
+	sound_play_hit_ext(snd_dead, 0.8 + random(0.1), 1.5);
+	sound_play_hit_ext(sndGoldScorpionDead, 1.2 + random(0.2), 2.5);
 	
 	 // Venom Explo:
 	var a = random(360);
@@ -916,15 +916,15 @@
 		repeat(irandom_range(8, 12)){
 			enemy_shoot("VenomPellet", d + orandom(12), 8 + random(8));
 		}
-
+		
 		 // Effects:
 		with(instance_create(x, y, AcidStreak)){
 			motion_set(d, 4);
 			image_angle = direction;
 		}
 	}
-
-
+	
+	
 #define Slaughter_create
 	 // Visual:
 	spr_spwn = spr.PetSlaughterSpwn;
@@ -951,13 +951,13 @@
 	
 	 // Stat:
 	if("bites" not in stat) stat.bites = 0;
-
+	
 #define Slaughter_ttip
 	return ["BUBBLE BLOWIN'", "BABY", "JAWS", "VICIOUS"];
-
+	
 #define Slaughter_stat(_name, _value)
 	if(_name == "") return spr.PetSlaughterIdle;
-
+	
 #define Slaughter_anim
 	if((sprite_index != spr_hurt && sprite_index != spr_spwn && sprite_index != spr_fire) || anim_end){
 		 // Spawn Animation End:
@@ -965,9 +965,9 @@
 			sprite_index = spr_hurt;
 			image_index = 0;
 			depth = -2;
-
+			
 			 // Effects:
-			sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 0.6);
+			sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 1.2);
 			var l = -8;
 			for(var d = direction; d < direction + 360; d += (360 / 3)){
 				repeat(2) scrFX(x, y, [d + orandom(40), 4], Dust);
@@ -978,18 +978,18 @@
 				}
 			}
 		}
-
+		
 		 // Normal:
 		else{
 			if(speed <= 0) sprite_index = spr_idle;
 			else sprite_index = spr_walk;
 		}
 	}
-
+	
 #define Slaughter_step
 	if(nextexplo > current_frame) image_index = 0;
 	if(sprite_index == spr_spwn) speed = 0;
-
+	
 	 // Extra Push:
 	else if(place_meeting(x, y, hitme) && sprite_index != spr_fire){
 		with(instances_meeting(x, y, hitme)){
@@ -1003,7 +1003,7 @@
 			}
 		}
 	}
-
+	
 	 // Biting:
 	if(sprite_index == spr_fire){
 		if(image_index < 3){
@@ -1011,13 +1011,13 @@
 			if(!instance_exists(my_bite)){
 				my_bite = instance_create(x, y, RobotEat);
 			}
-
+			
 			 // Drop Bone:
 			with(my_bone){
 				hspeed = 3.5 * other.right;
 				vspeed = orandom(2);
 				rotspeed = random_range(8, 16) * choose(-1, 1);
-
+				
 				 // Unstick From Wall:
 				if(place_meeting(x, y, Wall) && instance_budge(Wall, -1)){
 					instance_create(x, y, Dust);
@@ -1026,14 +1026,14 @@
 			}
 			my_bone = noone;
 		}
-
+		
 		 // Bite:
 		else if(image_index < 3 + image_speed_raw){
 			stat.bites++;
-
+			
 			 // Attack:
 			if(instance_is(target, hitme)){
-				sound_play_hit_ext(sndExplosionS, 1.5, 0.8);
+				sound_play_hit_ext(sndExplosionS, 1.5, 1.2);
 				with(enemy_shoot_ext(target.x, target.y, "BubbleExplosionSmall", point_direction(x, y, target.x, target.y), 5)){
 					repeat(2) scrFX(x, y, [direction + orandom(30), 3], Smoke);
 					image_angle = 0;
@@ -1042,17 +1042,17 @@
 					y -= vspeed;
 				}
 			}
-
+			
 			 // Fetch Bone:
 			else if(instance_is(target, WepPickup)){
 				my_bone = target;
 				sound_play_pitchvol(sndBloodGamble, 2 + orandom(0.2), 0.6);
 			}
-
+			
 			 // Effects:
 			sound_play_pitchvol(sndSharpTeeth, 1.5 + orandom(0.2), 0.5)
 		}
-
+		
 		with(my_bite){
 			x = other.x;
 			y = other.y;
@@ -1065,12 +1065,12 @@
 	else if(!instance_exists(target)){
 		target = noone;
 	}
-
+	
 	 // Fetching:
 	if(instance_exists(my_bone)){
 		var	_x = x + hspeed_raw + (10 * right),
 			_y = y + vspeed_raw + 2;
-
+			
 		with(my_bone){
 			if(point_distance(x, y, _x, _y) > 2){
 				x += (_x - x) * 0.8 * current_time_scale;
@@ -1084,7 +1084,7 @@
 			yprevious = y;
 			speed = 0;
 			rotation += angle_difference((10 + (10 * sin((x + y) / 10))) * other.right, rotation) * 0.5 * current_time_scale;
-
+			
 			 // Portal Takes Bone:
 			var n = instance_nearest(x, y, Portal);
 			if(!visible || in_distance(n, 96)){
@@ -1092,10 +1092,10 @@
 			}
 		}
 	}
-
+	
 #define Slaughter_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 20 + random(10);
-
+	
 	if(sprite_index != spr_fire && sprite_index != spr_spwn){
 		if(instance_exists(leader)){
 			 // Pathfinding:
@@ -1103,7 +1103,7 @@
 				scrWalk(path_dir + orandom(20), 12);
 				return 1 + irandom(walk);
 			}
-
+			
 			else{
 				if(in_sight(target) && point_distance(leader.x, leader.y, target.x, target.y) < 160 && target != my_bone){
 					 // Bite:
@@ -1118,14 +1118,14 @@
 						walk = 0;
 						scrRight(point_direction(x, y, target.x, target.y));
 					}
-
+					
 					 // Towards Enemy:
 					else{
 						scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [8, 16]);
 						alarm0 = 10;
 					}
 				}
-
+				
 				 // Towards Leader:
 				else{
 					if(_leaderDis > 48){
@@ -1136,7 +1136,7 @@
 						scrWalk(_leaderDir + orandom(90), [8, 16]);
 					}
 				}
-
+				
 				 // Targeting:
 				if(sprite_index != spr_fire){
 					var _disMax = 1000000;
@@ -1155,7 +1155,7 @@
 						motion_add(point_direction(x, y, target.x, target.y) + orandom(10), 2);
 						scrRight(direction);
 					}
-
+					
 					 // Fetch:
 					if(!instance_exists(my_bone) && !in_sight(target)){
 						var _disMax = 160;
@@ -1169,19 +1169,19 @@
 							}
 						}
 					}
-	
+					
 					else return 5 + random(10);
 				}
 			}
 		}
-
+		
 		 // Wander:
 		else{
 			scrWalk(random(360), [8, 16]);
 			return 30 + random(10);
 		}
 	}
-
+	
 #define Slaughter_hurt(_hitdmg, _hitvel, _hitdir)
 	if(sprite_index != spr_spwn){
 		if(my_health > 0 && (instance_exists(leader) || (sprite_index != spr_fire && "typ" in other && other.typ == 1))){
@@ -1191,17 +1191,17 @@
 				
 				 // Sound:
 				if(snd_hurt == sndOasisBossHurt){
-					sound_play_hit_ext(snd_hurt, 1.2 + random(0.1), 1);
+					sound_play_hit_ext(snd_hurt, 1.2 + random(0.1), 1.4);
 				}
 				
 				 // Bubble Armor:
 				if(nextexplo <= current_frame){
 					nextexplo = current_frame + 6;
-	
+					
 					var	_ang = random(360),
 						_num = 3 + (crown_current == crwn_death),
 						l = 8;
-		
+						
 					for(var d = _ang; d < _ang + 360; d += (360 / _num)){
 						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BubbleExplosionSmall")){
 							creator = other;
@@ -1211,10 +1211,10 @@
 					}
 					
 					 // Sound:
-					sound_play_hit_ext(sndExplosion, 1.5 + random(0.5), 1);
+					sound_play_hit_ext(sndExplosion, 1.5 + random(0.5), 1.2);
 				}
 			}
-	
+			
 			 // Eat:
 			else if(!instance_exists(other) || ("typ" in other && other.typ != 0)){
 				nexthurt = current_frame + 6;
@@ -1224,18 +1224,18 @@
 				walk = 0;
 			}
 		}
-	
+		
 		 // Dodge:
 		else if(sprite_index != spr_fire){
 			sprite_index = spr_fire;
 			image_index = 3;
 		}
 	}
-
+	
 #define Slaughter_death
-	sound_play_hit_ext(snd_dead, 1.5 + random(0.3), 1);
-
-
+	sound_play_hit_ext(snd_dead, 1.5 + random(0.3), 1.4);
+	
+	
 #define Spider_create
 	 // Visual:
 	spr_shadow_y = 0;
@@ -1442,16 +1442,16 @@
 			_ly = leader.y,
 			_leaderDir = point_direction(x, y, _lx, _ly),
 			_leaderDis = point_distance(x, y, _lx, _ly);
-
+			
 		if(leader.visible && in_sight(leader) && _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/){
 			 // Lightning Arcing Effects:
 			if(arcing < 1){
 				arcing += 0.15 * current_time_scale;
-
+				
 				if(current_frame_active){
 					var	_dis = random(_leaderDis),
 						_dir = _leaderDir;
-
+						
 					with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
 						if(object_index == LaserCharge){
 							sprite_index = sprLightning;
@@ -1463,11 +1463,11 @@
 						motion_add(random(360), 1);
 					}
 				}
-
+				
 				 // Arced:
 				if(arcing >= 1){
 					sound_play_pitch(sndLightningHit, 2);
-
+					
 					 // Laser Brain FX:
 					if(skill_get(mut_laser_brain)){
 						with(instance_create(x, y, LaserBrain)){
@@ -1481,24 +1481,24 @@
 					}
 				}
 			}
-
+			
 			 // Lightning Arc:
 			else{
 				lightning_connect(_lx, _ly, x, y, 8 * sin(wave / 60), false);
 				stat.arcing += (current_time_scale / 30);
 			}
 		}
-
+		
 		 // Stop Arcing:
 		else{
 			if(arcing > 0){
 				arcing = 0;
 				sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
-
+				
 				repeat(2){
 					var	_dis = random(point_distance(x, y, _lx, _ly)),
 						_dir = point_direction(x, y, _lx, _ly);
-
+						
 					with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
 						motion_add(random(360), 1);
 					}
@@ -1512,7 +1512,7 @@
 			if(arcing >= 1){
 				var	_nearest = noone,
 					_disMax = 96;
-
+					
 				with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
@@ -1528,22 +1528,22 @@
 						}
 					}
 				}
-
+				
 				if(instance_exists(_nearest)){
 					arcing_attack = 30 + random(30);
 					with(enemy_shoot("TeslaCoil", point_direction(x, y, _nearest.x, _nearest.y), 0)){
 						dist_max = _disMax;
 						creator_offx = 9;
-
+						
 						 // Manually Targeting:
 						alarm0 = -1;
 						target = _nearest;
 						target_x = target.x;
 						target_y = target.y;
-
+						
 						 // Effects:
 						var _brain = skill_get(mut_laser_brain);
-						sound_play_hit_ext((_brain ? sndLightningPistolUpg : sndLightningPistol), 1.5 + orandom(0.2), 1);
+						sound_play_hit_ext((_brain ? sndLightningPistolUpg : sndLightningPistol), 1.5 + orandom(0.2), 1.2);
 						if(_brain) instance_create(x, y, LaserBrain).creator = other;
 					}
 				}
@@ -1552,7 +1552,7 @@
 		}
 	}
 	else arcing = 0;
-
+	
 	 // He is bouncy:
 	if(array_length(path) <= 0){
 		with(path_wall) with(other){
@@ -1576,7 +1576,7 @@
 				text = string_replace(text, string(spr.PetOctoIcon), string(other.spr_icon));
 			}
 		}
-
+		
 		 // Hop to New Pit:
 		if(image_index < 1) image_index -= image_speed_raw * 0.95;
 		else if(anim_end){
@@ -1586,10 +1586,10 @@
 				y = (f.bbox_bottom + f.bbox_top + 1) / 2;
 			}
 		}
-
+		
 		 // Move Slower:
 		speed = clamp(speed, 0, maxspeed - 0.4);
-
+		
 		 // Can't be Grabbed Under Floors:
 		can_take = (floor_get(x, y - 4).sprite_index == spr.FloorTrenchB);
 	}
@@ -1765,7 +1765,7 @@
 						}
 					}
 					instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
-					sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 1);
+					sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 2.4);
 					other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
 					
 					 // Duplicate:
@@ -2008,14 +2008,16 @@
 	wkick -= clamp(wkick, -current_time_scale, current_time_scale);
 	
 #define Weapon_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
-	var _back = (gunangle < 180);
+	 // Self Behind:
+	var _back = (gunangle > 180);
 	if(!_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
 	 // Gun:
-	if(my_health > 0 || maxhealth <= 0){
+	if(!instance_exists(revive)){
 		draw_weapon(weapon_get_sprite(wep), _x, _y, gunangle, 0, wkick, right, _col, _alp);
 	}
 	
+	 // Self:
 	if(_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
 #define Weapon_alrm0(_leaderDir, _leaderDis)

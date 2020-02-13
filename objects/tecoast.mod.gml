@@ -20,6 +20,11 @@
 
 #macro DebugLag global.debug_lag
 
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
 #define BloomingAssassin_create(_x, _y)
 	with(instance_create(_x, _y, JungleAssassin)){
 		 // Visual:
@@ -550,8 +555,10 @@
 
 	 // Pushed away from floors:
 	if(in_distance(Floor, 128)){
-		var f = instance_nearest_bbox(x, y, Floor);
-		motion_add_ct(point_direction((f.bbox_left + f.bbox_right + 1) / 2, (f.bbox_top + f.bbox_bottom + 1) / 2, x, y), 3);
+		with(instance_nearest_bbox(x, y, Floor)){
+			var _dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
+			with(other) motion_add_ct(_dir, 3);
+		}
 	}
 
 	 // Push Player:
@@ -1766,9 +1773,8 @@
 						 // Launchin:
 						if(GameCont.loops > 0 && chance(1, 2)){
 							with(obj_create(x, y, "PalankingToss")){
-								if(instance_exists(Floor)){
-									var n = instance_nearest_bbox(x, y, Floor);
-									direction = point_direction(x, y, (n.bbox_left + n.bbox_right + 1) / 2, (n.bbox_top + n.bbox_bottom + 1) / 2) + orandom(30);
+								with(instance_nearest_bbox(x, y, Floor)){
+									other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
 								}
 								speed = 4 + random(4);
 								creator = other;
@@ -2929,9 +2935,8 @@
 				var n = instance_nearest_bbox(x, y, Wall);
 				if(instance_exists(n)){
 					with(n) if(distance_to_point(other.x, other.y) < other.toss_speed + (max(other.toss.sprite_height, other.toss.sprite_width) / 2)){
-						with(other){
-							motion_add_ct(point_direction((other.bbox_left + other.bbox_right + 1) / 2, (other.bbox_top + other.bbox_bottom + 1) / 2, x, y), 1);
-						}
+						var _dir = point_direction(bbox_center_x, bbox_center_x, other.x, other.y);
+						with(other) motion_add_ct(_dir, 1);
 					}
 				}
 
@@ -2990,8 +2995,8 @@
 									image_yscale *= 2/3;
 								}
 							}
-							sound_play_hit_ext(sndDiscDie, 0.6 + random(0.3), 1.3);
-							sound_play_hit(sndMeleeFlip, 0.2);
+							sound_play_hit_ext(sndDiscDie, 0.6 + random(0.1), 2);
+							sound_play_hit_ext(sndMeleeFlip, 0.8 + random(0.2), 3);
 						}
 					}
 
@@ -3306,7 +3311,7 @@
 
 							 // Preparin:
 							wkick = -4;
-							sound_play_hit_ext(sndShotReload, 1.5 + random(0.5), 0.5);
+							sound_play_hit_ext(sndShotReload, 1.5 + random(0.5), 1.2);
 							with(instance_create(x, y, Shell)){
 								sprite_index = sprShotShell;
 								motion_add(other.gunangle + (90 * other.right), 2 + random(2));
@@ -3329,7 +3334,7 @@
 						slide = 20;
 						alarm2 = 8;
 						direction = random(360);
-						sound_play_hit_ext(sndSnowBotSlideStart, 1.3 + random(0.4), 1);
+						sound_play_hit_ext(sndSnowBotSlideStart, 1.3 + random(0.4), 1.5);
 					}
 
 					alarm1 = slide + 5 + random(15);
@@ -3527,8 +3532,8 @@
 			 // Effects:
 			wkick = 10;
 			direction += choose(-30, 30);
-			sound_play_hit_ext(sndEnemyFire, 1 + random(0.3), 1.5);
-			sound_play_hit_ext(sndTurretFire, 1.3 + orandom(0.2), 0.8);
+			sound_play_hit_ext(sndEnemyFire, 1 + random(0.3), 2.5);
+			sound_play_hit_ext(sndTurretFire, 1.3 + orandom(0.2), 1.5);
 
 			break;
 	}
@@ -4691,11 +4696,10 @@
 
 		 // Walled:
 		if(!visible && !place_meeting(x, y, Floor)){
-			if(instance_exists(Floor)){
-				var n = instance_nearest_bbox(x, y, Floor);
-				x = (n.bbox_left + n.bbox_right + 1) / 2;
-				y = (n.bbox_top + n.bbox_bottom + 1) / 2;
-				repeat(4) instance_create(x, y, Smoke);
+			with(instance_nearest_bbox(x, y, Floor)){
+				other.x = bbox_center_x;
+				other.y = bbox_center_y;
+				repeat(4) instance_create(other.x, other.y, Smoke);
 			}
 		}
 

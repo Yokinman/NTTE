@@ -287,7 +287,7 @@
 			 // Sound:
 			sound_play(scrWepModeInfo(w, "swap"));
 			sound_play_hit(sndMutant14Turn, 0.1);
-			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 2);
+			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 4);
 			
 			 // Silence:
 			mod_variable_set("mod", "ntte", "sPromptIndex", -1);

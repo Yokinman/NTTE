@@ -2321,10 +2321,10 @@
 							mergewep_indicator = null;
 							
 							 // FX:
-							sound_play_hit_ext(sndNecromancerRevive, 1, 1.5);
+							sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
 							sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
 							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
-							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1);
+							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
 							with(instance_create(x, y + 2, ReviveFX)){
 								sprite_index = sprPopoRevive;
 								image_xscale = 0.8;
@@ -3348,16 +3348,34 @@
 			
 			 // Pet Indicator:
 			with(instances_matching(CustomHitme, "name", "Pet")){
-				var _dead = (maxhealth > 0 && my_health <= 0);
-				if("index" in leader && player_is_local_nonsync(leader.index) && ((visible && !point_seen(x, y, leader.index)) || _dead)){
+				var _draw = false;
+				
+				 // Death Conditions:
+				if(instance_exists(revive)){
+					if(instance_exists(leader)){
+						_draw = true;
+						with(revive) with(pickup_indicator){
+							if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep)) > 0){
+								_draw = false;
+							}
+						}
+					}
+				}
+				
+				 // Normal Conditions:
+				else if(visible && "index" in leader && player_is_local_nonsync(leader.index) && !point_seen(x, y, leader.index)){
+					_draw = true;
+				}
+				
+				if(_draw){
 					var _icon = pet_get_icon(mod_type, mod_name, pet);
 					
 					if(sprite_exists(_icon.spr)){
 						var	_x = x + _icon.x,
 							_y = y + _icon.y;
-								
+							
 						 // Death Pointer:
-						if(_dead){
+						if(instance_exists(revive)){
 							_y -= 20 + sin(wave / 10);
 							draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
 						}
@@ -3374,7 +3392,7 @@
 						draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
 						
 						 // Death Indicating:
-						if(_dead){
+						if(instance_exists(revive)){
 							var	_flashLength = 15,
 								_flashDelay = 10,
 								_flash = (current_frame % (_flashLength + _flashDelay));

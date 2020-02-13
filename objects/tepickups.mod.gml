@@ -2892,14 +2892,14 @@
 	}
 	
 	 // Sound:
-	sound_play_hit_ext(sndBloodGamble, 1.6 + random(0.2), 0.5);
-	var s = audio_play_sound(sndSharpTeeth, 0, false);
-	audio_sound_pitch(s, 0.6 + random(0.4));
-	audio_sound_gain(s, 0.4, 0);
+	sound_play_hit_ext(sndBloodGamble, 1.6 + random(0.2), 1.8);
+	var s = sound_play(sndSharpTeeth);
+	sound_pitch(s, 0.6 + random(0.4));
+	sound_volume(s, 0.4);
 	
 	instance_destroy();
-
-
+	
+	
 #define VaultFlower_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -3065,7 +3065,7 @@
 			}
 		}
 	}
-	sound_play_hit_ext(sndPlantSnare, 0.8, 1.5);
+	sound_play_hit_ext(sndPlantSnare, 0.8, 2.5);
 	
 	 // Secret:
 	if(!wilted){
@@ -3286,7 +3286,7 @@
 		
 		 // Effects:
 		repeat(3) scrFX([x, 4], [y, 4], random(1), Dust);
-		sound_play_hit_ext(sndWeaponPickup, 0.7, 0.5);
+		sound_play_hit_ext(sndWeaponPickup, 0.7, 0.8);
 	}
 	with(instance_create(x, y, WepSwap)){
 		depth = other.depth - 1;

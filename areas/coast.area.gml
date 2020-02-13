@@ -20,8 +20,8 @@
 	surfWaves    = surflist_set("CoastWaves",    0, 0, game_width, game_height);
 	surfWavesSub = surflist_set("CoastWavesSub", 0, 0, game_width, game_height);
 	surfSwim     = surflist_set("CoastSwim",     0, 0, 200, 200);
-	surfSwimBot	 = surflist_set("CoastSwimBot",	 0, 0, 0, 0);
-	surfSwimTop	 = surflist_set("CoastSwimTop",	 0, 0, 0, 0);
+	surfSwimBot  = surflist_set("CoastSwimBot",	 0, 0, 0, 0);
+	surfSwimTop  = surflist_set("CoastSwimTop",	 0, 0, 0, 0);
 	with([surfTrans, surfFloor]) reset = true;
     with(surfSwim){
 	    inst_visible = [];

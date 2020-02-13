@@ -3434,7 +3434,7 @@
 						_boomSmall = [],
 						_snd = -1,
 						_pit = 1 + orandom(0.1),
-						_vol = 3 + random(2),
+						_vol = 3,
 						_dir = (360 * (i / _num)) + _dirAng,
 						_x = x + lengthdir_x(_dis, _dir),
 						_y = y + lengthdir_y(_dis, _dir);
@@ -3469,7 +3469,7 @@
 								case 2:
 									_snd = sndBloodLauncherExplo;
 									_pit = 1.4 + orandom(0.2);
-									_vol = 0.6;
+									_vol = 1.5;
 									array_push(_boomSmall, instance_create(_x, _y, MeatExplosion));
 									break;
 	
@@ -4195,7 +4195,7 @@
 					y += vspeed;
 
 					 // Open FX:
-					sound_play_hit_ext(sndClusterOpen, 1 + orandom(0.2), 0.6);
+					sound_play_hit(sndClusterOpen, 0.2);
 					with(instance_create(x, y, Smoke)){
 						motion_add(direction, random(2));
 						depth = other.depth - 1;
