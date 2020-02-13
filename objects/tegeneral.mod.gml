@@ -2382,7 +2382,7 @@
 	
 	 // Portal Attraction:
 	var _spin = 0;
-	if((instance_exists(leader) && visible) || instance_exists(revive)){
+	if(visible || instance_exists(revive)){
 		with(Portal) if(point_distance(x, y, other.x, other.y) < 64 || (object_index == BigPortal && timer > 30)){
 			if(in_sight(other)){
 				with(other){
