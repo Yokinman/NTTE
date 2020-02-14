@@ -1269,13 +1269,14 @@
 			
 			 // Weapon Chest Mimic:
 			p = m + "Weapon/";
-			PetWeaponIcon = sprite(p + "sprPetWeaponIcon",	1,	6,	6);
-			PetWeaponChst = sprite(p + "sprPetWeaponChst",	1,	8,	8);
-			PetWeaponSpwn = sprite(p + "sprPetWeaponSpwn",	16,	12,	12);
-			PetWeaponIdle = sprite(p + "sprPetWeaponIdle",	8,	12,	12);
-			PetWeaponWalk = sprite(p + "sprPetWeaponWalk",	8,	12,	12);
-			PetWeaponHurt = sprite(p + "sprPetWeaponHurt",	3,	12,	12);
-			PetWeaponDead = sprite(p + "sprPetWeaponDead",	6,	12,	12);
+			PetWeaponIcon = sprite(p + "sprPetWeaponIcon",  1,  6,  6);
+			PetWeaponChst = sprite(p + "sprPetWeaponChst",  1,  8,  8);
+			PetWeaponHide = sprite(p + "sprPetWeaponHide",  8, 12, 12);
+			PetWeaponSpwn = sprite(p + "sprPetWeaponSpwn", 16, 12, 12);
+			PetWeaponIdle = sprite(p + "sprPetWeaponIdle",  8, 12, 12);
+			PetWeaponWalk = sprite(p + "sprPetWeaponWalk",  8, 12, 12);
+			PetWeaponHurt = sprite(p + "sprPetWeaponHurt",  3, 12, 12);
+			PetWeaponDead = sprite(p + "sprPetWeaponDead",  6, 12, 12);
 			
 		//#endregion
 	}

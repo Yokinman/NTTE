@@ -956,7 +956,7 @@
 				_num = irandom_range(6, 12),
 				_dir = direction,
 				_ped = true,
-				_tries = 1000;
+				_tries = 100;
 				
 			while(_num > 0 && _tries-- > 0){
 				var	_moveDis = 32,
@@ -971,6 +971,7 @@
 					
 				if(!instance_exists(n) || abs(_fx - n.x) > _floorDis || abs(_fy - n.y) > _floorDis){
 					_num--;
+					_tries = 100;
 					
 					 // Main Loot:
 					if(_spawnPed){
@@ -1025,7 +1026,7 @@
 				else{
 					_fx -= lengthdir_x(_moveDis, _moveDir);
 					_fy -= lengthdir_y(_moveDis, _moveDir);
-					_dir = direction;
+					_dir = _moveDir + 180 + orandom(90);
 				}
 			}
 		}
@@ -1905,10 +1906,10 @@
 		creator = noone;
 		small = false;
 		num = 6;
-
+		
 		return id;
 	}
-
+	
 #define ParrotChester_step
 	if(instance_exists(creator)){
 		x = creator.x;
@@ -1925,7 +1926,7 @@
 					t = noone;
 				}
 			}
-
+			
 			 // Feathers:
 			with(t){
 				for(var i = 0; i < other.num; i++){
@@ -1937,7 +1938,7 @@
 						target = other;
 						stick_wait = 3;
 					}
-
+					
 					 // Sound FX:
 					if(fork()){
 						wait((i * (4 / other.num)) + irandom(irandom(1)));
@@ -1947,11 +1948,11 @@
 				}
 			}
 		}
-
+		
 		instance_destroy();
 	}
-
-
+	
+	
 #define ParrotFeather_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -1981,10 +1982,10 @@
 		
 		return id;
 	}
-
+	
 #define ParrotFeather_step
 	speed -= speed_raw * 0.1;
-
+	
 	 // Timer:
 	if(stick_time > 0){
 		 // Generate Queue:
@@ -1995,7 +1996,7 @@
 			}
 		}
 		else stick_list = [];
-
+		
 		 // Decrement When First in Queue:
 		if(
 			(stick && array_find_index(stick_list, id) == 0)
@@ -2005,11 +2006,11 @@
 			stick_time -= lq_defget(variable_instance_get(target, "ntte_charm", 0), "time_speed", 1) * current_time_scale;
 		}
 	}
-
+	
 	if(stick_time > 0 && instance_exists(target) && (!stick || ("ntte_charm" in target && lq_defget(target.ntte_charm, "charmed", true)))){
 		if(!stick){
 			stick_list = [];
-
+			
 			 // Reach Target Faster:
 			if(canhold){
 				if(
@@ -2026,21 +2027,21 @@
 				y += vspeed_raw * move_factor;
 			}
 			else move_factor = 0;
-
+			
 			 // Reaching Target:
 			if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
 				canhold = false;
-
+				
 				 // Fly Towards Enemy:
 				motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
-
+				
 				if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
 					 // Effects:
 					with(instance_create(x, y, Dust)) depth = other.depth - 1;
 					sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
 					sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
 					sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
-
+					
 					 // Stick to & Charm Enemy:
 					if(target != creator){
 						stick = true;
@@ -2048,7 +2049,7 @@
 						sticky = random(y - target.y);
 						image_angle = random(360);
 						speed = 0;
-
+						
 						 // Parrot's Special Stat:
 						if("ntte_charm" not in target){
 							var _race = variable_instance_get(creator, "race", char_random);
@@ -2057,7 +2058,7 @@
 								stat_set(_stat, stat_get(_stat) + 1);
 							}
 						}
-
+						
 						 // Charm Enemy:
 						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
 						with(charm_instance(target, true)){
@@ -2067,7 +2068,7 @@
 							}
 						}
 					}
-
+					
 					 // Player Pickup:
 					else{
 						with(creator){
@@ -2082,53 +2083,53 @@
 					}
 				}
 			}
-
+			
 			 // Orbit Enemy:
 			else{
 				var	l = 16,
 					d = point_direction(target.x, target.y, x, y);
-
+					
 				d += 5 * sign(angle_difference(direction, d));
-
+				
 				var	_x = target.x + lengthdir_x(l, d),
 					_y = target.y + lengthdir_y(l, d);
-
+					
 				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
 			}
-
+			
 			 // Stick Delay:
 			if(stick_wait > 0){
 				stick_wait -= current_time_scale;
 				if(stick_wait <= 0) stick_wait = 0;
 			}
-
+			
 			 // Facing:
 			image_angle = direction + 135;
 		}
 	}
-
+	
 	else{
 		 // Travel to Creator:
 		if(!stick && stick_time > 0 && instance_exists(creator)){
 			target = creator;
 		}
-
+		
 		 // End:
 		else instance_destroy();
 	}
-
+	
 #define ParrotFeather_end_step
 	if(stick && instance_exists(target)){
 		x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
 		y = target.y + (sticky * image_yscale);
 		visible = target.visible;
 		depth = target.depth - 1;
-
+		
 		 // Target In Water:
 		if("wading" in target && target.wading != 0){
 			visible = true;
 		}
-
+		
 		 // Z-Axis Support:
 		if("z" in target){
 			if(target.object_index == RavenFly || target.object_index == LilHunterFly){
@@ -2142,13 +2143,13 @@
 		visible = true;
 		depth = -8;
 	}
-
+	
 #define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
 	var _col = image_blend;
 	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
 	draw_self();
 	image_blend = _col;
-
+	
 #define ParrotFeather_destroy
 	 // Fall to Ground:
 	with(instance_create(x, y, Feather)){
@@ -2157,7 +2158,7 @@
 		image_blend = other.image_blend_fade;
 		depth = ((!position_meeting(x, y, Floor) && !in_sight(other.creator)) ? -6.01 : 0);
 	}
-
+	
 	 // Sound:
 	sound_play_pitchvol(sndMoneyPileBreak, 1.5 + random(1.5), random(0.4));
 	if("ntte_charm" in target){
@@ -2167,13 +2168,13 @@
 			(stick_time_max / max(stick_time_max, lq_defget(target.ntte_charm, "time", 0)))
 		);
 	}
-
+	
 #define ParrotFeather_cleanup
 	with(stick_list) if(instance_exists(self)){
 		stick_list = array_delete_value(stick_list, other);
 	}
-
-
+	
+	
 #define Pet_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -2248,7 +2249,7 @@
 		mask_index = mask_store;
 		mask_store = null;
 	}
-
+	
 	 // Loading Screen Visual:
 	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
 		if(!instance_exists(my_portalguy)){
@@ -2258,7 +2259,7 @@
 				image_index = 2;
 				turnspeed *= 1.5;
 				dist /= 2;
-
+				
 				if(!in_range(turnspeed, -3, 3)){
 					turnspeed /= 2;
 				}
@@ -2273,7 +2274,7 @@
 			grow = 0;
 		}
 	}
-
+	
 #define Pet_step
 	wave += current_time_scale;
 	
@@ -2538,9 +2539,12 @@
 	
 	 // Going to New Level:
 	if(instance_exists(GenCont) || instance_exists(LevCont)){
-		with(revive) instance_destroy(); // Revive
-		portal_angle = 0;
 		visible = false;
+		
+		 // Reset:
+		with(revive) instance_destroy();
+		my_health = maxhealth;
+		portal_angle = 0;
 		
 		 // Follow Player:
 		var _inst = (instance_exists(leader) ? leader : instance_nearest(x, y, Player));
@@ -2890,68 +2894,41 @@
 		bossname = "WEAPON MIMIC";
 		col = c_red;
 		
+		 // HP:
+		maxhealth = boss_hp(120);
+		var _hp = maxhealth;
+		
+		 // Base Code:
+		mod_script_call("mod", "petlib", "Weapon_create");
+		
 		 // Visual:
 		spr_idle = spr.PetWeaponIdle;
 		spr_walk = spr.PetWeaponWalk;
 		spr_hurt = spr.PetWeaponHurt;
 		spr_dead = spr.PetWeaponDead;
-		spr_spwn = spr.PetWeaponSpwn;
 		spr_shadow = shd24;
-		spr_shadow_x = 0;
 		spr_shadow_y = -1;
-		hitid = [spr_idle, "WEAPON MIMIC"];
-		sprite_index = spr_spwn;
 		depth = -2;
-		
-		 // Sounds:
-		snd_hurt = sndMimicHurt;
-		snd_dead = sndMimicDead;
 		
 		 // Vars:
 		mask_index = mskFreak;
-		maxhealth = boss_hp(120);
+		maxhealth = _hp;
 		size = 1;
 		walk = 0;
 		walkspeed = 2;
 		maxspeed = 3;
 		intro = false;
 		corpse = false;
-		type = irandom(5);
-		gunangle = random(360);
-		gunangle_goal = gunangle;
-		gunangle_turn = 0.25;
-		shootdis_min = 0;
-		shootdis_max = 192;
 		path = [];
 		path_delay = 0;
 		cover_x = x;
 		cover_y = y;
 		cover_peek = false;
 		cover_delay = 0;
-		setup = true;
 		
 		 // Alarms:
 		alarm1 = 60;
-		alarm2 = 30;
-		
-		 // Weapons:
-		with(["", "b"]){
-			var b = self;
-			with(other){
-				variable_instance_set(self, b + "wep",       wep_none);
-				variable_instance_set(self, b + "wkick",     0);
-				variable_instance_set(self, b + "wepangle",  0);
-				variable_instance_set(self, b + "wepflip",   choose(-1, 1));
-				variable_instance_set(self, b + "reload",    alarm2);
-				variable_instance_set(self, b + "can_shoot", false);
-				variable_instance_set(self, b + "wep_laser", 0);
-			}
-		}
-		
-		 // Sounds:
-		audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
-		audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
-		sound_play_hit(sndBigWeaponChest, 0);
+		alarm2 = reload;
 		
 		 // NTTE:
 		ntte_anim = false;
@@ -2959,546 +2936,250 @@
 		return id;
 	}
 	
-#define PetWeaponBoss_setup
-	setup = false;
-	
-	if(type >= 0){
-		 // Auto-Wep:
-		if(wep == wep_none){
-			var t = (chance(1, 10) ? 2 : (GameCont.loops > 0));
-			
-			switch(type){     // NORMAL //           // LOOP //           // RARE //
-				case 0:	wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][t]; break;
-				case 1:	wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][t]; break;
-				case 2:	wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][t]; break;
-				case 3:	wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][t]; break;
-				case 4:	wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][t]; break;
-				case 5:	wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][t]; break;
-			}
-			
-			 // Akimbo:
-			if(bwep == wep_none){
-				var _name = string_upper(weapon_get_name(wep));
-				if(string_pos("REVOLVER", _name) > 0 || string_pos("PISTOL", _name) > 0){
-					bwep = wep;
-				}
-			}
-		}
-		else{
-			type = (weapon_is_melee(wep) ? 0 : weapon_get_type(wep));
-		}
-		
-		 // Weapon Setup:
-		gunangle_turn = 0.25;
-		shootdis_min = 32;
-		shootdis_max = 192;
-		switch(type){
-			case 0:
-				shootdis_min = 0;
-				break;
-				
-			case 2:
-				shootdis_min = 0;
-				shootdis_max = 96 + (64 * (wep == wep_eraser));
-				break;
-				
-			case 3:
-				gunangle_turn = 0.5;
-				shootdis_min = 64;
-				shootdis_max = 320;
-				break;
-				
-			case 4:
-				gunangle_turn = 0.1;
-				break;
-		}
-		if(wep == wep_jackhammer) gunangle_turn = 0.1;
-	}
-	
-	 // Melee:
-	var w = choose(-120, 120);
-	wepangle = w * weapon_is_melee(wep);
-	bwepangle = -w * weapon_is_melee(bwep);
-	
 #define PetWeaponBoss_step
-	if(setup) PetWeaponBoss_setup();
-	
 	if(path_delay > 0) path_delay -= current_time_scale;
 	if(cover_delay > 0) cover_delay -= current_time_scale;
 	
-	 // Animate:
-	if(sprite_index != spr_spwn || anim_end){
-		sprite_index = enemy_sprite;
-		
-		 // Boss Intro:
-		if(!intro){
-			intro = true;
-			boss_intro("PetWeapon", sndBigWeaponChest, musBoss1);
-			
-			 // Swap:
-			wkick = -2;
-			bwkick = -2;
-			sound_play(weapon_get_swap(wep));
-			instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
-		}
-	}
-	bwkick -= clamp(bwkick, -current_time_scale, current_time_scale);
+	 // Base Code:
+	mod_script_call("mod", "petlib", "Weapon_anim");
+	mod_script_call("mod", "petlib", "Weapon_step");
 	
-	 // Aim:
-	if(enemy_target(x, y) && in_sight(target)){
-		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
-	}
-	scrAim(angle_lerp(gunangle, gunangle_goal, gunangle_turn * current_time_scale));
-	
-	 // Weapons:
-	with(["", "b"]){
-		var b = self;
-		with(other){
-			var	_wep = variable_instance_get(self, b + "wep"),
-				_reload = variable_instance_get(self, b + "reload");
-				
-			 // Reloading:
-			if(_reload > 0){
-				_reload -= current_time_scale;
-				
-				 // Reload FX:
-				if(_reload <= 0 && variable_instance_get(self, b + "can_shoot") <= 0 && sprite_index != spr_spwn){
-					var _snd = -1;
-					
-					 // Melee:
-					variable_instance_set(self, b + "wepflip", -variable_instance_get(self, b + "wepflip"));
-					if(weapon_is_melee(_wep)){
-						var	l = 12,
-							d = gunangle + variable_instance_get(self, b + "wepangle");
-							
-						instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
-						variable_instance_set(self, b + "wkick", -3);
-						_snd = sndMeleeFlip;
-					}
-					
-					 // Normal:
-					else switch(weapon_get_type(_wep)){
-						case 2: // SHELL
-							_snd = sndShotReload;
-							
-							 // Epic:
-							variable_instance_set(self, b + "wkick", -4);
-							repeat(weapon_get_cost(_wep)){
-								with(instance_create(x, y, Shell)){
-									sprite_index = sprShotShell;
-									motion_add(other.gunangle + (100 * other.right) + orandom(20), 2 + random(2));
-								}
-							}
-							break;
-							
-						case 3: // BOLT
-							_snd = sndCrossReload;
-							break;
-							
-						case 4: // EXPLOSIVE
-							if(array_exists([wep_grenade_launcher, wep_golden_grenade_launcher, wep_grenade_shotgun, wep_grenade_rifle, wep_auto_grenade_shotgun, wep_ultra_grenade_launcher, wep_sticky_launcher, wep_hyper_launcher, wep_toxic_launcher, wep_cluster_launcher, wep_heavy_grenade_launcher], _wep)){
-								_snd = sndNadeReload;
-							}
-							break;
-							
-						case 5: // ENERGY
-							if(string_pos("PLASMA", weapon_get_name(_wep)) == 1){
-								_snd = sndPlasmaReload;
-							}
-							else if(string_pos("LIGHTNING", weapon_get_name(_wep)) == 1){
-								_snd = sndLightningReload;
-							}
-							break;
-					}
-					
-					if(sound_exists(_snd)){
-						sound_play_hit_ext(_snd, 1.15 + orandom(0.25), 1.5);
-					}
-				}
-			}
-			
-			 // Ready:
-			else{
-				var _wepLaser = variable_instance_get(self, b + "wep_laser");
-				
-				 // Laser Sight:
-				if(weapon_get_laser_sight(wep)){
-					if(point_distance(x, y, cover_x, cover_y) < 24 || (enemy_target(x, y) && in_sight(target))){
-						_wepLaser += current_time_scale / (in_distance(target, shootdis_min) ? 60 : 5);
-					}
-					else if(_wepLaser > 0){
-						_wepLaser -= current_time_scale / 3;
-					}
-				}
-				
-				 // Shoot:
-				var _canShoot = variable_instance_get(self, b + "can_shoot");
-				if(_canShoot > 0){
-					var	_minID    = GameObject.id,
-						_wepangle = variable_instance_get(self, b + "wepangle"),
-						_wkick    = variable_instance_get(self, b + "wkick");
-						
-					_canShoot--;
-					_wepLaser = 0;
-					
-					 // Mutation Fixes:
-					var _muts = [[mut_long_arms, 0], [mut_recycle_gland, 0], [mut_shotgun_shoulders, 0], [mut_bolt_marrow, 0], [mut_boiling_veins, 0], [mut_laser_brain, 0]];
-					with(_muts){
-						var v = self[1];
-						self[@1] = skill_get(self[0]);
-						skill_set(self[0], v);
-					}
-					
-					 // Fire:
-					with(player_fire_ext(gunangle, _wep, x, y, team, id)){
-						_reload = reload;
-						_wkick = wkick * 1.5;
-					}
-					_wepangle *= -1;
-					
-					 // Reset Mutation Fixes:
-					with(_muts) skill_set(self[0], self[1]);
-					
-					 // Projectiles:
-					with(instances_matching_gt([projectile, LaserCannon], "id", _minID)){
-						hitid = other.hitid;
-						
-						 // Specifics:
-						switch(object_index){
-							case Bullet2: // Nerf Shotguns
-								if(string_pos("SHOTGUN", string_upper(weapon_get_name(_wep))) > 0){
-									speed *= 0.8;
-								}
-								break;
-								
-							case Bolt: // Bolt Marrow Fix
-								instance_create_copy(x, y, "DiverHarpoon");
-								break;
-								
-							default:
-								 // Time Nades:
-								if(instance_is(self, Grenade) && alarm0 > 0){
-									var a = (alarm2 - alarm0);
-									alarm0 += (_canShoot * weapon_get_load(_wep));
-									if(alarm2 > 0){
-										if(TopCont.darkness) a -= 40;
-										alarm2 = max(1, alarm0 + a);
-									}
-								}
-						}
-						
-						 // Euphoria:
-						speed *= power(0.8, skill_get(mut_euphoria));
-						
-						 // Enemy Spriterize:
-						team_instance_sprite(1, self);
-					}
-					
-					variable_instance_set(self, b + "can_shoot", _canShoot);
-					variable_instance_set(self, b + "wepangle",  _wepangle);
-					variable_instance_set(self, b + "wkick",     _wkick);
-				}
-				
-				variable_instance_set(self, b + "wep_laser", _wepLaser);
-			}
-			
-			variable_instance_set(self, b + "reload", _reload);
-		}
+	 // Boss Intro:
+	if(!intro && sprite_index != spr_hide && sprite_index != spr_spwn){
+		intro = true;
+		boss_intro("PetWeapon", sndBigWeaponChest, musBoss1);
 	}
 	
 	 // Laser Cannon:
-	var _laserCannon = instances_matching(LaserCannon, "creator", id);
-	if(wep == wep_laser_cannon || array_length(_laserCannon) > 0){
-		with(_laserCannon){
-			direction = other.gunangle;
-			image_angle = other.gunangle;
-			time = 1 + floor(abs(angle_difference(other.gunangle, other.gunangle_goal)) / 4);
-		}
-		with(instances_matching(Laser, "creator", id)){
-			image_yscale = 1.4;
-			hitid = other.hitid;
-			team_instance_sprite(1, self);
-		}
+	with(instances_matching(LaserCannon, "creator", id)){
+		time = 1 + floor(abs(angle_difference(other.gunangle, other.gunangle_goal)) / 4);
 	}
-	else if(wep == wep_jackhammer){
-		with(instances_matching(SawBurst, "creator", id)){
-			direction = other.gunangle;
-		}
+	with(instances_matching(instances_matching(Laser, "creator", id), "sprite_index", sprLaser)){
+		image_yscale = 1.4;
+		hitid = other.hitid;
+		team_instance_sprite(1, self);
 	}
 	
 #define PetWeaponBoss_draw
-	//path_draw(path);
-	
-	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	
-	 // Gun Drawing Setup:
-	var	_wepOffX = 1,
-		_wepOffY = ((wep != wep_none && bwep != wep_none) ? 5 : 2),
-		_wepDraw = [];
-		
-	if(sprite_index != spr_spwn) with(["", "b"]){
-		var b = self;
-		with(other){
-			var	_wep = variable_instance_get(self, b + "wep"),
-				_wepAng = variable_instance_get(self, b + "wepangle"),
-				_wepDir = gunangle + _wepAng,
-				_wepLoad = variable_instance_get(self, b + "reload");
-				
-			array_push(_wepDraw, {
-				"sprt" : weapon_get_sprt(_wep),
-				"x"    : x + lengthdir_x(_wepOffX, _wepDir) + lengthdir_x(_wepOffY,       _wepDir - 90),
-				"y"    : y + lengthdir_y(_wepOffX, _wepDir) + lengthdir_y(_wepOffY * 2/3, _wepDir - 90),
-				"gang" : gunangle,
-				"wang" : _wepAng,
-				"kick" : variable_instance_get(self, b + "wkick"),
-				"flip" : ((_wepAng != 0) ? variable_instance_get(self, b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
-				"blnd" : merge_color(image_blend, c_black, 0.15 * (_wepLoad > 0) * weapon_is_melee(_wep)),
-				"alph" : image_alpha,
-				"load" : _wepLoad,
-				"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, b + "wep_laser"))
-			});
-			
-			_wepOffY *= -1;
-		}
-	}
-	
-	 // Guns in Back:
-	with(_wepDraw){
-		 // Laser Sight:
-		if(lasr > 0){
-			draw_set_color(make_color_rgb(250, 54, 0));
-			draw_lasersight(x, y, gang, 1000, lasr);
-		}
-		
-		 // Gun:
-		if(y < other.y){
-			draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
-		}
-	}
-	
-	 // Self:
-	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
-	draw_self_enemy();
-	if(_hurt) draw_set_fog(false, 0, 0, 0);
-	
-	 // Guns in Front:
-	with(_wepDraw) if(y >= other.y){
-		draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
-	}
+	mod_script_call("mod", "petlib", "Weapon_draw", sprite_index, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 	
 #define PetWeaponBoss_alrm1
 	alarm1 = 10 + random(30);
 	
-	if(enemy_target(x, y)){
-		var	_tx = target.x,
-			_ty = target.y,
-			_targetDir = point_direction(x, y, _tx, _ty),
-			_pathWall = Wall,
-			_pathX = null,
-			_pathY = null;
-			
-		switch(type){
-			case 0: /// MELEE
+	if(sprite_index != spr_hide && sprite_index != spr_spwn){
+		if(enemy_target(x, y)){
+			var	_tx = target.x,
+				_ty = target.y,
+				_targetDir = point_direction(x, y, _tx, _ty),
+				_pathWall = Wall,
+				_pathX = null,
+				_pathY = null;
 				
-				 // Movement:
-				if(in_sight(target)){
-					scrWalk(_targetDir + choose(-60, 60), 5 + random(10));
-					alarm1 = walk;
-				}
-				
-				 // Find Player:
-				else{
-					_pathX = _tx;
-					_pathY = _ty;
-				}
-				
-				 // Avoid:
-				with(instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team)){
-					if(abs(angle_difference(other.gunangle, point_direction(other.x, other.y, x, y))) < 60){
-						if(in_distance(other, 96)){
-							other.direction += 180;
-							break;
-						}
-					}
-				}
-				
-				break;
-				
-			case 2: /// CLOSE RANGE
-				
-				 // Movement:
-				if(in_sight(target)){
-					scrWalk(gunangle + orandom(60), 20);
-					alarm1 = walk;
-				}
-				
-				 // Find Player:
-				else{
-					_pathX = _tx;
-					_pathY = _ty;
-				}
-				
-				break;
-				
-			case 3: /// LONG RANGE + COVER
-			
-				 // Go to Cover:
-				if(cover_delay > 0 || PetWeaponBoss_point_is_cover(cover_x, cover_y, _tx, _ty)){
-					if(point_distance(x, y, cover_x, cover_y) > 8 || cover_peek){
-						 // Cover in Sight:
-						if(!collision_line(x, y, cover_x, cover_y, Wall, false, false)){
-							scrWalk(point_direction(x, y, cover_x, cover_y), (cover_peek ? [5, 10] : 1));
-							alarm1 = (cover_peek ? random_range(walk, 30) : walk);
-							cover_peek = false;
-						}
-						
-						 // Pathfind to Cover:
-						else{
-							_pathX = cover_x;
-							_pathY = cover_y;
-						}
+			switch(type){
+				case 0: /// MELEE
+					
+					 // Movement:
+					if(in_sight(target)){
+						scrWalk(_targetDir + choose(-60, 60), 5 + random(10));
+						alarm1 = walk;
 					}
 					
-					 // Peek Out of Cover:
+					 // Find Player:
 					else{
-						cover_peek = true;
-						gunangle_goal = _targetDir;
-						
-						alarm1 = 15;
-						alarm2 = alarm1 - random(3);
-						
-						 // Peekin:
-						var	l = 16,
-							d = round(point_direction(cover_x, cover_y, _tx, _ty) / 90) * 90,
-							_peekLeft  = !collision_line(cover_x + lengthdir_x(l, d - 90), cover_y + lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
-							_peekRight = !collision_line(cover_x - lengthdir_x(l, d - 90), cover_y - lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
-							_peekSide = sign(_peekRight - _peekLeft);
-							
-						scrWalk(d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
-						
-						 // Stay in Cover:
-						if(_peekRight || _peekLeft){
-							cover_delay = random_range(60, 90);
+						_pathX = _tx;
+						_pathY = _ty;
+					}
+					
+					 // Avoid:
+					with(instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team)){
+						if(abs(angle_difference(other.gunangle, point_direction(other.x, other.y, x, y))) < 60){
+							if(in_distance(other, 96)){
+								other.direction += 180;
+								break;
+							}
 						}
 					}
-				}
+					
+					break;
+					
+				case 2: /// CLOSE RANGE
+					
+					 // Movement:
+					if(in_sight(target)){
+						scrWalk(gunangle + orandom(60), 20);
+						alarm1 = walk;
+					}
+					
+					 // Find Player:
+					else{
+						_pathX = _tx;
+						_pathY = _ty;
+					}
+					
+					break;
+					
+				case 3: /// LONG RANGE + COVER
 				
-				 // Find Cover:
-				else{
-					cover_x = _tx;
-					cover_y = _ty;
-					cover_peek = false;
-					cover_delay = 30;
-					
-					scrWalk(point_direction(_tx, _ty, x, y), 15);
-					alarm1 = walk;
-					
-					var	_coverDisMax = null,
-						_targetDisMin = null;
+					 // Go to Cover:
+					if(cover_delay > 0 || PetWeaponBoss_point_is_cover(cover_x, cover_y, _tx, _ty)){
+						if(point_distance(x, y, cover_x, cover_y) > 8 || cover_peek){
+							 // Cover in Sight:
+							if(!collision_line(x, y, cover_x, cover_y, Wall, false, false)){
+								scrWalk(point_direction(x, y, cover_x, cover_y), (cover_peek ? [5, 10] : 1));
+								alarm1 = (cover_peek ? random_range(walk, 30) : walk);
+								cover_peek = false;
+							}
+							
+							 // Pathfind to Cover:
+							else{
+								_pathX = cover_x;
+								_pathY = cover_y;
+							}
+						}
 						
-					with(instance_rectangle_bbox(_tx - shootdis_max, _ty - shootdis_max, _tx + shootdis_max, _ty + shootdis_max, Floor)){
-						for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-							for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-								var	_cx = _x + 8,
-									_cy = _y + 8,
-									_coverDis = point_distance(_cx, _cy, other.x, other.y),
-									_targetDis = point_distance(_cx, _cy, _tx, _ty);
-									
-								if((is_undefined(_coverDisMax) || _coverDis < _coverDisMax) && (is_undefined(_targetDisMin) || _targetDis > _targetDisMin)){
-									with(other) if(PetWeaponBoss_point_is_cover(_cx, _cy, _tx, _ty)){
-										_coverDisMax = _coverDis;
-										_targetDisMin = _targetDis;
-										cover_x = _cx;
-										cover_y = _cy;
+						 // Peek Out of Cover:
+						else{
+							cover_peek = true;
+							gunangle_goal = _targetDir;
+							
+							alarm1 = 15;
+							alarm2 = alarm1 - random(3);
+							
+							 // Peekin:
+							var	l = 16,
+								d = round(point_direction(cover_x, cover_y, _tx, _ty) / 90) * 90,
+								_peekLeft  = !collision_line(cover_x + lengthdir_x(l, d - 90), cover_y + lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
+								_peekRight = !collision_line(cover_x - lengthdir_x(l, d - 90), cover_y - lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
+								_peekSide = sign(_peekRight - _peekLeft);
+								
+							scrWalk(d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
+							
+							 // Stay in Cover:
+							if(_peekRight || _peekLeft){
+								cover_delay = random_range(60, 90);
+							}
+						}
+					}
+					
+					 // Find Cover:
+					else{
+						cover_x = _tx;
+						cover_y = _ty;
+						cover_peek = false;
+						cover_delay = 30;
+						
+						scrWalk(point_direction(_tx, _ty, x, y), 15);
+						alarm1 = walk;
+						
+						var	_coverDisMax = null,
+							_targetDisMin = null;
+							
+						with(instance_rectangle_bbox(_tx - shootdis_max, _ty - shootdis_max, _tx + shootdis_max, _ty + shootdis_max, Floor)){
+							for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+								for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+									var	_cx = _x + 8,
+										_cy = _y + 8,
+										_coverDis = point_distance(_cx, _cy, other.x, other.y),
+										_targetDis = point_distance(_cx, _cy, _tx, _ty);
+										
+									if((is_undefined(_coverDisMax) || _coverDis < _coverDisMax) && (is_undefined(_targetDisMin) || _targetDis > _targetDisMin)){
+										with(other) if(PetWeaponBoss_point_is_cover(_cx, _cy, _tx, _ty)){
+											_coverDisMax = _coverDis;
+											_targetDisMin = _targetDis;
+											cover_x = _cx;
+											cover_y = _cy;
+										}
 									}
 								}
 							}
 						}
 					}
-				}
+					
+					break;
+					
+				case 5: /// ENERGY
 				
-				break;
-				
-			case 5: /// ENERGY
-			
-				 // Movement:
-				if(in_sight(target)){
-					if(in_distance(target, shootdis_max)){
-						if(chance(1, 3)){
-							scrWalk(random(360), random_range(5, 20));
+					 // Movement:
+					if(in_sight(target)){
+						if(in_distance(target, shootdis_max)){
+							if(chance(1, 3)){
+								scrWalk(random(360), random_range(5, 20));
+							}
+						}
+						else{
+							scrWalk(gunangle, 20);
+							alarm1 = walk;
 						}
 					}
+					
+					 // Find Player:
 					else{
-						scrWalk(gunangle, 20);
+						_pathX = _tx;
+						_pathY = _ty;
+					}
+					
+					break;
+					
+				default:
+				
+					 // Movement:
+					if(in_sight(target)){
+						if(in_distance(target, shootdis_max * 2/3)){
+							scrWalk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
+						}
+						else{
+							scrWalk(gunangle, 20);
+						}
 						alarm1 = walk;
 					}
-				}
-				
-				 // Find Player:
-				else{
-					_pathX = _tx;
-					_pathY = _ty;
-				}
-				
-				break;
-				
-			default:
-			
-				 // Movement:
-				if(in_sight(target)){
-					if(in_distance(target, shootdis_max * 2/3)){
-						scrWalk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
-					}
+					
+					 // Find Player:
 					else{
-						scrWalk(gunangle, 20);
+						_pathX = _tx;
+						_pathY = _ty;
 					}
-					alarm1 = walk;
-				}
-				
-				 // Find Player:
-				else{
-					_pathX = _tx;
-					_pathY = _ty;
-				}
-				
-				break;
-		}
-		
-		 // Pathfind:
-		if(is_real(_pathX) && is_real(_pathY)){
-			 // Create Path:
-			if(path_delay <= 0 && !path_reaches(path, _pathX, _pathY, _pathWall)){
-				path = path_create(x, y, _pathX, _pathY, _pathWall);
-				path = path_shrink(path, _pathWall, 2);
-				path_delay = 30;
+					
+					break;
 			}
 			
-			 // Follow Path:
-			var _pathDir = path_direction(path, x, y, _pathWall);
-			if(_pathDir != null){
-				scrWalk(_pathDir, [1, 5]);
-				alarm1 = walk;
+			 // Pathfind:
+			if(is_real(_pathX) && is_real(_pathY)){
+				 // Create Path:
+				if(path_delay <= 0 && !path_reaches(path, _pathX, _pathY, _pathWall)){
+					path = path_create(x, y, _pathX, _pathY, _pathWall);
+					path = path_shrink(path, _pathWall, 2);
+					path_delay = 30;
+				}
 				
-				 // Searching:
-				if(!in_sight(target)){
-					if(abs(angle_difference(gunangle_goal, _pathDir)) > 60){
-						gunangle_goal = _pathDir + orandom(60);
-					}
-					if(in_distance(target, 64)){
-						alarm1 += random(random(random(30)));
-						gunangle_goal = angle_lerp(gunangle_goal, _targetDir, 1/2);
+				 // Follow Path:
+				var _pathDir = path_direction(path, x, y, _pathWall);
+				if(_pathDir != null){
+					scrWalk(_pathDir, [1, 5]);
+					alarm1 = walk;
+					
+					 // Searching:
+					if(!in_sight(target)){
+						if(abs(angle_difference(gunangle_goal, _pathDir)) > 60){
+							gunangle_goal = _pathDir + orandom(60);
+						}
+						if(in_distance(target, 64)){
+							alarm1 += random(random(random(30)));
+							gunangle_goal = angle_lerp(gunangle_goal, _targetDir, 1/2);
+						}
 					}
 				}
+				else path = [];
 			}
 			else path = [];
 		}
-		else path = [];
-	}
-	
-	 // Wander:
-	else{
-		scrWalk(random(360), [15, 30]);
-		gunangle_goal = direction;
+		
+		 // Hide:
+		else{
+			sprite_index = spr_hide;
+			image_index = 0;
+			//scrWalk(random(360), [15, 30]);
+			//gunangle_goal = direction;
+		}
 	}
 	
 #define PetWeaponBoss_alrm2
@@ -3579,6 +3260,8 @@
 	with(pet_spawn(x, y, "Weapon")){
 		direction = other.direction;
 		speed = other.speed;
+		wep = other.wep;
+		bwep = other.bwep;
 		my_health = 0;
 	}
 	

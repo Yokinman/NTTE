@@ -1772,6 +1772,7 @@
 									if(_slct >= 0) while(true){
 										var _max = ceil(lq_size(_petList) / _col) * _col;
 										_slct = (_slct + _swaph + _swapv + _max) % _max;
+										if(_swapv != 0) _slct = min(_slct, lq_size(_petList) - 1);
 										
 										 // Back at Start:
 										if(lq_get_key(_petList, _slct) == _petSlct[_index]){

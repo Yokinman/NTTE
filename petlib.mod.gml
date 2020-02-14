@@ -18,6 +18,8 @@
 
 #macro surfWeb global.surfWeb
 
+#macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
+
 #define CoolGuy_create
 	 // Visual:
 	spr_shadow = shd16;
@@ -336,8 +338,7 @@
 	if(sprite_index != spr_hurt || anim_end){
 		if(speed > 0) sprite_index = spr_walk;
 		else if(sprite_index != spr_walk || in_range(image_index, 3, 3 + image_speed)){
-			if(instance_exists(leader)) sprite_index = spr_idle;
-			else sprite_index = spr_hide;
+			sprite_index = (instance_exists(leader) ? spr_idle : spr_hide);
 		}
 	}
 
@@ -515,24 +516,13 @@
 	if(_name == "") return spr.PetParrotIdle;
 
 #define Parrot_anim
-	 // Not Hurt:
-	if(sprite_index != spr_hurt){
-		 // Nowhere to Land:
-		if(instance_exists(SpiralCont) && !place_meeting(x, y, Floor)){
-			sprite_index = spr_walk;
-		}
-
-		else{
-			if(speed <= 0) sprite_index = spr_idle;
-			else if(sprite_index == spr_idle) sprite_index = spr_walk;
-		}
+	sprite_index = enemy_sprite;
+	
+	 // Nowhere to Land:
+	if(sprite_index != spr_hurt && instance_exists(SpiralCont) && !place_meeting(x, y, Floor)){
+		sprite_index = spr_walk;
 	}
-
-	 // Hurt:
-	else if(image_index > image_number - 1){
-		sprite_index = spr_idle;
-	}
-
+	
 #define Parrot_step
 	if("wading" in self && (speed > 0 || (instance_exists(perched) && ("wading" not in perched || perched.wading <= 0)))){
 		nowade = true;
@@ -794,10 +784,7 @@
 #define Scorpion_anim
 	if((sprite_index != spr_hurt && sprite_index != spr_shield) || anim_end){
 		if(instance_exists(my_venom)) sprite_index = spr_fire;
-		else{
-			if(speed <= 0) sprite_index = spr_idle;
-			else sprite_index = spr_walk;
-		}
+		else sprite_index = enemy_sprite;
 	}
 	
 #define Scorpion_step
@@ -840,7 +827,7 @@
 #define Scorpion_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 20 + irandom(10);
 	
-	target = instance_nearest_array(x, y, instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0));
+	target = instance_nearest_array(x, y, pet_target_inst);
 	
 	if(sprite_index != spr_shield){
 		if(instance_exists(leader)){
@@ -980,10 +967,7 @@
 		}
 		
 		 // Normal:
-		else{
-			if(speed <= 0) sprite_index = spr_idle;
-			else sprite_index = spr_walk;
-		}
+		else sprite_index = enemy_sprite;
 	}
 	
 #define Slaughter_step
@@ -1140,7 +1124,7 @@
 				 // Targeting:
 				if(sprite_index != spr_fire){
 					var _disMax = 1000000;
-					with(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0)){
+					with(pet_target_inst){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
 							if(!instance_is(self, prop) && in_sight(other)){
@@ -1423,12 +1407,8 @@
 	}
 
 #define Octo_anim
-	if(hiding) sprite_index = spr_hide;
-	else if(sprite_index != spr_hurt || anim_end){
-		if(speed <= 0) sprite_index = spr_idle;
-		else sprite_index = spr_walk;
-	}
-
+	sprite_index = (hiding ? spr_hide : enemy_sprite);
+	
 #define Octo_step
 	if(instance_exists(leader)){
 		 // Unhide:
@@ -1513,7 +1493,7 @@
 				var	_nearest = noone,
 					_disMax = 96;
 					
-				with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
+				with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone)){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
 						if(
@@ -1973,113 +1953,533 @@
 
 #define Weapon_create
 	 // Visual:
+	hitid = [spr.PetWeaponIdle, "WEAPON MIMIC"];
 	spr_spwn = spr.PetWeaponSpwn;
-	sprite_index = spr_spwn;
+	spr_hide = spr.PetWeaponHide;
+	sprite_index = spr_hide;
+	image_index = image_number - 1;
 	
 	 // Sounds:
 	snd_hurt = sndMimicHurt;
 	snd_dead = sndMimicDead;
-	 
+	
 	 // Vars:
 	mask_index = mskFrogEgg;
 	maxhealth = 60;
-	target = noone;
-	wep = wep_machinegun;
+	type = irandom(5);
 	gunangle = random(360);
-	wkick = 0;
+	gunangle_goal = gunangle;
+	gunangle_turn = 0.25;
+	shootdis_min = 0;
+	shootdis_max = 192;
+	target = noone;
+	setup = true;
+	
+	 // Weapons:
+	with(["", "b"]){
+		var b = self;
+		with(other){
+			variable_instance_set(self, b + "wep",       wep_none);
+			variable_instance_set(self, b + "wkick",     0);
+			variable_instance_set(self, b + "wepangle",  0);
+			variable_instance_set(self, b + "wepflip",   choose(-1, 1));
+			variable_instance_set(self, b + "reload",    30);
+			variable_instance_set(self, b + "can_shoot", false);
+			variable_instance_set(self, b + "wep_laser", 0);
+		}
+	}
 	
 #define Weapon_ttip
 	return ["MUTUAL RESPECT", "WALKING WEAPON"];
 	
-#define Weapon_step
-	 // Ally:
-	if(in_sight(leader) && "index" in leader){
-		var	_index = leader.index,
-			_leaderAim = point_direction(x, y, mouse_x[_index], mouse_y[_index]);
+#define Weapon_setup
+	setup = false;
+	
+	if(type >= 0){
+		 // Auto-Wep:
+		if(wep == wep_none){
+			var t = (chance(1, 10) ? 2 : (GameCont.loops > 0));
+			
+			switch(type){     // NORMAL //           // LOOP //           // RARE //
+				case 0:	wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][t]; break;
+				case 1:	wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][t]; break;
+				case 2:	wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][t]; break;
+				case 3:	wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][t]; break;
+				case 4:	wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][t]; break;
+				case 5:	wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][t]; break;
+			}
+			
+			 // Akimbo:
+			if(bwep == wep_none){
+				var _name = string_upper(weapon_get_name(wep));
+				if(string_pos("REVOLVER", _name) > 0 || string_pos("PISTOL", _name) > 0){
+					bwep = wep;
+				}
+			}
+		}
+		else{
+			type = (weapon_is_melee(wep) ? 0 : weapon_get_type(wep));
+		}
 		
-		if(button_pressed(_index, "fire")){
-			scrAim(_leaderAim);
-			enemy_shoot(AllyBullet, gunangle, 8);
-			wkick = 4;
+		 // Weapon Setup:
+		gunangle_turn = 0.25;
+		shootdis_min = 32;
+		shootdis_max = 192;
+		switch(type){
+			case 0:
+				shootdis_min = 0;
+				break;
+				
+			case 2:
+				shootdis_min = 0;
+				shootdis_max = 96 + (64 * (wep == wep_eraser));
+				break;
+				
+			case 3:
+				gunangle_turn = 0.5;
+				shootdis_min = 64;
+				shootdis_max = 320;
+				break;
+				
+			case 4:
+				gunangle_turn = 0.1;
+				break;
+		}
+		if(wep == wep_jackhammer) gunangle_turn = 0.1;
+	}
+	
+	 // Melee:
+	var w = choose(-120, 120);
+	wepangle = w * weapon_is_melee(wep);
+	bwepangle = -w * weapon_is_melee(bwep);
+	
+#define Weapon_anim
+	if(
+		sprite_index != spr_hide
+		|| (instance_is(self, enemy) && enemy_target(x, y))
+		|| (name == "Pet" && instance_exists(leader))
+	){
+		 // Appear:
+		if(sprite_index == spr_spwn || sprite_index == spr_hide){
+			if(sprite_index == spr_hide){
+				sprite_index = spr_spwn;
+				image_index = 0;
+			}
+			
+			if(instance_is(self, enemy) || instance_exists(leader)){
+				 // Laugh:
+				if(image_index <= 0){
+					audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
+					audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
+					sound_play_hit(sndBigWeaponChest, 0);
+				}
+				
+				 // Swap to Weapons:
+				if(anim_end){
+					wkick = -2;
+					bwkick = -2;
+					sound_play(weapon_get_swap(wep));
+					instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
+					sprite_index = enemy_sprite;
+				}
+			}
+			
+			 // No Owner:
+			else{
+				image_index -= 2 * image_speed_raw;
+				if(image_index <= 0) sprite_index = spr_hide;
+			}
+		}
+		
+		 // Normal:
+		else sprite_index = enemy_sprite;
+	}
+	
+	 // Hiding:
+	else image_index = min(image_index, image_number - 1);
+	
+#define Weapon_step
+	if(setup) Weapon_setup();
+	
+	 // Pet Shootin Rootin Tootin:
+	if(
+		sprite_index != spr_spwn
+		&& name == "Pet"
+		&& in_sight(leader)
+		&& instance_is(leader, Player)
+	){
+		gunangle_goal = point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]);
+		
+		 // Fire:
+		if(button_check(leader.index, "fire")){
+			if(
+				leader.reload > 0
+				||
+				(
+					weapon_get_load(leader.wep) <= leader.reloadspeed * current_time_scale
+					&&
+					array_length(instances_matching(projectile, "creator", leader)) > 0
+				)
+			){
+				var _shot = false;
+				with(["", "b"]){
+					var b = self;
+					with(other){
+						var	_wep      = variable_instance_get(self, b + "wep"),
+							_reload   = variable_instance_get(self, b + "reload"),
+							_canShoot = variable_instance_get(self, b + "can_shoot");
+							
+						if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
+							if(
+								button_pressed(leader.index, "fire")
+								||
+								(
+									(weapon_get_load(leader.wep) <= weapon_get_load(_wep) || weapon_get_auto(leader.wep) >= (leader.race != "steroids"))
+									&&
+									weapon_get_cost(leader.wep) > 0
+								)
+							){
+								_shot = true;
+								_canShoot = 1;
+								
+								 // Fire Multiple Times:
+								var _wepLoad = weapon_get_load(_wep);
+								if(weapon_get_auto(_wep) || _wepLoad <= 10){
+									_canShoot += floor(random(15) / _wepLoad);
+								}
+								
+								variable_instance_set(self, b + "reload",    _reload);
+								variable_instance_set(self, b + "can_shoot", _canShoot);
+							}
+						}
+					}
+					if(_shot) break;
+				}
+			}
 		}
 	}
 	
-	 // Kick:
-	wkick -= clamp(wkick, -current_time_scale, current_time_scale);
+	 // Aim:
+	if(instance_exists(target) && in_sight(target)){
+		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
+	}
+	else target = noone;
+	scrAim(angle_lerp(gunangle, gunangle_goal, gunangle_turn * current_time_scale));
+	
+	 // Weapons:
+	with(["", "b"]){
+		var b = self;
+		with(other){
+			var	_wep    = variable_instance_get(self, b + "wep"),
+				_wkick  = variable_instance_get(self, b + "wkick"),
+				_reload = variable_instance_get(self, b + "reload");
+				
+			 // Weapon Kick:
+			if(!instance_is(self, enemy) || b != ""){
+				_wkick -= clamp(_wkick, -current_time_scale, current_time_scale);
+			}
+			
+			 // Reloading:
+			if(_reload > 0){
+				_reload -= current_time_scale;
+				
+				 // Reload FX:
+				if(
+					_reload <= 0
+					&& _wep != wep_none
+					&& sprite_index != spr_spwn
+					&& sprite_index != spr_hide
+					&& variable_instance_get(self, b + "can_shoot") <= 0
+				){
+					var _snd = -1;
+					
+					 // Melee:
+					variable_instance_set(self, b + "wepflip", -variable_instance_get(self, b + "wepflip"));
+					if(weapon_is_melee(_wep)){
+						var	l = 12,
+							d = gunangle + variable_instance_get(self, b + "wepangle");
+							
+						instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+						variable_instance_set(self, b + "wkick", -3);
+						_snd = sndMeleeFlip;
+					}
+					
+					 // Normal:
+					else switch(weapon_get_type(_wep)){
+						case 2: // SHELL
+							_snd = sndShotReload;
+							
+							 // Epic:
+							variable_instance_set(self, b + "wkick", -4);
+							repeat(weapon_get_cost(_wep)){
+								with(instance_create(x, y, Shell)){
+									sprite_index = sprShotShell;
+									motion_add(other.gunangle + (100 * other.right) + orandom(20), 2 + random(2));
+								}
+							}
+							break;
+							
+						case 3: // BOLT
+							_snd = sndCrossReload;
+							break;
+							
+						case 4: // EXPLOSIVE
+							if(array_exists([wep_grenade_launcher, wep_golden_grenade_launcher, wep_grenade_shotgun, wep_grenade_rifle, wep_auto_grenade_shotgun, wep_ultra_grenade_launcher, wep_sticky_launcher, wep_hyper_launcher, wep_toxic_launcher, wep_cluster_launcher, wep_heavy_grenade_launcher], _wep)){
+								_snd = sndNadeReload;
+							}
+							break;
+							
+						case 5: // ENERGY
+							if(string_pos("PLASMA", weapon_get_name(_wep)) == 1){
+								_snd = sndPlasmaReload;
+							}
+							else if(string_pos("LIGHTNING", weapon_get_name(_wep)) == 1){
+								_snd = sndLightningReload;
+							}
+							break;
+					}
+					
+					if(sound_exists(_snd)){
+						sound_play_hit_ext(_snd, 1.15 + orandom(0.25), 1.5);
+					}
+				}
+			}
+			
+			 // Ready:
+			else{
+				var _wepLaser = variable_instance_get(self, b + "wep_laser");
+				
+				 // Laser Sight:
+				if(weapon_get_laser_sight(wep)){
+					if(
+						in_sight(target)
+						|| (name == "Pet" && in_sight(leader))
+						|| (name == "PetWeaponBoss" && point_distance(x, y, cover_x, cover_y) < 24)
+					){
+						_wepLaser += current_time_scale / (in_distance(target, shootdis_min) ? 60 : 5);
+					}
+					else if(_wepLaser > 0){
+						_wepLaser -= current_time_scale / 3;
+					}
+				}
+				
+				 // Shoot:
+				var _canShoot = variable_instance_get(self, b + "can_shoot");
+				if(_canShoot > 0){
+					var	_minID = GameObject.id,
+						_wepangle = variable_instance_get(self, b + "wepangle");
+						
+					_canShoot--;
+					_wepLaser = 0;
+					
+					 // Mutation Fixes:
+					var _muts = [];
+					if(instance_is(self, enemy)){
+						var _muts = [[mut_long_arms, 0], [mut_recycle_gland, 0], [mut_shotgun_shoulders, 0], [mut_bolt_marrow, 0], [mut_boiling_veins, 0], [mut_laser_brain, 0]];
+						with(_muts){
+							var v = self[1];
+							self[@1] = skill_get(self[0]);
+							skill_set(self[0], v);
+						}
+					}
+					
+					 // Fire:
+					with(player_fire_ext(gunangle, _wep, x, y, team, id)){
+						_reload = reload;
+						_wkick = wkick * 1.5;
+					}
+					_wepangle *= -1;
+					
+					 // Reset Mutation Fixes:
+					with(_muts) skill_set(self[0], self[1]);
+					
+					 // Projectiles:
+					with(instances_matching_gt([projectile, LaserCannon], "id", _minID)){
+						hitid = other.hitid;
+						
+						if(instance_is(other, enemy)){
+							 // Euphoria:
+							speed *= power(0.8, skill_get(mut_euphoria));
+							
+							 // Specifics:
+							switch(object_index){
+								case Bullet2: // Nerf Shotguns
+									if(string_pos("SHOTGUN", string_upper(weapon_get_name(_wep))) > 0){
+										speed *= 0.8;
+									}
+									break;
+									
+								case Bolt: // Bolt Marrow Fix
+									instance_create_copy(x, y, "DiverHarpoon");
+									break;
+									
+								default:
+									 // Time Nades:
+									if(instance_is(self, Grenade) && alarm0 > 0){
+										var a = (alarm2 - alarm0);
+										alarm0 += (_canShoot * weapon_get_load(_wep));
+										if(alarm2 > 0){
+											if(TopCont.darkness) a -= 40;
+											alarm2 = max(1, alarm0 + a);
+										}
+									}
+							}
+							
+							 // Enemy Spriterize:
+							team_instance_sprite(1, self);
+						}
+					}
+					
+					variable_instance_set(self, b + "can_shoot", _canShoot);
+					variable_instance_set(self, b + "wepangle",  _wepangle);
+				}
+				
+				variable_instance_set(self, b + "wep_laser", _wepLaser);
+			}
+			
+			variable_instance_set(self, b + "wkick",  _wkick);
+			variable_instance_set(self, b + "reload", _reload);
+		}
+	}
+	
+	 // Burst Weapon Fix:
+	with(instances_matching([LaserCannon, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst], "creator", id)){
+		direction = other.gunangle;
+	}
 	
 #define Weapon_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
-	 // Self Behind:
-	var _back = (gunangle > 180);
-	if(!_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	 // Gun Drawing Setup:
+	var	_wepOffX = 1,
+		_wepOffY = ((wep != wep_none && bwep != wep_none) ? 5 : 2),
+		_wepDraw = [];
+		
+	if(_spr != spr_spwn && _spr != spr_hide && !instance_exists(variable_instance_get(self, "revive", noone))){
+		with(["", "b"]){
+			var b = self;
+			with(other){
+				var	_wep     = variable_instance_get(self, b + "wep"),
+					_wepLoad = variable_instance_get(self, b + "reload"),
+					_wepAng  = variable_instance_get(self, b + "wepangle"),
+					_wepDir  = gunangle + _wepAng;
+					
+				array_push(_wepDraw, {
+					"sprt" : weapon_get_sprt(_wep),
+					"x"    : _x + lengthdir_x(_wepOffX, _wepDir) + lengthdir_x(_wepOffY,       _wepDir - 90),
+					"y"    : _y + lengthdir_y(_wepOffX, _wepDir) + lengthdir_y(_wepOffY * 2/3, _wepDir - 90),
+					"gang" : gunangle,
+					"wang" : _wepAng,
+					"kick" : variable_instance_get(self, b + "wkick"),
+					"flip" : ((_wepAng != 0) ? variable_instance_get(self, b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
+					"blnd" : merge_color(_col, c_black, 0.15 * (_wepLoad > 0) * weapon_is_melee(_wep)),
+					"alph" : _alp,
+					"load" : _wepLoad,
+					"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, b + "wep_laser"))
+				});
+				
+				_wepOffY *= -1;
+			}
+		}
+	}
 	
-	 // Gun:
-	if(!instance_exists(revive)){
-		draw_weapon(weapon_get_sprite(wep), _x, _y, gunangle, 0, wkick, right, _col, _alp);
+	 // Guns in Back:
+	with(_wepDraw){
+		 // Laser Sight:
+		if(lasr > 0){
+			draw_set_color(make_color_rgb(250, 54, 0));
+			draw_lasersight(x, y, gang, 1000, lasr);
+		}
+		
+		 // Gun:
+		if(y < _y){
+			draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
+		}
 	}
 	
 	 // Self:
-	if(_back) draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	var _hurt = (_spr != spr_hurt && nexthurt > current_frame + 3);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
-#define Weapon_alrm0(_leaderDir, _leaderDis)
-	alarm0 = 30 + random(30);
-	
-	if(instance_exists(leader)){
-		 // Pathfind:
-		if(path_dir != null){
-			scrWalk(path_dir + orandom(20), 10);
-			scrAim(direction);
-			
-			alarm0 = 1 + irandom(walk);
-		}
-			
-		 // Walkin':
-		else if(_leaderDis > 64){
-			scrWalk(_leaderDir + orandom(30), [30, 60]);
-			
-			if("index" in leader){
-				var _index = leader.index;
-				scrAim(point_direction(x, y, mouse_x[_index], mouse_y[_index]));
-			}
-		}
+	 // Guns in Front:
+	with(_wepDraw) if(y >= _y){
+		draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
 	}
 	
-	else{
-		 // Angry:
-		if(in_sight(target)){
-			gunangle = point_direction(x, y, target.x, target.y);
-			
-			 // Advance:
-			if(!in_distance(target, 128)){
-				scrWalk(gunangle + orandom(30), [30, 60]);
+#define Weapon_alrm0(_leaderDir, _leaderDis)
+	alarm0 = irandom_range(20, 40);
+	
+	if(sprite_index != spr_hide && sprite_index != spr_spwn){
+		if(instance_exists(leader)){
+			 // Pathfind:
+			if(path_dir != null){
+				scrWalk(path_dir + orandom(20), [5, 15]);
+				alarm0 = walk;
+				gunangle_goal = angle_lerp(gunangle_goal, direction, 0.2);
 			}
-			
+				
+			 // Walkin':
 			else{
-				 // Retreat:
-				if(in_distance(target, 32)){
-					scrWalk((gunangle + 180) + orandom(30), [30, 60]);
+				if(_leaderDis > 128){
+					scrWalk(_leaderDir + orandom(30), [30, 60]);
 				}
 				
-				 // Attack:
-				else{
-					if(chance(1, 3)){
-						enemy_shoot(AllyBullet, gunangle, 8);
+				 // Near Leader:
+				else if("index" in leader){
+					var	_mx = mouse_x[leader.index],
+						_my = mouse_y[leader.index];
+						
+					scrWalk(
+						point_direction(
+							x,
+							y,
+							lerp(leader.x, _mx, 0.5) + orandom(24),
+							lerp(leader.y, _my, 0.5) + orandom(24)
+						),
+						[10, 20]
+					);
+					
+					 // Lock-on Nearby Dudes:
+					if(!instance_exists(target)){
+						var _disMax = 64;
+						with(pet_target_inst){
+							var _dis = point_distance(x, y, _mx, _my);
+							if(_dis < _disMax && in_sight(other)){
+								_disMax = _dis;
+								other.target = id;
+							}
+						}
+						var _disMax = 64;
+						with(pet_target_inst){
+							var _dis = point_distance(x, y, other.x, other.y);
+							if(_dis < _disMax && in_sight(other)){
+								_disMax = _dis;
+								other.target = id;
+							}
+						}
 					}
 				}
 			}
 		}
 		
-		 // Wander:
+		 // Hide:
 		else{
-			scrWalk(random(360), [10, 30]);
-			scrAim(direction);
+			sprite_index = spr_hide;
+			image_index = 0;
 		}
 	}
 	
 #define Weapon_hurt(_hitdmg, _hitvel, _hitdir)
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
-	if(leader != other && "creator" in other) target = other.creator;
-
-
+	
+	 // Seek Revenge:
+	if(instance_exists(variable_instance_get(other, "creator", noone))){
+		if("team" in other.creator && other.creator.team != team){
+			target = other.creator;
+		}
+	}
+	
+	
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
