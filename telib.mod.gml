@@ -3335,14 +3335,14 @@
 		pet = _name;
 		mod_name = _modName;
 		mod_type = _modType;
-
+		
 		 // Stats:
 		var s = `pet/${pet}.${mod_name}.${mod_type}`;
 		if(!is_object(stat_get(s))){
 			stat_set(s, { found:0, owned:0 });
 		}
 		stat = stat_get(s);
-
+		
 		 // Sprites:
 		if(mod_type == "mod" && mod_name == "petlib"){
 			spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
@@ -3351,13 +3351,13 @@
 			spr_dead = lq_defget(spr, "Pet" + pet + "Dead", mskNone);
 		}
 		spr_icon = lq_defget(pet_get_icon(mod_type, mod_name, pet), "spr", spr_icon);
-
+		
 		 // Custom Create Event:
 		var _scrt = pet + "_create";
 		if(mod_script_exists(mod_type, mod_name, _scrt)){
 			mod_script_call(mod_type, mod_name, _scrt);
 		}
-
+		
 		 // Auto-set Stuff:
 		if(instance_exists(self)){
 			with(pickup_indicator) if(text == ""){
@@ -3367,11 +3367,11 @@
 			if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
 			if(hitid == -1) hitid = [spr_idle, pet];
 		}
-
+		
 		return self;
 	}
 	return noone;
-
+	
 #define pet_spawn(_x, _y, _name)
 	return pet_create(_x, _y, _name, "mod", "petlib");
 	
@@ -3406,7 +3406,12 @@
 	
 	 // Default:
 	else if(_modType == "mod" && _modName == "petlib"){
-		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
+		if(variable_instance_get(self, "name") == "Pet" && sprite_exists(variable_instance_get(self, "spr_icon", -1))){
+			_icon.spr = spr_icon;
+		}
+		else{
+			_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
+		}
 	}
 	
 	return _icon;

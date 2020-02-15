@@ -2864,21 +2864,34 @@
 		pickup_indicator = scrPickupIndicator("BATTLE");
 		pickup_indicator.yoff = -1;
 		
+		 // Curse:
+		switch(crown_current){
+			case crwn_none:   curse = false;        break;
+			case crwn_curses: curse = chance(2, 3); break;
+			default:          curse = chance(1, 7);
+		}
+		
 		return id;
 	}
 	
 #define PetWeaponBecome_step
+	 // Cursed:
+	if(curse && sprite_index == spr.PetWeaponChst){
+		sprite_index = spr.PetWeaponChstCursed;
+	}
+	
+	 // Activated:
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
 		with(obj_create(x, y, "PetWeaponBoss")){
 			type = other.type;
+			curse = other.curse;
 			
 			 // Push Away:
 			with(player_find(_pickup.pick)) with(other){
 				motion_add(point_direction(other.x, other.y, x, y), 3);
 			}
 		}
-		
 		GameCont.nochest = 0;
 		portal_poof();
 		
@@ -2898,6 +2911,13 @@
 		maxhealth = boss_hp(120);
 		var _hp = maxhealth;
 		
+		 // Stats:
+		var s = `pet/Weapon.petlib.mod`;
+		if(!is_object(stat_get(s))){
+			stat_set(s, { found:0, owned:0 });
+		}
+		stat = stat_get(s);
+		
 		 // Base Code:
 		mod_script_call("mod", "petlib", "Weapon_create");
 		
@@ -2906,6 +2926,7 @@
 		spr_walk = spr.PetWeaponWalk;
 		spr_hurt = spr.PetWeaponHurt;
 		spr_dead = spr.PetWeaponDead;
+		spr_icon = spr.PetWeaponIcon;
 		spr_shadow = shd24;
 		spr_shadow_y = -1;
 		depth = -2;
@@ -2925,6 +2946,7 @@
 		cover_y = y;
 		cover_peek = false;
 		cover_delay = 0;
+		stat_battle = true;
 		
 		 // Alarms:
 		alarm1 = 60;
@@ -2947,7 +2969,11 @@
 	 // Boss Intro:
 	if(!intro && sprite_index != spr_hide && sprite_index != spr_spwn){
 		intro = true;
-		boss_intro("PetWeapon", sndBigWeaponChest, musBoss1);
+		boss_intro(
+			(curse ? "PetWeaponCursed" : "PetWeapon"),
+			(curse ? sndBigCursedChest : sndBigWeaponChest),
+			musBoss1
+		);
 	}
 	
 	 // Laser Cannon:
@@ -2958,6 +2984,13 @@
 		image_yscale = 1.4;
 		hitid = other.hitid;
 		team_instance_sprite(1, self);
+	}
+	
+	 // Weapon Win:
+	if(!instance_exists(Player) && stat_battle){
+		stat_battle = false;
+		stat.battle[1]++;
+		alarm1 = max(alarm1, 60);
 	}
 	
 #define PetWeaponBoss_draw
@@ -3224,7 +3257,7 @@
 										
 									case 2: // Warning
 										_reload = 9;
-										with(scrAlert(self, spr.PetWeaponIcon)){
+										with(scrAlert(self, spr_icon)){
 											alert_x--;
 											flash = 2;
 											blink = 10;
@@ -3256,12 +3289,22 @@
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 	
 #define PetWeaponBoss_death
+	 // Boss Win Music:
+	with(MusCont) alarm_set(1, 1);
+	
+	 // Player Win:
+	if(stat_battle){
+		stat_battle = false;
+		stat.battle[0]++;
+	}
+	
 	 // Pet Time:
 	with(pet_spawn(x, y, "Weapon")){
 		direction = other.direction;
 		speed = other.speed;
 		wep = other.wep;
 		bwep = other.bwep;
+		curse = other.curse;
 		my_health = 0;
 	}
 	

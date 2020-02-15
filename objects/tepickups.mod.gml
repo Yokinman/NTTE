@@ -41,9 +41,9 @@
 		 // Vars:
 		raddrop = 8;
 		switch(crown_current){
-			case crwn_none:		curse = false;			break;
-			case crwn_curses:	curse = chance(2, 3);	break;
-			default:			curse = chance(1, 7);
+			case crwn_none:   curse = false;        break;
+			case crwn_curses: curse = chance(2, 3); break;
+			default:          curse = chance(1, 7);
 		}
 		for(var i = 0; i < maxp; i++){
 			raddrop += (player_get_race(i) == "melting");
@@ -357,9 +357,9 @@
 		
 		 // Cursed:
 		switch(crown_current){
-			case crwn_none:		curse = false;			break;
-			case crwn_curses:	curse = chance(2, 3);	break;
-			default:			curse = chance(1, 7);
+			case crwn_none:   curse = false;        break;
+			case crwn_curses: curse = chance(2, 3); break;
+			default:          curse = chance(1, 7);
 		}
 		
 		 // Events:

@@ -606,6 +606,7 @@
 			        	spr_idle = spr.PetParrotBIdle;
 			        	spr_walk = spr.PetParrotBWalk;
 			        	spr_hurt = spr.PetParrotBHurt;
+			        	spr_icon = spr.PetParrotBIcon;
 		        	}
 		        }
 		    }

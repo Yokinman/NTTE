@@ -209,44 +209,46 @@
 	if(_normalArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
 		with(instance_furthest(_spawnX, _spawnY, WeaponChest)){
 			with(obj_create(x, y, "PetWeaponBecome")){
+				curse = max(curse, other.curse);
+				
 				 // Spawn Room:
 				with(floor_room_create(x, y, 1, 1, floor_fill, random(360), 0)){
-					with(other){
-						x = other.x;
-						y = other.y;
-						switch(type){
-							case 0: // MELEE
-								floor_fill(x, y, 3, 3);
-								break;
-								
-							case 1: // BULLET
-								floor_fill_round(x, y, 5, 5);
-								break;
-								
-							case 2: // SHELL
-								floor_fill_round(x, y, 3, 3);
-								break;
-								
-							case 3: // BOLT
-								floor_fill_round(x, y, 3, 3);
-								floor_fill_ring(x, y, 5, 5);
-								break;
-								
-							case 4: // EXPLOSIVE
-								floor_fill(x, y, 5, 1);
-								floor_fill(x, y, 1, 5);
-								break;
-								
-							case 5: // ENERGY
-								floor_fill_ring(x, y, 5, 5);
-								break;
-						}
+					other.x = x;
+					other.y = y;
+					switch(other.type){
+						case 0: // MELEE
+							floor_fill(x, y, 3, 3);
+							break;
+							
+						case 1: // BULLET
+							floor_fill_round(x, y, 5, 5);
+							break;
+							
+						case 2: // SHELL
+							floor_fill_round(x, y, 3, 3);
+							break;
+							
+						case 3: // BOLT
+							floor_fill_round(x, y, 3, 3);
+							floor_fill_ring(x, y, 5, 5);
+							break;
+							
+						case 4: // EXPLOSIVE
+							floor_fill(x, y, 5, 1);
+							floor_fill(x, y, 1, 5);
+							break;
+							
+						case 5: // ENERGY
+							floor_fill_ring(x, y, 5, 5);
+							break;
 					}
 				}
 				
 				 // Clear:
 				instance_create(x, y, PortalClear);
-				with(instances_matching(instances_matching(PortalClear, "xstart", xstart), "ystart", ystart)) instance_destroy();
+				with(instances_matching(instances_matching(PortalClear, "xstart", xstart), "ystart", ystart)){
+					instance_destroy();
+				}
 			}
 			instance_delete(id);
 		}

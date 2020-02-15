@@ -505,10 +505,7 @@
 	
 	 // Stat:
 	if("pickups" not in stat) stat.pickups = 0;
-
-#define Parrot_icon
-	return (("bskin" in self && bskin) ? spr.PetParrotBIcon : spr.PetParrotIcon);
-
+	
 #define Parrot_ttip
 	return ["PARROTS RETRIEVE @wPICKUPS", "HANDY", "THEY LIKE YOU", "HAND OVER HAND"];
 
@@ -1965,7 +1962,7 @@
 	
 	 // Vars:
 	mask_index = mskFrogEgg;
-	maxhealth = 60;
+	maxhealth = 20;
 	type = irandom(5);
 	gunangle = random(360);
 	gunangle_goal = gunangle;
@@ -1973,6 +1970,7 @@
 	shootdis_min = 0;
 	shootdis_max = 192;
 	target = noone;
+	curse = false;
 	setup = true;
 	
 	 // Weapons:
@@ -1989,8 +1987,20 @@
 		}
 	}
 	
+	 // Stat:
+	if("battle" not in stat) stat.battle = [0, 0];
+	
 #define Weapon_ttip
 	return ["MUTUAL RESPECT", "WALKING WEAPON"];
+	
+#define Weapon_stat(_name, _value)
+	switch(_name){
+		case "":
+			return spr.PetWeaponIdle;
+			
+		case "battle":
+			return [`@5(${spr.PetWeaponStat})`, array_join(_value, "-")]
+	}
 	
 #define Weapon_setup
 	setup = false;
@@ -1998,15 +2008,28 @@
 	if(type >= 0){
 		 // Auto-Wep:
 		if(wep == wep_none){
-			var t = (chance(1, 10) ? 2 : (GameCont.loops > 0));
+			 // Cursed:
+			if(curse){
+				wep = wep_super_disc_gun;
+				type = 2;
+			}
 			
-			switch(type){     // NORMAL //           // LOOP //           // RARE //
-				case 0:	wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][t]; break;
-				case 1:	wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][t]; break;
-				case 2:	wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][t]; break;
-				case 3:	wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][t]; break;
-				case 4:	wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][t]; break;
-				case 5:	wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][t]; break;
+			 // Normal:
+			else{
+				var _typeSub = (
+					(chance(1, 15) && (stat.found > 0 || stat.owned > 0))
+					? 2
+					: (GameCont.loops > 0)
+				);
+				
+				switch(type){     // NORMAL //           // LOOP //           // RARE //
+					case 0:	wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][_typeSub]; break;
+					case 1:	wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][_typeSub]; break;
+					case 2:	wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][_typeSub]; break;
+					case 3:	wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][_typeSub]; break;
+					case 4:	wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][_typeSub]; break;
+					case 5:	wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][_typeSub]; break;
+				}
 			}
 			
 			 // Akimbo:
@@ -2053,6 +2076,31 @@
 	wepangle = w * weapon_is_melee(wep);
 	bwepangle = -w * weapon_is_melee(bwep);
 	
+	 // Cursed Sprites:
+	if(curse){
+		with(["idle", "walk", "hurt", "dead", "spwn", "hide", "icon"]){
+			var	_type = self,
+				_spr = variable_instance_get(other, "spr_" + _type, -1),
+				_sprName = "PetWeapon" + string_upper(string_char_at(_type, 1)) + string_delete(_type, 1, 1);
+				
+			if(_spr == lq_get(spr, _sprName)){
+				with(other){
+					var _new = lq_get(spr, _sprName + "Cursed");
+					variable_instance_set(self, "spr_" + _type, _new);
+					if(sprite_index == _spr) sprite_index = _new;
+					
+					 // Icon:
+					if(_type == "icon" && name == "Pet"){
+						with(pickup_indicator){
+							text = string_replace_all(text, string(_spr), string(_new));
+						}
+					}
+				}
+			}
+		}
+		hitid = [spr_idle, "@q@pCURSED#WEAPON MIMIC"];
+	}
+	
 #define Weapon_anim
 	if(
 		sprite_index != spr_hide
@@ -2066,28 +2114,20 @@
 				image_index = 0;
 			}
 			
-			if(instance_is(self, enemy) || instance_exists(leader)){
-				 // Laugh:
-				if(image_index <= 0){
-					audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
-					audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
-					sound_play_hit(sndBigWeaponChest, 0);
-				}
-				
-				 // Swap to Weapons:
-				if(anim_end){
-					wkick = -2;
-					bwkick = -2;
-					sound_play(weapon_get_swap(wep));
-					instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
-					sprite_index = enemy_sprite;
-				}
+			 // Laugh:
+			if(image_index <= 0){
+				audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
+				audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
+				sound_play_hit(sndBigWeaponChest, 0);
 			}
 			
-			 // No Owner:
-			else{
-				image_index -= 2 * image_speed_raw;
-				if(image_index <= 0) sprite_index = spr_hide;
+			 // Swap to Weapons:
+			if(anim_end){
+				wkick = -2;
+				bwkick = -2;
+				sound_play(weapon_get_swap(wep));
+				instance_create(x + lengthdir_x(8, gunangle), y + lengthdir_y(8, gunangle), WepSwap);
+				sprite_index = enemy_sprite;
 			}
 		}
 		
@@ -2096,7 +2136,15 @@
 	}
 	
 	 // Hiding:
-	else image_index = min(image_index, image_number - 1);
+	else{
+		image_index = min(image_index, image_number - 1);
+		
+		 // Clunk:
+		if(floor(image_index) == image_number - 2 && image_index < floor(image_index) + image_speed_raw){
+			sound_play_pitch(sndChest, 0.8 + random(0.2));
+			repeat(4) scrFX(x, y, 2, Dust);
+		}
+	}
 	
 #define Weapon_step
 	if(setup) Weapon_setup();
@@ -2105,7 +2153,7 @@
 	if(
 		sprite_index != spr_spwn
 		&& name == "Pet"
-		&& in_sight(leader)
+		&& (in_sight(leader) || in_sight(target))
 		&& instance_is(leader, Player)
 	){
 		gunangle_goal = point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]);
@@ -2413,9 +2461,9 @@
 		if(instance_exists(leader)){
 			 // Pathfind:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(20), [5, 15]);
+				scrWalk(path_dir + orandom(20), [5, 10]);
 				alarm0 = walk;
-				gunangle_goal = angle_lerp(gunangle_goal, direction, 0.2);
+				gunangle_goal = angle_lerp(gunangle_goal, direction, 0.1);
 			}
 				
 			 // Walkin':
@@ -2427,34 +2475,35 @@
 				 // Near Leader:
 				else if("index" in leader){
 					var	_mx = mouse_x[leader.index],
-						_my = mouse_y[leader.index];
+						_my = mouse_y[leader.index],
+						_tx = lerp(leader.x, _mx, 0.5),
+						_ty = lerp(leader.y, _my, 0.5);
 						
 					scrWalk(
-						point_direction(
-							x,
-							y,
-							lerp(leader.x, _mx, 0.5) + orandom(24),
-							lerp(leader.y, _my, 0.5) + orandom(24)
-						),
-						[10, 20]
+						point_direction(x, y, _tx + orandom(24), _ty + orandom(24)),
+						(point_distance(x, y, _tx, _ty) / 4) + irandom(20)
 					);
 					
 					 // Lock-on Nearby Dudes:
 					if(!instance_exists(target)){
 						var _disMax = 64;
 						with(pet_target_inst){
-							var _dis = point_distance(x, y, _mx, _my);
+							var _dis = point_distance(x, y, other.x, other.y);
 							if(_dis < _disMax && in_sight(other)){
 								_disMax = _dis;
 								other.target = id;
 							}
 						}
-						var _disMax = 64;
-						with(pet_target_inst){
-							var _dis = point_distance(x, y, other.x, other.y);
-							if(_dis < _disMax && in_sight(other)){
-								_disMax = _dis;
-								other.target = id;
+						
+						 // Nearby Mouse:
+						if(!instance_exists(target)){
+							var _disMax = 64;
+							with(pet_target_inst){
+								var _dis = point_distance(x, y, _mx, _my);
+								if(_dis < _disMax && in_sight(other)){
+									_disMax = _dis;
+									other.target = id;
+								}
 							}
 						}
 					}
@@ -2543,27 +2592,27 @@
 
 #define web_end_step(_inst)
 	if(DebugLag) trace_time();
-
+	
 	with(surfWeb){
 		if(surface_exists(surf)){
 			var	_surfx = x,
 				_surfy = y,
 				_slowInst = [];
-
+				
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 			draw_set_color(c_black);
-
+			
 			with(_inst) if(instance_exists(self)){
 				web_frame += current_time_scale;
-
+				
 				var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
 					_x1, _x2, _x3,
 					_y1, _y2, _y3,
 					_vertexNum = 0;
-
+					
 				draw_primitive_begin(pr_trianglestrip);
-
+				
 				with(web_list){
 					_x3 = _x2;
 					_y3 = _y2;
@@ -2571,10 +2620,10 @@
 					_y2 = _y1;
 					_x1 = x;
 					_y1 = y;
-
+					
 					 // Drawing Web Mask:
 					draw_vertex(x - _surfx, y - _surfy);
-
+					
 					 // Slow Enemies:
 					if(_vertexNum++ >= 2){
 						with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
@@ -2592,29 +2641,29 @@
 							//}
 						}
 					}
-
+					
 					 // Dissipate:
 					if(frame < other.web_frame){
 						 // Shrink Towards Next Point:
 						var	_x = x,
 							_y = y;
-
+							
 						if(_vertexNum + 1 < array_length(other.web_list)){
 							with(other.web_list[_vertexNum + 1]){
 								_x = x;
 								_y = y;
 							}
 						}
-
+						
 						x = lerp(x, _x, 0.2 * current_time_scale);
 						y = lerp(y, _y, 0.2 * current_time_scale);
-
+						
 						 // Delete:
 						if(point_distance(_x, _y, x, y) < 1){
 							with(other) Spider_web_delete(--_vertexNum);
 						}
 					}
-
+					
 					 // In Coast Water:
 					else if(wading){
 						var o = sin((current_frame + frame) / 10) * current_time_scale;
@@ -2622,16 +2671,16 @@
 						y += o * 0.15;
 					}
 				}
-
+				
 				 // Finish Web Mask:
 				if(instance_exists(leader)){
 					var	l = web_add_l * (1 - (web_timer / web_timer_max)),
 						d = web_add_d;
-	
+						
 					draw_vertex(x + lengthdir_x(l, d) - _surfx, bbox_bottom + lengthdir_y(l, d) - _surfy);
 				}
 				draw_primitive_end();
-
+				
 				 // Particles:
 				if(web_bits > 0) web_bits -= current_time_scale;
 				else{
@@ -2654,22 +2703,22 @@
 						}
 					}
 				}
-
+				
 				 // Special Stat:
 				with(instances_matching(_slowInst, "ntte_statspider", null)){
 					ntte_statspider = true;
 					other.stat.webbed++;
 				}
 			}
-
+			
 			 // Draw Web Sprite Over Web Mask:
 			draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
 			draw_rectangle(0, 0, w, h, false);
 			with(other) draw_sprite_tiled(spr.PetSpiderWeb, 0, 0 - _surfx, 0 - _surfy);
 			draw_set_blend_mode(bm_normal);
-
+			
 			surface_reset_target();
-
+			
 			 // Slow Enemies on Web:
 			with(_slowInst){
 				x = lerp(xprevious, x, current_time_scale / 3);
@@ -2677,14 +2726,14 @@
 			}
 		}
 	}
-
+	
 	if(DebugLag) trace_time("petlib_web_end_step");
-
+	
 	instance_destroy();
-
+	
 #define web_draw
 	instance_destroy();
-
+	
 	 // Drawing Web Surface:
 	with(surfWeb) if(surface_exists(surf)){
 		draw_set_fog(true, make_color_rgb(50, 41, 71), 0, 0);
@@ -2692,8 +2741,8 @@
 		draw_set_fog(false, 0, 0, 0);
 		draw_surface(surf, x, y);
 	}
-
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
