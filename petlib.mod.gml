@@ -254,21 +254,248 @@
 		
 		return 10 + random(10);
 	}
-
-
-#define Orchid_create
-	 // Visual:
 	
+	
+#define Orchid_create
 	 // Vars:
+	raddrop = 0;
+	skill_rads = 60;
+	skill_time = 450;
+	skill_inst = noone;
+	
+	 // Stat:
+	if("mutations" not in stat) stat.mutations = 0;
 	
 #define Orchid_ttip
 	return ["ELEGANT", "FLORID"];
 	
+#define Orchid_stat(_name, _value)
+	if(_name == "") return spr.PetOrchidIdle;
+	
 #define Orchid_step
+	 // Mutate:
+	if(raddrop >= skill_rads && instance_exists(enemy)){
+		raddrop -= skill_rads;
+		
+		 // Stat:
+		stat.mutations++;
+		
+		 // Compile Ungotten Skills:
+		var _skillList = [];
+		for(var i = mut_rhino_skin; i <= mut_heavy_heart; i++){
+			if(skill_get_active(i) && skill_get(i) == 0){
+				if(i != mut_patience && (i != mut_heavy_heart || GameCont.wepmuts >= 3)){
+					array_push(_skillList, i);
+				}
+			}
+		}
+		with(mod_get_names("skill")){
+			if(skill_get_active(self) && skill_get(self) == 0){
+				if(!mod_script_exists("skill", self, "skill_avail") || mod_script_call_nc("skill", self, "skill_avail")){
+					array_push(_skillList, self);
+				}
+			}
+		}
+		
+		 // Already Have Everything, +1 to Random Skill:
+		if(array_length(_skillList) <= 0){
+			for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+				var _at = skill_get_at(i);
+				if(_at != mut_patience && _at != mut_last_wish){
+					if(!is_string(_at) || !mod_script_exists("skill", _at, "skill_avail") || mod_script_call_nc("skill", _at, "skill_avail")){
+						array_push(_skillList, _at);
+					}
+				}
+			}
+		}
+		
+		 // Give Random Mutation:
+		skill_inst = Orchid_skill(_skillList[irandom(array_length(_skillList) - 1)], skill_time);
+	}
+	
 	 // Effects:
-	if(chance_ct(1, 15)) with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
-		image_angle = random(360);
-		depth = other.depth + choose(-1, 1);
+	if(chance_ct(1, (instance_exists(skill_inst) ? 10 : 15))){
+		with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
+			depth = other.depth + choose(-1, -1, 1);
+		}
+	}
+	
+#define Orchid_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	
+	 // Bloom:
+	var	_scale = lerp(1.5, 1.8, 0.5 + (0.5 * sin(wave / 10))),
+		_alpha = lerp(0.05, 0.25, raddrop / skill_rads);
+		
+	draw_set_blend_mode(bm_add);
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc * _scale, _ysc * _scale, _ang, _col, _alp * _alpha);
+	draw_set_blend_mode(bm_normal);
+	
+#define Orchid_skill(_skill, _time)
+	skill_set(_skill, skill_get(_skill) + 1);
+	
+	 // Skill-Specific Fixes:
+	var	_spirit = noone,
+		_chest = noone;
+		
+	switch(_skill){
+		case mut_scarier_face:
+			with(enemy){
+				maxhealth = round(maxhealth * 0.8);
+				my_health = round(my_health * 0.8);
+				
+				 // Hurt FX:
+				image_index = 0;
+				sprite_index = spr_hurt;
+				if(point_seen(x, y, -1)) sound_play_hit(snd_hurt, 0.3);
+			}
+			break;
+			
+		case mut_hammerhead:
+			with(Player){
+				hammerhead += 20;
+			}
+			break;
+			
+		case mut_strong_spirit:
+			with(Player){
+				if(canspirit == false || ceil(skill_get(mut_strong_spirit)) == 1){
+					canspirit = true;
+					
+					 // Effects:
+					with(instance_create(x, y, StrongSpirit)){
+						sprite_index = sprStrongSpiritRefill;
+						creator = other;
+					}
+					sound_play(sndStrongSpiritGain);
+				}
+				else if("bonus_spirit" in self){
+					_spirit = {};
+					array_push(bonus_spirit, _spirit);
+					sound_play(sndStrongSpiritGain);
+				}
+			}
+			break;
+			
+		case mut_open_mind:
+			with(instance_nearest_array(x, y, [chestprop, RadChest])){
+				_chest = instance_copy(false);
+			}
+			break;
+	}
+	
+	 // Alert:
+	var	_icon = skill_get_icon(_skill),
+		_alert = scrAlert(self, _icon[0]);
+		
+	with(_alert){
+		image_index = _icon[1];
+		image_speed = 0;
+		snd_flash = sndLevelUp;
+		spr_alert = -1;
+		alarm0 = _time - (2 * blink);
+	}
+	with(_chest){
+		with(scrAlert(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			spr_alert = -1;
+			alarm0 = _time / 3;
+			blink = 12;
+			flash = 4;
+			snd_flash = sndChest;
+		}
+	}
+	
+	 // Controller:
+	var _obj = instance_create(0, 0, CustomObject);
+	with(_obj){
+		time = _time;
+		skill = _skill;
+		alert = _alert;
+		spirit = _spirit;
+		chest = _chest;
+		creator = other;
+		on_step = script_ref_create(Orchid_skill_step);
+		on_cleanup = script_ref_create(Orchid_skill_cleanup);
+	}
+	
+	 // Effects:
+	repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
+		depth = -8;
+		image_speed = lerp(0.2, 0.4, speed);
+		hspeed += other.hspeed / 1.5;
+		vspeed += other.vspeed / 1.5;
+	}
+	sound_play_pitchvol(sndStatueXP, 0.8, 0.5);
+	sound_play_hit_big(sndMut, 0.2);
+	
+	return _obj;
+	
+#define Orchid_skill_step
+	if(time > 0 && instance_exists(creator) && creator.visible){
+		if(instance_exists(alert) && alert.alarm0 <= 2){
+			with(chest) visible = other.alert.visible;
+		}
+		time -= current_time_scale;
+	}
+	else instance_destroy();
+	
+#define Orchid_skill_cleanup
+	skill_set(skill, max(0, skill_get(skill) - 1));
+	
+	 // Skill-Specific:
+	switch(skill){
+		case mut_scarier_face:
+			with(instances_matching_lt(enemy, "id", self)){
+				maxhealth = round(maxhealth / 0.8);
+				my_health = round(my_health / 0.8);
+				
+				 // Heal FX:
+				image_index = 0;
+				sprite_index = spr_hurt;
+				with(instance_create(x, y, BloodLust)){
+					sprite_index = sprHealFX;
+					creator = other;
+				}
+				sound_play_pitchvol(sndHPPickup, 1.5, 0.3);
+			}
+			break;
+			
+		case mut_hammerhead:
+			with(instances_matching_gt(instances_matching_lt(Player, "id", self), "hammerhead", 0)){
+				hammerhead = max(0, hammerhead - 20);
+			}
+			break;
+			
+		case mut_strong_spirit:
+			if(is_object(spirit)){
+				with(spirit) if(lq_defget(self, "active", true)){
+					active = false;
+					sprite_index = sprStrongSpirit;
+					image_index = 0;
+					sound_play(sndStrongSpiritLost);
+				}
+			}
+			else with(instances_matching_lt(Player, "id", self)){
+				if(skill_get(mut_strong_spirit) <= 0 && canspirit == true){
+					with(instance_create(x, y, StrongSpirit)) creator = other;
+					sound_play(sndStrongSpiritLost);
+				}
+			}
+			break;
+			
+		case mut_open_mind:
+			with(chest) instance_delete(id);
+			break;
+	}
+	
+	 // Blip Out:
+	with(alert){
+		flash = 1;
+		snd_flash = sndCursedReminder;
+		alarm0 = flash;
+		blink = 0;
 	}
 	
 	
@@ -312,18 +539,18 @@
 				for(var i = 0; i < 128 + array_length(_mod); i++){
 					var w = ((i < 128) ? i : _mod[i - 128]);
 					if(
-						weapon_get_area(w) >= 0 	||
-						w == wep_revolver			||
-						w == wep_golden_revolver	||
-						w == wep_chicken_sword		||
-						w == wep_rusty_revolver		||
-						w == wep_rogue_rifle		||
-						w == wep_guitar				||
-						w == wep_frog_pistol		||
-						w == wep_black_sword		||
-						w == wep_golden_frog_pistol	||
-						w == "crabbone"				||
-						w == "merge"
+						weapon_get_area(w) >= 0
+						|| w == wep_revolver
+						|| w == wep_golden_revolver
+						|| w == wep_chicken_sword
+						|| w == wep_rusty_revolver
+						|| w == wep_rogue_rifle
+						|| w == wep_guitar
+						|| w == wep_frog_pistol
+						|| w == wep_black_sword
+						|| w == wep_golden_frog_pistol
+						|| w == "crabbone"
+						|| w == "merge"
 					){
 						_max++;
 						if(array_exists(_value, w)) _num++;
@@ -571,10 +798,10 @@
 
 	 // Perching:
 	if(
-		instance_exists(perched)	&&
-		perched.speed <= 0			&&
-		!instance_exists(pickup)	&&
-		("race" not in perched || perched.race != "horror")
+		instance_exists(perched)
+		&& perched.speed <= 0
+		&& !instance_exists(pickup)
+		&& ("race" not in perched || perched.race != "horror")
 	){
 		x = perched.x;
 		y = perched.y;
@@ -1953,6 +2180,7 @@
 	hitid = [spr.PetWeaponIdle, "WEAPON MIMIC"];
 	spr_spwn = spr.PetWeaponSpwn;
 	spr_hide = spr.PetWeaponHide;
+	spr_bubble_y = -1;
 	sprite_index = spr_hide;
 	image_index = image_number - 1;
 	
@@ -2532,7 +2760,7 @@
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
-
+	
 	 // Spider Webs:
 	var _inst = instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Spider");
 	if(array_length(_inst) > 0){
@@ -2542,14 +2770,14 @@
 			y = view_yview_nonsync;
 			w = game_width;
 			h = game_height;
-
+			
 			 // Bind Events:
 			if(!instance_exists(GenCont) && surface_exists(surf)){
 				script_bind_end_step(web_end_step, 0, _inst);
 				script_bind_draw(web_draw,		5);
 				script_bind_draw(web_draw_post,	0);
 			}
-	
+			
 			 // Reset Webs:
 			else with(_inst){
 				web_list = [];
@@ -2562,20 +2790,50 @@
 		}
 	}
 	else with(surfWeb) active = false;
-
+	
 	 // Octo Air Bubble:
 	if(!area_get_underwater(GameCont.area) && (GameCont.area != 100 || !area_get_underwater(GameCont.lastarea))){
 		script_bind_draw(octobubble_draw, -3);
 	}
-
+	
+	 // Mantis Rad Attraction:
+	var _targetInst = instances_matching(instances_matching(instances_matching(CustomHitme, "pet", "Orchid"), "name", "Pet"), "visible", true);
+	if(array_length(_targetInst) > 0){
+		with(instances_matching([Rad, BigRad], "orchidmantisradattract_check", null)){
+			orchidmantisradattract_check = true;
+			
+			var	_target = noone,
+				_disMax = 1000000;
+				
+			with(_targetInst){
+				if(instance_exists(leader) && !instance_exists(skill_inst)){
+					var _dis = point_distance(x, y, other.x, other.y);
+					if(_dis < _disMax){
+						_disMax = _dis;
+						_target = id;
+					}
+				}
+			}
+			
+			 // Grab:
+			if(instance_exists(_target)){
+				with(scrFX(x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
+					alarm0 = random_range(20, 30);
+					image_alpha *= 2;
+				}
+				rad_path(self, _target);
+			}
+		}
+	}
+	
 	if(DebugLag) trace_time("petlib_step");
-
+	
 #define octobubble_draw
 	instance_destroy();
 	with(instances_matching(instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "visible", true), "hiding", false)){
 		draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 	}
-
+	
 #define web_draw_post
 	instance_destroy();
 
@@ -2817,8 +3075,7 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);

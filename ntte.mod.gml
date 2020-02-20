@@ -3409,8 +3409,32 @@
 				}
 			}
 			
-			 // Alert Indicators:
-			with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "visible", true)){
+			 // Space Out Alert Indicators:
+			var _alert = instances_matching(CustomObject, "name", "AlertIndicator");
+			array_sort(_alert, true);
+			with(_alert){
+				xprevious = x;
+				yprevious = y;
+			}
+			with(_alert){
+				if(place_meeting(x, y, object_index)){
+					with(instances_meeting(x, y, _alert)){
+						var _ox = sign(xprevious - other.xprevious);
+						if(_ox < 0){ // Move Left
+							x = other.bbox_left - (1 + ((bbox_right + 1) - x));
+						}
+						else if(_ox > 0){ // Move Right
+							x = (other.bbox_right + 1) + (1 + (x - bbox_left));
+						}
+						else{ // Move Up
+							y = other.bbox_top - (1 + ((bbox_bottom + 1) - y));
+						}
+					}
+				}
+			}
+			
+			 // Alert Indicator Drawing:
+			with(instances_matching(_alert, "visible", true)){
 				var	_flash = max(1, flash),
 					_spr = sprite_index,
 					_img = image_index,
@@ -3453,6 +3477,12 @@
 				}
 				
 				if(flash > 0) draw_set_fog(false, 0, 0, 0);
+			}
+			
+			 // Reset Alert Indicator Positions:
+			with(_alert){
+				x = xprevious;
+				y = yprevious;
 			}
 		}
 	}
@@ -3582,8 +3612,7 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);

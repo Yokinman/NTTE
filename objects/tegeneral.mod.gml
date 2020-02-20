@@ -14,7 +14,9 @@
 	
 	 // Top Object Searching:
 	TopObjectSearchMap = ds_map_create();
-	with(TopObjectSearch) ds_map_set(TopObjectSearchMap, self, GameObject.id);
+	with(TopObjectSearch){
+		ds_map_set(TopObjectSearchMap, self, max(variable_instance_get(GameObject, "id", 0), other));
+	}
 	
 	 // Floor Related:
 	global.floor_num = 0;
@@ -2713,7 +2715,7 @@
 			if(instance_exists(leader)){
 				if(_leaderDis > 24){
 					 // Pathfinding:
-					if(array_length(path) > 0){
+					if(path_dir != null){
 						scrWalk(path_dir + orandom(20), 8);
 						alarm0 = walk;
 					}
@@ -4131,7 +4133,19 @@
 				 // Time Until Flight:
 				if(jump_time > 0){
 					jump_time -= current_time_scale;
-					if(jump_time <= 0 || (zspeed == 0 && speed == 0 && instance_exists(ScrapBoss))){
+					
+					 // Early Flight:
+					if(zspeed == 0 && speed == 0){
+						if(instance_exists(ScrapBoss)){
+							jump_time = 0;
+						}
+						else if(distance_to_object(projectile) < 16 || distance_to_object(BulletHit) < 16){
+							jump_time = 0;
+							idle_time = random(3);
+						}
+					}
+					
+					if(jump_time <= 0){
 						jump_time = 0;
 						
 						 // Prepare to Fly w/ Bros:
@@ -4139,7 +4153,7 @@
 							with(instances_matching(instances_matching(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0), "zspeed", 0), "speed", 0)){
 								if(instance_exists(target) && target.object_index == other.target.object_index && in_distance(other, 64)){
 									jump_time = 0;
-									idle_time = random_range(10, 60);
+									idle_time = min(idle_time, random_range(10, 60));
 								}
 							}
 						}
@@ -4968,12 +4982,13 @@
 			if(_object.id > _lastID){
 				TopObjectSearchMap[? _object] = _object.id;
 				
-				var _topObject = instances_matching(CustomObject, "name", "TopObject");
+				if(_object == Effect){
+					_object = instances_matching_ne(_object, "object_index", Smoke, Bubble);
+					if(array_length(_object) <= 0) continue;
+				}
 				
+				var _topObject = instances_matching(CustomObject, "name", "TopObject");
 				if(array_length(_topObject) > 0){
-					if(_object == Effect){
-						_object = instances_matching_ne(_object, "object_index", Smoke, Bubble);
-					}
 					with(array_flip(instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null))){
 						if(
 							!position_meeting(x, y, Floor)
@@ -5066,6 +5081,44 @@
 		
 		x -= hspeed_raw;
 		y -= vspeed_raw;
+	}
+	
+	 // Chests Give Feathers:
+	if(!instance_exists(GenCont)){
+		with(instances_matching(chestprop, "my_feather_storage", null)){
+			my_feather_storage = obj_create(x, y, "ParrotChester");
+			
+			 // Vars:
+			with(my_feather_storage){
+				creator = other;
+				switch(other.object_index){
+					case IDPDChest:
+					case BigWeaponChest:
+					case BigCursedChest:
+						num = 18; break;
+					case GiantWeaponChest:
+					case GiantAmmoChest:
+						num = 60; break;
+				}
+			}
+		}
+		
+		 // Throne Butt : Pickups Give Feathers
+		if(skill_get(mut_throne_butt) > 0){
+			with(instances_matching(Pickup, "my_feather_storage", null)){
+				my_feather_storage = noone;
+				if(mask_index == mskPickup){
+					my_feather_storage = obj_create(x, y, "ParrotChester");
+					
+					 // Vars:
+					with(my_feather_storage){
+						creator = other;
+						small = true;
+						num = ceil(2 * skill_get(mut_throne_butt));
+					}
+				}
+			}
+		}
 	}
 	
 	if(DebugLag) trace_time("tegeneral_step_post");
@@ -5399,8 +5452,7 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);

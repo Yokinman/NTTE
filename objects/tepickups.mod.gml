@@ -203,7 +203,21 @@
 	}
 
 	 // Restore Strong Spirit:
-	if(instance_is(other, Player)) scrRestoreSpirit(other);
+	if(skill_get(mut_strong_spirit) > 0){
+		with(instance_is(other, Player) ? other : Player){
+			if(canspirit == false){
+				canspirit = true;
+				GameCont.canspirit[index] = false;
+				
+				 // Effects:
+				with(instance_create(x, y, StrongSpirit)){
+					sprite_index = sprStrongSpiritRefill;
+					creator = other;
+				}
+				sound_play(sndStrongSpiritGain);
+			}
+		}
+	}
 
 
 #define Backpacker_create(_x, _y)
@@ -2627,7 +2641,7 @@
 #define SpiritPickup_open
 	var	_inst = noone,
 		_num = num;
-
+		
 	if(instance_is(other, Player)) _inst = other;
 	else _inst = Player;
 	
@@ -2649,7 +2663,7 @@
 	
 	 // Effects:
 	instance_create(x, y, SmallChestPickup);
-
+	
 #define SpiritPickup_fade
 	instance_create(x, y, SmallChestFade);
 	for(var i = 0; i < num; i++){
@@ -2658,22 +2672,8 @@
 	
 #define SpiritPickup_pull
 	return (pull_delay <= 0);
-
-#define scrRestoreSpirit(_inst)
-	with(_inst) if(skill_get(mut_strong_spirit) && !canspirit){
-		var i = index;
-			
-		canspirit = true;
-		GameCont.canspirit[i] = false;
-		with(instance_create(x, y, StrongSpirit)){
-			sprite_index = sprStrongSpiritRefill;
-			creator = i;
-		}
-		
-		sound_play(sndStrongSpiritGain);
-	}
-
-
+	
+	
 #define SunkenChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -2979,6 +2979,7 @@
 			image_index = 0;
 			sprite_index = spr.VaultFlowerHurt;
 			with(scrAlert(self, skill_get_icon("reroll")[0])){
+				image_speed = 0;
 				snd_flash = sndLevelUp;
 				spr_alert = -1;
 			}
@@ -3488,80 +3489,63 @@
 			bonus_spirit_bend_spd = 0;
 		}
 		
-		 // Sort Spirits:
-		var _spirits = [[], []];
-		with(bonus_spirit){
-			var o = self;
-			array_push(_spirits[active], o);
-		}
-
-		 // Grant Grace:
 		if(array_length(bonus_spirit) > 0){
+			 // Grant Grace:
 			if(my_health <= 0){
-				if(spiriteffect <= 0){
-					var _doSpirit = false;
-					
-					 // Natural Spirit Depletion:
-					if(skill_get(mut_strong_spirit) && canspirit){
-						with(instances_matching(StrongSpirit, "creator", index)) instance_destroy();
-						canspirit = false;
-						GameCont.canspirit[index] = false;
-						
-						array_push(_spirits[0], bonusSpiritLose);
-						
-						_doSpirit = true;
-					}
-					
-					 // Bonus Spirit Depletion:
-					else if(array_length(_spirits[1]) > 0){
-						with(_spirits[1]){
-							sprite = mskNone;
+				if(skill_get(mut_strong_spirit) <= 0 || canspirit != true){
+					for(var i = array_length(bonus_spirit) - 1; i >= 0; i--){
+						var _spirit = bonus_spirit[i];
+						if(lq_defget(_spirit, "active", true)){
+							my_health = 1;
+							spiriteffect = 5;
+							
+							 // Lost:
+							with(_spirit){
+								active = false;
+								sprite_index = sprStrongSpirit;
+								image_index = 0;
+							}
+							sound_play(sndStrongSpiritLost);
+							
 							break;
 						}
-						array_push(_spirits[0], bonusSpiritLose);
-						
-						_doSpirit = true;
-					}
-					
-					 // Perform Spirit Effect:
-					if(_doSpirit){
-						my_health = 1;
-						spiriteffect = 4;
-						sound_play(sndStrongSpiritLost);
 					}
 				}
-				
-				 // Fuck Explosions:
-				else my_health = 1;
 			}
-		}
-		
-		 // Animate and Cull Spirits:
-		var	a = [],
-			_animSpeed = 0.4 * current_time_scale;
 			
-		for(var i = 1; i >= 0; i--){
-			with(_spirits[i]){
+			 // Override Halos:
+			with(instances_matching(instances_matching(StrongSpirit, "creator", id), "visible", true)){
+				visible = false;
+				array_push(other.bonus_spirit, {
+					sprite_index : sprite_index,
+					image_index : image_index,
+					active : false
+				});
+			}
+			
+			 // Animate and Cull Spirits:
+			with(bonus_spirit){
+				if("active" not in self) active = true;
+				if("sprite_index" not in self) sprite_index = (active ? sprStrongSpiritRefill : sprStrongSpirit);
+				if("image_index" not in self) image_index = 0;
 				
-				 // you may pass:
-				var o = self;
-				if(sprite != mskNone){
-					index += _animSpeed;
-					if(index >= sprite_get_number(sprite)){
-						if(active) sprite = sprHalo;
-						else sprite = mskNone;
+				 // Animate:
+				if(active || sprite_index != mskNone){
+					image_index += 0.4 * current_time_scale;
+					if(image_index >= sprite_get_number(sprite_index)){
+						if(active) sprite_index = sprHalo;
+						else sprite_index = mskNone;
+						image_index = 0;
 					}
-					
-					array_push(a, o);
 				}
+				
+				 // Gone:
+				else other.bonus_spirit = array_delete_value(other.bonus_spirit, self);
 			}
 		}
-		
-		 // the next generation:
-		bonus_spirit = a;
 		
 		 // Wobble:
-		var _num = array_length(bonus_spirit) + (skill_get(mut_strong_spirit) && canspirit);
+		var _num = array_length(bonus_spirit) + (skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0);
 		bonus_spirit_bend_spd += hspeed_raw / (3 * max(1, _num));
 		bonus_spirit_bend_spd += 0.1 * (0 - bonus_spirit_bend) * current_time_scale;
 		bonus_spirit_bend += bonus_spirit_bend_spd * current_time_scale;
@@ -3921,14 +3905,14 @@
 					_x = x,
 					_y = y + sin(wave * 0.1);
 					
-				if(skill_get(mut_strong_spirit) && canspirit){
+				if(skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0){
 					_x += lengthdir_x(_dis, _dir);
 					_y += lengthdir_y(_dis, _dir);
 					_dir += _bend;
 				}
 				
 				for(var i = 0; i < n; i++){
-					draw_sprite_ext(bonus_spirit[i].sprite, bonus_spirit[i].index, _x, _y, 1, 1, _dir - 90, c_white, 1);
+					draw_sprite_ext(lq_defget(bonus_spirit[i], "sprite_index", mskNone), lq_defget(bonus_spirit[i], "image_index", 0), _x, _y, 1, 1, _dir - 90, c_white, 1);
 					_x += lengthdir_x(_dis, _dir);
 					_y += lengthdir_y(_dis, _dir);
 					_dir += _bend;
@@ -3941,9 +3925,9 @@
 	
 	 // Goodbye Bro:
 	instance_destroy();
-
-#macro bonusSpiritGain { sprite : sprStrongSpiritRefill, index : 0, active : true  }
-#macro bonusSpiritLose { sprite : sprStrongSpirit,       index : 0, active : false }
+	
+#macro bonusSpiritGain {}
+#macro bonusSpiritLose { active: false }
 
 
 /// Scripts
@@ -4020,8 +4004,7 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);

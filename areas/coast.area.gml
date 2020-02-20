@@ -93,10 +93,12 @@
 		
 		 // Rocks:
 		else if(instance_is(other, TopSmall)){
-			if(instance_exists(GenCont) && chance(1, 80)){
-				obj_create(other.x + 8, other.y + 8, "CoastDecal");
+			with(other){
+				if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
+					obj_create(x + 8, y + 8, "CoastDecal");
+				}
+				instance_delete(id);
 			}
-			instance_delete(other);
 		}
 	}
 	
@@ -1482,8 +1484,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y)                                          return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y);
-#define area_generate_ext(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate_ext', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
