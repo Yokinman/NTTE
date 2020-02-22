@@ -5127,7 +5127,9 @@
 				gunangle = _dir;
 				weapon_post(0, _pan * current_time_scale, 0);
 			}
-			catch(_error) trace_error(_error);
+			catch(_error){
+				trace_error(_error);
+			}
 			
 			instance_delete(id);
 		}

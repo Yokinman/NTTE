@@ -2921,10 +2921,21 @@
 	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
 	
 	 // Mutation HUD:
-	if(global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0){
-		global.hud_reroll = GameCont.hud_patience;
+	var	_skillType = [],
+		_skillList = [];
+		
+	with(instances_matching(CustomObject, "name", "OrchidSkill")){
+		if(skill_get(skill) != 0){
+			array_push(_skillType, "orchid");
+			array_push(_skillList, skill);
+		}
 	}
 	if(skill_get(global.hud_reroll) != 0){
+		array_push(_skillType, "reroll");
+		array_push(_skillList, ((global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0) ? GameCont.hud_patience : global.hud_reroll));
+	}
+	
+	if(array_length(_skillList) > 0){
 		var	_sx = game_width - 11,
 			_sy = 12,
 			_x = _sx,
@@ -2966,14 +2977,79 @@
 		}
 		
 		 // Draw:
-		for(var i = 0; true; i++){
+		for(var i = 0; array_length(_skillList) > 0; i++){
 			var _skill = skill_get_at(i);
 			if(is_undefined(_skill)) break;
 			
-			 // Rerolled Mutation:
-			if(_skill == global.hud_reroll){
-				draw_sprite(spr.SkillRerollHUDSmall, 0, _x + ((global.hud_reroll == GameCont.hud_patience) ? -4 : 5) + _ox, _y + 5 + _oy);
-				break; // remove break if you do some other mutation HUD stuff
+			while(array_exists(_skillList, _skill)){
+				var	_skillIndex = array_find_index(_skillList, _skill),
+					_dx = _x + _ox,
+					_dy = _y + _oy;
+					
+				switch(_skillType[_skillIndex]){
+					
+					case "reroll": // VAULT FLOWER
+						
+						draw_sprite(
+							spr.SkillRerollHUDSmall,
+							0,
+							_dx + ((_skill == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
+							_dy + 5
+						);
+						
+						break;
+						
+					case "orchid": // ORCHID MANTIS
+						
+						var	_icon = skill_get_icon(_skill),
+							_spr = _icon[0],
+							_img = _icon[1];
+							
+						if(sprite_exists(_spr)){
+							var	_uvs = sprite_get_uvs(_spr, _img),
+								_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ) - 1,
+								_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ) - 1,
+								_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))) + 1,
+								_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))) + 1,
+								_time = 1000000000,
+								_timeMax = 1000000000;
+								
+							with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
+								_time = min(_time, time);
+								_timeMax = min(_timeMax, time_max);
+							}
+							
+							if(_time > current_time_scale){
+								 // Outline:
+								draw_set_fog(true, make_color_rgb(76, 68, 16), 0, 0);
+								for(var d = 0; d < 360; d += 90){
+									draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
+								}
+								
+								 // Timer Outline:
+								draw_set_fog(true, make_color_rgb(255, 221, 0), 0, 0);
+								for(var d = 0; d < 360; d += 90){
+									var	_l = _x1,
+										_t = _y1 + round((_y2 - _y1) * (1 - (_time / _timeMax))) + dsin(d),
+										_w = _x2 - _l,
+										_h = _y2 - _t;
+										
+									draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
+								}
+							}
+							
+							 // Icon:
+							draw_set_fog((_time <= current_time_scale || _time >= _timeMax), c_white, 0, 0);
+							draw_sprite(_spr, _img, _dx, _dy);
+							draw_set_fog(false, 0, 0, 0);
+						}
+						
+						break;
+						
+				}
+				
+				_skillList = array_delete(_skillList, _skillIndex);
+				_skillType = array_delete(_skillType, _skillIndex);
 			}
 			
 			 // Keep it movin:

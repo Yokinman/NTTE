@@ -16,6 +16,11 @@
 
 #macro DebugLag global.debug_lag
 
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
 #macro surfWeb global.surfWeb
 
 #macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
@@ -274,7 +279,7 @@
 	
 #define Orchid_step
 	 // Mutate:
-	if(raddrop >= skill_rads && instance_exists(enemy)){
+	if(raddrop >= skill_rads){
 		raddrop -= skill_rads;
 		
 		 // Stat:
@@ -339,7 +344,7 @@
 		_chest = noone;
 		
 	switch(_skill){
-		case mut_scarier_face:
+		case mut_scarier_face: // Manually Reduce Enemy HP
 			with(enemy){
 				maxhealth = round(maxhealth * 0.8);
 				my_health = round(my_health * 0.8);
@@ -351,13 +356,13 @@
 			}
 			break;
 			
-		case mut_hammerhead:
+		case mut_hammerhead: // Give Hammerhead Points
 			with(Player){
 				hammerhead += 20;
 			}
 			break;
 			
-		case mut_strong_spirit:
+		case mut_strong_spirit: // Restore Strong Spirit
 			with(Player){
 				if(canspirit == false || ceil(skill_get(mut_strong_spirit)) == 1){
 					canspirit = true;
@@ -377,7 +382,7 @@
 			}
 			break;
 			
-		case mut_open_mind:
+		case mut_open_mind: // Duplicate Chest
 			with(instance_nearest_array(x, y, [chestprop, RadChest])){
 				_chest = instance_copy(false);
 			}
@@ -393,29 +398,31 @@
 		image_speed = 0;
 		snd_flash = sndLevelUp;
 		spr_alert = -1;
-		alarm0 = _time - (2 * blink);
+		blink = 15;
 	}
 	with(_chest){
 		with(scrAlert(self, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
 			spr_alert = -1;
-			alarm0 = _time / 3;
-			blink = 12;
-			flash = 4;
 			snd_flash = sndChest;
+			flash = 4;
+			alarm0 = _time - (2 * blink);
 		}
 	}
 	
 	 // Controller:
 	var _obj = instance_create(0, 0, CustomObject);
 	with(_obj){
-		time = _time;
+		name = "OrchidSkill";
+		time_max = _time;
+		time = time_max;
 		skill = _skill;
 		alert = _alert;
 		spirit = _spirit;
 		chest = _chest;
 		creator = other;
+		persistent = true;
 		on_step = script_ref_create(Orchid_skill_step);
 		on_cleanup = script_ref_create(Orchid_skill_cleanup);
 	}
@@ -433,20 +440,31 @@
 	return _obj;
 	
 #define Orchid_skill_step
-	if(time > 0 && instance_exists(creator) && creator.visible){
-		if(instance_exists(alert) && alert.alarm0 <= 2){
-			with(chest) visible = other.alert.visible;
+	 // Chest Blink:
+	with(chest){
+		with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", id)){
+			other.visible = visible;
+			break;
 		}
-		time -= current_time_scale;
+	}
+	
+	 // Timer:
+	if(time > 0){
+		if((!instance_exists(GenCont) && !instance_exists(LevCont)) || time >= time_max){
+			time -= current_time_scale;
+		}
 	}
 	else instance_destroy();
 	
 #define Orchid_skill_cleanup
 	skill_set(skill, max(0, skill_get(skill) - 1));
 	
+	 // Blip:
+	sound_play(sndCursedReminder);
+	
 	 // Skill-Specific:
 	switch(skill){
-		case mut_scarier_face:
+		case mut_scarier_face: // Restore Enemy HP
 			with(instances_matching_lt(enemy, "id", self)){
 				maxhealth = round(maxhealth / 0.8);
 				my_health = round(my_health / 0.8);
@@ -462,13 +480,13 @@
 			}
 			break;
 			
-		case mut_hammerhead:
+		case mut_hammerhead: // Take Back Hammerhead Points
 			with(instances_matching_gt(instances_matching_lt(Player, "id", self), "hammerhead", 0)){
 				hammerhead = max(0, hammerhead - 20);
 			}
 			break;
 			
-		case mut_strong_spirit:
+		case mut_strong_spirit: // Take Back Strong Spirit
 			if(is_object(spirit)){
 				with(spirit) if(lq_defget(self, "active", true)){
 					active = false;
@@ -485,17 +503,9 @@
 			}
 			break;
 			
-		case mut_open_mind:
+		case mut_open_mind: // Delete Duplicate Chest
 			with(chest) instance_delete(id);
 			break;
-	}
-	
-	 // Blip Out:
-	with(alert){
-		flash = 1;
-		snd_flash = sndCursedReminder;
-		alarm0 = flash;
-		blink = 0;
 	}
 	
 	
@@ -1784,10 +1794,9 @@
 		 // Hop to New Pit:
 		if(image_index < 1) image_index -= image_speed_raw * 0.95;
 		else if(anim_end){
-			var f = instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB));
-			if(instance_exists(f)){
-				x = (f.bbox_left + f.bbox_right + 1) / 2;
-				y = (f.bbox_bottom + f.bbox_top + 1) / 2;
+			with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB))){
+				other.x = bbox_center_x;
+				other.y = bbox_center_y;
 			}
 		}
 		
@@ -1867,8 +1876,8 @@
 					_disMax = 1000000;
 
 				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
-					var	_x = (bbox_left + bbox_right + 1) / 2,
-						_y = (bbox_top + bbox_bottom + 1) / 2,
+					var	_x = bbox_center_x,
+						_y = bbox_center_y,
 						_dis = point_distance(other.x, other.y, _x, _y);
 
 					if(_dis < _disMax && !collision_line(other.x, other.y, _x, _y, Wall, false, false)){
@@ -2129,28 +2138,31 @@
 			
 			if(!position_meeting(spawn_loc[0], spawn_loc[1], Floor)){
 				with(instance_random(Floor)){
-					other.spawn_loc = [
-						(bbox_left + bbox_right + 1) / 2,
-						(bbox_top + bbox_bottom + 1) / 2
-					];
+					other.spawn_loc = [bbox_center_x, bbox_center_y];
 				}
 			}
 			
-			 // Decide Which Floor:
-			var	f = instance_nearest_bbox(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor),
-				_fx = (f.bbox_left + f.bbox_right + 1) / 2,
-				_fy = (f.bbox_top + f.bbox_bottom + 1) / 2;
-				
 			 // Teleport:
-			if(!place_meeting(_fx, _fy, Wall)){
-				x = _fx;
-				y = _fy;
-				flash_frame = max(flash_frame, current_frame + 1);
-				repeat(4) with(instance_create(x + orandom(6), y + orandom(6), (chance(1, 6) ? CaveSparkle : Curse))){
-					direction = random(360);
-					depth = other.depth - 1;
+			with(instance_nearest_bbox(spawn_loc[0] + orandom(64), spawn_loc[1] + orandom(64), Floor)){
+				var	_fx = bbox_center_x,
+					_fy = bbox_center_y;
+					
+				with(other){
+					if(!place_meeting(_fx, _fy, Wall)){
+						x = _fx;
+						y = _fy;
+						flash_frame = max(flash_frame, current_frame + 1);
+						
+						 // Effects:
+						repeat(4){
+							with(scrFX([x, 6], [y, 6], 0, (chance(1, 6) ? CaveSparkle : Curse))){
+								direction = random(360);
+								depth = other.depth - 1;
+							}
+						}
+						sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 2 + random(2));
+					}
 				}
-				sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 2 + random(2));
 			}
 		}
 	}
@@ -2886,10 +2898,10 @@
 					if(_vertexNum++ >= 2){
 						with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
 							_webInst,
-							"bbox_right",	min(_x1, _x2, _x3)),
-							"bbox_left",	max(_x1, _x2, _x3)),
-							"bbox_bottom",	min(_y1, _y2, _y3)),
-							"bbox_top",		max(_y1, _y2, _y3))
+							"bbox_right",  min(_x1, _x2, _x3)),
+							"bbox_left",   max(_x1, _x2, _x3)),
+							"bbox_bottom", min(_y1, _y2, _y3)),
+							"bbox_top",    max(_y1, _y2, _y3))
 						){
 							//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
 								if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){

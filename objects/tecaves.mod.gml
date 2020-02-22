@@ -22,6 +22,11 @@
 
 #macro DebugLag global.debug_lag
 
+#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
+#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
+#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_height   (bbox_bottom + 1) - bbox_top
+
 #macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #macro surfWallShineMask global.surfWallShineMask
@@ -76,7 +81,6 @@
 	scrWalk(random(360), [10, 40]);
 	
 #define CrystalHeart_death
-
 	 // Unfold:
 	instance_create(x, y, PortalClear);
 	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
@@ -171,18 +175,31 @@
 		_genID = area_generate(area, subarea, x, y, false, false, _scrt);
 		
 	if(is_real(_genID)){
-		 // Chest:
+		var _chest = chest_type;
+		
+		 // Delete Chests:
+		with(instances_matching_gt([RadChest, chestprop], "id", _genID)){
+			instance_delete(id);
+		}
+		
+		 // Rogue:
+		if(_chest == RadChest || object_is_ancestor(_chest, RadChest)){
+			for(var i = 0; i < maxp; i++){
+				if(player_get_race(i) == "rogue"){
+					_chest = RogueChest;
+					break;
+				}
+			}
+		}
+		
+		 // Spawn Chest on Furthest Floor:
 		var	_disMin = -1,
 			_chestX = x,
 			_chestY = y;
 			
-		with(instances_matching_gt(RadChest, "id", _genID)){
-			instance_delete(id);
-		}
-		
 		with(instances_matching_gt(FloorNormal, "id", _genID)){
-			var	_x = (bbox_left + bbox_right + 1) / 2,
-				_y = (bbox_top + bbox_bottom + 1) / 2,
+			var	_x = bbox_center_x,
+				_y = bbox_center_y,
 				_dis = point_distance(other.x, other.y, _x, _y);
 				
 			if(_dis > _disMin){
@@ -193,7 +210,6 @@
 				}
 			}
 		}
-		
 		with(instance_create(_chestX, _chestY, chest_type)){
 			with(instances_meeting(x, y, CrystalProp)){
 				instance_delete(id);
