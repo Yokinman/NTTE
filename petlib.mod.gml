@@ -339,6 +339,16 @@
 #define Orchid_skill(_skill, _time)
 	skill_set(_skill, skill_get(_skill) + 1);
 	
+	 // Alert:
+	var _icon = skill_get_icon(_skill);
+	with(scrAlert(self, _icon[0])){
+		image_index = _icon[1];
+		image_speed = 0;
+		spr_alert = -1;
+		snd_flash = sndLevelUp;
+		blink = 15;
+	}
+	
 	 // Skill-Specific Fixes:
 	var	_spirit = noone,
 		_chest = noone;
@@ -385,30 +395,24 @@
 		case mut_open_mind: // Duplicate Chest
 			with(instance_nearest_array(x, y, [chestprop, RadChest])){
 				_chest = instance_copy(false);
+				with(_chest){
+					 // Manual Offset:
+					if(instance_is(self, RadChest)){
+						instance_budge(other, -1);
+					}
+					
+					 // Alert:
+					with(scrAlert(self, _icon[0])){
+						image_index = _icon[1];
+						image_speed = 0;
+						spr_alert = -1;
+						snd_flash = sndChest;
+						flash = 4;
+						alarm0 = _time - (2 * blink);
+					}
+				}
 			}
 			break;
-	}
-	
-	 // Alert:
-	var	_icon = skill_get_icon(_skill),
-		_alert = scrAlert(self, _icon[0]);
-		
-	with(_alert){
-		image_index = _icon[1];
-		image_speed = 0;
-		snd_flash = sndLevelUp;
-		spr_alert = -1;
-		blink = 15;
-	}
-	with(_chest){
-		with(scrAlert(self, _icon[0])){
-			image_index = _icon[1];
-			image_speed = 0;
-			spr_alert = -1;
-			snd_flash = sndChest;
-			flash = 4;
-			alarm0 = _time - (2 * blink);
-		}
 	}
 	
 	 // Controller:
@@ -418,7 +422,6 @@
 		time_max = _time;
 		time = time_max;
 		skill = _skill;
-		alert = _alert;
 		spirit = _spirit;
 		chest = _chest;
 		creator = other;
