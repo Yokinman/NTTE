@@ -11,19 +11,19 @@
 
 Example Code (Ignore extra space before #define here):
  #define area_step
-    script_bind_draw(draw_sea, 0);
+	script_bind_draw(draw_sea, 0);
 
  #define area_pop_enemies
-    obj_create(_x, _y, "TrafficCrab");
+	obj_create(_x, _y, "TrafficCrab");
  
  #define area_pop_props
-    instance_create(_x, _y, Cactus);
+	instance_create(_x, _y, Cactus);
 
 
 /// Misc
  #define draw_sea
-    instance_destroy();
-    draw_sprite(sprSea, 0, 0, 0);
+	instance_destroy();
+	draw_sprite(sprSea, 0, 0, 0);
 
 
 /// Scripts
@@ -31,17 +31,13 @@ blah blah blah
 
 \*  ^^ Delete this line and all above after copy-pasting ^^                                         */
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 	DebugLag = false;
-
-     // Sprites:
-    with(spr){
-    }
-
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -60,158 +56,160 @@ blah blah blah
 #define area_secret             return false;
 
 #define area_name(_subarea, _loop)
-    return "1-" + string(_subarea);
-
+	return "1-" + string(_subarea);
+	
 #define area_text
 	return choose("tip1", "tip2", "tip3");
-
+	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [
-    	0,
-    	0,
-    	true,
-    	true
-    ];
-
+	return [
+		0,
+		0,
+		true,
+		true
+	];
+	
 #define area_sprite(_spr)
-    switch(_spr){
-         // Floors:
-        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor1;
-        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor1B;
-        case sprFloor1Explo : return sprFloor1Explo;
-
-         // Walls:
-        case sprWall1Trans  : return sprWall1Trans;
-        case sprWall1Bot    : return sprWall1Bot;
-        case sprWall1Out    : return sprWall1Out;
-        case sprWall1Top    : return sprWall1Top;
-
-         // Misc:
-        case sprDebris1     : return sprDebris1;
-        case sprDetail1     : return sprDetail1;
-    }
-
+	switch(_spr){
+		 // Floors:
+		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor1;
+		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor1B;
+		case sprFloor1Explo : return sprFloor1Explo;
+		case sprDetail1     : return sprDetail1;
+		
+		 // Walls:
+		case sprWall1Bot    : return sprWall1Bot;
+		case sprWall1Top    : return sprWall1Top;
+		case sprWall1Out    : return sprWall1Out;
+		case sprWall1Trans  : return sprWall1Trans;
+		case sprDebris1     : return sprDebris1;
+		
+		 // Decals:
+		case sprTopPot      : return -1;
+		case sprBones       : return -1;
+	}
+	
 #define area_setup
-    goal = 110;
-    
-    background_color = area_background_color();
-    BackCont.shadcol = area_shadow_color();
-    TopCont.darkness = area_darkness();
-    
+	goal = 110;
+	
+	background_color = area_background_color();
+	BackCont.shadcol = area_shadow_color();
+	TopCont.darkness = area_darkness();
+	
 #define area_setup_floor
-     // Fix Depth:
-    if(styleb) depth = 8;
-    
-     // Footsteps:
-    material = (styleb ? 4 : 1);
-    
+	 // Fix Depth:
+	if(styleb) depth = 8;
+	
+	 // Footsteps:
+	material = (styleb ? 4 : 1);
+	
 #define area_start
-    
-
+	
+	
 #define area_finish
-    lastarea = area;
-    lastsubarea = subarea;
+	lastarea = area;
+	lastsubarea = subarea;
 
-     // Area End:
-    if(subarea >= area_subarea()){
-        var n = area_next();
-        if(!is_array(n)) n = [n];
-        if(array_length(n) < 1) array_push(n, mod_current);
-        if(array_length(n) < 2) array_push(n, 1);
-        area = n[0];
-        subarea = n[1];
-    }
-
-     // Next Subarea: 
-    else subarea++;
-
+	 // Area End:
+	if(subarea >= area_subarea()){
+		var n = area_next();
+		if(!is_array(n)) n = [n];
+		if(array_length(n) < 1) array_push(n, mod_current);
+		if(array_length(n) < 2) array_push(n, 1);
+		area = n[0];
+		subarea = n[1];
+	}
+	
+	 // Next Subarea: 
+	else subarea++;
+	
 #define area_step
-    if(DebugLag) trace_time();
-    if(DebugLag) trace_time("template_area_step");
+	if(DebugLag) trace_time();
+	if(DebugLag) trace_time("template_area_step");
 
 #define area_begin_step
-    if(DebugLag) trace_time();
-    if(DebugLag) trace_time("template_area_begin_step");
+	if(DebugLag) trace_time();
+	if(DebugLag) trace_time("template_area_begin_step");
 
 #define area_end_step
-    if(DebugLag) trace_time();
-    if(DebugLag) trace_time("template_area_end_step");
+	if(DebugLag) trace_time();
+	if(DebugLag) trace_time("template_area_end_step");
 
 #define area_effect(_vx, _vy)
-    var _x = _vx + random(game_width),
-        _y = _vy + random(game_height);
-
-     // Wind:
-    var f = instance_nearest(_x, _y, Floor);
-    with(f){
-        instance_create(x + random(32), y + random(32), Wind);
-    }
-
-    return random(60);
-
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Wind:
+	var f = instance_nearest(_x, _y, Floor);
+	with(f){
+		instance_create(x + random(32), y + random(32), Wind);
+	}
+	
+	return random(60);
+	
 #define area_make_floor
-    var _x = x,
-        _y = y,
-        _outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
-
-    /// Make Floors:
-         // Special - 2x2 Fill:
-    	if(chance(1, 2)){
-    		floor_fill(_x + 16, _y + 16, 2, 2);
-    	}
-    
-         // Normal:
-    	else instance_create(_x, _y, Floor);
-
+	var	_x = x,
+		_y = y,
+		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
+		
+	/// Make Floors:
+		 // Special - 2x2 Fill:
+		if(chance(1, 2)){
+			floor_fill(_x + 16, _y + 16, 2, 2);
+		}
+		
+		 // Normal:
+		else instance_create(_x, _y, Floor);
+		
 	/// Turn:
-	    var _trn = 0;
-    	if(chance(5, 14)){
-    	    _trn = choose(90, 90, -90, -90, 180);
-        }
-        direction += _trn;
-
-    /// Chests & Branching:
-         // Weapon Chests:
-        if(_outOfSpawn && _trn == 180){
-            floor_make(_x, _y, WeaponChest);
-        }
-        
-	     // Ammo Chests + End Branch:
-	    var n = instance_number(FloorMaker);
+		var _trn = 0;
+		if(chance(5, 14)){
+			_trn = choose(90, 90, -90, -90, 180);
+		}
+		direction += _trn;
+		
+	/// Chests & Branching:
+		 // Weapon Chests:
+		if(_outOfSpawn && _trn == 180){
+			floor_make(_x, _y, WeaponChest);
+		}
+		
+		 // Ammo Chests + End Branch:
+		var n = instance_number(FloorMaker);
 		if(!chance(20, 19 + n)){
 			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
 			instance_destroy();
 		}
-
+		
 		 // Branch:
 		if(chance(1, 8)){
-		    instance_create(_x, _y, FloorMaker);
+			instance_create(_x, _y, FloorMaker);
 		}
-
-#define area_pop_enemies
-    var _x = x + 16,
-        _y = y + 16;
-
-    instance_create(_x, _y, choose(Bandit, Maggot));
-
-#define area_pop_props
-    var _x = x + 16,
-        _y = y + 16,
-        _spawnDis = point_distance(_x, _y, 10016, 10016);
 		
-    if(_spawnDis > 48 && chance(1, 12)){
-        if(chance(1, 60)){
-            instance_create(_x, _y, BigSkull);
-        }
-        else instance_create(_x, _y, Cactus);
-    }
-
+#define area_pop_enemies
+	var	_x = x + 16,
+		_y = y + 16;
+		
+	instance_create(_x, _y, choose(Bandit, Maggot));
+	
+#define area_pop_props
+	var	_x = x + 16,
+		_y = y + 16,
+		_spawnDis = point_distance(_x, _y, 10016, 10016);
+		
+	if(_spawnDis > 48 && chance(1, 12)){
+		if(chance(1, 60)){
+			instance_create(_x, _y, BigSkull);
+		}
+		else instance_create(_x, _y, Cactus);
+	}
+	
 #define area_pop_extras
-    with(chestprop){
-        instance_create(x, y, Bandit);
-    }
-
-
+	with(chestprop){
+		instance_create(x, y, Bandit);
+	}
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -326,7 +324,6 @@ blah blah blah
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

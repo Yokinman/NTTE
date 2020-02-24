@@ -3363,23 +3363,51 @@
 		 // Visual:
 		spr_strt = -1;
 		spr_stop = -1;
-
+		
 		 // Vars:
 		mask_index = mskExploder;
 		follow_creator = false;
 		shrink_delay = 120;
 		ring = true;
 		force = 1;
-
+		
 		 // Alarms:
 		alarm0 = 10 + random(20);
-
+		
 		instance_create(x, y, PortalClear);
-
+		
 		return id;
 	}
-
-
+	
+	
+#define TopDecalWaterMine_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		mask_index = spr.TopDecalTrenchMine;
+		creator = noone;
+		return id;
+	}
+	
+#define TopDecalWaterMine_step
+	if(instance_exists(creator)){
+		x = creator.x;
+		y = creator.y;
+	}
+	else{
+		if(place_meeting(x, y, Floor)){
+			 // Mine:
+			with(instance_create(x, y, WaterMine)){
+				my_health = 0;
+				spr_dead = spr.TrenchMineDead;
+			}
+			
+			 // Clear Walls:
+			with(instance_create(x, y, PortalClear)){
+				mask_index = other.mask_index;
+			}
+		}
+		instance_destroy();
+	}
+	
 #define TrenchFloorChunk_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -4197,7 +4225,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

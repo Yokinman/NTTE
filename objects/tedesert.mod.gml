@@ -801,23 +801,23 @@
 	speed = 0;
 	x = xstart;
 	y = ystart;
-
+	
 	 // Animate:
 	image_index = clamp(part, 0, image_number - 1);
 	if(nexthurt > current_frame + 3) sprite_index = spr_hurt;
 	else sprite_index = spr_idle;
-
+	
 	 // Boneman Feature:
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup)) with(player_find(_pickup.pick)){
 		projectile_hit(id, 1);
 		lasthit = [sprBone, "GENEROSITY"];
-
+		
 		with(other) with(obj_create(x, y, "Bone")){
 			projectile_hit(other, damage);
 		}
 	}
-
+	
 	 // Rebuilding Skeleton:
 	if(part > 0){
 		 // Break Walls:
@@ -826,12 +826,12 @@
 			_y1 = bbox_top,
 			_x2 = bbox_right + o - (o * image_xscale),
 			_y2 = bbox_bottom;
-
+			
 		with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Wall)){
 			instance_create(x, y, FloorExplo);
 			instance_destroy();
 		}
-
+		
 		 // Complete:
 		if(part >= sprite_get_number(spr_idle) - 1){
 			with(obj_create(x - (image_xscale * 8), y - 6, "CoastBoss")){
@@ -842,15 +842,15 @@
 			with(WantBoss) instance_destroy();
 			with(BanditBoss) my_health = 0;
 			portal_poof();
-	
+			
 			instance_delete(id);
 			exit;
 		}
 	}
-
+	
 	 // Death:
 	if(my_health <= 0) instance_destroy();
-
+	
 #define CoastBossBecome_hurt(_hitdmg, _hitvel, _hitdir)
 	my_health -= _hitdmg;			// Damage
 	nexthurt = current_frame + 6;	// I-Frames
@@ -865,10 +865,10 @@
 		(instance_is(other, CustomProjectile) && variable_instance_get(other, "name") == "BoneArrow")
 	){
 		var _add = lq_defget(variable_instance_get(other, "wep"), "ammo", 1) + variable_instance_get(other, "big", 0);
-
+		
 		part += _add;
 		my_health = max(my_health, maxhealth);
-
+		
 		 // Effects:
 		sound_play_hit(sndMutant14Turn, 0.2);
 		repeat(3 * _add){
@@ -878,17 +878,17 @@
 				depth = -2;
 			}
 		}
-
+		
 		instance_delete(other);
 	}
-
+	
 #define CoastBossBecome_destroy
 	with(instance_create(x, y, Corpse)){
 		sprite_index = other.spr_dead;
 		image_xscale = other.image_xscale;
 		size = other.size;
 	}
-
+	
 	 // Death Effects:
 	if(part > 0){
 		sound_play(sndOasisDeath);
@@ -903,12 +903,12 @@
 	else for(var a = direction; a < direction + 360; a += (360 / 10)){
 		with(instance_create(x, y, Dust)) motion_add(a, 3);
 	}
-
+	
 #define CoastBossBecome_PickupIndicator_meet
 	if(other.race == "skeleton") return true;
 	return false;
-
-
+	
+	
 #define CoastBoss_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
@@ -2120,7 +2120,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

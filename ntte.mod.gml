@@ -45,7 +45,7 @@
 	global.sPromptIndex = 0;
 	global.scythePrompt = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
 	
-	 // Flower Reroll:
+	 // Vault Flower Rerolled Skill:
 	global.hud_reroll = null;
 	
 #macro spr global.spr
@@ -978,8 +978,9 @@
 		case 3: /// SCRAPYARDS
 			
 			 // Event Conditions:
-			var _eventRaven = (GameCont.subarea != 3 && chance(1, 30));
-			
+			var	_eventSludge = (GameCont.subarea == 2),
+				_eventRaven = (GameCont.subarea != 3 && chance(1, 30));
+				
 			 // Sawblade Traps:
 			if(GameCont.subarea != 3){
 				with(enemy) if(chance(1, 40)){
@@ -1008,7 +1009,7 @@
 			}
 			
 			 // Sludge Pool:
-			if(GameCont.subarea == 2){
+			if(_eventSludge){
 				var	_w = 2,
 					_h = 2,
 					_type = floor_fill,
@@ -1143,7 +1144,7 @@
 			
 			 // Spawn Lightning Crystals:
 			if(GameCont.loops <= 0){
-				with(LaserCrystal) if(chance(1, 40)){
+				with(LaserCrystal) if(chance(1, 40 * ((crown_current == crwn_blood) ? 0.7 : 1))){
 					instance_create(x, y, LightningCrystal);
 					instance_delete(id);
 				}
@@ -1348,33 +1349,38 @@
 			
 		case 100: /// CROWN VAULT
 			
+			 // Event Conditions:
+			var _eventFlower = mod_variable_get("mod", "tepickups", "VaultFlower_spawn");
+			
 			 // Vault Flower Room:
-			with(CrownPed){
-				var	_w = 3,
-					_h = 3,
-					_type = floor_fill,
-					_dirStart = random(360),
-					_dirOff = 90;
+			if(_eventFlower){
+				with(CrownPed){
+					var	_w = 3,
+						_h = 3,
+						_type = floor_fill,
+						_dirStart = random(360),
+						_dirOff = 90;
+						
+					floor_set_align(32, 32, null, null);
 					
-				floor_set_align(32, 32, null, null);
-				
-				with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff)){
-					 // Floor Time:
-					var _img = 0;
-					with(floors){
-						// love u yokin yeah im epic
-						sprite_index = spr.VaultFlowerFloor;
-						image_index = _img++;
-						depth = 7;
+					with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff)){
+						 // Floor Time:
+						var _img = 0;
+						with(floors){
+							// love u yokin yeah im epic
+							sprite_index = spr.VaultFlowerFloor;
+							image_index = _img++;
+							depth = 7;
+						}
+						
+						 // The Star of the Show:
+						with(obj_create(x, y - 8, "VaultFlower")){
+							with(instance_create(x, y, LightBeam)) sprite_index = sprLightBeamVault;
+						}
 					}
 					
-					 // The Star of the Show:
-					with(obj_create(x, y - 8, "VaultFlower")){
-						with(instance_create(x, y, LightBeam)) sprite_index = sprLightBeamVault;
-					}
+					floor_reset_align();
 				}
-				
-				floor_reset_align();
 			}
 			
 			 // Top Spawns:
@@ -1575,7 +1581,7 @@
 						 // Rocks:
 						if(_decalNum > 0){
 							_decalNum--;
-							with(TopDecal_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), GameCont.area)){
+							with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "TopDecal")){
 								x = xstart;
 								y = ystart;
 								instance_create(pfloor(x - 16, 16), pfloor(y - 16, 16), Top);
@@ -2080,7 +2086,7 @@
 		}
 		global.petMapicon[index] = _list;
 	}
-
+	
 	 // Player Death:
 	with(instances_matching_le(Player, "my_health", 0)){
 		if(fork()){
@@ -2089,14 +2095,15 @@
 				_save = ["ntte_pet", "feather_ammo", "ammo_bonus"],
 				_vars = {},
 				_race = race;
-
+				
 			with(_save){
 				if(self in other){
 					lq_set(_vars, self, variable_instance_get(other, self));
 				}
 			}
-
+			
 			wait 0;
+			
 			if(!instance_exists(self)){
 				 // Storing Vars w/ Revive:
 				with(other){
@@ -2109,17 +2116,18 @@
 						}
 					}
 				}
-
+				
 				 // Race Deaths Stat:
 				if(array_exists(raceList, _race)){
 					var _stat = "race/" + _race + "/lost";
 					stat_set(_stat, stat_get(_stat) + 1);
 				}
 			}
+			
 			exit;
 		}
 	}
-
+	
 	 // Wait for Level Start:
 	if(instance_exists(GenCont) || instance_exists(Menu)){
 		global.newLevel = true;
@@ -2876,6 +2884,8 @@
 	return _map;
 
 #define ntte_hud(_visible)
+	if(DebugLag) trace_time();
+	
 	var	_players = 0,
 		_pause = false,
 		_vx = view_xview_nonsync,
@@ -2950,7 +2960,7 @@
 			surface_set_target(surf);
 		}
 		
-		 // Co-op:
+		 // Co-op Offset:
 		if(!_pause && instance_exists(Player)){
 			if(_players >= 2){
 				_minx = 10;
@@ -2977,79 +2987,93 @@
 		}
 		
 		 // Draw:
-		for(var i = 0; array_length(_skillList) > 0; i++){
-			var _skill = skill_get_at(i);
-			if(is_undefined(_skill)) break;
-			
-			while(array_exists(_skillList, _skill)){
-				var	_skillIndex = array_find_index(_skillList, _skill),
-					_dx = _x + _ox,
+		for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+			var	_skill = skill_get_at(i),
+				_skillIndex = array_find_index(_skillList, _skill);
+				
+			if(_skillIndex >= 0){
+				var	_dx = _x + _ox,
 					_dy = _y + _oy;
 					
-				switch(_skillType[_skillIndex]){
-					
-					case "reroll": // VAULT FLOWER
+				while(_skillIndex >= 0){
+					switch(_skillType[_skillIndex]){
 						
-						draw_sprite(
-							spr.SkillRerollHUDSmall,
-							0,
-							_dx + ((_skill == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
-							_dy + 5
-						);
-						
-						break;
-						
-					case "orchid": // ORCHID MANTIS
-						
-						var	_icon = skill_get_icon(_skill),
-							_spr = _icon[0],
-							_img = _icon[1];
+						case "reroll": // VAULT FLOWER
 							
-						if(sprite_exists(_spr)){
-							var	_uvs = sprite_get_uvs(_spr, _img),
-								_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ) - 1,
-								_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ) - 1,
-								_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))) + 1,
-								_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))) + 1,
-								_time = 1000000000,
-								_timeMax = 1000000000;
+							draw_sprite(
+								spr.SkillRerollHUDSmall,
+								0,
+								_dx + ((_skill == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
+								_dy + 5
+							);
+							
+							break;
+							
+						case "orchid": // ORCHID MANTIS
+							
+							var	_icon = skill_get_icon(_skill),
+								_spr = _icon[0],
+								_img = _icon[1];
 								
-							with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
-								_time = min(_time, time);
-								_timeMax = min(_timeMax, time_max);
-							}
-							
-							if(_time > current_time_scale){
-								 // Outline:
-								draw_set_fog(true, make_color_rgb(76, 68, 16), 0, 0);
-								for(var d = 0; d < 360; d += 90){
-									draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
+							if(sprite_exists(_spr)){
+								var	_time = 1000000000,
+									_timeMax = 1000000000,
+									_colSub = c_dkgray,
+									_colTop = c_white,
+									_flash = false;
+									
+								with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
+									if(time < _time){
+										_time = time;
+										_timeMax = time_max;
+										_colSub = color2;
+										_colTop = color1;
+									}
+									if(flash) _flash = true;
 								}
 								
-								 // Timer Outline:
-								draw_set_fog(true, make_color_rgb(255, 221, 0), 0, 0);
-								for(var d = 0; d < 360; d += 90){
-									var	_l = _x1,
-										_t = _y1 + round((_y2 - _y1) * (1 - (_time / _timeMax))) + dsin(d),
-										_w = _x2 - _l,
-										_h = _y2 - _t;
+								if(_time > current_time_scale){
+									var	_uvs = sprite_get_uvs(_spr, _img),
+										_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ) - 1,
+										_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ) - 1,
+										_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))) + 1,
+										_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))) + 1;
 										
-									draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
+									 // Outline:
+									draw_set_fog(true, _colSub, 0, 0);
+									for(var d = 0; d < 360; d += 90){
+										draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
+									}
+									
+									 // Timer Outline:
+									draw_set_fog(true, _colTop, 0, 0);
+									for(var d = 0; d < 360; d += 90){
+										var	_l = _x1,
+											_t = _y1 + round((_y2 - _y1) * (1 - (_time / _timeMax))) + dsin(d),
+											_w = _x2 - _l,
+											_h = _y2 - _t;
+											
+										draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
+									}
 								}
+								
+								 // Icon:
+								draw_set_fog(_flash, c_white, 0, 0);
+								draw_sprite(_spr, _img, _dx, _dy);
+								draw_set_fog(false, 0, 0, 0);
 							}
 							
-							 // Icon:
-							draw_set_fog((_time <= current_time_scale || _time >= _timeMax), c_white, 0, 0);
-							draw_sprite(_spr, _img, _dx, _dy);
-							draw_set_fog(false, 0, 0, 0);
-						}
-						
-						break;
-						
+							break;
+							
+					}
+					
+					_skillList = array_delete(_skillList, _skillIndex);
+					_skillType = array_delete(_skillType, _skillIndex);
+					
+					_skillIndex = array_find_index(_skillList, _skill);
 				}
 				
-				_skillList = array_delete(_skillList, _skillIndex);
-				_skillType = array_delete(_skillType, _skillIndex);
+				if(array_length(_skillList) <= 0) break;
 			}
 			
 			 // Keep it movin:
@@ -3567,6 +3591,8 @@
 	draw_set_halign(fa_center);
 	draw_set_valign(fa_top);
 	
+	if(DebugLag) trace_time("ntte_hud");
+	
 	instance_destroy();
 	
 #define CharSelect_draw_new(_inst)
@@ -3728,7 +3754,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

@@ -9,7 +9,9 @@
 	 // Surfaces:
 	surfWepPickupGrounded = surflist_set("WepPickupGrounded", 0, 0, 32, 64);
 	
+	 // Custom Pickup Instances (Used in step):
 	global.pickup_custom = [];
+	
 	game_start();
 
 #macro spr global.spr
@@ -2916,11 +2918,11 @@
 		maxhealth = 30;
 		size = 2;
 		skill = mut_last_wish;
-		wilted = global.vFlowerWilted;
+		alive = global.VaultFlower_alive;
 		pickup_indicator = noone;
 		
 		 // Determine Skill:
-		if(!wilted){
+		if(alive){
 			if(skill_get(skill) == 0){
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
@@ -2933,11 +2935,14 @@
 				}
 			}
 			
-			wilted = (skill_get(skill) == 0);
+			 // Wilt:
+			if(skill_get(skill) == 0){
+				alive = false;
+			}
 		}
 		
 		 // Pickup Indicator:
-		if(!wilted){
+		if(alive){
 			pickup_indicator = scrPickupIndicator("  REROLL");
 			with(pickup_indicator){
 				mask_index = mskLast;
@@ -2956,20 +2961,20 @@
 	
 	var _pickup = pickup_indicator;
 	
-	if(!wilted){
+	if(alive){
 		 // Sprites:
 		if(spr_idle == spr.VaultFlowerWiltedIdle) spr_idle = spr.VaultFlowerIdle;
 		if(spr_hurt == spr.VaultFlowerWiltedHurt) spr_hurt = spr.VaultFlowerHurt;
 		if(spr_dead == spr.VaultFlowerWiltedDead) spr_dead = spr.VaultFlowerDead;
 		
 		 // Wilt:
-		if(global.vFlowerWilted || skill_get(skill) == 0){
-			wilted = true;
+		if(!global.VaultFlower_alive || skill_get(skill) == 0){
+			alive = false;
 		}
 		
 		 // Interact:
 		else if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
-			global.vFlowerWilted = true;
+			global.VaultFlower_alive = false;
 			
 			 // Reroll:
 			mod_variable_set("skill", "reroll", "skill", skill);
@@ -3003,10 +3008,10 @@
 			with(player_find(_pickup.pick)) sound_play(snd_crwn);
 			
 			/*if(fork()){
-				wilted = true;
+				alive = false;
 				while(button_check(0, "pick")) wait 0;
 				if(instance_exists(self)){
-					wilted = false;
+					alive = true;
 					with(instances_matching(CustomObject, "name", "AlertIndicator")) if(target == other) instance_destroy();
 				}
 				exit;
@@ -3053,7 +3058,7 @@
 		}
 	}
 	
-	with(_pickup) visible = !other.wilted;
+	with(_pickup) visible = other.alive;
 
 #define VaultFlower_death
 	 // Effects:
@@ -3069,8 +3074,11 @@
 	sound_play_hit_ext(sndPlantSnare, 0.8, 2.5);
 	
 	 // Secret:
-	if(!wilted){
+	if(alive){
 		pet_spawn(x, y, "Orchid");
+		
+		 // Permadeath:
+		global.VaultFlower_spawn = false;
 		
 		 // FX:
 		repeat(20) with(scrFX(x, (y - 6), [90 + orandom(100), random(4)], "VaultFlowerSparkle")){
@@ -3109,7 +3117,7 @@
 	
 #define scrVaultFlowerDebris(_x, _y, _dir, _spd)
 	with(instance_create(_x, _y, Feather)){
-		sprite_index = (other.wilted ? spr.VaultFlowerWiltedDebris : spr.VaultFlowerDebris);
+		sprite_index = (other.alive ? spr.VaultFlowerDebris : spr.VaultFlowerWiltedDebris);
 		image_index = irandom(image_number - 1);
 		image_angle = orandom(30);
 		image_speed = 0;
@@ -3377,15 +3385,15 @@
 	global.sPickupsNum = 1;
 	
 	 // Vault Flower:
-	global.vFlowerWilted = false;
+	global.VaultFlower_spawn = true; // ntte.mod
+	global.VaultFlower_alive = true;
 
 #define step
 	script_bind_step(post_step, 0);
 	script_bind_end_step(end_step, 0);
-	script_bind_draw(draw_bonus_spirit, -12);
 	
 	if(DebugLag) trace_time();
-
+	
 	 // Overstock / Bonus Ammo:
 	with(instances_matching(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true), "can_shoot", 1)){
 		var	_wep = wep,
@@ -3482,6 +3490,7 @@
 	}
 	
 	 // Bonus Spirits:
+	var _drawSpirit = false;
 	with(Player){
 		if("bonus_spirit" not in self){
 			bonus_spirit = [];
@@ -3490,6 +3499,8 @@
 		}
 		
 		if(array_length(bonus_spirit) > 0){
+			_drawSpirit = true;
+			
 			 // Grant Grace:
 			if(my_health <= 0){
 				if(skill_get(mut_strong_spirit) <= 0 || canspirit != true){
@@ -3551,7 +3562,10 @@
 		bonus_spirit_bend += bonus_spirit_bend_spd * current_time_scale;
 		bonus_spirit_bend_spd -= bonus_spirit_bend_spd * 0.15 * current_time_scale;
 	}
-
+	if(_drawSpirit){
+		script_bind_draw(draw_bonus_spirit, -8);
+	}
+	
 	 // Eyes Custom Pickup Attraction:
 	with(instances_matching(Player, "race", "eyes")){
 		if(canspec && button_check(index, "spec")){
@@ -3572,7 +3586,7 @@
 			}
 		}
 	}
-
+	
 	 // Grabbing Custom Pickups:
 	with(instances_matching([Player, Portal], "", null)){
 		if(place_meeting(x, y, Pickup)){
@@ -3597,10 +3611,9 @@
 			}
 		}
 	}
-
 	global.pickup_custom = [];
 	
-	if(DebugLag) trace_time("tepickups_step")
+	if(DebugLag) trace_time("tepickups_step");
 
 #define post_step
 	if(DebugLag) trace_time();
@@ -3744,26 +3757,26 @@
 	 // Overheal / Bonus HP:
 	with(instances_matching_gt(Player, "my_health_bonus", 0)){
 		drawlowhp = 0;
-
+		
 		if(nexthurt > current_frame && "my_health_bonus_hold" in self){
 			var	a = my_health,
 				b = my_health_bonus_hold;
-	
+				
 			if(a < b){
 				var c = min(my_health_bonus, b - a);
 				my_health += c;
 				my_health_bonus -= c;
-
+				
 				 // Sound:
 				sound_play_pitchvol(sndRogueAim, 2 + random(0.5), 0.7);
 				sound_play_pitchvol(sndHPPickup, 0.6 + random(0.1), 0.7);
-
+				
 				 // Visual:
 				var	_x1, _y1,
 					_x2, _y2,
 					_ang = direction + 180,
 					l = 12;
-
+					
 				for(var d = _ang; d <= _ang + 360; d += (360 / 20)){
 					_x1 = x + lengthdir_x(l, d);
 					_y1 = y + lengthdir_y(l, d);
@@ -3790,12 +3803,12 @@
 					image_speed = 1;
 					motion_add(other.direction, 0.5);
 				}
-
+				
 				 // End:
 				if(my_health_bonus <= 0){
 					 // Can't die coming out of overheal:
 					spiriteffect = max(1, spiriteffect);
-
+					
 					 // Effects:
 					sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
 					sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
@@ -3855,12 +3868,12 @@
 	}
 	
 	 // Vault Flower:
-	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "wilted", false)){
-		draw_circle(x, y, 64 + (sin(current_frame * 0.1) * 2), false);
+	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true)){
+		draw_circle(x, y, 64 + (2 * sin(current_frame / 10)), false);
 	}
 	
 	if(DebugLag) trace_time("tepickups_draw_dark");
-
+	
 #define draw_dark_end // Drawing Clears
 	draw_set_color(c_black);
 	
@@ -3886,8 +3899,8 @@
 	}
 	
 	 // Vault Flower:
-	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "wilted", false)){
-		draw_circle(x, y, 24 + (sin(current_frame * 0.1) * 2), false);
+	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true)){
+		draw_circle(x, y, 24 + (2 * sin(current_frame / 10)), false);
 	}
 	
 	if(DebugLag) trace_time("tepickups_draw_dark_end");
@@ -4044,7 +4057,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

@@ -1,77 +1,59 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 	DebugLag = false;
+	
+	 // Rooms:
+	var L = true;
+	RoomCenter = [10000, 10000];
+	RoomList = [];
+	RoomType = {
+		 // SPECIAL:
+		"Start" : {
+			w : 3,
+			h : 3,
+			carpet : 1.00,
+			special : true
+		},
+		
+		"Boss" : {
+			w : 12,
+			h : 12,
+			special : true,
+			layout : [
+				[0,0,0,L,L,L,L,L,L,0,0,0],
+				[0,0,0,L,L,L,L,L,L,0,0,0],
+				[0,0,L,L,L,L,L,L,L,L,0,0],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[L,L,L,L,L,L,L,L,L,L,L,L],
+				[0,0,L,L,L,L,L,L,L,L,0,0],
+				[0,0,0,L,L,L,L,L,L,0,0,0],
+				[0,0,0,L,L,L,L,L,L,0,0,0]
+				]
+		},
 
-     // Sprites:
-    with(spr){
-         // Floors:
-        FloorLair      = sprite_add("../sprites/areas/Lair/sprFloorLair.png",      4, 0, 0);
-        FloorLairB     = sprite_add("../sprites/areas/Lair/sprFloorLairB.png",     8, 0, 0);
-        FloorLairExplo = sprite_add("../sprites/areas/Lair/sprFloorLairExplo.png", 4, 1, 1);
-
-         // Walls:
-        WallLairBot   = sprite_add("../sprites/areas/Lair/sprWallLairBot.png",   4, 0,  0);
-        WallLairOut   = sprite_add("../sprites/areas/Lair/sprWallLairOut.png",   5, 4, 12);
-        WallLairTop   = sprite_add("../sprites/areas/Lair/sprWallLairTop.png",   4, 0,  0);
-        WallLairTrans = sprite_add("../sprites/areas/Lair/sprWallLairTrans.png", 1, 0,  0);
-
-         // Misc:
-        DebrisLair   = sprite_add("../sprites/areas/Lair/sprDebrisLair.png",   4, 4, 4);
-        TopDecalLair = sprite_add("../sprites/areas/Lair/sprTopDecalLair.png", 2, 0, 0);
-    }
-
-     // Rooms:
-    var L = true;
-    RoomCenter = [10000, 10000];
-    RoomList = [];
-    RoomType = {
-         // SPECIAL:
-        "Start" : {
-            w : 3,
-            h : 3,
-            carpet : 1.00,
-            special : true
-        },
-        
-        "Boss" : {
-            w : 12,
-            h : 12,
-            special : true,
-            layout : [
-            	[0,0,0,L,L,L,L,L,L,0,0,0],
-                [0,0,0,L,L,L,L,L,L,0,0,0],
-                [0,0,L,L,L,L,L,L,L,L,0,0],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [L,L,L,L,L,L,L,L,L,L,L,L],
-                [0,0,L,L,L,L,L,L,L,L,0,0],
-                [0,0,0,L,L,L,L,L,L,0,0,0],
-                [0,0,0,L,L,L,L,L,L,0,0,0]
-                ]
-        },
-
-         // SMALL:
-        "SmallClutter" : {
-            w : 2,
-            h : 2
-        },
-        
-        "MediumClutter" : {
-            w : 3,
-            h : 3
-        },
-        
-        "SmallPillars" : {
-            w : 3,
-            h : 3
-        },  
+		 // SMALL:
+		"SmallClutter" : {
+			w : 2,
+			h : 2
+		},
+		
+		"MediumClutter" : {
+			w : 3,
+			h : 3
+		},
+		
+		"SmallPillars" : {
+			w : 3,
+			h : 3
+	    },  
         
         "SmallRing" : {
             w : 2,
@@ -247,10 +229,7 @@
     return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
 
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [
-    	_lastx,
-    	9
-    ];
+    return [_lastx, 9];
 
 #define area_sprite(_spr)
     switch(_spr){
@@ -258,16 +237,18 @@
         case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLair;
         case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLairB;
         case sprFloor1Explo : return spr.FloorLairExplo;
+        case sprDetail1     : return sprDetail2;
         
          // Walls:
-        case sprWall1Trans  : return spr.WallLairTrans;
         case sprWall1Bot    : return spr.WallLairBot;
-        case sprWall1Out    : return spr.WallLairOut;
         case sprWall1Top    : return spr.WallLairTop;
-        
-         // Misc:
+        case sprWall1Out    : return spr.WallLairOut;
+        case sprWall1Trans  : return spr.WallLairTrans;
         case sprDebris1     : return spr.DebrisLair;
-        case sprDetail1     : return sprDetail2;
+        
+		 // Decals:
+        case sprTopPot      : return spr.TopDecalLair;
+        case sprBones       : return spr.WallDecalLair;
     }
     
 #define area_setup
@@ -364,18 +345,18 @@
         until (lq_get(RoomType, k).special == false);
         room_create(irandom_range(-1, 1), irandom_range(-1, 1), k);
     }
-
+	
      // Build Rooms:
     else{
         var _done = true;
-
+		
          // Push Rooms Apart:
         with(RoomList){
             var _x1 = x - 1,
                 _y1 = y - 1,
                 _x2 = _x1 + (w + 2),
                 _y2 = _y1 + (h + 2);
-
+				
             with(RoomList) if(self != other){
                 if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
                     if(type != "Start"){
@@ -383,43 +364,43 @@
                         if(chance(1, 2)){
                             _dir += choose(-90, -90, 90, 90, 180);
                         }
-
+						
                         x += lengthdir_x(1, _dir);
                         y += lengthdir_y(1, _dir);
                     }
-
+					
                     _done = false;
                 }
             }
             y = min(0 - floor(h / 2), y);
         }
-
+		
          // Special Rooms:
         if(_done){
             var _boss = false,
                 _strt = false;
-
+				
             with(RoomList){
                 if(type == "Boss") _boss = true;
                 else if(type == "Start") _strt = true;
             }
-
+			
              // Starting Room:
             if(!_strt){
                 var _maxY = 0;
                 with(RoomList) if(y > _maxY) _maxY = y + floor(h / 2);
                 with(RoomList) y -= _maxY;
-
+				
                 room_create(-1, -1, "Start");
-
+				
                 _done = false;
             }
-
+			
              // Boss Room:
             else if(!_boss){
                 var _maxDis = -1,
                     _furthest = noone;
-
+					
                 with(RoomList){
                     var _dis = point_distance(0, 0, x + (w / 2), y + (h / 2));
                     if(_dis > _maxDis){
@@ -427,15 +408,15 @@
                         _maxDis = _dis;
                     }
                 }
-
+				
                 with(_furthest){
                     room_create(x + sign(x), y + sign(y), "Boss");
                 }
-
+				
                 _done = false;
             }
         }
-
+		
         if(_done){
              // Determine Hallway Connections:
             for(var i = 0; i <= 1; i++){
@@ -451,7 +432,7 @@
                     with(link) if(link == other) link = noone;
                 }
             }
-
+			
             if(!RoomDebug || button_pressed(0, "east")){
                  // Make Rooms:
                 var o = 32;
@@ -466,7 +447,7 @@
                         }
                     }
                 }
-    
+    			
                  // Make Hallways:
                 styleb = true;
                 with(RoomList) with(link){
@@ -476,18 +457,18 @@
                         _ty = other.y + floor(other.h / 2),
                         _dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
                         _tries = 100;
-
+						
                     while(_tries-- > 0){
                         instance_create(_x + (_fx * o), _y + (_fy * o), Floor);
-
+						
                          // Turn Corner:
                         if(_fx == _tx || _fy == _ty) _dir = point_direction(_fx, _fy, _tx, _ty);
-    
+    					
                          // End Hallway & Spawn Door:
                         for(var a = _dir; a < _dir + 360; a += 90){
                             var _dx = _fx - other.x + lengthdir_x(1, a),
                                 _dy = _fy - other.y + lengthdir_y(1, a);
-        
+        						
                             if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
                                 if(other.layout[_dy, _dx]){
                                 	door_create(_x + 16 + (_fx * o), _y + 16 + (_fy * o), a);
@@ -496,36 +477,45 @@
                                 }
                             }
                         }
-
+						
                         _fx += lengthdir_x(1, _dir);
                         _fy += lengthdir_y(1, _dir);
                         if(_fx == _tx && _fy == _ty) break;
                     }
                 }
-
+				
                  // End Level Gen:
                 with(FloorMaker) instance_destroy();
             }
-
+			
             else if(RoomDebug && button_pressed(0, "west")) RoomList = [];
         }
     }
-
+	
+#define area_pop_props
+	var	_x = x + 16,
+		_y = y + 16;
+		
+	 // Top Decals:
+	if(chance(1, 50)){
+		obj_create(_x, _y, "TopDecal");
+	}
+	
 #define area_pop_enemies
     var _x = x + 16,
         _y = y + 16;
-
+		
 	 // Loop Spawns:
 	if(GameCont.loops > 0 && chance(1, 4)){
 		if(styleb) instance_create(_x, _y, BecomeTurret);
 		else instance_create(_x, _y, choose(Molesarge, Jock));
 	}
-
+	
      // Rat packs:
     if(!place_meeting(x, y, Wall) && chance(1, 20)){
         repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
     }
-
+	
      // Spawn Cats Underground:
     else if(chance(1, 8)){
         with(obj_create(_x, _y, "Cat")){
@@ -536,7 +526,7 @@
             }
         }
     }
-
+	
 #define area_pop_extras
      // Populate Rooms:
     with(RoomList){
@@ -1313,7 +1303,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

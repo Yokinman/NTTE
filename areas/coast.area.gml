@@ -3,17 +3,9 @@
     snd = mod_variable_get("mod", "teassets", "snd");
     mus = mod_variable_get("mod", "teassets", "mus");
     sav = mod_variable_get("mod", "teassets", "sav");
-
+	
     DebugLag = false;
-
-     // Sprites:
-    with(spr){
-    	CoastTrans  = sprite_add("../sprites/areas/Coast/sprCoastTrans.png",  1, 0, 0);
-    	FloorCoast  = sprite_add("../sprites/areas/Coast/sprFloorCoast.png",  4, 2, 2);
-    	FloorCoastB = sprite_add("../sprites/areas/Coast/sprFloorCoastB.png", 3, 2, 2);
-    	DetailCoast = sprite_add("../sprites/areas/Coast/sprDetailCoast.png", 6, 4, 4);
-    }
-
+	
 	 // Surfaces:
 	surfTrans    = surflist_set("CoastTrans",    0, 0, 0, 0);
 	surfFloor    = surflist_set("CoastFloor",    0, 0, 0, 0);
@@ -108,16 +100,14 @@
         case sprFloor1      : return spr.FloorCoast;
         case sprFloor1B     : return spr.FloorCoastB;
         case sprFloor1Explo : return sprFloor1Explo;
+        case sprDetail1     : return spr.DetailCoast;
         
          // Walls:
-        case sprWall1Trans  : return sprWall1Trans;
         case sprWall1Bot    : return sprWall1Bot;
-        case sprWall1Out    : return sprWall1Out;
         case sprWall1Top    : return sprWall1Top;
-        
-         // Misc:
+        case sprWall1Out    : return sprWall1Out;
+        case sprWall1Trans  : return sprWall1Trans;
         case sprDebris1     : return sprDebris1;
-        case sprDetail1     : return spr.DetailCoast;
     }
 
 #define area_setup
@@ -1524,7 +1514,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

@@ -16,8 +16,8 @@
      // Only Appears w/ a Player at Max Pets:
     with(Player){
         var _pet = variable_instance_get(self, "ntte_pet", []),
-            _num = 0,
-            _max = array_length(_pet);
+            _max = variable_instance_get(self, "ntte_pet_max", array_length(_pet)),
+            _num = 0;
             
         if(_max > 0){
             with(_pet) _num += instance_exists(self);

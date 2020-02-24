@@ -8,12 +8,12 @@
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopObject", "VenomPellet"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
-		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
+		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorIdler", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "RavenArenaCont", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedCrystalProp", "RedSpider", "Spiderling", "SpiderWall"]
@@ -2124,73 +2124,6 @@
 
 	return _unlock;
 	
-#define TopDecal_create(_x, _y, _area)
-	_area = string(_area);
-	
-	var _topDecal = {
-		"0"     : TopDecalNightDesert,
-		"1"     : TopDecalDesert,
-		"2"     : TopDecalSewers,
-		"3"     : TopDecalScrapyard,
-		"4"     : TopDecalCave,
-		"5"     : TopDecalCity,
-		"7"     : TopDecalPalace,
-		"102"   : TopDecalPizzaSewers,
-		"104"   : TopDecalInvCave,
-		"105"   : TopDecalJungle,
-		"106"   : TopPot,
-		"pizza" : TopDecalPizzaSewers
-	};
-	
-	if(lq_exists(_topDecal, _area)){
-		return instance_create(_x, _y, lq_get(_topDecal, _area));
-	}
-	
-	else if(lq_exists(spr.TopDecal, _area)){
-		with(instance_create(_x, _y, TopPot)){
-			sprite_index = lq_get(spr.TopDecal, _area);
-			image_index = irandom(image_number - 1);
-			image_speed = 0;
-			
-			 // Area-Specifics:
-			switch(_area){
-				case "trench":
-					right = choose(-1, 1);
-					image_index = 0;
-					
-					 // Water Mine:
-					if(chance(1, 6) && distance_to_object(Player) > 128){
-						image_index = 1;
-						with(script_bind_step(TopDecalWaterMine_step, 0)){
-							creator = other;
-						}
-					}
-					break;
-			}
-			
-			return id;
-		}
-	}
-	
-	return noone;
-
-#define TopDecalWaterMine_step
-	if(instance_exists(creator)){
-		x = creator.x;
-		y = creator.y;
-	}
-	else{
-		with(instance_create(x, y, WaterMine)){
-			my_health = 0;
-			spr_dead = spr.TopDecalMine;
-			with(instances_meeting(x, y, Wall)){
-				instance_create(x, y, FloorExplo);
-				instance_destroy();
-			}
-		}
-		instance_destroy();
-	}
-
 #define scrFX(_x, _y, _motion, _obj)
 	if(!is_array(_x)) _x = [_x, 1];
 	while(array_length(_x) < 2) array_push(_x, 0);
@@ -3172,6 +3105,7 @@
 						var _x = lerp(bbox_left, bbox_right + 1, _side);
 						with(instance_create(_x, _y, Bones)){
 							sprite_index = _sprite;
+							image_index = irandom(image_number - 1);
 							image_xscale = ((_side <= 0.5) ? 1 : -1);
 							array_push(_inst, id);
 						}
@@ -3184,7 +3118,7 @@
 	return _inst;
 
 #define floor_reveal(_floors, _maxTime)
-	with(script_bind_draw(floor_reveal_draw, -6.00001)){
+	with(script_bind_draw(floor_reveal_draw, -8)){
 		list = [];
 		
 		with(_floors) if(instance_exists(self)){

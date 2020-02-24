@@ -4168,6 +4168,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	    if(!position_meeting(_x, _y, Floor)){
 	    	with(instance_create(_x, _y, Floor)){
 	    		sprite_index = area_get_sprite("lair", sprFloor1B);
+	    		with(instances_meeting(x, y, [TopPot, Bones])) instance_destroy();
 	    	}
 	    	for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
 	    		instance_create(bbox_left, _y, FloorExplo);
@@ -4314,6 +4315,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         }
         
          // Generate the Realm:
+        var _lastArea = GameCont.area;
 		if(!instance_exists(Portal)){
         	area_generate("lair", 1, _sx + 16, _sy - 16, true, 0, null);
 		}
@@ -4324,8 +4326,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
         	styleb = true;
             sprite_index = area_get_sprite("lair", sprFloor1B);
             floor_walls();
+            
+        	 // Pipe Decals:
+        	if(!in_range(_borderY, bbox_top, bbox_bottom + 1)){
+	        	floor_bones(area_get_sprite(((y > _borderY) ? _lastArea : GameCont.area), sprBones), 1, 1/12, true);
+        	}
         }
 		with(instances_matching_gt(Wall, "id", _minID)) wall_tops();
+		with(instances_matching_gt(TopSmall, "id", _minID)) event_perform(ev_alarm, 0);
 		
 		 // Reveal Path:
         with(floor_reveal(instances_matching_gt(_path, "bbox_bottom", _borderY), 8)){
@@ -5252,7 +5260,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

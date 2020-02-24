@@ -265,8 +265,7 @@
 	 // Vars:
 	raddrop = 0;
 	skill_rads = 60;
-	skill_time = 450;
-	skill_inst = noone;
+	skill_inst = [];
 	
 	 // Stat:
 	if("mutations" not in stat) stat.mutations = 0;
@@ -278,6 +277,8 @@
 	if(_name == "") return spr.PetOrchidIdle;
 	
 #define Orchid_step
+	skill_inst = instances_matching(skill_inst, "", null);
+	
 	 // Mutate:
 	if(raddrop >= skill_rads){
 		raddrop -= skill_rads;
@@ -285,41 +286,32 @@
 		 // Stat:
 		stat.mutations++;
 		
-		 // Compile Ungotten Skills:
-		var _skillList = [];
-		for(var i = mut_rhino_skin; i <= mut_heavy_heart; i++){
-			if(skill_get_active(i) && skill_get(i) == 0){
-				if(i != mut_patience && (i != mut_heavy_heart || GameCont.wepmuts >= 3)){
-					array_push(_skillList, i);
-				}
-			}
-		}
-		with(mod_get_names("skill")){
-			if(skill_get_active(self) && skill_get(self) == 0){
-				if(!mod_script_exists("skill", self, "skill_avail") || mod_script_call_nc("skill", self, "skill_avail")){
-					array_push(_skillList, self);
-				}
-			}
-		}
-		
-		 // Already Have Everything, +1 to Random Skill:
-		if(array_length(_skillList) <= 0){
-			for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-				var _at = skill_get_at(i);
-				if(_at != mut_patience && _at != mut_last_wish){
-					if(!is_string(_at) || !mod_script_exists("skill", _at, "skill_avail") || mod_script_call_nc("skill", _at, "skill_avail")){
-						array_push(_skillList, _at);
-					}
-				}
+		 // Random Mutation:
+		with(obj_create(x, y, "OrchidSkill")){
+			array_push(other.skill_inst, id);
+			
+			 // Alert:
+			var _icon = skill_get_icon(skill);
+			with(scrAlert(other, _icon[0])){
+				image_index = _icon[1];
+				image_speed = 0;
+				spr_alert = -1;
+				snd_flash = sndLevelUp;
+				blink = 15;
 			}
 		}
 		
-		 // Give Random Mutation:
-		skill_inst = Orchid_skill(_skillList[irandom(array_length(_skillList) - 1)], skill_time);
+		 // Effects:
+		repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
+			depth = -8;
+			image_speed = lerp(0.2, 0.4, speed);
+			hspeed += other.hspeed / 1.5;
+			vspeed += other.vspeed / 1.5;
+		}
 	}
 	
 	 // Effects:
-	if(chance_ct(1, (instance_exists(skill_inst) ? 10 : 15))){
+	if(chance_ct(1, 15 / (1 + (0.5 * array_length(skill_inst))))){
 		with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
 			depth = other.depth + choose(-1, -1, 1);
 		}
@@ -335,181 +327,6 @@
 	draw_set_blend_mode(bm_add);
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc * _scale, _ysc * _scale, _ang, _col, _alp * _alpha);
 	draw_set_blend_mode(bm_normal);
-	
-#define Orchid_skill(_skill, _time)
-	skill_set(_skill, skill_get(_skill) + 1);
-	
-	 // Alert:
-	var _icon = skill_get_icon(_skill);
-	with(scrAlert(self, _icon[0])){
-		image_index = _icon[1];
-		image_speed = 0;
-		spr_alert = -1;
-		snd_flash = sndLevelUp;
-		blink = 15;
-	}
-	
-	 // Skill-Specific Fixes:
-	var	_spirit = noone,
-		_chest = noone;
-		
-	switch(_skill){
-		case mut_scarier_face: // Manually Reduce Enemy HP
-			with(enemy){
-				maxhealth = round(maxhealth * 0.8);
-				my_health = round(my_health * 0.8);
-				
-				 // Hurt FX:
-				image_index = 0;
-				sprite_index = spr_hurt;
-				if(point_seen(x, y, -1)) sound_play_hit(snd_hurt, 0.3);
-			}
-			break;
-			
-		case mut_hammerhead: // Give Hammerhead Points
-			with(Player){
-				hammerhead += 20;
-			}
-			break;
-			
-		case mut_strong_spirit: // Restore Strong Spirit
-			with(Player){
-				if(canspirit == false || ceil(skill_get(mut_strong_spirit)) == 1){
-					canspirit = true;
-					
-					 // Effects:
-					with(instance_create(x, y, StrongSpirit)){
-						sprite_index = sprStrongSpiritRefill;
-						creator = other;
-					}
-					sound_play(sndStrongSpiritGain);
-				}
-				else if("bonus_spirit" in self){
-					_spirit = {};
-					array_push(bonus_spirit, _spirit);
-					sound_play(sndStrongSpiritGain);
-				}
-			}
-			break;
-			
-		case mut_open_mind: // Duplicate Chest
-			with(instance_nearest_array(x, y, [chestprop, RadChest])){
-				_chest = instance_copy(false);
-				with(_chest){
-					 // Manual Offset:
-					if(instance_is(self, RadChest)){
-						instance_budge(other, -1);
-					}
-					
-					 // Alert:
-					with(scrAlert(self, _icon[0])){
-						image_index = _icon[1];
-						image_speed = 0;
-						spr_alert = -1;
-						snd_flash = sndChest;
-						flash = 4;
-						alarm0 = _time - (2 * blink);
-					}
-				}
-			}
-			break;
-	}
-	
-	 // Controller:
-	var _obj = instance_create(0, 0, CustomObject);
-	with(_obj){
-		name = "OrchidSkill";
-		time_max = _time;
-		time = time_max;
-		skill = _skill;
-		spirit = _spirit;
-		chest = _chest;
-		creator = other;
-		persistent = true;
-		on_step = script_ref_create(Orchid_skill_step);
-		on_cleanup = script_ref_create(Orchid_skill_cleanup);
-	}
-	
-	 // Effects:
-	repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
-		depth = -8;
-		image_speed = lerp(0.2, 0.4, speed);
-		hspeed += other.hspeed / 1.5;
-		vspeed += other.vspeed / 1.5;
-	}
-	sound_play_pitchvol(sndStatueXP, 0.8, 0.5);
-	sound_play_hit_big(sndMut, 0.2);
-	
-	return _obj;
-	
-#define Orchid_skill_step
-	 // Chest Blink:
-	with(chest){
-		with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", id)){
-			other.visible = visible;
-			break;
-		}
-	}
-	
-	 // Timer:
-	if(time > 0){
-		if((!instance_exists(GenCont) && !instance_exists(LevCont)) || time >= time_max){
-			time -= current_time_scale;
-		}
-	}
-	else instance_destroy();
-	
-#define Orchid_skill_cleanup
-	skill_set(skill, max(0, skill_get(skill) - 1));
-	
-	 // Blip:
-	sound_play(sndCursedReminder);
-	
-	 // Skill-Specific:
-	switch(skill){
-		case mut_scarier_face: // Restore Enemy HP
-			with(instances_matching_lt(enemy, "id", self)){
-				maxhealth = round(maxhealth / 0.8);
-				my_health = round(my_health / 0.8);
-				
-				 // Heal FX:
-				image_index = 0;
-				sprite_index = spr_hurt;
-				with(instance_create(x, y, BloodLust)){
-					sprite_index = sprHealFX;
-					creator = other;
-				}
-				sound_play_pitchvol(sndHPPickup, 1.5, 0.3);
-			}
-			break;
-			
-		case mut_hammerhead: // Take Back Hammerhead Points
-			with(instances_matching_gt(instances_matching_lt(Player, "id", self), "hammerhead", 0)){
-				hammerhead = max(0, hammerhead - 20);
-			}
-			break;
-			
-		case mut_strong_spirit: // Take Back Strong Spirit
-			if(is_object(spirit)){
-				with(spirit) if(lq_defget(self, "active", true)){
-					active = false;
-					sprite_index = sprStrongSpirit;
-					image_index = 0;
-					sound_play(sndStrongSpiritLost);
-				}
-			}
-			else with(instances_matching_lt(Player, "id", self)){
-				if(skill_get(mut_strong_spirit) <= 0 && canspirit == true){
-					with(instance_create(x, y, StrongSpirit)) creator = other;
-					sound_play(sndStrongSpiritLost);
-				}
-			}
-			break;
-			
-		case mut_open_mind: // Delete Duplicate Chest
-			with(chest) instance_delete(id);
-			break;
-	}
 	
 	
 #define Mimic_create
@@ -2821,7 +2638,7 @@
 				_disMax = 1000000;
 				
 			with(_targetInst){
-				if(instance_exists(leader) && !instance_exists(skill_inst)){
+				if(instance_exists(leader) && array_length(skill_inst) <= 0){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
 						_disMax = _dis;
@@ -3130,7 +2947,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

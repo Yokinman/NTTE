@@ -3,9 +3,9 @@
     snd = mod_variable_get("mod", "teassets", "snd");
     mus = mod_variable_get("mod", "teassets", "mus");
     sav = mod_variable_get("mod", "teassets", "sav");
-
+	
 	DebugLag = false;
-
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -43,16 +43,17 @@
         case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101;
         case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101B;
         case sprFloor1Explo : return sprFloor101Explo;
+        case sprDetail1     : return sprDetail101;
         
          // Walls:
-        case sprWall1Trans  : return sprWall101Trans;
         case sprWall1Bot    : return sprWall101Bot;
-        case sprWall1Out    : return sprWall101Out;
         case sprWall1Top    : return sprWall101Top;
-        
-         // Misc:
+        case sprWall1Out    : return sprWall101Out;
+        case sprWall1Trans  : return sprWall101Trans;
         case sprDebris1     : return sprDebris101;
-        case sprDetail1     : return sprDetail101;
+        
+		 // Decals:
+        case sprBones       : return sprCoral;
     }
     
 #define area_setup
@@ -288,7 +289,7 @@
 #define area_pop_extras
 	 // Bone Decals:
 	with(Floor){
-		floor_bones(sprCoral, 2, 1/9, false);
+		floor_bones(area_sprite(sprBones), 2, 1/9, false);
 	}
 	
      // The new bandits
@@ -411,7 +412,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

@@ -1,11 +1,14 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 	DebugLag = false;
-
+	
+	 // Next Area:
+	//global.nextarea
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -14,54 +17,55 @@
 
 #macro DebugLag global.debug_lag
 
-#define area_subarea			return 1;
-#define area_next				return 0;
-#define area_music				return mus101;
-#define area_ambience			return amb101;
-#define area_background_color	return make_color_rgb(235, 0, 67);
-#define area_shadow_color		return make_color_rgb(16, 0, 24);
-#define area_darkness			return false;
-#define area_secret				return true;
+#define area_subarea          return 1;
+#define area_next             return 0;//global.nextarea;
+#define area_music            return mus101;
+#define area_ambience         return amb101;
+#define area_background_color return make_color_rgb(235, 0, 67);
+#define area_shadow_color     return make_color_rgb(16, 0, 24);
+#define area_darkness         return false;
+#define area_secret           return true;
 
 #define area_name(_subarea, _loop)
-    return `@q@(color:${area_background_color()})???`;
-
+	return `@(color:${area_background_color()})???`;
+	
 #define area_text
-	return choose("WHAT IS THAT RED DOT?");
-
+	return choose("BLINDING", "THE RED DOT");
+	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx, 9, (_subarea == 1)];
-
+	return [_lastx, 9, (_subarea == 1)];
+	
 #define area_sprite(_spr)
-    switch(_spr){
-         // Floors:
-        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorCrystal;
-        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorCrystal;
-        case sprFloor1Explo : return sprFloor4Explo;
-        
-         // Walls:
-        case sprWall1Trans  : return spr.WallCrystalTrans;
-        case sprWall1Bot    : return spr.WallCrystalBot;
-        case sprWall1Out    : return spr.WallCrystalOut;
-        case sprWall1Top    : return spr.WallCrystalTop;
-        
-         // Misc:
-        case sprDebris1     : return sprDebris4;
-        case sprDetail1     : return sprDetail4;
-    }
-    
+	switch(_spr){
+		 // Floors:
+		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRed;
+		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRed;
+		case sprFloor1Explo : return spr.FloorRedExplo;
+		case sprDetail1     : return spr.DetailRed;
+		
+		 // Walls:
+		case sprWall1Bot    : return spr.WallRedBot;
+		case sprWall1Top    : return spr.WallRedTop;
+		case sprWall1Out    : return spr.WallRedOut;
+		case sprWall1Trans  : return spr.WallRedTrans;
+		case sprDebris1     : return spr.DebrisRed;
+		
+		 // Decals:
+		case sprTopPot      : return spr.TopDecalRed;
+	}
+	
 #define area_setup
-    background_color = area_background_color();
-    BackCont.shadcol = area_shadow_color();
-    TopCont.darkness = area_darkness();
-    
+	background_color = area_background_color();
+	BackCont.shadcol = area_shadow_color();
+	TopCont.darkness = area_darkness();
+	
 #define area_setup_floor
-     // Fix Depth:
-    if(styleb) depth = 8;
-    
-     // Footsteps:
-    material = (styleb ? 2 : 2);
-    
+	 // Fix Depth:
+	//if(styleb) depth = 8;
+	
+	 // Footsteps:
+	material = 2;
+	
 #define area_start
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
@@ -69,43 +73,43 @@
 			instance_destroy();
 		}
 	}
-    
+	
 #define area_finish
-    lastarea = area;
-    lastsubarea = subarea;
-    
-     // Area End:
-    if(subarea >= area_subarea()){
-        var n = area_next();
-        if(!is_array(n)) n = [n];
-        if(array_length(n) < 1) array_push(n, mod_current);
-        if(array_length(n) < 2) array_push(n, 1);
-        area = n[0];
-        subarea = n[1];
-    }
-    
-     // Next Subarea: 
-    else subarea++;
-
+	lastarea = area;
+	lastsubarea = subarea;
+	
+	 // Area End:
+	if(subarea >= area_subarea()){
+		var n = area_next();
+		if(!is_array(n)) n = [n];
+		if(array_length(n) < 1) array_push(n, mod_current);
+		if(array_length(n) < 2) array_push(n, 1);
+		area = n[0];
+		subarea = n[1];
+	}
+	
+	 // Next Subarea: 
+	else subarea++;
+	
 #define area_effect(_vx, _vy)
 	 // Cool Particles:
-	var _floor = instances_matching(Floor, "sprite_index", spr.FloorCrystal);
-    with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
-    	with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
-    		depth = -8;
-    		alarm0 = 40 + random(40);
-    		motion_set(random(360), random(0.2));
-    	}
-    }
-    
+	var _floor = instances_matching(Floor, "sprite_index", spr.FloorRed);
+	with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
+		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+			depth = -8;
+			alarm0 = 40 + random(40);
+			motion_set(random(360), random(0.2));
+		}
+	}
+	
 	return irandom(40);
-
+	
 #define area_make_floor
-    var _x = x,
-        _y = y,
-        _outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
-        
-    /// Make Floors:
+	var	_x = x,
+		_y = y,
+		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
+		
+	/// Make Floors:
 		 // Normal:
 		instance_create(_x, _y, Floor);
 		
@@ -133,37 +137,35 @@
 		}
 		
 	/*
-    /// Chests & Branching:
-         // Turn Arounds (Weapon Chests):
-        if(_trn == 180 && _outOfSpawn){
-            floor_make(_x, _y, WeaponChest);
-        }
-
-         // Dead Ends (Ammo Chests):
-        var n = instance_number(FloorMaker);
-    	if(!chance(20, 19 + n)){
-    		if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
-    		instance_destroy();
-    	}
-
-    	 // Branch:
-    	if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
-    	*/
-
-#define area_pop_enemies
-    var _x = x + 16,
-        _y = y + 16;
-        
-    if(chance(1, 2)){
-		 // Big:
-		if(chance(1, 7)){
-			instance_create(_x, _y, RhinoFreak);
+	/// Chests & Branching:
+		 // Turn Arounds (Weapon Chests):
+		if(_trn == 180 && _outOfSpawn){
+			floor_make(_x, _y, WeaponChest);
 		}
 		
-		 // Small:
-		else{
-			obj_create(_x, _y, "RedSpider");
+		 // Dead Ends (Ammo Chests):
+		var n = instance_number(FloorMaker);
+		if(!chance(20, 19 + n)){
+			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+			instance_destroy();
 		}
+		
+		 // Branch:
+		if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
+		*/
+		
+#define area_pop_enemies
+	var	_x = x + 16,
+		_y = y + 16;
+		
+	 // Big:
+	if(chance(0, 7)){
+		instance_create(_x, _y, RhinoFreak); // insert enemy here
+	}
+	
+	 // Small:
+	else{
+		obj_create(_x, _y, "RedSpider");
 	}
 	
 #define area_pop_props
@@ -184,8 +186,13 @@
 	else if(chance(1, 4)){
 		obj_create(x + 16, y + 16, "RedCrystalProp");
 	}
-
-
+	
+	 // Top Decals:
+	if(chance(1, 30)){
+		obj_create(x + 16, y + 16, "TopDecal");
+	}
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -300,7 +307,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);

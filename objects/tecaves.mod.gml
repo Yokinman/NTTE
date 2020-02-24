@@ -48,12 +48,12 @@
 		 // Sounds:
 		snd_hurt = sndHyperCrystalHurt;
 		snd_dead = sndHyperCrystalDead;
+		snd_mele = sndHyperCrystalSearch;
 		
 		 // Vars:
 		mask_index = mskLaserCrystal;
 		friction = 0.1;
 		maxhealth = 50;
-		meleedamage = 10;
 		size = 3;
 		walk = 0;
 		walkspeed = 0.3;
@@ -72,12 +72,53 @@
 	
 #define CrystalHeart_step
 	 // Effects:
-	if(chance_ct(1, 10)) with(scrFX([x, 6], [y, 12], random(1), LaserCharge)) alarm0 = 10 + random(10);
+	if(chance_ct(1, 10)){
+		with(scrFX([x, 6], [y, 12], random(1), LaserCharge)){
+			alarm0 = 10 + random(10);
+		}
+	}
+	
+	 // Manual Contact Damage:
+	if(canmelee == true && place_meeting(x, y, hitme)){
+		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+			if(place_meeting(x, y, other)){
+				with(other) if(projectile_canhit_melee(other)){
+					 // Fixes:
+					var	_lastFreeze = UberCont.opt_freeze,
+						_lastGamma = skill_get(mut_gamma_guts);
+						
+					if(!instance_is(other, Player)){
+						UberCont.opt_freeze = 0;
+						skill_set(mut_gamma_guts, 0);
+						sound_play_hit(snd_mele, 0.1);
+					}
+					
+					 // Damage:
+					meleedamage = ((other.my_health > 1) ? other.my_health - 1 : 20);
+					event_perform(ev_collision, (instance_is(other, Player) ? Player : prop));
+					meleedamage = 0;
+					
+					 // Reset Fixes:
+					if(!instance_is(other, Player)){
+						UberCont.opt_freeze = _lastFreeze;
+						skill_set(mut_gamma_guts, _lastGamma);
+					}
+					else{
+						my_health = 0;
+						GameCont.area = "red";
+						GameCont.subarea = 0;
+						instance_create(x, y, Portal);
+						with(other) motion_set(point_direction(x, y, other.x, other.y), 4);
+					}
+				}
+			}
+		}
+	}
 	
 #define CrystalHeart_alrm1
-	target = instance_nearest(x, y, Player);
-	alarm1 = 30 + random(30);
+	alarm1 = random_range(30, 60);
 	
+	 // Wander:
 	scrWalk(random(360), [10, 40]);
 	
 #define CrystalHeart_death
@@ -1020,8 +1061,8 @@
 		 // New Floors, Reset Wall Mask:
 		with(surfWallShineMask){
 			reset = true;
-			inst_tops = instances_matching(TopSmall, "sprite_index", spr.WallCrystalTrans);
-			inst_wall = instances_matching(Wall, "topspr", spr.WallCrystalTop);
+			inst_tops = instances_matching(TopSmall, "sprite_index", spr.WallRedTrans);
+			inst_wall = instances_matching(Wall, "topspr", spr.WallRedTop);
 			active = (array_length(inst_tops) + array_length(inst_wall) > 0);
 		}
 	}
@@ -1409,7 +1450,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define TopDecal_create(_x, _y, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'TopDecal_create', _x, _y, _area);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
