@@ -1,21 +1,21 @@
 #define init
-	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Red/sprCrownRedIcon.png",     1, 12, 16);
-	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Red/sprCrownRedIdle.png",    10,  8,  8);
+	global.sprCrownIcon    = sprite_add("../sprites/crowns/Red/sprCrownRedIcon.png",     1, 12, 16);
+	global.sprCrownIdle    = sprite_add("../sprites/crowns/Red/sprCrownRedIdle.png",    10,  8,  8);
 	global.sprCrownWalk    = sprite_add("../sprites/crowns/Red/sprCrownRedWalk.png",     6,  8,  8);
 	global.sprCrownLoadout = sprite_add("../sprites/crowns/Red/sprCrownRedLoadout.png",  2, 16, 16);
 	
-#define crown_name      	return "RED CROWN";
-#define crown_text      	return "MORE @rHEARTS#@sSMALLER @wAREAS";
-#define crown_tip       	return choose("FULL OF LIFE", "SO CRAMPED");
-#define crown_avail     	return (GameCont.loops > 0);//unlock_get("lairCrown");
-#define crown_menu_avail	return true;//unlock_get("crownRed");
+#define crown_name        return "RED CROWN";
+#define crown_text        return "MORE @rHEARTS#@sSMALLER @wAREAS";
+#define crown_tip         return choose("FULL OF LIFE", "SO CRAMPED");
+#define crown_avail       return (GameCont.loops > 0);//unlock_get("lairCrown");
+#define crown_menu_avail  return true;//unlock_get("crownRed");
 
 #define crown_menu_button
-    sprite_index = global.sprCrownLoadout;
-    image_index = !crown_menu_avail();
-    dix = -1;
-    diy = 2;
-    
+	sprite_index = global.sprCrownLoadout;
+	image_index = !crown_menu_avail();
+	dix = -1;
+	diy = 2;
+	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
 	

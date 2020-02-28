@@ -1,18 +1,18 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-
-    DebugLag = false;
-    
-     // Surfaces:
-    surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
-    surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
-    
-    global.floor_num = 0;
-    global.wall_num = 0;
-
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
+	DebugLag = false;
+	
+	 // Surfaces:
+	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
+	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+	
+	global.floor_num = 0;
+	global.wall_num = 0;
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -21,13 +21,6 @@
 #macro opt sav.option
 
 #macro DebugLag global.debug_lag
-
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
-#macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
@@ -153,7 +146,7 @@
 		chest_type = AmmoChest;
 		area = "red";
 		subarea = 1;
-        areaseed = random_get_seed();
+		areaseed = random_get_seed();
 		
 		 // Alarms:
 		alarm0 = 12;
@@ -290,8 +283,8 @@
 	
 	
 #define InvMortar_create(_x, _y)
-    with(obj_create(_x, _y, "Mortar")){
-         // Visual:
+	with(obj_create(_x, _y, "Mortar")){
+		 // Visual:
 		spr_idle = spr.InvMortarIdle;
 		spr_walk = spr.InvMortarWalk;
 		spr_fire = spr.InvMortarFire;
@@ -306,15 +299,15 @@
 		  
 		 // Vars:
 		inv = true;  
-
-    	return id;
-    }
-
-
+		
+		return id;
+	}
+	
+	
 #define Mortar_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
-        spr_idle = spr.MortarIdle;
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.MortarIdle;
 		spr_walk = spr.MortarWalk;
 		spr_fire = spr.MortarFire;
 		spr_hurt = spr.MortarHurt;
@@ -325,11 +318,11 @@
 		mask_index = mskSpider;
 		hitid = [spr_idle, "MORTAR"];
 		depth = -4;
-
-         // Sound:
+		
+		 // Sound:
 		snd_hurt = sndLaserCrystalHit;
 		snd_dead = sndLaserCrystalDeath;
-
+		
 		 // Vars:
 		maxhealth = 75;
 		raddrop = 30;
@@ -343,96 +336,96 @@
 		gunangle = random(360);
 		direction = gunangle;
 		inv = false;
-
-         // Alarms:
+		
+		 // Alarms:
 		alarm1 = 100 + irandom(40);
 		alarm2 = -1;
-
+		
 		 // NTTE:
 		ntte_anim = false;
-
-        return id;
-    }
-
+		
+		return id;
+	}
+	
 #define Mortar_step
-     // Animate:
-    if(sprite_index != spr_hurt && sprite_index != spr_fire){
-    	if(speed <= 0) sprite_index = spr_idle;
-    	else if(sprite_index == spr_idle) sprite_index = spr_walk;
-    }
-    else{
-         // End Hurt Sprite:
-        if(sprite_index = spr_hurt && image_index > 2) sprite_index = spr_idle;
-
-         // End Fire Sprite:
-        if(sprite_index = spr_fire && (image_index > sprite_get_number(spr_fire) - 1)){
-            sprite_index = spr_idle;
-        }
-    }
-
-     // Charging effect:
-    if(sprite_index == spr_fire && chance_ct(1, 5)){
-        var _x = x + 6 * right,
-            _y = y - 16,
-            _l = irandom_range(16, 24),
-            _d = random(360);
-            
-        with instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), LaserCharge){
-            depth = other.depth - 1;
-            motion_set(_d + 180, random_range(1,2));
-            alarm0 = point_distance(x, y, _x, _y) / speed;
-        }
-    }
-    
-     // Curse Particles:
-    if(inv){
+	 // Animate:
+	if(sprite_index != spr_hurt && sprite_index != spr_fire){
+		if(speed <= 0) sprite_index = spr_idle;
+		else if(sprite_index == spr_idle) sprite_index = spr_walk;
+	}
+	else{
+		 // End Hurt Sprite:
+		if(sprite_index = spr_hurt && image_index > 2) sprite_index = spr_idle;
+		
+		 // End Fire Sprite:
+		if(sprite_index = spr_fire && (image_index > sprite_get_number(spr_fire) - 1)){
+			sprite_index = spr_idle;
+		}
+	}
+	
+	 // Charging effect:
+	if(sprite_index == spr_fire && chance_ct(1, 5)){
+		var	_x = x + 6 * right,
+			_y = y - 16,
+			_l = irandom_range(16, 24),
+			_d = random(360);
+			
+		with instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), LaserCharge){
+			depth = other.depth - 1;
+			motion_set(_d + 180, random_range(1,2));
+			alarm0 = point_distance(x, y, _x, _y) / speed;
+		}
+	}
+	
+	 // Curse Particles:
+	if(inv){
 		if(chance_ct(1, 3)) instance_create(x + orandom(8), y + orandom(8), Curse);
-    }
-
+	}
+	
 #define Mortar_draw
-     // Flash White w/ Hurt While Firing:
-    if(
-        sprite_index == spr_fire &&
-        nexthurt > current_frame &&
-        (nexthurt + current_frame) mod (room_speed/10) = 0
-    ){
-        d3d_set_fog(true, image_blend, 0, 0);
-        draw_self_enemy();
-        d3d_set_fog(false, c_black, 0, 0);
-    }
-
-     // Normal Self:
-    else draw_self_enemy();
-
+	 // Flash White w/ Hurt While Firing:
+	if(
+		sprite_index == spr_fire &&
+		nexthurt > current_frame &&
+		(nexthurt + current_frame) mod (room_speed/10) = 0
+	){
+		d3d_set_fog(true, image_blend, 0, 0);
+		draw_self_enemy();
+		d3d_set_fog(false, c_black, 0, 0);
+	}
+	
+	 // Normal Self:
+	else draw_self_enemy();
+	
 #define Mortar_alrm1
-    alarm1 = 80 + random(20);
-    
-     // Near Target:
-    if(enemy_target(x, y) && in_distance(target, 240)){
-        scrAim(point_direction(x, y, target.x, target.y));
-        
-         // Attack:
-        if(chance(1, 3)){
-            alarm2 = 26;
+	alarm1 = 80 + random(20);
+	
+	 // Near Target:
+	if(enemy_target(x, y) && in_distance(target, 240)){
+		scrAim(point_direction(x, y, target.x, target.y));
+		
+		 // Attack:
+		if(chance(1, 3)){
+			alarm2 = 26;
 			target_x = target.x;
 			target_y = target.y;
-            sprite_index = spr_fire;
-            sound_play(sndCrystalJuggernaut);
-        }
-        
-         // Move Towards Target:
-        else{
-            alarm1 = 40 + irandom(40);
-        	scrWalk(gunangle + orandom(15), 15 + random(30));
-        }
-    }
-    
-     // Passive Movement:
-    else{
-        alarm1 = 50 + irandom(30);
-        scrWalk(random(360), 10);
-        scrAim(direction);
-    }
+			sprite_index = spr_fire;
+			sound_play(sndCrystalJuggernaut);
+		}
+		
+		 // Move Towards Target:
+		else{
+			alarm1 = 40 + irandom(40);
+			scrWalk(gunangle + orandom(15), 15 + random(30));
+		}
+	}
+	
+	 // Passive Movement:
+	else{
+		alarm1 = 50 + irandom(30);
+		scrWalk(random(360), 10);
+		scrAim(direction);
+	}
 
 #define Mortar_alrm2
 	enemy_target(x, y);
@@ -440,73 +433,73 @@
 	 // Start:
 	if(ammo <= 0){
 		if(instance_exists(target)){
-	        target_x = target.x;
-	        target_y = target.y;
+			target_x = target.x;
+			target_y = target.y;
 		}
-        ammo = 4;
+		ammo = 4;
 	}
 
-    if(ammo > 0){
-        var	_tx = target_x + orandom(16),
-        	_ty = target_y + orandom(16);
-        	
-        scrAim(point_direction(x, y, _tx, _ty));
-        
-         // Sound:
-        sound_play(sndCrystalTB);
-        sound_play(sndPlasma);
-        
-         // Shoot Mortar:
-        with(enemy_shoot_ext(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
-            z += 18;
-            var d = point_distance(x, y, _tx, _ty) / speed;
-            zspeed = (d * zfriction * 0.5) - (z / d);
-            
-             // Cool particle line
-            var _x = x,
-                _y = y,
-                _z = z,
-                _zspd = zspeed,
-                _zfrc = zfriction,
-                i = 0;
-                
-            while(_z > 0){
-                with(instance_create(_x, _y - _z, BoltTrail)){
-                    image_angle = point_direction(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
-                    image_xscale = point_distance(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
-                    image_yscale = random(1.5);
-                    image_blend = make_color_rgb(235, 0, 67);
-                    depth = -8;
-                    if(chance(1, 6)){
-                        with(instance_create(x + orandom(8), y + orandom(8), LaserCharge)){
-                            motion_add(point_direction(x, y, _x, _y - _z), 1);
-                            alarm0 = (point_distance(x, y, _x, _y - _z) / speed) + 1;
-                            depth = -8;
-                        }
-                    }
-                }
-                
-                _x += hspeed;
-                _y += vspeed;
-                _z += _zspd;
-                _zspd -= _zfrc;
-                i++;
-            }
-            var _ang = random(360);
-            for(var a = _ang; a < _ang + 360; a += 120 + orandom(30)){
-                var l = 16,
-                    _tx = _x,
-                    _ty = _y;
-                    
-                with(instance_create(_x + lengthdir_x(l, a), _y + lengthdir_y(l, a), LaserCharge)){
-                    motion_add(point_direction(x, y, _tx, _ty), (point_distance(x, y, _tx, _ty) / i));
-                    alarm0 = i;
-                }
-                i *= 3/4;
-            }
-            with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
-        }
-        
+	if(ammo > 0){
+		var	_tx = target_x + orandom(16),
+			_ty = target_y + orandom(16);
+			
+		scrAim(point_direction(x, y, _tx, _ty));
+		
+		 // Sound:
+		sound_play(sndCrystalTB);
+		sound_play(sndPlasma);
+		
+		 // Shoot Mortar:
+		with(enemy_shoot_ext(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
+			z += 18;
+			var d = point_distance(x, y, _tx, _ty) / speed;
+			zspeed = (d * zfriction * 0.5) - (z / d);
+			
+			 // Cool particle line
+			var	_x = x,
+				_y = y,
+				_z = z,
+				_zspd = zspeed,
+				_zfrc = zfriction,
+				i = 0;
+				
+			while(_z > 0){
+				with(instance_create(_x, _y - _z, BoltTrail)){
+					image_angle = point_direction(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
+					image_xscale = point_distance(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
+					image_yscale = random(1.5);
+					image_blend = make_color_rgb(235, 0, 67);
+					depth = -8;
+					if(chance(1, 6)){
+						with(instance_create(x + orandom(8), y + orandom(8), LaserCharge)){
+							motion_add(point_direction(x, y, _x, _y - _z), 1);
+							alarm0 = (point_distance(x, y, _x, _y - _z) / speed) + 1;
+							depth = -8;
+						}
+					}
+				}
+				
+				_x += hspeed;
+				_y += vspeed;
+				_z += _zspd;
+				_zspd -= _zfrc;
+				i++;
+			}
+			var _ang = random(360);
+			for(var a = _ang; a < _ang + 360; a += 120 + orandom(30)){
+				var	l = 16,
+					_tx = _x,
+					_ty = _y;
+					
+				with(instance_create(_x + lengthdir_x(l, a), _y + lengthdir_y(l, a), LaserCharge)){
+					motion_add(point_direction(x, y, _tx, _ty), (point_distance(x, y, _tx, _ty) / i));
+					alarm0 = i;
+				}
+				i *= 3/4;
+			}
+			with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
+		}
+		
 		 // Aim After Target:
 		if(in_sight(target)){
 			var	l = 32,
@@ -516,157 +509,157 @@
 			target_y += lengthdir_y(l, d);
 		}
 		
-        if(--ammo > 0) alarm2 = 4;
-    }
+		if(--ammo > 0) alarm2 = 4;
+	}
 
 #define Mortar_hurt(_hitdmg, _hitvel, _hitdir)
-    my_health -= _hitdmg;			// Damage
-    motion_add(_hitdir, _hitvel);	// Knockback
-    nexthurt = current_frame + 6;	// I-Frames
-    sound_play_hit(snd_hurt, 0.3);	// Sound
-
-     // Hurt Sprite:
-    if(sprite_index != spr_fire){
-        sprite_index = spr_hurt;
-        image_index = 0;
-    
-	     // Cursed Mortar Behavior:
-	    if(inv && my_health > 0 && chance(_hitdmg / 25, 1)){
-	        var _enemies = instances_matching_ne(enemy, "name", name),
-	        	_x = x,
-	        	_y = y;
+	my_health -= _hitdmg;          // Damage
+	motion_add(_hitdir, _hitvel);  // Knockback
+	nexthurt = current_frame + 6;  // I-Frames
+	sound_play_hit(snd_hurt, 0.3); // Sound
 	
-	         // Swap places with another dude:
-	        if(array_length(_enemies) > 0){
-	            with(instance_random(_enemies)){
-	                other.x = x;
-	                other.y = y;
-	                x = _x;
-	                y = _y;
-	
-	                 // Unstick from walls by annihilating them:
-	                instance_create(x, y, PortalClear).mask_index = mask_index;
-	
-	                 // Effects:
+	 // Hurt Sprite:
+	if(sprite_index != spr_fire){
+		sprite_index = spr_hurt;
+		image_index = 0;
+		
+		 // Cursed Mortar Behavior:
+		if(inv && my_health > 0 && chance(_hitdmg / 25, 1)){
+			var	_enemies = instances_matching_ne(enemy, "name", name),
+				_x = x,
+				_y = y;
+				
+			 // Swap places with another dude:
+			if(array_length(_enemies) > 0){
+				with(instance_random(_enemies)){
+					other.x = x;
+					other.y = y;
+					x = _x;
+					y = _y;
+					
+					 // Unstick from walls by annihilating them:
+					instance_create(x, y, PortalClear).mask_index = mask_index;
+					
+					 // Effects:
 					nexthurt = current_frame + 6;
-	                sprite_index = spr_hurt;
-	                image_index = 0;
-	            }
+					sprite_index = spr_hurt;
+					image_index = 0;
+				}
+				
+				 // Unstick from walls by annihilating them:
+				if(place_meeting(x, y, Floor)){
+					instance_create(x, y, PortalClear).mask_index = mask_index;
+				}
+				else{
+					top_create(x, y, id, 0, 0);
+				}
+			}
+		}
+	}
 	
-	             // Unstick from walls by annihilating them:
-	            if(place_meeting(x, y, Floor)){
-	            	instance_create(x, y, PortalClear).mask_index = mask_index;
-	            }
-	            else{
-	            	top_create(x, y, id, 0, 0);
-	            }
-	        }
-	    }
-    }
-
 #define Mortar_death
 	pickup_drop(30, 35);
 	pickup_drop(30, 0);
-
-
+	
+	
 #define MortarPlasma_create(_x, _y)
-    with(instance_create(_x, _y, CustomProjectile)){
-         // Visual:
-        sprite_index = spr.MortarPlasma;
-        mask_index = mskNone;
-	    depth = -8;
-
-         // Vars:
-        z = 1;
-        zspeed = 0;
-        zfriction = 0.4; // 0.8
-        damage = 0;
-        force = 0;
-
-        return id;
-    }
-
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.MortarPlasma;
+		mask_index = mskNone;
+		depth = -8;
+		
+		 // Vars:
+		z = 1;
+		zspeed = 0;
+		zfriction = 0.4; // 0.8
+		damage = 0;
+		force = 0;
+		
+		return id;
+	}
+	
 #define MortarPlasma_step
-    z += zspeed * current_time_scale;
-    zspeed -= zfriction * current_time_scale;
-
-     // Facing:
-    if((direction >= 30 && direction <= 150) || (direction >= 210 && direction <= 330)){
-        image_index = round((point_direction(0, 0, speed, zspeed) + 90) / (360 / image_number));
-        image_angle = direction;
-    }
-    else{
-        if(zspeed > 5) image_index = 0;
-        else if(zspeed > 2) image_index = 1;
-        else image_index = 2;
-        image_angle = point_direction(0, 0, hspeed, -zspeed);
-    }
-
-     // Trail:
-    if(chance_ct(1, 2)){
-        with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
-            sprite_index = spr.EnemyPlasmaTrail;
-            depth = other.depth;
-        }
-    }
-
-     // Hit:
-    if(z <= 0 || (z <= 8 && position_meeting(x, y + 8, Wall))){
-    	instance_destroy();
-    }
-
+	z += zspeed * current_time_scale;
+	zspeed -= zfriction * current_time_scale;
+	
+	 // Facing:
+	if((direction >= 30 && direction <= 150) || (direction >= 210 && direction <= 330)){
+		image_index = round((point_direction(0, 0, speed, zspeed) + 90) / (360 / image_number));
+		image_angle = direction;
+	}
+	else{
+		if(zspeed > 5) image_index = 0;
+		else if(zspeed > 2) image_index = 1;
+		else image_index = 2;
+		image_angle = point_direction(0, 0, hspeed, -zspeed);
+	}
+	
+	 // Trail:
+	if(chance_ct(1, 2)){
+		with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
+			sprite_index = spr.EnemyPlasmaTrail;
+			depth = other.depth;
+		}
+	}
+	
+	 // Hit:
+	if(z <= 0 || (z <= 8 && position_meeting(x, y + 8, Wall))){
+		instance_destroy();
+	}
+	
 #define MortarPlasma_draw
-    draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-
-     // Bloom:
-    draw_set_blend_mode(bm_add);
-    draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-    draw_set_blend_mode(bm_normal);
-
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	
+	 // Bloom:
+	draw_set_blend_mode(bm_add);
+	draw_sprite_ext(sprite_index, image_index, x, y - z, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+	draw_set_blend_mode(bm_normal);
+	
 #define MortarPlasma_hit
-    // nada
-
+	// nada
+	
 #define MortarPlasma_wall
-    // nada
-
+	// nada
+	
 #define MortarPlasma_destroy
-    with(instance_create(x, y, PlasmaImpact)){
-        sprite_index = spr.EnemyPlasmaImpact;
-        team = other.team;
-        creator = other.creator;
-        hitid = other.hitid;
-        damage = 2;
-        
-         // Over Wall:
-        if(position_meeting(x, y + 8, Wall) || !position_meeting(x, y + 8, Floor)){
-        	depth = -8;
-        }
-    }
-
-     // Effects:
-    view_shake_at(x, y, 2);
-    sound_play(sndPlasmaHit);
-
-
+	with(instance_create(x, y, PlasmaImpact)){
+		sprite_index = spr.EnemyPlasmaImpact;
+		team = other.team;
+		creator = other.creator;
+		hitid = other.hitid;
+		damage = 2;
+		
+		 // Over Wall:
+		if(position_meeting(x, y + 8, Wall) || !position_meeting(x, y + 8, Floor)){
+			depth = -8;
+		}
+	}
+	
+	 // Effects:
+	view_shake_at(x, y, 2);
+	sound_play(sndPlasmaHit);
+	
+	
 #define NewCocoon_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
-         // Visual:
+		 // Visual:
 		spr_idle = sprCocoon;
 		spr_hurt = sprCocoonHurt;
 		spr_dead = sprCocoonDead;
 		spr_shadow = shd24;
-
-         // Sound:
+		
+		 // Sound:
 		snd_dead = sndCocoonBreak;
-
-         // Vars:
+		
+		 // Vars:
 		maxhealth = 6;
 		nexthurt = current_frame;
 		size = 1;
-
+		
 		return id;
 	}
-
+	
 #define NewCocoon_death
 	 // Bits:
 	var _ang = random(360);
@@ -777,7 +770,7 @@
 			
 			 // Plasma Bite:
 			for(var _spd = 0; _spd < (_targetSeen ? 4 : 2); _spd += random_range(1, 1.5)){
-				var _dis = 12,
+				var	_dis = 12,
 					_dir = _targetDir + orandom(lerp(20, 10, _spd / 4)),
 					_x = x + lengthdir_x(_dis, _dir),
 					_y = y + lengthdir_y(_dis, _dir);
@@ -840,9 +833,9 @@
 	
 	
 #define Spiderling_create(_x, _y)
-    with(instance_create(_x, _y, CustomEnemy)){
-         // Visual:
-        spr_idle = spr.SpiderlingIdle;
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.SpiderlingIdle;
 		spr_walk = spr.SpiderlingWalk;
 		spr_hurt = spr.SpiderlingHurt;
 		spr_dead = spr.SpiderlingDead;
@@ -853,7 +846,7 @@
 		hitid = [spr_idle, "SPIDERLING"];
 		depth = -2;
 
-         // Sound:
+		 // Sound:
 		snd_hurt = sndSpiderHurt;
 		snd_dead = sndSpiderDead;
 
@@ -870,7 +863,7 @@
 		 // Cursed:
 		curse = (GameCont.area == 104);
 		if(curse){
-	        spr_idle = spr.InvSpiderlingIdle;
+			spr_idle = spr.InvSpiderlingIdle;
 			spr_walk = spr.InvSpiderlingWalk;
 			spr_hurt = spr.InvSpiderlingHurt;
 			spr_dead = spr.InvSpiderlingDead;
@@ -879,7 +872,7 @@
 			snd_dead = choose(sndEnemyDie, sndBanditDie, sndFastRatDie);
 		}
 		
-         // Alarms:
+		 // Alarms:
 		alarm0 = irandom_range(60, 150);
 		alarm1 = irandom_range(20, 40);
 		
@@ -887,66 +880,66 @@
 		if(instance_exists(n)) alarm0 += point_distance(x, y, n.x, n.y);
 
 		return id;
-    }
+	}
 
 #define Spiderling_alrm0
-     // Shhh dont tell anybody
-    var _obj = ((GameCont.area == 104) ? InvSpider : Spider);
-    with(instance_create(x, y, _obj)){
-        x = other.x;
-        y = other.y;
-        creator = other;
-        right = other.right;
-        alarm1 = 10 + random(10);
-    }
+	 // Shhh dont tell anybody
+	var _obj = ((GameCont.area == 104) ? InvSpider : Spider);
+	with(instance_create(x, y, _obj)){
+		x = other.x;
+		y = other.y;
+		creator = other;
+		right = other.right;
+		alarm1 = 10 + random(10);
+	}
 
-     // Effects:
-    for(var a = 0; a < 360; a += (360 / 6)){
-        var o = random(8);
-        with(instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), Smoke)){
-            motion_add(a + orandom(20), 1 + random(1.5));
-            depth = -3;
-            with(instance_create(x, y, Dust)){
-                depth = other.depth;
-                motion_add(other.direction + orandom(90), 2);
-            }
-        }
-    }
-    for(var a = direction; a < direction + 360; a += (360 / 3)){
-        with(obj_create(x, y, "CatDoorDebris")){
-            sprite_index = other.spr_hatch;
-            image_index = irandom(image_number - 1);
-            direction = a + orandom(30);
-            speed += 1 + random(4);
-        }
-    }
-    sound_play_hit(sndHitRock, 0.3);
-    sound_play_hit(sndBouncerBounce, 0.5);
-    sound_play_pitchvol(sndCocoonBreak, 2 + random(1), 0.8);
+	 // Effects:
+	for(var a = 0; a < 360; a += (360 / 6)){
+		var o = random(8);
+		with(instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), Smoke)){
+			motion_add(a + orandom(20), 1 + random(1.5));
+			depth = -3;
+			with(instance_create(x, y, Dust)){
+				depth = other.depth;
+				motion_add(other.direction + orandom(90), 2);
+			}
+		}
+	}
+	for(var a = direction; a < direction + 360; a += (360 / 3)){
+		with(obj_create(x, y, "CatDoorDebris")){
+			sprite_index = other.spr_hatch;
+			image_index = irandom(image_number - 1);
+			direction = a + orandom(30);
+			speed += 1 + random(4);
+		}
+	}
+	sound_play_hit(sndHitRock, 0.3);
+	sound_play_hit(sndBouncerBounce, 0.5);
+	sound_play_pitchvol(sndCocoonBreak, 2 + random(1), 0.8);
 
-    instance_delete(id);
+	instance_delete(id);
 
 #define Spiderling_alrm1
-    alarm1 = 10 + irandom(10);
-    
-    if(instance_exists(Player)){
-    	target = instance_nearest_array(x, y, [Player, CrystalProp, InvCrystal]);
-    }
-    
+	alarm1 = 10 + irandom(10);
+	
+	if(instance_exists(Player)){
+		target = instance_nearest_array(x, y, [Player, CrystalProp, InvCrystal]);
+	}
+	
 	 // Cursed:
 	if(curse) instance_create(x, y, Curse);
 	
-     // Move Towards Target:
-    if(in_sight(target) && in_distance(target, 96)){
-        scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), 14);
-        if(instance_is(target, prop)){
-        	direction += orandom(60);
-        	alarm1 *= random_range(1, 2);
-        }
-    }
-    
-     // Wander:
-    else scrWalk(direction + orandom(20), 12);
+	 // Move Towards Target:
+	if(in_sight(target) && in_distance(target, 96)){
+		scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), 14);
+		if(instance_is(target, prop)){
+			direction += orandom(60);
+			alarm1 *= random_range(1, 2);
+		}
+	}
+	
+	 // Wander:
+	else scrWalk(direction + orandom(20), 12);
 
 #define Spiderling_death
 	pickup_drop(15, 0);
@@ -966,21 +959,21 @@
 
 
 #define SpiderWall_create(_x, _y)
-    with(instance_create(_x, _y, CustomObject)){
-         // Visual:
-        topspr = spr.SpiderWallFakeTop;
-        botspr = sprWall4Bot;
-        topindex = 0;
-        botindex = 0;
-        
-         // Vars:
-        mask_index = mskWall;
-        creator = noone;
-        special = false;
-        setup = true;
-        
-        return id;
-    }
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		topspr = spr.SpiderWallFakeTop;
+		botspr = sprWall4Bot;
+		topindex = 0;
+		botindex = 0;
+		
+		 // Vars:
+		mask_index = mskWall;
+		creator = noone;
+		special = false;
+		setup = true;
+		
+		return id;
+	}
 
 #define SpiderWall_setup
 	setup = false;
@@ -992,9 +985,9 @@
 	botindex = irandom(sprite_get_number(botspr) - 1);
 	with(creator){
 		topspr = other.topspr;
-        topindex = other.topindex;
-        sprite_index = other.botspr;
-        image_index = other.botindex;
+		topindex = other.topindex;
+		sprite_index = other.botspr;
+		image_index = other.botindex;
 	}
 	
 	 // No Duplicates:
@@ -1014,37 +1007,37 @@
 	}
 	
 	 // Spawn:
-    if(!instance_exists(creator) && !place_meeting(x, y, Explosion)){
-    	 // Spawn:
-    	if(position_meeting(x + 8, y + 8, FloorExplo)){
-    		
-	         // Special Spider:
-	        if(special){
-	        	with(pet_spawn(x + 8, y + 8, "Spider")){
-	        		sprite_index = spr_hurt;
-    				sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
-	        	}
-	        }
-	        
-	         // Spiderlings:
-	        else repeat(irandom_range(1, 3)){
-	        	if(chance(3, 5)){
-	        		with(obj_create(x + 8, y + 8, "Spiderling")){
-	        			sprite_index = spr_hurt;
-    					sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 1.5);
-	        		}
-	        	}
-	        	
-	        	 // Sparkle:
-	        	with(instance_create(x + random(16), y + orandom(8), CaveSparkle)){
+	if(!instance_exists(creator) && !place_meeting(x, y, Explosion)){
+		 // Spawn:
+		if(position_meeting(x + 8, y + 8, FloorExplo)){
+			
+			 // Special Spider:
+			if(special){
+				with(pet_spawn(x + 8, y + 8, "Spider")){
+					sprite_index = spr_hurt;
+					sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
+				}
+			}
+			
+			 // Spiderlings:
+			else repeat(irandom_range(1, 3)){
+				if(chance(3, 5)){
+					with(obj_create(x + 8, y + 8, "Spiderling")){
+						sprite_index = spr_hurt;
+						sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 1.5);
+					}
+				}
+				
+				 // Sparkle:
+				with(instance_create(x + random(16), y + orandom(8), CaveSparkle)){
 					sprite_index = spr.PetSparkle;
 					depth = -3;
 				}
-	        }
-    	}
-        
-        instance_destroy();
-    }
+			}
+		}
+		
+		instance_destroy();
+	}
 
 
 /// Mod Events:
@@ -1085,18 +1078,18 @@
 	if(DebugLag) trace_time("tecaves_step");
 
 #define end_step
-    if(DebugLag) trace_time();
+	if(DebugLag) trace_time();
 
-     // Spider Cocoons:
-    with(Cocoon){
-    	obj_create(x, y, "NewCocoon");
-    	instance_delete(id);
-    }
-    
-     // Scramble Cursed Caves Weapons:
+	 // Spider Cocoons:
+	with(Cocoon){
+		obj_create(x, y, "NewCocoon");
+		instance_delete(id);
+	}
+	
+	 // Scramble Cursed Caves Weapons:
 	with(instances_matching(WepPickup, "cursedcavescramble_check", null)){
-    	cursedcavescramble_check = false;
-    	if(GameCont.area == 104){
+		cursedcavescramble_check = false;
+		if(GameCont.area == 104){
 			if(roll && wep_get(wep) != "merge"){
 				if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
 					cursedcavescramble_check = true;
@@ -1110,33 +1103,33 @@
 					}
 				}
 			}
-    	}
+		}
 	}
-    
-    if(DebugLag) trace_time("tecaves_end_step");
-    
+	
+	if(DebugLag) trace_time("tecaves_end_step");
+	
 	instance_destroy();
 
 #define draw_shadows
 	if(DebugLag) trace_time();
 
 	 // Mortar Plasma:
-    with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
-    	if(position_meeting(x, y, Floor)){
-	        var _percent = clamp(96 / z, 0.1, 1),
-	            _w = ceil(18 * _percent),
-	            _h = ceil(6 * _percent),
-	            _x = x,
-	            _y = y;
-	            
-	        draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
-    	}
-    }
+	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+		if(position_meeting(x, y, Floor)){
+			var	_percent = clamp(96 / z, 0.1, 1),
+				_w = ceil(18 * _percent),
+				_h = ceil(6 * _percent),
+				_x = x,
+				_y = y;
+				
+			draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+		}
+	}
 
 	if(DebugLag) trace_time("tecaves_draw_shadows");
 
 #define draw_dark // Drawing Grays
-    draw_set_color(c_gray);
+	draw_set_color(c_gray);
 
 	if(DebugLag) trace_time();
 
@@ -1145,22 +1138,22 @@
 		draw_crystal_heart_dark(45, 72 + random(2), 3);
 	}
 	
-     // Mortar:
-    with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
-        if(sprite_index == spr_fire){
-            draw_circle(x + (6 * right), y - 16, 48 - alarm1 + orandom(4), false)
-        }
-    }
+	 // Mortar:
+	with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
+		if(sprite_index == spr_fire){
+			draw_circle(x + (6 * right), y - 16, 48 - alarm1 + orandom(4), false)
+		}
+	}
 
-     // Mortar Plasma:
-    with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
-        draw_circle(x, y - z, 64 + orandom(1), false);
-    }
+	 // Mortar Plasma:
+	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+		draw_circle(x, y - z, 64 + orandom(1), false);
+	}
 
 	if(DebugLag) trace_time("tecaves_draw_dark");
 
 #define draw_dark_end // Drawing Clear
-    draw_set_color(c_black);
+	draw_set_color(c_black);
 
 	if(DebugLag) trace_time();
 	
@@ -1169,17 +1162,17 @@
 		draw_crystal_heart_dark(15, 24 + random(2), 2);
 	}
 
-     // Mortar:
-    with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
-        if(sprite_index == spr_fire){
-            draw_circle(x + (6 * right), y - 16, 24 - alarm1 + orandom(4), false)
-        }
-    }
+	 // Mortar:
+	with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
+		if(sprite_index == spr_fire){
+			draw_circle(x + (6 * right), y - 16, 24 - alarm1 + orandom(4), false)
+		}
+	}
 
-     // Mortar Plasma:
-    with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
-        draw_circle(x, y - z, 32 + orandom(1), false);
-    }
+	 // Mortar Plasma:
+	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+		draw_circle(x, y - z, 32 + orandom(1), false);
+	}
 
 	if(DebugLag) trace_time("tecaves_draw_dark_end");
 
@@ -1194,7 +1187,7 @@
 	draw_vertex(x, y);
 	
 	for(var i = 0; i <= _vertices + 1; i++){
-		var _x = x + lengthdir_x(_radius, (360 / _vertices) * i),
+		var	_x = x + lengthdir_x(_radius, (360 / _vertices) * i),
 			_y = y + lengthdir_y(_radius, (360 / _vertices) * i);
 			
 		_x += sin(_x * 0.1) * _coefficient;
@@ -1205,13 +1198,13 @@
 	draw_primitive_end();
 	
 #define draw_wall_shine
-	var _vx = view_xview_nonsync,
+	var	_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_gw = game_width,
 		_gh = game_height;
 		
 	with(surfWallShineMask){
-		var _x = floor(_vx / _gw) * _gw,
+		var	_x = floor(_vx / _gw) * _gw,
 			_y = floor(_vy / _gh) * _gh;
 			
 		if(_x != x || _y != y){
@@ -1340,6 +1333,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

@@ -15,7 +15,7 @@
 		"Start" : {
 			w : 3,
 			h : 3,
-			carpet : 1.00,
+			carpet : 1,
 			special : true
 		},
 		
@@ -36,7 +36,7 @@
 				[0,0,L,L,L,L,L,L,L,L,0,0],
 				[0,0,0,L,L,L,L,L,L,0,0,0],
 				[0,0,0,L,L,L,L,L,L,0,0,0]
-				]
+			]
 		},
 
 		 // SMALL:
@@ -53,152 +53,152 @@
 		"SmallPillars" : {
 			w : 3,
 			h : 3
-	    },  
-        
-        "SmallRing" : {
-            w : 2,
-            h : 2
-        },
-        
-        "WideSmallRing" : {
-            w : 3,
-            h : 2
-        },
-        
-        "TallSmallRing" : {
-            w : 2,
-            h : 3
-        },
-        
-        "MediumRing" : {
-            w : 3,
-            h : 3,
-            layout : [
-                [L,L,L],
-                [L,0,L],
-                [L,L,L]
-                ]
-        },
-        
-        "Table" : {
-            w : 3,
-            h : 3
-            // carpet : 0.40
-        },
-        
-        "Toilet" : {
-            w : 3,
-            h : 2,
-        },
-        
-        "SmallTriangle" : {
-            h : 3,
-            w : 3,
-            layout : [
-                [L,0,0],
-                [L,L,0],
-                [L,L,L]
-                ]
-        },
-        
-        "Vault" : {
-            w : 3,
-            h : 3
-        },
+		},  
+		
+		"SmallRing" : {
+			w : 2,
+			h : 2
+		},
+		
+		"WideSmallRing" : {
+			w : 3,
+			h : 2
+		},
+		
+		"TallSmallRing" : {
+			w : 2,
+			h : 3
+		},
+		
+		"MediumRing" : {
+			w : 3,
+			h : 3,
+			layout : [
+				[L,L,L],
+				[L,0,L],
+				[L,L,L]
+			]
+		},
+		
+		"Table" : {
+			w : 3,
+			h : 3
+			// carpet : 0.40
+		},
+		
+		"Toilet" : {
+			w : 3,
+			h : 2,
+		},
+		
+		"SmallTriangle" : {
+			h : 3,
+			w : 3,
+			layout : [
+				[L,0,0],
+				[L,L,0],
+				[L,L,L]
+			]
+		},
+		
+		"Vault" : {
+			w : 3,
+			h : 3
+		},
 
-         // LARGE:
-        "SmallAtrium" : {
-            w : 6,
-            h : 6,
-            layout : [
-                [0,0,L,L,0,0],
-                [0,0,L,L,0,0],
-                [L,L,L,L,L,L],
-                [L,L,L,L,L,L],
-                [0,0,L,L,0,0],
-                [0,0,L,L,0,0]
-                ]
-        },
-        
-        "Lounge" : {
-            w : 5,
-            h : 4,
-            layout : [
-                [L,L,L,L,L],
-                [L,L,L,L,L],
-                [L,L,L,L,L],
-                [L,0,0,0,L]
-                ]
-        },
-         
-        "Dining" : {
-            w : 4,
-            h : 3,
-            carpet : 0.33
-        },
-        
-        "Cafeteria" : {
-            w : 4,
-            h : 6,
-            layout : [
-                [0,L,0,0],
-                [L,L,L,L],
-                [L,L,L,L],
-                [L,L,L,L],
-                [L,L,L,L],
-                [L,L,L,L]
-                ]
-        },
-        
-        "Office" : {
-            w : 6,
-            h : 4,
-            layout : [
-                [0,0,L,L,0,0],
-                [L,L,L,L,L,L],
-                [L,L,L,L,L,L],
-                [L,L,L,L,L,L]
-                ]
-        },
-        
-        "Garage" : {
-            w : 4,
-            h : 3
-        },
-        
-        "LargeRing" : {
-            w : 6,
-            h : 6,
-            layout : [
-                [L,L,L,L,L,L],
-                [L,L,L,L,L,L],
-                [L,L,0,0,L,L],
-                [L,L,0,0,L,L],
-                [L,L,L,L,L,L],
-                [L,L,L,L,L,L]
-                ]
-        }
+		 // LARGE:
+		"SmallAtrium" : {
+			w : 6,
+			h : 6,
+			layout : [
+				[0,0,L,L,0,0],
+				[0,0,L,L,0,0],
+				[L,L,L,L,L,L],
+				[L,L,L,L,L,L],
+				[0,0,L,L,0,0],
+				[0,0,L,L,0,0]
+			]
+		},
+		
+		"Lounge" : {
+			w : 5,
+			h : 4,
+			layout : [
+				[L,L,L,L,L],
+				[L,L,L,L,L],
+				[L,L,L,L,L],
+				[L,0,0,0,L]
+			]
+		},
+		 
+		"Dining" : {
+			w : 4,
+			h : 3,
+			carpet : 0.33
+		},
+		
+		"Cafeteria" : {
+			w : 4,
+			h : 6,
+			layout : [
+				[0,L,0,0],
+				[L,L,L,L],
+				[L,L,L,L],
+				[L,L,L,L],
+				[L,L,L,L],
+				[L,L,L,L]
+			]
+		},
+		
+		"Office" : {
+			w : 6,
+			h : 4,
+			layout : [
+				[0,0,L,L,0,0],
+				[L,L,L,L,L,L],
+				[L,L,L,L,L,L],
+				[L,L,L,L,L,L]
+			]
+		},
+		
+		"Garage" : {
+			w : 4,
+			h : 3
+		},
+		
+		"LargeRing" : {
+			w : 6,
+			h : 6,
+			layout : [
+				[L,L,L,L,L,L],
+				[L,L,L,L,L,L],
+				[L,L,0,0,L,L],
+				[L,L,0,0,L,L],
+				[L,L,L,L,L,L],
+				[L,L,L,L,L,L]
+			]
+		}
+		
+	};
 
-    };
+	 // Set Room Defaults:
+	for(var i = 0; i < lq_size(RoomType); i++){
+		var	t = lq_get_value(RoomType, i),
+			_default = { w : 1, h : 1, carpet : 0, special : 0 };
 
-     // Set Room Defaults:
-    for(var i = 0; i < lq_size(RoomType); i++){
-        var t = lq_get_value(RoomType, i),
-            _default = { w : 1, h : 1, carpet : 0, special : 0 };
-
-        for(var j = 0; j < lq_size(_default); j++){
-            var k = lq_get_key(_default, j);
-            if(k not in t){
-                lq_set(t, k, lq_get(_default, k));
-            }
-        }
-    }
-    
-     // Carpet Surface:
-    global.resetSurf = true;
-    global.surfW = 2000;
-    global.surfH = 2000;
-    global.surf = noone;
+		for(var j = 0; j < lq_size(_default); j++){
+			var k = lq_get_key(_default, j);
+			if(k not in t){
+				lq_set(t, k, lq_get(_default, k));
+			}
+		}
+	}
+	
+	 // Carpet Surface:
+	global.resetSurf = true;
+	global.surfW = 2000;
+	global.surfH = 2000;
+	global.surf = noone;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -213,64 +213,64 @@
 #macro RoomType global.room_type
 #macro RoomCenter global.room_center
 
-#define area_subarea            return 1;
-#define area_next               return 3;
-#define area_music              return [mus.Lair, 0.6];
-#define area_ambience           return amb102;
-#define area_background_color   return make_color_rgb(160, 157, 75);
-#define area_shadow_color       return area_get_shadow_color(102);
-#define area_darkness           return true;
-#define area_secret             return true;
+#define area_subarea           return 1;
+#define area_next              return 3;
+#define area_music             return [mus.Lair, 0.6];
+#define area_ambience          return amb102;
+#define area_background_color  return make_color_rgb(160, 157, 75);
+#define area_shadow_color      return area_get_shadow_color(102);
+#define area_darkness          return true;
+#define area_secret            return true;
 
 #define area_name(_subarea, _loop)
-    return "2-?";
-
+	return "2-?";
+	
 #define area_text
-    return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
-
+	return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
+	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [_lastx, 9];
-
+	return [_lastx, 9];
+	
 #define area_sprite(_spr)
-    switch(_spr){
-         // Floors:
-        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLair;
-        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLairB;
-        case sprFloor1Explo : return spr.FloorLairExplo;
-        case sprDetail1     : return sprDetail2;
-        
-         // Walls:
-        case sprWall1Bot    : return spr.WallLairBot;
-        case sprWall1Top    : return spr.WallLairTop;
-        case sprWall1Out    : return spr.WallLairOut;
-        case sprWall1Trans  : return spr.WallLairTrans;
-        case sprDebris1     : return spr.DebrisLair;
-        
+	switch(_spr){
+		 // Floors:
+		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLair;
+		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLairB;
+		case sprFloor1Explo : return spr.FloorLairExplo;
+		case sprDetail1     : return sprDetail2;
+		
+		 // Walls:
+		case sprWall1Bot    : return spr.WallLairBot;
+		case sprWall1Top    : return spr.WallLairTop;
+		case sprWall1Out    : return spr.WallLairOut;
+		case sprWall1Trans  : return spr.WallLairTrans;
+		case sprDebris1     : return spr.DebrisLair;
+		
 		 // Decals:
-        case sprTopPot      : return spr.TopDecalLair;
-        case sprBones       : return spr.WallDecalLair;
-    }
-    
+		case sprTopPot      : return spr.TopDecalLair;
+		case sprBones       : return spr.WallDecalLair;
+	}
+	
 #define area_setup
-    goal = 110;
-    safespawn = false;
-    
-    background_color = area_background_color();
-    BackCont.shadcol = area_shadow_color();
-    TopCont.darkness = area_darkness();
-    TopCont.fog = sprFog102;
-    
-    RoomList = [];
-    
-    if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
-    
+	goal = 110;
+	safespawn = false;
+	
+	background_color = area_background_color();
+	BackCont.shadcol = area_shadow_color();
+	TopCont.darkness = area_darkness();
+	TopCont.fog = sprFog102;
+	
+	RoomList = [];
+	
+	if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
+	
 #define area_setup_floor
-     // Fix Depth:
-    if(styleb) depth = 8;
-    
-     // Footsteps:
-    material = (styleb ? 3 : 2);
-    
+	 // Fix Depth:
+	if(styleb) depth = 8;
+	
+	 // Footsteps:
+	material = (styleb ? 3 : 2);
+	
 #define area_start
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
@@ -278,41 +278,41 @@
 			instance_destroy();
 		}
 	}
-    
+	
 #define area_finish
-    lastarea = area;
-    lastsubarea = subarea;
-    
-     // Remember you were here:
-    with(GameCont) visited_lair = true;
-
-     // Area End:
-    if(subarea >= area_subarea()){
-        var n = area_next();
-        if(!is_array(n)) n = [n];
-        if(array_length(n) < 1) array_push(n, mod_current);
-        if(array_length(n) < 2) array_push(n, 1);
-        area = n[0];
-        subarea = n[1];
-    }
-
-     // Next Subarea: 
-    else subarea++;
-
+	lastarea = area;
+	lastsubarea = subarea;
+	
+	 // Remember you were here:
+	with(GameCont) visited_lair = true;
+	
+	 // Area End:
+	if(subarea >= area_subarea()){
+		var n = area_next();
+		if(!is_array(n)) n = [n];
+		if(array_length(n) < 1) array_push(n, mod_current);
+		if(array_length(n) < 2) array_push(n, 1);
+		area = n[0];
+		subarea = n[1];
+	}
+	
+	 // Next Subarea: 
+	else subarea++;
+	
 #define area_transit
-    global.resetSurf = true;
-    if(RoomDebug) GameCont.area = mod_current;
-
+	global.resetSurf = true;
+	if(RoomDebug) GameCont.area = mod_current;
+	
 #define area_effect(_vx, _vy)
-    var _x = _vx + random(game_width),
-        _y = _vy + random(game_height);
-
-     // Drips:
-    var f = instance_nearest(_x, _y, Floor);
-    with(f) instance_create(x + random(32), y + random(32), Drip);
-
-    return 30 + random(20);
-
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Drips:
+	var f = instance_nearest(_x, _y, Floor);
+	with(f) instance_create(x + random(32), y + random(32), Drip);
+	
+	return 30 + random(20);
+	
 #define area_begin_step
 	if(DebugLag) trace_time();
 	
@@ -330,167 +330,169 @@
 	if(DebugLag) trace_time("lair_area_step");
 	
 #define area_make_floor
-    var _x = 10016 - 16,
-        _y = 10016 - 16;
+	var	_x = 10016 - 16,
+		_y = 10016 - 16;
 		
-    RoomCenter = [_x, _y];
-    
-     // Remove Starter Floor:
-	with(id + 1) instance_destroy();
+	RoomCenter = [_x, _y];
 	
-     // Spawn Rooms:
-    if(array_length(RoomList) < 4){
-        var k = "";
-        do k = lq_get_key(RoomType, irandom(lq_size(RoomType) - 1));
-        until (lq_get(RoomType, k).special == false);
-        room_create(irandom_range(-1, 1), irandom_range(-1, 1), k);
-    }
+	 // Remove Starter Floor:
+	if(instance_is(self + 1, Floor)){
+		instance_delete(self + 1);
+	}
 	
-     // Build Rooms:
-    else{
-        var _done = true;
+	 // Spawn Rooms:
+	if(array_length(RoomList) < 4){
+		var k = "";
+		do k = lq_get_key(RoomType, irandom(lq_size(RoomType) - 1));
+		until (lq_get(RoomType, k).special == false);
+		room_create(irandom_range(-1, 1), irandom_range(-1, 1), k);
+	}
+	
+	 // Build Rooms:
+	else{
+		var _done = true;
 		
-         // Push Rooms Apart:
-        with(RoomList){
-            var _x1 = x - 1,
-                _y1 = y - 1,
-                _x2 = _x1 + (w + 2),
-                _y2 = _y1 + (h + 2);
+		 // Push Rooms Apart:
+		with(RoomList){
+			var	_x1 = x - 1,
+				_y1 = y - 1,
+				_x2 = _x1 + (w + 2),
+				_y2 = _y1 + (h + 2);
 				
-            with(RoomList) if(self != other){
-                if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
-                    if(type != "Start"){
-                        var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
-                        if(chance(1, 2)){
-                            _dir += choose(-90, -90, 90, 90, 180);
-                        }
+			with(RoomList) if(self != other){
+				if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
+					if(type != "Start"){
+						var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
+						if(chance(1, 2)){
+							_dir += choose(-90, -90, 90, 90, 180);
+						}
 						
-                        x += lengthdir_x(1, _dir);
-                        y += lengthdir_y(1, _dir);
-                    }
+						x += lengthdir_x(1, _dir);
+						y += lengthdir_y(1, _dir);
+					}
 					
-                    _done = false;
-                }
-            }
-            y = min(0 - floor(h / 2), y);
-        }
+					_done = false;
+				}
+			}
+			y = min(0 - floor(h / 2), y);
+		}
 		
-         // Special Rooms:
-        if(_done){
-            var _boss = false,
-                _strt = false;
+		 // Special Rooms:
+		if(_done){
+			var	_boss = false,
+				_strt = false;
 				
-            with(RoomList){
-                if(type == "Boss") _boss = true;
-                else if(type == "Start") _strt = true;
-            }
+			with(RoomList){
+				if(type == "Boss") _boss = true;
+				else if(type == "Start") _strt = true;
+			}
 			
-             // Starting Room:
-            if(!_strt){
-                var _maxY = 0;
-                with(RoomList) if(y > _maxY) _maxY = y + floor(h / 2);
-                with(RoomList) y -= _maxY;
+			 // Starting Room:
+			if(!_strt){
+				var _maxY = 0;
+				with(RoomList) if(y > _maxY) _maxY = y + floor(h / 2);
+				with(RoomList) y -= _maxY;
 				
-                room_create(-1, -1, "Start");
+				room_create(-1, -1, "Start");
 				
-                _done = false;
-            }
+				_done = false;
+			}
 			
-             // Boss Room:
-            else if(!_boss){
-                var _maxDis = -1,
-                    _furthest = noone;
+			 // Boss Room:
+			else if(!_boss){
+				var	_maxDis = -1,
+					_furthest = noone;
 					
-                with(RoomList){
-                    var _dis = point_distance(0, 0, x + (w / 2), y + (h / 2));
-                    if(_dis > _maxDis){
-                        _furthest = self;
-                        _maxDis = _dis;
-                    }
-                }
+				with(RoomList){
+					var _dis = point_distance(0, 0, x + (w / 2), y + (h / 2));
+					if(_dis > _maxDis){
+						_furthest = self;
+						_maxDis = _dis;
+					}
+				}
 				
-                with(_furthest){
-                    room_create(x + sign(x), y + sign(y), "Boss");
-                }
+				with(_furthest){
+					room_create(x + sign(x), y + sign(y), "Boss");
+				}
 				
-                _done = false;
-            }
-        }
+				_done = false;
+			}
+		}
 		
-        if(_done){
-             // Determine Hallway Connections:
-            for(var i = 0; i <= 1; i++){
-                with(RoomList) if(!is_object(link)){
-                    var _minDis = 10000;
-                    with(RoomList) if(self != other){
-                        var _dis = point_distance(x + (w / 2), y + (h / 2), other.x + (other.w / 2), other.y + (other.h / 2));
-                        if(_dis < _minDis && (!is_object(link) || i)){
-                            other.link = self;
-                            _minDis = _dis;
-                        }
-                    }
-                    with(link) if(link == other) link = noone;
-                }
-            }
+		if(_done){
+			 // Determine Hallway Connections:
+			for(var i = 0; i <= 1; i++){
+				with(RoomList) if(!is_object(link)){
+					var _minDis = 10000;
+					with(RoomList) if(self != other){
+						var _dis = point_distance(x + (w / 2), y + (h / 2), other.x + (other.w / 2), other.y + (other.h / 2));
+						if(_dis < _minDis && (!is_object(link) || i)){
+							other.link = self;
+							_minDis = _dis;
+						}
+					}
+					with(link) if(link == other) link = noone;
+				}
+			}
 			
-            if(!RoomDebug || button_pressed(0, "east")){
-                 // Make Rooms:
-                var o = 32;
-                styleb = false;
-                with(RoomList){
-                    for(var _fy = 0; _fy < array_length(layout); _fy++){
-                        var l = layout[_fy];
-                        for(var _fx = 0; _fx < array_length(l); _fx++){
-                            if(l[_fx]){
-                                array_push(floors, instance_create(_x + ((x + _fx) * o), _y + ((y + _fy) * o), Floor));
-                            }
-                        }
-                    }
-                }
-    			
-                 // Make Hallways:
-                styleb = true;
-                with(RoomList) with(link){
-                    var _fx = x + floor(w / 2),
-                        _fy = y + floor(h / 2),
-                        _tx = other.x + floor(other.w / 2),
-                        _ty = other.y + floor(other.h / 2),
-                        _dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
-                        _tries = 100;
-						
-                    while(_tries-- > 0){
-                        instance_create(_x + (_fx * o), _y + (_fy * o), Floor);
-						
-                         // Turn Corner:
-                        if(_fx == _tx || _fy == _ty) _dir = point_direction(_fx, _fy, _tx, _ty);
-    					
-                         // End Hallway & Spawn Door:
-                        for(var a = _dir; a < _dir + 360; a += 90){
-                            var _dx = _fx - other.x + lengthdir_x(1, a),
-                                _dy = _fy - other.y + lengthdir_y(1, a);
-        						
-                            if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
-                                if(other.layout[_dy, _dx]){
-                                	door_create(_x + 16 + (_fx * o), _y + 16 + (_fy * o), a);
-                                    _tries = 0;
-                                    break;
-                                }
-                            }
-                        }
-						
-                        _fx += lengthdir_x(1, _dir);
-                        _fy += lengthdir_y(1, _dir);
-                        if(_fx == _tx && _fy == _ty) break;
-                    }
-                }
+			if(!RoomDebug || button_pressed(0, "east")){
+				 // Make Rooms:
+				var o = 32;
+				styleb = false;
+				with(RoomList){
+					for(var _fy = 0; _fy < array_length(layout); _fy++){
+						var l = layout[_fy];
+						for(var _fx = 0; _fx < array_length(l); _fx++){
+							if(l[_fx]){
+								array_push(floors, instance_create(_x + ((x + _fx) * o), _y + ((y + _fy) * o), Floor));
+							}
+						}
+					}
+				}
 				
-                 // End Level Gen:
-                with(FloorMaker) instance_destroy();
-            }
+				 // Make Hallways:
+				styleb = true;
+				with(RoomList) with(link){
+					var	_fx = x + floor(w / 2),
+						_fy = y + floor(h / 2),
+						_tx = other.x + floor(other.w / 2),
+						_ty = other.y + floor(other.h / 2),
+						_dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
+						_tries = 100;
+						
+					while(_tries-- > 0){
+						instance_create(_x + (_fx * o), _y + (_fy * o), Floor);
+						
+						 // Turn Corner:
+						if(_fx == _tx || _fy == _ty) _dir = point_direction(_fx, _fy, _tx, _ty);
+						
+						 // End Hallway & Spawn Door:
+						for(var a = _dir; a < _dir + 360; a += 90){
+							var	_dx = _fx - other.x + lengthdir_x(1, a),
+								_dy = _fy - other.y + lengthdir_y(1, a);
+								
+							if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
+								if(other.layout[_dy, _dx]){
+									door_create(_x + 16 + (_fx * o), _y + 16 + (_fy * o), a);
+									_tries = 0;
+									break;
+								}
+							}
+						}
+						
+						_fx += lengthdir_x(1, _dir);
+						_fy += lengthdir_y(1, _dir);
+						if(_fx == _tx && _fy == _ty) break;
+					}
+				}
+				
+				 // End Level Gen:
+				with(FloorMaker) instance_destroy();
+			}
 			
-            else if(RoomDebug && button_pressed(0, "west")) RoomList = [];
-        }
-    }
+			else if(RoomDebug && button_pressed(0, "west")) RoomList = [];
+		}
+	}
 	
 #define area_pop_props
 	var	_x = x + 16,
@@ -502,8 +504,8 @@
 	}
 	
 #define area_pop_enemies
-    var _x = x + 16,
-        _y = y + 16;
+	var	_x = x + 16,
+		_y = y + 16;
 		
 	 // Loop Spawns:
 	if(GameCont.loops > 0 && chance(1, 4)){
@@ -511,44 +513,44 @@
 		else instance_create(_x, _y, choose(Molesarge, Jock));
 	}
 	
-     // Rat packs:
-    if(!place_meeting(x, y, Wall) && chance(1, 20)){
-        repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
-    }
+	 // Rat packs:
+	if(!place_meeting(x, y, Wall) && chance(1, 20)){
+		repeat(irandom_range(3, 7)) instance_create(_x, _y, Rat);
+	}
 	
-     // Spawn Cats Underground:
-    else if(chance(1, 8)){
-        with(obj_create(_x, _y, "Cat")){
-            if(chance(1, 2)){
-                active = false;
-                cantravel = true;
-                alarm1 = random_range(30, 900);
-            }
-        }
-    }
+	 // Spawn Cats Underground:
+	else if(chance(1, 8)){
+		with(obj_create(_x, _y, "Cat")){
+			if(chance(1, 2)){
+				active = false;
+				cantravel = true;
+				alarm1 = random_range(30, 900);
+			}
+		}
+	}
 	
 #define area_pop_extras
-     // Populate Rooms:
-    with(RoomList){
-        room_pop();
-        
+	 // Populate Rooms:
+	with(RoomList){
+		room_pop();
+		
 		// Cat Spawners:
-        with(floors) if(instance_exists(self)){
-            if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
-                if(
-                    chance(1, 16) ||
-                    (
-                        chance(1, 2) &&
-                        array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_matching(CustomObject, "name", "CatHole"))) <= 0
-                    )
-                ){
-                    obj_create(x + 16, y + 16, "CatHole");
-                }
-            }
-        }
-    }
-    
-     // Emergency Enemy Reserves:
+		with(floors) if(instance_exists(self)){
+			if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop)){
+				if(
+					chance(1, 16) ||
+					(
+						chance(1, 2) &&
+						array_length(instance_rectangle(x - 96, y - 96, x + 96, y + 96, instances_matching(CustomObject, "name", "CatHole"))) <= 0
+					)
+				){
+					obj_create(x + 16, y + 16, "CatHole");
+				}
+			}
+		}
+	}
+	
+	 // Emergency Enemy Reserves:
 	while(instance_number(enemy) < 24){
 		with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorLair))){
 			if(!place_meeting(x, y, Wall)){
@@ -556,643 +558,678 @@
 			}
 		}
 	}
-    
-     // Important Door Stuff:
-    with(instances_matching(CustomHitme, "name", "CatDoor")){
-         // Remove Blocking Walls:
-        var a = image_angle - (90 * image_yscale),
-            _x = floor((x + lengthdir_x(8, a) + lengthdir_x(16, image_angle)) / 16) * 16,
-            _y = floor((y + lengthdir_y(8, a) + lengthdir_y(16, image_angle)) / 16) * 16;
-			
-        if(position_meeting(_x, _y, Wall)){
-            with(instance_nearest_bbox(_x, _y, Wall)){
-            	instance_destroy();
-            }
-        }
-		
-         // Make sure door isn't placed weirdly:
-        with(instances_at((bbox_left + bbox_right + 1) / 2, bbox_bottom - 5, Floor)){
-            for(var i = 0; i <= 180; i += 180){
-                var a = other.image_angle - 90 + i;
-                if(position_meeting(x + lengthdir_x(32, a), y + lengthdir_y(32, a), Floor)){
-                    instance_delete(other);
-                    break;
-                }
-            }
-            break;
-        }
-    }
 	
-     // Delete stuck dudes:
-    with(enemy) if place_meeting(x, y, Wall){
-        instance_delete(id);
-    }
-    
-     // Light up specific things:
-    with(instances_matching([chestprop, RadChest], "", null)){
-        obj_create(x, y - 32, "CatLight");
-    }
-    with(obj_create(10016, 10016 - 60, "CatLight")){
+	 // Important Door Stuff:
+	with(instances_matching(CustomHitme, "name", "CatDoor")){
+		 // Remove Blocking Walls:
+		var	_ang = image_angle - (90 * image_yscale);
+		with(instances_at(
+			x + lengthdir_x(8, _ang) + lengthdir_x(8, image_angle),
+			y + lengthdir_y(8, _ang) + lengthdir_y(8, image_angle),
+			Wall
+		)){
+			instance_destroy();
+		}
+		
+		 // Make sure door isn't placed weirdly:
+		with(instances_at(bbox_center_x, bbox_bottom - 5, Floor)){
+			for(var i = 0; i <= 180; i += 180){
+				var a = other.image_angle - 90 + i;
+				if(position_meeting(x + lengthdir_x(32, a), y + lengthdir_y(32, a), Floor)){
+					instance_delete(other);
+					break;
+				}
+			}
+			break;
+		}
+	}
+	
+	 // Fix stuck dudes:
+	with(enemy) if(place_meeting(x, y, Wall)){
+		if(!instance_budge(Wall, -1)){
+			instance_delete(id);
+		}
+	}
+	
+	 // Light up specific things:
+	with(instances_matching([chestprop, RadChest], "", null)){
+		obj_create(x, y - 32, "CatLight");
+	}
+	with(obj_create(10016, 10016 - 60, "CatLight")){
 		w1 = 24;
 		w2 = 60;
 		h1 = 64;
 		h2 = 16;
-    }
-
-
+	}
+	
+	
 /// Rooms
 #define room_create(_x, _y, _type)
-    with({}){
-        x = _x;
-        y = _y;
-        type = _type;
-        link = noone;
-        floors = [];
-
-         // Grab Room Vars:
-        if(lq_exists(RoomType, type)){
-            var t = lq_get(RoomType, type);
-            for(var i = 0; i < lq_size(t); i++){
-                var k = lq_get_key(t, i);
-                lq_set(self, k, lq_get(t, k));
-            }
-        }
-
-         // Randomize Room:
-        else{
-            w = irandom_range(3, 6);
-            h = irandom_range(3, 6);
-            carpet = 1/4;
-            special = false;
-        }
-
-         // Carpet Chance:
-        if(chance(carpet, 1)) carpeted = true;
-        else carpeted = false;
-
-         // Floor Layout:
-        if("layout" not in self){
-            layout = [];
-            for(var _fy = 0; _fy < h; _fy++){
-                for(var _fx = 0; _fx < w; _fx++){
-                    layout[_fy, _fx] = true;
-                }
-            }
-        }
-
-        array_push(RoomList, self);
-        return self;
-    }
-
+	with({}){
+		x = _x;
+		y = _y;
+		type = _type;
+		link = noone;
+		floors = [];
+		
+		 // Grab Room Vars:
+		if(lq_exists(RoomType, type)){
+			var t = lq_get(RoomType, type);
+			for(var i = 0; i < lq_size(t); i++){
+				var k = lq_get_key(t, i);
+				lq_set(self, k, lq_get(t, k));
+			}
+		}
+		
+		 // Randomize Room:
+		else{
+			w = irandom_range(3, 6);
+			h = irandom_range(3, 6);
+			carpet = 1/4;
+			special = false;
+		}
+		
+		 // Carpet Chance:
+		if(chance(carpet, 1)) carpeted = true;
+		else carpeted = false;
+		
+		 // Floor Layout:
+		if("layout" not in self){
+			layout = [];
+			for(var _fy = 0; _fy < h; _fy++){
+				for(var _fx = 0; _fx < w; _fx++){
+					layout[_fy, _fx] = true;
+				}
+			}
+		}
+		
+		array_push(RoomList, self);
+		return self;
+	}
+	
 #define create_enemies(_x, _y, _num)
-    var _e = choose("Cat", "Bat");
-    repeat(_num + round(random_range(1.5, 2) * GameCont.loops)) obj_create(_x, _y, _e);
-
+	var _e = choose("Cat", "Bat");
+	repeat(_num + round(random_range(1.5, 2) * GameCont.loops)){
+		obj_create(_x, _y, _e);
+	}
+	
 #define room_pop
-    var o = 32,
-        _x = RoomCenter[0] + (x * o), // Left
-        _y = RoomCenter[1] + (y * o), // Top
-        _cx = _x + (w/2 * o), // Center X
-        _cy = _y + (h/2 * o); // Center Y
-
-    switch(type){
-         // IMPORTANT ROOMS
-        case "Start" : {
-        	obj_create(_cx, _cy, "SewerRug");
-        	break;
-        }
-         
-        case "Boss" : {
-            obj_create(_cx, _cy, "CatHoleBig");
-
-             // Corner Columns:
-            instance_create(_x + 80,           _y + 80,           Wall);
-            instance_create(_x + (w * o) - 96, _y + 80,           Wall);
-            instance_create(_x + 80,           _y + (h * o) - 96, Wall);
-            instance_create(_x + (w * o) - 96, _y + (h * o) - 96, Wall);
-
-             // Spawn backup chests
-            var _chest = [RadChest,AmmoChest,WeaponChest],
-                _d = irandom(3);
-            for (var _i = 0; _i <= 2; _i++)
-                if !instance_exists(_chest[_i]) instance_create(_cx + lengthdir_x(176,(_i+_d)*90), _cy + lengthdir_y(176,(_i+_d)*90),_chest[_i]);
-
-            break;
-        }
-         
-         // SMALL ROOMS
-        case "SmallClutter" : {
-             // Props:
-            repeat(irandom_range(2, 4)){
-                var _prop = choose("ChairFront", "ChairSide", "Table", "Cabinet"),
-                    _px = _cx + orandom(24),
-                    _py = _cy + orandom(24);
-                if is_string(_prop) obj_create(_px, _py, _prop);
-                else instance_create(_px, _py, _prop);
-            }
-             // Enemies:
-            create_enemies(_cx, _cy, irandom(3));
-            
-            break;
-        }
-            
-        case "MediumClutter" : {
-             // Props:
-            repeat(irandom_range(2, 6)){
-                var _prop = choose("ChairFront", "ChairSide", "Table", "Cabinet"),
-                    _px = _cx + orandom(32),
-                    _py = _cy + orandom(32);
-                if is_string(_prop) obj_create(_px, _py, _prop);
-                else instance_create(_px, _py, _prop);
-            }
-             // Enemies:
-            create_enemies(_cx, _cy, irandom(5));
-            
-            break;
-        }
-        
-        case "SmallPillars" : {
-             // Walls:
-            instance_create(_x + 16,            _y + 16,            Wall);
-            instance_create(_x + 64,            _y + 16,            Wall);
-            instance_create(_x + 16,            _y + 64,            Wall);
-            instance_create(_x + 64,            _y + 64,            Wall);
-             // Enemies:
-            create_enemies(_cx, _cy, 1);
-            
-            break;
-        }
-            
-        case "SmallRing" : {
-             // Walls:
-            for (var xx = 1; xx <= 2; xx++)
-                for (var yy = 1; yy <= 2; yy++)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-            break;
-        }
-            
-        case "WideSmallRing" : {
-             // Walls:
-            for (var xx = 2; xx <= 3; xx++)
-                for (var yy = 1; yy <= 2; yy++)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-
+	var	_x = RoomCenter[0] + (x * 32), // Left
+		_y = RoomCenter[1] + (y * 32), // Top
+		_w = w * 32, // Width
+		_h = h * 32, // Height
+		_cx = _x + (_w / 2), // Center X
+		_cy = _y + (_h / 2); // Center Y
+		
+	switch(type){
+		
+		/// IMPORTANT ROOMS
+		case "Start":
+			
+			obj_create(_cx, _cy, "SewerRug");
+			
+			break;
+			
+		case "Boss":
+			
+			obj_create(_cx, _cy, "CatHoleBig");
+			
+			 // Corner Columns:
+			instance_create(_x + 80,      _y + 80,      Wall);
+			instance_create(_x + _w - 96, _y + 80,      Wall);
+			instance_create(_x + 80,      _y + _h - 96, Wall);
+			instance_create(_x + _w - 96, _y + _h - 96, Wall);
+			
+			 // Spawn backup chests
+			var	_chest = [RadChest, AmmoChest, WeaponChest],
+				_dis = 176,
+				_dir = round(random(360) / 90) * 90;
+				
+			for(var i = 0; i < array_length(_chest); i++){
+				if(!instance_exists(_chest[i])){
+					instance_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
+				}
+			}
+			
+			break;
+			
+		/// SMALL ROOMS
+		case "SmallClutter":
+			
+			 // Props:
+			repeat(irandom_range(2, 4)){
+				obj_create(
+					_cx + orandom(24),
+					_cy + orandom(24),
+					choose("ChairFront", "ChairSide", "Table", "Cabinet")
+				);
+			}
+			
 			 // Enemies:
-			create_enemies(_cx + choose(-32, 32), _cy, 1);
-            break;
-        }
-            
-        case "TallSmallRing" : {
-             // Walls:
-            for (var xx = 1; xx <= 2; xx++)
-                for (var yy = 2; yy <= 3; yy++)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-
+			create_enemies(_cx, _cy, irandom(3));
+			
+			break;
+			
+		case "MediumClutter":
+			
+			 // Props:
+			repeat(irandom_range(2, 6)){
+				obj_create(
+					_cx + orandom(32),
+					_cy + orandom(32),
+					choose("ChairFront", "ChairSide", "Table", "Cabinet")
+				);
+			}
+			
 			 // Enemies:
-			create_enemies(_cx, _cy + choose(-32, 32), 1);
-            break;
-        }
-            
-        case "MediumRing" : {
-            for (var xx = 2; xx <= 3; xx++)
-                for (var yy = 2; yy <= 3; yy++)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-            break;
-        }
-         
-        case "Table" : {
-            with(obj_create(_cx, _cy,"NewTable")){
-                if(chance(4, 5)){
-                    obj_create(x + orandom(2), y - 18 + orandom(2), "ChairFront");
-                }
-                obj_create(x, y-32, "CatLight");
-            }
-             // Enemies:
-            create_enemies(_cx, _cy, 1 + irandom(2));
-            
-            break;
-        }
-        
-        case "Toilet" : {
-             // Walls:
-            for (var yy = 0; yy <= 1; yy++)
-                with instance_create(_x + o, _y + yy *16, Wall)
-                    instance_create(x, y, NOWALLSHEREPLEASE);
-            with instance_create(_x + 80, _y + 3 * 16, Wall)
-                instance_create(x, y, NOWALLSHEREPLEASE);
-
-             // Props:
-            with(obj_create(_x + 16 + orandom(2), _y + 12, "ChairFront")){
-                with(obj_create(x, y - 28, "CatLight")){
-            		w2 = 18;
-            		h2 = 6;
-                }
-            }
-
-             // Enemies:
-            create_enemies(_x, _y, 1);
-            
-            break;
-        }
-        
-        case "SmallTriangle" : {
-             // Walls:
-            for (i = 1; i <= 5; i += 2)
-                with instance_create(_x + i * 16, _y + (i - 1) * 16, Wall)
-                    instance_create(x, y, NOWALLSHEREPLEASE);
-             // Props:
-             // Enemies:
-            create_enemies(_cx, _cy, 1 + irandom(1));
-            
-            break;
-        }
-        
-        case "Vault": {
-        	 // Corners:
-        	instance_create(_x,                _y,                Wall);
-        	instance_create(_x + (w * o) - 16, _y,                Wall);
-        	instance_create(_x,                _y + (h * o) - 16, Wall);
-        	instance_create(_x + (w * o) - 16, _y + (h * o) - 16, Wall);
-        	
-        	 // Valuables:
-        	var	_ang = random(360),
-        		_num = random_range(2, 4);
-        		
-        	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-        		var l = random(24);
-        		obj_create(_cx + lengthdir_x(l, d), _cy + lengthdir_y(l, d), choose("PizzaStack", "PizzaStack", "PizzaChest", MoneyPile));
-        	}
-        	
-        	 // Center Floor:
-        	with(floors) if(position_meeting(_cx, _cy, id)){
+			create_enemies(_cx, _cy, irandom(5));
+			
+			break;
+			
+		case "SmallPillars":
+			
+			 // Walls:
+			instance_create(_x + 16,      _y + 16,      Wall);
+			instance_create(_x + _w - 32, _y + 16,      Wall);
+			instance_create(_x + 16,      _y + _h - 32, Wall);
+			instance_create(_x + _w - 32, _y + _h - 32, Wall);
+			
+			 // Enemies:
+			create_enemies(_cx, _cy, 1);
+			
+			break;
+			
+		case "SmallRing":
+		case "WideSmallRing":
+		case "TallSmallRing":
+		case "MediumRing":
+			
+			 // Center Walls:
+			instance_create(_cx - 16, _cy - 16, Wall);
+			instance_create(_cx - 16, _cy,      Wall);
+			instance_create(_cx,      _cy - 16, Wall);
+			instance_create(_cx,      _cy,      Wall);
+			
+			 // Enemies:
+			switch(type){
+				case "WideSmallRing":
+					create_enemies(_cx + choose(-32, 32), _cy, 1);
+					break;
+					
+				case "TallSmallRing":
+					create_enemies(_cx, _cy + choose(-32, 32), 1);
+					break;
+			}
+			
+			break;
+			
+		case "Table":
+			
+			 // Props:
+			with(obj_create(_cx, _cy, "NewTable")){
+				if(chance(4, 5)){
+					obj_create(x + orandom(2), y - 18 + orandom(2), "ChairFront");
+				}
+				obj_create(x, y - 32, "CatLight");
+			}
+			
+			 // Enemies:
+			create_enemies(_cx, _cy, 1 + irandom(2));
+			
+			break;
+			
+		case "Toilet":
+			
+			 // Walls:
+			for(var _oy = 0; _oy <= 1; _oy++){
+				instance_create(_x + 32, _y + (_oy * 16), Wall);
+			}
+			instance_create(_x + _w - 16, _y + 48, Wall);
+			
+			 // Props:
+			with(obj_create(_x + 16 + orandom(2), _y + 12, "ChairFront")){
+				with(obj_create(x, y - 28, "CatLight")){
+					w2 = 18;
+					h2 = 6;
+				}
+			}
+			
+			 // Enemies:
+			create_enemies(_x, _y, 1);
+			
+			break;
+			
+		case "SmallTriangle":
+			
+			 // Walls:
+			for(_off = 0; _off < min(_w, _h); _off += 32){
+				instance_create(_x + _off + 16, _y + _off, Wall);
+			}
+			
+			 // Enemies:
+			create_enemies(_cx, _cy, 1 + irandom(1));
+			
+			break;
+			
+		case "Vault":
+			
+			 // Corner Walls:
+			instance_create(_x,           _y,           Wall);
+			instance_create(_x + _w - 16, _y,           Wall);
+			instance_create(_x,           _y + _h - 16, Wall);
+			instance_create(_x + _w - 16, _y + _h - 16, Wall);
+			
+			 // Valuables:
+			var	_ang = random(360),
+				_num = random_range(2, 4);
+				
+			for(var d = _ang; d < _ang + 360; d += (360 / _num)){
+				var l = random(24);
+				obj_create(
+					_cx + lengthdir_x(l, d),
+					_cy + lengthdir_y(l, d),
+					choose("PizzaStack", "PizzaStack", "PizzaChest", MoneyPile)
+				);
+			}
+			
+			 // Center Floor:
+			with(instances_at(_cx, _cy, floors)){
 				sprite_index = sprFloor102B;
 				material = 6;
-        	}
-        	
-        	break;
-        }
-            
-         // LARGE ROOMS
-        case "SmallAtrium" : {
-             // Walls:
-                 // Horizontal:
-                for (var xx = 4; xx <= 7; xx += 3)
-                    for (var yy = 3; yy <= 8; yy += 5)
-                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                            instance_create(x, y, NOWALLSHEREPLEASE);
-                 // Vertical:
-                for (var xx = 3; xx <= 8; xx += 5)
-                    for (var yy = 4; yy <= 7; yy += 3)
-                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                            instance_create(x, y, NOWALLSHEREPLEASE);
-                 // Extras:
-                for (var xx = 3; xx <= 8; xx += 5)
-                    for (var yy = 3; yy <= 8; yy += 5)
-                        with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                            instance_create(x, y, NOWALLSHEREPLEASE);
-            for (var xx = 5; xx <= 6; xx++)
-                for (var yy = 5; yy <= 6; yy++)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall){
-                        if !place_meeting(x, y, Floor)
-                            instance_delete(id);
-                        else instance_create(x, y, NOWALLSHEREPLEASE);
-                    }
-                    
-             // Enemies & Lights:
-            var l = 72;
-            for (var d = 0; d <= 360; d += 90){
-                var _ox = _cx + lengthdir_x(l, d),
-                    _oy = _cy + lengthdir_y(l, d);
-
-                create_enemies(_ox, _oy, 1 + irandom(1));
-
-                 // Lights:
-                with(obj_create(_ox, _oy - 44, "CatLight")){
-            		h1 = 48;
-                }
-            }
-                
-            break;
-        }
-        
-        case "Lounge" : {
-             // Walls
-            for (var xx = 2; xx <= 7; xx += 5)
-                for (var yy = 0; yy <= 5; yy += 5)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-             // Props:
-            with obj_create(_cx + orandom(2), _y + 16 + orandom(2), "Couch")
-                obj_create(x + orandom(2), y + 20 + orandom(2), "NewTable");
-                
-             // Enemies:
-            create_enemies(_cx, _y + 16, 2);
-            
-            break;  
-        }
-        
-        case "Dining" : {
-            with(obj_create(_cx, _cy, "NewTable")){
-                for(var _r = -1; _r <= 1; _r += 2){
-                    with(obj_create(x + (24 * _r), y + orandom(2), "ChairSide")) image_xscale = _r;
-                    obj_create(x + (12 * _r), y - 18 + orandom(2), "ChairFront");
-                }
-                obj_create(x, y - 32, "CatLight");
-            }
-             // Enemies:
-            create_enemies(_cx, _cy, 1 + irandom(1));
-            
-            break;
-        }
-        
-        case "Cafeteria" : {
-             // Walls:
-            for (var i = 0; i <= 1; i++)
-                for (var xx = 0; xx <= 7; xx += 7)
-                    for (var yy = 3; yy <= 4; yy++)
-                        with instance_create(_x + xx * 16, _y + yy * 16 + i * 96, Wall)
-                            instance_create(x, y, NOWALLSHEREPLEASE);
-             // Props:
-                 // Vending machine:
-                with instance_create(_x + 48, _y + 16, SodaMachine){
-                    spr_idle = spr.SodaMachineIdle;
-                    spr_hurt = spr.SodaMachineHurt;
-                    spr_dead = spr.SodaMachineDead;
-                    sprite_index = spr_idle;
-                }
-                 // Tables and chairs:
-                for (var i = 0; i <= 2; i++)
-                    with obj_create(_cx + orandom(2), _cy - 16 + i * o + orandom(2), "NewTable"){
-                         // Chairs:
-                        if(chance(2, 5)) with obj_create(x - 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = -1;
-                        if(chance(2, 5)) with obj_create(x + 20 + orandom(2), y + orandom(2), "ChairSide") image_xscale = 1;
-                        if(chance(2, 5)) obj_create(x + orandom(2), y - 14 + orandom(2), "ChairFront");
-                         // Lights:
-                        if(chance(2, 3)) obj_create(x, y - o, "CatLight");
-                    }
-             // Enemies:
-            create_enemies(_cx, _cy, 3 + irandom(1));
-            break;
-        }
-
-        case "Office" : {
-             // Walls:
-            for (var xx = 1; xx <= 10; xx += 9)
-                for (var yy = 2; yy <= 7; yy += 5){
-                    instance_create(_x + xx * 16, _y + yy * 16, Wall);
-                    instance_create(_x + xx * 16, _y + yy * 16, NOWALLSHEREPLEASE);
-                }
-             // Props:
-            with obj_create(_cx + orandom(2), _cy - 38 + orandom(2), "NewTable"){
-                obj_create(x + orandom(4), y - 16 + orandom(2), choose("ChairFront","ChairFront","ChairSide"));
-                for (var xx = -3; xx <= 3; xx += 6)
-                    obj_create(_cx + xx * 16, _y + 42 + orandom(2), "Cabinet");
-                    
-                obj_create(x, y - 30, "CatLight");
-            }
-             // Enemies:
-            create_enemies(_cx, _cy, 1 + irandom(1));
-            
-            break;
-        }
-        
-        case "Garage" : {
-             // Walls:
-            for (var xx = 3; xx <= 4; xx++)
-                for (var yy = 0; yy <= 5; yy += 5)
-                    with instance_create(_x + xx * 16, _y + yy * 16, Wall)
-                        instance_create(x, y, NOWALLSHEREPLEASE);
-             // Props:
-                 // Cars:
-                for (var yy = 0; yy <= 1; yy++)
-                    instance_create(_x + o + orandom(2), _y + yy * o + o + orandom(2), Car);
-                 // Tires:
-                repeat(irandom_range(2, 4))
-                    with instance_create(_x + 90 + irandom(28), _y + 10 + irandom(86), Tires)
-                        if(chance(1, 10)){
-                            obj_create(x, y, choose("ChairFront","ChairSide"));
-                            instance_delete(id);
-                        }
-             // Lights:
-            for (var xx = -1; xx <= 1; xx += 2)
-                obj_create(_cx + xx * 40, _cy - o, "CatLight");
-            
-             // Enemies:
-            create_enemies(_cx, _cy, 1);
-            
-            break;
-        }
-            
-        case "LargeRing" : {
-             // Walls:
-            for (var xx = -2; xx <= 1; xx += 3)
-                for (var yy = -2; yy <= 1; yy += 3)
-                    with instance_create(_cx + xx * 16, _cy + yy * 16, Wall){
-                        if !place_meeting(x, y, Floor)
-                            instance_delete(id);
-                        else instance_create(x, y, NOWALLSHEREPLEASE);
-                    }
-
+			}
+			
+			break;
+			
+		/// LARGE ROOMS
+		case "SmallAtrium":
+			
+			 // Walls:
+			for(var _ox = -40; _ox <= 40; _ox += 80){
+				for(var _oy = -40; _oy <= 40; _oy += 80){
+					instance_create(_cx + _ox - 8,                    _cy + _oy - 8,                    Wall);
+					instance_create(_cx + _ox - 8 - (16 * sign(_ox)), _cy + _oy - 8,                    Wall);
+					instance_create(_cx + _ox - 8,                    _cy + _oy - 8 - (16 * sign(_oy)), Wall);
+				}
+			}
+			
+			 // Center Walls:
+			instance_create(_cx - 16, _cy - 16, Wall);
+			instance_create(_cx - 16, _cy,      Wall);
+			instance_create(_cx,      _cy - 16, Wall);
+			instance_create(_cx,      _cy,      Wall);
+			
+			 // Enemies & Lights:
+			for(var d = 0; d <= 360; d += 90){
+				var	_ox = _cx + lengthdir_x((_w / 2) - 24, d),
+					_oy = _cy + lengthdir_y((_h / 2) - 24, d);
+					
+				create_enemies(_ox, _oy, 1 + irandom(1));
+				
+				 // Lights:
+				with(obj_create(_ox, _oy - 44, "CatLight")){
+					h1 = 48;
+				}
+			}
+			
+			break;
+			
+		case "Lounge":
+			
+			 // Walls:
+			instance_create(_x + 32,      _y,           Wall);
+			instance_create(_x + 32,      _y + _h - 48, Wall);
+			instance_create(_x + _w - 48, _y,           Wall);
+			instance_create(_x + _w - 48, _y + _h - 48, Wall);
+			
+			 // Props:
+			with(obj_create(_cx + orandom(2), _y + 16 + orandom(2), "Couch")){
+				obj_create(x + orandom(2), y + 20 + orandom(2), "NewTable");
+			}
+			
+			 // Enemies:
+			create_enemies(_cx, _y + 16, 2);
+			
+			break;
+			
+		case "Dining":
+			
+			 // Props:
+			with(obj_create(_cx, _cy, "NewTable")){
+				for(var _side = -1; _side <= 1; _side += 2){
+					with(obj_create(x + (24 * _side), y + orandom(2), "ChairSide")){
+						image_xscale = _side;
+					}
+					obj_create(x + (12 * _side), y - 18 + orandom(2), "ChairFront");
+				}
+				obj_create(x, y - 32, "CatLight");
+			}
+			
+			 // Enemies:
+			create_enemies(_cx, _cy, 1 + irandom(1));
+			
+			break;
+			
+		case "Cafeteria":
+			
+			 // Walls:
+			for(var _oy = 1; _oy <= 2; _oy++){
+				instance_create(_x,           _y + (_oy * 16) + 32,      Wall);
+				instance_create(_x + _w - 16, _y + (_oy * 16) + 32,      Wall);
+				instance_create(_x,           _y - (_oy * 16) + _h - 16, Wall);
+				instance_create(_x + _w - 16, _y - (_oy * 16) + _h - 16, Wall);
+			}
+			
+			/// Props:
+				
+				 // Vending machine:
+				with(instance_create(_x + 48, _y + 16, SodaMachine)){
+					spr_idle = spr.SodaMachineIdle;
+					spr_hurt = spr.SodaMachineHurt;
+					spr_dead = spr.SodaMachineDead;
+					sprite_index = spr_idle;
+				}
+				
+				 // Tables & Chairs:
+				for(var _oy = 80; _oy < _h - 32; _oy += 32){
+					with(obj_create(_cx + orandom(2), _y + _oy + orandom(2), "NewTable")){
+						 // Chairs:
+						for(var _side = -1; _side <= 1; _side += 2){
+							if(chance(2, 5)){
+								with(obj_create(x + (20 * _side) + orandom(2), y + orandom(2), "ChairSide")){
+									image_xscale = _side;
+								}
+							}
+						}
+						if(chance(2, 5)){
+							obj_create(x + orandom(2), y - 14 + orandom(2), "ChairFront");
+						}
+						
+						 // Lights:
+						if(chance(2, 3)){
+							obj_create(x, y - 32, "CatLight");
+						}
+					}
+				}
+				
+			 // Enemies:
+			create_enemies(_cx, _cy, 3 + irandom(1));
+			
+			break;
+			
+		case "Office":
+			
+			 // Walls:
+			instance_create(_x + 16,      _y + 32,      Wall);
+			instance_create(_x + _w - 32, _y + 32,      Wall);
+			instance_create(_x + 16,      _y + _h - 16, Wall);
+			instance_create(_x + _w - 32, _y + _h - 16, Wall);
+			
+			 // Props:
+			with(obj_create(_cx + orandom(2), _y + 26 + orandom(2), "NewTable")){
+				obj_create(
+					x + orandom(4),
+					y - 16 + orandom(2),
+					choose("ChairFront", "ChairFront", "ChairSide")
+				);
+				
+				 // Cabinets:
+				for(var _side = -1; _side <= 1; _side += 2){
+					obj_create(_cx + (_side * ((_w / 2) - 48)), _y + 42 + orandom(2), "Cabinet");
+				}
+				
+				 // Light:
+				obj_create(x, y - 30, "CatLight");
+			}
+			
+			 // Enemies:
+			create_enemies(_cx, _cy, 1 + irandom(1));
+			
+			break;
+			
+		case "Garage":
+			
+			 // Walls:
+			instance_create(_cx - 16, _y,           Wall);
+			instance_create(_cx,      _y,           Wall);
+			instance_create(_cx - 16, _y + _h - 16, Wall);
+			instance_create(_cx,      _y + _h - 16, Wall);
+			
+			/// Props:
+				
+				 // Cars:
+				for(var _oy = 32; _oy < _h; _oy += 32){
+					instance_create(_x + 32 + orandom(2), _y + _oy + orandom(2), Car);
+				}
+				
+				 // Tires:
+				repeat(irandom_range(2, 4)){
+					with(instance_create(_cx + irandom_range(24, (_w / 2) - 10), _y + irandom_range(10, _h), Tires)){
+						if(chance(1, 10)){
+							obj_create(x, y, choose("ChairFront", "ChairSide"));
+							instance_delete(id);
+						}
+					}
+				}
+				
+				 // Lights:
+				for(var _side = -1; _side <= 1; _side += 2){
+					obj_create(_cx + (((_w / 2) - 24) * _side), _cy - 32, "CatLight");
+				}
+				
+			 // Enemies:
+			create_enemies(_cx, _cy, 1);
+			
+			break;
+			
+		case "LargeRing":
+			
+			 // Walls:
+			instance_create(_cx - 32, _cy - 32, Wall);
+			instance_create(_cx - 32, _cy + 16, Wall);
+			instance_create(_cx + 16, _cy - 32, Wall);
+			instance_create(_cx + 16, _cy + 16, Wall);
+			
+			 // Enemies:
 			create_enemies(_cx - 64, _cy - 64, 1);
 			create_enemies(_cx + 64, _cy - 64, 1);
 			create_enemies(_cx - 64, _cy + 64, 1);
 			create_enemies(_cx + 64, _cy + 64, 1);
-            break;
-        }
-
-    }
-        
+			
+			break;
+	}
+	
 #define draw_rugs
-    if(!instance_exists(GenCont)){
-        var _surfX = RoomCenter[0] - (global.surfW / 2),
-            _surfY = RoomCenter[1] - (global.surfH / 2),
-            o = 32;
+	if(!instance_exists(GenCont)){
+		var	_surfX = RoomCenter[0] - (global.surfW / 2),
+			_surfY = RoomCenter[1] - (global.surfH / 2),
+			o = 32;
 
-         // Reset surfaces:
-        if(global.resetSurf){
-            if(surface_exists(global.surf)){
-                surface_set_target(global.surf);
-                draw_clear_alpha(0, 0);
-                surface_reset_target();
-                surface_free(global.surf);
-            }
-            global.resetSurf = false;
-            exit;
-        }
-        
-         // Create surface:
-        if(!surface_exists(global.surf)){
-            global.surf = surface_create(global.surfW, global.surfH);
-            surface_set_target(global.surf);
+		 // Reset surfaces:
+		if(global.resetSurf){
+			if(surface_exists(global.surf)){
+				surface_set_target(global.surf);
+				draw_clear_alpha(0, 0);
+				surface_reset_target();
+				surface_free(global.surf);
+			}
+			global.resetSurf = false;
+			exit;
+		}
+		
+		 // Create surface:
+		if(!surface_exists(global.surf)){
+			global.surf = surface_create(global.surfW, global.surfH);
+			surface_set_target(global.surf);
 
-            with(RoomList) if(carpeted){
-                var _s = spr.Rug,
-                    _i = 8,
-                    _c = [
-                        choose(make_color_rgb(77, 49, 49), make_color_rgb(46, 56, 41)),
-                        choose(make_color_rgb(160, 75, 99), make_color_rgb(214, 134, 5))];
+			with(RoomList) if(carpeted){
+				var	_s = spr.Rug,
+					_i = 8,
+					_c = [
+						choose(make_color_rgb(77, 49, 49), make_color_rgb(46, 56, 41)),
+						choose(make_color_rgb(160, 75, 99), make_color_rgb(214, 134, 5))];
 
-                for(var n = 0; n < array_length(_s); n++){
-                    d3d_set_fog(true, _c[n], 0, 0);
-                    for(var xx = 0; xx < w; xx++){
-                        for (var yy = 0; yy < h; yy++){
-                            if(
-                                (yy > 0 && yy < h - 1) &&
-                                (xx > 0 && xx < w - 1)
-                            ){
-                                _i = 8;
-                            }
-                            else{
-                                if(yy <= 0){
-                                    if(xx <= 0) _i = 3;
-                                    else{
-                                        if(xx >= w - 1) _i = 1;
-                                        else _i = 2;
-                                    }
-                                }
-                                else if(yy >= h - 1){
-                                    if(xx <= 0) _i = 5;
-                                    else{
-                                        if(xx >= w - 1) _i = 7;
-                                        else _i = 6;
-                                    }
-                                }
-                                else{
-                                    if(xx <= 0) _i = 4;
-                                    else{
-                                        if(xx >= w - 1) _i = 0;
-                                    }
-                                }
-                            }
-                            
-                            with(other){ // cant call draw_sprite in lightweight object, sad
-                                draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * o) - _surfX, RoomCenter[1] + ((other.y + yy) * o) - _surfY);
-                            }
-                        }
-                    }
-                }
-            }
-
-            d3d_set_fog(false, c_white, 0, 0);
-        }
-
-        surface_reset_target();
-        draw_surface(global.surf, _surfX, _surfY);
-    }
-
+				for(var n = 0; n < array_length(_s); n++){
+					d3d_set_fog(true, _c[n], 0, 0);
+					for(var xx = 0; xx < w; xx++){
+						for (var yy = 0; yy < h; yy++){
+							if(
+								(yy > 0 && yy < h - 1) &&
+								(xx > 0 && xx < w - 1)
+							){
+								_i = 8;
+							}
+							else{
+								if(yy <= 0){
+									if(xx <= 0) _i = 3;
+									else{
+										if(xx >= w - 1) _i = 1;
+										else _i = 2;
+									}
+								}
+								else if(yy >= h - 1){
+									if(xx <= 0) _i = 5;
+									else{
+										if(xx >= w - 1) _i = 7;
+										else _i = 6;
+									}
+								}
+								else{
+									if(xx <= 0) _i = 4;
+									else{
+										if(xx >= w - 1) _i = 0;
+									}
+								}
+							}
+							
+							with(other){ // cant call draw_sprite in lightweight object, sad
+								draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * o) - _surfX, RoomCenter[1] + ((other.y + yy) * o) - _surfY);
+							}
+						}
+					}
+				}
+			}
+			
+			d3d_set_fog(false, c_white, 0, 0);
+		}
+		
+		surface_reset_target();
+		draw_surface(global.surf, _surfX, _surfY);
+	}
+	
 #define RoomDebug_draw
-    if(instance_exists(GenCont)){
-        depth = GenCont.depth - 1;
-
-        draw_set_projection(0);
-
-        draw_set_color(c_black);
-        draw_rectangle(0, 0, game_width, game_height, 0);
-
-        var o = 4,
-            _x = game_width / 2,
-            _y = game_height / 2;
-
-         // Hallways:
-        draw_set_color(c_dkgray);
-        with(RoomList){
-            if(is_object(link)) with(link){
-                var _fx = x + floor(w / 2),
-                    _fy = y + floor(h / 2),
-                    _tx = other.x + floor(other.w / 2),
-                    _ty = other.y + floor(other.h / 2),
-                    _dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
-                    _tries = 100;
-
-                while(_tries-- > 0){
-                    if(_fx == _tx || _fy == _ty){
-                        _dir = point_direction(_fx, _fy, _tx, _ty); // Turn Corner
-                    }
-
-                    draw_set_color(c_dkgray);
-                    draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
-
-                     // End Hallway & Spawn Door:
-                    for(var a = 0; a < 360; a += 90){
-                        var _dx = _fx - other.x + lengthdir_x(1, a),
-                            _dy = _fy - other.y + lengthdir_y(1, a);
-    
-                        if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
-                            if(other.layout[_dy, _dx]){
-                                draw_set_color(c_orange);
-                                draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
-                                _tries = 0;
-                            }
-                        }
-                    }
-
-                    _fx += lengthdir_x(1, _dir);
-                    _fy += lengthdir_y(1, _dir);
-                    if(_fx == _tx && _fy == _ty) break;
-                }
-                /*var _lx1 = _x + ((x + floor(w / 2)) * o),
-                    _ly1 = _y + ((y + floor(h / 2)) * o),
-                    _lx2 = _x + ((other.x + floor(other.w / 2)) * o),
-                    _ly2 = _y + ((other.y + floor(other.h / 2)) * o),
-                    _dir = round(point_direction(_lx1, _ly1, _lx2, _ly2) / 90) * 90,
-                    _mx = 0,
-                    _my = 0;
-
-                if(_dir == 0 || _dir == 180){
-                    _mx = _lx1;
-                    _my = _ly2;
-                    if(_lx1 > _lx2) _lx1 += o;
-                    //draw_set_color((_lx2 < _lx1) ? c_purple : c_blue);
-                }
-                else{
-                    _mx = _lx2;
-                    _my = _ly1;
-                    if(_ly1 > _ly2) _ly1 += o;
-                    //draw_set_color((_ly2 < _ly1) ? c_orange : c_red);
-                }
-
-                for(var _fx = min(_lx1, _lx2); _fx < max(_lx1, _lx2); _fx += o){
-                    draw_rectangle(_fx, _my, _fx + o - 1, _my + o - 1, 0);
-                }
-                for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += o){
-                    draw_rectangle(_mx, _fy, _mx + o - 1, _fy + o - 1, 0);
-                }*/
-            }
-        }
-
-         // Rooms:
-        draw_set_color(c_white);
-        with(RoomList){
-            draw_set_color(special ? c_purple : c_white);
-            for(var _fy = 0; _fy < array_length(layout); _fy++){
-                var l = layout[_fy];
-                for(var _fx = 0; _fx < array_length(l); _fx++){
-                    if(l[_fx]){
-                        draw_rectangle(_x + ((x + _fx) * o), _y + ((y + _fy) * o), _x + ((x + _fx) * o) + (o - 1), _y + ((y + _fy) * o) + (o - 1), 0);
-                    }
-                }
-            }
-        }
-
-         // Tip:
-        draw_set_font(fntChat)
-        draw_set_halign(fa_left);
-        draw_set_valign(fa_top);
-        draw_text_nt(0, 0, "[A] Reset#[D] Generate Level");
-
-        draw_reset_projection();
-    }
-    else instance_destroy();
-
-
+	if(instance_exists(GenCont)){
+		depth = GenCont.depth - 1;
+		
+		draw_set_projection(0);
+		
+		draw_set_color(c_black);
+		draw_rectangle(0, 0, game_width, game_height, 0);
+		
+		var	o = 4,
+			_x = game_width / 2,
+			_y = game_height / 2;
+			
+		 // Hallways:
+		draw_set_color(c_dkgray);
+		with(RoomList){
+			if(is_object(link)) with(link){
+				var	_fx = x + floor(w / 2),
+					_fy = y + floor(h / 2),
+					_tx = other.x + floor(other.w / 2),
+					_ty = other.y + floor(other.h / 2),
+					_dir = round(point_direction(_fx, _fy, _tx, _ty) / 90) * 90,
+					_tries = 100;
+					
+				while(_tries-- > 0){
+					if(_fx == _tx || _fy == _ty){
+						_dir = point_direction(_fx, _fy, _tx, _ty); // Turn Corner
+					}
+					
+					draw_set_color(c_dkgray);
+					draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+					
+					 // End Hallway & Spawn Door:
+					for(var a = 0; a < 360; a += 90){
+						var	_dx = _fx - other.x + lengthdir_x(1, a),
+							_dy = _fy - other.y + lengthdir_y(1, a);
+							
+						if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
+							if(other.layout[_dy, _dx]){
+								draw_set_color(c_orange);
+								draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+								_tries = 0;
+							}
+						}
+					}
+					
+					_fx += lengthdir_x(1, _dir);
+					_fy += lengthdir_y(1, _dir);
+					if(_fx == _tx && _fy == _ty) break;
+				}
+				/*var	_lx1 = _x + ((x + floor(w / 2)) * o),
+					_ly1 = _y + ((y + floor(h / 2)) * o),
+					_lx2 = _x + ((other.x + floor(other.w / 2)) * o),
+					_ly2 = _y + ((other.y + floor(other.h / 2)) * o),
+					_dir = round(point_direction(_lx1, _ly1, _lx2, _ly2) / 90) * 90,
+					_mx = 0,
+					_my = 0;
+					
+				if(_dir == 0 || _dir == 180){
+					_mx = _lx1;
+					_my = _ly2;
+					if(_lx1 > _lx2) _lx1 += o;
+					//draw_set_color((_lx2 < _lx1) ? c_purple : c_blue);
+				}
+				else{
+					_mx = _lx2;
+					_my = _ly1;
+					if(_ly1 > _ly2) _ly1 += o;
+					//draw_set_color((_ly2 < _ly1) ? c_orange : c_red);
+				}
+				
+				for(var _fx = min(_lx1, _lx2); _fx < max(_lx1, _lx2); _fx += o){
+					draw_rectangle(_fx, _my, _fx + o - 1, _my + o - 1, 0);
+				}
+				for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += o){
+					draw_rectangle(_mx, _fy, _mx + o - 1, _fy + o - 1, 0);
+				}*/
+			}
+		}
+		
+		 // Rooms:
+		draw_set_color(c_white);
+		with(RoomList){
+			draw_set_color(special ? c_purple : c_white);
+			for(var _fy = 0; _fy < array_length(layout); _fy++){
+				var l = layout[_fy];
+				for(var _fx = 0; _fx < array_length(l); _fx++){
+					if(l[_fx]){
+						draw_rectangle(_x + ((x + _fx) * o), _y + ((y + _fy) * o), _x + ((x + _fx) * o) + (o - 1), _y + ((y + _fy) * o) + (o - 1), 0);
+					}
+				}
+			}
+		}
+		
+		 // Tip:
+		draw_set_font(fntChat)
+		draw_set_halign(fa_left);
+		draw_set_valign(fa_top);
+		draw_text_nt(0, 0, "[A] Reset#[D] Generate Level");
+		
+		draw_reset_projection();
+	}
+	else instance_destroy();
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

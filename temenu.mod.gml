@@ -3,7 +3,7 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	mus = mod_variable_get("mod", "teassets", "mus");
 	sav = mod_variable_get("mod", "teassets", "sav");
-
+	
 	areaList = mod_variable_get("mod", "teassets", "area");
 	raceList = mod_variable_get("mod", "teassets", "race");
 	crwnList = mod_variable_get("mod", "teassets", "crwn");
@@ -2328,9 +2328,9 @@
 		with(Menu) mode = 0;
 		sound_volume(sndMenuCharSelect, 1);
 	}
-    
-     // Reset Clock Parts:
-    if(global.clock_fix) sprite_restore(sprClockParts);
+	
+	 // Reset Clock Parts:
+	if(global.clock_fix) sprite_restore(sprClockParts);
 	
 	
 /// SCRIPTS

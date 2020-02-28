@@ -4,18 +4,18 @@
 	global.sprCrownWalk	   = sprite_add("../sprites/crowns/Bonus/sprCrownBonusWalk.png",     6,  8,  8);
 	global.sprCrownLoadout = sprite_add("../sprites/crowns/Bonus/sprCrownBonusLoadout.png",  2, 16, 16);
 	
-#define crown_name      	return "CROWN OF BONUS";
-#define crown_text      	return "@bBONUS PICKUPS#@sLOWER @wDROP RATE";
-#define crown_tip       	return "ALL EXTRA";
-#define crown_avail     	return (GameCont.loops <= 0);//unlock_get("lairCrown");
-#define crown_menu_avail	return true;//unlock_get("crownBonus");
+#define crown_name        return "CROWN OF BONUS";
+#define crown_text        return "@bBONUS PICKUPS#@sLOWER @wDROP RATE";
+#define crown_tip         return "ALL EXTRA";
+#define crown_avail       return (GameCont.loops <= 0);//unlock_get("lairCrown");
+#define crown_menu_avail  return true;//unlock_get("crownBonus");
 
 #define crown_menu_button
-    sprite_index = global.sprCrownLoadout;
-    image_index = !crown_menu_avail();
-    dix = -1;
-    diy = 1;
-    
+	sprite_index = global.sprCrownLoadout;
+	image_index = !crown_menu_avail();
+	dix = -1;
+	diy = 1;
+	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
 	

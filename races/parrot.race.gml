@@ -20,13 +20,13 @@
 #macro DebugLag global.debug_lag
 
 /// General
-#define race_name           return "PARROT";
-#define race_text           return "MANY FRIENDS#@rCHARM ENEMIES";
-#define race_lock           return "REACH @1(sprInterfaceIcons)1-1";
-#define race_tb_text        return "@wPICKUPS @sGIVE @rFEATHERS@s";
-#define race_portrait(p, b) return race_sprite_raw("Portrait", b);
-#define race_mapicon(p, b)  return race_sprite_raw("Map",      b);
-#define race_avail          return unlock_get(mod_current);
+#define race_name            return "PARROT";
+#define race_text            return "MANY FRIENDS#@rCHARM ENEMIES";
+#define race_lock            return "REACH @1(sprInterfaceIcons)1-1";
+#define race_tb_text         return "@wPICKUPS @sGIVE @rFEATHERS@s";
+#define race_portrait(p, b)  return race_sprite_raw("Portrait", b);
+#define race_mapicon(p, b)   return race_sprite_raw("Map",      b);
+#define race_avail           return unlock_get(mod_current);
 
 #define race_ttip
 	if(GameCont.level >= 10 && chance(1, 5)){
@@ -270,16 +270,16 @@
 	
 	
 #define create
-	 // Random lets you play locked characters: (Remove once 9941+ gets stable build)
+	 // Random lets you play locked characters: (Can remove once 9941+ gets stable build)
 	if(!unlock_get(mod_current)){
 		race = "fish";
 		player_set_race(index, race);
 		exit;
 	}
-
+	
 	 // Sprite:
 	spr_feather = race_sprite(sprChickenFeather);
-
+	
 	 // Sound:
 	snd_wrld = race_sound(sndMutant1Wrld);
 	snd_hurt = race_sound(sndMutant1Hurt);
@@ -300,7 +300,7 @@
 	if(bskin) for(var i = 0; i < array_length(parrot_bob); i++){
 		parrot_bob[i] += 3;
 	}
-
+	
 	 // Feather Related:
 	feather_num = 12;
 	feather_num_mult = 1;
@@ -371,7 +371,7 @@
 			exit;
 		}
 	}
-
+	
 #define step
 	if(DebugLag) trace_time();
 	
@@ -522,7 +522,7 @@
 	}
 	
 	if(DebugLag) trace_time("parrot_step");
-
+	
 #define step_charm_hplink
 	 /// ULTRA B : Flock Together / HP Link
 	with(instances_matching(Player, "race", mod_current)){
@@ -606,6 +606,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

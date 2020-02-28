@@ -14,70 +14,70 @@
 
 #macro DebugLag global.debug_lag
 
-#define area_subarea			return 1;
-#define area_next				return [3, 3];
-#define area_music				return mus101;
-#define area_ambience			return amb101;
-#define area_background_color	return area_get_background_color(101);
-#define area_shadow_color		return area_get_shadow_color(101);
-#define area_darkness			return false;
-#define area_secret				return true;
-#define area_underwater			return true;
+#define area_subarea           return 1;
+#define area_next              return [3, 3];
+#define area_music             return mus101;
+#define area_ambience          return amb101;
+#define area_background_color  return area_get_background_color(101);
+#define area_shadow_color      return area_get_shadow_color(101);
+#define area_darkness          return false;
+#define area_secret            return true;
+#define area_underwater        return true;
 
 #define area_name(_subarea, _loop)
-    return "@1(sprInterfaceIcons)2-" + string(_subarea);
-
+	return "@1(sprInterfaceIcons)2-" + string(_subarea);
+	
 #define area_text
 	return choose("DON'T MOVE", "IT'S BEAUTIFUL DOWN HERE", "HOLD YOUR BREATH", "FISH", "RIPPLING SKY", "IT'S SO QUIET", "THERE'S SOMETHING IN THE WATER");
-
+	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-    return [
-    	44,
-    	-9,
-    	(_subarea == 1)
-    ];
-
+	return [
+		44,
+		-9,
+		(_subarea == 1)
+	];
+	
 #define area_sprite(_spr)
-    switch(_spr){
-         // Floors:
-        case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101;
-        case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101B;
-        case sprFloor1Explo : return sprFloor101Explo;
-        case sprDetail1     : return sprDetail101;
-        
-         // Walls:
-        case sprWall1Bot    : return sprWall101Bot;
-        case sprWall1Top    : return sprWall101Top;
-        case sprWall1Out    : return sprWall101Out;
-        case sprWall1Trans  : return sprWall101Trans;
-        case sprDebris1     : return sprDebris101;
-        
+	switch(_spr){
+		 // Floors:
+		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101;
+		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return sprFloor101B;
+		case sprFloor1Explo : return sprFloor101Explo;
+		case sprDetail1     : return sprDetail101;
+		
+		 // Walls:
+		case sprWall1Bot    : return sprWall101Bot;
+		case sprWall1Top    : return sprWall101Top;
+		case sprWall1Out    : return sprWall101Out;
+		case sprWall1Trans  : return sprWall101Trans;
+		case sprDebris1     : return sprDebris101;
+		
 		 // Decals:
-        case sprBones       : return sprCoral;
-    }
-    
+		case sprBones       : return sprCoral;
+	}
+	
 #define area_setup
-    goal = 130;
-    
-    background_color = area_background_color();
-    BackCont.shadcol = area_shadow_color();
-    TopCont.darkness = area_darkness();
-    
+	goal = 130;
+	
+	background_color = area_background_color();
+	BackCont.shadcol = area_shadow_color();
+	TopCont.darkness = area_darkness();
+	
 #define area_setup_floor
-     // Fix Depth:
-    if(styleb) depth = 8;
-    
-     // Footsteps:
-    material = (styleb ? 4 : 1);
-    
+	 // Fix Depth:
+	if(styleb) depth = 8;
+	
+	 // Footsteps:
+	material = (styleb ? 4 : 1);
+	
 #define area_start
-     // Anglers:
-    with(RadChest) if(chance(1, 40)){
-        obj_create(x, y, "Angler");
-        instance_delete(id);
-    }
-    
-     // Secret:
+	 // Anglers:
+	with(RadChest) if(chance(1, 40)){
+		obj_create(x, y, "Angler");
+		instance_delete(id);
+	}
+	
+	 // Secret:
 	if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(TopSmall)){
 			with(top_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "SunkenChest", -1, -1)){
@@ -91,179 +91,176 @@
 			}
 		}
 	}
-
+	
 	 // Bab Skull:
-    if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
-	    var _spawnFloor = [];
+	if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
+		var _spawnFloor = [];
 		with(Floor){
-			var _x = (bbox_left + bbox_right + 1) / 2,
-				_y = (bbox_top + bbox_bottom + 1) / 2;
-
-			if(point_distance(_x, _y, 10016, 10016) > 48){
+			if(point_distance(bbox_center_x, bbox_center_y, 10016, 10016) > 48){
 				if(array_length(instances_meeting(x, y, [prop, chestprop, Wall])) <= 0){
 					array_push(_spawnFloor, id);
 				}
 			}
 		}
-
+		
 		with(instance_random(_spawnFloor)){
-        	obj_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "OasisPetBecome");
+			obj_create(bbox_center_x, bbox_center_y, "OasisPetBecome");
 		}
-    }
-    
+	}
+	
 #define area_finish
-    lastarea = area;
-    lastsubarea = subarea;
-
-     // Area End:
-    if(subarea >= area_subarea()){
-        var n = area_next();
-        if(!is_array(n)) n = [n];
-        if(array_length(n) < 1) array_push(n, mod_current);
-        if(array_length(n) < 2) array_push(n, 1);
-        area = n[0];
-        subarea = n[1];
-    }
-
-     // Next Subarea: 
-    else subarea++;
-
+	lastarea = area;
+	lastsubarea = subarea;
+	
+	 // Area End:
+	if(subarea >= area_subarea()){
+		var n = area_next();
+		if(!is_array(n)) n = [n];
+		if(array_length(n) < 1) array_push(n, mod_current);
+		if(array_length(n) < 2) array_push(n, 1);
+		area = n[0];
+		subarea = n[1];
+	}
+	
+	 // Next Subarea: 
+	else subarea++;
+	
 #define area_step
 	if(DebugLag) trace_time();
-
-     // Spawn cool crack effect:
-    if(instance_exists(Portal)){
-        var _crack = instances_matching(CustomObject, "name", "Crack");
-        if(array_length(_crack) <= 0){
-            with(instance_nearest_bbox(10016, 10016, Floor)){
-                obj_create((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, "Crack");
-            }
-        }
-    }
-
-	if(DebugLag) trace_time("oasis_area_step");
-
-#define area_effect(_vx, _vy)
-    var _x = _vx + random(game_width),
-        _y = _vy + random(game_height);
-
-     // Player Bubbles:
-    if(chance(1, 4)){
-        with(Player) instance_create(x, y, Bubble);
-    }
-    
-     // Pet Bubbles:
-    if(chance(1, 4)){
-        with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
-    }
-
-     // Floor Bubbles:
-    else{
-        var f = instance_nearest(_x, _y, Floor);
-        with(f) instance_create(x + random(32), y + random(32), Bubble);
-    }
-
-    return 30 + random(20);
-
-#define area_make_floor
-    var _x = x,
-        _y = y,
-        _outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
-
-    /// Make Floors:
-         // Normal:
-    	instance_create(_x, _y, Floor);
-    	
-    	 // Special - Diamond:
-    	if(chance(1, 3)){
-    		floor_fill_round(_x + 16, _y + 16, 3, 3);
-    	}
-
-	/// Turn:
-        var _trn = 0;
-        if(chance(1, 4)){
-    	    _trn = choose(90, 90, -90, -90, 180);
-        }
-        direction += _trn;
-
-    /// Chests & Branching:
-         // Turn Arounds (Weapon Chests):
-        if(_trn == 180 && _outOfSpawn){
-            floor_make(_x, _y, WeaponChest);
-        }
-
-         // Dead Ends (Ammo Chests):
-        var n = instance_number(FloorMaker);
-    	if(!chance(20, 19 + n)){
-    		if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
-    		instance_destroy();
-    	}
-
-    	 // Branch:
-    	if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
-
-#define area_pop_enemies
-    var _x = x + 16,
-        _y = y + 16;
-
-    if(chance(1, 2)){
-        var _top = chance(1, 2);
-        
-         // Shoals:
-        if(chance(1, 2)){
-            if(!styleb && chance(3, 4)){
-                if(GameCont.loops > 0 && chance(1, 2)){
-                    repeat(irandom_range(1, 4)){
-                    	obj_create(_x, _y, Freak);
-                    }
-                }
-                repeat(irandom_range(1, 4)){
-                	obj_create(_x, _y, BoneFish);
-                }
-            }
-            else repeat(irandom_range(1, 4)){
-            	obj_create(_x, _y, "Puffer");
-            }
-        }
-
-        else{
-            if(GameCont.loops > 0 && chance(1, 3)){
-                instance_create(_x, _y, choose(Necromancer, Ratking));
-            }
-            else{
-                if(chance(1, 5)) obj_create(_x, _y, "Diver");
-                else{
-                    if(!styleb){
-                        if(chance(1, 2)) instance_create(_x, _y, Crab);
-                    }
-                    else{
-                    	obj_create(_x, _y, "Hammerhead");
-                    }
-                }
-            }
-        }
-    }
-
-#define area_pop_props
-     // Lone Walls:
-    if(
-    	chance(1, 14)
-    	&& point_distance(x, y, 10000, 10000) > 96
-    	&& !place_meeting(x, y, NOWALLSHEREPLEASE)
-    ){
-        var	_x = x + choose(0, 16),
-        	_y = y + choose(0, 16);
-        	
-        if(!place_meeting(_x, _y, hitme)){
-            instance_create(_x, _y, Wall);
-            instance_create(x, y, NOWALLSHEREPLEASE);
-        }
-    }
 	
-     // Props:
-    else if(chance(1, 10)){
-        var _x = x + 16,
-            _y = y + 16,
+	 // Spawn cool crack effect:
+	if(instance_exists(Portal)){
+		var _crack = instances_matching(CustomObject, "name", "Crack");
+		if(array_length(_crack) <= 0){
+			with(instance_nearest_bbox(10016, 10016, FloorNormal)){
+				obj_create(bbox_center_x, bbox_center_y, "Crack");
+			}
+		}
+	}
+	
+	if(DebugLag) trace_time("oasis_area_step");
+	
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Player Bubbles:
+	if(chance(1, 4)){
+		with(Player) instance_create(x, y, Bubble);
+	}
+	
+	 // Pet Bubbles:
+	if(chance(1, 4)){
+		with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
+	}
+	
+	 // Floor Bubbles:
+	else{
+		var f = instance_nearest(_x, _y, Floor);
+		with(f) instance_create(x + random(32), y + random(32), Bubble);
+	}
+	
+	return 30 + random(20);
+	
+#define area_make_floor
+	var	_x = x,
+		_y = y,
+		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
+		
+	/// Make Floors:
+		 // Normal:
+		instance_create(_x, _y, Floor);
+		
+		 // Special - Diamond:
+		if(chance(1, 3)){
+			floor_fill_round(_x + 16, _y + 16, 3, 3);
+		}
+		
+	/// Turn:
+		var _trn = 0;
+		if(chance(1, 4)){
+			_trn = choose(90, 90, -90, -90, 180);
+		}
+		direction += _trn;
+		
+	/// Chests & Branching:
+		 // Turn Arounds (Weapon Chests):
+		if(_trn == 180 && _outOfSpawn){
+			floor_make(_x, _y, WeaponChest);
+		}
+		
+		 // Dead Ends (Ammo Chests):
+		var n = instance_number(FloorMaker);
+		if(!chance(20, 19 + n)){
+			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+			instance_destroy();
+		}
+		
+		 // Branch:
+		if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
+		
+#define area_pop_enemies
+	var	_x = x + 16,
+		_y = y + 16;
+		
+	if(chance(1, 2)){
+		var _top = chance(1, 2);
+		
+		 // Shoals:
+		if(chance(1, 2)){
+			if(!styleb && chance(3, 4)){
+				if(GameCont.loops > 0 && chance(1, 2)){
+					repeat(irandom_range(1, 4)){
+						obj_create(_x, _y, Freak);
+					}
+				}
+				repeat(irandom_range(1, 4)){
+					obj_create(_x, _y, BoneFish);
+				}
+			}
+			else repeat(irandom_range(1, 4)){
+				obj_create(_x, _y, "Puffer");
+			}
+		}
+		
+		else{
+			if(GameCont.loops > 0 && chance(1, 3)){
+				instance_create(_x, _y, choose(Necromancer, Ratking));
+			}
+			else{
+				if(chance(1, 5)) obj_create(_x, _y, "Diver");
+				else{
+					if(!styleb){
+						if(chance(1, 2)) instance_create(_x, _y, Crab);
+					}
+					else{
+						obj_create(_x, _y, "Hammerhead");
+					}
+				}
+			}
+		}
+	}
+	
+#define area_pop_props
+	 // Lone Walls:
+	if(
+		chance(1, 14)
+		&& point_distance(x, y, 10000, 10000) > 96
+		&& !place_meeting(x, y, NOWALLSHEREPLEASE)
+	){
+		var	_x = x + choose(0, 16),
+			_y = y + choose(0, 16);
+			
+		if(!place_meeting(_x, _y, hitme)){
+			instance_create(_x, _y, Wall);
+			instance_create(x, y, NOWALLSHEREPLEASE);
+		}
+	}
+	
+	 // Props:
+	else if(chance(1, 10)){
+		var	_x = x + 16,
+			_y = y + 16,
 			_spawnDis = point_distance(_x, _y, 10016, 10016);
 			
 		 // Special:
@@ -292,16 +289,21 @@
 		floor_bones(area_sprite(sprBones), 2, 1/9, false);
 	}
 	
-     // The new bandits
-    with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
-        obj_create(x, y, "Diver");
-    }
-
-
+	 // The new bandits
+	with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+		obj_create(x, y, "Diver");
+	}
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

@@ -14,14 +14,14 @@
 
 #macro DebugLag global.debug_lag
 
-#define area_subarea          return 1;
-#define area_next             return 3;
-#define area_music            return mus102;
-#define area_ambience         return amb102;
-#define area_background_color return area_get_background_color(102);
-#define area_shadow_color     return area_get_shadow_color(102);
-#define area_darkness         return true;
-#define area_secret           return true;
+#define area_subarea           return 1;
+#define area_next              return 3;
+#define area_music             return mus102;
+#define area_ambience          return amb102;
+#define area_background_color  return area_get_background_color(102);
+#define area_shadow_color      return area_get_shadow_color(102);
+#define area_darkness          return true;
+#define area_secret            return true;
 
 #define area_name(_subarea, _loop)
 	return "2-@2(sprSlice:0)";
@@ -258,7 +258,7 @@
 	
 	 // Top Decals:
 	if(chance(1, 30)){
-	    obj_create(_x, _y, "TopDecal");
+		obj_create(_x, _y, "TopDecal");
 	}
 	
 #define area_pop_extras
@@ -296,6 +296,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

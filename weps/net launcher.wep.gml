@@ -1,7 +1,7 @@
 #define init
-    global.sprWep = sprite_add_weapon("../sprites/weps/sprNetGun.png", 3, 2);
-    global.sprWepLocked = mskNone;
-
+	global.sprWep = sprite_add_weapon("../sprites/weps/sprNetGun.png", 3, 2);
+	global.sprWepLocked = mskNone;
+	
 #define weapon_name         return (weapon_avail() ? "NET LAUNCHER" : "LOCKED");
 #define weapon_text         return "CATCH OF THE DAY";
 #define weapon_type         return 3;  // Bolt
@@ -14,24 +14,24 @@
 #define weapon_avail        return unlock_get("coastWep");
 
 #define weapon_fire(w)
-    var f = wepfire_init(w);
-    w = f.wep;
-    
-     // Projectile:
-    with(obj_create(x, y, "NetNade")){
-        motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
-        image_angle = direction;
-        creator = f.creator;
-        team = other.team;
-    }
-    
-     // Effects:
-    weapon_post(6, 8, -20);
-    sound_play(sndGrenade);
-    sound_play_pitch(sndFlakCannon, 1.75 + random(0.25));
-    sound_play_pitch(sndNadeReload, 0.8);
-
-
+	var f = wepfire_init(w);
+	w = f.wep;
+	
+	 // Projectile:
+	with(obj_create(x, y, "NetNade")){
+		motion_add(other.gunangle + orandom(5 * other.accuracy), 16);
+		image_angle = direction;
+		creator = f.creator;
+		team = other.team;
+	}
+	
+	 // Effects:
+	weapon_post(6, 8, -20);
+	sound_play(sndGrenade);
+	sound_play_pitch(sndFlakCannon, 1.75 + random(0.25));
+	sound_play_pitch(sndNadeReload, 0.8);
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);

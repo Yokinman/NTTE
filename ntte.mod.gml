@@ -61,13 +61,6 @@
 
 #macro DebugLag global.debug_lag
 
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
-#macro FloorNormal instances_matching(Floor, "object_index", Floor)
-
 #macro surfMainHUD  global.surfMainHUD
 #macro surfSkillHUD global.surfSkillHUD
 
@@ -107,6 +100,23 @@
 	with(instance_nearest(_spawnX, _spawnY, Player)){
 		_spawnX = x;
 		_spawnY = y;
+	}
+	
+	 // Top Decal Fix:
+	with(TopPot){
+		if(place_meeting(x, y, FloorExplo)){
+			with(instances_meeting(x, y, FloorExplo)){
+				if(place_meeting(x, y, other) && place_meeting(x, y, PortalClear)){
+					with(other){
+						while(place_meeting(x, y, Floor)){
+							x += lengthdir_x(16, dir);
+							y += lengthdir_y(16, dir);
+						}
+					}
+					break;
+				}
+			}
+		}
 	}
 	
 	 // Visibilize Pets:
@@ -167,36 +177,32 @@
 	
 	 // Crystal Hearts:
 	if(_normalArea){
-		if(chance(GameCont.hard, GameCont.hard + 120)){
-			with(instance_random(enemy)){
-				with(instance_nearest_bbox(x, y, FloorNormal)){
-					obj_create(bbox_center_x, bbox_center_y, "CrystalHeart");
-				}
-			}
-		}
+		var _heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard));
 		
 		 // Red Crown:
 		if(crown_current == "red"){
-			var _heartNum = chance(1, 5) + (GameCont.subarea == 1);
-			if(_heartNum > 0){
-				 // Find Spawnable Tiles:
-				var _spawnFloor = [];
-				with(FloorNormal){
-					if(instance_exists(Player) && distance_to_object(Player) > 128){
-						if(!instance_exists(Wall) || distance_to_object(Wall) < 34){
-							array_push(_spawnFloor, id);
-						}
+			_heartNum += (GameCont.subarea == 1) + chance(1, 5);
+		}
+		
+		 // Spawn:
+		if(_heartNum > 0){
+			 // Find Spawnable Tiles:
+			var _spawnFloor = [];
+			with(FloorNormal){
+				if(instance_exists(Player) && distance_to_object(Player) > 128){
+					if(!instance_exists(Wall) || distance_to_object(Wall) < 34){
+						array_push(_spawnFloor, id);
 					}
 				}
-				
-				 // Spawn Hearts:
-				if(array_length(_spawnFloor) > 0){
-					repeat(_heartNum){
-						with(_spawnFloor[irandom(array_length(_spawnFloor) - 1)]){
-							with(obj_create(bbox_center_x, bbox_center_y + 2, "CrystalHeart")){
-								with(instance_create(x, y, PortalClear)){
-									mask_index = other.mask_index;
-								}
+			}
+			
+			 // Spawn Hearts:
+			if(array_length(_spawnFloor) > 0){
+				repeat(_heartNum){
+					with(_spawnFloor[irandom(array_length(_spawnFloor) - 1)]){
+						with(obj_create(bbox_center_x, bbox_center_y + 2, "CrystalHeart")){
+							with(instance_create(x, y, PortalClear)){
+								mask_index = other.mask_index;
 							}
 						}
 					}
@@ -983,8 +989,10 @@
 				
 			 // Sawblade Traps:
 			if(GameCont.subarea != 3){
-				with(enemy) if(chance(1, 40)){
-					obj_create(x, y, "SawTrap");
+				with(enemy) if(chance(1, 40) && place_meeting(x, y, Floor)){
+					with(instance_nearest_bbox(x, y, FloorNormal)){
+						obj_create(bbox_center_x, bbox_center_y, "SawTrap");
+					}
 				}
 			}
 			
@@ -2266,7 +2274,7 @@
 	with(instances_matching(VanSpawn, "ntte_vanalert_check", null)){
 		ntte_vanalert_check = true;
 		
-		if(!point_seen_ext(x, y, -32, -32, -1)){
+		if(!point_seen(x, y, -1)){
 			var _side = choose(-1, 1);
 			with(instance_nearest(x, y, Player)){
 				if(x != other.x) _side = sign(x - other.x);
@@ -3644,6 +3652,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

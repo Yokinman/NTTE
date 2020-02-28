@@ -4,13 +4,13 @@
 	
 #define game_start
 	global.skill = null;
-    global.last = skill_get(mod_current);
+	global.last = skill_get(mod_current);
 	
-#define skill_name      return "FLOWER'S BLESSING";
-#define skill_text      return `@sREROLL @w${skill_get_name(global.skill)}`;
-#define skill_tip		return "~";
-#define skill_icon      return global.sprSkillHUD;
-#define skill_avail 	return false;
+#define skill_name   return "FLOWER'S BLESSING";
+#define skill_text   return `@sREROLL @w${skill_get_name(global.skill)}`;
+#define skill_tip    return "~";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
 
 #define skill_take(_num)
 	if(is_undefined(global.skill)){
@@ -36,7 +36,7 @@
 		with(GameCont) skillpoints++;
 	}
 	
-    global.last = skill_get(mod_current);
+	global.last = skill_get(mod_current);
 	
 #define skill_lose
 	if(!is_undefined(global.skill) && global.last != 0){
@@ -44,7 +44,7 @@
 		with(GameCont) skillpoints--;
 	}
 	global.skill = null;
-    global.last = 0;
+	global.last = 0;
 	
 #define step
 	script_bind_end_step(end_step, 0);
@@ -65,8 +65,8 @@
 			break;
 		}
 	}
-
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);

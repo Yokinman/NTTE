@@ -5,9 +5,9 @@
  - Try to keep all #defines in the order of how this template file has them
  - If you aren't using an event, such as area_begin_step, then remove it
  - If you need to add a script that doesn't follow the '#define area_' naming:
-     Place it between the general area code section and scripts section
-     Add a '/// Misc' (or whatever you want to call it) comment before that section, like with the scripts section
-     Double space the area between that section and the scripts and general area code sections
+	 Place it between the general area code section and scripts section
+	 Add a '/// Misc' (or whatever you want to call it) comment before that section, like with the scripts section
+	 Double space the area between that section and the scripts and general area code sections
 
 Example Code (Ignore extra space before #define here):
  #define area_step
@@ -46,14 +46,14 @@ blah blah blah
 
 #macro DebugLag global.debug_lag
 
-#define area_subarea            return 3;
-#define area_next               return [2, 1];
-#define area_music              return mus1;
-#define area_ambience           return amb1;
-#define area_background_color   return make_color_rgb(175, 143, 106);
-#define area_shadow_color       return c_black;
-#define area_darkness           return false;
-#define area_secret             return false;
+#define area_subarea           return 3;
+#define area_next              return [2, 1];
+#define area_music             return mus1;
+#define area_ambience          return amb1;
+#define area_background_color  return make_color_rgb(175, 143, 106);
+#define area_shadow_color      return c_black;
+#define area_darkness          return false;
+#define area_secret            return false;
 
 #define area_name(_subarea, _loop)
 	return "1-" + string(_subarea);
@@ -214,6 +214,11 @@ blah blah blah
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

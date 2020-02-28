@@ -1,6 +1,0 @@
-/loadarea coast
-/loadarea oasis
-/loadarea pizza
-/loadarea lair
-/loadarea trench
-/loadarea red

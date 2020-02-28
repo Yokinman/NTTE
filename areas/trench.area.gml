@@ -35,25 +35,18 @@
 #macro surfPitWallTop global.surfPitWallTop
 #macro surfSpark      global.surfSpark
 
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
-#macro FloorNormal instances_matching(Floor, "object_index", Floor)
-
 #macro FloorPit     instances_matching(Floor, "sprite_index", spr.FloorTrenchB)
 #macro FloorPitless instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)
 
-#define area_subarea          return 3;
-#define area_next             return 5;
-#define area_music            return mus.Trench;
-#define area_ambience         return amb101;
-#define area_background_color return make_color_rgb(100, 114, 127);
-#define area_shadow_color     return c_black;
-#define area_darkness         return true;
-#define area_secret           return true;
-#define area_underwater       return true;
+#define area_subarea           return 3;
+#define area_next              return 5;
+#define area_music             return mus.Trench;
+#define area_ambience          return amb101;
+#define area_background_color  return make_color_rgb(100, 114, 127);
+#define area_shadow_color      return c_black;
+#define area_darkness          return true;
+#define area_secret            return true;
+#define area_underwater        return true;
 
 #define area_name(_subarea, _loop)
 	return "@1(sprInterfaceIcons)3-" + string(_subarea);
@@ -886,12 +879,17 @@
 	with(instances_matching_ne([Debris, Shell, ChestOpen, Feather, Corpse, Scorch, ScorchTop, MeltSplat, GroundFlame, BlueFlame], "trenchpit_check", null)){
 		trenchpit_check = null;
 	}
-
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

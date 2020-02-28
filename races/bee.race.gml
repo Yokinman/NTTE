@@ -4,13 +4,13 @@
 		with(loadbutton) instance_destroy();
 	}
 	
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-    
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 	DebugLag = false;
-
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -19,39 +19,39 @@
 
 #macro DebugLag global.debug_lag
 
-#define race_name			return "BEE";
-#define race_text			return "PASSIVE#ACTIVE";
-#define race_lock			return "???";
-#define race_tb_text		return "???";
-#define race_portrait(p, b)	return race_sprite_raw("Portrait", b);
-#define race_mapicon(p, b)	return race_sprite_raw("Map",      b);
-#define race_avail			return unlock_get(mod_current);
+#define race_name            return "BEE";
+#define race_text            return "PASSIVE#ACTIVE";
+#define race_lock            return "???";
+#define race_tb_text         return "???";
+#define race_portrait(p, b)  return race_sprite_raw("Portrait", b);
+#define race_mapicon(p, b)   return race_sprite_raw("Map",      b);
+#define race_avail           return unlock_get(mod_current);
 
 #define race_ttip
-    if(GameCont.level >= 10 && chance(1, 5)){
-        return choose("ULTRA TIP");
-    }
-    else{
-        return choose("BASIC TIP");
-    }
-    
+	if(GameCont.level >= 10 && chance(1, 5)){
+		return choose("ULTRA TIP");
+	}
+	else{
+		return choose("BASIC TIP");
+	}
+	
 #define race_sprite(_spr)
-    var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
-    switch(_spr){
-        case sprMutant1Idle:		return race_sprite_raw("Idle",  b);
-        case sprMutant1Walk:		return race_sprite_raw("Walk",  b);
-        case sprMutant1Hurt:		return race_sprite_raw("Hurt",  b);
-        case sprMutant1Dead:		return race_sprite_raw("Dead",  b);
-        case sprMutant1GoSit:		return race_sprite_raw("GoSit", b);
-        case sprMutant1Sit:			return race_sprite_raw("Sit",   b);
-        case sprFishMenu:			return race_sprite_raw("Idle",  b);
-        case sprFishMenuSelected:	return race_sprite_raw("Walk",  b);
-        case sprFishMenuSelect:		return race_sprite_raw("Idle",  b);
-        case sprFishMenuDeselect:	return race_sprite_raw("Idle",  b);
-		case shd24:					return shd16;
-    }
-    return mskNone;
-    
+	var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
+	switch(_spr){
+		case sprMutant1Idle:        return race_sprite_raw("Idle",  b);
+		case sprMutant1Walk:        return race_sprite_raw("Walk",  b);
+		case sprMutant1Hurt:        return race_sprite_raw("Hurt",  b);
+		case sprMutant1Dead:        return race_sprite_raw("Dead",  b);
+		case sprMutant1GoSit:       return race_sprite_raw("GoSit", b);
+		case sprMutant1Sit:         return race_sprite_raw("Sit",   b);
+		case sprFishMenu:           return race_sprite_raw("Idle",  b);
+		case sprFishMenuSelected:   return race_sprite_raw("Walk",  b);
+		case sprFishMenuSelect:	    return race_sprite_raw("Idle",  b);
+		case sprFishMenuDeselect:   return race_sprite_raw("Idle",  b);
+		case shd24:                 return shd16;
+	}
+	return mskNone;
+	
 #define race_sound(_snd)
 	switch(_snd){
 		case sndMutant1Wrld: return -1;
@@ -68,7 +68,7 @@
 		case sndMutant1Thrn: return -1;
 	}
 	return -1;
-    
+	
 #define race_sprite_raw(_spr, _skin)
 	var s = lq_defget(spr.Race, mod_current, []);
 	if(_skin >= 0 && _skin < array_length(s)){
@@ -76,7 +76,7 @@
 	}
 	return -1;
 	
-
+	
 /// Menu
 #define race_menu_select
 	return sndMutant1Slct;
@@ -85,16 +85,16 @@
 	return sndMutant1Cnfm;
 	
 #define race_menu_button
-    sprite_index = race_sprite_raw("Select", 0);
-    image_index = !race_avail();
-    
-
+	sprite_index = race_sprite_raw("Select", 0);
+	image_index = !race_avail();
+	
+	
 /// Skins
 #define race_skins
 	var _playersActive = 0;
 	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
 	if(_playersActive <= 1){
-    	return 2;
+		return 2;
 	}
 	else{ // Fix co-op bugginess
 		var n = 1;
@@ -107,51 +107,51 @@
 	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
 	if(_playersActive <= 1){
 		if(_skin == 0) return true;
-    	return unlock_get(mod_current + chr(65 + real(_skin)));
+		return unlock_get(mod_current + chr(65 + real(_skin)));
 	}
 	else{ // Fix co-op bugginess
 		return true;
 	}
 	
 #define race_skin_name(_skin)
-    if(race_skin_avail(_skin)){
-        return chr(65 + _skin) + " SKIN";
-    }
-    else switch(_skin){
-        case 0: return "EDIT THE SAVE FILE LMAO";
-        case 1: return "??";
-    }
-    
+	if(race_skin_avail(_skin)){
+		return chr(65 + _skin) + " SKIN";
+	}
+	else switch(_skin){
+		case 0: return "EDIT THE SAVE FILE LMAO";
+		case 1: return "??";
+	}
+	
 #define race_skin_button(_skin)
-    sprite_index = race_sprite_raw("Loadout", _skin);
-    image_index = !race_skin_avail(_skin);
-    
-
+	sprite_index = race_sprite_raw("Loadout", _skin);
+	image_index = !race_skin_avail(_skin);
+	
+	
 /// Ultras
 #macro ultA 1
 #macro ultB 2
 
 #define race_ultra_name(_ultra)
-    switch(_ultra){
-        case ultA: return "ULTRA A";
-        case ultB: return "ULTRA B";
-    }
-    return "";
-    
+	switch(_ultra){
+		case ultA: return "ULTRA A";
+		case ultB: return "ULTRA B";
+	}
+	return "";
+	
 #define race_ultra_text(_ultra)
-    switch(_ultra){
-        case ultA: return "???";
-        case ultB: return "???";
-    }
-    return "";
-
+	switch(_ultra){
+		case ultA: return "???";
+		case ultB: return "???";
+	}
+	return "";
+	
 #define race_ultra_button(_ultra)
 	sprite_index = race_sprite_raw("UltraIcon", 0);
 	image_index = _ultra - 1; // why are ultras 1-based bro
-
+	
 #define race_ultra_icon(_ultra)
 	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);
-
+	
 #define race_ultra_take(_ultra, _state)
 	 // Ultra Sound:
 	if(_state && instance_exists(EGSkillIcon)){
@@ -160,15 +160,15 @@
 		switch(_ultra){
 			case ultA:
 				break;
-
+				
 			case ultB:
 				break;
 		}
 	}
-
-
+	
+	
 #define create
-	 // Random lets you play locked characters: (Remove once 9941+ gets stable build)
+	 // Random lets you play locked characters: (Can remove once 9941+ gets stable build)
 	if(!unlock_get(mod_current)){
 		race = "fish";
 		player_set_race(index, race);
@@ -179,8 +179,8 @@
 	spr_shadow = race_sprite(shd24);
 	spr_shadow_y = 7;
 	
-     // Sound:
-    snd_wrld = race_sound(sndMutant1Wrld);
+	 // Sound:
+	snd_wrld = race_sound(sndMutant1Wrld);
 	snd_hurt = race_sound(sndMutant1Hurt);
 	snd_dead = race_sound(sndMutant1Dead);
 	snd_lowa = race_sound(sndMutant1LowA);
@@ -194,34 +194,39 @@
 	snd_thrn = race_sound(sndMutant1Thrn);
 	footkind = 1; // Sho
 	
-     // Perching Parrot:
-    parrot_bob = [0];
-    
-     // Re-Get Ultras When Revived:
-    for(var i = 0; i < ultra_count(mod_current); i++){
-    	if(ultra_get(mod_current, i)){
-    		race_ultra_take(i, true);
-    	}
-    }
-
+	 // Perching Parrot:
+	parrot_bob = [0];
+	
+	 // Re-Get Ultras When Revived:
+	for(var i = 0; i < ultra_count(mod_current); i++){
+		if(ultra_get(mod_current, i)){
+			race_ultra_take(i, true);
+		}
+	}
+	
 #define step
 	if(DebugLag) trace_time();
 	
 	
 	
 	if(DebugLag) trace_time(mod_current + "_step");
-
+	
 #define cleanup
 	with(Loadout){
 		instance_destroy();
 		with(loadbutton) instance_destroy();
 	}
-
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

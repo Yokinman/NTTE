@@ -33,11 +33,6 @@
 
 #macro DebugLag global.debug_lag
 
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
 #macro surfShadowTop     global.surfShadowTop
 #macro surfShadowTopMask global.surfShadowTopMask
 #macro surfPet           global.surfPet
@@ -4499,9 +4494,9 @@
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 							
 							if(
-								(other.jump_x == other.x && other.jump_y == other.y) ||
-								!place_meeting(other.jump_x, other.jump_y, Floor)    ||
-								place_meeting(other.jump_x, other.jump_y, Wall)
+								(other.jump_x == other.x && other.jump_y == other.y)
+								|| !place_meeting(other.jump_x, other.jump_y, Floor)
+								|| place_meeting(other.jump_x, other.jump_y, Wall)
 							){
 								var	_x = other.x,
 									_y = other.y;
@@ -5668,6 +5663,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

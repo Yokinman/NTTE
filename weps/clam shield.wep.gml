@@ -1,6 +1,6 @@
 #define init
-	global.sprWep		= sprite_add_weapon("../sprites/weps/sprWepClamShield.png",          8, 8);
-	global.sprWepHUD	= sprite_add(       "../sprites/weps/sprWepClamShieldHUD.png",    1, 0, 6);
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprWepClamShield.png",       8, 8);
+	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprWepClamShieldHUD.png", 1, 0, 6);
 	global.sprWepLocked = mskNone;
 	
 	lwoWep = {
@@ -10,21 +10,21 @@
 	
 #macro lwoWep global.lwoWep
 
-#define weapon_name		return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
-#define weapon_text		return "ROYAL GUARD";
-#define weapon_auto		return false;
-#define weapon_type		return 0;  // Melee
-#define weapon_load		return 30; // 1 Second
-#define weapon_area		return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_melee	return false;
-#define weapon_swap		return sndSwapHammer;
-#define weapon_sprt(w)	return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
-#define weapon_sprt_hud	return global.sprWepHUD;
-#define weapon_avail	return unlock_get("coastWep");
+#define weapon_name      return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
+#define weapon_text      return "ROYAL GUARD";
+#define weapon_auto      return false;
+#define weapon_type      return 0;  // Melee
+#define weapon_load      return 30; // 1 Second
+#define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_melee     return false;
+#define weapon_swap      return sndSwapHammer;
+#define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
+#define weapon_sprt_hud  return global.sprWepHUD;
+#define weapon_avail     return unlock_get("coastWep");
 
 #define weapon_fire(w)
-    var f = wepfire_init(w);
-    w = f.wep;
+	var f = wepfire_init(w);
+	w = f.wep;
 	
 	 // Create Shield:
 	if(!instance_exists(w.inst)){
@@ -80,13 +80,13 @@
 	sound_play_pitch(sndHammer,					_pit);
 	
 #define step(_primary)
-    var b = (_primary ? "" : "b"),
-        w = variable_instance_get(self, b + "wep");
-        
-     // LWO Setup:
-    if(!is_object(w)){
-        w = lq_clone(lwoWep);
-        variable_instance_set(self, b + "wep", w);
+	var	b = (_primary ? "" : "b"),
+		w = variable_instance_get(self, b + "wep");
+		
+	 // LWO Setup:
+	if(!is_object(w)){
+		w = lq_clone(lwoWep);
+		variable_instance_set(self, b + "wep", w);
 	}
 	
 	 // Create Shield:

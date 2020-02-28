@@ -70,11 +70,6 @@
 
 #macro DebugLag global.debug_lag
 
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
 #macro surfSludgePool global.surfSludgePool
 
 #macro shadSludgePool global.shadSludgePool
@@ -1081,9 +1076,9 @@
 	
 
 #define Tunneler_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;           // Damage
-	nexthurt = current_frame + 6;	// I-Frames
-	sound_play_hit(snd_hurt, 0.3);	// Sound
+	my_health -= _hitdmg;          // Damage
+	nexthurt = current_frame + 6;  // I-Frames
+	sound_play_hit(snd_hurt, 0.3); // Sound
 	sprite_index = spr_hurt;
 	
 	if(tunneling) {
@@ -1211,6 +1206,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

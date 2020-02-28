@@ -3989,7 +3989,7 @@
 	 // Mark Walls:
 	with(instance_rectangle(_gridx, _gridy, _gridx + _areaWidth, _gridy + _areaHeight, _wall)){
 		if(position_meeting(x, y, id)){
-			_grid[# ((x - _gridx) / _tileSize), ((y - _gridy) / _tileSize)] = -2;
+			_grid[# (x - _gridx) / _tileSize, (y - _gridy) / _tileSize] = -2;
 		}
 	}
 
@@ -4128,6 +4128,7 @@
 		
 		return true;
 	}
+	
 	return false;
 	
 #define path_direction(_path, _x, _y, _wall)

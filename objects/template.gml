@@ -5,63 +5,63 @@
  - There should be a double space between different object's code
  - If you add a script to telib.mod use nttedev.mod to add it to all mod_script_call blocks
  - If you need to add a standard .mod event to handle code, like '#define draw_dark':
-     Place it between the mod object code section and scripts section
-     Add a '/// Mod Events' comment before that section, like with the scripts section
-     Double space the area between that section and the scripts and mod object code sections
+	 Place it between the mod object code section and scripts section
+	 Add a '/// Mod Events' comment before that section, like with the scripts section
+	 Double space the area between that section and the scripts and mod object code sections
  - I like to order events generally by when and how often they're called:
-    ~ on_create
-    ~ on_begin_step
-    ~ on_step
-    ~ on_end_step
-    ~ on_draw
-    ~ on_anim
-    ~ on_alrm#
-    ~ on_hit
-    ~ on_wall
-    ~ on_grenade
-    ~ on_projectile
-    ~ on_hurt
-    ~ on_death
-    ~ on_destroy
-    ~ on_cleanup
-    ~ Misc. related scripts
+	~ on_create
+	~ on_begin_step
+	~ on_step
+	~ on_end_step
+	~ on_draw
+	~ on_anim
+	~ on_alrm#
+	~ on_hit
+	~ on_wall
+	~ on_grenade
+	~ on_projectile
+	~ on_hurt
+	~ on_death
+	~ on_destroy
+	~ on_cleanup
+	~ Misc. related scripts
 
 Example Code (Ignore extra space before #define here):
  #define Bat_create(_x, _y)
-    return instance_create(_x, _y, CustomEnemy);
- 
+	return instance_create(_x, _y, CustomEnemy);
+    
  #define Bat_step
-    motion_add(direction, 1);
- 
+	motion_add(direction, 1);
+    
  #define Bat_draw
-    draw_self_enemy();
- 
-
+	draw_self_enemy();
+    
+    
  #define Cat_create(_x, _y)
-    return instance_create(_x, _y, CustomEnemy);
- 
+	return instance_create(_x, _y, CustomEnemy);
+    
  #define Cat_step
-    my_health = 0;
-
-
+	my_health = 0;
+    
+    
 /// Mod Events
  #define step
-    with(Catobjects) x += 20;
-
+	with(Catobjects) x += 20;
+    
  #define draw_shadows
-    with(Batboys) draw_sprite(shd24, 0, x, y);
-
-
+	with(Batboys) draw_sprite(shd24, 0, x, y);
+    
+    
 /// Scripts
 blah blah blah
 
 \*  ^^ Delete this line and all above after copy-pasting ^^                                         */
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
-    mus = mod_variable_get("mod", "teassets", "mus");
-    sav = mod_variable_get("mod", "teassets", "sav");
-    
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
+	mus = mod_variable_get("mod", "teassets", "mus");
+	sav = mod_variable_get("mod", "teassets", "sav");
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -74,6 +74,11 @@ blah blah blah
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

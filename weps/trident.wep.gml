@@ -1,9 +1,9 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    
-    global.sprWep = spr.Trident;
-    global.sprWepLocked = mskNone;
-
+	spr = mod_variable_get("mod", "teassets", "spr");
+	
+	global.sprWep = spr.Trident;
+	global.sprWepLocked = mskNone;
+	
 	lwoWep = {
 		wep 	 : mod_current,
 		chrg	 : false,
@@ -15,21 +15,21 @@
 		primary  : true,
 		visible  : true
 	};
-
+	
 #macro spr global.spr
 
 #macro lwoWep global.lwoWep
 
-#define weapon_name		return (weapon_avail() ? "TRIDENT" : "LOCKED");
-#define weapon_text		return "SCEPTER OF THE @bSEA";
-#define weapon_type		return 0;  // Melee
-#define weapon_area		return (weapon_avail() ? 7 : -1); // 3-2
-#define weapon_auto		return true;
-#define weapon_melee	return false;
-#define weapon_chrg		return true;
-#define weapon_swap(w)	return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
-#define weapon_sprt(w)	return (lq_defget(w, "visible", true) ? (weapon_avail() ? global.sprWep : global.sprWepLocked) : mskNone);
-#define weapon_avail	return (unlock_get("coastWep") || unlock_get("trident"));
+#define weapon_name     return (weapon_avail() ? "TRIDENT" : "LOCKED");
+#define weapon_text     return "SCEPTER OF THE @bSEA";
+#define weapon_type     return 0;  // Melee
+#define weapon_area     return (weapon_avail() ? 7 : -1); // 3-2
+#define weapon_auto     return true;
+#define weapon_melee    return false;
+#define weapon_chrg     return true;
+#define weapon_swap(w)  return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
+#define weapon_sprt(w)  return (lq_defget(w, "visible", true) ? (weapon_avail() ? global.sprWep : global.sprWepLocked) : mskNone);
+#define weapon_avail    return (unlock_get("coastWep") || unlock_get("trident"));
 
 #define weapon_load(w)
 	 // Stab Reload:
@@ -41,7 +41,7 @@
 	
 	 // Normal:
 	return current_time_scale;
-
+	
 #define weapon_fire(w)
 	var f = wepfire_init(w);
 	w = f.wep;
@@ -52,24 +52,24 @@
 		w.primary = !f.spec;
 		
 		 // Charging:
-    	if(w.chrg_num < w.chrg_max){
-    		 // Determine Charge Speed:
-    		var s = 1;
-    		with(f.creator) if(instance_is(self, Player)){
-    			s *= reloadspeed;
-	    		s *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
-    		}
-    		if(race == "venuz"){
-    			s *= 1.2 + (0.4 * ultra_get(race, 2));
-    		}
-    		
-    		 // Charge:
-	    	w.chrg_num += s * current_time_scale;
-	    	
+		if(w.chrg_num < w.chrg_max){
+			 // Determine Charge Speed:
+			var s = 1;
+			with(f.creator) if(instance_is(self, Player)){
+				s *= reloadspeed;
+				s *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
+			}
+			if(race == "venuz"){
+				s *= 1.2 + (0.4 * ultra_get(race, 2));
+			}
+			
+			 // Charge:
+			w.chrg_num += s * current_time_scale;
+			
 			 // Charging FX:
 			sound_play_pitch(sndOasisMelee, 1 / (1 - ((w.chrg_num / w.chrg_max) * 0.25)));
 			
-	    	 // Full Charge:
+			 // Full Charge:
 			if(w.chrg_num >= w.chrg_max){
 				w.chrg_num = w.chrg_max;
 				
@@ -83,19 +83,19 @@
 				sound_play_pitch(sndSewerDrip,		 3);
 				sleep(5);
 			}
-    	}
-    	
-    	 // Fully Charged - Blink:
-    	else if(frame_active(12)){
+		}
+		
+		 // Fully Charged - Blink:
+		else if(frame_active(12)){
 			with(f.creator) if(instance_is(self, Player)){
 				gunshine = 2;
 			}
 		}
 		
-    	 // Pullback:
-    	var n = (w.chrg_num / w.chrg_max);
-	    weapon_post(9 * n, 8 * n * current_time_scale, 0);
-	    
+		 // Pullback:
+		var n = (w.chrg_num / w.chrg_max);
+		weapon_post(9 * n, 8 * n * current_time_scale, 0);
+		
 		 // Pop Pop, Blood Gamble:
 		if(f.spec && !f.roids){
 			w.chrg_num = w.chrg_max;
@@ -107,9 +107,9 @@
 		}
 		with(w.chrg_obj) creator = other;
 	}
-
+	
 #define trident_chrg(w)
-    if(!w.chrg){
+	if(!w.chrg){
 		with(creator){
 			var	f = wepfire_init(w),
 				b = (w.primary ? "" : "b");
@@ -117,12 +117,12 @@
 			if(w.chrg_num > 0){
 				if((b + "wep") not in self || variable_instance_get(f.creator, b + "wep") == w){
 					 // Throw Trident:
-				    if(w.chrg_num >= w.chrg_max){
-			    		var c = variable_instance_get(f.creator, b + "curse", false);
-			    		
-			    		 // Lose Trident:
+					if(w.chrg_num >= w.chrg_max){
+						var c = variable_instance_get(f.creator, b + "curse", false);
+						
+						 // Lose Trident:
 						with(f.creator) if(variable_instance_get(self, b + "wep") == w){
-					    	if(!c){
+							if(!c){
 								variable_instance_set(self, b + "wep", wep_none);
 								
 								var k = (b + "wkick");
@@ -132,10 +132,10 @@
 								if(instance_is(self, Player) && w.primary){
 									player_swap();
 								}
-					    	}
-					    	else w.visible = false;
+							}
+							else w.visible = false;
 						}
-				    	
+						
 						 // Trident:
 						with(obj_create(x, y, "Trident")){
 							motion_add(other.gunangle, 18);
@@ -150,7 +150,7 @@
 					
 					 // Stab Trident:
 					else{
-						var l = w.stab_dis,
+						var	l = w.stab_dis,
 							d = gunangle;
 							
 						variable_instance_set(self, b + "reload",	 l);
@@ -198,7 +198,7 @@
 			  							}
 			  						}
 			  					}
-			        		}
+							}
 						}
 					}
 					
@@ -211,41 +211,41 @@
 					sound_play_pitchvol(sndOasisMelee,			1	* n, 1);
 					
 					 // bubbol:
-					var l = 24,
+					var	l = 24,
 						d = gunangle;
 						
 					with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bubble)){
 						motion_set(d + orandom(30), choose(1, 2, 2, 3, 3));
 					}
 				}
-	    	}
-		    w.chrg_num = 0;
-	    }
-	    instance_destroy();
-    }
-    w.chrg = false;
-
+			}
+			w.chrg_num = 0;
+		}
+		instance_destroy();
+	}
+	w.chrg = false;
+	
 #define step(_primary)
-    var b = (_primary ? "" : "b"),
-        w = variable_instance_get(self, b + "wep");
-        
-     // LWO Setup:
-    if(!is_object(w)){
-        w = lq_clone(lwoWep);
-        variable_instance_set(self, b + "wep", w);
-    }
-    
-     // Cursed Trident Grab Reorient:
-    if(w.wepangle != 0){
-    	script_bind_end_step(end_step, 0, _primary, self);
-    }
-
+	var	b = (_primary ? "" : "b"),
+		w = variable_instance_get(self, b + "wep");
+		
+	 // LWO Setup:
+	if(!is_object(w)){
+		w = lq_clone(lwoWep);
+		variable_instance_set(self, b + "wep", w);
+	}
+	
+	 // Cursed Trident Grab Reorient:
+	if(w.wepangle != 0){
+		script_bind_end_step(end_step, 0, _primary, self);
+	}
+	
 #define end_step(_primary, _inst)
 	instance_destroy();
-
+	
 	 // Wepangle Transition:
 	if(instance_exists(_inst)){
-		var b = (_primary ? "" : "b"),
+		var	b = (_primary ? "" : "b"),
 			w = variable_instance_get(_inst, b + "wep");
 			
 		if(is_object(w) && "wepangle" in w){
@@ -254,8 +254,8 @@
 			if(abs(w.wepangle) < 1) w.wepangle = 0;
 		}
 	}
-
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);

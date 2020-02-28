@@ -25,13 +25,11 @@
 
 #macro DebugLag global.debug_lag
 
-#macro bbox_center_x (bbox_left + bbox_right + 1) / 2
-#macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
-#macro bbox_height   (bbox_bottom + 1) - bbox_top
-
 #macro surfAnglerTrail	global.surfAnglerTrail
 #macro surfAnglerClear	global.surfAnglerClear
+
+#macro FloorPit     instances_matching(Floor, "sprite_index", spr.FloorTrenchB)
+#macro FloorPitless instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)
 
 #define Angler_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -167,7 +165,7 @@
 				scrWalk(direction + orandom(30), [20, 50]);
 				
 				 // Go to Nearest Non-Pit Floor:
-				with(instance_nearest_bbox(x + (hspeed * 4), y + (vspeed * 4), instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB))){
+				with(instance_nearest_bbox(x + (hspeed * 4), y + (vspeed * 4), FloorPitless)){
 					other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
 				}
 				
@@ -1791,7 +1789,7 @@
 
 		 // Floor Collision:
 		if(pit_get(posx, posy - 16)){
-			var f = instances_meeting(posx, posy - 16, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+			var f = instances_meeting(posx, posy - 16, FloorPitless);
 			if(array_length(f) > 0){
 				posx = _xprev;
 				posy = _yprev;
@@ -1829,7 +1827,7 @@
 	
 			 // Clear Floors:
 			if(place_meeting(posx, posy - 16, Floor)){
-				var _floors = instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB);
+				var _floors = FloorPitless;
 				if(array_length(instances_meeting(posx, posy - 16, _floors)) > 0){
 					image_xscale = _xsc * 1.2;
 					image_yscale = _ysc * 1.2;
@@ -2081,16 +2079,16 @@
 	}
 
 #define PitSquid_alrm3
-	var	_pits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB),
+	var	_floors = FloorPit,
 		_sparks = instances_matching(CustomObject, "name", "PitSpark");
 
-	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_pits));
+	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_floors));
 
 	 // Cool tentacle effects:
 	if(pit_height >= 1 && intro){
 		var _tries = 10;
 		while(_tries-- > 0){
-			with(instance_random(_pits)){
+			with(instance_random(_floors)){
 				var d = point_distance(x, y, other.posx, other.posy);
 				if(d > 96 && d < 256){
 					if(array_length(instances_meeting(x, y, _sparks)) <= 0){
@@ -2287,7 +2285,7 @@
 
 	 // Floor Collision:
 	if(pit_get(x, y) && sprite_index != spr_appear){
-		var f = instances_meeting(x, y, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+		var f = instances_meeting(x, y, FloorPitless);
 		if(array_length(f) > 0){
 			x = xprevious;
 			y = yprevious;
@@ -2305,7 +2303,7 @@
 			instance_create(x, y, FloorExplo);
 			instance_destroy();
 		}
-		with(instances_meeting(x, y, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB))){
+		with(instances_meeting(x, y, FloorPitless)){
 			styleb = true;
 			sprite_index = spr.FloorTrenchB;
 			mod_script_call("area", "trench", "area_setup_floor");
@@ -2431,7 +2429,7 @@
 				if(instance_exists(target)){
 					var	_target = target,
 						_creator = creator,
-						_allPits = instances_matching(Floor, "sprite_index", spr.FloorTrenchB);
+						_allPits = FloorPit;
 						
 					 // Bomb Attack:
 					if(bomb){
@@ -3608,7 +3606,7 @@
 		 // Floor Collision:
 		mask_index = mask;
 		if(pit_get(xpos, ypos)){
-			var f = instances_meeting(xpos, ypos, instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB));
+			var f = instances_meeting(xpos, ypos, FloorPitless);
 			if(array_length(f) > 0){
 				xpos -= hspeed_raw;
 				ypos -= vspeed_raw;
@@ -3639,7 +3637,7 @@
 		){
 			if(instance_exists(target)){
 				var _floor = [];
-				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
+				with(FloorPit){
 					if(
 						!place_meeting(x, y, Wall)			&&
 						!place_meeting(x, y, FloorExplo)	&&
@@ -3852,9 +3850,9 @@
 			_frame = floor(image_index);
 
 		if(
-			sprite_index == spr_fire                    ||
-			(sprite_index == spr_hurt && _frame != 1)   ||
-			(sprite_index == spr_idle && (_frame == 1 || _frame == 3))
+			sprite_index == spr_fire
+			|| (sprite_index == spr_hurt && _frame != 1)
+			|| (sprite_index == spr_idle && (_frame == 1 || _frame == 3))
 		){
 			o = 5;
 		}
@@ -3956,9 +3954,9 @@
 			_frame = floor(image_index);
 
 		if(
-			sprite_index == spr_fire                    ||
-			(sprite_index == spr_hurt && _frame != 1)   ||
-			(sprite_index == spr_idle && (_frame == 1 || _frame == 3))
+			sprite_index == spr_fire
+			|| (sprite_index == spr_hurt && _frame != 1)
+			|| (sprite_index == spr_idle && (_frame == 1 || _frame == 3))
 		){
 			o = 5;
 		}
@@ -4115,6 +4113,11 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
+#macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
+#macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
+#macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
+#macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
