@@ -765,11 +765,11 @@
 		spr_shadow = shd32;
 		image_speed = 0;
 		depth = -1;
-
+		
 		 // Sound:
 		snd_hurt = sndHitRock;
 		snd_dead = -1;
-
+		
 		 // Vars:
 		mask_index = mskScorpion;
 		maxhealth = 100 * (1 + GameCont.loops);
@@ -780,16 +780,16 @@
 		 // Easter:
 		pickup_indicator = scrPickupIndicator("DONATE");
 		with(pickup_indicator) on_meet = script_ref_create(CoastBossBecome_PickupIndicator_meet);
-
+		
 		 // Part Bonus:
 		if(variable_instance_get(GameCont, "visited_coast", false)){
 			part = 1;
 		}
 		part = min(part + GameCont.loops, 2);
-
+		
 		return id;
 	}
-
+	
 #define CoastBossBecome_step
 	speed = 0;
 	x = xstart;

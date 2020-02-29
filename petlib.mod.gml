@@ -796,11 +796,146 @@
 #define Salamander_create
 	 // Visual:
 	spr_shadow_y = -2;
+	depth = -3;
 	
 	 // Vars:
+	mask_index = mskAlly;
+	mount = false;
+	mount_y = 0;
+	pickup_mount_time = -1;
+	pickup_mount_text = ["MOUNT", "UNMOUNT"];
+	pickup_mount = scrPickupIndicator(pickup_mount_text[mount]);
+	with(pickup_mount){
+		image_xscale = 2;
+		image_yscale = 2;
+		on_meet = script_ref_create(Salamander_PickupIndicator_meet);
+	}
 	
 #define Salamander_ttip
 	return [""];
+	
+#define Salamander_step
+	 // Mount/Unmount:
+	var _pickup = pickup_mount;
+	if(instance_exists(_pickup)){
+		if(player_is_active(_pickup.pick) || (mount && !instance_exists(leader))){
+			mount = !mount;
+			mount_y = 0;
+			
+			 // Pickup Text:
+			pickup_mount_time = (mount ? 0 : -1);
+			_pickup.text = pickup_mount_text[mount];
+			_pickup.creator = (mount ? leader : self);
+			
+			 // Move Rider:
+			if(instance_exists(leader)){
+				if(mount){
+					leader.x = lerp(leader.x, x, 0.5);
+					leader.y = lerp(leader.y, y, 0.5);
+				}
+				leader.vspeed = -3;
+			}
+			
+			 // Mounted/Unmounted Effects:
+			repeat(3) with(scrFX(x, y, 1.5, Smoke)){
+				image_xscale /= 1.2;
+				image_yscale /= 1.2;
+			}
+			if(mount){
+				repeat(5) scrFX(x, y, 3, Dust);
+				sound_play_hit_ext(sndSalamanderCharge, 1.3 + random(0.2), 1);
+				sound_play_hit_ext(sndSalamanderFire, 1 + orandom(0.2), 0.5);
+			}
+			else{
+				sound_play_hit_ext(sndSalamanderEndFire, 1 + random(0.2), 0.5);
+			}
+		}
+		
+		 // Hide Indicator:
+		if(pickup_mount_time > 0){
+			pickup_mount_time = max(0, pickup_mount_time - current_time_scale);
+			
+			 // Puff Out:
+			if(pickup_mount_time <= 2){
+				_pickup.text = pickup_mount_text[mount];
+				if(pickup_mount_time > 0){
+					_pickup.text = `@(color:${merge_color(c_black, c_white, (pickup_mount_time - 1) / 2)})` + _pickup.text;
+				}
+				else{
+					sound_play_hit_ext(sndSalamanderEndFire, 1.5 + orandom(0.1), 1);
+				}
+			}
+		}
+		_pickup.visible = (pickup_mount_time != 0 && instance_exists(leader));
+		
+		 // Unhide Indicator:
+		if(pickup_mount_time == 0){
+			with(leader) if(canpick && button_pressed(index, "pick") && !instance_exists(nearwep)){
+				other.pickup_mount_time = 45;
+				sound_play_hit_ext(sndAppear, 1 + orandom(0.1), 0.8);
+			}
+		}
+	}
+	
+	 // Riding:
+	if(mount && instance_exists(leader)){
+		with(leader) sprite_index = spr_idle;
+		
+		 // Offset:
+		var _yAdd = 0;
+		mount_y = lerp(mount_y, 2 + pfloor(sprite_get_bbox_bottom(leader.sprite_index) - sprite_get_yoffset(leader.sprite_index), 2), 0.25 * current_time_scale);
+		while(_yAdd != mount_y && !place_meeting(leader.x, leader.y + _yAdd + sign(mount_y), Wall)){
+			_yAdd += clamp(mount_y - _yAdd, -1, 1);
+		}
+		if(_yAdd != mount_y){
+			mount_y = _yAdd;
+			
+			 // Push Away:
+			leader.vspeed -= 1.8 * sign(_yAdd) * current_time_scale;
+		}
+		
+		 // Hold:
+		x = leader.x;
+		y = leader.y + mount_y;
+		hspeed = leader.hspeed;
+		vspeed = leader.vspeed;
+		if(hspeed != 0) scrRight(direction);
+		
+		 // Effects:
+		if(chance(1, 60)){
+			instance_create(x, y, Smoke);
+		}
+	}
+	
+#define Salamander_alrm0(_leaderDir, _leaderDis)
+	alarm0 = 30;
+	
+	if(!mount){
+		if(instance_exists(leader)){
+			if(_leaderDis > 24){
+				 // Pathfinding:
+				if(path_dir != null){
+					scrWalk(path_dir + orandom(20), 8);
+					alarm0 = walk;
+				}
+				
+				 // Move Toward Leader:
+				else{
+					scrWalk(_leaderDir + orandom(10), 10);
+					alarm0 = 10 + random(5);
+				}
+			}
+		}
+		
+		 // Wander:
+		else scrWalk(random(360), 15);
+	}
+	
+#define Salamander_PickupIndicator_meet
+	if(creator == other || variable_instance_get(creator, "leader") == other){
+		return true;
+	}
+	return false;
 	
 	
 #define Scorpion_create

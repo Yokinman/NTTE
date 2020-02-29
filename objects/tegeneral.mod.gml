@@ -2969,7 +2969,7 @@
 				}
 			}
 			
-			 // Idle Movement:
+			 // Wander:
 			else scrWalk(random(360), 15);
 		}
 	}
@@ -3587,7 +3587,6 @@
 		pick = -1;
 		xoff = 0;
 		yoff = 0;
-		creator_visible_follow = true;
 		
 		 // Events:
 		on_meet = ["", "", ""];
@@ -3603,11 +3602,15 @@
 	var c = creator;
 	if(c != noone){
 		if(instance_exists(c)){
+			if(instance_exists(nearwep)) with(nearwep){
+				x += c.x - other.x;
+				y += c.y - other.y;
+			}
 			x = c.x;
 			y = c.y;
-			image_angle = c.image_angle;
-			image_xscale = c.image_xscale;
-			image_yscale = c.image_yscale;
+			//image_angle = c.image_angle;
+			//image_xscale = c.image_xscale;
+			//image_yscale = c.image_yscale;
 		}
 		else instance_destroy();
 	}
@@ -5190,64 +5193,78 @@
 	_inst = instances_matching(_inst, "visible", true);
 	if(array_length(_inst) > 0){
 		with(Player) if(visible || variable_instance_get(id, "wading", 0) > 0){
-			if(place_meeting(x, y, CustomObject)){
-				// Find Nearest Touching Indicator:
-				var	_nearest = noone,
-					_maxDis = null,
-					_maxDepth = null;
-					
-				if(instance_exists(nearwep)){
-					_maxDis = point_distance(x, y, nearwep.x, nearwep.y);
-					_maxDepth = nearwep.depth;
-				}
+			if(place_meeting(x, y, CustomObject) && !place_meeting(x, y, IceFlower) && !place_meeting(x, y, CarVenusFixed)){
+				var _noVan = true;
 				
-				with(instances_meeting(x, y, _inst)){
-					if(place_meeting(x, y, other) && (!creator_visible_follow || !instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
-						var e = on_meet;
-						if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
-							if(_maxDepth == null || depth < _maxDepth){
-								_maxDepth = depth;
-								_maxDis = null;
-							}
-							if(depth == _maxDepth){
-								var _dis = point_distance(x, y, other.x, other.y);
-								if(_maxDis == null || _dis < _maxDis){
-									_maxDis = _dis;
-									_nearest = id;
-								}
-							}
+				 // Van Check:
+				if(place_meeting(x, y, Van)){
+					with(instances_meeting(x, y, instances_matching(Van, "drawspr", sprVanOpenIdle))){
+						if(place_meeting(x, y, other)){
+							_noVan = false;
+							break;
 						}
 					}
 				}
 				
-				 // Secret IceFlower:
-				with(_nearest){
-					nearwep = instance_create(x + hspeed_raw + xoff, y + vspeed_raw + yoff, IceFlower);
-					with(nearwep){
-						name = other.text;
-						x = xstart;
-						y = ystart;
-						xprevious = x;
-						yprevious = y;
-						mask_index = mskNone;
-						sprite_index = mskNone;
-						spr_idle = mskNone;
-						spr_walk = mskNone;
-						spr_hurt = mskNone;
-						spr_dead = mskNone;
-						spr_shadow = -1;
-						snd_hurt = -1;
-						snd_dead = -1;
-						size = 0;
-						team = 0;
-						nowade = true;
-						my_health = 99999;
-						nexthurt = current_frame + 99999;
+				if(_noVan){
+					// Find Nearest Touching Indicator:
+					var	_nearest = noone,
+						_maxDis = null,
+						_maxDepth = null;
+						
+					if(instance_exists(nearwep)){
+						_maxDis = point_distance(x, y, nearwep.x, nearwep.y);
+						_maxDepth = nearwep.depth;
 					}
-					with(other){
-						nearwep = other.nearwep;
-						if(canpick && button_pressed(index, "pick")){
-							other.pick = index;
+					
+					with(instances_meeting(x, y, _inst)){
+						if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
+							var e = on_meet;
+							if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
+								if(_maxDepth == null || depth < _maxDepth){
+									_maxDepth = depth;
+									_maxDis = null;
+								}
+								if(depth == _maxDepth){
+									var _dis = point_distance(x, y, other.x, other.y);
+									if(_maxDis == null || _dis < _maxDis){
+										_maxDis = _dis;
+										_nearest = id;
+									}
+								}
+							}
+						}
+					}
+					
+					 // Secret IceFlower:
+					with(_nearest){
+						nearwep = instance_create(x + xoff, y + yoff, IceFlower);
+						with(nearwep){
+							name = other.text;
+							x = xstart;
+							y = ystart;
+							xprevious = x;
+							yprevious = y;
+							mask_index = mskNone;
+							sprite_index = mskNone;
+							spr_idle = mskNone;
+							spr_walk = mskNone;
+							spr_hurt = mskNone;
+							spr_dead = mskNone;
+							spr_shadow = -1;
+							snd_hurt = -1;
+							snd_dead = -1;
+							size = 0;
+							team = 0;
+							nowade = true;
+							my_health = 99999;
+							nexthurt = current_frame + 99999;
+						}
+						with(other){
+							nearwep = other.nearwep;
+							if(canpick && button_pressed(index, "pick")){
+								other.pick = index;
+							}
 						}
 					}
 				}

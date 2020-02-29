@@ -376,118 +376,120 @@
 	if(DebugLag) trace_time();
 	
 	 /// ACTIVE : Charm
-	if(button_check(index, "spec") || usespec > 0){
-		var	_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
-			_feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
-			_featherNum = ceil(feather_num * feather_num_mult);
-			
-		if(array_length(_feathersTargeting) < _featherNum){
-			 // Retrieve Feathers:
-			with(instances_matching(_feathers, "canhold", false)){
-				 // Remove Charm Time:
-				if(target != creator){
-					if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) > 0 || creator != other)){
-						with(target){
-							ntte_charm.time -= other.stick_time;
-							if(ntte_charm.time <= 0){
-								charm_instance(id, false);
+	if(canspec){
+		if(button_check(index, "spec") || usespec > 0){
+			var	_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
+				_feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
+				_featherNum = ceil(feather_num * feather_num_mult);
+				
+			if(array_length(_feathersTargeting) < _featherNum){
+				 // Retrieve Feathers:
+				with(instances_matching(_feathers, "canhold", false)){
+					 // Remove Charm Time:
+					if(target != creator){
+						if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) > 0 || creator != other)){
+							with(target){
+								ntte_charm.time -= other.stick_time;
+								if(ntte_charm.time <= 0){
+									charm_instance(id, false);
+								}
 							}
 						}
+						target = creator;
 					}
-					target = creator;
-				}
-				
-				 // Unstick:
-				if(stick){
-					stick = false;
-					motion_add(random(360), 4);
-				}
-				
-				 // Mine now:
-				if(creator == other && array_length(_feathersTargeting) < _featherNum){
-					other.feather_targ_delay = 3;
-					array_push(_feathersTargeting, id);
-				}
-			}
-			
-			 // Excrete New Feathers:
-			while(array_length(_feathersTargeting) < _featherNum && (feather_ammo > 0 || infammo != 0)){
-				if(infammo == 0) feather_ammo--;
-				
-				 // Feathers:
-				with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-					sprite_index = other.spr_feather;
-					bskin = other.bskin;
-					index = other.index;
-					creator = other;
-					target = other;
-					array_push(_feathersTargeting, id);
-				}
-				
-				 // Effects:
-				sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
-			}
-		}
-		
-		 // Targeting:
-		if(array_length(_feathersTargeting) > 0){
-			with(_feathersTargeting) canhold = true;
-			
-			if(feather_targ_delay <= 0){
-				var	_targ = [],
-					_targX = mouse_x[index],
-					_targY = mouse_y[index],
-					_targRadius = feather_targ_radius,
-					_featherMax = array_length(_feathersTargeting);
 					
-				 // Gather All Potential Targets:
-				with(instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
-					if(collision_circle(_targX, _targY, _targRadius, id, true, false)){
-						 // Intro played OR is not a boss:
-						if(
-							variable_instance_get(self, "intro", true)
-							||
-							!(array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) || variable_instance_get(self, "boss", false))
-						){
-							array_push(_targ, id);
-							if(array_length(_targ) >= _featherMax) break;
-						}
+					 // Unstick:
+					if(stick){
+						stick = false;
+						motion_add(random(360), 4);
+					}
+					
+					 // Mine now:
+					if(creator == other && array_length(_feathersTargeting) < _featherNum){
+						other.feather_targ_delay = 3;
+						array_push(_feathersTargeting, id);
 					}
 				}
 				
-				 // Spread Feathers Out Evenly:
-				if(array_length(_targ) > 0){
-					var	_featherNum = 0,
-						_spreadMax = max(1, ceil(_featherMax / array_length(_targ)));
-						
-					with(_targ){
-						var _spreadNum = 0;
-						while(_featherNum < _featherMax && _spreadNum < _spreadMax){
-							with(_feathersTargeting[_featherNum]){
-								target = other;
-							}
-							_featherNum++;
-							_spreadNum++;
-						}
+				 // Excrete New Feathers:
+				while(array_length(_feathersTargeting) < _featherNum && (feather_ammo > 0 || infammo != 0)){
+					if(infammo == 0) feather_ammo--;
+					
+					 // Feathers:
+					with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
+						sprite_index = other.spr_feather;
+						bskin = other.bskin;
+						index = other.index;
+						creator = other;
+						target = other;
+						array_push(_feathersTargeting, id);
 					}
-				}
-				
-				 // Nothing to Target, Return to Parrot:
-				else{
-					with(_feathersTargeting) target = other;
+					
+					 // Effects:
+					sound_play_pitchvol(sndSharpTeeth, 3 + random(3), 0.4);
 				}
 			}
 			
-			 // Minor targeting delay so you can just click to return feathers:
-			else{
-				feather_targ_delay -= current_time_scale;
-				with(_feathers) target = creator;
+			 // Targeting:
+			if(array_length(_feathersTargeting) > 0){
+				with(_feathersTargeting) canhold = true;
+				
+				if(feather_targ_delay <= 0){
+					var	_targ = [],
+						_targX = mouse_x[index],
+						_targY = mouse_y[index],
+						_targRadius = feather_targ_radius,
+						_featherMax = array_length(_feathersTargeting);
+						
+					 // Gather All Potential Targets:
+					with(instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
+						if(collision_circle(_targX, _targY, _targRadius, id, true, false)){
+							 // Intro played OR is not a boss:
+							if(
+								variable_instance_get(self, "intro", true)
+								||
+								!(array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index) || variable_instance_get(self, "boss", false))
+							){
+								array_push(_targ, id);
+								if(array_length(_targ) >= _featherMax) break;
+							}
+						}
+					}
+					
+					 // Spread Feathers Out Evenly:
+					if(array_length(_targ) > 0){
+						var	_featherNum = 0,
+							_spreadMax = max(1, ceil(_featherMax / array_length(_targ)));
+							
+						with(_targ){
+							var _spreadNum = 0;
+							while(_featherNum < _featherMax && _spreadNum < _spreadMax){
+								with(_feathersTargeting[_featherNum]){
+									target = other;
+								}
+								_featherNum++;
+								_spreadNum++;
+							}
+						}
+					}
+					
+					 // Nothing to Target, Return to Parrot:
+					else{
+						with(_feathersTargeting) target = other;
+					}
+				}
+				
+				 // Minor targeting delay so you can just click to return feathers:
+				else{
+					feather_targ_delay -= current_time_scale;
+					with(_feathers) target = creator;
+				}
 			}
-		}
-		
-		 // No Feathers:
-		else if(button_pressed(index, "spec")){
-			sound_play_pitchvol(sndMutant0Cnfm, 3 + orandom(0.2), 0.5);
+			
+			 // No Feathers:
+			else if(button_pressed(index, "spec")){
+				sound_play_pitchvol(sndMutant0Cnfm, 3 + orandom(0.2), 0.5);
+			}
 		}
 	}
 	
