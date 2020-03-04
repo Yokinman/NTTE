@@ -853,7 +853,7 @@
 		 // Vars:
 		maxhealth = 4;
 		raddrop = 2;
-		size = 1;
+		size = 0;
 		walk = 0;
 		walkspeed = 0.8;
 		maxspeed = 3;

@@ -2384,39 +2384,45 @@
 		z = 0;
 		zspeed = 8;
 		zfriction = 0.5;
-
+		
 		 // Saved Vars:
 		depth = -2;
 		mask_index = mskPlayer;
 		spr_shadow_y = 0;
-
+		
 		return id;
 	}
 
 #define PalankingToss_end_step
 	z += zspeed * current_time_scale;
 	zspeed -= zfriction * current_time_scale;
-
+	
 	if(instance_exists(creator) && (z > 0 || zspeed > 0)){
 		if(instance_is(creator, Player)){
 			hspeed += (creator.hspeed / 10) * current_time_scale;
 			vspeed += (creator.vspeed / 10) * current_time_scale;
 		}
+		
 		speed = clamp(speed, 2, 6);
+		
 		with(creator){
 			x = other.x;
 			y = other.y - other.z;
 			mask_index = mskNone;
+			depth = -8;
 			nowade = true;
-
-			 // Visual:
-			depth = -7;
+			
+			 // Shadow:
 			if("spr_shadow_y" in self){
 				spr_shadow_y = other.spr_shadow_y + other.z;
 			}
+			
+			 // Aerodynamic:
 			var _ang = point_direction(0, 0, other.hspeed, -other.zspeed) - 90;
 			if("angle" in self) angle = _ang;
 			else image_angle = _ang;
+			
+			 // Trail:
 			if(current_frame_active && instance_is(self, Player)){
 				with(instance_create(x + orandom(4), y + orandom(4), Dust)){
 					coast_water = false;
@@ -2426,22 +2432,35 @@
 		}
 	}
 	else{
-		instance_create(x, y, PortalClear);
-
-		 // Reset Vars & Damage:
 		with(creator){
-			nowade = false;
-			depth = other.depth;
+			 // Reset Vars:
 			mask_index = other.mask_index;
+			depth = other.depth;
+			nowade = false;
 			if("spr_shadow_y" in self) spr_shadow_y = other.spr_shadow_y;
 			if("angle" in self) angle = 0;
 			else image_angle = 0;
-
+			
+			 // Damage:
 			if(instance_is(self, hitme) && (place_meeting(x, y, Floor) || GameCont.area != "coast")){
 				projectile_hit(id, 1);
 			}
+			
+			 // On Walls:
+			if(!place_meeting(x, y, Floor) || place_meeting(x, y, Wall)){
+				if(!place_meeting(x, y, Floor)){
+					with(instance_nearest_bbox(x, y, Floor)){
+						if(collision_line(other.x, other.y, bbox_center_x, bbox_center_y, Wall, false, false)){
+							with(other){
+								top_create(x, y, self, 0, 0);
+							}
+						}
+					}
+				}
+				instance_create(x, y, PortalClear);
+			}
 		}
-
+		
 		 // Effects:
 		repeat(5 + variable_instance_get(creator, "size", 0)){
 			with(instance_create(x, y, Dust)){
@@ -2449,11 +2468,11 @@
 				motion_add(other.direction, 1);
 			}
 		}
-
+		
 		instance_destroy();
 	}
-
-
+	
+	
 #define Palm_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -2462,32 +2481,32 @@
 		spr_dead = spr.PalmDead;
 		spr_shadow = -1;
 		depth = -2 - (y / 20000);
-
+		
 		 // Sound:
 		snd_hurt = sndHitRock;
 		snd_dead = sndHitPlant;
-
+		
 		 // Vars:
 		mask_index = mskStreetLight;
 		maxhealth = 30;
 		size = 2;
 		my_enemy = noone;
 		my_enemy_mask = mskNone;
-
+		
 		 // Fortify:
 		if(chance(1, 8)){
 			my_enemy = obj_create(x, y, "Diver");
 			with(my_enemy) depth = -3;
-
+			
 			spr_idle = spr.PalmFortIdle;
 			spr_hurt = spr.PalmFortHurt;
 			snd_dead = sndGeneratorBreak;
 			maxhealth = 40;
 		}
-
+		
 		return id;
 	}
-
+	
 #define Palm_step
 	with(my_enemy){
 		x = other.x;

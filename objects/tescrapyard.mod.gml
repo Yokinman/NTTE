@@ -99,8 +99,7 @@
 		maxhealth = 10;
 		raddrop = 5;
 		size = 1;
-		kills = 0;
-		max_kills = 0;
+		max_kills = -1;
 		walk = 0;
 		walkspeed = 0.6;
 		maxspeed = 2.5;
@@ -120,9 +119,18 @@
 	}
 	
 #define BoneRaven_step
-	 // Animate:
 	if(!instance_exists(top_object) || (top_object.speed == 0 && top_object.zspeed == 0)){
-		if(!active) speed = 0;
+		 // Stay Still:
+		if(!active){
+			speed = 0;
+		}
+		
+		 // Setup Kills:
+		else if(max_kills < 0){
+			max_kills = GameCont.kills;
+		}
+		
+		 // Animate:
 		if(sprite_index != spr_chrg || anim_end){
 			sprite_index = enemy_sprite;
 		}
@@ -134,8 +142,7 @@
 		
 		 // Landing:
 		if(top_object.zspeed < 0){
-			if(top_object.z > 8)
-			if(sprite_index != spr_land){
+			if(top_object.z > 8 && sprite_index != spr_land){
 				image_index = max(2, image_index);
 				if(anim_end) spr_chrg = spr_land;
 			}
@@ -169,7 +176,7 @@
 	alarm1 = 30 + random(30);
 	
 	 // You Lose:
-	if(GameCont.kills > max_kills || failed){
+	if((max_kills >= 0 && GameCont.kills > max_kills) || failed){
 		failed = true;
 		BoneRaven_fly(-1, -1);
 	}
@@ -196,6 +203,8 @@
 #define BoneRaven_alrm2
 	 // Activate:
 	active = true;
+	
+	 // Fly Away:
 	var _disMin = 96;
 	if(enemy_target(x, y)){
 		_disMin += point_distance(x, y, target.x, target.y);
@@ -210,6 +219,11 @@
 	
 #define BoneRaven_death
 	with(top_object) instance_destroy();
+	
+	 // Kills Fix:
+	with(instances_matching(object_index, "name", name)){
+		max_kills += other.kills;
+	}
 	
 	 // Return That Which You Stole:
 	if(instance_exists(creator)){
@@ -677,10 +691,8 @@
 		}
 		if(active){
 			var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
-			with(instances_matching(_ravens, "active", false)){
-				max_kills = GameCont.kills;
+			with(instances_matching_lt(instances_matching(_ravens, "active", false), "alarm2", 0)){
 				alarm2 = 1 + random(5);
-				active = true;
 			}
 		}
 		

@@ -2627,17 +2627,19 @@
 	 // Portal Attraction:
 	var _spin = 0;
 	if(visible || instance_exists(revive)){
-		with(Portal) if(point_distance(x, y, other.x, other.y) < 64 || (object_index == BigPortal && timer > 30)){
-			if(in_sight(other)){
-				with(other){
-					var	l = 4 * current_time_scale,
-						d = point_direction(x, y, other.x, other.y),
-						_x = x + lengthdir_x(l, d),
-						_y = y + lengthdir_y(l, d)
-
-					if(place_free(_x, y)) x = _x;
-					if(place_free(x, _y)) y = _y;
-					_spin = (30 * right);
+		with(instances_matching_ne(Portal, "sprite_index", sprPortalSpawn, sprBigPortalSpawn)){
+			if(point_distance(x, y, other.x, other.y) < 64 || (object_index == BigPortal && timer > 30)){
+				if(in_sight(other)){
+					with(other){
+						var	l = 4 * current_time_scale,
+							d = point_direction(x, y, other.x, other.y),
+							_x = x + lengthdir_x(l, d),
+							_y = y + lengthdir_y(l, d)
+							
+						if(place_free(_x, y)) x = _x;
+						if(place_free(x, _y)) y = _y;
+						_spin = (30 * right);
+					}
 				}
 			}
 		}
@@ -2653,7 +2655,7 @@
 	
 	 // Portal Spin:
 	if(_spin != 0){
-		portal_angle = (portal_angle + 360 + _spin) % 360;
+		portal_angle += _spin;
 		sprite_index = spr_hurt;
 		image_index = 1;
 		
@@ -2662,6 +2664,7 @@
 		walk = 0;
 	}
 	else if(portal_angle != 0){
+		portal_angle = ((portal_angle % 360) + 360) % 360;
 		portal_angle -= portal_angle * 0.2 * current_time_scale;
 	}
 	
@@ -2867,7 +2870,7 @@
 		_y = y,
 		_xsc = image_xscale * right,
 		_ysc = image_yscale,
-		_ang = image_angle + portal_angle,
+		_ang = image_angle + (((portal_angle % 360) + 360) % 360),
 		_col = image_blend,
 		_alp = image_alpha * (instance_exists(revive) ? 0.4 : 1);
 		
