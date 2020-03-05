@@ -20,6 +20,8 @@
 
 #macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
 
+#macro player_moving (canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west")))
+
 #define CoolGuy_create
 	 // Visual:
 	spr_shadow = shd16;
@@ -915,13 +917,13 @@
 		charge_slow = ((charge < _chargeMax) ? 15 : 6);
 		with((mount && instance_exists(leader)) ? leader : self){
 			 // Slow:
-			speed = clamp(speed, friction + 0.6, 2);
+			speed = clamp(speed, 1, 2);
 			other.speed = speed;
 			
 			 // Charging Direction:
 			if(instance_is(self, Player)){
 				 // Towards Direction:
-				if(canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west"))){
+				if(player_moving){
 					other.charge_dir = direction;
 				}
 				
@@ -1134,6 +1136,14 @@
 					if(speed > _max) speed = max(_max, speed - (friction_raw * 2));
 				}
 			}
+			
+			else if(mount){
+				with(leader){
+					if(race == "frog" && !player_moving){
+						speed = other.speed;
+					}
+				}
+			}
 		}
 	}
 	
@@ -1193,9 +1203,7 @@
 			 // Push Away:
 			with(leader){
 				var _push = 1.8;
-				if(canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west"))){
-					_push /= 3;
-				}
+				if(player_moving) _push /= 3;
 				vspeed -= _push * sign(_yAdd) * current_time_scale;
 			}
 		}
