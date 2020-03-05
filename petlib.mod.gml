@@ -878,7 +878,7 @@
 		 // Unhide Indicator:
 		if(pickup_mount_time == 0){
 			with(leader) if(canpick && button_pressed(index, "pick") && !instance_exists(nearwep)){
-				other.pickup_mount_time = 45;
+				other.pickup_mount_time = 40;
 				sound_play_hit_ext(sndAppear, 1 + orandom(0.1), 0.8);
 			}
 		}
@@ -912,23 +912,28 @@
 		
 		 // Movement:
 		charge_dir = direction;
-		charge_slow = 10;
+		charge_slow = ((charge < _chargeMax) ? 15 : 6);
 		with((mount && instance_exists(leader)) ? leader : self){
 			 // Slow:
-			speed = clamp(speed, ((other.charge >= _chargeMin) ? friction + 0.6 : 0), 2);
+			speed = clamp(speed, friction + 0.6, 2);
 			other.speed = speed;
 			
-			 // Charge Towards Mouse:
+			 // Charging Direction:
 			if(instance_is(self, Player)){
-				other.charge_dir = point_direction(x, y, mouse_x[index], mouse_y[index]);
+				 // Towards Direction:
+				if(canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west"))){
+					other.charge_dir = direction;
+				}
 				
-				if(other.charge >= _chargeMin){
-					if(canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west"))){
-						//other.charge_dir = direction;
-					}
-					else{
-						direction = angle_lerp(direction, other.charge_dir + 180, 0.2 * current_time_scale);
-						other.direction = direction;
+				 // Towards Mouse:
+				else{
+					other.charge_dir = point_direction(x, y, mouse_x[index], mouse_y[index]);
+					direction = angle_lerp(direction, other.charge_dir + 180, 0.2 * current_time_scale);
+					other.direction = direction;
+					
+					 // Dash Backwards:
+					if(other.charge < _chargeMax){
+						other.charge_dir += 180;
 					}
 				}
 			}
@@ -955,33 +960,33 @@
 		if(charging){
 			charging = false;
 			
-			if(charge >= _chargeMax){
-				 // Force Direction:
-				direction = charge_dir;
-				with((mount && instance_exists(leader)) ? leader : self){
-					direction = other.direction;
+			 // Low Charge Dash:
+			if(charge < _chargeMax){
+				charge = _chargeMin;
+				
+				 // Effects:
+				//sound_play_hit_ext(sndSalamanderHurt, 1.6 + random(0.2), 0.3);
+				with(instance_create(x, y, Smoke)){
+					motion_set(other.charge_dir + 180 + orandom(10), 2 + other.charge);
 				}
+			}
 				
-				 // Shake:
-				view_shake_at(x, y, charge * 10);
-				
-				 // Sound:
-				var	_inst = (instance_exists(Player) ? instance_nearest(x, y, Player) : self),
-					_snd = audio_play_sound_at(sndFiretrap, _inst.x - x, _inst.y - y, 0, 64, 320, 1, false, 0);
-					
-				audio_sound_gain(_snd, 2, 0);
-				audio_sound_pitch(_snd, 2 + orandom(0.2));
-				audio_sound_set_track_position(_snd, 2.5 * (1 - (charge / _chargeMax)));
+			 // Force Direction:
+			direction = charge_dir;
+			with((mount && instance_exists(leader)) ? leader : self){
+				direction = other.charge_dir;
 			}
 			
-			 // No Charge:
-			else{
-				sound_play_hit_ext(sndSalamanderHurt, 1.6 + random(0.2), 0.3);
-				with(instance_create(x, y, Smoke)){
-					motion_set(other.charge_dir + orandom(10), 2 + other.charge);
-				}
-				charge = 0;
-			}
+			 // Shake:
+			view_shake_at(x, y, charge * 10);
+			
+			 // Sound:
+			var	_inst = (instance_exists(Player) ? instance_nearest(x, y, Player) : self),
+				_snd = audio_play_sound_at(sndFiretrap, _inst.x - x, _inst.y - y, 0, 64, 320, 1, false, 0);
+				
+			audio_sound_gain(_snd, 2, 0);
+			audio_sound_pitch(_snd, 2 + orandom(0.2));
+			audio_sound_set_track_position(_snd, 2.5 * (1 - (charge / _chargeMax)));
 		}
 		
 		 // Charging:
@@ -1002,7 +1007,7 @@
 					
 				if(array_length(_inst) > 0){
 					var	_charge = other.charge,
-						_damage = 14;
+						_damage = 4 + ceil(4 * _charge);
 						
 					with(_inst) if(mask_index != mskNone){
 						projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed), other.direction);
@@ -1110,7 +1115,7 @@
 					}
 					if(chance(1, 5)){
 						with(instance_create(x + orandom(8), y + orandom(8), GroundFlame)){
-							alarm0 = 30 + random(15);
+							alarm0 = 25 + random(15);
 						}
 					}
 				}
@@ -1169,7 +1174,16 @@
 		leader.mask_index = m;
 		
 		var _yAdd = 0;
-		while(_yAdd != mount_y && !place_meeting(leader.x, leader.y + _yAdd + sign(mount_y), Wall)){
+		while(_yAdd != mount_y){
+			var _walled = false;
+			for(var i = 0; i < array_length(path_wall); i++){
+				if(place_meeting(leader.x, leader.y + _yAdd + sign(mount_y), path_wall[i])){
+					_walled = true;
+					break;
+				}
+			}
+			if(_walled) break;
+			
 			_yAdd += clamp(mount_y - _yAdd, -1, 1);
 		}
 		
@@ -1209,7 +1223,7 @@
 #define Salamander_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 30;
 	
-	if(!mount && charge <= 0){
+	if(!mount && charge <= 0 && charge_slow <= 0){
 		if(instance_exists(leader)){
 			if(_leaderDis > 24){
 				 // Pathfinding:
