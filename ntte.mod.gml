@@ -509,7 +509,7 @@
 					with(floor_room(_w, _h, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
 						 // Family:
 						repeat(max(1, ((_w + _h) / 2) - 2)){
-							instance_create(x, y, (chance(1, 5) ? GoldScorpion : Scorpion));
+							instance_create(x, y, ((chance(1, 5) || !instance_exists(GoldScorpion)) ? GoldScorpion : Scorpion));
 						}
 						
 						 // Props:

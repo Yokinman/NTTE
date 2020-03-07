@@ -797,6 +797,7 @@
 
 #define Salamander_create
 	 // Visual:
+	spr_chrg = spr.PetSalamanderChrg;
 	spr_shadow_y = -2;
 	depth = -3;
 	
@@ -824,7 +825,19 @@
 	return [""];
 	
 #define Salamander_anim
-	sprite_index = ((dash_charge > 0 && !dash) ? spr_hurt : enemy_sprite);
+	 // Charging Up:
+	if(dash_charge > 0 && !dash){
+		if(dash_charge < dash_max){
+			sprite_index = spr_chrg;
+			image_index = image_number * (dash_charge / dash_max);
+		}
+		else{
+			sprite_index = spr_hurt;
+		}
+	}
+	
+	 // Normal:
+	else sprite_index = enemy_sprite;
 	
 #define Salamander_step
 	 // Mount/Unmount:
@@ -1020,6 +1033,7 @@
 					if(chance(1, 5)){
 						with(instance_create(x + orandom(8), y + orandom(8), GroundFlame)){
 							alarm0 = 25 + random(15);
+							image_blend = merge_color(image_blend, c_orange, random(1/4));
 						}
 					}
 				}
@@ -1052,9 +1066,6 @@
 			
 			 // Charging Effects:
 			if(_dashChargeLast < dash_max){
-				 // No Blinking:
-				image_index = image_number - 1;
-				
 				 // Sound:
 				sound_play_hit_ext(sndSalamanderEndFire, lerp(0.8, 2, dash_charge / dash_max), 1.4);
 				if(dash_charge >= dash_max){

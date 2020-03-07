@@ -1277,11 +1277,11 @@
 			
 			 // Salamander:
 			p = m + "Scrapyards/";
-			PetSalamanderIcon        = sprite(p + "sprPetSalamanderIcon",        1,  6,  6);
-			PetSalamanderIdle        = sprite(p + "sprPetSalamanderIdle",        6, 16, 16);
-			PetSalamanderWalk        = sprite(p + "sprPetSalamanderWalk",        8, 16, 16);
-			PetSalamanderHurt        = sprite(p + "sprPetSalamanderHurt",        3, 16, 16);
-			PetSalamanderMountedHurt = sprite(p + "sprPetSalamanderMountedHurt", 3, 16, 16);
+			PetSalamanderIcon = sprite(p + "sprPetSalamanderIcon", 1,  6,  6);
+			PetSalamanderIdle = sprite(p + "sprPetSalamanderIdle", 6, 16, 16);
+			PetSalamanderWalk = sprite(p + "sprPetSalamanderWalk", 8, 16, 16);
+			PetSalamanderHurt = sprite(p + "sprPetSalamanderHurt", 3, 16, 16);
+			PetSalamanderChrg = sprite(p + "sprPetSalamanderChrg", 3, 16, 16);
 			
 			 // Golden Chest Mimic:
 			p = m + "Mansion/";
