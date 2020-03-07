@@ -1030,7 +1030,8 @@
 		else{
 			with((mount && instance_exists(leader)) ? leader : self){
 				 // Slow:
-				speed = clamp(speed, 1, 2);
+				var _min = friction + 0.6;
+				speed = clamp(speed, _min, _min + 1);
 				other.speed = speed;
 				
 				 // Charging Direction:
