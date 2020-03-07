@@ -19,8 +19,8 @@
 
 #define area_subarea           return 1;
 #define area_next              return 0;//global.nextarea;
-#define area_music             return mus101;
-#define area_ambience          return amb101;
+#define area_music             return mus104;
+#define area_ambience          return amb104;
 #define area_background_color  return make_color_rgb(235, 0, 67);
 #define area_shadow_color      return make_color_rgb(16, 0, 24);
 #define area_darkness          return false;

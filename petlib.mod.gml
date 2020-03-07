@@ -802,10 +802,13 @@
 	
 	 // Vars:
 	mask_index = mskAlly;
-	charge = 0;
-	charge_dir = direction;
-	charge_slow = 0;
-	charging = false;
+	dash = false;
+	dash_max = 3;
+	dash_add = dash_max / 20;
+	dash_charge = 0;
+	dash_charging = false;
+	dash_direction = direction;
+	right_delay = 0;
 	mount = false;
 	mount_y = 0;
 	pickup_mount_time = -1;
@@ -821,7 +824,7 @@
 	return [""];
 	
 #define Salamander_anim
-	sprite_index = (charging ? spr_hurt : enemy_sprite);
+	sprite_index = ((dash_charge > 0 && !dash) ? spr_hurt : enemy_sprite);
 	
 #define Salamander_step
 	 // Mount/Unmount:
@@ -886,186 +889,82 @@
 		}
 	}
 	
-	 // Charge:
-	var	_chargeMin = 1,
-		_chargeMax = 3,
-		_chargeAdd = (_chargeMax / 20) * current_time_scale;
+	 // Dashing:
+	if((dash_charge > 0 || dash_charging) && portal_angle == 0){
+		var	_dashAdd = dash_add * (dash_charging ? 1 : -1) * current_time_scale,
+			_dashChargeLast = dash_charge;
+			
+		dash_charge = min(dash_charge + _dashAdd, dash_max);
 		
-	if(portal_angle != 0){
-		charge = 0;
-	}
-	
-	if(charging && mount && instance_exists(leader) && (button_check(leader.index, "spec") || leader.usespec > 0)){
-		if(charge < _chargeMax){
-			charge += _chargeAdd;
-			
-			 // No Blinking:
-			image_index = image_number - 1;
-			
-			 // Sound:
-			sound_play_hit_ext(sndSalamanderEndFire, lerp(0.8, 2, charge / _chargeMax), 1);
-			if(charge >= _chargeMax){
-				audio_sound_set_track_position(
-					sound_play_hit_ext(sndSalamanderCharge, 1 + orandom(0.05), 1.8),
-					0.05
-				);
-			}
-		}
-		
-		 // Movement:
-		charge_dir = direction;
-		charge_slow = ((charge < _chargeMax) ? 15 : 6);
-		with((mount && instance_exists(leader)) ? leader : self){
-			 // Slow:
-			speed = clamp(speed, 1, 2);
-			other.speed = speed;
-			
-			 // Charging Direction:
-			if(instance_is(self, Player)){
-				 // Towards Direction:
-				if(player_moving){
-					other.charge_dir = direction;
-				}
-				
-				 // Towards Mouse:
-				else{
-					other.charge_dir = point_direction(x, y, mouse_x[index], mouse_y[index]);
-					direction = angle_lerp(direction, other.charge_dir + 180, 0.2 * current_time_scale);
-					other.direction = direction;
-					
-					 // Dash Backwards:
-					if(other.charge < _chargeMax){
-						other.charge_dir += 180;
-					}
-				}
-			}
-		}
-		
-		 // Effects:
-		if(charge >= _chargeMin){
-			if(chance_ct(charge, 12)){
-				if(chance(2, 3)){
-					with(scrFX(x, y, [charge_dir + 180, 1], Smoke)){
-						hspeed += other.hspeed;
-						vspeed += other.vspeed;
-					}
-				}
-				with(scrFX([x - (13 * right * image_xscale), 2 * image_xscale], y + random(4 * image_yscale), random(random(1)), FireFly)){
-					sprite_index = spr.FlameSpark;
-					depth = other.depth - 1;
-				}
-			}
-		}
-	}
-	else{
-		 // Begin Charge:
-		if(charging){
-			charging = false;
-			
-			 // Low Charge Dash:
-			if(charge < _chargeMax){
-				charge = _chargeMin;
-				
-				 // Effects:
-				//sound_play_hit_ext(sndSalamanderHurt, 1.6 + random(0.2), 0.3);
-				with(instance_create(x, y, Smoke)){
-					motion_set(other.charge_dir + 180 + orandom(10), 2 + other.charge);
-				}
-			}
-				
-			 // Force Direction:
-			direction = charge_dir;
+		if(dash){
 			with((mount && instance_exists(leader)) ? leader : self){
-				direction = other.charge_dir;
-			}
-			
-			 // Shake:
-			view_shake_at(x, y, charge * 10);
-			
-			 // Sound:
-			var	_inst = (instance_exists(Player) ? instance_nearest(x, y, Player) : self),
-				_snd = audio_play_sound_at(sndFiretrap, _inst.x - x, _inst.y - y, 0, 64, 320, 1, false, 0);
-				
-			audio_sound_gain(_snd, 2, 0);
-			audio_sound_pitch(_snd, 2 + orandom(0.2));
-			audio_sound_set_track_position(_snd, 2.5 * (1 - (charge / _chargeMax)));
-		}
-		
-		 // Charging:
-		if(charge > 0){
-			charge -= _chargeAdd;
-			
-			with((mount && instance_exists(leader)) ? leader : self){
-				 // Dash:
-				direction = angle_lerp(direction, other.charge_dir, 0.2 * current_time_scale);
-				speed = friction + maxspeed + 2 + (2 * other.charge);
+				 // Movement:
+				direction = angle_lerp(direction, other.dash_direction, 0.2 * current_time_scale);
+				speed = friction + maxspeed + 2 + (2 * other.dash_charge);
 				other.direction = direction;
 				other.speed = speed;
 				
-				 // Bash:
+				 // Dash Bash:
 				var	_bx = 6,
 					_by = 6,
-					_inst = instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", team);
+					_inst = instances_matching_ne(instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", team), "mask_index", mskNone);
 					
 				if(array_length(_inst) > 0){
-					var	_charge = other.charge,
-						_damage = 4 + ceil(4 * _charge);
-						
-					with(_inst) if(mask_index != mskNone){
-						projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed), other.direction);
-						
-						if(instance_exists(self)){
-							 // Punt:
-							if(
-								chance(speed, 16)
-								&& my_health <= 0
-								&& size == 1
-								&& team != 0
-								&& !instance_is(self, prop)
-							){
-								with(obj_create(x, y, "PalankingToss")){
-									direction = other.direction;
-									speed = other.speed * 2/3;
-									zspeed = 5;
-									zfriction = 2/3;
-									creator = other;
-									depth = other.depth;
-									mask_index = other.mask_index;
-									spr_shadow_y = other.spr_shadow_y;
-									
-									 // Try not to go outside level:
-									with(other){
-										if(!place_meeting(x + lengthdir_x(96, direction), y + lengthdir_y(96, direction), Floor)){
-											other.speed /= 10;
+					with(other){
+						var _damage = 4 + ceil(4 * dash_charge);
+						with(_inst){
+							projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed), other.direction);
+							
+							if(instance_exists(self)){
+								 // Punt:
+								if(
+									chance(speed, 16)
+									&& my_health <= 0
+									&& size == 1
+									&& team != 0
+									&& !instance_is(self, prop)
+								){
+									with(obj_create(x, y, "PalankingToss")){
+										direction = other.direction;
+										speed = other.speed * 2/3;
+										zspeed = 5;
+										zfriction = 2/3;
+										creator = other;
+										depth = other.depth;
+										mask_index = other.mask_index;
+										spr_shadow_y = other.spr_shadow_y;
+										
+										 // Try not to go outside level:
+										with(other){
+											if(!place_meeting(x + lengthdir_x(96, direction), y + lengthdir_y(96, direction), Floor)){
+												other.speed /= 10;
+											}
 										}
 									}
+									
+									 // Don't Die:
+									my_health = max(my_health, 1);
+									if("canfly" in self) canfly = true;
 								}
 								
-								 // Don't Die:
-								my_health = max(my_health, 1);
-								if("canfly" in self) canfly = true;
-							}
-							
-							 // Large Dude, Stops Charge:
-							if((size > 0 && !instance_is(self, prop)) || maxhealth > _damage){
-								_charge = 0;
-								
-								 // Effects:
-								repeat(5){
-									with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
-										friction *= 2;
+								 // Large Dude, Stops Charge:
+								if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
+									with(other){
+										dash_charge = 0;
+										sprite_index = spr_hurt;
+										image_index = 0;
 									}
+									
+									 // Effects:
+									repeat(5){
+										with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
+											friction *= 2;
+										}
+									}
+									sound_play_hit_ext(sndBigBanditMeleeHit, 0.5 + random(0.2), 0.5);
 								}
-								sound_play_hit_ext(sndBigBanditMeleeHit, 0.5 + random(0.2), 0.5);
 							}
 						}
-					}
-					
-					 // End:
-					with(other) if(_charge != charge){
-						charge = _charge;
-						sprite_index = spr_hurt;
-						image_index = 0;
 					}
 				}
 				
@@ -1074,11 +973,12 @@
 					var _lastSpeed = speed;
 					if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -0.1;
 					if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -0.1;
-					other.charge_dir = direction;
-					other.charge -= _chargeAdd * 3;
+					other.dash_direction = direction;
 					
 					 // Wall Bonk:
-					if(other.charge >= _chargeMin){
+					if(other.dash_charge >= 1){
+						other.dash_charge = max(1, other.dash_charge - (other.dash_add * 4));
+						
 						with(instance_nearest_bbox(x, y, Wall)){
 							var	_dis = 8,
 								_dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
@@ -1098,6 +998,8 @@
 								}
 							}
 						}
+						
+						 // Sound:
 						sound_play_hit_ext(sndSalamanderHurt, 1.4 + random(0.2), lerp(0.3, 0.8, 1 - (speed / _lastSpeed)));
 					}
 				}
@@ -1105,7 +1007,7 @@
 			
 			 // Flame Trail:
 			if(current_frame_active){
-				if(charge < _chargeMin){
+				if(dash_charge < 1){
 					scrFX(x, y, [direction + orandom(30), 3], Smoke);
 				}
 				else{
@@ -1124,33 +1026,97 @@
 			}
 		}
 		
+		 // Charging:
 		else{
-			charge = 0;
-			
-			 // Post-Charge Slow:
-			if(charge_slow > 0){
-				charge_slow -= current_time_scale;
+			with((mount && instance_exists(leader)) ? leader : self){
+				 // Slow:
+				speed = clamp(speed, 1, 2);
+				other.speed = speed;
 				
-				with((mount && instance_exists(leader)) ? leader : self){
-					var _max = maxspeed - 1;
-					if(speed > _max) speed = max(_max, speed - (friction_raw * 2));
-				}
-			}
-			
-			else if(mount){
-				with(leader){
-					if(race == "frog" && !player_moving){
-						speed = other.speed;
+				 // Charging Direction:
+				if(instance_is(self, Player)){
+					 // Towards Direction:
+					if(player_moving){
+						other.dash_direction = angle_lerp(other.dash_direction, direction, 0.5 * current_time_scale);
+					}
+					
+					 // Towards Mouse:
+					else{
+						other.dash_direction = point_direction(x, y, mouse_x[index], mouse_y[index]);
+						direction = angle_lerp(direction, other.dash_direction + 180, 0.2 * current_time_scale);
+						other.direction = direction;
 					}
 				}
 			}
+			
+			 // Charging Effects:
+			if(_dashChargeLast < dash_max){
+				 // No Blinking:
+				image_index = image_number - 1;
+				
+				 // Sound:
+				sound_play_hit_ext(sndSalamanderEndFire, lerp(0.8, 2, dash_charge / dash_max), 1.4);
+				if(dash_charge >= dash_max){
+					audio_sound_set_track_position(
+						sound_play_hit_ext(sndSalamanderCharge, 1 + orandom(0.05), 1.8),
+						0.05
+					);
+				}
+			}
+			
+			 // Start Dashing:
+			else if(!dash_charging){
+				dash = true;
+				dash_charge = dash_max;
+				
+				 // Force Direction:
+				direction = dash_direction;
+				with((mount && instance_exists(leader)) ? leader : self){
+					direction = other.direction;
+				}
+				
+				 // Shake:
+				view_shake_at(x, y, dash_charge * 10);
+				
+				 // Sound:
+				var	_inst = (instance_exists(Player) ? instance_nearest(x, y, Player) : self),
+					_snd = audio_play_sound_at(sndFiretrap, _inst.x - x, _inst.y - y, 0, 64, 320, 1, false, 0);
+					
+				audio_sound_gain(_snd, 2, 0);
+				audio_sound_pitch(_snd, 2 + orandom(0.2));
+				audio_sound_set_track_position(_snd, 2.5 * (1 - (dash_charge / dash_max)));
+			}
+			
+			 // Effects:
+			if(chance_ct(dash_charge, 12)){
+				if(chance(2, 3)){
+					with(scrFX(x, y, [dash_direction + 180, 1], Smoke)){
+						hspeed += other.hspeed;
+						vspeed += other.vspeed;
+					}
+				}
+				with(scrFX([x - (13 * right * image_xscale), 2 * image_xscale], y + random(4 * image_yscale), random(random(1)), FireFly)){
+					sprite_index = spr.FlameSpark;
+					depth = other.depth - 1;
+				}
+			}
 		}
+		
+		 // End:
+		if(dash_charge <= 0){
+			right_delay = max(right_delay, 15);
+		}
+	}
+	else{
+		dash = false;
+		dash_charge = 0;
+		dash_direction = direction;
 	}
 	
 	 // Riding:
 	if(mount && instance_exists(leader) && portal_angle == 0){
 		with(leader){
-			 // Not Walkin:
+			 // Sittin, Not Walkin:
 			if(sprite_index == spr_walk) sprite_index = spr_idle;
 			
 			 // Disable Active:
@@ -1169,11 +1135,14 @@
 			}
 			with(_inst) alive = true;
 			
-			 // Begin Charging:
-			if(!other.charging && other.charge <= 0){
-				if(button_pressed(index, "spec") || usespec > 0){
-					other.charging = true;
-				}
+			 // Charging Dash:
+			if(!other.dash){
+				other.dash_charging = ((other.dash_charging ? button_check(index, "spec") : button_pressed(index, "spec")) || usespec > 0);
+			}
+			
+			 // Hold Frog:
+			if(race == "frog" && !player_moving){
+				speed = other.speed;
 			}
 		}
 		
@@ -1184,16 +1153,7 @@
 		leader.mask_index = m;
 		
 		var _yAdd = 0;
-		while(_yAdd != mount_y){
-			var _walled = false;
-			for(var i = 0; i < array_length(path_wall); i++){
-				if(place_meeting(leader.x, leader.y + _yAdd + sign(mount_y), path_wall[i])){
-					_walled = true;
-					break;
-				}
-			}
-			if(_walled) break;
-			
+		while(_yAdd != mount_y && place_free(leader.x, leader.y + _yAdd + sign(mount_y))){
 			_yAdd += clamp(mount_y - _yAdd, -1, 1);
 		}
 		
@@ -1215,23 +1175,37 @@
 		vspeed = leader.vspeed;
 		
 		 // Effects:
-		if(chance(1, 60)){
+		if(chance_ct(1, 60)){
 			instance_create(x, y, Smoke);
 		}
 	}
+	else dash_charging = false;
 	
 	 // Facing:
-	if(charging || (charge <= 0 && charge_slow > 0)){
-		scrRight(charge_dir);
+	if(right_delay > 0) right_delay -= current_time_scale;
+	else{
+		if(!dash && dash_charge > 0){
+			scrRight(dash_direction);
+		}
+		else if(hspeed != 0){
+			scrRight(direction);
+		}
 	}
-	else if(hspeed != 0){
-		scrRight(direction);
-	}
+	
+/*#define Salamander_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	
+	 // Bloom:
+	if(dash_charging){
+		draw_set_blend_mode(bm_add);
+		draw_sprite_ext(sprGroundFlameBig, image_speed * current_frame, _x, _y, _xsc * 2.5, _ysc * 2.5, _ang + (90 * right), _col, _alp * 0.15 * (dash_charge / dash_max));
+		draw_set_blend_mode(bm_normal);
+	}*/
 	
 #define Salamander_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 30;
 	
-	if(!mount && charge <= 0 && charge_slow <= 0){
+	if(!mount && !dash && dash_charge <= 0){
 		if(instance_exists(leader)){
 			if(_leaderDis > 24){
 				 // Pathfinding:

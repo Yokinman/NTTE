@@ -722,7 +722,7 @@
 		spr_dead = spr.RedSpiderDead;
 		sprite_index = spr_idle;
 		spr_shadow = shd24;
-		hitid = [spr_idle, "CRYSTAL SPIDER?"];
+		hitid = [spr_idle, `@(color:${mod_script_call("area", "red", "area_background_color")})RED SPIDER`];
 		depth = -2;
 		
 		 // Sounds:

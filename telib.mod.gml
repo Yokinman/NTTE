@@ -2761,6 +2761,13 @@
 		 // Deactivate Objects:
 		game_deactivate();
 		
+		 // No Boss Death Music:
+		if(_setArea){
+			with(MusCont){
+				alarm_set(3, -1);
+			}
+		}
+		
 		 // Generate Level:
 		GameCont.area = _area;
 		GameCont.subarea = _subarea;
@@ -2769,6 +2776,13 @@
 			var	_ox = (_x - 10016),
 				_oy = (_y - 10016);
 				
+			 // Music:
+			if(_setArea){
+				with(MusCont){
+					event_perform(ev_alarm, 11);
+				}
+			}
+			
 			 // Delete Loading Spirals:
 			with(SpiralCont) instance_destroy();
 			with(Spiral) instance_destroy();
@@ -5094,18 +5108,16 @@
 	c.pos = 0;
 	
 	 // Play Track:
-	if(!audio_is_playing(c.hold)){
-		switch(_type){
-			case "mus":
-				sound_play_music(-1);
-				sound_play_music(c.hold);
-				break;
-				
-			case "amb":
-				sound_play_ambient(-1);
-				sound_play_ambient(c.hold);
-				break;
-		}
+	switch(_type){
+		case "mus":
+			sound_play_music(-1);
+			sound_play_music(c.hold);
+			break;
+			
+		case "amb":
+			sound_play_ambient(-1);
+			sound_play_ambient(c.hold);
+			break;
 	}
 	
 	return c;

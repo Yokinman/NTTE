@@ -102,6 +102,9 @@
 		_spawnY = y;
 	}
 	
+	 // Next Music:
+	global.musTrans = true;
+	
 	 // Top Decal Fix:
 	with(TopPot){
 		if(place_meeting(x, y, FloorExplo)){
@@ -2184,19 +2187,18 @@
 		
 		 // Music / Ambience:
 		if(GameCont.area != 100){
-			if(global.musTrans || instance_exists(GenCont) || instance_exists(mutbutton)){
-				global.musTrans = false;
+			if(global.musTrans || instance_exists(GenCont) || instance_exists(LevCont)){
 				var _scrt = ["area_music", "area_ambience"];
 				for(var i = 0; i < lq_size(global.sound_current); i++){
 					var _type = lq_get_key(global.sound_current, i);
 					if(mod_script_exists("area", _area, _scrt[i])){
 						var s = mod_script_call("area", _area, _scrt[i]);
 						if(!is_array(s)) s = [s];
-	
+						
 						while(array_length(s) < 3) array_push(s, -1);
 						if(s[1] == -1) s[1] = 1;
 						if(s[2] == -1) s[2] = 0;
-	
+						
 						with(sound_play_ntte(_type, s[0])){
 							vol = s[1];
 							pos = s[2];
@@ -2206,6 +2208,7 @@
 			}
 		}
 	}
+	global.musTrans = false;
 	
 	 // Fix for Custom Music/Ambience:
 	for(var i = 0; i < lq_size(global.sound_current); i++){
