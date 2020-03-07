@@ -821,8 +821,14 @@
 		on_meet = script_ref_create(Salamander_PickupIndicator_meet);
 	}
 	
+	 // Stat:
+	if("tossed" not in stat) stat.tossed = 0;
+	
 #define Salamander_ttip
-	return [""];
+	return ["VEHICULAR COMBAT", "NITROUS", "PUNT"];
+	
+#define Salamander_stat(_name, _value)
+	if(_name == "") return spr.PetSalamanderIdle;
 	
 #define Salamander_anim
 	 // Charging Up:
@@ -926,9 +932,14 @@
 					with(other){
 						var _damage = 4 + ceil(4 * dash_charge);
 						with(_inst){
-							projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed), other.direction);
+							projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed * 2/3), other.direction);
 							
 							if(instance_exists(self)){
+								 // Kill FX:
+								if(my_health <= 0 && size > 0 && !instance_is(self, prop)){
+									sound_play_hit_ext(sndBigBanditMeleeHit, max(0.2, 0.7 - (size / 10)) + random(0.1), 0.8);
+								}
+								
 								 // Punt:
 								if(
 									chance(speed, 16)
@@ -939,13 +950,14 @@
 								){
 									with(obj_create(x, y, "PalankingToss")){
 										direction = other.direction;
-										speed = other.speed * 2/3;
+										speed = other.speed;
 										zspeed = 5;
 										zfriction = 2/3;
 										creator = other;
 										depth = other.depth;
 										mask_index = other.mask_index;
 										spr_shadow_y = other.spr_shadow_y;
+										explo = skill_get(mut_throne_butt);
 										
 										 // Try not to go outside level:
 										with(other){
@@ -958,6 +970,15 @@
 									 // Don't Die:
 									my_health = max(my_health, 1);
 									if("canfly" in self) canfly = true;
+									
+									 // Disable:
+									alarm1 = -1;
+									if(instance_is(self, CustomEnemy) || instance_is(self, CustomHitme)){
+										for(var i = 0; i < 12; i++) alarm_set(i, -1);
+									}
+									
+									 // Stat:
+									other.stat.tossed++;
 								}
 								
 								 // Large Dude, Stops Charge:
@@ -974,7 +995,6 @@
 											friction *= 2;
 										}
 									}
-									sound_play_hit_ext(sndBigBanditMeleeHit, 0.5 + random(0.2), 0.5);
 								}
 							}
 						}
@@ -1181,10 +1201,12 @@
 		}
 		
 		 // Hold:
-		x = leader.x;
-		y = leader.y + mount_y;
-		hspeed = leader.hspeed;
-		vspeed = leader.vspeed;
+		with(leader){
+			other.x = x;
+			other.y = y + other.mount_y;
+			other.hspeed = hspeed * place_free(x + hspeed_raw, y);
+			other.vspeed = vspeed * place_free(x, y + vspeed_raw);
+		}
 		
 		 // Effects:
 		if(chance_ct(1, 60)){
@@ -1203,16 +1225,6 @@
 			scrRight(direction);
 		}
 	}
-	
-/*#define Salamander_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
-	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-	
-	 // Bloom:
-	if(dash_charging){
-		draw_set_blend_mode(bm_add);
-		draw_sprite_ext(sprGroundFlameBig, image_speed * current_frame, _x, _y, _xsc * 2.5, _ysc * 2.5, _ang + (90 * right), _col, _alp * 0.15 * (dash_charge / dash_max));
-		draw_set_blend_mode(bm_normal);
-	}*/
 	
 #define Salamander_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 30;

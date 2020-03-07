@@ -2389,6 +2389,7 @@
 		depth = -2;
 		mask_index = mskPlayer;
 		spr_shadow_y = 0;
+		explo = 0;
 		
 		return id;
 	}
@@ -2459,6 +2460,12 @@
 				}
 				instance_create(x, y, PortalClear);
 			}
+		}
+		
+		 // Explosion (Salamander Pet):
+		if(explo > 0) repeat(explo){
+			with(instance_create(x, y, Explosion)) hitid = 55;
+			sound_play_hit_big(sndExplosion, 0.1);
 		}
 		
 		 // Effects:

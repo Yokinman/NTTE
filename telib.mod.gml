@@ -963,15 +963,15 @@
 	pickup_drop(16, 0); // Bandit drop-ness
 
 #define enemy_target(_x, _y)
-	// Base game targeting
-	if(!instance_exists(target)){
-		target = -1;
-	}
+	/*
+		Base game targeting for consistency, cause with consistency u can have clever solutions
+	*/
+	
 	if(instance_exists(Player)){
 		target = instance_nearest(_x, _y, Player);
 	}
-	return (target > 0 && instance_exists(target));
-	// Just doing this for consistency with base game, with consistency you can have clever solutions
+	
+	return instance_exists(target);
 
 #define chance(_numer, _denom)
 	return random(_denom) < _numer;
