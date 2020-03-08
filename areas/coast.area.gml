@@ -80,17 +80,41 @@
 #define area_sprite(_spr)
 	 // No Walls:
 	if(instance_number(Wall) <= 1 || array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
-		if(instance_is(other, Wall) || instance_is(other, FloorExplo)){
-			instance_delete(other);
-		}
-		
-		 // Rocks:
-		else if(instance_is(other, TopSmall)){
-			with(other){
-				if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
-					obj_create(x + 8, y + 8, "CoastDecal");
-				}
-				instance_delete(id);
+		with(other){
+			switch(variable_instance_get(self, "object_index")){
+				case Wall:
+					
+					 // Delete:
+					instance_delete(self);
+					
+					break;
+					
+				case FloorExplo:
+					
+					 // Destroy Colliding Wall Decals:
+					with(instances_meeting(x, y, GameObject)){
+						event_perform(ev_collision, FloorExplo);
+						if(!instance_exists(other)) break;
+					}
+					
+					 // Delete:
+					instance_delete(self);
+					
+					break;
+					
+				case TopSmall:
+					
+					 // Rock Decals:
+					if(instance_exists(GenCont)){
+						if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
+							obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
+						}
+					}
+					
+					 // Delete:
+					instance_delete(self);
+					
+					break;
 			}
 		}
 	}
@@ -1499,6 +1523,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

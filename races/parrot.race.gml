@@ -29,15 +29,19 @@
 #define race_avail           return unlock_get(mod_current);
 
 #define race_ttip
+	 // Ultra:
 	if(GameCont.level >= 10 && chance(1, 5)){
 		return choose("MIGRATION FORMATION", "CHARMED, I'M SURE", "ADVENTURING PARTY", "FREE AS A BIRD");
 	}
+	
+	 // Normal:
 	else{
 		return choose("HITCHHIKER", "BIRDBRAIN", "PARROT IS AN EXPERT TRAVELER", "WIND UNDER MY WINGS", "PARROT LIKES CAMPING", "MACAW WORKS TOO", "CHESTS GIVE YOU @rFEATHERS@s");
 	}
 	
 #define race_sprite(_spr)
 	var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
+	
 	switch(_spr){
 		case sprMutant1Idle:        return race_sprite_raw("Idle",         b);
 		case sprMutant1Walk:        return race_sprite_raw("Walk",         b);
@@ -50,8 +54,10 @@
 		case sprFishMenuSelect:     return race_sprite_raw("Idle",         b);
 		case sprFishMenuDeselect:   return race_sprite_raw("Idle",         b);
 		case sprChickenFeather:     return race_sprite_raw("Feather",      b);
+		case sprRogueAmmoHUD:       return race_sprite_raw("FeatherHUD",   b);
 	}
-	return mskNone;
+	
+	return -1;
 	
 #define race_sound(_snd)
 	switch(_snd){
@@ -68,13 +74,16 @@
 		case sndMutant1Cptn: return -1;
 		case sndMutant1Thrn: return -1;
 	}
+	
 	return -1;
 	
 #define race_sprite_raw(_spr, _skin)
 	var s = lq_defget(spr.Race, mod_current, []);
+	
 	if(_skin >= 0 && _skin < array_length(s)){
 		return lq_defget(s[_skin], _spr, -1);
 	}
+	
 	return -1;
 	
 
@@ -277,9 +286,6 @@
 		exit;
 	}
 	
-	 // Sprite:
-	spr_feather = race_sprite(sprChickenFeather);
-	
 	 // Sound:
 	snd_wrld = race_sound(sndMutant1Wrld);
 	snd_hurt = race_sound(sndMutant1Hurt);
@@ -297,8 +303,10 @@
 	
 	 // Perching Parrot:
 	parrot_bob = [0, 1, 1, 0];
-	if(bskin) for(var i = 0; i < array_length(parrot_bob); i++){
-		parrot_bob[i] += 3;
+	if(bskin == 1){
+		for(var i = 0; i < array_length(parrot_bob); i++){
+			parrot_bob[i] += 3;
+		}
 	}
 	
 	 // Feather Related:
@@ -342,7 +350,7 @@
 					
 					 // Special:
 					bskin = other.bskin;
-					if(bskin){
+					if(bskin == 1){
 						spr_idle = spr.PetParrotBIdle;
 						spr_walk = spr.PetParrotBWalk;
 						spr_hurt = spr.PetParrotBHurt;
@@ -358,12 +366,12 @@
 			if(instance_exists(self)){
 				repeat(feather_num){
 					with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-						sprite_index = other.spr_feather;
 						bskin = other.bskin;
 						index = other.index;
 						creator = other;
 						target = other;
 						speed *= 3;
+						sprite_index = race_get_sprite(other.race, sprite_index);
 					}
 				}
 			}
@@ -417,12 +425,12 @@
 					
 					 // Feathers:
 					with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-						sprite_index = other.spr_feather;
 						bskin = other.bskin;
 						index = other.index;
 						creator = other;
 						target = other;
-						array_push(_feathersTargeting, id);
+						sprite_index = race_get_sprite(other.race, sprite_index);
+						array_push(_feathersTargeting, self);
 					}
 					
 					 // Effects:
@@ -496,8 +504,8 @@
 	 // Feather FX:
 	if(lsthealth > my_health && (chance_ct(1, 10) || my_health <= 0)){
 		repeat((my_health <= 0) ? 5 : 1) with(instance_create(x, y, Feather)){
-			sprite_index = other.spr_feather;
 			image_blend = c_gray;
+			sprite_index = race_get_sprite(other.race, sprite_index);
 		}
 	}
 	
@@ -702,6 +710,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

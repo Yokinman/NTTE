@@ -3308,7 +3308,8 @@
 					 // Parrot Feathers:
 					var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
 						_y = _oy + 11,
-						_spr = spr_feather,
+						_spr = race_get_sprite(race, sprChickenFeather),
+						_sprHUD = race_get_sprite(race, sprRogueAmmoHUD),
 						_output = feather_num_mult,
 						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
 						_hudGoal = [feather_ammo, 0];
@@ -3347,7 +3348,7 @@
 						}
 						
 						 // Draw:
-						draw_sprite_ext(spr.Race.parrot[bskin].FeatherHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+						draw_sprite_ext(_sprHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
 						_dx -= sprite_get_xoffset(_spr) * _xsc;
 						_dy -= sprite_get_yoffset(_spr) * _ysc;
 						for(var j = 0; j < array_length(_hud); j++){
@@ -3749,6 +3750,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

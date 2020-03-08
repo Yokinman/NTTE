@@ -1684,10 +1684,7 @@
 								draw_set_halign(fa_left);
 								draw_set_valign(fa_top);
 								if(mod_script_exists("race", _raceCurrent, "race_name")){
-									var _text = mod_script_call("race", _raceCurrent, "race_name");
-									if(is_string(_text)){
-										draw_text_bn(_x + 6 + (_portX * 1.5), _y - 80, _text, 1.5);
-									}
+									draw_text_bn(_x + 6 + (_portX * 1.5), _y - 80, race_get_title(_raceCurrent), 1.5);
 								}
 								else{
 									draw_text_bn(_x + 16 + (_portX * 0.6), _y - 80, "NONE", 1.5);
@@ -2356,4 +2353,5 @@
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);

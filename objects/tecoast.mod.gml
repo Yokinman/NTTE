@@ -2384,12 +2384,13 @@
 		z = 0;
 		zspeed = 8;
 		zfriction = 0.5;
+		explo = 0;
+		team = -1;
 		
 		 // Saved Vars:
 		depth = -2;
 		mask_index = mskPlayer;
 		spr_shadow_y = 0;
-		explo = 0;
 		
 		return id;
 	}
@@ -2463,9 +2464,26 @@
 		}
 		
 		 // Explosion (Salamander Pet):
-		if(explo > 0) repeat(explo){
-			with(instance_create(x, y, Explosion)) hitid = 55;
-			sound_play_hit_big(sndExplosion, 0.1);
+		if(explo > 0){
+			with(instance_create(x, y, Explosion)){
+				team = other.team;
+				hitid = 55;
+				
+				 // Flame:
+				for(var i = 0; i < 12 * other.explo; i++){
+				    with(instance_create(x, y, Flame)){
+				        motion_add(random(360), (i / 6) + random_range(1.5, 2.5));
+				        hitid = other.hitid;
+				        team = other.team;
+				        depth = other.depth - 1;
+				    }
+				}
+			}
+			
+			 // Effects:
+			sound_play_hit_big(sndFlameCannonEnd, 0.3);
+			sound_play_hit(sndExplosion, 0.1);
+			sleep(40);
 		}
 		
 		 // Effects:
@@ -5027,6 +5045,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

@@ -282,6 +282,42 @@
 	random_set_seed(_seed);
 	
 	
+#define CrystalPropRed_create(_x, _y)
+	with(instance_create(_x, _y, CrystalProp)){
+		 // Visual:
+		spr_idle = spr.CrystalPropRedIdle;
+		spr_hurt = spr.CrystalPropRedHurt;
+		spr_dead = spr.CrystalPropRedDead;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndCrystalPropBreak;
+		
+		 // Vars:
+		maxhealth = 2;
+		
+		return id;
+	}
+	
+	
+#define CrystalPropWhite_create(_x, _y)
+	with(instance_create(_x, _y, CrystalProp)){
+		 // Visual:
+		spr_idle = spr.CrystalPropWhiteIdle;
+		spr_hurt = spr.CrystalPropWhiteHurt;
+		spr_dead = spr.CrystalPropWhiteDead;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndCrystalPropBreak;
+		
+		 // Vars:
+		maxhealth = 2;
+		
+		return id;
+	}
+	
+	
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
@@ -693,26 +729,8 @@
 		instance_change(Cocoon, false);
 		instance_destroy();
 	}
-
-
-#define RedCrystalProp_create(_x, _y)
-	with(instance_create(_x, _y, CrystalProp)){
-		 // Visual:
-		spr_idle = spr.RedCrystalPropIdle;
-		spr_hurt = spr.RedCrystalPropHurt;
-		spr_dead = spr.RedCrystalPropDead;
-		
-		 // Sounds:
-		snd_hurt = sndHitRock;
-		snd_dead = sndCrystalPropBreak;
-		
-		 // Vars:
-		maxhealth = 2;
-		
-		return id;
-	}
 	
-
+	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1054,8 +1072,8 @@
 		 // New Floors, Reset Wall Mask:
 		with(surfWallShineMask){
 			reset = true;
-			inst_tops = instances_matching(TopSmall, "sprite_index", spr.WallRedTrans);
-			inst_wall = instances_matching(Wall, "topspr", spr.WallRedTop);
+			inst_tops = instances_matching(TopSmall, "sprite_index", spr.WallRedTrans, spr.WallRedTop);
+			inst_wall = instances_matching(Wall, "topspr", spr.WallRedTrans, spr.WallRedTop);
 			active = (array_length(inst_tops) + array_length(inst_wall) > 0);
 		}
 	}
@@ -1299,7 +1317,7 @@
 						x += _x;
 						y += _y;
 					}
-					with(instances_matching(instances_matching(CrystalProp, "name", "RedCrystalProp"), "visible", true)){
+					with(instances_matching(instances_matching(CrystalProp, "name", "CrystalPropRed"), "visible", true)){
 						x -= _x;
 						y -= _y;
 						draw_self();
@@ -1427,6 +1445,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

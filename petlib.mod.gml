@@ -18,6 +18,8 @@
 
 #macro surfWeb global.surfWeb
 
+#macro Pet instances_matching(CustomHitme, "name", "Pet")
+
 #macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
 
 #macro player_moving (canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west")))
@@ -284,19 +286,7 @@
 		stat.mutations++;
 		
 		 // Random Mutation:
-		with(obj_create(x, y, "OrchidSkill")){
-			array_push(other.skill_inst, id);
-			
-			 // Alert:
-			var _icon = skill_get_icon(skill);
-			with(scrAlert(other, _icon[0])){
-				image_index = _icon[1];
-				image_speed = 0;
-				spr_alert = -1;
-				snd_flash = sndLevelUp;
-				blink = 15;
-			}
-		}
+		array_push(skill_inst, obj_create(x, y, "OrchidSkill"));
 		
 		 // Effects:
 		repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
@@ -304,6 +294,33 @@
 			image_speed = lerp(0.2, 0.4, speed);
 			hspeed += other.hspeed / 1.5;
 			vspeed += other.vspeed / 1.5;
+		}
+	}
+	
+	 // Alert:
+	if(array_length(skill_inst) > 0){
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self);
+		if(portal_angle == 0){
+			with(skill_inst){
+				if(array_length(instances_matching(_inst, "creator", self)) <= 0){
+					var _icon = skill_get_icon(skill);
+					with(scrAlert(other, _icon[0])){
+						image_index = _icon[1];
+						image_speed = 0;
+						creator = other;
+						spr_alert = -1;
+						snd_flash = sndLevelUp;
+						blink = min(blink, other.time / 2);
+						alarm0 = 1 + max(1, other.time - (blink * 2));
+					}
+				}
+			}
+		}
+		
+		 // Portal, Delete Alerts:
+		else with(instances_matching_gt(_inst, "blink", 6)){
+			blink = 6;
+			alarm0 = 1;
 		}
 	}
 	
@@ -926,7 +943,8 @@
 				 // Dash Bash:
 				var	_bx = 6,
 					_by = 6,
-					_inst = instances_matching_ne(instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", team), "mask_index", mskNone);
+					_team = team,
+					_inst = instances_matching_ne(instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", _team), "mask_index", mskNone);
 					
 				if(array_length(_inst) > 0){
 					with(other){
@@ -958,6 +976,7 @@
 										mask_index = other.mask_index;
 										spr_shadow_y = other.spr_shadow_y;
 										explo = skill_get(mut_throne_butt);
+										team = _team;
 										
 										 // Try not to go outside level:
 										with(other){
@@ -974,7 +993,9 @@
 									 // Disable:
 									alarm1 = -1;
 									if(instance_is(self, CustomEnemy) || instance_is(self, CustomHitme)){
-										for(var i = 0; i < 12; i++) alarm_set(i, -1);
+										for(var i = 0; i < 12; i++){
+											alarm_set(i, -1);
+										}
 									}
 									
 									 // Stat:
@@ -3055,8 +3076,10 @@
 #define step
 	if(DebugLag) trace_time();
 	
+	var _petInst = Pet;
+	
 	 // Spider Webs:
-	var _inst = instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Spider");
+	var _inst = instances_matching(_petInst, "pet", "Spider");
 	if(array_length(_inst) > 0){
 		with(surfWeb){
 			active = true;
@@ -3091,7 +3114,7 @@
 	}
 	
 	 // Mantis Rad Attraction:
-	var _targetInst = instances_matching(instances_matching(instances_matching(CustomHitme, "pet", "Orchid"), "name", "Pet"), "visible", true);
+	var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
 	if(array_length(_targetInst) > 0){
 		with(instances_matching([Rad, BigRad], "orchidmantisradattract_check", null)){
 			orchidmantisradattract_check = true;
@@ -3120,11 +3143,33 @@
 		}
 	}
 	
+	 // Salamander Throne Butt Text:
+	if(array_length(instances_matching(_petInst, "pet", "Salamander")) > 0){
+		with(instances_matching(instances_matching(SkillIcon, "skill", mut_throne_butt), "petsalamander_check", null)){
+			petsalamander_check = true;
+			
+			 // Append Player's Name:
+			for(var i = 0; i < maxp; i++){
+				if(player_is_active(i)){
+					var _title = race_get_title(player_get_race(i));
+					if(string_pos(_title, text) != 1){
+						text = _title + " - " + text;
+					}
+					break;
+				}
+			}
+			
+			 // Add Salamander:
+			text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
+		}
+	}
+	
 	if(DebugLag) trace_time("petlib_step");
 	
 #define octobubble_draw
 	instance_destroy();
-	with(instances_matching(instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "visible", true), "hiding", false)){
+	
+	with(instances_matching(instances_matching(instances_matching(Pet, "pet", "Octo"), "visible", true), "hiding", false)){
 		draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 	}
 	
@@ -3393,6 +3438,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

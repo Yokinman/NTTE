@@ -1956,8 +1956,8 @@
 	
 	 // Effects:
 	flash = true;
-	sound_play_pitchvol(sndStatueXP, 0.8, 0.5);
 	sound_play_pitch(sndMut, 1 + orandom(0.2));
+	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
 	
 	 // Skill:
 	skill_set(skill, max(0, skill_get(skill)) + num);
@@ -2019,7 +2019,7 @@
 			
 			if(num > 0){
 				 // Duplicate Chest:
-				with(instance_nearest_array(x, y, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
+				with(instance_random(instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
 					repeat(other.num){
 						array_push(other.chest, instance_copy(false));
 					}
@@ -2055,7 +2055,7 @@
 	
 	if(skill_get(skill) != 0){
 		 // Chest Blink:
-		with(chest){
+		with(chest) if(instance_exists(self)){
 			with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self)){
 				other.visible = visible;
 				break;
@@ -2080,8 +2080,17 @@
 	skill_set(skill, max(0, skill_get(skill) - num));
 	
 	 // Blip:
-	sound_play_pitchvol(sndMutHover, 0.5 + random(0.2), 2);
-	sound_play_pitchvol(sndCursedReminder, 1 + orandom(0.1), 2);
+	sound_play_pitchvol(sndMutHover,       0.5 + random(0.2), 3);
+	sound_play_pitchvol(sndCursedReminder, 1 + orandom(0.1),  3);
+	sound_play_pitchvol(sndStatueHurt,     0.7 + random(0.1), 0.4);
+	
+	 // Delete Alerts:
+	with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "creator", id)){
+		flash = 1;
+		blink = 1;
+		alarm0 = 1 + flash;
+		visible = true;
+	}
 	
 	 // Skill-Specific:
 	switch(skill){
@@ -2137,7 +2146,9 @@
 		case mut_open_mind:
 			
 			 // Delete Duplicate Chest:
-			with(chest) instance_delete(id);
+			with(chest) if(instance_exists(self)){
+				instance_delete(id);
+			}
 			
 			break;
 	}
@@ -2174,12 +2185,12 @@
 			with(t){
 				for(var i = 0; i < other.num; i++){
 					with(obj_create(other.x, other.y, "ParrotFeather")){
-						sprite_index = other.spr_feather;
 						bskin = other.bskin;
 						index = other.index;
 						creator = other;
 						target = other;
 						stick_wait = 3;
+						sprite_index = race_get_sprite(other.race, sprite_index);
 					}
 					
 					 // Sound FX:
@@ -2199,7 +2210,7 @@
 #define ParrotFeather_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index = spr.Race.parrot[0].Feather;
+		sprite_index = sprChickenFeather;
 		image_blend_fade = c_gray;
 		depth = -8;
 		
@@ -2533,6 +2544,23 @@
 		mask_store = null;
 	}
 	
+	 // Loading/Level Up Screen:
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
+		visible = false;
+		
+		 // Reset:
+		with(revive) instance_destroy();
+		my_health = maxhealth;
+		portal_angle = 0;
+		
+		 // Follow Player:
+		var _inst = (instance_exists(leader) ? leader : instance_nearest(x, y, Player));
+		if(instance_exists(_inst)){
+			x = _inst.x + orandom(16);
+			y = _inst.y + orandom(16);
+		}
+	}
+	
 	if(visible){
 		 // Animate:
 		var _scrt = pet + "_anim";
@@ -2782,23 +2810,6 @@
 		}
 	}
 	with(_pickup) visible = other.can_take;
-	
-	 // Going to New Level:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
-		visible = false;
-		
-		 // Reset:
-		with(revive) instance_destroy();
-		my_health = maxhealth;
-		portal_angle = 0;
-		
-		 // Follow Player:
-		var _inst = (instance_exists(leader) ? leader : instance_nearest(x, y, Player));
-		if(instance_exists(_inst)){
-			x = _inst.x + orandom(16);
-			y = _inst.y + orandom(16);
-		}
-	}
 	
 	if(visible || instance_exists(revive)){
 		if(instance_exists(leader)) team = leader.team;
@@ -4095,7 +4106,9 @@
 	
 	
 #define TopDecal_create(_x, _y)
-	switch(GameCont.area){
+	var _area = GameCont.area;
+	
+	switch(_area){
 		case 0:   return instance_create(_x, _y, TopDecalNightDesert);
 		case 1:   return instance_create(_x, _y, TopDecalDesert);
 		case 2:   return instance_create(_x, _y, TopDecalSewers);
@@ -4110,10 +4123,13 @@
 		
 		 // Custom:
 		default:
-			if(is_string(GameCont.area)){
-				if(sprite_exists(mod_script_call_nc("area", GameCont.area, "area_sprite", sprTopPot))){
+			if(is_string(_area)){
+				var	_scrt = "area_sprite",
+					_spr = mod_script_call_nc("area", _area, _scrt, sprTopPot);
+					
+				if(_spr != 0 && is_real(_spr) && sprite_exists(_spr)){
 					with(instance_create(_x, _y, TopPot)){
-						sprite_index = mod_script_call("area", GameCont.area, "area_sprite", sprTopPot);
+						sprite_index = mod_script_call("area", _area, _scrt, sprTopPot);
 						image_index = irandom(image_number - 1);
 						image_speed = 0;
 						
@@ -5777,6 +5793,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

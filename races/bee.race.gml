@@ -28,15 +28,19 @@
 #define race_avail           return unlock_get(mod_current);
 
 #define race_ttip
+	 // Ultra:
 	if(GameCont.level >= 10 && chance(1, 5)){
 		return choose("ULTRA TIP");
 	}
+	
+	 // Normal:
 	else{
 		return choose("BASIC TIP");
 	}
 	
 #define race_sprite(_spr)
 	var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
+	
 	switch(_spr){
 		case sprMutant1Idle:        return race_sprite_raw("Idle",  b);
 		case sprMutant1Walk:        return race_sprite_raw("Walk",  b);
@@ -50,7 +54,8 @@
 		case sprFishMenuDeselect:   return race_sprite_raw("Idle",  b);
 		case shd24:                 return shd16;
 	}
-	return mskNone;
+	
+	return -1;
 	
 #define race_sound(_snd)
 	switch(_snd){
@@ -67,13 +72,16 @@
 		case sndMutant1Cptn: return -1;
 		case sndMutant1Thrn: return -1;
 	}
+	
 	return -1;
 	
 #define race_sprite_raw(_spr, _skin)
 	var s = lq_defget(spr.Race, mod_current, []);
+	
 	if(_skin >= 0 && _skin < array_length(s)){
 		return lq_defget(s[_skin], _spr, -1);
 	}
+	
 	return -1;
 	
 	
@@ -316,6 +324,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);

@@ -1015,6 +1015,7 @@
 			
 			 // Floors:
 			FloorRed      = sprite(p + "sprFloorCrystal",      1, 2, 2);
+			FloorRedB     = sprite(p + "sprFloorCrystalB",     1, 2, 2);
 			FloorRedExplo = sprite(p + "sprFloorCrystalExplo", 4, 1, 1);
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
@@ -1026,15 +1027,20 @@
 			DebrisRed    = sprite(p + "sprDebrisCrystal",    4, 4,  4);
 			
 			 // Decals:
-			TopDecalRed  = sprite(p + "sprTopDecalCrystal", 3, 16, 16);
+			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
 			//#region PROPS
 			p = m + "Props/";
 				
-				 // Red Crystal:
-				RedCrystalPropIdle = sprite(p + "sprRedCrystalPropIdle", 1, 12, 12);
-				RedCrystalPropHurt = sprite(p + "sprRedCrystalPropHurt", 3, 12, 12);
-				RedCrystalPropDead = sprite(p + "sprRedCrystalPropDead", 4, 12, 12);
+				 // Red Crystals:
+				CrystalPropRedIdle = sprite(p + "sprCrystalPropRedIdle", 1, 12, 12);
+				CrystalPropRedHurt = sprite(p + "sprCrystalPropRedHurt", 3, 12, 12);
+				CrystalPropRedDead = sprite(p + "sprCrystalPropRedDead", 4, 12, 12);
+				
+				 // White Crystals:
+				CrystalPropWhiteIdle = sprite(p + "sprCrystalPropWhiteIdle", 1, 12, 12);
+				CrystalPropWhiteHurt = sprite(p + "sprCrystalPropWhiteHurt", 3, 12, 12);
+				CrystalPropWhiteDead = sprite(p + "sprCrystalPropWhiteDead", 4, 12, 12);
 				
 			//#endregion
 			

@@ -39,7 +39,7 @@
 	switch(_spr){
 		 // Floors:
 		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRed;
-		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRed;
+		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRedB;
 		case sprFloor1Explo : return spr.FloorRedExplo;
 		case sprDetail1     : return spr.DetailRed;
 		
@@ -51,7 +51,7 @@
 		case sprDebris1     : return spr.DebrisRed;
 		
 		 // Decals:
-		case sprTopPot      : return spr.TopDecalRed;
+		case sprBones       : return spr.WallDecalRed;
 	}
 	
 #define area_setup
@@ -61,7 +61,7 @@
 	
 #define area_setup_floor
 	 // Fix Depth:
-	//if(styleb) depth = 8;
+	if(styleb) depth = 8;
 	
 	 // Footsteps:
 	material = 2;
@@ -109,6 +109,8 @@
 		_y = y,
 		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
 		
+	styleb = false;
+	
 	/// Make Floors:
 		 // Normal:
 		instance_create(_x, _y, Floor);
@@ -184,12 +186,15 @@
 	
 	 // Props:
 	else if(chance(1, 4)){
-		obj_create(x + 16, y + 16, "RedCrystalProp");
+		obj_create(x + 16, y + 16, "CrystalProp" + (styleb ? "White" : "Red"));
 	}
 	
-	 // Top Decals:
-	if(chance(1, 30)){
-		obj_create(x + 16, y + 16, "TopDecal");
+#define area_pop_extras
+	 // Bone Decals:
+	with(FloorNormal){
+		if(chance(3, 4)){
+			floor_bones(area_sprite(sprBones), 2, 1/8, false);
+		}
 	}
 	
 	
@@ -291,6 +296,7 @@
 #define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
+#define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
 #define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
