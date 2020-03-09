@@ -142,20 +142,39 @@
 		
 		 // Landing:
 		if(top_object.zspeed < 0){
-			if(top_object.z > 8 && sprite_index != spr_land){
-				image_index = max(2, image_index);
-				if(anim_end) spr_chrg = spr_land;
+			if(sprite_exists(spr_chrg)){
+				if(sprite_index != spr_land){
+					if(top_object.z > 8){
+						image_index = max(2, image_index);
+						if(anim_end) spr_chrg = spr_land;
+					}
+				}
+				else if(anim_end){
+					spr_chrg = -1;
+					sprite_index = enemy_sprite;
+				}
 			}
 		}
 		
 		 // Flying:
 		else if(sprite_index != spr_wing){
 			if(sprite_index != spr_lift) spr_chrg = spr_lift;
-			else if(anim_end) spr_chrg = spr_wing;
+			else if(anim_end){
+				spr_chrg = spr_wing;
+				sound_play_hit_ext(sndMutant14Turn, 1.4 + random(0.1), 2);
+			}
+		}
+		else if(image_index < 1 && current_frame_active){
+			if(chance(1, 3)){
+				sound_play_hit_ext(sndMutant14LowA, 1.8 + orandom(0.2), 2);
+			}
+			with(scrFX(x, y, [270, 2], Dust)){
+				depth = -6.01;
+			}
 		}
 		
 		 // Manual Spriting:
-		if(sprite_index != spr_chrg){
+		if(sprite_exists(spr_chrg) && sprite_index != spr_chrg){
 			sprite_index = spr_chrg;
 			image_index = 0;
 		}
@@ -1305,7 +1324,7 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
-#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
+#define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

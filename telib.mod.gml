@@ -8,7 +8,7 @@
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet", "WallDecal"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
@@ -3091,28 +3091,23 @@
 	
 	return _minID;
 
-#define floor_bones(_sprite, _num, _chance, _linked)
+#define floor_bones(_num, _chance, _linked)
 	/*
-		Creates Bones decals around the current Floor
+		Creates Bones decals on to the Walls left and right of the current Floor
+		Doesn't create decals if there are any adjacent Floors to the left or right of the current Floor or there are any Walls on the current Floor
 		
 		Ex:
-			floor_bones(sprNightBones,      2, 1,    false) == CAMPFIRE
-			floor_bones(sprBones,           2, 1,    false) == DESERT
-			floor_bones(sprCoral,           2, 1/9,  false) == OASIS
-			floor_bones(sprSewerDecal,      1, 1/10, true ) == SEWERS
-			floor_bones(sprPizzaSewerDecal, 1, 1/10, true ) == PIZZA SEWERS
-			floor_bones(sprScrapDecal,      2, 1/7,  false) == SCRAPYARDS
-			floor_bones(sprCaveDecal,       2, 1/9,  false) == CRYSTAL CAVES
-			floor_bones(sprInvCaveDecal,    2, 1/9,  false) == CURSED CRYSTAL CAVES
-			floor_bones(sprIceDecal,        2, 1/7,  false) == FROZEN CITY
-			floor_bones(sprJungleDecal,     1, 1/10, true ) == JUNGLE
+			floor_bones(2, 1,    false) == DESERT / CAMPFIRE
+			floor_bones(1, 1/10, true ) == SEWERS / PIZZA SEWERS / JUNGLE
+			floor_bones(2, 1/7,  false) == SCRAPYARDS / FROZEN CITY
+			floor_bones(2, 1/9,  false) == CRYSTAL CAVES / CURSED CRYSTAL CAVES / OASIS
 	*/
 	
 	var _inst = [];
 	
 	if(!collision_rectangle(bbox_left - 16, bbox_top, bbox_right + 16, bbox_bottom, Floor, false, true)){
 		if(place_free(x, y)){
-			for(var _y = y; _y < y + 32; _y += (32 / _num)){
+			for(var _y = bbox_top; _y < bbox_bottom + 1; _y += (32 / _num)){
 				var _create = true;
 				for(var _side = 0; _side <= 1; _side++){
 					if(_side == 0 || !_linked){
@@ -3120,10 +3115,8 @@
 					}
 					if(_create){
 						var _x = lerp(bbox_left, bbox_right + 1, _side);
-						with(instance_create(_x, _y, Bones)){
-							sprite_index = _sprite;
-							image_index = irandom(image_number - 1);
-							image_xscale = ((_side <= 0.5) ? 1 : -1);
+						with(obj_create(_x, _y, "WallDecal")){
+							image_xscale = ((_side > 0.5) ? -1 : 1);
 							array_push(_inst, id);
 						}
 					}

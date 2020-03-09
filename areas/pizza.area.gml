@@ -53,6 +53,12 @@
 	}
 	
 #define area_setup
+	background_color = area_background_color();
+	BackCont.shadcol = area_shadow_color();
+	TopCont.darkness = area_darkness();
+	TopCont.fog = sprFog102;
+	
+	 // Turtle Den Gen:
 	var _den = {
 		cols : 0,
 		rows : 0,
@@ -60,14 +66,45 @@
 		rows_max : 6
 	};
 	turtle_den = _den;
-	
 	goal = (_den.cols_max * _den.rows_max) + 2;
 	safespawn = false;
 	
-	background_color = area_background_color();
-	BackCont.shadcol = area_shadow_color();
-	TopCont.darkness = area_darkness();
-	TopCont.fog = sprFog102;
+	 // Manually Unlock Eyes:
+	try{
+		with(GameCont){
+			 // Save Vars & Seed:
+			var	_vars = [],
+				_crownAlarm = [],
+				_seed = random_get_seed();
+				
+			with(variable_instance_get_names(self)){
+				array_push(_vars, [self, variable_instance_get(other, self)]);
+			}
+			with(_crownAlarm){
+				array_push(_crownAlarm, [self, alarm0]);
+			}
+			
+			 // Set Area to Pizza Sewers & Call room_start:
+			area = 102;
+			subarea = 1;
+			loops = 0;
+			with(self) event_perform(ev_other, ev_room_start);
+			
+			 // Restore Vars & Seed:
+			with(_vars){
+				if(!mod_script_call_nc("mod", "telib", "variable_is_readonly", other, self[0])){
+					variable_instance_set(other, self[0], self[1]);
+				}
+			}
+			with(_crownAlarm){
+				with(self[0]) alarm0 = other[1];
+			}
+			random_set_seed(_seed);
+		}
+	}
+	catch(_error){
+		trace_error(_error);
+	}
 	
 #define area_setup_floor
 	 // Fix Depth:
@@ -292,6 +329,7 @@
 		else if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
 	}
 	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -383,7 +421,7 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
-#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
+#define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

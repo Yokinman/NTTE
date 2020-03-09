@@ -4108,6 +4108,28 @@
 #define TopDecal_create(_x, _y)
 	var _area = GameCont.area;
 	
+	 // Custom:
+	if(is_string(_area)){
+		var	_scrt = "area_sprite",
+			_spr = mod_script_call_nc("area", _area, _scrt, sprTopPot);
+			
+		if(_spr != 0 && is_real(_spr) && sprite_exists(_spr)){
+			with(instance_create(_x, _y, TopPot)){
+				sprite_index = mod_script_call("area", _area, _scrt, sprTopPot);
+				image_index = irandom(image_number - 1);
+				image_speed = 0;
+				
+				 // Offset Again:
+				x = _x;
+				y = _y;
+				event_perform(ev_create, 0);
+				
+				return self;
+			}
+		}
+	}
+	
+	 // Normal:
 	switch(_area){
 		case 0:   return instance_create(_x, _y, TopDecalNightDesert);
 		case 1:   return instance_create(_x, _y, TopDecalDesert);
@@ -4120,28 +4142,6 @@
 		case 104: return instance_create(_x, _y, TopDecalInvCave);
 		case 105: return instance_create(_x, _y, TopDecalJungle);
 		case 106: return instance_create(_x, _y, TopPot);
-		
-		 // Custom:
-		default:
-			if(is_string(_area)){
-				var	_scrt = "area_sprite",
-					_spr = mod_script_call_nc("area", _area, _scrt, sprTopPot);
-					
-				if(_spr != 0 && is_real(_spr) && sprite_exists(_spr)){
-					with(instance_create(_x, _y, TopPot)){
-						sprite_index = mod_script_call("area", _area, _scrt, sprTopPot);
-						image_index = irandom(image_number - 1);
-						image_speed = 0;
-						
-						 // Offset Again:
-						x = _x;
-						y = _y;
-						event_perform(ev_create, 0);
-						
-						return self;
-					}
-				}
-			}
 	}
 	
 	return noone;
@@ -4984,8 +4984,52 @@
 
 #define VenomPellet_destroy
 	instance_create(x, y, ScorpionBulletHit);
-
-
+	
+	
+#define WallDecal_create(_x, _y)
+	var _area = GameCont.area;
+	
+	 // Custom:
+	if(is_string(_area)){
+		var	_scrt = "area_sprite",
+			_spr = mod_script_call_nc("area", _area, _scrt, sprBones);
+			
+		if(_spr != 0 && is_real(_spr) && sprite_exists(_spr)){
+			with(instance_create(_x, _y, Bones)){
+				sprite_index = mod_script_call("area", _area, _scrt, sprBones);
+				image_index = irandom(image_number - 1);
+				
+				return self;
+			}
+		}
+	}
+	
+	 // Normal:
+	var _spr = -1;
+	switch(_area){
+		case 0:   _spr = sprNightBones;      break;
+		case 1:   _spr = sprBones;           break;
+		case 2:   _spr = sprSewerDecal;      break;
+		case 3:   _spr = sprScrapDecal;      break;
+		case 4:   _spr = sprCaveDecal;       break;
+		case 5:   _spr = sprIceDecal;        break;
+		case 101: _spr = sprCoral;           break;
+		case 102: _spr = sprPizzaSewerDecal; break;
+		case 104: _spr = sprInvCaveDecal;    break;
+		case 105: _spr = sprJungleDecal;     break;
+	}
+	if(sprite_exists(_spr)){
+		with(instance_create(_x, _y, Bones)){
+			sprite_index = _spr;
+			image_index = irandom(image_number - 1);
+			
+			return self;
+		}
+	}
+	
+	return noone;
+	
+	
 /// Mod Events
 #define game_start
 	 // Reset Pets:
@@ -5786,7 +5830,7 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
-#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
+#define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);

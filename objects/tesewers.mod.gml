@@ -4091,26 +4091,27 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		sprite_index = spr.PizzaManhole[_num];
 		image_speed = 0;
-		mask_index = mskFloor;
-
-		 // Vars:
 		depth = 8;
-		toarea = "pizza"; // go to pizza sewers
-
+		
+		 // Vars:
+		mask_index = mskFloor;
+		area = "pizza";
+		subarea = 0;
+		
 		return id;
 	}
-
+	
 #define Manhole_step
 	if(image_index < 1){
 		if(place_meeting(x, y, Explosion) && !instance_exists(FrogQueen) && array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0){
 			image_index = 1;
-
+			
 			with(GameCont){
-				area = other.toarea;
-				subarea = 0;
+				area = other.area;
+				subarea = other.subarea;
 				killenemies = true;
 			}
-
+			
 			 // Portal:
 			with(instance_create(x + 16, y + 16, Portal)){
 				image_alpha = 0;
@@ -4164,7 +4165,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
-
+	
 #define NewTable_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -4221,6 +4222,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		maxhealth = 40;
 		team = 0;
 		size = 3;
+		area = "lair";
+		subarea = 1;
 		
 		 // Cool Floor:
 		with(instance_nearest_bbox(_x - 16, _y, Floor)){
@@ -4252,7 +4255,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 		if(!position_meeting(_x, _y, Floor)){
 			with(instance_create(_x, _y, Floor)){
-				sprite_index = area_get_sprite("lair", sprFloor1B);
+				styleb = true;
+				area = other.area;
+				sprite_index = area_get_sprite(area, sprFloor1B);
 				with(instances_meeting(x, y, [TopPot, Bones])) instance_destroy();
 			}
 			for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
@@ -4402,19 +4407,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Generate the Realm:
 		var _lastArea = GameCont.area;
 		if(!instance_exists(Portal)){
-			area_generate("lair", 1, _sx + 16, _sy - 16, true, 0, null);
+			area_generate(area, subarea, _sx + 16, _sy - 16, true, 0, null);
 		}
 		
 		 // Finish Path:
 		var _minID = GameObject.id;
 		with(_path){
 			styleb = true;
-			sprite_index = area_get_sprite("lair", sprFloor1B);
+			area = GameCont.area;
+			sprite_index = area_get_sprite(area, sprFloor1B);
 			floor_walls();
 			
 			 // Pipe Decals:
 			if(!in_range(_borderY, bbox_top, bbox_bottom + 1)){
-				floor_bones(area_get_sprite(((y > _borderY) ? _lastArea : GameCont.area), sprBones), 1, 1/12, true);
+				GameCont.area = ((y > _borderY) ? _lastArea : area);
+				floor_bones(1, 1/12, true);
+				GameCont.area = area;
 			}
 		}
 		with(instances_matching_gt(Wall, "id", _minID)) wall_tops();
@@ -5322,7 +5330,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
-#define floor_bones(_sprite, _num, _chance, _linked)                                    return  mod_script_call(   'mod', 'telib', 'floor_bones', _sprite, _num, _chance, _linked);
+#define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
