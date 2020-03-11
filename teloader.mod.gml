@@ -18,6 +18,7 @@
 		["teassets.mod.gml",                        5 + _coop, "Assets"],
 		["telib.mod.gml",                           1 + _coop, "Main Files"],
 		["temenu.mod.gml",                          1 + _coop],
+		["teevents.mod.gml",                        1 + _coop],
 		["ntte.mod.gml",                            1 + _coop],
 		["petlib.mod.gml",                          1 + _coop],
 		["objects/tegeneral.mod.gml",               0 + _coop, "Objects"],

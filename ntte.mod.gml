@@ -67,6 +67,23 @@
 #macro cMusic    global.sound_current.mus
 #macro cAmbience global.sound_current.amb
 
+#macro area_campfire     0
+#macro area_desert       1
+#macro area_sewers       2
+#macro area_scrapyards   3
+#macro area_caves        4
+#macro area_city         5
+#macro area_labs         6
+#macro area_palace       7
+#macro area_vault        100
+#macro area_oasis        101
+#macro area_pizza        102
+#macro area_mansion      103
+#macro area_cursed_caves 104
+#macro area_jungle       105
+#macro area_hq           106
+#macro area_crib         107
+
 #define game_start
 	 // Reset:
 	global.pet_max = 1;
@@ -126,7 +143,7 @@
 	with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
 	
 	 // Flavor Big Cactus:
-	if(chance(1, ((GameCont.area == 0) ? 3 : 10))){
+	if(chance(1, ((GameCont.area == area_campfire) ? 3 : 10))){
 		with(instance_random([Cactus, NightCactus])){
 			obj_create(x, y, "BigCactus");
 			instance_delete(id);
@@ -157,9 +174,9 @@
 	
 	 // Backpack Setpieces:
 	var	_canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
-		_forceSpawn = (GameCont.area == 0);
+		_forceSpawn = (GameCont.area == area_campfire);
 		
-	if(GameCont.hard > 4 && ((_canBackpack && _normalArea && GameCont.area != 106) || _forceSpawn)){
+	if(GameCont.hard > 4 && ((_canBackpack && _normalArea && GameCont.area != area_hq) || _forceSpawn)){
 		with(array_shuffle(FloorNormal)){
 			if(distance_to_object(Player) > 80){
 				if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
@@ -168,7 +185,7 @@
 					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					 // Flavor Corpse:
-					if(GameCont.area != 0){
+					if(GameCont.area != area_campfire){
 						obj_create(bbox_center_x + orandom(8), bbox_center_y + irandom(8), "Backpacker");
 					}
 					
@@ -265,7 +282,7 @@
 	
 	 // Area-Specific:
 	switch(GameCont.area){
-		case 0: /// CAMPFIRE
+		case area_campfire: /// CAMPFIRE
 			
 			 // Unlock Custom Crowns:
 			if(array_exists(crwnList, crown_current)){
@@ -279,24 +296,7 @@
 			
 			break;
 			
-		case 1: /// DESERT
-			
-			 // Event Conditions:
-			var	_eventMaggot = ((GameCont.subarea > 1 || GameCont.loops > 0) && chance(1, 60)),
-				_eventScorp  = false,
-				_eventBandit = ((GameCont.subarea == 3 && chance(1, 10)) || (GameCont.subarea != 3 && GameCont.loops > 0 && chance(1, 20)));
-				
-			with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion")){
-				if(scorpion_city){
-					scorpion_city = false;
-					_eventScorp = true;
-					
-					 // Alert:
-					with(scrAlert(self, spr_icon)){
-						snd_flash = sndScorpionMelee;
-					}
-				}
-			}
+		case area_desert: /// DESERT
 			
 			 // Disable Oasis Skip:
 			with(instance_create(0, 0, chestprop)){
@@ -310,7 +310,7 @@
 				
 			with(FloorNormal){
 				if(point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 48){
-					if(array_length(instances_meeting(x, y, [prop, chestprop, Wall, MaggotSpawn])) <= 0){
+					if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, MaggotSpawn)){
 						array_push(_propFloor, id);
 						_propIndex++;
 					}
@@ -333,388 +333,30 @@
 			}
 			
 			 // Consistent Crab Skeletons:
-			if(!_eventScorp && !instance_exists(BonePile)){
+			if(!instance_exists(BonePile) && !teevent_get_active("ScorpionCity")){
 				if(_propIndex >= 0) with(_propFloor[_propIndex--]){
 					obj_create(bbox_center_x, bbox_center_y, BonePile);
 				}
 			}
 			
 			 // Scorpion Rocks:
-			if(GameCont.subarea < area_get_subarea(GameCont.area) && chance(2, 5)){
+			if(chance(2, 5) && GameCont.subarea < area_get_subarea(GameCont.area)){
 				if(_propIndex >= 0) with(_propFloor[_propIndex--]){
-					with(obj_create(bbox_center_x, bbox_center_y - 2, "ScorpionRock")){
-						if(_eventScorp) friendly = -1;
-					}
+					obj_create(bbox_center_x, bbox_center_y - 2, "ScorpionRock");
 				}
-			}
-			
-			 // Maggot Park:
-			if(_eventMaggot){
-				var	_x = _spawnX,
-					_y = _spawnY,
-					_num = 3,
-					_ang = random(360),
-					_nestNum = _num,
-					_nestDir = _ang,
-					_nestDis = 12 + (4 * _nestNum),
-					_w = ceil(((2 * (_nestDis + 32)) + 32) / 32),
-					_h = _w,
-					_type = floor_fill_round,
-					_dirOff = 0,
-					_spawnDis = 160,
-					_spawnFloor = FloorNormal;
-					
-				 // Find Spawn Location:
-				with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-					_x = x;
-					_y = y;
-				}
-				with(instance_furthest(_spawnX, _spawnY, RadChest)){
-					with(instance_nearest_bbox(_x, _y, _spawnFloor)){
-						var	_fx = bbox_center_x,
-							_fy = bbox_center_y;
-							
-						if(point_distance(_fx, _fy, _spawnX, _spawnY) >= _spawnDis){
-							_x = _fx;
-							_y = _fy;
-						}
-					}
-					instance_delete(id);
-				}
-				
-				 // Generate Area:
-				floor_set_align(32, 32, null, null);
-				floor_set_style(1, GameCont.area);
-				
-				with(floor_room_create(_x, _y, _w - 2, _h - 2, _type, point_direction(_spawnX, _spawnY, _x, _y), _dirOff)){
-					var _minID = GameObject.id;
-					script_execute(_type, x, y, _w, _h);
-					
-					 // Tendril Floors:
-					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-						var	_fx = x + lengthdir_x((_w * 16) - 32, _dir),
-							_fy = y + lengthdir_y((_h * 16) - 32, _dir),
-							_off = 0;
-							
-						for(var _size = 3; _size > 0; _size--){
-							var	_dis = _size * 16,
-								_dirOff = round((_dir + _off) / 90) * 90;
-								
-							_fx += lengthdir_x(_dis, _dirOff);
-							_fy += lengthdir_y(_dis, _dirOff);
-							floor_fill(_fx, _fy, _size, _size);
-							_fx += lengthdir_x(_dis, _dirOff);
-							_fy += lengthdir_y(_dis, _dirOff);
-							_off += orandom(60);
-						}
-					}
-					
-					 // Nests:
-					for(var d = _nestDir; d < _nestDir + 360; d += (360 / _nestNum)){
-						var l = _nestDis + random(4 * _nestNum);
-						obj_create(round(x + lengthdir_x(l, d)), round(y + lengthdir_y(l, d)), "BigMaggotSpawn");
-					}
-					
-					 // Tendril Floors Setup:
-					var	_nestTinyNum = random_range(5, 6),
-						_burrowNum = random_range(3, 4);
-						
-					with(array_shuffle(instances_matching_gt(Floor, "id", _minID))){
-						var	_fx = bbox_center_x,
-							_fy = bbox_center_y,
-							_cx = other.x,
-							_cy = other.y;
-							
-						 // Enemies:
-						if(!place_meeting(x, y, enemy)){
-							if(_nestTinyNum > 0){
-								_nestTinyNum--;
-								with(instance_create(_fx, _fy, MaggotSpawn)){
-									x = xstart;
-									y = ystart;
-									move_contact_solid(point_direction(_cx, _cy, x, y) + orandom(120), random(16));
-									instance_create(x, y, Maggot);
-								}
-							}
-							else if(_burrowNum > 0){
-								_burrowNum--;
-								obj_create(_fx, _fy, "WantBigMaggot");
-							}
-						}
-						
-						 // Remove Details:
-						with(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Detail)){
-							instance_destroy();
-						}
-					}
-					
-					 // Sound:
-					sound_volume(sound_loop(sndMaggotSpawnIdle), 0.4);
-				}
-				
-				floor_reset_align();
-				floor_reset_style();
 			}
 			
 			 // Big Maggot Nests:
-			else with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
-				obj_create(x, y, "BigMaggotSpawn");
-				instance_delete(id);
-			}
-			
-			 // Scorpion City:
-			if(_eventScorp){
-				 // Delete Lone Walls:
-				with(Wall) if(place_meeting(x, y, Floor)){
-					var _delete = true;
-					for(var d = 0; d < 360; d += 90){
-						if(place_meeting(x + lengthdir_x(16, d), y + lengthdir_y(16, d), Wall)){
-							_delete = false;
-							break;
-						}
-					}
-					if(_delete) instance_delete(id);
-				}
-				
-				 // More Scorpions:
-				with(instances_matching_lt(enemy, "size", 4)){
-					if(!floor_get(x, y).styleb){
-						if(!instance_is(self, Bandit) || chance(1, 2)){
-							var	_scorp = [[Scorpion, "BabyScorpion"], [GoldScorpion, "BabyScorpionGold"]],
-								_gold = chance(size, 5),
-								_baby = (size <= 1);
-								
-							obj_create(x, y, _scorp[_gold, _baby]);
-							instance_delete(id);
-						}
-					}
-				}
-				with(instances_matching(CustomEnemy, "name", "BigMaggotSpawn")){
-					scorp_drop++;
-				}
-				
-				 // Scorpion Nests:
-				var	_minID = GameObject.id,
-					_spawnFloor = FloorNormal;
-					
-				repeat(3){
-					var	_w = irandom_range(3, 5),
-						_h = _w,
-						_type = (min(_w, _h) > 3) ? floor_fill_round : floor_fill,
-						_dirOff = 90,
-						_spawnDis = 64 + (_w * 16);
-						
-					floor_set_align(32, 32, null, null);
-					
-					with(floor_room(_w, _h, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-						 // Family:
-						repeat(max(1, ((_w + _h) / 2) - 2)){
-							instance_create(x, y, ((chance(1, 5) || !instance_exists(GoldScorpion)) ? GoldScorpion : Scorpion));
-						}
-						
-						 // Props:
-						var	_boneNum = round(((_w * _h) / 16) + orandom(1)),
-							_ang = random(360);
-							
-						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _boneNum)){
-							var	d = _dir + orandom(30),
-								_obj = choose("Backpacker", LightBeam, WepPickup);
-								
-							with(obj_create(round(x + lengthdir_x((_w * 16) - 24, d)), round(y + lengthdir_y((_h * 16) - 24, d)), _obj)){
-								if(_obj == WepPickup) wep = "crabbone";
-							}
-						}
-						
-						 // Details:
-						for(var d = 0; d < 360; d += random_range(4, 10)){
-							var l = (chance(1, 3) ? random_range(1/3, 1/2) : random(1/4)) * 32;
-							with(instance_create(round(x + lengthdir_x(_w * l, d)), round(y + lengthdir_y(_h * l, d)), Detail)){
-								if(floor(image_index) != 4 && chance(1, 5)){
-									image_index = 4;
-								}
-							}
-						}
-					}
-					
-					floor_reset_align();
-				}
-				
-				 // Nest Corner Walls:
-				with(instances_matching_gt(Floor, "id", _minID)){
-					var	_x1 = bbox_left,
-						_y1 = bbox_top,
-						_x2 = bbox_right + 1,
-						_y2 = bbox_bottom + 1,
-						_cx = bbox_center_x,
-						_cy = bbox_center_y,
-						_w = _x2 - _x1,
-						_h = _y2 - _y1,
-						_break = false;
-						
-					for(var	_x = _x1; _x < _x2; _x += _w - 16){
-						for(var	_y = _y1; _y < _y2; _y += _h - 16){
-							var	_sideX = sign((_x + 8) - _cx),
-								_sideY = sign((_y + 8) - _cy);
-								
-							if(!place_meeting(_x1 + (_w * _sideX), _y1, Floor) && !place_meeting(_x1, _y1 + (_h * _sideY), Floor)){
-								instance_create(_x, _y, Wall);
-								
-								 // Bone Decals:
-								with(obj_create(_x + 8 - (8 * _sideX), _y, "WallDecal")){
-									image_xscale = -_sideX;
-								}
-								
-								_break = true;
-								break;
-							}
-						}
-						if(_break) break;
-					}
-				}
-			}
-			
-			 // Bandit Camp:
-			if(_eventBandit){
-				var	_w = 5,
-					_h = 4,
-					_type = floor_fill,
-					_dirOff = 30,
-					_spawnDis = 128,
-					_spawnFloor = FloorNormal;
-					
-				floor_set_align(32, 32, null, null);
-				
-				with(floor_room(_w - 2, _h - 2, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-					script_execute(_type, x, y, _w, _h);
-					
-					 // Dying Campfire:
-					with(instance_create(x, y, Effect)){
-						sprite_index = spr.BanditCampfire;
-						image_xscale = choose(-1, 1);
-						depth = 8;
-						with(instance_create(x, y - 2, GroundFlame)) alarm0 *= 4;
-					}
-					
-					 // Main Tents:
-					var	_ang = random(360),
-						_chests = instances_matching_ne([chestprop, RadChest], "name", "PetWeaponBecome");
-						
-					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-						var	l = 40,
-							d = _dir + orandom(10);
-							
-						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BanditTent")){
-							 // Grab Chests:
-							with(instance_nearest_array(x, y, _chests)){
-								_chests = array_delete_value(_chests, self);
-								with(other){
-									target = other;
-									event_perform(ev_step, ev_step_begin);
-								}
-							}
-						}
-					}
-					
-					 // Bro:
-					obj_create(x, y, "BanditHiker");
-					
-					 // Reduce Nearby Non-Bandits:
-					with(instances_matching([MaggotSpawn, BigMaggot], "", null)){
-						if(chance(1, point_distance(x, y, other.x, other.y) / (_eventMaggot ? 64 : 160))){
-							instance_delete(id);
-						}
-					}
-					with(instances_matching([Scorpion, GoldScorpion], "", null)){
-						if(chance(1, point_distance(x, y, other.x, other.y) / (_eventScorp ? 32 : 160))){
-							instance_delete(id);
-						}
-					}
-					
-					 // Random Tent Spawns:
-					with(array_shuffle(instances_matching(FloorNormal, "styleb", false))){
-						if(chance(1, point_distance(x, y, other.x, other.y) / 24)){
-							if(!place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
-								var	_fw = bbox_width,
-									_fh = bbox_height,
-									_fx = x + (_fw / 2),
-									_fy = y + (_fh / 2);
-									
-								if(point_distance(_fx, _fy, _spawnX, _spawnY) > 64){
-									var	_sideStart = choose(-1, 1),
-										_spawn = true;
-										
-									 // Wall Tent:
-									for(var _side = _sideStart; abs(_side) <= 1; _side += 2 * -_sideStart){
-										if(_spawn && !place_meeting(x + (_fw * _side), y, Floor)){
-											_spawn = false;
-											with(obj_create(_fx + (((_fw / 2) - irandom_range(3, 5)) * _side), _fy - random(2), "BanditTent")){
-												spr_idle = spr.BanditTentWallIdle;
-												spr_hurt = spr.BanditTentWallHurt;
-												spr_dead = spr.BanditTentWallDead;
-												image_xscale = -_side;
-											}
-										}
-									}
-									
-									 // Can't Spawn Wall Tent, Spawn Normal:
-									if(_spawn){
-										if(!collision_rectangle(_fx - 32, _fy - 32, _fx + 32, _fy + 32, Wall, false, false)){
-											if(!collision_rectangle(bbox_left - 4, bbox_top - 4, bbox_right + 4, bbox_bottom + 4, hitme, false, false)){
-												_spawn = false;
-												obj_create(_fx + orandom(8), _fy + orandom(8), (chance(1, 3) ? Barrel : "BanditTent"));
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					 // Riders:
-					if(_eventScorp){
-						var	_rideList = array_shuffle(instances_matching([Scorpion, GoldScorpion], "", null)),
-							_rideNum = 0;
-							
-						with(instances_matching(Bandit, "name", "BanditCamper")){
-							if(_rideNum >= array_length(_rideList)) break;
-							if(chance(1, 2)){
-								rider_target = _rideList[_rideNum++];
-							}
-						}
-					}
-				}
-				
-				floor_reset_align();
-			}
-			
-			 // Baby Scorpions:
-			with(Scorpion) if(chance(1 + _eventScorp, 4)){
-				repeat(irandom_range(1, 3)){
-					obj_create(x, y, "BabyScorpion");
-				}
-			}
-			with(GoldScorpion) if(chance(_eventScorp, 4)){
-				repeat(irandom_range(1, 3)){
-					obj_create(x, y, "BabyScorpionGold");
-				}
-			}
-			with(MaggotSpawn){
-				babyscorp_drop = chance(1, 8) + _eventScorp;
-			}
-			
-			 // Wall Bandits:
-			with(Wall) if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
-				if(chance(1, 400)){
-					obj_create(x + 8, y + 8, "WallEnemy");
+			if(!teevent_get_active("MaggotPark")){
+				with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
+					obj_create(x, y, "BigMaggotSpawn");
+					instance_delete(id);
 				}
 			}
 			
 			break;
 			
-		case 2: /// SEWERS
-			
-			 // Event Conditions:
-			var _eventGator = ((unlock_get("lairCrown") && chance(1, 5)) || crown_current == "crime");
+		case area_sewers: /// SEWERS
 			
 			 // Cats:
 			with(ToxicBarrel){
@@ -767,212 +409,6 @@
 				}
 			}
 			
-			 // Bounty Hunter Den:
-			if(_eventGator){
-				with(array_shuffle(FloorNormal)){
-					if(!place_meeting(x, y, Wall)){
-						var	_fx = bbox_center_x,
-							_fy = bbox_center_y,
-							_w = 5 * 32,
-							_h = 4 * 32,
-							_ang = 90 * irandom(3),
-							_border = 32,
-							_end = false;
-							
-						for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-							if(!place_meeting(x + lengthdir_x(32, _dir), y + lengthdir_y(32, _dir), Floor)){
-								for(var _dis = _border + choose(32, 64, 96); _dis >= _border; _dis -= 32){
-									var	_hallXOff = lengthdir_x(_dis - _border, _dir + 180),
-										_hallYOff = lengthdir_y(_dis - _border, _dir + 180),
-										_cx = _fx + lengthdir_x(16 + _dis + (_w / 2), _dir),
-										_cy = _fy + lengthdir_y(16 + _dis + (_h / 2), _dir);
-										
-									if(!collision_rectangle(
-										_cx - (_w / 2) - _border + min(0, _hallXOff),
-										_cy - (_h / 2) - _border + min(0, _hallYOff),
-										_cx + (_w / 2) + _border + max(0, _hallXOff) - 1,
-										_cy + (_h / 2) + _border + max(0, _hallYOff) - 1,
-										Floor,
-										false,
-										false
-									)){
-										 // Floors:
-										floor_fill(_cx, _cy, _w / 32, _h / 32);
-										
-										 // Entrance:
-										floor_set_style(1, "lair");
-										for(var l = _border; l <= _dis; l += 32){
-											with(floor_set(_fx - 16 + lengthdir_x(l, _dir), _fy - 16 + lengthdir_y(l, _dir), true)){
-												 // Doors:
-												if(l > _dis - 32){
-													door_create(x + 16, y + 16, _dir);
-												}
-												if(l <= _border){
-													door_create(x + 16, y + 16, _dir + 180);
-												}
-												
-												 // Pipes:
-												else floor_bones(1, 1/10, true);
-											}
-										}
-										floor_reset_style();
-										
-										 // Table:
-										with(instance_create(_cx + lengthdir_x(12, _dir + 180), _cy + lengthdir_y(12, _dir + 180), Table)){
-											spr_idle = sprTable1;
-											spr_hurt = sprTable1Hurt;
-											spr_dead = sprTable1Dead;
-											spr_shadow = shd32;
-											maxhealth = 5;
-											my_health = maxhealth;
-											
-											 // Furnishment:
-											obj_create(x, y, "SewerRug");
-											
-											 // Light:
-											with(obj_create(x, y - 30, "CatLight")){
-												w1 = 16;
-											}
-											
-											 // Table Variance:
-											if(chance(1, 3)){
-												spr_idle = sprTable2;
-												spr_hurt = sprTable2Hurt;
-												spr_dead = sprTable2Dead;
-											}
-											else if(chance(1, 2)){
-												with(instance_create(x, y - 10, Corpse)){
-													sprite_index = sprBanditDead;
-													image_xscale = choose(-1, 1);
-													mask_index = mskBandit;
-													size = 1;
-													other.depth = depth;
-												}
-											}
-											else with(instance_create(x, y - 9, MoneyPile)){
-												x = xstart;
-												y = ystart;
-												depth = other.depth - 1;
-											}
-											
-											 // The Boys:
-											var _inst = [id];
-											for(var _side = -1; _side <= 1; _side += 2){
-												var	_off = 20,
-													_num = 2,
-													l = 28,
-													d = (180 * (_side < 0)) - _off;
-													
-												repeat(_num){
-													var _obj = choose(
-														Gator, Gator, GatorSmoke, GatorSmoke,
-														"BabyGator", "BabyGator", "BabyGator",
-														BuffGator, BuffGator,
-														"BoneGator",
-														"AlbinoGator"
-													);
-													
-													with(obj_create(x + orandom(2) + lengthdir_x(l, d), y - random(4) + lengthdir_y(l, d), _obj)){
-														x = xstart;
-														y = ystart;
-														image_index = irandom(image_number - 1);
-														
-														 // Aim:
-														scrAim(d + 180);
-														if(chance(2, 3)){
-															gunangle = 90 + (random_range(30, 50) * right);
-														}
-														
-														 // Specifics:
-														switch(_obj){
-															case GatorSmoke:
-																image_speed = 0;
-																break;
-																
-															case "BabyGator":
-																if(chance(1, 2)){
-																	with(instance_copy(false)){
-																		var o = orandom(30);
-																		x += lengthdir_x(16, d + o);
-																		y += lengthdir_y(16, d + o);
-																		right *= choose(-1, 1);
-																		gunangle = 90 + (angle_difference(90, gunangle) * right) + orandom(20);
-																		array_push(_inst, id);
-																	}
-																}
-																break;
-														}
-														
-														array_push(_inst, id);
-													}
-													
-													d += (_off * 2) / (_num - 1);
-												}
-											}
-											with(obj_create(x, y, "GatorIdler")){
-												inst = _inst;
-											}
-										}
-										
-										 // Corner Prop:
-										var	_x = choose(_cx - (_w / 2) + 16, _cx + (_w / 2) - 16),
-											_y = choose(_cy - (_h / 2) + 16, _cy + (_h / 2) - 16),
-											_obj = MoneyPile;
-											
-										if(abs(angle_difference(_dir + 180, point_direction(_cx, _cy, _x, _y))) < 90){
-											_obj = Table;
-										}
-										
-										with(instance_create(_x, _y, _obj)){
-											switch(_obj){
-												case Table:
-													spr_idle = sprFallenChair;
-													spr_hurt = sprFallenChairHurt;
-													spr_dead = sprFallenChairDead;
-													break;
-											}
-										}
-										
-										 // Loot:
-										for(var _side = -1; _side <= 1; _side++){
-											var	_ox = ((_side == 0) ? -24 : -32),
-												_oy = -32,
-												_x = _cx + lengthdir_x((_w / 2) + _ox, _dir) + (lengthdir_x((_w / 2) + _oy, _dir - 90) * _side) + orandom(2),
-												_y = _cy + lengthdir_y((_h / 2) + _ox, _dir) + (lengthdir_y((_h / 2) + _oy, _dir - 90) * _side) + orandom(2),
-												_obj = choose(choose(WeaponChest, AmmoChest), AmmoChestMystery, MoneyPile);
-												
-											if(_side == 0){
-												_obj = choose("BatChest", "CatChest");
-											}
-											
-											with(obj_create(_x, _y, _obj)){
-												x = xstart;
-												y = ystart;
-											}
-											
-											 // Light:
-											with(obj_create(_x, _y - 24, "CatLight")){
-												w1 = 12;
-												w2 = random_range(18, 22);
-												h1 = 28
-												h2 = 6;
-											}
-										}
-										
-										_end = true;
-										break;
-									}
-								}
-								
-								if(_end) break;
-							}
-						}
-						
-						if(_end) break;
-					}
-				}
-			}
-			
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				 // Traffic Crabs:
@@ -984,12 +420,8 @@
 			
 			break;
 			
-		case 3: /// SCRAPYARDS
+		case area_scrapyards: /// SCRAPYARDS
 			
-			 // Event Conditions:
-			var	_eventSludge = (GameCont.subarea == 2),
-				_eventRaven = (GameCont.subarea != 3 && chance(1, 30));
-				
 			 // Sawblade Traps:
 			if(GameCont.subarea != 3){
 				with(enemy) if(chance(1, 40) && place_meeting(x, y, Floor)){
@@ -1020,7 +452,7 @@
 			}
 			
 			 // Sludge Pool:
-			if(_eventSludge){
+			if(GameCont.subarea == 2){
 				var	_w = 2,
 					_h = 2,
 					_type = floor_fill,
@@ -1053,73 +485,10 @@
 			}
 			
 			 // Raven Spectators:
-			with(Wall) if(!place_meeting(x, y, PortalClear) && place_meeting(x, y, Floor)){
-				if(chance(1, 5)){
+			with(Wall) if(chance(1, 5)){
+				if(!place_meeting(x, y, PortalClear) && place_meeting(x, y, Floor)){
 					top_create(bbox_center_x + orandom(2), y - 8 + orandom(2), "TopRaven", 0, 0);
 				}
-			}
-			
-			 // Raven Arena:
-			if(_eventRaven){
-				floor_set_align(32, 32, null, null);
-				
-				var	_w = 6 + ceil(GameCont.loops / 2.5),
-					_h = _w,
-					_type = floor_fill_round,
-					_dirOff = 60,
-					_spawnDis = 32,
-					_spawnFloor = FloorNormal;
-					
-				with(floor_room(_w, _h, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-					 // Decals:
-					repeat(3){
-						instance_create(x, y, TopDecalScrapyard);
-					}
-					
-					 // Round Off Corners:
-					for(var _x = x1; _x < x2; _x += 16){
-						for(var _y = y1; _y < y2; _y += 16){
-							var	_cx = _x + 8,
-								_cy = _y + 8;
-								
-							if(!in_range(_cx, x1 + 64, x2 - 64) && !in_range(_cy, y1 + 64, y2 - 64)){
-								var	_sideX = ((_x <= x1 || _x >= x2 - 16) ? sign(_cx - x) : 0),
-									_sideY = ((_y <= y1 || _y >= y2 - 16) ? sign(_cy - y) : 0);
-									
-								if(_sideX != 0 || _sideY != 0){
-									if(position_meeting(_cx + (16 * _sideX), _cy + (16 * _sideY), Wall)){
-										var	_cornerX = ((_cx < x) ? x1 : x2 - 32),
-											_cornerY = ((_cy < y) ? y1 : y2 - 32);
-											
-										if(!collision_rectangle(_cornerX, _cornerY, _cornerX + 31, _cornerY + 31, Floor, false, false)){
-											instance_create(_x, _y, Wall);
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					 // Controller:
-					obj_create(x, y, "RavenArenaCont");
-				}
-				
-				floor_reset_align();
-			}
-			
-			 // Baby Sludge Pools:
-			with(instances_matching(instances_matching(Floor, "sprite_index", sprFloor3), "image_index", 3)){
-				if(array_length(instances_meeting(CustomObject, "name", "SludgePool")) <= 0){
-					with(obj_create(bbox_center_x, bbox_center_y, "SludgePool")){
-						sprite_index = msk.SludgePoolSmall;
-						spr_floor = other.sprite_index;
-					}
-				}
-			}
-			
-			 // Big Dog Spectators:
-			with(BecomeScrapBoss) repeat(irandom_range(2, 6) * (1 + GameCont.loops)){
-				top_create(x, y, "TopRaven", random(360), -1);
 			}
 			
 			 // Loop Spawns:
@@ -1133,7 +502,7 @@
 			
 			break;
 			
-		case 4: /// CAVES
+		case area_caves: /// CAVES
 			
 			 // Spawn Mortars:
 			with(instances_matching(LaserCrystal, "mortar_check", null)){
@@ -1207,7 +576,7 @@
 			
 			break;
 			
-		case 5: /// FROZEN CITY
+		case area_city: /// FROZEN CITY
 			
 			 // Igloos:
 			if(chance(1, 1)){
@@ -1268,7 +637,7 @@
 			
 			break;
 			
-		case 6: /// LABS
+		case area_labs: /// LABS
 			
 			 // Top Spawns:
 			_topChance *= (1 + (0.5 * GameCont.loops));
@@ -1319,7 +688,7 @@
 			
 			break;
 			
-		case 7: /// PALACE
+		case area_palace: /// PALACE
 			
 			 // Cool Dudes:
 			with(Guardian) if(chance(1, 20)){
@@ -1358,13 +727,10 @@
 			
 			break;
 			
-		case 100: /// CROWN VAULT
-			
-			 // Event Conditions:
-			var _eventFlower = mod_variable_get("mod", "tepickups", "VaultFlower_spawn");
+		case area_vault: /// CROWN VAULT
 			
 			 // Vault Flower Room:
-			if(_eventFlower){
+			if(mod_variable_get("mod", "tepickups", "VaultFlower_spawn")){
 				with(CrownPed){
 					var	_w = 3,
 						_h = 3,
@@ -1402,7 +768,7 @@
 			
 			break;
 			
-		case 101:
+		case area_oasis:
 		case "oasis":
 			
 			 // Top Spawns:
@@ -1417,7 +783,7 @@
 			
 			break;
 			
-		case 103: /// MANSIOM  its MANSION idiot, who wrote this
+		case area_mansion: /// MANSIOM  its MANSION idiot, who wrote this
 			
 			 // Spawn Gold Mimic:
 			with(instance_nearest(_spawnX, _spawnY, GoldChest)){
@@ -1438,7 +804,7 @@
 			
 			break;
 			
-		case 104: /// CURSED CAVES
+		case area_caves: /// CURSED CAVES
 			
 			 // Spawn Cursed Mortars:
 			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
@@ -1460,7 +826,7 @@
 			
 			break;
 			
-		case 105: /// JUNGLE where is the hive ?
+		case area_jungle: /// JUNGLE where is the hive ?
 			
 			 // Top Spawns:
 			_topSpawn = [
@@ -1469,12 +835,14 @@
 				[BigFlower,				1/3]
 			];
 			with(instances_matching([JungleBandit, JungleFly], "", null)){
-				if(chance(1, 3)) top_create(x, y, id, -1, -1);
+				if(chance(1, 3)){
+					top_create(x, y, id, -1, -1);
+				}
 			}
 			
 			break;
 			
-		case 107: /// CRIB
+		case area_crib: /// CRIB
 			
 			 // Top Spawns
 			_topSpawn = [
@@ -1482,6 +850,22 @@
 			];
 			
 			break;
+	}
+	
+	 // Activate Events:
+	with(array_flip(instances_matching(CustomObject, "name", "NTTEEvent"))){
+		on_step = script_ref_create_ext(mod_type, mod_name, event + "_step");
+		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
+		mod_script_call(mod_type, mod_name, event + "_create");
+	}
+	
+	 // Wall Enemies:
+	if(GameCont.area == area_desert){
+		with(Wall) if(chance(1, 400)){
+			if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
+				obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
+			}
+		}
 	}
 	
 	 // Top Spawns:
@@ -1780,7 +1164,7 @@
 	}
 	
 	 // Top Chests:
-	if(_normalArea && (GameCont.area != 1 || GameCont.loops > 0)){
+	if(_normalArea && (GameCont.area != area_desert || GameCont.loops > 0)){
 		var _obj = -1;
 		
 		 // Health:
@@ -1828,7 +1212,7 @@
 	 // Buried Vault:
 	if(_normalArea || instance_exists(IDPDSpawn) || instance_exists(CrownPed)){
 		if(chance(
-			1 + (2 * GameCont.vaults * (GameCont.area == 100)),
+			1 + (2 * GameCont.vaults * (GameCont.area == area_vault)),
 			8 + variable_instance_get(GameCont, "buried_vaults", 0)
 		)){
 			with(instance_random(Wall)){
@@ -1840,8 +1224,33 @@
 			}
 		}
 	}
-
-	 // Sewer manhole:
+	
+	 // Baby Scorpions:
+	if(instance_exists(Scorpion) || instance_exists(GoldScorpion)){
+		var _eventScorp = teevent_get_active("ScorpionCity");
+		with(Scorpion) if(chance(1 + _eventScorp, 4)){
+			repeat(irandom_range(1, 3)){
+				obj_create(x, y, "BabyScorpion");
+			}
+		}
+		with(GoldScorpion) if(chance(_eventScorp, 4)){
+			repeat(irandom_range(1, 3)){
+				obj_create(x, y, "BabyScorpionGold");
+			}
+		}
+		with(MaggotSpawn){
+			babyscorp_drop = chance(1, 8) + _eventScorp;
+		}
+	}
+	
+	 // Big Dog Spectators:
+	with(BecomeScrapBoss){
+		repeat(irandom_range(2, 6) * (1 + GameCont.loops)){
+			top_create(x, y, "TopRaven", random(360), -1);
+		}
+	}
+	
+	 // Sewer Manhole:
 	with(PizzaEntrance){
 		with(obj_create(x, y, "Manhole")) toarea = "pizza";
 		instance_delete(id);
@@ -1887,105 +1296,15 @@
 		}
 	}
 	
-#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)
-	/*
-		Returns a safe starting x/y and direction to call floor_room_create() with
-	*/
-	
-	with(array_shuffle(instances_matching(_spawnFloor, "", null))){
-		var	_x = bbox_center_x,
-			_y = bbox_center_y;
-			
-		if(point_distance(_spawnX, _spawnY, _x, _y) >= _spawnDis){
-			return {
-				x : _x,
-				y : _y,
-				direction : point_direction(_spawnX, _spawnY, _x, _y)
-			};
+	 // Baby Sludge Pools:
+	with(instances_matching(instances_matching(Floor, "sprite_index", sprFloor3), "image_index", 3)){
+		if(array_length(instances_meeting(CustomObject, "name", "SludgePool")) <= 0){
+			with(obj_create(bbox_center_x, bbox_center_y, "SludgePool")){
+				sprite_index = msk.SludgePoolSmall;
+				spr_floor = other.sprite_index;
+			}
 		}
 	}
-	return noone;
-	
-#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)
-	/*
-		Moves toward a given direction until an open space is found, then creates floors based on the width, height, and script
-		Rooms should always connect to the level as long as the starting x/y is over a floor, and should never overlap pre-existing floors
-	*/
-	
-	 // Script Setup:
-	if(is_real(_scrt)){
-		_scrt = script_ref_create(_scrt);
-	}
-	else if(is_string(_scrt)){
-		_scrt = script_ref_create_ext("mod", mod_current, _scrt);
-	}
-	
-	 // Find Space:
-	var	_floorAvoid = FloorNormal,
-		_dis = 16,
-		_dir = 0,
-		_ow = (_w * 32) / 2,
-		_oh = (_h * 32) / 2,
-		_sx = _x,
-		_sy = _y;
-		
-	if(!is_array(_dirOff)) _dirOff = [_dirOff];
-	while(array_length(_dirOff) < 2) array_push(_dirOff, 0);
-	
-	while(
-		(_scrt[2] == "floor_fill_round")
-			? (
-				array_length(instance_rectangle_bbox(_x - _ow + 32, _y - _oh,      _x + _ow - 1 - 32, _y + _oh - 1,      _floorAvoid)) > 0 ||
-				array_length(instance_rectangle_bbox(_x - _ow,      _y - _oh + 32, _x + _ow - 1,      _y + _oh - 1 - 32, _floorAvoid)) > 0
-			)
-			: (
-				array_length(instance_rectangle_bbox(_x - _ow, _y - _oh, _x + _ow - 1, _y + _oh - 1, _floorAvoid)) > 0
-			)
-	){
-		_dir = round((_dirStart + (random_range(_dirOff[0], _dirOff[1]) * choose(-1, 1))) / 90) * 90;
-		_x += lengthdir_x(_dis, _dir);
-		_y += lengthdir_y(_dis, _dir);
-	}
-	
-	 // Create Room:
-	var	_floors = script_ref_call(_scrt, _x, _y, _w, _h),
-		_cx = _x,
-		_cy = _y;
-		
-	if(array_length(_floors) > 0){
-		_cx = 0;
-		_cy = 0;
-		with(_floors){
-			_cx += bbox_center_x;
-			_cy += bbox_center_y;
-		}
-		_cx /= array_length(_floors);
-		_cy /= array_length(_floors);
-	}
-	
-	 // Done:
-	return {
-		floors : _floors,
-		x  : _cx,
-		y  : _cy,
-		x1 : _cx - _ow,
-		y1 : _cy - _oh,
-		x2 : _cx + _ow,
-		y2 : _cy + _oh,
-		xstart : _sx,
-		ystart : _sy
-	};
-	
-#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)
-	/*
-		Automatically creates a room a safe distance from the player
-	*/
-	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-		with(floor_room_create(x, y, _w, _h, _scrt, direction, _dirOff)){
-			return self;
-		}
-	}
-	return noone;
 	
 #define step
 	if(DebugLag) trace_time();
@@ -2150,7 +1469,9 @@
 	
 	 // Call Area Events (Not built into area mods):
 	var a = array_find_index(areaList, GameCont.area);
-	if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
+	if(a < 0 && GameCont.area = area_vault){
+		a = array_find_index(areaList, GameCont.lastarea);
+	}
 	if(a >= 0){
 		var _area = areaList[a];
 		
@@ -2186,7 +1507,7 @@
 		}
 		
 		 // Music / Ambience:
-		if(GameCont.area != 100){
+		if(GameCont.area != area_vault){
 			if(global.musTrans || instance_exists(GenCont) || instance_exists(LevCont)){
 				var _scrt = ["area_music", "area_ambience"];
 				for(var i = 0; i < lq_size(global.sound_current); i++){
@@ -2320,7 +1641,7 @@
 
 #define end_step
 	if(DebugLag) trace_time();
-
+	
 	 // Manually Recreating Pause/Loading/GameOver Map:
 	if(global.mapAreaCheck){
 		global.mapAreaCheck = false;
@@ -2329,8 +1650,21 @@
 			if(i >= 0) global.mapArea[i] = [area, subarea, loops];
 		}
 	}
-
+	
 	try{
+		 // Loop Labs:
+		if(GameCont.loops > 0 && GameCont.area == area_labs){
+			with(instances_matching(Freak, "fish_freak", null)){
+				fish_freak = chance(1, 7);
+				if(fish_freak){
+					spr_idle = spr.FishFreakIdle;
+					spr_walk = spr.FishFreakWalk;
+					spr_hurt = spr.FishFreakHurt;
+					spr_dead = spr.FishFreakDead;
+				}
+			}
+		}
+		
 		 // Labs Merged Weapons:
 		with(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale))){
 			if(place_meeting(x, y, WepPickup)){
@@ -2384,6 +1718,37 @@
 			with(_pop) mergewep_indicator = true;
 		}
 		
+		 // Last Wish:
+		with(instances_matching_ne(Player, "ntte_lastwish", skill_get(mut_last_wish))){
+			var _wishDiff = (skill_get(mut_last_wish) - variable_instance_get(id, "ntte_lastwish", 0));
+			ntte_lastwish = skill_get(mut_last_wish);
+			
+			if(ntte_lastwish != 0){
+				 // LWO Weapons:
+				with([wep, bwep]){
+					var w = self;
+					if(is_object(w) && "ammo" in w && "amax" in w && array_exists(wepsList, wep_get(w))){
+						var	_cost = lq_defget(w, "cost", 0),
+							_amax = w.amax,
+							_amaxRaw = (_amax / (1 + lq_defget(w, "buff", 0))),
+							_wish = lq_defget(w, "wish", (
+								(_amaxRaw < 200)
+								? ceil(_amax * 0.35)
+								: round(_amax * 0.785)
+							));
+							
+						w.ammo = clamp(w.ammo + (_wish * _wishDiff), _cost, _amax);
+					}
+				}
+				
+				 // Parrot:
+				if(race == "parrot"){
+					var _wish = (2 * feather_num);
+					feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
+				}
+			}
+		}
+		
 		 // Weapon Unlock Stuff:
 		with(Player){
 			var w = 0;
@@ -2425,7 +1790,7 @@
 		if(instance_exists(Player)){
 			var _statList = {
 				"kill"	: (GameCont.kills - global.killsLast),
-				"loop"	: ((GameCont.area == 0) ? array_length(instances_matching(_statInst, "object_index", GenCont)) : 0),
+				"loop"	: ((GameCont.area == area_vault) ? array_length(instances_matching(_statInst, "object_index", GenCont)) : 0),
 				"wins"	: array_length(instances_matching(_statInst, "object_index", SitDown)),
 				"time"	: (current_time_scale / 30)
 			};
@@ -2461,67 +1826,6 @@
 			}
 		}
 		global.killsLast = GameCont.kills;
-		
-		 // Scythe Prompts:
-		with(instances_matching(GenCont, "tip_scythe", null)){
-			tip_scythe = false;
-			
-			if(GameCont.hard > 1){
-				if(global.sPromptIndex != -1){
-					with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-						other.tip_scythe = true;
-					}
-					if(tip_scythe){
-						tip = global.scythePrompt[global.sPromptIndex];
-						global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
-					}
-				}
-			}
-		}
-		
-		 // Last Wish:
-		with(instances_matching_ne(Player, "ntte_lastwish", skill_get(mut_last_wish))){
-			var _wishDiff = (skill_get(mut_last_wish) - variable_instance_get(id, "ntte_lastwish", 0));
-			ntte_lastwish = skill_get(mut_last_wish);
-			
-			if(ntte_lastwish != 0){
-				 // LWO Weapons:
-				with([wep, bwep]){
-					var w = self;
-					if(is_object(w) && "ammo" in w && "amax" in w && array_exists(wepsList, wep_get(w))){
-						var	_cost = lq_defget(w, "cost", 0),
-							_amax = w.amax,
-							_amaxRaw = (_amax / (1 + lq_defget(w, "buff", 0))),
-							_wish = lq_defget(w, "wish", (
-								(_amaxRaw < 200)
-								? ceil(_amax * 0.35)
-								: round(_amax * 0.785)
-							));
-							
-						w.ammo = clamp(w.ammo + (_wish * _wishDiff), _cost, _amax);
-					}
-				}
-				
-				 // Parrot:
-				if(race == "parrot"){
-					var _wish = (2 * feather_num);
-					feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
-				}
-			}
-		}
-		
-		 // Loop Labs:
-		if(GameCont.loops > 0 && GameCont.area == 6){
-			with(instances_matching(Freak, "fish_freak", null)){
-				fish_freak = chance(1, 7);
-				if(fish_freak){
-					spr_idle = spr.FishFreakIdle;
-					spr_walk = spr.FishFreakWalk;
-					spr_hurt = spr.FishFreakHurt;
-					spr_dead = spr.FishFreakDead;
-				}
-			}
-		}
 		
 		 // Custom Loading Screens:
 		with(instances_matching(SpiralCont, "ntte_spiral", null)){
@@ -2567,6 +1871,82 @@
 			}
 		}
 		
+		 // NTTE Tips:
+		with(instances_matching(GenCont, "tip_ntte", null)){
+			tip_ntte = "";
+			
+			 // Scythe:
+			if(GameCont.hard > 1){
+				if(global.sPromptIndex != -1){
+					var _scythe = false;
+					with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+						_scythe = true;
+					}
+					if(_scythe){
+						tip_ntte = global.scythePrompt[global.sPromptIndex];
+						global.sPromptIndex = min(global.sPromptIndex + 1, array_length(global.scythePrompt) - 1);
+					}
+				}
+			}
+			
+			 // Pets:
+			if(tip_ntte == "" && chance(1, 14)){
+				var	_player = array_shuffle(instances_matching_ne(Player, "ntte_pet", null)),
+					_tip = null;
+					
+				with(_player){
+					var _pet = array_shuffle(array_clone(ntte_pet));
+					with(_pet) if(instance_exists(self)){
+						var _scrt = pet + "_ttip";
+						if(mod_script_exists(mod_type, mod_name, _scrt)){
+							_tip = mod_script_call(mod_type, mod_name, _scrt);
+							if(array_length(_tip) > 0){
+								_tip = _tip[irandom(array_length(_tip) - 1)];
+							}
+						}
+						
+						if(is_string(_tip)) break;
+					}
+					if(is_string(_tip)) break;
+				}
+				
+				if(is_string(_tip)){
+					tip_ntte = _tip;
+				}
+			}
+			
+			 // Set Tip:
+			if(tip_ntte != ""){
+				tip = tip_ntte;
+			}
+		}
+		
+		 // Setup Events:
+		with(instances_matching(GenCont, "ntte_event_check", null)){
+			ntte_event_check = true;
+			
+			if(GameCont.hard > 1){
+				var _list = mod_variable_get("mod", "teevents", "event_list");
+				for(var i = 0; i < array_length(_list); i++){
+					var	_scrt = _list[i],
+						_modType = _scrt[0],
+						_modName = _scrt[1],
+						_name = _scrt[2],
+						_area = mod_script_call(_modType, _modName, _name + "_area");
+						
+					if(_area == null || GameCont.area == _area){
+						var _chance = 1;
+						if(mod_script_exists(_modType, _modName, _name + "_chance")){
+							_chance = mod_script_call(_modType, _modName, _name + "_chance");
+						}
+						if(chance(_chance, 1)){
+							teevent_set_active(_name, true);
+						}
+					}
+				}
+			}
+		}
+		
 		 // This is it:
 		with(instances_matching(Breath, "depth", -2)) depth = -3;
 		with(instances_matching(MeltSplat, "depth", 1)) depth = 7;
@@ -2590,11 +1970,11 @@
 		}
 	}
 	script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
-
+	
 	if(DebugLag) trace_time("ntte_end_step");
-
+	
 	instance_destroy();
-
+	
 #define draw_pause_pre
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
 		 // Dim:
@@ -2676,7 +2056,9 @@
 #define area_step
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		var a = array_find_index(areaList, GameCont.area);
-		if(a < 0 && GameCont.area = 100) a = array_find_index(areaList, GameCont.lastarea);
+		if(a < 0 && GameCont.area = area_vault){
+			a = array_find_index(areaList, GameCont.lastarea);
+		}
 		if(a >= 0){
 			var	_area = areaList[a],
 				_scrt = "step";
@@ -2850,10 +2232,10 @@
 			if(is_real(_data.area)){
 				if(_data.area < 100){
 					var n = 0;
-					n += 3 *  ceil((floor(_data.area) - 1) / 2);	// Main Areas
-					n += 1 * floor((floor(_data.area) - 1) / 2);	// Transition Areas
-					n += _data.subarea - 1;							// Subarea
-					n += (_data.area - floor(_data.area));			// Fractional Areas
+					n += 3 *  ceil((floor(_data.area) - 1) / 2); // Main Areas
+					n += 1 * floor((floor(_data.area) - 1) / 2); // Transition Areas
+					n += _data.subarea - 1;                      // Subarea
+					n += (_data.area - floor(_data.area));       // Fractional Areas
 
 					_data.x = 9 * n;
 					_data.y = 0;
@@ -3742,7 +3124,11 @@
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
@@ -3770,6 +3156,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

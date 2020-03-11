@@ -8,14 +8,14 @@
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PickupIndicator", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet", "WallDecal"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet", "WallDecal"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PickupIndicator", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenRoom", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorIdler", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
-		"tescrapyard" : ["BoneRaven", "RavenArenaCont", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
+		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
+		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedSpider", "Spiderling", "SpiderWall"]
 	};
 	
@@ -2479,7 +2479,7 @@
 	}
 	
 	return _instNew;
-
+	
 #define instance_create_lq(_x, _y, _lq)
 	var	_inst = obj_create(_x, _y, lq_defget(_lq, "object_index", (is_real(_lq) ? _lq : GameObject))),
 		_lqSize = lq_size(_lq);
@@ -2494,7 +2494,7 @@
 	}
 	
 	return _inst;
-
+	
 #define variable_is_readonly(_inst, _varName)
 	if(array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _varName)){
 		return true;
@@ -2505,7 +2505,7 @@
 		}
 	}
 	return false;
-
+	
 #define wepfire_init(_wep)
 	var _fire = {
 		wep     : _wep,
@@ -3303,11 +3303,7 @@
 						_y1 = bbox_center_y;
 						
 					if(collision_line(_x1, _y1, _x2, _y1, Wall, false, false)){
-						with(instance_create(_x1, _y - 24, PortalClear)){
-							sprite_index = mskFloor;
-							image_xscale = (_x2 - _x1) / sprite_width;
-							image_speed = 1 / abs(image_xscale);
-						}
+						floor_tunnel(_x1, _y - 8, _x2, _y - 8);
 					}
 				}
 			}
@@ -3421,7 +3417,7 @@
 	}
 	
 	return -1;
-
+	
 #define floor_get(_x, _y)
 	 // Find Floor:
 	with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(Floor, "bbox_right", _x), "bbox_left", _x), "bbox_bottom", _y), "bbox_top", _y)){
@@ -3733,6 +3729,137 @@
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, SnowFloor)){
 		instance_delete(id);
 	}
+	
+#define floor_tunnel(_x1, _y1, _x2, _y2)
+	/*
+		Creates a PortalClear that destroys all Walls between two given points, making a FloorExplo tunnel
+		Tunnel's height defaults to 32, set its 'image_yscale' to change
+	*/
+	
+	with(instance_create(_x1, _y1, PortalClear)){
+		var	_dis = point_distance(x, y, _x2, _y2),
+			_dir = point_direction(x, y, _x2, _y2);
+			
+		sprite_index = sprBoltTrail;
+		image_xscale = _dis / bbox_width;
+		image_yscale = 32 / bbox_height;
+		image_angle = _dir;
+		image_speed = 16 / _dis;
+		
+		 // Ensure Tunnel:
+		if(instance_exists(Wall) && !place_meeting(x, y, Wall) && !place_meeting(x, y, Floor)){
+			with(instance_nearest_bbox(x, y, Wall)){
+				instance_create(x + pfloor(other.x - x, 16), y + pfloor(other.y - y, 16), Wall);
+			}
+		}
+		
+		return id;
+	}
+	
+	return noone;
+	
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)
+	/*
+		Returns a safe starting x/y and direction to call floor_room_create() with
+	*/
+	
+	with(array_shuffle(instances_matching(_spawnFloor, "", null))){
+		var	_x = bbox_center_x,
+			_y = bbox_center_y;
+			
+		if(point_distance(_spawnX, _spawnY, _x, _y) >= _spawnDis){
+			return {
+				x : _x,
+				y : _y,
+				direction : point_direction(_spawnX, _spawnY, _x, _y)
+			};
+		}
+	}
+	
+	return noone;
+	
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)
+	/*
+		Moves toward a given direction until an open space is found, then creates floors based on the width, height, and script
+		Rooms should always connect to the level as long as the starting x/y is over a floor, and should never overlap pre-existing floors
+	*/
+	
+	 // Script Setup:
+	if(is_real(_scrt)){
+		_scrt = script_ref_create(_scrt);
+	}
+	else if(is_string(_scrt)){
+		_scrt = script_ref_create_ext("mod", mod_current, _scrt);
+	}
+	
+	 // Find Space:
+	var	_floorAvoid = FloorNormal,
+		_dis = 16,
+		_dir = 0,
+		_ow = (_w * 32) / 2,
+		_oh = (_h * 32) / 2,
+		_sx = _x,
+		_sy = _y;
+		
+	if(!is_array(_dirOff)) _dirOff = [_dirOff];
+	while(array_length(_dirOff) < 2) array_push(_dirOff, 0);
+	
+	while(
+		(_scrt[2] == "floor_fill_round")
+			? (
+				array_length(instance_rectangle_bbox(_x - _ow + 32, _y - _oh,      _x + _ow - 1 - 32, _y + _oh - 1,      _floorAvoid)) > 0 ||
+				array_length(instance_rectangle_bbox(_x - _ow,      _y - _oh + 32, _x + _ow - 1,      _y + _oh - 1 - 32, _floorAvoid)) > 0
+			)
+			: (
+				array_length(instance_rectangle_bbox(_x - _ow, _y - _oh, _x + _ow - 1, _y + _oh - 1, _floorAvoid)) > 0
+			)
+	){
+		_dir = round((_dirStart + (random_range(_dirOff[0], _dirOff[1]) * choose(-1, 1))) / 90) * 90;
+		_x += lengthdir_x(_dis, _dir);
+		_y += lengthdir_y(_dis, _dir);
+	}
+	
+	 // Create Room:
+	var	_floors = script_ref_call(_scrt, _x, _y, _w, _h),
+		_cx = _x,
+		_cy = _y;
+		
+	if(array_length(_floors) > 0){
+		_cx = 0;
+		_cy = 0;
+		with(_floors){
+			_cx += bbox_center_x;
+			_cy += bbox_center_y;
+		}
+		_cx /= array_length(_floors);
+		_cy /= array_length(_floors);
+	}
+	
+	 // Done:
+	return {
+		floors : _floors,
+		x  : _cx,
+		y  : _cy,
+		x1 : _cx - _ow,
+		y1 : _cy - _oh,
+		x2 : _cx + _ow,
+		y2 : _cy + _oh,
+		xstart : _sx,
+		ystart : _sy
+	};
+	
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)
+	/*
+		Automatically creates a room a safe distance from the spawn point
+	*/
+	
+	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+		with(floor_room_create(x, y, _w, _h, _scrt, direction, _dirOff)){
+			return self;
+		}
+	}
+	
+	return noone;
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
@@ -5677,3 +5804,78 @@
 	if(array_length(_newInst) <= 0) return noone;
 	return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
 	
+#define teevent_add(_event)
+	/*
+		Adds a given event script reference to the list of events
+		If the given event is a string then a script reference is automatically generated for teevents.mod
+		
+		Ex:
+			teevent_add(script_ref_create_ext("mod", "teevents", "MaggotPark"));
+			teevent_add("MaggotPark");
+	*/
+	
+	var	_list = mod_variable_get("mod", "teevents", "event_list"),
+		_scrt = (is_array(_event) ? _event : script_ref_create_ext("mod", "teevents", _event));
+		
+	array_push(_list, _scrt);
+	
+	return _scrt;
+	
+#define teevent_set_active(_name, _active)
+	/*
+		Activates or deactivates a given event
+	*/
+	
+	var _inst = instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name);
+	
+	 // Activate:
+	if(_active){
+		if(array_length(_inst) > 0){
+			return _inst[0];
+		}
+		else{
+			var	_x = 10016,
+				_y = 10016;
+				
+			with(GenCont){
+				_x = spawn_x;
+				_y = spawn_y;
+			}
+			with(instance_nearest(_x, _y, Player)){
+				_x = x;
+				_y = y;
+			}
+			
+			with(instance_create(_x, _y, CustomObject)){
+				name = "NTTEEvent";
+				mod_type = "mod";
+				mod_name = "teevents";
+				event = _name;
+				
+				 // Tip:
+				tip = mod_script_call("mod", "teevents", _name + "_text");
+				if(is_string(tip) && tip != ""){
+					with(instances_matching(GenCont, "tip_ntte_event", null)){
+						tip_ntte_event = "@w" + other.tip;
+						tip = tip_ntte_event;
+					}
+				}
+				
+				return id;
+			}
+		}
+	}
+	
+	 // Deactivate:
+	else with(_inst){
+		instance_destroy();
+	}
+	
+	return noone;
+	
+#define teevent_get_active(_name)
+	/*
+		Returns if a given NTTE event is active or not
+	*/
+	
+	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);

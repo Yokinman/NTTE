@@ -3917,7 +3917,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(current_frame_active){
 		visible = !chance(1, 60);
 	}
-
+	
 #define draw_catlight(_x, _y, _w1, _w2, _h1, _h2, _offset)
 	if(point_seen_ext(_x, _y, max(_w1, _w2), (_h1 + _h2), player_find_local_nonsync())){
 		var	_x1a = _x - (_w1 / 2),
@@ -3938,144 +3938,53 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Rounded Bottom:
 		draw_ellipse(_x1b - 1, _y2 - 1 - _h2,  _x2b - 1, _y2 - 1 + _h2, false);
 	}
-
-
+	
+	
 #define ChairFront_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.ChairFrontIdle;
 		spr_hurt = spr.ChairFrontHurt;
 		spr_dead = spr.ChairFrontDead;
-
+		
 		 // Sounds:
 		snd_hurt = sndHitMetal;
 		snd_dead = sndStreetLightBreak;
-
+		
 		 // Vars:
 		maxhealth = 4;
 		size = 1;
-
+		
 		return id;
 	}
-
-
+	
+	
 #define ChairSide_create(_x, _y)
 	with(obj_create(_x, _y, "ChairFront")){
 		 // Visual:
 		spr_idle = spr.ChairSideIdle;
 		spr_hurt = spr.ChairSideHurt;
 		spr_dead = spr.ChairSideDead;
-
+		
 		return id;
 	}
-
+	
 #define Couch_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.CouchIdle;
 		spr_hurt = spr.CouchHurt;
 		spr_dead = spr.CouchDead;
-
+		
 		 // Sounds:
 		snd_hurt = sndHitPlant;
 		snd_dead = sndWheelPileBreak;
-
+		
 		 // Vars:
 		maxhealth = 20;
 		size = 3;
-
-		return id;
-	}
-
-
-#define GatorIdler_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		inst = [];
-		return id;
-	}
-	
-#define GatorIdler_step
-	if(array_length(inst) > 0){
-		with(inst){
-			 // Deactivate:
-			if(instance_exists(self) && !in_sight(Player) && sprite_index != spr_hurt){
-				alarm1 = -1;
-				if(instance_is(self, GatorSmoke)) timer = 0;
-			}
-			
-			 // Reactivate:
-			else{
-				with(other) instance_destroy();
-				exit;
-			}
-		}
-	}
-	else instance_destroy();
-	
-#define GatorIdler_destroy
-	var _alert = false;
-	
-	with(inst){
-		 // Stop Smoking:
-		if(instance_is(self, GatorSmoke)){
-			var	_x = x,
-				_y = y;
-				
-			with(instance_create(x, y, Shell)) sprite_index = sprCigarette;
-			instance_change(Gator, true);
-			x = _x;
-			y = _y;
-		}
 		
-		 // Reactivate:
-		if(instance_is(self, enemy)){
-			if(alarm1 < 0) alarm1 = 25 + random(10);
-			
-			 // Alerted:
-			if(enemy_target(x, y) && in_sight(target) && my_health > 0){
-				_alert = true;
-				
-				var _ready = (sign(right) == sign(dcos(gunangle)));
-				scrAim(point_direction(x, y, target.x, target.y) + orandom(20));
-				
-				 // Move:
-				if(_ready){
-					alarm1 /= 2;
-					scrWalk(gunangle + 180 + orandom(30), random(15));
-				}
-				
-				 // Reload:
-				else{
-					wkick = -4;
-					instance_create(x + lengthdir_x(4, gunangle), y + lengthdir_y(4, gunangle), WepSwap);
-					if(variable_instance_get(self, "spr_weap") != spr.AlbinoGatorWeap){
-						with(scrFX(x, y, [gunangle + (90 * right), 2 + random(2)], Shell)){
-							sprite_index = sprShotShell;
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	 // Alert:
-	if(_alert){
-		with(scrAlert(self, spr.GatorAlert)){
-			y -= 16;
-			vspeed = -2;
-			snd_flash = sndBuffGatorHit;
-		}
-	}
-	
-	 // ?
-	else with(inst) if(instance_is(self, enemy) && my_health > 0){
-		with(scrAlert(self, -1)){
-			spr_alert = spr.AlertIndicatorMystery;
-			alert_col = c_yellow;
-			target_y -= 2;
-			alarm1 = 30;
-			blink = 15;
-		}
+		return id;
 	}
 	
 	
@@ -5226,11 +5135,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 	
-	 // Lair Rad Chest:
-	with(instances_matching(CustomProp, "name", "LairRadChest")) if(visible){
-		draw_sprite_ext(sprRadChestGlow, 0, x, y - 3, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-	}
-	
 	 // Flame Spark:
 	with(instances_matching(Sweat, "name", "FlameSpark")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
@@ -5329,7 +5233,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
@@ -5357,6 +5265,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

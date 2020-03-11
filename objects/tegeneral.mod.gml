@@ -3590,49 +3590,6 @@
 	return false;
 	
 	
-#define PickupIndicator_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		mask_index = mskWepPickup;
-		persistent = true;
-		creator = noone;
-		nearwep = noone;
-		depth = 0; // Priority (0==WepPickup)
-		pick = -1;
-		xoff = 0;
-		yoff = 0;
-		
-		 // Events:
-		on_meet = ["", "", ""];
-
-		return id;
-	}
-
-#define PickupIndicator_begin_step
-	with(nearwep) instance_delete(id);
-
-#define PickupIndicator_end_step
-	 // Follow Creator:
-	var c = creator;
-	if(c != noone){
-		if(instance_exists(c)){
-			if(instance_exists(nearwep)) with(nearwep){
-				x += c.x - other.x;
-				y += c.y - other.y;
-			}
-			x = c.x;
-			y = c.y;
-			//image_angle = c.image_angle;
-			//image_xscale = c.image_xscale;
-			//image_yscale = c.image_yscale;
-		}
-		else instance_destroy();
-	}
-
-#define PickupIndicator_cleanup
-	with(nearwep) instance_delete(id);
-
-
 #define PortalBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -5032,14 +4989,9 @@
 	
 /// Mod Events
 #define game_start
-	 // Reset Pets:
-	with(instances_matching(CustomHitme, "name", "Pet")) instance_destroy();
-	
-	 // Delete Revives:
-	with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_destroy();
-	
-	 // Delete Orchid Skills:
-	with(instances_matching(CustomObject, "name", "OrchidSkill")) instance_delete(id);
+	 // Delete:
+	with(instances_matching(CustomHitme, "name", "Pet")) instance_delete(id);
+	with(instances_matching(CustomObject, "name", "ReviveNTTE", "OrchidSkill")) instance_delete(id);
 	
 #define step
 	if(DebugLag) trace_time();
@@ -5189,32 +5141,6 @@
 			}
 		}
 	}
-	
-	 // Pet Tips:
-	with(instances_matching(GenCont, "tip_ntte_pet", null)){
-		tip_ntte_pet = chance(1, 14);
-		if(tip_ntte_pet){
-			var	_player = array_shuffle(instances_matching_ne(Player, "ntte_pet", null)),
-				_tip = null;
-
-			with(_player){
-				var _pet = array_shuffle(array_clone(ntte_pet));
-				with(_pet) if(instance_exists(self)){
-					var _scrt = pet + "_ttip";
-					if(mod_script_exists(mod_type, mod_name, _scrt)){
-						_tip = mod_script_call(mod_type, mod_name, _scrt);
-						if(array_length(_tip) > 0){
-							_tip = _tip[irandom(array_length(_tip) - 1)];
-						}
-					}
-
-					if(is_string(_tip)) break;
-				}
-				if(is_string(_tip)) break;
-			}
-			if(is_string(_tip)) tip = _tip;
-		}
-	}
 
 	 // Pet Leveling Up FX:
 	with(instances_matching(LevelUp, "nttepet_levelup", null)){
@@ -5249,91 +5175,6 @@
 	instance_destroy();
 	
 	if(DebugLag) trace_time();
-	
-	 // Pickup Indicator Collision:
-	var _inst = instances_matching(CustomObject, "name", "PickupIndicator");
-	with(_inst) pick = -1;
-	_inst = instances_matching(_inst, "visible", true);
-	if(array_length(_inst) > 0){
-		with(Player) if(visible || variable_instance_get(id, "wading", 0) > 0){
-			if(place_meeting(x, y, CustomObject) && !place_meeting(x, y, IceFlower) && !place_meeting(x, y, CarVenusFixed)){
-				var _noVan = true;
-				
-				 // Van Check:
-				if(place_meeting(x, y, Van)){
-					with(instances_meeting(x, y, instances_matching(Van, "drawspr", sprVanOpenIdle))){
-						if(place_meeting(x, y, other)){
-							_noVan = false;
-							break;
-						}
-					}
-				}
-				
-				if(_noVan){
-					// Find Nearest Touching Indicator:
-					var	_nearest = noone,
-						_maxDis = null,
-						_maxDepth = null;
-						
-					if(instance_exists(nearwep)){
-						_maxDis = point_distance(x, y, nearwep.x, nearwep.y);
-						_maxDepth = nearwep.depth;
-					}
-					
-					with(instances_meeting(x, y, _inst)){
-						if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
-							var e = on_meet;
-							if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
-								if(_maxDepth == null || depth < _maxDepth){
-									_maxDepth = depth;
-									_maxDis = null;
-								}
-								if(depth == _maxDepth){
-									var _dis = point_distance(x, y, other.x, other.y);
-									if(_maxDis == null || _dis < _maxDis){
-										_maxDis = _dis;
-										_nearest = id;
-									}
-								}
-							}
-						}
-					}
-					
-					 // Secret IceFlower:
-					with(_nearest){
-						nearwep = instance_create(x + xoff, y + yoff, IceFlower);
-						with(nearwep){
-							name = other.text;
-							x = xstart;
-							y = ystart;
-							xprevious = x;
-							yprevious = y;
-							mask_index = mskNone;
-							sprite_index = mskNone;
-							spr_idle = mskNone;
-							spr_walk = mskNone;
-							spr_hurt = mskNone;
-							spr_dead = mskNone;
-							spr_shadow = -1;
-							snd_hurt = -1;
-							snd_dead = -1;
-							size = 0;
-							team = 0;
-							nowade = true;
-							my_health = 99999;
-							nexthurt = current_frame + 99999;
-						}
-						with(other){
-							nearwep = other.nearwep;
-							if(canpick && button_pressed(index, "pick")){
-								other.pick = index;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 	
 	 // Auto-Topify New Objects:
 	with(TopObjectSearch){
@@ -5829,7 +5670,11 @@
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
@@ -5857,6 +5702,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

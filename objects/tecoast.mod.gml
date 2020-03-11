@@ -2722,12 +2722,12 @@
 		hitid = [spr_idle, "SEAL"];
 		sprite_index = spr_spwn;
 		depth = -2;
-
+		
 		 // Sound:
 		var _male = irandom(1);
 		snd_hurt = (_male ? sndFireballerHurt : sndFreakHurt);
 		snd_dead = (_male ? sndFireballerDead : sndFreakDead);
-
+		
 		 // Vars:
 		mask_index = mskBandit;
 		maxhealth = 12;
@@ -2758,17 +2758,17 @@
 		attack_delay = 0;
 		skeal = false;
 		setup = true;
-
+		
 		 // Alarms:
 		alarm1 = 20 + random(20);
 		alarm2 = -1;
-
+		
 		 // NTTE:
 		ntte_anim = false;
-
+		
 		return id;
 	}
-
+	
 #macro seal_none        0
 #macro seal_hookpole    1
 #macro seal_shield      2
@@ -2786,18 +2786,18 @@
 
 #define Seal_setup
 	setup = false;
-
+	
 	if(skeal){
 		spr_idle = spr.SkealIdle;
 		spr_walk = spr.SkealWalk;
 		spr_hurt = spr.SkealHurt;
 		spr_dead = spr.SkealDead;
 		spr_spwn = spr.SkealSpwn;
-
+		
 		 // Sound:
 		snd_hurt = sndMutant14Hurt;
 		snd_dead = sndGatorDie;
-
+		
 		 // Vars:
 		maxhealth = ceil(maxhealth * 2);
 		my_health = ceil(my_health * 2);
@@ -2814,86 +2814,86 @@
 	spr_weap = spr.SealWeap[type];
 	hitid = [spr_idle, name];
 	if(sprite_index == spr.SealSpwn[0]) sprite_index = spr_spwn;
-
+	
 #define Seal_step
 	if(setup) Seal_setup();
-
+	
 	if(attack_delay > 0) attack_delay -= current_time_scale;
-
+	
 	 // Slide:
 	if(slide > 0){
 		speed += min(slide, 2) * current_time_scale;
-
+		
 		var _turn = 5 * sin(current_frame / 10) * current_time_scale;
 		if(type == seal_dasher) _turn /= 3;
 		direction += _turn;
 		gunangle += _turn;
-
+		
 		 // Effects:
 		if(chance_ct(1, (skeal ? 3 : 1))){
 			with(instance_create(x + orandom(3), y + 6, (skeal ? Smoke : Dust))){
 				direction = other.direction;
 			}
 		}
-
+		
 		slide -= current_time_scale;
 	}
-
+	
 	 // Type Step:
 	switch(type){
 		case seal_hookpole:
 			 // About to Stab:
 			if(alarm2 > 0) wkick += 2 * current_time_scale;
-
+			
 			 // Decrease wkick Faster:
 			else if(wkick < 0){
 				wkick -= (wkick / 20) * current_time_scale;
 			}
 			break;
-
+			
 		case seal_shield:
 			 // Shield Mode:
 			if(shield){
 				 // Turn:
 				var	m = random(10/3) * current_time_scale,
 					t = clamp(angle_difference(gunangle, shield_ang) / 8, -m, m);
-
+					
 				shield_ang = (shield_ang + t + 360) % 360;
-
+				
 				 // Draw Shield:
 				if(t != 0 && point_seen_ext(x, y, 16, 16, -1)){
 					shield_draw = true;
 				}
-
+				
 				 // Reflect Projectiles:
 				var	o = 6,
 					r = 12,
 					_x = x + lengthdir_x(o, shield_ang),
 					_y = y + lengthdir_y(o, shield_ang),
 					b = r + 32;
-
+					
 				if(collision_circle(_x, _y, b, projectile, false, false)){
 					with(instances_matching_ne(instances_matching_ne(instances_matching_gt(instances_matching_ne(instances_matching_ne(instance_rectangle(_x - b, _y - b, _x + b, _y + b, projectile), "team", team), "typ", 0), "speed", 0), "object_index", ToxicGas), "mask_index", mskNone, sprVoid)){
 						if(abs(angle_difference(direction + 180, other.shield_ang)) < 80){
 							if(point_in_circle(x + hspeed_raw, y + vspeed_raw, _x, _y, r + (speed_raw / 2))){
 								other.wkick = 8 + orandom(1);
 								speed += friction * 3;
-
+								
 								 // Knockback:
 								if(force > 3){
 									with(other) motion_add(shield_ang + 180, min(other.damage / 3, 3));
 								}
-
+								
 								 // Reflect:
 								var _reflectLine = other.shield_ang;
 								direction = _reflectLine - clamp(angle_difference(direction + 180, _reflectLine), -40, 40);
 								image_angle = direction;
-
+								
 								 // Effects:
 								sound_play(sndShielderDeflect);
 								with(instance_create(x, y, Deflect)) image_angle = _reflectLine;
 								instance_create(x, y, Dust);
-
+								
 								 // Destroyables:
 								if(typ == 2) instance_destroy();
 							}
@@ -2901,17 +2901,17 @@
 					}
 				}
 			}
-
+			
 			 // Sword Stabby Mode:
 			else{
 				if(wepangle == 0) wepangle = choose(-120, 120);
 				shield_ang = 90;
 			}
-
+			
 			 // Draw 3D Shield to Surface:
 			if(shield_draw){
 				shield_draw = false;
-
+				
 				var	_shielding = shield,
 					_spr = spr.ClamShield,
 					_dis = 10 + (_shielding ? wkick : 0),
@@ -2920,33 +2920,33 @@
 					_surfh = surfClamShieldH,
 					_surfx = surfClamShieldX,
 					_surfy = surfClamShieldY;
-
+					
 				if(!surface_exists(surfClamShield)) surfClamShield = surface_create(_surfw, _surfh);
 				surface_set_target(surfClamShield);
 				draw_clear_alpha(0, 0);
-
+				
 				var	n = sprite_get_number(_spr) - 1,
 					_dx = x - _surfx + lengthdir_x(_dis, _dir),
 					_dy = y - _surfy + lengthdir_y(_dis, _dir);
-
+					
 				for(var i = 0; i <= n; i++){
 					var	_ox = 0,
 						_oy = -i;
-
+						
 					if(_shielding){
 						_oy *= 3/4;
 						var o = 2 * (1 - sqr((i - 4) / (n / 2)));
 						_ox += lengthdir_x(o, _dir);
 						_oy += lengthdir_y(o, _dir);
 					}
-
+					
 					draw_sprite_ext(_spr, i, _dx + _ox, _dy + _oy, (_shielding ? 1.5 : 1), 1, _dir, image_blend, image_alpha);
 				}
-
+				
 				surface_reset_target();
 			}
 			break;
-
+			
 		case seal_blunderbuss:
 			 // Powder Smoke:
 			if(alarm2 > 0 && current_frame_active){
@@ -2960,13 +2960,13 @@
 				}
 			}
 			break;
-
+			
 		case seal_dasher:
 			if(slide <= 0 && gunangle > 180){
 				gunangle = random(180);
 			}
 			break;
-
+			
 		case seal_deadeye:
 			 // Tossing:
 			if(instance_exists(toss)){
@@ -2978,18 +2978,18 @@
 						with(other) motion_add_ct(_dir, 1);
 					}
 				}
-
+				
 				with(toss){
 					 // Build Speed:
 					if(speed < other.toss_speed){
 						speed += (1.5 * current_time_scale) + friction_raw;
-
+						
 						depth = other.depth;
-
+						
 						 // Ready:
 						if(speed >= other.toss_speed){
 							speed = other.toss_speed + 0.0001;
-
+							
 							 // Effects:
 							other.wkick = 1;
 							repeat(2){
@@ -2999,33 +2999,33 @@
 							sound_play_pitchvol(sndDiscgun, 1.6 + random(0.2), 0.4);
 						}
 					}
-
+					
 					 // Spin:
 					else{
 						depth = other.depth - 1;
 						other.toss_spin += clamp((6 * speed) - other.toss_spin, -1, 1) * current_time_scale;
 						direction += other.toss_spin * current_time_scale;
 					}
-
+					
 					 // Holding:
 					var l = (speed + other.wkick) - (speed_raw - friction_raw);
 					x = other.x + lengthdir_x(l, direction);
 					y = other.y + lengthdir_y(l, direction);
 					xprevious = x;
 					yprevious = y;
-
+					
 					 // Toss:
 					if(other.toss_time > 0) other.toss_time -= current_time_scale;
 					else if(speed >= other.toss_speed){
 						if(abs(angle_difference(direction + (90 * sign(other.toss_spin)), other.gunangle)) < abs(other.toss_spin * 0.5 * max(1, current_time_scale))){
 							other.toss = noone;
-
+							
 							x = other.x + hspeed;
 							y = other.y + vspeed;
 							direction += 90 * sign(other.toss_spin);
 							x -= hspeed_raw;
 							y -= vspeed_raw;
-
+							
 							 // FX:
 							with(other) motion_add(other.direction, 3);
 							repeat(2){
@@ -3038,28 +3038,28 @@
 							sound_play_hit_ext(sndMeleeFlip, 0.8 + random(0.2), 3);
 						}
 					}
-
+					
 					 // Discin:
 					if(instance_is(self, Disc)){
 						dist = 0;
 						alarm0 = max(alarm0, 15);
 					}
-
+					
 					with(other) scrRight(other.direction);
 				}
 			}
 			else{
 				toss_speed = 0;
 				toss_spin = 0;
-
+				
 				 // No More Discs:
 				if(toss_ammo <= 0) type = seal_none;
 			}
 			break;
-
+			
 		default:
 			if(walk > 0) direction += orandom(10);
-
+			
 			 // Less Post-Level Running Around:
 			if(type == seal_none){
 				if(scared && array_length(instances_matching(CustomEnemy, "name", "Palanking")) <= 0){
@@ -3071,7 +3071,7 @@
 				}
 			}
 	}
-
+	
 	 // Animate:
 	if(sprite_index != spr_spwn){
 		if(sprite_index != spr_hurt || anim_end){
@@ -3090,9 +3090,9 @@
 				depth = other.depth - 1;
 			}
 		}
-
+		
 		if(skeal) speed = 0;
-
+		
 		if(image_index < 2){
 			if(skeal){
 				if(current_frame_active) scrFX(x, y, [90, 1], Smoke);
@@ -3102,7 +3102,7 @@
 			}
 		}
 	}
-
+	
 #define Seal_draw
 	var _drawWep = (sprite_index != spr_spwn || image_index > (skeal ? 5 : 2));
 
@@ -5037,7 +5037,11 @@
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
@@ -5065,6 +5069,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

@@ -173,6 +173,7 @@
 			GatorAlbinoAlert = sprite(p + "sprAlbinoGatorAlert", 1, 7, 7);
 			SealAlert        = sprite(p + "sprSealAlert",        1, 7, 7);
 			SealArcticAlert  = sprite(p + "sprArcticSealAlert",  1, 7, 7);
+			SkealAlert       = sprite(p + "sprSkealAlert",       1, 7, 7);
 			SludgePoolAlert  = sprite(p + "sprSludgePoolAlert",  1, 7, 7);
 			VanAlert         = sprite(p + "sprVanAlert",         1, 7, 7)
 			

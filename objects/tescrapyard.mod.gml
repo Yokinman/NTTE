@@ -293,114 +293,6 @@
 	return false;
 	
 	
-#define RavenArenaCont_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Front Row Seating:
-		with(Wall) if(place_meeting(x, y, Floor) && !collision_line(bbox_center_x, bbox_center_y, other.x, other.y, Wall, false, true)){
-			if(chance(1, 4)){
-				top_create(bbox_center_x + orandom(2), y - 8 + orandom(2), "TopRaven", 0, 0);
-			}
-		}
-		
-		 // Back Row Seating:
-		var	_ang = random(360),
-			_num = 3 + ceil(GameCont.loops / 4);
-			
-		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			with(top_create(x, y, ((GameCont.loops > 0 && chance(1, 2)) ? MeleeFake : Tires), _dir + orandom(40), 16)){
-				with(target){
-					 // Perched Raven:
-					with(top_create(x, y + 1, "TopRaven", 0, 0)){
-						z += max(0, ((sprite_get_bbox_bottom(other.spr_idle) + 1) - sprite_get_bbox_top(other.spr_idle)) - 5);
-					}
-					
-					 // Ravens:
-					var	_num = 3 + ceil(GameCont.loops / 2),
-						l = 24;
-						
-					for(var d = _dir; d < _dir + 360; d += (360 / _num)){
-						top_create(x + lengthdir_x(l, d), y + lengthdir_x(l, d), "TopRaven", d + orandom(40), -1);
-					}
-				}
-			}
-		}
-		
-		 // Grab Top Dudes:
-		inst = [];
-		with(instances_matching_gt(instances_matching(CustomEnemy, "name", "TopRaven"), "id", id)){
-			array_push(other.inst, top_object);
-			with(top_object) jump_time = -1;
-		}
-		
-		 // Generic Enemies:
-		var	_obj = [choose(Raven, Salamander, Exploder), choose(Sniper, MeleeFake)],
-			_ang = random(360),
-			_num = 4 * (1 + GameCont.loops);
-			
-		if(GameCont.loops > 0){
-			array_push(_obj, choose(SnowBot, BuffGator));
-		}
-		
-		inst_idle = [];
-		
-		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			var _objNum = array_length(inst_idle);
-			if(_objNum >= array_length(_obj)){
-				_objNum = irandom(array_length(_obj) - 1);
-			}
-			with(obj_create(x, y, _obj[_objNum])){
-				move_contact_solid(_dir + orandom(20), random_range(16, 64));
-				array_push(other.inst_idle, id);
-				
-				 // Loop Groups:
-				if(chance(GameCont.loops, 60)){
-					repeat(3 + GameCont.loops){
-						array_push(other.inst_idle, instance_copy(false));
-					}
-				}
-			}
-		}
-		
-		 // Weapon:
-		with(obj_create(x + orandom(8), y + orandom(8), "WepPickupGrounded")){
-			with(target){
-				var _noWep = [];
-				with(Player){
-					array_push(_noWep, wep);
-					array_push(_noWep, bwep);
-				}
-				wep = weapon_decide(2, GameCont.hard, false, _noWep);
-			}
-		}
-		
-		return id;
-	}
-	
-#define RavenArenaCont_step
-	 // Hold Enemies:
-	with(inst_idle){
-		if(instance_exists(self) && sprite_index != spr_hurt){
-			if("walk" in self){
-				if(walk > 0) walk -= 4 * current_time_scale;
-			}
-			else{
-				direction = angle_lerp(direction, point_direction(x, y, other.x, other.y), 0.04 * current_time_scale);
-			}
-		}
-		else other.inst_idle = array_delete_value(other.inst_idle, self);
-	}
-	
-	 // Activate Ravens:
-	if(in_distance(Player, 96)){
-		var _time = 60;
-		with(instances_matching_lt(inst, "jump_time", 0)){
-			jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
-			_time += random_range(15 + (2400 / _time), 60);
-		}
-		instance_destroy();
-	}
-	
-	
 #define SawTrap_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -1323,7 +1215,11 @@
 #define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
@@ -1351,6 +1247,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
