@@ -3769,7 +3769,7 @@
 			
 		Ex:
 			with(floor_room_start(10016, 10016, 128, FloorNormal)){
-				floor_room_create(x, y, 2, 2, floor_fill, direction, [60, 90], 96);
+				floor_room_create(x, y, 2, 2, "", direction, [60, 90], 96);
 			}
 	*/
 	
@@ -3789,35 +3789,28 @@
 	
 	return noone;
 	
-#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff, _floorDis)
+#define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)
 	/*
 		Moves toward a given direction until an open space is found, then creates a room based on the width, height, and script
-		Rooms will always connect to the level as long as floorDis is <=0 and the starting x/y is over a floor
-		Rooms will never overlap pre-existing Floor tiles (they can still overlap FloorExplo)
+		Rooms will always connect to the level as long as floorDis <= 0 (and the starting x/y is over a floor)
+		Rooms will not overlap existing Floors as long as floorDis >= 0 (they can still overlap FloorExplo)
 		
 		Args:
 			x/y      - The point to begin the search for an open space to create the room
 			w/h      - Width/height of the room to create
-			scrt     - Script reference/name/index to create the room with
+			type     - The type of room to create (see 'floor_fill' script)
 			dirStart - The direction to search towards for an open space
 			dirOff   - Random directional offset to use while searching towards dirStart
-			floorDis - Minimum distance from the level to create the room, use above 0 to create an isolated room
+			floorDis - How far from the level to create the room
+			           Use 0 to spawn adjacent to the level, >0 to create an isolated room, <0 to overlap the level
 			
 		Ex:
-			floor_room_create(10016, 10016, 5, 3, floor_fill, random(360), 0, 0)
+			floor_room_create(10016, 10016, 5, 3, "round", random(360), 0, 0)
 	*/
 	
-	 // Script Setup:
-	if(is_real(_scrt)){
-		_scrt = script_ref_create(_scrt);
-	}
-	else if(is_string(_scrt)){
-		_scrt = script_ref_create_ext("mod", mod_current, _scrt);
-	}
-	
 	 // Find Space:
-	var	_floorAvoid = FloorNormal,
-		_round = (_scrt[2] == "floor_fill_round"),
+	var	_move = true,
+		_floorAvoid = FloorNormal,
 		_dis = 16,
 		_dir = 0,
 		_ow = (_w * 32) / 2,
@@ -3828,49 +3821,59 @@
 	if(!is_array(_dirOff)) _dirOff = [_dirOff];
 	while(array_length(_dirOff) < 2) array_push(_dirOff, 0);
 	
-	while(true){
+	while(_move){
 		var	_x1 = _x - _ow,
 			_y1 = _y - _oh,
-			_x2 = _x + _ow - 1,
-			_y2 = _y + _oh - 1;
+			_x2 = _x + _ow,
+			_y2 = _y + _oh,
+			_inst = instance_rectangle_bbox(_x1 - _floorDis, _y1 - _floorDis, _x2 + _floorDis - 1, _y2 + _floorDis - 1, _floorAvoid);
 			
-		 // Touching Floors Check:
-		if(
-			_round
-			? (
-				array_length(instance_rectangle_bbox(_x1 + 32, _y1,      _x2 - 32, _y2,      _floorAvoid)) <= 0 &&
-				array_length(instance_rectangle_bbox(_x1,      _y1 + 32, _x2,      _y2 - 32, _floorAvoid)) <= 0
-			)
-			: (
-				array_length(instance_rectangle_bbox(_x1, _y1, _x2, _y2, _floorAvoid)) <= 0
-			)
-		){
-			var _break = true;
+		 // No Corner Floors:
+		if(_type == "round" && _floorDis <= 0){
+			with(_inst){
+				if((bbox_right < _x1 + 32 || bbox_left >= _x2 - 32) && (bbox_bottom < _y1 + 32 || bbox_top >= _y2 - 32)){
+					_inst = array_delete_value(_inst, self);
+				}
+			}
+		}
+		
+		 // Floors in Range:
+		_move = false;
+		if(array_length(_inst) > 0){
+			if(_floorDis <= 0){
+				_move = true;
+			}
 			
 			 // Floor Distance Check:
-			if(_floorDis > 0){
-				with(instance_rectangle_bbox(_x1 - _floorDis, _y1 - _floorDis, _x2 + _floorDis, _y2 + _floorDis, _floorAvoid)){
-					var	_fx = clamp(_x, bbox_left, bbox_right + 1),
-						_fy = clamp(_y, bbox_top, bbox_bottom + 1);
-						
-					if(point_distance(_fx, _fy, clamp(_fx, _x1, _x2 + 1), clamp(_fy, _y1, _y2 + 1)) < _floorDis){
-						_break = false;
-						break;
-					}
+			else with(_inst){
+				var	_fx = clamp(_x, bbox_left, bbox_right + 1),
+					_fy = clamp(_y, bbox_top, bbox_bottom + 1),
+					_fDis = (
+						(_type == "round")
+						? min(
+							point_distance(_fx, _fy, clamp(_fx, _x1 + 32, _x2 - 32), clamp(_fy, _y1,      _y2     )),
+							point_distance(_fx, _fy, clamp(_fx, _x1,      _x2     ), clamp(_fy, _y1 + 32, _y2 - 32))
+						)
+						: point_distance(_fx, _fy, clamp(_fx, _x1, _x2), clamp(_fy, _y1, _y2))
+					);
+					
+				if(_fDis < _floorDis){
+					_move = true;
+					break;
 				}
 			}
 			
-			if(_break) break;
+			 // Keep Searching:
+			if(_move){
+				_dir = pround(_dirStart + (random_range(_dirOff[0], _dirOff[1]) * choose(-1, 1)), 90);
+				_x += lengthdir_x(_dis, _dir);
+				_y += lengthdir_y(_dis, _dir);
+			}
 		}
-		
-		 // Move:
-		_dir = round((_dirStart + (random_range(_dirOff[0], _dirOff[1]) * choose(-1, 1))) / 90) * 90;
-		_x += lengthdir_x(_dis, _dir);
-		_y += lengthdir_y(_dis, _dir);
 	}
 	
 	 // Create Room:
-	var	_floors = script_ref_call(_scrt, _x, _y, _w, _h),
+	var	_floors = mod_script_call_nc("mod", mod_current, "floor_fill", _x, _y, _w, _h, _type),
 		_cx = _x,
 		_cy = _y;
 		
@@ -3915,25 +3918,28 @@
 		ystart : _sy
 	};
 	
-#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)
+#define floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)
 	/*
 		Automatically creates a room a safe distance from the spawn point
-		Rooms will always connect to the level and never overlap pre-existing Floor tiles (they can still overlap FloorExplo)
+		Rooms will always connect to the level as long as floorDis <= 0
+		Rooms will not overlap existing Floors as long as floorDis >= 0 (they can still overlap FloorExplo)
 		
 		Args:
-			w/h           - Width/height of the room to create
-			scrt          - Script reference/name/index to create the room with
-			dirOff        - Random directional offset to use while moving away from the spawn point to find an open space
 			spawnX/spawnY - The spawn point
 			spawnDis      - Minimum distance from the spawn point to begin searching for an open space
 			spawnFloor    - Potential starting floors to begin searching for an open space from
+			w/h           - Width/height of the room to create
+			type          - The type of room to create (see 'floor_fill' script)
+			dirOff        - Random directional offset to use while moving away from the spawn point to find an open space
+			floorDis      - How far from the level to create the room
+			                Use 0 to spawn adjacent to the level, >0 to create an isolated room, <0 to overlap the level
 			
 		Ex:
-			floor_room(4, 4, floor_fill_round, 60, 10016, 10016, 96, FloorNormal)
+			floor_room(4, 4, "round", 60, 10016, 10016, 96, FloorNormal)
 	*/
 	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-		with(floor_room_create(x, y, _w, _h, _scrt, direction, _dirOff, 0)){
+		with(floor_room_create(x, y, _w, _h, _type, direction, _dirOff, _floorDis)){
 			return self;
 		}
 	}
@@ -5280,15 +5286,28 @@
 	
 	return instance_create(_x + 16, _y + 16, _obj);
 	
-#define floor_fill(_x, _y, _w, _h)
+#define floor_fill(_x, _y, _w, _h, _type)
 	/*
 		Creates a rectangular area of floors around the given position
+		The type can be "" for default, "round" for no corners, or "ring" for no inner floors
 		
 		Ex:
-			floor_fill(x, y, 4, 3)
-			####
-			####
-			####
+			floor_fill(x, y, 3, 3, "")
+				###
+				###
+				###
+				
+			floor_fill(x, y, 5, 4, "round")
+				 ###
+				#####
+				#####
+				 ###
+				 
+			floor_fill(x, y, 4, 4, "ring")
+				####
+				#  #
+				#  #
+				####
 	*/
 	
 	var o = 32;
@@ -5313,94 +5332,20 @@
 	
 	for(var _ox = 0; _ox < _w; _ox += o){
 		for(var _oy = 0; _oy < _h; _oy += o){
-			array_push(_inst, floor_set(_x + _ox, _y + _oy, true));
-		}
-	}
-	
-	floor_set_align(_aw, _ah, _ax, _ay);
-	
-	return _inst;
-	
-#define floor_fill_round(_x, _y, _w, _h)
-	/*
-		Creates a rounded rectangular area of floors around the given position
-		
-		Ex:
-			floor_fill_round(x, y, 6, 4)
-			 ####
-			######
-			######
-			 ####
-	*/
-	
-	var o = 32;
-	_w *= o;
-	_h *= o;
-	
-	 // Center & Align:
-	_x -= (_w / 2);
-	_y -= (_h / 2);
-	var _gridPos = floor_align(_w, _h, _x, _y);
-	_x = _gridPos[0];
-	_y = _gridPos[1];
-	
-	 // Floors:
-	var	_aw = global.floor_align_w,
-		_ah = global.floor_align_h,
-		_ax = global.floor_align_x,
-		_ay = global.floor_align_y,
-		_inst = [];
-		
-	floor_set_align(o, o, _x, _y);
-	
-	for(var _ox = 0; _ox < _w; _ox += o){
-		for(var _oy = 0; _oy < _h; _oy += o){
-			if((_ox != 0 && _ox != _w - o) || (_oy != 0 && _oy != _h - o)){ // Don't Make Corner Floors
-				array_push(_inst, floor_set(_x + _ox, _y + _oy, true));
+			var _make = true;
+			
+			 // Type-Specific:
+			switch(_type){
+				case "round": // No Corner Floors
+					_make = ((_ox != 0 && _ox != _w - o) || (_oy != 0 && _oy != _h - o));
+					break;
+					
+				case "ring": // No Inner Floors
+					_make = (_ox == 0 || _oy == 0 || _ox == _w - o || _oy == _h - o);
+					break;
 			}
-		}
-	}
-	
-	floor_set_align(_aw, _ah, _ax, _ay);
-	
-	return _inst;
-	
-#define floor_fill_ring(_x, _y, _w, _h)
-	/*
-		Creates a rectangular outline of floors around the given position
-		
-		Ex:
-			floor_fill_ring(x, y, 4, 5)
-			####
-			#  #
-			#  #
-			#  #
-			####
-	*/
-	
-	var o = 32;
-	_w *= o;
-	_h *= o;
-	
-	 // Center & Align:
-	_x -= (_w / 2);
-	_y -= (_h / 2);
-	var _gridPos = floor_align(_w, _h, _x, _y);
-	_x = _gridPos[0];
-	_y = _gridPos[1];
-	
-	 // Floors:
-	var	_aw = global.floor_align_w,
-		_ah = global.floor_align_h,
-		_ax = global.floor_align_x,
-		_ay = global.floor_align_y,
-		_inst = [];
-		
-	floor_set_align(o, o, _x, _y);
-	
-	for(var _ox = 0; _ox < _w; _ox += o){
-		for(var _oy = 0; _oy < _h; _oy += o){
-			if(_ox == 0 || _oy == 0 || _ox == _w - o || _oy == _h - o){ // Don't Make Inner Floors
+			
+			if(_make){
 				array_push(_inst, floor_set(_x + _ox, _y + _oy, true));
 			}
 		}

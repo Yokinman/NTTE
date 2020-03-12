@@ -238,34 +238,34 @@
 				curse = max(curse, other.curse);
 				
 				 // Spawn Room:
-				with(floor_room_create(x, y, 1, 1, floor_fill, random(360), 0, 0)){
+				with(floor_room_create(x, y, 1, 1, "", random(360), 0, 0)){
 					other.x = x;
 					other.y = y;
 					switch(other.type){
 						case 0: // MELEE
-							floor_fill(x, y, 3, 3);
+							floor_fill(x, y, 3, 3, "");
 							break;
 							
 						case 1: // BULLET
-							floor_fill_round(x, y, 5, 5);
+							floor_fill(x, y, 5, 5, "round");
 							break;
 							
 						case 2: // SHELL
-							floor_fill_round(x, y, 3, 3);
+							floor_fill(x, y, 3, 3, "round");
 							break;
 							
 						case 3: // BOLT
-							floor_fill_round(x, y, 3, 3);
-							floor_fill_ring(x, y, 5, 5);
+							floor_fill(x, y, 3, 3, "round");
+							floor_fill(x, y, 5, 5, "ring");
 							break;
 							
 						case 4: // EXPLOSIVE
-							floor_fill(x, y, 5, 1);
-							floor_fill(x, y, 1, 5);
+							floor_fill(x, y, 5, 1, "");
+							floor_fill(x, y, 1, 5, "");
 							break;
 							
 						case 5: // ENERGY
-							floor_fill_ring(x, y, 5, 5);
+							floor_fill(x, y, 5, 5, "ring");
 							break;
 					}
 				}
@@ -370,7 +370,7 @@
 				var	_total = 0,
 					_queen = self;
 					
-				with(array_shuffle(floor_fill_round(x, y, 5, 5))){
+				with(array_shuffle(floor_fill(x, y, 5, 5, "round"))){
 					var _chance = 0;
 					
 					for(var _checkDir = 0; _checkDir < 360; _checkDir += 90){
@@ -436,7 +436,7 @@
 				 // Fix Overlapping Chests:
 				if(place_meeting(x, y, chestprop) || place_meeting(x, y, prop)){
 					floor_set_align(32, 32, null, null);
-					with(floor_room_create(x, y, 1, 1, floor_fill, random(360), 0, 0)){
+					with(floor_room_create(x, y, 1, 1, "", random(360), 0, 0)){
 						other.x = x;
 						other.y = y;
 					}
@@ -447,30 +447,29 @@
 				with(instance_nearest_bbox(x, y, instances_matching_lt(FloorNormal, "id", id))){
 					floor_set_style(styleb, area);
 				}
-				floor_fill(x, y, 3, 3);
+				floor_fill(x, y, 3, 3, "");
 				floor_reset_style();
 			}
 			
 			 // Sludge Pool:
 			if(GameCont.subarea == 2){
-				var	_w = 2,
-					_h = 2,
-					_type = floor_fill,
+				var	_w = 4,
+					_h = 4,
+					_type = "round",
 					_dirOff = 90,
+					_floorDis = -32,
 					_spawnDis = 96,
 					_spawnFloor = FloorNormal;
 					
 				floor_set_align(32, 32, null, null);
 				
-				with(floor_room(_w, _h, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-					floor_fill_round(x, y, _w + 2, _h + 2);
-					
+				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 					 // Fill Some Corners:
 					repeat(3){
-						var	_x = choose(x1 - 32, x2),
-							_y = choose(y1 - 32, y2);
+						var	_x = choose(x1, x2 - 32),
+							_y = choose(y1, y2 - 32);
 							
-						if(array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, FloorNormal)) <= 0){
+						if(array_length(instances_at(_x + 16, _y + 16, FloorNormal)) <= 0){
 							floor_set(_x, _y, true);
 						}
 					}
@@ -583,15 +582,16 @@
 				var	_minID = GameObject.id,
 					_w = 3,
 					_h = 3,
-					_type = floor_fill,
+					_type = "",
 					_dirOff = [30, 90],
+					_floorDis = 0,
 					_spawnDis = 64,
 					_spawnFloor = FloorNormal;
 					
 				repeat(1 + irandom(2)){
 					floor_set_align(32, 32, null, null);
 					
-					with(floor_room(_w, _h, _type, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
+					with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 						obj_create(x, y, "Igloo");
 					}
 					
@@ -734,7 +734,7 @@
 				with(CrownPed){
 					var	_w = 3,
 						_h = 3,
-						_type = floor_fill,
+						_type = "",
 						_dirStart = random(360),
 						_dirOff = 90,
 						_floorDis = 0;
@@ -3121,13 +3121,11 @@
 #define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_fill(_x, _y, _w, _h)                                                      return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h);
-#define floor_fill_round(_x, _y, _w, _h)                                                return  mod_script_call_nc('mod', 'telib', 'floor_fill_round', _x, _y, _w, _h);
-#define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
+#define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
-#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff, _floorDis);
-#define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
+#define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
+#define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
