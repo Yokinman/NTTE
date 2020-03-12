@@ -9,7 +9,7 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "Igloo", "OrchidSkill", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TeslaCoil", "TopDecal", "TopObject", "VenomPellet", "WallDecal"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PickupIndicator", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenRoom", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PickupIndicator", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WallEnemy", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
@@ -3761,6 +3761,16 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)
 	/*
 		Returns a safe starting x/y and direction to call floor_room_create() with
+		
+		Args:
+			spawnX/spawnY - The spawn point
+			spawnDis      - Minimum distance that the starting x/y must be from the spawn point
+			spawnFloor    - Potential starting floors to search
+			
+		Ex:
+			with(floor_room_start(10016, 10016, 128, FloorNormal)){
+				floor_room_create(x, y, 2, 2, floor_fill, direction, [60, 90], 96);
+			}
 	*/
 	
 	with(array_shuffle(instances_matching(_spawnFloor, "", null))){
@@ -3769,19 +3779,32 @@
 			
 		if(point_distance(_spawnX, _spawnY, _x, _y) >= _spawnDis){
 			return {
-				x : _x,
-				y : _y,
-				direction : point_direction(_spawnX, _spawnY, _x, _y)
+				"x" : _x,
+				"y" : _y,
+				"direction" : point_direction(_spawnX, _spawnY, _x, _y),
+				"id" : id
 			};
 		}
 	}
 	
 	return noone;
 	
-#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff, _floorDis)
 	/*
-		Moves toward a given direction until an open space is found, then creates floors based on the width, height, and script
-		Rooms should always connect to the level as long as the starting x/y is over a floor, and should never overlap pre-existing floors
+		Moves toward a given direction until an open space is found, then creates a room based on the width, height, and script
+		Rooms will always connect to the level as long as floorDis is <=0 and the starting x/y is over a floor
+		Rooms will never overlap pre-existing Floor tiles (they can still overlap FloorExplo)
+		
+		Args:
+			x/y      - The point to begin the search for an open space to create the room
+			w/h      - Width/height of the room to create
+			scrt     - Script reference/name/index to create the room with
+			dirStart - The direction to search towards for an open space
+			dirOff   - Random directional offset to use while searching towards dirStart
+			floorDis - Minimum distance from the level to create the room, use above 0 to create an isolated room
+			
+		Ex:
+			floor_room_create(10016, 10016, 5, 3, floor_fill, random(360), 0, 0)
 	*/
 	
 	 // Script Setup:
@@ -3794,6 +3817,7 @@
 	
 	 // Find Space:
 	var	_floorAvoid = FloorNormal,
+		_round = (_scrt[2] == "floor_fill_round"),
 		_dis = 16,
 		_dir = 0,
 		_ow = (_w * 32) / 2,
@@ -3804,16 +3828,42 @@
 	if(!is_array(_dirOff)) _dirOff = [_dirOff];
 	while(array_length(_dirOff) < 2) array_push(_dirOff, 0);
 	
-	while(
-		(_scrt[2] == "floor_fill_round")
+	while(true){
+		var	_x1 = _x - _ow,
+			_y1 = _y - _oh,
+			_x2 = _x + _ow - 1,
+			_y2 = _y + _oh - 1;
+			
+		 // Touching Floors Check:
+		if(
+			_round
 			? (
-				array_length(instance_rectangle_bbox(_x - _ow + 32, _y - _oh,      _x + _ow - 1 - 32, _y + _oh - 1,      _floorAvoid)) > 0 ||
-				array_length(instance_rectangle_bbox(_x - _ow,      _y - _oh + 32, _x + _ow - 1,      _y + _oh - 1 - 32, _floorAvoid)) > 0
+				array_length(instance_rectangle_bbox(_x1 + 32, _y1,      _x2 - 32, _y2,      _floorAvoid)) <= 0 &&
+				array_length(instance_rectangle_bbox(_x1,      _y1 + 32, _x2,      _y2 - 32, _floorAvoid)) <= 0
 			)
 			: (
-				array_length(instance_rectangle_bbox(_x - _ow, _y - _oh, _x + _ow - 1, _y + _oh - 1, _floorAvoid)) > 0
+				array_length(instance_rectangle_bbox(_x1, _y1, _x2, _y2, _floorAvoid)) <= 0
 			)
-	){
+		){
+			var _break = true;
+			
+			 // Floor Distance Check:
+			if(_floorDis > 0){
+				with(instance_rectangle_bbox(_x1 - _floorDis, _y1 - _floorDis, _x2 + _floorDis, _y2 + _floorDis, _floorAvoid)){
+					var	_fx = clamp(_x, bbox_left, bbox_right + 1),
+						_fy = clamp(_y, bbox_top, bbox_bottom + 1);
+						
+					if(point_distance(_fx, _fy, clamp(_fx, _x1, _x2 + 1), clamp(_fy, _y1, _y2 + 1)) < _floorDis){
+						_break = false;
+						break;
+					}
+				}
+			}
+			
+			if(_break) break;
+		}
+		
+		 // Move:
 		_dir = round((_dirStart + (random_range(_dirOff[0], _dirOff[1]) * choose(-1, 1))) / 90) * 90;
 		_x += lengthdir_x(_dis, _dir);
 		_y += lengthdir_y(_dis, _dir);
@@ -3835,9 +3885,26 @@
 		_cy /= array_length(_floors);
 	}
 	
+	 // Fix Isolated Room Softlock:
+	var _tunnel = noone;
+	if(_floorDis > 0){
+		with(instance_create(_cx - _ow, _cy - _oh, CustomObject)){
+			name = "TunnelRoom";
+			on_step = TunnelRoom_step;
+			mask_index = mskFloor;
+			image_xscale = _w;
+			image_yscale = _h;
+			floors = _floors;
+			size = 1;
+			
+			_tunnel = id;
+		}
+	}
+	
 	 // Done:
 	return {
 		floors : _floors,
+		tunnel : _tunnel,
 		x  : _cx,
 		y  : _cy,
 		x1 : _cx - _ow,
@@ -3851,15 +3918,85 @@
 #define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)
 	/*
 		Automatically creates a room a safe distance from the spawn point
+		Rooms will always connect to the level and never overlap pre-existing Floor tiles (they can still overlap FloorExplo)
+		
+		Args:
+			w/h           - Width/height of the room to create
+			scrt          - Script reference/name/index to create the room with
+			dirOff        - Random directional offset to use while moving away from the spawn point to find an open space
+			spawnX/spawnY - The spawn point
+			spawnDis      - Minimum distance from the spawn point to begin searching for an open space
+			spawnFloor    - Potential starting floors to begin searching for an open space from
+			
+		Ex:
+			floor_room(4, 4, floor_fill_round, 60, 10016, 10016, 96, FloorNormal)
 	*/
 	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-		with(floor_room_create(x, y, _w, _h, _scrt, direction, _dirOff)){
+		with(floor_room_create(x, y, _w, _h, _scrt, direction, _dirOff, 0)){
 			return self;
 		}
 	}
 	
 	return noone;
+	
+#define TunnelRoom_step
+	if(instance_exists(Floor)){
+		if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+			var _tunnel = false;
+			
+			 // Player/Enemy Check:
+			with(floors) if(instance_exists(self)){
+				if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+					_tunnel = true;
+					break;
+				}
+			}
+			
+			 // Tunnel to Main Level:
+			if(_tunnel){
+				var	_x = bbox_center_x,
+					_y = bbox_center_y,
+					_spawnX = 10016,
+					_spawnY = 10016,
+					_tunnelSize = size,
+					_tunnelFloor = [];
+					
+				 // Get Position of Oldest Floor & Sort Floors by Closest First:
+				with(FloorNormal){
+					_spawnX = bbox_center_x;
+					_spawnY = bbox_center_y;
+					if(!array_exists(other.floors, id)){
+						array_push(_tunnelFloor, [id, point_distance(bbox_center_x, bbox_center_y, _x, _y)]);
+					}
+				}
+				array_sort_sub(_tunnelFloor, 1, true);
+				
+				 // Tunnel to the Nearest Main-Level Floor:
+				with(_tunnelFloor){
+					var _break = false;
+					with(self[0]){
+						for(var	_fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+							for(var	_fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+								if(path_reaches(path_create(_fx + 8, _fy + 8, _spawnX, _spawnY, Wall), _spawnX, _spawnY, Wall)){
+									with(floor_tunnel(bbox_center_x, bbox_center_y, _x, _y)){
+										image_yscale *= _tunnelSize;
+									}
+									_break = true;
+									break;
+								}
+							}
+							if(_break) break;
+						}
+					}
+					if(_break) break;
+				}
+				
+				instance_destroy();
+			}
+		}
+	}
+	
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){

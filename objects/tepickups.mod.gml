@@ -2893,35 +2893,6 @@
 	if(speed > 0) return true;
 	
 	
-#define SunkenRoom_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		mask_index = mskShield;
-		
-		 // Floors:
-		floors = [];
-		with(instances_meeting(x, y, Floor)){
-			array_push(other.floors, id);
-		}
-		
-		return id;
-	}
-	
-#define SunkenRoom_step
-	 // Tunnel:
-	if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
-		var _tunnelFloors = [];
-		with(FloorNormal){
-			if(!array_exists(other.floors, id)){
-				array_push(_tunnelFloors, id);
-			}
-		}
-		with(instance_nearest_bbox(x, y, _tunnelFloors)){
-			floor_tunnel(bbox_center_x, bbox_center_y, other.x, other.y);
-		}
-		instance_destroy();
-	}
-	
-	
 #define SunkenSealSpawn_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
@@ -4185,7 +4156,7 @@
 #define floor_fill_ring(_x, _y, _w, _h)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_fill_ring', _x, _y, _w, _h);
 #define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
-#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff)                    return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff);
+#define floor_room_create(_x, _y, _w, _h, _scrt, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirStart, _dirOff, _floorDis);
 #define floor_room(_w, _h, _scrt, _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor)    return  mod_script_call_nc('mod', 'telib', 'floor_room', _w, _h, (is_real(_scrt) ? script_ref_create(_scrt) : _scrt), _dirOff, _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
