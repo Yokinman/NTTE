@@ -521,7 +521,7 @@
 				}
 			}
 			
-			 // Spawn Lightning Crystals:
+			 // Preloop Lightning Crystals:
 			if(GameCont.loops <= 0){
 				with(LaserCrystal) if(chance(1, 40 * ((crown_current == crwn_blood) ? 0.7 : 1))){
 					instance_create(x, y, LightningCrystal);
@@ -842,8 +842,8 @@
 			var	_main = true,
 				_mainX = 0,
 				_mainY = 0,
-				_mainDis = 48 + (32 * GameCont.loops),
-				_strayNum = (8 + irandom(4)) * (1 + GameCont.loops);
+				_mainDis = 48 + (16 * GameCont.loops),
+				_strayNum = 8 + irandom(4) + (2 * GameCont.loops);
 				
 			with(array_shuffle(instances_matching(Wall, "", null))){
 				if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, TopPot)){
