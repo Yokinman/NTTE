@@ -16,7 +16,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel", "WantPitSquid"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedSpider", "Spiderling", "SpiderWall"]
+		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedSpider", "Spiderling"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -3935,7 +3935,7 @@
 			                Use 0 to spawn adjacent to the level, >0 to create an isolated room, <0 to overlap the level
 			
 		Ex:
-			floor_room(4, 4, "round", 60, 10016, 10016, 96, FloorNormal)
+			floor_room(10016, 10016, 96, FloorNormal, 4, 4, "round", 60, -32)
 	*/
 	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
@@ -5005,7 +5005,6 @@
 						
 					case Cocoon:
 					case "NewCocoon":
-						spawn_dis = 8;
 						spr_shadow = shd16;
 						spr_shadow_y = 3;
 						break;

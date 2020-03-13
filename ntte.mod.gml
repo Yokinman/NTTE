@@ -529,49 +529,12 @@
 				}
 			}
 			
-			 // Spawn Spider Walls:
-			if(instance_exists(Wall)){
-				var _spawnWall = [];
-				with(Wall) if(distance_to_object(PortalClear) > 16){
-					array_push(_spawnWall, id);
-				}
-				
-				 // Central Mass:
-				with(instance_random(_spawnWall)){
-					var _dis = 48 + (32 * GameCont.loops);
-					
-					 // Spawn Main Wall:
-					with(obj_create(x, y, "SpiderWall")){
-						creator = other;
-						special = true;
-					}
-					
-					 // Spawn fake walls:
-					with(_spawnWall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(2, 3)){
-						with(obj_create(x, y, "SpiderWall")){
-							creator = other;
-						}
-					}
-					
-					 // Change TopSmalls:
-					with(TopSmall) if(point_distance(x, y, other.x, other.y) <= _dis && chance(1, 3)){
-						sprite_index = spr.SpiderWallTrans;
-					}
-				}
-				
-				 // Strays:
-				repeat((8 + irandom(4)) * (1 + GameCont.loops)) with(instance_random(_spawnWall)){
-					with(obj_create(x, y, "SpiderWall")){
-						creator = other;
-					}
+			 // Top Props:
+			with(array_shuffle(instances_matching_ge(Wall, "image_index", 2))){
+				if(chance(1, 6) && distance_to_object(TopPot) > 64 && distance_to_object(Bones) > 96){
+					top_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), choose(CrystalProp, CrystalProp, "NewCocoon"), -1, -1);
 				}
 			}
-			
-			 // Top Spawns:
-			_topSpawn = [
-				[CrystalProp,	1],
-				["NewCocoon",	1/2]
-			];
 			
 			break;
 			
@@ -805,7 +768,7 @@
 			
 			break;
 			
-		case area_caves: /// CURSED CAVES
+		case area_cursed_caves: /// CURSED CAVES
 			
 			 // Spawn Cursed Mortars:
 			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
@@ -861,12 +824,73 @@
 	}
 	
 	 // Wall Enemies:
-	if(GameCont.area == area_desert){
-		with(Wall) if(chance(1, 400)){
-			if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
-				obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
+	switch(GameCont.area){
+		case area_desert: // BANDITS
+			
+			with(array_shuffle(instances_matching(Wall, "", null))){
+				if(chance(1, 400)){
+					if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
+						obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
+					}
+				}
 			}
-		}
+			
+			break;
+			
+		case area_caves: // SPIDERLINGS
+			
+			var	_main = true,
+				_mainX = 0,
+				_mainY = 0,
+				_mainDis = 48 + (32 * GameCont.loops),
+				_strayNum = (8 + irandom(4)) * (1 + GameCont.loops);
+				
+			with(array_shuffle(instances_matching(Wall, "", null))){
+				if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, TopPot)){
+					var	_x = bbox_center_x,
+						_y = bbox_center_y;
+						
+					if(point_distance(_x, _y, _spawnX, _spawnY) > 64){
+						 // Central Wall:
+						if(_main){
+							_main = false;
+							_mainX = _x;
+							_mainY = _y;
+							
+							 // Wall Spider:
+							with(obj_create(_x, _y, "WallEnemy")){
+								special = true;
+								with(target){
+									sprite_index = spr.WallSpider;
+									image_index = irandom(image_number - 1);
+								}
+							}
+							sprite_index = spr.WallSpiderBot;
+							image_index = irandom(image_number - 1);
+							
+							 // TopSmalls:
+							with(TopSmall){
+								if(chance(1, 3) && point_distance(bbox_center_x, bbox_center_y, _mainX, _mainY) <= _mainDis){
+									obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
+								}
+							}
+						}
+						
+						 // Central Mass:
+						else if(chance(2, 3) && point_distance(_x, _y, _mainX, _mainY) <= _mainDis){
+							obj_create(_x, _y, "WallEnemy");
+						}
+						
+						 // Strays:
+						else if(_strayNum > 0){
+							_strayNum--;
+							obj_create(_x, _y, "WallEnemy");
+						}
+					}
+				}
+			}
+			
+			break;
 	}
 	
 	 // Top Spawns:

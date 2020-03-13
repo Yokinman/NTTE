@@ -103,17 +103,13 @@
 	
 	 // Bab Skull:
 	if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
-		var _spawnFloor = [];
-		with(Floor){
+		with(array_shuffle(FloorNormal)){
 			if(point_distance(bbox_center_x, bbox_center_y, 10016, 10016) > 48){
-				if(array_length(instances_meeting(x, y, [prop, chestprop, Wall])) <= 0){
-					array_push(_spawnFloor, id);
+				if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+					obj_create(bbox_center_x, bbox_center_y, "OasisPetBecome");
+					break;
 				}
 			}
-		}
-		
-		with(instance_random(_spawnFloor)){
-			obj_create(bbox_center_x, bbox_center_y, "OasisPetBecome");
 		}
 	}
 	

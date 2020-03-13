@@ -1763,116 +1763,232 @@
 	
 	
 #define WallEnemy_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Eye:
-		eyedir = 90;
-		eyeblink = random(10000);
+	var	_area = GameCont.area,
+		_spr = -1;
 		
-		 // Top Decal:
-		target = instance_create(x, y, TopPot);
-		with(target){
-			sprite_index = spr.WallEnemy;
-			image_xscale = choose(-1, 1);
-			x = xstart;
-			y = ystart;
-		}
-		
-		return id;
+	switch(_area){
+		case 1: // DESERT
+			_spr = spr.WallBandit;
+			break;
+			
+		case 4: // CRYSTAL CAVES
+			_spr = (position_meeting(_x, _y, Wall) ? spr.WallSpiderling : spr.WallSpiderlingTrans);
+			break;
 	}
 	
-#define WallEnemy_step
-	eyeblink += current_time_scale;
+	if(sprite_exists(_spr)){
+		with(instance_create(_x, _y, CustomObject)){
+			 // Vars:
+			area = _area;
+			special = false;
+			eyeblink = random(10000);
+			eyedir = 90;
+			
+			 // Top Decal:
+			target = instance_create(x, y, TopPot);
+			with(target){
+				sprite_index = _spr;
+				image_index = irandom(image_number - 1);
+				image_speed = 0;
+				
+				if(place_meeting(xstart, ystart, Wall) || !place_meeting(xstart, ystart, Floor)){
+					x = xstart;
+					y = ystart;
+				}
+			}
+			
+			 // Area-Specific:
+			switch(area){
+				
+				case 1: // DESERT
+					
+					 // Variation:
+					with(target) image_xscale = choose(-1, 1);
+					
+					break;
+					
+				case 4: // CRYSTAL CAVES
+					
+					 // No Orange Crystals:
+					with(instances_at(x, y, Wall)){
+						topindex = irandom(1);
+					}
+					
+					break;
+					
+			}
+			
+			return id;
+		}
+	}
 	
-	 // Follow Target:
+	return noone;
+	
+#define WallEnemy_step
 	if(instance_exists(target)){
 		x = target.x;
 		y = target.y;
 		
-		 // Lookin'
-		var	n = instance_nearest(x, y, Player),
-			_dir = 90;
+		switch(area){
 			
-		if(instance_exists(n) && n.visible && (point_distance(x, y, n.x, n.y) < 140 || !position_meeting(x, y, Wall))){
-			if(n.y < y - 8){
-				_dir = 270 + (30 * sin(eyeblink / 40));
-			}
-			else{
-				_dir = point_direction(x, y - 8, n.x, n.y);
-			}
-		}
-		
-		eyedir = angle_lerp(eyedir, _dir, 0.2 * current_time_scale);
-		eyedir = (eyedir + 360) % 360;
-		
-		 // Target Eye Control:
-		var	_num = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
-			_blink = ((eyeblink % 250) < 6 || (eyeblink % 300) < 6);
-			
-		with(target){
-			image_index = 0;
-			
-			 // Flinch:
-			if(distance_to_object(projectile) < 8){
-				other.eyeblink = -random_range(3, 6);
-			}
-			
-			 // Lookin'
-			else if(in_range(_num, 0, 1) && !_blink){
-				if(sign(image_xscale) < 0) _num = 1 - _num;
-				image_index = round(lerp(1, image_number - 1, _num));
-			}
+			case 1: // DESERT
+				
+				eyeblink += current_time_scale;
+				
+				 // Lookin'
+				var	n = instance_nearest(x, y, Player),
+					_dir = 90;
+					
+				if(instance_exists(n) && n.visible && (point_distance(x, y, n.x, n.y) < 140 || !position_meeting(x, y, Wall))){
+					if(n.y < y - 8){
+						_dir = 270 + (30 * sin(eyeblink / 40));
+					}
+					else{
+						_dir = point_direction(x, y - 8, n.x, n.y);
+					}
+				}
+				
+				eyedir = angle_lerp(eyedir, _dir, 0.2 * current_time_scale);
+				eyedir = (eyedir + 360) % 360;
+				
+				 // Target Eye Control:
+				var	_num = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
+					_blink = ((eyeblink % 250) < 6 || (eyeblink % 300) < 6);
+					
+				with(target){
+					image_index = 0;
+					
+					 // Flinch:
+					if(distance_to_object(projectile) < 8){
+						other.eyeblink = -random_range(3, 6);
+					}
+					
+					 // Lookin'
+					else if(in_range(_num, 0, 1) && !_blink){
+						if(sign(image_xscale) < 0) _num = 1 - _num;
+						image_index = round(lerp(1, image_number - 1, _num));
+					}
+				}
+				
+				break;
+				
+			case 4: // CRYSTAL CAVES
+				
+				 // Sparkle:
+				if(special > 0 && chance_ct(special, 90)){
+					with(instance_create(x + orandom(12), y - 8 + orandom(12), CaveSparkle)){
+						sprite_index = spr.PetSparkle;
+						depth = -9;
+					}
+				}
+				
+				break;
+				
 		}
 	}
+	else instance_destroy();
 	
-	 // Spawn Bandit:
-	else{
-		if(position_meeting(x, y, Floor)){
-			with(instance_create(x, y, Bandit)){
-				wkick = 8;
+#define WallEnemy_destroy
+	with(target) instance_destroy();
+	
+	if(position_meeting(x, y, FloorExplo)){
+		switch(area){
+			
+			case 1: // DESERT
 				
-				 // Alert:
-				if(point_seen(x, y, -1)){
-					with(scrAlert(self, spr.BanditAlert)){
-						flash = 6;
-						alarm0 = 60;
-						blink = 15;
+				with(instance_create(x, y, Bandit)){
+					wkick = 8;
+					
+					 // Alert:
+					if(point_seen(x, y, -1)){
+						with(scrAlert(self, spr.BanditAlert)){
+							flash = 6;
+							alarm0 = 60;
+							blink = 15;
+						}
 					}
-				}
-				
-				 // Launch:
-				with(instance_nearest_bbox(x, y, FloorNormal)){
-					other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
-				}
-				with(obj_create(x, y, "BackpackPickup")){
-					zspeed *= 1.2;
-					speed /= 1.2;
-					target = other;
-					direction = other.direction;
-					event_perform(ev_step, ev_step_end);
-				}
-				
-				 // Pickup:
-				pickup_drop(1000, 0);
-				with(instances_matching_gt([Pickup, chestprop], "id", id)){
+					
+					 // Launch:
+					with(instance_nearest_bbox(x, y, FloorNormal)){
+						other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
+					}
 					with(obj_create(x, y, "BackpackPickup")){
 						target = other;
-						direction = other.direction + orandom(60);
+						zspeed = random_range(2.5, 5);
+						speed = random_range(1, 2.5);
+						direction = other.direction;
 						event_perform(ev_step, ev_step_end);
+					}
+					
+					 // Pickup:
+					pickup_drop(1000, 0);
+					with(instances_matching_gt([Pickup, chestprop], "id", id)){
+						with(obj_create(x, y, "BackpackPickup")){
+							target = other;
+							direction = other.direction + orandom(60);
+							event_perform(ev_step, ev_step_end);
+						}
+					}
+					
+					 // Effects:
+					if(chance(1, 15)){
+						with(scrFX(x, y, [direction + orandom(60), 4], Shell)){
+							sprite_index = sprSodaCan;
+							image_index = irandom(image_number - 1);
+							image_speed = 0;
+						}
+					}
+					sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 1.6);
+				}
+				
+				break;
+				
+			case 4: // CRYSTAL CAVES
+				
+				 // Special Spider:
+				if(special){
+					with(pet_spawn(x, y, "Spider")){
+						sprite_index = spr_hurt;
+						sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
+						
+						 // Alert:
+						with(scrAlert(self, spr_icon)){
+							flash = 6;
+							blink = 15;
+							alert_col = make_color_rgb(16, 226, 165);
+							alert_x--;
+						}
 					}
 				}
 				
-				 // Effects:
-				if(chance(1, 15)){
-					with(scrFX(x, y, [direction + orandom(60), 4], Shell)){
-						sprite_index = sprSodaCan;
-						image_index = irandom(image_number - 1);
-						image_speed = 0;
+				 // Spiderlings:
+				else repeat(irandom_range(1, 3)){
+					if(chance(3, 5)){
+						with(obj_create(x, y, "Spiderling")){
+							sprite_index = spr_hurt;
+							sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 1.5);
+							
+							 // Launch:
+							with(obj_create(x, y, "BackpackPickup")){
+								target = other;
+								zspeed = random_range(2, 4);
+								speed = random_range(1, 2.5);
+								direction = random(360);
+								event_perform(ev_step, ev_step_end);
+							}
+						}
+					}
+					
+					 // Sparkle:
+					with(instance_create(x + orandom(8), y - 8 + orandom(8), CaveSparkle)){
+						sprite_index = spr.PetSparkle;
+						depth = -3;
 					}
 				}
-				sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 1.6);
-			}
+				
+				break;
+				
 		}
-		instance_destroy();
 	}
 	
 	

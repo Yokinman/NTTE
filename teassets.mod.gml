@@ -630,8 +630,8 @@
 			 // Fly:
 			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
 			
-			 // Wall Dude:
-			WallEnemy = sprite(p + "sprWallEnemy", 9, 8, 8);
+			 // Wall Bro:
+			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -678,11 +678,11 @@
 		m = "areas/Caves/";
 		p = m;
 			
-			 // Spider Walls:
-			SpiderWallMainBot = sprite(p + "sprSpiderWallMainBot", 2, 0, 0);
-			SpiderWallMainTop = sprite(p + "sprSpiderWallMainTop", 2, 0, 0);
-			SpiderWallFakeTop = sprite(p + "sprSpiderWallFakeTop", 4, 0, 0);
-			SpiderWallTrans	  = sprite(p + "sprSpiderWallTrans",   4, 0, 0);
+			 // Wall Spiders:
+			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
+			WallSpiderBot       = sprite(p + "sprWallSpiderBot",       2, 0, 0);
+			WallSpiderling      = sprite(p + "sprWallSpiderling",      4, 8, 8);
+			WallSpiderlingTrans	= sprite(p + "sprWallSpiderlingTrans", 4, 8, 8);
 			
 		//#endregion
 		
