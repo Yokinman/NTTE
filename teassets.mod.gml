@@ -82,6 +82,11 @@
 			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
 			
+			 // Red Spider Bullet:
+			SpiderBullet			= sprite(p + "sprSpiderBullet", 			1,	8,	8);
+			SpiderBulletAppear		= sprite(p + "sprSpiderBulletAppear",		5,	8,	8);
+			SpiderBulletDisappear	= sprite(p + "sprSpiderBulletDisappear",	1,	8,	8);
+			
 			 // Bone:
 			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
 			msk.BoneSlashLight	= sprite(p + "mskBoneSlashLight", 3, 16, 16);

@@ -759,6 +759,7 @@
 		canmelee = true;
 		meleedamage = 2;
 		cantunnel = false;
+		bullet_sound = noone;
 		
 		 // Alarms:
 		alarm1 = irandom_range(30, 60);
@@ -775,6 +776,24 @@
 			
 		if(_targetSeen) cantunnel = true;
 		
+		 // Attack:
+		if(chance(2, 3) && in_distance(target, 98)){
+			alarm1 = 45;
+			walk = 0;
+			speed /= 2;
+			scrRight(_targetDir);
+			
+			for(var i = -1; i <= 1; i++){
+				var l = 128,
+					d = (i * 90) + round(_targetDir / 45) * 45 + orandom(2);
+				enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", 0, 0);
+			}
+			
+			 // Effects:
+			bullet_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
+		}
+		
+		/*
 		 // Attack:
 		if(
 			(chance(2, 3) && in_distance(target, 64))
@@ -819,6 +838,7 @@
 				nexthurt = current_frame + 6;
 			}
 		}
+		*/
 		
 		 // Towards Target:
 		else if(_targetSeen || cantunnel){
@@ -849,7 +869,83 @@
 	}
 	sound_play_hit_big(sndPlasmaHit, 0.2);
 	
+#define SpiderBullet_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		spr_appear = spr.SpiderBulletAppear;
+		sprite_index = spr_appear;
+		depth = -7;
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 2;
+		force = 3;
+		typ = 0;
+		setup = false;
+		
+		return id;
+	}
 	
+#define SpiderBullet_step
+	if(instance_exists(creator)){
+		var _maxSpeed = 8;
+		
+		direction = point_direction(x, y, creator.x, creator.y);
+		if(sprite_index != spr_appear) motion_add_ct(direction, 0.4);
+		
+		image_angle = direction;
+		speed = min(speed, _maxSpeed);
+		
+		 // Particles:
+		if(chance_ct(1, 4)) with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / _maxSpeed)], PlasmaTrail)){
+			sprite_index = spr.EnemyPlasmaTrail;
+			depth = other.depth - 1;
+		}
+		
+		 // Goodbye, Sweet Prince:
+		if(place_meeting(x, y, creator)){
+			
+			with(creator) if(bullet_sound != noone){
+				sound_stop(bullet_sound);
+				bullet_sound = noone;
+				
+				sound_play_hit_ext(sndLaser,		1.1 + random(0.3), 1);
+				sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
+			}
+			instance_destroy();
+		}
+	}
+	
+	 // Goodbye:
+	else{
+		instance_destroy();
+	}
+	
+#define SpiderBullet_end_step
+	 // Go through walls:
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall) || (x == xprevious && y == yprevious && speed > 0)){
+		if(place_meeting(x + hspeed_raw, y, Wall)) x += hspeed_raw;
+		if(place_meeting(x, y + vspeed_raw, Wall)) y += vspeed_raw;
+	}
+	
+#define SpiderBullet_hit
+	if(sprite_index != spr_appear && projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+	}
+	
+#define SpiderBullet_anim
+	if(sprite_index == spr_appear){
+		sprite_index = spr.SpiderBullet;
+		image_speed  = 1;
+	}
+	
+#define SpiderBullet_wall
+
+#define SpiderBullet_destroy
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = spr.SpiderBulletDisappear;
+	}
+
 #define Spiderling_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1115,6 +1211,11 @@
 #define draw_bloom
 	 // Crystal Heart Projectile:
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	}
+	
+	 // Spider Bullets:
+	with(instances_matching(projectile, "name", "SpiderBullet")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 	}
 	
