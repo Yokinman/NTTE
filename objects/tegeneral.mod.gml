@@ -2221,7 +2221,12 @@
 			break;
 	}
 	
+	
 #define OrchidSkillBecome_create(_x, _y)
+	/*
+		The Orchid pet's temporary mutation orbital
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.PetOrchidCharge;
@@ -2230,7 +2235,7 @@
 		mask_index = mskFlakBullet;
 		friction = 0.4;
 		target = noone;
-		orchid = noone;
+		creator = noone;
 		hold_seek = 0;
 		trail_col = make_color_rgb(84, 58, 24);
 		grow = 0;
@@ -2242,13 +2247,15 @@
 	grow = min(grow + (current_time_scale / 15), 1);
 	
 	 // Stick Around:
-	if(instance_exists(orchid)){
-		visible 	= orchid.visible;
-		persistent	= orchid.persistent;
-
+	if(instance_exists(creator)){
+		visible = creator.visible;
+		persistent = creator.persistent;
+		
 		 // Effects:
-		if(chance_ct(1, 4) && visible) scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
-	
+		if(visible && chance_ct(1, 4)){
+			scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
+		}
+		
 		 // Doin':
 		hold_seek -= current_time_scale;
 		if(target != noone && hold_seek <= 0){
@@ -2259,15 +2266,15 @@
 					image_angle = direction;
 					
 					if(current_frame_active){
-						with(instance_create(x, y, DiscTrail)) {
+						with(instance_create(x, y, DiscTrail)){
 							image_blend = other.trail_col;
 						}
 					}
 				}
+				
 				else{
-					
 					 // Mutate:
-					with(orchid){
+					with(creator){
 						stat.mutations++;
 						array_push(skills_active, obj_create(x, y, "OrchidSkill"));
 					}
@@ -2276,8 +2283,8 @@
 					instance_destroy();
 				}
 			}
+			
 			else{
-				
 				 // Fresh Meat:
 				if(instance_exists(Player)){
 					target = instance_nearest(x, y, Player);
@@ -2295,7 +2302,10 @@
 	else instance_destroy();
 	
 #define OrchidSkillBecome_destroy
-	repeat(10 + irandom(10)) scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle");
+	repeat(10 + irandom(10)){
+		scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle");
+	}
+	
 	
 #define ParrotChester_create(_x, _y)
 	/*

@@ -83,9 +83,9 @@
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
 			
 			 // Red Spider Bullet:
-			SpiderBullet			= sprite(p + "sprSpiderBullet", 			1,	8,	8);
-			SpiderBulletAppear		= sprite(p + "sprSpiderBulletAppear",		5,	8,	8);
-			SpiderBulletDisappear	= sprite(p + "sprSpiderBulletDisappear",	1,	8,	8);
+			SpiderBullet          = sprite(p + "sprSpiderBullet",          1, 8, 8);
+			SpiderBulletAppear    = sprite(p + "sprSpiderBulletAppear",    5, 8, 8);
+			SpiderBulletDisappear = sprite(p + "sprSpiderBulletDisappear", 1, 8, 8);
 			
 			 // Bone:
 			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
@@ -1321,12 +1321,11 @@
 			
 			 // Mantis:
 			p = m + "Vault/";
-			PetOrchidIcon = sprite(p + "sprPetOrchidIcon",	1,	6,	6);
-			PetOrchidIdle = sprite(p + "sprPetOrchidIdle",	28, 12, 12);
-			PetOrchidWalk = sprite(p + "sprPetOrchidWalk",	6,	12, 12);
-			PetOrchidHurt = sprite(p + "sprPetOrchidHurt",	3,	12, 12);
-			
-			PetOrchidCharge = sprite(p + "sprPetOrchidCharge",	2,	12,	12);
+			PetOrchidIcon   = sprite(p + "sprPetOrchidIcon",    1,  6,  6);
+			PetOrchidIdle   = sprite(p + "sprPetOrchidIdle",   28, 12, 12);
+			PetOrchidWalk   = sprite(p + "sprPetOrchidWalk",    6, 12, 12);
+			PetOrchidHurt   = sprite(p + "sprPetOrchidHurt",    3, 12, 12);
+			PetOrchidCharge = sprite(p + "sprPetOrchidCharge",  2, 12, 12);
 			
 			 // Weapon Chest Mimic:
 			p = m + "Weapon/";

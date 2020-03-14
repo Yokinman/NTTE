@@ -783,17 +783,23 @@
 			speed /= 2;
 			scrRight(_targetDir);
 			
+			var _last = noone;
+			
 			for(var i = -1; i <= 1; i++){
-				var l = 128,
+				var	l = 128,
 					d = (i * 90) + round(_targetDir / 45) * 45 + orandom(2);
+					
 				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", 0, 0)){
 					target_x = other.x;
 					target_y = other.y;
+					_last = id;
 				}
 			}
 			
 			 // Effects:
-			with(GameObject.id) my_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
+			with(_last){
+				my_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
+			}
 		}
 		
 		/*
@@ -872,11 +878,14 @@
 	}
 	sound_play_hit_big(sndPlasmaHit, 0.2);
 	
+	
 #define SpiderBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
-		spr_appear = spr.SpiderBulletAppear;
-		sprite_index = spr_appear;
+		spr_idle = spr.SpiderBullet;
+		spr_spwn = spr.SpiderBulletAppear;
+		spr_dead = spr.SpiderBulletDisappear;
+		sprite_index = spr_spwn;
 		depth = -7;
 		
 		 // Vars:
@@ -884,6 +893,7 @@
 		damage = 2;
 		force = 3;
 		typ = 0;
+		maxspeed = 8;
 		target_x = x;
 		target_y = y;
 		my_sound = noone;
@@ -892,18 +902,26 @@
 	}
 	
 #define SpiderBullet_step
-	var _maxSpeed = 8;
-	
+	 // Move Towards Creator:
+	if(instance_exists(creator)){
+		target_x = creator.x;
+		target_y = creator.y;
+	}
 	direction = point_direction(x, y, target_x, target_y);
-	if(sprite_index != spr_appear) motion_add_ct(direction, 0.4);
-	
 	image_angle = direction;
-	speed = min(speed, _maxSpeed);
+	
+	 // Accelerate:
+	if(sprite_index != spr_spwn){
+		speed += 0.4 * current_time_scale;
+	}
+	speed = min(speed, maxspeed);
 	
 	 // Particles:
-	if(chance_ct(1, 4)) with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / _maxSpeed)], PlasmaTrail)){
-		sprite_index = spr.EnemyPlasmaTrail;
-		depth = other.depth - 1;
+	if(chance_ct(1, 4)){
+		with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / maxspeed)], PlasmaTrail)){
+			sprite_index = spr.EnemyPlasmaTrail;
+			depth = other.depth - 1;
+		}
 	}
 	
 	 // Goodbye, Sweet Prince:
@@ -911,7 +929,7 @@
 		if(my_sound != noone){
 			sound_stop(my_sound);
 			
-			sound_play_hit_ext(sndLaser,		1.1 + random(0.3), 1);
+			sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
 			sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
 		}
 		instance_destroy();
@@ -925,23 +943,25 @@
 	}
 	
 #define SpiderBullet_hit
-	if(sprite_index != spr_appear && projectile_canhit_melee(other)){
+	if(sprite_index != spr_spwn && projectile_canhit_melee(other)){
 		projectile_hit(other, damage, force, direction);
 	}
 	
 #define SpiderBullet_anim
-	if(sprite_index == spr_appear){
-		sprite_index = spr.SpiderBullet;
+	if(sprite_index == spr_spwn){
+		sprite_index = spr_idle;
 		image_speed  = 1;
 	}
 	
 #define SpiderBullet_wall
-
+	// wtf
+	
 #define SpiderBullet_destroy
 	with(instance_create(x, y, BulletHit)){
-		sprite_index = spr.SpiderBulletDisappear;
+		sprite_index = other.spr_dead;
 	}
-
+	
+	
 #define Spiderling_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -955,11 +975,11 @@
 		mask_index = mskMaggot;
 		hitid = [spr_idle, "SPIDERLING"];
 		depth = -2;
-
+		
 		 // Sound:
 		snd_hurt = sndSpiderHurt;
 		snd_dead = sndSpiderDead;
-
+		
 		 // Vars:
 		maxhealth = 4;
 		raddrop = 2;
@@ -969,7 +989,7 @@
 		maxspeed = 3;
 		nexthurt = current_frame + 15;
 		direction = random(360);
-
+		
 		 // Cursed:
 		curse = (GameCont.area == 104);
 		if(curse){
@@ -988,10 +1008,10 @@
 		
 		var n = instance_nearest(x, y, Player);
 		if(instance_exists(n)) alarm0 += point_distance(x, y, n.x, n.y);
-
+		
 		return id;
 	}
-
+	
 #define Spiderling_alrm0
 	 // Shhh dont tell anybody
 	var _obj = ((GameCont.area == 104) ? InvSpider : Spider);

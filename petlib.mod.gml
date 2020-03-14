@@ -269,7 +269,7 @@
 	skills_active = [];
 	wave = 0;
 	pickup_skill = scrPickupIndicator("BORROW");
-	pickup_skill.visible = false;
+	with(pickup_skill) visible = false;
 	
 	 // Stat:
 	if("mutations" not in stat) stat.mutations = 0;
@@ -286,24 +286,28 @@
 	wave += current_time_scale;
 	
 	 // Orbs:
-	var _numSkills = array_length(skills_become);
-	var o = 360 / _numSkills;
+	var	_numSkills = array_length(skills_become),
+		o = 360 / _numSkills;
+		
 	for(var i = 0; i < _numSkills; i++){
-		var w = wave,
+		var	w = wave,
 			d = o * i;
-		with(skills_become[i]) if(target == noone){
-			image_angle = sin((w + d) / 45) * 45;
-			x = other.x + lengthdir_x(16 * grow, w + d);
-			y = other.y + lengthdir_y(16 * grow, w + d);
 			
-			var s = 1 + sin(w / 15) * 0.2;
-			image_xscale = s * grow;
-			image_yscale = s * grow;
-			
-			direction = w + d;
+		with(skills_become[i]){
+			if(target == noone){
+				image_angle = sin((w + d) / 45) * 45;
+				x = other.x + lengthdir_x(16 * grow, w + d);
+				y = other.y + lengthdir_y(16 * grow, w + d);
+				
+				var s = 1 + sin(w / 15) * 0.2;
+				image_xscale = s * grow;
+				image_yscale = s * grow;
+				
+				direction = w + d;
+			}
 		}
 	}
-		
+	
 	 // Mutatin':
 	if(array_length(skills_active) <= 0){
 		if(_numSkills < max_skills){
@@ -313,18 +317,19 @@
 				
 				 // Be:
 				with(obj_create(x, y, "OrchidSkillBecome")){
-					orchid = other;
-					array_push(orchid.skills_become, id);
+					creator = other;
+					array_push(other.skills_become, id);
 				}
 				_numSkills++;
 			}
 		}
-			
+		
 		 // Indicator:
 		var _pickup = pickup_skill;
-		if(_numSkills > 0){
+		if(_numSkills > 0 && instance_exists(_pickup)){
 			_pickup.visible = true;
-			if(_pickup.pick != -1){
+			
+			if(player_is_active(_pickup.pick)){
 				_pickup.visible = false;
 				
 				 // Depart:
@@ -342,7 +347,7 @@
 			}
 		}
 	}
-		
+	
 	/*
 	 // Mutate:
 	if(raddrop >= skill_rads){

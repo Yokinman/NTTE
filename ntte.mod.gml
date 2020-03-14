@@ -2459,7 +2459,7 @@
 									surface_set_target(global.orchid_skill_surf);
 									draw_clear_alpha(0, 0);
 									
-									var _wave = current_frame * current_time_scale,
+									var	_wave = current_frame * current_time_scale,
 										_surf = global.orchid_skill_surf,
 										_cx = surface_get_width(_surf) / 2,
 										_cy = surface_get_height(_surf) / 2;
@@ -2475,7 +2475,7 @@
 									else surface_reset_target();
 								
 									 // Draw to HUD:
-									var _sx = _dx - _cx,
+									var	_sx = _dx - _cx,
 										_sy = _dy - _cy;
 									 
 									draw_set_fog(true, _colSub, 0, 0);
