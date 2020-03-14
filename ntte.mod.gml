@@ -29,6 +29,9 @@
 	surfMainHUD  = surflist_set("MainHUD",  0, 0, game_width, game_height);
 	surfSkillHUD = surflist_set("SkillHUD", 0, 0, game_width, game_height);
 	
+	 // Orchid Mutation Surface:
+	global.orchid_skill_surf = noone;
+	
 	 // Pets:
 	global.pet_max = 1;
 	global.petMapicon = array_create(maxp, []);
@@ -2450,6 +2453,47 @@
 									if(flash) _flash = true;
 								}
 								
+								 // Draw to Surface:
+								if(_time > current_time_scale){
+									if(!surface_exists(global.orchid_skill_surf)) global.orchid_skill_surf = surface_create(48, 48);
+									surface_set_target(global.orchid_skill_surf);
+									draw_clear_alpha(0, 0);
+									
+									var _wave = current_frame * current_time_scale,
+										_surf = global.orchid_skill_surf,
+										_cx = surface_get_width(_surf) / 2,
+										_cy = surface_get_height(_surf) / 2;
+									
+									 // Outline:
+									var _scale = 1 + sin(_wave / 15) * 0.1;
+									draw_sprite_ext(spr.PetOrchidCharge, _wave % 2, _cx, _cy, _scale, _scale, _wave * 5, c_white, 1);
+									for(var d = 0; d < 360; d += 90){
+										draw_sprite(_spr, _img, _cx + dcos(d), _cy + dsin(d));
+									}
+									
+									if(surface_exists(surfSkillHUD.surf)) surface_set_target(surfSkillHUD.surf);
+									else surface_reset_target();
+								
+									 // Draw to HUD:
+									var _sx = _dx - _cx,
+										_sy = _dy - _cy;
+									 
+									draw_set_fog(true, _colSub, 0, 0);
+									draw_surface(_surf, _sx, _sy);
+									
+									draw_set_fog(true, _colTop, 0, 0);
+									draw_surface_part(
+										_surf, 
+										0,
+										(_cy * 2) * (1 - (_time / _timeMax)),
+										(_cx * 2),
+										(_cy * 2) * (_time / _timeMax),
+										_sx,
+										_sy + (_cy * 2) * (1 - (_time / _timeMax))
+									);
+								}
+								
+								/*
 								if(_time > current_time_scale){
 									var	_uvs = sprite_get_uvs(_spr, _img),
 										_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ) - 1,
@@ -2474,6 +2518,7 @@
 										draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
 									}
 								}
+								*/
 								
 								 // Icon:
 								draw_set_fog(_flash, c_white, 0, 0);

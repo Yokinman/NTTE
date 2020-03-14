@@ -1326,6 +1326,8 @@
 			PetOrchidWalk = sprite(p + "sprPetOrchidWalk",	6,	12, 12);
 			PetOrchidHurt = sprite(p + "sprPetOrchidHurt",	3,	12, 12);
 			
+			PetOrchidCharge = sprite(p + "sprPetOrchidCharge",	2,	12,	12);
+			
 			 // Weapon Chest Mimic:
 			p = m + "Weapon/";
 			PetWeaponIcon       = sprite(p + "sprPetWeaponIcon",        1,  6,  6);
