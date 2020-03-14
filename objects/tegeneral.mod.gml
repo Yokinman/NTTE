@@ -1900,8 +1900,8 @@
 #define OrchidSkill_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		color1 = make_color_rgb(255, 221, 0);
-		color2 = make_color_rgb(76, 68, 16);
+		color1 = c_yellow;
+		color2 = make_color_rgb(84, 58, 24);
 		
 		 // Vars:
 		persistent = true;
@@ -2153,6 +2153,81 @@
 			break;
 	}
 	
+#define OrchidSkillBecome_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.PetOrchidCharge;
+		
+		 // Vars:
+		mask_index = mskFlakBullet;
+		friction = 0.4;
+		target = noone;
+		orchid = noone;
+		hold_seek = 0;
+		trail_col = make_color_rgb(84, 58, 24);
+		grow = 0;
+		
+		return id;
+	}
+	
+#define OrchidSkillBecome_step
+	grow = min(grow + (current_time_scale / 15), 1);
+	
+	 // Stick Around:
+	if(instance_exists(orchid)){
+		visible 	= orchid.visible;
+		persistent	= orchid.persistent;
+
+		 // Effects:
+		if(chance_ct(1, 4) && visible) scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
+	
+		 // Doin':
+		hold_seek -= current_time_scale;
+		if(target != noone && hold_seek <= 0){
+			if(instance_exists(target)){
+				if(!place_meeting(x, y, target)){
+					motion_add_ct(point_direction(x, y, target.x, target.y), 1);
+					speed = min(speed, 16);
+					image_angle = direction;
+					
+					if(current_frame_active){
+						with(instance_create(x, y, DiscTrail)) {
+							image_blend = other.trail_col;
+						}
+					}
+				}
+				else{
+					
+					 // Mutate:
+					with(orchid){
+						stat.mutations++;
+						array_push(skills_active, obj_create(x, y, "OrchidSkill"));
+					}
+					
+					 // Goodbye:
+					instance_destroy();
+				}
+			}
+			else{
+				
+				 // Fresh Meat:
+				if(instance_exists(Player)){
+					target = instance_nearest(x, y, Player);
+				}
+				
+				 // Disappear:
+				else{
+					instance_destroy();
+				}
+			}
+		}
+	}
+	
+	 // Goodbye:
+	else instance_destroy();
+	
+#define OrchidSkillBecome_destroy
+	repeat(10 + irandom(10)) scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle");
 	
 #define ParrotChester_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -5378,6 +5453,11 @@
 	
 	 // Portal Ball:
 	with(instances_matching(CustomProjectile, "name", "PortalBullet")){
+		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+	}
+	
+	 // Orchid Skill Become:
+	with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkillBecome"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 	

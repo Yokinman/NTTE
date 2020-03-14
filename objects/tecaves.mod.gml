@@ -786,11 +786,14 @@
 			for(var i = -1; i <= 1; i++){
 				var l = 128,
 					d = (i * 90) + round(_targetDir / 45) * 45 + orandom(2);
-				enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", 0, 0);
+				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", 0, 0)){
+					target_x = other.x;
+					target_y = other.y;
+				}
 			}
 			
 			 // Effects:
-			bullet_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
+			with(GameObject.id) my_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
 		}
 		
 		/*
@@ -881,43 +884,36 @@
 		damage = 2;
 		force = 3;
 		typ = 0;
-		setup = false;
+		target_x = x;
+		target_y = y;
+		my_sound = noone;
 		
 		return id;
 	}
 	
 #define SpiderBullet_step
-	if(instance_exists(creator)){
-		var _maxSpeed = 8;
-		
-		direction = point_direction(x, y, creator.x, creator.y);
-		if(sprite_index != spr_appear) motion_add_ct(direction, 0.4);
-		
-		image_angle = direction;
-		speed = min(speed, _maxSpeed);
-		
-		 // Particles:
-		if(chance_ct(1, 4)) with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / _maxSpeed)], PlasmaTrail)){
-			sprite_index = spr.EnemyPlasmaTrail;
-			depth = other.depth - 1;
-		}
-		
-		 // Goodbye, Sweet Prince:
-		if(place_meeting(x, y, creator)){
-			
-			with(creator) if(bullet_sound != noone){
-				sound_stop(bullet_sound);
-				bullet_sound = noone;
-				
-				sound_play_hit_ext(sndLaser,		1.1 + random(0.3), 1);
-				sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
-			}
-			instance_destroy();
-		}
+	var _maxSpeed = 8;
+	
+	direction = point_direction(x, y, target_x, target_y);
+	if(sprite_index != spr_appear) motion_add_ct(direction, 0.4);
+	
+	image_angle = direction;
+	speed = min(speed, _maxSpeed);
+	
+	 // Particles:
+	if(chance_ct(1, 4)) with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / _maxSpeed)], PlasmaTrail)){
+		sprite_index = spr.EnemyPlasmaTrail;
+		depth = other.depth - 1;
 	}
 	
-	 // Goodbye:
-	else{
+	 // Goodbye, Sweet Prince:
+	if(point_distance(x, y, target_x, target_y) <= 16){
+		if(my_sound != noone){
+			sound_stop(my_sound);
+			
+			sound_play_hit_ext(sndLaser,		1.1 + random(0.3), 1);
+			sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
+		}
 		instance_destroy();
 	}
 	

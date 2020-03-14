@@ -263,21 +263,87 @@
 #define Orchid_create
 	 // Vars:
 	raddrop = 0;
+	max_skills = 3;
 	skill_rads = 60;
-	skill_inst = [];
+	skills_become = [];
+	skills_active = [];
+	wave = 0;
+	pickup_skill = scrPickupIndicator("BORROW");
+	pickup_skill.visible = false;
 	
 	 // Stat:
 	if("mutations" not in stat) stat.mutations = 0;
 	
 #define Orchid_ttip
-	return ["ELEGANT", "FLORID"];
+	return ["ELEGANT", "FLORID", "STOCKPILE POWER", "GENETIC MAGIC"];
 	
 #define Orchid_stat(_name, _value)
 	if(_name == "") return spr.PetOrchidIdle;
 	
 #define Orchid_step
-	skill_inst = instances_matching(skill_inst, "", null);
+	skills_become = instances_matching(skills_become, "", null);
+	skills_active = instances_matching(skills_active, "", null);
+	wave += current_time_scale;
 	
+	 // Orbs:
+	var _numSkills = array_length(skills_become);
+	var o = 360 / _numSkills;
+	for(var i = 0; i < _numSkills; i++){
+		var w = wave,
+			d = o * i;
+		with(skills_become[i]) if(target == noone){
+			image_angle = sin((w + d) / 45) * 45;
+			x = other.x + lengthdir_x(16 * grow, w + d);
+			y = other.y + lengthdir_y(16 * grow, w + d);
+			
+			var s = 1 + sin(w / 15) * 0.2;
+			image_xscale = s * grow;
+			image_yscale = s * grow;
+			
+			direction = w + d;
+		}
+	}
+		
+	 // Mutatin':
+	if(array_length(skills_active) <= 0){
+		if(_numSkills < max_skills){
+			var _maxRads = skill_rads * (1 + _numSkills); 
+			if(raddrop >= _maxRads){
+				raddrop -= _maxRads;
+				
+				 // Be:
+				with(obj_create(x, y, "OrchidSkillBecome")){
+					orchid = other;
+					array_push(orchid.skills_become, id);
+				}
+				_numSkills++;
+			}
+		}
+			
+		 // Indicator:
+		var _pickup = pickup_skill;
+		if(_numSkills > 0){
+			_pickup.visible = true;
+			if(_pickup.pick != -1){
+				_pickup.visible = false;
+				
+				 // Depart:
+				with(skills_become){
+					target = player_find(_pickup.pick);
+					hold_seek = 10 + random(10);
+					motion_set(direction, 8);
+					array_push(other.skills_active, id);
+				}
+				skills_become = [];
+				raddrop = 0;
+				
+				 // Effects:
+				repeat(8) scrFX([x, 12], [y, 12], 0, "VaultFlowerSparkle");
+			}
+		}
+	}
+		
+	/*
 	 // Mutate:
 	if(raddrop >= skill_rads){
 		raddrop -= skill_rads;
@@ -330,13 +396,14 @@
 			depth = other.depth + choose(-1, -1, 1);
 		}
 	}
+	*/
 	
 #define Orchid_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
 	 // Bloom:
 	var	_scale = lerp(1.5, 1.8, 0.5 + (0.5 * sin(wave / 10))),
-		_alpha = lerp(0.05, 0.25, raddrop / skill_rads);
+		_alpha = lerp(0.05, 0.25, raddrop / (skill_rads * (1 + array_length(skills_become))));
 		
 	draw_set_blend_mode(bm_add);
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc * _scale, _ysc * _scale, _ang, _col, _alp * _alpha);
@@ -3123,6 +3190,36 @@
 				_disMax = 1000000;
 				
 			with(_targetInst){
+				if(instance_exists(leader) && array_length(skills_become) < max_skills && array_length(skills_active) <= 0){
+					var _dis = point_distance(x, y, other.x, other.y);
+					if(_dis < _disMax){
+						_disMax = _dis;
+						_target = id;
+					}
+				}
+			}
+			
+			 // Grab:
+			if(instance_exists(_target)){
+				with(scrFX(x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
+					alarm0 = random_range(20, 30);
+					image_alpha *= 2;
+				}
+				rad_path(self, _target);
+			}
+		}
+	}
+	
+	/*
+	var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
+	if(array_length(_targetInst) > 0){
+		with(instances_matching([Rad, BigRad], "orchidmantisradattract_check", null)){
+			orchidmantisradattract_check = true;
+			
+			var	_target = noone,
+				_disMax = 1000000;
+				
+			with(_targetInst){
 				if(instance_exists(leader) && array_length(skill_inst) <= 0){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
@@ -3142,6 +3239,7 @@
 			}
 		}
 	}
+	*/
 	
 	 // Salamander Throne Butt Text:
 	if(array_length(instances_matching(_petInst, "pet", "Salamander")) > 0){
