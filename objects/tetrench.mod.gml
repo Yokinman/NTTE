@@ -32,6 +32,10 @@
 #macro FloorPitless instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)
 
 #define Angler_create(_x, _y)
+	/*
+		It's just a rad canister bro
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Offset:
 		x = _x - (right * 6);
@@ -296,6 +300,11 @@
 	
 	
 #define Eel_create(_x, _y)
+	/*
+		Rat-style enemy, lightning arcs between it and the nearest Jelly
+		Different colors represent the pickup they drop (health/ammo/rad chunk)
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		type = irandom(2);
@@ -553,6 +562,10 @@
 
 
 #define EelSkull_create(_x, _y)
+	/*
+		Epic prop, drops bone
+	*/
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.EelSkullIdle;
@@ -587,6 +600,16 @@
 
 
 #define ElectroPlasma_create(_x, _y)
+	/*
+		A PlasmaBall-style projectile that arcs lightning to another instance, usually other ElectroPlasma
+		
+		Vars:
+			tether            - 0 to 1, untethered to fully tethered
+			tether_x/tether_y - The point to tether lightning with
+			tether_inst       - The instance to tether lightning with, forces tether_x/tether_y to its position
+			tether_range      - Cannot tether lightning to tether_x/tether_y outside of this distance
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visuals:
 		sprite_index = spr.ElectroPlasma;
@@ -606,7 +629,7 @@
 		tether_inst = noone;
 		tether_range = 80;
 		setup = true;
-
+		
 		return id;
 	}
 	
@@ -640,12 +663,12 @@
 			tether_x = tether_inst.x + tether_inst.hspeed_raw;
 			tether_y = tether_inst.y + tether_inst.vspeed_raw;
 		}
-	
+		
 		var	_x1 = x + hspeed_raw,
 			_y1 = y + vspeed_raw,
 			_x2 = tether_x,
 			_y2 = tether_y;
-	
+			
 		if(
 			(tether_inst == noone || instance_exists(tether_inst))
 			&&
@@ -656,7 +679,7 @@
 			 // Initialize Tether:
 			if(tether < 1){
 				tether += 0.2 * current_time_scale;
-	
+				
 				if(current_frame_active){
 					var	_dis = random(point_distance(_x1, _y1, _x2, _y2)),
 						_dir = point_direction(_x1, _y1, _x2, _y2);
@@ -670,7 +693,7 @@
 						motion_add(random(360), 1);
 					}
 				}
-	
+				
 				 // Tethered:
 				if(tether >= 1){
 					sound_play_pitch(sndLightningHit, 2);
@@ -688,7 +711,7 @@
 					}
 				}
 			}
-	
+			
 			 // Tethering:
 			else{
 				var	_d1 = direction,
@@ -711,11 +734,11 @@
 				}
 			}
 		}
-	
+		
 		 // Untether FX:
 		else ElectroPlasma_untether();
 	}
-
+	
 	 // Trail:
 	if(chance_ct(1, 8)){
 		with(instance_create(x + orandom(6), y + orandom(6), PlasmaTrail)){
@@ -725,7 +748,7 @@
 	
 	 // Goodbye:
 	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
-
+	
 #define ElectroPlasma_hit
 	if(setup) ElectroPlasma_setup();
 
@@ -789,28 +812,37 @@
 
 
 #define ElectroPlasmaImpact_create(_x, _y)
+	/*
+		ElectroPlasma's plasma explosion
+	*/
+	
 	with(instance_create(_x, _y, PlasmaImpact)){
 		 // Visual:
 		sprite_index = spr.ElectroPlasmaImpact;
-
+		
 		 // Vars:
 		mask_index = mskBullet1;
 		damage = 2;
-
+		
 		 // Effects:
 		repeat(1 + irandom(1)){
 			instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
 		}
-
+		
 		 // Sounds:
-		sound_play_hit(sndPlasmaHit,	 0.4);
+		sound_play_hit(sndPlasmaHit,     0.4);
 		sound_play_hit(sndGammaGutsProc, 0.4);
-
+		
 		return id;
 	}
-
-
+	
+	
 #define Jelly_create(_x, _y)
+	/*
+		A standard Trench enemy that floats around and fires lightning rings at the Player
+		Lightning arcs between it and the nearest Eel, changing the Eel's color to the Jelly's color
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		type = irandom(2);
@@ -920,6 +952,11 @@
 
 
 #define JellyElite_create(_x, _y)
+	/*
+		The elite Jelly
+		Has a farther Eel arcing range, makes elite Eels, and shoots 3 lightning rings
+	*/
+	
 	with(obj_create(_x, _y, "Jelly")){
 		 // Visual:
 		type = 3;
@@ -928,22 +965,26 @@
 		spr_hurt = spr.JellyHurt[type];
 		spr_dead = spr.JellyDead[type];
 		spr_fire = spr.JellyEliteFire;
-
+		
 		 // Sound:
 		var _water = area_get_underwater(GameCont.area);
 		snd_hurt = sndLightningCrystalHit;
 		snd_dead = (_water ? sndOasisDeath : sndLightningCrystalDeath);
-
+		
 		 // Vars:
 		raddrop *= 2;
 		arc_max = 5;
 		arc_dis = 144;
-
+		
 		return id;
 	}
-
-
+	
+	
 #define Kelp_create(_x, _y)
+	/*
+		Kelp prop
+	*/
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.KelpIdle;
@@ -951,24 +992,43 @@
 		spr_dead = spr.KelpDead;
 		image_speed = random_range(0.2, 0.3);
 		depth = -2;
-
+		
 		 // Sounds:
 		snd_hurt = sndOasisHurt;
 		snd_dead = sndOasisDeath;
-
+		
 		 // Vars:
 		maxhealth = 2;
 		size = 1;
-
+		
 		return id;
 	}
-
+	
 #define Kelp_step
 	 // Over Pit:
 	if(pit_get(x, y)) my_health = 0;
-
-
+	
+	
 #define LightningDisc_create(_x, _y)
+	/*
+		Lightning ring projectiles that bounces around, slowly shrink, and zap enemies they come into contact with
+		
+		Vars:
+			ammo           - How many segments the lightning ring has (3 == triangle)
+			radius         - The radius of the lightning ring (wtf ??)
+			rotation       - The ring's visual rotation for drawing
+			rotspeed       - Added to 'rotation', makes it spin
+			charge         - The value that image_xscale/image_yscale should grow towards
+			charge_spd     - Multiplier of how fast image_xscale/image_yscale should grow towards 'charge'
+			shrink         - How fast the ring should shrink after charging up
+			maxspeed       - The speed to clamp down to after charging up
+			is_enemy       - True/false, created by an enemy, determines laser brain and minor homing effects
+			stretch        - The width of the ring (How fat the ring looks)
+			super          - Describes the minimum size of the ring before splitting into more rings, -1 == no splitting
+			creator_follow - True/false, should follow its creator while charging up
+			roids          - Shot by steroids' secondary weapon
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprLightning;
@@ -990,7 +1050,7 @@
 		image_xscale = 0;
 		image_yscale = 0;
 		stretch = 1;
-		super = -1; //describes the minimum size of the ring to split into more rings, -1 = no splitting
+		super = -1;
 		creator_follow = true;
 		roids = false;
 		setup = true;
@@ -1305,21 +1365,29 @@
 
 
 #define LightningDiscEnemy_create(_x, _y)
+	/*
+		Basic enemy lightning ring
+	*/
+	
 	with(obj_create(_x, _y, "LightningDisc")){
 		 // Visual:
 		sprite_index = sprEnemyLightning;
-
+		
 		 // Vars:
 		is_enemy = true;
 		maxspeed = 2;
 		radius = 16;
 		charge_spd = 1.4;
-
+		
 		return id;
 	}
-
-
+	
+	
 #define PitSpark_create(_x, _y)
+	/*
+		Cool pit tentacle effect used by PitSquid
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.PitSpark[irandom(array_length(spr.PitSpark) - 1)];
@@ -1362,13 +1430,48 @@
 
 
 #define PitSquid_create(_x, _y)
+	/*
+		Trench boss bro, resides in the pits
+		
+		Vars:
+			posx/posy          - Custom x/y position so nothing interacts with PitSquid, like bolt marrow
+			meleedamage        - Bite damage
+			bite               - Delay before biting, set to 1 for a basic bite or above 1 for a delayed bite. Based on # of frames in spr_bite.
+			spit               - Delay before spitting, set to 1 for a basic spit or above 1 for a delayed spit. Based on # of frames in spr_spit.
+			ammo               - How many electroplasma to spit
+			electroplasma_side - Used to determine which directional side to spit ElectroPlasma, -1/1
+			electroplasma_last - The most recently spat ElectroPlasma, used to tether the next ElectroPlasma to it
+			sink               - Sink into the pits, true/false
+			pit_height         - Height in the pits, 0 to 1 (1 == at the top, 0 == smaller than a pixel)
+			intro              - Boss intro played, true/false
+			intro_pitbreak     - Next pit smash should be big, true/false
+			rise_delay         - How long to wait before rising out of the pits, used for initial intro pit smash
+			tauntdelay         - Delay before taunting after all Players are dead
+			eye                - List of eye LWOs (see 'Eye Vars')
+			eye_dir            - PitSquid's eye rotation offset
+			eye_dir_speed      - Added to 'eye_dir' to spin PitSquid
+			eye_dis            - PitSquid's eye offset
+			eye_laser          - How many frames to shoot eye lasers
+			eye_laser_delay    - Delay before shooting eye lasers, usually set same time as 'eye_laser'
+			alarm1             - Used for PitSquid's general AI
+			alarm2             - Used for PitSquid's attacks
+			alarm3             - Used for spawning PitSpark effects
+			
+		Eye Vars:
+			x/y       - Eye's center position, set for reference like with drawing and stuff
+			dis/dir   - Distance/direction offset of the pupil from the eye's center position
+			blink     - Close the eye, true/false
+			blink_img - Frame index of the eyelid, based on spr.PitSquidEyelid
+			my_laser  - The QuasarBeam instance when firing eye lasers
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
 		 // For Sani's bosshudredux:
 		bossname = "PIT SQUID";
 		col = c_red;
-
+		
 		 // Visual:
 		spr_bite = spr.PitSquidMawBite;
 		spr_fire = spr.PitSquidMawSpit;
@@ -1403,8 +1506,6 @@
 		gunangle = random(360);
 		electroplasma_side = choose(-1, 1);
 		electroplasma_last = noone;
-		laser = 0;
-		laser_charge = 0;
 		rise_delay = 0;
 		
 		 // Eyes:
@@ -1434,13 +1535,13 @@
 		alarm1 = 90;
 		alarm2 = 90;
 		alarm3 = random_range(1, 30);
-
+		
 		return id;
 	}
-
+	
 #define PitSquid_step
 	var _eyeDisGoal = 0;
-
+	
 	 // Pit Z Movement:
 	if(sink || rise_delay > 0){
 		rise_delay -= current_time_scale;
@@ -1452,7 +1553,7 @@
 			if(abs(t - pit_height) < 0.05) pit_height = t;
 			with(eye) blink = true;
 		}
-
+		
 		 // Start Rising:
 		/*
 		if(pit_height <= 0.5){
@@ -1471,19 +1572,19 @@
 		 // Slow Initial Rise:
 		if(pit_height < 0.5){
 			pit_height += abs(sin(current_frame / 30)) * 0.02 * current_time_scale;
-
+			
 			 // Prepare Bite:
 			if(bite <= 0 && pit_height > 0.3){
 				bite = 0.6;
 			}
 		}
-
+		
 		 // Quickly Rise:
 		else if(pit_height < 1){
 			if(bite <= 0) bite = 1;
 			else if(((1 - bite) * sprite_get_number(spr_bite)) >= 6){
 				pit_height += 0.1 * current_time_scale;
-	
+				
 				 // Reached Top of Pit:
 				if(pit_height >= 1){
 					pit_height = 1;
@@ -1513,19 +1614,19 @@
 			}
 		}
 	}
-
+	
 	 // Sinking/Rising FX:
 	if(pit_height > 0.5 && pit_height < 1 && current_frame_active){
 		instance_create(posx + orandom(32), posy + orandom(32), Smoke);
 		view_shake_at(posx, posy, 4);
 	}
-
+	
 	 // Movement:
 	if(eye_laser > 0) speed = 0;
 	if(speed > 0){
 		eye_dir_speed += (speed / 10) * current_time_scale;
 		direction += sin(current_frame / 20) * current_time_scale;
-
+		
 		 // Effects:
 		if(current_frame_active){
 			view_shake_max_at(posx, posy, min(speed * 4, 3));
@@ -1534,11 +1635,11 @@
 			instance_create(posx + orandom(40), posy + orandom(40), Bubble);
 		}
 	}
-
+	
 	 // Find Nearest Visible Player:
 	var	_target = noone,
 		d = 1000000;
-
+		
 	with(Player) if(!collision_line(other.posx, other.posy, x, y, Wall, false, false)){
 		var _dis = point_distance(other.posx, other.posy, x, y);
 		if(_dis < d){
@@ -1546,7 +1647,7 @@
 			d = _dis;
 		}
 	}
-
+	
 	 // Eye Lasering:
 	if(eye_laser_delay > 0){
 		eye_laser_delay -= current_time_scale;
@@ -1579,7 +1680,7 @@
 			eye_laser_delay = random_range(30, 150);
 		}
 	}
-
+	
 	 // Eyes:
 	eye_dir += eye_dir_speed * right * current_time_scale;
 	eye_dir_speed -= (eye_dir_speed * 0.1) * current_time_scale;
@@ -1588,11 +1689,11 @@
 			_dir = image_angle + eye_dir + ((360 / array_length(eye)) * i),
 			_x = posx + hspeed_raw + lengthdir_x(_dis * image_xscale, _dir),
 			_y = posy + vspeed_raw + lengthdir_y(_dis * image_yscale, _dir);
-
+			
 		with(eye[i]){
 			x = _x;
 			y = _y;
-
+			
 			 // Look at Player:
 			if(other.eye_laser <= 0 && !instance_exists(my_laser)){
 				var _seen = false;
@@ -1603,12 +1704,12 @@
 				}
 				else dir += sin((current_frame) / 20) * 1.5;
 			}
-
+			
 			 // Blinking:
 			if(blink || (other.eye_laser > 0 && other.eye_laser_delay > 0)){
 				var n = sprite_get_number(spr.PitSquidEyelid) - 1;
 				blink_img += other.image_speed * (instance_exists(my_laser) ? 0.5 : 1) * current_time_scale;
-
+				
 				 // Gonna Laser:
 				if(other.eye_laser > 0){
 					var _dir = point_direction(other.posx, other.posy, x, y);
@@ -1628,7 +1729,7 @@
 						}
 					}
 				}
-
+				
 				 // End Blink:
 				if(blink_img >= n){
 					blink_img = n;
@@ -1637,14 +1738,14 @@
 					}
 				}
 			}
-
+			
 			else{
 				blink_img = max(blink_img - other.image_speed, 0);
-
+				
 				 // Eye Lasers:
 				if(other.eye_laser > 0){
 					dis -= dis * 0.1 * current_time_scale;
-
+					
 					if(!instance_exists(my_laser)){
 						with(other){
 							other.my_laser = enemy_shoot_ext(other.x, other.y, "QuasarBeam", _dir, 0);
@@ -1662,7 +1763,7 @@
 					}
 					with(my_laser) shrink_delay = 4;
 				}
-
+				
 				 // Blink:
 				if(blink_img <= 0){
 					if(chance_ct(1, (_seen ? 150 : 100))){
@@ -1670,7 +1771,7 @@
 					}
 				}
 			}
-
+			
 			 // Lasering:
 			if(instance_exists(my_laser)){
 				_eyeDisGoal = -4;
@@ -1692,7 +1793,7 @@
 			}*/
 		}
 	}
-
+	
 	 // Spit:
 	if(spit > 0){
 		_eyeDisGoal = 8;
@@ -1709,19 +1810,19 @@
 			}
 		}
 	}
-
+	
 	 // Bite:
 	if(bite > 0){
 		_eyeDisGoal = 8;
-
+		
 		var	_spr = spr_bite,
 			_img = ((1 - bite) * sprite_get_number(_spr));
-
+			
 		 // Finish chomp at top of pit:
 		if(_img < 6 || _img >= 8 || (pit_height > 0.5 && (eye_laser <= 0 || eye_laser_delay <= 0))){
 			bite -= (image_speed_raw / sprite_get_number(_spr));
 		}
-
+		
 		 // Bite Time:
 		if(in_range(_img, 8, 9)){
 			if(pit_height > 0.5){
@@ -1736,7 +1837,7 @@
 				}
 				mask_index = mskNone;
 			}
-
+			
 			 // Chomp FX:
 			if(_img - image_speed_raw < 8){
 				sound_play_pitchvol(snd_mele, 0.8 + orandom(0.1), 0.8);
@@ -1745,9 +1846,9 @@
 			}
 		}
 	}
-
+	
 	eye_dis += ((_eyeDisGoal - eye_dis) / 5) * current_time_scale;
-
+	
 	 // Death Taunt:
 	if(tauntdelay > 0 && !instance_exists(Player)){
 		tauntdelay -= current_time_scale;
@@ -1761,21 +1862,21 @@
 			sound_play_pitchvol(sndNothingGenerators, 0.4, 0.4);
 		}
 	}
-
+	
 #define PitSquid_end_step
 	x = 0;
 	y = 0;
-
+	
 	var	_xprev = posx,
 		_yprev = posy;
-
+		
 	posx += hspeed_raw;
 	posy += vspeed_raw;
-
+	
 	 // Collisions:
 	if(pit_height > 0.5){
 		mask_index = mskReviveArea;
-
+		
 		 // Wall Collision:
 		if(place_meeting(posx, posy - 16, Wall)){
 			speed *= 0.8;
@@ -1786,23 +1887,23 @@
 			if(!place_meeting(posx + hspeed_raw, posy - 16,              Wall)) posx += hspeed_raw;
 			if(!place_meeting(posx,              posy - 16 + vspeed_raw, Wall)) posy += vspeed_raw;
 		}
-
+		
 		 // Floor Collision:
 		if(pit_get(posx, posy - 16)){
 			var f = instances_meeting(posx, posy - 16, FloorPitless);
 			if(array_length(f) > 0){
 				posx = _xprev;
 				posy = _yprev;
-
+				
 				if(array_length(instances_meeting(posx + hspeed_raw, posy - 16, f)) > 0) hspeed_raw *= -1;
 				if(array_length(instances_meeting(posx, posy - 16 + vspeed_raw, f)) > 0) vspeed_raw *= -1;
 				speed *= 0.8;
-
+				
 				posx += hspeed_raw;
 				posy += vspeed_raw;
 			}
 		}
-
+		
 		 // Destroy Stuff:
 		if(pit_height >= 1){
 			var	_xsc = image_xscale,
@@ -1824,7 +1925,7 @@
 					}
 				}
 			}
-	
+			
 			 // Clear Floors:
 			if(place_meeting(posx, posy - 16, Floor)){
 				var _floors = FloorPitless;
@@ -1835,14 +1936,14 @@
 						styleb = true;
 						sprite_index = spr.FloorTrenchB;
 						mod_script_call("area", "trench", "area_setup_floor");
-
+						
 						 // Effects:
 						sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
 						for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
 							for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
 								var	_dir = point_direction(other.posx, other.posy - 16, _x + 8, _y + 8),
 									_spd = 8 - (point_distance(other.posx, other.posy - 16, _x + 8, _y + 8) / 16);
-
+									
 								if(other.intro && chance(2, 3)){
 									with(obj_create(_x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
 										zspeed = _spd;
@@ -1860,7 +1961,7 @@
 						/*repeat(sprite_width / 8){
 							instance_create(x + random(32), y + random(32), Debris);
 						}*/
-
+						
 						 // TopSmall Fix:
 						if(place_meeting(x, y, TopSmall)){
 							with(TopSmall) if(place_meeting(x, y, other)){
@@ -1870,7 +1971,7 @@
 					}
 				}
 			}
-
+			
 			if(intro_pitbreak){
 				intro_pitbreak = false;
 				_xsc /= 1.5;
@@ -1880,10 +1981,10 @@
 			image_xscale = _xsc;
 			image_yscale = _ysc;
 		}
-
+		
 		mask_index = mskNone;
 	}
-
+	
 #define PitSquid_alrm1
 	alarm1 = 20 + irandom(30);
 	
@@ -1892,18 +1993,18 @@
 			if(intro || pit_height < 1){
 				var	_targetDir = point_direction(posx, posy, target.x, target.y),
 					_targetDis = point_distance(posx, posy, target.x, target.y);
-		
+					
 				if(_targetDis >= 96 || pit_height < 1 || chance(1, 2)){
 					if(chance(pit_height, 2) || !intro){
 						motion_add(_targetDir, 1);
 						sound_play_pitchvol(sndRoll, 0.2 + random(0.2), 2)
 						sound_play_pitchvol(sndFishRollUpg, 0.4, 0.2);
 					}
-		
+					
 					 // In Pit:
 					if(sink){
 						alarm1 = 20 + random(10);
-		
+						
 						direction = _targetDir;
 						speed = max(speed, 2.4);
 						if(!intro) speed = min(speed, 3);
@@ -1946,13 +2047,13 @@
 						}
 						with(f) x += 10000;
 					}
-		
+					
 					 // Sink into pit:
 					if(!_targetSeen && eye_laser_delay <= 0){
 						sink = true;
 						alarm1 = 20;
 					}
-			
+					
 					 // Spawn Tentacles:
 					else{
 						var	_ang = random(360),
@@ -1984,7 +2085,7 @@
 	
 #define PitSquid_alrm2
 	alarm2 = 40 + random(20);
-
+	
 	if(pit_height >= 1 && intro){
 		
 		 // Electroplasma Volley:
@@ -2154,6 +2255,11 @@
 
 
 #define PitSquidArm_create(_x, _y)
+	/*
+		PitSquid's tentacles, when hurt they deal damage to PitSquid
+		Do an epic plasma bomb attack
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		spr_idle = spr.TentacleIdle;
@@ -2547,6 +2653,10 @@
 
 
 #define PitSquidBomb_create(_x, _y)
+	/*
+		Used by PitSquidArm to create a trail of plasma explosions
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		hitid = -1;
@@ -2669,6 +2779,10 @@
 
 
 #define PitSquidDeath_create(_x, _y)
+	/*
+		PitSquid's death animation, creates bubble explosions and pickups and sinks into the pit
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		spr_bite = spr.PitSquidMawBite;
@@ -2688,7 +2802,7 @@
 		
 		return id;
 	}
-
+	
 #define PitSquidDeath_step
 	with(instances_matching_ge(Corpse, "alarm0", 0)) alarm0 = -1;
 	
@@ -2762,6 +2876,42 @@
 
 
 #define QuasarBeam_create(_x, _y)
+	/*
+		Bendy lasers bro, they bend
+		
+		Vars:
+			sprite_index   - The main laser beam sprite
+			spr_strt       - The start of the laser sprite
+			spr_stop       - The end of the laser sprite
+			loop_snd       - The index of the beam's looping sound, used to stop the sound when destroyed
+			roids          - Created by steroids' secondary weapon, true/false
+			hit_time       - Custom frame count for custom invincibility frames system
+			hit_list       - LWO of hit enemies and what 'hit_time' they were hit at
+			blast_hit      - Initial hit, true/false, does more damage and effects
+			flash_frame    - Visually flash white, used to give it more impact
+			line_seg       - Array of LWOs containing the laser's drawing information
+			line_dis       - The beam's current max possible hitscan distance
+			line_dis_max   - The beam's max possible hitscan distance
+			line_dir_turn  - Rotation speed, adds to 'image_angle'
+			line_dir_fric  - Multiplicative friction for 'line_dir_turn' and 'bend'
+			line_dir_goal  - The direction to add 'line_dir_turn' towards, keep undefined for no goal
+			turn_max       - Max rotation speed
+			turn_factor    - Rotation speed increasement factor
+			bend           - How much the beam should bend
+			bend_fric      - Multiplicative friction for 'bend'
+			shrink_delay   - Delay in frames before shrinking
+			shrink         - Shrink speed, subtracted from image_xscale/image_yscale
+			scale_goal     - image_xscale/image_yscale to reach when not shrinking
+			follow_creator - Follow the 'creator', true/false
+			offset_dis     - Offset towards 'image_angle' when following the creator
+			hold_x/hold_y  - Force this position, keep undefined to not hold
+			ring           - Is a QuasarRing, true/false
+			ring_size      - Scale of ring, multiplier (cause I don't wanna figure out the epic math)
+			ring_lasers    - Array of QuasarBeams created from being a QuasarRing
+			wave           - Ticks up every frame, used for visual stuff
+			alarm0         - Creates QuasarBeams for the QuasarRing variant
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.QuasarBeam;
@@ -2769,7 +2919,7 @@
 		spr_stop = spr.QuasarBeamEnd;
 		image_speed = 0.5;
 		depth = -1.5;
-
+		
 		 // Vars:
 		friction = 0.02;
 		mask_index = msk.QuasarBeam;
@@ -2780,30 +2930,30 @@
 		damage = 12;
 		force = 4;
 		typ = 0;
-		bend = 0;
 		loop_snd = -1;
 		hit_time = 0;
 		hit_list = {};
-		line_seg = [];
-		line_dis = 0;
-		line_dir_turn = 0;
-		line_dir_goal = null;
 		blast_hit = true;
 		flash_frame = current_frame + 2;
-		follow_creator = true;  // Follow Creator
-		offset_dis     = 0;     // Offset from Creator Towards image_angle
-		bend_fric      = 0.3;   // Multiplicative Friction for Line Bending
-		line_dir_fric  = 1/4;   // Multiplicative Friction for line_dir_turn
-		line_dis_max   = 300;   // Max Possible Line Length
-		turn_max       = 8;     // Max Rotate Speed
-		turn_factor    = 1/8;   // Rotation Speed Increase Factor
-		shrink_delay   = 0;     // Frames Until Shrink
-		shrink         = 0.05;  // Subtracted from Line Size
-		scale_goal     = 1;     // Size to Reach When shrink_delay > 0
-		hold_x         = null;  // Stay at this X
-		hold_y         = null;  // Stay at this Y
-		ring           = false; // Take Ring Form
-		ring_size      = 1;     // Scale of ring, multiplier cause I don't wanna figure out the epic math
+		line_seg = [];
+		line_dis = 0;
+		line_dis_max = 300;
+		line_dir_turn = 0;
+		line_dir_fric = 1/4;
+		line_dir_goal = null;
+		turn_max = 8;
+		turn_factor = 1/8;
+		bend = 0;
+		bend_fric = 0.3;
+		shrink_delay = 0;
+		shrink = 0.05;
+		scale_goal = 1;
+		follow_creator = true;
+		offset_dis = 0;
+		hold_x = null;
+		hold_y = null;
+		ring = false;
+		ring_size = 1;
 		ring_lasers = [];
 		wave = random(100);
 		
@@ -2811,7 +2961,7 @@
 		
 		return id;
 	}
-
+	
 #define QuasarBeam_quick_fix
 	on_end_step = [];
 	
@@ -2923,7 +3073,7 @@
 		y = hold_y + lengthdir_y(o, image_angle);
 		yprevious = y;
 	}
-
+	
 	 // Rotation:
 	line_dir_turn -= line_dir_turn * line_dir_fric * current_time_scale;
 	if(line_dir_goal != null){
@@ -2936,11 +3086,11 @@
 	line_dir_turn = clamp(line_dir_turn, -turn_max, turn_max);
 	image_angle += line_dir_turn * current_time_scale;
 	image_angle = (image_angle + 360) % 360;
-
+	
 	 // Bending:
 	bend -= (bend * bend_fric) * current_time_scale;
 	bend -= line_dir_turn * current_time_scale;
-
+	
 	 // Line:
 	var	_lineAdd = 20,
 		_lineWid = 16,
@@ -3057,7 +3207,7 @@
 				}
 			}
 		}
-
+		
 		 // Wall Collision:
 		else{
 			blast_hit = false;
@@ -3073,7 +3223,7 @@
 				}
 			}
 		}
-
+		
 		 // Hit Enemies:
 		if(place_meeting(_cx, _cy, hitme)){
 			with(instances_meeting(_cx, _cy, _enemies)){
@@ -3089,25 +3239,25 @@
 								image_yscale = other.image_yscale;
 								depth = other.depth - 1;
 							}
-	
+							
 							 // Damage:
 							if(!ring) direction = _dir;
 							QuasarBeam_hit();
 						}
-
+						
 						 // Hit the BRAKES:
 						if(instance_is(creator, Player)){
 							if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
 								line_dis = _dis;
 							}
 						}
-
+						
 						blast_hit = false;
 					}
 				}
 			}
 		}
-
+		
 		 // Effects:
 		if(_seen && random(160 / _lineAdd) < current_time_scale){
 			if(position_meeting(_cx, _cy, Floor)){
@@ -3119,14 +3269,14 @@
 				}
 			}
 		}
-
+		
 		 // Move:
 		_lx = _cx;
 		_ly = _cy;
 		_cx += lengthdir_x(_lineAdd, _dir);
 		_cy += lengthdir_y(_lineAdd, _dir);
 		_dis += _lineAdd;
-
+		
 		 // Turn:
 		if(ring){
 			_dir += (_lineAdd / ring_size);
@@ -3134,7 +3284,7 @@
 		else{
 			_dir = clamp(_dir + (bend / (48 / _lineAdd)), _lineDir - 90, _lineDir + 90);
 		}
-
+		
 		 // End:
 		if((!ring && _dis >= line_dis) || (ring && abs(_dir - _lineDir) > 360)){
 			if(_dis >= line_dis_max){
@@ -3357,6 +3507,10 @@
 
 
 #define QuasarRing_create(_x, _y)
+	/*
+		The cannon variant of QuasarBeams, breaks walls and emits QuasarBeams
+	*/
+	
 	with(obj_create(_x, _y, "QuasarBeam")){
 		 // Visual:
 		spr_strt = -1;
@@ -3378,7 +3532,165 @@
 	}
 	
 	
+#define TeslaCoil_create(_x, _y)
+	/*
+		A small lightning ball that follows its creator and arcs lightning to the nearest enemy
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = sprLightningBall;
+		image_speed = 0.4 + orandom(0.1);
+		image_xscale = 0.4;
+		image_yscale = image_xscale;
+		
+		 // Vars:
+		team = -1;
+		creator = noone;
+		creator_offx = 17;
+		creator_offy = 2;
+		num = 3;
+		wave = random(1000);
+		time = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
+		target = noone;
+		target_x = x;
+		target_y = y;
+		dist_max = 96;
+		roids = false;
+		bat = false;
+		
+		 // Alarms:
+		alarm0 = 1;
+		
+		return id;
+	}
+
+#define TeslaCoil_alrm0
+	 // Find Targetable Enemies:
+	var	_maxDist = dist_max,
+		_target = [],
+		_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
+		
+	with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
+		if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
+			if(_teamPriority == null || team > _teamPriority){
+				_teamPriority = team;
+				target = [];
+			}
+			
+			array_push(_target, id);
+		}
+	}
+	
+	 // Random Arc:
+	if(array_length(_target) <= 0){
+		var	_dis = _maxDist * random_range(0.2, 0.8),
+			_dir = random(360);
+			
+		do{
+			target_x = x + lengthdir_x(_dis, _dir);
+			target_y = y + lengthdir_y(_dis, _dir);
+			_dis -= 4;
+		}
+		until (_dis < 12 || !collision_line(x, y, target_x, target_y, Wall, false, false));
+	}
+	
+	 // Enemy Arc:
+	else{
+		target = instance_random(_target);
+		target_x = target.x;
+		target_y = target.y;
+		time *= 1.5;
+	}
+	
+#define TeslaCoil_step
+	wave += current_time_scale;
+	
+	if(instance_exists(creator)){
+		 // Follow Creator:
+		if(instance_exists(creator)){
+			var	_xdis = creator_offx - (variable_instance_get(creator, (roids ? "bwkick" : "wkick"), 0) / 3),
+				_xdir = (("gunangle" in creator) ? creator.gunangle : direction),
+				_ydis = creator_offy * variable_instance_get(creator, "right", 1),
+				_ydir = _xdir - 90;
+				
+			x = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
+			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
+			if(roids) y -= 4;
+		}
+
+		 // Targeting:
+		if(instance_exists(target)){
+			with(target){
+				other.target_x = x + orandom(2);
+				other.target_y = y + orandom(2);
+			}
+		}
+		else if(target != noone){
+			target = noone;
+			time = min(time, 8);
+		}
+		
+		 // Arc Lightning:
+		var	_tx = target_x,
+			_ty = target_y,
+			_bat = bat;
+			
+		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
+			with(creator){
+				var _inst = lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
+				if(_bat) with(_inst) sprite_index = spr.BatLightning;
+			}
+			
+			 // Hit FX:
+			if(!place_meeting(_tx, _ty, LightningHit)){
+				with(instance_create(_tx, _ty, LightningHit)){
+					image_speed = 0.2 + random(0.2);
+					
+					 // Bat Effect:
+					if(_bat) sprite_index = spr.BatLightningHit;
+				}
+			}
+		}
+		
+		 // Effects:
+		view_shake_max_at(x, y, 3);
+		var _kick = (roids ? "bwkick" : "wkick");
+		if(_kick in creator){
+			variable_instance_set(creator, _kick, 3);
+		}
+		
+		 // Death Timer:
+		if(time > 0){
+			time -= current_time_scale;
+			if(time <= 0) instance_destroy();
+		}
+	}
+	else instance_destroy();
+	
+#define TeslaCoil_end_step
+	if(bat && instance_is(creator, hitme)){
+		var c = creator;
+		with(instances_matching_le(target, "my_health", 0)){
+			with(c) if(my_health < maxhealth){
+				my_health = min(my_health + 1, maxhealth);
+				
+				 // Effects:
+				instance_create(x, y, HealFX);
+				
+				 // Sounds:
+				sound_play_pitchvol(sndBloodlustProc, 0.8 + random(0.4), 1.0);
+				sound_play_pitchvol(sndLightningCrystalHit, 0.4 + random(0.4), 1.2);
+			}
+		}
+	}
+	
+	
 #define TopDecalWaterMine_create(_x, _y)
+	/*
+		Used for Trench's water mine top decal, creates a water mine when the decal is destroyed
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		mask_index = spr.TopDecalTrenchMine;
 		creator = noone;
@@ -3391,7 +3703,7 @@
 		y = creator.y;
 	}
 	else{
-		if(place_meeting(x, y, Floor)){
+		if(place_meeting(x, y, FloorExplo)){
 			 // Mine:
 			with(instance_create(x, y, WaterMine)){
 				my_health = 0;
@@ -3407,6 +3719,10 @@
 	}
 	
 #define TrenchFloorChunk_create(_x, _y)
+	/*
+		The z-axis chunks created when PitSquid smashes through floors
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.FloorTrenchBreak;
@@ -3500,6 +3816,10 @@
 
 
 #define Vent_create(_x, _y)
+	/*
+		Bro it's a bubble prop, I love it
+	*/
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.VentIdle;
@@ -3539,6 +3859,10 @@
 
 
 #define WantEel_create(_x, _y)
+	/*
+		An Eel waiting to come out of the pit, he's waiting
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		sprite = spr.WantEel;
@@ -3676,36 +4000,15 @@
 	 // Watch Out:
 	if(in_distance(target, 96)) instance_create(xpos, ypos, AssassinNotice);
 	
-
-#define WantPitSquid_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		
-		
-		return id;
-	}
 	
-#define WantPitSquid_step
-	if(!instance_exists(enemy) && instance_exists(Player)){
-		with(instance_random(Player)){
-			var	l = random_range(128, 256),
-				d = random(360);
-				
-			obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PitSquid");
-		}
-		portal_poof();
-		instance_destroy();
-	}
-
-
 /// Pits Yo
 #define pit_get(_x, _y)
 	return global.pit_grid[# _x / 16, _y / 16];
-
+	
 #define pit_set(_x, _y, _bool)
 	mod_script_call_nc("area", "trench", "pit_set", _x, _y, _bool);
-
-
+	
+	
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
@@ -3742,7 +4045,7 @@
 	
 	 // Lightning Discs:
 	with(instances_matching(CustomProjectile, "name", "LightningDisc")) if(visible){
-		scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+		scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
 	}
 	
 	 // Quasar Beams:

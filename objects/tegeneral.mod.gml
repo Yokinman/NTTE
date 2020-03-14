@@ -41,6 +41,23 @@
 #macro TopObjectSearchMap global.top_object_search_map
 
 #define AlertIndicator_create(_x, _y)
+	/*
+		A cool alert effect used to quickly draw the Player's attention
+		Generally you should use 'scrAlert()' to create alert indicators
+		
+		Vars:
+			sprite_index      - The main sprite
+			spr_alert         - The alert/exclamation's sprite
+			alert_col         - The alert/exclamation's color
+			alert_x/alert_y   - The alert/exclamation's x/y offset from the main sprite
+			target            - The instance to follow, use 'noone' to stay still
+			target_x/target_y - The x/y offset used when following its target
+			alarm0            - How long before blinking out, set -1 to never blink out
+			blink             - How many times it should blink before destroying itself
+			flash             - How many frames its flash-in effect should take
+			snd_flash         - The sound that plays once its 'flash' timer hits 0
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.BanditAlert;
@@ -101,6 +118,10 @@
 
 
 #define BigDecal_create(_x, _y)
+	/*
+		A giant version of the TopPot/TopDecal object
+	*/
+	
 	var a = string(GameCont.area);
 	if(lq_exists(spr.BigTopDecal, a)){
 		with(instance_create(floor(_x / 16) * 16, floor(_y / 16) * 16, CustomObject)){
@@ -490,8 +511,12 @@
 	
 	
 #define BoneArrow_create(_x, _y)
-	var	_shotgunShoulders	= skill_get(mut_shotgun_shoulders),
-		_boltMarrow 		= skill_get(mut_bolt_marrow);
+	/*
+		A projectile used for the bone scythe's ranged modes
+	*/
+	
+	var	_shotgunShoulders = skill_get(mut_shotgun_shoulders),
+		_boltMarrow       = skill_get(mut_bolt_marrow);
 		
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -663,7 +688,7 @@
 		var _damage = damage + ((damage_falloff > current_frame) * 2);
 		projectile_hit(other, _damage, force, direction);
 	}
-
+	
 #define scrBoneDust(_x, _y)
 	var c = [
 		make_color_rgb(208, 197, 180),
@@ -679,6 +704,10 @@
 
 
 #define BoneFX_create(_x, _y)
+	/*
+		An effect used when swapping the bone scythe's mode
+	*/
+	
 	with(instance_create(_x, _y, Shell)){
 		 // Visual:
 		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
@@ -724,6 +753,10 @@
 
 
 #define BoneSlash_create(_x, _y)
+	/*
+		A scythe slash, creates BonePickups from kills
+	*/
+	
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.BoneSlashLight;
@@ -783,7 +816,7 @@
 		with(other) if(my_health <= 0){
 			var	_max = round(maxhealth / power(0.8, skill_get(mut_scarier_face))),
 				_num = ceil(maxhealth / 5);
-
+				
 			if(_num > 0){
 				if(
 					!instance_is(self, prop)
@@ -853,6 +886,11 @@
 
 
 #define BuriedVault_create(_x, _y)
+	/*
+		Creates a vault buried in the wall with cool treasures
+		Uncovers itself if any of its layout comes into contact with normal Floors
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		var	_w = 6,
 			_h = 4;
@@ -1142,6 +1180,10 @@
 	
 	
 #define CustomBullet_create(_x, _y)
+	/*
+		A Bullet1-type projectile that allows for extra customization
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprBullet1;
@@ -1170,6 +1212,10 @@
 	
 	
 #define CustomFlak_create(_x, _y)
+	/*
+		A FlakBullet/EFlakBullet-type projectile that allows for extra customization
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprFlakBullet;
@@ -1206,7 +1252,7 @@
 	image_speed = (speed / 12);
 
 	 // Explode:
-	if(speed <= 0 || place_meeting(x, y, Explosion)){
+	if(speed == 0 || place_meeting(x, y, Explosion)){
 		instance_destroy();
 	}
 	
@@ -1265,6 +1311,10 @@
 	
 	
 #define CustomShell_create(_x, _y)
+	/*
+		A Bullet2/EnemyBullet3-type projectile that allows for extra customization
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprBullet2;
@@ -1336,6 +1386,10 @@
 
 
 #define CustomPlasma_create(_x, _y)
+	/*
+		A PlasmaBall/PlasmaBig/PlasmaHuge-type projectile that allows for extra customization
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprPlasmaBall;
@@ -1374,7 +1428,7 @@
 	view_shake_max_at(x, y, floor(_width / 24));
 		
 	 // Explode:
-	if(sprite_width < _minWidth || (friction > 0 && speed <= 0)){
+	if(sprite_width < _minWidth || (friction > 0 && speed == 0)){
 		instance_destroy();
 	}
 	
@@ -1491,6 +1545,11 @@
 	
 	
 #define FlakBall_create(_x, _y)
+	/*
+		A projectile that groups a bunch of other projectiles into a flak ball
+		Used for merged weapon flak cannons
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = -1;
@@ -1736,7 +1795,7 @@
 	}
 
 	 // Explode:
-	if(speed <= 0 || place_meeting(x + hspeed, y + vspeed, Wall)) instance_destroy();
+	if(speed == 0 || place_meeting(x + hspeed, y + vspeed, Wall)) instance_destroy();
 
 #define FlakBall_draw
 	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
@@ -1803,6 +1862,10 @@
 
 
 #define Igloo_create(_x, _y)
+	/*
+		Buildings for the Frozen City bro, seals live here
+	*/
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		var _front = chance(1, 3);
@@ -1898,6 +1961,11 @@
 	
 	
 #define OrchidSkill_create(_x, _y)
+	/*
+		Manages the pet Orchid's temporary mutation
+		Automatically decides a mutation, but also allows you to manually set what mutation it gives
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		color1 = make_color_rgb(255, 221, 0);
@@ -2155,6 +2223,18 @@
 	
 	
 #define ParrotChester_create(_x, _y)
+	/*
+		Follows a chestprop until it's open and then creates ParrotFeathers to give feather ammo to the nearest Player
+		
+		Ex:
+			with(GiantWeaponChest){
+				with(obj_create(x, y, "ParrotChester")){
+					creator = other;
+					num = 96;
+				}
+			}
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
 		creator = noone;
@@ -2208,6 +2288,12 @@
 	
 	
 #define ParrotFeather_create(_x, _y)
+	/*
+		A feather that homes in on its target and charms them
+		If their target is a Player then it will give them feather ammo instead of charming
+		Used for Parrot's active ability
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = sprChickenFeather;
@@ -2430,6 +2516,11 @@
 	
 	
 #define Pet_create(_x, _y)
+	/*
+		An NTTE pet object
+		Generally don't create this object manually, use 'pet_spawn()' to create pets
+	*/
+	
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		spr_idle = spr.PetParrotIdle;
@@ -3039,6 +3130,11 @@
 	
 	
 #define PetRevive_create(_x, _y)
+	/*
+		The death controller object for Pets
+		Handles the visuals and pickup indicator for dead Pets
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		depth = -5;
@@ -3112,6 +3208,10 @@
 	
 	
 #define PetWeaponBecome_create(_x, _y)
+	/*
+		The pet weapon boss chest, press E to fight bro
+	*/
+	
 	with(instance_create(_x, _y, chestprop)){
 		 // Visual:
 		sprite_index = spr.PetWeaponChst;
@@ -3157,6 +3257,12 @@
 	
 	
 #define PetWeaponBoss_create(_x, _y)
+	/*
+		The pet weapon boss bro
+		Has an AI variant for each weapon type, with 3 possible weapons for each variant (1 standard, 1 loop, and 1 rare)
+		Becomes a pet when killed
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
@@ -3591,6 +3697,11 @@
 	
 	
 #define PortalBullet_create(_x, _y)
+	/*
+		A projectile that teleports its creator to itself when destroyed
+		Also teleports hitmes that it damages to its creator's position, basically swapping their positions
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		spr_spwn = spr.PortalBulletSpawn;
@@ -3741,6 +3852,10 @@
 
 
 #define PortalGuardian_create(_x, _y)
+	/*
+		A rare palace enemy, shoots a projectile that swaps positions with itself and whatever it hit
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		spr_idle      = spr.PortalGuardianIdle;
@@ -3802,9 +3917,8 @@
 			sound_play_hit_ext(sndGuardianFire, 1.5 + orandom(0.2), 2);
 		}
 	}
-	else if((sprite_index != spr_disappear && sprite_index != spr_hurt) || anim_end){
-		if(speed <= 0) sprite_index = spr_idle;
-		else sprite_index = spr_walk;
+	else if(sprite_index != spr_disappear || anim_end){
+		sprite_index = enemy_sprite;
 	}
 	
 	 // FX:
@@ -3864,10 +3978,18 @@
 	
 	
 #define PortalPrevent_create(_x, _y)
+	/*
+		Creates a becomenemy to prevent Corpses from creating Portals
+	*/
+	
 	return instance_create(_x, _y, becomenemy);
 	
 	
 #define ReviveNTTE_create(_x, _y)
+	/*
+		Used to transfer custom NTTE vars through a Player's Revive object
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
 		persistent = true;
@@ -3912,157 +4034,12 @@
 	}
 	
 	
-#define TeslaCoil_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index = sprLightningBall;
-		image_speed = 0.4 + orandom(0.1);
-		image_xscale = 0.4;
-		image_yscale = image_xscale;
-
-		 // Vars:
-		team = -1;
-		creator = noone;
-		creator_offx = 17;
-		creator_offy = 2;
-		num = 3;
-		wave = random(1000);
-		time = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
-		target = noone;
-		target_x = x;
-		target_y = y;
-		dist_max = 96;
-		roids = false;
-		bat = false;
-
-		 // Alarms:
-		alarm0 = 1;
-		
-		return id;
-	}
-
-#define TeslaCoil_alrm0
-	 // Find Targetable Enemies:
-	var	_maxDist = dist_max,
-		_target = [],
-		_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
-
-	with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
-		if(distance_to_point(other.x, other.y) < _maxDist && in_sight(other)){
-			if(_teamPriority == null || team > _teamPriority){
-				_teamPriority = team;
-				target = [];
-			}
-
-			array_push(_target, id);
-		}
-	}
-
-	 // Random Arc:
-	if(array_length(_target) <= 0){
-		var	_dis = _maxDist * random_range(0.2, 0.8),
-			_dir = random(360);
-
-		do{
-			target_x = x + lengthdir_x(_dis, _dir);
-			target_y = y + lengthdir_y(_dis, _dir);
-			_dis -= 4;
-		}
-		until (_dis < 12 || !collision_line(x, y, target_x, target_y, Wall, false, false));
-	}
-
-	 // Enemy Arc:
-	else{
-		target = instance_random(_target);
-		target_x = target.x;
-		target_y = target.y;
-		time *= 1.5;
-	}
-
-#define TeslaCoil_step
-	wave += current_time_scale;
-
-	if(instance_exists(creator)){
-		 // Follow Creator:
-		if(instance_exists(creator)){
-			var	_xdis = creator_offx - (variable_instance_get(creator, (roids ? "bwkick" : "wkick"), 0) / 3),
-				_xdir = (("gunangle" in creator) ? creator.gunangle : direction),
-				_ydis = creator_offy * variable_instance_get(creator, "right", 1),
-				_ydir = _xdir - 90;
-				
-			x = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
-			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
-			if(roids) y -= 4;
-		}
-
-		 // Targeting:
-		if(instance_exists(target)){
-			with(target){
-				other.target_x = x + orandom(2);
-				other.target_y = y + orandom(2);
-			}
-		}
-		else if(target != noone){
-			target = noone;
-			time = min(time, 8);
-		}
-
-		 // Arc Lightning:
-		var	_tx = target_x,
-			_ty = target_y,
-			_bat = bat;
-
-		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
-			with(creator){
-				var _inst = lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
-				if(_bat) with(_inst) sprite_index = spr.BatLightning;
-			}
-
-			 // Hit FX:
-			if(!place_meeting(_tx, _ty, LightningHit)){
-				with(instance_create(_tx, _ty, LightningHit)){
-					image_speed = 0.2 + random(0.2);
-					
-					 // Bat Effect:
-					if(_bat) sprite_index = spr.BatLightningHit;
-				}
-			}
-		}
-
-		 // Effects:
-		view_shake_max_at(x, y, 3);
-		var _kick = (roids ? "bwkick" : "wkick");
-		if(_kick in creator){
-			variable_instance_set(creator, _kick, 3);
-		}
-		
-		 // Death Timer:
-		if(time > 0){
-			time -= current_time_scale;
-			if(time <= 0) instance_destroy();
-		}
-	}
-	else instance_destroy();
-
-#define TeslaCoil_end_step
-	if(bat && instance_is(creator, hitme)){
-		var c = creator;
-		with(instances_matching_le(target, "my_health", 0)){
-			with(c) if(my_health < maxhealth){
-				my_health = min(my_health + 1, maxhealth);
-				
-				 // Effects:
-				instance_create(x, y, HealFX);
-				
-				 // Sounds:
-				sound_play_pitchvol(sndBloodlustProc, 0.8 + random(0.4), 1.0);
-				sound_play_pitchvol(sndLightningCrystalHit, 0.4 + random(0.4), 1.2);
-			}
-		}
-	}
-	
-	
 #define TopDecal_create(_x, _y)
+	/*
+		Creates the current area's TopDecal object with the current area's sprTopPot sprite variant
+		If the area doesn't have a sprTopPot sprite variant then nothing is created
+	*/
+	
 	var _area = GameCont.area;
 	
 	 // Custom:
@@ -4105,6 +4082,11 @@
 	
 	
 #define TopObject_create(_x, _y)
+	/*
+		Creates a top object controller that gives an object walltop z-axis powers
+		Generally don't create this object manually, use 'top_create()' to create top objects
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		spr_shadow = -1;
@@ -4668,10 +4650,14 @@
 	
 	
 #define UnlockCont_create(_x, _y)
+	/*
+		Used to handle NTTE's custom unlock splat system
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		depth = UberCont.depth - 1;
-
+		
 		 // Vars:
 		persistent = true;
 		unlock = [];
@@ -4691,7 +4677,7 @@
 		
 		return id;
 	}
-
+	
 #define UnlockCont_step
 	if(instance_exists(Menu)){
 		instance_destroy();
@@ -4699,7 +4685,7 @@
 	}
 	
 	depth = UberCont.depth - 1;
-
+	
 	 // Animate Corner Popup:
 	if(splash_delay > 0) splash_delay -= current_time_scale;
 	else{
@@ -4727,7 +4713,7 @@
 		}
 		splash_image += clamp(_img - splash_image, -1, 1) * current_time_scale;
 	}
-
+	
 	 // Game Over Splash:
 	if(instance_exists(UnlockScreen)) unlock_delay = 1;
 	else if(!instance_exists(Player)){
@@ -4808,7 +4794,7 @@
 			instance_destroy();
 		}
 	}
-
+	
 #define UnlockCont_draw
 	draw_set_projection(0);
 
@@ -4910,40 +4896,49 @@
 
 
 #define VenomPellet_create(_x, _y)
+	/*
+		A projectile equivalent to EnemyBullet2, but has friction and destroys itself once not moving
+	*/
+	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprScorpionBullet;
 		depth = -3;
-
+		
 		 // Vars:
 		mask_index = mskEnemyBullet1;
 		friction = 0.75;
 		damage = 2;
 		force = 4;
 		typ = 2;
-
+		
 		return id;
 	}
-
+	
 #define VenomPellet_step
-	if(speed <= 0) instance_destroy();
-
+	if(speed == 0) instance_destroy();
+	
 #define VenomPellet_anim
 	if(instance_exists(self)){
 		image_speed = 0;
 		image_index = image_number - 1;
 	}
-
+	
 #define VenomPellet_hit
 	if(projectile_canhit_melee(other)){
 		projectile_hit_push(other, damage, force);
 	}
-
+	
 #define VenomPellet_destroy
 	instance_create(x, y, ScorpionBulletHit);
 	
 	
 #define WallDecal_create(_x, _y)
+	/*
+		Creates a Bones wall decal object with the current area's sprBones sprite variant
+		If the area doesn't have a sprBones sprite variant then nothing is created
+	*/
+	
 	var _area = GameCont.area;
 	
 	 // Custom:
@@ -4985,6 +4980,245 @@
 	}
 	
 	return noone;
+	
+	
+#define WallEnemy_create(_x, _y)
+	/*
+		Creates a wall-residing enemy that pops out of the wall when destroyed
+		Uses a TopPot/TopDecal object to handle collision and drawing
+		
+		Types:
+			Desert - Bandits
+			Caves  - Spiders
+	*/
+	
+	var	_area = GameCont.area,
+		_spr = -1;
+		
+	switch(_area){
+		case 1: // DESERT
+			_spr = spr.WallBandit;
+			break;
+			
+		case 4: // CRYSTAL CAVES
+			_spr = (position_meeting(_x, _y, Wall) ? spr.WallSpiderling : spr.WallSpiderlingTrans);
+			break;
+	}
+	
+	if(sprite_exists(_spr)){
+		with(instance_create(_x, _y, CustomObject)){
+			 // Vars:
+			area = _area;
+			special = false;
+			eyeblink = random(10000);
+			eyedir = 90;
+			
+			 // Top Decal:
+			target = instance_create(x, y, TopPot);
+			with(target){
+				sprite_index = _spr;
+				image_index = irandom(image_number - 1);
+				image_speed = 0;
+				
+				if(place_meeting(xstart, ystart, Wall) || !place_meeting(xstart, ystart, Floor)){
+					x = xstart;
+					y = ystart;
+				}
+			}
+			
+			 // Area-Specific:
+			switch(area){
+				
+				case 1: // DESERT
+					
+					 // Variation:
+					with(target) image_xscale = choose(-1, 1);
+					
+					break;
+					
+				case 4: // CRYSTAL CAVES
+					
+					 // No Orange Crystals:
+					with(instances_at(x, y, Wall)){
+						topindex = irandom(1);
+					}
+					
+					break;
+					
+			}
+			
+			return id;
+		}
+	}
+	
+	return noone;
+	
+#define WallEnemy_step
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y;
+		
+		switch(area){
+			
+			case 1: // DESERT
+				
+				eyeblink += current_time_scale;
+				
+				 // Lookin'
+				var	n = instance_nearest(x, y, Player),
+					_dir = 90;
+					
+				if(instance_exists(n) && n.visible && (point_distance(x, y, n.x, n.y) < 140 || !position_meeting(x, y, Wall))){
+					if(n.y < y - 8){
+						_dir = 270 + (30 * sin(eyeblink / 40));
+					}
+					else{
+						_dir = point_direction(x, y - 8, n.x, n.y);
+					}
+				}
+				
+				eyedir = angle_lerp(eyedir, _dir, 0.2 * current_time_scale);
+				eyedir = (eyedir + 360) % 360;
+				
+				 // Target Eye Control:
+				var	_num = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
+					_blink = ((eyeblink % 250) < 6 || (eyeblink % 300) < 6);
+					
+				with(target){
+					image_index = 0;
+					
+					 // Flinch:
+					if(distance_to_object(projectile) < 8){
+						other.eyeblink = -random_range(3, 6);
+					}
+					
+					 // Lookin'
+					else if(in_range(_num, 0, 1) && !_blink){
+						if(sign(image_xscale) < 0) _num = 1 - _num;
+						image_index = round(lerp(1, image_number - 1, _num));
+					}
+				}
+				
+				break;
+				
+			case 4: // CRYSTAL CAVES
+				
+				 // Sparkle:
+				if(special > 0 && chance_ct(special, 90)){
+					with(instance_create(x + orandom(12), y - 8 + orandom(12), CaveSparkle)){
+						sprite_index = spr.PetSparkle;
+						depth = -9;
+					}
+				}
+				
+				break;
+				
+		}
+	}
+	else instance_destroy();
+	
+#define WallEnemy_destroy
+	with(target) instance_destroy();
+	
+	if(position_meeting(x, y, FloorExplo)){
+		switch(area){
+			
+			case 1: // DESERT
+				
+				with(instance_create(x, y, Bandit)){
+					wkick = 8;
+					
+					 // Alert:
+					if(point_seen(x, y, -1)){
+						with(scrAlert(self, spr.BanditAlert)){
+							flash = 6;
+							alarm0 = 60;
+							blink = 15;
+						}
+					}
+					
+					 // Launch:
+					with(instance_nearest_bbox(x, y, FloorNormal)){
+						other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
+					}
+					with(obj_create(x, y, "BackpackPickup")){
+						target = other;
+						zspeed = random_range(2.5, 5);
+						speed = random_range(1, 2.5);
+						direction = other.direction;
+						event_perform(ev_step, ev_step_end);
+					}
+					
+					 // Pickup:
+					pickup_drop(1000, 0);
+					with(instances_matching_gt([Pickup, chestprop], "id", id)){
+						with(obj_create(x, y, "BackpackPickup")){
+							target = other;
+							direction = other.direction + orandom(60);
+							event_perform(ev_step, ev_step_end);
+						}
+					}
+					
+					 // Effects:
+					if(chance(1, 15)){
+						with(scrFX(x, y, [direction + orandom(60), 4], Shell)){
+							sprite_index = sprSodaCan;
+							image_index = irandom(image_number - 1);
+							image_speed = 0;
+						}
+					}
+					sound_play_hit_ext(sndWallBreakCrystal, 2 + random(0.5), 1.6);
+				}
+				
+				break;
+				
+			case 4: // CRYSTAL CAVES
+				
+				 // Special Spider:
+				if(special){
+					with(pet_spawn(x, y, "Spider")){
+						sprite_index = spr_hurt;
+						sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
+						
+						 // Alert:
+						with(scrAlert(self, spr_icon)){
+							flash = 6;
+							blink = 15;
+							alert_col = make_color_rgb(16, 226, 165);
+							alert_x--;
+						}
+					}
+				}
+				
+				 // Spiderlings:
+				else repeat(irandom_range(1, 3)){
+					if(chance(3, 5)){
+						with(obj_create(x, y, "Spiderling")){
+							sprite_index = spr_hurt;
+							sound_play_hit_ext(sndSpiderHurt, 0.5 + random(0.3), 1.5);
+							
+							 // Launch:
+							with(obj_create(x, y, "BackpackPickup")){
+								target = other;
+								zspeed = random_range(2, 4);
+								speed = random_range(1, 2.5);
+								direction = random(360);
+								event_perform(ev_step, ev_step_end);
+							}
+						}
+					}
+					
+					 // Sparkle:
+					with(instance_create(x + orandom(8), y - 8 + orandom(8), CaveSparkle)){
+						sprite_index = spr.PetSparkle;
+						depth = -3;
+					}
+				}
+				
+				break;
+				
+		}
+	}
 	
 	
 /// Mod Events
@@ -5083,7 +5317,7 @@
 						}
 						
 						 // Jump to Target Position:
-						if(target.speed <= 0) zspeed *= 2/3;
+						if(target.speed == 0) zspeed *= 2/3;
 						direction = point_direction(x, y, jump_x, jump_y);
 						var d = point_distance(x, y, jump_x, jump_y);
 						speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
