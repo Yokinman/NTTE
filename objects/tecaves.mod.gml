@@ -732,7 +732,14 @@
 	
 	
 #define PlasmaImpactSmall_create(_x, _y)
-	with(instance_create(_x, _y, PlasmaImpact)){
+	var	_lastShake = UberCont.opt_shake,
+		_lastFreeze = UberCont.opt_freeze;
+		
+	UberCont.opt_shake *= 0.5;
+	UberCont.opt_freeze = 0;
+	
+	var _inst = instance_create(_x, _y, PlasmaImpact);
+	with(_inst){
 		 // Visual:
 		sprite_index = spr.PlasmaImpactSmall;
 		
@@ -740,10 +747,12 @@
 		mask_index = msk.PlasmaImpactSmall;
 		damage = 4;
 		force = 6;
-		
-		return id;
 	}
 	
+	UberCont.opt_shake = _lastShake;
+	UberCont.opt_freeze = _lastFreeze;
+	
+	return _inst;
 	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){

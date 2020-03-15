@@ -2726,7 +2726,7 @@
 #define PitSquidBomb_destroy
 	var	l = 8,
 		_explo = [];
-	
+		
 	 // Triple Sucker:
 	if(triple){
 		for(var d = 0; d < 360; d += 120){
@@ -2763,9 +2763,6 @@
 		 // Effects:
 		with(instance_create(x, y, Smoke)) waterbubble = false;
 	}
-	
-	 // Effects:
-	view_shake_max_at(x, y, (triple ? 5 : 15));
 	
 	 // Sounds:
 	sound_play_hit(sndEliteShielderFire, 0.6);
