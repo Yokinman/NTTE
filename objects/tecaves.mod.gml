@@ -731,6 +731,20 @@
 	}
 	
 	
+#define PlasmaImpactSmall_create(_x, _y)
+	with(instance_create(_x, _y, PlasmaImpact)){
+		 // Visual:
+		sprite_index = spr.PlasmaImpactSmall;
+		
+		 // Vars:
+		mask_index = msk.PlasmaImpactSmall;
+		damage = 4;
+		force = 6;
+		
+		return id;
+	}
+	
+	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -789,7 +803,9 @@
 				var	l = 128,
 					d = (i * 90) + (round(_targetDir / 45) * 45) + orandom(2);
 					
-				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", d + 180, 1)){
+				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
+					sprite_index = spr.EnemyVlasmaBullet;
+					target = other;
 					target_x = other.x;
 					target_y = other.y;
 					_last = id;
@@ -874,97 +890,17 @@
 	 // Plasma:
 	with(team_instance_sprite(1, enemy_shoot(PlasmaImpact, 0, 0))){
 		mask_index = mskPopoPlasmaImpact;
-		with(instance_create_copy(x, y, PortalClear)) visible = false;
+		with(instance_create(x, y, PortalClear)){
+			mask_index   = other.mask_index;
+			sprite_index = other.sprite_index;
+			image_index  = other.image_index;
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale;
+			image_angle  = other.image_angle;
+			visible = false;
+		}
 	}
 	sound_play_hit_big(sndPlasmaHit, 0.2);
-	
-	
-#define SpiderBullet_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		spr_idle = spr.SpiderBullet;
-		spr_spwn = spr.SpiderBulletAppear;
-		spr_dead = spr.SpiderBulletDisappear;
-		sprite_index = spr_spwn;
-		image_speed = 0.4;
-		depth = -8;
-		
-		 // Vars:
-		mask_index = mskEnemyBullet1;
-		damage = 2;
-		force = 3;
-		typ = 0;
-		maxspeed = 8;
-		addspeed = 0.4;
-		target_x = x;
-		target_y = y;
-		my_sound = -1;
-		
-		return id;
-	}
-	
-#define SpiderBullet_step
-	 // Move Towards Creator:
-	if(instance_exists(creator)){
-		target_x = creator.x;
-		target_y = creator.y;
-	}
-	direction = point_direction(x, y, target_x, target_y);
-	image_angle = direction;
-	
-	 // Accelerate:
-	var _euphoria = power(0.8, skill_get(mut_euphoria));
-	if(sprite_index != spr_spwn){
-		speed += addspeed * _euphoria * current_time_scale;
-	}
-	speed = min(speed, maxspeed * _euphoria);
-	
-	 // Particles:
-	if(chance_ct(1, 4)){
-		with(scrFX([x, 4], [y, 4], [direction, 2 * (speed / maxspeed)], PlasmaTrail)){
-			sprite_index = spr.EnemyPlasmaTrail;
-			depth = other.depth - 1;
-		}
-	}
-	
-	 // Goodbye, Sweet Prince:
-	if(point_distance(x, y, target_x, target_y) <= 16){
-		if(my_sound != -1){
-			sound_stop(my_sound);
-			
-			sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
-			sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
-		}
-		instance_destroy();
-	}
-	
-#define SpiderBullet_hit
-	if(sprite_index != spr_spwn && projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
-	}
-	
-#define SpiderBullet_anim
-	if(sprite_index == spr_spwn){
-		sprite_index = spr_idle;
-		image_speed = 1;
-	}
-	
-#define SpiderBullet_wall
-	 // Pass Through Walls:
-	xprevious += hspeed_raw;
-	yprevious += vspeed_raw;
-	
-#define SpiderBullet_destroy
-	 // Explo:
-	with(instance_create(x, y, PlasmaImpact)){
-		sprite_index = spr.EnemyPlasmaImpact;
-		image_index = 2;
-		image_xscale = 0.5;
-		image_yscale = 0.5;
-		creator = other.creator;
-		hitid = other.hitid;
-		team = other.team;
-	}
 	
 	
 #define Spiderling_create(_x, _y)
@@ -1083,13 +1019,133 @@
 	var _chance = 2/3 * curse;
 	if(chance(_chance, 1)){
 		speed = min(1, speed);
-		repeat(3 * max(1, _chance)) with(obj_create(x, y, "Spiderling")){
-			sprite_index = spr_hurt;
-			alarm0 = ceil(other.alarm0 / 2);
-			curse = other.curse / 2;
-			kills = other.kills;
-			raddrop = 0;
+		repeat(3 * max(1, _chance)){
+			with(obj_create(x, y, "Spiderling")){
+				sprite_index = spr_hurt;
+				alarm0 = ceil(other.alarm0 / 2);
+				curse = other.curse / 2;
+				kills = other.kills;
+				raddrop = 0;
+			}
 		}
+	}
+	
+	
+#define VlasmaBullet_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.VlasmaBullet;
+		image_speed = 0.4;
+		depth = -8;
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 2;
+		force = 3;
+		typ = 1;
+		maxspeed = 8;
+		addspeed = 0.4;
+		target = noone;
+		target_x = x;
+		target_y = y;
+		my_sound = -1;
+		
+		return id;
+	}
+	
+#define VlasmaBullet_step
+	 // Follow Target:
+	if(instance_exists(target)){
+		target_x = target.x;
+		target_y = target.y;
+	}
+	
+	 // Movement:
+	if(image_speed == 0){
+		 // Acceleration:
+		var	_euphoria = (instance_is(creator, Player) ? 1 : power(0.8, skill_get(mut_euphoria))),
+			_speedMax = maxspeed * _euphoria,
+			_speedAdd = addspeed * _euphoria * current_time_scale;
+			
+		speed += clamp(_speedMax - speed, -_speedAdd, _speedAdd);
+		
+		 // Turn:
+		var _turn = angle_difference(point_direction(x, y, target_x, target_y), direction);
+		_turn *= clamp(speed / point_distance(x, y, target_x, target_y), 0.1, 1);
+		_turn *= min(current_time_scale, 1);
+		direction += _turn;
+		image_angle += _turn;
+	}
+	
+	 // Particles:
+	if(chance_ct(1, 4)){
+		with(team_instance_sprite(
+			sprite_get_team(sprite_index),
+			scrFX([x, 4], [y, 4], [direction, 2 * (speed / maxspeed)], PlasmaTrail)
+		)){
+			depth = other.depth;
+		}
+	}
+	
+	 // Passing Through Walls:
+	xprevious += hspeed_raw;
+	yprevious += vspeed_raw;
+	
+	 // Target Acquired, Sweet Prince:
+	if(image_speed == 0){
+		if(
+			(instance_exists(target) && team != variable_instance_get(target, "team"))
+			? place_meeting(x, y, target)
+			: point_distance(x, y, target_x, target_y) <= 8 + speed_raw
+		){
+			instance_destroy();
+		}
+	}
+	
+#define VlasmaBullet_draw
+	draw_self();
+	
+	 // Bloom:
+	var	_scale = 2,
+		_alpha = 0.1;
+		
+	draw_set_blend_mode(bm_add);
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	image_alpha  *= _alpha;
+	draw_self();
+	image_xscale /= _scale;
+	image_yscale /= _scale;
+	image_alpha  /= _alpha;
+	draw_set_blend_mode(bm_normal);
+	
+#define VlasmaBullet_anim
+	image_index = image_number - 1;
+	image_speed = 0;
+	
+#define VlasmaBullet_hit
+	if(image_speed == 0 && projectile_canhit_melee(other)){
+		projectile_hit_push(other, damage, force);
+	}
+	
+#define VlasmaBullet_wall
+	 // Passing Through Walls: *Movement Fix
+	x -= hspeed_raw;
+	y -= vspeed_raw;
+	
+#define VlasmaBullet_destroy
+	 // Sound:
+	sound_stop(my_sound);
+	sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
+	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
+	
+	 // Explo:
+	with(team_instance_sprite(
+		sprite_get_team(sprite_index),
+		enemy_shoot("PlasmaImpactSmall", direction, 0)
+	)){
+		image_angle = 0;
+		depth = other.depth;
 	}
 	
 	
@@ -1236,9 +1292,9 @@
 	}
 	
 	 // Spider Bullets:
-	with(instances_matching(projectile, "name", "SpiderBullet")){
+	/*with(instances_matching(projectile, "name", "VlasmaBullet")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-	}
+	}*/
 	
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
 	draw_primitive_begin(pr_trianglefan);

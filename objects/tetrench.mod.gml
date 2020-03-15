@@ -2541,9 +2541,8 @@
 					if(bomb){
 						with(enemy_shoot("PitSquidBomb", point_direction(x, y, target.x, target.y), 0)){
 							target = _target;
-							ammo   = 4 + irandom(3);
-							scale  = 1;
 							triple = false;
+							ammo = 4 + irandom(3);
 							
 							alarm0 = 10;
 							alarm1 += alarm0;
@@ -2667,7 +2666,6 @@
 		target = noone;
 		team = 0;
 		ammo = 0;
-		scale = 0.4;
 		triple = true;
 		
 		alarm0 = 3;
@@ -2735,15 +2733,19 @@
 			var	_x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			array_push(_explo, instance_create(_x, _y, PlasmaImpact));
-			// enemy_shoot_ext(_x, _y, "ElectroPlasmaImpact", direction, 0);
+			with(enemy_shoot_ext(_x, _y, "PlasmaImpactSmall", direction, 0)){
+				sprite_index = spr.EnemyPlasmaImpactSmall;
+				array_push(_explo, id);
+			}
 		}
 	}
 
 	 // Single Sucker:
 	else{
-		array_push(_explo, instance_create(x, y, PlasmaImpact));
-		// enemy_shoot("ElectroPlasmaImpact", direction, 0);
+		with(enemy_shoot_ext(_x, _y, PlasmaImpact, direction, 0)){
+			sprite_index = spr.EnemyPlasmaImpact;
+			array_push(_explo, id);
+		}
 		
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
@@ -2753,18 +2755,10 @@
 		}
 	}
 	
+	 // PlasmaImpact Setup:
 	with(_explo){
-		direction = other.direction;
-		creator	  = other.creator;
-		team	  = other.team;
-		hitid	  = other.hitid;
-		damage	  = 2;
-		
-		image_speed = 0.4;
-		
-		sprite_index = spr.EnemyPlasmaImpact;
-		image_xscale = other.scale;
-		image_yscale = other.scale;
+		damage = 2;
+		image_angle = 0;
 		
 		 // Effects:
 		with(instance_create(x, y, Smoke)) waterbubble = false;

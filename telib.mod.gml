@@ -16,7 +16,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "RedSpider", "SpiderBullet", "Spiderling"]
+		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "VlasmaBullet"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -63,7 +63,7 @@
 		[[sprEnemyLaser,				EnemyLaser		],	[sprLaser,				Laser				],	[										]], // Laser
 		[[sprEnemyLaserStart							],	[sprLaserStart								],	[										]], // Laser Start
 		[[sprEnemyLaserEnd								],	[sprLaserEnd								],	[										]], // Laser End
-		[[sprLaserCharge								],	[spr.PlayerLaserCharge						],	[										]], // Laser Particle
+		[[sprLaserCharge								],	[spr.AllyLaserCharge						],	[										]], // Laser Particle
 		[[sprEnemyLightning								],	[sprLightning								],	[										]], // Lightning
 		//[[sprLightningHit								],	[sprLightningHit							],	[										]], // Lightning Hit
 		//[[sprLightningSpawn							],	[sprLightningSpawn							],	[										]], // Lightning Particle
@@ -71,7 +71,9 @@
 		[[spr.EnemyPlasmaBig,			"CustomPlasma"	],	[sprPlasmaBallBig,		PlasmaBig			],	[										]], // Plasma Big
 		[[spr.EnemyPlasmaHuge,			"CustomPlasma"	],	[sprPlasmaBallHuge,		PlasmaHuge			],	[										]], // Plasma Huge
 		[[spr.EnemyPlasmaImpact							],	[sprPlasmaImpact							],	[sprPopoPlasmaImpact					]], // Plasma Impact
+		[[spr.EnemyPlasmaImpactSmall					],	[spr.PlasmaImpactSmall						],	[										]], // Plasma Impact Small
 		[[spr.EnemyPlasmaTrail							],	[sprPlasmaTrail								],	[sprPopoPlasmaTrail						]], // Plasma Particle
+		[[spr.EnemyVlasmaBullet							],	[spr.VlasmaBullet							],	[										]], // Vector Plasma
 		[[sprEnemySlash									],	[sprSlash									],	[sprEnemySlash							]]  // Slash
 	];
 	
@@ -916,16 +918,14 @@
 	return enemy_shoot_ext(x, y, _object, _dir, _spd);
 
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)
-	var _inst = noone;
+	var _inst = obj_create(_x, _y, _object);
 	
-	if(is_string(_object)) _inst = obj_create(_x, _y, _object);
-	else _inst = instance_create(_x, _y, _object);
 	with(_inst){
-		if(_spd <= 0) direction = _dir;
-		else motion_add(_dir, _spd);
-		image_angle = _dir;
+		speed += _spd;
+		direction = _dir;
+		image_angle = direction;
 		if("hitid" in other) hitid = other.hitid;
-		team = other.team;
+		if("team" in other) team = other.team;
 		
 		 // Auto-Creator:
 		creator = other;
@@ -934,9 +934,8 @@
 		}
 		
 		 // Euphoria:
-		var e = skill_get(mut_euphoria);
-		if(e != 0 && instance_is(self, CustomProjectile)){
-			speed *= (0.8 / e);
+		if(instance_is(self, CustomProjectile)){
+			speed *= power(0.8, skill_get(mut_euphoria));
 		}
 	}
 	
