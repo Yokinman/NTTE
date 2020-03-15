@@ -777,7 +777,7 @@
 		if(_targetSeen) cantunnel = true;
 		
 		 // Attack:
-		if(chance(2, 3) && in_distance(target, 98)){
+		if(chance(2, 3) && in_distance(target, 96)){
 			alarm1 = 45;
 			walk = 0;
 			speed /= 2;
@@ -787,9 +787,9 @@
 			
 			for(var i = -1; i <= 1; i++){
 				var	l = 128,
-					d = (i * 90) + round(_targetDir / 45) * 45 + orandom(2);
+					d = (i * 90) + (round(_targetDir / 45) * 45) + orandom(2);
 					
-				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", 0, 0)){
+				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SpiderBullet", d + 180, 1)){
 					target_x = other.x;
 					target_y = other.y;
 					_last = id;
@@ -886,7 +886,8 @@
 		spr_spwn = spr.SpiderBulletAppear;
 		spr_dead = spr.SpiderBulletDisappear;
 		sprite_index = spr_spwn;
-		depth = -7;
+		image_speed = 0.4;
+		depth = -8;
 		
 		 // Vars:
 		mask_index = mskEnemyBullet1;
@@ -894,9 +895,10 @@
 		force = 3;
 		typ = 0;
 		maxspeed = 8;
+		addspeed = 0.4;
 		target_x = x;
 		target_y = y;
-		my_sound = noone;
+		my_sound = -1;
 		
 		return id;
 	}
@@ -911,10 +913,11 @@
 	image_angle = direction;
 	
 	 // Accelerate:
+	var _euphoria = power(0.8, skill_get(mut_euphoria));
 	if(sprite_index != spr_spwn){
-		speed += 0.4 * current_time_scale;
+		speed += addspeed * _euphoria * current_time_scale;
 	}
-	speed = min(speed, maxspeed);
+	speed = min(speed, maxspeed * _euphoria);
 	
 	 // Particles:
 	if(chance_ct(1, 4)){
@@ -926,7 +929,7 @@
 	
 	 // Goodbye, Sweet Prince:
 	if(point_distance(x, y, target_x, target_y) <= 16){
-		if(my_sound != noone){
+		if(my_sound != -1){
 			sound_stop(my_sound);
 			
 			sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
@@ -935,30 +938,32 @@
 		instance_destroy();
 	}
 	
-#define SpiderBullet_end_step
-	 // Go through walls:
-	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall) || (x == xprevious && y == yprevious && speed > 0)){
-		if(place_meeting(x + hspeed_raw, y, Wall)) x += hspeed_raw;
-		if(place_meeting(x, y + vspeed_raw, Wall)) y += vspeed_raw;
-	}
-	
 #define SpiderBullet_hit
 	if(sprite_index != spr_spwn && projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
+		projectile_hit_push(other, damage, force);
 	}
 	
 #define SpiderBullet_anim
 	if(sprite_index == spr_spwn){
 		sprite_index = spr_idle;
-		image_speed  = 1;
+		image_speed = 1;
 	}
 	
 #define SpiderBullet_wall
-	// wtf
+	 // Pass Through Walls:
+	xprevious += hspeed_raw;
+	yprevious += vspeed_raw;
 	
 #define SpiderBullet_destroy
-	with(instance_create(x, y, BulletHit)){
-		sprite_index = other.spr_dead;
+	 // Explo:
+	with(instance_create(x, y, PlasmaImpact)){
+		sprite_index = spr.EnemyPlasmaImpact;
+		image_index = 2;
+		image_xscale = 0.5;
+		image_yscale = 0.5;
+		creator = other.creator;
+		hitid = other.hitid;
+		team = other.team;
 	}
 	
 	

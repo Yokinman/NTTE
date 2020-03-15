@@ -3167,12 +3167,12 @@
 	if(_lineAdd > 0 && line_dis > 0) while(true){
 		var	b = _lineAdd * 2,
 			_seen = point_seen_ext(_lx, _ly, b, b, -1);
-
+			
 		if(!_walled){
 			if(!ring && collision_line(_lx, _ly, _cx, _cy, Wall, false, false)){
 				_walled = true;
 			}
-
+			
 			 // Add to Line Draw:
 			else if(_seen){
 				var	l = _lineWid,
@@ -3180,7 +3180,7 @@
 					_x = _cx + hspeed_raw,
 					_y = _cy + vspeed_raw,
 					_xtex = (_dis / line_dis);
-
+					
 				 // Ring Collapse:
 				if(ring){
 					var o = (2 + (2 * ring_size * image_yscale)) / max(shrink_delay / 20, 1);
@@ -3188,12 +3188,12 @@
 					_y += lengthdir_y(o, d) * dsin((_dir * 10) + (wave * 4));
 					d -= (_lineAdd / ring_size) * 0.5;
 				}
-
+				
 				 // Pulsate:
 				else{
 					l *= 1 + (0.1 * sin((wave / 6) + (_wob / 10)) * min(1, _wob / 3));
 				}
-
+				
 				for(var a = -1; a <= 1; a += 2){
 					array_push(line_seg, {
 						x    : _x,
@@ -3228,31 +3228,33 @@
 		if(place_meeting(_cx, _cy, hitme)){
 			with(instances_meeting(_cx, _cy, _enemies)){
 				if(place_meeting(x - (_cx - other.x), y - (_cy - other.y), other)){
-					with(other){
-						if(lq_defget(hit_list, string(other), 0) <= hit_time){
-							 // Effects:
-							with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
-								sprite_index = spr.QuasarBeamHit;
-								motion_add(point_direction(_cx, _cy, x, y), 1);
-								image_angle = direction;
-								image_xscale = other.image_yscale;
-								image_yscale = other.image_yscale;
-								depth = other.depth - 1;
+					if(!instance_is(self, Player) || (!_walled && !collision_line(x, y, _lx, _ly, Wall, false, false))){
+						with(other){
+							if(lq_defget(hit_list, string(other), 0) <= hit_time){
+								 // Effects:
+								with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
+									sprite_index = spr.QuasarBeamHit;
+									motion_add(point_direction(_cx, _cy, x, y), 1);
+									image_angle = direction;
+									image_xscale = other.image_yscale;
+									image_yscale = other.image_yscale;
+									depth = other.depth - 1;
+								}
+								
+								 // Damage:
+								if(!ring) direction = _dir;
+								QuasarBeam_hit();
 							}
 							
-							 // Damage:
-							if(!ring) direction = _dir;
-							QuasarBeam_hit();
-						}
-						
-						 // Hit the BRAKES:
-						if(instance_is(creator, Player)){
-							if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
-								line_dis = _dis;
+							 // Hit the BRAKES:
+							if(instance_is(creator, Player)){
+								if(!instance_exists(other) || other.my_health <= 0 || other.size >= ((image_yscale <= 1) ? 3 : 4) || blast_hit){
+									line_dis = _dis;
+								}
 							}
+							
+							blast_hit = false;
 						}
-						
-						blast_hit = false;
 					}
 				}
 			}
