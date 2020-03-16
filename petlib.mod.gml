@@ -269,7 +269,10 @@
 	skills_active = [];
 	wave = 0;
 	pickup_skill = scrPickupIndicator("BORROW");
-	with(pickup_skill) visible = false;
+	with(pickup_skill){
+		visible = false;
+		mask_index = mskShield;
+	}
 	
 	 // Stat:
 	if("mutations" not in stat) stat.mutations = 0;
@@ -281,9 +284,10 @@
 	if(_name == "") return spr.PetOrchidIdle;
 	
 #define Orchid_step
+	wave += current_time_scale;
+	
 	skills_become = instances_matching(skills_become, "", null);
 	skills_active = instances_matching(skills_active, "", null);
-	wave += current_time_scale;
 	
 	 // Orbs:
 	var	_numSkills = array_length(skills_become),
@@ -299,9 +303,11 @@
 				x = other.x + lengthdir_x(16 * grow, w + d);
 				y = other.y + lengthdir_y(16 * grow, w + d);
 				
-				var s = 1 + sin(w / 15) * 0.2;
+				var s = 1 + (0.1 * sin(w / 15));
 				image_xscale = s * grow;
 				image_yscale = s * grow;
+				image_index = s;
+				image_speed = 0;
 				
 				direction = w + d;
 			}

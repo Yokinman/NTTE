@@ -2052,12 +2052,12 @@
 	}
 
 	 // Draw on Pause Screen but Below draw_pause Depth:
-	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)) with(UberCont){
-		script_bind_draw(draw_pause_pre, depth - 0.1);
+	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
+		script_bind_draw(draw_pause_pre, UberCont.depth - 0.1);
 	}
 	
 	 // Game Over Skill HUD:
-	if(!instance_exists(Player)){
+	else if(!instance_exists(Player)){
 		with(UberCont) if(visible){
 			if(player_get_show_skills(player_find_local_nonsync())){
 				with(surfSkillHUD) if(surface_exists(surf)){
@@ -2348,7 +2348,7 @@
 	var	_hudSide = array_create(maxp, 0),
 		n = 0;
 		
-	for(var i = 0; i < maxp; i++) if(player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
+	for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
 	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
 	
 	 // Mutation HUD:
@@ -2455,46 +2455,6 @@
 								
 								 // Draw to Surface:
 								if(_time > current_time_scale){
-									if(!surface_exists(global.orchid_skill_surf)) global.orchid_skill_surf = surface_create(48, 48);
-									surface_set_target(global.orchid_skill_surf);
-									draw_clear_alpha(0, 0);
-									
-									var	_wave = current_frame * current_time_scale,
-										_surf = global.orchid_skill_surf,
-										_cx = surface_get_width(_surf) / 2,
-										_cy = surface_get_height(_surf) / 2;
-									
-									 // Outline:
-									var _scale = 1 + sin(_wave / 15) * 0.1;
-									draw_sprite_ext(spr.PetOrchidCharge, _wave % 2, _cx, _cy, _scale, _scale, _wave * 5, c_white, 1);
-									for(var d = 0; d < 360; d += 90){
-										draw_sprite(_spr, _img, _cx + dcos(d), _cy + dsin(d));
-									}
-									
-									if(surface_exists(surfSkillHUD.surf)) surface_set_target(surfSkillHUD.surf);
-									else surface_reset_target();
-								
-									 // Draw to HUD:
-									var	_sx = _dx - _cx,
-										_sy = _dy - _cy;
-									 
-									draw_set_fog(true, _colSub, 0, 0);
-									draw_surface(_surf, _sx, _sy);
-									
-									draw_set_fog(true, _colTop, 0, 0);
-									draw_surface_part(
-										_surf, 
-										0,
-										(_cy * 2) * (1 - (_time / _timeMax)),
-										(_cx * 2),
-										(_cy * 2) * (_time / _timeMax),
-										_sx,
-										_sy + (_cy * 2) * (1 - (_time / _timeMax))
-									);
-								}
-								
-								/*
-								if(_time > current_time_scale){
 									var	_uvs = sprite_get_uvs(_spr, _img),
 										_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ) - 1,
 										_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ) - 1,
@@ -2517,13 +2477,26 @@
 											
 										draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
 									}
+									
+									 // Star Flash:
+									var	_wave = current_frame + (i * 1000),
+										_frames = 40,
+										_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
+										_angle = _wave / 10;
+										
+									if(_scale > 0){
+										if(_flash) draw_set_fog(true, c_white, 0, 0);
+										draw_sprite_ext(spr.PetOrchidCharge, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
+									}
 								}
-								*/
 								
 								 // Icon:
 								draw_set_fog(_flash, c_white, 0, 0);
 								draw_sprite(_spr, _img, _dx, _dy);
 								draw_set_fog(false, 0, 0, 0);
+								draw_set_blend_mode(bm_add);
+								draw_sprite_ext(_spr, _img, _dx, _dy, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
+								draw_set_blend_mode(bm_normal);
 							}
 							
 							break;

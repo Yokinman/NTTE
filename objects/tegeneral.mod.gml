@@ -1962,13 +1962,20 @@
 	
 #define OrchidSkill_create(_x, _y)
 	/*
-		Manages the pet Orchid's temporary mutation
-		Automatically decides a mutation, but also allows you to manually set what mutation it gives
+		Manages the pet Orchid's timed mutation
+		
+		Vars:
+			color1 - The main HUD color
+			color2 - The secondary HUD color
+			skill  - The mutation to give, leave as 'mut_none' to let it auto-decide
+			num    - The value of the mutation
+			time   - How long the mutation lasts
+			flash  - Visual HUD flash, true/false
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		color1 = c_yellow;
+		color1 = make_color_rgb(255, 255, 80);
 		color2 = make_color_rgb(84, 58, 24);
 		
 		 // Vars:
@@ -1982,7 +1989,19 @@
 		chest = [];
 		spirit = [];
 		
-		 // Random Un-gotten Skill:
+		return id;
+	}
+	
+#define OrchidSkill_setup
+	setup = false;
+	
+	 // Effects:
+	flash = true;
+	sound_play_pitch(sndMut, 1 + orandom(0.2));
+	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
+	
+	 // Decide Random Un-gotten Skill:
+	if(skill == mut_none){
 		var _skillList = [],
 			_skillMods = mod_get_names("skill"),
 			_skillMax = 30,
@@ -2015,17 +2034,7 @@
 				break;
 			}
 		}
-		
-		return id;
 	}
-	
-#define OrchidSkill_setup
-	setup = false;
-	
-	 // Effects:
-	flash = true;
-	sound_play_pitch(sndMut, 1 + orandom(0.2));
-	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
 	
 	 // Skill:
 	skill_set(skill, max(0, skill_get(skill)) + num);
@@ -2230,6 +2239,7 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.PetOrchidCharge;
+		depth = -9;
 		
 		 // Vars:
 		mask_index = mskFlakBullet;
@@ -2301,15 +2311,34 @@
 	 // Goodbye:
 	else instance_destroy();
 	
+#define OrchidSkillBecome_draw
+	draw_self();
+	
+	 // Bloom:
+	var	_scale = 2,
+		_alpha = 0.1;
+		
+	draw_set_blend_mode(bm_add);
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	image_alpha  *= _alpha;
+	draw_self();
+	image_xscale /= _scale;
+	image_yscale /= _scale;
+	image_alpha  /= _alpha;
+	draw_set_blend_mode(bm_normal);
+	
 #define OrchidSkillBecome_destroy
 	repeat(10 + irandom(10)){
-		scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle");
+		with(scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle")){
+			depth = -9;
+		}
 	}
 	
 	
 #define ParrotChester_create(_x, _y)
 	/*
-		Follows a chestprop until it's open and then creates ParrotFeathers to give feather ammo to the nearest Player
+		Follows a chestprop until it's opened, then sends ParrotFeathers to the nearest Player with race=="parrot"
 		
 		Ex:
 			with(GiantWeaponChest){
@@ -5701,9 +5730,9 @@
 	}
 	
 	 // Orchid Skill Become:
-	with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkillBecome"), "visible", true)){
+	/*with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkillBecome"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
+	}*/
 	
 	if(DebugLag) trace_time("tegeneral_draw_bloom");
 
