@@ -252,14 +252,10 @@
 		chance(1, 14)
 		&& point_distance(x, y, 10000, 10000) > 96
 		&& !place_meeting(x, y, NOWALLSHEREPLEASE)
+		&& !place_meeting(x, y, hitme)
 	){
-		var	_x = x + choose(0, 16),
-			_y = y + choose(0, 16);
-			
-		if(!place_meeting(_x, _y, hitme)){
-			instance_create(_x, _y, Wall);
-			instance_create(x, y, NOWALLSHEREPLEASE);
-		}
+		instance_create(x + choose(0, 16), y + choose(0, 16), Wall);
+		instance_create(x, y, NOWALLSHEREPLEASE);
 	}
 	
 	 // Props:

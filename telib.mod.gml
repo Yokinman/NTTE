@@ -3759,7 +3759,8 @@
 	
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)
 	/*
-		Returns a safe starting x/y and direction to call floor_room_create() with
+		Returns a safe starting x/y and direction to use with 'floor_room_create()'
+		Searches through the given Floor tiles for one that is far enough away from the spawn and can be reached from the spawn (no Walls in between)
 		
 		Args:
 			spawnX/spawnY - The spawn point
@@ -3777,12 +3778,29 @@
 			_y = bbox_center_y;
 			
 		if(point_distance(_spawnX, _spawnY, _x, _y) >= _spawnDis){
-			return {
-				"x" : _x,
-				"y" : _y,
-				"direction" : point_direction(_spawnX, _spawnY, _x, _y),
-				"id" : id
-			};
+			var _spawnReached = false;
+			
+			 // Make Sure it Reaches the Spawn Point:
+			var _pathWall = [Wall, InvisiWall];
+			for(var _fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+				for(var _fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+					if(path_reaches(path_create(_fx + 8, _fy + 8, _spawnX, _spawnY, _pathWall), _spawnX, _spawnY, _pathWall)){
+						_spawnReached = true;
+						break;
+					}
+				}
+				if(_spawnReached) break;
+			}
+			
+			 // Success bro!
+			if(_spawnReached){
+				return {
+					"x" : _x,
+					"y" : _y,
+					"direction" : point_direction(_spawnX, _spawnY, _x, _y),
+					"id" : id
+				};
+			}
 		}
 	}
 	
@@ -3872,25 +3890,45 @@
 	}
 	
 	 // Create Room:
-	var	_floors = mod_script_call_nc("mod", mod_current, "floor_fill", _x, _y, _w, _h, _type),
-		_cx = _x,
-		_cy = _y;
+	var	_floorNumLast = array_length(FloorNormal),
+		_floors = mod_script_call_nc("mod", mod_current, "floor_fill", _x, _y, _w, _h, _type),
+		_floorNum = array_length(FloorNormal),
+		_x1 = _x,
+		_y1 = _y,
+		_x2 = _x,
+		_y2 = _y;
 		
 	if(array_length(_floors) > 0){
-		_cx = 0;
-		_cy = 0;
-		with(_floors){
-			_cx += bbox_center_x;
-			_cy += bbox_center_y;
+		with(_floors[0]){
+			_x1 = bbox_left;
+			_y1 = bbox_top;
+			_x2 = bbox_right + 1;
+			_y2 = bbox_bottom + 1;
 		}
-		_cx /= array_length(_floors);
-		_cy /= array_length(_floors);
+		with(_floors){
+			var	_fx1 = bbox_left,
+				_fy1 = bbox_top,
+				_fx2 = bbox_right,
+				_fy2 = bbox_bottom;
+				
+			 // Determine Room's Dimensions:
+			_x1 = min(_x1, _fx1);
+			_y1 = min(_y1, _fy1);
+			_x2 = max(_x2, _fx2 + 1);
+			_y2 = max(_y2, _fy2 + 1);
+			
+			 // Fix Potential Wall Softlock:
+			if(_floorDis <= 0 && _floorNum == _floorNumLast + array_length(_floors)){
+				with(instance_rectangle_bbox(_fx1 - 1, _fy1,     _fx2 + 1, _fy2,     Wall)) if(place_meeting(x, y, Floor)) instance_destroy();
+				with(instance_rectangle_bbox(_fx1,     _fy1 - 1, _fx2,     _fy2 + 1, Wall)) if(place_meeting(x, y, Floor)) instance_destroy();
+			}
+		}
 	}
 	
 	 // Fix Isolated Room Softlock:
 	var _tunnel = noone;
 	if(_floorDis > 0){
-		with(instance_create(_cx - _ow, _cy - _oh, CustomObject)){
+		with(instance_create(_x1, _y1, CustomObject)){
 			name = "TunnelRoom";
 			on_step = TunnelRoom_step;
 			mask_index = mskFloor;
@@ -3907,12 +3945,12 @@
 	return {
 		floors : _floors,
 		tunnel : _tunnel,
-		x  : _cx,
-		y  : _cy,
-		x1 : _cx - _ow,
-		y1 : _cy - _oh,
-		x2 : _cx + _ow,
-		y2 : _cy + _oh,
+		x  : (_x1 + _x2) / 2,
+		y  : (_y1 + _y2) / 2,
+		x1 : _x1,
+		y1 : _y1,
+		x2 : _x2,
+		y2 : _y2,
 		xstart : _sx,
 		ystart : _sy
 	};
