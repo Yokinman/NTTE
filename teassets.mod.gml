@@ -82,18 +82,13 @@
 			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
 			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
 			
-			 // Red Spider Bullet:
-			SpiderBullet          = sprite(p + "sprSpiderBullet",          1, 8, 8);
-			SpiderBulletAppear    = sprite(p + "sprSpiderBulletAppear",    5, 8, 8);
-			SpiderBulletDisappear = sprite(p + "sprSpiderBulletDisappear", 1, 8, 8);
-			
 			 // Bone:
-			BoneSlashLight		= sprite(p + "sprBoneSlashLight", 3, 16, 16);
-			msk.BoneSlashLight	= sprite(p + "mskBoneSlashLight", 3, 16, 16);
-			BoneSlashHeavy		= sprite(p + "sprBoneSlashHeavy", 4, 24, 24);
-			msk.BoneSlashHeavy	= sprite(p + "mskBoneSlashHeavy", 4, 24, 24);
-			BoneArrow			= sprite(p + "sprBoneArrow",      1, 10,  2);
-			BoneArrowHeavy		= sprite(p + "sprBoneArrowHeavy", 1, 12,  3);
+			BoneSlashLight     = sprite(p + "sprBoneSlashLight", 3, 16, 16);
+			msk.BoneSlashLight = sprite(p + "mskBoneSlashLight", 3, 16, 16);
+			BoneSlashHeavy     = sprite(p + "sprBoneSlashHeavy", 4, 24, 24);
+			msk.BoneSlashHeavy = sprite(p + "mskBoneSlashHeavy", 4, 24, 24);
+			BoneArrow          = sprite(p + "sprBoneArrow",      1, 10,  2);
+			BoneArrowHeavy     = sprite(p + "sprBoneArrowHeavy", 1, 12,  3);
 			with([msk.BoneSlashLight, msk.BoneSlashHeavy]){
 				mask = [true, 0];
 			}
@@ -126,6 +121,14 @@
 			 // Mortar Plasma:
 			MortarPlasma = sprite(p + "sprMortarPlasma", 8, 8, 8);
 			
+			 // Small Plasma Impact:
+			EnemyPlasmaImpactSmall = sprite(p + "sprEnemyPlasmaImpactSmall", 7,  8,  8);
+			PlasmaImpactSmall      = sprite(p + "sprPlasmaImpactSmall",      7,  8,  8);
+			msk.PlasmaImpactSmall  = sprite(p + "mskPlasmaImpactSmall",      7, 16, 16);
+			with(msk.PlasmaImpactSmall){
+				mask = [true, 0];
+			}
+			
 			 // Portal Guardian:
 			PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
 			PortalBulletSpawn = sprite(p + "sprPortalBulletSpawn", 7, 26, 26);
@@ -140,6 +143,10 @@
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
+			
+			 // Vector Plasma:
+			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
+			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5, 8, 8);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
@@ -159,7 +166,7 @@
 			EnemyPlasmaImpact       = sprite(p + "sprEnemyPlasmaImpact",       7, 16, 16);
 			EnemyPlasmaTrail        = sprite(p + "sprEnemyPlasmaTrail",        3,  4,  4);
 			AllySniperBullet        = sprite(p + "sprAllySniperBullet",        2,  6,  8);
-			PlayerLaserCharge       = sprite(p + "sprPlayerLaserCharge",       4,  3,  3);
+			AllyLaserCharge         = sprite(p + "sprAllyLaserCharge",         4,  3,  3);
 			
 		//#endregion
 		
