@@ -277,7 +277,10 @@
 	with(FloorMaker){
 		goal = _goal;
 		direction = round(_direction / 90) * 90;
-		directionstart = direction;
+		
+		 // Custom Variables:
+		directionstart	= direction;
+		no_warpzone 	= true;
 	}
 	random_set_seed(_seed);
 	

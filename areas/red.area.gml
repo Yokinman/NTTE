@@ -30,7 +30,7 @@
 	return `@(color:${area_background_color()})???`;
 	
 #define area_text
-	return choose("BLINDING", "THE RED DOT");
+	return choose("BLINDING", "THE RED DOT", `WELCOME TO THE @(color:${area_background_color()})WARP ZONE`);
 	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
 	return [_lastx, 9, (_subarea == 1)];
@@ -74,6 +74,29 @@
 		}
 	}
 	
+	/*
+	 // Funky Little Warp Rooms:
+	var _spawnX = 10000,
+		_spawnY = 10000,
+		_spawnDis = 64,
+		_spawnFloor = instances_matching(Floor, "object_index", Floor),
+		_w = 3,
+		_h = 3,
+		_type = "",
+		_dirOff = 0,
+		_floorDis = 0;
+		
+	floor_set_align(32, 32, null, null);
+	floor_set_style(1, "red");
+	
+	repeat(3) with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
+	*/
+	
 #define area_finish
 	lastarea = area;
 	lastsubarea = subarea;
@@ -107,9 +130,10 @@
 #define area_make_floor
 	var	_x = x,
 		_y = y,
-		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
+		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48),
+		_noWarpzone = ("no_warpzone" in self);
 		
-	styleb = false;
+	if(_noWarpzone) styleb = false;
 	
 	/// Make Floors:
 		 // Normal:
@@ -138,23 +162,24 @@
 			}
 		}
 		
-	/*
 	/// Chests & Branching:
-		 // Turn Arounds (Weapon Chests):
-		if(_trn == 180 && _outOfSpawn){
-			floor_make(_x, _y, WeaponChest);
+		if(!_noWarpzone){
+			
+			 // Turn Arounds (Weapon Chests):
+			if(_trn == 180 && _outOfSpawn){
+				floor_make(_x, _y, WeaponChest);
+			}
+			
+			 // Dead Ends (Ammo Chests):
+			var n = instance_number(FloorMaker);
+			if(!chance(20, 19 + n)){
+				if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+				instance_destroy();
+			}
+			
+			 // Branch:
+			if(chance(1, 6)) instance_create(_x, _y, FloorMaker);
 		}
-		
-		 // Dead Ends (Ammo Chests):
-		var n = instance_number(FloorMaker);
-		if(!chance(20, 19 + n)){
-			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
-			instance_destroy();
-		}
-		
-		 // Branch:
-		if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
-		*/
 		
 #define area_pop_enemies
 	var	_x = x + 16,

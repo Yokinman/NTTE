@@ -1885,69 +1885,60 @@
 		team = 1;
 		size = 3;
 		seal_count = 5 + irandom(3);
-		seal_alert = true;
-		health_threshold = -1;
+		seal_spawn = false;
 		type = irandom_range(4, 6);
-		setup = true;
 		
 		 // Alarms:
 		alarm0 = 90;
-		alarm1 = -1;
 		
 		return id;
 	}
-
-#define Igloo_setup
-	setup = false;
-	
-	 // :
-	var	_igloos = instances_matching(object_index, "name", name),
-		_maxHealth = 0;
-		
-	with(enemy) _maxHealth += maxhealth;
-	
-	for(var i = 0; i < array_length(_igloos); i++) with(_igloos[i]){
-		health_threshold = _maxHealth * (2 / (i + 3));
-	}
 	
 #define Igloo_step
-	if(setup) Igloo_setup();
-	
 	 // No Leaving Bro:
 	if(seal_count > 0 && !instance_exists(enemy)){
 		portal_poof();
 	}
 	
 #define Igloo_alrm0
-	if(alarm1 < 0){
-		 // Call in the Seals:
-		var _healthPool = 0;
-		with(enemy) _healthPool += my_health;
-		if(_healthPool <= max(0, health_threshold)){
-			alarm1 = 60;
+	alarm0 = 60 + random(60);
+
+	var p = instance_nearest(x, y, Player),
+		e = instance_nearest(x, y, enemy);
+		
+	 // Begin:
+	if(!seal_spawn){
+		if(!instance_exists(e) || (instance_exists(p) && (point_distance(x, y, p.x, p.y) < point_distance(x, y, e.x, e.y)))){
+			alarm0 = 60;
 			
-			 // Alert:
+			seal_spawn = true;
 			with(scrAlert(self, spr.SealArcticAlert)){
 				flash = 30;
 				if(chance(1, 10)){
 					spr_alert = sprBreath;
 					alert_col = c_white;
-					alert_x = 1;
+					alert_x   = 1;
 				}
 			}
 		}
-		
-		 // Carry On:
-		else alarm0 = 30 + random(30);
 	}
 	
-#define Igloo_alrm1
 	 // Seal Spew:
-	if(seal_count-- > 0){
-		alarm1 = 2 + random(3);
-		
-		with(obj_create(x, y, "Seal")){
-			type = choose(other.type, 4);
+	else{
+		alarm0 = -1;
+		if(seal_count > 0){
+			alarm0 = 2 + random(3);
+			
+			 // The Boys:
+			with(obj_create(x, y, "Seal")){
+				type = choose(other.type, 4);
+			}
+			
+			 // Empty Nest:
+			seal_count--;
+			if(seal_count <= 0){
+				alarm0 = -1;
+			}
 		}
 	}
 	
