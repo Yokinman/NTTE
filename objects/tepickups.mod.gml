@@ -2531,6 +2531,79 @@
 		image_blend = make_color_rgb(26, 23, 38);
 	}
 	
+#define PalankingStatue_create(_x, _y)
+	var _phase = 0;
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.PalankingStatueIdle[_phase];
+		spr_hurt = spr.PalankingStatueHurt[_phase];
+		spr_dead = spr.PalankingStatueDead;
+		sprite_index = spr_idle;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndPillarBreak;
+		
+		 // Vars:
+		maxhealth = 300;
+		team = 1;
+		size = 3;
+		phase = _phase;
+		
+		return id;
+	}
+	
+#define PalankingStatue_step
+
+	 // Change Phase:
+	if(sprite_index == spr_hurt){
+		var _mPhase = 4,
+			_cPhase = floor(_mPhase - ((my_health / maxhealth) * _mPhase));
+			
+		while(phase < _cPhase){
+			phase++;
+			
+			 // Loot:
+			with(obj_create(x, y, "BackpackPickup")){
+				pickup_drop(10000, 0);
+				target = GameObject.id;
+			}
+			
+			 // Resprite:
+			spr_idle = spr.PalankingStatueIdle[phase];
+			spr_hurt = spr.PalankingStatueHurt[phase];
+			sprite_index = spr_hurt;
+			
+			 // Effects:
+			repeat(3) scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
+			sound_play_hit_ext(snd.PalankingHurt, 0.7 + random(0.2), 0.5);
+		}
+	}
+
+#define PalankingStatue_death
+	repeat(3) with(obj_create(x, y, "BackpackPickup")){
+		zfriction = 0.6;
+		zspeed = random_range(3, 4);
+		speed = 1.5 + orandom(0.2);
+		
+		pickup_drop(10000, 10000);
+		target = GameObject.id;
+		
+		event_perform(ev_step, ev_step_end);
+	}
+	
+	 // Effects:
+	repeat(6)	scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
+	sound_play_hit_ext(snd.PalankingDead, 0.7 + random(0.2), 0.5);
+	
+#define scrPalankingStatueChunk(_x, _y, _dir, _spd)
+	with(scrFX(_x, _y, [_dir, _spd], ScrapBossCorpse)){
+		sprite_index	= spr.PalankingStatueChunk;
+		image_index		= irandom(image_number - 1);
+		depth			= 2;
+		
+		return id;
+	}
 	
 #define PickupIndicator_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){

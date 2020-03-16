@@ -706,6 +706,18 @@
 				IglooSideHurt  = sprite(p + "sprIglooSideHurt",  3, 24, 24);
 				IglooSideDead  = sprite(p + "sprIglooSideDead",  3, 24, 24);
 				
+				 // Palanking Statue:
+				PalankingStatueIdle		=[sprite(p + "sprPalankingStatue1Idle",	1,	32,	32),
+										  sprite(p + "sprPalankingStatue2Idle",	1,	32,	32),
+										  sprite(p + "sprPalankingStatue3Idle",	1,	32,	32),
+										  sprite(p + "sprPalankingStatue4Idle",	1,	32,	32)];
+				PalankingStatueHurt 	=[sprite(p + "sprPalankingStatue1Hurt", 3,	32,	32),
+										  sprite(p + "sprPalankingStatue2Hurt", 3,	32,	32),
+										  sprite(p + "sprPalankingStatue3Hurt", 3,	32,	32),
+										  sprite(p + "sprPalankingStatue4Hurt", 3,	32,	32)];
+				PalankingStatueDead 	= sprite(p + "sprPalankingStatueDead",	3,	32,	32);
+				PalankingStatueChunk	= sprite(p + "sprPalankingStatueChunk", 5,	16,	16);
+				
 			//#endregion
 			
 		//#endregion
