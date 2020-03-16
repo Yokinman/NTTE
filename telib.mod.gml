@@ -3759,7 +3759,8 @@
 	
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)
 	/*
-		Returns a safe starting x/y and direction to call floor_room_create() with
+		Returns a safe starting x/y and direction to use with 'floor_room_create()'
+		Searches through the given Floor tiles for one that is far enough away from the spawn and can be reached from the spawn (no Walls in between)
 		
 		Args:
 			spawnX/spawnY - The spawn point
@@ -3777,12 +3778,29 @@
 			_y = bbox_center_y;
 			
 		if(point_distance(_spawnX, _spawnY, _x, _y) >= _spawnDis){
-			return {
-				"x" : _x,
-				"y" : _y,
-				"direction" : point_direction(_spawnX, _spawnY, _x, _y),
-				"id" : id
-			};
+			var _spawnReached = false;
+			
+			 // Make Sure it Reaches the Spawn Point:
+			var _pathWall = [Wall, InvisiWall];
+			for(var _fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+				for(var _fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+					if(path_reaches(path_create(_fx + 8, _fy + 8, _spawnX, _spawnY, _pathWall), _spawnX, _spawnY, _pathWall)){
+						_spawnReached = true;
+						break;
+					}
+				}
+				if(_spawnReached) break;
+			}
+			
+			 // Success bro!
+			if(_spawnReached){
+				return {
+					"x" : _x,
+					"y" : _y,
+					"direction" : point_direction(_spawnX, _spawnY, _x, _y),
+					"id" : id
+				};
+			}
 		}
 	}
 	
