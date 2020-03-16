@@ -21,9 +21,9 @@
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
-	teevent_add("RavenArena");
-	teevent_add("SealTown");
 	teevent_add("GatorDen");
+	teevent_add("RavenArena");
+	teevent_add("SealPlaza");
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -866,11 +866,11 @@
 	}
 	
 	
-#define SealTown_text    return "DISTANT RELATIVES";
-#define SealTown_area    return area_city;
-#define SealTown_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ?  1/7 : 0);
+#define SealPlaza_text    return "DISTANT RELATIVES";
+#define SealPlaza_area    return area_city;
+#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ?  1/7 : 0);
 
-#define SealTown_create
+#define SealPlaza_create
 	var	_minID = GameObject.id,
 		_w = 6,
 		_h = 6,
@@ -893,7 +893,7 @@
 			_iglooSpawnY = y,
 			_iglooFloorDis = -32,
 			_iglooSpawnDis = 0,
-			_iglooSpawnFloor = instances_matching_gt(FloorNormal, "id", _minID);
+			_iglooSpawnFloor = floors;
 			
 		 // Igloos:
 		repeat(2 + irandom(2)){

@@ -176,11 +176,9 @@
 		chance(1, 5)
 		&& point_distance(x, y, 10000, 10000) > 16
 		&& !place_meeting(x, y, NOWALLSHEREPLEASE)
+		&& !place_meeting(x, y, hitme)
 	){
-		var _wx = x + pfloor(random(bbox_right - bbox_left), 16),
-			_wy = y + pfloor(random(bbox_bottom - bbox_top), 16);
-			
-		instance_create(_wx, _wy, Wall);
+		instance_create(x + choose(0, 16), y + choose(0, 16), Wall);
 		instance_create(x, y, NOWALLSHEREPLEASE);
 	}
 	
