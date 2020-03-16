@@ -21,9 +21,9 @@
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
-	teevent_add("GatorDen");
 	teevent_add("RavenArena");
-	teevent_add("SealCitySquare");
+	teevent_add("SealTown");
+	teevent_add("GatorDen");
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -865,11 +865,13 @@
 		instance_destroy();
 	}
 	
-#define SealCitySquare_text		return "DISTANT RELATIVES";
-#define SealCitySquare_area		return area_city;
-#define SealCitySquare_chance	return (GameCont.subarea != 3 && unlock_get("coastWep")) / 7;
-#define SealCitySquare_create
-	var _minID = GameObject.id,
+	
+#define SealTown_text    return "DISTANT RELATIVES";
+#define SealTown_area    return area_city;
+#define SealTown_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ?  1/7 : 0);
+
+#define SealTown_create
+	var	_minID = GameObject.id,
 		_w = 6,
 		_h = 6,
 		_type = "",
@@ -880,31 +882,23 @@
 		_spawnDis = 160,
 		_spawnFloor = FloorNormal;
 		
-	 // Generate Area:
 	floor_set_align(32, 32, null, null);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		_w = 3;
-		_h = 3;
-		_type = "";
-		_dirOff = 0;
-		_spawnX = x;
-		_spawnY = y;
-		_floorDis = -64;
-		_spawnDis = 0;
-		_spawnFloor = instances_matching_gt(FloorNormal, "id", _minID);
+		var	_iglooW = 3,
+			_iglooH = 3,
+			_iglooType = "",
+			_iglooDirOff = 0,
+			_iglooSpawnX = x,
+			_iglooSpawnY = y,
+			_iglooFloorDis = -32,
+			_iglooSpawnDis = 0,
+			_iglooSpawnFloor = instances_matching_gt(FloorNormal, "id", _minID);
 			
+		 // Igloos:
 		repeat(2 + irandom(2)){
-			with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+			with(floor_room(_iglooSpawnX, _iglooSpawnY, _iglooSpawnDis, _iglooSpawnFloor, _iglooW, _iglooH, _iglooType, _iglooDirOff, _iglooFloorDis)){
 				obj_create(x, y, "Igloo");
-			}
-			
-			 // Corner Walls:
-			with(instances_matching_gt(Floor, "id", _minID)){
-				if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x,      y,      Wall);
-				if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x + 16, y,      Wall);
-				if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x,      y + 16, Wall);
-				if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
 			}
 		}
 		
@@ -913,7 +907,15 @@
 	}
 	
 	floor_reset_align();
-
+	
+	 // Corner Walls:
+	with(instances_matching_gt(Floor, "id", _minID)){
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x,      y,      Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x + 16, y,      Wall);
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x,      y + 16, Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
+	}
+	
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
@@ -924,8 +926,6 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-
-
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);

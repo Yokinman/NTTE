@@ -198,7 +198,7 @@
 			motion_add(random(360), random_range(3, 5));
 		}
 	}
-
+	
 	 // Restore Strong Spirit:
 	if(skill_get(mut_strong_spirit) > 0){
 		with(instance_is(other, Player) ? other : Player){
@@ -215,8 +215,8 @@
 			}
 		}
 	}
-
-
+	
+	
 #define Backpacker_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -2531,9 +2531,11 @@
 		image_blend = make_color_rgb(26, 23, 38);
 	}
 	
+	
 #define PalankingStatue_create(_x, _y)
-	var _phase = 0;
 	with(instance_create(_x, _y, CustomProp)){
+		var _phase = 0;
+		
 		 // Visual:
 		spr_idle = spr.PalankingStatueIdle[_phase];
 		spr_hurt = spr.PalankingStatueHurt[_phase];
@@ -2554,19 +2556,23 @@
 	}
 	
 #define PalankingStatue_step
-
+	
 	 // Change Phase:
 	if(sprite_index == spr_hurt){
-		var _mPhase = 4,
+		var	_mPhase = 4,
 			_cPhase = floor(_mPhase - ((my_health / maxhealth) * _mPhase));
 			
 		while(phase < _cPhase){
 			phase++;
 			
 			 // Loot:
-			with(obj_create(x, y, "BackpackPickup")){
-				pickup_drop(10000, 0);
-				target = GameObject.id;
+			var _minID = GameObject.id;
+			pickup_drop(10000, 0);
+			with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
+				with(obj_create(x, y, "BackpackPickup")){
+					target = other;
+					event_perform(ev_step, ev_step_end);
+				}
 			}
 			
 			 // Resprite:
@@ -2581,29 +2587,31 @@
 	}
 
 #define PalankingStatue_death
-	repeat(3) with(obj_create(x, y, "BackpackPickup")){
-		zfriction = 0.6;
-		zspeed = random_range(3, 4);
-		speed = 1.5 + orandom(0.2);
-		
-		pickup_drop(10000, 10000);
-		target = GameObject.id;
-		
-		event_perform(ev_step, ev_step_end);
+	var _minID = GameObject.id;
+	repeat(3) pickup_drop(10000, 10000);
+	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
+		with(obj_create(x, y, "BackpackPickup")){
+			target = other;
+			zfriction = 0.6;
+			zspeed = random_range(3, 4);
+			speed = 1.5 + orandom(0.2);
+			event_perform(ev_step, ev_step_end);
+		}
 	}
 	
 	 // Effects:
-	repeat(6)	scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
+	repeat(6) scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
 	sound_play_hit_ext(snd.PalankingDead, 0.7 + random(0.2), 0.5);
 	
 #define scrPalankingStatueChunk(_x, _y, _dir, _spd)
 	with(scrFX(_x, _y, [_dir, _spd], ScrapBossCorpse)){
-		sprite_index	= spr.PalankingStatueChunk;
-		image_index		= irandom(image_number - 1);
-		depth			= 2;
+		sprite_index = spr.PalankingStatueChunk;
+		image_index  = irandom(image_number - 1);
+		depth        = 2;
 		
 		return id;
 	}
+	
 	
 #define PickupIndicator_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
