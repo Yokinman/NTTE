@@ -156,7 +156,11 @@
 	
 #define CrystalHeartProj_step
 	 // Effects:
-	if(chance_ct(2, 3)) with(scrFX([x, 6], [y, 6], random(1), LaserCharge)) alarm0 = 5 + random(15);
+	if(chance_ct(2, 3)){
+		with(scrFX([x, 6], [y, 6], random(1), LaserCharge)){
+			alarm0 = 5 + random(15);
+		}
+	}
 	if(current_frame_active) with(instance_create(x, y, DiscTrail)){
 		image_blend = make_color_rgb(253, 0, 67);
 	}

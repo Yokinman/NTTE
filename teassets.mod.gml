@@ -642,6 +642,9 @@
 			 // Fly:
 			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
 			
+			 // Wall Rubble:
+			Wall1TopRubble = sprite(p + "sprWall1TopRubble", 3, 0, 0);
+			
 			 // Wall Bro:
 			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
 			
