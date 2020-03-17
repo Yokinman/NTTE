@@ -1896,6 +1896,17 @@
 					}
 					
 					break;
+					
+				case "trench": // Surprise Cameo:
+					if(chance(1, 6)){
+						with(instance_create(x, y, SpiralDebris)){
+							sprite_index = spr.YetiCrabIdle;
+							grow  = 0.1;
+							dist *= 0.8;
+						}
+					}
+					
+					break;
 			}
 		}
 		

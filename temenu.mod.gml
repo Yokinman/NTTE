@@ -160,9 +160,9 @@
 						role : [[cred_music, "Music"]],
 						link : [[cred_twitter, "JDubbsishere"], [cred_soundcloud, "jdubmmusic"], [cred_discord, "Mista Jub\#8521"]]
 						},
-					{	name : "BioOnPC",
+					{	name : "Wildebee", // formerly BioOnPc
 						role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailer"],
-						link : [[cred_twitter, "HitregOnPC"], [cred_discord, "BioOnPC\#6521"]]
+						link : [[cred_twitter, "HitregOnPC"], [cred_discord, "Wildebee\#6521"]]
 						},
 					{	name : "Special Thanks",
 						role : [[cred_yellow, "blaac"], "Bub", "Emffles", "minichibis"],

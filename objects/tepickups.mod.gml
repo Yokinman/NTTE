@@ -2575,44 +2575,112 @@
 				}
 			}
 			
+			/*		disabled for now
+			 // Protection:
+			var _sealCap = 10,
+				_sealNum = array_length(instances_matching(CustomEnemy, "name", "Seal"));
+				
+			if(_sealNum < _sealCap){
+				repeat(min(3, _sealCap - _sealNum)){
+					var _spawnDir = point_direction(x, y, 10016, 10016) + orandom(90),
+						_spawnDis = 180;
+					
+					with(top_create(x - 50, y, "Seal", _spawnDir, _spawnDis)){
+						idle_time = 0;
+						jump_time = 1;
+						with(target){
+							type = choose(irandom_range(4, 6), 4);
+							scrAlert(self, spr.SealArcticAlert);
+						}
+					}
+				}
+			}
+			*/
+			
+			 // Blank:
+			scrPalankingStatueBlank(1 + phase);
+			
 			 // Resprite:
 			spr_idle = spr.PalankingStatueIdle[phase];
 			spr_hurt = spr.PalankingStatueHurt[phase];
 			sprite_index = spr_hurt;
 			
 			 // Effects:
-			repeat(3) scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
+			repeat(3) scrPalankingStatueChunk(x, y, random(360), random_range(3, 8), random_range(3, 8));
 			sound_play_hit_ext(snd.PalankingHurt, 0.7 + random(0.2), 0.5);
 		}
 	}
 
 #define PalankingStatue_death
 	var _minID = GameObject.id;
-	repeat(3) pickup_drop(10000, 10000);
+	pickup_drop(10000, 0);
+	obj_create(x, y, "Backpack");
+
+	 // Become Big:
+	with(instances_matching_gt(AmmoPickup, "id", _minID)){
+		instance_create(x, y, AmmoChest);
+		instance_delete(id);
+	}
+	
+	with(instances_matching_gt(HPPickup, "id", _minID)){
+		instance_create(x, y, HealthChest);
+		instance_delete(id);
+	}
+	
+	 // Z-ify:
 	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
 		with(obj_create(x, y, "BackpackPickup")){
 			target = other;
 			zfriction = 0.6;
 			zspeed = random_range(3, 4);
-			speed = 1.5 + orandom(0.2);
+			speed = 1 + orandom(0.5);
 			event_perform(ev_step, ev_step_end);
 		}
 	}
 	
+	 // Blank:
+	scrPalankingStatueBlank(2 + phase);
+	
 	 // Effects:
-	repeat(6) scrPalankingStatueChunk(x, y, random(360), 3 + random(6));
+	scrPalankingStatueChunk(x, y, random(360), random_range(3, 8), random_range(3, 8));
 	sound_play_hit_ext(snd.PalankingDead, 0.7 + random(0.2), 0.5);
 	
-#define scrPalankingStatueChunk(_x, _y, _dir, _spd)
+#define scrPalankingStatueChunk(_x, _y, _dir, _spd, _zspd)
 	with(scrFX(_x, _y, [_dir, _spd], ScrapBossCorpse)){
 		sprite_index = spr.PalankingStatueChunk;
 		image_index  = irandom(image_number - 1);
-		depth        = 2;
+		friction	 = 0.2;
+		
+		 // Z-ify:
+		with(obj_create(_x, _y, "BackpackPickup")){
+			target = other;
+			zfriction = 0.6;
+			zspeed = _zspd;
+			speed  = _spd;
+			event_perform(ev_step, ev_step_end);
+		}
 		
 		return id;
 	}
 	
 	
+#define scrPalankingStatueBlank(_num)
+	var n = _num;
+	for(var i = 0; i < n; i++){
+		var s = 0.5 + (1 - (i / n)) * 0.5,
+			l = (24 * i) * (s * 2);
+		repeat(1 + i){
+			var d = random(360);
+			with(obj_create(x + lengthdir_x(l, d) + orandom(5), y + lengthdir_y(l, d) + orandom(5), "BatScreech")){
+				image_xscale = s;
+				image_yscale = s;
+				image_speed *= s;
+				depth = -7;
+				team  = 2;
+			}
+		}
+	}
+
 #define PickupIndicator_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
