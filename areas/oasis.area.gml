@@ -15,7 +15,8 @@
 #macro DebugLag global.debug_lag
 
 #define area_subarea           return 1;
-#define area_next              return [3, 3];
+#define area_goal              return 130;
+#define area_next              return [3, 3]; // SCRAPYARDS BOSS
 #define area_music             return mus101;
 #define area_ambience          return amb101;
 #define area_background_color  return area_get_background_color(101);
@@ -57,8 +58,7 @@
 	}
 	
 #define area_setup
-	goal = 130;
-	
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();

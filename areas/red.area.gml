@@ -6,9 +6,6 @@
 	
 	DebugLag = false;
 	
-	 // Next Area:
-	//global.nextarea
-	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -18,7 +15,8 @@
 #macro DebugLag global.debug_lag
 
 #define area_subarea           return 1;
-#define area_next              return 0;//global.nextarea;
+#define area_goal              return 60;
+#define area_next              return mod_current; // CAN'T LEAVE
 #define area_music             return mus104;
 #define area_ambience          return amb104;
 #define area_background_color  return make_color_rgb(235, 0, 67);
@@ -55,6 +53,7 @@
 	}
 	
 #define area_setup
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
@@ -73,29 +72,6 @@
 			instance_destroy();
 		}
 	}
-	
-	/*
-	 // Funky Little Warp Rooms:
-	var _spawnX = 10000,
-		_spawnY = 10000,
-		_spawnDis = 64,
-		_spawnFloor = instances_matching(Floor, "object_index", Floor),
-		_w = 3,
-		_h = 3,
-		_type = "",
-		_dirOff = 0,
-		_floorDis = 0;
-		
-	floor_set_align(32, 32, null, null);
-	floor_set_style(1, "red");
-	
-	repeat(3) with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		
-	}
-	
-	floor_reset_align();
-	floor_reset_style();
-	*/
 	
 #define area_finish
 	lastarea = area;
@@ -130,10 +106,9 @@
 #define area_make_floor
 	var	_x = x,
 		_y = y,
-		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48),
-		_noWarpzone = ("no_warpzone" in self);
+		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
 		
-	if(_noWarpzone) styleb = false;
+	styleb = false;
 	
 	/// Make Floors:
 		 // Normal:
@@ -152,33 +127,23 @@
 		direction += _trn;
 		
 	/// Don't Move:
-		if("directionstart" in self){
+		if(!variable_instance_get(GenCont, "iswarpzone", true)){
+			if("direction_start" not in self){
+				direction_start = direction;
+			}
+			
 			var _ox = lengthdir_x(32, direction),
 				_oy = lengthdir_y(32, direction);
 				
-			if(abs(angle_difference(directionstart, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
+			if(abs(angle_difference(direction_start, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
 				x -= _ox;
 				y -= _oy;
 			}
 		}
 		
-	/// Chests & Branching:
-		if(!_noWarpzone){
-			
-			 // Turn Arounds (Weapon Chests):
-			if(_trn == 180 && _outOfSpawn){
-				floor_make(_x, _y, WeaponChest);
-			}
-			
-			 // Dead Ends (Ammo Chests):
-			var n = instance_number(FloorMaker);
-			if(!chance(20, 19 + n)){
-				if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
-				instance_destroy();
-			}
-			
-			 // Branch:
-			if(chance(1, 6)) instance_create(_x, _y, FloorMaker);
+	/// Chests:
+		if(_trn == 180 && _outOfSpawn){
+			floor_make(_x, _y, choose(WeaponChest, AmmoChest));
 		}
 		
 #define area_pop_enemies
@@ -210,6 +175,59 @@
 	 // Props:
 	else if(chance(1, 4)){
 		obj_create(x + 16, y + 16, "CrystalProp" + (styleb ? "White" : "Red"));
+	}
+	
+	 // Warp Rooms:
+	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
+		if(chance(1, 15) || array_length(instances_matching(CustomObject, "sprite_index", sprTop)) <= 0){
+			var _w = 2,
+				_h = 2,
+				_type = "",
+				_dirOff = 90,
+				_floorDis = random_range(48, 96),
+				_spawnX = 10016,
+				_spawnY = 10016,
+				_spawnDis = 64,
+				_spawnFloor = instances_matching(FloorNormal, "styleb", 0),
+				_floorHallwaySearch = FloorNormal;
+				
+			floor_set_align(32, 32, null, null);
+			floor_set_style(1, null);
+			
+			with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+				 // Hallway:
+				var	_x = x,
+					_y = y,
+					_moveDis = 32;
+					
+				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
+					while(
+						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+						&&
+						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _floorHallwaySearch)) <= 0
+					){
+						 // Floor + Props:
+						with(floor_set(_x, _y, true)){
+							area_pop_props();
+						}
+						
+						 // Move:
+						var _moveDir = round((point_direction(_x, _y, other.xstart, other.ystart) + orandom(60)) / 90) * 90;
+						_x += lengthdir_x(_moveDis, _moveDir);
+						_y += lengthdir_y(_moveDis, _moveDir);
+					}
+				}
+				
+				 // Portal:
+				with(instance_create(x - 16, y - 16, CustomObject)){
+					sprite_index = sprTop;
+					with(instances_meeting(x, y, [Wall, prop])) instance_delete(id);
+				}
+			}
+			
+			floor_reset_align();
+			floor_reset_style();
+		}
 	}
 	
 #define area_pop_extras

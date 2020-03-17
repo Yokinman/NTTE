@@ -3618,7 +3618,7 @@
 		_y = _gridPos[1];
 		
 		 // Clear Floors:
-		if(!instance_exists(GenCont)){
+		if(!instance_exists(FloorMaker)){
 			if(_obj == FloorExplo){
 				with(instances_matching(instances_matching(_obj, "x", _x), "y", _y)) instance_delete(id);
 			}
@@ -3646,22 +3646,20 @@
 		
 		 // Floorify:
 		_inst = instance_create(_x, _y, _obj);
+		with(_floormaker) instance_destroy();
+		GameCont.area = _lastArea;
 		with(_inst){
 			 // Clear Area:
-			if(!instance_exists(GenCont)){
+			if(!instance_exists(FloorMaker)){
 				wall_clear(bbox_left, bbox_top, bbox_right, bbox_bottom);
 			}
 			
 			 // Wallerize:
-			GameCont.area = _lastArea;
 			if(instance_exists(Wall)){
 				floor_walls();
 				wall_update(bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16);
 			}
 		}
-		
-		with(_floormaker) instance_destroy();
-		GameCont.area = _lastArea;
 	}
 	
 	 // Destroy Floor:

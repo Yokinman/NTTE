@@ -39,7 +39,8 @@
 #macro FloorPitless instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)
 
 #define area_subarea           return 3;
-#define area_next              return 5;
+#define area_goal              return 150;
+#define area_next              return 5; // FROZEN CITY
 #define area_music             return mus.Trench;
 #define area_ambience          return amb101;
 #define area_background_color  return make_color_rgb(100, 114, 127);
@@ -97,11 +98,13 @@
 	}
 	
 #define area_setup
-	goal = 150;
-	safespawn += 2;
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
+	
+	 // Tunnel Spawn:
+	safespawn += 2;
 	
 #define area_setup_floor
 	if(styleb){

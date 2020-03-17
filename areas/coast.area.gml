@@ -56,6 +56,7 @@
 #macro WadeColor make_color_rgb(44, 37, 122)
 
 #define area_subarea           return 3;
+#define area_goal              return 100;
 #define area_next              return "oasis";
 #define area_music             return [mus.Coast, 0.5];
 #define area_ambience          return amb0b;
@@ -136,8 +137,7 @@
 	}
 	
 #define area_setup
-	goal = 100;
-	
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();

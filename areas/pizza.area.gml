@@ -15,11 +15,12 @@
 #macro DebugLag global.debug_lag
 
 #define area_subarea           return 1;
-#define area_next              return 3;
+#define area_next              return 3; // SCRAPYARDS
 #define area_music             return mus102;
 #define area_ambience          return amb102;
 #define area_background_color  return area_get_background_color(102);
 #define area_shadow_color      return area_get_shadow_color(102);
+#define area_fog               return sprFog102;
 #define area_darkness          return true;
 #define area_secret            return true;
 
@@ -56,7 +57,7 @@
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
-	TopCont.fog = sprFog102;
+	TopCont.fog      = area_fog();
 	
 	 // Turtle Den Gen:
 	var _den = {

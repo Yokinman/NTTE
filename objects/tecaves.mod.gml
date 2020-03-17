@@ -277,14 +277,11 @@
 #define CrystalHeartProj_area_generate_setup(_goal, _direction, _seed)
 	with(GenCont){
 		goal = _goal;
+		iswarpzone = false;
 	}
 	with(FloorMaker){
 		goal = _goal;
 		direction = round(_direction / 90) * 90;
-		
-		 // Custom Variables:
-		directionstart	= direction;
-		no_warpzone 	= true;
 	}
 	random_set_seed(_seed);
 	

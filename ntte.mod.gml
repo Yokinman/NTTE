@@ -369,7 +369,6 @@
 					
 				floor_set_align(32, 32, null, null);
 				
-				 // Generate Room:
 				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 					var	_cx = x,
 						_cy = y;

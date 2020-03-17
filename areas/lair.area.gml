@@ -214,11 +214,13 @@
 #macro RoomCenter global.room_center
 
 #define area_subarea           return 1;
-#define area_next              return 3;
+#define area_goal              return 110;
+#define area_next              return 3; // SCRAPYARDS
 #define area_music             return [mus.Lair, 0.6];
 #define area_ambience          return amb102;
 #define area_background_color  return make_color_rgb(160, 157, 75);
 #define area_shadow_color      return area_get_shadow_color(102);
+#define area_fog               return sprFog102;
 #define area_darkness          return true;
 #define area_secret            return true;
 
@@ -252,16 +254,17 @@
 	}
 	
 #define area_setup
-	goal = 110;
-	safespawn = false;
-	
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
-	TopCont.fog = sprFog102;
+	TopCont.fog      = area_fog();
 	
+	 // No Safespawns:
+	safespawn = 0;
+	
+	 // Rooms:
 	RoomList = [];
-	
 	if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
 	
 #define area_setup_floor

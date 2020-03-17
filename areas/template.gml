@@ -47,7 +47,8 @@ blah blah blah
 #macro DebugLag global.debug_lag
 
 #define area_subarea           return 3;
-#define area_next              return [2, 1];
+#define area_goal              return 110;
+#define area_next              return [2, 1]; // SEWERS
 #define area_music             return mus1;
 #define area_ambience          return amb1;
 #define area_background_color  return make_color_rgb(175, 143, 106);
@@ -90,8 +91,7 @@ blah blah blah
 	}
 	
 #define area_setup
-	goal = 110;
-	
+	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
