@@ -4548,6 +4548,158 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	
+#define SewerDrain_create(_x, _y)
+	with(obj_create(_x, _y, "PizzaDrain")){
+		 // Visual:
+		spr_idle = spr.SewerDrainIdle;
+		spr_hurt = spr.SewerDrainHurt;
+		spr_dead = spr.SewerDrainDead;
+		sprite_index = spr_idle;
+		
+		 // Vars:
+		area = 2;
+		
+		 // Scripts:
+		on_destroy = script_ref_create(SewerDrain_destroy);
+		
+		return id;
+	}
+	
+#define SewerDrain_destroy
+	 // Sound:
+	sound_play_pitch(snd_dead, 1 - random(0.3));
+	with(instance_nearest(x, y, Player)){
+		sound_play_pitchvol(snd_chst, 1, 0.9);
+	}
+	
+	 // Deleet Stuff:
+	var	_x1 = bbox_left,
+		_y1 = bbox_top - 16,
+		_x2 = bbox_right,
+		_y2 = bbox_bottom;
+		
+	if(fork()){
+		repeat(2){
+			wall_clear(_x1, _y1, _x2, _y2);
+			wait 0;
+		}
+		exit;
+	}
+	
+	 // Corpse:
+	with(instance_create(x, y, Corpse)){
+		sprite_index = other.spr_dead;
+		image_index = 1 - image_speed;
+		mask_index = other.mask_index;
+		image_xscale = other.image_xscale;
+		size = other.size;
+	}
+	repeat(6){
+		with(instance_create(x + orandom(8), y + orandom(8), Debris)){
+			direction = angle_lerp(direction, 90, 1/4);
+		}
+	}
+	
+	/// Secret Room:
+	var _w = 4,
+		_h = 3,
+		_type = "",
+		_spawnX = x,
+		_spawnY = y,
+		_spawnDis = 0,
+		_dirStart = 90,
+		_dirOff = 45,
+		_floorDis = 32,
+		_spawnFloor = instance_nearest(x, y, Floor);
+	
+	floor_set_align(32, 32, null, null);
+	
+	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+			floor_tunnel(x, y, other.x, other.y);
+		}
+	}
+	
+	floor_reset_align();
+	
+	 // No Leaving:
+	if(instance_exists(enemy)) portal_poof();
+	
+#define SewerPool_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_floor = spr.SewerPool;
+		sprite_index = msk.SewerPool;
+		depth = 4;
+		
+		 // Vars:
+		mask_index = -1;
+		fx_color = make_color_rgb(130 - 40, 189, 5);
+		right = choose(-1, 1);
+		setup = true;
+		 
+		return id;
+	}
+	
+#define SewerPool_setup
+	setup = false;
+	
+	 // Floorerize:
+	var	_w = ceil(abs(sprite_width) / 32),
+		_h = ceil(abs(sprite_height) / 32),
+		_cx = 0,
+		_cy = 0,
+		_num = 0;
+		
+	with(floor_fill(x, y, _w, _h, "")){
+		sprite_index = other.spr_floor;
+		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
+		material = 5; // slimy stone
+		_cx += bbox_center_x;
+		_cy += bbox_center_y;
+		_num++;
+	}
+	
+	 // Center Position:
+	x = (_cx / _num);
+	y = (_cy / _num);
+	
+#define SewerPool_end_step
+	if(setup) SewerPool_setup();
+	
+	 // Sticky Sludge:
+	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching_lt(instances_matching_gt(hitme, "speed", 0), "size", 6))){
+		if(position_meeting(x, bbox_bottom, other)){
+			x = lerp(xprevious, x, 2/3);
+			y = lerp(yprevious, y, 2/3);
+			
+			 // Somethins comin up bro:
+			if(other.alarm0 > 0){
+				motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
+			}
+			
+			 // FX:
+			if(chance_ct(speed, 12)){
+				var o = other;
+				with(instance_create(x + orandom(2), bbox_bottom + random(4), Dust)){
+					sprite_index = sprBoltTrail;
+					image_blend = o.fx_color;
+					image_xscale *= random_range(1, 3);
+					depth = o.depth - 1;
+				}
+			}
+		}
+	}
+	
+	 // Effects:
+	with(instances_matching(instances_meeting(x, y, Dust), "sprite_index", sprDust)){
+		if(position_meeting(x, y, other)){
+			sprite_index = sprSweat;
+			image_blend = other.fx_color;
+			speed /= 3;
+		}
+	}
+	
 #define SewerRug_create(_x, _y)
 	with(instance_create(_x, _y, Effect)){
 		sprite_index = spr.Rug;

@@ -1026,7 +1026,7 @@
 	 // Bind Events:
 	script_bind_draw(draw_ravenflys, -8);
 	with(surfSludgePool){
-		active = (array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0);
+		active = (array_length(instances_matching(CustomObject, "name", "SludgePool", "SewerPool")) > 0);
 		if(active) script_bind_draw(draw_sludge, -4);
 	}
 	
@@ -1075,7 +1075,7 @@
 		}
 		_inst = instances_matching(_inst, "visible", true);
 		
-		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool"), "visible", true)){
+		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool", "SewerPool"), "visible", true)){
 			surface_set_target(_surf);
 			draw_clear_alpha(0, 0);
 				

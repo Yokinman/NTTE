@@ -687,6 +687,9 @@
 			msk.SludgePool      = sprite(p + "mskSludgePool",      1, 32, 32);
 			msk.SludgePoolSmall = sprite(p + "mskSludgePoolSmall", 1, 16, 16);
 			
+			 // Fire Pit Scorch Details:
+			FirePitScorch = sprite(p + "sprFirePitScorch", 3, 16, 16);
+			
 		//#endregion
 		
 		//#region CRYSTAL CAVES
@@ -919,6 +922,24 @@
 				
 			//#endregion
 			
+		//#endregion
+		
+		//#region SEWERS
+		m = "areas/Sewers/";
+		p = m;
+			
+			 // Sewer Pool:
+			SewerPool		= sprite(p + "sprSewerPool",	8,	0,	0);
+			msk.SewerPool	= sprite(p + "mskSewerPool",	1,	32, 64);
+			
+			//#region PROPS
+			p = m + "Props/"
+				
+				 // Sewer Drain:
+				SewerDrainIdle = sprite(p + "sprSewerDrainIdle", 8, 32, 38);
+				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
+				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
+				
 		//#endregion
 		
 		//#region PIZZA SEWERS

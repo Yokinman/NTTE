@@ -17,12 +17,17 @@
 	
 	global.event_list = [];
 	
+	 // Custom Event Tip Color:
+	global.tipColor = make_color_rgb(175, 143, 106);
+	
 	 // Event Execution Order:
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
+	teevent_add("SlimeBath");
 	teevent_add("GatorDen");
 	teevent_add("RavenArena");
+	teevent_add("FirePit");
 	teevent_add("SealPlaza");
 	
 #macro spr global.spr
@@ -30,6 +35,8 @@
 #macro snd global.snd
 #macro mus global.mus
 #macro sav global.sav
+
+#macro tipCol global.tipColor
 
 #macro area_campfire     0
 #macro area_desert       1
@@ -50,7 +57,7 @@
 
 #macro ScorpionCityPet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
 
-#define BanditCamp_text    return "BANDITS";
+#define BanditCamp_text    return choose(`@(color:${tipCol})BANDITS`, `@(color:${tipCol})BASE OF OPERATIONS`);
 #define BanditCamp_area    return area_desert;
 #define BanditCamp_chance  return ((GameCont.subarea == 3) ? 1/10 : ((GameCont.loops > 0) ? 1/20 : 0));
 
@@ -168,7 +175,7 @@
 	floor_reset_align();
 	
 	
-#define MaggotPark_text    return "SMELLS BAD";
+#define MaggotPark_text    return choose(`@(color:${tipCol})SMELLS BAD`, `THE SOUND OF @(color:${tipCol})FLIES`);
 #define MaggotPark_area    return area_desert;
 #define MaggotPark_chance  return 1/60;
 
@@ -281,7 +288,7 @@
 	floor_reset_style();
 	
 	
-#define ScorpionCity_text    return "WHERE ARE WE GOING";
+#define ScorpionCity_text    return choose(`THE AIR @(color:${tipCol})STINGS`, `@(color:${tipCol})WHERE ARE WE GOING`);
 #define ScorpionCity_area    return area_desert;
 #define ScorpionCity_chance  return array_length(ScorpionCityPet);
 
@@ -411,8 +418,36 @@
 	}
 	
 	
+#define SlimeBath_text		return choose(`@(color:${tipCol})RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `THE @(color:${tipCol})WATER@w'S FINE`, `@(color:${tipCol})ACID RAIN @wRUNOFF`);
+#define SlimeBath_area		return area_sewers;
+#define SlimeBath_chance	return 1/5;
+#define SlimeBath_create
+	var	_w = 2,
+		_h = 4,
+		_type = "",
+		_dirStart = 90,
+		_dirOff = 0,
+		_floorDis = 0,
+		_spawnX = x,
+		_spawnY = y,
+		_spawnDis = 160,
+		_spawnFloor = FloorNormal;
+		
+	floor_set_align(32, 32, null, null);
 	
-#define GatorDen_text    return "DISTANT CHATTER";
+	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+			
+			 // The Bath:
+			obj_create(x, y, "SewerPool");
+			obj_create(x + 16, y - 64, "SewerDrain");
+		}
+	}
+	
+	floor_reset_align();
+
+
+#define GatorDen_text    return choose(`@(color:${tipCol})DISTANT CHATTER`, `@(color:${tipCol})YOU'RE NOT WELCOME HERE`);
 #define GatorDen_area    return area_sewers;
 #define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("lairCrown") ? 1/5 : 0));
 
@@ -708,7 +743,7 @@
 	}
 	
 	
-#define RavenArena_text    return "ENTER THE RING";
+#define RavenArena_text    return choose(`ENTER @(color:${tipCol})THE RING`, `CACOPHONOUS @(color:${tipCol})CAWING`);
 #define RavenArena_area    return area_scrapyards;
 #define RavenArena_chance  return ((GameCont.subarea != 3) ? 1/30 : 0);
 
@@ -866,7 +901,43 @@
 	}
 	
 	
-#define SealPlaza_text    return "DISTANT RELATIVES";
+#define FirePit_text	return choose(`@(color:${tipCol})SO HOT`, `@(color:${tipCol})RAIN @wTURNS TO @(color:${tipCol})STEAM`);
+#define FirePit_area	return area_scrapyards;
+#define FirePit_chance	return (GameCont.subarea != 3 ? 1/12 : 0);
+#define FirePit_create
+	with(Wall) if(place_meeting(x, y, Floor)){
+		instance_create(x, y, Trap);
+	}
+	
+	 // Baby Scorches:
+	with(instances_matching(Floor, "object_index", Floor)) if(chance(1, 4)){
+		with(instance_create(x + random(32), y + random(32), Scorchmark)){
+			sprite_index = spr.FirePitScorch;
+			image_angle	 = random(360);
+			image_speed  = 0;
+			image_index  = irandom(image_number);
+		}
+	}
+	
+#define FirePit_step
+	 // Fast Traps:
+	with(Trap){
+		var n = 10;
+		fire	= min(fire, 	10 + irandom(5));
+		alarm0	= min(alarm0,	35);
+	}
+	
+	 // Rain Turns to Steam:
+	with(instances_matching(RainSplash, "ntte_firepitevent_steam", null)){
+		ntte_firepitevent_steam = true;
+		
+		with(instance_create(x, y, Breath)){
+			image_angle  = random(90);
+			image_yscale = choose(-1, 1);
+		}
+	}
+	
+#define SealPlaza_text    return choose(`@(color:${tipCol})DISTANT RELATIVES`, `@(color:${tipCol})AWAY FROM HOME`, `MEMORY OF @(color:${tipCol})THE KING`);
 #define SealPlaza_area    return area_city;
 #define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ?  1/7 : 0);
 
@@ -896,14 +967,25 @@
 			_iglooSpawnFloor = floors;
 			
 		 // Igloos:
-		repeat(2 + irandom(2)){
+		repeat(3){
 			with(floor_room(_iglooSpawnX, _iglooSpawnY, _iglooSpawnDis, _iglooSpawnFloor, _iglooW, _iglooH, _iglooType, _iglooDirOff, _iglooFloorDis)){
-				obj_create(x, y, "Igloo");
+				with(obj_create(x, y, "Igloo")){
+					seal_count -= 2;
+				}
 			}
 		}
 		
 		 // Royal Presence:
 		obj_create(x, y, "PalankingStatue");
+		
+		 // The Neighbors:
+		repeat(3) instance_create(x, y, Bandit);
+		repeat(2) with(instance_random(instances_matching(floors, "", null))){
+			if(!place_meeting(x, y, hitme) && !place_meeting(x, y, Wall)){
+				instance_create(x + 16, y + 16, SnowMan);
+			}
+		}
+		
 	}
 	
 	floor_reset_align();

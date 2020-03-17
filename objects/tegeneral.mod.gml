@@ -1881,7 +1881,7 @@
 		
 		 // Vars:
 		mask_index = -1;
-		my_health = 30;
+		maxhealth = 30;
 		team = 1;
 		size = 3;
 		seal_count = 5 + irandom(3);
@@ -1908,7 +1908,7 @@
 		
 	 // Begin:
 	if(!seal_spawn){
-		if(!instance_exists(e) || (instance_exists(p) && (point_distance(x, y, p.x, p.y) < point_distance(x, y, e.x, e.y)))){
+		if(!instance_exists(e) || (instance_exists(p) && (point_distance(x, y, p.x, p.y) < point_distance(x, y, e.x, e.y))) || my_health < maxhealth){
 			alarm0 = 60;
 			
 			seal_spawn = true;
@@ -1926,18 +1926,12 @@
 	 // Seal Spew:
 	else{
 		alarm0 = -1;
-		if(seal_count > 0){
+		if(seal_count-- > 0){
 			alarm0 = 2 + random(3);
 			
 			 // The Boys:
 			with(obj_create(x, y, "Seal")){
 				type = choose(other.type, 4);
-			}
-			
-			 // Empty Nest:
-			seal_count--;
-			if(seal_count <= 0){
-				alarm0 = -1;
 			}
 		}
 	}
