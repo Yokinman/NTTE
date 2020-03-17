@@ -357,6 +357,110 @@
 				}
 			}
 			
+			 // Blocked Room:
+			if(chance(1, 1)){
+				var	_w = 2,
+					_h = 2,
+					_type = "",
+					_dirOff = 0,
+					_floorDis = 32,
+					_spawnDis = 96,
+					_spawnFloor = FloorNormal;
+					
+				floor_set_align(32, 32, null, null);
+				
+				 // Generate Room:
+				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+					var	_cx = x,
+						_cy = y;
+						
+					 // Remove Softlock Prevention:
+					with(tunnel) instance_delete(id);
+					
+					 // Decals:
+					with(instance_random(floors)){
+						obj_create(bbox_center_x, bbox_center_y, "TopDecal");
+					}
+					
+					 // Barrel Wall Entrance:
+					var	_ow = (_w * 32) / 2,
+						_oh = (_h * 32) / 2,
+						_ang = 90 * round(point_direction(xstart, ystart, x, y) / 90);
+						
+					for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+						var	_x = x + lengthdir_x(_ow + _floorDis + 1, _dir),
+							_y = y + lengthdir_y(_oh + _floorDis + 1, _dir),
+							_ox = abs(lengthdir_x(_ow + 1, _dir - 90)),
+							_oy = abs(lengthdir_y(_oh + 1, _dir - 90)),
+							_inst = instance_rectangle_bbox(_x - _ox, _y - _oy, _x + _ox, _y + _oy, Floor);
+							
+						if(array_length(_inst) > 0){
+							var	_doorSide = ((_dir % 180) == 0),
+								_doorDis = (_doorSide ? _h : _w) * 32,
+								_doorW = (_doorSide ? _floorDis : _doorDis) / 32,
+								_doorH = (_doorSide ? _doorDis : _floorDis) / 32,
+								_doorX = x + lengthdir_x(_ow + _floorDis - 8, _dir),
+								_doorY = y + lengthdir_y(_oh + _floorDis - 8, _dir);
+								
+							_cx += lengthdir_x((_floorDis / 2) - 8, _dir);
+							_cy += lengthdir_y((_floorDis / 2) - 8, _dir);
+							
+							 // Connect to Level:
+							floor_fill(
+								_x - lengthdir_x((_floorDis / 2) + 1, _dir),
+								_y - lengthdir_y((_floorDis / 2) + 1, _dir),
+								_doorW,
+								_doorH,
+								""
+							);
+							
+							 // Walls:
+							for(var _dis = 8; _dis < _doorDis; _dis += 16){
+								with(instance_create(
+									_doorX + lengthdir_x(_dis - (_doorDis / 2), _dir - 90) - 8,
+									_doorY + lengthdir_y(_dis - (_doorDis / 2), _dir - 90) - 8,
+									Wall
+								)){
+									if(!position_meeting(bbox_center_x + lengthdir_x(16, _dir), bbox_center_y + lengthdir_y(16, _dir), Wall)){
+										//topspr = spr.Wall1TopRubble;
+										//topindex = irandom(sprite_get_number(topspr) - 1);
+									}
+								}
+							}
+							
+							 // Barrel:
+							with(instance_nearest_bbox(x + orandom(1), y + orandom(1), _inst)){
+								with(instances_meeting(x, y, Wall)){
+									instance_destroy();
+								}
+								with(instance_create(bbox_center_x, bbox_center_y, Barrel)){
+									size = 2;
+									move_contact_solid(point_direction(x, y, _doorX, _doorY) + orandom(60), random(8));
+									
+									 // Go Away Bro:
+									with(instances_meeting(x, y, [chestprop, hitme])){
+										if(place_meeting(x, y, other)){
+											x = _cx;
+											y = _cy;
+											xstart = x;
+											ystart = y;
+										}
+									}
+								}
+							}
+							
+							 // No More Entrances:
+							if(chance(1, 3)) break;
+						}
+					}
+					
+					 // Secrets Within:
+					instance_create(_cx, _cy, choose(WeaponChest, GoldScorpion));
+				}
+				
+				floor_reset_align();
+			}
+			
 			break;
 			
 		case area_sewers: /// SEWERS
