@@ -373,9 +373,6 @@
 					var	_cx = x,
 						_cy = y;
 						
-					 // Remove Softlock Prevention:
-					with(tunnel) instance_delete(id);
-					
 					 // Decals:
 					with(instance_random(floors)){
 						obj_create(bbox_center_x, bbox_center_y, "TopDecal");

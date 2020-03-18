@@ -1165,6 +1165,76 @@
 	}
 	
 	
+#define SunkenRoom_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mask_index = mskFloor;
+		image_xscale = 1;
+		image_yscale = 1;
+		floors = [];
+		size = 1;
+		
+		return id;
+	}
+	
+#define SunkenRoom_step
+	if(instance_exists(Floor)){
+		if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+			var _tunnel = false;
+			
+			 // Player/Enemy Check:
+			with(floors) if(instance_exists(self)){
+				if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+					_tunnel = true;
+					break;
+				}
+			}
+			
+			 // Tunnel to Main Level:
+			if(_tunnel){
+				var	_x = bbox_center_x,
+					_y = bbox_center_y,
+					_spawnX = 10016,
+					_spawnY = 10016,
+					_tunnelSize = size,
+					_tunnelFloor = [];
+					
+				 // Get Position of Oldest Floor & Sort Floors by Closest First:
+				with(FloorNormal){
+					_spawnX = bbox_center_x;
+					_spawnY = bbox_center_y;
+					if(!array_exists(other.floors, id)){
+						array_push(_tunnelFloor, [id, point_distance(bbox_center_x, bbox_center_y, _x, _y)]);
+					}
+				}
+				array_sort_sub(_tunnelFloor, 1, true);
+				
+				 // Tunnel to the Nearest Main-Level Floor:
+				with(_tunnelFloor){
+					var _break = false;
+					with(self[0]){
+						for(var	_fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+							for(var	_fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+								if(path_reaches(path_create(_fx + 8, _fy + 8, _spawnX, _spawnY, Wall), _spawnX, _spawnY, Wall)){
+									with(floor_tunnel(bbox_center_x, bbox_center_y, _x, _y)){
+										image_yscale *= _tunnelSize;
+									}
+									_break = true;
+									break;
+								}
+							}
+							if(_break) break;
+						}
+					}
+					if(_break) break;
+				}
+				
+				instance_destroy();
+			}
+		}
+	}
+	
+	
 #define WaterStreak_create(_x, _y)
 	with(instance_create(_x, _y, AcidStreak)){
 		 // Visual:

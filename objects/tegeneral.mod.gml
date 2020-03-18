@@ -2246,7 +2246,7 @@
 		visible = creator.visible;
 		persistent = creator.persistent;
 	}
-		
+	
 	 // Effects:
 	if(visible && chance_ct(1, 4)){
 		scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
