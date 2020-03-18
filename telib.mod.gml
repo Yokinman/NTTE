@@ -473,10 +473,10 @@
 									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
 									if(array_length(_bind) <= 0 || self == "draw"){
 										switch(self){
-											case "step":       _bind = script_bind_step(ntte_bind, 0);       break;
-											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0); break;
-											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);   break;
-											case "draw":       _bind = script_bind_draw(ntte_bind, depth);   break;
+											case "step":       _bind = script_bind_step(ntte_bind, 0);           break;
+											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0);     break;
+											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);       break;
+											case "draw":       _bind = script_bind_draw(ntte_bind, _inst.depth); break;
 										}
 										with(_bind){
 											name = "NTTEBind_" + other;
@@ -485,7 +485,7 @@
 										}
 									}
 									with(_bind){
-										array_push(inst, other);
+										array_push(inst, _inst);
 									}
 								}
 							}
@@ -692,6 +692,9 @@
 	if(!_isDraw){
 		inst = instances_matching_ne(GameObject, _varName, null);
 	}
+	else{
+		inst = instances_matching(inst, "", null);
+	}
 	
 	 // Run Events:
 	if(array_length(inst) > 0){
@@ -699,6 +702,7 @@
 			 // Depth:
 			if(_isDraw){
 				other.depth = depth - 0.0000000000001;
+				if(!visible) continue;
 			}
 			
 			 // Script:
