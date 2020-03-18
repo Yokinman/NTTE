@@ -459,39 +459,33 @@
 					_modName = _scrt[1];
 
 				with(_events){
-					var v = (_isCustom ? "on_" + self : "ntte_bind_" + self);
-					if(v not in other || is_undefined(variable_instance_get(other, v))){
+					var _varName = (_isCustom ? "on_" + self : "ntte_bind_" + self);
+					if(_varName not in other || is_undefined(variable_instance_get(other, _varName))){
 						var _modScrt = _name + "_" + self;
-
+						
 						if(mod_script_exists(_modType, _modName, _modScrt)){
-							 // Normal Event Set:
-							if(_isCustom){
-								variable_instance_set(other, v, [_modType, _modName, _modScrt]);
-							}
-
+							variable_instance_set(other, _varName, [_modType, _modName, _modScrt]);
+							
 							 // Auto Script Binding:
-							else{
-								var s = variable_instance_get(other, "on_" + self, null);
-								if(array_length(s) < 3 || !mod_script_exists(s[0], s[1], s[2])){
+							if(!_isCustom){
+								var _onScrt = variable_instance_get(other, "on_" + self, null);
+								if(array_length(_onScrt) < 3 || !mod_script_exists(_onScrt[0], _onScrt[1], _onScrt[2])){
 									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
 									if(array_length(_bind) <= 0 || self == "draw"){
 										switch(self){
-											case "step":		_bind = script_bind_step(ntte_bind, 0);			break;
-											case "begin_step":	_bind = script_bind_begin_step(ntte_bind, 0);	break;
-											case "end_step":	_bind = script_bind_end_step(ntte_bind, 0);		break;
-											case "draw":		_bind = script_bind_draw(ntte_bind, 0);			break;
+											case "step":       _bind = script_bind_step(ntte_bind, 0);       break;
+											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0); break;
+											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);   break;
+											case "draw":       _bind = script_bind_draw(ntte_bind, depth);   break;
 										}
-										if(instance_exists(_bind)){
-											with(_bind){
-												name = "NTTEBind_" + other;
-												inst_list = [];
-												persistent = true;
-											}
-											variable_instance_set(other, v, _bind);
+										with(_bind){
+											name = "NTTEBind_" + other;
+											inst = [];
+											persistent = true;
 										}
 									}
 									with(_bind){
-										array_push(inst_list, { "inst" : _inst, "script" : [_modType, _modName, _modScrt] });
+										array_push(inst, other);
 									}
 								}
 							}
@@ -499,15 +493,7 @@
 
 						 // Defaults:
 						else if(_isCustom) with(other){
-							switch(v){
-								/*
-								case "on_step":
-									if(_isEnemy){
-										on_step = enemy_step_ntte;
-									}
-									break;
-								*/
-
+							switch(_varName){
 								case "on_hurt":
 									on_hurt = enemy_hurt;
 									break;
@@ -534,9 +520,9 @@
 					 // Override Events:
 					var _override = ["step", "draw"];
 					with(_override){
-						var v = "on_" + self;
-						if(v in other){
-							var	e = variable_instance_get(other, v),
+						var _varName = "on_" + self;
+						if(_varName in other){
+							var	e = variable_instance_get(other, _varName),
 								_objScrt = script_ref_create(script_get_index("obj_" + self));
 
 							if(!is_array(e) || !array_equals(e, _objScrt)){
@@ -544,7 +530,7 @@
 									variable_instance_set(id, "on_ntte_" + other, e);
 
 									 // Override Specifics:
-									switch(v){
+									switch(_varName){
 										case "on_step":
 											 // Setup Custom NTTE Event Vars:
 											if("ntte_anim" not in self){
@@ -594,7 +580,7 @@
 											break;
 
 										default:
-											variable_instance_set(id, v, []);
+											variable_instance_set(id, _varName, []);
 									}
 								}
 							}
@@ -685,32 +671,45 @@
 
 #define obj_draw // Only used for debugging lag
 	if(DebugLag) trace_lag_bgn(name + "_draw");
-
+	
 	script_ref_call(on_ntte_draw);
-
+	
 	if(DebugLag) trace_lag_end(name + "_draw");
-
+	
 #define ntte_bind
-	if(array_length(inst_list) > 0){
-		if(DebugLag) trace_time();
-
-		with(inst_list){
-			if(instance_exists(inst)){
-				if(other.object_index == CustomDraw && other.depth != inst.depth - 1){
-					other.depth = inst.depth - 1;
-				}
-
-				 // Call Bound Script:
-				var s = script;
-				with(inst) mod_script_call(s[0], s[1], s[2]);
+	 // Determine Event Type:
+	var	_varName = "ntte_bind_",
+		_isDraw = instance_is(self, CustomDraw);
+		
+	switch(object_index){
+		case CustomStep:      _varName += "step";       break;
+		case CustomBeginStep: _varName += "begin_step"; break;
+		case CustomEndStep:   _varName += "end_step";   break;
+		case CustomDraw:      _varName += "draw";       break;
+	}
+	
+	 // Searching all GameObjects to fix instance_copy():
+	if(!_isDraw){
+		inst = instances_matching_ne(GameObject, _varName, null);
+	}
+	
+	 // Run Events:
+	if(array_length(inst) > 0){
+		with(inst){
+			 // Depth:
+			if(_isDraw){
+				other.depth = depth - 0.0000000000001;
 			}
-			else other.inst_list = array_delete_value(other.inst_list, self);
+			
+			 // Script:
+			var _scrt = variable_instance_get(self, _varName);
+			if(array_length(_scrt) > 2){
+				mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
+			}
 		}
-
-		if(DebugLag) trace_time(name);
 	}
 	else instance_destroy();
-
+	
 #define step
 	if(DebugLag) script_bind_end_step(end_step_trace_lag, 0);
 	
@@ -3092,9 +3091,14 @@
 
 #define floor_bones(_num, _chance, _linked)
 	/*
-		Creates Bones decals on to the Walls left and right of the current Floor
-		Doesn't create decals if there are any adjacent Floors to the left or right of the current Floor or there are any Walls on the current Floor
+		Checks if the current Floor is a vertical hallway and then creates Bones decals on the Walls left and right of the current Floor
 		
+		Args:
+			sprite - The sprite, bro
+			num    - How many decals can be made vertically
+			chance - Chance to create each decal
+			linked - Decal should always spawn with one on the other side, true/false
+			
 		Ex:
 			floor_bones(2, 1,    false) == DESERT / CAMPFIRE
 			floor_bones(1, 1/10, true ) == SEWERS / PIZZA SEWERS / JUNGLE
@@ -3132,17 +3136,17 @@
 		
 		with(_floors) if(instance_exists(self)){
 			array_push(other.list, {
-				inst        : id,
-				time        : _maxTime,
-				time_max    : _maxTime,
-				color       : background_color,
-				flash       : false,
-				move_dis    : 4,
-				move_dir    : 90,
-				ox          : 0,
-				oy          : -8,
-				bx          : 0,
-				by          : 0
+				inst     : id,
+				time     : _maxTime,
+				time_max : _maxTime,
+				color    : background_color,
+				flash    : false,
+				move_dis : 4,
+				move_dir : 90,
+				ox       : 0,
+				oy       : -8,
+				bx       : 0,
+				by       : 0
 			})
 		}
 		
