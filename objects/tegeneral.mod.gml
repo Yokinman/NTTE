@@ -2245,56 +2245,54 @@
 	if(instance_exists(creator)){
 		visible = creator.visible;
 		persistent = creator.persistent;
+	}
 		
-		 // Effects:
-		if(visible && chance_ct(1, 4)){
-			scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
-		}
-		
-		 // Doin':
-		hold_seek -= current_time_scale;
-		if(target != noone && hold_seek <= 0){
-			if(instance_exists(target)){
-				if(!place_meeting(x, y, target)){
-					motion_add_ct(point_direction(x, y, target.x, target.y), 1);
-					speed = min(speed, 16);
-					image_angle = direction;
-					
-					if(current_frame_active){
-						with(instance_create(x, y, DiscTrail)){
-							image_blend = other.trail_col;
-						}
-					}
-				}
+	 // Effects:
+	if(visible && chance_ct(1, 4)){
+		scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
+	}
+	
+	 // Doin':
+	hold_seek -= current_time_scale;
+	if(target != noone && hold_seek <= 0){
+		if(instance_exists(target)){
+			if(!place_meeting(x, y, target)){
+				motion_add_ct(point_direction(x, y, target.x, target.y), 1);
+				speed = min(speed, 16);
+				image_angle = direction;
 				
-				else{
-					 // Mutate:
-					with(creator){
-						stat.mutations++;
-						array_push(skills_active, obj_create(x, y, "OrchidSkill"));
+				if(current_frame_active){
+					with(instance_create(x, y, DiscTrail)){
+						image_blend = other.trail_col;
 					}
-					
-					 // Goodbye:
-					instance_destroy();
 				}
 			}
 			
 			else{
-				 // Fresh Meat:
-				if(instance_exists(Player)){
-					target = instance_nearest(x, y, Player);
+				 // Mutate:
+				var s = obj_create(x, y, "OrchidSkill");
+				with(creator){
+					stat.mutations++;
+					array_push(skills_active, s);
 				}
 				
-				 // Disappear:
-				else{
-					instance_destroy();
-				}
+				 // Goodbye:
+				instance_destroy();
+			}
+		}
+		
+		else{
+			 // Fresh Meat:
+			if(instance_exists(Player)){
+				target = instance_nearest(x, y, Player);
+			}
+			
+			 // Disappear:
+			else{
+				instance_destroy();
 			}
 		}
 	}
-	
-	 // Goodbye:
-	else instance_destroy();
 	
 #define OrchidSkillBecome_draw
 	draw_self();
