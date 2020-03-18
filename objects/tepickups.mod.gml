@@ -1848,34 +1848,34 @@
 			zspeed *= s - 0.5;
 		}
 	}
-
-
+	
+	
 #define CustomChest_create(_x, _y)
 	with(instance_create(_x, _y, chestprop)){
 		 // Visual:
 		sprite_index = sprAmmoChest;
 		spr_dead = sprAmmoChestOpen;
-
+		
 		 // Sound:
 		snd_open = sndAmmoChest;
 		
 		 // Vars:
 		nochest = 0; // Adds to GameCont.nochest if not grabbed
-
+		
 		 // Events:
 		on_step = ["", "", ""];
 		on_open = ["", "", ""];
-
+		
 		return id;
 	}
-
+	
 #define CustomChest_step
 	 // Call Chest Step Event:
 	var e = on_step;
 	if(mod_script_exists(e[0], e[1], e[2])){
 		mod_script_call(e[0], e[1], e[2]);
 	}
-
+	
 	 // Open Chest:
 	var c = [Player, PortalShock];
 	for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
@@ -1889,20 +1889,20 @@
 					projectile_hit_raw(other, 1, true);
 				}
 			}
-
+			
 			 // Call Chest Open Event:
 			var e = on_open;
 			if(mod_script_exists(e[0], e[1], e[2])){
 				mod_script_call(e[0], e[1], e[2]);
 			}
-
+			
 			 // Effects:
 			if(sprite_exists(spr_dead)){
 				with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_dead;
 			}
 			instance_create(x, y, FXChestOpen);
 			sound_play(snd_open);
-
+			
 			instance_destroy();
 			exit;
 		}
@@ -1919,8 +1919,8 @@
 		}
 		exit;
 	}
-
-
+	
+	
 #define CustomPickup_create(_x, _y)
 	with(instance_create(_x, _y, Pickup)){
 		 // Visual:
@@ -1929,11 +1929,11 @@
 		spr_fade = sprSmallChestFade;
 		image_speed = 0.4;
 		shine = 0.04;
-
+		
 		 // Sound:
 		snd_open = sndAmmoPickup;
 		snd_fade = sndPickupDisappear;
-
+		
 		 // Vars:
 		mask_index = mskPickup;
 		friction = 0.2;
@@ -1944,19 +1944,19 @@
 		pull_dis = 40 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd = 6;
 		num = 1;
-
+		
 		 // Events:
 		on_step = ["", "", ""];
 		on_pull = ["", "", ""];
 		on_open = ["", "", ""];
 		on_fade = ["", "", ""];
-
+		
 		return id;
 	}
-
+	
 #define CustomPickup_pull
 	return true;
-
+	
 #define CustomPickup_step
 	array_push(global.pickup_custom, id); // For step event management
 	
