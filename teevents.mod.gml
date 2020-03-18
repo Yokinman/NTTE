@@ -24,7 +24,7 @@
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
-	teevent_add("SlimeBath");
+	teevent_add("SewerPool");
 	teevent_add("GatorDen");
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
@@ -57,7 +57,7 @@
 
 #macro ScorpionCityPet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
 
-#define BanditCamp_text    return choose(`@(color:${tipCol})BANDITS`, `@(color:${tipCol})BASE OF OPERATIONS`);
+#define BanditCamp_text    return `@(color:${tipCol})BANDITS`;
 #define BanditCamp_area    return area_desert;
 #define BanditCamp_chance  return ((GameCont.subarea == 3) ? 1/10 : ((GameCont.loops > 0) ? 1/20 : 0));
 
@@ -175,7 +175,7 @@
 	floor_reset_align();
 	
 	
-#define MaggotPark_text    return choose(`@(color:${tipCol})SMELLS BAD`, `THE SOUND OF @(color:${tipCol})FLIES`);
+#define MaggotPark_text    return `THE SOUND OF @(color:${tipCol})FLIES`; // `@(color:${tipCol})SMELLS BAD` 
 #define MaggotPark_area    return area_desert;
 #define MaggotPark_chance  return 1/60;
 
@@ -418,11 +418,11 @@
 	}
 	
 	
-#define SlimeBath_text    return choose(`@(color:${tipCol})RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `THE @(color:${tipCol})WATER@w'S FINE`, `@(color:${tipCol})ACID RAIN @wRUNOFF`);
-#define SlimeBath_area    return area_sewers;
-#define SlimeBath_chance  return 1/5;
+#define SewerPool_text    return choose(`@(color:${tipCol})RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `@(color:${tipCol})ACID RAIN @wRUNOFF`);
+#define SewerPool_area    return area_sewers;
+#define SewerPool_chance  return 1/5;
 
-#define SlimeBath_create
+#define SewerPool_create
 	var	_w = 2,
 		_h = 4,
 		_type = "",
@@ -443,9 +443,19 @@
 				sprite_index = msk.SewerPool;
 				spr_floor = spr.SewerPool;
 				detail = false;
-				
-				 // The Drain:
+
 				obj_create(x + 16, y - 64, "SewerDrain");
+			}
+			
+			 // Just Bros Bathing Together:
+			if(point_distance(x, y, 10000, 10000) >= 128){
+				repeat(2 + irandom(1)){
+					var r = choose(-1, 1);
+					with(obj_create(x - irandom(16), y + orandom(24), "Cat")){
+						right = r;
+						sit = true;
+					}
+				}
 			}
 		}
 	}
@@ -453,7 +463,7 @@
 	floor_reset_align();
 
 
-#define GatorDen_text    return choose(`@(color:${tipCol})DISTANT CHATTER`, `@(color:${tipCol})YOU'RE NOT WELCOME HERE`);
+#define GatorDen_text    return `@(color:${tipCol})DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
 #define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("lairCrown") ? 1/5 : 0));
 
@@ -749,7 +759,7 @@
 	}
 	
 	
-#define RavenArena_text    return choose(`ENTER @(color:${tipCol})THE RING`, `CACOPHONOUS @(color:${tipCol})CAWING`);
+#define RavenArena_text    return `ENTER @(color:${tipCol})THE RING`;
 #define RavenArena_area    return area_scrapyards;
 #define RavenArena_chance  return ((GameCont.subarea != 3) ? 1/30 : 0);
 
@@ -907,14 +917,20 @@
 	}
 	
 	
-#define FirePit_text    return choose(`@(color:${tipCol})SO HOT`, `@(color:${tipCol})RAIN @wTURNS TO @(color:${tipCol})STEAM`);
+#define FirePit_text    return `@(color:${tipCol})RAIN DROPS @wTURN TO @(color:${tipCol})STEAM`;
 #define FirePit_area    return area_scrapyards;
-#define FirePit_chance  return ((GameCont.subarea != 3) ? 100/12 : 0);
+#define FirePit_chance  return ((GameCont.subarea != 3) ? 1/12 : 0);
 
 #define FirePit_create
 	 // More Traps:
-	with(Wall) if(place_meeting(x, y, Floor)){
+	with(Wall) if(place_meeting(x, y, Floor) && !place_meeting(x, y, Trap)){
 		instance_create(x, y, Trap);
+	}
+	
+	 // Balance:
+	with(MeleeBandit){
+		instance_create(x, y, Bandit);
+		instance_delete(id);
 	}
 	
 	 // Baby Scorches:
@@ -930,7 +946,6 @@
 #define FirePit_step
 	 // Fast Traps:
 	with(Trap){
-		var n = 10;
 		fire   = min(fire,   10 + irandom(5));
 		alarm0 = min(alarm0, 35);
 	}
@@ -946,7 +961,7 @@
 	}
 	
 	
-#define SealPlaza_text    return choose(`@(color:${tipCol})DISTANT RELATIVES`, `@(color:${tipCol})AWAY FROM HOME`, `MEMORY OF @(color:${tipCol})THE KING`);
+#define SealPlaza_text    return `@(color:${tipCol})DISTANT RELATIVES`;
 #define SealPlaza_area    return area_city;
 #define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ? 1/7 : 0);
 

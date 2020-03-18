@@ -932,6 +932,10 @@
 			SewerPool     = sprite(p + "sprSewerPool", 8,  0,  0);
 			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
 			
+			 // Secret:
+			FloorSewerWeb	= sprite(p + "sprFloorSewerWeb",	1,	0,	0);
+			FloorSewerDrain	= sprite(p + "sprFloorSewerDrain",	1,	0,	0);
+			
 			//#region PROPS
 			p = m + "Props/"
 				
@@ -939,6 +943,11 @@
 				SewerDrainIdle = sprite(p + "sprSewerDrainIdle", 8, 32, 38);
 				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
 				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
+				
+				 // Homage:
+				GatorStatueIdle = sprite(p + "sprGatorStatueIdle", 1, 16, 16);
+				GatorStatueHurt = sprite(p + "sprGatorStatueHurt", 3, 16, 16);
+				GatorStatueDead = sprite(p + "sprGatorStatueDead", 4, 16, 16);
 				
 			//#endregion
 			
@@ -1147,7 +1156,11 @@
 			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",    1, 12, 12);
 			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
 			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
-			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12)
+			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
+			
+			 // Orchid Chest:
+			OrchidChest 	= sprite(p + "sprOrchidChest",		1,	13,	8);
+			OrchidChestOpen = sprite(p + "sprOrchidChestOpen",	1,	13,	8);
 			
 			 // Overstock/Overheal:
 			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);

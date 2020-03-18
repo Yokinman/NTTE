@@ -3988,6 +3988,91 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	
+#define GatorStatue_create(_x, _y)
+	/*
+		Homage to Blaac's Hardmode. You should play it.
+	*/
+
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.GatorStatueIdle;
+		spr_hurt = spr.GatorStatueHurt;
+		spr_dead = spr.GatorStatueDead;
+		sprite_index = spr_idle;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndWallBreak;
+		
+		 // Vars:
+		maxhealth = 80;
+		raddrop = 8
+		size = 3;
+		pickup_indicator = scrPickupIndicator("BLESSING");
+		pickup_indicator.mask_index = mskReviveArea;
+		pickup_indicator.yoff = -12;
+		
+		return id;
+	}
+	
+#define GatorStatue_step
+	 // Accept Blessing:
+	with(pickup_indicator){
+		if(pick != -1){
+			var p = player_find(pick);
+			
+			 // Effects:
+			sound_play(p.snd_valt);
+			sound_play(sndShotReload);
+			with(instance_create(x - 1, y - 7, EatRad)){
+				sprite_index = sprEatBigRadPlut;
+				depth = other.depth - 1;
+			}
+			with(instance_create(x, y, PopupText)){
+				mytext = "BLESSED!";
+				target = other.pick;
+			}
+			
+			 // Skill:
+			with(obj_create(x, y, "OrchidSkill")){
+				color1	= make_color_rgb(072, 253, 008); // make_color_rgb(252, 056, 000);
+				color2	= make_color_rgb(003, 033, 018)
+				skill	= mut_shotgun_shoulders;
+				time	= 3600; // 2 minutes
+			}
+			
+			 // Inactive:
+			instance_delete(id);
+		}
+	}
+	
+#define GatorStatue_death
+	 // Effects:
+	repeat(10) scrFX([x, 16],	[y, 16],	[90, 1 + random(4)],			Dust);
+	repeat(10) scrFX( x, 		 y, 		[random(360), 2 + random(3)],	Debris);
+	repeat(10) scrFX( x, 		 y, 		[random(360), 1 + random(4)],	Shell).sprite_index = sprShotShell;
+
+	 // Merged Shell Weapons:
+	repeat(2){
+		var _part = null,S
+			_tries = 100;
+			
+		while(_tries-- > 0 && !(array_length(_part) >= 2 && weapon_get_type(_part[1].weap) == 2)){
+			_part = wep_merge_decide(0, GameCont.hard + 1);
+		}
+		
+		if(array_length(_part) >= 2) with(instance_create(x, y, WepPickup)){
+			wep = wep_merge(_part[0], _part[1]);
+			
+			ammo = true;
+			roll = true;
+			with(obj_create(x, y, "BackpackPickup")){
+				target = other;
+				event_perform(ev_step, ev_step_end);
+			}
+		}
+	}
+
 #define Manhole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -4591,7 +4676,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Secret Room:
 	with(instance_nearest_bbox(x, y - 16, FloorNormal)){
-		sprite_index = sprFloor2B;
+		sprite_index = spr.FloorSewerDrain;
 		
 		 // Generate:
 		var	_x = bbox_center_x,
@@ -4607,15 +4692,100 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 			floor_tunnel(x, y, _x, _y);
 			
-			 // Dusty:
-			with(floors) repeat(2){
-				var	_dx = random_range(bbox_left, bbox_right),
-					_dy = random_range(bbox_top, bbox_bottom);
-					
-				with(scrFX(_dx, _dy, [point_direction(_dx, _dy, _x, _y) + orandom(30), 3], Dust)){
-					image_xscale *= 2.5;
-					image_yscale *= 2.5;
+			 // General Floor Changes:
+			with(floors){
+				
+				 // Spiderize:
+				if(chance(2, 3)){
+					sprite_index = spr.FloorSewerWeb;
+					material = 5;
+					traction = 2;
 				}
+				
+				 // Dustify:
+				repeat(2){
+					var	_dx = random_range(bbox_left, bbox_right),
+						_dy = random_range(bbox_top, bbox_bottom);
+						
+					with(scrFX(_dx, _dy, [point_direction(_dx, _dy, _x, _y) + orandom(30), 3], Dust)){
+						image_xscale *= 2.5;
+						image_yscale *= 2.5;
+					}
+				}
+			}
+			
+			 // Enwall:
+			var o = 16;
+			instance_create(x - 64,	y - 32,	Wall);
+			instance_create(x + 48, y - 32, Wall);
+			instance_create(x - 64,	y + 16,	Wall);
+			instance_create(x + 48, y + 16, Wall);
+			
+			 // Decorate:
+			repeat(2) obj_create(x, y, "TopDecal");
+			
+			 // Layout:
+			var p = [];
+			
+			/// Common:
+				repeat(4) array_push(p, "WeaponChest");
+				repeat(4) array_push(p, "Backpack");
+				repeat(4) array_push(p, "AmmoChest");
+				
+			if(unlock_get("lairCrown")) 
+				repeat(3) array_push(p, "LairChest");
+				repeat(3) array_push(p, "HealthChest");
+				
+				repeat(20) array_push(p, "Spider");
+
+			if(skill_get(mut_shotgun_shoulders) <= 0)
+				repeat(2) array_push(p, "GatorStatue");
+				
+				repeat(1) array_push(p, "FrogQueen");
+			
+			switch(p[irandom(array_length(p) - 1)]){
+				case "WeaponChest":
+					instance_create(x - 24 + orandom(1), y + orandom(1), WeaponChest);
+					instance_create(x + 24 + orandom(1), y + orandom(1), WeaponChest);
+					break;
+					
+				case "HealthChest":
+					instance_create(x, y, HealthChest);
+					break;
+					
+				case "AmmoChest":
+					instance_create(x - 24 + orandom(1), y + orandom(1), AmmoChest);
+					instance_create(x + 24 + orandom(1), y + orandom(1), AmmoChest);
+					break;
+					
+				case "LairChest":
+					var r = choose(-1, 1);
+					obj_create(x - (24 * r) + orandom(1), y + orandom(1), "CatChest");
+					obj_create(x + (24 * r) + orandom(1), y + orandom(1), "BatChest");
+					break;
+					
+				case "Backpack":
+					obj_create(x, y, "Backpack");
+					break;
+					
+				case "Spider":
+					with(floors){
+						if(chance(2, 3) && !place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
+							if(chance(1, 3))	obj_create(x + (8 + random(16)), y + (8 + random(16)), "CrystalPropRed");
+							else				obj_create(x + 16, y + 16, "RedSpider");
+						}
+					}
+					break;
+					
+				case "GatorStatue":
+					var r = choose(-1, 1);
+					obj_create(x - (24 * r),	y - 24,	"CatLight");
+					obj_create(x - (24 * r),	y, 		"GatorStatue").image_xscale = r;
+					break;
+					
+				case "FrogQueen":
+					with(instance_create(x, y, FrogQueen)) alarm3 = 60;
+					break;
 			}
 		}
 		
