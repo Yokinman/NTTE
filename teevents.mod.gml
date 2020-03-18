@@ -17,8 +17,8 @@
 	
 	global.event_list = [];
 	
-	 // Custom Event Tip Color:
-	global.tipColor = make_color_rgb(175, 143, 106);
+	 // Event Tip Color:
+	tipCol = make_color_rgb(175, 143, 106);
 	
 	 // Event Execution Order:
 	teevent_add("MaggotPark");
@@ -418,9 +418,10 @@
 	}
 	
 	
-#define SlimeBath_text		return choose(`@(color:${tipCol})RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `THE @(color:${tipCol})WATER@w'S FINE`, `@(color:${tipCol})ACID RAIN @wRUNOFF`);
-#define SlimeBath_area		return area_sewers;
-#define SlimeBath_chance	return 1/5;
+#define SlimeBath_text    return choose(`@(color:${tipCol})RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `THE @(color:${tipCol})WATER@w'S FINE`, `@(color:${tipCol})ACID RAIN @wRUNOFF`);
+#define SlimeBath_area    return area_sewers;
+#define SlimeBath_chance  return 1/5;
+
 #define SlimeBath_create
 	var	_w = 2,
 		_h = 4,
@@ -437,10 +438,15 @@
 	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-			
 			 // The Bath:
-			obj_create(x, y, "SewerPool");
-			obj_create(x + 16, y - 64, "SewerDrain");
+			with(obj_create(x, y, "SludgePool")){
+				sprite_index = msk.SewerPool;
+				spr_floor = spr.SewerPool;
+				detail = false;
+				
+				 // The Drain:
+				obj_create(x + 16, y - 64, "SewerDrain");
+			}
 		}
 	}
 	
@@ -901,21 +907,23 @@
 	}
 	
 	
-#define FirePit_text	return choose(`@(color:${tipCol})SO HOT`, `@(color:${tipCol})RAIN @wTURNS TO @(color:${tipCol})STEAM`);
-#define FirePit_area	return area_scrapyards;
-#define FirePit_chance	return (GameCont.subarea != 3 ? 1/12 : 0);
+#define FirePit_text    return choose(`@(color:${tipCol})SO HOT`, `@(color:${tipCol})RAIN @wTURNS TO @(color:${tipCol})STEAM`);
+#define FirePit_area    return area_scrapyards;
+#define FirePit_chance  return ((GameCont.subarea != 3) ? 100/12 : 0);
+
 #define FirePit_create
+	 // More Traps:
 	with(Wall) if(place_meeting(x, y, Floor)){
 		instance_create(x, y, Trap);
 	}
 	
 	 // Baby Scorches:
-	with(instances_matching(Floor, "object_index", Floor)) if(chance(1, 4)){
-		with(instance_create(x + random(32), y + random(32), Scorchmark)){
+	with(FloorNormal) if(chance(1, 4)){
+		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Scorchmark)){
 			sprite_index = spr.FirePitScorch;
-			image_angle	 = random(360);
-			image_speed  = 0;
-			image_index  = irandom(image_number);
+			image_index = irandom(image_number - 1);
+			image_speed = 0;
+			image_angle = random(360);
 		}
 	}
 	
@@ -923,8 +931,8 @@
 	 // Fast Traps:
 	with(Trap){
 		var n = 10;
-		fire	= min(fire, 	10 + irandom(5));
-		alarm0	= min(alarm0,	35);
+		fire   = min(fire,   10 + irandom(5));
+		alarm0 = min(alarm0, 35);
 	}
 	
 	 // Rain Turns to Steam:
@@ -937,9 +945,10 @@
 		}
 	}
 	
+	
 #define SealPlaza_text    return choose(`@(color:${tipCol})DISTANT RELATIVES`, `@(color:${tipCol})AWAY FROM HOME`, `MEMORY OF @(color:${tipCol})THE KING`);
 #define SealPlaza_area    return area_city;
-#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ?  1/7 : 0);
+#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ? 1/7 : 0);
 
 #define SealPlaza_create
 	var	_minID = GameObject.id,

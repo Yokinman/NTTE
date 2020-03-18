@@ -4117,7 +4117,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_walk = spr_idle;
 		spr_hurt = spr.PizzaDrainHurt;
 		spr_dead = spr.PizzaDrainDead;
-		spr_shadow = mskNone;
+		spr_floor = spr.FloorLairB;
+		spr_shadow = -1;
 		image_xscale = choose(-1, 1);
 		image_speed = 0.4;
 		depth = -1;
@@ -4166,7 +4167,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			with(instance_create(_x, _y, Floor)){
 				styleb = true;
 				area = other.area;
-				sprite_index = area_get_sprite(area, sprFloor1B);
+				sprite_index = other.spr_floor;
 				with(instances_meeting(x, y, [TopPot, Bones])) instance_destroy();
 			}
 			for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
@@ -4177,12 +4178,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Takeover Walls:
 		if(place_meeting(x, y, Wall)){
-			with(instance_nearest(bbox_left - 16, y - 16, Wall)) outindex = 0;
-			with(instance_nearest(bbox_right,	  y - 16, Wall)) outindex = 0;
+			with(instance_nearest_bbox(bbox_left  - 8, y - 8, Wall)) outindex = 0;
+			with(instance_nearest_bbox(bbox_right + 8, y - 8, Wall)) outindex = 0;
 			while(place_meeting(x, y, Wall)){
 				with(instances_meeting(x, y, Wall)){
 					instance_create(x, y, InvisiWall);
-					sprite_index = sprWall102Trans;
+					sprite_index = area_get_sprite(GameCont.area, sprWall1Trans);
 					visible = true;
 					topspr = -1;
 					outspr = -1;
@@ -4265,12 +4266,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Corpse:
-	with(instance_create(x, y, Corpse)){
-		sprite_index = other.spr_dead;
+	with(corpse_drop(0, 0)){
 		image_index = 1 - image_speed;
-		mask_index = other.mask_index;
-		image_xscale = other.image_xscale;
-		size = other.size;
 	}
 	repeat(6){
 		with(instance_create(x + orandom(8), y + orandom(8), Debris)){
@@ -4530,20 +4527,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	x = xstart;
 	y = ystart;
 	depth = 0; // why must i force depth every frame mmmm
-
+	
 	 // Death without needing a corpse sprite haha:
 	if(my_health <= 0){
-		with(instance_create(x, y, Corpse)){
-			sprite_index = other.spr_dead;
-			mask_index = other.mask_index;
-			size = other.size;
-		}
-
+		corpse_drop(0, 0);
+		
 		 // Zap:
 		sound_play_pitch(sndPlantPotBreak, 1.6);
 		sound_play_pitchvol(sndLightningHit, 1, 2);
 		repeat(2) instance_create(x, y, PortalL);
-
+		
 		instance_delete(id);
 	}
 	
@@ -4552,8 +4545,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(obj_create(_x, _y, "PizzaDrain")){
 		 // Visual:
 		spr_idle = spr.SewerDrainIdle;
+		spr_walk = spr_idle;
 		spr_hurt = spr.SewerDrainHurt;
 		spr_dead = spr.SewerDrainDead;
+		spr_floor = sprFloor2;
 		sprite_index = spr_idle;
 		
 		 // Vars:
@@ -4587,118 +4582,62 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Corpse:
-	with(instance_create(x, y, Corpse)){
-		sprite_index = other.spr_dead;
-		image_index = 1 - image_speed;
-		mask_index = other.mask_index;
-		image_xscale = other.image_xscale;
-		size = other.size;
-	}
+	corpse_drop(0, 0);
 	repeat(6){
 		with(instance_create(x + orandom(8), y + orandom(8), Debris)){
 			direction = angle_lerp(direction, 90, 1/4);
 		}
 	}
 	
-	/// Secret Room:
-	var _w = 4,
-		_h = 3,
-		_type = "",
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 0,
-		_dirStart = 90,
-		_dirOff = 45,
-		_floorDis = 32,
-		_spawnFloor = instance_nearest(x, y, Floor);
-	
-	floor_set_align(32, 32, null, null);
-	
-	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-			floor_tunnel(x, y, other.x, other.y);
+	 // Secret Room:
+	with(instance_nearest_bbox(x, y - 16, FloorNormal)){
+		sprite_index = sprFloor2B;
+		
+		 // Generate:
+		var	_x = bbox_center_x,
+			_y = bbox_center_y,
+			_w = 4,
+			_h = 3,
+			_type = "",
+			_dirStart = 90,
+			_dirOff = 45,
+			_floorDis = 32,
+			_minID = GameObject.id;
+			
+		with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+			floor_tunnel(x, y, _x, _y);
+			
+			 // Dusty:
+			with(floors) repeat(2){
+				var	_dx = random_range(bbox_left, bbox_right),
+					_dy = random_range(bbox_top, bbox_bottom);
+					
+				with(scrFX(_dx, _dy, [point_direction(_dx, _dy, _x, _y) + orandom(30), 3], Dust)){
+					image_xscale *= 2.5;
+					image_yscale *= 2.5;
+				}
+			}
+		}
+		
+		 // Reveal:
+		with(floor_reveal(
+			array_combine([id], instances_matching_gt(Floor, "id", _minID)),
+			10
+		)){
+			flash = true;
+			move_dis = 0;
+			
+			 // Offset:
+			if(inst == other){
+				by = 8;
+				oy = -32;
+			}
 		}
 	}
-	
-	floor_reset_align();
 	
 	 // No Leaving:
 	if(instance_exists(enemy)) portal_poof();
 	
-#define SewerPool_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		spr_floor = spr.SewerPool;
-		sprite_index = msk.SewerPool;
-		depth = 4;
-		
-		 // Vars:
-		mask_index = -1;
-		fx_color = make_color_rgb(130 - 40, 189, 5);
-		right = choose(-1, 1);
-		setup = true;
-		 
-		return id;
-	}
-	
-#define SewerPool_setup
-	setup = false;
-	
-	 // Floorerize:
-	var	_w = ceil(abs(sprite_width) / 32),
-		_h = ceil(abs(sprite_height) / 32),
-		_cx = 0,
-		_cy = 0,
-		_num = 0;
-		
-	with(floor_fill(x, y, _w, _h, "")){
-		sprite_index = other.spr_floor;
-		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
-		material = 5; // slimy stone
-		_cx += bbox_center_x;
-		_cy += bbox_center_y;
-		_num++;
-	}
-	
-	 // Center Position:
-	x = (_cx / _num);
-	y = (_cy / _num);
-	
-#define SewerPool_end_step
-	if(setup) SewerPool_setup();
-	
-	 // Sticky Sludge:
-	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching_lt(instances_matching_gt(hitme, "speed", 0), "size", 6))){
-		if(position_meeting(x, bbox_bottom, other)){
-			x = lerp(xprevious, x, 2/3);
-			y = lerp(yprevious, y, 2/3);
-			
-			 // Somethins comin up bro:
-			if(other.alarm0 > 0){
-				motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
-			}
-			
-			 // FX:
-			if(chance_ct(speed, 12)){
-				var o = other;
-				with(instance_create(x + orandom(2), bbox_bottom + random(4), Dust)){
-					sprite_index = sprBoltTrail;
-					image_blend = o.fx_color;
-					image_xscale *= random_range(1, 3);
-					depth = o.depth - 1;
-				}
-			}
-		}
-	}
-	
-	 // Effects:
-	with(instances_matching(instances_meeting(x, y, Dust), "sprite_index", sprDust)){
-		if(position_meeting(x, y, other)){
-			sprite_index = sprSweat;
-			image_blend = other.fx_color;
-			speed /= 3;
-		}
-	}
 	
 #define SewerRug_create(_x, _y)
 	with(instance_create(_x, _y, Effect)){
@@ -5204,13 +5143,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(DebugLag) trace_time();
 	
 	 // Doors:
-	with(instances_matching(CustomHitme, "name", "CatDoor")) if(visible && surface_exists(my_surf)){
-		var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
-		draw_surface_ext(my_surf, x - (my_surf_w / 2), y + (((image_number - 1) - (my_surf_h / 2)) * _yscale), 1, _yscale, 0, c_white, image_alpha);
+	with(instances_matching(instances_matching(CustomHitme, "name", "CatDoor"), "visible", true)){
+		if(surface_exists(my_surf)){
+			var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
+			draw_surface_ext(my_surf, x - (my_surf_w / 2), y + (((image_number - 1) - (my_surf_h / 2)) * _yscale), 1, _yscale, 0, c_white, image_alpha);
+		}
 	}
 	
 	 // Fix Pizza Drain Shadows:
-	with(instances_matching(CustomHitme, "name", "PizzaDrain")) if(visible){
+	with(instances_matching(instances_matching(CustomHitme, "name", "PizzaDrain", "SewerDrain"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 	}
 	

@@ -872,11 +872,7 @@
 	}
 	
 #define CoastBossBecome_destroy
-	with(instance_create(x, y, Corpse)){
-		sprite_index = other.spr_dead;
-		image_xscale = other.image_xscale;
-		size = other.size;
-	}
+	corpse_drop(0, 0);
 	
 	 // Death Effects:
 	if(part > 0){

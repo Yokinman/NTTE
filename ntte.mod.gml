@@ -2003,7 +2003,7 @@
 				case "trench": // Surprise Cameo:
 					if(chance(1, 6)){
 						with(instance_create(x, y, SpiralDebris)){
-							sprite_index = spr.YetiCrabIdle;
+							sprite_index = spr.KingCrabIdle;
 							grow  = 0.1;
 							dist *= 0.8;
 						}
@@ -2091,7 +2091,7 @@
 		
 		 // This is it:
 		with(instances_matching(Breath, "depth", -2)) depth = -3;
-		with(instances_matching(MeltSplat, "depth", 1)) depth = 7;
+		with(instances_matching([MeltSplat, Scorchmark], "depth", 1)) depth = 7;
 	}
 	catch(_error){
 		trace_error(_error);

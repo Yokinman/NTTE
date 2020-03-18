@@ -162,7 +162,7 @@
 						},
 					{	name : "Wildebee", // formerly BioOnPc
 						role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailer"],
-						link : [[cred_twitter, "HitregOnPC"], [cred_discord, "Wildebee\#6521"]]
+						link : [[cred_twitter, "Wilde_bee"], [cred_discord, "Wildebee\#6521"]]
 						},
 					{	name : "Special Thanks",
 						role : [[cred_yellow, "blaac"], "Bub", "Emffles", "minichibis"],

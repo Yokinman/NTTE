@@ -2242,11 +2242,7 @@
 	}
 
 	 // Fricken DEAD:
-	with(instance_create(x, y, Corpse)){
-		sprite_index = other.spr_dead;
-		image_xscale = other.image_xscale;
-		mask_index = other.mask_index;
-		size = other.size;
+	with(corpse_drop(0, 0)){
 		depth = 0;
 	}
 

@@ -14,7 +14,7 @@
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerPool", "SewerRug", "TurtleCool", "VenomFlak"],
+		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "VlasmaBullet"]
 	};
@@ -2155,12 +2155,12 @@
 	with(instance_create(x, y, Corpse)){
 		size = other.size;
 		sprite_index = other.spr_dead;
-		image_xscale = other.right;
+		image_xscale = variable_instance_get(other, "right", other.image_xscale);
 		direction = _dir;
 		speed = _spd;
 		
 		 // Non-Props:
-		if(!instance_is(other, prop)){
+		if(!instance_is(other, prop) && instance_is(other, hitme)){
 			mask_index = other.mask_index;
 			speed += max(0, -other.my_health / 5);
 			speed += 8 * skill_get(mut_impact_wrists) * instance_is(other, enemy);
@@ -3132,17 +3132,17 @@
 		
 		with(_floors) if(instance_exists(self)){
 			array_push(other.list, {
-				inst		: id,
-				time		: _maxTime,
-				time_max	: _maxTime,
-				color		: background_color,
-				flash		: false,
-				move_dis	: 4,
-				move_dir	: 90,
-				ox			: 0,
-				oy			: -8,
-				bx			: 0,
-				by			: 0
+				inst        : id,
+				time        : _maxTime,
+				time_max    : _maxTime,
+				color       : background_color,
+				flash       : false,
+				move_dis    : 4,
+				move_dir    : 90,
+				ox          : 0,
+				oy          : -8,
+				bx          : 0,
+				by          : 0
 			})
 		}
 		

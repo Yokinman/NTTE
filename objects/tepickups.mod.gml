@@ -2577,7 +2577,7 @@
 			
 			/*		disabled for now
 			 // Protection:
-			var _sealCap = 10,
+			var	_sealCap = 10,
 				_sealNum = array_length(instances_matching(CustomEnemy, "name", "Seal"));
 				
 			if(_sealNum < _sealCap){
@@ -2667,8 +2667,9 @@
 #define scrPalankingStatueBlank(_num)
 	var n = _num;
 	for(var i = 0; i < n; i++){
-		var s = 0.5 + (1 - (i / n)) * 0.5,
+		var	s = 0.5 + (0.5 * (1 - (i / n))),
 			l = (24 * i) * (s * 2);
+			
 		repeat(1 + i){
 			var d = random(360);
 			with(obj_create(x + lengthdir_x(l, d) + orandom(5), y + lengthdir_y(l, d) + orandom(5), "BatScreech")){

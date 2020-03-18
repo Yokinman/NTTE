@@ -929,8 +929,8 @@
 		p = m;
 			
 			 // Sewer Pool:
-			SewerPool		= sprite(p + "sprSewerPool",	8,	0,	0);
-			msk.SewerPool	= sprite(p + "mskSewerPool",	1,	32, 64);
+			SewerPool     = sprite(p + "sprSewerPool", 8,  0,  0);
+			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
 			
 			//#region PROPS
 			p = m + "Props/"
@@ -940,6 +940,8 @@
 				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
 				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
 				
+			//#endregion
+			
 		//#endregion
 		
 		//#region PIZZA SEWERS
