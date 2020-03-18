@@ -539,6 +539,7 @@
 		fx_color = make_color_rgb(130 - 40, 189, 5);
 		my_alert = noone;
 		right = choose(-1, 1);
+		detail = true;
 		active = false;
 		setup = true;
 		num = -1;
@@ -562,11 +563,19 @@
 	with(floor_fill(x, y, _w, _h, "")){
 		sprite_index = other.spr_floor;
 		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
-		material = 5; // slimy stone
-		instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Detail);
 		_cx += bbox_center_x;
 		_cy += bbox_center_y;
 		_num++;
+		
+		 // Slimy Material:
+		if(material > 0 && material < 4){
+			material += 3;
+		}
+		
+		 // Details:
+		if(other.detail){
+			instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Detail);
+		}
 	}
 	
 	 // Center Position:
@@ -1026,7 +1035,7 @@
 	 // Bind Events:
 	script_bind_draw(draw_ravenflys, -8);
 	with(surfSludgePool){
-		active = (array_length(instances_matching(CustomObject, "name", "SludgePool", "SewerPool")) > 0);
+		active = (array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0);
 		if(active) script_bind_draw(draw_sludge, -4);
 	}
 	
@@ -1075,7 +1084,7 @@
 		}
 		_inst = instances_matching(_inst, "visible", true);
 		
-		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool", "SewerPool"), "visible", true)){
+		with(instances_matching(instances_matching(CustomObject, "name", "SludgePool"), "visible", true)){
 			surface_set_target(_surf);
 			draw_clear_alpha(0, 0);
 				
