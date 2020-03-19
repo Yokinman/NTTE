@@ -4208,7 +4208,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_walk = spr_idle;
 		spr_hurt = spr.PizzaDrainHurt;
 		spr_dead = spr.PizzaDrainDead;
-		spr_floor = spr.FloorLairB;
+		spr_floor = -1;
 		spr_shadow = -1;
 		image_xscale = choose(-1, 1);
 		image_speed = 0.4;
@@ -4225,6 +4225,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		size = 3;
 		area = "lair";
 		subarea = 1;
+		styleb = 1;
+		my_floor = noone;
 		
 		 // Cool Floor:
 		with(instance_nearest_bbox(_x - 16, _y, Floor)){
@@ -4251,19 +4253,38 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	if(!instance_exists(GenCont)){
 		 // Floorerize:
-		var	_x = x - 16,
-			_y = y - 32;
+		if(!instance_exists(my_floor)){
+			var	_w = 32,
+				_h = 32;
+				
+			floor_set_align(16, 16, x, null);
 			
-		if(!position_meeting(_x, _y, Floor)){
-			with(instance_create(_x, _y, Floor)){
-				styleb = true;
-				area = other.area;
-				sprite_index = other.spr_floor;
-				with(instances_meeting(x, y, [TopPot, Bones])) instance_destroy();
+			 // Clear:
+			with(instance_rectangle_bbox(x - _w, y - _h, x + _w - 1, y - 1, [Floor, TopPot, Bones])){
+				instance_delete(id);
 			}
-			for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
-				instance_create(bbox_left, _y, FloorExplo);
-				instance_create(bbox_right - 15, _y, FloorExplo);
+			
+			 // Side Tiles:
+			for(var _x = x - _w; _x < x + _w; _x += 16){
+				floor_set(_x, y - 16, 2);
+			}
+			
+			 // Main Floor:
+			floor_set_style(styleb, area);
+			my_floor = floor_set(x - 16, y - 32, true);
+			with(my_floor){
+				if(sprite_exists(other.spr_floor)){
+					sprite_index = other.spr_floor;
+				}
+			}
+			floor_reset_align();
+			floor_reset_style();
+			
+			 // Walls:
+			for(var	_x = x - _w; _x < x + _w; _x += 16){
+				for(var	_y = y - _h; _y < y; _y += 16){
+					instance_create(_x, _y, Wall);
+				}
 			}
 		}
 		
@@ -4312,11 +4333,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		my_health = 0;
 	}
 	with(instances_matching_le(FloorExplo, "y", y - 320)){
-		instance_create(x, y, PortalClear);
+		instance_create(bbox_center_x, bbox_center_y, PortalClear);
 		other.my_health = 0;
 	}
 	with(instance_rectangle(bbox_left - 16, y - 320, bbox_right + 16, bbox_top - 16, FloorExplo)){
-		instance_create(x, y, PortalClear);
+		instance_create(bbox_center_x, bbox_center_y, PortalClear);
 		other.my_health = 0;
 	}
 	
@@ -4644,6 +4665,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		area = 2;
+		styleb = 0;
 		
 		 // Scripts:
 		on_destroy = script_ref_create(SewerDrain_destroy);
@@ -4660,7 +4682,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Deleet Stuff:
 	var	_x1 = bbox_left,
-		_y1 = bbox_top - 16,
+		_y1 = bbox_top,
 		_x2 = bbox_right,
 		_y2 = bbox_bottom;
 		
@@ -4681,7 +4703,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Secret Room:
-	with(instance_nearest_bbox(x, y - 16, FloorNormal)){
+	with(my_floor){
 		var	_x = bbox_center_x,
 			_y = bbox_center_y,
 			_w = 4,

@@ -117,7 +117,7 @@
 	
 #define CrystalHeart_death
 	 // Sound:
-	if(GameCont.area == "red"){
+	if(place_meeting(x, y, Portal) && GameCont.area == "red"){
 		var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
 		audio_sound_set_track_position(_snd, 0.4 + random(0.1));
 		snd_dead = -1;

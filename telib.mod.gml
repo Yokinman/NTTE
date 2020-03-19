@@ -5901,6 +5901,7 @@
 				mod_type = "mod";
 				mod_name = "teevents";
 				event = _name;
+				floors = [];
 				
 				 // Tip:
 				tip = mod_script_call("mod", "teevents", _name + "_text");
