@@ -623,6 +623,9 @@
 		m = "areas/Campfire/";
 		p = m;
 			
+			 // Loading Screen:
+			SpiralDebrisNothing = sprite(p + "sprSpiralDebrisNothing", 5, 24, 24);
+			
 			//#region PROPS
 			p = m + "Props/";
 				
@@ -1090,7 +1093,8 @@
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
 			 // Misc:
-			Starfield = sprite(p + "sprStarfield", 2, 256, 256);
+			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
+			SpiralStarfield = sprite(p + "sprSpiralStarfield", 2,  32,  32);
 			
 			//#region PROPS
 			p = m + "Props/";

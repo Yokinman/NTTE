@@ -358,7 +358,7 @@
 			}
 			
 			 // Blocked Room:
-			if(chance(1, 1)){
+			if(chance(1, 5)){
 				var	_w = 2,
 					_h = 2,
 					_type = "",
@@ -1960,7 +1960,36 @@
 			ntte_spiral = true;
 			
 			switch(GameCont.area){
+				case 1: // Another Universe Fallen
+					
+					if(GameCont.lastarea == 0 && instance_exists(GenCont)){
+						var s = spr.SpiralDebrisNothing;
+						for(var i = 0; i < sprite_get_number(s); i++){
+							var	l = 24,
+								d = random(360);
+								
+							with(instance_create((game_width / 2) + lengthdir_x(l, d), (game_height / 2) + lengthdir_y(l, d), SpiralDebris)){
+								sprite_index = s;
+								image_index = i;
+								turnspeed *= 2/3;
+								angle = d;
+								with(self) repeat(irandom_range(25, 40) / current_time_scale){
+									event_perform(ev_step, ev_step_normal);
+									if(!instance_exists(self)) break;
+								}
+							}
+						}
+						with(instances_matching(SpiralDebris, "sprite_index", sprDebris1)){
+							if(chance(1, 2)){
+								sprite_index = sprDebris7;
+							}
+						}
+					}
+					
+					break;
+					
 				case "pizza": // Falling Through Manhole
+					
 					type = 4;
 					
 					 // Reset:
@@ -1997,7 +2026,8 @@
 					
 					break;
 					
-				case "trench": // Surprise Cameo:
+				case "trench": // Surprise Cameo
+					
 					if(chance(1, 6)){
 						with(instance_create(x, y, SpiralDebris)){
 							sprite_index = spr.KingCrabIdle;
@@ -2008,22 +2038,9 @@
 					
 					break;
 					
-				case "red": // Between Betweens:
-					type = 4;
+				case "red": // Between Betweens
+					
 					time = 0;
-					
-					  // Reset:
-					with(Spiral) instance_destroy();
-					
-					 // Starfield:
-					for(var i = 1; i >= 0; i--){
-						with(instance_create(x, y, SpiralStar)){
-							ntte_starfield = true;
-							sprite_index = spr.Starfield;
-							image_index  = i;
-							image_angle  = random(360);
-						}
-					}
 					
 					/*
 					 // Did You Just See That?:
@@ -2039,28 +2056,18 @@
 					}
 					*/
 					
-					break;
-			}
-			
-			 // Throne II Fragments:
-			if(GameCont.area == 1 && GameCont.lastarea == 0){
-				if("ntte_throne_debris" not in self){
-					ntte_throne_debris = true;
-					
-					 // Another Universe Fallen:
-					var s = sprNothing2Part;
-					for(var i = 0; i < sprite_get_number(s); i++){
+					 // Starfield:
+					var _spr = spr.Starfield;
+					for(var i = sprite_get_number(_spr) - 1; i >= 0; i--){
 						with(instance_create(x, y, SpiralDebris)){
-							sprite_index = s;
-							image_index  = i;
-							turnspeed *= 2/3;
-							angle = random(360);
-							with(self) repeat(irandom_range(8, 32) / current_time_scale){
-								event_perform(ev_step, ev_step_normal);
-							}
+							ntte_starfield = true;
+							sprite_index = _spr;
+							image_index = i;
+							turnspeed = 0;
 						}
 					}
-				}
+					
+					break;
 			}
 			
 			 // Bubbles:
@@ -2074,23 +2081,25 @@
 				}
 			}
 		}
-		
-		 // I'm Sorry, Code Reviewer:
-		with(SpiralCont) if(GameCont.area == "red"){
-			var w = arctan(time / 100);
-			with(instances_matching(SpiralStar, "ntte_starfield", true)){
-				var s = (0.8 + (0.4 * image_index)) + w;
-				
-				image_xscale = s;
-				image_yscale = image_xscale;
-				image_angle += current_time_scale * s;
-				
-				dist  = 0;
-				grow  = 0;
-				angle = 0;
+		if(GameCont.area == "red"){
+			 // Starfield:
+			with(SpiralCont){
+				var w = arctan(time / 100);
+				with(instances_matching(SpiralDebris, "ntte_starfield", true)){
+					image_xscale = (0.8 + (0.4 * image_index)) + w;
+					image_yscale = image_xscale;
+					rotspeed = image_xscale;
+					dist = 0;
+					grow = 0;
+				}
 			}
 			
-			with(instances_matching_ne(SpiralStar, "ntte_starfield", true)) instance_delete(id);
+			 // Starfield Spirals:
+			with(instances_matching(Spiral, "sprite_index", sprSpiral)){
+				sprite_index = spr.SpiralStarfield;
+				colors = array_create(2, make_color_rgb(30, 14, 29));
+				grow += 0.05;
+			}
 		}
 		
 		 // NTTE Tips:
