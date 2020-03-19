@@ -17,7 +17,7 @@
 #define area_subarea           return 1;
 #define area_goal              return 60;
 #define area_next              return mod_current; // CAN'T LEAVE
-#define area_music             return [mus.Red, 0.7];
+#define area_music             return [mus.Red, 0.8];
 #define area_ambience          return amb104;
 #define area_background_color  return make_color_rgb(235, 0, 67);
 #define area_shadow_color      return make_color_rgb(16, 0, 24);

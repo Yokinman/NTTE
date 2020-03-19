@@ -100,6 +100,7 @@
 						my_health = 0;
 						GameCont.area = "red";
 						GameCont.subarea = 0;
+						sound_play_music(-1);
 						instance_create(x, y, Portal);
 						with(other) motion_set(point_direction(x, y, other.x, other.y), 4);
 					}
@@ -115,6 +116,13 @@
 	scrWalk(random(360), [10, 40]);
 	
 #define CrystalHeart_death
+	 // Sound:
+	if(GameCont.area == "red"){
+		var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
+		audio_sound_set_track_position(_snd, 0.4 + random(0.1));
+		snd_dead = -1;
+	}
+	
 	 // Unfold:
 	instance_create(x, y, PortalClear);
 	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
