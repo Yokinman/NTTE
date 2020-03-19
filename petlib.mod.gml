@@ -290,12 +290,11 @@
 	skills_active = instances_matching(skills_active, "", null);
 	
 	 // Orbs:
-	var	_numSkills = array_length(skills_become),
-		o = 360 / _numSkills;
-		
+	var _numSkills = array_length(skills_become);
+	
 	for(var i = 0; i < _numSkills; i++){
 		var	w = wave,
-			d = o * i;
+			d = 360 * (i / _numSkills);
 			
 		with(skills_become[i]){
 			if(target == noone){
@@ -303,9 +302,10 @@
 				x = other.x + lengthdir_x(16 * grow, w + d);
 				y = other.y + lengthdir_y(16 * grow, w + d);
 				
-				var s = 1 + (0.1 * sin(w / 15));
+				var s = 1 + (0.1 * sin(w / 10));
 				image_xscale = s * grow;
 				image_yscale = s * grow;
+				
 				image_index = s;
 				image_speed = 0;
 				
@@ -316,41 +316,46 @@
 	
 	 // Mutatin':
 	if(array_length(skills_active) <= 0){
-		if(_numSkills < max_skills){
-			var _maxRads = skill_rads * (1 + _numSkills); 
-			if(raddrop >= _maxRads){
-				raddrop -= _maxRads;
-				
-				 // Be:
-				with(obj_create(x, y, "OrchidSkillBecome")){
-					creator = other;
+		var _maxRads = skill_rads * (1 + _numSkills); 
+		if(raddrop >= _maxRads){
+			raddrop -= _maxRads;
+			
+			 // Be:
+			with(obj_create(x, y, "OrchidSkillBecome")){
+				creator = other;
+				if(_numSkills < other.max_skills){
 					array_push(other.skills_become, id);
 				}
-				_numSkills++;
-			}
-		}
-		
-		 // Indicator:
-		var _pickup = pickup_skill;
-		if(_numSkills > 0 && instance_exists(_pickup)){
-			_pickup.visible = true;
-			
-			if(player_is_active(_pickup.pick)){
-				_pickup.visible = false;
-				
-				 // Depart:
-				with(skills_become){
-					target = player_find(_pickup.pick);
+				else{
+					target = instance_nearest(x, y, Player);
 					hold_seek = 10 + random(10);
 					motion_set(direction, 8);
 					array_push(other.skills_active, id);
 				}
-				skills_become = [];
-				raddrop = 0;
-				
-				 // Effects:
-				repeat(8) scrFX([x, 12], [y, 12], 0, "VaultFlowerSparkle");
 			}
+		}
+	}
+	
+	 // Indicator:
+	var _pickup = pickup_skill;
+	if(array_length(skills_become) > 0 && instance_exists(_pickup)){
+		_pickup.visible = true;
+		
+		if(player_is_active(_pickup.pick)){
+			_pickup.visible = false;
+			
+			 // Depart:
+			with(skills_become){
+				target = player_find(_pickup.pick);
+				hold_seek = 10 + random(10);
+				motion_set(direction, 8);
+				array_push(other.skills_active, id);
+			}
+			skills_become = [];
+			raddrop = 0;
+			
+			 // Effects:
+			repeat(8) scrFX([x, 12], [y, 12], 0, "VaultFlowerSparkle");
 		}
 	}
 	
@@ -3201,7 +3206,7 @@
 				_disMax = 1000000;
 				
 			with(_targetInst){
-				if(instance_exists(leader) && array_length(skills_become) < max_skills && array_length(skills_active) <= 0){
+				if(instance_exists(leader) && array_length(skills_active) <= 0){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
 						_disMax = _dis;

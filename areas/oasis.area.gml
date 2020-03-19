@@ -93,6 +93,14 @@
 				obj_create(x, y, "SunkenChest");
 				instance_create(x, y - 8, LightBeam);
 				
+				 // Softlock Prevention:
+				with(obj_create(x1, y1, "SunkenRoom")){
+					image_xscale = _w;
+					image_yscale = _h;
+					floors = other.floors;
+				}
+				
+				 // Details:
 				with(floors){
 					instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Detail);
 					floor_bones(2, 1/4, false);

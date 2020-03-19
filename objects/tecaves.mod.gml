@@ -975,6 +975,9 @@
 		creator = other;
 		right = other.right;
 		alarm1 = 10 + random(10);
+		
+		 // Out of Wall:
+		instance_budge(Wall, -1);
 	}
 
 	 // Effects:

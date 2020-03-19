@@ -448,11 +448,10 @@
 			}
 			
 			 // Just Bros Bathing Together:
-			if(point_distance(x, y, 10000, 10000) >= 128){
+			if(point_distance(x, y, 10016, 10016) >= 128){
 				repeat(2 + irandom(1)){
-					var r = choose(-1, 1);
 					with(obj_create(x - irandom(16), y + orandom(24), "Cat")){
-						right = r;
+						right = choose(-1, 1);
 						sit = true;
 					}
 				}

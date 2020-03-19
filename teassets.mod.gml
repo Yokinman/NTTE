@@ -933,8 +933,8 @@
 			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
 			
 			 // Secret:
-			FloorSewerWeb	= sprite(p + "sprFloorSewerWeb",	1,	0,	0);
-			FloorSewerDrain	= sprite(p + "sprFloorSewerDrain",	1,	0,	0);
+			FloorSewerWeb   = sprite(p + "sprFloorSewerWeb",   1, 0, 0);
+			FloorSewerDrain = sprite(p + "sprFloorSewerDrain", 1, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/"
@@ -1162,8 +1162,8 @@
 			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
 			
 			 // Orchid Chest:
-			OrchidChest 	= sprite(p + "sprOrchidChest",		1,	13,	8);
-			OrchidChestOpen = sprite(p + "sprOrchidChestOpen",	1,	13,	8);
+			OrchidChest     = sprite(p + "sprOrchidChest",     1, 13, 8);
+			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 13, 8);
 			
 			 // Overstock/Overheal:
 			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);

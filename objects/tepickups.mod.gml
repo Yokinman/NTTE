@@ -2207,7 +2207,10 @@
 	}
 	
 #define OrchidChest_step
-	if(chance_ct(1, 5)) scrFX([x, 7], [y, 6], 0, "VaultFlowerSparkle");
+	 // Sparkle:
+	if(chance_ct(1, 5)){
+		scrFX([x, 7], [y, 6], 0, "VaultFlowerSparkle");
+	}
 	
 #define OrchidChest_open
 	var o = other;
@@ -2217,14 +2220,18 @@
 	
 	 // Skill:
 	with(obj_create(x, y, "OrchidSkillBecome")){
-		target		= o;
-		hold_seek	= 10;
+		target = o;
+		hold_seek = 10;
 		motion_set(45 + random(90), 5);
 	}
 	
 	 // Effects:
-	repeat(10)	scrFX(x + random(5), [y, 5], [90, random(1)], "VaultFlowerSparkle");
-	repeat(5)	scrVaultFlowerDebris(x, y, random(360), random(3));
+	repeat(10){
+		scrFX(x + random(5), [y, 5], [90, random(1)], "VaultFlowerSparkle");
+	}
+	repeat(5){
+		scrVaultFlowerDebris(x, y, random(360), random(3));
+	}
 	with(instance_create(x, y - 10, FXChestOpen)){
 		sprite_index = sprMutant6Dead;
 		image_index  = 12;
@@ -2233,10 +2240,11 @@
 	}
 	
 	 // Sound:
-	sound_play_pitchvol(sndUncurse, 			0.9 + random(0.2),	1.0);
-	sound_play_pitchvol(sndJungleAssassinWake,	0.9 + random(0.2),	0.8);
-	sound_play_pitchvol(sndWallBreakBrick,		1,					0.6);
-		
+	sound_play_pitchvol(sndUncurse,            0.9 + random(0.2), 1.0);
+	sound_play_pitchvol(sndJungleAssassinWake, 0.9 + random(0.2), 0.8);
+	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
+	
+	
 #define OverhealChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -3352,7 +3360,7 @@
 	
 #define scrVaultFlowerDebris(_x, _y, _dir, _spd)
 	with(instance_create(_x, _y, Feather)){
-		sprite_index = ("alive" in other ? (other.alive ? spr.VaultFlowerDebris : spr.VaultFlowerWiltedDebris) : spr.VaultFlowerDebris);
+		sprite_index = (variable_instance_get(other, "alive", true) ? spr.VaultFlowerDebris : spr.VaultFlowerWiltedDebris);
 		image_index = irandom(image_number - 1);
 		image_angle = orandom(30);
 		image_speed = 0;

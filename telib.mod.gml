@@ -12,7 +12,7 @@
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
-		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "WaterStreak"],
+		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
@@ -473,10 +473,10 @@
 									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
 									if(array_length(_bind) <= 0 || self == "draw"){
 										switch(self){
-											case "step":       _bind = script_bind_step(ntte_bind, 0);       break;
-											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0); break;
-											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);   break;
-											case "draw":       _bind = script_bind_draw(ntte_bind, depth);   break;
+											case "step":       _bind = script_bind_step(ntte_bind, 0);           break;
+											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0);     break;
+											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);       break;
+											case "draw":       _bind = script_bind_draw(ntte_bind, _inst.depth); break;
 										}
 										with(_bind){
 											name = "NTTEBind_" + other;
@@ -485,7 +485,7 @@
 										}
 									}
 									with(_bind){
-										array_push(inst, other);
+										array_push(inst, _inst);
 									}
 								}
 							}
@@ -692,6 +692,9 @@
 	if(!_isDraw){
 		inst = instances_matching_ne(GameObject, _varName, null);
 	}
+	else{
+		inst = instances_matching(inst, "", null);
+	}
 	
 	 // Run Events:
 	if(array_length(inst) > 0){
@@ -699,6 +702,7 @@
 			 // Depth:
 			if(_isDraw){
 				other.depth = depth - 0.0000000000001;
+				if(!visible) continue;
 			}
 			
 			 // Script:
@@ -3927,26 +3931,9 @@
 		}
 	}
 	
-	 // Fix Isolated Room Softlock:
-	var _tunnel = noone;
-	if(_floorDis > 0){
-		with(instance_create(_x1, _y1, CustomObject)){
-			name = "TunnelRoom";
-			on_step = TunnelRoom_step;
-			mask_index = mskFloor;
-			image_xscale = _w;
-			image_yscale = _h;
-			floors = _floors;
-			size = 1;
-			
-			_tunnel = id;
-		}
-	}
-	
 	 // Done:
 	return {
 		floors : _floors,
-		tunnel : _tunnel,
 		x  : (_x1 + _x2) / 2,
 		y  : (_y1 + _y2) / 2,
 		x1 : _x1,
@@ -3984,63 +3971,6 @@
 	}
 	
 	return noone;
-	
-#define TunnelRoom_step
-	if(instance_exists(Floor)){
-		if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
-			var _tunnel = false;
-			
-			 // Player/Enemy Check:
-			with(floors) if(instance_exists(self)){
-				if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
-					_tunnel = true;
-					break;
-				}
-			}
-			
-			 // Tunnel to Main Level:
-			if(_tunnel){
-				var	_x = bbox_center_x,
-					_y = bbox_center_y,
-					_spawnX = 10016,
-					_spawnY = 10016,
-					_tunnelSize = size,
-					_tunnelFloor = [];
-					
-				 // Get Position of Oldest Floor & Sort Floors by Closest First:
-				with(FloorNormal){
-					_spawnX = bbox_center_x;
-					_spawnY = bbox_center_y;
-					if(!array_exists(other.floors, id)){
-						array_push(_tunnelFloor, [id, point_distance(bbox_center_x, bbox_center_y, _x, _y)]);
-					}
-				}
-				array_sort_sub(_tunnelFloor, 1, true);
-				
-				 // Tunnel to the Nearest Main-Level Floor:
-				with(_tunnelFloor){
-					var _break = false;
-					with(self[0]){
-						for(var	_fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
-							for(var	_fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
-								if(path_reaches(path_create(_fx + 8, _fy + 8, _spawnX, _spawnY, Wall), _spawnX, _spawnY, Wall)){
-									with(floor_tunnel(bbox_center_x, bbox_center_y, _x, _y)){
-										image_yscale *= _tunnelSize;
-									}
-									_break = true;
-									break;
-								}
-							}
-							if(_break) break;
-						}
-					}
-					if(_break) break;
-				}
-				
-				instance_destroy();
-			}
-		}
-	}
 	
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
