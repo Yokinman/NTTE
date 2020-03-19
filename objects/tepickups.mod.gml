@@ -2219,7 +2219,7 @@
 	with(obj_create(x, y, "OrchidSkillBecome")){
 		target		= o;
 		hold_seek	= 10;
-		motion_set(random(360), 5);
+		motion_set(45 + random(90), 5);
 	}
 	
 	 // Effects:

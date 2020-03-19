@@ -2010,7 +2010,90 @@
 					}
 					
 					break;
+					
+				case "red": // Between Betweens:
+					type = 4;
+					time = 0;
+					
+					  // Reset:
+					with(Spiral) instance_destroy();
+					
+					 // Starfield:
+					for(var i = 1; i >= 0; i--){
+						with(instance_create(x, y, SpiralStar)){
+							ntte_starfield = true;
+							sprite_index = spr.Starfield;
+							image_index  = i;
+							image_angle  = random(360);
+						}
+					}
+					
+					/*
+					 // Did You Just See That?:
+					with(Player) if(chance(2, 3)){
+						with(instance_create(other.x, other.y, SpiralDebris)){
+							sprite_index = other.spr_hurt;
+							image_index  = 1;
+							turnspeed *= 2/3;
+							with(self) repeat(irandom_range(8, 12) / current_time_scale){
+								event_perform(ev_step, ev_step_normal);
+							}
+						}
+					}
+					*/
+					
+					break;
 			}
+			
+			 // Throne II Fragments:
+			if(GameCont.area == 1 && GameCont.lastarea == 0){
+				if("ntte_throne_debris" not in self){
+					ntte_throne_debris = true;
+					
+					 // Another Universe Fallen:
+					var s = sprNothing2Part;
+					for(var i = 0; i < sprite_get_number(s); i++){
+						with(instance_create(x, y, SpiralDebris)){
+							sprite_index = s;
+							image_index  = i;
+							turnspeed *= 2/3;
+							angle = random(360);
+							with(self) repeat(irandom_range(8, 32) / current_time_scale){
+								event_perform(ev_step, ev_step_normal);
+							}
+						}
+					}
+				}
+			}
+			
+			 // Bubbles:
+			if(area_get_underwater(GameCont.area)){
+				repeat(12) with(instance_create(x, y, SpiralStar)){
+					sprite_index = sprBubble;
+					image_speed  = random(0.2);
+					with(self) repeat(irandom_range(12, 48) / current_time_scale){
+						event_perform(ev_step, ev_step_normal);
+					}
+				}
+			}
+		}
+		
+		 // I'm Sorry, Code Reviewer:
+		with(SpiralCont) if(GameCont.area == "red"){
+			var w = arctan(time / 100);
+			with(instances_matching(SpiralStar, "ntte_starfield", true)){
+				var s = (0.8 + (0.4 * image_index)) + w;
+				
+				image_xscale = s;
+				image_yscale = image_xscale;
+				image_angle += current_time_scale * s;
+				
+				dist  = 0;
+				grow  = 0;
+				angle = 0;
+			}
+			
+			with(instances_matching_ne(SpiralStar, "ntte_starfield", true)) instance_delete(id);
 		}
 		
 		 // NTTE Tips:

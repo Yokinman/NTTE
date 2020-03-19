@@ -1089,6 +1089,9 @@
 			 // Decals:
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
+			 // Misc:
+			Starfield = sprite(p + "sprStarfield", 2, 256, 256);
+			
 			//#region PROPS
 			p = m + "Props/";
 				
@@ -1441,6 +1444,7 @@
 		Coast  = sound_add(p + "musCoast.ogg");
 		Trench = sound_add(p + "musTrench.ogg");
 		Lair   = sound_add(p + "musLair.ogg");
+		Red    = sound_add(p + "musRed.ogg");
 		
 		 // Bosses:
 		SealKing      = sound_add(p + "musSealKing.ogg");
