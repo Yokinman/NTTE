@@ -923,7 +923,11 @@
 	with(array_flip(instances_matching(CustomObject, "name", "NTTEEvent"))){
 		on_step = script_ref_create_ext(mod_type, mod_name, event + "_step");
 		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
+		
+		 // Event Generation:
+		var _minID = GameObject.id;
 		mod_script_call(mod_type, mod_name, event + "_create");
+		floors = array_combine(floors, instances_matching_gt(Floor, "id", _minID));
 	}
 	
 	 // Wall Enemies:
@@ -1380,7 +1384,7 @@
 	
 	 // Sewer Manhole:
 	with(PizzaEntrance){
-		with(obj_create(x, y, "Manhole")) toarea = "pizza";
+		obj_create(x, y, "Manhole");
 		instance_delete(id);
 	}
 	

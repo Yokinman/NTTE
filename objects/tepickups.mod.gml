@@ -3655,7 +3655,14 @@
 	}
 	
 #define WepPickupGrounded_end_step
-	if(instance_exists(target)){
+	var _portal = false;
+	with(Portal){
+		if(in_sight(other) && in_distance(other, 96)){
+			_portal = true;
+			break;
+		}
+	}
+	if(instance_exists(target) && !_portal){
 		with(target){
 			image_alpha = 0;
 			

@@ -24,8 +24,8 @@
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
-	teevent_add("SewerPool");
 	teevent_add("GatorDen");
+	teevent_add("SewerPool");
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
@@ -431,14 +431,37 @@
 		_type = "",
 		_dirStart = 90,
 		_dirOff = 0,
-		_floorDis = 0,
+		_floorDis = -32,
 		_spawnX = x,
 		_spawnY = y,
-		_spawnDis = 160,
-		_spawnFloor = FloorNormal;
+		_spawnDis = 96,
+		_spawnFloor = [];
 		
 	floor_set_align(32, 32, null, null);
 	
+	 // Get Potential Spawn Floors:
+	var _floorNormal = FloorNormal;
+	with(instances_matching(_floorNormal, "styleb", 0)){
+		 // Not Above Spawn:
+		if(abs(_spawnX - bbox_center_x) > _w * 32){
+			 // No Floors Above Current Floor:
+			if(array_length(instances_matching_ge(instances_matching_le(instances_matching_lt(_floorNormal, "bbox_top", bbox_top), "bbox_left", bbox_right), "bbox_right", bbox_left)) <= 0){
+				 // Not Above Another Event:
+				var _notEvent = true;
+				/*with(instances_matching(CustomObject, "name", "NTTEEvent")){
+					if(array_exists(floors, other)){
+						_notEvent = false;
+						break;
+					}
+				}*/
+				if(_notEvent){
+					array_push(_spawnFloor, id);
+				}
+			}
+		}
+	}
+	
+	 // Generate Room:
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 			 // The Bath:
@@ -446,7 +469,7 @@
 				sprite_index = msk.SewerPool;
 				spr_floor = spr.SewerPool;
 				detail = false;
-
+				
 				obj_create(x + 16, y - 64, "SewerDrain");
 			}
 			

@@ -3998,6 +3998,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_idle = spr.GatorStatueIdle;
 		spr_hurt = spr.GatorStatueHurt;
 		spr_dead = spr.GatorStatueDead;
+		spr_shadow = shd32;
+		spr_shadow_y = 7;
 		sprite_index = spr_idle;
 		
 		 // Sounds:
@@ -4005,6 +4007,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		snd_dead = sndWallBreak;
 		
 		 // Vars:
+		mask_index = mskScorpion;
 		maxhealth = 80;
 		raddrop = 8
 		size = 3;
@@ -4160,7 +4163,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 			}
 			if(place_meeting(x, y, Scorch) || place_meeting(x, y, ScorchTop)){
-				with(instances_meeting(x, y, [Scorch, ScorchTop])) instance_destroy();
+				with(instances_meeting(x, y, Scorch)){
+					with(instances_matching(instances_matching(ScorchTop, "x", x), "y", y)) instance_destroy();
+					instance_destroy();
+				}
+				with(instances_meeting(x, y, ScorchTop)) instance_destroy();
 			}
 		}
 	}
@@ -4208,7 +4215,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_walk = spr_idle;
 		spr_hurt = spr.PizzaDrainHurt;
 		spr_dead = spr.PizzaDrainDead;
-		spr_floor = spr.FloorLairB;
+		spr_floor = -1;
 		spr_shadow = -1;
 		image_xscale = choose(-1, 1);
 		image_speed = 0.4;
@@ -4225,6 +4232,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		size = 3;
 		area = "lair";
 		subarea = 1;
+		styleb = 1;
+		my_floor = noone;
 		
 		 // Cool Floor:
 		with(instance_nearest_bbox(_x - 16, _y, Floor)){
@@ -4251,19 +4260,38 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	if(!instance_exists(GenCont)){
 		 // Floorerize:
-		var	_x = x - 16,
-			_y = y - 32;
+		if(!instance_exists(my_floor)){
+			var	_w = 32,
+				_h = 32;
+				
+			floor_set_align(16, 16, x, null);
 			
-		if(!position_meeting(_x, _y, Floor)){
-			with(instance_create(_x, _y, Floor)){
-				styleb = true;
-				area = other.area;
-				sprite_index = other.spr_floor;
-				with(instances_meeting(x, y, [TopPot, Bones])) instance_destroy();
+			 // Clear:
+			with(instance_rectangle_bbox(x - _w, y - _h, x + _w - 1, y - 1, [Floor, TopPot, Bones])){
+				instance_delete(id);
 			}
-			for(var _y = bbox_top; _y < bbox_bottom - 16; _y += 16){
-				instance_create(bbox_left, _y, FloorExplo);
-				instance_create(bbox_right - 15, _y, FloorExplo);
+			
+			 // Side Tiles:
+			for(var _x = x - _w; _x < x + _w; _x += 16){
+				floor_set(_x, y - 16, 2);
+			}
+			
+			 // Main Floor:
+			floor_set_style(styleb, area);
+			my_floor = floor_set(x - 16, y - 32, true);
+			with(my_floor){
+				if(sprite_exists(other.spr_floor)){
+					sprite_index = other.spr_floor;
+				}
+			}
+			floor_reset_align();
+			floor_reset_style();
+			
+			 // Walls:
+			for(var	_x = x - _w; _x < x + _w; _x += 16){
+				for(var	_y = y - _h; _y < y; _y += 16){
+					instance_create(_x, _y, Wall);
+				}
 			}
 		}
 		
@@ -4312,11 +4340,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		my_health = 0;
 	}
 	with(instances_matching_le(FloorExplo, "y", y - 320)){
-		instance_create(x, y, PortalClear);
+		instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
 		other.my_health = 0;
 	}
 	with(instance_rectangle(bbox_left - 16, y - 320, bbox_right + 16, bbox_top - 16, FloorExplo)){
-		instance_create(x, y, PortalClear);
+		instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
 		other.my_health = 0;
 	}
 	
@@ -4644,14 +4672,35 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		area = 2;
+		styleb = 0;
 		
-		 // Scripts:
+		 // Room Type:
+		var _pool = [];
+			repeat(4) array_push(_pool, "WeaponChest");
+			repeat(4) array_push(_pool, "AmmoChest");
+			repeat(4) array_push(_pool, "Backpack");
+			repeat(3) array_push(_pool, "HealthChest");
+			repeat(2) array_push(_pool, "Pizza");
+			repeat(2) array_push(_pool, "Spider");
+			repeat(1) array_push(_pool, "FrogQueen");
+			
+		if(unlock_get("lairCrown")) 
+			repeat(3) array_push(_pool, "LairChest");
+			
+		if(skill_get(mut_shotgun_shoulders) <= 0)
+			repeat(2) array_push(_pool, "GatorStatue");
+			
+		type = _pool[irandom(array_length(_pool) - 1)];
+		
+		 // Events:
 		on_destroy = script_ref_create(SewerDrain_destroy);
 		
 		return id;
 	}
 	
 #define SewerDrain_destroy
+	var _roomType = type;
+	
 	 // Sound:
 	sound_play_pitch(snd_dead, 1 - random(0.3));
 	with(instance_nearest(x, y, Player)){
@@ -4660,7 +4709,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Deleet Stuff:
 	var	_x1 = bbox_left,
-		_y1 = bbox_top - 16,
+		_y1 = bbox_top,
 		_x2 = bbox_right,
 		_y2 = bbox_bottom;
 		
@@ -4681,28 +4730,42 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Secret Room:
-	with(instance_nearest_bbox(x, y - 16, FloorNormal)){
+	with(my_floor){
 		var	_x = bbox_center_x,
 			_y = bbox_center_y,
 			_w = 4,
 			_h = 3,
 			_type = "",
 			_dirStart = 90,
-			_dirOff = 45,
+			_dirOff = 0,
 			_floorDis = 32,
 			_minID = GameObject.id;
 			
 		with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 			floor_tunnel(x, y, _x, _y);
 			
-			 // General Floor Changes:
-			with(floors){
-				
-				 // Spiderize:
-				if(chance(2, 3)){
-					sprite_index = spr.FloorSewerWeb;
-					material = 5;
-					traction = 2;
+			 // Floor Setup:
+			var _detailNum = 4;
+			with(array_shuffle(floors)){
+				 // Details:
+				if(chance(1, 5) || _detailNum-- > 0){
+					var	_dx = random_range(bbox_left, bbox_right),
+						_dy = random_range(bbox_top, bbox_bottom);
+						
+					with(instance_create(_dx, _dy, Detail)){
+						if(_roomType == "Pizza"){
+							sprite_index = sprDetail102;
+							image_index = irandom_range(1, 4);
+						}
+					}
+					
+					 // Shells:
+					if(_roomType == "GatorStatue"){
+						with(instance_create(_dx, _dy, Debris)){
+							sprite_index = (chance(1, 4) ? sprShotShellBig : sprShotShell);
+							motion_add(random(360), random(1));
+						}
+					}
 				}
 				
 				 // Dustify:
@@ -4715,82 +4778,134 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						image_yscale *= 2.5;
 					}
 				}
+				
+				 // Spiderize:
+				if(_roomType != "Pizza" && chance(2, 3)){
+					if(_roomType == "Spider" || (chance(1, 2) && !point_in_rectangle(other.x, other.y, bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1))){
+						sprite_index = spr.FloorSewerWeb;
+						material = 5;
+						traction = 2;
+					}
+				}
 			}
 			
-			 // Enwall:
-			instance_create(x1,      y1 + 16, Wall);
-			instance_create(x2 - 16, y1 + 16, Wall);
-			instance_create(x1,      y2 - 32, Wall);
-			instance_create(x2 - 16, y2 - 32, Wall);
-			
-			 // Decorate:
-			repeat(2) obj_create(x, y, "TopDecal");
-			
-			 // Pool:
-			var _pool = [];
-				repeat(4) array_push(_pool, "WeaponChest");
-				repeat(4) array_push(_pool, "AmmoChest");
-				repeat(4) array_push(_pool, "Backpack");
-				repeat(3) array_push(_pool, "HealthChest");
-				repeat(2) array_push(_pool, "Spider");
-				repeat(1) array_push(_pool, "FrogQueen");
-			if(unlock_get("lairCrown")) 
-				repeat(3) array_push(_pool, "LairChest");
-			if(skill_get(mut_shotgun_shoulders) <= 0)
-				repeat(2) array_push(_pool, "GatorStatue");
-			
-			 // Create:
+			 // Room Gen:
 			var _ox = 24 * choose(-1, 1);
-			switch(_pool[irandom(array_length(_pool) - 1)]){
+			switch(_roomType){
 				case "WeaponChest":
+					
 					instance_create(x - _ox + orandom(1), y + orandom(1), WeaponChest);
 					instance_create(x + _ox + orandom(1), y + orandom(1), WeaponChest);
+					
 					break;
 					
 				case "AmmoChest":
+					
 					instance_create(x - _ox + orandom(1), y + orandom(1), AmmoChest);
 					instance_create(x + _ox + orandom(1), y + orandom(1), AmmoChest);
+					
 					break;
 					
 				case "HealthChest":
+					
 					instance_create(x, y, HealthChest);
+					
 					break;
 					
 				case "Backpack":
+					
 					obj_create(x, y, "Backpack");
+					
 					break;
 					
 				case "LairChest":
+					
 					obj_create(x - _ox + orandom(1), y + orandom(1), "CatChest");
 					obj_create(x + _ox + orandom(1), y + orandom(1), "BatChest");
+					
+					break;
+					
+				case "Pizza":
+					
+					 // Manhole:
+					with(instance_nearest_bbox(x + _ox, y, FloorNormal)){
+						obj_create(x, y, "Manhole");
+						
+						 // Pizza:
+						if(chance(2, 3)){
+							obj_create(bbox_center_x + orandom(4) + random(16 * sign(_ox)), bbox_center_y + orandom(4), choose("PizzaChest", "PizzaStack"));
+						}
+					}
+					
+					 // Nader:
+					with(obj_create(x - _ox, y, "WepPickupGrounded")){
+						with(target) wep = wep_grenade_launcher;
+					}
+					
 					break;
 					
 				case "Spider":
+					
 					with(floors){
 						if(chance(2, 3) && !place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
+							 // Props:
 							if(chance(1, 3)){
 								obj_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), "CrystalPropRed");
 							}
+							
+							 // Enemies:
 							else{
 								obj_create(bbox_center_x, bbox_center_y, "RedSpider");
 							}
 						}
 					}
+					
 					break;
 					
 				case "FrogQueen":
+					
+					 // Cool Floors:
+					floor_set_style(1, null);
+					floor_fill(x1 + 16, y, 1, _h, "");
+					floor_fill(x2 - 16, y, 1, _h, "");
+					floor_reset_style();
+					
+					 // Herself:
 					with(instance_create(x, y, FrogQueen)){
+						maxhealth = round(maxhealth / 2);
+						my_health = round(my_health / 2);
 						alarm3 = 60;
+						
+						 // Ammo:
+						instance_create(other.x1 + 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
+						instance_create(other.x2 - 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
 					}
+					
 					break;
 					
 				case "GatorStatue":
-					obj_create(x + _ox, y - 24, "CatLight");
-					with(obj_create(x + _ox, y, "GatorStatue")){
-						image_xscale = sign(_ox);
+					
+					with(obj_create(x, y - 4, "GatorStatue")){
+						obj_create(x, y - 24, "CatLight");
 					}
+					
 					break;
 			}
+			
+			 // Walls:
+			with([
+				instance_create(x1,      y1 + 16, Wall),
+				instance_create(x2 - 16, y1 + 16, Wall),
+				instance_create(x1,      y2 - 32, Wall),
+				instance_create(x2 - 16, y2 - 32, Wall)
+			]){
+				if(chance(1, 2)){
+					topindex = irandom_range(1, sprite_get_number(topspr) - 1);
+				}
+			}
+			
+			 // Decorate:
+			repeat(2) obj_create(x, y, "TopDecal");
 		}
 		
 		 // Reveal:

@@ -9,7 +9,7 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "GroundFlameGreen", "Igloo", "OrchidSkill", "OrchidSkillBecome", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaBoxCool", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "WaterStreak"],
@@ -5901,6 +5901,7 @@
 				mod_type = "mod";
 				mod_name = "teevents";
 				event = _name;
+				floors = [];
 				
 				 // Tip:
 				tip = mod_script_call("mod", "teevents", _name + "_text");
