@@ -434,6 +434,8 @@
 		_spawnDis = 96,
 		_spawnFloor = [];
 		
+	floor_set_align(32, 32, null, null);
+	
 	 // Get Potential Spawn Floors:
 	var _floorNormal = FloorNormal;
 	with(_floorNormal){
@@ -457,8 +459,6 @@
 	}
 	
 	 // Generate Room:
-	floor_set_align(32, 32, null, null);
-	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 			 // The Bath:

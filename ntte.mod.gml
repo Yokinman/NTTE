@@ -1384,7 +1384,7 @@
 	
 	 // Sewer Manhole:
 	with(PizzaEntrance){
-		with(obj_create(x, y, "Manhole")) toarea = "pizza";
+		obj_create(x, y, "Manhole");
 		instance_delete(id);
 	}
 	
