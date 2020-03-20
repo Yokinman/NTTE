@@ -2042,9 +2042,8 @@
 					
 					time = 0;
 					
-					/*
 					 // Did You Just See That?:
-					with(Player) if(chance(2, 3)){
+					with(Player) if(chance(1, 3)){
 						with(instance_create(other.x, other.y, SpiralDebris)){
 							sprite_index = other.spr_hurt;
 							image_index  = 1;
@@ -2054,7 +2053,6 @@
 							}
 						}
 					}
-					*/
 					
 					 // Starfield:
 					var _spr = spr.Starfield;
@@ -2097,8 +2095,10 @@
 			 // Starfield Spirals:
 			with(instances_matching(Spiral, "sprite_index", sprSpiral)){
 				sprite_index = spr.SpiralStarfield;
-				colors = array_create(2, make_color_rgb(30, 14, 29));
+				colors = [make_color_rgb(30, 14, 29), make_color_rgb(16, 10, 25)];
+				lanim = -100;
 				grow += 0.05;
+				
 			}
 		}
 		
@@ -2165,7 +2165,7 @@
 						_name = _scrt[2],
 						_area = mod_script_call(_modType, _modName, _name + "_area");
 						
-					if(_area == null || GameCont.area == _area){
+					if(_area == null || GameCont.area == _area || _area == -1){
 						var _chance = 1;
 						if(mod_script_exists(_modType, _modName, _name + "_chance")){
 							_chance = mod_script_call(_modType, _modName, _name + "_chance");

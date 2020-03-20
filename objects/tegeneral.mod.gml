@@ -1861,6 +1861,24 @@
 	}
 
 
+#define GroundFlameGreen_create(_x, _y)
+	with(instance_create(_x, _y, GroundFlame)){
+		 // Visual:
+		var _big = chance(1, 3);
+		spr_dead = _big ? spr.GroundFlameGreenBigDisappear : spr.GroundFlameGreenDisappear;
+		sprite_index = _big ? spr.GroundFlameGreenBig : spr.GroundFlameGreen;
+		
+		return id;
+	}
+	
+#define GroundFlameGreen_end_step
+	if(sprite_index == sprGroundFlameDisappear){
+		sprite_index = spr_dead;
+	}
+	if(sprite_index == spr_dead && anim_end){
+		instance_delete(id);
+	}
+
 #define Igloo_create(_x, _y)
 	/*
 		Buildings for the Frozen City bro, seals live here
@@ -1967,7 +1985,7 @@
 		persistent = true;
 		skill = mut_none;
 		num = 1;
-		time = 450;
+		time = 900; // 450;
 		time_max = 0;
 		setup = true;
 		flash = true;

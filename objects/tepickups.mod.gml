@@ -481,6 +481,74 @@
 	repeat(6) scrFX(x, y, 3, Dust);
 
 
+#define BigIDPDSpawn_create(_x, _y)
+	with(instance_create(_x, _y, IDPDSpawn)){
+		 // Visual:
+		depth -= 1;
+		
+		 // Vars:
+		elite = true;
+		num = 3;
+		
+		 // Vars:
+		alarm0 += 30;
+		sound_stop(sndIDPDPortalSpawn);
+		sound_play(sndEliteIDPDPortalSpawn);
+		
+		return id;
+	}
+
+#define BigIDPDSpawn_step
+	if(sprite_index == sprVanPortalCharge){
+		if(chance_ct(2, 3)){
+			var l = 64,
+				d = random(360);
+			
+			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), IDPDPortalCharge)){
+				alarm0 = 20 + random(20);
+				speed  = l / alarm0;
+				direction = d + 180;
+			}
+		}
+		if(chance(1, 4)){
+			with(scrFX(x, y, [random(360), 1 + random(1)], PlasmaTrail)){
+				sprite_index = sprPopoPlasmaTrail;
+			}
+		}
+	}
+	
+#define BigIDPDSpawn_end_step
+	 // Force Spawns:
+	if(--alarm1 == 0){
+		repeat(num){
+			event_perform(ev_alarm, 1);
+			with(instance_create(x, y, PortalClear)){
+				image_xscale = 2;
+				image_yscale = image_xscale;
+			}
+		}
+	}
+	
+	 // Animate:
+	if(anim_end){
+		switch(sprite_index){
+			case sprVanPortalStart:
+				sprite_index = sprVanPortalCharge;
+				break;
+			
+			case sprVanPortalClose:
+				instance_destroy();
+				break;
+		}
+	}
+	else{
+		switch(sprite_index){
+			case sprIDPDPortalClose:	sprite_index = sprVanPortalClose;	break;
+			case sprIDPDPortalCharge:	sprite_index = sprVanPortalCharge;	break;
+			case sprIDPDPortalStart:	sprite_index = sprVanPortalStart;	break;
+		}
+	}
+	
 #define BoneBigPickup_create(_x, _y)
 	with(obj_create(_x, _y, "BonePickup")){
 		 // Visual:
@@ -592,9 +660,16 @@
 			speed = 1.5 + orandom(0.2);
 			direction = d;
 			
-			var _pool = [AmmoChest, WeaponChest, HealthChest, RadChest];
-			if(chance(1, 2)) array_push(_pool, "Backpack");
+			var _pool = [AmmoChest, WeaponChest, HealthChest, "Backpack", "OrchidChest"];
+			// if(chance(1, 2)) array_push(_pool, "Backpack");
 			
+			if(crown_current == crwn_love){
+				for(var i = 0; i < array_length(_pool); i++){
+					_pool[i] = AmmoChest;
+				}
+			}
+			
+			/*
 			switch(crown_current){
 				case crwn_love:
 					for(var i = 0; i < array_length(_pool); i++){
@@ -610,6 +685,7 @@
 					}
 					break;
 			}
+			*/
 			
 			target = obj_create(x, y, _pool[irandom(array_length(_pool) - 1)]);
 			
@@ -729,7 +805,7 @@
 		var _pool = [];
 			repeat(4) array_push(_pool, "BuriedVaultChest");
 			repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest));
-			repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : RadChest));
+			// repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : RadChest));
 		
 		if(!instance_exists(ProtoChest))
 			repeat(1) array_push(_pool, ProtoChest);
@@ -2588,6 +2664,138 @@
 	}
 	
 	
+#define PalaceAltar_create(_x, _y)
+	/*
+		7-2 event prop. Grants a temporary weapon mutation based on the player's loadout.
+	*/
+
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.PalaceAltarIdle;
+		spr_hurt = spr.PalaceAltarHurt;
+		spr_dead = spr.PalaceAltarDead;
+		sprite_index = spr_idle;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndGeneratorBreak;
+		
+		 // Vars:
+		maxhealth = 80;
+		raddrop = 6;
+		team = 1;
+		size = 3;
+		skill = mut_none;
+		effect_color = make_color_rgb(72, 253,  8); // make_color_rgb(190, 253,  8);
+		
+		 // Pickup Indicator:
+		pickup_indicator = scrPickupIndicator("  CHOOSE");
+		with(pickup_indicator){
+			xoff = -8;
+			yoff = -16;
+			mask_index = mskReviveArea;
+			on_meet = script_ref_create(VaultFlower_PickupIndicator_meet);
+		}
+		
+		 // Alarms:
+		alarm0 = -1;
+		
+		return id;
+	}
+	
+#define PalaceAltar_step
+
+	 // Radiate:
+	if(chance_ct(2, 3)){
+		with(scrFX([x, 2], y - random(16), [90, random(2)], EatRad)){
+			sprite_index = choose(sprEatRadPlut, sprEatBigRadPlut);
+			image_speed  = 0.4;
+			depth = -7;
+		} 
+	}
+	
+	 // Damage Sparks:
+	if(sprite_index == spr_hurt && chance_ct(2, 5)){
+		instance_create(x + orandom(16), (y + 8) + orandom(16), PortalL);
+	}
+	
+	 // Pickup:
+	if(instance_exists(pickup_indicator)){
+		if(pickup_indicator.pick != -1){
+			
+			 // Grant Blessing:
+			with(obj_create(0, 0, "OrchidSkill")){
+				color1 = make_color_rgb(72, 253,  8);
+				color2 = make_color_rgb( 3,  33, 18)
+				skill  = other.skill;
+				time   = 3600; // 2 minutes
+			}
+			
+			 // Effect:
+			with(instance_create(x, y, ImpactWrists)){
+				image_blend = other.effect_color;
+				depth = -7;
+			}
+			
+			 // Disable All Altars:
+			with(instances_matching(CustomProp, "name", name)){
+				instance_delete(pickup_indicator);
+				alarm0 = 10 + random(10);
+			}
+		}
+	}
+	
+#define PalaceAltar_alrm0
+	my_health = 0;
+	
+#define PalaceAltar_death
+	 // Debris:
+	repeat(10){
+		with(instance_create(x, y, ScrapBossCorpse)){
+			sprite_index = spr.PalaceAltarDebris;
+			image_index  = irandom(image_number - 1);
+			image_angle  = random(360);
+			motion_set(random(360), random_range(4, 8));
+		}
+	}
+	
+	 // Effects:
+	instance_create(x, y, PortalClear);
+	repeat(4){
+		obj_create(x + orandom(24), (y + 8) + orandom(24), "GroundFlameGreen");
+	}
+	repeat(2 + irandom(1)){
+		with(obj_create(x + orandom(16), (y + 8) + orandom(16), "GroundFlameGreen")){
+			spr_dead = sprThroneFlameEnd;
+			sprite_index = sprThroneFlameIdle;
+			image_yscale = 0.6;
+			image_xscale = 0.8;
+		}
+	}
+	with(instance_create(x, y - 8, EatRad)){
+		sprite_index = sprMutant6Dead;
+		image_speed  = 0.4;
+		image_index  = 9;
+		image_blend  = other.effect_color;
+		depth = -6
+	}
+	repeat(15){
+		with(scrFX([x, 16], [y, 16], [90, random(1)], EatRad)){
+			sprite_index = choose(sprEatRadPlut, sprEatBigRadPlut);
+			image_index  = random(2);
+			image_speed  = 0.4;
+			depth = -7;
+		}
+	}
+	view_shake_max_at(x, y, 50);
+	sleep_max(50);
+	
+	 // Sounds:
+	sound_play_hit_ext(sndGunGun,			0.6 + random(0.2),	1.0);
+	sound_play_hit_ext(sndSnowTankDead, 	0.6 + random(0.2),	1.0);
+	sound_play_hit_ext(sndEnergyHammerUpg,	0.5,				0.8);
+	
+
 #define PalankingStatue_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		var _phase = 0;

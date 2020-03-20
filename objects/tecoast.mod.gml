@@ -3389,10 +3389,7 @@
 							toss_ammo--;
 							toss_time = 60;
 							toss_speed = random_range(7, 9);
-							toss = enemy_shoot(Disc, random(360), 0);
-
-							 // Make it Pretty:
-							with(toss) sprite_index = spr.SealDisc;
+							toss = enemy_shoot("SealDisc", random(360), 0);
 						}
 					}
 
@@ -3734,6 +3731,22 @@
 		}
 	}
 
+
+#define SealDisc_create(_x, _y)
+	with(instance_create(_x, _y, Disc)){
+		 // Visual:
+		sprite_index = spr.SealDisc;
+		
+		 // Vars:
+		trail_color = make_color_rgb(252, 56, 0);
+		
+		return id;
+	}
+	
+#define SealDisc_end_step
+	with(instances_matching(instances_matching(DiscTrail, "xstart", xprevious), "ystart", yprevious)){
+		image_blend = other.trail_color;
+	}
 
 #define SealHeavy_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){

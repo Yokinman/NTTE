@@ -29,6 +29,8 @@
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
+	teevent_add("PopoAmbush");
+	teevent_add("PalaceShrine");
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -38,6 +40,7 @@
 
 #macro tipCol global.tipColor
 
+#macro area_any			-1
 #macro area_campfire     0
 #macro area_desert       1
 #macro area_sewers       2
@@ -927,8 +930,8 @@
 	}
 	
 	 // Balance:
-	with(MeleeBandit){
-		instance_create(x, y, Bandit);
+	with(instances_matching([MeleeBandit, MeleeFake], "", null)){
+		obj_create(x, y, "BanditCamper");
 		instance_delete(id);
 	}
 	
@@ -1021,6 +1024,165 @@
 		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
 	}
 	
+	
+#define PalaceShrine_text	return `@(color:${tipCol})RAD MANIPULATION @wIS TRICKY`;
+#define PalaceShrine_area	return area_palace;
+#define PalaceShrine_chance	return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
+#define PalaceShrine_create
+	/*
+		This is WIP and I know u will look here so I will explain my plans. It's also 2am and I dunno if I'll remember what I wanted tomorrow
+		
+		To be composed of three room types:
+		 1. Main Room:
+			- Pretty empty, meant to be like an atrium of sorts
+			- Custom single floors resembling the big vault tiles but in palace colors
+		 2. Altar Rooms:
+			- Each contains an altar
+			- Custom 2x2 or 3x3 floor patterns
+		 3. Decor Rooms:
+			- Small rooms with decorative props
+			- Custom single floors
+			
+		Rooms don't necessarily have to be connected so long as they spawn close enough but it would be nice u know.
+	*/
+
+	var _minID = GameObject.id,
+		_skillArray = PalaceShrine_skills(),
+		_skillCount = min(array_length(_skillArray), 2 + irandom(2)),
+		_w = choose(3, 4),
+		_h = choose(3, 4),
+		_type = "",
+		_dirOff = 0,
+		_dirStart = random(360),
+		_floorDis = 0,
+		_spawnX = x,
+		_spawnY = y,
+		_spawnDis = 128,
+		_spawnFloor = FloorNormal;
+		
+	floor_set_align(32, 32, null, null);
+	
+	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+		
+		 // Main Decorative Room:
+		with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+			
+			 // Altar Rooms:
+			for(var i = 0; i < _skillCount; i++){
+				var _roomSize = choose(2, 3),
+					_roomDir = _dirStart + orandom(45);
+					
+				with(floor_room_create(x, y, _roomSize, _roomSize, _type, _roomDir, _dirOff, _floorDis)){
+					with(obj_create(x, y, "PalaceAltar")){
+						skill = _skillArray[i];
+					}
+					
+					 // Beautify Rooms:	 
+					for(var j = 0; j < array_length(floors); j++){
+						with(floors[j]){
+							sprite_index = ((_roomSize == 3) ? spr.FloorPalaceShrineRoomLarge : spr.FloorPalaceShrineRoomSmall);
+							image_index	 = j;
+							depth = 7;
+						}
+					}
+				}
+			}
+			
+			 // Small Decorative Side Rooms:
+			repeat(2 + irandom(2)){
+				var _decorRoomSize = choose(1, 1, 1, 2);
+				with(floor_room_create(x, y, _decorRoomSize, _decorRoomSize, "", 0, 360, _floorDis)){
+					
+					if(chance(2, 3)){
+						instance_create(x, y, Pillar);
+					}
+				}
+			}
+			
+			 // Decals:
+			repeat(3) obj_create(x, y, "TopDecal");
+		}
+		
+		 // Fancify:
+		with(instances_matching_ne(instances_matching_gt(FloorNormal, "id", _minID), "sprite_index", spr.FloorPalaceShrineRoomSmall, spr.FloorPalaceShrineRoomLarge)){
+			sprite_index = spr.FloorPalaceShrine;
+			image_index  = random(image_number);
+			depth = 7;
+		}
+	}
+	
+	floor_reset_align();
+	
+#define PalaceShrine_skills
+	/*
+		Compiles a list of weapon mutations based on a player's weapon loadout
+		and mutaton selection.
+	*/
+	
+	var _skillArray = [],
+		_skillTypes = [mut_long_arms, mut_recycle_gland, mut_shotgun_shoulders, mut_bolt_marrow, mut_boiling_veins, mut_laser_brain];
+	with(Player){
+		with(["wep", "bwep"]){
+			var o = self,
+				w = variable_instance_get(other, o),
+				t = weapon_get_type(w),
+				s = _skillTypes[t];
+			if(skill_get(s) <= 0){
+				array_push(_skillArray, s);
+			}
+			
+			 // Ammo Consuming Melee Weapons:
+			if(skill_get(mut_long_arms) <= 0){
+				if(t != 0 && weapon_is_melee(w)){
+					array_push(_skillArray, mut_long_arms);
+				}
+			}
+		}
+	}
+	var _finalArray = [];
+	with(array_shuffle(_skillArray)){
+		var o = self;
+		if(!array_exists(_finalArray, o)){
+			array_push(_finalArray, o);
+		}
+	}
+	// trace(_skillArray, _finalArray);
+	return _finalArray;
+	
+	
+#define PopoAmbush_text		return `@(color:${tipCol})THE IDPD @wIS UNSTOPPABLE`;
+#define PopoAmbush_area		return area_palace;
+#define PopoAmbush_chance	return ((GameCont.subarea != 3) ? 1/3 : 0); 
+#define PopoAmbush_create
+	 // Ambush:
+	repeat(2 + irandom(2)) instance_create(x, y, IDPDSpawn);
+	with(instance_nearest(10016, 10016, IDPDSpawn)){
+		with(obj_create(x, y, "BigIDPDSpawn")){
+			instance_create(x, y, PortalClear);
+			with(scrAlert(id, spr.PopoAmbushAlert)){
+				image_speed = 0.1;
+				spr_alert = spr.AlertIndicatorPopoAmbush;
+				alert_col = c_white;
+				alert_x = -5;
+				alert_y = 5;
+				target_x = -3;
+				target_y = -24;
+				alarm0 = other.alarm0;
+			}
+		}
+		instance_delete(id);
+	}
+	
+	 // Fewer Guardians:
+	with(enemy) if(chance(1, 3)){
+		instance_delete(id);
+	}
+	
+	 // Replace Chest:
+	with(instances_matching([AmmoChest, AmmoChestMystery], "", null)){
+		instance_create(x, y, IDPDChest);
+		instance_delete(id);
+	}
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

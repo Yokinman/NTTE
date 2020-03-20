@@ -329,6 +329,24 @@
 		return id;
 	}
 	
+#define CrystalPropWhite_step
+	 // Sparkly:
+	if(chance_ct(1, 5)){
+		with(scrFX([x, 7], [(y + 3), 7], [90, random(1)], LaserCharge)){
+			sprite_index = sprSpiralStar;
+			depth  = other.depth - 1;
+			alarm0 = 20 + random(20);
+		}
+	}
+	if(chance_ct(1, 10)){
+		with(instance_create(x + orandom(7), (y + 3) + orandom(7), BulletHit)){
+			sprite_index = sprThrowHit;
+			image_xscale = 0.2 + random(0.3);
+			image_yscale = image_xscale;
+			depth = other.depth - 1;
+		}
+	}
+	
 	
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
