@@ -438,7 +438,7 @@
 	
 	 // Get Potential Spawn Floors:
 	var _floorNormal = FloorNormal;
-	with(_floorNormal){
+	with(instances_matching(_floorNormal, "styleb", 0)){
 		 // Not Above Spawn:
 		if(abs(_spawnX - bbox_center_x) > _w * 32){
 			 // No Floors Above Current Floor:
