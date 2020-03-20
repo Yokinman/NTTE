@@ -2101,8 +2101,7 @@
 				sprite_index = spr.SpiralStarfield;
 				colors = [make_color_rgb(30, 14, 29), make_color_rgb(16, 10, 25)];
 				lanim = -100;
-				grow += 0.05;
-				
+				//grow += 0.05;
 			}
 		}
 		

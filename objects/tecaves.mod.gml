@@ -331,14 +331,15 @@
 	
 #define CrystalPropWhite_step
 	 // Sparkly:
-	if(chance_ct(1, 5)){
-		with(scrFX([x, 7], [(y + 3), 7], [90, random(1)], LaserCharge)){
+	if(chance_ct(1, 20)){
+		with(scrFX([x, 7], [(y + 3), 7], [90, random_range(0.2, 0.5)], LaserCharge)){
 			sprite_index = sprSpiralStar;
-			depth  = other.depth - 1;
-			alarm0 = 20 + random(20);
+			image_index = choose(0, irandom(image_number - 1));
+			depth = other.depth - 1;
+			alarm0 = random_range(15, 30);
 		}
 	}
-	if(chance_ct(1, 10)){
+	if(chance_ct(1, 25)){
 		with(instance_create(x + orandom(7), (y + 3) + orandom(7), BulletHit)){
 			sprite_index = sprThrowHit;
 			image_xscale = 0.2 + random(0.3);

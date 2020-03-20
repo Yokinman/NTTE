@@ -3038,7 +3038,7 @@
 					 // Discin:
 					if(instance_is(self, Disc)){
 						dist = 0;
-						alarm0 = max(alarm0, 15);
+						alarm0 = max(alarm0, 4);
 					}
 					
 					with(other) scrRight(other.direction);
@@ -3170,27 +3170,27 @@
 
 #define Seal_alrm1
 	alarm1 = 30 + random(30);
-
+	
 	trident_dist = 0; // Reset
-
+	
 	if(enemy_target(x, y)){
 		var	_aimLast = gunangle,
 			_canAttack = (attack_delay <= 0);
-
+			
 		scrAim(point_direction(x, y, target.x, target.y));
-
+		
 		if(in_sight(target) || type == seal_none){
 			 // Seal Types:
 			switch(type){
 				case seal_hookpole:
-
+					
 					alarm1 = 10 + random(15);
-
+					
 					 // Too Close:
 					if(in_distance(target, 20)){
 						scrWalk(gunangle + 180 + orandom(60), 10);
 					}
-
+					
 					else{
 						if(chance(4, 5)){
 							 // Attack:
@@ -3199,57 +3199,57 @@
 								alarm2 = 10;
 								trident_dist = point_distance(x, y, target.x, target.y) - 24;
 							}
-
+							
 							 // Too Far:
 							else{
 								scrWalk(gunangle + orandom(20), 10);
 								if(chance(1, 10)) slide = 10;
 							}
 						}
-
+						
 						 // Side Step:
 						else{
 							scrWalk(gunangle + choose(-80, 80), 15);
 							if(chance(1, 2)) slide = 5 + random(10);
 						}
 					}
-
+					
 					break;
-
+					
 				case seal_shield:
-
+					
 					 // Shield Defendy Mode:
 					if(shield){
 						alarm1 = 15 + irandom(5);
-
+						
 						 // Dagger Time:
 						if((in_distance(target, 80) || abs(angle_difference(shield_ang, gunangle)) > 80) && wkick == 0){
 							scrWalk(gunangle + orandom(10), [4, 8]);
-
+							
 							shield = false;
 							shield_draw = true;
 							alarm1 = 20;
-
+							
 							 // Swap FX:
 							var o = 8;
 							instance_create(x + lengthdir_x(o, gunangle), y + lengthdir_y(o, gunangle), WepSwap);
 							sound_play(sndSwapSword);
 						}
-
+						
 						 // Reposition:
 						else if(chance(2, 3)){
 							scrWalk(gunangle + orandom(50), [6, 12]);
 							scrAim(direction);
 						}
 					}
-
+					
 					 // Sword Stabby Mode:
 					else{
 						alarm1 = 20 + random(10);
-
+						
 						if(in_distance(target, 120)){
 							scrWalk(gunangle + (180 * chance(1, 3)) + orandom(20), [5, 10]);
-
+							
 							 // Stabby:
 							if(_canAttack && in_distance(target, 80)){
 								with(enemy_shoot(Shank, gunangle, 3)){
@@ -3258,92 +3258,92 @@
 								motion_add(gunangle, 2);
 								wepangle *= -1;
 								wkick = -5;
-
+								
 								 // Effects:
 								instance_create(x, y, Dust);
 								sound_play(sndMeleeFlip);
 								sound_play(sndScrewdriver);
 								sound_play_pitchvol(sndSwapGold, 1.25 + random(0.5), 0.4);
 							}
-
+							
 							 // Slide Away:
 							else{
 								direction = gunangle + 180;
 								slide = 10;
 							}
 						}
-
+						
 						 // Shield Time:
 						else{
 							shield = true;
 							shield_ang = gunangle;
 							shield_draw = true;
 							wkick = 2;
-
+							
 							 // Swap FX:
 							var	l = 8,
 								d = shield_ang;
-
+								
 							instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
 							sound_play(sndSwapHammer);
 						}
 					}
-
+					
 					break;
-
+					
 				case seal_blunderbuss:
-
+					
 					 // Slide Away:
 					if(in_distance(target, 80)){
 						direction = gunangle + 180;
 						slide = 15;
 						alarm1 = slide + random(10);
 					}
-
+					
 					 // Good Distance Away:
 					else{
 						 // Aim & Ignite Powder:
 						if(_canAttack && in_distance(target, 192) && chance(2, 3)){
 							alarm1 = alarm1 + 90;
 							alarm2 = 15;
-
+							
 							 // Effects:
 							sound_play_pitchvol(sndEmpty, 2.5, 0.5);
 							wkick = -2;
 						}
-
+						
 						 // Reposition:
 						else{
 							scrWalk(gunangle + orandom(90), 10);
 							if(chance(1, 2)) slide = 15;
 						}
-
+						
 						 // Important:
 						if(chance(1, 3)){
 							with(instance_create(x, y, CaveSparkle)) depth = other.depth - 1;
 						}
 					}
-
+					
 					break;
-
+					
 				case seal_mercenary:
-
+					
 					 // Slide Towards:
 					if(!in_distance(target, 160)){
 						direction = gunangle + orandom(60);
 						slide = 15;
 						alarm1 = slide + random(20);
 					}
-
+					
 					 // Within Range:
 					else{
 						scrWalk(gunangle + orandom(90), 15);
-
+						
 						 // Pew Time:
 						if(_canAttack){
 							alarm2 = 8;
 							alarm1 = alarm2 + 5 + random(20);
-
+							
 							 // Preparin:
 							wkick = -4;
 							sound_play_hit_ext(sndShotReload, 1.5 + random(0.5), 1.2);
@@ -3353,17 +3353,17 @@
 							}
 						}
 					}
-
+					
 					break;
-
+					
 				case seal_dasher:
-
+					
 					 // Move Away:
 					if(in_distance(target, 32) || chance(1, 4)){
 						slide = 5 + random(5);
 						direction = gunangle + 180 + orandom(40);
 					}
-
+					
 					 // Combat Slide:
 					else{
 						slide = 20;
@@ -3371,19 +3371,19 @@
 						direction = random(360);
 						sound_play_hit_ext(sndSnowBotSlideStart, 1.3 + random(0.4), 1.5);
 					}
-
+					
 					alarm1 = slide + 5 + random(15);
-
+					
 					break;
-
+					
 				case seal_deadeye:
-
+					
 					if(!instance_exists(toss)){
 						 // Hobble Around:
 						if(chance(1, 2)){
 							scrWalk(gunangle + choose(-80, 80) + orandom(20), [4, 20]);
 						}
-
+						
 						 // Toss Disc:
 						else{
 							toss_ammo--;
@@ -3392,19 +3392,19 @@
 							toss = enemy_shoot("SealDisc", random(360), 0);
 						}
 					}
-
+					
 					if(instance_exists(toss)) alarm1 = 15;
-
+					
 					break;
-
+					
 				default:
-
+					
 					 // Follow Big Seal:
 					if(instance_exists(creator) && variable_instance_get(creator, "active", false)){
 						scrAim(point_direction(x, y, creator.x, creator.y));
 						scrWalk(gunangle, [10, 20]);
 					}
-
+					
 					 // Normal:
 					else{
 						 // "Don't kill me!"
@@ -3419,7 +3419,7 @@
 							}
 							scrAim(direction);
 						}
-
+						
 						 // Idle:
 						else{
 							scrWalk(point_direction(x, y, xstart + orandom(24), ystart + orandom(24)), [5, 10]);
@@ -3429,18 +3429,18 @@
 						}
 					}
 			}
-
+			
 			 // Sliding Time:
 			if(alarm2 > 0 && slide > 0){
 				scrRight(gunangle - (direction - 90));
 			}
 		}
-
+		
 		 // Looking for Player:
 		else{
 			scrWalk(gunangle + orandom(60), [5, 25]);
 			alarm1 = 5 + irandom(walk) + irandom(15);
-
+			
 			 // Aiming:
 			scrAim(direction);
 			switch(type){
@@ -3449,21 +3449,21 @@
 						scrAim(angle_lerp(_aimLast, direction, 1/5));
 					}
 					break;
-
+					
 				case seal_dasher:
 					gunangle = random(180);
 					break;
 			}
 		}
 	}
-
+	
 	 // Wander:
 	else{
 		scrWalk(random(360), [5, 25]);
 		scrAim(direction);
 		alarm1 += walk;
 	}
-
+	
 	 // Slide FX:
 	if(slide > 0){
 		if(hold) slide = 0;
@@ -3475,7 +3475,7 @@
 			}
 		}
 	}
-
+	
 #define Seal_alrm2
 	switch(type){
 		case seal_hookpole:
@@ -3719,7 +3719,7 @@
 			if(typ == 1){
 				direction = other.direction;
 				image_angle = direction;
-
+				
 				 // Effects:
 				with(instance_create(x, y, Deflect)){
 					image_angle = other.image_angle;
@@ -3730,8 +3730,8 @@
 			}
 		}
 	}
-
-
+	
+	
 #define SealDisc_create(_x, _y)
 	with(instance_create(_x, _y, Disc)){
 		 // Visual:
@@ -3744,10 +3744,12 @@
 	}
 	
 #define SealDisc_end_step
-	with(instances_matching(instances_matching(DiscTrail, "xstart", xprevious), "ystart", yprevious)){
-		image_blend = other.trail_color;
+	 // Color Trail:
+	with(instances_matching(instances_matching(instances_matching(DiscTrail, "image_blend", c_white), "xstart", xprevious), "ystart", yprevious)){
+		image_blend = ((other.team == 2) ? c_yellow : other.trail_color);
 	}
-
+	
+	
 #define SealHeavy_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:

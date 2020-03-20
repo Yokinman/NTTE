@@ -1862,23 +1862,31 @@
 
 
 #define GroundFlameGreen_create(_x, _y)
+	/*
+		Green variant of the GroundFlame effect
+	*/
+	
 	with(instance_create(_x, _y, GroundFlame)){
 		 // Visual:
 		var _big = chance(1, 3);
-		spr_dead = _big ? spr.GroundFlameGreenBigDisappear : spr.GroundFlameGreenDisappear;
-		sprite_index = _big ? spr.GroundFlameGreenBig : spr.GroundFlameGreen;
+		sprite_index = (_big ? spr.GroundFlameGreenBig          : spr.GroundFlameGreen         );
+		spr_dead     = (_big ? spr.GroundFlameGreenBigDisappear : spr.GroundFlameGreenDisappear);
 		
 		return id;
 	}
 	
+	return noone;
+	
 #define GroundFlameGreen_end_step
+	 // Override Disappear Animation:
 	if(sprite_index == sprGroundFlameDisappear){
 		sprite_index = spr_dead;
 	}
 	if(sprite_index == spr_dead && anim_end){
-		instance_delete(id);
+		instance_destroy();
 	}
-
+	
+	
 #define Igloo_create(_x, _y)
 	/*
 		Buildings for the Frozen City bro, seals live here

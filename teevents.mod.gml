@@ -1048,9 +1048,10 @@
 	}
 	
 	
-#define PalaceShrine_text	return `@(color:${tipCol})RAD MANIPULATION @wIS TRICKY`;
-#define PalaceShrine_area	return area_palace;
-#define PalaceShrine_chance	return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
+#define PalaceShrine_text    return `@(color:${tipCol})RAD MANIPULATION @wIS TRICKY`;
+#define PalaceShrine_area    return area_palace;
+#define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
+
 #define PalaceShrine_create
 	/*
 		This is WIP and I know u will look here so I will explain my plans. It's also 2am and I dunno if I'll remember what I wanted tomorrow
@@ -1067,9 +1068,10 @@
 			- Custom single floors
 			
 		Rooms don't necessarily have to be connected so long as they spawn close enough but it would be nice u know.
+		we epic
 	*/
-
-	var _minID = GameObject.id,
+	
+	var	_minID = GameObject.id,
 		_skillArray = PalaceShrine_skills(),
 		_skillCount = min(array_length(_skillArray), 2 + irandom(2)),
 		_w = choose(3, 4),
@@ -1092,7 +1094,7 @@
 			
 			 // Altar Rooms:
 			for(var i = 0; i < _skillCount; i++){
-				var _roomSize = choose(2, 3),
+				var	_roomSize = choose(2, 3),
 					_roomDir = _dirStart + orandom(45);
 					
 				with(floor_room_create(x, y, _roomSize, _roomSize, _type, _roomDir, _dirOff, _floorDis)){
@@ -1115,7 +1117,6 @@
 			repeat(2 + irandom(2)){
 				var _decorRoomSize = choose(1, 1, 1, 2);
 				with(floor_room_create(x, y, _decorRoomSize, _decorRoomSize, "", 0, 360, _floorDis)){
-					
 					if(chance(2, 3)){
 						instance_create(x, y, Pillar);
 					}
@@ -1129,7 +1130,7 @@
 		 // Fancify:
 		with(instances_matching_ne(instances_matching_gt(FloorNormal, "id", _minID), "sprite_index", spr.FloorPalaceShrineRoomSmall, spr.FloorPalaceShrineRoomLarge)){
 			sprite_index = spr.FloorPalaceShrine;
-			image_index  = random(image_number);
+			image_index  = irandom(image_number - 1);
 			depth = 7;
 		}
 	}
@@ -1144,24 +1145,29 @@
 	
 	var _skillArray = [],
 		_skillTypes = [mut_long_arms, mut_recycle_gland, mut_shotgun_shoulders, mut_bolt_marrow, mut_boiling_veins, mut_laser_brain];
+		
 	with(Player){
 		with(["wep", "bwep"]){
-			var o = self,
+			var	o = self,
 				w = variable_instance_get(other, o),
 				t = weapon_get_type(w),
 				s = _skillTypes[t];
-			if(skill_get(s) <= 0){
-				array_push(_skillArray, s);
-			}
-			
-			 // Ammo Consuming Melee Weapons:
-			if(skill_get(mut_long_arms) <= 0){
-				if(t != 0 && weapon_is_melee(w)){
-					array_push(_skillArray, mut_long_arms);
+				
+			if(w != wep_none){
+				if(skill_get(s) <= 0){
+					array_push(_skillArray, s);
+				}
+				
+				 // Ammo Consuming Melee Weapons:
+				if(skill_get(mut_long_arms) <= 0){
+					if(t != 0 && weapon_is_melee(w)){
+						array_push(_skillArray, mut_long_arms);
+					}
 				}
 			}
 		}
 	}
+	
 	var _finalArray = [];
 	with(array_shuffle(_skillArray)){
 		var o = self;
@@ -1169,13 +1175,16 @@
 			array_push(_finalArray, o);
 		}
 	}
+	
 	// trace(_skillArray, _finalArray);
+	
 	return _finalArray;
 	
 	
-#define PopoAmbush_text		return `@(color:${tipCol})THE IDPD @wIS UNSTOPPABLE`;
-#define PopoAmbush_area		return area_palace;
-#define PopoAmbush_chance	return ((GameCont.subarea != 3) ? 1/3 : 0); 
+#define PopoAmbush_text    return `@(color:${tipCol})THE IDPD @wIS UNSTOPPABLE`;
+#define PopoAmbush_area    return area_palace;
+#define PopoAmbush_chance  return ((GameCont.subarea != 3) ? 1/3 : 0);
+
 #define PopoAmbush_create
 	 // Ambush:
 	repeat(2 + irandom(2)) instance_create(x, y, IDPDSpawn);
@@ -1202,10 +1211,11 @@
 	}
 	
 	 // Replace Chest:
-	with(instances_matching([AmmoChest, AmmoChestMystery], "", null)){
+	with(AmmoChest){
 		instance_create(x, y, IDPDChest);
 		instance_delete(id);
 	}
+	
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

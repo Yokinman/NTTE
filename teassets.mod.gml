@@ -174,8 +174,8 @@
 		p = "enemies/Alerts/";
 			
 			 // Alert Indicators:
-			AlertIndicator      	 = sprite(p + "sprAlertIndicator",      	 1, 1, 6);
-			AlertIndicatorMystery	 = sprite(p + "sprAlertIndicatorMystery",	 1, 2, 6);
+			AlertIndicator           = sprite(p + "sprAlertIndicator",           1, 1, 6);
+			AlertIndicatorMystery    = sprite(p + "sprAlertIndicatorMystery",    1, 2, 6);
 			AlertIndicatorPopoAmbush = sprite(p + "sprAlertIndicatorPopoAmbush", 1, 4, 4);
 			
 			 // Alert Icons:
@@ -189,7 +189,7 @@
 			SkealAlert       = sprite(p + "sprSkealAlert",       1, 7, 7);
 			SludgePoolAlert  = sprite(p + "sprSludgePoolAlert",  1, 7, 7);
 			VanAlert         = sprite(p + "sprVanAlert",         1, 7, 7);
-			PopoAmbushAlert	 = sprite(p + "sprPopoAmbushAlert",  3, 9, 9);
+			PopoAmbushAlert  = sprite(p + "sprPopoAmbushAlert",  3, 9, 9);
 			
 		//#endregion
 		
@@ -745,23 +745,23 @@
 		p = m;
 			
 			 // Shrine Floors:
-			FloorPalaceShrine			= sprite(p + "sprFloorPalaceShrine",			8,	2,	2);
-			FloorPalaceShrineRoomSmall	= sprite(p + "sprFloorPalaceShrineRoomSmall",	4,	0,	0);
-			FloorPalaceShrineRoomLarge	= sprite(p + "sprFloorPalaceShrineRoomLarge",	9,	0,	0);
+			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          8, 2, 2);
+			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall", 4, 0, 0);
+			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge", 9, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";
 				
 				 // Palace Altar:
-				PalaceAltarIdle 	= sprite(p + "sprPalaceAltarIdle", 	 1,	24, 24);
-				PalaceAltarHurt 	= sprite(p + "sprPalaceAltarHurt", 	 3,	24, 24);
-				PalaceAltarDead 	= sprite(p + "sprPalaceAltarDead", 	 4,	24, 24);
-				PalaceAltarDebris	= sprite(p + "sprPalaceAltarDebris", 5,	8,	8);
+				PalaceAltarIdle   = sprite(p + "sprPalaceAltarIdle",   1, 24, 24);
+				PalaceAltarHurt   = sprite(p + "sprPalaceAltarHurt",   3, 24, 24);
+				PalaceAltarDead   = sprite(p + "sprPalaceAltarDead",   4, 24, 24);
+				PalaceAltarDebris = sprite(p + "sprPalaceAltarDebris", 5,  8,  8);
 				
-				GroundFlameGreen			 = sprite(p + "sprGroundFlameGreen",			 8, 6, 6);
-				GroundFlameGreenBig 		 = sprite(p + "sprGroundFlameGreenBig", 		 8, 8, 8);
-				GroundFlameGreenDisappear	 = sprite(p + "sprGroundFlameGreenDisappear",	 4, 6, 6);
-				GroundFlameGreenBigDisappear = sprite(p + "sprGroundFlameGreenBigDisappear", 4, 8, 8);
+				GroundFlameGreen             = sprite(p + "sprGroundFlameGreen",             8, 4, 6);
+				GroundFlameGreenBig          = sprite(p + "sprGroundFlameGreenBig",          8, 6, 8);
+				GroundFlameGreenDisappear    = sprite(p + "sprGroundFlameGreenDisappear",    4, 4, 6);
+				GroundFlameGreenBigDisappear = sprite(p + "sprGroundFlameGreenBigDisappear", 4, 6, 8);
 				
 			//#endregion
 			

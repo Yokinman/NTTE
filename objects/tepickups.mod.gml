@@ -474,17 +474,17 @@
 			_part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", _hardMin, _hardMax, -1, _part[0], false);
 		}
 	}
-
+	
 	 // Effects:
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
 	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	repeat(6) scrFX(x, y, 3, Dust);
-
-
+	
+	
 #define BigIDPDSpawn_create(_x, _y)
 	with(instance_create(_x, _y, IDPDSpawn)){
 		 // Visual:
-		depth -= 1;
+		depth = -3;
 		
 		 // Vars:
 		elite = true;
@@ -497,29 +497,30 @@
 		
 		return id;
 	}
-
-#define BigIDPDSpawn_step
+	
+#define BigIDPDSpawn_end_step
+	 // Effects:
 	if(sprite_index == sprVanPortalCharge){
 		if(chance_ct(2, 3)){
-			var l = 64,
+			var	l = 64,
 				d = random(360);
 			
 			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), IDPDPortalCharge)){
 				alarm0 = 20 + random(20);
-				speed  = l / alarm0;
+				speed = l / alarm0;
 				direction = d + 180;
 			}
 		}
-		if(chance(1, 4)){
+		if(chance_ct(1, 4)){
 			with(scrFX(x, y, [random(360), 1 + random(1)], PlasmaTrail)){
 				sprite_index = sprPopoPlasmaTrail;
 			}
 		}
 	}
 	
-#define BigIDPDSpawn_end_step
 	 // Force Spawns:
-	if(--alarm1 == 0){
+	if(alarm1 > 0 && alarm1 <= ceil(current_time_scale)){
+		depth = 0;
 		repeat(num){
 			event_perform(ev_alarm, 1);
 			with(instance_create(x, y, PortalClear)){
@@ -535,7 +536,7 @@
 			case sprVanPortalStart:
 				sprite_index = sprVanPortalCharge;
 				break;
-			
+				
 			case sprVanPortalClose:
 				instance_destroy();
 				break;
@@ -543,11 +544,12 @@
 	}
 	else{
 		switch(sprite_index){
-			case sprIDPDPortalClose:	sprite_index = sprVanPortalClose;	break;
-			case sprIDPDPortalCharge:	sprite_index = sprVanPortalCharge;	break;
-			case sprIDPDPortalStart:	sprite_index = sprVanPortalStart;	break;
+			case sprIDPDPortalClose:  sprite_index = sprVanPortalClose;  break;
+			case sprIDPDPortalCharge: sprite_index = sprVanPortalCharge; break;
+			case sprIDPDPortalStart:  sprite_index = sprVanPortalStart;  break;
 		}
 	}
+	
 	
 #define BoneBigPickup_create(_x, _y)
 	with(obj_create(_x, _y, "BonePickup")){
@@ -2668,7 +2670,7 @@
 	/*
 		7-2 event prop. Grants a temporary weapon mutation based on the player's loadout.
 	*/
-
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.PalaceAltarIdle;
@@ -2686,7 +2688,7 @@
 		team = 1;
 		size = 3;
 		skill = mut_none;
-		effect_color = make_color_rgb(72, 253,  8); // make_color_rgb(190, 253,  8);
+		effect_color = make_color_rgb(72, 253, 8); // make_color_rgb(190, 253, 8);
 		
 		 // Pickup Indicator:
 		pickup_indicator = scrPickupIndicator("  CHOOSE");
@@ -2720,15 +2722,16 @@
 	}
 	
 	 // Pickup:
-	if(instance_exists(pickup_indicator)){
-		if(pickup_indicator.pick != -1){
+	var _pickup = pickup_indicator;
+	if(instance_exists(_pickup)){
+		if(player_is_active(_pickup.pick)){
 			
 			 // Grant Blessing:
 			with(obj_create(0, 0, "OrchidSkill")){
 				color1 = make_color_rgb(72, 253,  8);
 				color2 = make_color_rgb( 3,  33, 18)
 				skill  = other.skill;
-				time   = 3600; // 2 minutes
+				time   = 120 * 30; // 2 minutes
 			}
 			
 			 // Effect:
@@ -2738,8 +2741,8 @@
 			}
 			
 			 // Disable All Altars:
-			with(instances_matching(CustomProp, "name", name)){
-				instance_delete(pickup_indicator);
+			with(instances_matching(object_index, "name", name)){
+				with(pickup_indicator) visible = false;
 				alarm0 = 10 + random(10);
 			}
 		}
@@ -2791,11 +2794,11 @@
 	sleep_max(50);
 	
 	 // Sounds:
-	sound_play_hit_ext(sndGunGun,			0.6 + random(0.2),	1.0);
-	sound_play_hit_ext(sndSnowTankDead, 	0.6 + random(0.2),	1.0);
-	sound_play_hit_ext(sndEnergyHammerUpg,	0.5,				0.8);
+	sound_play_hit_ext(sndGunGun,          0.6 + random(0.2), 1.0);
+	sound_play_hit_ext(sndSnowTankDead,    0.6 + random(0.2), 1.0);
+	sound_play_hit_ext(sndEnergyHammerUpg, 0.5,               0.8);
 	
-
+	
 #define PalankingStatue_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		var _phase = 0;
