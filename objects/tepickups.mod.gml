@@ -2706,6 +2706,8 @@
 	}
 	
 #define PalaceAltar_step
+	x = xstart;
+	y = ystart;
 
 	 // Radiate:
 	if(chance_ct(2, 3)){

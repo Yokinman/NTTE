@@ -1048,7 +1048,7 @@
 	}
 	
 	
-#define PalaceShrine_text    return `@(color:${tipCol})RAD MANIPULATION @wIS TRICKY`;
+#define PalaceShrine_text    return `@(color:${tipCol})RAD MANIPULATION @wIS KINDA TRICKY`;
 #define PalaceShrine_area    return area_palace;
 #define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
 
@@ -1098,7 +1098,7 @@
 					_roomDir = _dirStart + orandom(45);
 					
 				with(floor_room_create(x, y, _roomSize, _roomSize, _type, _roomDir, _dirOff, _floorDis)){
-					with(obj_create(x, y, "PalaceAltar")){
+					with(obj_create(x, y - 12, "PalaceAltar")){
 						skill = _skillArray[i];
 					}
 					
@@ -1181,7 +1181,7 @@
 	return _finalArray;
 	
 	
-#define PopoAmbush_text    return `@(color:${tipCol})THE IDPD @wIS UNSTOPPABLE`;
+#define PopoAmbush_text    return `@(color:${tipCol})THE IDPD @wIS WAITING FOR YOU`;
 #define PopoAmbush_area    return area_palace;
 #define PopoAmbush_chance  return ((GameCont.subarea != 3) ? 1/3 : 0);
 
