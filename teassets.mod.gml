@@ -745,9 +745,9 @@
 		p = m;
 			
 			 // Shrine Floors:
-			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          8, 2, 2);
-			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall", 4, 0, 0);
-			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge", 9, 0, 0);
+			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
+			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall", 4,	 0, 0);
+			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge", 9,  0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";

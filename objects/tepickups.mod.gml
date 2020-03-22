@@ -528,6 +528,7 @@
 				image_yscale = image_xscale;
 			}
 		}
+		alarm1 = -1;
 	}
 	
 	 // Animate:

@@ -1206,8 +1206,13 @@
 	}
 	
 	 // Fewer Guardians:
-	with(enemy) if(chance(1, 3)){
+	with(instances_matching([DogGuardian, ExploGuardian], "", null)){
 		instance_delete(id);
+	}
+	with(Guardian){
+		if(chance(1, 4)){
+			instance_delete(id);
+		}
 	}
 	
 	 // Replace Chest:
