@@ -8,8 +8,8 @@
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "GroundFlameGreen", "Igloo", "OrchidSkill", "OrchidSkillBecome", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "FlakBall", "GroundFlameGreen", "Igloo", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "WaterStreak"],
@@ -1057,36 +1057,213 @@
 	}
 	return false;
 	
+#define save_get(_name, _default)
+	/*
+		Returns the value stored at the given name in NTTE's save file
+		Returns the given default value if nothing was found
+		
+		Ex:
+			save_get("option:allowShaders")
+			save_get("stat:pet:Baby.examplepet.mod:found")
+	*/
+	
+	var	_path = string_split(_name, ":"),
+		_save = sav;
+		
+	with(_path){
+		if(!lq_exists(_save, self)){
+			return _default;
+		}
+		_save = lq_get(_save, self);
+	}
+	
+	return _save;
+	
+#define save_set(_name, _value)
+	/*
+		Stores the given value at the given name in NTTE's save file
+		
+		Ex:
+			save_set("stat:time", save_get("stat:time") + 1)
+			save_set("unlock:coolWeapon", true)
+	*/
+	
+	var	_path = string_split(_name, ":"),
+		_save = sav;
+		
+	with(array_slice(_path, 0, array_length(_path) - 1)){
+		if(!is_object(lq_get(_save, self))){
+			lq_set(_save, self, {});
+		}
+		_save = lq_get(_save, self);
+	}
+	
+	lq_set(_save, _path[array_length(_path) - 1], _value);
+	
 #define option_get(_name, _default)
-	var q = lq_defget(sav, "option", {});
-	return lq_defget(q, _name, _default);
-
+	/*
+		Returns the value associated with a given option's name
+		Returns the given default value if nothing was found
+		
+		Ex:
+			option_get("allowShaders")
+	*/
+	
+	return save_get("option:" + _name, _default);
+	
 #define option_set(_name, _value)
-	if(!lq_exists(sav, "option")) sav.option = {};
-	lq_set(sav.option, _name, _value);
-
+	/*
+		Sets the given option to the given value
+		
+		Ex:
+			option_set("allowShaders", false)
+	*/
+	
+	save_set("option:" + _name, _value);
+	
+#define stat_get(_name)
+	/*
+		Returns the value associated with a given stat's name
+		Returns 0 if nothing was found
+		
+		Ex:
+			stat_get("time")
+	*/
+	
+	return save_get("stat:" + _name, 0);
+	
+#define stat_set(_name, _value)
+	/*
+		Sets the given stat to the given value
+		
+		Ex:
+			stat_set("time", stat_get("time") + 1)
+	*/
+	
+	save_set("stat:" + _name, _value);
+	
 #define unlock_get(_name)
-	var q = lq_defget(sav, "unlock", {});
-	return lq_defget(q, _name, false);
-
+	/*
+		Returns the value associated with a given unlock's name
+		Returns 'false' if nothing was found
+		
+		Ex:
+			unlock_get("parrot")
+	*/
+	
+	return save_get("unlock:" + _name, false);
+	
 #define unlock_set(_name, _value)
-	if(!lq_exists(sav, "unlock")) sav.unlock = {};
-	lq_set(sav.unlock, _name, _value);
-
+	/*
+		Sets the given unlock to the given value
+		Returns 'false' if the unlock was already equal to the given value, 'true' if not
+		If the given value is equivalent to 'true' and it was not already equal to the given value, unlock effects are played
+		
+		Ex:
+			unlock_set("parrot", true)
+			unlock_set("coolWeapon", false)
+	*/
+	
+	if(unlock_get(_name) != _value){
+		save_set("unlock:" + _name, _value);
+		
+		 // Unlock FX:
+		if(!is_real(_value) || _value){
+			var	_unlockName = unlock_get_name(_name),
+				_unlockText = unlock_get_text(_name);
+				
+			 // General Unlocks:
+			var _type = {
+				"race" : ["parrot", "bee"],
+				"skin" : ["parrotB", "beeB"],
+				"pack" : ["coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown"],
+				"weps" : ["boneScythe"]
+			};
+			for(var i = 0; i < lq_size(_type); i++){
+				var	_packName = lq_get_key(_type, i),
+					_pack = lq_get_value(_type, i);
+					
+				if(array_exists(_pack, _name)){
+					switch(_packName){
+						case "race":
+							unlock_splat(
+								_unlockName,
+								_unlockText,
+								mod_script_call("race", _name, "race_portrait", 0, 0),
+								mod_script_call("race", _name, "race_menu_confirm")
+							);
+							sound_play_pitchvol(sndGoldUnlock, 0.9, 0.9);
+							break;
+							
+						case "skin":
+							var	_race = string_copy(_name, 1, string_length(_name) - 1),
+								_skin = ord(string_char_at(_name, string_length(_name))) - 65;
+								
+							with(unlock_splat(
+								_unlockName,
+								_unlockText,
+								mod_script_call("race", _race, "race_portrait", 0, _skin),
+								mod_script_call("race", _race, "race_menu_confirm")
+							)){
+								nam[0] += "-SKIN";
+							}
+							sound_play(sndMenuBSkin);
+							break;
+							
+						case "pack":
+							unlock_splat(_unlockName, _unlockText, -1, -1);
+							sound_play(sndGoldUnlock);
+							break;
+							
+						default:
+							unlock_splat(_unlockName, _unlockText, -1, -1);
+					}
+				}
+			}
+			
+			 // Loadout Unlocks:
+			var _split = string_split(_name, ":");
+			if(_split[0] == "loadout" && array_length(_split) > 1){
+				unlock_splat(_unlockName, _unlockText, -1, -1);
+				
+				switch(_split[1]){
+					case "wep":
+						sound_play(sndGoldUnlock);
+						break;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	return false;
+	
 #define unlock_get_name(_name)
-	 // Crown Unlock:
-	if(string_pos("crown", _name) == 1){
-		return string_upper(crown_get_name(string_lower(string_delete(_name, 1, 5)))) + "@s";
+	/*
+		Returns the title associated with a given unlock's corner splat
+	*/
+	
+	 // Loadout Unlock:
+	var _split = string_split(_name, ":");
+	if(_split[0] == "loadout" && array_length(_split) > 1){
+		if(array_length(_split) > 2){
+			switch(_split[1]){
+				case "wep"  : return weapon_get_name(unlock_get(_name));
+				case "crown": return crown_get_name(_split[2]) + "@s UNLOCKED";
+			}
+		}
+		return "";
 	}
 	
 	 // General Unlock:
 	switch(_name){
-		case "coastWep":	return "BEACH GUNS";
-		case "oasisWep":	return "BUBBLE GUNS";
-		case "trenchWep":	return "TECH GUNS";
-		case "lairWep":		return "SAWBLADE GUNS";
-		case "lairCrown":	return crown_get_name("crime");
-		case "boneScythe":	return weapon_get_name("scythe");
+		case "coastWep"  : return "BEACH GUNS UNLOCKED";
+		case "oasisWep"  : return "BUBBLE GUNS UNLOCKED";
+		case "trenchWep" : return "TECH GUNS UNLOCKED";
+		case "lairWep"   : return "SAWBLADE GUNS UNLOCKED";
+		case "lairCrown" : return crown_get_name("crime") + " UNLOCKED";
+		case "boneScythe": return weapon_get_name("scythe") + " UNLOCKED";
 	}
 	
 	 // Default (Split Name by Capitalization):
@@ -1099,109 +1276,59 @@
 	return array_join(_split, " ");
 	
 #define unlock_get_text(_name)
-	 // Crown Unlock:
-	if(string_pos("crown", _name) == 1){
-		return "FOR @wEVERYONE";
+	/*
+		Returns the description associated with a given unlock's corner splat
+	*/
+	
+	 // Loadout Unlock:
+	var _split = string_split(_name, ":");
+	if(_split[0] == "loadout" && array_length(_split) > 1){
+		switch(_split[1]){
+			case "wep"  : return "STORED!";
+			case "crown": return "FOR @wEVERYONE";
+		}
 	}
 	
 	 // General Unlock:
 	switch(_name){
-		case "parrot":		return "FOR REACHING COAST";
-		case "parrotB":		return "FOR BEATING THE AQUATIC ROUTE";
-		case "bee":			return "???";
-		case "beeB":		return "???";
-		case "coastWep":	return "GRAB YOUR FRIENDS";
-		case "oasisWep":	return "SOAP AND WATER";
-		case "trenchWep":	return "TERRORS FROM THE DEEP";
-		case "lairWep":		return "DEVICES OF TORTURE";
-		case "lairCrown":	return "STOLEN FROM THIEVES";
-		case "boneScythe":	return "A PACKAGE DEAL";
+		case "parrot"    : return "FOR REACHING COAST";
+		case "parrotB"   : return "FOR BEATING THE AQUATIC ROUTE";
+		case "bee"       : return "???";
+		case "beeB"      : return "???";
+		case "coastWep"  : return "GRAB YOUR FRIENDS";
+		case "oasisWep"  : return "SOAP AND WATER";
+		case "trenchWep" : return "TERRORS FROM THE DEEP";
+		case "lairWep"   : return "DEVICES OF TORTURE";
+		case "lairCrown" : return "STOLEN FROM THIEVES";
+		case "boneScythe": return "A PACKAGE DEAL";
 	}
 	
 	return "";
-
-#define unlock_call(_name)
-	if(!unlock_get(_name)){
-		unlock_set(_name, true);
-		
-		 // General Unlocks:
-		var _type = {
-			"race" : ["parrot", "bee"],
-			"skin" : ["parrotB", "beeB"],
-			"pack" : ["coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown"],
-			"misc" : ["crownCrime", "boneScythe"]
-		};
-		for(var i = 0; i < array_length(_type); i++){
-			var	_packName = lq_get_key(_type, i),
-				_pack = lq_get_value(_type, i);
-				
-			if(array_exists(_pack, _name)){
-				var	_unlockName = unlock_get_name(_name),
-					_unlockText = unlock_get_text(_name);
-					
-				switch(_packName){
-					case "race":
-						unlock_splat(
-							_unlockName,
-							_unlockText,
-							mod_script_call("race", _name, "race_portrait", 0, 0),
-							mod_script_call("race", _name, "race_menu_confirm")
-						);
-						sound_play_pitchvol(sndGoldUnlock, 0.9, 0.9);
-						break;
-						
-					case "skin":
-						var	_race = string_copy(_name, 1, string_length(_name) - 1),
-							_skin = ord(string_char_at(_name, string_length(_name))) - 65;
-							
-						with(unlock_splat(
-							_unlockName,
-							_unlockText,
-							mod_script_call("race", _race, "race_portrait", 0, _skin),
-							mod_script_call("race", _race, "race_menu_confirm")
-						)){
-							nam[0] += "-SKIN";
-						}
-						sound_play(sndMenuBSkin);
-						break;
-						
-					case "pack":
-						unlock_splat(_unlockName, _unlockText, -1, -1);
-						sound_play(sndGoldUnlock);
-						break;
-						
-					default:
-						unlock_splat(_unlockName, _unlockText, -1, -1);
-				}
-			}
+	
+#define unlock_splat(_name, _text, _sprite, _sound)
+	 // Make Sure UnlockCont Exists:
+	if(array_length(instances_matching(CustomObject, "name", "UnlockCont")) <= 0){
+		obj_create(0, 0, "UnlockCont");
+	}
+	
+	 // Add New Unlock:
+	var _unlock = {
+		"nam" : [_name, _name], // [splash popup, gameover popup]
+		"txt" : _text,
+		"spr" : _sprite,
+		"img" : 0,
+		"snd" : _sound
+	};
+	
+	with(instances_matching(CustomObject, "name", "UnlockCont")){
+		if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
+			splash_delay = 40;
 		}
-		
-		return unlock_get(_name);
+		array_push(unlock, _unlock);
 	}
-	return false;
-
-#define stat_get(_name)
-	if(!is_array(_name)) _name = string_split(_name, "/");
-
-	var q = lq_defget(sav, "stat", {});
-	with(_name) q = lq_defget(q, self, 0);
-
-	return q;
-
-#define stat_set(_name, _value)
-	if(!is_array(_name)) _name = string_split(_name, "/");
-
-	if("stat" not in sav) sav.stat = {};
-
-	var	q = sav.stat,
-		m = array_length(_name) - 1;
-
-	with(array_slice(_name, 0, m)){
-		if(self not in q) lq_set(q, self, {});
-		q = lq_get(q, self);
-	}
-	lq_set(q, _name[m], _value);
-
+	
+	return _unlock;
+	
 #define scrPickupIndicator(_text)
 	with(obj_create(x, y, "PickupIndicator")){
 		text = _text;
@@ -2105,30 +2232,6 @@
 		instance_destroy();
 	}
 
-#define unlock_splat(_name, _text, _sprite, _sound)
-	 // Make Sure UnlockCont Exists:
-	if(array_length(instances_matching(CustomObject, "name", "UnlockCont")) <= 0){
-		obj_create(0, 0, "UnlockCont");
-	}
-
-	 // Add New Unlock:
-	var _unlock = {
-		"nam" : [_name, _name], // [splash popup, gameover popup]
-		"txt" : _text,
-		"spr" : _sprite,
-		"img" : 0,
-		"snd" : _sound
-	};
-
-	with(instances_matching(CustomObject, "name", "UnlockCont")){
-		if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
-			splash_delay = 40;
-		}
-		array_push(unlock, _unlock);
-	}
-
-	return _unlock;
-	
 #define scrFX(_x, _y, _motion, _obj)
 	if(!is_array(_x)) _x = [_x, 1];
 	while(array_length(_x) < 2) array_push(_x, 0);
@@ -2400,7 +2503,7 @@
 #define instance_nearest_bbox(_x, _y, _inst)
 	/*
 		Returns the instance closest to a given point based on their bounding box, similar to how distance_to_point() works
-		Accepts an array argument like "instance_nearest_array()"
+		Accepts an array argument like 'instance_nearest_array()' does
 		
 		Ex:
 			instance_nearest_bbox(x, y, Floor);
@@ -4208,6 +4311,44 @@
 	
 	return _wepDecide;
 	
+#define weapon_get_loadout(_wep)
+	/*
+		Returns the loadout sprite associated with a given weapon
+	*/
+	
+	var _wepRaw = wep_get(_wep);
+	
+	 // Custom:
+	if(is_string(_wepRaw)){
+		return mod_script_call("weapon", _wepRaw, "weapon_loadout", _wep);
+	}
+	
+	 // Normal:
+	else switch(_wepRaw){
+		case wep_revolver               : return sprRevolverLoadout;
+		case wep_golden_revolver        : return sprGoldRevolverLoadout;
+		case wep_chicken_sword          : return sprChickenSwordLoadout;
+		case wep_rogue_rifle            : return sprRogueRifleLoadout;
+		case wep_rusty_revolver         : return sprRustyRevolverLoadout;
+		case wep_golden_wrench          : return sprGoldWrenchLoadout;
+		case wep_golden_machinegun      : return sprGoldMachinegunLoadout;
+		case wep_golden_shotgun         : return sprGoldShotgunLoadout;
+		case wep_golden_crossbow        : return sprGoldCrossbowLoadout;
+		case wep_golden_grenade_launcher: return sprGoldGrenadeLauncherLoadout;
+		case wep_golden_laser_pistol    : return sprGoldLaserPistolLoadout;
+		case wep_golden_screwdriver     : return sprGoldScrewdriverLoadout;
+		case wep_golden_assault_rifle   : return sprGoldAssaultRifleLoadout;
+		case wep_golden_slugger         : return sprGoldSluggerLoadout;
+		case wep_golden_splinter_gun    : return sprGoldSplintergunLoadout;
+		case wep_golden_bazooka         : return sprGoldBazookaLoadout;
+		case wep_golden_plasma_gun      : return sprGoldPlasmaGunLoadout;
+		case wep_golden_nuke_launcher   : return sprGoldNukeLauncherLoadout;
+		case wep_golden_disc_gun        : return sprGoldDiscgunLoadout;
+		case wep_golden_frog_pistol     : return sprGoldToxicGunLoadout;
+	}
+	
+	return 0;
+	
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)
 	 // Auto-Determine Grid Size:
 	var	_tileSize = 16,
@@ -4670,11 +4811,11 @@
 		mod_type = _modType;
 		
 		 // Stats:
-		var s = `pet/${pet}.${mod_name}.${mod_type}`;
-		if(!is_object(stat_get(s))){
-			stat_set(s, { found:0, owned:0 });
+		var _stat = `pet:${pet}.${mod_name}.${mod_type}`;
+		if(!is_object(stat_get(_stat))){
+			stat_set(_stat, { found:0, owned:0 });
 		}
-		stat = stat_get(s);
+		stat = stat_get(_stat);
 		
 		 // Sprites:
 		if(mod_type == "mod" && mod_name == "petlib"){

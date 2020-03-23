@@ -96,20 +96,39 @@
 	global.mapArea = [];
 	global.killsLast = GameCont.kills;
 	global.hud_reroll = null;
+	global.sPromptIndex = 0;
 	with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
 	
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
 		var _race = player_get_race(i);
 		if(array_exists(raceList, _race)){
-			var _stat = "race/" + _race + "/runs";
+			var _stat = "race:" + _race + ":runs";
 			stat_set(_stat, stat_get(_stat) + 1);
 		}
 	}
 	
-	 // Yeah:
-	global.sPromptIndex = 0;
-
+	 // Set Storable NTTE Weapon:
+	with(Player){
+		var _wep = unlock_get(`loadout:wep:${race}:${save_get(`loadout:wep:${race}`, "")}`);
+		if(_wep != wep_none){
+			 // Take Ammo:
+			var _type = weapon_get_type(wep);
+			if(_type != 0){
+				ammo[_type] = max(0, ammo[_type] - (typ_ammo[_type] * 3));
+			}
+			
+			 // Set Wep:
+			wep = _wep;
+			
+			 // Give Ammo:
+			var _type = weapon_get_type(wep);
+			if(_type != 0){
+				ammo[_type] += round(typ_ammo[_type] * ((wep_get(wep) == "merge") ? 2 : 3));
+			}
+		}
+	}
+	
 #define level_start // game_start but every level
 	var	_spawnX = 10016,
 		_spawnY = 10016,
@@ -289,7 +308,7 @@
 			
 			 // Unlock Custom Crowns:
 			if(array_exists(crwnList, crown_current)){
-				unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
+				unlock_set(`loadout:crown:${crown_current}`, true);
 			}
 			
 			 // Less Bones:
@@ -1450,7 +1469,7 @@
 			 // Custom Character Stuff:
 			with(raceList){
 				var _name = self;
-	
+				
 				 // Create Custom CampChars:
 				if(mod_exists("race", _name) && unlock_get(_name)){
 					if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
@@ -1463,7 +1482,7 @@
 						}
 					}
 				}
-
+				
 				 // CharSelect:
 				with(instances_matching(CharSelect, "race", _name)){
 					 // race_avail Fix:
@@ -1472,12 +1491,12 @@
 					}
 					
 					 // New:
-					else if(stat_get("race/" + _name + "/runs") <= 0){
+					else if(stat_get("race:" + _name + ":runs") <= 0){
 						script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
 					}
 				}
 			}
-	
+			
 			 // CampChar Management:
 			var	_playersTotal = 0,
 				_playersLocal = 0;
@@ -1508,7 +1527,7 @@
 								break;
 							}
 						}
-	
+						
 						 // Manually Animate:
 						if(anim_end){
 							if(sprite_index != spr_menu){
@@ -1581,7 +1600,7 @@
 				
 				 // Race Deaths Stat:
 				if(array_exists(raceList, _race)){
-					var _stat = "race/" + _race + "/lost";
+					var _stat = "race:" + _race + ":lost";
 					stat_set(_stat, stat_get(_stat) + 1);
 				}
 			}
@@ -1667,7 +1686,7 @@
 	for(var i = 0; i < lq_size(global.sound_current); i++){
 		var	_type = lq_get_key(global.sound_current, i),
 			c = lq_get_value(global.sound_current, i);
-
+			
 		if(audio_is_playing(c.hold)){
 			if(!audio_is_playing(c.snd)){
 				audio_sound_set_track_position(audio_play_sound(c.snd, 0, true), c.pos);
@@ -1691,7 +1710,7 @@
 					if(is_string(area) && area in _packList){
 						if(subarea >= area_get_subarea(area)){
 							with(lq_get_value(_packList, i)){
-								unlock_call(other.area + self);
+								unlock_set(other.area + self, true);
 							}
 						}
 					}
@@ -1703,7 +1722,26 @@
 	 // Game Win Crown Unlock:
 	with(SitDown) if(place_meeting(x, y, Player)){
 		if(array_exists(crwnList, crown_current)){
-			unlock_call("crown" + string_upper(string_char_at(crown_current, 1)) + string_delete(crown_current, 1, 1));
+			unlock_set(`loadout:crown:${crown_current}`, true);
+		}
+	}
+	
+	 // Unlock Golden Merged Weapons:
+	with(instances_matching(GenCont, "ntte_wep_unlock", null)){
+		ntte_wep_unlock = true;
+		with(Player){
+			with(["wep", "bwep"]){
+				var _wep = variable_instance_get(other, self);
+				if(weapon_get_gold(_wep) && wep_get(_wep) == "merge"){
+					var	_path = `loadout:wep:${other.race}`,
+						_name = "main";
+						
+					if(unlock_set(_path + ":" + _name, _wep)){
+						save_set(_path, _name);
+						break;
+					}
+				}
+			}
 		}
 	}
 	
@@ -1904,7 +1942,7 @@
 						}
 						
 						 // Weapon Found:
-						else unlock_call("found(" + _wep + ".wep)");
+						else stat_set("found:" + _wep + ".wep", true);
 					}
 				}
 				w++;
@@ -1913,7 +1951,7 @@
 		
 		 // Crown Found:
 		if(is_string(crown_current) && array_exists(crwnList, crown_current)){
-			unlock_call("found(" + crown_current + ".crown)");
+			stat_set("found:" + crown_current + ".crown", true);
 		}
 		
 		 // Race Stats:
@@ -1921,12 +1959,12 @@
 		with(_statInst) ntte_statadd = true;
 		if(instance_exists(Player)){
 			var _statList = {
-				"kill"	: (GameCont.kills - global.killsLast),
-				"loop"	: ((GameCont.area == area_vault) ? array_length(instances_matching(_statInst, "object_index", GenCont)) : 0),
-				"wins"	: array_length(instances_matching(_statInst, "object_index", SitDown)),
-				"time"	: (current_time_scale / 30)
+				"kill" : (GameCont.kills - global.killsLast),
+				"loop" : ((GameCont.area == area_vault) ? array_length(instances_matching(_statInst, "object_index", GenCont)) : 0),
+				"wins" : array_length(instances_matching(_statInst, "object_index", SitDown)),
+				"time" : (current_time_scale / 30)
 			};
-
+			
 			 // Find Active Races:
 			var _statRace = [];
 			for(var i = 0; i < maxp; i++){
@@ -1935,21 +1973,21 @@
 					array_push(_statRace, _race);
 				}
 			}
-
+			
 			 // Apply Stats:
 			with(_statRace){
-				var _statPath = "race/" + self + "/";
-
+				var _statPath = "race:" + self + ":";
+				
 				 // General Stats:
 				for(var i = 0; i < lq_size(_statList); i++){
 					var	_stat = _statPath + lq_get_key(_statList, i),
 						_add = lq_get_value(_statList, i);
-	
+						
 					if(_add > 0){
 						stat_set(_stat, stat_get(_stat) + _add);
 					}
 				}
-
+				
 				  // Best Run:
 			 	if(GameCont.kills > stat_get(_statPath + "bestKill")){
 			 		stat_set(_statPath + "bestArea", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
@@ -3307,13 +3345,14 @@
 #define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_call(_name)                                                              return  mod_script_call_nc('mod', 'telib', 'unlock_call', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);

@@ -90,17 +90,17 @@
 						"y" : -16,
 						"slct" : array_create(maxp, ""),
 						"list" : [ // Pets that show up by default
-							"Scorpion"		+ ".petlib.mod",
-							"Parrot"		+ ".petlib.mod",
-							"Slaughter"		+ ".petlib.mod",
-							"CoolGuy"		+ ".petlib.mod",
-							"Salamander"	+ ".petlib.mod",
-							"Mimic"			+ ".petlib.mod",
-							"Octo"			+ ".petlib.mod",
-							"Spider"		+ ".petlib.mod",
-							"Prism"			+ ".petlib.mod",
-							"Orchid"		+ ".petlib.mod",
-							"Weapon"		+ ".petlib.mod"
+							"Scorpion"   + ".petlib.mod",
+							"Parrot"     + ".petlib.mod",
+							"Slaughter"  + ".petlib.mod",
+							"CoolGuy"    + ".petlib.mod",
+							"Salamander" + ".petlib.mod",
+							"Mimic"      + ".petlib.mod",
+							"Octo"       + ".petlib.mod",
+							"Spider"     + ".petlib.mod",
+							"Prism"      + ".petlib.mod",
+							"Orchid"     + ".petlib.mod",
+							"Weapon"     + ".petlib.mod"
 						]
 					},
 					
@@ -109,11 +109,11 @@
 						"list" : [
 							{	name : "AREA UNLOCKS",
 								list : [
-									["coastWep",	["harpoon launcher.wep", "net launcher.wep", "clam shield.wep", "trident.wep"]],
-									["oasisWep",	["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
-									["trenchWep",	["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
-									["lairWep",		["bat disc launcher.wep", "bat disc cannon.wep"]],
-									["lairCrown",	["crime.crown"]]
+									["coastWep",  ["harpoon launcher.wep", "net launcher.wep", "clam shield.wep", "trident.wep"]],
+									["oasisWep",  ["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
+									["trenchWep", ["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
+									["lairWep",   ["bat disc launcher.wep", "bat disc cannon.wep"]],
+									["lairCrown", ["crime.crown"]]
 									]
 								},
 							{	name : "MISC",
@@ -187,9 +187,9 @@
 		if("type" not in self) type = opt_title;
 		if("pick" not in self){
 			switch(type){
-				case opt_toggle:	pick = ["OFF", "ON"];	break;
-				case opt_slider:	pick = [0, 1];			break;
-				default:			pick = [];				break;
+				case opt_toggle: pick = ["OFF", "ON"]; break;
+				case opt_slider: pick = [0, 1];        break;
+				default:         pick = [];            break;
 			}
 		}
 		if("sync" not in self) sync = true;
@@ -226,22 +226,22 @@
 	 // Race Stats:
 	with(raceList){
 		var	_race = self,
-			_path = "race/" + _race + "/",
+			_path = "race:" + _race + ":",
 			_stat = [
 				{	name : "",
 					list : [
-						["Kills",	_path + "kill", stat_base],
-						["Loops",	_path + "loop", stat_base],
-						["Runs",	_path + "runs", stat_base],
-						["Deaths",	_path + "lost", stat_base],
-						["Wins",	_path + "wins", stat_base],
-						["Time",	_path + "time", stat_time]
+						["Kills",  _path + "kill", stat_base],
+						["Loops",  _path + "loop", stat_base],
+						["Runs",   _path + "runs", stat_base],
+						["Deaths", _path + "lost", stat_base],
+						["Wins",   _path + "wins", stat_base],
+						["Time",   _path + "time", stat_time]
 						]
 					},
 				{	name : "Best Run",
 					list : [
-						["Area",	_path + "bestArea",	stat_base],
-						["Kills",	_path + "bestKill", stat_base]
+						["Area",  _path + "bestArea", stat_base],
+						["Kills", _path + "bestKill", stat_base]
 						]
 					}
 			];
@@ -256,7 +256,7 @@
 	}
 	
 	 // Loadout Crown System:
-	global.loadout_crown = {
+	crownLoadout = {
 		size : [],
 		race : {},
 		camp : crwn_none
@@ -266,8 +266,21 @@
 		with(loadbutton) instance_destroy();
 		with(Loadout) selected = false;
 	}
-	surfCrownHide       = surflist_set("CrownHide",       0, 0, 32, 32);
-	surfCrownHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
+	surfLoadoutHide       = surflist_set("CrownHide",       0, 0, 64, 64);
+	surfLoadoutHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
+	
+	 // Loadout Weapon System:
+	wepLoadout = [
+		{ name: "",     inst: noone, hover: false, alarm0: -1, addy: 0, overy: 0, dix: -0.00001, diy: 0 },
+		{ name: "main", inst: noone, hover: false, alarm0: -1, addy: 0, overy: 0, dix: -1,       diy: 0 }
+	];
+	
+	 // Loadout Tooltip: 
+	loadoutTip = {
+		x : 0,
+		y : 0,
+		text : ""
+	};
 	
 	 // Mouse:
 	global.mouse_x_previous = array_create(maxp, 0);
@@ -284,8 +297,8 @@
 #macro crwnList global.crwn
 #macro wepsList global.weps
 
-#macro surfCrownHide       global.surfCrownHide
-#macro surfCrownHideScreen global.surfCrownHideScreen
+#macro surfLoadoutHide       global.surfLoadoutHide
+#macro surfLoadoutHideScreen global.surfLoadoutHideScreen
 
 #macro NTTEMenu         global.menu
 #macro MenuOpen         NTTEMenu.open
@@ -312,22 +325,29 @@
 #macro cred_artist     `@(color:${make_color_rgb(30, 160, 240)})`
 #macro cred_coder      `@(color:${make_color_rgb(250, 170, 0)})`
 #macro cred_music      `@(color:${make_color_rgb(255, 60, 0)})`
-#macro cred_twitter    cred_artist	+ "Twitter: @w"
-#macro cred_itchio     cred_coder	+ "Itch.io: @w"
-#macro cred_soundcloud cred_music	+ "Soundcloud: @w"
+#macro cred_twitter    cred_artist + "Twitter: @w"
+#macro cred_itchio     cred_coder  + "Itch.io: @w"
+#macro cred_soundcloud cred_music  + "Soundcloud: @w"
 #macro cred_discord    `@(color:${make_color_rgb(160, 70, 200)})Discord: @w`
 #macro cred_yellow     "@y"
 
-#macro crownPlayer player_find_local_nonsync()
-#macro crownSize   global.loadout_crown.size
-#macro crownRace   global.loadout_crown.race
-#macro crownCamp   global.loadout_crown.camp
-#macro crownIconW  28
-#macro crownIconH  28
-#macro crownPath   "crownCompare/"
-#macro crownPathD  ""
-#macro crownPathA  "A"
-#macro crownPathB  "B"
+#macro loadoutPlayer player_find_local_nonsync()
+#macro loadoutTip    global.loadout_tooltip
+
+#macro crownLoadout global.loadout_crown
+#macro crownSize    crownLoadout.size
+#macro crownRace    crownLoadout.race
+#macro crownCamp    crownLoadout.camp
+#macro crownIconW   28
+#macro crownIconH   28
+#macro crownPath    "crownCompare/"
+#macro crownPathD   ""
+#macro crownPathA   "A"
+#macro crownPathB   "B"
+
+#macro wepLoadout global.loadout_wep
+#macro wepIconW   48
+#macro wepIconH   48
 
 #define chat_command(_cmd, _arg, _ind)
 	if(string_upper(_cmd) == "NTTE"){
@@ -343,7 +363,7 @@
 	}
 	
 	 // Special Loadout Crown Selected:
-	var	p = crownPlayer,
+	var	p = loadoutPlayer,
 		_crown = lq_get(crownRace, player_get_race_fix(p)),
 		_crownPoints = GameCont.crownpoints;
 		
@@ -397,9 +417,9 @@
 #define step
 	script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 0.1);
 	
-	 // Loadout Crowns:
+	 // Loadout Crowns/Weapons:
 	if(instance_exists(Menu)){
-		with([surfCrownHide, surfCrownHideScreen]) active = true;
+		with([surfLoadoutHide, surfLoadoutHideScreen]) active = true;
 		with(Menu){
 			with(Loadout) if(selected == false && openanim > 0){
 				openanim = 0; // Bro they actually forgot to reset this when the loadout is closed (<= v9940)
@@ -407,8 +427,17 @@
 			
 			 // Bind Drawing:
 			script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 1);
+			script_bind_draw(draw_weapon, object_get_depth(LoadoutWep) - 1);
+			script_bind_draw(draw_loadout_tooltip, -100000);
 			if(instance_exists(Loadout)){
 				script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
+				script_bind_draw(loadout_above,  Loadout.depth - 0.0001);
+			}
+			
+			 // LoadoutSkin Offset:
+			with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
+				ntte_crown_xoffset = -22;
+				xstart += ntte_crown_xoffset;
 			}
 			
 			 // Crown Thing:
@@ -423,7 +452,7 @@
 						 // Place by Last Played Character:
 						with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
 							other.x = x + (random_range(12, 24) * choose(-1, 1));
-							other.y = y + random_range(-8, 8);
+							other.y = y + orandom(8);
 						}
 						
 						 // Visual Setup:
@@ -464,10 +493,81 @@
 					});
 				}
 			}
+			
+			 // Custom Loadout Weapons:
+			if(instance_exists(LoadoutWep)){
+				 // Create Inactive LoadoutWeps:
+				with(wepLoadout){
+					if(!instance_exists(inst)){
+						if(name == "" || unlock_get(`loadout:wep:${player_get_race(loadoutPlayer)}:${name}`) != wep_none){
+							inst = instance_create(0, 0, FloorMaker);
+							alarm0 = 2;
+							overy = 0;
+							addy = 2;
+							
+							 // Destroy FloorMaker Things:
+							with(instances_matching_gt(GameObject, "id", inst)){
+								instance_delete(id);
+							}
+							
+							 // Become LoadoutWep:
+							with(inst){
+								dix = other.dix;
+								instance_change(LoadoutWep, true);
+								other.alarm0 = alarm_get(0);
+								alarm_set(0, -1);
+							}
+						}
+					}
+				}
+				
+				 // Loadout Wep Selection:
+				with(wepLoadout){
+					hover = false;
+					with(other){
+						for(var i = 0; i < maxp; i++){
+							if(player_is_active(i) && position_meeting(mouse_x[i], mouse_y[i], other.inst)){
+								other.hover = true;
+								break;
+							}
+						}
+					}
+				}
+				for(var i = 0; i < maxp; i++){
+					if(player_is_active(i) && button_pressed(i, "fire")){
+						if(position_meeting(mouse_x[i], mouse_y[i], LoadoutWep)){
+							var	_slctPath = `loadout:wep:${player_get_race(i)}`,
+								_slctSnd = false,
+								_slct = "";
+								
+							with(wepLoadout) if(hover){
+								_slct = name;
+								if(_slct == "") _slctSnd = true;
+								break;
+							}
+							
+							 // Selected:
+							if(_slct != save_get(_slctPath, "")){
+								save_set(_slctPath, _slct);
+								
+								 // Sound:
+								if(_slctSnd){
+									switch(player_get_race(i)){
+										case "venuz":   sound_play(sndMenuGoldwep);  break;
+										case "chicken": sound_play(sndMenuSword);    break;
+										default:        sound_play(sndMenuRevolver); break;
+									}
+								}
+								else sound_play(sndMenuGoldwep);
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	else{
-		with([surfCrownHide, surfCrownHideScreen]) active = false;
+		with([surfLoadoutHide, surfLoadoutHideScreen]) active = false;
 		
 		 // For CharSelection Crown Boy:
 		crownCamp = crown_current;
@@ -655,8 +755,9 @@
 	instance_destroy();
 	
 #define draw_crown
-	var	p = crownPlayer,
-		_crown = lq_get(crownRace, player_get_race_fix(p)),
+	var	p = loadoutPlayer,
+		_race = player_get_race_fix(p),
+		_crown = lq_get(crownRace, _race),
 		_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_mx = mouse_x[p],
@@ -975,104 +1076,65 @@
 		
 		 // Custom Crown Tooltip:
 		with(_crown.custom.icon) if(visible && hover){
-			draw_set_font(fntM);
-			
-			var	_text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn)),
-				_x = x,
-				_y = y - 5 - hover; // NTT header fix: max(, _vy + 24 + string_height(_text))
-				
-			draw_tooltip(_x, _y, _text);
+			loadoutTip.x = x;
+			loadoutTip.y = y - 5 - hover;
+			loadoutTip.text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn));
 		}
 	}
 	else crownSize = [];
 	
-	 // Drawing Custom Crown on Collapsed Loadout:
-	if(_crown.custom.slct != -1){
-		with(surfCrownHide) if(surface_exists(surf)){
-			with(Loadout) if(visible && (selected == false || openanim < 3)){
-				var _x = x + other.x,
-					_y = y + other.y;
+	instance_destroy();
+	
+#define draw_weapon
+	for(var i = 0; i < array_length(wepLoadout); i++){
+		with(wepLoadout[i]){
+			if(alarm0 >= 0 && current_frame_active) alarm0--;
+			if(alarm0 <= 0){
+				var	_real = (name != ""),
+					_savePath = `loadout:wep:${player_get_race(loadoutPlayer)}`,
+					_slct = (save_get(_savePath, "") == name),
+					_wep = unlock_get(_savePath + ":" + name),
+					_x = view_xview_nonsync + game_width  - 86 + (dix * wepIconW),
+					_y = view_yview_nonsync + game_height - 78 + (diy * wepIconH) + addy;
 					
-				 // Hide Normal Crown:
-				if(_crown.slct != crwn_none){
-					draw_surface(other.surf, _x, _y);
+				with(inst){
+					 // Perform Important Code & Cover Normal LoadoutWeps:
+					if(_real || _slct){
+						// Disable drawing
+						draw_set_blend_mode_ext(bm_zero, bm_dest_alpha);
+					}
+					else if(!_real){
+						// Cover
+						draw_set_color(c_black);
+						draw_rectangle(_x - 16, _y - 16, _x + 16, _y + 16, false);
+					}
+					with(self) event_perform(ev_draw, 0);
+					draw_set_blend_mode(bm_normal);
+					
+					 // Draw Manually:
+					if(_real){
+						draw_loadoutwep(_wep, 0, _x, _y - (_slct ? 2 : other.hover), 1, 1, 0, merge_color(c_white, c_black, (_slct ? 0 : (other.hover ? 0.2 : 0.5))), 1);
+						
+						 // Tooltip:
+						if(other.hover){
+							loadoutTip.x = _x;
+							loadoutTip.y = _y - 7 + other.overy;
+							loadoutTip.text = weapon_get_name(_wep);
+							if(other.overy > 0) other.overy--;
+						}
+						else other.overy = 1;
+					}
 				}
 				
-				 // Draw Custom:
-				with(_crown.custom.icon) if(crwn == _crown.custom.slct){
-					with(other) draw_sprite(other.sprite_index, other.image_index, _x + 16, _y + 16);
-				}
+				if(addy > 0) addy--;
 			}
 		}
-	}
-	
-	 // LoadoutSkin Offset:
-	with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
-		ntte_crown_xoffset = -22;
-		xstart += ntte_crown_xoffset;
 	}
 	
 	instance_destroy();
 	
 #define loadout_behind
 	instance_destroy();
-	
-	var	p = crownPlayer,
-		_crown = lq_get(crownRace, player_get_race_fix(p));
-		
-	if(is_undefined(_crown)) exit;
-	
-	with(surfCrownHide) if(surface_exists(surf)){
-		var	_surf = surf,
-			_surfx = -60 - (w / 2),
-			_surfy = -39 - (h / 2);
-			
-		with(Loadout){
-			_surfy += (introsettle - (introsettle > 0));
-			if(position_meeting(mouse_x[p], mouse_y[p], self)){
-				_surfx--;
-				_surfy--;
-			}
-			
-			if(_crown.slct != crwn_none){
-				with(surfCrownHideScreen) if(surface_exists(surf)){
-					x = other.x - game_width;
-					y = other.y - (game_height - 36);
-					w = game_width;
-					h = game_height;
-					
-					 // Capture Screen:
-					surface_set_target(surf);
-					draw_clear(c_black);
-					draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
-					surface_screenshot(surf);
-					draw_set_blend_mode(bm_normal);
-					
-					with(other){
-						surface_set_target(_surf);
-						draw_clear_alpha(0, 0);
-						
-						 // Draw Mask of What to Hide (The Currently Selected Crown):
-						draw_set_fog(true, c_black, 0, 0);
-						draw_sprite(sprLoadoutCrown, _crown.slct, 16, 16 + (introsettle > 0));
-						draw_set_fog(false, 0, 0, 0);
-						
-						 // Lay Screen + Loadout Sprite Over Mask:
-						draw_set_color_write_enable(true, true, true, false);
-						draw_surface(other.surf, other.x - (x + _surfx), other.y - (y + _surfy));
-						draw_sprite(sprLoadoutSplat, image_index, -_surfx, -_surfy);
-						if(selected == true) draw_sprite(sprLoadoutOpen, openanim, -_surfx, -_surfy);
-						draw_set_color_write_enable(true, true, true, true);
-					}
-				}
-				
-				surface_reset_target();
-			}
-		}
-		
-		x = _surfx;
-		y = _surfy;
-	}
 	
 	 // Fix Haste Hands:
 	if(global.clock_fix){
@@ -1098,6 +1160,179 @@
 			}
 		}
 	}
+	
+	 // Hiding Crown/Weapon Icons Setup:
+	var	p = loadoutPlayer,
+		_race = player_get_race_fix(p),
+		_crown = lq_get(crownRace, _race);
+		
+	with(surfLoadoutHide) if(surface_exists(surf)){
+		with(Loadout){
+			var	_x = view_xview_nonsync + game_width,
+				_y = view_yview_nonsync + game_height - 36 + (introsettle - (introsettle > 0)),
+				_surf = other.surf,
+				_surfw = other.w,
+				_surfh = other.h,
+				_surfx = _x - 32 - _surfw,
+				_surfy = _y + 4 - _surfh;
+				
+			with(surfLoadoutHideScreen) if(surface_exists(surf)){
+				x = view_xview_nonsync;
+				y = view_yview_nonsync;
+				w = game_width;
+				h = game_height;
+				
+				 // Capture Screen:
+				surface_set_target(surf);
+				draw_clear(c_black);
+				draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
+				surface_screenshot(surf);
+				draw_set_blend_mode(bm_normal);
+				
+				with(other){
+					surface_set_target(_surf);
+					draw_clear_alpha(0, 0);
+					
+					 // Offset:
+					var _off = 0;
+					if(position_meeting(mouse_x[p], mouse_y[p], self)){
+						_off = 1;
+					}
+					if(selected == true){
+						if(openanim <= 0) _off = 2;
+						if(openanim == 1) _off = 1;
+					}
+					
+					/// Draw Mask of What to Hide:
+					draw_set_fog(true, c_black, 0, 0);
+						
+						 // The Currently Selected Crown:
+						if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
+							draw_sprite(sprLoadoutCrown, _crown.slct, _x - _surfx - 60 - _off, _y - _surfy - 39 - _off);
+						}
+						
+						 // The Character's Starting Weapon:
+						if(unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`) != wep_none){
+							var _wep = wep_revolver;
+							
+							 // Determine Starting Wep:
+							switch(race_get_id(_race)){
+								case char_random  : _wep = wep_none;               break;
+								case char_venuz   : _wep = wep_golden_revolver;    break;
+								case char_chicken : _wep = wep_chicken_sword;      break;
+								case char_rogue   : _wep = wep_rogue_rifle;        break;
+								case char_bigdog  : _wep = wep_dog_spin_attack;    break;
+								case char_skeleton: _wep = wep_rusty_revolver;     break;
+								case char_frog    : _wep = wep_golden_frog_pistol; break;
+								
+								default: // Custom
+									if(is_string(_race) && mod_script_exists("race", _race, "race_swep")){
+										_wep = mod_script_call("race", _race, "race_swep");
+									}
+							}
+							
+							 // Draw:
+							draw_loadoutwep(_wep, 0, _x - _surfx - 60 - _off, _y - _surfy - 14 + _off, 1, 1, 0, c_white, 1);
+						}
+						
+					draw_set_fog(false, 0, 0, 0);
+					
+					 // Overlay Screen + Loadout Splat Over Mask:
+					draw_set_color_write_enable(true, true, true, false);
+					
+					draw_surface(other.surf, other.x - _surfx, other.y - _surfy);
+					
+					draw_sprite(sprLoadoutSplat, image_index, _x - _surfx, _y - _surfy);
+					if(selected == true){
+						draw_sprite(sprLoadoutOpen, openanim, _x - _surfx, _y - _surfy);
+					}
+					if(_race == "steroids"){
+						draw_loadoutwep(wep_revolver, 0, _x - _surfx - 40 - _off, _y - _surfy - 14 + _off, 1, 1, 0, c_ltgray, 1);
+					}
+					
+					draw_set_color_write_enable(true, true, true, true);
+				}
+			}
+			
+			surface_reset_target();
+			
+			other.x = _surfx;
+			other.y = _surfy;
+		}
+	}
+	
+#define loadout_above
+	instance_destroy();
+	
+	 // Drawing Custom Loadout Icons (Collapsed Loadout):
+	var	p = loadoutPlayer,
+		_race = player_get_race_fix(p),
+		_crown = lq_get(crownRace, _race);
+		
+	with(surfLoadoutHide) if(surface_exists(surf)){
+		with(Loadout) if(visible && (selected == false || openanim <= 2)){
+			var	_x = view_xview_nonsync + game_width,
+				_y = view_yview_nonsync + game_height - 36;
+				
+			 // Hide Normal Icons:
+			draw_surface(other.surf, other.x, other.y);
+			
+			 // Offset:
+			var _off = 0;
+			if(position_meeting(mouse_x[p], mouse_y[p], self)){
+				_off = 1;
+			}
+			if(selected == true){
+				if(openanim <= 0) _off = 2;
+				if(openanim == 1) _off = 1;
+			}
+			
+			 // Custom Crown:
+			if(!is_undefined(_crown) && _crown.custom.slct != -1){
+				with(_crown.custom.icon) if(crwn == _crown.custom.slct){
+					with(other) draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
+				}
+			}
+			
+			 // Custom Weapon:
+			var _wep = unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`);
+			if(_wep != wep_none){
+				draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
+			}
+		}
+	}
+	
+#define draw_loadoutwep(_wep, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	/*
+		Draws a given weapon's loadout sprite as it would appear on the character selection screen
+	*/
+	
+	var _spr = weapon_get_loadout(_wep);
+	
+	 // Default to 2x Normal Sprite:
+	if(_spr == 0 || _spr == null){
+		_spr = weapon_get_sprt(_wep);
+		_xsc *= 2;
+		_ysc *= 2;
+		_ang += point_direction(0, 0, 2, -1);
+		
+		 // Offset:
+		var	_xoff = (1 - ((sprite_get_width(_spr)  / 2) - sprite_get_xoffset(_spr))) * _xsc,
+			_yoff = (1 - ((sprite_get_height(_spr) / 2) - sprite_get_yoffset(_spr))) * _ysc;
+			
+		_x += lengthdir_x(_xoff, _ang) + lengthdir_x(_yoff, _ang - 90);
+		_y += lengthdir_y(_xoff, _ang) + lengthdir_y(_yoff, _ang - 90);
+	}
+	
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	
+#define draw_loadout_tooltip
+	if(loadoutTip.text != ""){
+		draw_set_font(fntM);
+		draw_tooltip(loadoutTip.x, loadoutTip.y, loadoutTip.text);
+		loadoutTip.text = "";
+	}
+	instance_destroy();
 	
 #define player_get_race_fix(p) /// Used for custom crown loadout
 	var _race = player_get_race(p);
@@ -1857,7 +2092,7 @@
 							if(_pet != null && _pet.avail){
 								var	_stat = { name : "", list : [] },
 									_scrt = _pet.name + "_stat",
-									_statPath = `pet/${_pet.name}.${_pet.mod_name}.${_pet.mod_type}/`;
+									_statPath = `pet:${_pet.name}.${_pet.mod_name}.${_pet.mod_type}:`;
 									
 								for(var i = -1; i < lq_size(_pet.stat); i++){
 									var	_name = ((i < 0) ? "" : lq_get_key(_pet.stat, i)),
@@ -1993,7 +2228,7 @@
 																var	_split = string_split(_unlockList[i], "."),
 																	_modType = _split[array_length(_split) - 1],
 																	_modName = array_join(array_slice(_split, 0, array_length(_split) - 1), "."),
-																	_found = unlock_get("found(" + _unlockList[i] + ")");
+																	_found = (stat_get("found:" + _unlockList[i]) || unlock_get("found(" + _unlockList[i] + ")"));
 																	
 																if(_modType == "wep") _modType = "weapon";
 																
@@ -2327,7 +2562,14 @@
 	}
 	
 	 // Reset Clock Parts:
-	if(global.clock_fix) sprite_restore(sprClockParts);
+	if(global.clock_fix){
+		sprite_restore(sprClockParts);
+	}
+	
+	 // Destroy Inactive LoadoutWeps:
+	with(wepLoadout){
+		with(inst) instance_destroy();
+	}
 	
 	
 /// SCRIPTS
@@ -2343,15 +2585,18 @@
 #define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
 #define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
 #define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define unlock_get_name(_name)                                                          return  mod_script_call_nc('mod', 'telib', 'unlock_get_name', _name);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call(   'mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define weapon_get_loadout(_wep)                                                        return  mod_script_call(   'mod', 'telib', 'weapon_get_loadout', _wep)

@@ -2323,6 +2323,380 @@
 	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
 	
 	
+#define OrchidSkill_create(_x, _y)
+	/*
+		Manages the pet Orchid's timed mutation
+		
+		Vars:
+			color1 - The main HUD color
+			color2 - The secondary HUD color
+			skill  - The mutation to give, leave as 'mut_none' to let it auto-decide
+			num    - The value of the mutation
+			time   - How long the mutation lasts
+			flash  - Visual HUD flash, true/false
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		color1 = make_color_rgb(255, 255, 80);
+		color2 = make_color_rgb(84, 58, 24);
+		
+		 // Vars:
+		persistent = true;
+		skill = mut_none;
+		num = 1;
+		time = 900; // 450;
+		time_max = 0;
+		setup = true;
+		flash = true;
+		chest = [];
+		spirit = [];
+		
+		return id;
+	}
+	
+#define OrchidSkill_setup
+	setup = false;
+	
+	 // Effects:
+	flash = true;
+	sound_play_pitch(sndMut, 1 + orandom(0.2));
+	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
+	
+	 // Decide Random Un-gotten Skill:
+	if(skill == mut_none){
+		var _skillList = [],
+			_skillMods = mod_get_names("skill"),
+			_skillMax = 30,
+			_skillAll = true; // Already have every available skill
+			
+		for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
+			var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
+			
+			if(skill_get_active(_skill)){
+				if(
+					_skill != mut_patience
+					&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
+					&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
+				){
+					if(
+						!is_string(_skill)
+						|| !mod_script_exists("skill", _skill, "skill_avail")
+						|| mod_script_call("skill", _skill, "skill_avail")
+					){
+						array_push(_skillList, _skill);
+						if(skill_get(_skill) == 0) _skillAll = false;
+					}
+				}
+			}
+		}
+		with(array_shuffle(_skillList)){
+			var _skill = self;
+			if(_skillAll || skill_get(_skill) == 0){
+				other.skill = _skill;
+				break;
+			}
+		}
+	}
+	
+	 // Skill:
+	skill_set(skill, max(0, skill_get(skill)) + num);
+	if(num != 0) switch(skill){
+		case mut_scarier_face:
+			
+			 // Manually Reduce Enemy HP:
+			with(enemy){
+				maxhealth = round(maxhealth * power(0.8, other.num));
+				my_health = round(my_health * power(0.8, other.num));
+				
+				 // Hurt FX:
+				image_index = 0;
+				sprite_index = spr_hurt;
+				if(point_seen(x, y, -1)) sound_play_hit(snd_hurt, 0.3);
+			}
+			
+			break;
+			
+		case mut_hammerhead:
+			
+			 // Give Hammerhead Points:
+			with(Player) hammerhead += 20 * other.num;
+			
+			break;
+			
+		case mut_strong_spirit:
+			
+			with(Player){
+				var _num = other.num;
+				
+				 // Restore Strong Spirit:
+				if(canspirit == false || skill_get(mut_strong_spirit) <= other.num){
+					canspirit = true;
+					_num--;
+					
+					 // Effects:
+					with(instance_create(x, y, StrongSpirit)){
+						sprite_index = sprStrongSpiritRefill;
+						creator = other;
+					}
+					sound_play(sndStrongSpiritGain);
+				}
+				
+				 // Bonus Spirit (Strong Spirit doesn't have built-in mutation stacking):
+				if("bonus_spirit" in self && _num > 0){
+					repeat(_num){
+						var _spirit = {};
+						array_push(other.spirit, _spirit);
+						array_push(bonus_spirit, _spirit);
+						sound_play(sndStrongSpiritGain);
+					}
+				}
+			}
+			
+			break;
+			
+		case mut_open_mind:
+			
+			if(num > 0){
+				 // Duplicate Chest:
+				with(instance_random(instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
+					repeat(other.num){
+						array_push(other.chest, instance_copy(false));
+					}
+					
+					 // Manual Offset:
+					if(instance_is(self, RadChest)){
+						with(other.chest) instance_budge(other, -1);
+					}
+				}
+				
+				 // Alert:
+				with(chest) with(other){
+					var _icon = skill_get_icon(skill);
+					with(scrAlert(other, _icon[0])){
+						image_index = _icon[1];
+						image_speed = 0;
+						spr_alert = -1;
+						snd_flash = sndChest;
+						flash = 4;
+						alarm0 = other.time - (2 * blink);
+					}
+				}
+			}
+			
+			break;
+	}
+	
+#define OrchidSkill_step
+	if(setup) OrchidSkill_setup();
+	
+	 // Unflash:
+	else flash = false;
+	
+	if(skill_get(skill) != 0){
+		 // Chest Blink:
+		with(chest) if(instance_exists(self)){
+			with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self)){
+				other.visible = visible;
+				break;
+			}
+		}
+		
+		 // Timer:
+		time_max = max(time, time_max);
+		if(time > 0 && !instance_exists(GenCont) && !instance_exists(LevCont)){
+			time -= current_time_scale;
+			
+			 // Goodbye:
+			if(time <= current_time_scale){
+				flash = true;
+				if(time <= 0) instance_destroy();
+			}
+		}
+	}
+	else instance_delete(id);
+	
+#define OrchidSkill_destroy
+	skill_set(skill, max(0, skill_get(skill) - num));
+	
+	 // Blip:
+	sound_play_pitchvol(sndMutHover,       0.5 + random(0.2), 3);
+	sound_play_pitchvol(sndCursedReminder, 1 + orandom(0.1),  3);
+	sound_play_pitchvol(sndStatueHurt,     0.7 + random(0.1), 0.4);
+	
+	 // Delete Alerts:
+	with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "creator", id)){
+		flash = 1;
+		blink = 1;
+		alarm0 = 1 + flash;
+		visible = true;
+	}
+	
+	 // Skill-Specific:
+	switch(skill){
+		case mut_scarier_face:
+			
+			 // Restore Enemy HP:
+			with(instances_matching_lt(enemy, "id", self)){
+				maxhealth = round(maxhealth / power(0.8, other.num));
+				my_health = round(my_health / power(0.8, other.num));
+				
+				 // Heal FX:
+				image_index = 0;
+				sprite_index = spr_hurt;
+				with(instance_create(x, y, BloodLust)){
+					sprite_index = sprHealFX;
+					creator = other;
+				}
+				sound_play_pitchvol(sndHPPickup, 1.5, 0.3);
+			}
+			
+			break;
+			
+		case mut_hammerhead:
+			
+			 // Remove Hammerhead Points:
+			with(instances_matching_gt(instances_matching_lt(Player, "id", self), "hammerhead", 0)){
+				hammerhead = max(0, hammerhead - (20 * other.num));
+			}
+			
+			break;
+			
+		case mut_strong_spirit:
+			
+			 // Remove Bonus Spirit:
+			with(spirit) if(lq_defget(self, "active", true)){
+				active = false;
+				sprite_index = sprStrongSpirit;
+				image_index = 0;
+				sound_play(sndStrongSpiritLost);
+			}
+			
+			 // Remove Strong Spirit:
+			if(num - array_length(spirit) > 0){
+				with(instances_matching(instances_matching_lt(Player, "id", self), "canspirit", true)){
+					if(skill_get(mut_strong_spirit) > 0) canspirit = false;
+					with(instance_create(x, y, StrongSpirit)) creator = other;
+					sound_play(sndStrongSpiritLost);
+				}
+			}
+			
+			break;
+			
+		case mut_open_mind:
+			
+			 // Delete Duplicate Chest:
+			with(chest) if(instance_exists(self)){
+				instance_delete(id);
+			}
+			
+			break;
+	}
+	
+	
+#define OrchidSkillBecome_create(_x, _y)
+	/*
+		The Orchid pet's temporary mutation orbital
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.PetOrchidCharge;
+		depth = -9;
+		
+		 // Vars:
+		mask_index = mskFlakBullet;
+		friction = 0.4;
+		target = noone;
+		creator = noone;
+		hold_seek = 0;
+		trail_col = make_color_rgb(84, 58, 24);
+		grow = 0;
+		
+		return id;
+	}
+	
+#define OrchidSkillBecome_step
+	grow = min(grow + (current_time_scale / 15), 1);
+	
+	 // Stick Around:
+	if(instance_exists(creator)){
+		visible = creator.visible;
+		persistent = creator.persistent;
+	}
+	
+	 // Effects:
+	if(visible && chance_ct(1, 4)){
+		scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
+	}
+	
+	 // Doin':
+	hold_seek -= current_time_scale;
+	if(target != noone && hold_seek <= 0){
+		if(instance_exists(target)){
+			if(!place_meeting(x, y, target)){
+				motion_add_ct(point_direction(x, y, target.x, target.y), 1);
+				speed = min(speed, 16);
+				image_angle = direction;
+				
+				if(current_frame_active){
+					with(instance_create(x, y, DiscTrail)){
+						image_blend = other.trail_col;
+					}
+				}
+			}
+			
+			else{
+				 // Mutate:
+				var s = obj_create(x, y, "OrchidSkill");
+				with(creator){
+					stat.mutations++;
+					array_push(skills_active, s);
+				}
+				
+				 // Goodbye:
+				instance_destroy();
+			}
+		}
+		
+		else{
+			 // Fresh Meat:
+			if(instance_exists(Player)){
+				target = instance_nearest(x, y, Player);
+			}
+			
+			 // Disappear:
+			else{
+				instance_destroy();
+			}
+		}
+	}
+	
+#define OrchidSkillBecome_draw
+	draw_self();
+	
+	 // Bloom:
+	var	_scale = 2,
+		_alpha = 0.1;
+		
+	draw_set_blend_mode(bm_add);
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	image_alpha  *= _alpha;
+	draw_self();
+	image_xscale /= _scale;
+	image_yscale /= _scale;
+	image_alpha  /= _alpha;
+	draw_set_blend_mode(bm_normal);
+	
+#define OrchidSkillBecome_destroy
+	repeat(10 + irandom(10)){
+		with(scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle")){
+			depth = -9;
+		}
+	}
+	
+	
 #define OverhealChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -3169,13 +3543,17 @@
 	}
 	
 #define SunkenChest_open
-	instance_create(x, y, PortalClear);
+	with(instance_create(x, y, PortalClear)){
+		image_xscale *= 1.5;
+		image_yscale = image_xscale;
+	}
 	
+	 // Sunken Chest Count:
 	with(GameCont){
 		if("sunkenchests" not in self){
 			sunkenchests = 0;
 		}
-		sunkenchests++;
+		sunkenchests = max(sunkenchests, GameCont.loops + 1);
 	}
 	
 	 // Important:
@@ -3184,7 +3562,7 @@
 	}
 	
 	 // Trident Unlock:
-	if(wep == "trident") unlock_call("trident");
+	if(wep == "trident") unlock_set("trident", true);
 	
 	 // Weapon:
 	var _num = 1 + ultra_get("steroids", 1);
@@ -4513,13 +4891,14 @@
 #define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_call(_name)                                                              return  mod_script_call_nc('mod', 'telib', 'unlock_call', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);

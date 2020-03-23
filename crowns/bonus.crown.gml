@@ -8,10 +8,11 @@
 #define crown_text        return "@bBONUS PICKUPS#@sLOWER @wDROP RATE";
 #define crown_tip         return "ALL EXTRA";
 #define crown_avail       return (GameCont.loops <= 0);//unlock_get("lairCrown");
-#define crown_menu_avail  return true;//unlock_get("crownBonus");
+#define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
+#define crown_loadout     return global.sprCrownLoadout;
 
 #define crown_menu_button
-	sprite_index = global.sprCrownLoadout;
+	sprite_index = crown_loadout();
 	image_index = !crown_menu_avail();
 	dix = -1;
 	diy = 1;

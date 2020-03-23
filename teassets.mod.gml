@@ -1239,6 +1239,7 @@
 			
 			 // Merged Weapon Sprite Storage:
 			MergeWep = {};
+			MergeWepLoadout = {};
 			MergeWepText = {};
 			
 		//#endregion
@@ -2002,7 +2003,9 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	if(lq_exists(spr.MergeWep, _sprName)){
 		return lq_get(spr.MergeWep, _sprName);
 	}
-	else{
+	
+	 // Initial Setup:
+	else if(sprite_exists(_stock) && sprite_exists(_front)){
 		var	_spr = [_stock, _front],
 			_sprW = [],
 			_sprH = [];
@@ -2069,11 +2072,99 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		return s;
 	}
 	
+	return -1;
+	
+#define weapon_merge_sprite_loadout(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
+	if(lq_exists(spr.MergeWepLoadout, _sprName)){
+		return lq_get(spr.MergeWepLoadout, _sprName);
+	}
+	
+	 // Initial Setup:
+	else if(sprite_exists(_stock) && sprite_exists(_front) && _stock > 0 && _front > 0){
+		var	_spr = [_stock, _front],
+			_sprW = array_create(array_length(_spr), 0),
+			_sprH = array_create(array_length(_spr), 0),
+			_surfW = 0,
+			_surfH = 0;
+			
+		for(var i = 0; i < array_length(_spr); i++){
+			_sprW[i] = sprite_get_width(_spr[i]);
+			_sprH[i] = sprite_get_height(_spr[i]);
+			_surfW = max(_surfW, _sprW[i]);
+			_surfH = max(_surfH, _sprH[i]);
+		}
+		
+		var _surf = surface_create(_surfW, _surfH);
+		surface_set_target(_surf);
+		draw_clear_alpha(0, 0);
+		
+		draw_set_color(c_white);
+		
+		 // Draw Sprite Halves:
+		for(var i = 0; i < array_length(_spr); i++){
+			var	_uvs = sprite_get_uvs(_spr[i], 0),
+				_uvsExists = (_uvs[0] != 0 || _uvs[1] != 0 || _uvs[2] != 1 || _uvs[3] != 1),
+				_x = floor(_surfW / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
+				_y = floor(_surfH / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
+				_w = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
+				_h = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
+				_cutDis = _w / 3,
+				_cutDir = 20,
+				_ox = (_h / 2) * dtan(_cutDir);
+				
+			if(i == 1){
+				_cutDis = _w - _cutDis;
+			}
+			_cutDis += 2;
+			
+			draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(_spr[i], 0));
+			
+			with([ // [x, y]
+				[0,             0 ],
+				[_cutDis - _ox, 0 ],
+				[0,             _h],
+				[_cutDis + _ox, _h]
+			]){
+				var _pos = self;
+				
+				 // Flip:
+				if(i == 1){
+					_pos[0] = _w - _pos[0];
+					_pos[1] = _h - _pos[1];
+				}
+				
+				 // Draw Vertex:
+				var	_dx = _pos[0] + _x,
+					_dy = _pos[1] + _y;
+					
+				draw_vertex_texture(_dx, _dy, _pos[0] / _w, _pos[1] / _h);
+			}
+			
+			draw_primitive_end();
+		}
+		
+		 // Save Sprite:
+		surface_reset_target();
+		surface_save(_surf, "sprMergeLoadout.png");
+		surface_destroy(_surf);
+		
+		 // Add Sprite:
+		var s = sprite_add_weapon("sprMergeLoadout.png", _surfW / 2, _surfH / 2);
+		lq_set(spr.MergeWepLoadout, _sprName, s);
+		
+		return s;
+	}
+	
+	return -1;
+	
 #define weapon_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
 	if(lq_exists(spr.MergeWepText, _sprName)){
 		return lq_get(spr.MergeWepText, _sprName);
 	}
+	
+	 // Initial Setup:
 	else{
 		draw_set_font(fntSmall);
 		draw_set_halign(fa_center);

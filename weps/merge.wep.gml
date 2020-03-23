@@ -1362,6 +1362,7 @@
 		"name" : "",
 		"text" : "",
 		"sprt" : mskNone,
+		"icon" : 0,
 		"swap" : sndSwapPistol,
 		"area" : -1,
 		"type" : 0,
@@ -1412,6 +1413,7 @@
 			if("mele" not in self) mele = weapon_is_melee(weap);
 			if("gold" not in self) gold = weapon_get_gold(weap);
 			if("lasr" not in self) lasr = weapon_get_laser_sight(weap);
+			if("icon" not in self) icon = mod_script_call_nc("mod", "telib", "weapon_get_loadout", weap);
 		}
 		
 		 // Default:
@@ -1965,8 +1967,11 @@
 			}
 			with(_swap) other.text = string_replace_all(other.text, self, n);
 			
-		 // Sprite:
-		sprt = mod_script_call("mod", "teassets", "weapon_merge_sprite", _stock.sprt, _front.sprt);
+		 // Initialize Sprites:
+		sprt = -1;
+		icon = -1;
+		mod_script_call("mod", "teassets", "weapon_merge_sprite", _stock.sprt, _front.sprt);
+		mod_script_call("mod", "teassets", "weapon_merge_sprite_loadout", _stock.icon, _front.icon);
 		
 		 // Flags:
 		flag = array_combine(_stock.flag, _front.flag);
@@ -2268,7 +2273,6 @@
 
 #define weapon_name(w)         return wep_stat(w, "name");
 #define weapon_text(w)         return wep_stat(w, "text");
-#define weapon_sprt(w)         return (sprite_exists(wep_stat(w, "sprt")) ? wep_stat(w, "sprt") : mskNone);
 #define weapon_swap(w)         return wep_stat(w, "swap");
 #define weapon_area(w)         return -1;
 #define weapon_type(w)         return wep_stat(w, "type");
@@ -2280,6 +2284,33 @@
 #define weapon_gold(w)         return wep_stat(w, "gold");
 #define weapon_laser_sight(w)  return wep_stat(w, "lasr");
 
+#define weapon_sprt(w)
+	var _spr = wep_stat(w, "sprt");
+	
+	 // Setup Sprite:
+	if(!sprite_exists(_spr)){
+		var	_stock = weapon_get_sprt(wep_stat(w, "stock")),
+			_front = weapon_get_sprt(wep_stat(w, "front"));
+			
+		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite", _stock, _front);
+	}
+	
+	return (sprite_exists(_spr) ? _spr : mskNone);
+	
+#define weapon_loadout
+	var	w = ((argument_count > 0) ? argument0 : mod_current),
+		_spr = wep_stat(w, "icon");
+		
+	 // Setup Loadout Sprite:
+	if(!sprite_exists(_spr)){
+		var	_stock = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(w, "stock")),
+			_front = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(w, "front"));
+			
+		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite_loadout", _stock, _front);
+	}
+	
+	return (sprite_exists(_spr) ? _spr : 0);
+	
 #define weapon_fire(w)
 	if(is_object(w)){
 		var f = mod_script_call("mod", "telib", "wepfire_init", w);
@@ -2288,14 +2319,14 @@
 		 // Blood Cost:
 		if(instance_is(self, Player)){
 			if(wep_stat(w, "blod") && infammo == 0){
-				var	_type = wep_stat(w, "type"),
+				var	_type = weapon_get_type(w),
 					_cost = wep_stat(w, "cost");
 					
 				if(_cost > 0){
 					if(ammo[_type] < _cost){
 						sound_play_hit(sndBloodHurt, 0.1);
 						projectile_hit_raw(self, max(floor(_cost / 2), 1), true);
-						lasthit = [wep_stat(w, "sprt"), wep_stat(w, "name")];
+						lasthit = [weapon_get_sprt(w), weapon_get_name(w)];
 						ammo[_type] += _cost;
 					}
 					ammo[_type] -= _cost;
@@ -4436,13 +4467,14 @@
 #define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
 #define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_call(_name)                                                              return  mod_script_call_nc('mod', 'telib', 'unlock_call', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
