@@ -97,12 +97,23 @@
 						skill_set(mut_gamma_guts, _lastGamma);
 					}
 					else{
-						my_health = 0;
 						GameCont.area = "red";
 						GameCont.subarea = 0;
 						sound_play_music(-1);
-						instance_create(x, y, Portal);
-						with(other) motion_set(point_direction(x, y, other.x, other.y), 4);
+						
+						 // Kill All:
+						with(enemy){
+							my_health = 0;
+						}
+						
+						 // Teleport Out:
+						with(Player){
+							visible = false;
+							with(instance_create(x, y, Portal)){
+								image_alpha = 0;
+							}
+							obj_create(x, y, "TeleportFX");
+						}
 					}
 				}
 			}
@@ -1074,6 +1085,73 @@
 	}
 	
 	
+#define TeleportFX_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		setup  = true;
+		scale  = 1.2;
+		radius = 16;
+		scale_mult = 2;
+		
+		return id;
+	}
+	
+#define TeleportFX_setup
+	setup = false;
+	
+	with(instance_create(x, y, PortalClear)){
+		image_xscale = 2;
+		image_yscale = image_xscale;
+	}
+	
+	repeat(30){
+		var l = 32 + random(8),
+			d = random(360);
+			
+		with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(2)], Dust)){
+			friction = 0.4;
+			sprite_index = sprSmoke;
+		}
+	}
+	
+	view_shake_at(x, y, 50);
+	sleep(100);
+	
+#define TeleportFX_step
+	if(setup) TeleportFX_setup();
+	
+	 // Effects:
+	if(chance_ct(1, 1)){
+		var l = 64,
+			d = random(360);
+		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), LaserCharge)){
+			alarm0 = random_range(15, 20);
+			motion_set(d + 180, random_range(1, 2));
+			sprite_index = sprSpiralStar;
+			direction = d + 180;
+			speed = l / alarm0;
+		}
+	}
+	if(chance_ct(1, 5)){
+		var l = random_range(32, 128),
+			d = random(360);
+		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), BulletHit)){
+			sprite_index = sprWepSwap;
+		}
+	}
+	
+	scale -= (current_time_scale / 40);
+	scale_mult = max(scale_mult - current_time_scale, 1);
+	if(scale <= 0) instance_destroy();
+	
+#define TeleportFX_draw
+	draw_circle(x, y, (scale * scale_mult * radius) + random(3), false);
+	
+#define TeleportFX_destroy
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = sprThrowHit;
+	}
+	
 #define VlasmaBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -1084,7 +1162,7 @@
 		 // Vars:
 		mask_index = mskEnemyBullet1;
 		damage = 2;
-		force = 3;
+		force = 0; // 3;
 		typ = 1;
 		maxspeed = 8;
 		addspeed = 0.4;
@@ -1333,6 +1411,13 @@
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 	}
+	
+	 // Teleport FX:
+	draw_set_alpha(0.1);
+	with(instances_matching(CustomObject, "name", "TeleportFX")){
+		draw_circle(x, y, (scale * scale_mult * radius * 2) + random(3), false);
+	}
+	draw_set_alpha(1);
 	
 	 // Spider Bullets:
 	/*with(instances_matching(projectile, "name", "VlasmaBullet")){

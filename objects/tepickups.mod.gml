@@ -528,6 +528,7 @@
 				image_yscale = image_xscale;
 			}
 		}
+		alarm1 = -1;
 	}
 	
 	 // Animate:
@@ -3080,6 +3081,8 @@
 	}
 	
 #define PalaceAltar_step
+	x = xstart;
+	y = ystart;
 
 	 // Radiate:
 	if(chance_ct(2, 3)){
