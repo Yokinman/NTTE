@@ -488,7 +488,7 @@
 		
 		 // Vars:
 		elite = true;
-		num = 3;
+		num = 2 * (1 + GameCont.loops);
 		
 		 // Vars:
 		alarm0 += 30;

@@ -1,8 +1,10 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
+    spr = mod_variable_get("mod", "teassets", "spr");
+    snd = mod_variable_get("mod", "teassets", "snd");
+    mus = mod_variable_get("mod", "teassets", "mus");
+    sav = mod_variable_get("mod", "teassets", "sav");
+    
+	ColRed = make_color_rgb(235, 0, 67);
 	
 	DebugLag = false;
 	
@@ -12,237 +14,47 @@
 #macro mus global.mus
 #macro sav global.sav
 
+#macro ColRed global.col_red
+
 #macro DebugLag global.debug_lag
 
-#define area_subarea           return 1;
-#define area_goal              return 60;
-#define area_next              return mod_current; // CAN'T LEAVE
-#define area_music             return [mus.Red, 0.8];
-#define area_ambience          return amb104;
-#define area_background_color  return make_color_rgb(235, 0, 67);
-#define area_shadow_color      return make_color_rgb(16, 0, 24);
-#define area_darkness          return false;
-#define area_secret            return true;
-
-#define area_name(_subarea, _loop)
-	return `@(color:${area_background_color()})???`;
+#define skin_race			return 2; // Crystal
+#define skin_name           return (skin_avail() ? "RED" : `@sREACH @(color:${ColRed})???`);
+#define skin_ttip			return choose("NEVER MORE ALIVE", "FAMILY CAN WAIT");
+#define skin_avail			return unlock_get("redSkin");
 	
-#define area_text
-	return choose("BLINDING", "THE RED DOT", `WELCOME TO THE @(color:${area_background_color()})WARP ZONE`);
-	
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-	return [_lastx, 9, (_subarea == 1)];
-	
-#define area_sprite(_spr)
+#define skin_sprite(_spr)
 	switch(_spr){
-		 // Floors:
-		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRed;
-		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorRedB;
-		case sprFloor1Explo : return spr.FloorRedExplo;
-		case sprDetail1     : return spr.DetailRed;
-		
-		 // Walls:
-		case sprWall1Bot    : return spr.WallRedBot;
-		case sprWall1Top    : return spr.WallRedTop;
-		case sprWall1Out    : return spr.WallRedOut;
-		case sprWall1Trans  : return spr.WallRedTrans;
-		case sprDebris1     : return spr.DebrisRed;
-		
-		 // Decals:
-		case sprBones       : return spr.WallDecalRed;
+		case sprMutant2Idle:				return spr.CrystalRedIdle;
+		case sprMutant2Walk:				return spr.CrystalRedWalk;
+		case sprMutant2Hurt:				return spr.CrystalRedHurt;
+		case sprMutant2Dead:				return spr.CrystalRedDead;
+		case sprMutant2GoSit:				return spr.CrystalRedGoSit;
+		case sprMutant2Sit:					return spr.CrystalRedSit;
+		case sprBigPortrait:				return spr.CrystalRedPortrait;
+		case sprLoadoutSkin:				return spr.CrystalRedLoadout;
+		case sprMapIcon:					return spr.CrystalRedMapIcon;
+		case sprShield:						return spr.CrystalRedShield;
+		case sprShieldDisappear:			return spr.CrystalRedShieldDisappear;
+		case sprCrystalShieldIdleFront:		return spr.CrystalRedShieldIdleFront;
+		case sprCrystalShieldWalkFront:		return spr.CrystalRedShieldWalkFront;
+		case sprCrystalShieldIdleBack:		return spr.CrystalRedShieldIdleBack;
+		case sprCrystalShieldWalkBack:		return spr.CrystalRedShieldWalkBack;
+		case sprCrystTrail:					return spr.CrystalRedTrail;
 	}
 	
-#define area_setup
-	goal             = area_goal();
-	background_color = area_background_color();
-	BackCont.shadcol = area_shadow_color();
-	TopCont.darkness = area_darkness();
+	return -1;
 	
-#define area_setup_floor
-	 // Fix Depth:
-	if(styleb) depth = 8;
+#define skin_portrait	return spr.CrystalRedPortrait;
+#define skin_mapicon	return spr.CrystalRedMapIcon;
+#define skin_button		
+	sprite_index = spr.CrystalRedLoadout;
+	image_index  = skin_avail();
 	
-	 // Footsteps:
-	material = 2;
-	
-#define area_start
-	 // Delete SpawnWall:
-	if(instance_exists(Wall)){
-		with(Wall.id) if(place_meeting(x, y, Floor)){
-			instance_destroy();
-		}
-	}
-	
-#define area_finish
-	lastarea = area;
-	lastsubarea = subarea;
-	
-	 // Area End:
-	if(subarea >= area_subarea()){
-		var n = area_next();
-		if(!is_array(n)) n = [n];
-		if(array_length(n) < 1) array_push(n, mod_current);
-		if(array_length(n) < 2) array_push(n, 1);
-		area = n[0];
-		subarea = n[1];
-	}
-	
-	 // Next Subarea: 
-	else subarea++;
-	
-#define area_effect(_vx, _vy)
-	 // Cool Particles:
-	var _floor = instances_matching(Floor, "sprite_index", spr.FloorRed);
-	with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
-		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
-			depth = -8;
-			alarm0 = 40 + random(40);
-			motion_set(random(360), random(0.2));
-		}
-	}
-	
-	return irandom(40);
-	
-#define area_make_floor
-	var	_x = x,
-		_y = y,
-		_outOfSpawn = (point_distance(_x, _y, 10000, 10000) > 48);
-		
-	styleb = false;
-	
-	/// Make Floors:
-		 // Normal:
-		instance_create(_x, _y, Floor);
-		
-		 // Special - Diamond:
-		if(chance(1, 7)){
-			floor_fill(_x + 16, _y + 16, 3, 3, "round");
-		}
-		
-	/// Turn:
-		var _trn = 0;
-		if(chance(3, 7)){
-			_trn = choose(90, -90, 180);
-		}
-		direction += _trn;
-		
-	/// Don't Move:
-		if(!variable_instance_get(GenCont, "iswarpzone", true)){
-			if("direction_start" not in self){
-				direction_start = direction;
-			}
-			
-			var _ox = lengthdir_x(32, direction),
-				_oy = lengthdir_y(32, direction);
-				
-			if(abs(angle_difference(direction_start, point_direction(xstart, ystart, x + _ox, y + _oy))) > 45){
-				x -= _ox;
-				y -= _oy;
-			}
-		}
-		
-	/// Chests:
-		if(_trn == 180 && _outOfSpawn){
-			floor_make(_x, _y, choose(WeaponChest, AmmoChest));
-		}
-		
-#define area_pop_enemies
-	var	_x = x + 16,
-		_y = y + 16;
-		
-	 // Big:
-	if(chance(0, 7)){
-		instance_create(_x, _y, RhinoFreak); // insert enemy here
-	}
-	
-	 // Small:
-	else{
-		obj_create(_x, _y, "RedSpider");
-	}
-	
-#define area_pop_props
-	 // Lone Walls:
-	if(
-		chance(1, 5)
-		&& point_distance(x, y, 10000, 10000) > 16
-		&& !place_meeting(x, y, NOWALLSHEREPLEASE)
-		&& !place_meeting(x, y, hitme)
-	){
-		instance_create(x + choose(0, 16), y + choose(0, 16), Wall);
-		instance_create(x, y, NOWALLSHEREPLEASE);
-	}
-	
-	 // Props:
-	else if(chance(1, 4)){
-		obj_create(x + 16, y + 16, "CrystalProp" + (styleb ? "White" : "Red"));
-	}
-	
-	 // Warp Rooms:
-	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
-		if(chance(1, 15) || array_length(instances_matching(CustomObject, "sprite_index", sprTop)) <= 0){
-			var _w = 2,
-				_h = 2,
-				_type = "",
-				_dirOff = 90,
-				_floorDis = random_range(48, 96),
-				_spawnX = 10016,
-				_spawnY = 10016,
-				_spawnDis = 64,
-				_spawnFloor = instances_matching(FloorNormal, "styleb", 0),
-				_floorHallwaySearch = FloorNormal;
-				
-			floor_set_align(32, 32, null, null);
-			floor_set_style(1, null);
-			
-			with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-				 // Hallway:
-				var	_x = x,
-					_y = y,
-					_moveDis = 32;
-					
-				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
-					while(
-						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
-						&&
-						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _floorHallwaySearch)) <= 0
-					){
-						 // Floor + Props:
-						with(floor_set(_x, _y, true)){
-							area_pop_props();
-						}
-						
-						 // Move:
-						var _moveDir = round((point_direction(_x, _y, other.xstart, other.ystart) + orandom(60)) / 90) * 90;
-						_x += lengthdir_x(_moveDis, _moveDir);
-						_y += lengthdir_y(_moveDis, _moveDir);
-					}
-				}
-				
-				 // Portal:
-				with(instance_create(x - 16, y - 16, CustomObject)){
-					sprite_index = sprTop;
-					with(instances_meeting(x, y, [Wall, prop])) instance_delete(id);
-				}
-			}
-			
-			floor_reset_align();
-			floor_reset_style();
-		}
-	}
-	
-#define area_pop_extras
-	 // Bone Decals:
-	with(FloorNormal){
-		if(chance(3, 4)){
-			floor_bones(2, 1/8, false);
-		}
-	}
-	
-#define area_step
-	 // Red Crystal Skin Unlock:
-	if(!unlock_get("redSkin") && array_length(instances_matching(Player, "race", "crystal")) > 0){
-		unlock_set("redSkin", true);
-	}
+#define step
+	if(DebugLag) trace_time();
+
+	if(DebugLag) trace_time(mod_current + "_step");
 	
 	
 /// Scripts

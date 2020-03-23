@@ -1264,6 +1264,7 @@
 		case "lairWep"   : return "SAWBLADE GUNS UNLOCKED";
 		case "lairCrown" : return crown_get_name("crime") + " UNLOCKED";
 		case "boneScythe": return weapon_get_name("scythe") + " UNLOCKED";
+		case "redSkin"	 : return "RED CRYSTAL SKIN UNLOCKED";
 	}
 	
 	 // Default (Split Name by Capitalization):
@@ -1301,6 +1302,7 @@
 		case "lairWep"   : return "DEVICES OF TORTURE";
 		case "lairCrown" : return "STOLEN FROM THIEVES";
 		case "boneScythe": return "A PACKAGE DEAL";
+		case "redSkin"	 : return `FOR REACHING @(color:${make_color_rgb(235, 0, 67)})???`;
 	}
 	
 	return "";

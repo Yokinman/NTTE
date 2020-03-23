@@ -37,6 +37,7 @@
 		["areas/lair.area.gml",                     1 + _coop],
 		["areas/red.area.gml",                      1 + _coop],
 		["races/parrot.race.gml",                   1 + _coop, "Characters"],
+		["skins/red crystal.skin.gml",				1 + _coop, "Skins"],
 		["skills/compassion.skill.gml",             1 + _coop, "Mutations"],
 		["skills/reroll.skill.gml",                 1 + _coop],
 		["crowns/bonus.crown.gml",                  0 + _coop],
