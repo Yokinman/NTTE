@@ -129,7 +129,7 @@
 	}
 	
 	 // Unlocks:
-	global.unlock = ["parrot", "parrotB", "bee", "beeB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "boneScythe", "crownCrime"];
+	global.unlock = ["parrot", "parrotB", "bee", "beeB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "boneScythe", "crownCrime", "redSkin"];
 	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
 	with(global.unlock){
 		chat_comp_add_arg("unlocktoggle", 0, self, (mod_script_call_nc("mod", "telib", "unlock_get", self) ? "UNLOCKED" : "LOCKED"));

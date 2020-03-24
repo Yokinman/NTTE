@@ -1324,6 +1324,32 @@
 			
 		//#endregion
 		
+		//#region SKINS
+		m = "skins/";
+			
+			 // Red Crystal:
+			p = m + "CrystalRed/";
+			CrystalRedPortrait			= sprite(p + "sprCrystalRedPortrait",			1,	20,	229);
+			CrystalRedIdle				= sprite(p + "sprCrystalRedIdle",				4,	12,	12);
+			CrystalRedWalk				= sprite(p + "sprCrystalRedWalk",				6,	12,	12);
+			CrystalRedHurt				= sprite(p + "sprCrystalRedHurt",				3,	12,	12);
+			CrystalRedDead				= sprite(p + "sprCrystalRedDead",				6,	12,	12);
+			CrystalRedGoSit				= sprite(p + "sprCrystalRedGoSit",				3,	12,	12);
+			CrystalRedSit				= sprite(p + "sprCrystalRedSit",				1,	12,	12);
+			CrystalRedLoadout			= sprite(p + "sprCrystalRedLoadout",			2,	16,	16);
+			CrystalRedMapIcon			= sprite(p + "sprCrystalRedMapIcon",			1,	10,	10);
+			CrystalRedShield			= sprite(p + "sprCrystalRedShield",				4,	32,	42);
+			CrystalRedShieldDisappear	= sprite(p + "sprCrystalRedShieldDisappear",	6,	32,	42);
+			CrystalRedShieldIdleFront	= sprite(p + "sprCrystalRedShieldIdleFront",	1,	32, 42);
+			CrystalRedShieldWalkFront	= sprite(p + "sprCrystalRedShieldWalkFront",	8,	32,	42);
+			CrystalRedShieldIdleBack	= sprite(p + "sprCrystalRedShieldIdleBack",		1,	32,	42);
+			CrystalRedShieldWalkBack	= sprite(p + "sprCrystalRedShieldWalkBack",		8,	32,	42);
+			CrystalRedTrail				= sprite(p + "sprCrystalRedTrail",				5,	8,	8);
+				
+			//#endregion
+			
+		//#endregion
+		
 		//#region PETS
 		m = "pets/";
 			

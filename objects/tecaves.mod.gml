@@ -1087,6 +1087,9 @@
 	
 #define TeleportFX_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		depth = -7;
+		
 		 // Vars:
 		setup  = true;
 		scale  = 1.2;
