@@ -263,22 +263,14 @@
 #define Orchid_create
 	 // Vars:
 	raddrop = 0;
-	max_skills = 3;
 	skill_rads = 60;
-	skills_become = [];
-	skills_active = [];
-	wave = 0;
-	pickup_skill = scrPickupIndicator("BORROW");
-	with(pickup_skill){
-		visible = false;
-		mask_index = mskShield;
-	}
+	skill_inst = [];
 	
 	 // Stat:
 	if("mutations" not in stat) stat.mutations = 0;
 	
 #define Orchid_ttip
-	return ["ELEGANT", "FLORID", "STOCKPILE POWER", "GENETIC MAGIC"];
+	return ["ELEGANT", "FLORID", "GENETIC MAGIC"];
 	
 #define Orchid_stat(_name, _value)
 	if(_name == "") return spr.PetOrchidIdle;
@@ -286,6 +278,65 @@
 #define Orchid_step
 	wave += current_time_scale;
 	
+	 // Mutate:
+	if(raddrop >= skill_rads){
+		raddrop -= skill_rads;
+		
+		 // Random Mutation:
+		with(obj_create(x, y, "OrchidSkillBecome")){
+			direction = other.direction + orandom(30);
+			creator = other;
+		}
+		
+		 // Stat:
+		stat.mutations++;
+		
+		 // Effects:
+		repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
+			depth = -8;
+			image_speed = lerp(0.2, 0.4, speed);
+			hspeed += other.hspeed / 1.5;
+			vspeed += other.vspeed / 1.5;
+		}
+	}
+	skill_inst = instances_matching(instances_matching(CustomObject, "name", "OrchidSkill", "OrchidSkillBecome"), "creator", self);
+	
+	 // Mutation Alert Indicators:
+	/*var _canAlert = (array_length(skill_inst) > 0 && portal_angle == 0);
+	if(_canAlert){
+		with(skill_inst){
+			if(array_length(instances_matching(other.skill_alert, "skill", skill)) <= 0){
+				var	_icon = skill_get_icon(skill),
+					_alert = scrAlert(other, _icon[0]);
+					
+				with(_alert){
+					image_index = _icon[1];
+					image_speed = 0;
+					spr_alert = -1;
+					snd_flash = sndLevelUp;
+					skill = other.skill;
+				}
+				
+				array_push(other.skill_alert, _alert);
+			}
+		}
+	}
+	with(skill_alert){
+		var _inst = instances_matching(other.skill_inst, "skill", skill);
+		if(_canAlert && array_length(_inst) > 0){
+			var _max = 2 * ceil(current_time_scale);
+			with(instances_matching(_inst, "name", "OrchidSkill")){
+				_max = max(_max, time - (other.blink * 2));
+			}
+			alarm0 = max(alarm0, _max);
+		}
+		else{
+			alarm0 = min(alarm0, ceil(current_time_scale));
+			blink = min(blink, 6);
+		}
+	}*/
+	
+	/*
 	skills_become = instances_matching(skills_become, "", null);
 	skills_active = instances_matching(skills_active, "", null);
 	
@@ -357,7 +408,7 @@
 			 // Effects:
 			repeat(8) scrFX([x, 12], [y, 12], 0, "VaultFlowerSparkle");
 		}
-	}
+	}*/
 	
 	/*
 	 // Mutate:
@@ -419,7 +470,7 @@
 	
 	 // Bloom:
 	var	_scale = lerp(1.5, 1.8, 0.5 + (0.5 * sin(wave / 10))),
-		_alpha = lerp(0.05, 0.25, raddrop / (skill_rads * (1 + array_length(skills_become))));
+		_alpha = lerp(0.05, 0.25, (raddrop + (skill_rads * array_length(skill_inst))) / skill_rads);
 		
 	draw_set_blend_mode(bm_add);
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc * _scale, _ysc * _scale, _ang, _col, _alp * _alpha);
@@ -3206,36 +3257,6 @@
 				_disMax = 1000000;
 				
 			with(_targetInst){
-				if(instance_exists(leader) && array_length(skills_active) <= 0){
-					var _dis = point_distance(x, y, other.x, other.y);
-					if(_dis < _disMax){
-						_disMax = _dis;
-						_target = id;
-					}
-				}
-			}
-			
-			 // Grab:
-			if(instance_exists(_target)){
-				with(scrFX(x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
-					alarm0 = random_range(20, 30);
-					image_alpha *= 2;
-				}
-				rad_path(self, _target);
-			}
-		}
-	}
-	
-	/*
-	var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
-	if(array_length(_targetInst) > 0){
-		with(instances_matching([Rad, BigRad], "orchidmantisradattract_check", null)){
-			orchidmantisradattract_check = true;
-			
-			var	_target = noone,
-				_disMax = 1000000;
-				
-			with(_targetInst){
 				if(instance_exists(leader) && array_length(skill_inst) <= 0){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
@@ -3255,7 +3276,6 @@
 			}
 		}
 	}
-	*/
 	
 	 // Salamander Throne Butt Text:
 	if(array_length(instances_matching(_petInst, "pet", "Salamander")) > 0){

@@ -4972,7 +4972,7 @@
 #define game_start
 	 // Delete:
 	with(instances_matching(CustomHitme, "name", "Pet")) instance_delete(id);
-	with(instances_matching(CustomObject, "name", "ReviveNTTE", "OrchidSkill")) instance_delete(id);
+	with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_delete(id);
 	
 #define step
 	if(DebugLag) trace_time();
@@ -5361,11 +5361,6 @@
 	with(instances_matching(CustomProjectile, "name", "PortalBullet")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
-	
-	 // Orchid Skill Become:
-	/*with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkillBecome"), "visible", true)){
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}*/
 	
 	if(DebugLag) trace_time("tegeneral_draw_bloom");
 

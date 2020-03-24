@@ -419,146 +419,152 @@
 	
 	 // Loadout Crowns/Weapons:
 	if(instance_exists(Menu)){
-		with([surfLoadoutHide, surfLoadoutHideScreen]) active = true;
-		with(Menu){
-			with(Loadout) if(selected == false && openanim > 0){
-				openanim = 0; // Bro they actually forgot to reset this when the loadout is closed (<= v9940)
-			}
-			
-			 // Bind Drawing:
-			script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 1);
-			script_bind_draw(draw_weapon, object_get_depth(LoadoutWep) - 1);
-			script_bind_draw(draw_loadout_tooltip, -100000);
-			if(instance_exists(Loadout)){
-				script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
-				script_bind_draw(loadout_above,  Loadout.depth - 0.0001);
-			}
-			
-			 // LoadoutSkin Offset:
-			with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
-				ntte_crown_xoffset = -22;
-				xstart += ntte_crown_xoffset;
-			}
-			
-			 // Crown Thing:
-			if("NTTE_crown_check" not in self){
-				NTTE_crown_check = true;
-				if(crownCamp != crwn_none){
-					var _inst = instance_create(0, 0, Crown);
-					with(_inst){
-						alarm0 = -1;
-						event_perform(ev_alarm, 0);
-						
-						 // Place by Last Played Character:
-						with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
-							other.x = x + (random_range(12, 24) * choose(-1, 1));
-							other.y = y + orandom(8);
-						}
-						
-						 // Visual Setup:
-						var c = crownCamp;
-						if(is_string(c)){
-							mod_script_call("crown", c, "crown_object");
-						}
-						else if(is_real(c)){
-							spr_idle = asset_get_index(`sprCrown${c}Idle`);
-							spr_walk = asset_get_index(`sprCrown${c}Walk`);
-						}
-						depth = -2 - (y / 10000);
-					}
-					
-					 // Delete:
-					if(fork()){
-						wait 5;
-						with(instances_matching_ne(Crown, "id", _inst)){
-							instance_destroy();
-						}
-						exit;
-					}
+		var _players = 0;
+		for(var i = 0; i < maxp; i++){
+			_players += player_is_active(i);
+		}
+		if(_players <= 1){
+			with([surfLoadoutHide, surfLoadoutHideScreen]) active = true;
+			with(Menu){
+				with(Loadout) if(selected == false && openanim > 0){
+					openanim = 0; // Bro they actually forgot to reset this when the loadout is closed (<= v9940)
 				}
-			}
-			
-			 // Initialize Crown Selection:
-			var _mods = mod_get_names("race");
-			for(var i = 0; i <= 16 + array_length(_mods); i++){
-				var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
-				if(_race not in crownRace){
-					lq_set(crownRace, _race, {
-						icon : [],
-						slct : crwn_none,
-						custom : {
-							icon : [],
-							slct : -1
-						}
-					});
+				
+				 // Bind Drawing:
+				script_bind_draw(draw_crown, object_get_depth(LoadoutCrown) - 1);
+				script_bind_draw(draw_weapon, object_get_depth(LoadoutWep) - 1);
+				script_bind_draw(draw_loadout_tooltip, -100000);
+				if(instance_exists(Loadout)){
+					script_bind_draw(loadout_behind, Loadout.depth + 0.0001);
+					script_bind_draw(loadout_above,  Loadout.depth - 0.0001);
 				}
-			}
-			
-			 // Custom Loadout Weapons:
-			if(instance_exists(LoadoutWep)){
-				 // Create Inactive LoadoutWeps:
-				with(wepLoadout){
-					if(!instance_exists(inst)){
-						if(name == "" || unlock_get(`loadout:wep:${player_get_race(loadoutPlayer)}:${name}`) != wep_none){
-							inst = instance_create(0, 0, FloorMaker);
-							alarm0 = 2;
-							overy = 0;
-							addy = 2;
+				
+				 // LoadoutSkin Offset:
+				with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
+					ntte_crown_xoffset = -22;
+					xstart += ntte_crown_xoffset;
+				}
+				
+				 // Crown Thing:
+				if("NTTE_crown_check" not in self){
+					NTTE_crown_check = true;
+					if(crownCamp != crwn_none){
+						var _inst = instance_create(0, 0, Crown);
+						with(_inst){
+							alarm0 = -1;
+							event_perform(ev_alarm, 0);
 							
-							 // Destroy FloorMaker Things:
-							with(instances_matching_gt(GameObject, "id", inst)){
-								instance_delete(id);
+							 // Place by Last Played Character:
+							with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
+								other.x = x + (random_range(12, 24) * choose(-1, 1));
+								other.y = y + orandom(8);
 							}
 							
-							 // Become LoadoutWep:
-							with(inst){
-								dix = other.dix;
-								instance_change(LoadoutWep, true);
-								other.alarm0 = alarm_get(0);
-								alarm_set(0, -1);
+							 // Visual Setup:
+							var c = crownCamp;
+							if(is_string(c)){
+								mod_script_call("crown", c, "crown_object");
 							}
+							else if(is_real(c)){
+								spr_idle = asset_get_index(`sprCrown${c}Idle`);
+								spr_walk = asset_get_index(`sprCrown${c}Walk`);
+							}
+							depth = -2 - (y / 10000);
+						}
+						
+						 // Delete:
+						if(fork()){
+							wait 5;
+							with(instances_matching_ne(Crown, "id", _inst)){
+								instance_destroy();
+							}
+							exit;
 						}
 					}
 				}
 				
-				 // Loadout Wep Selection:
-				with(wepLoadout){
-					hover = false;
-					with(other){
-						for(var i = 0; i < maxp; i++){
-							if(player_is_active(i) && position_meeting(mouse_x[i], mouse_y[i], other.inst)){
-								other.hover = true;
-								break;
+				 // Initialize Crown Selection:
+				var _mods = mod_get_names("race");
+				for(var i = 0; i <= 16 + array_length(_mods); i++){
+					var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
+					if(_race not in crownRace){
+						lq_set(crownRace, _race, {
+							icon : [],
+							slct : crwn_none,
+							custom : {
+								icon : [],
+								slct : -1
+							}
+						});
+					}
+				}
+				
+				 // Custom Loadout Weapons:
+				if(instance_exists(LoadoutWep)){
+					 // Create Inactive LoadoutWeps:
+					with(wepLoadout){
+						if(!instance_exists(inst)){
+							if(name == "" || unlock_get(`loadout:wep:${player_get_race(loadoutPlayer)}:${name}`) != wep_none){
+								inst = instance_create(0, 0, FloorMaker);
+								alarm0 = 2;
+								overy = 0;
+								addy = 2;
+								
+								 // Destroy FloorMaker Things:
+								with(instances_matching_gt(GameObject, "id", inst)){
+									instance_delete(id);
+								}
+								
+								 // Become LoadoutWep:
+								with(inst){
+									dix = other.dix;
+									instance_change(LoadoutWep, true);
+									other.alarm0 = alarm_get(0);
+									alarm_set(0, -1);
+								}
 							}
 						}
 					}
-				}
-				for(var i = 0; i < maxp; i++){
-					if(player_is_active(i) && button_pressed(i, "fire")){
-						if(position_meeting(mouse_x[i], mouse_y[i], LoadoutWep)){
-							var	_slctPath = `loadout:wep:${player_get_race(i)}`,
-								_slctSnd = false,
-								_slct = "";
-								
-							with(wepLoadout) if(hover){
-								_slct = name;
-								if(_slct == "") _slctSnd = true;
-								break;
-							}
-							
-							 // Selected:
-							if(_slct != save_get(_slctPath, "")){
-								save_set(_slctPath, _slct);
-								
-								 // Sound:
-								if(_slctSnd){
-									switch(player_get_race(i)){
-										case "venuz":   sound_play(sndMenuGoldwep);  break;
-										case "chicken": sound_play(sndMenuSword);    break;
-										default:        sound_play(sndMenuRevolver); break;
-									}
+					
+					 // Loadout Wep Selection:
+					with(wepLoadout){
+						hover = false;
+						with(other){
+							for(var i = 0; i < maxp; i++){
+								if(player_is_active(i) && position_meeting(mouse_x[i], mouse_y[i], other.inst)){
+									other.hover = true;
+									break;
 								}
-								else sound_play(sndMenuGoldwep);
+							}
+						}
+					}
+					for(var i = 0; i < maxp; i++){
+						if(player_is_active(i) && button_pressed(i, "fire")){
+							if(position_meeting(mouse_x[i], mouse_y[i], LoadoutWep)){
+								var	_slctPath = `loadout:wep:${player_get_race(i)}`,
+									_slctSnd = false,
+									_slct = "";
+									
+								with(wepLoadout) if(hover){
+									_slct = name;
+									if(_slct == "") _slctSnd = true;
+									break;
+								}
+								
+								 // Selected:
+								if(_slct != save_get(_slctPath, "")){
+									save_set(_slctPath, _slct);
+									
+									 // Sound:
+									if(_slctSnd){
+										switch(player_get_race(i)){
+											case "venuz":   sound_play(sndMenuGoldwep);  break;
+											case "chicken": sound_play(sndMenuSword);    break;
+											default:        sound_play(sndMenuRevolver); break;
+										}
+									}
+									else sound_play(sndMenuGoldwep);
+								}
 							}
 						}
 					}

@@ -505,6 +505,7 @@
 	if(lsthealth > my_health && (chance_ct(1, 10) || my_health <= 0)){
 		repeat((my_health <= 0) ? 5 : 1) with(instance_create(x, y, Feather)){
 			image_blend = c_gray;
+			bskin = other.bskin;
 			sprite_index = race_get_sprite(other.race, sprite_index);
 		}
 	}

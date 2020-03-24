@@ -2724,7 +2724,7 @@
 									
 									 // Star Flash:
 									var	_wave = current_frame + (i * 1000),
-										_frames = 40,
+										_frames = 60,
 										_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
 										_angle = _wave / 10;
 										

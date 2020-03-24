@@ -12,7 +12,14 @@
 	 // Custom Pickup Instances (Used in step):
 	global.pickup_custom = [];
 	
-	game_start();
+	 // Special Pickups:
+	global.sPickupsMax = 4;
+	global.sPickupsInc = 1;
+	global.sPickupsNum = 1;
+	
+	 // Vault Flower:
+	global.VaultFlower_spawn = true; // used in ntte.mod
+	global.VaultFlower_alive = true;
 
 #macro spr global.spr
 #macro msk spr.msk
@@ -1282,8 +1289,10 @@
 					
 					 // B-Skin:
 					with(instance_nearest_array(x, y, instances_matching(Player, "race", "parrot"))){
-						other.sprite_index = spr_feather;
-						if(bskin) other.image_blend = make_color_rgb(0, 220, 255);
+						if(bskin == 1){
+							other.image_blend = make_color_rgb(0, 220, 255);
+						}
+						other.sprite_index = race_get_sprite(race, sprChickenFeather);
 					}
 					break;
 					
@@ -2292,16 +2301,10 @@
 	}
 	
 #define OrchidChest_open
-	var o = other;
-	if(!instance_is(o, Player)){
-		o = instance_nearest(x, y, Player);
-	}
-	
 	 // Skill:
 	with(obj_create(x, y, "OrchidSkillBecome")){
-		target = o;
-		hold_seek = 10;
-		motion_set(90 + orandom(45), 5);
+		if(instance_is(other, Player)) target = other;
+		direction = 90 + orandom(45);
 	}
 	
 	 // Effects:
@@ -2324,6 +2327,49 @@
 	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
 	
 	
+#define OrchidSkill_decide
+	/*
+		Returns a random mutation that could currently appear on the mutation selection screen and isn't patience
+		If the player already has every available mutation then a random one is returned
+		Returns 'mut_none' if there were no available mutations
+	*/
+	
+	var _skillList = [],
+		_skillMods = mod_get_names("skill"),
+		_skillMax = 30,
+		_skillAll = true; // Already have every available skill
+		
+	for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
+		var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
+		
+		if(skill_get_active(_skill)){
+			if(
+				_skill != mut_patience
+				&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
+				&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
+			){
+				if(
+					!is_string(_skill)
+					|| !mod_script_exists("skill", _skill, "skill_avail")
+					|| mod_script_call("skill", _skill, "skill_avail")
+				){
+					array_push(_skillList, _skill);
+					if(skill_get(_skill) == 0) _skillAll = false;
+				}
+			}
+		}
+	}
+	
+	var _skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidSkillBecome");
+	with(array_shuffle(_skillList)){
+		var _skill = self;
+		if(_skillAll || (skill_get(_skill) == 0 && array_length(instances_matching(_skillInst, "skill", _skill)) <= 0)){
+			return _skill;
+		}
+	}
+	
+	return mut_none;
+
 #define OrchidSkill_create(_x, _y)
 	/*
 		Manages the pet Orchid's timed mutation
@@ -2331,7 +2377,7 @@
 		Vars:
 			color1 - The main HUD color
 			color2 - The secondary HUD color
-			skill  - The mutation to give, leave as 'mut_none' to let it auto-decide
+			skill  - The mutation to give, automatically decided by default
 			num    - The value of the mutation
 			time   - How long the mutation lasts
 			flash  - Visual HUD flash, true/false
@@ -2344,14 +2390,15 @@
 		
 		 // Vars:
 		persistent = true;
-		skill = mut_none;
+		skill = OrchidSkill_decide();
 		num = 1;
-		time = 900; // 450;
+		time = 600;
 		time_max = 0;
 		setup = true;
 		flash = true;
 		chest = [];
 		spirit = [];
+		creator = noone;
 		
 		return id;
 	}
@@ -2363,42 +2410,6 @@
 	flash = true;
 	sound_play_pitch(sndMut, 1 + orandom(0.2));
 	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
-	
-	 // Decide Random Un-gotten Skill:
-	if(skill == mut_none){
-		var _skillList = [],
-			_skillMods = mod_get_names("skill"),
-			_skillMax = 30,
-			_skillAll = true; // Already have every available skill
-			
-		for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
-			var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
-			
-			if(skill_get_active(_skill)){
-				if(
-					_skill != mut_patience
-					&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
-					&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
-				){
-					if(
-						!is_string(_skill)
-						|| !mod_script_exists("skill", _skill, "skill_avail")
-						|| mod_script_call("skill", _skill, "skill_avail")
-					){
-						array_push(_skillList, _skill);
-						if(skill_get(_skill) == 0) _skillAll = false;
-					}
-				}
-			}
-		}
-		with(array_shuffle(_skillList)){
-			var _skill = self;
-			if(_skillAll || skill_get(_skill) == 0){
-				other.skill = _skill;
-				break;
-			}
-		}
-	}
 	
 	 // Skill:
 	skill_set(skill, max(0, skill_get(skill)) + num);
@@ -2597,7 +2608,15 @@
 	
 #define OrchidSkillBecome_create(_x, _y)
 	/*
-		The Orchid pet's temporary mutation orbital
+		The Orchid pet's mutation projectile
+		
+		Args:
+			skill       - The mutation to give, automatically decided by default
+			target      - The instance to fly towards
+			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
+			creator     - Who created this ball, bro
+			trail_col   - The trail effect's 'image_blend'
+			flash       - How many frames to draw in flat white
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
@@ -2606,25 +2625,34 @@
 		depth = -9;
 		
 		 // Vars:
-		mask_index = mskFlakBullet;
+		speed = 6;
 		friction = 0.4;
-		target = noone;
+		direction = random(360);
+		image_xscale = 1.5;
+		image_yscale = image_xscale;
+		mask_index = mskSuperFlakBullet;
+		skill = OrchidSkill_decide();
+		target = instance_nearest(x, y, Player);
+		target_seek = false;
 		creator = noone;
-		hold_seek = 0;
 		trail_col = make_color_rgb(84, 58, 24);
-		grow = 0;
+		flash = 3;
 		
 		return id;
 	}
 	
 #define OrchidSkillBecome_step
-	grow = min(grow + (current_time_scale / 15), 1);
+	if(flash > 0) flash -= current_time_scale;
 	
-	 // Stick Around:
-	if(instance_exists(creator)){
-		visible = creator.visible;
-		persistent = creator.persistent;
-	}
+	 // Grow / Shrink:
+	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
+		_scaleAdd = (current_time_scale / 15);
+		
+	image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
+	image_yscale += clamp(_scale - image_yscale, -_scaleAdd, _scaleAdd);
+	
+	 // Spin:
+	image_angle += hspeed_raw / 3;
 	
 	 // Effects:
 	if(visible && chance_ct(1, 4)){
@@ -2632,49 +2660,47 @@
 	}
 	
 	 // Doin':
-	hold_seek -= current_time_scale;
-	if(target != noone && hold_seek <= 0){
-		if(instance_exists(target)){
-			if(!place_meeting(x, y, target)){
-				motion_add_ct(point_direction(x, y, target.x, target.y), 1);
-				speed = min(speed, 16);
-				image_angle = direction;
+	if(target_seek){
+		if(target != noone){
+			if(instance_exists(target)){
+				 // Epic Success:
+				if(place_meeting(x, y, target) || place_meeting(x, y, Portal)){
+					instance_destroy();
+				}
 				
-				if(current_frame_active){
-					with(instance_create(x, y, DiscTrail)){
-						image_blend = other.trail_col;
+				 // Movin':
+				else{
+					motion_add_ct(point_direction(x, y, target.x, target.y), 1);
+					speed = min(speed, 16);
+					
+					 // Trail:
+					if(current_frame_active){
+						with(instance_create(x, y, DiscTrail)){
+							image_blend = other.trail_col;
+							image_xscale = other.image_xscale;
+							image_yscale = other.image_yscale;
+						}
 					}
 				}
 			}
 			
-			else{
-				 // Mutate:
-				var s = obj_create(x, y, "OrchidSkill");
-				with(creator){
-					stat.mutations++;
-					array_push(skills_active, s);
-				}
-				
-				 // Goodbye:
-				instance_destroy();
-			}
-		}
-		
-		else{
 			 // Fresh Meat:
-			if(instance_exists(Player)){
+			else if(instance_exists(Player)){
 				target = instance_nearest(x, y, Player);
 			}
-			
+				
 			 // Disappear:
-			else{
-				instance_destroy();
-			}
+			else instance_destroy();
 		}
+	}
+	else if(speed == 0){
+		target_seek = true;
 	}
 	
 #define OrchidSkillBecome_draw
+	if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
 	draw_self();
+	if(flash > 0) draw_set_fog(false, 0, 0, 0);
 	
 	 // Bloom:
 	var	_scale = 2,
@@ -2691,6 +2717,28 @@
 	draw_set_blend_mode(bm_normal);
 	
 #define OrchidSkillBecome_destroy
+	 // Mutate:
+	with(obj_create(x, y, "OrchidSkill")){
+		creator = other.creator;
+		if(other.skill != mut_none){
+			skill = other.skill;
+		}
+	}
+	
+	 // Alert:
+	with(target){
+		var _icon = skill_get_icon(other.skill);
+		with(scrAlert(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			spr_alert = -1;
+			snd_flash = sndLevelUp;
+			alarm0 = 60;
+			blink = 15;
+		}
+	}
+	
+	 // Effects:
 	repeat(10 + irandom(10)){
 		with(scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle")){
 			depth = -9;
@@ -4221,15 +4269,14 @@
 
 /// Mod Events
 #define game_start
-	 // Special Pickups:
-	global.sPickupsMax = 4;
-	global.sPickupsInc = 1;
+	 // Reset:
 	global.sPickupsNum = 1;
-	
-	 // Vault Flower:
-	global.VaultFlower_spawn = true; // ntte.mod
+	global.VaultFlower_spawn = true;
 	global.VaultFlower_alive = true;
-
+	
+	 // Delete Orchid Skills:
+	with(instances_matching(CustomObject, "name", "OrchidSkill")) instance_delete(id);
+	
 #define step
 	script_bind_step(post_step, 0);
 	script_bind_end_step(end_step, 0);

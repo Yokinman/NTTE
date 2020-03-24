@@ -771,8 +771,8 @@
 							spr_alert = spr.AlertIndicatorMystery;
 							alert_col = c_yellow;
 							target_y -= 2;
-							alarm1 = 30;
-							blink = 15;
+							alarm0 = irandom_range(50, 70);
+							blink = irandom_range(6, 15);
 						}
 					}
 					

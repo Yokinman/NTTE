@@ -1538,8 +1538,8 @@
 #define charm_step
 	if(DebugLag) trace_time();
 	
-	var	_instList = inst,
-		_varsList = vars,
+	var	_instList = array_clone(inst),
+		_varsList = array_clone(vars),
 		_charmDraw = array_create(maxp + 1),
 		_charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
 		
@@ -1552,7 +1552,7 @@
 	
 	var i = 0;
 	with(_instList){
-		var _vars = _varsList[i];
+		var _vars = _varsList[i++];
 		
 		if(_vars.charmed){
 			if(!instance_exists(self)) _vars.charmed = false;
@@ -1993,27 +1993,23 @@
 							with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
 								target = other;
 								index = _vars.index;
-								with(player_find(index)) if("spr_feather" in self){
-									other.sprite_index = spr_feather;
-								}
+								with(player_find(index)) other.bskin = bskin;
+								sprite_index = race_get_sprite("parrot", sprite_index);
 							}
 						}
 					}
 					else c.time = _vars.time;
 				}
 			}
-			
-			i++;
 		}
 		
 		 // Done:
 		else{
-			_instList = array_delete(_instList, i);
-			_varsList = array_delete(_varsList, i);
+			var _pos = array_find_index(other.inst, self);
+			other.inst = array_delete(other.inst, _pos);
+			other.vars = array_delete(other.vars, _pos);
 		}
 	}
-	inst = _instList;
-	vars = _varsList;
 	
 	 // Drawing:
 	with(surfCharm) active = false;
@@ -2026,7 +2022,7 @@
 	}
 	
 	 // Goodbye:
-	if(array_length(_instList) <= 0){
+	if(array_length(inst) <= 0){
 		instance_destroy();
 	}
 	

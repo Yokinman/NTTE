@@ -3364,13 +3364,13 @@
 
 #define QuasarBeam_alrm0
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
-
+	
 	 // Laser:
 	with(obj_create(x, y, "QuasarBeam")){
 		image_angle = random(360);
 		team = other.team;
 		creator = other.creator;
-
+		
 		spr_strt = -1;
 		follow_creator = false;
 		line_dir_goal = image_angle + random(orandom(180));
@@ -3379,14 +3379,14 @@
 		image_xscale = 0;
 		image_yscale = 0;
 		visible = false;
-
+		
 		array_push(other.ring_lasers, id);
 	}
-
+	
 #define QuasarBeam_hit
 	if(lq_defget(hit_list, string(other), 0) <= hit_time){
 		speed *= 1 - (0.05 * other.size);
-
+		
 		 // Effects:
 		with(other){
 			repeat(3) instance_create(x, y, Smoke);
@@ -3396,7 +3396,7 @@
 				sound_play_hit_ext(sndMeatExplo, 1.2 + random(0.1), 1.4);
 			}
 		}
-	
+		
 		 // Damage:
 		var _dir = direction;
 		if(place_meeting(x, y, other) || ring){
@@ -3408,11 +3408,11 @@
 			(instance_is(other, prop) ? 0 : force),
 			_dir
 		);
-
+		
 		 // Set Custom IFrames:
 		lq_set(hit_list, string(other), hit_time + (ring ? 3 : 6));
 	}
-
+	
 #define QuasarBeam_wall
 	// dust
 
