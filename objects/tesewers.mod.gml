@@ -4001,6 +4001,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_shadow = shd32;
 		spr_shadow_y = 7;
 		sprite_index = spr_idle;
+		hitid = [spr.GatorStatueIdle, "GATOR STATUE"];
 		
 		 // Sounds:
 		snd_hurt = sndHitRock;
@@ -4081,7 +4082,67 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
+	 // Revenge:
+	repeat(4) enemy_shoot("GatorStatueFlak", 0, 0);
 	
+	
+#define GatorStatueFlak_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = sprEFlak;
+		
+		 // Vars:
+		mask_index = mskNone;
+		setup = true;
+		scale = 0;
+		effect_color = make_color_rgb(252, 056, 000);
+		
+		return id;
+	}
+	
+#define GatorStatueFlak_setup
+	setup = false;
+	
+	var t = instance_nearest(x, y, Player),
+		f = [];
+		
+	if(instance_exists(t)){
+		with(FloorNormal) if(!place_meeting(x, y, Wall)){
+			if(in_distance(t, [32, 128])){
+				array_push(f, id);
+			}
+		}
+		with(instance_random(f)){
+			with(other){
+				x = other.x + 16;
+				y = other.y + 16;
+			}
+		}
+	}
+	
+#define GatorStatueFlak_step
+	if(setup) GatorStatueFlak_setup();
+	
+	 // Grow:
+	scale += (current_time_scale / 40);
+	image_xscale = scale;
+	image_yscale = scale;
+	
+	 // Particles:
+	if(chance_ct(1, 2)){
+		with(scrFX(x, y, [random(360), random_range(2, 5) * scale], PlasmaTrail)){
+			sprite_index = spr.QuasarBeamTrail;
+		}
+	}
+
+	 // Explode:
+	if(scale >= 1){
+		instance_destroy();
+	}
+
+#define GatorStatueFlak_destroy
+	enemy_shoot(EFlakBullet, 0, 0);
+
 #define Manhole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
