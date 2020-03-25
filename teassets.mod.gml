@@ -60,8 +60,9 @@
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Trident:
-			Trident     = sprite(p + "sprTrident", 1, 11, 6, shnWep);
-			msk.Trident = sprite(p + "mskTrident", 1, 11, 6);
+			Trident     = sprite(p + "sprTrident",     1, 11, 6, shnWep);
+			GoldTrident = sprite(p + "sprGoldTrident", 1, 11, 6, shnWep);
+			msk.Trident = sprite(p + "mskTrident",     1, 11, 6);
 			
 		//#endregion
 		
@@ -746,8 +747,8 @@
 			
 			 // Shrine Floors:
 			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
-			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall", 4,	 0, 0);
-			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge", 9,  0, 0);
+			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
+			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge",  9, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1267,8 +1268,8 @@
 						["MenuSelected", 10, 16,  16, false],
 						["Feather",       1,  3,   4, true],
 						["FeatherHUD",    1,  5,   5, false]
-						]
-					},
+					]
+				},
 					
 				"bee" : {
 					skin : 2,
@@ -1286,11 +1287,12 @@
 						["Dead",      6, 12,  12, true],
 						["GoSit",     3, 12,  12, true],
 						["Sit",       1, 12,  12, true]
-						]
-					}
+					]
+				}
 			};
 			
 			Race = {};
+			
 			for(var i = 0; i < lq_size(_list); i++){
 				var	_race = lq_get_key(_list, i),
 					_info = lq_get_value(_list, i);
@@ -1310,7 +1312,7 @@
 							_y    = self[3],
 							_hasB = self[4];
 							
-						lq_set(_sprt, _name, sprite(p + ((_hasB && b > 0) ? chr(65 + b) : "") + _name, _img, _x, _y));
+						lq_set(_sprt, _name, sprite(p + ((_hasB && b > 0) ? chr(ord("A") + b) : "") + _name, _img, _x, _y));
 					}
 					
 					array_push(lq_get(Race, _race), _sprt);
@@ -1329,24 +1331,22 @@
 			
 			 // Red Crystal:
 			p = m + "CrystalRed/";
-			CrystalRedPortrait			= sprite(p + "sprCrystalRedPortrait",			1,	20,	229);
-			CrystalRedIdle				= sprite(p + "sprCrystalRedIdle",				4,	12,	12);
-			CrystalRedWalk				= sprite(p + "sprCrystalRedWalk",				6,	12,	12);
-			CrystalRedHurt				= sprite(p + "sprCrystalRedHurt",				3,	12,	12);
-			CrystalRedDead				= sprite(p + "sprCrystalRedDead",				6,	12,	12);
-			CrystalRedGoSit				= sprite(p + "sprCrystalRedGoSit",				3,	12,	12);
-			CrystalRedSit				= sprite(p + "sprCrystalRedSit",				1,	12,	12);
-			CrystalRedLoadout			= sprite(p + "sprCrystalRedLoadout",			2,	16,	16);
-			CrystalRedMapIcon			= sprite(p + "sprCrystalRedMapIcon",			1,	10,	10);
-			CrystalRedShield			= sprite(p + "sprCrystalRedShield",				4,	32,	42);
-			CrystalRedShieldDisappear	= sprite(p + "sprCrystalRedShieldDisappear",	6,	32,	42);
-			CrystalRedShieldIdleFront	= sprite(p + "sprCrystalRedShieldIdleFront",	1,	32, 42);
-			CrystalRedShieldWalkFront	= sprite(p + "sprCrystalRedShieldWalkFront",	8,	32,	42);
-			CrystalRedShieldIdleBack	= sprite(p + "sprCrystalRedShieldIdleBack",		1,	32,	42);
-			CrystalRedShieldWalkBack	= sprite(p + "sprCrystalRedShieldWalkBack",		8,	32,	42);
-			CrystalRedTrail				= sprite(p + "sprCrystalRedTrail",				5,	8,	8);
-				
-			//#endregion
+			CrystalRedPortrait        = sprite(p + "sprCrystalRedPortrait",        1, 20, 229);
+			CrystalRedIdle            = sprite(p + "sprCrystalRedIdle",            4, 12,  12);
+			CrystalRedWalk            = sprite(p + "sprCrystalRedWalk",            6, 12,  12);
+			CrystalRedHurt            = sprite(p + "sprCrystalRedHurt",            3, 12,  12);
+			CrystalRedDead            = sprite(p + "sprCrystalRedDead",            6, 12,  12);
+			CrystalRedGoSit           = sprite(p + "sprCrystalRedGoSit",           3, 12,  12);
+			CrystalRedSit             = sprite(p + "sprCrystalRedSit",             1, 12,  12);
+			CrystalRedLoadout         = sprite(p + "sprCrystalRedLoadout",         2, 16,  16);
+			CrystalRedMapIcon         = sprite(p + "sprCrystalRedMapIcon",         1, 10,  10);
+			CrystalRedShield          = sprite(p + "sprCrystalRedShield",          4, 32,  42);
+			CrystalRedShieldDisappear = sprite(p + "sprCrystalRedShieldDisappear", 6, 32,  42);
+			CrystalRedShieldIdleFront = sprite(p + "sprCrystalRedShieldIdleFront", 1, 32,  42);
+			CrystalRedShieldWalkFront = sprite(p + "sprCrystalRedShieldWalkFront", 8, 32,  42);
+			CrystalRedShieldIdleBack  = sprite(p + "sprCrystalRedShieldIdleBack",  1, 32,  42);
+			CrystalRedShieldWalkBack  = sprite(p + "sprCrystalRedShieldWalkBack",  8, 32,  42);
+			CrystalRedTrail           = sprite(p + "sprCrystalRedTrail",           5,  8,   8);
 			
 		//#endregion
 		

@@ -7,8 +7,9 @@
 #define crown_name        return "CROWN OF CRIME";
 #define crown_text        return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip         return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
-#define crown_avail       return unlock_get("lairCrown");
-#define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`) || unlock_get("crownCrime"); // crownCrime old unlock name
+#define crown_unlock      return "STOLEN FROM THIEVES";
+#define crown_avail       return unlock_get(`crown:${mod_current}`);
+#define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
 
 #define crown_menu_button

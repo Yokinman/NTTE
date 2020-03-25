@@ -10,7 +10,7 @@
 #define weapon_area   return (weapon_avail() ? 18 : -1); // L1 1-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return unlock_get("trenchWep");
+#define weapon_avail  return unlock_get("pack:trench");
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);
