@@ -9,6 +9,7 @@
 	 // Surfaces:
 	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
 	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+	// surfCrystalBrain = surflist_set("CrystalBrain", 0, 0, 64, 64);
 	
 	global.floor_num = 0;
 	global.wall_num = 0;
@@ -24,6 +25,202 @@
 
 #macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
+// #macro surfCrystalBrain global.surfCrystalBrain
+
+#define CrystalBrain_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.CrystalBrainIdle;
+		spr_walk = spr.CrystalBrainIdle;
+		spr_hurt = spr.CrystalBrainHurt;
+		spr_dead = spr.CrystalBrainDead;
+		sprite_index = spr_hurt;
+		spr_shadow = shd32;
+		spr_shadow_y = 6;
+		depth = -8;
+		hitid = [sprite_index, "CRYSTAL BRAIN"];
+		
+		 // Sounds:
+		snd_hurt = sndLightningCrystalHit;
+		snd_dead = sndLightningCrystalDeath;
+		
+		 // Vars:
+		mask_index = mskBanditBoss;
+		direction = random(360);
+		friction = 0.1;
+		wave = 0;
+		canfly = true;
+		maxhealth = 75;
+		raddrop = 20;
+		size = 3;
+		walk = 0;
+		walkspeed = 0.3;
+		maxspeed = 1.2;
+		minspeed = 0.4;
+		canmelee = true;
+		meleedamage = 6;
+		target_x = x;
+		target_y = y;
+		motion_obj = noone;
+		
+		 // Alarms:
+		alarm1 = 90;
+		
+		 // NTTE:
+		ntte_walk = false;
+		
+		return id;
+	}
+	
+#define CrystalBrain_end_step
+	 // Intangible:
+	if(instance_exists(motion_obj)){
+		var m = motion_obj;
+		x = m.x;
+		y = m.y;
+		speed = m.speed;
+		direction = m.direction;
+	}
+	
+#define CrystalBrain_step
+	wave += current_time_scale;
+	
+	 // Effects:
+	if(chance_ct(1, 4)){
+		scrCrystalBrainEffect(x + orandom(32), y + orandom(32));
+	}
+	
+	 // Motion:
+	speed = max(minspeed, speed);
+	if(!instance_exists(motion_obj)){
+		motion_obj = instance_create(x, y, CustomObject);
+		with(motion_obj){
+			direction = other.direction;
+			speed = other.speed;
+		}
+	}
+	var m = motion_obj;
+	if(walk > 0){
+		with(motion_obj){
+			motion_add(direction, other.walkspeed);
+		}
+		walk -= current_time_scale;
+	}
+	m.speed = clamp(m.speed - friction, minspeed, maxspeed);
+
+#define CrystalBrain_hurt(_hitdmg, _hitvel, _hitdir)
+	enemy_hurt(_hitdmg, 0, 0);
+	
+	 // It's gross, I know:
+	with(motion_obj){
+		motion_add(_hitdir, _hitvel);
+	}
+	
+#define CrystalBrain_alrm1
+	alarm1 = 30 + random(30);
+	
+	// if(point_distance(x, y, target_x, target_y) >= 64){
+	// 	scrWalk(point_direction(x, y, target_x, target_y) + orandom(20), 20 + random(20));
+	// 	alarm1 = walk;
+	// }
+	// else{
+		
+	// 	 // New Target:
+	// 	if(chance(1, 5)){
+	// 		var f = instance_random(FloorNormal);
+	// 		target_x = f.x;
+	// 		target_y = f.y;
+	// 	}
+		
+	// 	 // Wander
+	// 	else{
+			scrWalk(random(360), 10 + random(10));
+			with(motion_obj) direction = other.direction;
+	// 	}
+	// }
+	
+// #define CrystalBrain_draw
+
+	/*	
+	if(button_check(0, "horn")) draw_self_enemy();
+	else
+	
+	for(var i = 0; i <= 1; i++){
+		var c = (i == 0 ? -1 : 1);
+		
+		with(surfCrystalBrain){
+			var _surf = surf,
+				_cx = w / 2,
+				_cy = h / 2;
+				
+			with(other){
+				if(surface_exists(_surf)){
+					var _w = 48,
+						_h = 48;
+					
+					surface_set_target(_surf);
+					draw_clear_alpha(0, 0);
+					
+					var _segHeight = 3,
+						_segStartY = (wave mod _segHeight),
+						_segNumber = (_h div _segHeight);
+						
+					for(var j = 0; j <= _segNumber; j++){
+						draw_sprite_part(
+							sprite_index, 
+							image_index,
+							0,
+							j * _segHeight - _segStartY,
+							_w,
+							_segHeight,
+							sin((wave + (j * 2)) / 10) * (2 * c),
+							j * _segHeight - _segStartY
+						);
+					}
+					
+					draw_set_blend_mode_ext(bm_inv_src_alpha, bm_subtract);
+					draw_sprite_tiled(spr.CrystalBrainSurfMask, 0, 0, view_xview_nonsync + i);
+					draw_set_blend_mode(bm_normal);
+					
+					surface_reset_target();
+					draw_surface(_surf, x - _cx, y - _cy);
+				}
+			}
+		}
+	}
+	*/
+	
+#define CrystalBrain_death
+	 // Effects:
+	repeat(30){
+		with(scrCrystalBrainEffect(x + orandom(64), y + orandom(64))){
+			image_index = random(4);
+		}
+	}
+	repeat(6 + irandom(2)){
+		with(instance_create(x, y, Shell)){
+			sprite_index = spr.CrystalBrainChunk;
+			image_index = irandom(image_number - 1);
+			image_speed = 0;
+			motion_set(random(360), random(5));
+		}
+	}
+	
+	instance_create(x, y, PortalClear);
+	
+#define CrystalBrain_cleanup
+	instance_delete(motion_obj);
+	
+#define scrCrystalBrainEffect(_x, _y)
+	with(instance_create(_x, _y, BulletHit)){
+		sprite_index = spr.CrystalBrainEffect
+		image_yscale = choose(1, -1);
+		image_angle = irandom(3) * 90;
+		depth = other.depth + choose(-1, -1, 1);
+		
+		return id;
+	}
+
 
 #define CrystalHeart_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){

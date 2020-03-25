@@ -1920,7 +1920,11 @@
 	web_timer_max = 9;
 	web_timer = web_timer_max;
 	web_frame = 0;
-	web_bits= 0;
+	web_bits = 0;
+	cursed = false;
+	
+	 // Alarms:
+	alarm1 = -1;
 	
 	 // Stat:
 	if("webbed" not in stat) stat.webbed = 0;
@@ -1953,6 +1957,44 @@
 		}
 	}
 	else web_timer = web_timer_max;
+	
+	 // Sparkle:	 
+	if(chance_ct(1, 20)){
+		with(instance_create(x + orandom(8), y + orandom(8), CaveSparkle)){
+			sprite_index = (other.cursed ? sprCaveSparkle : spr.PetSparkle);
+			depth = other.depth - 1;
+		}
+	}
+	
+	 // Encurse:
+	if(!cursed){
+		if(!instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(Spiral)){
+			if(!cursed && GameCont.area == 104){
+				cursed = true;
+				
+				 // Swap Sprites:
+				spr_idle = spr.PetSpiderCursedIdle;
+				spr_walk = spr.PetSpiderCursedWalk;
+				spr_hurt = spr.PetSpiderCursedHurt;
+				spr_icon = spr.PetSpiderCursedIcon;
+				sprite_index = spr_idle;
+				
+				 // Alert:
+				with(scrAlert(id, spr_icon)){
+					spr_alert = sprCurse;
+					alert_col = c_white;
+					snd_flash = sndCursedChest;
+					alarm0 = 90;
+					alert_y = 3;
+					flash = 10;
+				}
+				
+				 // Pickup Indicator:
+				pickup_indicator.text = `@2(${other.spr_icon})` + pet;
+			}
+		}
+	}
+
 
 #define Spider_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 20 + irandom(20);
@@ -3336,6 +3378,13 @@
 	if(DebugLag) trace_time();
 	
 	with(surfWeb){
+		var _cursed = false;
+		with(instances_matching(_inst, "", null)){
+			if(cursed){
+				_cursed = true;
+			}
+		}
+		
 		if(surface_exists(surf)){
 			var	_surfx = x,
 				_surfy = y,
@@ -3362,6 +3411,13 @@
 					_y2 = _y1;
 					_x1 = x;
 					_y1 = y;
+					
+					/*
+					 // Curse Effect:
+					if(_cursed && chance_ct(1, 60)){
+						instance_create(x + orandom(8), y + orandom(8), Curse);
+					}
+					*/
 					
 					 // Drawing Web Mask:
 					draw_vertex(x - _surfx, y - _surfy);
@@ -3465,6 +3521,15 @@
 			with(_slowInst){
 				x = lerp(xprevious, x, current_time_scale / 3);
 				y = lerp(yprevious, y, current_time_scale / 3);
+				
+				 // Maybe Kill:
+				if(_cursed && my_health <= ceil(maxhealth * 0.2)){
+					projectile_hit(id, my_health, 0, 0);
+					sound_play_hit(sndPlantTBKill, 0.2);
+					with(instance_create(x, y, TangleKill)){
+						sprite_index = spr.PetSpiderCursedKill;
+					}
+				}
 			}
 		}
 	}
