@@ -1760,17 +1760,17 @@
 	cursed = false;
 	
 	 // Alarms:
-	alarm1 = -1;
+	//alarm1 = -1;
 	
 	 // Stat:
 	if("webbed" not in stat) stat.webbed = 0;
-
+	
 #define Spider_ttip
 	return ["A BIT STUCK", "STICKY SITUATION", "GROSS", "COCOONED"];
-
+	
 #define Spider_stat(_name, _value)
 	if(_name == "") return spr.PetSpiderIdle;
-
+	
 #define Spider_step
 	 // Lay Webs:
 	web_addx = x;
@@ -1780,12 +1780,12 @@
 			if(speed > 0) web_timer -= current_time_scale;
 			if(web_timer <= 0){
 				web_timer = web_timer_max;
-
+				
 				Spider_web_add(
 					x + lengthdir_x(web_add_l, web_add_d),
 					bbox_bottom + lengthdir_y(web_add_l, web_add_d)
 				);
-
+				
 				web_add_l = 8 + orandom(2);
 				web_add_d = direction + web_add_side + orandom(20);
 				web_add_side *= -1;
@@ -1803,30 +1803,29 @@
 	}
 	
 	 // Encurse:
-	if(!cursed){
-		if(!instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(Spiral)){
-			if(!cursed && GameCont.area == 104){
-				cursed = true;
-				
-				 // Swap Sprites:
-				spr_idle = spr.PetSpiderCursedIdle;
-				spr_walk = spr.PetSpiderCursedWalk;
-				spr_hurt = spr.PetSpiderCursedHurt;
-				spr_icon = spr.PetSpiderCursedIcon;
-				sprite_index = spr_idle;
-				
-				 // Alert:
-				with(scrAlert(id, spr_icon)){
-					spr_alert = sprCurse;
-					alert_col = c_white;
-					snd_flash = sndCursedChest;
-					alarm0 = 90;
-					alert_y = 3;
-					flash = 10;
-				}
-				
-				 // Pickup Indicator:
-				pickup_indicator.text = `@2(${other.spr_icon})` + pet;
+	if(!cursed && GameCont.area == 104){
+		if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+			cursed = true;
+			
+			 // Swap Sprites:
+			var _lastIcon = spr_icon;
+			spr_idle = spr.PetSpiderCursedIdle;
+			spr_walk = spr.PetSpiderCursedWalk;
+			spr_hurt = spr.PetSpiderCursedHurt;
+			spr_icon = spr.PetSpiderCursedIcon;
+			sprite_index = spr_idle;
+			with(pickup_indicator){
+				text = string_replace(text, string(_lastIcon), string(other.spr_icon));
+			}
+			
+			 // Alert:
+			with(scrAlert(id, spr_icon)){
+				spr_alert = sprCurse;
+				alert_col = c_white;
+				snd_flash = sndCursedChest;
+				alarm0 = 90;
+				alert_y = 3;
+				flash = 10;
 			}
 		}
 	}

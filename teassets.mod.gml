@@ -360,12 +360,12 @@
 			
 			 // Crystal Brain:
 			p = m + "CrystalBrain/";
-			CrystalBrainIdle	 = sprite(p + "sprCrystalBrainIdle",	 6,  24, 24);
-			CrystalBrainHurt	 = sprite(p + "sprCrystalBrainHurt",	 3,  24, 24);
-			CrystalBrainDead	 = sprite(p + "sprCrystalBrainDead",	 7,  24, 24);
-			CrystalBrainChunk	 = sprite(p + "sprCrystalBrainChunk",	 4,  8,  8);
-			CrystalBrainEffect	 = sprite(p + "sprCrystalBrainEffect",	 10, 8,  8);
-			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask", 1,  0,  0);
+			CrystalBrainIdle     = sprite(p + "sprCrystalBrainIdle",      6, 24, 24);
+			CrystalBrainHurt     = sprite(p + "sprCrystalBrainHurt",      3, 24, 24);
+			CrystalBrainDead     = sprite(p + "sprCrystalBrainDead",      7, 24, 24);
+			CrystalBrainChunk    = sprite(p + "sprCrystalBrainChunk",     4,  8,  8);
+			CrystalBrainEffect   = sprite(p + "sprCrystalBrainEffect",   10,  8,  8);
+			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask",  1,  0,  0);
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
@@ -1436,19 +1436,18 @@
 			
 			 // Spider
 			p = m + "Caves/";
-			PetSpiderIcon    = sprite(p + "sprPetSpiderIcon",  1,  6,  6);
-			PetSpiderIdle    = sprite(p + "sprPetSpiderIdle",  8, 16, 16);
-			PetSpiderWalk    = sprite(p + "sprPetSpiderWalk",  6, 16, 16);
-			PetSpiderHurt    = sprite(p + "sprPetSpiderDodge", 3, 16, 16);
-			PetSpiderWeb     = sprite(p + "sprPetSpiderWeb",   1,  0,  0);
-			PetSpiderWebBits = sprite(p + "sprWebBits",        5,  4,  4);
-			PetSparkle       = sprite(p + "sprPetSparkle",     5,  8,  8);
-			
-			PetSpiderCursedIcon = sprite(p + "sprPetSpiderCursedIcon",  1,  6,   6);
-			PetSpiderCursedIdle = sprite(p + "sprPetSpiderCursedIdle",  8,  16,  16);
-			PetSpiderCursedWalk = sprite(p + "sprPetSpiderCursedWalk",  6,  16,  16);
-			PetSpiderCursedHurt = sprite(p + "sprPetSpiderCursedDodge", 3,  16,  16);
-			PetSpiderCursedKill = sprite(p + "sprPetSpiderCursedKill",	6,  16,  16);
+			PetSpiderIcon       = sprite(p + "sprPetSpiderIcon",        1,  6,  6);
+			PetSpiderIdle       = sprite(p + "sprPetSpiderIdle",        8, 16, 16);
+			PetSpiderWalk       = sprite(p + "sprPetSpiderWalk",        6, 16, 16);
+			PetSpiderHurt       = sprite(p + "sprPetSpiderDodge",       3, 16, 16);
+			PetSpiderWeb        = sprite(p + "sprPetSpiderWeb",         1,  0,  0);
+			PetSpiderWebBits    = sprite(p + "sprWebBits",              5,  4,  4);
+			PetSparkle          = sprite(p + "sprPetSparkle",           5,  8,  8);
+			PetSpiderCursedIcon = sprite(p + "sprPetSpiderCursedIcon",  1,  6,  6);
+			PetSpiderCursedIdle = sprite(p + "sprPetSpiderCursedIdle",  8, 16, 16);
+			PetSpiderCursedWalk = sprite(p + "sprPetSpiderCursedWalk",  6, 16, 16);
+			PetSpiderCursedHurt = sprite(p + "sprPetSpiderCursedDodge", 3, 16, 16);
+			PetSpiderCursedKill = sprite(p + "sprPetSpiderCursedKill",  6, 16, 16);
 			
 			 // Prism:
 			p = m + "Cursed Caves/";

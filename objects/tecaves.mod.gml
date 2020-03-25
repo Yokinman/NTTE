@@ -220,8 +220,8 @@
 		
 		return id;
 	}
-
-
+	
+	
 #define CrystalHeart_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:

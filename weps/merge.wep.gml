@@ -2281,7 +2281,7 @@
 #define weapon_rads(w)         return wep_stat(w, "rads");
 #define weapon_auto(w)         return (instance_is(self, Player) && wep_stat(w, "blod") && ammo[wep_stat(w, "type")] < wep_stat(w, "cost") && infammo == 0) ? -1 : wep_stat(w, "auto");
 #define weapon_melee(w)        return wep_stat(w, "mele");
-#define weapon_gold(w)         return wep_stat(w, "gold");
+#define weapon_gold(w)         return ((wep_stat(w, "gold") != 0) ? -1 : 0);
 #define weapon_laser_sight(w)  return wep_stat(w, "lasr");
 
 #define weapon_sprt(w)
