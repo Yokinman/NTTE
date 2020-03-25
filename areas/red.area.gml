@@ -156,8 +156,8 @@
 		_y = y + 16;
 		
 	 // Big:
-	if(chance(0, 7)){
-		instance_create(_x, _y, RhinoFreak); // insert enemy here
+	if(chance(1, 7)){
+		obj_create(_x, _y, "CrystalBrain");
 	}
 	
 	 // Small:

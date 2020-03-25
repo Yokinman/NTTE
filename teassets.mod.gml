@@ -367,6 +367,9 @@
 			CrystalBrainEffect   = sprite(p + "sprCrystalBrainEffect",   10,  8,  8);
 			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask",  1,  0,  0);
 			
+			CloneOverlay	  = sprite(p + "sprCloneOverlay",	   8, 0, 0);
+			CloneOverlayFlash = sprite(p + "sprCloneOverlayFlash", 8, 0, 0);
+			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
 			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle", 10, 24, 24);

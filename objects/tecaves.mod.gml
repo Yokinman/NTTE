@@ -9,6 +9,7 @@
 	 // Surfaces:
 	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
 	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+	surfClone = surflist_set("Clone", 0, 0, 0, 0);
 	// surfCrystalBrain = surflist_set("CrystalBrain", 0, 0, 64, 64);
 	
 	global.floor_num = 0;
@@ -25,9 +26,196 @@
 
 #macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
+#macro surfClone global.surfClone
 // #macro surfCrystalBrain global.surfCrystalBrain
 
+#define Clone_create(_x, _y)
+	/*
+		Clone handler object for enemies duplicated by crystal brains.
+		
+		Vars:
+			spr_overlay	- An array containing the overlay sprites. Meant to be accessed with 'flash' as the index.
+			clone_color - Base blend color for clones.
+			wave		- Incrementing variable.
+			clone_of	- Tracks the ID of the enemy cloned.
+			creator		- The brain that created the enemy.
+			target		- The enemy being handled.
+			time		- Time in frames until the enemy is destroyed; does not decrement while the brain is alive.
+			team		- Determines the team from which enemies will be cloned.
+			flash		- Boolean. Used as an index for referencing 'spr_overlay'.
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_overlay = [spr.CloneOverlay, spr.CloneOverlayFlash];
+		clone_color = make_color_rgb(145, 0, 43);
+		image_speed = 0.4;
+		
+		 // Vars:
+		wave = 0;
+		clone_of = noone;
+		creator = noone;
+		clone = noone;
+		time = 60 + random(60);
+		team = 1;
+		flash = false;
+		setup = true;
+		
+		return id;
+	}
+	
+#define Clone_setup
+	setup = false;
+	
+	 // Inherit Variables:
+	if(instance_exists(creator)){
+		team = creator.team;
+	}
+	
+	 // Find Target:
+	if(!instance_exists(clone)){
+		var _enemies = [],
+			_target = noone,
+			_clones = instances_matching(CustomObject, "name", "Clone");
+		with(instances_matching_ne(instances_matching([enemy, Ally], "team", team), "name", "CrystalBrain")){
+			if(array_length(instances_matching(_clones, "clone", id)) <= 0){
+				if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
+					array_push(_enemies, id);
+				}
+			}
+		}
+		clone_of = instance_nearest_array(x, y, _enemies);
+		with(clone_of){
+			_target = instance_copy(false);
+		}
+		clone = _target;
+	}
+	
+	if(instance_exists(clone)){
+		
+		 // Clone Variables:
+		Clone_end_step();
+		with(clone){
+			raddrop = 0;
+			kills = 0;
+			motion_add(random(360), 2);
+		}
+		
+		 // (Placeholder) Effects:
+		with(instance_create(x, y, PlasmaTrail)){
+			sprite_index = sprMutant6Dead;
+			image_index  = 9;
+			image_blend  = other.clone_color;
+		}
+	}
+	
+#define Clone_step
+	if(setup) Clone_setup();
+	wave += current_time_scale;
+	
+	if(instance_exists(clone)){
+		
+		 // Effects:
+		if(chance_ct(1, 5)){
+			scrCrystalBrainEffect(x + orandom(24), y + orandom(24));
+		}
+		
+		if(!instance_exists(creator)){
+			time -= current_time_scale;
+			flash = (floor(time / 2) % 2);
+			
+			if(time <= 0){
+				with(clone){
+					my_health = 0;
+				}
+				
+				 // Goodbye:
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // Goodbye:
+	else{
+		instance_destroy();
+	}
+	
+#define Clone_end_step
+	if(setup) Clone_setup();
+	
+	if(instance_exists(clone)){
+		x = clone.x;
+		y = clone.y;
+		with(clone){
+			image_alpha = abs(image_alpha) * -1;
+		}
+	}
+	
+#define Clone_draw
+	if(instance_exists(clone)){
+		var _sprOverlay = spr_overlay[flash],
+			_overlayInd = (wave * image_speed),
+			_sprite = clone.sprite_index,
+			_color = clone_color,
+			_xOff = sprite_get_xoffset(_sprite),
+			_yOff = sprite_get_yoffset(_sprite),
+			_w = sprite_get_width(_sprite),
+			_h = sprite_get_height(_sprite);
+			
+		with(surfClone){
+			if(surface_get_width(surf) != _w || surface_get_height(surf) != _h){
+				surface_destroy(surf);
+				surf = surface_create(_w, _h);
+			}
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			with(other.clone){
+				var _x = x,
+					_y = y,
+					_alpha = abs(image_alpha);
+				
+				x = _xOff;
+				y = _yOff;
+				image_alpha = _alpha;
+				draw_set_color(_color);
+				
+				event_perform(ev_draw, 0);
+				
+				x = _x;
+				y = _y;
+				image_alpha *= -1;
+				draw_set_color(c_white);
+				
+				draw_set_color_write_enable(1, 1, 1, 0);
+				draw_set_blend_mode(bm_add);
+				
+				draw_sprite_tiled(_sprOverlay, _overlayInd, view_xview_nonsync, view_yview_nonsync);
+				
+				draw_set_color_write_enable(1, 1, 1, 1);
+				
+				surface_reset_target();
+				draw_set_blend_mode(bm_normal);
+				
+				draw_surface(other.surf, x - _xOff, y - _yOff);
+			}
+		}
+	}
+	
 #define CrystalBrain_create(_x, _y)
+	/*
+		Mastermind. Clones enemies.
+		
+		Vars:
+			target_x/y		- Coordinates the brain will try to navigate to.
+			motion_obj		- Separate object for avoiding wall collision. Trades motion and position data with the brain.
+			clone_num		- Number of currently active clones. Cannot excede 'clone_max'.
+			clone_max		- Max clone count.
+			wall_yoff		- Vertical visual offset for when in contact with a wall.
+			wall_yoff_coeff - Coefficient to 'wall_yoff'.
+	*/
+
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		spr_idle = spr.CrystalBrainIdle;
@@ -62,6 +250,10 @@
 		target_x = x;
 		target_y = y;
 		motion_obj = noone;
+		clone_num = 0;
+		clone_max = 6;
+		wall_yoff = -8
+		wall_yoff_coeff = 0;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -84,6 +276,7 @@
 	
 #define CrystalBrain_step
 	wave += current_time_scale;
+	clone_num = array_length(instances_matching(instances_matching(CustomObject, "name", "Clone"), "creator", id));
 	
 	 // Effects:
 	if(chance_ct(1, 4)){
@@ -107,40 +300,21 @@
 		walk -= current_time_scale;
 	}
 	m.speed = clamp(m.speed - friction, minspeed, maxspeed);
-
-#define CrystalBrain_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, 0, 0);
 	
-	 // It's gross, I know:
-	with(motion_obj){
-		motion_add(_hitdir, _hitvel);
+	 // Wall Climbing:
+	var w = (place_meeting(x, y, TopSmall) || !place_meeting(x, y, Floor));
+	if(w){
+		wall_yoff_coeff += current_time_scale / 16;
 	}
-	
-#define CrystalBrain_alrm1
-	alarm1 = 30 + random(30);
-	
-	// if(point_distance(x, y, target_x, target_y) >= 64){
-	// 	scrWalk(point_direction(x, y, target_x, target_y) + orandom(20), 20 + random(20));
-	// 	alarm1 = walk;
-	// }
-	// else{
-		
-	// 	 // New Target:
-	// 	if(chance(1, 5)){
-	// 		var f = instance_random(FloorNormal);
-	// 		target_x = f.x;
-	// 		target_y = f.y;
-	// 	}
-		
-	// 	 // Wander
-	// 	else{
-			scrWalk(random(360), 10 + random(10));
-			with(motion_obj) direction = other.direction;
-	// 	}
-	// }
-	
-// #define CrystalBrain_draw
+	else{
+		wall_yoff_coeff -= current_time_scale / 8;
+	}
+	wall_yoff_coeff = clamp(wall_yoff_coeff, 0, 1);
 
+#define CrystalBrain_draw
+	var _yoff = sin(wave / 20);
+	draw_sprite_ext(sprite_index, image_index, x, y + (wall_yoff * wall_yoff_coeff) + _yoff, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	
 	/*	
 	if(button_check(0, "horn")) draw_self_enemy();
 	else
@@ -190,6 +364,63 @@
 	}
 	*/
 	
+#define CrystalBrain_hurt(_hitdmg, _hitvel, _hitdir)
+	enemy_hurt(_hitdmg, 0, 0);
+	
+	 // It's gross, I know:
+	with(motion_obj){
+		motion_add(_hitdir, _hitvel);
+	}
+	
+#define CrystalBrain_alrm1
+	alarm1 = 30 + random(30);
+
+	if(enemy_target(x, y)){
+		if(in_distance(target, 64) && place_meeting(x, y, Floor)){
+			scrCrystalBrainWalk(point_direction(target.x, target.y, x, y) + orandom(30), 10 + random(20), 2.4);
+			scrRight(direction + 180);
+			alarm1 = walk;
+		}
+		else{
+			if(point_distance(x, y, target_x, target_y) < 64){
+				
+				 // Deploy Clones:
+				if(chance(2, (1 - (clone_num / clone_max)))){
+					with(obj_create(x, y, "Clone")){
+						creator = other;
+					}
+				}
+				
+				 // Seek New Target:
+				if(chance(1, 4)){
+					var o = instance_nearest_array(target.x, target.y, instances_matching(enemy, "team", team));
+					if(instance_exists(o)){
+						target_x = o.x;
+						target_y = o.y;
+					}
+				}
+				
+				 // Wander:
+				else{
+					scrCrystalBrainWalk(random(360), 10 + random(20), 1.2);
+				}
+			}
+			
+			 // Move to Target:
+			else{
+				scrCrystalBrainWalk(point_direction(x, y, target_x, target_y) + random(30), 20 + random(20), 2.4);
+				alarm1 = walk;
+			}
+		}
+	}
+	
+#define scrCrystalBrainWalk(_dir, _walk, _spd)
+	scrWalk(_dir, _walk);
+	walkspeed = _spd;
+	with(motion_obj){
+		motion_set(other.direction, other.speed);
+	}
+	
 #define CrystalBrain_death
 	 // Effects:
 	repeat(30){
@@ -203,6 +434,13 @@
 			image_index = irandom(image_number - 1);
 			image_speed = 0;
 			motion_set(random(360), random(5));
+		}
+	}
+	
+	 // Revenge:
+	repeat(3){
+		with(obj_create(x, y, "Clone")){
+			creator = other;
 		}
 	}
 	
