@@ -278,20 +278,13 @@
 #define Orchid_step
 	wave += current_time_scale;
 	
-	 // Sparkle:
-	if(chance_ct(1, 15)){
-		with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
-			depth = other.depth + choose(-1, -1, 1);
-		}
-	}
-	
 	 // Mutate:
 	if(raddrop >= skill_rads){
 		raddrop -= skill_rads;
 		
 		 // Random Mutation:
 		with(obj_create(x, y, "OrchidSkillBecome")){
-			direction = other.direction + orandom(30);
+			//direction = other.direction + orandom(30);
 			creator = other;
 		}
 		
@@ -307,174 +300,17 @@
 		}
 		
 		 // Sounds:
-		sound_play_pitchvol(sndFlyFire, 1.0, 1.0);
+		sound_play_pitchvol(sndFlyFire,     1.5,               0.8);
 		sound_play_pitchvol(sndCrownRandom, 0.8 + random(0.3), 0.2);
 	}
 	skill_inst = instances_matching(instances_matching(CustomObject, "name", "OrchidSkill", "OrchidSkillBecome"), "creator", self);
 	
-	 // Mutation Alert Indicators:
-	/*var _canAlert = (array_length(skill_inst) > 0 && portal_angle == 0);
-	if(_canAlert){
-		with(skill_inst){
-			if(array_length(instances_matching(other.skill_alert, "skill", skill)) <= 0){
-				var	_icon = skill_get_icon(skill),
-					_alert = scrAlert(other, _icon[0]);
-					
-				with(_alert){
-					image_index = _icon[1];
-					image_speed = 0;
-					spr_alert = -1;
-					snd_flash = sndLevelUp;
-					skill = other.skill;
-				}
-				
-				array_push(other.skill_alert, _alert);
-			}
-		}
-	}
-	with(skill_alert){
-		var _inst = instances_matching(other.skill_inst, "skill", skill);
-		if(_canAlert && array_length(_inst) > 0){
-			var _max = 2 * ceil(current_time_scale);
-			with(instances_matching(_inst, "name", "OrchidSkill")){
-				_max = max(_max, time - (other.blink * 2));
-			}
-			alarm0 = max(alarm0, _max);
-		}
-		else{
-			alarm0 = min(alarm0, ceil(current_time_scale));
-			blink = min(blink, 6);
-		}
-	}*/
-	
-	/*
-	skills_become = instances_matching(skills_become, "", null);
-	skills_active = instances_matching(skills_active, "", null);
-	
-	 // Orbs:
-	var _numSkills = array_length(skills_become);
-	
-	for(var i = 0; i < _numSkills; i++){
-		var	w = wave,
-			d = 360 * (i / _numSkills);
-			
-		with(skills_become[i]){
-			if(target == noone){
-				image_angle = sin((w + d) / 45) * 45;
-				x = other.x + lengthdir_x(16 * grow, w + d);
-				y = other.y + lengthdir_y(16 * grow, w + d);
-				
-				var s = 1 + (0.1 * sin(w / 10));
-				image_xscale = s * grow;
-				image_yscale = s * grow;
-				
-				image_index = s;
-				image_speed = 0;
-				
-				direction = w + d;
-			}
-		}
-	}
-	
-	 // Mutatin':
-	if(array_length(skills_active) <= 0){
-		var _maxRads = skill_rads * (1 + _numSkills); 
-		if(raddrop >= _maxRads){
-			raddrop -= _maxRads;
-			
-			 // Be:
-			with(obj_create(x, y, "OrchidSkillBecome")){
-				creator = other;
-				if(_numSkills < other.max_skills){
-					array_push(other.skills_become, id);
-				}
-				else{
-					target = instance_nearest(x, y, Player);
-					hold_seek = 10 + random(10);
-					motion_set(direction, 8);
-					array_push(other.skills_active, id);
-				}
-			}
-		}
-	}
-	
-	 // Indicator:
-	var _pickup = pickup_skill;
-	if(array_length(skills_become) > 0 && instance_exists(_pickup)){
-		_pickup.visible = true;
-		
-		if(player_is_active(_pickup.pick)){
-			_pickup.visible = false;
-			
-			 // Depart:
-			with(skills_become){
-				target = player_find(_pickup.pick);
-				hold_seek = 10 + random(10);
-				motion_set(direction, 8);
-				array_push(other.skills_active, id);
-			}
-			skills_become = [];
-			raddrop = 0;
-			
-			 // Effects:
-			repeat(8) scrFX([x, 12], [y, 12], 0, "VaultFlowerSparkle");
-		}
-	}*/
-	
-	/*
-	 // Mutate:
-	if(raddrop >= skill_rads){
-		raddrop -= skill_rads;
-		
-		 // Stat:
-		stat.mutations++;
-		
-		 // Random Mutation:
-		array_push(skill_inst, obj_create(x, y, "OrchidSkill"));
-		
-		 // Effects:
-		repeat(5) with(scrFX([x + hspeed, 12], [y + vspeed, 12], [90, random(1)], CaveSparkle)){
-			depth = -8;
-			image_speed = lerp(0.2, 0.4, speed);
-			hspeed += other.hspeed / 1.5;
-			vspeed += other.vspeed / 1.5;
-		}
-	}
-	
-	 // Alert:
-	if(array_length(skill_inst) > 0){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self);
-		if(portal_angle == 0){
-			with(skill_inst){
-				if(array_length(instances_matching(_inst, "creator", self)) <= 0){
-					var _icon = skill_get_icon(skill);
-					with(scrAlert(other, _icon[0])){
-						image_index = _icon[1];
-						image_speed = 0;
-						creator = other;
-						spr_alert = -1;
-						snd_flash = sndLevelUp;
-						blink = min(blink, other.time / 2);
-						alarm0 = 1 + max(1, other.time - (blink * 2));
-					}
-				}
-			}
-		}
-		
-		 // Portal, Delete Alerts:
-		else with(instances_matching_gt(_inst, "blink", 6)){
-			blink = 6;
-			alarm0 = 1;
-		}
-	}
-	
-	 // Effects:
+	 // Sparkle:
 	if(chance_ct(1, 15 / (1 + (0.5 * array_length(skill_inst))))){
 		with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
 			depth = other.depth + choose(-1, -1, 1);
 		}
 	}
-	*/
 	
 #define Orchid_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);

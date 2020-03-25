@@ -59,7 +59,9 @@
 	TopCont.darkness = area_darkness();
 	
 	 // Skin Time:
-	unlock_set("skin:red crystal", true);
+	if(variable_instance_get(GenCont, "iswarpzone", false)){
+		unlock_set("skin:red crystal", true);
+	}
 	
 #define area_setup_floor
 	 // Fix Depth:

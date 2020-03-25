@@ -22,16 +22,16 @@
 
 #macro lwoWep global.lwoWep
 
-#define weapon_name(w)  return (weapon_avail() ? (weapon_gold(w) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
-#define weapon_text(w)  return (weapon_gold(w) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
+#define weapon_name(w)  return (weapon_avail(w) ? ((weapon_gold(w) != 0) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
+#define weapon_text(w)  return ((weapon_get_gold(w) != 0) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
 #define weapon_type     return 0; // Melee
-#define weapon_area     return (weapon_avail() ? 7 : -1); // 3-2
+#define weapon_area(w)  return (weapon_avail(w) ? 7 : -1); // 3-2
 #define weapon_auto     return true;
 #define weapon_melee    return false;
 #define weapon_chrg     return true;
-#define weapon_gold(w)  return lq_defget(w, "gold", false);
+#define weapon_gold(w)  return (lq_defget(w, "gold", false) ? -1 : 0);
 #define weapon_swap(w)  return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
-#define weapon_sprt(w)  return (lq_defget(w, "visible", true) ? (weapon_avail() ? (weapon_gold(w) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
+#define weapon_sprt(w)  return (lq_defget(w, "visible", true) ? (weapon_avail() ? ((weapon_get_gold(w) != 0) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
 #define weapon_avail    return (unlock_get("pack:coast") || unlock_get("wep:" + mod_current));
 
 #define weapon_load(w)

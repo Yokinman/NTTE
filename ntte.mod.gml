@@ -53,7 +53,7 @@
 	
 	 // Crystal Heart Guarantee:
 	global.crystal_heart_guarantee = false;
-	global.crystal_heart_area	   = null;
+	global.crystal_heart_area      = null;
 	global.crystal_heart_subarea   = null;
 	
 #macro spr global.spr
@@ -143,14 +143,14 @@
 			- Excludes boss levels
 		*/
 		
-		var a = irandom_range(2, 7),
-			s = ((a == 2 || a == 4 || a == 6) ? 1 : irandom_range(1, 2));
-		
-		global.crystal_heart_area	 = a;
-		global.crystal_heart_subarea = s;
+		var	_area = irandom_range(2, 7),
+			_sub  = irandom_range(1, max(1, area_get_subarea(_area) - 1));
+			
+		global.crystal_heart_area    = _area;
+		global.crystal_heart_subarea = _sub;
 	}
 	else{
-		global.crystal_heart_area	 = null;
+		global.crystal_heart_area    = null;
 		global.crystal_heart_subarea = null;
 	}
 	
@@ -351,7 +351,9 @@
 			}
 			
 			 // Guarantee Crystal Heart Spawn Next Run:
-			global.crystal_heart_guarantee = true;
+			if(GameCont.loops > 0){
+				global.crystal_heart_guarantee = true;
+			}
 			
 			break;
 			
@@ -1773,7 +1775,7 @@
 			with(["wep", "bwep"]){
 				var _wep = variable_instance_get(other, self);
 					
-				if(weapon_get_gold(_wep)){
+				if(weapon_get_gold(_wep) != 0){
 					if(array_exists(["merge", "trident"], wep_get(_wep))){
 						var	_path = `loadout:wep:${other.race}`,
 							_name = "main";

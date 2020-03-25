@@ -4103,7 +4103,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define GatorStatueFlak_setup
 	setup = false;
 	
-	var t = instance_nearest(x, y, Player),
+	var	t = instance_nearest(x, y, Player),
 		f = [];
 		
 	if(instance_exists(t)){
@@ -4130,19 +4130,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Particles:
 	if(chance_ct(1, 2)){
-		with(scrFX(x, y, [random(360), random_range(2, 5) * scale], PlasmaTrail)){
+		with(scrFX(x, y, random_range(2, 5) * scale, PlasmaTrail)){
 			sprite_index = spr.QuasarBeamTrail;
 		}
 	}
-
+	
 	 // Explode:
 	if(scale >= 1){
 		instance_destroy();
 	}
-
+	
 #define GatorStatueFlak_destroy
 	enemy_shoot(EFlakBullet, 0, 0);
-
+	
+	
 #define Manhole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:

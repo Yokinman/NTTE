@@ -2378,8 +2378,8 @@
 			color1 - The main HUD color
 			color2 - The secondary HUD color
 			skill  - The mutation to give, automatically decided by default
-			num    - The value of the mutation
 			time   - How long the mutation lasts
+			num    - The value of the mutation
 			flash  - Visual HUD flash, true/false
 	*/
 	
@@ -2612,7 +2612,7 @@
 		
 		Args:
 			skill       - The mutation to give, automatically decided by default
-			skill_time	- The lifespan of the given mutation 
+			time        - The lifespan of the given mutation
 			target      - The instance to fly towards
 			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
 			creator     - Who created this ball, bro
@@ -2633,7 +2633,7 @@
 		image_yscale = image_xscale;
 		mask_index = mskSuperFlakBullet;
 		skill = OrchidSkill_decide();
-		skill_time = 30;
+		time = -1;
 		target = instance_nearest(x, y, Player);
 		target_seek = false;
 		creator = noone;
@@ -2681,8 +2681,11 @@
 							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
 								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
 								image_blend  = other.trail_col;
-								// image_speed  = 0.4;	
+								image_xscale = 0.8;
+								image_yscale = image_xscale;
 								image_angle  = random(360);
+								depth        = other.depth + 0.1;
+								// image_speed  = 0.4;
 							}
 						}
 					}
@@ -2729,8 +2732,8 @@
 		if(other.skill != mut_none){
 			skill = other.skill;
 		}
-		if(other.skill_time != null){
-			time = other.skill_time;
+		if(other.time >= 0){
+			time = other.time;
 		}
 	}
 	
@@ -2756,12 +2759,15 @@
 	}
 	var _len = 16;
 	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
+		speed = 1;
+		direction = other.direction;
 		sprite_index = sprMutant6Dead;
+		image_index = 11;
+		image_speed = 0.5;
 		image_xscale = 0.75;
 		image_yscale = image_xscale;
-		image_index = 11;
-		image_angle = other.direction - 90;
-		motion_set(other.direction, 1);
+		image_angle = direction - 90;
+		depth = -4;
 	}
 	sleep(20);
 	
@@ -3632,8 +3638,11 @@
 	}
 	
 	 // Trident Unlock:
-	if(wep == "trident" && mod_script_exists("weapon", wep, "weapon_avail") && !mod_script_call("weapon", wep, "weapon_avail", wep)){
-		unlock_set(`wep:${wep}`, true);
+	var _wepRaw = wep_get(wep);
+	if(_wepRaw == "trident"){
+		if(mod_script_exists("weapon", _wepRaw, "weapon_avail") && !mod_script_call("weapon", _wepRaw, "weapon_avail", wep)){
+			unlock_set(`wep:${_wepRaw}`, true);
+		}
 	}
 	
 	 // Weapon:

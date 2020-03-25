@@ -1582,7 +1582,7 @@
 	areaList = ["coast", "oasis", "lair", "pizza", "red", "trench"];
 	raceList = ["parrot", "bee"];
 	crwnList = ["bonus", "crime", "red"];
-	wepsList = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+	wepsList = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 	
 	 // Reminders:
 	global.remind = [];
