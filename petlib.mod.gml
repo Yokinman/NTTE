@@ -1769,7 +1769,13 @@
 	return ["A BIT STUCK", "STICKY SITUATION", "GROSS", "COCOONED"];
 	
 #define Spider_stat(_name, _value)
-	if(_name == "") return spr.PetSpiderIdle;
+	switch(_name){
+		case "":
+			return spr.PetSpiderIdle;
+			
+		case "cursed":
+			return [`${((current_frame % 60) < 15 || chance(1, 30)) ? "@y@q" : "@p"}${_name}`, _value];
+	}
 	
 #define Spider_step
 	 // Lay Webs:
@@ -1806,6 +1812,9 @@
 	if(!cursed && GameCont.area == 104){
 		if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 			cursed = true;
+			
+			 // Stat:
+			stat.cursed = lq_defget(stat, "cursed", 0) + 1;
 			
 			 // Swap Sprites:
 			var _lastIcon = spr_icon;
