@@ -278,6 +278,13 @@
 #define Orchid_step
 	wave += current_time_scale;
 	
+	 // Sparkle:
+	if(chance_ct(1, 15)){
+		with(scrFX([x, 8], [y, 8], [90, 0.1], "VaultFlowerSparkle")){
+			depth = other.depth + choose(-1, -1, 1);
+		}
+	}
+	
 	 // Mutate:
 	if(raddrop >= skill_rads){
 		raddrop -= skill_rads;
@@ -298,6 +305,10 @@
 			hspeed += other.hspeed / 1.5;
 			vspeed += other.vspeed / 1.5;
 		}
+		
+		 // Sounds:
+		sound_play_pitchvol(sndFlyFire, 1.0, 1.0);
+		sound_play_pitchvol(sndCrownRandom, 0.8 + random(0.3), 0.2);
 	}
 	skill_inst = instances_matching(instances_matching(CustomObject, "name", "OrchidSkill", "OrchidSkillBecome"), "creator", self);
 	

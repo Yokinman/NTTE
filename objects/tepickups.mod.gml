@@ -2612,6 +2612,7 @@
 		
 		Args:
 			skill       - The mutation to give, automatically decided by default
+			skill_time	- The lifespan of the given mutation 
 			target      - The instance to fly towards
 			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
 			creator     - Who created this ball, bro
@@ -2625,17 +2626,18 @@
 		depth = -9;
 		
 		 // Vars:
-		speed = 6;
-		friction = 0.4;
+		speed = 8;
+		friction = 0.6;
 		direction = random(360);
 		image_xscale = 1.5;
 		image_yscale = image_xscale;
 		mask_index = mskSuperFlakBullet;
 		skill = OrchidSkill_decide();
+		skill_time = 30;
 		target = instance_nearest(x, y, Player);
 		target_seek = false;
 		creator = noone;
-		trail_col = make_color_rgb(84, 58, 24);
+		trail_col = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
 		flash = 3;
 		
 		return id;
@@ -2670,15 +2672,18 @@
 				
 				 // Movin':
 				else{
-					motion_add_ct(point_direction(x, y, target.x, target.y), 1);
-					speed = min(speed, 16);
+					motion_add_ct(point_direction(x, y, target.x, target.y), 1.5);
+					speed = min(speed, 10);
 					
 					 // Trail:
 					if(current_frame_active){
-						with(instance_create(x, y, DiscTrail)){
-							image_blend = other.trail_col;
-							image_xscale = other.image_xscale;
-							image_yscale = other.image_yscale;
+						repeat(1 + chance(1, 3)){
+							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
+								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
+								image_blend  = other.trail_col;
+								// image_speed  = 0.4;	
+								image_angle  = random(360);
+							}
 						}
 					}
 				}
@@ -2693,8 +2698,9 @@
 			else instance_destroy();
 		}
 	}
-	else if(speed == 0){
+	else if(speed <= 3){
 		target_seek = true;
+		flash = 3;
 	}
 	
 #define OrchidSkillBecome_draw
@@ -2723,6 +2729,9 @@
 		if(other.skill != mut_none){
 			skill = other.skill;
 		}
+		if(other.skill_time != null){
+			time = other.skill_time;
+		}
 	}
 	
 	 // Alert:
@@ -2740,10 +2749,21 @@
 	
 	 // Effects:
 	repeat(10 + irandom(10)){
-		with(scrFX([x, 6], [y, 6], [direction, 3 + random(3)], "VaultFlowerSparkle")){
+		with(scrFX([x, 16], [y, 16], [direction, 3 + random(3)], "VaultFlowerSparkle")){
 			depth = -9;
+			friction = 0.2;
 		}
 	}
+	var _len = 16;
+	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
+		sprite_index = sprMutant6Dead;
+		image_xscale = 0.75;
+		image_yscale = image_xscale;
+		image_index = 11;
+		image_angle = other.direction - 90;
+		motion_set(other.direction, 1);
+	}
+	sleep(20);
 	
 	
 #define OverhealChest_create(_x, _y)

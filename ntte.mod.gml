@@ -51,6 +51,11 @@
 	 // Vault Flower Rerolled Skill:
 	global.hud_reroll = null;
 	
+	 // Crystal Heart Guarantee:
+	global.crystal_heart_guarantee = false;
+	global.crystal_heart_area	   = null;
+	global.crystal_heart_subarea   = null;
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -129,6 +134,26 @@
 		}
 	}
 	
+	 // Determine Crystal Heart Area:
+	if(global.crystal_heart_guarantee){
+		global.crystal_heart_guarantee = false;
+		
+		/*
+			- Excludes desert
+			- Excludes boss levels
+		*/
+		
+		var a = irandom_range(2, 7),
+			s = ((a == 2 || a == 4 || a == 6) ? 1 : irandom_range(1, 2));
+		
+		global.crystal_heart_area	 = a;
+		global.crystal_heart_subarea = s;
+	}
+	else{
+		global.crystal_heart_area	 = null;
+		global.crystal_heart_subarea = null;
+	}
+	
 #define level_start // game_start but every level
 	var	_spawnX = 10016,
 		_spawnY = 10016,
@@ -183,8 +208,9 @@
 		}
 	}
 	
+	/*
 	 // Cool Vault Statues:
-	/*with(ProtoStatue) with(floor_get(x, y)){
+	with(ProtoStatue) with(floor_get(x, y)){
 		var o = 32;
 		for(var h = -1; h <= 1; h++) for(var v = -1; v <= 1; v++){
 			with(floor_get(x + (h * o), y + (v * o))){
@@ -192,7 +218,8 @@
 				image_index	 = ((h + 1) * 3) + (v + 1);
 			}
 		}
-	}*/
+	}
+	*/
 	
 	 // Backpack Setpieces:
 	var	_canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
@@ -224,6 +251,13 @@
 		 // Red Crown:
 		if(crown_current == "red"){
 			_heartNum += (GameCont.subarea == 1) + chance(1, 5);
+		}
+		
+		 // Guaranteed Spawn:
+		if(GameCont.loops <= 0){
+			if(GameCont.area == global.crystal_heart_area && GameCont.subarea == global.crystal_heart_subarea){
+				_heartNum++;
+			}
 		}
 		
 		 // Spawn:
@@ -315,6 +349,9 @@
 			with(BonePileNight) if(chance(1, 3)){
 				instance_delete(id);
 			}
+			
+			 // Guarantee Crystal Heart Spawn Next Run:
+			global.crystal_heart_guarantee = true;
 			
 			break;
 			
