@@ -10,7 +10,7 @@
 #define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap   return sndSwapExplosive;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return unlock_get("oasisWep");
+#define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded
 	var	l = 14,

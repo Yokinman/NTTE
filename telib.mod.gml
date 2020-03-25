@@ -16,7 +16,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TeleportFX", "VlasmaBullet"]
+		"tecaves"     : ["CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "VlasmaBullet", "WarpPortal"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -751,10 +751,10 @@
 	image_xscale *= right;
 	draw_self(); // This is faster than draw_sprite_ext yea
 	image_xscale /= right;
-
+	
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)
 	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
-
+	
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
 	var	_sx = _x,
 		_sy = _y,
@@ -763,21 +763,21 @@
 		_md = _maxDistance,
 		d = _md,
 		m = 0; // Minor hitscan increment distance
-
+		
 	while(d > 0){
 		 // Major Hitscan Mode (Start at max, go back until no collision line):
 		if(m <= 0){
 			_lx = _sx + lengthdir_x(d, _dir);
 			_ly = _sy + lengthdir_y(d, _dir);
 			d -= sqrt(_md);
-
+			
 			 // Enter minor hitscan mode:
 			if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
 				m = 2;
 				d = sqrt(_md);
 			}
 		}
-
+		
 		 // Minor Hitscan Mode (Move until collision):
 		else{
 			if(position_meeting(_lx, _ly, Wall)) break;
@@ -786,11 +786,11 @@
 			d -= m;
 		}
 	}
-
+	
 	draw_line_width(_sx, _sy, _lx, _ly, _width);
-
+	
 	return [_lx, _ly];
-
+	
 #define draw_text_bn(_x, _y, _string, _angle)
 	var _col = draw_get_color();
 	_string = string_upper(_string);
@@ -977,7 +977,7 @@
 	}
 	
 	return instance_exists(target);
-
+	
 #define chance(_numer, _denom)
 	return random(_denom) < _numer;
 
@@ -1100,16 +1100,16 @@
 	
 	lq_set(_save, _path[array_length(_path) - 1], _value);
 	
-#define option_get(_name, _default)
+#define option_get(_name)
 	/*
 		Returns the value associated with a given option's name
-		Returns the given default value if nothing was found
+		Returns 1 if nothing was found
 		
 		Ex:
 			option_get("allowShaders")
 	*/
 	
-	return save_get("option:" + _name, _default);
+	return save_get("option:" + _name, 1);
 	
 #define option_set(_name, _value)
 	/*
@@ -1130,7 +1130,20 @@
 			stat_get("time")
 	*/
 	
-	return save_get("stat:" + _name, 0);
+	var _default = 0;
+	
+	 // Old Stat Names:
+	switch(_name){
+		case "race:parrot:best:area": _default = stat_get("race:parrot:bestArea"); break;
+		case "race:parrot:best:kill": _default = stat_get("race:parrot:bestKill"); break;
+		
+		default:
+			if(string_pos("found:", _name) == 1){
+				_default = unlock_get(string_replace(_name, ":", "(") + ")");
+			}
+	}
+	
+	return save_get("stat:" + _name, _default);
 	
 #define stat_set(_name, _value)
 	/*
@@ -1148,88 +1161,136 @@
 		Returns 'false' if nothing was found
 		
 		Ex:
-			unlock_get("parrot")
+			unlock_get("race:parrot")
 	*/
 	
-	return save_get("unlock:" + _name, false);
+	var _default = false;
+	
+	 // Old Unlock Names:
+	switch(_name){
+		case "race:parrot"         : _default = unlock_get("parrot");     break;
+		case "skin:parrot:1"       : _default = unlock_get("parrotB");    break;
+		case "pack:coast"          : _default = unlock_get("coastWep");   break;
+		case "pack:oasis"          : _default = unlock_get("oasisWep");   break;
+		case "pack:trench"         : _default = unlock_get("trenchWep");  break;
+		case "pack:lair"           : _default = unlock_get("lairWep");    break;
+		case "crown:crime"         : _default = unlock_get("lairCrown");  break;
+		case "loadout:crown:crime" : _default = unlock_get("crownCrime"); break;
+		case "wep:trident"         : _default = unlock_get("trident");    break;
+		case "wep:scythe"          : _default = unlock_get("boneScythe"); break;
+	}
+	
+	return save_get("unlock:" + _name, _default);
 	
 #define unlock_set(_name, _value)
 	/*
 		Sets the given unlock to the given value
-		Returns 'false' if the unlock was already equal to the given value, 'true' if not
-		If the given value is equivalent to 'true' and it was not already equal to the given value, unlock effects are played
+		Plays unlock FX if the given value isn't already equal to the the unlock's value
+		Returns 'true' if it plays unlock FX, 'false' otherwise
 		
+		Layout:
+			pack    : Unlocks multiple things
+			race    : Unlocks a character
+			skin    : Unlocks a skin
+			wep     : Unlocks a weapon
+			crown   : Unlocks a crown (to appear in the crown vault)
+			loadout : Unlocks an item on the loadout menu
+			
 		Ex:
-			unlock_set("parrot", true)
-			unlock_set("coolWeapon", false)
+			unlock_set("pack:lair", true)
+			unlock_set("race:parrot", true)
+			unlock_set("skin:red crystal", true) // for skin mods
+			unlock_set("skin:parrot:1", true)    // for race mods
+			unlock_set("crown:crime", true)
+			unlock_set("loadout:crown:crime", true)
 	*/
 	
 	if(unlock_get(_name) != _value){
 		save_set("unlock:" + _name, _value);
 		
 		 // Unlock FX:
-		if(!is_real(_value) || _value){
-			var	_unlockName = unlock_get_name(_name),
-				_unlockText = unlock_get_text(_name);
+		var _unlockName = unlock_get_name(_name);
+		if(_unlockName != ""){
+			var	_unlocked = (!is_real(_value) || _value),
+				_unlockText = (_unlocked ? unlock_get_text(_name) : "LOCKED"),
+				_unlockSprite = -1,
+				_unlockSound = -1,
+				_split = string_split(_name, ":");
 				
-			 // General Unlocks:
-			var _type = {
-				"race" : ["parrot", "bee"],
-				"skin" : ["parrotB", "beeB"],
-				"pack" : ["coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown"],
-				"weps" : ["boneScythe"]
-			};
-			for(var i = 0; i < lq_size(_type); i++){
-				var	_packName = lq_get_key(_type, i),
-					_pack = lq_get_value(_type, i);
+			 // Type-Specifics:
+			if(array_length(_split) >= 2){
+				switch(_split[0]){
 					
-				if(array_exists(_pack, _name)){
-					switch(_packName){
-						case "race":
-							unlock_splat(
-								_unlockName,
-								_unlockText,
-								mod_script_call("race", _name, "race_portrait", 0, 0),
-								mod_script_call("race", _name, "race_menu_confirm")
-							);
-							sound_play_pitchvol(sndGoldUnlock, 0.9, 0.9);
-							break;
+					case "pack": // PACK
+						
+						sound_play(_unlocked ? sndGoldUnlock : sndCursedChest);
+						
+						break;
+						
+					case "race": // CHARACTER
+						
+						sound_play_pitchvol(_unlocked ? sndGoldUnlock : sndCursedChest, 0.9, 0.9);
+						
+						if(_unlocked){
+							var _race = _split[1];
+							_unlockSprite = mod_script_call("race", _race, "race_portrait", 0, 0);
+							_unlockSound  = mod_script_call("race", _race, "race_menu_confirm");
+						}
+						
+						break;
+						
+					case "skin": // SKIN
+						
+						sound_play(_unlocked ? sndMenuBSkin : sndMenuASkin);
+						
+						if(_unlocked){
+							var	_race = "",
+								_skin = _split[1];
 							
-						case "skin":
-							var	_race = string_copy(_name, 1, string_length(_name) - 1),
-								_skin = ord(string_char_at(_name, string_length(_name))) - 65;
-								
-							with(unlock_splat(
-								_unlockName,
-								_unlockText,
-								mod_script_call("race", _race, "race_portrait", 0, _skin),
-								mod_script_call("race", _race, "race_menu_confirm")
-							)){
-								nam[0] += "-SKIN";
+							 // Race Mod:
+							if(array_length(_split) > 2){
+								_race = _skin;
+								_skin = real(_split[2]);
+								_unlockSprite = mod_script_call("race", _race, "race_portrait", 0, _skin);
 							}
-							sound_play(sndMenuBSkin);
-							break;
 							
-						case "pack":
-							unlock_splat(_unlockName, _unlockText, -1, -1);
-							sound_play(sndGoldUnlock);
-							break;
+							 // Skin Mod:
+							else if(mod_exists("skin", _skin)){
+								_race = mod_script_call("skin", _skin, "skin_race");
+								_unlockSprite = mod_script_call("skin", _skin, "skin_portrait", 0);
+							}
 							
-						default:
-							unlock_splat(_unlockName, _unlockText, -1, -1);
-					}
+							 // Sound:
+							_unlockSound = mod_script_call("race", _race, "race_menu_confirm");
+						}
+						
+						break;
+						
+					case "loadout": // LOADOUT
+						
+						if(_split[1] == "wep"){
+							sound_play(_unlocked ? sndGoldUnlock : sndCursedChest);
+						}
+						
+						break;
+						
 				}
 			}
+			if(!is_real(_unlockSprite)) _unlockSprite = -1;
+			if(!is_real(_unlockSound)) _unlockSound = -1;
 			
-			 // Loadout Unlocks:
-			var _split = string_split(_name, ":");
-			if(_split[0] == "loadout" && array_length(_split) > 1){
-				unlock_splat(_unlockName, _unlockText, -1, -1);
+			 // Splat:
+			with(unlock_splat(_unlockName, _unlockText, _unlockSprite, _unlockSound)){
+				 // Append "-SKIN" to GameOver Splat:
+				if(array_length(_split) >= 2 && _split[1] == "skin"){
+					with(_unlockSplat){
+						nam[0] += "-SKIN";
+					}
+				}
 				
-				switch(_split[1]){
-					case "wep":
-						sound_play(sndGoldUnlock);
-						break;
+				 // UNLOCKED:
+				if(is_real(_value) && _value){
+					nam[0] += " UNLOCKED";
 				}
 			}
 		}
@@ -1244,65 +1305,197 @@
 		Returns the title associated with a given unlock's corner splat
 	*/
 	
-	 // Loadout Unlock:
-	var _split = string_split(_name, ":");
-	if(_split[0] == "loadout" && array_length(_split) > 1){
-		if(array_length(_split) > 2){
-			switch(_split[1]){
-				case "wep"  : return weapon_get_name(unlock_get(_name));
-				case "crown": return crown_get_name(_split[2]) + "@s UNLOCKED";
-			}
-		}
-		return "";
-	}
-	
-	 // General Unlock:
+	 // Specific:
 	switch(_name){
-		case "coastWep"  : return "BEACH GUNS UNLOCKED";
-		case "oasisWep"  : return "BUBBLE GUNS UNLOCKED";
-		case "trenchWep" : return "TECH GUNS UNLOCKED";
-		case "lairWep"   : return "SAWBLADE GUNS UNLOCKED";
-		case "lairCrown" : return crown_get_name("crime") + " UNLOCKED";
-		case "boneScythe": return weapon_get_name("scythe") + " UNLOCKED";
-		case "redSkin"	 : return "RED CRYSTAL SKIN UNLOCKED";
+		case "skin:red crystal": return "RED CRYSTAL";
 	}
 	
-	 // Default (Split Name by Capitalization):
-	var _split = [];
-	for(var i = 1; i <= string_length(_name); i++){
-		var c = string_char_at(_name, i);
-		if(i == 1 || string_lower(c) != c) array_push(_split, "");
-		_split[array_length(_split) - 1] += string_upper(c);
+	 // General:
+	var _split = string_split(_name, ":");
+	
+	if(array_length(_split) >= 2){
+		switch(_split[0]){
+			
+			case "pack": // PACK
+				
+				var _pack = _split[1];
+				
+				switch(_pack){
+					case "coast"  : return "BEACH GUNS";
+					case "oasis"  : return "BUBBLE GUNS";
+					case "trench" : return "TECH GUNS";
+					case "lair"   : return "SAWBLADE GUNS";
+				}
+					
+				return _pack;
+				
+			case "race": // CHARACTER
+				
+				return race_get_title(_split[1]);
+				
+			case "skin": // SKIN
+				
+				var	_race = "",
+					_skin = _split[1];
+					
+				 // Race Mod:
+				if(array_length(_split) > 2){
+					_race = _skin;
+					_skin = real(_split[2]);
+				}
+				
+				 // Skin Mod:
+				else if(mod_exists("skin", _skin)){
+					_race = mod_script_call("skin", _skin, "skin_race");
+				}
+				
+				 // Get Unlock Name:
+				var _skinName = race_get_title(_race) + " " + string_upper(skin_get_name(_race, _skin));
+				if(string_delete(_skinName, 1, string_length(_skinName) - 4) != "SKIN"){
+					_skinName += " SKIN";
+				}
+				
+				return _skinName;
+				
+			case "wep": // WEAPON
+				
+				return weapon_get_name(_split[1]);
+				
+			case "crown": // CROWN
+				
+				return crown_get_name(_split[1]);
+				
+			case "loadout": // LOADOUT
+				
+				switch(_split[1]){
+					
+					case "wep":
+						
+						return weapon_get_name(unlock_get(_name));
+						
+					case "crown":
+						
+						if(array_length(_split) > 2){
+							return crown_get_name(_split[2]) + "@s";
+						}
+						
+						break;
+						
+				}
+				
+				break;
+				
+		}
 	}
-	return array_join(_split, " ");
+	
+	return "";
 	
 #define unlock_get_text(_name)
 	/*
 		Returns the description associated with a given unlock's corner splat
 	*/
 	
-	 // Loadout Unlock:
 	var _split = string_split(_name, ":");
-	if(_split[0] == "loadout" && array_length(_split) > 1){
-		switch(_split[1]){
-			case "wep"  : return "STORED!";
-			case "crown": return "FOR @wEVERYONE";
-		}
-	}
 	
-	 // General Unlock:
-	switch(_name){
-		case "parrot"    : return "FOR REACHING COAST";
-		case "parrotB"   : return "FOR BEATING THE AQUATIC ROUTE";
-		case "bee"       : return "???";
-		case "beeB"      : return "???";
-		case "coastWep"  : return "GRAB YOUR FRIENDS";
-		case "oasisWep"  : return "SOAP AND WATER";
-		case "trenchWep" : return "TERRORS FROM THE DEEP";
-		case "lairWep"   : return "DEVICES OF TORTURE";
-		case "lairCrown" : return "STOLEN FROM THIEVES";
-		case "boneScythe": return "A PACKAGE DEAL";
-		case "redSkin"	 : return `FOR REACHING @(color:${make_color_rgb(235, 0, 67)})???`;
+	if(array_length(_split) >= 2){
+		switch(_split[0]){
+			
+			case "pack": // PACK
+				
+				switch(_split[1]){
+					case "coast"  : return "GRAB YOUR FRIENDS";
+					case "oasis"  : return "SOAP AND WATER";
+					case "trench" : return "TERRORS FROM THE DEEP";
+					case "lair"   : return "DEVICES OF TORTURE";
+				}
+				
+				break;
+				
+			case "race": // CHARACTER
+				
+				var	_race = _split[1],
+					_text = mod_script_call("race", _race, "race_unlock");
+					
+				 // Loading Tip:
+				if(!is_string(_text)){
+					_text = mod_script_call("skin", _race, "race_ttip");
+				}
+				
+				if(is_string(_text)){
+					return _text;
+				}
+				
+				break;
+				
+			case "skin": // SKIN
+				
+				var	_skin = _split[1],
+					_text = "";
+					
+				 // Race Mod:
+				if(array_length(_split) > 2){
+					var _race = _skin;
+					_skin = real(_split[2]);
+					_text = mod_script_call("race", _race, "race_skin_unlock", _skin);
+				}
+				
+				 // Skin Mod:
+				else if(mod_exists("skin", _skin)){
+					_text = mod_script_call("skin", _skin, "skin_unlock");
+					
+					 // Loading Tip:
+					if(!is_string(_text)){
+						_text = mod_script_call("skin", _skin, "skin_ttip");
+					}
+				}
+				
+				if(is_string(_text)){
+					return _text;
+				}
+				
+				break;
+				
+			case "wep": // WEAPON
+				
+				var	_wep = _split[1],
+					_text = mod_script_call("weapon", _wep, "weapon_unlock", _wep);
+					
+				 // Loading Tip:
+				if(!is_string(_text)){
+					_text = mod_script_call("weapon", _wep, "weapon_text", _wep);
+				}
+				
+				if(is_string(_text)){
+					return _text;
+				}
+				
+				break;
+				
+			case "crown": // CROWN
+				
+				var	_crown = _split[1],
+					_text = mod_script_call("crown", _crown, "crown_unlock");
+				
+				 // Loading Tip:
+				if(!is_string(_text)){
+					_text = mod_script_call("weapon", _crown, "crown_tip");
+				}
+				
+				if(is_string(_text)){
+					return _text;
+				}
+				
+				break;
+				
+			case "loadout": // LOADOUT
+				
+				switch(_split[1]){
+					case "wep"   : return "STORED!";
+					case "crown" : return "FOR @w" + ((array_length(_split) > 3) ? race_get_title(_split[3]) : "EVERYONE");
+				}
+				
+				break;
+		}
 	}
 	
 	return "";
@@ -2108,7 +2301,7 @@
 			current_time_scale = _cts;
 			
 			 // Outlines:
-			var _option = option_get("outlineCharm", 2);
+			var _option = option_get("outlineCharm");
 			if(_option > 0){
 				if(_option < 2 || player_get_outlines(player_find_local_nonsync())){
 					draw_set_fog(true, player_get_color(_index), 0, 0);
@@ -2184,7 +2377,7 @@
 	if(delay > 0){
 		delay -= current_time_scale;
 		
-		var	_option = option_get("intros", 2),
+		var	_option = option_get("intros"),
 			_introLast = UberCont.opt_bossintros;
 
 		if(_option < 2) UberCont.opt_bossintros = !!_option;
@@ -2294,7 +2487,11 @@
 	swapmove = true;
 	clicked = false;
 	
-#define portal_poof()  // Get Rid of Portals (but make it look cool)
+#define portal_poof()
+	/*
+		Get rid of portals, but make it look cool
+	*/
+	
 	if(
 		instance_exists(Portal) &&
 		array_length(instances_matching_gt(instances_matching_gt(instances_matching_ne(Portal, "type", 2), "endgame", 0), "image_alpha", 0)) >= instance_number(Portal)
@@ -2380,7 +2577,11 @@
 		}
 	}
 
-#define orandom(n) // For offsets
+#define orandom(n)
+	/*
+		For offsets
+	*/
+	
 	return random_range(-n, n);
 	
 #define pfloor(_num, _precision)
@@ -2687,11 +2888,11 @@
 		if(!instance_exists(menubutton) || _index == player_find_local_nonsync()){
 			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
 				_y = view_yview_nonsync + 21;
-
+				
 			var _active = 0;
 			for(var i = 0; i < maxp; i++) _active += player_is_active(i);
 			if(_active > 1) _x -= 19;
-
+			
 			 // Determine Color:
 			var _col = "w";
 			if(is_real(_ammo)){
@@ -2705,7 +2906,7 @@
 				}
 				else _col = "d";
 			}
-
+			
 			 // !!!
 			draw_set_halign(fa_left);
 			draw_set_valign(fa_top);
@@ -2714,10 +2915,10 @@
 			draw_reset_projection();
 		}
 	}
-
+	
 #define frame_active(_interval)
 	return ((current_frame % _interval) < current_time_scale);
-
+	
 #define skill_get_icon(_skill)
 	/*
 		Returns an array containing the [sprite_index, image_index] of a mutation's HUD icon
@@ -4099,7 +4300,7 @@
 		 // TopSmalls:
 		wall_tops();
 	}
-
+	
 #define instance_budge(_objAvoid, _disMax)
 	var	_isArray = is_array(_objAvoid),
 		_canWall = (!place_meeting(x, y, Floor) || (_isArray ? array_exists(_objAvoid, Wall) : (_objAvoid == Wall)));
@@ -4673,6 +4874,57 @@
 	 // Normal:
 	return race_get_alias(_id);
 	
+#define race_get_skin_list(_race)
+	/*
+		Returns a list of a given race's skins
+	*/
+	
+	var _num = 1;
+	
+	switch(race_get_id(_race)){
+		case char_fish:
+		case char_crystal:
+		case char_eyes:
+		case char_melting:
+		case char_plant:
+		case char_steroids:
+		case char_chicken:
+		case char_rebel:
+		case char_horror:
+		case char_rogue:
+		case char_skeleton:
+			_num = 2;
+			break;
+			
+		case char_venuz:
+		case char_robot:
+			_num = 3;
+			break;
+			
+		default: // CUSTOM
+			if(is_string(_race)){
+				var _skins = mod_script_call("race", _race, "race_skins");
+				if(is_real(_skins)){
+					_num = _skins;
+				}
+			}
+	}
+	
+	 // Add Normal Skins to List:
+	var _list = array_create(_num, 0);
+	for(var i = 0; i < array_length(_list); i++){
+		_list[i] = i;
+	}
+	
+	 // Add Skin Mods to List:
+	with(mod_get_names("skin")){
+		if(race_get_id(mod_script_call("skin", self, "skin_race")) == race_get_id(_race)){
+			array_push(_list, self);
+		}
+	}
+	
+	return _list;
+	
 #define skin_get_sprite(_skin, _sprite)
 	/*
 		Returns a given skin's variant of a given sprite
@@ -4801,6 +5053,31 @@
 	}
 	
 	return sprite_skin(_skin, _sprite);
+	
+#define skin_get_name(_race, _skin)
+	/*
+		Returns the name of a race's skin as it appears on the loadout menu
+	*/
+	
+	 // Modded Skin:
+	if(is_string(_skin)){
+		var _name = mod_script_call("skin", _skin, "skin_name", true);
+		if(is_string(_name)){
+			return _name;
+		}
+	}
+	
+	 // Modded Race:
+	else if(is_string(_race)){
+		var _name = mod_script_call("race", _race, "race_skin_name", _skin);
+		if(is_string(_name)){
+			return _name;
+		}
+	}
+	
+	 // Default:
+	var _skinList = race_get_skin_list(_race);
+	return chr(ord("A") + max(0, array_find_index(_skinList, _skin))) + " SKIN";
 	
 #define pet_create(_x, _y, _name, _modType, _modName)
 	with(obj_create(_x, _y, "Pet")){
@@ -5502,18 +5779,18 @@
 			var	_name = lq_get_key(global.lag, i),
 				_total = string(lq_get_value(global.lag, i).total),
 				_str = "";
-
+				
 			while(string_length(_total) > 0){
 				var p = string_length(_total) - 3;
 				_str = string_delete(_total, 1, p) + " " + _str;
 				_total = string_copy(_total, 1, p);
 			}
-
+			
 			trace(_name + ":", _str + "us");
 		}
 	}
 	global.lag = {};
-
+	
 #define trace_lag_bgn(_name)
 	_name = string(_name);
 	if(!lq_exists(global.lag, _name)){
@@ -5525,14 +5802,14 @@
 	with(lq_get(global.lag, _name)){
 		timer = get_timer_nonsync();
 	}
-
+	
 #define trace_lag_end(_name)
 	var _timer = get_timer_nonsync();
 	with(lq_get(global.lag, string(_name))){
 		total += (_timer - timer);
 		timer = _timer;
 	}
-
+	
 #define player_create(_x, _y, _index)
 	/*
 		Creates a Player of the given index at the given coordinates
@@ -5993,79 +6270,3 @@
 	if(array_length(_newInst) <= 0) return noone;
 	return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
 	
-#define teevent_add(_event)
-	/*
-		Adds a given event script reference to the list of events
-		If the given event is a string then a script reference is automatically generated for teevents.mod
-		
-		Ex:
-			teevent_add(script_ref_create_ext("mod", "teevents", "MaggotPark"));
-			teevent_add("MaggotPark");
-	*/
-	
-	var	_list = mod_variable_get("mod", "teevents", "event_list"),
-		_scrt = (is_array(_event) ? _event : script_ref_create_ext("mod", "teevents", _event));
-		
-	array_push(_list, _scrt);
-	
-	return _scrt;
-	
-#define teevent_set_active(_name, _active)
-	/*
-		Activates or deactivates a given event
-	*/
-	
-	var _inst = instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name);
-	
-	 // Activate:
-	if(_active){
-		if(array_length(_inst) > 0){
-			return _inst[0];
-		}
-		else{
-			var	_x = 10016,
-				_y = 10016;
-				
-			with(GenCont){
-				_x = spawn_x;
-				_y = spawn_y;
-			}
-			with(instance_nearest(_x, _y, Player)){
-				_x = x;
-				_y = y;
-			}
-			
-			with(instance_create(_x, _y, CustomObject)){
-				name = "NTTEEvent";
-				mod_type = "mod";
-				mod_name = "teevents";
-				event = _name;
-				floors = [];
-				
-				 // Tip:
-				tip = mod_script_call("mod", "teevents", _name + "_text");
-				if(is_string(tip) && tip != ""){
-					with(instances_matching(GenCont, "tip_ntte_event", null)){
-						tip_ntte_event = "@w" + other.tip;
-						tip = tip_ntte_event;
-					}
-				}
-				
-				return id;
-			}
-		}
-	}
-	
-	 // Deactivate:
-	else with(_inst){
-		instance_destroy();
-	}
-	
-	return noone;
-	
-#define teevent_get_active(_name)
-	/*
-		Returns if a given NTTE event is active or not
-	*/
-	
-	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);

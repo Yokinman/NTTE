@@ -21,7 +21,7 @@
 #define weapon_area   return (weapon_avail() ? 11 : -1); // 5-2
 #define weapon_melee  return false;
 #define weapon_swap   return sndSwapShotgun;
-#define weapon_avail  return unlock_get("lairWep");
+#define weapon_avail  return unlock_get("pack:lair");
 
 #define weapon_auto(w)
 	if(is_object(w) && w.ammo < w.cost) return -1;

@@ -1,10 +1,13 @@
 #define chat_command(_cmd, _arg, _ind)
 	switch(_cmd){
 		case "charm":
+			
 			mod_script_call_nc("mod", "telib", "charm_instance", instance_create(mouse_x[_ind], mouse_y[_ind], asset_get_index(_arg)), true);
+			
 			return true;
 			
 		case "debuglag":
+			
 			var _mod = [];
 			if(_arg != ""){
 				var	p = 0;
@@ -50,40 +53,69 @@
 			return true;
 			
 		case "loadblock":
+			
 			scriptblock_file_load("scripts/" + _arg + ".txt");
+			
 			return true;
 			
 		case "pet":
+			
 			mod_script_call_nc("mod", "telib", "pet_spawn", mouse_x[_ind], mouse_y[_ind], _arg);
+			
 			return true;
 			
 		case "top":
+			
 			mod_script_call_nc("mod", "telib", "top_create", mouse_x[_ind], mouse_y[_ind], (object_exists(asset_get_index(_arg)) ? asset_get_index(_arg) : _arg), 0, 0);
+			
 			return true;
 			
-		case "unlockall":
-		case "unlockreset":
-			var _unlock = (_cmd == "unlockall");
+		case "unlock":
 			
+			var	_argSplit = string_split(_arg, "="),
+				_name = string_trim(_argSplit[0]),
+				_all = (_name == ""),
+				_value = ((array_length(_argSplit) > 1 || _all) ? json_decode((array_length(_argSplit) > 1) ? _argSplit[1] : "") : !mod_script_call_nc("mod", "telib", "unlock_get", _name));
+				
+			if(_value == json_error){
+				if(_all){
+					_value = false;
+					with(global.unlock){
+						var _unlock = mod_script_call_nc("mod", "telib", "unlock_get", self);
+						if(is_real(_unlock) && !_unlock){
+							_value = true;
+							break;
+						}
+					}
+				}
+				else _value = real(_argSplit[1]);
+			}
+			else if(_value == json_true) _value = true;
+			else if(_value == json_false) _value = false;
+			
+			 // Sound:
+			sound_play((!is_real(_value) || _value) ? sndGoldChest : sndCursedChest);
+			
+			 // Set Unlock(s):
+			if(_all){
+				with(global.unlock){
+					if(is_real(mod_script_call_nc("mod", "telib", "unlock_get", self))){
+						mod_script_call_nc("mod", "telib", "save_set", "unlock:" + self, _value);
+					}
+				}
+				mod_script_call_nc("mod", "telib", "unlock_splat", "EVERYTHING " + (_value ? "UNLOCKED" : "@rLOCKED"), (_value ? "THIS IS SO EPIC" : "BRO WTF"), -1, -1);
+			}
+			else mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+			
+			 // Update:
 			with(global.unlock){
-				mod_script_call_nc("mod", "telib", "unlock_set", self, _unlock);
-				chat_comp_add_arg("unlocktoggle", 0, self, (_unlock ? "UNLOCKED" : "LOCKED"));
+				chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "telib", "unlock_get", self)));
 			}
 			
-			mod_script_call_nc("mod", "telib", "unlock_splat", "", "@wEVERYTHING " + (_unlock ? "@gUNLOCKED" : "@rLOCKED"), -1, -1);
-			sound_play(_unlock ? sndGoldUnlock : sndCursedChest);
-			return true;
-			
-		case "unlocktoggle":
-			if(!mod_script_call_nc("mod", "telib", "unlock_call", _arg)){
-				mod_script_call_nc("mod", "telib", "unlock_set", _arg, false);
-				mod_script_call_nc("mod", "telib", "unlock_splat", "", "@w" + _arg + " @rLOCKED", -1, -1);
-				sound_play(sndCursedChest);
-			}
-			chat_comp_add_arg("unlocktoggle", 0, _arg, (mod_script_call_nc("mod", "telib", "unlock_get", _arg) ? "UNLOCKED" : "LOCKED"));
 			return true;
 			
 		case "wepmerge":
+			
 			var	a = string_split(_arg, "/"),
 				w = wep_none;
 				
@@ -98,6 +130,7 @@
 				wep = w;
 				ammo = true;
 			}
+			
 			return true;
 	}
 	
@@ -124,18 +157,46 @@
 	
 	 // Pets:
 	chat_comp_add("pet", "(name)", "name of pet");
-	with(["Scorpion", "Parrot", "CoolGuy", "Salamander", "Mimic", "Slaughter", "Octo", "Spider", "Prism", "Weapon", "Orchid"]){
+	with(["Scorpion", "Parrot", "CoolGuy", "Salamander", "Mimic", "Slaughter", "Octo", "Spider", "Prism", "Orchid", "Weapon"]){
 		chat_comp_add_arg("pet", 0, self);
 	}
 	
 	 // Unlocks:
-	global.unlock = ["parrot", "parrotB", "bee", "beeB", "coastWep", "oasisWep", "trenchWep", "lairWep", "lairCrown", "boneScythe", "crownCrime", "redSkin"];
-	chat_comp_add("unlocktoggle", "(unlock name)", "toggle an unlock");
-	with(global.unlock){
-		chat_comp_add_arg("unlocktoggle", 0, self, (mod_script_call_nc("mod", "telib", "unlock_get", self) ? "UNLOCKED" : "LOCKED"));
+	global.unlock = [
+		"pack:coast",
+		"pack:oasis",
+		"pack:trench",
+		"pack:lair",
+		
+		"race:parrot",
+		"race:bee",
+		
+		"skin:parrot:1",
+		"skin:bee:1",
+		"skin:red crystal",
+		
+		"wep:scythe",
+		"wep:trident",
+		
+		"crown:crime",
+		
+		"loadout:crown:crime",
+		"loadout:crown:bonus",
+		"loadout:crown:red"
+	];
+	with([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "parrot", "bee"]){
+		array_push(global.unlock, `loadout:wep:${race_get_name(self)}:main`);
 	}
-	chat_comp_add("unlockall");
-	chat_comp_add("unlockreset");
+	chat_comp_add("unlock", "(name)", "=", "(value)", "leave name blank for all, value blank to toggle");
+	chat_comp_add_arg("unlock", 2, "0");
+	chat_comp_add_arg("unlock", 2, "1");
+	if(fork()){
+		while(!mod_exists("mod", "telib")) wait 0;
+		with(global.unlock){
+			chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "telib", "unlock_get", self)));
+		}
+		exit;
+	}
 	
 	 // Weapon Merging:
 	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");

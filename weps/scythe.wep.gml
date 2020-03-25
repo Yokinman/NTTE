@@ -77,13 +77,14 @@
 	return lq_defget(wepModes[_index], _name, false);
 	
 #define weapon_name   return (weapon_avail() ? scrWepModeInfo(argument0, "name") : "LOCKED");
-#define weapon_text   return choose("@rreassembled", "@gradiation@s deteriorates @wbones", "@wmarrow @sfrom a hundred @gmutants");
+#define weapon_text   return choose("@rREASSEMBLED", "@gRADIATION@s DETERIORATES @wBONES", "@wMARROW @sFROM A HUNDRED @gMUTANTS");
 #define weapon_type   return 0; // Melee
 #define weapon_area   return (weapon_avail() ? 18 : -1); // 1-2 L1
 #define weapon_load   return scrWepModeInfo(argument0, "load");
 #define weapon_melee  return scrWepModeInfo(argument0, "mele");
 #define weapon_swap   return sndBloodGamble;
-#define weapon_avail  return unlock_get("boneScythe");
+#define weapon_avail  return unlock_get("wep:" + mod_current);
+#define weapon_unlock return "A PACKAGE DEAL";
 
 #define weapon_auto(w)
 	if(lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1) || variable_instance_get(self, "infammo", 0) != 0){

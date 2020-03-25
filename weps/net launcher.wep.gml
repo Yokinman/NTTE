@@ -11,7 +11,7 @@
 #define weapon_swap         return sndSwapExplosive;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_laser_sight  return false; // wtf why isnt this just called weapon_lasr/weapon_laser/weapon_sight
-#define weapon_avail        return unlock_get("coastWep");
+#define weapon_avail        return unlock_get("pack:coast");
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);

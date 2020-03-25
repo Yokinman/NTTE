@@ -22,11 +22,12 @@
 /// General
 #define race_name            return "PARROT";
 #define race_text            return "MANY FRIENDS#@rCHARM ENEMIES";
-#define race_lock            return "REACH @1(sprInterfaceIcons)1-1";
+#define race_lock            return "REACH " + area_get_name("coast", 1, 0);
+#define race_unlock          return "FOR REACHING COAST";
 #define race_tb_text         return "@wPICKUPS @sGIVE @rFEATHERS@s";
 #define race_portrait(p, b)  return race_sprite_raw("Portrait", b);
 #define race_mapicon(p, b)   return race_sprite_raw("Map",      b);
-#define race_avail           return unlock_get(mod_current);
+#define race_avail           return unlock_get("race:" + mod_current);
 
 #define race_ttip
 	 // Ultra:
@@ -152,7 +153,9 @@
 	}
 	else{ // Fix co-op bugginess
 		var n = 1;
-		while(unlock_get(mod_current + chr(65 + n))) n++;
+		while(unlock_get(`skin:${mod_current}:${n}`)){
+			n++;
+		}
 		return n;
 	}
 
@@ -161,7 +164,7 @@
 	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
 	if(_playersActive <= 1){
 		if(_skin == 0) return true;
-		return unlock_get(mod_current + chr(65 + real(_skin)));
+		return unlock_get(`skin:${mod_current}:${_skin}`);
 	}
 	else{ // Fix co-op bugginess
 		return true;
@@ -171,9 +174,19 @@
 	if(race_skin_avail(_skin)){
 		return chr(65 + _skin) + " SKIN";
 	}
-	else switch(_skin){
+	else{
+		return race_skin_lock(_skin);
+	}
+	
+#define race_skin_lock(_skin)
+	switch(_skin){
 		case 0: return "EDIT THE SAVE FILE LMAO";
 		case 1: return "COMPLETE THE#AQUATIC ROUTE";
+	}
+	
+#define race_skin_unlock(_skin)
+	switch(_skin){
+		case 1: return "FOR BEATING THE AQUATIC ROUTE";
 	}
 	
 #define race_skin_button(_skin)
@@ -280,7 +293,7 @@
 	
 #define create
 	 // Random lets you play locked characters: (Can remove once 9941+ gets stable build)
-	if(!unlock_get(mod_current)){
+	if(!race_avail()){
 		race = "fish";
 		player_set_race(index, race);
 		exit;
@@ -639,13 +652,12 @@
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -734,8 +746,6 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

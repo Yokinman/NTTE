@@ -50,8 +50,8 @@
 #macro surfSwim     global.surfSwim
 #macro surfSwimBot  global.surfSwimBot
 #macro surfSwimTop  global.surfSwimTop
-#macro surfScale    (1/3 + (2/3 * option_get("waterQualityMain", 1)))
-#macro surfScaleTop (1/2 + (1/2 * option_get("waterQualityTop", 1)))
+#macro surfScale    1/3 + (2/3 * option_get("waterQualityMain"))
+#macro surfScaleTop 1/2 + (1/2 * option_get("waterQualityTop"))
 
 #macro WadeColor make_color_rgb(44, 37, 122)
 
@@ -185,7 +185,7 @@
 	}
 	
 	 // Secret:
-	if(chance(1, 80) && variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
+	if(chance(1, 40) && variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(WeaponChest)){
 			var	l = 64,
 				d = random(360);
@@ -255,7 +255,7 @@
 	}
 	
 	 // who's that bird?
-	unlock_set("parrot", true);
+	unlock_set("race:parrot", true);
 	
 	 // Reset Surfaces:
 	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
@@ -394,7 +394,7 @@
 				if(DebugLag) trace_time();
 				
 				var	_charmShader = shadlist_get("Charm"),
-					_charmOption = option_get("outlineCharm", 2),
+					_charmOption = option_get("outlineCharm"),
 					_charmCanOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
 					
 				with(other){
@@ -1451,13 +1451,12 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -1546,8 +1545,6 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

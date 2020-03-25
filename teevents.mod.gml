@@ -490,7 +490,7 @@
 
 #define GatorDen_text    return `@(color:${tipCol})DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
-#define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("lairCrown") ? 1/5 : 0));
+#define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("crown:crime") ? 1/5 : 0));
 
 #define GatorDen_create
 	var _inst = [];
@@ -988,7 +988,7 @@
 	
 #define SealPlaza_text    return `@(color:${tipCol})DISTANT RELATIVES`;
 #define SealPlaza_area    return area_city;
-#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("coastWep")) ? 1/7 : 0);
+#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("pack:coast")) ? 1/7 : 0);
 
 #define SealPlaza_create
 	var	_minID = GameObject.id,
@@ -1222,6 +1222,85 @@
 	}
 	
 	
+#define teevent_add(_event)
+	/*
+		Adds a given event script reference to the list of events
+		If the given event is a string then a script reference is automatically generated for teevents.mod
+		
+		Ex:
+			teevent_add(script_ref_create_ext("mod", mod_current, "MaggotPark"));
+			teevent_add("MaggotPark");
+	*/
+	
+	var	_list = global.event_list,
+		_scrt = (is_array(_event) ? _event : script_ref_create_ext("mod", mod_current, _event));
+		
+	array_push(_list, _scrt);
+	
+	return _scrt;
+	
+	
+#define teevent_set_active(_name, _active)
+	/*
+		Activates or deactivates a given event
+	*/
+	
+	var _inst = instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name);
+	
+	 // Activate:
+	if(_active){
+		if(array_length(_inst) > 0){
+			return _inst[0];
+		}
+		else{
+			var	_x = 10016,
+				_y = 10016;
+				
+			with(GenCont){
+				_x = spawn_x;
+				_y = spawn_y;
+			}
+			with(instance_nearest(_x, _y, Player)){
+				_x = x;
+				_y = y;
+			}
+			
+			with(instance_create(_x, _y, CustomObject)){
+				name = "NTTEEvent";
+				mod_type = "mod";
+				mod_name = mod_current;
+				event = _name;
+				floors = [];
+				
+				 // Tip:
+				tip = mod_script_call("mod", mod_current, _name + "_text");
+				if(is_string(tip) && tip != ""){
+					with(instances_matching(GenCont, "tip_ntte_event", null)){
+						tip_ntte_event = "@w" + other.tip;
+						tip = tip_ntte_event;
+					}
+				}
+				
+				return id;
+			}
+		}
+	}
+	
+	 // Deactivate:
+	else with(_inst){
+		instance_destroy();
+	}
+	
+	return noone;
+	
+#define teevent_get_active(_name)
+	/*
+		Returns if a given NTTE event is active or not
+	*/
+	
+	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -1248,13 +1327,12 @@
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -1343,11 +1421,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define teevent_add(_event)                                                             return  mod_script_call_nc('mod', 'telib', 'teevent_add', _event);

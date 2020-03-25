@@ -284,7 +284,7 @@
 					}
 					
 					 // Damage:
-					meleedamage = ((other.my_health > 1) ? other.my_health - 1 : 20);
+					meleedamage = max(1, other.my_health - 1);
 					event_perform(ev_collision, (instance_is(other, Player) ? Player : prop));
 					meleedamage = 0;
 					
@@ -294,22 +294,13 @@
 						skill_set(mut_gamma_guts, _lastGamma);
 					}
 					else{
+						my_health = 0;
 						GameCont.area = "red";
 						GameCont.subarea = 0;
+						GameCont.killenemies = true;
 						sound_play_music(-1);
-						
-						 // Kill All:
-						with(enemy){
-							my_health = 0;
-						}
-						
-						 // Teleport Out:
-						with(Player){
-							visible = false;
-							with(instance_create(x, y, Portal)){
-								image_alpha = 0;
-							}
-							obj_create(x, y, "TeleportFX");
+						with(obj_create(x, y, "WarpPortal")){
+							event_perform(ev_step, ev_step_normal);
 						}
 					}
 				}
@@ -645,7 +636,7 @@
 			_l = irandom_range(16, 24),
 			_d = random(360);
 			
-		with instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), LaserCharge){
+		with(instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), LaserCharge)){
 			depth = other.depth - 1;
 			motion_set(_d + 180, random_range(1,2));
 			alarm0 = point_distance(x, y, _x, _y) / speed;
@@ -1282,48 +1273,97 @@
 	}
 	
 	
-#define TeleportFX_create(_x, _y)
+#define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		depth = -7;
+		sprite_index = sprPortalClear;
+		depth = -8;
 		
 		 // Vars:
-		setup  = true;
-		scale  = 1.2;
-		radius = 16;
-		scale_mult = 2;
+		mask_index = sprPortalShock;
+		image_xscale = 0.6;
+		image_yscale = image_xscale;
+		
+		 // Portal:
+		portal = instance_create(x, y, BigPortal);
+		with(portal){
+			x = other.x;
+			y = other.y;
+			sprite_index = sprBigPortal;
+			image_alpha = 0;
+		}
+		instance_create(x, y, PortalShock);
+		
+		 // Effects:
+		repeat(30){
+			var l = 32 + random(8),
+				d = random(360);
+				
+			with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(2)], Dust)){
+				friction = 0.4;
+				sprite_index = sprSmoke;
+			}
+		}
+		view_shake_at(x, y, 50);
+		sleep(100);
 		
 		return id;
 	}
 	
-#define TeleportFX_setup
-	setup = false;
-	
-	with(instance_create(x, y, PortalClear)){
-		image_xscale = 2;
-		image_yscale = image_xscale;
+#define WarpPortal_step
+	 // Shrink:
+	if(!instance_exists(portal) || portal.endgame < 100){
+		var _shrinkSpeed = 1/80 * current_time_scale;
+		image_xscale -= _shrinkSpeed;
+		image_yscale -= _shrinkSpeed;
 	}
 	
-	repeat(30){
-		var l = 32 + random(8),
-			d = random(360);
-			
-		with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(2)], Dust)){
-			friction = 0.4;
-			sprite_index = sprSmoke;
+	 // Destroy Walls:
+	if(place_meeting(x, y, Wall)){
+		with(instances_meeting(x, y, Wall)){
+			if(place_meeting(x, y, other)){
+				instance_create(x, y, FloorExplo);
+				instance_destroy();
+			}
 		}
 	}
 	
-	view_shake_at(x, y, 50);
-	sleep(100);
-	
-#define TeleportFX_step
-	if(setup) TeleportFX_setup();
+	 // Grab Player:
+	with(instances_matching(Player, "visible", true)){
+		if(place_meeting(x, y, other) || position_meeting(x, y, other)){
+			visible = false;
+			direction = point_direction(x, y, other.x, other.y);
+			
+			 // Wacky Effect:
+			with(instance_create(x, y, Dust)){
+				speed = max(3, other.speed);
+				direction = other.direction;
+				sprite_index = other.spr_hurt;
+				image_index = 1;
+				image_xscale = abs(other.image_xscale * other.right);
+				image_yscale = abs(other.image_yscale);
+				image_angle = other.sprite_angle + other.angle + orandom(30);
+				image_blend = other.image_blend;
+				image_alpha = other.image_alpha;
+				depth = -9;
+				growspeed *= 2/3;
+				
+				 // Pink Flash:
+				with(instance_create(x , y, ThrowHit)){
+					motion_add(other.direction, 1);
+					image_speed = 0.5;
+					image_blend = make_color_rgb(255, 0, 80);
+					depth = other.depth - 1;
+				}
+			}
+		}
+	}
 	
 	 // Effects:
-	if(chance_ct(1, 1)){
-		var l = 64,
+	if(current_frame_active){
+		var	l = 64,
 			d = random(360);
+			
 		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), LaserCharge)){
 			alarm0 = random_range(15, 20);
 			motion_set(d + 180, random_range(1, 2));
@@ -1333,24 +1373,37 @@
 		}
 	}
 	if(chance_ct(1, 5)){
-		var l = random_range(32, 128),
+		var	l = random_range(32, 128),
 			d = random(360);
+			
 		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), BulletHit)){
 			sprite_index = sprWepSwap;
 		}
 	}
 	
-	scale -= (current_time_scale / 40);
-	scale_mult = max(scale_mult - current_time_scale, 1);
-	if(scale <= 0) instance_destroy();
+	 // Later, Bro:
+	if(image_xscale <= 0 || image_yscale <= 0){
+		instance_destroy();
+		exit;
+	}
 	
-#define TeleportFX_draw
-	draw_circle(x, y, (scale * scale_mult * radius) + random(3), false);
+#define WarpPortal_draw
+	image_alpha = abs(image_alpha); // CustomObject
 	
-#define TeleportFX_destroy
+	var	_ext = random(3),
+		_xsc = image_xscale + (_ext / sprite_get_width(sprite_index)),
+		_ysc = image_yscale + (_ext / sprite_get_height(sprite_index));
+		
+	draw_sprite_ext(sprite_index, image_index, x, y, _xsc, _ysc, image_angle, image_blend, image_alpha);
+	
+	image_alpha = -abs(image_alpha); // CustomObject
+	
+#define WarpPortal_destroy
+	 // Blip Out:
 	with(instance_create(x, y, BulletHit)){
 		sprite_index = sprThrowHit;
 	}
+	
 	
 #define VlasmaBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1362,7 +1415,7 @@
 		 // Vars:
 		mask_index = mskEnemyBullet1;
 		damage = 2;
-		force = 0; // 3;
+		force = 1;
 		typ = 1;
 		maxspeed = 8;
 		addspeed = 0.4;
@@ -1441,8 +1494,10 @@
 	draw_set_blend_mode(bm_normal);
 	
 #define VlasmaBullet_anim
-	image_index = image_number - 1;
-	image_speed = 0;
+	if(instance_exists(self)){
+		image_index = image_number - 1;
+		image_speed = 0;
+	}
 	
 #define VlasmaBullet_hit
 	if(image_speed == 0 && projectile_canhit_melee(other)){
@@ -1613,16 +1668,18 @@
 	}
 	
 	 // Teleport FX:
-	draw_set_alpha(0.1);
-	with(instances_matching(CustomObject, "name", "TeleportFX")){
-		draw_circle(x, y, (scale * scale_mult * radius * 2) + random(3), false);
+	with(instances_matching(CustomObject, "name", "WarpPortal")){
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		image_xscale *= _scale;
+		image_yscale *= _scale;
+		image_alpha  *= _alpha;
+		event_perform(ev_draw, 0);
+		image_xscale /= _scale;
+		image_yscale /= _scale;
+		image_alpha  /= _alpha;
 	}
-	draw_set_alpha(1);
-	
-	 // Spider Bullets:
-	/*with(instances_matching(projectile, "name", "VlasmaBullet")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
-	}*/
 	
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
 	draw_primitive_begin(pr_trianglefan);
@@ -1797,13 +1854,12 @@
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -1892,8 +1948,6 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

@@ -129,7 +129,7 @@
 			 // Give Ammo:
 			var _type = weapon_get_type(wep);
 			if(_type != 0){
-				ammo[_type] += round(typ_ammo[_type] * ((wep_get(wep) == "merge") ? 2 : 3));
+				ammo[_type] += round(typ_ammo[_type] * ((wep_get(wep) == "merge") ? 1.25 : 3));
 			}
 		}
 	}
@@ -1508,7 +1508,7 @@
 				var _name = self;
 				
 				 // Create Custom CampChars:
-				if(mod_exists("race", _name) && unlock_get(_name)){
+				if(mod_exists("race", _name) && unlock_get("race:" + _name)){
 					if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
 						with(CampChar_create(64, 48, _name)){
 							 // Poof in:
@@ -1734,21 +1734,24 @@
 	
 	 // Area Completion Unlocks:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
-		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(CorpseActive))){
+		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(becomenemy) && !instance_exists(CorpseActive))){
 			//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
-				var _packList = {
-					"coast"  : ["Wep"],
-					"oasis"  : ["Wep"],
-					"trench" : ["Wep"],
-					"lair"	 : ["Wep", "Crown"]
-				};
+				var _packList = [
+					"coast",
+					"oasis",
+					"trench",
+					"lair"
+				];
 				
-				with(GameCont){
-					if(is_string(area) && area in _packList){
-						if(subarea >= area_get_subarea(area)){
-							with(lq_get_value(_packList, i)){
-								unlock_set(other.area + self, true);
-							}
+				if(array_exists(_packList, GameCont.area)){
+					if(GameCont.subarea >= area_get_subarea(GameCont.area)){
+						unlock_set("pack:" + GameCont.area, true);
+						
+						 // Extra Unlocks:
+						switch(GameCont.area){
+							case "lair":
+								unlock_set("crown:crime", true);
+								break;
 						}
 					}
 				}
@@ -1769,13 +1772,16 @@
 		with(Player){
 			with(["wep", "bwep"]){
 				var _wep = variable_instance_get(other, self);
-				if(weapon_get_gold(_wep) && wep_get(_wep) == "merge"){
-					var	_path = `loadout:wep:${other.race}`,
-						_name = "main";
-						
-					if(unlock_set(_path + ":" + _name, _wep)){
-						save_set(_path, _name);
-						break;
+					
+				if(weapon_get_gold(_wep)){
+					if(array_exists(["merge", "trident"], wep_get(_wep))){
+						var	_path = `loadout:wep:${other.race}`,
+							_name = "main";
+							
+						if(unlock_set(_path + ":" + _name, _wep)){
+							save_set(_path, _name);
+							break;
+						}
 					}
 				}
 			}
@@ -2026,9 +2032,9 @@
 				}
 				
 				  // Best Run:
-			 	if(GameCont.kills > stat_get(_statPath + "bestKill")){
-			 		stat_set(_statPath + "bestArea", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
-			 		stat_set(_statPath + "bestKill", GameCont.kills);
+			 	if(GameCont.kills > stat_get(_statPath + "best:kill")){
+			 		stat_set(_statPath + "best:area", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
+			 		stat_set(_statPath + "best:kill", GameCont.kills);
 			 	}
 			}
 		}
@@ -3384,13 +3390,12 @@
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -3479,10 +3484,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
+#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);
