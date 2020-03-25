@@ -4001,6 +4001,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_shadow = shd32;
 		spr_shadow_y = 7;
 		sprite_index = spr_idle;
+		hitid = [spr.GatorStatueIdle, "GATOR STATUE"];
 		
 		 // Sounds:
 		snd_hurt = sndHitRock;
@@ -4081,7 +4082,67 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
+	 // Revenge:
+	repeat(4) enemy_shoot("GatorStatueFlak", 0, 0);
 	
+	
+#define GatorStatueFlak_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = sprEFlak;
+		
+		 // Vars:
+		mask_index = mskNone;
+		setup = true;
+		scale = 0;
+		effect_color = make_color_rgb(252, 056, 000);
+		
+		return id;
+	}
+	
+#define GatorStatueFlak_setup
+	setup = false;
+	
+	var t = instance_nearest(x, y, Player),
+		f = [];
+		
+	if(instance_exists(t)){
+		with(FloorNormal) if(!place_meeting(x, y, Wall)){
+			if(in_distance(t, [32, 128])){
+				array_push(f, id);
+			}
+		}
+		with(instance_random(f)){
+			with(other){
+				x = other.x + 16;
+				y = other.y + 16;
+			}
+		}
+	}
+	
+#define GatorStatueFlak_step
+	if(setup) GatorStatueFlak_setup();
+	
+	 // Grow:
+	scale += (current_time_scale / 40);
+	image_xscale = scale;
+	image_yscale = scale;
+	
+	 // Particles:
+	if(chance_ct(1, 2)){
+		with(scrFX(x, y, [random(360), random_range(2, 5) * scale], PlasmaTrail)){
+			sprite_index = spr.QuasarBeamTrail;
+		}
+	}
+
+	 // Explode:
+	if(scale >= 1){
+		instance_destroy();
+	}
+
+#define GatorStatueFlak_destroy
+	enemy_shoot(EFlakBullet, 0, 0);
+
 #define Manhole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -4684,7 +4745,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			repeat(2) array_push(_pool, "Spider");
 			repeat(1) array_push(_pool, "FrogQueen");
 			
-		if(unlock_get("lairCrown")) 
+		if(unlock_get("crown:crime")) 
 			repeat(3) array_push(_pool, "LairChest");
 			
 		if(skill_get(mut_shotgun_shoulders) <= 0)
@@ -5551,13 +5612,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -5646,8 +5706,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

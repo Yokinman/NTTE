@@ -4457,27 +4457,27 @@
 		hit_time = 0;
 		hit_list = {};
 		wep = "trident";
-
+		
 		 // Alarms:
 		alarm0 = 15;
-
+		
 		return id;
 	}
 
 #define Trident_step
 	hit_time += current_time_scale;
-
+	
 	 // Cursed:
 	if(curse){
 		 // Cursed Trident Returns:
 		curse_return = (instance_exists(creator) && (variable_instance_get(creator, "wep") == wep || variable_instance_get(creator, "bwep") == wep));
-
+		
 		 // FX:
 		if(visible && current_frame_active){
 			instance_create(x + orandom(4), y + orandom(4), Curse);
 		}
 	}
-
+	
 	 // Break Projectiles:
 	with(instances_matching_ne(instances_matching(projectile, "typ", 1, 2), "team", team)){
 		if(object_index != PopoNade && distance_to_object(other) <= 8){
@@ -4485,7 +4485,7 @@
 			instance_destroy();
 		}
 	}
-
+	
 	 // Bolt Marrow:
 	if(speed > 0){
 		if(skill_get(mut_bolt_marrow) > 0){
@@ -4494,7 +4494,7 @@
 				var	_x = x + hspeed,
 					_y = y + vspeed,
 					_disMax = 1000000;
-
+					
 				with(instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone, sprVoid)){
 					if(in_sight(other) && in_distance(other, 160)){
 						if(array_length(instances_matching(PopoShield, "creator", id)) <= 0){
@@ -4513,12 +4513,12 @@
 				rotspeed += (angle_difference(point_direction(x, y, n.x, n.y), direction) / max(1, 60 / (point_distance(x, y, n.x, n.y) + 1))) * min(1, 0.1 * skill_get(mut_bolt_marrow)) * current_time_scale;
 				//rotspeed = clamp(rotspeed, -90, 90);
 			}
-
+			
 			var f = min(1, abs(rotspeed) / 90);
 			x -= hspeed_raw * f;
 			y -= vspeed_raw * f;
 		}
-
+		
 		 // Rotatin:
 		if(rotspeed != 0){
 			direction += rotspeed * current_time_scale;
@@ -4526,7 +4526,7 @@
 			rotspeed -= rotspeed * 0.3 * current_time_scale;
 		}
 	}
-
+	
 	else{
 		 // Trident Return:
 		if(curse_return){
@@ -4534,10 +4534,10 @@
 				 // Movin:
 				var	l = max(5, point_distance(x, y, creator.x, creator.y) * 0.1 * current_time_scale) / (curse_return_delay + 1),
 					d = point_direction(x, y, creator.x, creator.y);
-
+					
 				x += lengthdir_x(l, d);
 				y += lengthdir_y(l, d);
-
+				
 				 // Walled:
 				if(!place_free(x, y)){
 					xprevious = x;
@@ -4559,7 +4559,7 @@
 						}
 					}
 				}
-
+				
 				 // Rotatin:
 				if(in_distance(creator, 40)){
 					d += 180;
@@ -4569,20 +4569,20 @@
 			if(curse_return_delay <= 8){
 				image_angle += orandom(2 + curse_return_delay) * current_time_scale;
 			}
-
+			
 			var f = 0.5 * current_time_scale;
 			curse_return_delay -= clamp(curse_return_delay, -f, f);
-
+			
 			 // Grab Weapon:
 			if(place_meeting(x, y, creator) || (creator.mask_index == mskNone && place_meeting(x, y, Portal))){
 				instance_destroy();
 			}
 		}
-
+		
 		 // Stopped:
 		else instance_destroy();
 	}
-
+	
 #define Trident_end_step
 	 // Trail:
 	if(visible){
@@ -4590,13 +4590,13 @@
 			_y1 = y,
 			_x2 = xprevious,
 			_y2 = yprevious;
-
+			
 		with(instance_create(_x1, _y1, BoltTrail)){
 			image_xscale = point_distance(_x1, _y1, _x2, _y2);
 			image_angle = point_direction(_x1, _y1, _x2, _y2);
 			if(other.curse) image_blend = make_color_rgb(235, 0, 67);
 			creator = other.creator;
-
+			
 			/*
 			if(skill_get(mut_bolt_marrow)){
 				image_blend = make_color_rgb(235, 0, 67);
@@ -4608,28 +4608,30 @@
 			*/
 		}
 	}
-
+	
 #define Trident_draw
 	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * max(2/3, 1 - (0.025 * abs(rotspeed) * min(1, speed_raw / 8))), image_yscale, image_angle + rotspeed, image_blend, image_alpha);
-
+	
 #define Trident_anim
-	image_speed = 0;
-	image_index = 0;
-
+	if(instance_exists(self)){
+		image_speed = 0;
+		image_index = 0;
+	}
+	
 #define Trident_alrm0
 	friction = 0.5; // Stop movin
-
+	
 #define Trident_hit
 	if(speed > 0 && lq_defget(hit_list, string(other), 0) <= hit_time){
 		projectile_hit_push(other, damage, force);
-
+		
 		if(marrow_target == other) marrow_target = noone;
-
+		
 		 // Keep Movin:
 		if(!lq_exists(hit_list, string(other)) && speed > 12){
 			speed = 18;
 		}
-
+		
 		 // Stick:
 		if(other.my_health > 0){
 			//replacing this interaction for now cause of stabby trident interaction// if(!skill_get(mut_long_arms)){
@@ -4637,7 +4639,7 @@
 				sound_play_pitch(sndAssassinAttack, 2);
 				target = other;
 				speed = 0;
-
+				
 				 // Curse Return:
 				if(curse){
 					curse_return_delay = 8 + random(2);
@@ -4645,7 +4647,7 @@
 				}
 			}
 		}
-
+		
 		 // Impact:
 		else if(rotspeed < 5){
 			x -= hspeed / 3;
@@ -4654,11 +4656,11 @@
 		var f = clamp(other.size, 1, 5);
 		view_shake_at(x, y, 12 * f);
 		sleep(16 * f);
-
+		
 		 // Set Custom IFrames:
 		lq_set(hit_list, string(other), hit_time + 3);
 	}
-
+	
 #define Trident_wall
 	if(speed > 0){
 		var _canWall = true;
@@ -4672,25 +4674,25 @@
 				}
 			}
 		}
-
+		
 		 // Stick in Wall:
 		if(_canWall){
 			speed = 0;
 			move_contact_solid(direction, 16);
-
+			
 			 // Curse Return:
 			if(curse){
 				curse_return_delay = 8 + random(2);
 				mask_index = mskFlakBullet;
 			}
-
+			
 			 // Effects:
 			instance_create(x, y, Debris);
 			sound_play(sndBoltHitWall);
 			sound_play_pitchvol(sndExplosionS, 1.5, 0.7);
 			sound_play_pitchvol(sndBoltHitWall,  1, 0.7);
 		}
-
+		
 		 // Marrow Homin on Target:
 		else if(instance_exists(marrow_target)){
 			direction = angle_lerp(direction, point_direction(x, y, marrow_target.x, marrow_target.y), 0.25 * current_time_scale);
@@ -4698,14 +4700,14 @@
 			alarm0 = min(alarm0, 1);
 		}
 	}
-
+	
 #define Trident_destroy
 	 // Hit FX:
 	var	l = 18,
 		d = direction,
 		_x = x + lengthdir_x(l, d),
 		_y = y + lengthdir_y(l, d);
-
+		
 	instance_create(_x, _y, BubblePop).image_index = 1;
 	repeat(3) scrFX(
 		_x,
@@ -4713,11 +4715,11 @@
 		[direction + orandom(30), choose(1, 2, 2)],
 		Bubble
 	);
-
+	
 #define Trident_cleanup // pls why do portals instance_delete everything
 	var w = wep;
 	if(is_object(w)) w.visible = true;
-
+	
 	 // Return to Player:
 	if(curse_return) with(creator){
 		if(instance_is(self, Player)){
@@ -4728,7 +4730,7 @@
 				variable_instance_set(self, b + "wepangle",	w.wepangle);
 			}
 		}
-
+		
 		 // Effects:
 		if(instance_is(self, Player)){
 			with(instance_create(x, y, WepSwap)) creator = other;
@@ -4736,14 +4738,14 @@
 		sound_play(weapon_get_swap(w));
 		sound_play(sndSwapCursed);
 	}
-
+	
 	 // Drop Weapon:
 	else if(w != wep_none){
 		 // Delete Existing:
 		with(instances_matching([WepPickup, ThrownWep], "wep", w)){
 			instance_destroy();
 		}
-
+		
 		 // Walled:
 		if(!visible && !place_meeting(x, y, Floor)){
 			with(instance_nearest_bbox(x, y, Floor)){
@@ -4752,14 +4754,14 @@
 				repeat(4) instance_create(other.x, other.y, Smoke);
 			}
 		}
-
+		
 		 // WepPickup:
 		var t = target;
 		with(obj_create(x, y, (instance_exists(t) ? "WepPickupStick" : WepPickup))){
 			wep = w;
 			curse = other.curse;
 			rotation = other.image_angle;
-
+			
 			 // Stick:
 			if(instance_exists(t)){
 				stick_target = t;
@@ -4772,16 +4774,16 @@
 				else{
 					var	l = 24,
 						d = rotation + 180;
-
+						
 					stick_x = lengthdir_x(l, d);
 					stick_y = lengthdir_y(l, d);
 				}
-
+				
 				 // Bigger Hitbox:
 				image_xscale *= 2;
 				image_yscale = image_xscale;
 			}
-
+			
 			 // Determination:
 			if(instance_exists(other.creator) && ultra_get(char_chicken, 2) && variable_instance_get(other.creator, "race") == "chicken"){
 				creator = other.creator;
@@ -4789,8 +4791,8 @@
 			}
 		}
 	}
-
-
+	
+	
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
@@ -4800,19 +4802,19 @@
 		var	_rope = self,
 			_link1 = _rope.link1,
 			_link2 = _rope.link2;
-
+			
 		if(instance_exists(_link1) && instance_exists(_link2)){
 			if(_rope.broken < 0) _rope.length = 0; // Deteriorate Rope
-
+			
 			var	_length = _rope.length,
 				_linkDis = point_distance(_link1.x, _link1.y, _link2.x, _link2.y) - _length,
 				_linkDir = point_direction(_link1.x, _link1.y, _link2.x, _link2.y);
-
+				
 			 // Pull Link:
 			if(_linkDis > 0){
 				var	_pullLink = [_link1, _link2],
 					_pullInst = [];
-
+					
 				for(var i = 0; i < array_length(_pullLink); i++){
 					with(_pullLink[i]) if(!instance_is(self, projectile)){
 						var _inst = noone;
@@ -4836,7 +4838,7 @@
 								_inst = id;
 							}
 						}
-
+						
 						 // Add to Pull List:
 						if(instance_exists(_inst)){
 							array_push(_pullInst, {
@@ -4848,13 +4850,13 @@
 						}
 					}
 				}
-
+				
 				 // Pull:
 				with(_pullInst){
 					var	_pull = pull,
 						_drag = drag,
 						_dir = dir;
-
+						
 					with(inst){
 						hspeed += lengthdir_x(_pull, _dir);
 						vspeed += lengthdir_y(_pull, _dir);
@@ -4863,14 +4865,14 @@
 					}
 				}
 			}
-
+			
 			 // Draw Rope:
 			script_bind_draw(draw_rope, (collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false) ? -8 : 0), _rope);
-
+			
 			 // Rope Stretching:
 			with(_rope){
 				break_force = max(_linkDis, 0);
-
+				
 				 // Break:
 				if(break_timer <= 0 || break_force > 1000){
 					if(break_force > 100 || (_rope.broken < 0 && _length <= 1)){
@@ -4898,40 +4900,40 @@
 			
 		draw_sprite_ext(shd16, 0, _x, _y, image_xscale, image_yscale, image_angle - 90, c_white, 1);
 	}
-
+	
 #define draw_dark // Drawing Grays
 	draw_set_color(c_gray);
-
+	
 	if(DebugLag) trace_time();
-
+	
 	 // Divers:
 	with(instances_matching(CustomEnemy, "name", "Diver")) if(visible){
 		draw_circle(x, y, 40 + orandom(1), false);
 	}
-
+	
 	if(DebugLag) trace_time("tecoast_draw_dark");
-
+	
 #define draw_dark_end // Drawing Clear
 	draw_set_color(c_black);
-
+	
 	if(DebugLag) trace_time();
-
+	
 	 // Divers:
 	with(instances_matching(CustomEnemy, "name", "Diver")) if(visible){
 		draw_circle(x, y, 16 + orandom(1), false);
 	}
-
+	
 	if(DebugLag) trace_time("tecoast_draw_dark_end");
-
+	
 #define draw_gui_end
 	 // Palanking camera pan here so that pausing doesn't jank things:
 	var	_dir = global.palankingPan[0],
 		_dis = global.palankingPan[1];
-
+		
 	if(_dis > 0){
 		view_shift(-1, _dir, _dis);
 	}
-
+	
 #define draw_palankingplayer(_inst)
 	with(_inst){
 		event_perform(ev_draw, 0);
@@ -4957,7 +4959,7 @@
 		draw_line_width(_x1, _y1, _x2, _y2, _wid);
 	}
 	
-
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -4984,13 +4986,12 @@
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name, _default)                                                     return  mod_script_call_nc('mod', 'telib', 'option_get', _name, _default);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
 #define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
-#define unlock_splat(_name, _text, _sprite, _sound)                                     return  mod_script_call_nc('mod', 'telib', 'unlock_splat', _name, _text, _sprite, _sound);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -5079,8 +5080,6 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'telib', 'teevent_set_active', _name, _active);
-#define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'telib', 'teevent_get_active', _name);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

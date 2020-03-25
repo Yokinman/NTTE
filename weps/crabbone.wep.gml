@@ -143,7 +143,7 @@
 				variable_instance_set(id, b + "wep", _wep);
 				
 				 // Unlock:
-				unlock_call("boneScythe");
+				unlock_set("wep:" + _wep, true);
 				
 				 // Drop Spare Bones:
 				w.ammo -= 10;
@@ -230,10 +230,10 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'telib', 'unlock_get', _unlock);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
-#define unlock_call(_name)                                                              return  mod_script_call_nc('mod', 'telib', 'unlock_call', _name);
 #define stat_get(_name)                                                                 return  mod_script_call(   'mod', 'telib', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);

@@ -17,7 +17,7 @@
 #define weapon_area   return (weapon_avail() ? 4 : -1); // 1-3
 #define weapon_swap   return sndSwapBow;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return unlock_get("coastWep");
+#define weapon_avail  return unlock_get("pack:coast");
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);

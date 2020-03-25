@@ -11,7 +11,7 @@
 #define weapon_area   return (weapon_avail() ? 11 : -1); // 5-2
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return unlock_get("trenchWep");
+#define weapon_avail  return unlock_get("pack:trench");
 
 #define weapon_reloaded
 	sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);

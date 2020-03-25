@@ -1,12 +1,14 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	
-	global.sprWep = spr.Trident;
+	global.sprWep       = spr.Trident;
+	global.sprWepGold   = spr.GoldTrident;
 	global.sprWepLocked = mskNone;
 	
 	lwoWep = {
-		wep 	 : mod_current,
-		chrg	 : false,
+		wep      : mod_current,
+		gold     : false,
+		chrg     : false,
 		chrg_num : 0,
 		chrg_max : 7,
 		chrg_obj : noone,
@@ -20,16 +22,17 @@
 
 #macro lwoWep global.lwoWep
 
-#define weapon_name     return (weapon_avail() ? "TRIDENT" : "LOCKED");
-#define weapon_text     return "SCEPTER OF THE @bSEA";
-#define weapon_type     return 0;  // Melee
+#define weapon_name(w)  return (weapon_avail() ? (weapon_gold(w) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
+#define weapon_text(w)  return (weapon_gold(w) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
+#define weapon_type     return 0; // Melee
 #define weapon_area     return (weapon_avail() ? 7 : -1); // 3-2
 #define weapon_auto     return true;
 #define weapon_melee    return false;
 #define weapon_chrg     return true;
+#define weapon_gold(w)  return lq_defget(w, "gold", false);
 #define weapon_swap(w)  return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
-#define weapon_sprt(w)  return (lq_defget(w, "visible", true) ? (weapon_avail() ? global.sprWep : global.sprWepLocked) : mskNone);
-#define weapon_avail    return (unlock_get("coastWep") || unlock_get("trident"));
+#define weapon_sprt(w)  return (lq_defget(w, "visible", true) ? (weapon_avail() ? (weapon_gold(w) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
+#define weapon_avail    return (unlock_get("pack:coast") || unlock_get("wep:" + mod_current));
 
 #define weapon_load(w)
 	 // Stab Reload:
@@ -120,6 +123,18 @@
 					if(w.chrg_num >= w.chrg_max){
 						var c = variable_instance_get(f.creator, b + "curse", false);
 						
+						 // Trident:
+						with(obj_create(x, y, "Trident")){
+							sprite_index = weapon_get_sprt(w);
+							motion_add(other.gunangle, 18 * (1 + (0.3 * w.gold)));
+							image_angle = direction;
+							creator = f.creator;
+							team = other.team;
+							curse = c;
+							wep = w;
+						}
+						weapon_post(-4, 50, 5);
+						
 						 // Lose Trident:
 						with(f.creator) if(variable_instance_get(self, b + "wep") == w){
 							if(!c){
@@ -135,17 +150,6 @@
 							}
 							else w.visible = false;
 						}
-						
-						 // Trident:
-						with(obj_create(x, y, "Trident")){
-							motion_add(other.gunangle, 18);
-							image_angle = direction;
-							creator = f.creator;
-							team = other.team;
-							curse = c;
-							wep = w;
-						}
-						weapon_post(-4, 50, 5);
 					}
 					
 					 // Stab Trident:
@@ -169,35 +173,35 @@
 						var _off = 220 / l;
 						for(var o = -_off; o <= _off; o += _off){
 							for(var i = l + (8 * ((o == 0) ? 1 : 2/3)); i > 0; i -= 16){
-			  					with(instance_create(x + hspeed + lengthdir_x(i, d + o), y + vspeed + lengthdir_y(i, d + o) - (w.primary ? 0 : 4), Shank)){
-			  						direction = d + (o / 3);
-			  						image_angle = direction;
-			  						
-			  						speed = 1 + skill_get(mut_long_arms);
-			  						if(o != 0) speed /= 2;
-			  						
-			  						depth = other.depth - (1 + (0.1 * (o != 0)));
-			  						image_xscale = 0.5 + (0.1 * (o == 0));
-			  						image_yscale = 0.9;
+								with(instance_create(x + hspeed + lengthdir_x(i, d + o), y + vspeed + lengthdir_y(i, d + o) - (w.primary ? 0 : 4), Shank)){
+									direction = d + (o / 3);
+									image_angle = direction;
+									
+									speed = 1 + skill_get(mut_long_arms);
+									if(o != 0) speed /= 2;
+									
+									depth = other.depth - (1 + (0.1 * (o != 0)));
+									image_xscale = 0.5 + (0.1 * (o == 0));
+									image_yscale = 0.9;
 									creator = f.creator;
 									team = other.team;
-			  						canfix = false;
-			  						damage = 20;
-			  						
-			  						 // Secret Shanks:
-			  						if(i < l) visible = false;
-			  						
-			  						 // Hit Wall:
-			  						else if(place_meeting(x + hspeed, y + vspeed, Wall)){
-			  							sound_play(sndMeleeWall);
-			  							instance_create(x + orandom(4), y + orandom(4), Debris);
-			  							with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
+									canfix = false;
+									damage = 20;
+									
+									 // Secret Shanks:
+									if(i < l) visible = false;
+									
+									 // Hit Wall:
+									else if(place_meeting(x + hspeed, y + vspeed, Wall)){
+										sound_play(sndMeleeWall);
+										instance_create(x + orandom(4), y + orandom(4), Debris);
+										with(instance_nearest(x + hspeed - 8, y + vspeed - 8, Wall)){
 			  								with(instance_create(x + 8 + orandom(4), y + 8 + orandom(4), MeleeHitWall)){
 			  									image_angle = d;
 			  								}
 			  							}
-			  						}
-			  					}
+									}
+								}
 							}
 						}
 					}
@@ -205,10 +209,13 @@
 					 // Effects:
 					sleep(15);
 					var n = random_range(0.8, 1.2);
-					sound_play_pitchvol(sndAssassinAttack,		1.3	* n, 1.6);
-					sound_play_pitchvol(sndOasisExplosionSmall,	0.7	* n, 0.7);
-					sound_play_pitchvol(sndOasisDeath,			1.2	* n, 0.8);
-					sound_play_pitchvol(sndOasisMelee,			1	* n, 1);
+					sound_play_pitchvol(sndAssassinAttack,      1.3 * n, 1.6);
+					sound_play_pitchvol(sndOasisExplosionSmall, 0.7 * n, 0.7);
+					sound_play_pitchvol(sndOasisDeath,          1.2 * n, 0.8);
+					sound_play_pitchvol(sndOasisMelee,          1   * n, 1);
+					if(w.gold){
+						sound_play_pitchvol(sndSwapGold,        0.8 * n, 0.7);
+					}
 					
 					 // bubbol:
 					var	l = 24,

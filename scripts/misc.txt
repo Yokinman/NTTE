@@ -1,6 +1,7 @@
 "path" : {
 	"skills/" : ["compassion.skill", "reroll.skill"],
-	"crowns/" : ["bonus.crown", "crime.crown"]
+	"crowns/" : ["bonus.crown", "crime.crown"],
+	"skins/"  : ["red crystal.skin"]
 },
 
 "script" : "
@@ -13,17 +14,7 @@
 ",
 
 "remove" : [
-	"scrWaterStreak",
-	"enemySprites",
-	"scrDefaultDrop",
-	"z_engine",
-	"scrSetPet",
-	"scrLightning",
-	"trace_lag",
-	"trace_lag_bgn",
-	"trace_lag_end"
 ],
 
 "rename" : {
-	"weapon_decide_gold" : "weapon_decide"
 }

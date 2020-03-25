@@ -20,7 +20,7 @@
 #define weapon_swap      return sndSwapHammer;
 #define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
 #define weapon_sprt_hud  return global.sprWepHUD;
-#define weapon_avail     return unlock_get("coastWep");
+#define weapon_avail     return unlock_get("pack:coast");
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);

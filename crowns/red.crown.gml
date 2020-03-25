@@ -7,7 +7,7 @@
 #define crown_name        return "RED CROWN";
 #define crown_text        return "MORE @rHEARTS#@sSMALLER @wAREAS";
 #define crown_tip         return choose("FULL OF LIFE", "SO CRAMPED");
-#define crown_avail       return (GameCont.loops > 0);//unlock_get("lairCrown");
+#define crown_avail       return (GameCont.loops > 0);//unlock_get(`crown:${mod_current}`);
 #define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
 
