@@ -1019,7 +1019,7 @@
 		repeat(3){
 			with(floor_room(_iglooSpawnX, _iglooSpawnY, _iglooSpawnDis, _iglooSpawnFloor, _iglooW, _iglooH, _iglooType, _iglooDirOff, _iglooFloorDis)){
 				with(obj_create(x, y, "Igloo")){
-					seal_count -= 2;
+					//num--;
 				}
 			}
 		}

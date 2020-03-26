@@ -702,25 +702,25 @@
 		case area_city: /// FROZEN CITY
 			
 			 // Igloos:
-			if(chance(1, 1)){
+			if(chance(1, GameCont.subarea)){
 				var	_minID = GameObject.id,
 					_w = 3,
 					_h = 3,
 					_type = "",
 					_dirOff = [30, 90],
-					_floorDis = 0,
 					_spawnDis = 64,
 					_spawnFloor = FloorNormal;
 					
-				repeat(1 + irandom(2)){
-					floor_set_align(32, 32, null, null);
-					
+				floor_set_align(32, 32, null, null);
+				
+				repeat(irandom_range(1, 3)){
+					var _floorDis = choose(0, -32);
 					with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 						obj_create(x, y, "Igloo");
 					}
-					
-					floor_reset_align();
 				}
+				
+				floor_reset_align();
 				
 				 // Corner Walls:
 				with(instances_matching_gt(Floor, "id", _minID)){

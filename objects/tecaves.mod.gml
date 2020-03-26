@@ -34,15 +34,15 @@
 		Clone handler object for enemies duplicated by crystal brains.
 		
 		Vars:
-			spr_overlay	- An array containing the overlay sprites. Meant to be accessed with 'flash' as the index.
+			spr_overlay - An array containing the overlay sprites. Meant to be accessed with 'flash' as the index.
 			clone_color - Base blend color for clones.
-			wave		- Incrementing variable.
-			clone_of	- Tracks the ID of the enemy cloned.
-			creator		- The brain that created the enemy.
-			target		- The enemy being handled.
-			time		- Time in frames until the enemy is destroyed; does not decrement while the brain is alive.
-			team		- Determines the team from which enemies will be cloned.
-			flash		- Boolean. Used as an index for referencing 'spr_overlay'.
+			wave        - Incrementing variable.
+			clone_of    - Tracks the ID of the enemy cloned.
+			creator     - The brain that created the enemy.
+			target      - The enemy being handled.
+			time        - Time in frames until the enemy is destroyed; does not decrement while the brain is alive.
+			team        - Determines the team from which enemies will be cloned.
+			flash       - Boolean. Used as an index for referencing 'spr_overlay'.
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
@@ -74,9 +74,10 @@
 	
 	 // Find Target:
 	if(!instance_exists(clone)){
-		var _enemies = [],
+		var	_enemies = [],
 			_target = noone,
 			_clones = instances_matching(CustomObject, "name", "Clone");
+			
 		with(instances_matching_ne(instances_matching([enemy, Ally], "team", team), "name", "CrystalBrain")){
 			if(array_length(instances_matching(_clones, "clone", id)) <= 0){
 				if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
@@ -153,7 +154,7 @@
 	
 #define Clone_draw
 	if(instance_exists(clone)){
-		var _sprOverlay = spr_overlay[flash],
+		var	_sprOverlay = spr_overlay[flash],
 			_overlayInd = (wave * image_speed),
 			_sprite = clone.sprite_index,
 			_color = clone_color,
@@ -172,16 +173,16 @@
 			draw_clear_alpha(0, 0);
 			
 			with(other.clone){
-				var _x = x,
+				var	_x = x,
 					_y = y,
 					_alpha = abs(image_alpha);
-				
+					
 				x = _xOff;
 				y = _yOff;
 				image_alpha = _alpha;
 				draw_set_color(_color);
 				
-				event_perform(ev_draw, 0);
+				with(self) event_perform(ev_draw, 0);
 				
 				x = _x;
 				y = _y;
@@ -208,11 +209,11 @@
 		Mastermind. Clones enemies.
 		
 		Vars:
-			target_x/y		- Coordinates the brain will try to navigate to.
-			motion_obj		- Separate object for avoiding wall collision. Trades motion and position data with the brain.
-			clone_num		- Number of currently active clones. Cannot excede 'clone_max'.
-			clone_max		- Max clone count.
-			wall_yoff		- Vertical visual offset for when in contact with a wall.
+			target_x/y      - Coordinates the brain will try to navigate to.
+			motion_obj      - Separate object for avoiding wall collision. Trades motion and position data with the brain.
+			clone_num       - Number of currently active clones. Cannot excede 'clone_max'.
+			clone_max       - Max clone count.
+			wall_yoff       - Vertical visual offset for when in contact with a wall.
 			wall_yoff_coeff - Coefficient to 'wall_yoff'.
 	*/
 
@@ -222,11 +223,11 @@
 		spr_walk = spr.CrystalBrainIdle;
 		spr_hurt = spr.CrystalBrainHurt;
 		spr_dead = spr.CrystalBrainDead;
-		sprite_index = spr_hurt;
 		spr_shadow = shd32;
 		spr_shadow_y = 6;
+		hitid = [spr_idle, "CRYSTAL BRAIN"];
+		sprite_index = spr_hurt;
 		depth = -8;
-		hitid = [sprite_index, "CRYSTAL BRAIN"];
 		
 		 // Sounds:
 		snd_hurt = sndLightningCrystalHit;
@@ -236,16 +237,15 @@
 		mask_index = mskBanditBoss;
 		direction = random(360);
 		friction = 0.1;
-		wave = 0;
-		canfly = true;
 		maxhealth = 75;
 		raddrop = 20;
+		canfly = true;
+		wave = 0;
 		size = 3;
 		walk = 0;
 		walkspeed = 0.3;
 		maxspeed = 1.2;
 		minspeed = 0.4;
-		canmelee = true;
 		meleedamage = 6;
 		target_x = x;
 		target_y = y;
@@ -422,6 +422,8 @@
 	}
 	
 #define CrystalBrain_death
+	instance_create(x, y, PortalClear);
+	
 	 // Effects:
 	repeat(30){
 		with(scrCrystalBrainEffect(x + orandom(64), y + orandom(64))){
@@ -443,8 +445,6 @@
 			creator = other;
 		}
 	}
-	
-	instance_create(x, y, PortalClear);
 	
 #define CrystalBrain_cleanup
 	instance_delete(motion_obj);

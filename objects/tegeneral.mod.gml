@@ -1890,14 +1890,20 @@
 #define Igloo_create(_x, _y)
 	/*
 		Buildings for the Frozen City bro, seals live here
+		
+		Vars:
+			num   - Number of seals that live here
+			type  - The main type of seal that lives here
+			alert - Alert the player before releasing seals, true/false
+			chest - Drops a chest on death, true/false
 	*/
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		var _front = chance(1, 3);
-		spr_idle = (_front ? spr.IglooFrontIdle : spr.IglooSideIdle);
-		spr_hurt = (_front ? spr.IglooFrontHurt : spr.IglooSideHurt);
-		spr_dead = (_front ? spr.IglooFrontDead : spr.IglooSideDead);
+		front = chance(1, 3);
+		spr_idle = (front ? spr.IglooFrontIdle : spr.IglooSideIdle);
+		spr_hurt = (front ? spr.IglooFrontHurt : spr.IglooSideHurt);
+		spr_dead = (front ? spr.IglooFrontDead : spr.IglooSideDead);
 		sprite_index = spr_idle;
 		depth = -1;
 		
@@ -1910,37 +1916,79 @@
 		maxhealth = 30;
 		team = 1;
 		size = 3;
-		seal_count = 5 + irandom(3);
-		seal_spawn = false;
+		num  = irandom_range(5, 6);
 		type = irandom_range(4, 6);
+		alert = true;
+		chest = chance(1, 5);
 		
 		 // Alarms:
-		alarm0 = 90;
+		alarm0 = irandom_range(150, 240);
 		
 		return id;
 	}
 	
 #define Igloo_step
 	 // No Leaving Bro:
-	if(seal_count > 0 && !instance_exists(enemy)){
+	if(num > 0 && !instance_exists(enemy)){
 		portal_poof();
 	}
 	
 #define Igloo_alrm0
-	alarm0 = 60 + random(60);
-
-	var p = instance_nearest(x, y, Player),
-		e = instance_nearest(x, y, enemy);
+	if(num > 0){
+		alarm0 = 60 + random(60);
 		
-	 // Begin:
-	if(!seal_spawn){
-		if(!instance_exists(e) || (instance_exists(p) && (point_distance(x, y, p.x, p.y) < point_distance(x, y, e.x, e.y))) || my_health < maxhealth){
-			alarm0 = 60;
+		if(instance_exists(Player)){
+			 // Seal Spew:
+			if(!alert || chance(num, 16)){
+				num--;
+				
+				if(alert) alarm0 += random(30);
+				else alarm0 = 2 + random(3);
+				
+				 // The Boys:
+				with(obj_create(x, y, "Seal")){
+					type = choose(other.type, 4);
+				}
+			}
 			
-			seal_spawn = true;
+			 // Alert:
+			if(alert){
+				var	_player = instance_nearest(x, y, Player),
+					_enemy  = instance_nearest(x, y, enemy);
+					
+				if(
+					my_health < maxhealth
+					|| !instance_exists(_enemy)
+					|| point_distance(x, y, _player.x, _player.y) < point_distance(x, y, _enemy.x, _enemy.y)
+				){
+					alert = false;
+					alarm0 = 30;
+					
+					with(scrAlert(self, spr.SealArcticAlert)){
+						flash = other.alarm0;
+						if(other.chest){
+							spr_alert = sprBreath;
+							alert_col = c_white;
+							alert_x   = 1;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+#define Igloo_death
+	 // Seal Spew Pt.2:
+	if(num > 0){
+		repeat(num){
+			with(obj_create(x, y, "Seal")){
+				type = choose(other.type, 4);
+			}
+		}
+		if(alert){
 			with(scrAlert(self, spr.SealArcticAlert)){
-				flash = 30;
-				if(chance(1, 10)){
+				vspeed = -3;
+				if(other.chest){
 					spr_alert = sprBreath;
 					alert_col = c_white;
 					alert_x   = 1;
@@ -1949,26 +1997,40 @@
 		}
 	}
 	
-	 // Seal Spew:
-	else{
-		alarm0 = -1;
-		if(seal_count-- > 0){
-			alarm0 = 2 + random(3);
+	 // Pickups:
+	if(chest){
+		var	_num = 1 + skill_get(mut_open_mind),
+			_obj = (chance(1, 5) ? "Backpack" : choose(WeaponChest, AmmoChest, HealthChest));
 			
-			 // The Boys:
-			with(obj_create(x, y, "Seal")){
-				type = choose(other.type, 4);
+		if(crown_current == crwn_love){
+			_obj = AmmoChest;
+		}
+		
+		if(_num > 0) repeat(_num){
+			with(obj_create(x, y, _obj)){
+				motion_add(random(360), 1);
 			}
 		}
 	}
+	else repeat(2){
+		pickup_drop(50, 20);
+	}
 	
-#define Igloo_death
-	 // Seal Spew Pt.2:
-	if(seal_count > 0) repeat(seal_count){
-		with(obj_create(x, y, "Seal")){
-			type = choose(other.type, 4);
+	 // Effects:
+	for(var _dir = 0; _dir < 360; _dir += (360 / (12 + num))){
+		with(scrFX([x, 4], [y + 6, 4], 0, Smoke)){
+			direction = _dir + orandom(10);
+			speed = random_range(1, 3);
+			sprite_index = sprSnowFlake;
+			image_index = irandom(image_number - 1);
+			image_xscale *= 2;
+			image_yscale *= 2;
+			//friction *= 2/3;
+			vspeed -= 1.5;
+			gravity = 0.085;
 		}
 	}
+	sound_play_hit_ext(sndMaggotSpawnDie, 1.2 + random(0.2), 7);
 	
 	
 #define ParrotChester_create(_x, _y)

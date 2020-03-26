@@ -3038,7 +3038,7 @@
 					 // Discin:
 					if(instance_is(self, Disc)){
 						dist = 0;
-						alarm0 = max(alarm0, 4);
+						alarm0 = max(alarm0, 9);
 					}
 					
 					with(other) scrRight(other.direction);
@@ -3745,8 +3745,10 @@
 	
 #define SealDisc_end_step
 	 // Color Trail:
-	with(instances_matching(instances_matching(instances_matching(DiscTrail, "image_blend", c_white), "xstart", xprevious), "ystart", yprevious)){
-		image_blend = ((other.team == 2) ? c_yellow : other.trail_color);
+	if(team == -1){
+		with(instances_matching(instances_matching(instances_matching(DiscTrail, "image_blend", c_white), "xstart", xprevious), "ystart", yprevious)){
+			image_blend = ((other.team == 2) ? c_yellow : other.trail_color);
+		}
 	}
 	
 	

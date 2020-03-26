@@ -60,9 +60,11 @@
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Trident:
-			Trident     = sprite(p + "sprTrident",     1, 11, 6, shnWep);
-			GoldTrident = sprite(p + "sprGoldTrident", 1, 11, 6, shnWep);
-			msk.Trident = sprite(p + "mskTrident",     1, 11, 6);
+			Trident            = sprite(p + "sprTrident",            1, 11,  6, shnWep);
+			GoldTrident        = sprite(p + "sprGoldTrident",        1, 11,  6, shnWep);
+			TridentLoadout     = sprite(p + "sprTridentLoadout",     1, 24, 24);
+			GoldTridentLoadout = sprite(p + "sprGoldTridentLoadout", 1, 24, 24);
+			msk.Trident        = sprite(p + "mskTrident",            1, 11,  6);
 			
 		//#endregion
 		
@@ -367,7 +369,7 @@
 			CrystalBrainEffect   = sprite(p + "sprCrystalBrainEffect",   10,  8,  8);
 			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask",  1,  0,  0);
 			
-			CloneOverlay	  = sprite(p + "sprCloneOverlay",	   8, 0, 0);
+			CloneOverlay      = sprite(p + "sprCloneOverlay",      8, 0, 0);
 			CloneOverlayFlash = sprite(p + "sprCloneOverlayFlash", 8, 0, 0);
 			
 			 // Crystal Heart:
