@@ -9,8 +9,10 @@
 	 // Surfaces:
 	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
 	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
-	surfClone = surflist_set("Clone", 0, 0, 0, 0);
+	surfClones = surflist_set("Clones", 0, 0, game_width, game_height);
 	// surfCrystalBrain = surflist_set("CrystalBrain", 0, 0, 64, 64);
+	
+	baseCloneCol = make_color_rgb(145, 0, 43);
 	
 	global.floor_num = 0;
 	global.wall_num = 0;
@@ -26,7 +28,9 @@
 
 #macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
-#macro surfClone global.surfClone
+#macro surfClones global.surfClones
+
+#macro baseCloneCol global.cloneCol
 // #macro surfCrystalBrain global.surfCrystalBrain
 
 #define Clone_create(_x, _y)
@@ -47,7 +51,7 @@
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_overlay = [spr.CloneOverlay, spr.CloneOverlayFlash];
+		spr_overlay = [spr.CloneOverlay, spr.CloneOverlayCorpse];
 		clone_color = make_color_rgb(145, 0, 43);
 		image_speed = 0.4;
 		
@@ -78,17 +82,65 @@
 			_target = noone,
 			_clones = instances_matching(CustomObject, "name", "Clone");
 			
-		with(instances_matching_ne(instances_matching([enemy, Ally], "team", team), "name", "CrystalBrain")){
-			if(array_length(instances_matching(_clones, "clone", id)) <= 0){
-				if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
-					array_push(_enemies, id);
+		with(instances_matching([enemy, Ally, Player], "team", team)){
+			
+			 // Quality Assurance:
+			if(!instance_is(id, becomenemy)){
+				
+				 // Blacklist:
+				var _objName = variable_instance_get(id, "name", object_index);
+				if(!array_exists([
+					"CrystalBrain", 
+					"Palanking", 
+					"PitSquid", 
+					"PitSquidArm", 
+					"BoneRaven", 
+					"Creature", 
+					TechnoMancer,
+					Nothing,
+					Nothing2
+					], _objName)){
+				
+					 // No Duplicate Clones:
+					if(array_length(instances_matching(_clones, "clone", id)) <= 0){
+						if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
+							array_push(_enemies, id);
+						}
+					}
 				}
 			}
 		}
+		
 		clone_of = instance_nearest_array(x, y, _enemies);
-		with(clone_of){
-			_target = instance_copy(false);
+		if(!instance_is(clone_of, Player)){
+			with(clone_of){
+				_target = instance_copy(false);
+			}
 		}
+		else{
+			
+			 // Easter Egg:
+			with(clone_of){
+				_target = instance_create(x, y, Ally);
+				with(_target){
+					 // Visual:
+					spr_idle = other.spr_idle;
+					spr_walk = other.spr_walk;
+					spr_hurt = other.spr_hurt;
+					spr_dead = other.spr_dead;
+					sprite_index = spr_idle;
+					spr_weap = sprRevolver;
+					
+					 // Sounds:
+					snd_hurt = other.snd_hurt;
+					snd_dead = other.snd_dead;
+					
+					sound_stop(sndAllySpawn);
+					sound_play(other.snd_wrld);
+				}
+			}
+		}
+		
 		clone = _target;
 	}
 	
@@ -99,7 +151,12 @@
 		with(clone){
 			raddrop = 0;
 			kills = 0;
-			motion_add(random(360), 2);
+			direction += orandom(90);
+			
+			 // Disable Duplicated Boss Intros:
+			if("intro" in id){
+				intro = true;
+			}
 		}
 		
 		 // (Placeholder) Effects:
@@ -107,6 +164,17 @@
 			sprite_index = sprMutant6Dead;
 			image_index  = 9;
 			image_blend  = other.clone_color;
+		}
+		sound_play_hit_ext(sndHyperCrystalSearch, 0.8 + random(0.3), 0.8);
+		
+		if(instance_exists(creator)){
+			var _dist = point_distance(x, y, creator.x, creator.y),
+				_dir = point_direction(x, y, creator.x, creator.y);
+				
+			repeat(_dist / 12){
+				var _len = random(_dist);
+				scrCrystalBrainEffect(x + lengthdir_x(_len, _dir) + orandom(8), y + lengthdir_y(_len, _dir) + orandom(8));
+			}
 		}
 	}
 	
@@ -118,20 +186,20 @@
 		
 		 // Effects:
 		if(chance_ct(1, 5)){
-			scrCrystalBrainEffect(x + orandom(24), y + orandom(24));
+			scrCrystalBrainEffect(random_range(bbox_left, bbox_right) + orandom(10), random_range(bbox_top, bbox_bottom) + orandom(10));
 		}
 		
 		if(!instance_exists(creator)){
-			time -= current_time_scale;
-			flash = (floor(time / 2) % 2);
-			
-			if(time <= 0){
-				with(clone){
-					my_health = 0;
-				}
+			if(!instance_is(clone, becomenemy)){
+				time -= current_time_scale;
+				flash = (floor(time / 2) % 2);
 				
-				 // Goodbye:
-				instance_destroy();
+				if(time <= 0){
+					time = 0;
+					with(clone){
+						my_health = 0;
+					}
+				}
 			}
 		}
 	}
@@ -149,60 +217,21 @@
 		y = clone.y;
 		with(clone){
 			image_alpha = abs(image_alpha) * -1;
+			
+			 // Death Effects:
+			if(my_health <= 0){
+				sound_play_hit_ext(sndHyperCrystalRelease, 0.8 + random(0.3), 0.8);
+				repeat(size + irandom(2)){
+					instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Smoke);
+					with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+						alarm0 = 10 + random(10);
+						motion_set(90, random(0.5));
+					}
+				}
+			}
 		}
 	}
 	
-#define Clone_draw
-	if(instance_exists(clone)){
-		var	_sprOverlay = spr_overlay[flash],
-			_overlayInd = (wave * image_speed),
-			_sprite = clone.sprite_index,
-			_color = clone_color,
-			_xOff = sprite_get_xoffset(_sprite),
-			_yOff = sprite_get_yoffset(_sprite),
-			_w = sprite_get_width(_sprite),
-			_h = sprite_get_height(_sprite);
-			
-		with(surfClone){
-			if(surface_get_width(surf) != _w || surface_get_height(surf) != _h){
-				surface_destroy(surf);
-				surf = surface_create(_w, _h);
-			}
-			
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			with(other.clone){
-				var	_x = x,
-					_y = y,
-					_alpha = abs(image_alpha);
-					
-				x = _xOff;
-				y = _yOff;
-				image_alpha = _alpha;
-				draw_set_color(_color);
-				
-				with(self) event_perform(ev_draw, 0);
-				
-				x = _x;
-				y = _y;
-				image_alpha *= -1;
-				draw_set_color(c_white);
-				
-				draw_set_color_write_enable(1, 1, 1, 0);
-				draw_set_blend_mode(bm_add);
-				
-				draw_sprite_tiled(_sprOverlay, _overlayInd, view_xview_nonsync, view_yview_nonsync);
-				
-				draw_set_color_write_enable(1, 1, 1, 1);
-				
-				surface_reset_target();
-				draw_set_blend_mode(bm_normal);
-				
-				draw_surface(other.surf, x - _xOff, y - _yOff);
-			}
-		}
-	}
 	
 #define CrystalBrain_create(_x, _y)
 	/*
@@ -1511,6 +1540,218 @@
 	}
 	
 	
+#define TwinOrbital_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.PetTwinsRed;
+		image_speed = 0;
+		depth = -3;
+		
+		 // Vars:
+		mask_index = mskFreak;
+		creator = false;
+		white = false;
+		setup = true;
+		damage = 2;
+		force = 5;
+		team = 2;
+		kick = 0;
+		kick_dir = 0;
+		twin = noone;
+		free = false;
+		
+		return id;
+	}
+	
+#define TwinOrbital_setup
+	setup = false;
+	
+	if(white){
+		sprite_index = spr.PetTwinsWhite;
+	}
+	
+#define TwinOrbital_step
+	if(setup) TwinOrbital_setup();
+
+	 // Visibilize:
+	var _lastFree = free;
+	free = (place_meeting(x, y, Floor) && !place_meeting(x, y, TopSmall));
+	
+	 // Effects:
+	if(free != _lastFree){
+		instance_create(x, y, ThrowHit)
+	}
+	if(free){
+		if(white){
+			if(chance_ct(1, 20)){
+				with(scrFX([x, 8], [y, 8], [90, random_range(0.2, 0.5)], LaserCharge)){
+					sprite_index = sprSpiralStar;
+					image_index = choose(0, irandom(image_number - 1));
+					depth = other.depth - 1;
+					alarm0 = random_range(15, 30);
+				}
+			}
+			if(chance_ct(1, 25)){
+				with(instance_create(x + orandom(8), y + orandom(8), BulletHit)){
+					sprite_index = sprThrowHit;
+					image_xscale = 0.2 + random(0.3);
+					image_yscale = image_xscale;
+					depth = other.depth - 1;
+				}
+			}
+		}
+	}
+	
+	 // Kick:
+	kick = max(abs(kick) - current_time_scale, 0) * sign(kick);
+	
+	
+#define TwinOrbital_hit
+	// if(projectile_canhit_melee(other)) projectile_hit(other, damage, force, direction);
+	
+#define TwinOrbital_projectile
+	var t = twin;
+	
+	kick = 6;
+	kick_dir = other.direction;
+	t.kick = -3;
+	t.kick_dir = other.direction;
+	with(team_instance_sprite(team, other)){
+		team = other.team;
+		x = t.x;
+		y = t.y;
+		move_contact_solid(direction, speed);
+	}
+	
+	if(instance_exists(creator)){
+		creator.stat.diverted++;
+	}
+	
+#define TwinOrbital_draw
+	if(free){
+		draw_sprite_ext(sprite_index, image_index, x + lengthdir_x(kick, kick_dir), y + lengthdir_y(kick, kick_dir), image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	}
+	
+#define VlasmaBullet_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.VlasmaBullet;
+		image_speed = 0.4;
+		depth = -8;
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 2;
+		force = 1;
+		typ = 1;
+		maxspeed = 8;
+		addspeed = 0.4;
+		target = noone;
+		target_x = x;
+		target_y = y;
+		my_sound = -1;
+		
+		return id;
+	}
+	
+#define VlasmaBullet_step
+	 // Follow Target:
+	if(instance_exists(target)){
+		target_x = target.x;
+		target_y = target.y;
+	}
+	
+	 // Movement:
+	if(image_speed == 0){
+		 // Acceleration:
+		var	_euphoria = (instance_is(creator, Player) ? 1 : power(0.8, skill_get(mut_euphoria))),
+			_speedMax = maxspeed * _euphoria,
+			_speedAdd = addspeed * _euphoria * current_time_scale;
+			
+		speed += clamp(_speedMax - speed, -_speedAdd, _speedAdd);
+		
+		 // Turn:
+		var _turn = angle_difference(point_direction(x, y, target_x, target_y), direction);
+		_turn *= clamp(speed / point_distance(x, y, target_x, target_y), 0.1, 1);
+		_turn *= min(current_time_scale, 1);
+		direction += _turn;
+		image_angle += _turn;
+	}
+	
+	 // Particles:
+	if(chance_ct(1, 4)){
+		with(team_instance_sprite(
+			sprite_get_team(sprite_index),
+			scrFX([x, 4], [y, 4], [direction, 2 * (speed / maxspeed)], PlasmaTrail)
+		)){
+			depth = other.depth;
+		}
+	}
+	
+	 // Passing Through Walls:
+	xprevious += hspeed_raw;
+	yprevious += vspeed_raw;
+	
+	 // Target Acquired, Sweet Prince:
+	if(image_speed == 0){
+		if(
+			(instance_exists(target) && team != variable_instance_get(target, "team"))
+			? place_meeting(x, y, target)
+			: point_distance(x, y, target_x, target_y) <= 8 + speed_raw
+		){
+			instance_destroy();
+		}
+	}
+	
+#define VlasmaBullet_draw
+	draw_self();
+	
+	 // Bloom:
+	var	_scale = 2,
+		_alpha = 0.1;
+		
+	draw_set_blend_mode(bm_add);
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	image_alpha  *= _alpha;
+	draw_self();
+	image_xscale /= _scale;
+	image_yscale /= _scale;
+	image_alpha  /= _alpha;
+	draw_set_blend_mode(bm_normal);
+	
+#define VlasmaBullet_anim
+	if(instance_exists(self)){
+		image_index = image_number - 1;
+		image_speed = 0;
+	}
+	
+#define VlasmaBullet_hit
+	if(image_speed == 0 && projectile_canhit_melee(other)){
+		projectile_hit_push(other, damage, force);
+	}
+	
+#define VlasmaBullet_wall
+	 // Passing Through Walls: *Movement Fix
+	x -= hspeed_raw;
+	y -= vspeed_raw;
+	
+#define VlasmaBullet_destroy
+	 // Sound:
+	sound_stop(my_sound);
+	sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
+	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
+	
+	 // Explo:
+	with(team_instance_sprite(
+		sprite_get_team(sprite_index),
+		enemy_shoot("PlasmaImpactSmall", direction, 0)
+	)){
+		image_angle = 0;
+		depth = other.depth;
+	}
+	
+	
 #define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -1643,126 +1884,6 @@
 	}
 	
 	
-#define VlasmaBullet_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = spr.VlasmaBullet;
-		image_speed = 0.4;
-		depth = -8;
-		
-		 // Vars:
-		mask_index = mskEnemyBullet1;
-		damage = 2;
-		force = 1;
-		typ = 1;
-		maxspeed = 8;
-		addspeed = 0.4;
-		target = noone;
-		target_x = x;
-		target_y = y;
-		my_sound = -1;
-		
-		return id;
-	}
-	
-#define VlasmaBullet_step
-	 // Follow Target:
-	if(instance_exists(target)){
-		target_x = target.x;
-		target_y = target.y;
-	}
-	
-	 // Movement:
-	if(image_speed == 0){
-		 // Acceleration:
-		var	_euphoria = (instance_is(creator, Player) ? 1 : power(0.8, skill_get(mut_euphoria))),
-			_speedMax = maxspeed * _euphoria,
-			_speedAdd = addspeed * _euphoria * current_time_scale;
-			
-		speed += clamp(_speedMax - speed, -_speedAdd, _speedAdd);
-		
-		 // Turn:
-		var _turn = angle_difference(point_direction(x, y, target_x, target_y), direction);
-		_turn *= clamp(speed / point_distance(x, y, target_x, target_y), 0.1, 1);
-		_turn *= min(current_time_scale, 1);
-		direction += _turn;
-		image_angle += _turn;
-	}
-	
-	 // Particles:
-	if(chance_ct(1, 4)){
-		with(team_instance_sprite(
-			sprite_get_team(sprite_index),
-			scrFX([x, 4], [y, 4], [direction, 2 * (speed / maxspeed)], PlasmaTrail)
-		)){
-			depth = other.depth;
-		}
-	}
-	
-	 // Passing Through Walls:
-	xprevious += hspeed_raw;
-	yprevious += vspeed_raw;
-	
-	 // Target Acquired, Sweet Prince:
-	if(image_speed == 0){
-		if(
-			(instance_exists(target) && team != variable_instance_get(target, "team"))
-			? place_meeting(x, y, target)
-			: point_distance(x, y, target_x, target_y) <= 8 + speed_raw
-		){
-			instance_destroy();
-		}
-	}
-	
-#define VlasmaBullet_draw
-	draw_self();
-	
-	 // Bloom:
-	var	_scale = 2,
-		_alpha = 0.1;
-		
-	draw_set_blend_mode(bm_add);
-	image_xscale *= _scale;
-	image_yscale *= _scale;
-	image_alpha  *= _alpha;
-	draw_self();
-	image_xscale /= _scale;
-	image_yscale /= _scale;
-	image_alpha  /= _alpha;
-	draw_set_blend_mode(bm_normal);
-	
-#define VlasmaBullet_anim
-	if(instance_exists(self)){
-		image_index = image_number - 1;
-		image_speed = 0;
-	}
-	
-#define VlasmaBullet_hit
-	if(image_speed == 0 && projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
-	}
-	
-#define VlasmaBullet_wall
-	 // Passing Through Walls: *Movement Fix
-	x -= hspeed_raw;
-	y -= vspeed_raw;
-	
-#define VlasmaBullet_destroy
-	 // Sound:
-	sound_stop(my_sound);
-	sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
-	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
-	
-	 // Explo:
-	with(team_instance_sprite(
-		sprite_get_team(sprite_index),
-		enemy_shoot("PlasmaImpactSmall", direction, 0)
-	)){
-		image_angle = 0;
-		depth = other.depth;
-	}
-	
-	
 /// Mod Events:
 #define step
 	script_bind_end_step(end_step, 0);
@@ -1795,6 +1916,26 @@
 				until player_is_active(i);
 				mod_script_call_nc("area", "red", "area_effect", view_xview[i], view_yview[i]);
 			}
+		}
+	}
+	
+	 // Clone Draw:
+	with(surfClones){
+		reset = true;
+		inst_clones = instances_matching(CustomObject, "name", "Clone");
+		inst_corpse = []; // instances_matching(Corpse, "ntte_clonecorpse", true);
+		var _clonesExist = (array_length(inst_clones) > 0),
+			_corpseExist = (array_length(inst_corpse) > 0);
+		active = (_clonesExist || _corpseExist);
+		if(active){
+			if(_clonesExist){
+				script_bind_draw(draw_clones, -2, inst_clones, spr.CloneOverlay, 0.4);
+			}
+			/*
+			if(_corpseExist){
+				script_bind_draw(draw_clones,  1, inst_corpse, spr.CloneOverlayCorpse, 0.2);
+			}
+			*/
 		}
 	}
 	
@@ -2066,6 +2207,62 @@
 	instance_destroy();
 	
 
+#define draw_clones(_inst, _sprite, _speed)
+	var _vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_gw = game_width,
+		_gh = game_height;
+
+	with(surfClones){
+		x = _vx;
+		y = _vy;
+		w = _gw;
+		h = _gh;
+		
+		if(surface_exists(surf)){
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			draw_set_color(baseCloneCol);
+			
+			 // Drawin':
+			with(instances_matching(_inst, "", null)){
+				if(flash) draw_set_fog(true, c_black, 0, 0);
+				with(clone){
+					x -= _vx;
+					y -= _vy;
+					image_alpha = abs(image_alpha);
+					
+					with(self) event_perform(ev_draw, 0);
+					
+					x += _vx;
+					y += _vy;
+					image_alpha *= -1;
+				}
+				if(flash) draw_set_fog(false, c_white, 0, 0);
+			}
+			
+			draw_set_color(c_white);
+			
+			draw_set_blend_mode(bm_add);
+			draw_set_color_write_enable(1, 1, 1, 0);
+			
+			var _index = (current_frame * current_time_scale) * _speed; 
+			draw_sprite_tiled(_sprite, _index, 0, 0);
+			
+			draw_set_blend_mode(bm_normal);
+			draw_set_color_write_enable(1, 1, 1, 1);
+			
+			surface_reset_target();
+			
+			draw_surface(surf, x, y);
+		}
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number

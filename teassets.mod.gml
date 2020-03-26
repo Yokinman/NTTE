@@ -369,8 +369,8 @@
 			CrystalBrainEffect   = sprite(p + "sprCrystalBrainEffect",   10,  8,  8);
 			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask",  1,  0,  0);
 			
-			CloneOverlay      = sprite(p + "sprCloneOverlay",      8, 0, 0);
-			CloneOverlayFlash = sprite(p + "sprCloneOverlayFlash", 8, 0, 0);
+			CloneOverlay       = sprite(p + "sprCloneOverlay",       8, 0, 0);
+			CloneOverlayCorpse = sprite(p + "sprCloneOverlayCorpse", 8, 0, 0);
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
@@ -1486,6 +1486,13 @@
 			PetWeaponWalkCursed = sprite(p + "sprPetWeaponWalkCursed",  8, 12, 12);
 			PetWeaponHurtCursed = sprite(p + "sprPetWeaponHurtCursed",  3, 12, 12);
 			PetWeaponDeadCursed = sprite(p + "sprPetWeaponDeadCursed",  6, 12, 12);
+			
+			 // Twins:
+			p = m + "Red/";
+			PetTwinsIcon  = sprite(p + "sprPetTwinsIcon",  1,  6,  6);
+			PetTwinsStat  = sprite(p + "sprPetTwinsStat",  6,  12, 12);
+			PetTwinsRed	  = sprite(p + "sprPetTwinsRed",   6,  12, 12);
+			PetTwinsWhite = sprite(p + "sprPetTwinsWhite", 6,  12, 12);
 			
 		//#endregion
 	}

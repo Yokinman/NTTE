@@ -100,6 +100,7 @@
 							"Spider"     + ".petlib.mod",
 							"Prism"      + ".petlib.mod",
 							"Orchid"     + ".petlib.mod",
+							"Twins"		 + ".petlib.mod",
 							"Weapon"     + ".petlib.mod"
 						]
 					},
