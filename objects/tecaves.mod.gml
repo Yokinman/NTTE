@@ -71,9 +71,7 @@
 	setup = false;
 	
 	 // Inherit Variables:
-	if(instance_exists(creator)){
-		team = creator.team;
-	}
+	team = variable_instance_get(creator, "team", team);
 	
 	 // Find Target:
 	if(!instance_exists(clone)){
@@ -164,17 +162,8 @@
 			image_index  = 9;
 			image_blend  = other.clone_color;
 		}
-		sound_play_hit_ext(sndHyperCrystalSearch, 0.8 + random(0.3), 0.8);
-		
-		if(instance_exists(creator)){
-			var _dist = point_distance(x, y, creator.x, creator.y),
-				_dir = point_direction(x, y, creator.x, creator.y);
-				
-			repeat(_dist / 12){
-				var _len = random(_dist);
-				scrCrystalBrainEffect(x + lengthdir_x(_len, _dir) + orandom(8), y + lengthdir_y(_len, _dir) + orandom(8));
-			}
-		}
+		sound_play_hit_ext(sndHyperCrystalSearch, 0.8 + random(0.3), 0.5);
+		scrCloneFX(x, y, xstart, ystart);
 	}
 	
 #define Clone_step
@@ -218,7 +207,7 @@
 			image_alpha = abs(image_alpha) * -1;
 			
 			 // Death Effects:
-			if(my_health <= 0){
+			if("my_health" in self && my_health <= 0){
 				sound_play_hit_ext(sndHyperCrystalRelease, 0.8 + random(0.3), 0.8);
 				repeat(size + irandom(2)){
 					instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Smoke);
@@ -231,6 +220,17 @@
 		}
 	}
 	
+#define scrCloneFX(_x1, _y1, _x2, _y2)
+	var _array = [],
+		_dist = point_distance(_x1, _y1, _x2, _y2),
+		_dir = point_direction(_x1, _y1, _x2, _y2);
+		
+	repeat(_dist / 12){
+		var _len = random(_dist);
+		array_push(_array, scrCrystalBrainEffect(_x1 + lengthdir_x(_len, _dir) + orandom(8), _y1 + lengthdir_y(_len, _dir) + orandom(8)));
+	}
+	
+	return _array;
 	
 #define CrystalBrain_create(_x, _y)
 	/*
@@ -280,12 +280,12 @@
 		minspeed = 0.4;
 		meleedamage = 4;
 		clone_num = 0;
-		clone_max = 6;
+		clone_max = 3;
 		teleport = false;
 		teleport_x = x;
 		teleport_y = y;
-		min_tele_dist = 64;
-		max_tele_dist = 128;
+		min_tele_dist = 80;
+		max_tele_dist = 160;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -515,25 +515,120 @@
 #define CrystalBrain_death
 	instance_create(x, y, PortalClear);
 	
-	 // Effects:
-	repeat(30){
-		with(scrCrystalBrainEffect(x + orandom(64), y + orandom(64))){
-			image_index = random(4);
+	 // Death Object:
+	if(corpse){
+		with(obj_create(x, y, "CrystalBrainDeath")){
+			raddrop = other.raddrop;
 		}
-	}
-	repeat(6 + irandom(2)){
-		with(instance_create(x, y, Shell)){
-			sprite_index = spr.CrystalBrainChunk;
-			image_index = irandom(image_number - 1);
-			image_speed = 0;
-			motion_set(random(360), random(5));
-		}
+		raddrop = 0;
+		corpse  = false;
 	}
 	
-	 // Revenge:
-	repeat(3){
-		with(obj_create(x, y, "Clone")){
-			creator = other;
+	 // Effects:
+	sound_play_hit(sndLightningCrystalCharge, 0.3);
+	
+	/*
+	 // Plasma:
+	team_instance_sprite(team, enemy_shoot(PlasmaImpact, 0, 0));
+	*/
+	
+#define CrystalBrainDeath_create(_x, _y)
+	with(instance_create(_x, _y, CustomHitme)){
+		 // Visual:
+		spr_idle = spr.CrystalBrainHurt;
+		spr_dead = spr.CrystalBrainDead;
+		sprite_index = spr_idle;
+		hitid = [spr_idle, "CRYSTAL BRAIN"];
+		image_speed = 0.4;
+		depth = -2;
+		
+		 // Sounds:
+		snd_hurt = sndLightningCrystalHit;
+		snd_dead = sndLightningCrystalDeath;
+		
+		 // Vars:
+		mask_index = mskNone;
+		friction = 0.5;
+		team = 1;
+		size = 3;
+		ammo = irandom_range(3, 4);
+		motion_set(random(360), random_range(3, 5));
+		
+		return id;
+	}
+	
+#define CrystalBrainDeath_step
+	 // Effects:
+	if(chance_ct(1, 4)){
+		scrCrystalBrainEffect(x + orandom(32), y + orandom(32));
+	}
+
+	 // Dying:
+	x += orandom(2);
+	y += orandom(2);
+	if(speed <= friction){
+		if(ammo > 0){
+			ammo--;
+			
+			 // Jerk Around:
+			motion_set(point_direction(x, y, xstart, ystart) + orandom(30), random_range(3, 8));
+			move_contact_solid(direction, 4);
+			
+			 // Desperation Clone:
+			obj_create(x, y, "Clone");
+			
+			 // Effects:
+			instance_create(x, y, PortalClear);
+			sound_play_hit(snd_hurt, 0.3);
+			view_shake_at(x, y, 15);
+			repeat(2){
+				with(scrFX(x, y, [random(360), random_range(2, 5)], Shell)){
+					sprite_index = spr.CrystalBrainChunk;
+					image_index = irandom(image_number - 1);
+					image_speed = 0;
+				}
+			}
+			
+			/*
+			 // Plasma:
+			var l = 10;
+			for(var i = 0; i < 360; i += 360 / 3){
+				var d = direction + i;
+				team_instance_sprite(team, enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PlasmaImpactSmall", 0, 0));
+			}
+			*/
+		}
+		else{
+		
+			 // Death Drops:
+			rad_drop(x, y, raddrop, direction, speed);
+			corpse_drop(direction, speed);
+			pickup_drop(100, 0);
+			pickup_drop(50,  0);
+			
+			 // Effects:
+			instance_create(x, y, PortalClear);
+			sound_play_hit(snd_dead, 0.3);
+			view_shake_at(x, y, 30);
+			repeat(5){
+				with(scrFX(x, y, [random(360), random_range(3, 7)], Shell)){
+					sprite_index = spr.CrystalBrainChunk;
+					image_index = irandom(image_number - 1);
+					image_speed = 0;
+				}
+			}
+			
+			/*
+			 // Plasma:
+			var l = 24;
+			for(var i = 0; i < 360; i += 360 / 3){
+				var d = direction + i;
+				team_instance_sprite(team, enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PlasmaImpactSmall", 0, 0));
+			}
+			team_instance_sprite(team, enemy_shoot(PlasmaImpact, 0, 0));
+			*/
+			
+			instance_destroy();
 		}
 	}
 	
@@ -683,6 +778,105 @@
 		 // Alarms:
 		alarm0 = 12;
 		
+		 // Red Crown:
+		if(crown_current == "red"){
+			var a = [GameCont.area, area];
+			if(chance(1, 2)){
+				switch(GameCont.area){
+					 // CAMPFIRE
+					case 0:
+						break;
+					
+					 // DESERT
+					case 1:
+						a = [2, 3];
+						break;
+						
+						 // COAST
+						case "coast":
+							a = [3, 105];
+							break;
+							
+						 // OASIS
+						case 101:
+						case "oasis":
+							a = [2, 6];
+							break;
+							
+						 // TRENCH
+						case "trench":
+							a = [2, 4];
+							break;
+						
+					 // SEWERS
+					case 2:
+						a = [4];
+						break;
+						
+						 // PIZZA SEWERS
+						case 102:
+						case "pizza":
+							break;
+							
+						 // LAIR
+						case "lair":
+							break;
+						
+					 // SCRAPYARDS
+					case 3:
+						a = [2, 5];
+						break;
+						
+						 // VENUZ MANSION
+						case 103:
+							break;
+							
+						 // THE CRIB
+						case 107:
+							break;
+						
+					 // CRYSTAL CAVES
+					case 4:
+						a = [6];
+						break;
+						
+						 // CURSED CRYSTAL CAVES
+						case 104:
+							break;
+						
+					 // FROZEN CITY
+					case 5:
+						a = [6, 7];
+						break;
+						
+						 // JUNGLE
+						case 105:
+							break;
+						
+					 // LABS
+					case 6:
+						a = [2, 4];
+						break;
+						
+					 // PALACE
+					case 7:
+						a = [3, 6];
+						break;
+						
+						 // IDPD HEADQUARTERS
+						case 106:
+							break;
+							
+					 // WARP ZONE
+					case "red":
+						break;
+				}
+			}
+			
+			 // Decision Making:
+			area = a[irandom(array_length(a) - 1)];
+		}
+		
 		return id;
 	}
 	
@@ -798,6 +992,13 @@
 		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID), 6)){
 			flash = true;
 			move_dis = 0;
+		}
+		
+		 // Red Crown Quality Assurance:
+		if(crown_current == "red"){
+			with(instances_matching([PizzaEntrance, CarVenus, IceFlower], "", null)){
+				instance_delete(id);
+			}
 		}
 		
 		 // Goodbye:

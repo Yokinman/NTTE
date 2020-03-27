@@ -177,9 +177,10 @@
 		p = "enemies/Alerts/";
 			
 			 // Alert Indicators:
-			AlertIndicator           = sprite(p + "sprAlertIndicator",           1, 1, 6);
-			AlertIndicatorMystery    = sprite(p + "sprAlertIndicatorMystery",    1, 2, 6);
-			AlertIndicatorPopoAmbush = sprite(p + "sprAlertIndicatorPopoAmbush", 1, 4, 4);
+			AlertIndicator            = sprite(p + "sprAlertIndicator",            1, 1, 6);
+			AlertIndicatorMystery     = sprite(p + "sprAlertIndicatorMystery",     1, 2, 6);
+			AlertIndicatorPopoAmbush  = sprite(p + "sprAlertIndicatorPopoAmbush",  1, 4, 4);
+			AlertIndicatorOrchidSkill = sprite(p + "sprAlertIndicatorOrchidSkill", 1, 4, 4);
 			
 			 // Alert Icons:
 			AllyAlert        = sprite(p + "sprAllyAlert",        1, 7, 7);

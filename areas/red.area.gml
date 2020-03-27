@@ -162,7 +162,12 @@
 	
 	 // Small:
 	else{
-		obj_create(_x, _y, "RedSpider");
+		if(chance(1, 7)){
+			instance_create(_x, _y, Bandit);
+		}
+		else{
+			obj_create(_x, _y, "RedSpider");
+		}
 	}
 	
 #define area_pop_props

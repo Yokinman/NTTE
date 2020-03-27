@@ -2743,7 +2743,10 @@
 		with(scrAlert(self, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
-			spr_alert = -1;
+			spr_alert = spr.AlertIndicatorOrchidSkill;
+			alert_col = c_white;
+			alert_x = 6;
+			alert_y = 6;
 			snd_flash = sndLevelUp;
 			alarm0 = 60;
 			blink = 15;
