@@ -285,7 +285,7 @@
 		teleport_x = x;
 		teleport_y = y;
 		min_tele_dist = 64;
-		max_tele_dist = 96;
+		max_tele_dist = 128;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -493,7 +493,7 @@
 		if(instance_exists(_target)){
 			with(FloorNormal){
 				if(!place_meeting(x, y, Wall)){
-					if(!in_distance(_target, [_minDis, _maxDis])){
+					if(in_distance(_target, [_minDis, _maxDis])){
 						array_push(_floors, id);
 					}
 				}
