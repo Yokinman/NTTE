@@ -10,8 +10,8 @@
 	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
 	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
 	surfClones = surflist_set("Clones", 0, 0, game_width, game_height);
-	// surfCrystalBrain = surflist_set("CrystalBrain", 0, 0, 64, 64);
 	
+	 // Clone Base Color:
 	baseCloneCol = make_color_rgb(145, 0, 43);
 	
 	global.floor_num = 0;
@@ -31,7 +31,6 @@
 #macro surfClones global.surfClones
 
 #macro baseCloneCol global.cloneCol
-// #macro surfCrystalBrain global.surfCrystalBrain
 
 #define Clone_create(_x, _y)
 	/*
@@ -242,21 +241,26 @@
 			motion_obj      - Separate object for avoiding wall collision. Trades motion and position data with the brain.
 			clone_num       - Number of currently active clones. Cannot excede 'clone_max'.
 			clone_max       - Max clone count.
-			wall_yoff       - Vertical visual offset for when in contact with a wall.
-			wall_yoff_coeff - Coefficient to 'wall_yoff'.
+			teleport		- Boolean. Indicates if the brain is currently teleporting.
+			teleport_x		- X coordinate to draw to during teleportation. Doubles as a destination coordinate.
+			teleport_y		- Y coordinate counterpart to teleport_x.
+			min_tele_dist	- Minimum distance from the player the brain can teleport to.
+			max_tele_dist	- Maximum distance from the player the brain can teleport to.
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.CrystalBrainIdle;
-		spr_walk = spr.CrystalBrainIdle;
-		spr_hurt = spr.CrystalBrainHurt;
-		spr_dead = spr.CrystalBrainDead;
+		spr_idle	  = spr.CrystalBrainIdle;
+		spr_walk	  = spr.CrystalBrainIdle;
+		spr_hurt	  = spr.CrystalBrainHurt;
+		spr_dead	  = spr.CrystalBrainDead;
+		spr_appear	  = spr.CrystalRedShield;
+		spr_disappear = spr.CrystalRedShieldDisappear;
 		spr_shadow = shd32;
 		spr_shadow_y = 6;
 		hitid = [spr_idle, "CRYSTAL BRAIN"];
 		sprite_index = spr_hurt;
-		depth = -8;
+		depth = -2;
 		
 		 // Sounds:
 		snd_hurt = sndLightningCrystalHit;
@@ -266,52 +270,60 @@
 		mask_index = mskBanditBoss;
 		direction = random(360);
 		friction = 0.1;
-		maxhealth = 75;
+		maxhealth = 80;
 		raddrop = 20;
-		canfly = true;
 		wave = 0;
 		size = 3;
 		walk = 0;
 		walkspeed = 0.3;
 		maxspeed = 1.2;
 		minspeed = 0.4;
-		meleedamage = 6;
-		target_x = x;
-		target_y = y;
-		motion_obj = noone;
+		meleedamage = 4;
 		clone_num = 0;
 		clone_max = 6;
-		wall_yoff = -8
-		wall_yoff_coeff = 0;
+		teleport = false;
+		teleport_x = x;
+		teleport_y = y;
+		min_tele_dist = 64;
+		max_tele_dist = 96;
 		
 		 // Alarms:
 		alarm1 = 90;
 		
 		 // NTTE:
-		ntte_walk = false;
+		ntte_anim = false;
 		
 		return id;
-	}
-	
-#define CrystalBrain_end_step
-	 // Intangible:
-	if(instance_exists(motion_obj)){
-		var m = motion_obj;
-		x = m.x;
-		y = m.y;
-		speed = m.speed;
-		direction = m.direction;
 	}
 	
 #define CrystalBrain_step
 	wave += current_time_scale;
 	clone_num = array_length(instances_matching(instances_matching(CustomObject, "name", "Clone"), "creator", id));
 	
+	 // Animate:
+	if(teleport){
+		if(anim_end){
+			if(sprite_index == spr_appear){
+				teleport = false;
+				x = teleport_x;
+				y = teleport_y;
+				sprite_index = enemy_sprite;
+			}
+			if(sprite_index == spr_disappear){
+				image_index -= image_speed_raw;
+			}
+		}
+	}
+	else{
+		sprite_index = enemy_sprite;
+	}
+	
 	 // Effects:
-	if(chance_ct(1, 4)){
+	if(!teleport && chance_ct(1, 4)){
 		scrCrystalBrainEffect(x + orandom(32), y + orandom(32));
 	}
 	
+	/*
 	 // Motion:
 	speed = max(minspeed, speed);
 	if(!instance_exists(motion_obj)){
@@ -339,12 +351,35 @@
 		wall_yoff_coeff -= current_time_scale / 8;
 	}
 	wall_yoff_coeff = clamp(wall_yoff_coeff, 0, 1);
+	*/
 
+#define CrystalBrain_end_step
+	speed = max(speed, minspeed);
+	canfly = teleport;
+
+	/*
+	 // Intangible:
+	if(instance_exists(motion_obj)){
+		var m = motion_obj;
+		x = m.x;
+		y = m.y;
+		speed = m.speed;
+		direction = m.direction;
+	}
+	*/
+	
 #define CrystalBrain_draw
+	var _x = (teleport ? teleport_x : x),
+		_y = (teleport ? teleport_y : y);
+	
+	draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+
+	/*	
+	
+	/// DEPRICATED - FUNKY DRAW EFFECT
 	var _yoff = sin(wave / 20);
 	draw_sprite_ext(sprite_index, image_index, x, y + (wall_yoff * wall_yoff_coeff) + _yoff, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 	
-	/*	
 	if(button_check(0, "horn")) draw_self_enemy();
 	else
 	
@@ -393,61 +428,88 @@
 	}
 	*/
 	
-#define CrystalBrain_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, 0, 0);
-	
-	 // It's gross, I know:
-	with(motion_obj){
-		motion_add(_hitdir, _hitvel);
-	}
-	
 #define CrystalBrain_alrm1
-	alarm1 = 30 + random(30);
-
-	if(enemy_target(x, y)){
-		if(in_distance(target, 64) && place_meeting(x, y, Floor)){
-			scrCrystalBrainWalk(point_direction(target.x, target.y, x, y) + orandom(30), 10 + random(20), 2.4);
-			scrRight(direction + 180);
-			alarm1 = walk;
-		}
-		else{
-			if(point_distance(x, y, target_x, target_y) < 64){
-				
-				 // Deploy Clones:
-				if(chance(2, (1 - (clone_num / clone_max)))){
+	alarm1 = random_range(20, 40);
+	
+	
+	if(!teleport){
+		if(enemy_target(x, y)){
+			var _targetDir = point_direction(x, y, target.x, target.y),
+				_canWarp = true;
+			
+			if(in_sight(target)){
+			
+				 // Attempt Cloning:
+				if(chance((1 - (clone_num / clone_max)), 1)){
 					with(obj_create(x, y, "Clone")){
+						_canWarp = false;
 						creator = other;
 					}
 				}
 				
-				 // Seek New Target:
-				if(chance(1, 4)){
-					var o = instance_nearest_array(target.x, target.y, instances_matching(enemy, "team", team));
-					if(instance_exists(o)){
-						target_x = o.x;
-						target_y = o.y;
-					}
-				}
-				
-				 // Wander:
-				else{
-					scrCrystalBrainWalk(random(360), 10 + random(20), 1.2);
+				 // Get Back, Bro:
+				if(in_distance(target, 64)){
+					scrWalk((_targetDir + 180) + orandom(30), random_range(10, 20));
+					alarm1 = walk + random(10);
 				}
 			}
 			
-			 // Move to Target:
-			else{
-				scrCrystalBrainWalk(point_direction(x, y, target_x, target_y) + random(30), 20 + random(20), 2.4);
-				alarm1 = walk;
+			 // Warp Out:
+			if(_canWarp && chance(1, 4)){
+				alarm1 = 30;
+				
+				teleport = true;
+				teleport_x = x;
+				teleport_y = y;
+				x = 0;
+				y = 0;
+				
+				 // Visual:
+				sprite_index = spr_disappear;
+				image_index = 0;
 			}
+			
+			 // Watch Your Back:
+			if(in_sight(target)){
+				scrRight(_targetDir);
+			}
+		}
+		
+		 // Wander:
+		else{
+			scrWalk(random(360), random_range(20, 40));
+			alarm1 = random_range(30, 60);
 		}
 	}
 	
-#define scrCrystalBrainWalk(_dir, _walk, _spd)
-	scrWalk(_dir, _walk);
-	walkspeed = _spd;
-	with(motion_obj){
-		motion_set(other.direction, other.speed);
+	 // Warp In:
+	else{
+		var _floors = [],
+			_target = instance_nearest(x, y, Player),
+			_minDis = min_tele_dist,
+			_maxDis = max_tele_dist;
+			
+		 // Find Valid Floors:
+		if(instance_exists(_target)){
+			with(FloorNormal){
+				if(!place_meeting(x, y, Wall)){
+					if(!in_distance(_target, [_minDis, _maxDis])){
+						array_push(_floors, id);
+					}
+				}
+			}
+			
+			 // Teleport to Random Floor:
+			var _targetFloor = instance_random(_floors);
+			if(instance_exists(_targetFloor)){
+				teleport_x = _targetFloor.x + 16;
+				teleport_y = _targetFloor.y + 16;
+				
+				 // Visual:
+				sprite_index = spr_appear;
+				image_index = 0;
+			}
+		}
 	}
 	
 #define CrystalBrain_death
@@ -475,9 +537,6 @@
 		}
 	}
 	
-#define CrystalBrain_cleanup
-	instance_delete(motion_obj);
-	
 #define scrCrystalBrainEffect(_x, _y)
 	with(instance_create(_x, _y, BulletHit)){
 		sprite_index = spr.CrystalBrainEffect
@@ -487,7 +546,6 @@
 		
 		return id;
 	}
-	
 	
 #define CrystalHeart_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -1242,7 +1300,7 @@
 		
 		 // Vars:
 		mask_index = msk.PlasmaImpactSmall;
-		damage = 4;
+		damage = 2;
 		force = 6;
 	}
 	
