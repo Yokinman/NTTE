@@ -1937,21 +1937,17 @@
 
 
 #define Twins_create
-	var r = obj_create(x, y, "TwinOrbital"),
-		w = obj_create(x, y, "TwinOrbital");
-	r.twin = w;
-	w.twin = r;
-	w.white = true;
-	twins = [r, w];
-	with(twins) creator = other;
-	
-	track = 0;
-	wave = 0;
-	
+	 // Visual:
 	spr_idle = mskNone;
 	spr_walk = mskNone;
 	spr_hurt = mskNone;
 	spr_shadow = mskNone;
+	
+	 // Vars:
+	twin_count = 2;
+	twin_array = array_create(twin_count, noone);
+	twin_angle = 0;
+	twin_orbit_coeff = 0;
 	
 	 // Stat:
 	if("diverted" not in stat) stat.diverted = 0;
@@ -1963,51 +1959,81 @@
 	if(_name == "") return spr.PetTwinsStat;
 	
 #define Twins_step
-	wave += current_time_scale;
-	var _orbitalCount = 1,
-		_orbitalIndex = 0,
-		_pet = id;
-	
-	 // Cling to Leader:
-	if(instance_exists(leader)){
-		track = min(track + current_time_scale / 30, 1);
-		x = lerp(x, leader.x, track);
-		y = lerp(y, leader.y, track);
-		wave = lerp(wave % 360, leader.wave % 360, track);
+	twin_angle = (twin_angle + current_time_scale) % 360;
+	var _twinsCount = 0,
+		_twinsIndex = 0,
+		_petName = pet,
+		_petInst = id;
 		
+	 // Create twin_array:
+	var _leader = leader,
+		_doLink = false;
+	for(var i = 0; i < twin_count; i++){
+		if(!instance_exists(twin_array[i])){
+			twin_array[i] = obj_create(x, y, "TwinOrbital");
+			with(twin_array[i]){
+				creator = other;
+				leader = _leader;
+				white = i;
+			}
+			
+			_doLink = true;
+		}
+	}
+	if(_doLink){
+		for(var i = 0; i < twin_count; i++){
+			var _linkTo = twin_array[(i + 1) % twin_count];
+			with(twin_array[i]){
+				twin = _linkTo;
+			}
+		}
+	}
+		
+	 // Leader:
+	var _leaderAngle = twin_angle;
+	if(instance_exists(leader)){
+		twin_orbit_coeff = min(twin_orbit_coeff + (current_time_scale / 30), 1);
+		x = lerp(x, leader.x, twin_orbit_coeff);
+		y = lerp(y, leader.y, twin_orbit_coeff);
 		
 		with(leader){
+			_leaderAngle = wave % 360;
 			for(var i = 0; i < array_length(ntte_pet); i++){
-				if(ntte_pet[i] != noone){
-					if(ntte_pet[i] == _pet){
-						_orbitalIndex = i;
+				var _pet = ntte_pet[i];
+				
+				if(instance_exists(_pet)){
+					if(_pet == _petInst){
+						_twinsIndex = _twinsCount;
 					}
-					else{
-						if(ntte_pet[i].pet == _pet.pet){
-							_orbitalCount++;
-						}
+					if(_pet.pet == _petName){
+						_twinsCount++;
 					}
 				}
 			}
 		}
+		
 	}
 	else{
-		track = 0;
+		twin_orbit_coeff = 0;
 	}
 	
-	 // Drag Orbitals Along:
-	var l = 24,
-		o = (360 / (_orbitalCount * 2)) * _orbitalIndex;
-	// trace(_orbitalCount, _orbitalIndex)
-	for(var i = 0; i <= 1; i++){
-		with(twins[i]){
-			direction = (other.wave * 2) + (i * 180) + o;
-			x = other.x + lengthdir_x(l, direction);
-			y = other.y + lengthdir_y(l, direction);
+	 // Orbit:
+	var l = lerp(12, 24 + ((twin_count - 1) * 10), twin_orbit_coeff),
+		o = (360 / (_twinsCount * twin_count)) * _twinsIndex;
+	
+	for(var i = 0; i < twin_count; i++){
+		var a = lerp(twin_angle, _leaderAngle, twin_orbit_coeff),
+			d = ((a * 2) + (i * (360 / twin_count)) + o) % 360;
+			
+		// trace(_twinsCount, _twinsIndex, d)
+		with(twin_array[i]){
+			direction = d;
+			x = other.x + lengthdir_x(l, d);
+			y = other.y + lengthdir_y(l, d);
 			xprevious = x;
 			yprevious = y;
-			image_index = ((direction / 360) * (image_number * 4)) % image_number;
-			depth = other.depth + dsin(direction) / 100;
+			image_index = ((d / 360) * (image_number * 4)) % image_number;
+			depth = other.depth + (dsin(d) / 100);
 		}
 	}
 	

@@ -1808,11 +1808,12 @@
 		
 		 // Vars:
 		mask_index = mskFreak;
-		creator = false;
+		creator = noone;
+		leader = noone;
 		white = false;
 		setup = true;
 		damage = 2;
-		force = 5;
+		force = 4;
 		team = 2;
 		kick = 0;
 		kick_dir = 0;
@@ -1866,29 +1867,84 @@
 	
 	
 #define TwinOrbital_hit
-	// if(projectile_canhit_melee(other)) projectile_hit(other, damage, force, direction);
-	
-#define TwinOrbital_projectile
-	var t = twin;
-	
-	kick = 6;
-	kick_dir = other.direction;
-	t.kick = -3;
-	t.kick_dir = other.direction;
-	with(team_instance_sprite(team, other)){
-		team = other.team;
-		x = t.x;
-		y = t.y;
-		move_contact_solid(direction, speed);
+	if(free && projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+		
+		 // Game Feel:
+		sleep_max(20);
+		kick = 4;
+		kick_dir = lerp(point_direction(x, y, other.x, other.y), direction, 0.5);
 	}
 	
-	if(instance_exists(creator)){
-		creator.stat.diverted++;
+#define TwinOrbital_projectile
+	var _projDir = other.direction;
+	
+	 // Divert:
+	if(instance_exists(twin)){
+		kick = 6;
+		kick_dir = _projDir;
+		
+		scrTwinOrbitalFX(x, y, _projDir);
+		repeat(irandom_range(1, 3)){
+			with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
+				alarm0 = random_range(10, 20);
+			}
+		}
+		
+		with(twin){
+			kick = -3;
+			kick_dir = _projDir;
+		
+			scrTwinOrbitalFX(x, y, _projDir);
+			repeat(irandom_range(1, 3)){
+				with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
+					sprite_index = sprSpiralStar;
+					alarm0 = random_range(10, 20);
+				}
+			}
+		}
+		
+		if(twin.free){
+			var _twin = twin;
+			with(team_instance_sprite(team, other)){
+				team = other.team;
+				x = _twin.x;
+				y = _twin.y;
+			}
+		}
+		
+		else{
+			instance_delete(other);
+		}
+	}
+	
+	 // Oh Well:
+	else{
+		instance_create(x, y, Smoke);
+		instance_delete(other);
+	}
+
+	
+	 // Stat:
+	with(creator){
+		if("stat" in self && "diverted" in stat){
+			stat.diverted++;
+		}
 	}
 	
 #define TwinOrbital_draw
 	if(free){
 		draw_sprite_ext(sprite_index, image_index, x + lengthdir_x(kick, kick_dir), y + lengthdir_y(kick, kick_dir), image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	}
+	
+#define scrTwinOrbitalFX(_x, _y, _dir)
+	var _sprite = (white ? spr.PetTwinsEffectWhite : spr.PetTwinsEffectRed);
+	with(instance_create(_x, _y, BulletHit)){
+		sprite_index = _sprite;
+		image_angle = _dir;
+		depth = other.depth - 1;
+		
+		return id;
 	}
 	
 #define VlasmaBullet_create(_x, _y)

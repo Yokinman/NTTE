@@ -355,6 +355,16 @@
 				global.crystal_heart_guarantee = true;
 			}
 			
+			 // Guitar Grounded:
+			with(instances_matching(WepPickup, "wep", wep_guitar)){
+				with(obj_create(x, y, "WepPickupGrounded")){
+					with(target){
+						wep = wep_guitar;
+					}
+				}
+				instance_delete(id);
+			}
+			
 			break;
 			
 		case area_desert: /// DESERT
@@ -1849,6 +1859,7 @@
 	 // Goodbye, stupid mechanic:
 	with(GameCont) if(junglevisits > 0){
 		skill_set(mut_last_wish, 1);
+		junglevisits--;
 		skillpoints--;
 	}
 	
