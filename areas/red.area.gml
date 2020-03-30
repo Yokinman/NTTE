@@ -248,6 +248,90 @@
 		}
 	}
 	
+	 // Secrets Upon Secrets:
+	if(variable_instance_get(GenCont, "iswarpzone", true)){
+		var _floorArray = [];
+		with(FloorNormal) if(array_length(instances_matching_lt(instances_matching(FloorNormal, "x", x), "y", y)) <= 0){
+			array_push(_floorArray, id);
+		}
+		
+		 // Highest Floor:
+		var _floorTarget = instance_random(_floorArray);
+		with(_floorTarget){
+			var _w = 3,
+				_h = 3,
+				_type = "",
+				_dirOff = 60,
+				_floorDis = random_range(80, 160),
+				_dirStart = 90,
+				_levelFloor = FloorNormal;
+				
+			floor_set_align(32, 32, null, null);
+			floor_set_style(1, null);
+		
+			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+				var	_minID = GameObject.id,
+					_x = x + 16,
+					_y = y + 16,
+					_moveDis = 32;
+					
+				 // Create Hallway:
+				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
+					while(
+						point_distance(_x, _y, _floorTarget.x, _floorTarget.y) > _moveDis / 2
+						&&
+						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _levelFloor)) <= 0
+					){
+						
+						 // Floor + Props:
+						floor_set(_x, _y, true);
+						
+						 // Move:
+						var _moveDir = round((point_direction(_x, _y, _floorTarget.x, _floorTarget.y) + orandom(60)) / 90) * 90;
+						_x += lengthdir_x(_moveDis, _moveDir);
+						_y += lengthdir_y(_moveDis, _moveDir);
+					}
+				}
+				
+				 // Secrets Upon Secrets Upon Secres:
+				with(instance_random(floors)){
+					var v = y - 32;
+					while(place_meeting(x, v, Floor)){
+						v -= 32;
+					}
+					floor_set(x, v, true);
+					with(floor_set(x, (v - 32), true)){
+						
+						 // Secret Chest:
+						with(obj_create(x + 16, y + 16, "Backpack")){
+							
+						}
+					}
+				}
+				
+				 // Hide:
+				with(instances_matching_gt(FloorNormal, "id", _minID)){
+					obj_create(x, y, "WallFake");
+					depth = 10;
+					
+					 // Crystallize:
+					if(chance(1, 3)){ 
+						// obj_create(x + 16, y + 16, "CrystalPropRed");
+					}
+				}
+				with(instances_matching_gt(Wall, "id", _minID)){
+					topindex = 0;
+				}
+				with(instances_matching_gt(TopSmall, "id", _minID)){
+					image_index = 0;
+				}
+			}
+			
+			floor_reset_align();
+			floor_reset_style();
+		}
+	}
+	
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

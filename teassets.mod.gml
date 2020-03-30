@@ -1128,11 +1128,15 @@
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:
-			WallRedBot	 = sprite(p + "sprWallCrystalBot",   2, 0,  0);
-			WallRedTop	 = sprite(p + "sprWallCrystalTop",   4, 0,  0);
-			WallRedOut	 = sprite(p + "sprWallCrystalOut",   1, 4, 12);
-			WallRedTrans = sprite(p + "sprWallCrystalTrans", 4, 0,  0);
-			DebrisRed    = sprite(p + "sprDebrisCrystal",    4, 4,  4);
+			WallRedBot	 = sprite(p + "sprWallCrystalBot",   2,  0,  0);
+			WallRedTop	 = sprite(p + "sprWallCrystalTop",   4,  0,  0);
+			WallRedOut	 = sprite(p + "sprWallCrystalOut",   1,  4,  12);
+			WallRedTrans = sprite(p + "sprWallCrystalTrans", 4,  0,  0);
+			DebrisRed    = sprite(p + "sprDebrisCrystal",    4,  4,  4);
+			
+			WallFakeBot = sprite(p + "sprWallFakeBot",  16,	0,  0);
+			WallFakeTop = sprite(p + "sprWallFakeTop",	1,	0,  8);
+			WallFakeOut = sprite(p + "sprWallFakeOut",	1,	1,  9);
 			
 			 // Decals:
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);

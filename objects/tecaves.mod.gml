@@ -9,7 +9,12 @@
 	 // Surfaces:
 	surfWallShineMask = surflist_set("WallShineMask", 0, 0, game_width * 2, game_height * 2);
 	surfWallShine = surflist_set("WallShine", 0, 0, game_width, game_height);
+	surfWallFake = surflist_set("WallFake", 0, 0, game_width, game_height);
 	surfClones = surflist_set("Clones", 0, 0, game_width, game_height);
+	
+	 // Fake Wall Player Visibility Coefficient:
+	wallFakePlayerVisible = array_create(maxp, 0);
+	wallFakeTransitionCol = make_color_rgb(145, 0, 43);
 	
 	 // Clone Base Color:
 	baseCloneCol = make_color_rgb(145, 0, 43);
@@ -28,8 +33,11 @@
 
 #macro surfWallShineMask global.surfWallShineMask
 #macro surfWallShine global.surfWallShine
+#macro surfWallFake global.surfWallFake
 #macro surfClones global.surfClones
 
+#macro wallFakePlayerVisible global.wallFakePlayerVisible
+#macro wallFakeTransitionCol global.wallFakeTransitionCol
 #macro baseCloneCol global.cloneCol
 
 #define Clone_create(_x, _y)
@@ -88,6 +96,7 @@
 				var _objName = variable_instance_get(id, "name", object_index);
 				if(!array_exists([
 					"CrystalBrain", 
+					"CrystalHeart",
 					"Palanking", 
 					"PitSquid", 
 					"PitSquidArm", 
@@ -493,8 +502,10 @@
 		if(instance_exists(_target)){
 			with(FloorNormal){
 				if(!place_meeting(x, y, Wall)){
-					if(in_distance(_target, [_minDis, _maxDis])){
-						array_push(_floors, id);
+					if(array_length(instances_meeting(x, y, instances_matching(CustomObject, "name", "WallFake"))) <= 0){
+						if(in_distance(_target, [_minDis, _maxDis])){
+							array_push(_floors, id);
+						}
 					}
 				}
 			}
@@ -518,6 +529,7 @@
 	 // Death Object:
 	if(corpse){
 		with(obj_create(x, y, "CrystalBrainDeath")){
+			image_xscale = other.right;
 			raddrop = other.raddrop;
 		}
 		raddrop = 0;
@@ -533,7 +545,7 @@
 	*/
 	
 #define CrystalBrainDeath_create(_x, _y)
-	with(instance_create(_x, _y, CustomHitme)){
+	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		spr_idle = spr.CrystalBrainHurt;
 		spr_dead = spr.CrystalBrainDead;
@@ -549,6 +561,7 @@
 		 // Vars:
 		mask_index = mskNone;
 		friction = 0.5;
+		raddrop = 0;
 		team = 1;
 		size = 3;
 		ammo = irandom_range(3, 4);
@@ -2067,6 +2080,83 @@
 	}
 	
 	
+#define WallFake_create(_x, _y)
+	/*
+		Illusory walls. Drawn through draw_fake_walls().
+		
+		Vars:
+			- out_free: enables drawing the out sprite.
+			- bot_free: enables drawing the bottom sprite.
+	*/
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.WallFakeBot;
+		image_speed = 0.2;
+		image_alpha = -1;
+		
+		 // Vars:
+		mask_index = mskFloor;
+		out_free = true;
+		bot_free = true;
+		
+		return id;
+	}
+
+#define WallFake_end_step
+	image_alpha = abs(image_alpha) * -1;
+	
+	/*
+	
+	 // Determine Open Faces:
+	out_free = false;
+	bot_free = false;
+	 
+	var l = 32;
+	for(var d = 0; d < 360; d += 90){
+		var _x = x + lengthdir_x(l, d),
+			_y = y + lengthdir_y(l, d);
+			
+		if(array_length(instance_rectangle_bbox(_x, _y, (_x + 31), (_y + 31), Floor)) > 0){
+			if(d == 270){
+				bot_free = true;
+			}
+			else{
+				out_free = true;
+			}
+		}
+	}
+	*/
+	
+	 // Repel Enemies:
+	if(out_free || bot_free){
+		with(instances_meeting(x, y, enemy)){
+			if(!place_meeting(x - hspeed, y - vspeed, other)){
+				
+				 // Horizontal Collision:
+				if(!place_meeting(x - hspeed, y, other)){
+					repeat(5){
+						with(instance_create((sign(hspeed) ? bbox_right : bbox_left) + orandom(2), random_range(min(bbox_top, other.bbox_top), max(bbox_bottom, other.bbox_bottom)), PlasmaTrail)){
+							sprite_index = spr.EnemyPlasmaTrail;
+						}
+					}
+					x -= hspeed;
+					hspeed *= -1;
+				} 
+				
+				 // Vertical Collision:
+				if(!place_meeting(x, y - vspeed, other)){
+					repeat(5){
+						with(instance_create(random_range(min(bbox_right, other.bbox_right), max(bbox_left, other.bbox_left)), (sign(vspeed) ? bbox_bottom : bbox_top) + orandom(2), PlasmaTrail)){
+							sprite_index = spr.EnemyPlasmaTrail;
+						}
+					}
+					y -= vspeed;
+					vspeed *= -1;
+				}
+			}
+		}
+	}
+	
 #define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2221,6 +2311,33 @@
 	with(surfWallShine){
 		active = surfWallShineMask.active;
 		if(active) script_bind_draw(draw_wall_shine, -6.0001);
+	}
+	
+	 // Fake Walls:
+	with(surfWallFake){
+		var _inst = instances_matching(CustomObject, "name", "WallFake");
+		active = (array_length(_inst) > 0);
+		
+		if(active){
+			script_bind_draw(draw_fake_walls,  0, instances_matching(_inst, "bot_free", true), spr.WallFakeBot, -1);
+			script_bind_draw(draw_fake_walls, -6, instances_matching(_inst, "out_free", true), spr.WallFakeOut,  0);
+			script_bind_draw(draw_fake_walls, -7, _inst, spr.WallFakeTop,  0);
+		}
+		
+		 // Player Visibility:
+		with(Player){
+			
+			 // Increment:
+			var _array = wallFakePlayerVisible;
+			if(array_length(instances_meeting(x, y, _inst)) > 0){
+				_array[index] = min(_array[index] + current_time_scale / 10, 1);
+			}
+			
+			 // Decrement:
+			else{
+				_array[index] = max(_array[index] - current_time_scale / 10, 0);
+			}
+		}
 	}
 	
 	 // Crystal Tunnel Particles:
@@ -2522,6 +2639,82 @@
 	instance_destroy();
 	
 
+#define draw_fake_walls(_inst, _sprite, _frame)
+	var _vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_gw = game_width,
+		_gh = game_height;
+		
+	with(surfWallFake){
+		x = _vx;
+		y = _vy;
+		w = _gw;
+		h = _gh;
+		
+		if(surface_exists(surf)){
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			 // Draw Fake Wall Sprite:
+			var _instSeen = instances_seen_nonsync(_inst, 48, 48);
+			with(_instSeen){
+				draw_sprite(_sprite, _frame, x - _vx, y - _vy);
+			}
+			
+			 // Drawing Cutout:
+			var p = player_find_local_nonsync(),
+				c = wallFakePlayerVisible[p],
+				r = (32 + sin(current_frame / 10)) * lerp(0.2, c, c);
+			
+			if(c > 0){
+				with(player_find(p)){
+					draw_set_blend_mode(bm_subtract);
+					
+					draw_circle(x - _vx, y - _vy, r, false);
+				
+					draw_set_blend_mode(bm_normal);
+				
+					draw_set_color_write_enable(1, 1, 1, 0);
+					draw_set_color(wallFakeTransitionCol);
+					
+					draw_circle(x - _vx, y - _vy, r + 0.5, false);
+	
+					draw_set_color_write_enable(1, 1, 1, 1);
+					draw_set_color(c_white);
+				}
+			}
+			
+			/*
+			
+			 // Wall Silhouette:
+			draw_set_color_write_enable(1, 1, 1, 0);
+			draw_set_fog(true, merge_color(background_color, c_black, 0.5), 0, 0);
+			
+			var i = player_find_local_nonsync();
+			with(player_find(i)){
+				x -= _vx;
+				y -= _vy;
+				
+				with(self) event_perform(ev_draw, 0);
+				
+				x += _vx;
+				y += _vy;
+			}
+			
+			draw_set_color_write_enable(1, 1, 1, 1);
+			draw_set_fog(false, c_white, 0, 0);
+			*/
+			
+			surface_reset_target();
+			
+			draw_surface(surf, _vx, _vy);
+		}
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
 #define draw_clones(_inst, _sprite, _speed)
 	var _vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
