@@ -36,8 +36,10 @@
 #macro surfWallFake global.surfWallFake
 #macro surfClones global.surfClones
 
+#macro WallFake				 instances_matching(FloorNormal, "ntte_wallfake", true)
 #macro wallFakePlayerVisible global.wallFakePlayerVisible
 #macro wallFakeTransitionCol global.wallFakeTransitionCol
+
 #macro baseCloneCol global.cloneCol
 
 #define Clone_create(_x, _y)
@@ -255,6 +257,8 @@
 			teleport_y		- Y coordinate counterpart to teleport_x.
 			min_tele_dist	- Minimum distance from the player the brain can teleport to.
 			max_tele_dist	- Maximum distance from the player the brain can teleport to.
+			dying			- Boolean. Tracks if the brain has entered its death phase.
+			death_throes	- The remaining number of throes in the death phase.
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -295,6 +299,9 @@
 		teleport_y = y;
 		min_tele_dist = 80;
 		max_tele_dist = 160;
+		candie = false;
+		dying = false;
+		death_throes = irandom_range(3, 4);
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -324,7 +331,14 @@
 		}
 	}
 	else{
-		sprite_index = enemy_sprite;
+		if(!dying){
+			sprite_index = enemy_sprite;
+		}
+		else{
+			if(anim_end){
+				sprite_index = spr_hurt;
+			}
+		}
 	}
 	
 	 // Effects:
@@ -332,50 +346,70 @@
 		scrCrystalBrainEffect(x + orandom(32), y + orandom(32));
 	}
 	
-	/*
-	 // Motion:
-	speed = max(minspeed, speed);
-	if(!instance_exists(motion_obj)){
-		motion_obj = instance_create(x, y, CustomObject);
-		with(motion_obj){
-			direction = other.direction;
-			speed = other.speed;
+	 // Dying:
+	if(my_health <= 0){
+		
+		 // Begin Death:
+		if(!dying){
+			dying = true;
+			
+			 // Visual:
+			sprite_index = spr_hurt;
+			image_index = 0;
+			
+			 // Vars:
+			friction = 0.5;
+			speed = 0;
+			minspeed = 0;
+			maxspeed = 8;
+			
+			sound_play_hit(sndLightningCrystalCharge, 0.3);
+		}
+		
+		alarm1 = -1;
+		walk = 0;
+		
+		 // Mid Death:
+		var _still = (speed <= minspeed);
+		if(death_throes > 0){
+			
+			x += orandom(2);
+			y += orandom(2);
+			if(_still){
+				death_throes--;
+				
+				 // Jerk Around:
+				motion_set(point_direction(x, y, xstart, ystart) + orandom(30), random_range(3, 8));
+				move_contact_solid(direction, 4);
+				
+				 // Desperation Clone:
+				with(obj_create(x, y, "Clone")){
+					creator = other;
+				}
+				
+				 // Effects:
+				sound_play_hit(snd_hurt, 0.3);
+				view_shake_at(x, y, 15);
+				repeat(2){
+					with(scrFX(x, y, [random(360), random_range(2, 5)], Shell)){
+						sprite_index = spr.CrystalBrainChunk;
+						image_index = irandom(image_number - 1);
+						image_speed = 0;
+					}
+				}
+			}
+		}
+		
+		else{
+			if(_still){
+				candie = true;
+			}
 		}
 	}
-	var m = motion_obj;
-	if(walk > 0){
-		with(motion_obj){
-			motion_add(direction, other.walkspeed);
-		}
-		walk -= current_time_scale;
-	}
-	m.speed = clamp(m.speed - friction, minspeed, maxspeed);
-	
-	 // Wall Climbing:
-	var w = (place_meeting(x, y, TopSmall) || !place_meeting(x, y, Floor));
-	if(w){
-		wall_yoff_coeff += current_time_scale / 16;
-	}
-	else{
-		wall_yoff_coeff -= current_time_scale / 8;
-	}
-	wall_yoff_coeff = clamp(wall_yoff_coeff, 0, 1);
-	*/
 
 #define CrystalBrain_end_step
 	speed = max(speed, minspeed);
 	canfly = teleport;
-
-	/*
-	 // Intangible:
-	if(instance_exists(motion_obj)){
-		var m = motion_obj;
-		x = m.x;
-		y = m.y;
-		speed = m.speed;
-		direction = m.direction;
-	}
-	*/
 	
 #define CrystalBrain_draw
 	var _x = (teleport ? teleport_x : x),
@@ -524,127 +558,19 @@
 	}
 	
 #define CrystalBrain_death
-	instance_create(x, y, PortalClear);
+	pickup_drop(100, 0);
+	pickup_drop(50,  0);
 	
-	 // Death Object:
-	if(corpse){
-		with(obj_create(x, y, "CrystalBrainDeath")){
-			image_xscale = other.right;
-			raddrop = other.raddrop;
+	 // Effects:
+	view_shake_at(x, y, 30);
+	repeat(5){
+		with(scrFX(x, y, [random(360), random_range(3, 7)], Shell)){
+			sprite_index = spr.CrystalBrainChunk;
+			image_index = irandom(image_number - 1);
+			image_speed = 0;
 		}
-		raddrop = 0;
-		corpse  = false;
-	}
-	
-	 // Effects:
-	sound_play_hit(sndLightningCrystalCharge, 0.3);
-	
-	/*
-	 // Plasma:
-	team_instance_sprite(team, enemy_shoot(PlasmaImpact, 0, 0));
-	*/
-	
-#define CrystalBrainDeath_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		spr_idle = spr.CrystalBrainHurt;
-		spr_dead = spr.CrystalBrainDead;
-		sprite_index = spr_idle;
-		hitid = [spr_idle, "CRYSTAL BRAIN"];
-		image_speed = 0.4;
-		depth = -2;
-		
-		 // Sounds:
-		snd_hurt = sndLightningCrystalHit;
-		snd_dead = sndLightningCrystalDeath;
-		
-		 // Vars:
-		mask_index = mskNone;
-		friction = 0.5;
-		raddrop = 0;
-		team = 1;
-		size = 3;
-		ammo = irandom_range(3, 4);
-		motion_set(random(360), random_range(3, 5));
-		
-		return id;
-	}
-	
-#define CrystalBrainDeath_step
-	 // Effects:
-	if(chance_ct(1, 4)){
-		scrCrystalBrainEffect(x + orandom(32), y + orandom(32));
 	}
 
-	 // Dying:
-	x += orandom(2);
-	y += orandom(2);
-	if(speed <= friction){
-		if(ammo > 0){
-			ammo--;
-			
-			 // Jerk Around:
-			motion_set(point_direction(x, y, xstart, ystart) + orandom(30), random_range(3, 8));
-			move_contact_solid(direction, 4);
-			
-			 // Desperation Clone:
-			obj_create(x, y, "Clone");
-			
-			 // Effects:
-			instance_create(x, y, PortalClear);
-			sound_play_hit(snd_hurt, 0.3);
-			view_shake_at(x, y, 15);
-			repeat(2){
-				with(scrFX(x, y, [random(360), random_range(2, 5)], Shell)){
-					sprite_index = spr.CrystalBrainChunk;
-					image_index = irandom(image_number - 1);
-					image_speed = 0;
-				}
-			}
-			
-			/*
-			 // Plasma:
-			var l = 10;
-			for(var i = 0; i < 360; i += 360 / 3){
-				var d = direction + i;
-				team_instance_sprite(team, enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PlasmaImpactSmall", 0, 0));
-			}
-			*/
-		}
-		else{
-		
-			 // Death Drops:
-			rad_drop(x, y, raddrop, direction, speed);
-			corpse_drop(direction, speed);
-			pickup_drop(100, 0);
-			pickup_drop(50,  0);
-			
-			 // Effects:
-			instance_create(x, y, PortalClear);
-			sound_play_hit(snd_dead, 0.3);
-			view_shake_at(x, y, 30);
-			repeat(5){
-				with(scrFX(x, y, [random(360), random_range(3, 7)], Shell)){
-					sprite_index = spr.CrystalBrainChunk;
-					image_index = irandom(image_number - 1);
-					image_speed = 0;
-				}
-			}
-			
-			/*
-			 // Plasma:
-			var l = 24;
-			for(var i = 0; i < 360; i += 360 / 3){
-				var d = direction + i;
-				team_instance_sprite(team, enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "PlasmaImpactSmall", 0, 0));
-			}
-			team_instance_sprite(team, enemy_shoot(PlasmaImpact, 0, 0));
-			*/
-			
-			instance_destroy();
-		}
-	}
-	
 #define scrCrystalBrainEffect(_x, _y)
 	with(instance_create(_x, _y, BulletHit)){
 		sprite_index = spr.CrystalBrainEffect
@@ -2081,30 +2007,20 @@
 	
 	
 #define WallFake_create(_x, _y)
-	/*
-		Illusory walls. Drawn through draw_fake_walls().
-		
-		Vars:
-			- out_free: enables drawing the out sprite.
-			- bot_free: enables drawing the bottom sprite.
-	*/
-	with(instance_create(_x, _y, CustomObject)){
+	with(floor_set(_x, _y, true)){
 		 // Visual:
-		sprite_index = spr.WallFakeBot;
-		image_speed = 0.2;
-		image_alpha = -1;
+		sprite_index = spr.FloorRedB;
 		
 		 // Vars:
-		mask_index = mskFloor;
+		depth = 10;
 		out_free = true;
 		bot_free = true;
+		styleb = true;
 		
 		return id;
 	}
-
-#define WallFake_end_step
-	image_alpha = abs(image_alpha) * -1;
 	
+#define WallFake_step
 	/*
 	
 	 // Determine Open Faces:
@@ -2156,7 +2072,7 @@
 			}
 		}
 	}
-	
+
 #define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2315,13 +2231,14 @@
 	
 	 // Fake Walls:
 	with(surfWallFake){
-		var _inst = instances_matching(CustomObject, "name", "WallFake");
-		active = (array_length(_inst) > 0);
+		var a = instances_matching(Floor, "name", "WallFake");
+		active = (array_length(a) > 0);
 		
 		if(active){
-			script_bind_draw(draw_fake_walls,  0, instances_matching(_inst, "bot_free", true), spr.WallFakeBot, -1);
-			script_bind_draw(draw_fake_walls, -6, instances_matching(_inst, "out_free", true), spr.WallFakeOut,  0);
-			script_bind_draw(draw_fake_walls, -7, _inst, spr.WallFakeTop,  0);
+			var _frame = ((current_frame * current_time_scale) / 10) % sprite_get_number(spr.WallFakeBot);
+			script_bind_draw(draw_fake_walls,  0, instances_matching(a, "bot_free", true), spr.WallFakeBot, _frame);
+			script_bind_draw(draw_fake_walls, -6, instances_matching(a, "out_free", true), spr.WallFakeOut,  0);
+			script_bind_draw(draw_fake_walls, -7, a, spr.WallFakeTop,  0);
 		}
 		
 		 // Player Visibility:
@@ -2329,7 +2246,7 @@
 			
 			 // Increment:
 			var _array = wallFakePlayerVisible;
-			if(array_length(instances_meeting(x, y, _inst)) > 0){
+			if(array_length(instances_meeting(x, y, a)) > 0){
 				_array[index] = min(_array[index] + current_time_scale / 10, 1);
 			}
 			

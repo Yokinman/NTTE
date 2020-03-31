@@ -14,6 +14,8 @@
 
 #macro DebugLag global.debug_lag
 
+#macro isWallFake ("name" in id && name == "WallFake")
+
 #define area_subarea           return 1;
 #define area_goal              return 60;
 #define area_next              return mod_current; // CAN'T LEAVE
@@ -66,6 +68,7 @@
 #define area_setup_floor
 	 // Fix Depth:
 	if(styleb) depth = 8;
+	if(isWallFake) depth = 10;
 	
 	 // Footsteps:
 	material = 2;
@@ -184,7 +187,7 @@
 	
 	 // Props:
 	else if(chance(1, 4)){
-		obj_create(x + 16, y + 16, "CrystalProp" + (styleb ? "White" : "Red"));
+		obj_create(x + 16, y + 16, "CrystalProp" + ((styleb && !isWallFake) ? "White" : "Red"));
 	}
 	
 	 // Warp Rooms:
@@ -283,8 +286,10 @@
 						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _levelFloor)) <= 0
 					){
 						
-						 // Floor + Props:
-						floor_set(_x, _y, true);
+						 // Walls and Props:
+						with(obj_create(_x, _y, "WallFake")){
+							area_pop_props();
+						}
 						
 						 // Move:
 						var _moveDir = round((point_direction(_x, _y, _floorTarget.x, _floorTarget.y) + orandom(60)) / 90) * 90;
@@ -299,8 +304,8 @@
 					while(place_meeting(x, v, Floor)){
 						v -= 32;
 					}
-					floor_set(x, v, true);
-					with(floor_set(x, (v - 32), true)){
+					obj_create(x, v, "WallFake");
+					with(obj_create(x, (v - 32), "WallFake")){
 						
 						 // Secret Chest:
 						with(obj_create(x + 16, y + 16, "Backpack")){
@@ -309,16 +314,7 @@
 					}
 				}
 				
-				 // Hide:
-				with(instances_matching_gt(FloorNormal, "id", _minID)){
-					obj_create(x, y, "WallFake");
-					depth = 10;
-					
-					 // Crystallize:
-					if(chance(1, 3)){ 
-						// obj_create(x + 16, y + 16, "CrystalPropRed");
-					}
-				}
+				 // Hidden::
 				with(instances_matching_gt(Wall, "id", _minID)){
 					topindex = 0;
 				}
