@@ -25,7 +25,7 @@
 			mask_index = mskBullet1;
 			image_angle = direction;
 			image_speed = 0;
-			image_index = 4;
+			image_index = 9;
 			
 			creator = f.creator;
 			team = other.team;

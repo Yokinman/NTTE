@@ -534,12 +534,10 @@
 			
 		 // Find Valid Floors:
 		if(instance_exists(_target)){
-			with(FloorNormal){
+			with(instances_matching_ne(Floor, "name", "WallFake")){
 				if(!place_meeting(x, y, Wall)){
-					if(array_length(instances_meeting(x, y, instances_matching(CustomObject, "name", "WallFake"))) <= 0){
-						if(in_distance(_target, [_minDis, _maxDis])){
-							array_push(_floors, id);
-						}
+					if(in_distance(_target, [_minDis, _maxDis])){
+						array_push(_floors, id);
 					}
 				}
 			}

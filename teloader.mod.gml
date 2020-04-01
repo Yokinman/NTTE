@@ -30,6 +30,7 @@
 		["objects/tesewers.mod.gml",                0 + _coop],
 		["objects/tescrapyard.mod.gml",             0 + _coop],
 		["objects/tecaves.mod.gml",                 1 + _coop],
+		["objects/telabs.mod.gml",					1 + _coop],
 		["areas/coast.area.gml",                    1 + _coop, "Areas"],
 		["areas/oasis.area.gml",                    1 + _coop],
 		["areas/trench.area.gml",                   1 + _coop],

@@ -725,6 +725,9 @@
 		image_speed = 0.4 * choose(-1, 1);
 		depth = -8;
 		
+		 // Sounds:
+		snd_land = -1;
+		
 		 // Vars:
 		friction = 0.15;
 		direction = random(360);
@@ -733,6 +736,7 @@
 		zspeed = 10;
 		zfriction = 1;
 		rotspeed = orandom(30);
+		bounce = 0;
 		land = false;
 		
 		return id;
@@ -778,13 +782,19 @@
 		
 		if(_land){
 			if(abs(zspeed) > zfriction){
+				sound_play_hit_ext(snd_land, 0.9 + random(0.2), 0.5);
 				repeat(3) with(scrFX(x, y - z, 2, Dust)){
 					depth = other.depth;
 				}
 			}
-			image_index = 0;
-			image_angle = 0;
-			zspeed = 0;
+			if(bounce-- > 0){
+				zspeed *= -2/3;
+			}
+			else{
+				image_index = 0;
+				image_angle = 0;
+				zspeed = 0;
+			}
 		}
 	}
 	else{

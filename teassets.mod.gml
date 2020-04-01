@@ -756,6 +756,25 @@
 			
 		//#endregion
 		
+		//#region LABS
+		m = "areas/Labs/";
+		p = m;
+		
+			//#region PROPS
+			p = m + "Props/";
+			
+				 // Labs Vat:
+				LabsVatIdle  = sprite(p + "sprLabsVatIdle",  1, 32, 32);
+				LabsVatHurt  = sprite(p + "sprLabsVatHurt",  3, 32, 32);
+				LabsVatDead  = sprite(p + "sprLabsVatDead",  3, 32, 32);
+				LabsVatBack  = sprite(p + "sprLabsVatBack",  6, 32, 32);
+				LabsVatLid   = sprite(p + "sprLabsVatLid",   8, 24, 24);
+				LabsVatGlass = sprite(p + "sprLabsVatGlass", 4, 6,  6);
+				
+			//#endregion
+			
+		//#endregion
+		
 		//#region PALACE
 		m = "areas/Palace/";
 		p = m;

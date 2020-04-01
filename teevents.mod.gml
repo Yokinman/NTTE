@@ -29,8 +29,12 @@
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
+	teevent_add("LabVats");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
+	
+	 // Initialize Global Variables:
+	game_start();
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -1048,6 +1052,68 @@
 	}
 	
 	
+#define LabVats_text	return `@(color:${tipCol})SPECIMENS`;
+#define LabVats_area	return area_labs;
+#define LabVats_chance	return (lq_size(global.pastPets) > 0 ? 1 : 0);
+#define LabVats_create
+	var _spawnX = x,
+		_spawnY = y,
+		_spawnDis = 128,
+		_spawnFloor = FloorNormal,
+		_w = 6,
+		_h = 5,
+		_type = "",
+		_dirOff = 0,
+		_floorDis = 0;
+	
+	floor_set_align(32, 32, null, null);
+	
+	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		var _petList = global.pastPets,
+			_vatList = [];
+			
+		 // Corner Vats:
+		array_push(_vatList, obj_create(x - 64, y - 44, "LabsVat"));
+		array_push(_vatList, obj_create(x - 56, y + 36, "LabsVat"));
+		array_push(_vatList, obj_create(x + 64, y - 44, "LabsVat"));
+		array_push(_vatList, obj_create(x + 56, y + 36, "LabsVat"));
+		
+		 // Central Vat:
+		_vatList = array_combine([obj_create(x, y - 16, "LabsVat")], array_shuffle(_vatList));
+		
+		 // Petify:
+		var _numVats = array_length(_vatList);
+		for(var i = 0; (i < _numVats && i < lq_size(_petList)); i++){
+			if(chance(1 - (i / _numVats), 1)){
+			
+				var _petData = lq_get_value(_petList, i);
+				with(_vatList[i]){
+					with(thing){
+						type = "Pet";
+						sprite = _petData.sprite;
+						
+						with(pet_data){
+							pet_name = _petData.pet_name;
+							mod_type = _petData.mod_type;
+							mod_name = _petData.mod_name;
+							pet_vars = _petData.pet_vars;
+						}
+					}
+				}
+			}
+			
+			 // Remove From Pool:
+			lq_set(_petData, "cull", true);
+		}
+		
+		 // Ring:
+		floor_set_style(1, null);
+		floor_fill(x, y, _w, _h, "ring");
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
+
 #define PalaceShrine_text    return `@(color:${tipCol})RAD MANIPULATION @wIS KINDA TRICKY`;
 #define PalaceShrine_area    return area_palace;
 #define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
@@ -1300,6 +1366,89 @@
 	
 	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);
 	
+	
+/// Mod Events
+#define game_start
+	 // Pet Tracking:
+	global.livePets = {};
+	global.pastPets = {};
+
+#define step
+	var _livePets = global.livePets,
+		_pastPets = global.pastPets,
+		_newLive  = {},
+		_newPast  = {};
+		
+	with(instances_matching(CustomHitme, "name", "Pet")){
+		var _id = string(id);
+			
+		 // Case Specific Pet Variables:
+		var _petVars = {};
+		with(_petVars){
+			var _varList = [];
+			switch(other.pet){
+				case "Mimic":
+					_varList = ["wep"];
+					break;
+					
+				case "Parrot":
+					_varList = ["bskin", "spr_idle", "spr_walk", "spr_hurt", "spr_icon"];
+					break;
+					
+				case "Spider":
+					_varList = ["cursed", "spr_idle", "spr_walk", "spr_hurt", "spr_icon"];
+					break;
+					
+				case "Weapon":
+					_varList = ["curse", "wep", "bwep"];
+					break;
+			}
+			for(var i = 0; i < array_length(_varList); i++){
+				var o = _varList[i];
+				lq_set(self, o, variable_instance_get(other, o));
+			}
+		}
+		
+		lq_set(_newLive, _id, {"pet_name" : pet, "mod_type" : mod_type, "mod_name" : mod_name, "pet_vars" : _petVars});
+		// trace(`added '${pet}' to live pets`);
+	}
+		
+	for(var i = 0; i < lq_size(_livePets); i++){
+		var _id = lq_get_key(_livePets, i),
+			_pet = lq_get(_livePets, _id);
+			
+		 // Lost But Not Forgotten:
+		if(!instance_exists(real(_id))){
+			var _scr = `${_pet.pet_name}_stat`,
+				_spr = mskNone;
+				
+			 // Find Stats Sprite:
+			if(mod_script_exists(_pet.mod_type, _pet.mod_name, _scr)){
+				_spr = mod_script_call(_pet.mod_type, _pet.mod_name, _scr, "");
+			}
+			
+			lq_set(_pastPets, _id, {"pet_name" : _pet.pet_name, "mod_type" : _pet.mod_type, "mod_name" : _pet.mod_name, "sprite" : _spr, "pet_vars" : _pet.pet_vars, "cull" : false});
+			// trace(`added '${_pet.pet_name}' to past pets`);
+		}
+	}
+	
+	 // Cull:
+	for(var i = 0; i < lq_size(_pastPets); i++){
+		var _petID = lq_get_key(_pastPets, i),
+			_pet = lq_get(_pastPets, _petID);
+		if(!lq_get(_pet, "cull")){
+			lq_set(_newPast, _petID, _pet);
+		}
+		/*
+		else{
+			trace(`removed '${_pet.pet_name}' from past pets`);
+		}
+		*/
+	}
+	global.pastPets = _newPast;
+	global.livePets = _newLive;
+	
+	// trace(lq_size(global.livePets), lq_size(global.pastPets));
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
