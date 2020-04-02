@@ -1073,6 +1073,7 @@
 			_vatList = [];
 			
 		 // Corner Vats:
+		/*
 		array_push(_vatList, obj_create(x - 64, y - 44, "LabsVat"));
 		array_push(_vatList, obj_create(x - 56, y + 36, "LabsVat"));
 		array_push(_vatList, obj_create(x + 64, y - 44, "LabsVat"));
@@ -1080,13 +1081,26 @@
 		
 		 // Central Vat:
 		_vatList = array_combine([obj_create(x, y - 16, "LabsVat")], array_shuffle(_vatList));
+		*/
+		
+		 // Vats:
+		array_push(_vatList, obj_create(x - 64, y - 24, "LabsVat"));
+		array_push(_vatList, obj_create(x + 64, y - 24, "LabsVat"));
+		_vatList = array_combine([obj_create(x, y - 40, "LabsVat")], array_shuffle(_vatList));
+		
+		 // Props:
+		with(_vatList){
+			var r = choose(1, -1);
+			with(instance_create(x + (16 * r) + orandom(2), y + 32 + orandom(2), Terminal)){
+				depth = other.depth - 1/100;
+			}
+		}
 		
 		 // Petify:
 		var _numVats = array_length(_vatList);
 		for(var i = 0; (i < _numVats && i < lq_size(_petList)); i++){
-			if(chance(1 - (i / _numVats), 1)){
-			
-				var _petData = lq_get_value(_petList, i);
+			var _petData = lq_get_value(_petList, i);
+			if(chance(1 - (i / (_numVats - 1)), 1)){
 				with(_vatList[i]){
 					with(thing){
 						type = "Pet";
@@ -1369,11 +1383,22 @@
 	
 /// Mod Events
 #define game_start
-	 // Pet Tracking:
+	 // Pet History:
 	global.livePets = {};
 	global.pastPets = {};
 
 #define step
+	 // No Infinite Rads:
+	if(GameCont.loops <= 0){
+		with(instances_matching(PopoFreak, "ntte_raddrop", null)){
+			ntte_raddrop = true;
+			if(kills == 0){
+				raddrop = 0;
+			}
+		}
+	}
+
+	 // Pet History:
 	var _livePets = global.livePets,
 		_pastPets = global.pastPets,
 		_newLive  = {},
@@ -1575,3 +1600,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

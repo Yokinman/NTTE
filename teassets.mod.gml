@@ -686,6 +686,11 @@
 				BigCactusHurt = sprite(p + "sprBigCactusHurt", 3, 16, 16);
 				BigCactusDead = sprite(p + "sprBigCactusDead", 4, 16, 16);
 				
+				 // Return of a Legend:
+				CowSkullIdle = sprite(p + "sprCowSkullIdle", 1, 24, 24);
+				CowSkullHurt = sprite(p + "sprCowSkullHurt", 3, 24, 24);
+				CowSkullDead = sprite(p + "sprCowSkullDead", 3, 24, 24);
+				
 				 // Scorpion Rock:
 				ScorpionRockEnemy   = sprite(p + "sprScorpionRockEnemy",  6, 16, 16);
 				ScorpionRockFriend  = sprite(p + "sprScorpionRockFriend", 6, 16, 16);

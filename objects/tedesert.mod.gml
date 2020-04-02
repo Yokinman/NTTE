@@ -1528,6 +1528,17 @@
 	with(MusCont) alarm_set(1, 1);
 
 
+#define CowSkull_create(_x, _y)
+	with(instance_create(_x, _y, BigSkull)){
+		 // Visual:
+		spr_idle = spr.CowSkullIdle;
+		spr_hurt = spr.CowSkullHurt;
+		spr_dead = spr.CowSkullDead;
+		sprite_index = spr_idle;
+		
+		return id;
+	}
+
 #define FlySpin_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2002,3 +2013,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

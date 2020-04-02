@@ -3218,9 +3218,10 @@
 #define PalaceAltar_death
 	 // Debris:
 	repeat(10){
-		with(instance_create(x, y, ScrapBossCorpse)){
+		with(instance_create(x, y, Shell)){
 			sprite_index = spr.PalaceAltarDebris;
 			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
 			image_angle  = random(360);
 			motion_set(random(360), random_range(4, 8));
 		}
@@ -5090,3 +5091,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

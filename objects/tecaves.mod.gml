@@ -85,44 +85,53 @@
 	
 	 // Find Target:
 	if(!instance_exists(clone)){
-		var	_enemies = [],
-			_target = noone,
-			_clones = instances_matching(CustomObject, "name", "Clone");
-			
-		with(instances_matching([enemy, Ally, Player], "team", team)){
-			
-			 // Quality Assurance:
-			if(!instance_is(id, becomenemy)){
+		if(!instance_exists(clone_of)){
+			var	_enemies = [],
+				_target = noone,
+				_clones = instances_matching(CustomObject, "name", "Clone");
 				
-				 // Blacklist:
-				var _objName = variable_instance_get(id, "name", object_index);
-				if(!array_exists([
-					"CrystalBrain", 
-					"CrystalHeart",
-					"Palanking", 
-					"PitSquid", 
-					"PitSquidArm", 
-					"BoneRaven", 
-					"Creature", 
-					TechnoMancer,
-					Nothing,
-					Nothing2
-					], _objName)){
+			with(instances_matching([enemy, Ally], "team", team)){
+				if(in_distance(other, 256)){
 				
-					 // No Duplicate Clones:
-					if(array_length(instances_matching(_clones, "clone", id)) <= 0){
-						if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
-							array_push(_enemies, id);
+					 // Quality Assurance:
+					if(!instance_is(id, becomenemy)){
+						
+						 // Blacklist:
+						var _objName = variable_instance_get(id, "name", object_index);
+						if(!array_exists([
+							"CrystalBrain", 
+							"CrystalHeart",
+							"Palanking", 
+							"PitSquid", 
+							"PitSquidArm", 
+							"BoneRaven", 
+							"Creature", 
+							TechnoMancer,
+							Nothing,
+							Nothing2
+							], _objName)){
+						
+							 // No Duplicate Clones:
+							if(array_length(instances_matching(_clones, "clone", id)) <= 0){
+								if(array_length(instances_matching(_clones, "clone_of", id)) <= 0){
+									array_push(_enemies, id);
+								}
+							}
 						}
 					}
 				}
 			}
+			
+			 // Man of the Hour:
+			clone_of = instance_nearest_array(x, y, _enemies);
 		}
 		
-		clone_of = instance_nearest_array(x, y, _enemies);
 		if(!instance_is(clone_of, Player)){
 			with(clone_of){
 				_target = instance_copy(false);
+				/*
+				_target = instance_clone();
+				*/
 			}
 		}
 		else{
@@ -166,6 +175,19 @@
 				intro = true;
 			}
 		}
+		
+		/*
+		 // Encharm:
+		if(lq_defget(lq_defget(clone, "ntte_charm", {}), "charmed", false)){
+			var _cloneInst = clone,
+				_charmData = ntte_charm;
+				
+			with(instances_matching(CustomScript, "name", "charm_step")){
+				array_push(inst, _cloneInst);
+				array_push(vars, _charmData);
+			}
+		}
+		*/
 		
 		 // (Placeholder) Effects:
 		with(instance_create(x, y, PlasmaTrail)){
@@ -324,6 +346,11 @@
 				x = teleport_x;
 				y = teleport_y;
 				sprite_index = enemy_sprite;
+				
+				 // For Safety:
+				with(instance_create(x, y, PortalClear)){
+					mask_index = other.mask_index;
+				}
 			}
 			if(sprite_index == spr_disappear){
 				image_index -= image_speed_raw;
@@ -534,7 +561,7 @@
 			
 		 // Find Valid Floors:
 		if(instance_exists(_target)){
-			with(instances_matching_ne(Floor, "name", "WallFake")){
+			with(instances_matching_ne(FloorNormal, "name", "WallFake")){
 				if(!place_meeting(x, y, Wall)){
 					if(in_distance(_target, [_minDis, _maxDis])){
 						array_push(_floors, id);
@@ -2811,3 +2838,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

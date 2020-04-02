@@ -4002,6 +4002,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_shadow_y = 7;
 		sprite_index = spr_idle;
 		hitid = [spr.GatorStatueIdle, "GATOR STATUE"];
+		depth = -1;
 		
 		 // Sounds:
 		snd_hurt = sndHitRock;
@@ -4083,13 +4084,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Revenge:
-	repeat(4) enemy_shoot("GatorStatueFlak", 0, 0);
+	repeat(4 + irandom(2)) enemy_shoot("GatorStatueFlak", 0, 0);
+	sound_play_hit_ext(sndCrownNo,		0.8, 0.4);
+	sound_play_hit_ext(sndStatueCharge, 0.8, 0.4);
 	
 	
 #define GatorStatueFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprEFlak;
+		image_speed = 0.4;
 		
 		 // Vars:
 		mask_index = mskNone;
@@ -4120,11 +4124,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
+	 // Effects:
+	with(instance_create(x, y, ThrowHit)){
+		image_blend = other.effect_color;
+	}
+	
 #define GatorStatueFlak_step
 	if(setup) GatorStatueFlak_setup();
 	
 	 // Grow:
-	scale += (current_time_scale / 40);
+	scale += (current_time_scale / 60);
 	image_xscale = scale;
 	image_yscale = scale;
 	
@@ -5584,6 +5593,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
 	}
 	
+	 // Gator Statue Flak:
+	with(instances_matching(CustomProjectile, "name", "GatorStatueFlak")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	}
+	
 	if(DebugLag) trace_time("tesewers_draw_bloom");
 	
 	
@@ -5712,3 +5726,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

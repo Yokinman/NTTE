@@ -38,16 +38,16 @@
 		setup = true;
 		var _pool = [];
 			/// Danger
-			repeat(4) array_push(_pool, "Freak");
+			repeat(3) array_push(_pool, "Freak");
 			repeat(2) array_push(_pool, "FishFreak");
 			repeat(3) array_push(_pool, "Angler");
 			repeat(3) array_push(_pool, "PortalGuardian");
 			repeat(2) array_push(_pool, "PopoFreak");
 			repeat(1) array_push(_pool, "CrystalHeart");
+			repeat(1) array_push(_pool, "Bandit");
 			
 			/// Loot
 			repeat(1) array_push(_pool, "WeaponChest");
-			repeat(1) array_push(_pool, "OrchidChest");
 			repeat(1) array_push(_pool, "Backpack");
 			
 		if(unlock_get("crown:crime")){
@@ -122,11 +122,14 @@
 				sprite = spr.CrystalHeartIdle;
 				break;
 				
+			case "Bandit":
+				sprite = sprBanditHurt;
+				break;
+				
 			case "WeaponChest":
 				sprite = sprWeaponChest;
 				break;
 				
-			case "OrchidChest":
 			case "Backpack":
 			case "CatChest":
 			case "BatChest":
@@ -136,12 +139,14 @@
 			 // Labs Event Exclusive:
 			case "Pet":
 				_canWatch = true;
+				/*
 				with(obj_create(_x, _y - 20, "CatLight")){
 					w1 *= 2;
 					w2 *= 3/2;
 					h1 *= 7/6;
 					h2 *= 2;
 				}
+				*/
 				break;
 		}
 	}
@@ -236,6 +241,17 @@
 			image_index = random(2);
 		}
 	}
+	repeat(24){
+		var c = random(1),
+			l = (48 * c),
+			d = random(360);
+			
+		with(instance_create(x + lengthdir_x(l, d), (y + 16) + lengthdir_y(l, d), SmokeOLD)){
+			sprite_index = sprExploderExplo;
+			image_index = 2 + (3 * (1 - c));
+			motion_set(d, 2);
+		}
+	}
 	
 	 // Drops:
 	var _x = x,
@@ -302,11 +318,14 @@
 				}
 				break;
 				
+			case "Bandit":
+				instance_create(_x, _y, Bandit);
+				break;
+				
 			case "WeaponChest":
 				instance_create(_x, _y, WeaponChest);
 				break;
 				
-			case "OrchidChest":
 			case "Backpack":
 			case "CatChest":
 			case "BatChest":
@@ -341,6 +360,7 @@
 		}
 	}
 	
+	/*
 	 // Open the Floodgates:
 	with(instances_matching(object_index, "name", name)){
 		if(self != other){
@@ -352,6 +372,7 @@
 			}
 		}
 	}
+	*/
 
 	
 /// Mod Events
@@ -495,3 +516,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

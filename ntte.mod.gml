@@ -355,6 +355,7 @@
 				global.crystal_heart_guarantee = true;
 			}
 			
+			/*
 			 // Guitar Grounded:
 			with(instances_matching(WepPickup, "wep", wep_guitar)){
 				with(obj_create(x, y, "WepPickupGrounded")){
@@ -364,6 +365,7 @@
 				}
 				instance_delete(id);
 			}
+			*/
 			
 			break;
 			
@@ -427,7 +429,8 @@
 			
 			 // Blocked Room:
 			if(chance(1, 5)){
-				var	_w = 2,
+				var	_minID = GameObject.id,
+					_w = 2,
 					_h = 2,
 					_type = "",
 					_dirOff = 0,
@@ -519,7 +522,61 @@
 					}
 					
 					 // Secrets Within:
-					instance_create(_cx, _cy, choose(WeaponChest, GoldScorpion));
+					var _pool = [];
+						repeat(4) array_push(_pool, "Chest");
+						repeat(2) array_push(_pool, "Scorp");
+						repeat(2) array_push(_pool, "Skull");
+						repeat(1) array_push(_pool, "Dummy");
+						repeat(1) array_push(_pool, "Exile");
+						
+					switch(_pool[irandom(array_length(_pool) - 1)]){
+						case "Chest":
+							 // Pulls in the nearest existing chest:
+							with(instance_nearest_array(_cx, _cy, instances_matching_ne(chestprop, "name", "Backpack"))){
+								x = _cx;
+								y = _cy;
+							}
+							break;
+							
+						case "Scorp":
+							instance_create(_cx, _cy, GoldScorpion);
+							obj_create(_cx, _cy, "BabyScorpionGold");
+							obj_create(_cx, _cy, "TopDecal");
+							break;
+							
+						case "Skull":
+							var _skullMoved = false;
+							with(instances_matching(CustomHitme, "name", "CoastBossBecome")){
+								if(!_skullMoved){
+									_skullMoved = true;
+									xstart = _cx;
+									ystart = _cy;
+								}
+							}
+							if(!_skullMoved){
+								obj_create(_cx, _cy, "CowSkull");
+								obj_create(_cx, _cy, "BanditCamper");
+							}
+							break;
+							
+						case "Dummy":
+							instance_create(_cx, _cy, TutorialTarget);
+							repeat(4) obj_create(_cx, _cy, "TopDecal");
+							with(instances_matching_gt([Wall, TopSmall], "id", _minID)){
+								if(chance((instance_is(id, Wall) ? 1/3 : 1/5), 1)){
+									obj_create(x + 8, y + 8, "WallEnemy");
+								}
+							}
+							break;
+							
+						case "Exile":
+							obj_create(_cx, _cy, "BanditTent");
+							with(instances_matching_gt(Bandit, "id", _minID)){
+								obj_create(x, y, "BanditHiker");
+								instance_delete(id);
+							}
+							break;
+					}
 				}
 				
 				floor_reset_align();
@@ -772,6 +829,27 @@
 			break;
 			
 		case area_labs: /// LABS
+			
+			 // Labs Vat:
+			repeat(1 + chance(1, 3)){
+				var _w = 2,
+					_h = 3,
+					_type = "",
+					_dirOff = 0,
+					_floorDis = 0,
+					_spawnDis = 96,
+					_spawnFloor = FloorNormal;
+					
+				floor_set_align(32, 32, null, null);
+				floor_set_style(1, null);
+				
+				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+					obj_create(x, y, "LabsVat");
+				}
+				
+				floor_reset_align();
+				floor_reset_style();
+			}
 			
 			 // Top Spawns:
 			_topChance *= (1 + (0.5 * GameCont.loops));
@@ -3502,5 +3580,6 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
 #define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);
