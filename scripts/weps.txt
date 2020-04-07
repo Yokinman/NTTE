@@ -1,0 +1,31 @@
+"path" : {
+	"weps/" : ["bat disc cannon.wep", "bat disc launcher.wep", "bat tether.wep", "clam shield.wep", "bubble cannon.wep", "bubble minigun.wep", "bubble rifle.wep", "bubble shotgun.wep", "clam shield.wep", "crabbone.wep", "dematerializer.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "harpoon launcher.wep", "hyper bubbler.wep", "lightring launcher.wep", "net launcher.wep", "quasar blaster.wep", "quasar cannon.wep", "quasar rifle.wep", "red rifle.wep", "scythe.wep", "super lightring launcher.wep", "tesla coil.wep", "trident.wep"]
+},
+
+"script" : "
+#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#define orandom(n)                                                                      return  random_range(-n, n);
+#define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
+#define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'telib', 'unlock_get', _unlock);
+#define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
+#define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
+#define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
+",
+
+"remove" : [
+	"scrWaterStreak",
+	"enemySprites",
+	"scrDefaultDrop",
+	"z_engine",
+	"scrSetPet",
+	"scrLightning",
+	"trace_lag",
+	"trace_lag_bgn",
+	"trace_lag_end"
+],
+
+"rename" : {
+	"weapon_decide_gold" : "weapon_decide"
+}
