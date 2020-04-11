@@ -213,7 +213,7 @@
 		_bwep = variable_instance_get(creator, "bwep", wep_none);
 		
 	if(instance_exists(creator) && creator.visible && (wep == _wep || _bwep == wep)){
-		var	_shieldList = instances_matching(instances_matching(object_index, "name", name), "wep", wep),
+		var	_shieldList = instances_matching(instances_matching(instances_matching(object_index, "name", name), "wep", wep), "creator", creator),
 			_boltStick = instances_matching(BoltStick, "target", self),
 			_b = ((wep == _bwep) ? "b" : "");
 			
@@ -1884,7 +1884,7 @@
 	}
 	
 #define Palanking_end_step
-	with(seal) if(instance_exists(self) && hold && "hold_x" in self){
+	with(instances_matching_ne(seal, "hold_x", null)){
 		if(mask_index != mskNone){
 			x = other.x + hold_x;
 			y = other.y + hold_y;
@@ -1892,27 +1892,27 @@
 			yprevious = y;
 			hspeed = other.hspeed;
 			vspeed = other.vspeed;
-			depth = other.depth + (0.1 * dsin(point_direction(0, 24, hold_x, hold_y)));
+			depth = other.depth - (hold_y > 24 && hold);
 		}
 		else hold = false;
 	}
 
 #define Palanking_draw
 	var h = ((nexthurt > current_frame + 3 && active) || (sprite_index == spr_hurt && image_index < 1));
-
+	
 	 // Palanquin Bottom:
 	if(z > 4 || place_meeting(x, y, Floor)){
-		if(h) d3d_set_fog(1, image_blend, 0, 0);
+		if(h) d3d_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-		if(h) d3d_set_fog(0, 0, 0, 0);
+		if(h) d3d_set_fog(false, 0, 0, 0);
 	}
-
+	
 	 // Self:
 	h = (h && sprite_index != spr_hurt);
-	if(h) d3d_set_fog(1, image_blend, 0, 0);
+	if(h) d3d_set_fog(true, image_blend, 0, 0);
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	if(h) d3d_set_fog(0, 0, 0, 0);
-
+	if(h) d3d_set_fog(false, 0, 0, 0);
+	
 #define Palanking_alrm0
 	if(intro_pan <= 0){
 		alarm0 = 60;
@@ -2793,7 +2793,7 @@
 		
 		 // Vars:
 		mask_index = mskBandit;
-		maxhealth = 12;
+		maxhealth = 10;
 		raddrop = 1;
 		size = 1;
 		walk = 0;
@@ -2859,7 +2859,7 @@
 		maxhealth = ceil(maxhealth * 2);
 		my_health = ceil(my_health * 2);
 		raddrop += 4;
-		maxspeed = 2.5;
+		maxspeed -= 1;
 	}
 	
 	 // Normal Seal:
@@ -2924,6 +2924,9 @@
 			if(shield){
 				if(!instance_exists(shield_inst)){
 					shield_inst = enemy_shoot("ClamShield", gunangle, 0);
+					with(shield_inst){
+						mask_index = sprWall0Out;
+					}
 				}
 				/*
 				 // Turn:
@@ -3464,7 +3467,7 @@
 			switch(type){
 				case seal_shield:
 					
-					if(shield){
+					if(shield && chance(1, 3)){
 						scrAim(angle_lerp(_aimLast, direction, 1/5));
 					}
 					
@@ -3798,7 +3801,7 @@
 
 		 // Vars:
 		mask_index = mskBandit;
-		maxhealth = 40;
+		maxhealth = 32;
 		raddrop = 12;
 		size = 2;
 		walk = 0;

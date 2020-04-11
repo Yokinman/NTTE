@@ -8,6 +8,23 @@
 	global.sea_inst = [];
 	global.sea_depth = object_get_depth(Floor) + 10;
 	
+	 // Manually Set Draw Event Status:
+	hasDrawEvent = [];
+	for(var i = 0; object_exists(i); i++){
+		hasDrawEvent[i] = false;
+	}
+	with([Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, WaterShader, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, LightBeam, TV, SentryGun, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, QuitSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw]){
+		hasDrawEvent[self] = true;
+	}
+	for(var i = 0; i < array_length(hasDrawEvent); i++){
+		var o = i;
+		while(!hasDrawEvent[i]){
+			o = object_get_parent(o);
+			if(o >= 0) hasDrawEvent[i] = hasDrawEvent[o];
+			else break;
+		}
+	}
+	
 	 // # of times that 'area_pop_enemies' must be called before it spawns another enemy, to reduce enemy spawns:
 	global.pop_enemies_wait = 0;
 	
@@ -22,6 +39,8 @@
 #macro DebugLag global.debug_lag
 
 #macro WadeColor make_color_rgb(44, 37, 122)
+
+#macro hasDrawEvent global.draw_event_list
 
 #define area_subarea           return 3;
 #define area_goal              return 100;
@@ -993,7 +1012,8 @@
 		}
 		
 		 // Drawing Water Wading Objects:
-		var _charmOutline = option_get("outline:charm");
+		var	_charmOutline = option_get("outline:charm");
+		
 		with(instances_matching_gt(instance_rectangle_bbox(_x1 - 24, _y1 - 24, _x2 + 24, _y2 + 24, global.sea_inst), "wading", 0)){
 			var _isPlayer = (object_index == Player),
 				_sprH = sprite_get_height(sprite_index),
@@ -1051,7 +1071,7 @@
 			
 			 // Call Draw Event:
 			y += _z;
-			if("right" in self || "rotation" in self || ("on_draw" in self && !is_undefined(on_draw))){
+			if(hasDrawEvent[object_index]){
 				event_perform(ev_draw, 0);
 			}
 			else draw_self();
@@ -1087,8 +1107,7 @@
 					var	_x = x - _surfSwimTopX,
 						_y = y - _surfSwimTopY,
 						_w = w * scale,
-						_h = (((other.y - y) + (_sprH - _sprY)) - _wh) * scale,
-						_charm = variable_instance_get(other, "ntte_charm");
+						_h = (((other.y - y) + (_sprH - _sprY)) - _wh) * scale;
 						
 					 // Manually Draw Laser Sights:
 					if(_isPlayer){
@@ -1160,33 +1179,35 @@
 					}
 					
 					 // Charmed Enemy Drawing:
-					if(!is_undefined(_charm) && _charm.charmed){
+					if("ntte_charm" in other && other.ntte_charm.charmed){
+						var _charm = other.ntte_charm;
+						
 						 // Outlines:
 						if(_charmOutline){
 							var _charmColor = player_get_color(player_is_active(_charm.index) ? _charm.index : player_find_local_nonsync());
 							draw_set_fog(true, _charmColor, 0, 0);
 							for(var a = 0; a < 360; a += 90){
-								draw_surface_part_ext(surf, 0, 0, _w, _h, _x + dcos(a), _y - dsin(a), _surfSwimTopScale / scale, _surfSwimTopScale / scale, c_white, 1);
+								draw_surface_part(surf, 0, 0, _w, _h, _x + dcos(a), _y - dsin(a));
 							}
 							draw_set_fog(false, 0, 0, 0);
 						}
 						
 						 // Self:
-						draw_surface_part_ext(surf, 0, 0, _w, _h, _x, _y, _surfSwimTopScale / scale, _surfSwimTopScale / scale, c_white, 1);
+						draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
 						
 						 // Eyes:
 						if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
-							draw_surface_part_ext(surf, 0, 0, _w, _h, _x, _y, _surfSwimTopScale / scale, _surfSwimTopScale / scale, c_white, 1);
+							draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
 							shader_reset();
 						}
 					}
 					
 					 // Self:
-					else draw_surface_part_ext(surf, 0, 0, _w, _h, _x, _y, _surfSwimTopScale / scale, _surfSwimTopScale / scale, c_white, 1);
+					else draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
 					
 					 // Water Interference Line:
 					draw_set_fog(true, c_white, 0, 0);
-					draw_surface_part_ext(surf, 0, _h, _w, max(1, scale), _x, _y + (_h * (_surfSwimTopScale / scale)), _surfSwimTopScale / scale, _surfSwimTopScale / scale, c_white, 0.8);
+					draw_surface_part_ext(surf, 0, _h, _w, max(1, scale), _x, _y + _h, 1, 1, c_white, 0.8);
 					draw_set_fog(false, 0, 0, 0);
 					
 				surface_reset_target();
