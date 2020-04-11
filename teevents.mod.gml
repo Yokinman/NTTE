@@ -27,7 +27,7 @@
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
-	teevent_add("LabVats");
+	teevent_add("MutantVats");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
 	
@@ -1050,10 +1050,10 @@
 	}
 	
 	
-#define LabVats_text    return `@(color:${tipCol})SPECIMENS`;
-#define LabVats_area    return area_labs;
-#define LabVats_chance  return lq_size(global.pastPets);
-#define LabVats_create
+#define MutantVats_text    return `@(color:${tipCol})SPECIMENS`;
+#define MutantVats_area    return area_labs;
+#define MutantVats_chance  return lq_size(global.pastPets);
+#define MutantVats_create
 	var _spawnX = x,
 		_spawnY = y,
 		_spawnDis = 128,
