@@ -1,6 +1,8 @@
 #define init
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprWepClamShield.png",       8, 8);
-	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprWepClamShieldHUD.png", 1, 0, 6);
+	spr = mod_variable_get("mod", "teassets", "spr");
+	
+	global.sprWep       = spr.ClamShieldWep;
+	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprClamShieldHUD.png", 0, 6);
 	global.sprWepLocked = mskNone;
 	
 	lwoWep = {
@@ -16,7 +18,7 @@
 #define weapon_type      return 0;  // Melee
 #define weapon_load      return 30; // 1 Second
 #define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_melee     return false;
+#define weapon_melee     return true;
 #define weapon_swap      return sndSwapHammer;
 #define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
 #define weapon_sprt_hud  return global.sprWepHUD;
@@ -62,7 +64,9 @@
 		
 		 // Effects:
 		repeat(2){
-			instance_create(_x + orandom(2), _y + orandom(2), Dust).speed += 2;
+			with(instance_create(_x + orandom(2), _y + orandom(2), Dust)){
+				speed += 2;
+			}
 		}
 		with(other){
 			weapon_post(-(4 + l), 12, 0);
@@ -114,8 +118,8 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'telib', 'unlock_get', _unlock);
 #define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);

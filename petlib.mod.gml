@@ -1,22 +1,15 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	DebugLag = false;
-	
-	surfWeb = surflist_set("Web", 0, 0, game_width, game_height);
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro DebugLag global.debug_lag
-
-#macro surfWeb global.surfWeb
 
 #macro Pet instances_matching(CustomHitme, "name", "Pet")
 
@@ -574,10 +567,10 @@
 	
 #define Parrot_step
 	if("wading" in self && (speed > 0 || (instance_exists(perched) && ("wading" not in perched || perched.wading <= 0)))){
-		nowade = true;
+		canwade = false;
 		wading = 0;
 	}
-	else nowade = false;
+	else canwade = true;
 
 	 // Grabbing Pickup:
 	if(instance_exists(pickup)){
@@ -1934,8 +1927,113 @@
 		other.web_list_x2 = max(x, other.web_list_x2);
 		other.web_list_y2 = max(y, other.web_list_y2);
 	}
-
-
+	
+	
+#define Twins_create
+	 // Visual:
+	spr_idle = mskNone;
+	spr_walk = mskNone;
+	spr_hurt = mskNone;
+	spr_shadow = mskNone;
+	
+	 // Vars:
+	twin_count = 2;
+	twin_array = array_create(twin_count, noone);
+	twin_angle = 0;
+	twin_orbit_coeff = 0;
+	
+	 // Stat:
+	if("diverted" not in stat) stat.diverted = 0;
+	
+#define Twins_ttip
+	return [""];
+	
+#define Twins_stat(_name, _value)
+	if(_name == "") return spr.PetTwinsStat;
+	
+#define Twins_step
+	twin_angle = (twin_angle + current_time_scale) % 360;
+	var _twinsCount = 0,
+		_twinsIndex = 0,
+		_petName = pet,
+		_petInst = id;
+		
+	 // Create twin_array:
+	var _leader = leader,
+		_doLink = false;
+	for(var i = 0; i < twin_count; i++){
+		if(!instance_exists(twin_array[i])){
+			twin_array[i] = obj_create(x, y, "TwinOrbital");
+			with(twin_array[i]){
+				creator = other;
+				leader = _leader;
+				white = i;
+			}
+			
+			_doLink = true;
+		}
+	}
+	if(_doLink){
+		for(var i = 0; i < twin_count; i++){
+			var _linkTo = twin_array[(i + 1) % twin_count];
+			with(twin_array[i]){
+				twin = _linkTo;
+			}
+		}
+	}
+		
+	 // Leader:
+	var _leaderAngle = twin_angle;
+	if(instance_exists(leader)){
+		twin_orbit_coeff = min(twin_orbit_coeff + (current_time_scale / 30), 1);
+		x = lerp(x, leader.x, twin_orbit_coeff);
+		y = lerp(y, leader.y, twin_orbit_coeff);
+		
+		with(leader){
+			_leaderAngle = wave % 360;
+			for(var i = 0; i < array_length(ntte_pet); i++){
+				var _pet = ntte_pet[i];
+				
+				if(instance_exists(_pet)){
+					if(_pet == _petInst){
+						_twinsIndex = _twinsCount;
+					}
+					if(_pet.pet == _petName){
+						_twinsCount++;
+					}
+				}
+			}
+		}
+		
+	}
+	else{
+		twin_orbit_coeff = 0;
+	}
+	
+	 // Orbit:
+	var l = lerp(12, 24 + ((twin_count - 1) * 10), twin_orbit_coeff),
+		o = (360 / (_twinsCount * twin_count)) * _twinsIndex;
+	
+	for(var i = 0; i < twin_count; i++){
+		var a = lerp(twin_angle, _leaderAngle, twin_orbit_coeff),
+			d = ((a * 2) + (i * (360 / twin_count)) + o) % 360;
+			
+		// trace(_twinsCount, _twinsIndex, d)
+		with(twin_array[i]){
+			direction = d;
+			x = other.x + lengthdir_x(l, d);
+			y = other.y + lengthdir_y(l, d);
+			xprevious = x;
+			yprevious = y;
+			image_index = ((d / 360) * (image_number * 4)) % image_number;
+			depth = other.depth + (dsin(d) / 100);
+		}
+	}
+	
+#define Twins_alrm0(_leaderDir, _leaderDis)
+	return 30;
+	
+	
 #define Octo_create
 	 // Visual:
 	spr_hide = spr.PetOctoHide;
@@ -2162,35 +2260,35 @@
 				scrWalk(path_dir + orandom(10), 6);
 				return 1 + irandom(walk) + irandom(6);
 			}
-
+			
 			 // Toward Leader:
 			else{
 				scrWalk(_leaderDir + orandom(20), [5, 15]);
 			}
-
+			
 			return walk + random(5);
 		}
-
+		
 		 // Idle Around Leader:
 		else{
 			motion_add(_leaderDir + orandom(60), 1.5 + random(1.5));
 			scrRight(direction);
-
+			
 			 // More Aggressive:
 			if(arcing >= 1 && in_distance(enemy, 160) && "index" in leader){
 				motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
 			}
-
+			
 			return 20 + random(10);
 		}
 	}
-
+	
 	 // No Leader:
 	else{
 		 // Find trench pit:
 		if(GameCont.area == "trench" && !hiding){
 			var f = floor_get(x, y - 4);
-
+			
 			 // Hide:
 			if(f.sprite_index == spr.FloorTrenchB){
 				hiding = true;
@@ -2203,47 +2301,47 @@
 					with(scrFX(x, y, 2, Dust)) waterbubble = chance(1, 2);
 				}
 			}
-
+			
 			 // Move Toward Nearest Seen Pit:
 			else{
 				var	_dir = -1,
 					_disMax = 1000000;
-
+					
 				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
 					var	_x = bbox_center_x,
 						_y = bbox_center_y,
 						_dis = point_distance(other.x, other.y, _x, _y);
-
+						
 					if(_dis < _disMax && !collision_line(other.x, other.y, _x, _y, Wall, false, false)){
 						_dir = point_direction(other.x, other.y, _x, _y);
 						_disMax = _dis;
 					}
 				}
-
+				
 				if(_dir >= 0){
 					scrWalk(_dir, [10, 15]);
 					return walk + random(5);
 				}
 			}
 		}
-
+		
 		 // Idle Movement:
 		instance_create(x, y, Bubble);
 		scrWalk(direction + orandom(60), [5, 15]);
 		return walk + random_range(30, 60);
 	}
-
+	
 #define Octo_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!hiding){
 		sprite_index = spr_hurt;
 		image_index = 0;
-   
+		
 		 // Movin'
 		scrWalk(_hitdir, 10);
 		scrRight(direction + 180);
 	}
-
-
+	
+	
 #define Prism_create
 	 // Visual:
 	spr_bubble = -1;
@@ -2262,13 +2360,13 @@
 	
 	 // Stat:
 	if("splits" not in stat) stat.splits = 0;
-
+	
 #define Prism_ttip
 	return ["STRANGE GEOMETRY", "CURSED REFRACTION", "YEAH OH ", "LIGHT BEAMS"];
-
+	
 #define Prism_stat(_name, _value)
 	if(_name == "") return spr.PetPrismIdle;
-
+	
 #define Prism_step
 	if(instance_exists(leader)){
 		spawn_loc = [x, y];
@@ -2296,11 +2394,11 @@
 						speed *= 0.5;
 						stat.splits++;
 					}
-		
+					
 					 // Slice FX:
 					var	_dir = random(360),
 						_disMax = 6;
-	
+						
 					for(var _dis = _disMax; _dis >= -_disMax; _dis -= 2){
 						with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
 							motion_add(_dir, 1);
@@ -2316,14 +2414,14 @@
 					other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
 					
 					 // Duplicate:
-					var	_copy = instance_copy(false),
+					var	_copy = instance_clone(),
 						_accuracy = variable_instance_get(other.leader, "accuracy", 1);
 						
 					switch(_copy.object_index){
 						case Laser:
 							var	l = point_distance(xstart, ystart, other.x, other.y) + 12,
 								d = image_angle;
-	
+								
 							with(_copy){
 								x = other.xstart + lengthdir_x(l, d);
 								y = other.ystart + lengthdir_y(l, d);
@@ -2333,7 +2431,7 @@
 								event_perform(ev_alarm, 0);
 							}
 							break;
-		
+							
 						case Lightning:
 							for(var i = id + ceil(ammo); (i > id || instance_is(i, Lightning) || !instance_exists(i)); i--){
 								if(instance_is(i, Lightning)) with(i){
@@ -2362,7 +2460,7 @@
 								}
 							}
 							break;
-		
+							
 						default:
 							var _off = random_range(4, 16) * _accuracy;
 							with([id, _copy]){
@@ -2372,37 +2470,41 @@
 							}
 							
 							 // Custom Projectile Fixes:
-							with(_copy) if(instance_is(self, CustomProjectile)){
-								switch(variable_instance_get(self, "name")){
-									case "Bone":
-										broken = true;
-										break;
-										
-									case "QuasarRing":
-										ring_lasers = array_clone(ring_lasers);
-										break;
-										
-									case "Trident":
-										with(other) if(!curse){
-											curse = true;
-											direction -= _off;
-											image_angle -= _off;
-											other.wep = wep_none;
-											instance_delete(other);
+							with(_copy){
+								if("wep" in self){
+									wep = other.wep;
+								}
+								
+								if(instance_is(self, CustomProjectile)){
+									switch(variable_instance_get(self, "name")){
+										case "Bone":
+											broken = true;
+											break;
 											
-											 // FX:
-											for(var i = 0; i < 3; i++){
-												with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
-													image_angle = direction;
-													sprite_index = spr.WaterStreak;
-													image_speed = random_range(0.2, 0.4);
-													image_blend = make_color_rgb(103, 27, 131);
-													depth = -4;
+										case "Trident":
+											if(!curse){
+												wep = wep_none;
+												instance_delete(id);
+												with(other){
+													curse = true;
+													direction -= _off;
+													image_angle -= _off;
+													
+													 // FX:
+													for(var i = 0; i < 3; i++){
+														with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
+															image_angle = direction;
+															sprite_index = spr.WaterStreak;
+															image_speed = random_range(0.2, 0.4);
+															image_blend = make_color_rgb(103, 27, 131);
+															depth = -4;
+														}
+													}
+													sound_play_pitch(sndCursedChest, 0.8);
 												}
 											}
-											sound_play_pitch(sndCursedChest, 0.8);
-										}
-										break;
+											break;
+									}
 								}
 							}
 					}
@@ -2420,19 +2522,19 @@
 				can_prism_duplicate = true;
 			}
 		}
-
+		
 		 // TP Around Player:
 		if(tp_delay > 0) tp_delay -= current_time_scale;
 		else{
 			var	_dis = 96,
 				_x = x,
 				_y = y;
-	
+				
 			if(!collision_circle(leader.x, leader.y, _dis, id, true, false)){
 				tp_delay = 15;
 				
 				var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
-	
+				
 				do{
 					x = leader.x + lengthdir_x(_dis, _dir) + orandom(4);
 					y = leader.y + lengthdir_y(_dis, _dir) + orandom(4);
@@ -2448,7 +2550,7 @@
 						)
 					)
 				)
-	
+				
 				 // Effects:
 				if(!place_meeting(x, y, Wall)){
 					flash_frame = max(flash_frame, current_frame + 1);
@@ -2464,7 +2566,7 @@
 	else{
 		x += sin(current_frame / 10) * 0.4 * current_time_scale;
 		y += cos(current_frame / 10) * 0.4 * current_time_scale;
-
+		
 		 // Jitters Around:
 		if(tp_delay > 0) tp_delay -= current_time_scale;
 		else if(instance_exists(Floor)){
@@ -2500,7 +2602,7 @@
 			}
 		}
 	}
-
+	
 	 // Bouncin:
 	with(path_wall) with(other){
 		if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
@@ -2509,18 +2611,18 @@
 			direction += orandom(20);
 		}
 	}
-
+	
 	 // Effects:
 	if(chance_ct(1, 3)) repeat(irandom(4)){
 		instance_create(x + orandom(8), y + orandom(8), Curse);
 	}
-
+	
 #define Prism_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	if(flash_frame > current_frame) draw_set_fog(true, image_blend, 0, 0);
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
-
-
+	
+	
 #define Weapon_create
 	 // Visual:
 	hitid = [spr.PetWeaponIdle, "WEAPON MIMIC"];
@@ -3112,32 +3214,23 @@
 	 // Spider Webs:
 	var _inst = instances_matching(_petInst, "pet", "Spider");
 	if(array_length(_inst) > 0){
-		with(surfWeb){
-			active = true;
-			x = view_xview_nonsync;
-			y = view_yview_nonsync;
-			w = game_width;
-			h = game_height;
-			
-			 // Bind Events:
-			if(!instance_exists(GenCont) && surface_exists(surf)){
-				script_bind_end_step(web_end_step, 0, _inst);
-				script_bind_draw(web_draw,		5);
-				script_bind_draw(web_draw_post,	0);
-			}
-			
-			 // Reset Webs:
-			else with(_inst){
-				web_list = [];
-				web_timer = web_timer_max;
-				web_list_x1 = 1000000;
-				web_list_y1 = 1000000;
-				web_list_x2 = 0;
-				web_list_y2 = 0;
-			}
+		 // Bind Events:
+		if(!instance_exists(GenCont)){
+			script_bind_end_step(web_end_step, 0, _inst);
+			script_bind_draw(web_draw,		5);
+			script_bind_draw(web_draw_post,	0);
+		}
+		
+		 // Reset Webs:
+		else with(_inst){
+			web_list = [];
+			web_timer = web_timer_max;
+			web_list_x1 = 1000000;
+			web_list_y1 = 1000000;
+			web_list_x2 = 0;
+			web_list_y2 = 0;
 		}
 	}
-	else with(surfWeb) active = false;
 	
 	 // Octo Air Bubble:
 	if(!area_get_underwater(GameCont.area) && (GameCont.area != 100 || !area_get_underwater(GameCont.lastarea))){
@@ -3200,179 +3293,181 @@
 #define octobubble_draw
 	instance_destroy();
 	
+	 // Octo Bubble Draw:
 	with(instances_matching(instances_matching(instances_matching(Pet, "pet", "Octo"), "visible", true), "hiding", false)){
 		draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 	}
 	
 #define web_draw_post
 	instance_destroy();
-
+	
 	 // Web Bloom:
-	with(surfWeb){
-		if(surface_exists(surf)){
-			draw_set_alpha(1/3);
-			draw_set_blend_mode(bm_add);
-			draw_surface(surf, x, y);
-			draw_set_blend_mode(bm_normal);
-			draw_set_alpha(1);
-		}
+	with(surface_setup("PetWeb", null, null, null)){
+		draw_set_alpha(1/3);
+		draw_set_blend_mode(bm_add);
+		draw_surface_scale(surf, x, y, 1 / scale);
+		draw_set_blend_mode(bm_normal);
+		draw_set_alpha(1);
 	}
-
+	
 #define web_end_step(_inst)
 	if(DebugLag) trace_time();
 	
-	with(surfWeb){
-		var _cursed = false;
-		with(instances_matching(_inst, "", null)){
-			if(cursed){
-				_cursed = true;
+	_inst = instances_matching(_inst, "", null);
+	
+	with(surface_setup("PetWeb", game_width, game_height, option_get("quality:main"))){
+		x = view_xview_nonsync;
+		y = view_yview_nonsync;
+		
+		var	_surfX = x,
+			_surfY = y,
+			_surfScale = scale,
+			_slowInst = [],
+			_cursed = false;
+			
+		with(_inst) if(cursed){
+			_cursed = true;
+			break;
+		}
+		
+		surface_set_target(surf);
+		draw_clear_alpha(0, 0);
+		draw_set_color(c_black);
+		
+		with(_inst){
+			web_frame += current_time_scale;
+			
+			var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
+				_x1, _x2, _x3,
+				_y1, _y2, _y3,
+				_vertexNum = 0;
+				
+			draw_primitive_begin(pr_trianglestrip);
+			
+			with(web_list){
+				_x3 = _x2;
+				_y3 = _y2;
+				_x2 = _x1;
+				_y2 = _y1;
+				_x1 = x;
+				_y1 = y;
+				
+				/*
+				 // Curse Effect:
+				if(_cursed && chance_ct(1, 60)){
+					instance_create(x + orandom(8), y + orandom(8), Curse);
+				}
+				*/
+				
+				 // Drawing Web Mask:
+				draw_vertex((x - _surfX) * _surfScale, (y - _surfY) * _surfScale);
+				
+				 // Slow Enemies:
+				if(_vertexNum++ >= 2){
+					with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
+						_webInst,
+						"bbox_right",  min(_x1, _x2, _x3)),
+						"bbox_left",   max(_x1, _x2, _x3)),
+						"bbox_bottom", min(_y1, _y2, _y3)),
+						"bbox_top",    max(_y1, _y2, _y3))
+					){
+						//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
+							if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
+								array_push(_slowInst, id);
+							}
+							_webInst = array_delete_value(_webInst, id);
+						//}
+					}
+				}
+				
+				 // Dissipate:
+				if(frame < other.web_frame){
+					 // Shrink Towards Next Point:
+					var	_x = x,
+						_y = y;
+						
+					if(_vertexNum + 1 < array_length(other.web_list)){
+						with(other.web_list[_vertexNum + 1]){
+							_x = x;
+							_y = y;
+						}
+					}
+					
+					x = lerp(x, _x, 0.2 * current_time_scale);
+					y = lerp(y, _y, 0.2 * current_time_scale);
+					
+					 // Delete:
+					if(point_distance(_x, _y, x, y) < 1){
+						with(other) Spider_web_delete(--_vertexNum);
+					}
+				}
+				
+				 // In Coast Water:
+				else if(wading){
+					var o = sin((current_frame + frame) / 10) * current_time_scale;
+					x += o * 0.1;
+					y += o * 0.15;
+				}
+			}
+			
+			 // Finish Web Mask:
+			if(instance_exists(leader)){
+				var	l = web_add_l * (1 - (web_timer / web_timer_max)),
+					d = web_add_d;
+					
+				draw_vertex((x + lengthdir_x(l, d) - _surfX) * _surfScale, (bbox_bottom + lengthdir_y(l, d) - _surfY) * _surfScale);
+			}
+			draw_primitive_end();
+			
+			 // Particles:
+			if(web_bits > 0) web_bits -= current_time_scale;
+			else{
+				web_bits = 10 + random(20);
+				if(array_length(web_list) > 0) with(web_list[0]){
+					if(frame < other.web_frame){
+						with(instance_create(x, y, Dust)){
+							image_xscale /= 2;
+							image_yscale /= 2;
+						}
+						with(instance_create(x, y, Feather)){
+							sprite_index = spr.PetSpiderWebBits;
+							image_index = irandom(image_number - 1);
+							image_angle = orandom(30);
+							image_speed = 0;
+							speed *= 0.5;
+							rot *= 0.5;
+							alarm0 = 60 + random(30);
+						}
+					}
+				}
+			}
+			
+			 // Special Stat:
+			with(instances_matching(_slowInst, "ntte_statspider", null)){
+				ntte_statspider = true;
+				other.stat.webbed++;
 			}
 		}
 		
-		if(surface_exists(surf)){
-			var	_surfx = x,
-				_surfy = y,
-				_slowInst = [];
-				
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			draw_set_color(c_black);
+		 // Draw Web Sprite Over Web Mask:
+		draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
+		draw_rectangle(0, 0, w * scale, h * scale, false);
+		with(other) draw_sprite_tiled_ext(spr.PetSpiderWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+		draw_set_blend_mode(bm_normal);
+		
+		surface_reset_target();
+		
+		 // Slow Enemies on Web:
+		with(_slowInst){
+			x = lerp(xprevious, x, current_time_scale / 3);
+			y = lerp(yprevious, y, current_time_scale / 3);
 			
-			with(_inst) if(instance_exists(self)){
-				web_frame += current_time_scale;
-				
-				var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
-					_x1, _x2, _x3,
-					_y1, _y2, _y3,
-					_vertexNum = 0;
-					
-				draw_primitive_begin(pr_trianglestrip);
-				
-				with(web_list){
-					_x3 = _x2;
-					_y3 = _y2;
-					_x2 = _x1;
-					_y2 = _y1;
-					_x1 = x;
-					_y1 = y;
-					
-					/*
-					 // Curse Effect:
-					if(_cursed && chance_ct(1, 60)){
-						instance_create(x + orandom(8), y + orandom(8), Curse);
-					}
-					*/
-					
-					 // Drawing Web Mask:
-					draw_vertex(x - _surfx, y - _surfy);
-					
-					 // Slow Enemies:
-					if(_vertexNum++ >= 2){
-						with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
-							_webInst,
-							"bbox_right",  min(_x1, _x2, _x3)),
-							"bbox_left",   max(_x1, _x2, _x3)),
-							"bbox_bottom", min(_y1, _y2, _y3)),
-							"bbox_top",    max(_y1, _y2, _y3))
-						){
-							//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
-								if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-									array_push(_slowInst, id);
-								}
-								_webInst = array_delete_value(_webInst, id);
-							//}
-						}
-					}
-					
-					 // Dissipate:
-					if(frame < other.web_frame){
-						 // Shrink Towards Next Point:
-						var	_x = x,
-							_y = y;
-							
-						if(_vertexNum + 1 < array_length(other.web_list)){
-							with(other.web_list[_vertexNum + 1]){
-								_x = x;
-								_y = y;
-							}
-						}
-						
-						x = lerp(x, _x, 0.2 * current_time_scale);
-						y = lerp(y, _y, 0.2 * current_time_scale);
-						
-						 // Delete:
-						if(point_distance(_x, _y, x, y) < 1){
-							with(other) Spider_web_delete(--_vertexNum);
-						}
-					}
-					
-					 // In Coast Water:
-					else if(wading){
-						var o = sin((current_frame + frame) / 10) * current_time_scale;
-						x += o * 0.1;
-						y += o * 0.15;
-					}
-				}
-				
-				 // Finish Web Mask:
-				if(instance_exists(leader)){
-					var	l = web_add_l * (1 - (web_timer / web_timer_max)),
-						d = web_add_d;
-						
-					draw_vertex(x + lengthdir_x(l, d) - _surfx, bbox_bottom + lengthdir_y(l, d) - _surfy);
-				}
-				draw_primitive_end();
-				
-				 // Particles:
-				if(web_bits > 0) web_bits -= current_time_scale;
-				else{
-					web_bits = 10 + random(20);
-					if(array_length(web_list) > 0) with(web_list[0]){
-						if(frame < other.web_frame){
-							with(instance_create(x, y, Dust)){
-								image_xscale /= 2;
-								image_yscale /= 2;
-							}
-							with(instance_create(x, y, Feather)){
-								sprite_index = spr.PetSpiderWebBits;
-								image_index = irandom(image_number - 1);
-								image_angle = orandom(30);
-								image_speed = 0;
-								speed *= 0.5;
-								rot *= 0.5;
-								alarm0 = 60 + random(30);
-							}
-						}
-					}
-				}
-				
-				 // Special Stat:
-				with(instances_matching(_slowInst, "ntte_statspider", null)){
-					ntte_statspider = true;
-					other.stat.webbed++;
-				}
-			}
-			
-			 // Draw Web Sprite Over Web Mask:
-			draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
-			draw_rectangle(0, 0, w, h, false);
-			with(other) draw_sprite_tiled(spr.PetSpiderWeb, 0, 0 - _surfx, 0 - _surfy);
-			draw_set_blend_mode(bm_normal);
-			
-			surface_reset_target();
-			
-			 // Slow Enemies on Web:
-			with(_slowInst){
-				x = lerp(xprevious, x, current_time_scale / 3);
-				y = lerp(yprevious, y, current_time_scale / 3);
-				
-				 // Maybe Kill:
-				if(_cursed && my_health <= ceil(maxhealth * 0.2)){
-					projectile_hit(id, my_health, 0, 0);
-					sound_play_hit(sndPlantTBKill, 0.2);
-					with(instance_create(x, y, TangleKill)){
-						sprite_index = spr.PetSpiderCursedKill;
-					}
+			 // Maybe Kill:
+			if(_cursed && my_health <= ceil(maxhealth * 0.2)){
+				projectile_hit(id, my_health, 0, 0);
+				sound_play_hit(sndPlantTBKill, 0.2);
+				with(instance_create(x, y, TangleKill)){
+					sprite_index = spr.PetSpiderCursedKill;
 				}
 			}
 		}
@@ -3386,11 +3481,11 @@
 	instance_destroy();
 	
 	 // Drawing Web Surface:
-	with(surfWeb) if(surface_exists(surf)){
+	with(surface_setup("PetWeb", null, null, null)){
 		draw_set_fog(true, make_color_rgb(50, 41, 71), 0, 0);
-		draw_surface(surf, x, y + 1);
+		draw_surface_scale(surf, x, y + 1, 1 / scale);
 		draw_set_fog(false, 0, 0, 0);
-		draw_surface(surf, x, y);
+		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
 	
@@ -3398,6 +3493,8 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -3411,21 +3508,19 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -3433,6 +3528,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -3444,6 +3540,7 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -3468,7 +3565,7 @@
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);

@@ -1,8 +1,6 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	areaList = mod_variable_get("mod", "teassets", "area");
 	raceList = mod_variable_get("mod", "teassets", "race");
@@ -23,55 +21,61 @@
 				"y" : -64,
 				"slct" : array_create(maxp, -1),
 				"list" : [
+					
 					{	name : "Use Shaders",
 						type : opt_toggle,
 						text : "Used for certain visuals#@sShaders may cause the game# to @rcrash @son certain systems!",
-						sync : false,
-						varname : "allowShaders"
+						save : "option:shaders",
+						sync : false
 						},
+						
 					{	name : "Reminders",
 						type : opt_toggle,
 						text : "@sRemind you to enable#@wboss intros @s& @wmusic",
-						varname : "remindPlayer"
+						save : "option:reminders"
 						},
+						
 					{	name : "NTTE Intros",
 						type : opt_toggle,
 						pick : ["OFF", "ON", "AUTO"],
 						text : "@sSet @wAUTO @sto obey the#@wboss intros @soption",
-						varname : "intros"
+						save : "option:intros"
 						},
+						
 					{	name : "NTTE Outlines :",
 						type : opt_title,
 						text : "@sSet @wAUTO @sto#obey @w/outlines"
 						},
-					{	name : "Pets",
-						type : opt_toggle,
-						pick : ["OFF", "ON", "AUTO"],
-						sync : false,
-						varname : "outlinePets"
-						},
-					{	name : "Charm",
-						type : opt_toggle,
-						pick : ["OFF", "ON", "AUTO"],
-						sync : false,
-						varname : "outlineCharm"
-						},
-					{	name : "Water Quality :",
+						{	name : "Pets",
+							type : opt_toggle,
+							pick : ["OFF", "ON", "AUTO"],
+							save : "option:outline:pets",
+							sync : false
+							},
+						{	name : "Charm",
+							type : opt_toggle,
+							pick : ["OFF", "ON", "AUTO"],
+							save : "option:outline:charm",
+							sync : false
+							},
+							
+					{	name : "Visual Quality :",
 						type : opt_title,
-						text : `@sAdjust @sfor @wperformance#@sat the @(color:${make_color_rgb(55, 253, 225)})Coast`
+						text : "@sReduce to improve#@wperformance"
 						},
-					{	name : "Wading",
-						type : opt_slider,
-						text : "Objects in the water",
-						sync : false,
-						varname : "waterQualityTop"
-						},
-					{	name : "Main",
-						type : opt_slider,
-						text : "Water foam,#underwater visuals,#etc.",
-						sync : false,
-						varname : "waterQualityMain"
-						}
+						{	name : "Main",
+							type : opt_slider,
+							text : "Obvious @svisuals",
+							save : "option:quality:main",
+							sync : false
+							},
+						{	name : "Minor",
+							type : opt_slider,
+							text : "@wLesser @svisuals",
+							save : "option:quality:minor",
+							sync : false
+							}
+							
 				]
 			},
 			
@@ -100,6 +104,7 @@
 							"Spider"     + ".petlib.mod",
 							"Prism"      + ".petlib.mod",
 							"Orchid"     + ".petlib.mod",
+							"Twins"      + ".petlib.mod",
 							"Weapon"     + ".petlib.mod"
 						]
 					},
@@ -192,13 +197,10 @@
 				default:         pick = [];            break;
 			}
 		}
+		if("save" not in self) save = "";
 		if("sync" not in self) sync = true;
 		if("splat" not in self) splat = 0;
-		if("varname" not in self) varname = name;
 		if("clicked" not in self) clicked = array_create(maxp, false);
-		if(type >= 0 && varname not in sav.option){
-			option_set(varname, 0);
-		}
 	}
 	with(MenuList.credits.list){
 		if("name" not in self) name = "";
@@ -266,8 +268,6 @@
 		with(loadbutton) instance_destroy();
 		with(Loadout) selected = false;
 	}
-	surfLoadoutHide       = surflist_set("CrownHide",       0, 0, 64, 64);
-	surfLoadoutHideScreen = surflist_set("CrownHideScreen", 0, 0, game_width, game_height);
 	
 	 // Loadout Weapon System:
 	wepLoadout = [
@@ -289,16 +289,12 @@
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro areaList global.area
 #macro raceList global.race
 #macro crwnList global.crwn
 #macro wepsList global.weps
-
-#macro surfLoadoutHide       global.surfLoadoutHide
-#macro surfLoadoutHideScreen global.surfLoadoutHideScreen
 
 #macro NTTEMenu         global.menu
 #macro MenuOpen         NTTEMenu.open
@@ -415,7 +411,7 @@
 	GameCont.crownpoints = _crownPoints;
 	
 #define step
-	script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 0.1);
+	script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1);
 	
 	 // Loadout Crowns/Weapons:
 	if(instance_exists(Menu)){
@@ -424,7 +420,6 @@
 			_players += player_is_active(i);
 		}
 		if(_players <= 1){
-			with([surfLoadoutHide, surfLoadoutHideScreen]) active = true;
 			with(Menu){
 				with(Loadout) if(selected == false && openanim > 0){
 					openanim = 0; // Bro they actually forgot to reset this when the loadout is closed (<= v9940)
@@ -435,8 +430,8 @@
 				script_bind_draw(draw_loadout_weapon, object_get_depth(LoadoutWep) - 1);
 				script_bind_draw(draw_loadout_tooltip, -100000);
 				if(instance_exists(Loadout)){
-					script_bind_draw(draw_loadout_behind, Loadout.depth + 0.0001);
-					script_bind_draw(draw_loadout_above,  Loadout.depth - 0.0001);
+					script_bind_draw(draw_loadout_behind, Loadout.depth + 1);
+					script_bind_draw(draw_loadout_above,  Loadout.depth - 1);
 				}
 				
 				 // LoadoutSkin Offset:
@@ -469,7 +464,7 @@
 								spr_idle = asset_get_index(`sprCrown${c}Idle`);
 								spr_walk = asset_get_index(`sprCrown${c}Walk`);
 							}
-							depth = -2 - (y / 10000);
+							depth = -2;
 						}
 						
 						 // Delete:
@@ -573,8 +568,6 @@
 		}
 	}
 	else{
-		with([surfLoadoutHide, surfLoadoutHideScreen]) active = false;
-		
 		 // For CharSelection Crown Boy:
 		crownCamp = crown_current;
 	}
@@ -748,7 +741,7 @@
 			}
 			if(MenuSplatBlink >= 0){
 				MenuSplatBlink += current_time_scale;
-				if(_hover || !option_get("remindPlayer")) MenuSplatBlink = -1;
+				if(_hover || !option_get("reminders")) MenuSplatBlink = -1;
 			}
 		}
 		
@@ -916,41 +909,44 @@
 		
 		 // Generate Comparison Sizes:
 		if(array_length(crownSize) <= 0){
-			var _x = _w / 2,
-				_y = _h / 2,
-				_surf = surface_create(_w, _h);
+			with(surface_setup("CrownSize", _w, _h, 1)){
+				surface_set_target(surf);
 				
-			surface_set_target(_surf);
-			
-			for(var i = 0; i <= 13; i++){
-				var a = crownPath + string(i) + crownPathA,
-					b = crownPath + string(i) + crownPathB;
+				var _x = w / 2,
+					_y = h / 2;
 					
-				 // Selected:
-				draw_clear(c_black);
-				draw_sprite(sprLoadoutCrown, i, _x, _y - 2);
-				surface_save(_surf, a);
-				
-				 // Locked:
-				draw_clear(c_black);
-				draw_sprite_ext(sprLockedLoadoutCrown, i, _x, _y, 1, 1, 0, c_gray, 1);
-				surface_save(_surf, b);
-				
-				 // Store Sizes:
-				var _size = { slct:0, lock:0 };
-				array_push(crownSize, _size);
-				file_load(a);
-				file_load(b);
-				if(fork()){
-					wait 0;
-					_size.slct = file_size(a);
-					_size.lock = file_size(b);
-					exit;
+				with(UberCont){
+					for(var i = 0; i <= 13; i++){
+						var a = crownPath + string(i) + crownPathA,
+							b = crownPath + string(i) + crownPathB;
+							
+						 // Selected:
+						draw_clear(c_black);
+						draw_sprite(sprLoadoutCrown, i, _x, _y - 2);
+						surface_save(other.surf, a);
+						
+						 // Locked:
+						draw_clear(c_black);
+						draw_sprite_ext(sprLockedLoadoutCrown, i, _x, _y, 1, 1, 0, c_gray, 1);
+						surface_save(other.surf, b);
+						
+						 // Store Sizes:
+						var _size = { slct:0, lock:0 };
+						array_push(crownSize, _size);
+						file_load(a);
+						file_load(b);
+						if(fork()){
+							wait 0;
+							_size.slct = file_size(a);
+							_size.lock = file_size(b);
+							exit;
+						}
+					}
 				}
+				
+				surface_reset_target();
+				free = true;
 			}
-			
-			surface_reset_target();
-			surface_destroy(_surf);
 		}
 		
 		 // Adding Custom Crowns:
@@ -1172,21 +1168,20 @@
 		_race = player_get_race_fix(p),
 		_crown = lq_get(crownRace, _race);
 		
-	with(surfLoadoutHide) if(surface_exists(surf)){
+	with(surface_setup("LoadoutHide", 64, 64, game_scale_nonsync)){
 		with(Loadout){
 			var	_x = view_xview_nonsync + game_width,
 				_y = view_yview_nonsync + game_height - 36 + (introsettle - (introsettle > 0)),
 				_surf = other.surf,
-				_surfw = other.w,
-				_surfh = other.h,
-				_surfx = _x - 32 - _surfw,
-				_surfy = _y + 4 - _surfh;
+				_surfW = other.w,
+				_surfH = other.h,
+				_surfScale = other.scale,
+				_surfX = _x - 32 - _surfW,
+				_surfY = _y +  4 - _surfH;
 				
-			with(surfLoadoutHideScreen) if(surface_exists(surf)){
+			with(surface_setup("LoadoutHideScreen", game_width, game_height, _surfScale)){
 				x = view_xview_nonsync;
 				y = view_yview_nonsync;
-				w = game_width;
-				h = game_height;
 				
 				 // Capture Screen:
 				surface_set_target(surf);
@@ -1214,7 +1209,7 @@
 						
 						 // The Currently Selected Crown:
 						if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
-							draw_sprite(sprLoadoutCrown, _crown.slct, _x - _surfx - 60 - _off, _y - _surfy - 39 - _off);
+							draw_sprite_ext(sprLoadoutCrown, _crown.slct, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 39 - _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 						}
 						
 						 // The Character's Starting Weapon:
@@ -1223,13 +1218,13 @@
 							
 							 // Determine Starting Wep:
 							switch(race_get_id(_race)){
-								case char_random  : _wep = wep_none;               break;
-								case char_venuz   : _wep = wep_golden_revolver;    break;
-								case char_chicken : _wep = wep_chicken_sword;      break;
-								case char_rogue   : _wep = wep_rogue_rifle;        break;
-								case char_bigdog  : _wep = wep_dog_spin_attack;    break;
-								case char_skeleton: _wep = wep_rusty_revolver;     break;
-								case char_frog    : _wep = wep_golden_frog_pistol; break;
+								case char_random   : _wep = wep_none;               break;
+								case char_venuz    : _wep = wep_golden_revolver;    break;
+								case char_chicken  : _wep = wep_chicken_sword;      break;
+								case char_rogue    : _wep = wep_rogue_rifle;        break;
+								case char_bigdog   : _wep = wep_dog_spin_attack;    break;
+								case char_skeleton : _wep = wep_rusty_revolver;     break;
+								case char_frog     : _wep = wep_golden_frog_pistol; break;
 								
 								default: // Custom
 									if(is_string(_race) && mod_script_exists("race", _race, "race_swep")){
@@ -1238,7 +1233,7 @@
 							}
 							
 							 // Draw:
-							draw_loadoutwep(_wep, 0, _x - _surfx - 60 - _off, _y - _surfy - 14 + _off, 1, 1, 0, c_white, 1);
+							draw_loadoutwep(_wep, 0, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 						}
 						
 					draw_set_fog(false, 0, 0, 0);
@@ -1246,24 +1241,26 @@
 					 // Overlay Screen + Loadout Splat Over Mask:
 					draw_set_color_write_enable(true, true, true, false);
 					
-					draw_surface(other.surf, other.x - _surfx, other.y - _surfy);
+					with(other){
+						draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+					}
 					
-					draw_sprite(sprLoadoutSplat, image_index, _x - _surfx, _y - _surfy);
+					draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 					if(selected == true){
-						draw_sprite(sprLoadoutOpen, openanim, _x - _surfx, _y - _surfy);
+						draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 					}
 					if(_race == "steroids"){
-						draw_loadoutwep(wep_revolver, 0, _x - _surfx - 40 - _off, _y - _surfy - 14 + _off, 1, 1, 0, c_ltgray, 1);
+						draw_loadoutwep(wep_revolver, 0, (_x - _surfX - 40 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
 					}
 					
 					draw_set_color_write_enable(true, true, true, true);
 				}
+				
+				surface_reset_target();
 			}
 			
-			surface_reset_target();
-			
-			other.x = _surfx;
-			other.y = _surfy;
+			other.x = _surfX;
+			other.y = _surfY;
 		}
 	}
 	
@@ -1275,13 +1272,15 @@
 		_race = player_get_race_fix(p),
 		_crown = lq_get(crownRace, _race);
 		
-	with(surfLoadoutHide) if(surface_exists(surf)){
+	with(surface_setup("LoadoutHide", null, null, null)){
 		with(Loadout) if(visible && (selected == false || openanim <= 2)){
 			var	_x = view_xview_nonsync + game_width,
 				_y = view_yview_nonsync + game_height - 36;
 				
 			 // Hide Normal Icons:
-			draw_surface(other.surf, other.x, other.y);
+			with(other){
+				draw_surface_scale(surf, x, y, 1 / scale);
+			}
 			
 			 // Offset:
 			var _off = 0;
@@ -1549,19 +1548,19 @@
 								if(_selected && (sync || _local)) switch(type){
 									case opt_toggle:
 										if(_confirm){
-											option_set(varname, (option_get(varname) + 1) % array_length(pick));
+											save_set(save, (save_get(save, 1) + 1) % array_length(pick));
 										}
 										break;
 										
 									case opt_slider:
 										if(_hover && button_check(_index, "fire") && clicked[_index]){
 											var _slider = clamp(round((_mx - _vx) - (_menuX + 40)) / 100, 0, 1);
-											option_set(varname, _slider);
+											save_set(save, _slider);
 										}
 										else{
 											var _adjust = 0.1 * sign(button_pressed(_index, "east") - button_pressed(_index, "west"));
 											if(_adjust != 0){
-												option_set(varname, clamp(option_get(varname) + _adjust, pick[0], pick[1]));
+												save_set(save, clamp(save_get(save, 1) + _adjust, pick[0], pick[1]));
 											}
 										}
 										break;
@@ -1635,9 +1634,8 @@
 								
 								 // Option Specifics:
 								_x += 124;
-								var _value = option_get(varname);
+								var _value = save_get(save, 1);
 								with(other){
-									
 									switch(other.type){
 										case opt_toggle:
 											draw_text_shadow(_x, _y, other.pick[clamp(_value, 0, array_length(other.pick) - 1)]);
@@ -1646,13 +1644,13 @@
 										case opt_slider:
 											var	_dx = _x - 5,
 												_dy = _y - 2,
-												w = 6 + (100 * _value),
-												h = sprite_get_height(sprOptionSlider);
+												_w = 6 + (100 * _value),
+												_h = sprite_get_height(sprOptionSlider);
 												
 											 // Slider:
-											draw_sprite(sprOptionSlider,      0,             _dx,           _dy);
-											draw_sprite_part(sprOptionSlider, 1, 0, 0, w, h, _dx - 5,       _dy - 6);
-											draw_sprite(sprSliderEnd,         1,             _dx + w - 2,   _y);
+											draw_sprite(sprOptionSlider,      0,               _dx,            _dy);
+											draw_sprite_part(sprOptionSlider, 1, 0, 0, _w, _h, _dx - 5,        _dy - 6);
+											draw_sprite(sprSliderEnd,         1,               _dx + _w - 2,   _y);
 											
 											 // Text:
 											draw_set_color(c_white);
@@ -1662,50 +1660,51 @@
 									
 									switch(_name){
 										
-										case "Water Quality :": // Water Quality Visual
+										case "Visual Quality :": // Surface Quality Visual
 											
 											var	_active = in_range(_menuSlct[_index], i, i + 2),
 												_spr = spr.GullIdle,
 												_img = (current_frame * 0.4),
-												_scale = [
-													1/3 + (2/3 * option_get("waterQualityMain")),
-													1/2 + (1/2 * option_get("waterQualityTop"))
-												],
-												_sx = _x - 32,
-												_sy = _y + 12;
+												_surfW = sprite_get_width(_spr),
+												_surfH = sprite_get_height(_spr),
+												_surfScale = [
+													option_get("quality:minor"),
+													option_get("quality:main")
+												];
 												
-											for(var s = 0; s < array_length(_scale); s++){
-												var	_sw = sprite_get_width(_spr) * _scale[s],
-													_sh = sprite_get_height(_spr) * _scale[s],
-													_surf = surface_create(_sw, _sh);
+											for(var s = 0; s < array_length(_surfScale); s++){
+												with(surface_setup(`VisualQuality${s}`, _surfW, _surfH, _surfScale[s])){
+													x = _x - 32;
+													y = _y + 12;
 													
-												 // Quality Visual:
-												surface_set_target(_surf);
-												draw_clear_alpha(0, 0);
-												
-												var	_dx = (_sw / 2),
-													_dy = (_sh / 2) - ((2 + sin(current_frame / 10)) * _scale[s]);
+													 // Draw Sprite:
+													surface_set_target(surf);
+													draw_clear_alpha(0, 0);
 													
-												draw_sprite_ext(_spr, _img, _dx, _dy, _scale[s], _scale[s], 0, (_active ? c_white : c_gray), 1);
-												
-												surface_reset_target();
-												draw_set_projection(0);
-												
-												 // Draw Clipped/Colored Surface:
-												if(s == 0){
-													var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
-													draw_set_fog(true, (_active ? b : merge_color(b, c_black, 0.5)), 0, 0);
-													draw_surface_part_ext(_surf, 0, (_sh / 2), _sw, (_sh / 2), _sx, _sy + ((_sh / 2) / _scale[s]), 1 / _scale[s], 1 / _scale[s], c_white, 1);
-													draw_set_fog(false, 0, 0, 0);
+													var	_dx = (w / 2) * scale,
+														_dy = ((h / 2) - (2 + sin(current_frame / 10))) * scale;
+														
+													with(UberCont){
+														draw_sprite_ext(_spr, _img, _dx, _dy, other.scale, other.scale, 0, (_active ? c_white : c_gray), 1);
+													}
+													
+													surface_reset_target();
+													draw_set_projection(0);
+													
+													 // Draw Clipped/Colored Surface:
+													if(s == 0){ // Bottom
+														var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
+														draw_set_fog(true, (_active ? b : merge_color(b, c_black, 0.5)), 0, 0);
+														draw_surface_part_ext(surf, 0, (h / 2) * scale, w * scale, (h / 2) * scale, x, y + (h / 2), 1 / scale, 1 / scale, c_white, 1);
+														draw_set_fog(false, 0, 0, 0);
+													}
+													else{ // Top
+														draw_surface_part_ext(surf, 0, 0, w * scale, ((h / 2) + 1) * scale, x, y, 1 / scale, 1 / scale, c_white, 1);
+														draw_set_fog(true, (_active ? c_white : c_gray), 0, 0);
+														draw_surface_part_ext(surf, 0, (h / 2) * scale, w * scale, max(1, scale), x, y + (h / 2), 1 / scale, 1 / scale, c_white, 0.8);
+														draw_set_fog(false, 0, 0, 0);
+													}
 												}
-												else{
-													draw_surface_part_ext(_surf, 0, 0, _sw, (_sh / 2) + 1, _sx,	_sy, 1/_scale[s], 1/_scale[s], c_white, 1);
-													draw_set_fog(true, (_active ? c_white : c_gray), 0, 0);
-													draw_surface_part_ext(_surf, 0,	(_sh / 2), _sw, 1, _sx, _sy + ((_sh / 2) / _scale[s]), 1/_scale[s], 1/_scale[s], c_white, 0.8);
-													draw_set_fog(false, 0, 0, 0);
-												}
-												
-												surface_destroy(_surf);
 											}
 											
 											break;
@@ -1938,7 +1937,7 @@
 							var _petSlct = _statMenu.slct;
 							
 							 // Add Any Pets Found in Stats:
-							var	_petStatList = lq_defget(lq_defget(sav, "stat", {}), "pet", {}),
+							var	_petStatList = save_get("stat:pet", {}),
 								_list = array_clone(_statMenu.list);
 								
 							for(var i = 0; i < lq_size(_petStatList); i++){
@@ -2582,6 +2581,8 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -2595,21 +2596,19 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -2617,6 +2616,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -2628,6 +2628,7 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -2652,7 +2653,7 @@
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);

@@ -1,8 +1,6 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	DebugLag = false;
 	
@@ -38,7 +36,7 @@
 				[0,0,0,L,L,L,L,L,L,0,0,0]
 			]
 		},
-
+		
 		 // SMALL:
 		"SmallClutter" : {
 			w : 2,
@@ -180,12 +178,12 @@
 		}
 		
 	};
-
+	
 	 // Set Room Defaults:
 	for(var i = 0; i < lq_size(RoomType); i++){
 		var	t = lq_get_value(RoomType, i),
 			_default = { w : 1, h : 1, carpet : 0, special : 0 };
-
+			
 		for(var j = 0; j < lq_size(_default); j++){
 			var k = lq_get_key(_default, j);
 			if(k not in t){
@@ -195,23 +193,21 @@
 	}
 	
 	 // Carpet Surface:
-	global.resetSurf = true;
-	global.surfW = 2000;
-	global.surfH = 2000;
-	global.surf = noone;
-
+	//surfCarpet = surface_setup("LairCarpet", 2000, 2000, null);
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro DebugLag global.debug_lag
 
-#macro RoomDebug false
-#macro RoomList global.room_list
-#macro RoomType global.room_type
+#macro RoomDebug  false
+#macro RoomList   global.room_list
+#macro RoomType   global.room_type
 #macro RoomCenter global.room_center
+
+//#macro surfCarpet global.surfCarpet
 
 #define area_subarea           return 1;
 #define area_goal              return 110;
@@ -236,8 +232,8 @@
 #define area_sprite(_spr)
 	switch(_spr){
 		 // Floors:
-		case sprFloor1      : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLair;
-		case sprFloor1B     : if(instance_is(other, Floor)){ with(other) area_setup_floor(); } return spr.FloorLairB;
+		case sprFloor1      : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorLair;
+		case sprFloor1B     : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorLairB;
 		case sprFloor1Explo : return spr.FloorLairExplo;
 		case sprDetail1     : return sprDetail2;
 		
@@ -303,8 +299,11 @@
 	else subarea++;
 	
 #define area_transit
-	global.resetSurf = true;
+	 // Debug:
 	if(RoomDebug) GameCont.area = mod_current;
+	
+	 // Reset Carpet Surface:
+	//surfCarpet.reset = true;
 	
 #define area_effect(_vx, _vy)
 	var	_x = _vx + random(game_width),
@@ -1043,80 +1042,76 @@
 	
 #define draw_rugs
 	if(!instance_exists(GenCont)){
-		var	_surfX = RoomCenter[0] - (global.surfW / 2),
-			_surfY = RoomCenter[1] - (global.surfH / 2),
-			o = 32;
-
-		 // Reset surfaces:
-		if(global.resetSurf){
-			if(surface_exists(global.surf)){
-				surface_set_target(global.surf);
+		with(surface_setup("LairCarpet", null, null, 1)){
+			x = RoomCenter[0] - (w / 2);
+			y = RoomCenter[1] - (h / 2);
+			
+			 // Setup Carpets:
+			if(reset){
+				reset = false;
+				
+				surface_set_target(surf);
 				draw_clear_alpha(0, 0);
-				surface_reset_target();
-				surface_free(global.surf);
-			}
-			global.resetSurf = false;
-			exit;
-		}
-		
-		 // Create surface:
-		if(!surface_exists(global.surf)){
-			global.surf = surface_create(global.surfW, global.surfH);
-			surface_set_target(global.surf);
-
-			with(RoomList) if(carpeted){
-				var	_s = spr.Rug,
-					_i = 8,
-					_c = [
-						choose(make_color_rgb(77, 49, 49), make_color_rgb(46, 56, 41)),
-						choose(make_color_rgb(160, 75, 99), make_color_rgb(214, 134, 5))];
-
-				for(var n = 0; n < array_length(_s); n++){
-					d3d_set_fog(true, _c[n], 0, 0);
-					for(var xx = 0; xx < w; xx++){
-						for (var yy = 0; yy < h; yy++){
-							if(
-								(yy > 0 && yy < h - 1) &&
-								(xx > 0 && xx < w - 1)
-							){
-								_i = 8;
-							}
-							else{
-								if(yy <= 0){
-									if(xx <= 0) _i = 3;
-									else{
-										if(xx >= w - 1) _i = 1;
-										else _i = 2;
-									}
-								}
-								else if(yy >= h - 1){
-									if(xx <= 0) _i = 5;
-									else{
-										if(xx >= w - 1) _i = 7;
-										else _i = 6;
-									}
+				
+				with(RoomList) if(carpeted){
+					var	_o = 32,
+						_s = spr.Rug,
+						_i = 8,
+						_c = [
+							choose(make_color_rgb(77, 49, 49), make_color_rgb(46, 56, 41)),
+							choose(make_color_rgb(160, 75, 99), make_color_rgb(214, 134, 5))
+						];
+						
+					for(var n = 0; n < array_length(_s); n++){
+						draw_set_fog(true, _c[n], 0, 0);
+						
+						for(var xx = 0; xx < w; xx++){
+							for (var yy = 0; yy < h; yy++){
+								if(
+									(yy > 0 && yy < h - 1) &&
+									(xx > 0 && xx < w - 1)
+								){
+									_i = 8;
 								}
 								else{
-									if(xx <= 0) _i = 4;
+									if(yy <= 0){
+										if(xx <= 0) _i = 3;
+										else{
+											if(xx >= w - 1) _i = 1;
+											else _i = 2;
+										}
+									}
+									else if(yy >= h - 1){
+										if(xx <= 0) _i = 5;
+										else{
+											if(xx >= w - 1) _i = 7;
+											else _i = 6;
+										}
+									}
 									else{
-										if(xx >= w - 1) _i = 0;
+										if(xx <= 0) _i = 4;
+										else{
+											if(xx >= w - 1) _i = 0;
+										}
 									}
 								}
-							}
-							
-							with(other){ // cant call draw_sprite in lightweight object, sad
-								draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * o) - _surfX, RoomCenter[1] + ((other.y + yy) * o) - _surfY);
+								
+								with(other){ // cant call draw_sprite in lightweight object, sad
+									draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * _o) - x, RoomCenter[1] + ((other.y + yy) * _o) - y);
+								}
 							}
 						}
 					}
 				}
+				
+				draw_set_fog(false, c_white, 0, 0);
+				
+				surface_reset_target();
 			}
 			
-			d3d_set_fog(false, c_white, 0, 0);
+			 // Draw:
+			draw_surface(surf, x, y);
 		}
-		
-		surface_reset_target();
-		draw_surface(global.surf, _surfX, _surfY);
 	}
 	
 #define RoomDebug_draw
@@ -1228,6 +1223,8 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1241,21 +1238,19 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -1263,6 +1258,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -1274,6 +1270,7 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -1298,7 +1295,7 @@
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);

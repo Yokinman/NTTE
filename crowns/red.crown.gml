@@ -5,7 +5,7 @@
 	global.sprCrownLoadout = sprite_add("../sprites/crowns/Red/sprCrownRedLoadout.png",  2, 16, 16);
 	
 #define crown_name        return "RED CROWN";
-#define crown_text        return "MORE @rHEARTS#@sSMALLER @wAREAS";
+#define crown_text        return "CHAOTIC @rCRYSTAL HEARTS#@sSMALLER @wAREAS";
 #define crown_tip         return choose("FULL OF LIFE", "SO CRAMPED");
 #define crown_avail       return (GameCont.loops > 0);//unlock_get(`crown:${mod_current}`);
 #define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);

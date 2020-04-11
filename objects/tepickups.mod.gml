@@ -1,13 +1,8 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	DebugLag = false;
-	
-	 // Surfaces:
-	surfWepPickupGrounded = surflist_set("WepPickupGrounded", 0, 0, 32, 64);
 	
 	 // Custom Pickup Instances (Used in step):
 	global.pickup_custom = [];
@@ -24,12 +19,9 @@
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro DebugLag global.debug_lag
-
-#macro surfWepPickupGrounded global.surfWepPickupGrounded
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -725,6 +717,9 @@
 		image_speed = 0.4 * choose(-1, 1);
 		depth = -8;
 		
+		 // Sounds:
+		snd_land = -1;
+		
 		 // Vars:
 		friction = 0.15;
 		direction = random(360);
@@ -733,6 +728,7 @@
 		zspeed = 10;
 		zfriction = 1;
 		rotspeed = orandom(30);
+		bounce = 0;
 		land = false;
 		
 		return id;
@@ -778,13 +774,19 @@
 		
 		if(_land){
 			if(abs(zspeed) > zfriction){
+				sound_play_hit_ext(snd_land, 0.9 + random(0.2), 0.5);
 				repeat(3) with(scrFX(x, y - z, 2, Dust)){
 					depth = other.depth;
 				}
 			}
-			image_index = 0;
-			image_angle = 0;
-			zspeed = 0;
+			if(bounce-- > 0){
+				zspeed *= -2/3;
+			}
+			else{
+				image_index = 0;
+				image_angle = 0;
+				zspeed = 0;
+			}
 		}
 	}
 	else{
@@ -2232,7 +2234,7 @@
 	if(instance_exists(target)){
 		var	_odis = 16,
 			_odir = image_angle;
-
+			
 		x = target.x + target.hspeed_raw - lengthdir_x(_odis, _odir);
 		y = target.y + target.vspeed_raw - lengthdir_y(_odis, _odir);
 		if("z" in target){
@@ -2243,10 +2245,10 @@
 		}
 		xprevious = x;
 		yprevious = y;
-
+		
 		if(!target.visible) target = noone;
 	}
-
+	
 #define HarpoonPickup_pull
 	if(instance_exists(target)){ // Stop Sticking
 		if(place_meeting(x, y, Wall)){
@@ -2258,16 +2260,16 @@
 		target = noone;
 	}
 	return (speed <= 0);
-
+	
 #define HarpoonPickup_open
 	 // +1 Bolt Ammo:
 	var	_inst = noone,
 		_type = 3,
 		_num = num;
-
+		
 	if(instance_is(other, Player)) _inst = other;
 	else _inst = Player;
-
+	
 	with(_inst){
 		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
 		with(instance_create(x, y, PopupText)){
@@ -2473,7 +2475,7 @@
 				 // Duplicate Chest:
 				with(instance_random(instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
 					repeat(other.num){
-						array_push(other.chest, instance_copy(false));
+						array_push(other.chest, instance_clone());
 					}
 					
 					 // Manual Offset:
@@ -2743,7 +2745,10 @@
 		with(scrAlert(self, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
-			spr_alert = -1;
+			spr_alert = spr.AlertIndicatorOrchidSkill;
+			alert_col = c_white;
+			alert_x = 6;
+			alert_y = 6;
 			snd_flash = sndLevelUp;
 			alarm0 = 60;
 			blink = 15;
@@ -3205,9 +3210,10 @@
 #define PalaceAltar_death
 	 // Debris:
 	repeat(10){
-		with(instance_create(x, y, ScrapBossCorpse)){
+		with(instance_create(x, y, Shell)){
 			sprite_index = spr.PalaceAltarDebris;
 			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
 			image_angle  = random(360);
 			motion_set(random(360), random_range(4, 8));
 		}
@@ -3429,6 +3435,7 @@
 			if(instance_exists(nearwep)) with(nearwep){
 				x += c.x - other.x;
 				y += c.y - other.y;
+				visible = true;
 			}
 			x = c.x;
 			y = c.y;
@@ -3771,8 +3778,12 @@
 	
 #define SunkenSealSpawn_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
+		var _inCoast = (GameCont.area == "coast" || (GameCont.area == 100 && GameCont.lastarea == "coast"));
+		
 		 // Vars:
 		mask_index = mskBandit;
+		type = irandom_range(1, 3);
+		skeal = !_inCoast;
 		
 		 // Alarms:
 		alarm0 = 30 + (10 * array_length(instances_matching(CustomObject, "name", "SunkenSealSpawn")));
@@ -3803,8 +3814,10 @@
 	
 #define SunkenSealSpawn_alrm0
 	with(obj_create(x, y, "Seal")){
-		skeal = !(GameCont.area == "coast" || (GameCont.area == 100 && GameCont.lastarea == "coast"));
-		type = choose(1, 2, 3);
+		skeal = other.skeal;
+		type = other.type;
+		
+		 // Alert:
 		with(scrAlert(self, (skeal ? spr.SkealAlert : spr.SealAlert))){
 			blink = 20;
 		}
@@ -4190,7 +4203,7 @@
 		}
 		
 		 // Draw w/ End Clipped Off:
-		else with(surfWepPickupGrounded) if(surface_exists(surf)){
+		else with(surface_setup(name, 64, 64, option_get("quality:main"))){
 			x = other.x - (w / 2);
 			y = other.y - h;
 			
@@ -4198,11 +4211,11 @@
 			draw_clear_alpha(0, 0);
 			
 			with(other){
-				draw_sprite_ext(_spr, _img, _x - other.x, _y - other.y, _xsc, _ysc, _ang, _col, _alp);
+				draw_sprite_ext(_spr, _img, (_x - other.x) * other.scale, (_y - other.y) * other.scale, _xsc * other.scale, _ysc * other.scale, _ang, _col, _alp);
 			}
 			
 			surface_reset_target();
-			draw_surface(surf, x, y);
+			draw_surface_scale(surf, x, y, 1 / scale);
 		}
 	}
 	
@@ -4241,21 +4254,21 @@
 		stick_x = 0;
 		stick_y = 0;
 		stick_damage = 0;
-
+		
 		return id;
 	}
-
+	
 #define WepPickupStick_step
 	var t = stick_target;
 	if(instance_exists(t)){
 		speed = 0;
-		nowade = true;
+		canwade = false;
 		rotspeed = 0;
-
+		
 		 // Stick in Target:
 		var	l = 24,
 			d = rotation;
-
+			
 		x = t.x + t.hspeed_raw + stick_x;
 		y = t.y + t.vspeed_raw + stick_y;
 		if("z" in t){
@@ -4267,7 +4280,7 @@
 		visible = t.visible;
 		xprevious = x;
 		yprevious = y;
-
+		
 		 // Deal Damage w/ Taken Out:
 		if(stick_damage != 0 && fork()){
 			var	_damage = stick_damage,
@@ -4276,7 +4289,7 @@
 				_wep = wep,
 				_x = x,
 				_y = y;
-
+				
 			wait 0;
 			if(!instance_exists(self)){
 				with(t){
@@ -4297,11 +4310,11 @@
 		}
 	}
 	else{
-		nowade = false;
+		canwade = true;
 		if(rotspeed == 0) rotspeed = random_range(1, 2) * choose(-1, 1);
 	}
 	
-
+	
 /// Mod Events
 #define game_start
 	 // Reset:
@@ -4319,94 +4332,96 @@
 	if(DebugLag) trace_time();
 	
 	 // Overstock / Bonus Ammo:
-	with(instances_matching(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "visible", true), "can_shoot", 1)){
-		var	_wep = wep,
-			_cost = weapon_get_cost(_wep),
-			_type = weapon_get_type(_wep),
-			_auto = weapon_get_auto(_wep),
-			_internal = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
-			_internalCost = (_internal ? _wep.cost : 0),
-			_fireNum = 0;
-			
-		if(_type != 0){
-			if(canfire >= 1){
-				if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked >= 1)){
-					_fireNum = 1;
-				}
-			}
-			
-			 // Race-Specific:
-			switch(race){
-				case "steroids": // Automatic Weapons
-					if(_auto >= 0) _auto = true;
-					break;
-					
-				case "venuz": // Pop Pop
-					if(canspec && button_pressed(index, "spec")){
-						_fireNum = floor(2 * (1 + skill_get(mut_throne_butt)));
+	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "can_shoot", true)){
+		if(player_active){
+			var	_wep = wep,
+				_cost = weapon_get_cost(_wep),
+				_type = weapon_get_type(_wep),
+				_auto = weapon_get_auto(_wep),
+				_internal = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
+				_internalCost = (_internal ? _wep.cost : 0),
+				_fireNum = 0;
+				
+			if(_type != 0){
+				if(canfire >= 1){
+					if(button_pressed(index, "fire") || (_auto && button_check(index, "fire")) || (!_auto && clicked >= 1)){
+						_fireNum = 1;
 					}
-					break;
-			}
-			
-			 // Firing:
-			if(_fireNum > 0) repeat(_fireNum){
-				 // Bonus Ammo:
-				var _fire = (ammo[_type] + ammo_bonus >= _cost);
-				if(_fire){
-					_cost = min(ammo_bonus, _cost);
-					ammo[_type] += _cost;
-					ammo_bonus -= _cost;
 				}
 				
-				 // Internal Bonus Ammo:
-				var _fireInternal = (_fire && _internal && _wep.ammo + ammo_bonus >= _internalCost);
-				if(_fireInternal){
-					_internalCost = min(ammo_bonus, _internalCost);
-					_wep.ammo += _internalCost;
-					ammo_bonus -= _internalCost;
-				}
-				
-				 // FX:
-				var	_end = (ammo_bonus <= 0);
-				if((_fire && _cost > 0) || (_fireInternal && _internalCost > 0) || _end){
-					var	l = 12,
-						d = gunangle,
-						_x = x + hspeed + lengthdir_x(l, d),
-						_y = y + vspeed + lengthdir_y(l, d),
-						_load = weapon_get_load(_wep);
+				 // Race-Specific:
+				switch(race){
+					case "steroids": // Automatic Weapons
+						if(_auto >= 0) _auto = true;
+						break;
 						
-					sound_play_pitchvol(
-						choose(sndGruntFire, sndRogueRifle),
-						(0.6 + random(1)) / clamp(_load / 10, 1, 3),
-						0.8 + (0.2 * (_load / 20))
-					);
+					case "venuz": // Pop Pop
+						if(canspec && button_pressed(index, "spec")){
+							_fireNum = floor(2 * (1 + skill_get(mut_throne_butt)));
+						}
+						break;
+				}
+				
+				 // Firing:
+				if(_fireNum > 0) repeat(_fireNum){
+					 // Bonus Ammo:
+					var _fire = (ammo[_type] + ammo_bonus >= _cost);
+					if(_fire){
+						_cost = min(ammo_bonus, _cost);
+						ammo[_type] += _cost;
+						ammo_bonus -= _cost;
+					}
 					
-					with(instance_create(_x, _y, BulletHit)){
-						sprite_index = sprImpactWrists;
-						image_xscale = 0.4 + (0.1 * ceil(_load / 15));
-						image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
-						depth = -4;
-						
-						 // Normal:
-						if(!_end){
-							image_index = max(2 - image_speed, 3 - (_load / 30));
-							image_angle = 0;
+					 // Internal Bonus Ammo:
+					var _fireInternal = (_fire && _internal && _wep.ammo + ammo_bonus >= _internalCost);
+					if(_fireInternal){
+						_internalCost = min(ammo_bonus, _internalCost);
+						_wep.ammo += _internalCost;
+						ammo_bonus -= _internalCost;
+					}
+					
+					 // FX:
+					var	_end = (ammo_bonus <= 0);
+					if((_fire && _cost > 0) || (_fireInternal && _internalCost > 0) || _end){
+						var	l = 12,
+							d = gunangle,
+							_x = x + hspeed + lengthdir_x(l, d),
+							_y = y + vspeed + lengthdir_y(l, d),
+							_load = weapon_get_load(_wep);
 							
-							 // Fast Reload Spacing Out:
-							friction = 0.4;
-							motion_add(random(360), min(2, random(6 / _load)));
-						}
+						sound_play_pitchvol(
+							choose(sndGruntFire, sndRogueRifle),
+							(0.6 + random(1)) / clamp(_load / 10, 1, 3),
+							0.8 + (0.2 * (_load / 20))
+						);
 						
-						 // End:
-						else{
-							image_xscale *= 1.5;
-							image_speed = 0.35;
-							sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-							sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+						with(instance_create(_x, _y, BulletHit)){
+							sprite_index = sprImpactWrists;
+							image_xscale = 0.4 + (0.1 * ceil(_load / 15));
+							image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
+							depth = -4;
+							
+							 // Normal:
+							if(!_end){
+								image_index = max(2 - image_speed, 3 - (_load / 30));
+								image_angle = 0;
+								
+								 // Fast Reload Spacing Out:
+								friction = 0.4;
+								motion_add(random(360), min(2, random(6 / _load)));
+							}
+							
+							 // End:
+							else{
+								image_xscale *= 1.5;
+								image_speed = 0.35;
+								sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+								sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+							}
+							
+							image_xscale = min(1.2, image_xscale);
+							image_yscale = image_xscale;
 						}
-						
-						image_xscale = min(1.2, image_xscale);
-						image_yscale = image_xscale;
 					}
 				}
 			}
@@ -4492,10 +4507,10 @@
 	
 	 // Eyes Custom Pickup Attraction:
 	with(instances_matching(Player, "race", "eyes")){
-		if(canspec && button_check(index, "spec")){
+		if(player_active && canspec && button_check(index, "spec")){
 			var	_vx = view_xview[index],
 				_vy = view_yview[index];
-
+				
 			with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
 				var e = on_pull;
 				if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
@@ -4503,7 +4518,7 @@
 						d = point_direction(x, y, other.x, other.y),
 						_x = x + lengthdir_x(l, d),
 						_y = y + lengthdir_y(l, d);
-	
+						
 					if(place_free(_x, y)) x = _x;
 					if(place_free(x, _y)) y = _y;
 				}
@@ -4557,7 +4572,7 @@
 			global.sPickupsNum = min(global.sPickupsNum + global.sPickupsInc, global.sPickupsMax, (GameCont.hard < _minHard));
 		}
 	}
-
+	
 	else{
 		 // Spawning Overheal, Overstock, and Spirit Pickups:
 		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
@@ -4729,6 +4744,7 @@
 							y = ystart;
 							xprevious = x;
 							yprevious = y;
+							visible = false;
 							mask_index = mskNone;
 							sprite_index = mskNone;
 							spr_idle = mskNone;
@@ -4740,7 +4756,6 @@
 							snd_dead = -1;
 							size = 0;
 							team = 0;
-							nowade = true;
 							my_health = 99999;
 							nexthurt = current_frame + 99999;
 						}
@@ -4759,10 +4774,10 @@
 	if(DebugLag) trace_time("tepickups_post_step");
 	
 	instance_destroy();
-
+	
 #define end_step
 	if(DebugLag) trace_time();
-
+	
 	 // Overheal / Bonus HP:
 	with(instances_matching_gt(Player, "my_health_bonus", 0)){
 		drawlowhp = 0;
@@ -4956,6 +4971,8 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -4969,21 +4986,19 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -4991,6 +5006,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -5002,6 +5018,7 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -5026,7 +5043,7 @@
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);

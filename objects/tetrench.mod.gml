@@ -1,18 +1,8 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	DebugLag = false;
-	
-	 // Surfaces:
-	surfAnglerTrail = surflist_set("AnglerTrail", 0, 0, 0, 0);
-	surfAnglerClear = surflist_set("AnglerClear", 0, 0, 0, 0);
-	with(surfAnglerTrail){
-		if("frame" not in self) frame = 0;
-		reset = true;
-	}
 	
 	 // Pit Grid:
 	global.pit_grid = mod_variable_get("area", "trench", "pit_grid");
@@ -20,13 +10,9 @@
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro DebugLag global.debug_lag
-
-#macro surfAnglerTrail	global.surfAnglerTrail
-#macro surfAnglerClear	global.surfAnglerClear
 
 #macro FloorPit     instances_matching(Floor, "sprite_index", spr.FloorTrenchB)
 #macro FloorPitless instances_matching_ne(Floor, "sprite_index", spr.FloorTrenchB)
@@ -94,7 +80,7 @@
 	if(hiding){
 		sprite_index = spr_appear;
 		if(image_index > 0){
-			image_index -= min(image_index, image_speed * 2 * current_time_scale);
+			image_index -= min(image_index, image_speed_raw * 2);
 		}
 	}
 	else if(sprite_index != spr_appear || anim_end){
@@ -104,8 +90,7 @@
 	
 	 // Charging:
 	if(!hiding && ammo >= 0){
-		speed -= (speed * 0.15) * current_time_scale;
-		surfAnglerTrail.frame = current_frame + 30;
+		speed -= speed_raw * 0.15;
 	}
 	
 #define Angler_draw
@@ -1934,8 +1919,7 @@
 					image_yscale = _ysc * 1.2;
 					with(instances_meeting(posx, posy - 16, _floors)){
 						styleb = true;
-						sprite_index = spr.FloorTrenchB;
-						mod_script_call("area", "trench", "area_setup_floor");
+						sprite_index = area_get_sprite(area, sprFloor1B);
 						
 						 // Effects:
 						sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
@@ -1973,9 +1957,9 @@
 			}
 			
 			if(intro_pitbreak){
-				intro_pitbreak = false;
 				_xsc /= 1.5;
 				_ysc /= 1.5;
+				intro_pitbreak = false;
 			}
 			
 			image_xscale = _xsc;
@@ -2388,18 +2372,18 @@
 			speed /= 2;
 		}
 	}
-
+	
 	 // Floor Collision:
 	if(pit_get(x, y) && sprite_index != spr_appear){
 		var f = instances_meeting(x, y, FloorPitless);
 		if(array_length(f) > 0){
 			x = xprevious;
 			y = yprevious;
-	
+			
 			if(array_length(instances_meeting(x + hspeed_raw, y, f)) > 0) hspeed_raw *= -1;
 			if(array_length(instances_meeting(x, y + vspeed_raw, f)) > 0) vspeed_raw *= -1;
 			speed *= 0.5;
-	
+			
 			x += hspeed_raw;
 			y += vspeed_raw;
 		}
@@ -2411,15 +2395,16 @@
 		}
 		with(instances_meeting(x, y, FloorPitless)){
 			styleb = true;
-			sprite_index = spr.FloorTrenchB;
-			mod_script_call("area", "trench", "area_setup_floor");
+			sprite_index = area_get_sprite(area, sprFloor1B);
+			
+			 // Effects:
 			sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
 			repeat(sprite_width / 16){
 				instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Debris);
 			}
 		}
 	}
-
+	
 #define PitSquidArm_alrm1
 	alarm1 = 20 + irandom(20);
 	
@@ -2757,10 +2742,7 @@
 	
 	 // PlasmaImpact Setup:
 	with(_explo){
-		damage = 2;
 		image_angle = 0;
-		
-		 // Effects:
 		with(instance_create(x, y, Smoke)) waterbubble = false;
 	}
 	
@@ -4007,10 +3989,9 @@
 	if(DebugLag) trace_time();
 
 	 // Bind Angler Trail Drawing:
-	var _active = (surfAnglerTrail.frame > current_frame);
-	if(_active) script_bind_draw(draw_anglertrail, -3);
-	surfAnglerTrail.active = _active;
-	surfAnglerClear.active = _active;
+	if(array_length(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0)) >= 0){
+		script_bind_draw(draw_anglertrail, -3);
+	}
 	
 	 // Lightring Trigger Fingers Interaction:
 	if(skill_get(mut_trigger_fingers) > 0){
@@ -4030,7 +4011,7 @@
 
 #define draw_bloom
 	if(DebugLag) trace_time();
-
+	
 	 // Canister Bloom:
 	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true)) if(visible){
 		draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
@@ -4050,7 +4031,7 @@
 		if(blast_hit) _alp *= 1.5 / image_yscale;
 		
 		QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
-
+		
 		if(ring){
 			with(ring_lasers) if(instance_exists(self) && !visible){
 				QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
@@ -4064,27 +4045,33 @@
 	}
 	
 	 // Hot Quasar Weapons:
-	draw_set_color_write_enable(true, false, false, true);
-	with(instances_matching_gt(Player, "reload", 0)){
-		if(visible && array_find_index(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(wep)) >= 0){
-			var	l = -2,
-				d = gunangle - 90,
-				_alpha = image_alpha * (reload / weapon_get_load(wep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
-
-			draw_weapon(weapon_get_sprt(wep), x + lengthdir_x(l, d), y + lengthdir_y(l, d), gunangle, wepangle, wkick, right, image_blend, _alpha);
+	if(!instance_exists(PlayerSit)){
+		var _players = instances_matching(Player, "visible", true);
+		
+		draw_set_color_write_enable(true, false, false, true);
+		
+		with(instances_matching_gt(_players, "reload", 0)){
+			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(wep))){
+				var	l = -2,
+					d = gunangle - 90,
+					_alpha = image_alpha * (reload / weapon_get_load(wep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
+					
+				draw_weapon(weapon_get_sprt(wep), x + lengthdir_x(l, d), y + lengthdir_y(l, d), gunangle, wepangle, wkick, right, image_blend, _alpha);
+			}
 		}
-	}
-	with(instances_matching_gt(instances_matching(Player, "race", "steroids"), "breload", 0)){ // hey JW why couldnt u make weapons arrays why couldnt you pleas e
-		if(visible && array_find_index(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(bwep)) >= 0){
-			var	l = -4,
-				d = gunangle - 90,
-				_alpha = image_alpha * (breload / weapon_get_load(bwep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
-
-			draw_weapon(weapon_get_sprt(bwep), x + lengthdir_x(l, d), y + lengthdir_y(l, d) - 2, gunangle, wepangle, bwkick, -right, image_blend, _alpha);
+		with(instances_matching_gt(instances_matching(_players, "race", "steroids"), "breload", 0)){ // hey JW why couldnt u make weapons arrays or objects why couldnt you pleas e
+			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(bwep))){
+				var	l = -4,
+					d = gunangle - 90,
+					_alpha = image_alpha * (breload / weapon_get_load(bwep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
+					
+				draw_weapon(weapon_get_sprt(bwep), x + lengthdir_x(l, d), y + lengthdir_y(l, d) - 2, gunangle, wepangle, bwkick, -right, image_blend, _alpha);
+			}
 		}
+		
+		draw_set_color_write_enable(true, true, true, true);
 	}
-	draw_set_color_write_enable(true, true, true, true);
-
+	
 	 // Pit Spark:
 	with(instances_matching(CustomObject, "name", "PitSpark")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
@@ -4092,12 +4079,12 @@
 	with(instances_matching(PortalL, "name", "PitSquidL")) if(visible){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 	}
-
+	
 	if(DebugLag) trace_time("tetrench_draw_bloom");
-
+	
 #define draw_shadows
 	if(DebugLag) trace_time();
-
+	
 	 // Squid-Launched Floor Chunks:
 	with(instances_matching(CustomObject, "name", "TrenchFloorChunk")){
 		if(visible && place_meeting(x, y, Floor)){
@@ -4105,33 +4092,33 @@
 			draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
 		}
 	}
-
+	
 	if(DebugLag) trace_time("tetrench_draw_shadows");
-
+	
 #define draw_dark // Drawing Grays
 	draw_set_color(c_gray);
-
+	
 	if(DebugLag) trace_time();
 	
 	 // Electroplasma:
 	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")) if(visible){
 		draw_circle(x, y, 48, false);
 	}
-
+	
 	 // Lightning Discs:
 	with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")) if(visible){
 		draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
 	}
-
+	
 	 // Anglers:
 	draw_set_fog(true, draw_get_color(), 0, 0);
 	with(instances_matching(CustomEnemy, "name", "Angler")) if(visible){
 		var _img = image_index;
-
+		
 		if(sprite_index != spr_appear){
 			_img = sprite_get_number(spr_appear) - 1;
 		}
-
+		
 		 // Manual buzziness since it's a sprite:
 		var o = random(2);
 		for(var a = 0; a < 360; a += 45){
@@ -4139,12 +4126,12 @@
 		}
 	}
 	draw_set_fog(false, 0, 0, 0);
-
+	
 	 // Jellies:
 	with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")) if(visible){
 		var	o = 0,
 			_frame = floor(image_index);
-
+			
 		if(
 			sprite_index == spr_fire
 			|| (sprite_index == spr_hurt && _frame != 1)
@@ -4152,15 +4139,15 @@
 		){
 			o = 5;
 		}
-
+		
 		draw_circle(x, y, 80 + o + orandom(1), false);
 	}
-
+	
 	 // Elite Eels:
 	with(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0)) if(visible){
 		draw_circle(x, y, 48 + orandom(2), false);
 	}
-
+	
 	 // Kelp:
 	with(instances_matching(CustomProp, "name", "Kelp")) if(visible){
 		draw_circle(x, y, 32 + orandom(1), false);
@@ -4184,24 +4171,24 @@
 		var	_scale = 5,
 			_xscale = _scale * image_xscale,
 			_yscale = _scale * image_yscale;
-
+			
 		if(!ring){
 			QuasarBeam_draw_laser(_xscale, _yscale, 1);
-	
+			
 			 // Rounded Ends:
 			var	_x = x,
 				_y = y,
 				r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
-	
+				
 			draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
-	
+			
 			if(array_length(line_seg) > 0){
 				with(line_seg[array_length(line_seg) - 1]){
 					_x = x - 1 + lengthdir_x(8 * _xscale, dir);
 					_y = y - 1 + lengthdir_y(8 * _xscale, dir);
 				}
 			}
-	
+			
 			draw_circle(_x, _y, r, false);
 		}
 		else{
@@ -4209,33 +4196,33 @@
 		}
 	}
 	draw_set_fog(false, 0, 0, 0);
-
+	
 	if(DebugLag) trace_time("tetrench_draw_dark");
-
+	
 #define draw_dark_end // Drawing Clear
 	draw_set_color(c_black);
-
+	
 	if(DebugLag) trace_time();
 	
 	 // Electroplasma:
 	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")) if(visible){
 		draw_circle(x, y, 24, false);
 	}
-
+	
 	 // Lightning Discs:
 	with(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy")) if(visible){
 		draw_circle(x - 1, y - 1, (radius * image_xscale * 1.5) + 4 + orandom(1), false);
 	}
-
+	
 	 // Anglers:
 	draw_set_blend_mode(bm_subtract);
 	with(instances_matching(CustomEnemy, "name", "Angler")) if(visible){
 		var _img = image_index;
-
+		
 		if(sprite_index != spr_appear){
 			_img = sprite_get_number(spr_appear) - 1;
 		}
-
+		
 		 // Manual buzziness since it's a sprite:
 		var o = random(2);
 		for(var a = 0; a < 360; a += 45){
@@ -4243,12 +4230,12 @@
 		}
 	}
 	draw_set_blend_mode(bm_normal);
-
+	
 	 // Jellies:
 	with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")) if(visible){
 		var	o = 0,
 			_frame = floor(image_index);
-
+			
 		if(
 			sprite_index == spr_fire
 			|| (sprite_index == spr_hurt && _frame != 1)
@@ -4256,10 +4243,10 @@
 		){
 			o = 5;
 		}
-
+		
 		draw_circle(x, y, 40 + o + orandom(1), false);
 	}
-
+	
 	 // Elite Eels:
 	with(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0)) if(visible){
 		draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
@@ -4283,24 +4270,24 @@
 		var	_scale = 2,
 			_xscale = _scale * image_xscale,
 			_yscale = _scale * image_yscale;
-
+			
 		if(!ring){
 			QuasarBeam_draw_laser(_xscale, _yscale, 1);
-	
+			
 			 // Rounded Ends:
 			var	_x = x,
 				_y = y,
 				r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
-	
+				
 			draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
-	
+			
 			if(array_length(line_seg) > 0){
 				with(line_seg[array_length(line_seg) - 1]){
 					_x = x - 1 + lengthdir_x(8 * _xscale, dir);
 					_y = y - 1 + lengthdir_y(8 * _xscale, dir);
 				}
 			}
-	
+			
 			draw_circle(_x, _y, r, false);
 		}
 		else{
@@ -4308,99 +4295,80 @@
 		}
 	}
 	draw_set_fog(false, 0, 0, 0);
-
+	
 	if(DebugLag) trace_time("tetrench_draw_dark_end");
 	
 #define draw_anglertrail
-	var	_surfTrail = surfAnglerTrail,
-		_surfClear = surfAnglerClear;
+	if(DebugLag) trace_time();
+	
+	var	_vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_gw = game_width,
+		_gh = game_height;
 		
-	if(surface_exists(_surfTrail.surf) && surface_exists(_surfClear.surf)){
-		if(DebugLag) trace_time();
+	with(surface_setup("AnglerTrail", _gw * 2, _gh * 2, option_get("quality:minor"))){
+		x = pfloor(_vx, _gw);
+		y = pfloor(_vy, _gh);
 		
-		 // Surface Follow Screen:
-		with(_surfTrail){
-			x = floor(view_xview_nonsync / game_width) * game_width;
-			y = floor(view_yview_nonsync / game_height) * game_height;
-			w = game_width * 2;
-			h = game_height * 2;
-			with(_surfClear){
-				w = other.w;
-				h = other.h;
-			}
+		var	_surfX = x,
+			_surfY = y,
+			_surfScale = scale;
 			
-			 // Make sure it clear bro:
-			if(reset){
-				reset = false;
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-				surface_reset_target();
-			}
+		surface_set_target(surf);
+		
+		 // Reset:
+		if(reset){
+			reset = false;
+			draw_clear_alpha(0, 0);
 		}
 		
-		 // Clear Trail Surface Over Time:
-		if(frame_active(1)){
-			with(_surfClear){
-				surface_set_target(surf);
-				draw_clear(c_black);
+		 // Clear Over Time:
+		with(other){
+			var	_x = 32 * dcos(current_frame * 20),
+				_y =  8 * dsin(current_frame * 17);
 				
-				draw_set_blend_mode(bm_subtract);
-				draw_surface(_surfTrail.surf, 0, 0);
-				with(other) draw_sprite_tiled(sprStreetLight, 0, irandom(128), irandom(128));
-				
-				surface_set_target(_surfTrail.surf);
-				for(var a = 0; a < 360; a += 90){
-					draw_surface(surf, lengthdir_x(1, a), lengthdir_y(1, a));
-				}
-				draw_set_blend_mode(bm_normal);
-				surface_reset_target();
-			}
-		}
-		
-		 // Main Trail Surface:
-		with(_surfTrail){
-			 // Draw Trails:
-			surface_set_target(surf);
-			//d3d_set_fog(1, c_black, 0, 0);
-			with(instances_matching_ge(instances_matching(CustomEnemy, "name", "Angler"), "ammo", 0)){
-				if(visible && sprite_index != spr_appear){
-					var	_x1 = xprevious,
-						_y1 = yprevious,
-						_x2 = x,
-						_y2 = y,
-						_dis = point_distance(_x1, _y1, _x2, _y2),
-						_dir = point_direction(_x1, _y1, _x2, _y2),
-						_spr = spr.AnglerTrail,
-						_img = image_index,
-						_xscal = image_xscale * right,
-						_yscal = image_yscale,
-						_angle = image_angle,
-						_blend = image_blend,
-						_alpha = image_alpha,
-						_charm = (_blend == c_white && "charm" in self && lq_defget(charm, "charmed", true));
-						
-					if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
-					
-					for(var o = 0; o <= _dis; o++){
-						draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(o, _dir) - other.x, _y1 + lengthdir_y(o, _dir) - other.y, _xscal, _yscal, _angle, _blend, _alpha);
-					}
-					
-					if(_charm) draw_set_fog(false, 0, 0, 0);
-				}
-			}
-			//d3d_set_fog(0, 0, 0, 0);
-			surface_reset_target();
-			
-			 // Draw Surface:
-			//d3d_set_fog(1, make_color_rgb(252, 56, 0), 0, 0);
-			draw_set_blend_mode(bm_add);
-			draw_surface(surf, x, y);
+			draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+			draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
 			draw_set_blend_mode(bm_normal);
-			//d3d_set_fog(0, 0, 0, 0);
 		}
 		
-		if(DebugLag) trace_time("tetrench_draw_anglertrail");
+		 // Draw Trails:
+		with(instances_matching(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0), "visible", true)){
+			if(sprite_index != spr_appear){
+				var	_x1 = xprevious,
+					_y1 = yprevious,
+					_x2 = x,
+					_y2 = y,
+					_dis = point_distance(_x1, _y1, _x2, _y2),
+					_dir = point_direction(_x1, _y1, _x2, _y2),
+					_spr = spr.AnglerTrail,
+					_img = image_index,
+					_xsc = image_xscale * _surfScale * right,
+					_ysc = image_yscale * _surfScale,
+					_ang = image_angle,
+					_col = image_blend,
+					_alp = image_alpha,
+					_charm = (_col == c_white && "charm" in self && lq_defget(charm, "charmed", true));
+					
+				if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
+				
+				for(var i = 0; i <= _dis; i++){
+					draw_sprite_ext(_spr, _img, (_x1 - _surfX + lengthdir_x(i, _dir)) * _surfScale, (_y1 - _surfY + lengthdir_y(i, _dir)) * _surfScale, _xsc, _ysc, _ang, _col, _alp);
+				}
+				
+				if(_charm) draw_set_fog(false, 0, 0, 0);
+			}
+		}
+		
+		surface_reset_target();
+		
+		 // Draw Surface:
+		draw_set_blend_mode(bm_add);
+		draw_surface_scale(surf, x, y, 1 / scale);
+		draw_set_blend_mode(bm_normal);
 	}
+	
+	if(DebugLag) trace_time("tetrench_draw_anglertrail");
 	
 	instance_destroy();
 	
@@ -4409,6 +4377,8 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -4422,21 +4392,19 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -4444,6 +4412,7 @@
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -4455,6 +4424,7 @@
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -4479,7 +4449,7 @@
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);

@@ -28,8 +28,9 @@
 		["objects/teoasis.mod.gml",                 0 + _coop],
 		["objects/tetrench.mod.gml",                1 + _coop],
 		["objects/tesewers.mod.gml",                0 + _coop],
-		["objects/tescrapyard.mod.gml",             0 + _coop],
-		["objects/tecaves.mod.gml",                 1 + _coop],
+		["objects/tescrapyard.mod.gml",             1 + _coop],
+		["objects/tecaves.mod.gml",                 0 + _coop],
+		["objects/telabs.mod.gml",                  1 + _coop],
 		["areas/coast.area.gml",                    1 + _coop, "Areas"],
 		["areas/oasis.area.gml",                    1 + _coop],
 		["areas/trench.area.gml",                   1 + _coop],
@@ -64,7 +65,8 @@
 		["weps/electroplasma shotgun.wep.gml",      1],
 		["weps/quasar blaster.wep.gml",             1],
 		["weps/quasar rifle.wep.gml",               1],
-		["weps/quasar cannon.wep.gml",              1]
+		["weps/quasar cannon.wep.gml",              1],
+		["weps/teleport gun.wep.gml",               1]
 	];
 	global.load_max += array_length(global.list);
 	
