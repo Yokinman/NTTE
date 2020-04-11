@@ -2387,7 +2387,7 @@
 		projectile_hit_push(other, damage, force);
 
 		 // Mega Smak:
-		if(instance_is(other, Player) || other.size <= 1 || "smack_all" in self){
+		if(instance_is(other, Player) || other.size <= 1){
 			var p = other;
 			with(obj_create(p.x, p.y, "PalankingToss")){
 				direction = angle_lerp(other.direction, point_direction(other.x, other.y, p.x, p.y), 1/3);
@@ -4263,7 +4263,6 @@
 	}
 	sound_play_hit(sndFlakExplode, 0.2);
 
-
 #define TrafficCrab_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -4416,8 +4415,9 @@
 
 	 // Just be a prop bro:
 	else{
-		alarm1 = 20;
-
+		alarm1 = 30 + random(30);
+		target = instance_nearest(x, y, Player);
+		
 		 // Awaken:
 		if(in_distance(target, 80) || chance(1, instance_number(enemy))){
 			active = true;
@@ -5101,3 +5101,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

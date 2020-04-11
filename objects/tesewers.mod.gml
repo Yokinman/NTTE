@@ -828,7 +828,7 @@
 				alarm1 = 10;
 				canfire = true;
 				instance_create(x + (4 * right), y, AssassinNotice);
-				
+
 				 // Sounds:
 				sound_play_hit(sndShotReload, 0.2);
 			}
@@ -1442,7 +1442,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(instance_exists(other.target)){
 			scrAim(point_direction(x, y, other.target.x, other.target.y));
 		}
-		
+
 		 // Effects:
 		for(var a = 0; a < 360; a += (360 / 12)){
 			with(scrFX(x, y + 6, [a, 2], Smoke)){
@@ -1811,7 +1811,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			instance_delete(id);
 		}
-		
+
 		 // Destroy projectiles:
 		else if(team != other.team){
 			if(typ == 1 || typ == 2){
@@ -1821,7 +1821,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					friction = 0.4;
 				}
 				instance_create(x, y, ThrowHit);
-				
+
 				 // Destroy:
 				instance_destroy();
 			}
@@ -1933,7 +1933,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		repeat(1 + irandom(2)) with(scrFlameSpark(_x, _y)) motion_set(other.gunangle + orandom(30), random(5));
 		repeat(1 + irandom(2)) scrFX(_x, _y, [gunangle, random(4)], Smoke);
 	}
-	
+
 	 // Normal Behavior:
 	else if(enemy_target(x, y)){
 		if(in_sight(target)){
@@ -1960,11 +1960,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					scrWalk((gunangle + 180) + orandom(30), [20, 50]);
 				}
 			}
-			
+
 			 // Chase:
 			else scrWalk(gunangle + orandom(60), [20, 50]);
 		}
-		
+
 		 // Wander:
 		else if(chance(2, 5)){
 			alarm1 += random(10);
@@ -1972,13 +1972,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			scrAim(direction);
 		}
 	}
-	
+
 #define BoneGator_hurt(_hitdmg, _hitvel, _hitdir)
 	if(!instance_is(other, Explosion)){
 		enemy_hurt(_hitdmg, _hitvel, _hitdir);
 		sound_play_hit_ext(sndBloodHurt, 0.8 + orandom(0.2), 0.9);
 	}
-	
+
 	 // Boiling Veins:
 	else if(nextheal <= current_frame){
 		my_health = min(my_health + 12, maxhealth);
@@ -2627,7 +2627,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 #define CatBoss_alrm1
 	alarm1 = 20 + random(20);
-	
+
 	if(supertime > 0){
 		alarm1 = 1;
 		supertime -= 1;
@@ -5199,11 +5199,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			creator.wkick += random_range(1, 2) * current_time_scale;
 		}
 
+    // Change angle with creator if Creator is Player:
+    if (creator.object_index) = Player{
+      direction = creator.gunangle;
+    }
+
 		x = xstart;
 		y = ystart;
 		xprevious = x;
 		yprevious = y;
-		 
+
 		 // Effects 1:
 		if(chance_ct(1, 4)){
 			var f = 0.6;
@@ -5240,11 +5245,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(charging){
 		if(projectile_canhit_melee(other)) projectile_hit(other, 1);
 	}
-	
+
 	else{
 		if(projectile_canhit(other)){
 			projectile_hit(other, damage, force, direction);
-			
+
 			instance_destroy();
 		}
 	}
@@ -5598,6 +5603,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
 	}
 	
+	 // Gator Statue Flak:
+	with(instances_matching(CustomProjectile, "name", "GatorStatueFlak")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	}
+	
 	if(DebugLag) trace_time("tesewers_draw_bloom");
 	
 	
@@ -5728,3 +5738,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');
