@@ -104,9 +104,11 @@
 			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
 			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
 			
-			 // Clam Shield Slash:
-			ClamShieldSlash     = sprite(p + "sprClamShieldSlash", 4, 12, 12);
-			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash", 4, 12, 12);
+			 // Clam Shield:
+			ClamShield          = sprite(p + "sprClamShield",      14,  0,  7);
+			ClamShieldWep       = sprite(p + "sprClamShieldWep",    1,  8,  8, shn16);
+			ClamShieldSlash     = sprite(p + "sprClamShieldSlash",  4, 12, 12);
+			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
@@ -435,11 +437,11 @@
 			JellyEliteFire = sprite(p + "sprJellyfishEliteFire",   6, 24, 24);
 			JellyIdle	   =[sprite(p + "sprJellyfishBlueIdle",    8, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleIdle",  8, 24, 24),
-			                 sprite(p + "sprJellyfishGreenIdle",   8, 24, 24)
+			                 sprite(p + "sprJellyfishGreenIdle",   8, 24, 24),
 			                 sprite(p + "sprJellyfishEliteIdle",   8, 24, 24)];
 			JellyHurt	   =[sprite(p + "sprJellyfishBlueHurt",    3, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleHurt",  3, 24, 24),
-			                 sprite(p + "sprJellyfishGreenHurt",   3, 24, 24)
+			                 sprite(p + "sprJellyfishGreenHurt",   3, 24, 24),
 			                 sprite(p + "sprJellyfishEliteHurt",   3, 24, 24)];
 			JellyDead	   =[sprite(p + "sprJellyfishBlueDead",   10, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleDead", 10, 24, 24),
@@ -584,18 +586,17 @@
 				SealSpwn[i] = sprite(p + "sprSealSpwn" + n, 6, 12, 12);
 				SealWeap[i] = mskNone;
 			}
-			SealWeap[1] = sprite(p + "sprHookPole",     1, 18,  2);
-			SealWeap[2] = sprite(p + "sprSabre",        1, -2,  1);
-			SealWeap[3] = sprite(p + "sprBlunderbuss",  1,  7,  1);
-			SealWeap[4] = sprite(p + "sprRepeater",     1,  6,  2);
-			SealWeap[5] = sprBanditGun;
-			SealDisc	= sprite(p + "sprSealDisc",		2,	7,	7);
-			ClamShield  = sprite(p + "sprClamShield",  14,  0,  7);
-			SkealIdle   = sprite(p + "sprSkealIdle",    6, 12, 12);
-			SkealWalk   = sprite(p + "sprSkealWalk",    7, 12, 12);
-			SkealHurt   = sprite(p + "sprSkealHurt",    3, 12, 12);
-			SkealDead   = sprite(p + "sprSkealDead",   10, 16, 16);
-			SkealSpwn   = sprite(p + "sprSkealSpwn",    8, 16, 16);
+			SealWeap[1] = sprite(p + "sprHookPole",    1, 18,  2);
+			SealWeap[2] = sprite(p + "sprSabre",       1, -2,  1);
+			SealWeap[3] = sprite(p + "sprBlunderbuss", 1,  7,  1);
+			SealWeap[4] = sprite(p + "sprRepeater",    1,  6,  2);
+			SealWeap[6] = sprBanditGun;
+			SealDisc    = sprite(p + "sprSealDisc",    2,  7,  7);
+			SkealIdle   = sprite(p + "sprSkealIdle",   6, 12, 12);
+			SkealWalk   = sprite(p + "sprSkealWalk",   7, 12, 12);
+			SkealHurt   = sprite(p + "sprSkealHurt",   3, 12, 12);
+			SkealDead   = sprite(p + "sprSkealDead",  10, 16, 16);
+			SkealSpwn   = sprite(p + "sprSkealSpwn",   8, 16, 16);
 			
 			 // Seal (Heavy):
 			p = m + "SealHeavy/";
@@ -764,10 +765,10 @@
 		//#region LABS
 		m = "areas/Labs/";
 		p = m;
-		
+			
 			//#region PROPS
 			p = m + "Props/";
-			
+				
 				 // Labs Vat:
 				LabsVatIdle  = sprite(p + "sprLabsVatIdle",  1, 32, 32);
 				LabsVatHurt  = sprite(p + "sprLabsVatHurt",  3, 32, 32);
@@ -950,7 +951,7 @@
 			DebrisTrench    = sprite(p + "sprDebrisTrench",    4,  4,  4);
 			
 			 // Decals:
-			TopDecalTrench     = sprite(p + "sprTopDecalTrench",      1, 19, 24);
+			TopDecalTrench     = sprite(p + "sprTopDecalTrench",      2, 19, 24);
 			TopDecalTrenchMine = sprite(p + "sprTopDecalTrenchMine",  1, 16, 24);
 			TrenchMineDead     = sprite(p + "sprTrenchMineDead",     12, 12, 36);
 			
@@ -1152,15 +1153,16 @@
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:
-			WallRedBot	 = sprite(p + "sprWallCrystalBot",   2,  0,  0);
-			WallRedTop	 = sprite(p + "sprWallCrystalTop",   4,  0,  0);
-			WallRedOut	 = sprite(p + "sprWallCrystalOut",   1,  4,  12);
-			WallRedTrans = sprite(p + "sprWallCrystalTrans", 4,  0,  0);
-			DebrisRed    = sprite(p + "sprDebrisCrystal",    4,  4,  4);
+			WallRedBot   = sprite(p + "sprWallCrystalBot",   2, 0,  0);
+			WallRedTop   = sprite(p + "sprWallCrystalTop",   4, 0,  0);
+			WallRedOut   = sprite(p + "sprWallCrystalOut",   1, 4, 12);
+			WallRedTrans = sprite(p + "sprWallCrystalTrans", 4, 0,  0);
+			DebrisRed    = sprite(p + "sprDebrisCrystal",    4, 4,  4);
 			
-			WallFakeBot = sprite(p + "sprWallFakeBot",  16,	0,  0);
-			WallFakeTop = sprite(p + "sprWallFakeTop",	1,	0,  8);
-			WallFakeOut = sprite(p + "sprWallFakeOut",	1,	1,  9);
+			 // Fake Walls:
+			WallFakeBot = sprite(p + "sprWallFakeBot", 16, 0, 0);
+			WallFakeTop = sprite(p + "sprWallFakeTop",  1, 0, 8);
+			WallFakeOut = sprite(p + "sprWallFakeOut",  1, 1, 9);
 			
 			 // Decals:
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
@@ -1518,11 +1520,11 @@
 			
 			 // Twins:
 			p = m + "Red/";
-			PetTwinsIcon		= sprite(p + "sprPetTwinsIcon", 	   1,  6,  6);
-			PetTwinsStat		= sprite(p + "sprPetTwinsStat", 	   6,  12, 12);
-			PetTwinsRed			= sprite(p + "sprPetTwinsRed",  	   6,  12, 12);
-			PetTwinsWhite		= sprite(p + "sprPetTwinsWhite",	   6,  12, 12);
-			PetTwinsEffectRed	= sprite(p + "sprPetTwinsEffectRed",   6,  8,  8);
+			PetTwinsIcon        = sprite(p + "sprPetTwinsIcon",        1,  6,  6);
+			PetTwinsStat        = sprite(p + "sprPetTwinsStat",        6, 12, 12);
+			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
+			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
+			PetTwinsEffectRed   = sprite(p + "sprPetTwinsEffectRed",   6,  8,  8);
 			PetTwinsEffectWhite = sprite(p + "sprPetTwinsEffectWhite", 6,  8,  8);
 			
 		//#endregion
@@ -1546,86 +1548,85 @@
 		 // SawTrap:
 		p = m + "SawTrap/";
 		SawTrap = sound_add(p + "sndSawTrap.ogg");
-	}
-	
-	 // MUSIC //
-	mus = {};
-	with(mus){
-		var p = "sounds/music/";
-		amb = {};
 		
-		Placeholder     = sound_add(p + "musPlaceholder.ogg");
-		amb.Placeholder = sound_add(p + "musPlaceholder.ogg");
-		
-		 // Areas:
-		Coast  = sound_add(p + "musCoast.ogg");
-		Trench = sound_add(p + "musTrench.ogg");
-		Lair   = sound_add(p + "musLair.ogg");
-		Red    = sound_add(p + "musRed.ogg");
-		
-		 // Bosses:
-		SealKing      = sound_add(p + "musSealKing.ogg");
-		BigShots      = sound_add(p + "musBigShots.ogg");
-		PitSquid      = sound_add(p + "musPitSquid.ogg");
-		PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
+		 // Music:
+		mus = {};
+		with(mus){
+			var p = "sounds/music/";
+			amb = {};
+			
+			Placeholder     = sound_add(p + "musPlaceholder.ogg");
+			amb.Placeholder = sound_add(p + "musPlaceholder.ogg");
+			
+			 // Areas:
+			Coast  = sound_add(p + "musCoast.ogg");
+			Trench = sound_add(p + "musTrench.ogg");
+			Lair   = sound_add(p + "musLair.ogg");
+			Red    = sound_add(p + "musRed.ogg");
+			
+			 // Bosses:
+			SealKing      = sound_add(p + "musSealKing.ogg");
+			BigShots      = sound_add(p + "musBigShots.ogg");
+			PitSquid      = sound_add(p + "musPitSquid.ogg");
+			PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
+		}
 	}
 	
 	 // SAVE FILE //
-	global.sav_auto = false;
-	sav = {
-		option : {
-			"allowShaders"     : true,
-			"remindPlayer"     : true,
-			"intros"           : 2,
-			"outlinePets"      : 2,
-			"outlineCharm"     : 2,
-			"waterQualityMain" : 1,
-			"waterQualityTop"  : 1
-		}
-	};
+	saveAuto = false;
+	save = {};
 	
 	if(fork()){
 		 // Load Existing Save:
-		var _path = savPath;
+		var _path = savePath;
 		wait file_load(_path);
 		
 		if(file_loaded(_path) && file_exists(_path)){
 			var _save = json_decode(string_load(_path));
+			
 			if(_save != json_error){
+				 // Copy Loaded Save's Vars:
+				for(var i = 0; i < lq_size(_save); i++){
+					lq_set(save, lq_get_key(_save, i), lq_get_value(_save, i));
+				}
+				
 				 // Defaulterize Options:
-				if("option" in _save){
-					for(var j = 0; j < lq_size(opt); j++){
-						var _name = lq_get_key(opt, j);
-						if(_name not in _save.option){
-							lq_set(_save.option, _name, lq_get_value(opt, j));
-						}
+				with([
+					["option:shaders",       true],
+					["option:reminders",     true],
+					["option:intros",        2],
+					["option:outline:pets",  2],
+					["option:outline:charm", 2],
+					["option:quality:main",  1],
+					["option:quality:minor", 1]
+				]){
+					if(is_undefined(save_get(self[0], null))){
+						save_set(self[0], self[1]);
 					}
 				}
 				
-				 // Copy Vars From Save File:
-				for(var i = 0; i < lq_size(_save); i++){
-					lq_set(global.sav, lq_get_key(_save, i), lq_get_value(_save, i));
-				}
+				 // Enable Auto Saving:
+				saveAuto = true;
 				
-				global.sav_auto = true;
 				exit;
 			}
 			
 			 // Save File Corrupt:
 			else{
-				string_save(string_load(_path), "saveCORRUPT.sav");
+				var _pathCorrupt = string_insert("CORRUPT", _path, string_pos(".", _path));
+				string_save(string_load(_path), _pathCorrupt);
 				if(fork()){
 					while(mod_exists("mod", "teloader")) wait 0;
 					wait 1;
-					trace_color("NTTE | Something isn't right with your save file... creating a new one and moving old to 'saveCORRUPT.sav'.", c_red);
+					trace_color(`NTTE | Something isn't right with your save file... creating a new one and moving old to '${_pathCorrupt}'.`, c_red);
 					exit;
 				}
 			}
 		}
 		
 		 // New Save File:
-		save();
-		global.sav_auto = true;
+		save_ntte();
+		saveAuto = true;
 		exit;
 	}
 	
@@ -1649,12 +1650,12 @@
 		trace_color("NTTE | Finished loading!", c_yellow);
 		repeat(20 * (game_height / 240)) trace("");
 		
-		if(lq_defget(opt, "remindPlayer", true)){
+		if(option_get("reminders")){
 			global.remind = [
 				{   "pos" : [-85, -2],
 					"but" : GameMenuButton,
 					"txt" : "Turn em on!",
-					"rem" : (!UberCont.opt_bossintros && opt.intros >= 2)
+					"rem" : (!UberCont.opt_bossintros && save_get("option:intros", 1) >= 2)
 					},
 				{   "pos" : [-85, 29],
 					"but" : AudioMenuButton,
@@ -1686,9 +1687,7 @@
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
-#macro opt sav.option
+#macro mus snd.mus
 
 #macro sprLoad global.spr_load
 
@@ -1709,51 +1708,439 @@
 #macro surfList global.surf
 #macro shadList global.shad
 
-#macro savPath "save.sav"
+#macro save     global.save
+#macro saveAuto global.save_auto
+#macro savePath "save.sav"
 
-#define save()
+#macro game_scale_nonsync game_screen_get_width_nonsync() / game_width
+
+#define save_ntte()
 	if(player_is_local_nonsync(player_find_local_nonsync())){
-		string_save(json_encode(sav), savPath);
+		string_save(json_encode(save), savePath);
 	}
 	
-#define surflist_set(_name, _x, _y, _width, _height)
-	var _surf = surflist_get(_name);
+#define save_get(_name, _default)
+	/*
+		Returns the value stored at the given name in NTTE's save file
+		Returns the given default value if nothing was found
+		
+		Ex:
+			save_get("option:shaders")
+			save_get("stat:pet:Baby.examplepet.mod:found")
+	*/
 	
-	_width  = max(1, _width);
-	_height = max(1, _height);
+	var	_path = string_split(_name, ":"),
+		_save = save;
+		
+	with(_path){
+		if(!lq_exists(_save, self)){
+			return _default;
+		}
+		_save = lq_get(_save, self);
+	}
 	
-	 // Add to List:
-	if(_surf == noone){
+	return _save;
+	
+#define save_set(_name, _value)
+	/*
+		Stores the given value at the given name in NTTE's save file
+		
+		Ex:
+			save_set("stat:time", save_get("stat:time") + 1)
+			save_set("unlock:coolWeapon", true)
+	*/
+	
+	var	_path = string_split(_name, ":"),
+		_save = save;
+		
+	with(array_slice(_path, 0, array_length(_path) - 1)){
+		if(!is_object(lq_get(_save, self))){
+			lq_set(_save, self, {});
+		}
+		_save = lq_get(_save, self);
+	}
+	
+	lq_set(_save, _path[array_length(_path) - 1], _value);
+	
+#define option_get(_name)
+	/*
+		Returns the value associated with a given option's name, which may be altered from the base value for simpler usage
+		Returns 1 if nothing was found
+		
+		Ex:
+			option_get("shaders")
+	*/
+	
+	var _value = save_get("option:" + _name, 1);
+	
+	 // Type-Specific Conditions:
+	var _split = string_split(_name, ":");
+	switch(_split[0]){
+		case "intros": // Auto Intros
+			if(_value >= 2){
+				_value = (UberCont.opt_bossintros == true);
+			}
+			break;
+			
+		case "outline": // Auto Outlines
+			if(_value >= 2){
+				_value = player_get_outlines(player_find_local_nonsync());
+			}
+			break;
+			
+		case "quality": // Surface Quality
+			_value = lerp(1/3, game_scale_nonsync, _value);
+			break;
+	}
+	
+	return _value;
+	
+#define option_set(_name, _value)
+	/*
+		Sets the given option to the given value
+		
+		Ex:
+			option_set("shaders", false)
+	*/
+	
+	save_set("option:" + _name, _value);
+	
+#define stat_get(_name)
+	/*
+		Returns the value associated with a given stat's name
+		Returns 0 if nothing was found
+		
+		Ex:
+			stat_get("time")
+	*/
+	
+	var _default = 0;
+	
+	 // Old Stat Names:
+	switch(_name){
+		case "race:parrot:best:area": _default = stat_get("race:parrot:bestArea"); break;
+		case "race:parrot:best:kill": _default = stat_get("race:parrot:bestKill"); break;
+		
+		default:
+			if(string_pos("found:", _name) == 1){
+				_default = unlock_get(string_replace(_name, ":", "(") + ")");
+			}
+	}
+	
+	return save_get("stat:" + _name, _default);
+	
+#define stat_set(_name, _value)
+	/*
+		Sets the given stat to the given value
+		
+		Ex:
+			stat_set("time", stat_get("time") + 1)
+	*/
+	
+	save_set("stat:" + _name, _value);
+	
+#define unlock_get(_name)
+	/*
+		Returns the value associated with a given unlock's name
+		Returns 'false' if nothing was found
+		
+		Ex:
+			unlock_get("race:parrot")
+	*/
+	
+	var _default = false;
+	
+	 // Old Unlock Names:
+	switch(_name){
+		case "race:parrot"         : _default = unlock_get("parrot");     break;
+		case "skin:parrot:1"       : _default = unlock_get("parrotB");    break;
+		case "pack:coast"          : _default = unlock_get("coastWep");   break;
+		case "pack:oasis"          : _default = unlock_get("oasisWep");   break;
+		case "pack:trench"         : _default = unlock_get("trenchWep");  break;
+		case "pack:lair"           : _default = unlock_get("lairWep");    break;
+		case "crown:crime"         : _default = unlock_get("lairCrown");  break;
+		case "loadout:crown:crime" : _default = unlock_get("crownCrime"); break;
+		case "wep:trident"         : _default = unlock_get("trident");    break;
+		case "wep:scythe"          : _default = unlock_get("boneScythe"); break;
+	}
+	
+	return save_get("unlock:" + _name, _default);
+	
+#define unlock_set(_name, _value)
+	/*
+		Sets the given unlock to the given value
+		Plays unlock FX if the given value isn't already equal to the the unlock's value
+		Returns 'true' if the unlock was set to a new value, 'false' otherwise
+		
+		Layout:
+			pack    : Unlocks multiple things
+			race    : Unlocks a character
+			skin    : Unlocks a skin
+			wep     : Unlocks a weapon
+			crown   : Unlocks a crown (to appear in the crown vault)
+			loadout : Unlocks an item on the loadout menu
+			
+		Ex:
+			unlock_set("pack:lair", true)
+			unlock_set("race:parrot", true)
+			unlock_set("skin:red crystal", true) // for skin mods
+			unlock_set("skin:parrot:1", true)    // for race mods
+			unlock_set("crown:crime", true)
+			unlock_set("loadout:crown:crime", true)
+	*/
+	
+	if(unlock_get(_name) != _value){
+		save_set("unlock:" + _name, _value);
+		
+		 // Unlock FX:
+		if(mod_exists("mod", "telib")){
+			var _unlockName = mod_script_call("mod", "telib", "unlock_get_name", _name);
+			if(_unlockName != ""){
+				var	_unlocked = (!is_real(_value) || _value),
+					_unlockText = (_unlocked ? mod_script_call("mod", "telib", "unlock_get_text", _name) : "LOCKED"),
+					_unlockSprite = -1,
+					_unlockSound = -1,
+					_split = string_split(_name, ":");
+					
+				 // Type-Specifics:
+				if(array_length(_split) >= 2){
+					switch(_split[0]){
+						
+						case "pack": // PACK
+							
+							sound_play(_unlocked ? sndGoldUnlock : sndCursedChest);
+							
+							break;
+							
+						case "race": // CHARACTER
+							
+							sound_play_pitchvol(_unlocked ? sndGoldUnlock : sndCursedChest, 0.9, 0.9);
+							
+							if(_unlocked){
+								var _race = _split[1];
+								_unlockSprite = mod_script_call("race", _race, "race_portrait", 0, 0);
+								_unlockSound  = mod_script_call("race", _race, "race_menu_confirm");
+							}
+							
+							break;
+							
+						case "skin": // SKIN
+							
+							sound_play(_unlocked ? sndMenuBSkin : sndMenuASkin);
+							
+							if(_unlocked){
+								var	_race = "",
+									_skin = _split[1];
+								
+								 // Race Mod:
+								if(array_length(_split) > 2){
+									_race = _skin;
+									_skin = real(_split[2]);
+									_unlockSprite = mod_script_call("race", _race, "race_portrait", 0, _skin);
+								}
+								
+								 // Skin Mod:
+								else if(mod_exists("skin", _skin)){
+									_race = mod_script_call("skin", _skin, "skin_race");
+									_unlockSprite = mod_script_call("skin", _skin, "skin_portrait", 0);
+								}
+								
+								 // Sound:
+								_unlockSound = mod_script_call("race", _race, "race_menu_confirm");
+							}
+							
+							break;
+							
+						case "loadout": // LOADOUT
+							
+							if(_split[1] == "wep"){
+								sound_play(_unlocked ? sndGoldUnlock : sndCursedChest);
+							}
+							
+							break;
+							
+					}
+				}
+				if(!is_real(_unlockSprite)) _unlockSprite = -1;
+				if(!is_real(_unlockSound)) _unlockSound = -1;
+				
+				 // Splat:
+				with(mod_script_call("mod", "telib", "unlock_splat", _unlockName, _unlockText, _unlockSprite, _unlockSound)){
+					 // Append "-SKIN" to GameOver Splat:
+					if(array_length(_split) >= 2 && _split[1] == "skin"){
+						with(_unlockSplat){
+							nam[0] += "-SKIN";
+						}
+					}
+					
+					 // UNLOCKED:
+					if(is_real(_value) && _value){
+						nam[0] += " UNLOCKED";
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	return false;
+	
+#define surface_setup(_name, _w, _h, _scale)
+	/*
+		Returns a LWO from the global surface list that contains a surface and its variables
+		Initializes and stores the LWO if it isn't already found in the global surface list
+		
+		Auto:
+			Creates the surface if it doesn't exist
+			Destroys and recreates the surface if it doesn't match the given width/height
+			Destroys the surface if it hasn't been retrieved for 30 frames, to free up memory
+			
+		Args:
+			name  - The name used to store & retrieve the shader
+			w/h   - The width/height of the surface
+			        Use 'null' to not update the surface's width/height
+			scale - The scale or quality of the surface
+			        Use 'null' to not update the surface's scale
+			
+		Vars:
+			name  - The name used to store & retrieve the surface
+			surf  - The surface itself
+			time  - # of frames until the surface is destroyed, not counting when the game is paused
+			        Is set to 30 frames by default, set -1 to disable the timer
+			reset - Is set to 'true' when the surface is created or the game pauses
+			free  - Set to 'true' if you aren't going to use this surface anymore (removes it from the list when 'time' hits 0)
+			scale - The scale or quality of the surface
+			w/h   - The drawing width/height of the surface
+			x/y   - The drawing position of the surface, you can set this manually
+	*/
+	
+	 // Retrieve Surface:
+	var _surf = noone;
+	with(surfList) if(name == _name){
+		_surf = self;
+		break;
+	}
+	
+	 // Initialize Surface:
+	if(!is_object(_surf)){
 		_surf = {
-			name    : _name,
-			active  : true,
-			surf    : -1,
-			wave	: 0,
-			x       : 0,
-			y       : 0,
-			w       : 0,
-			h       : 0
+			name  : _name,
+			surf  : -1,
+			time  : 0,
+			reset : false,
+			free  : false,
+			scale : 1,
+			w     : 1,
+			h     : 1,
+			x     : 0,
+			y     : 0
 		};
 		array_push(surfList, _surf);
 	}
 	
-	 // Set Vars:
+	 // Surface Setup:
 	with(_surf){
-		x = _x;
-		y = _y;
-		w = _width;
-		h = _height;
+		if(is_real(_w)) w = _w;
+		if(is_real(_h)) h = _h;
+		if(is_real(_scale)) scale = _scale;
+		
+		 // Create / Resize Surface:
+		if(!surface_exists(surf) || surface_get_width(surf) != max(1, w * scale) || surface_get_height(surf) != max(1, h * scale)){
+			surface_destroy(surf);
+			surf = surface_create(max(1, w * scale), max(1, h * scale));
+			reset = true;
+		}
+		
+		 // Active For 30 Frames:
+		if(time >= 0) time = max(time, 30);
 	}
 	
 	return _surf;
 	
-#define surflist_get(_name)
-	with(surfList) if(name == _name) return self;
-	return noone;
+#define shader_setup(_name, _texture, _args)
+	/*
+		Performs setup code for the shader associated with the given name
+		Returns 'true' if the shader exists and was enabled for drawing, 'false' otherwise
+		Use 'shader_add()' to initialize the shader before calling this script
+		
+		Args:
+			name    - The name used to store & retrieve the shader
+			texture - The texture to stage for drawing with the shader
+			args    - An array of arguments for shader-specific setup
+			
+		Ex:
+			if(shader_setup("Charm", sprite_get_texture(_spr, _img), [])){
+				draw_sprite(_spr, _img, x, y);
+				shader_reset();
+			}
+	*/
 	
-#define shadlist_set(_name, _vertex, _fragment)
-	var _shad = shadlist_get(_name);
+	with(shadList) if(name == _name){
+		if(shad != -1){
+			 // Matrix:
+			shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+			
+			 // Shader-Specific:
+			switch(name){
+				case "Charm":
+					var	_w = _args[0],
+						_h = _args[1];
+						
+					shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+					break;
+					
+				case "SludgePool":
+					var	_w = _args[0],
+						_h = _args[1],
+						_color = _args[2];
+						
+					shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+					shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
+					break;
+			}
+			
+			 // Enable Shader & Stage Texture:
+			shader_set(shad);
+			texture_set_stage(0, _texture);
+			
+			return true;
+		}
+		
+		break;
+	}
 	
+	return false;
+	
+#define shader_add(_name, _vertex, _fragment)
+	/*
+		Initializes and stores a shader in the global shader list
+		Returns the shader LWO so its variables can be referenced
+		To prevent crashes, the shader is not created until the 'Menu' object no longer exists and the player has shaders enabled in NTTE's options
+		
+		Args:
+			name     - The name used to store & retrieve the shader
+			vertex   - The shader's vertex code
+			fragment - The shader's fragment code
+			
+		Vars:
+			name - The name used to store & retrieve the shader
+			shad - The shader itself
+			vert - The shader's vertex code
+			frag - The shader's fragment code
+			
+		Ex:
+			shader_add("Charm", "VERTEX SHADER CODE", "FRAGMENT SHADER CODE");
+	*/
+	
+	 // Retrieve Shader:
+	var _shad = noone;
+	with(shadList) if(name == _name){
+		_shad = self;
+		break;
+	}
+	
+	 // Initialize Shader:
 	if(_shad == noone){
 		_shad = {
 			name : _name,
@@ -1764,17 +2151,17 @@
 		array_push(shadList, _shad);
 	}
 	
+	 // Shader Setup:
 	with(_shad){
-		shad = -1;
+		if(shad != -1){
+			shader_destroy(shad);
+			shad = -1;
+		}
 		vert = _vertex;
 		frag = _fragment;
 	}
 	
 	return _shad;
-	
-#define shadlist_get(_name)
-	with(shadList) if(name == _name) return self;
-	return noone;
 	
 #define sprite /// sprite(_path, _img, _x, _y, _shine = false)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
@@ -1839,10 +2226,10 @@ var _shine = argument_count > 4 ? argument[4] : false;
 								else{
 									 // Wait for Sprite to Load:
 									var	_base = sprite_add(_path, _img, _x, _y),
-										_waitTex = sprite_get_texture(_base, 0),
-										_waitMax = 150;
+										_waitMax = 90,
+										_waitBox = [sprite_get_bbox_left(_base), sprite_get_bbox_top(_base), sprite_get_bbox_right(_base), sprite_get_bbox_bottom(_base)];
 										
-									while(_waitMax-- > 0 && sprite_get_texture(_base, 0) == _waitTex){
+									while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_base), sprite_get_bbox_top(_base), sprite_get_bbox_right(_base), sprite_get_bbox_bottom(_base)])){
 										wait 0;
 									}
 									
@@ -1893,6 +2280,42 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		}
 	}
 	
+	 // Deactivate Unused Surfaces:
+	with(surfList){
+		if(time >= 0 && --time <= 0){
+			time = -1;
+			surface_destroy(surf);
+			
+			 // Remove From List:
+			if(free){
+				var	_index = array_find_index(surfList, self),
+					_new = array_slice(surfList, 0, _index);
+					
+				array_copy(_new, array_length(_new), surfList, _index + 1, array_length(surfList) - (_index + 1));
+				surfList = _new;
+			}
+		}
+	}
+	
+	 // Shader Setup:
+	if(option_get("shaders")){
+		if(!instance_exists(Menu)){
+			with(shadList) if(shad == -1){
+				try{
+					shad = shader_create(vert, frag);
+				}
+				catch(_error){
+					trace(_error);
+					shad = -1;
+				}
+			}
+		}
+	}
+	else with(shadList) if(shad != -1){
+		shader_destroy(shad);
+		shad = -1;
+	}
+	
 	 // Locked Weapon Spriterize:
 	with(wepsList){
 		var _name = self;
@@ -1905,66 +2328,21 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 	 // Autosave:
-	if(global.sav_auto){
+	if(saveAuto){
 		with(instances_matching(GameCont, "ntte_autosave", null)){
-			save();
+			save_ntte();
 			ntte_autosave = true;
-		}
-	}
-	
-#define draw_gui_end
-	 // Surface Setup:
-	with(surfList){
-		 // Create/Resize:
-		if(active){
-			if(!surface_exists(surf) || surface_get_width(surf) != w || surface_get_height(surf) != h){
-				surface_destroy(surf);
-				surf = surface_create(w, h);
-				if("reset" in self) reset = true;
-			}
-		}
-		
-		 // Not Being Used, Destroy:
-		else if(surface_exists(surf)){
-			surface_destroy(surf);
-		}
-	}
-	
-	 // Shader Setup:
-	if(lq_defget(opt, "allowShaders", true)){
-		if(!instance_exists(Menu)){
-			with(shadList){
-				if(shad == -1){
-					try{
-						shad = shader_create(vert, frag);
-					}
-					catch(_error){
-						trace(shad);
-						trace(_error);
-						shad = -1;
-					}
-				}
-			}
-		}
-	}
-	else with(shadList){
-		if(shad != -1){
-			shader_destroy(shad);
-			shad = -1;
 		}
 	}
 	
 #define draw_pause
 	 // Reset Surfaces:
-	with(surfList) if(active && "reset" in self){
-		reset = true;
-	}
-	
-	
-	draw_set_projection(0);
+	with(surfList) reset = true;
 	
 	 // Remind Player:
-	if(lq_defget(opt, "remindPlayer", false)){
+	draw_set_projection(0);
+	
+	if(option_get("reminders")){
 		var d = current_time_scale;
 		with(global.remind){
 			if(rem){
@@ -2043,45 +2421,63 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	draw_reset_projection();
 	
 #define sprite_shine(_spr, _sprShine)
-	var _img = sprite_get_number(_spr);
-	if(_img <= 1) _img = sprite_get_number(_sprShine);
+	/*
+		Returns a new sprite made by overlaying the given shine sprite on top of the other given normal sprite
+	*/
 	
-	var	_ox = sprite_get_xoffset(_spr),
-		_oy = sprite_get_yoffset(_spr),
-		_surfw = sprite_get_width(_spr),
-		_surfh = sprite_get_height(_spr),
-		_surf = surface_create(_surfw * _img, _surfh);
+	var	_sprX = sprite_get_xoffset(_spr),
+		_sprY = sprite_get_yoffset(_spr),
+		_sprW = sprite_get_width(_spr),
+		_sprH = sprite_get_height(_spr),
+		_img  = sprite_get_number(_spr);
 		
-	surface_set_target(_surf);
-	draw_clear_alpha(0, 0);
-	
-	for(var i = 0; i < _img; i++){
-		var	_x = (_surfw * i),
-			_y = 0;
-			
-		draw_sprite(_spr, i, _x + _ox, _y + _oy);
-		
-		 // Overlay Shine:
-		var	_shineSiz = max(_surfw, _surfh),
-			_shineImg = i,
-			s = 2;
-			
-		if(i >= s){
-			_shineImg = lerp(s, sprite_get_number(_sprShine), (i - s) / (_img - s));
-		}
-		
-		draw_set_color_write_enable(true, true, true, false);
-		draw_sprite_stretched(_sprShine, _shineImg, _x, _y, _shineSiz, _shineSiz);
-		draw_set_color_write_enable(true, true, true, true);
+	if(_img <= 1){
+		_img = sprite_get_number(_sprShine);
 	}
 	
-	surface_reset_target();
-	surface_save(_surf, "sprShine.png");
-	surface_destroy(_surf);
+	with(surface_setup("sprShine", _sprW * _img, _sprH, 1)){
+		surface_set_target(surf);
+		draw_clear_alpha(0, 0);
+		
+		with(UberCont){
+			for(var i = 0; i < _img; i++){
+				var	_x = _sprW * i,
+					_y = 0;
+					
+				 // Normal Sprite:
+				draw_sprite(_spr, i, _x + _sprX, _y + _sprY);
+				
+				 // Overlay Shine:
+				var	_shineSize = max(_sprW, _sprH),
+					_shineImg = i,
+					s = 2;
+					
+				if(i >= s){
+					_shineImg = lerp(s, sprite_get_number(_sprShine), (i - s) / (_img - s));
+				}
+				
+				draw_set_color_write_enable(true, true, true, false);
+				draw_sprite_stretched(_sprShine, _shineImg, _x, _y, _shineSize, _shineSize);
+				draw_set_color_write_enable(true, true, true, true);
+			}
+		}
+		
+		 // Done:
+		surface_reset_target();
+		free = true;
+		
+		 // Add Sprite:
+		surface_save(surf, name + ".png");
+		return sprite_add(name + ".png", _img, _sprX, _sprY);
+	}
 	
-	return sprite_add("sprShine.png", _img, _ox, _oy);
+#define weapon_merge_sprite(_stock, _front)
+	/*
+		Used to create merge weapon sprites
+		Returns a new sprite made by combining the left half of the given stock sprite with the right half of the given front sprite
+		Doing this here so that the sprite doesnt get unloaded with merge.wep
+	*/
 	
-#define weapon_merge_sprite(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
 	if(lq_exists(spr.MergeWep, _sprName)){
 		return lq_get(spr.MergeWep, _sprName);
@@ -2090,74 +2486,85 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	 // Initial Setup:
 	else if(sprite_exists(_stock) && sprite_exists(_front)){
 		var	_spr = [_stock, _front],
-			_sprW = [],
-			_sprH = [];
+			_sprW = array_create(array_length(_spr), 0),
+			_sprH = array_create(array_length(_spr), 0),
+			_surfW = 0,
+			_surfH = 0;
 			
 		for(var i = 0; i < array_length(_spr); i++){
 			_sprW[i] = sprite_get_width(_spr[i]);
 			_sprH[i] = sprite_get_height(_spr[i]);
+			_surfW = max(_surfW, _sprW[i]);
+			_surfH = max(_surfH, _sprH[i]);
 		}
 		
-		var	_surfW = max(_sprW[0], _sprW[1]),
-			_surfH = max(_sprH[0], _sprH[1]),
-			_surf = surface_create(_surfW, _surfH);
+		with(surface_setup("sprMerge", _surfW, _surfH, 1)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
 			
-		surface_set_target(_surf);
-		draw_clear_alpha(0, 0);
-		
-		with(other){
-			for(var b = false; b <= true; b++){
-				var	_dx = 0,
-					_dy = _surfH / 3;
-					
-				for(var i = 0; i <= 1; i++){
-					var	_cut = (ceil(_sprW[i] / 2) + 2) - ceil(_sprW[i] / 8),
-						l = _cut * i,
-						w = (i ? _sprW[i] - _cut : _cut),
-						t = 0,
-						h = _sprH[i],
-						_x = _dx,
-						_y = _dy - sprite_get_yoffset(_spr[i]);
+			with(UberCont){
+				for(var b = 0; b <= 1; b++){
+					var	_dx = 0,
+						_dy = other.h / 3;
 						
-					switch(_spr[i]){
-						case sprAutoShotgun:
-							_y += 1;
-							break;
+					for(var i = 0; i <= 1; i++){
+						var	_cut = (ceil(_sprW[i] / 2) + 2) - ceil(_sprW[i] / 8),
+							_l = _cut * i,
+							_w = (i ? _sprW[i] - _cut : _cut),
+							_t = 0,
+							_h = _sprH[i],
+							_x = _dx,
+							_y = _dy - sprite_get_yoffset(_spr[i]);
 							
-						case sprAutoCrossbow:
-						case sprSuperCrossbow:
-						case sprGatlingSlugger:
-							_y -= 1;
-							break;
-							
-						case sprToxicBow:
-							_y -= 2;
-							break;
+						switch(_spr[i]){
+							case sprAutoShotgun:
+								_y += 1;
+								break;
+								
+							case sprAutoCrossbow:
+							case sprSuperCrossbow:
+							case sprGatlingSlugger:
+								_y -= 1;
+								break;
+								
+							case sprToxicBow:
+								_y -= 2;
+								break;
+						}
+						
+						if(b == 0){
+							draw_sprite_part_ext(_spr[i], 0, _cut - !i, _t, 1, _h, _x + (_cut - _l) - i, _y, 1, 1, c_black, 1);
+						}
+						else{
+							draw_sprite_part_ext(_spr[i], 0, _l, _t, _w, _h, _x, _y, 1, 1, c_white, 1);
+						}
+						
+						_dx += _cut;
 					}
-					
-					if(b){
-						draw_sprite_part_ext(_spr[i], 0, l, t, w, h, _x, _y, 1, 1, c_white, 1);
-					}
-					else{
-						draw_sprite_part_ext(_spr[i], 0, _cut - !i, t, 1, h, _x + (_cut - l) - i, _y, 1, 1, c_black, 1);
-					}
-					_dx += _cut;
 				}
 			}
+			
+			 // Done:
+			surface_reset_target();
+			free = true;
+			
+			 // Add Sprite:
+			surface_save(surf, name + ".png");
+			var _sprNew = sprite_add_weapon(name + ".png", 2, h / 3);
+			lq_set(spr.MergeWep, _sprName, _sprNew);
+			return _sprNew;
 		}
-		
-		surface_reset_target();
-		surface_save(_surf, "sprMerge.png");
-		surface_destroy(_surf);
-		
-		var s = sprite_add_weapon("sprMerge.png", 2, _surfH / 3);
-		lq_set(spr.MergeWep, _sprName, s);
-		return s;
 	}
 	
 	return -1;
 	
-#define weapon_merge_sprite_loadout(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with merge.wep
+#define weapon_merge_sprite_loadout(_stock, _front)
+	/*
+		Used to create merged weapon loadout HUD sprites
+		Returns a new sprite made by combining the left half of the given stock sprite with the right half of the given front sprite
+		Doing this here so that the sprite doesnt get unloaded with merge.wep
+	*/
+	
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
 	if(lq_exists(spr.MergeWepLoadout, _sprName)){
 		return lq_get(spr.MergeWepLoadout, _sprName);
@@ -2178,70 +2585,76 @@ var _shine = argument_count > 4 ? argument[4] : false;
 			_surfH = max(_surfH, _sprH[i]);
 		}
 		
-		var _surf = surface_create(_surfW, _surfH);
-		surface_set_target(_surf);
-		draw_clear_alpha(0, 0);
-		
-		draw_set_color(c_white);
-		
-		 // Draw Sprite Halves:
-		for(var i = 0; i < array_length(_spr); i++){
-			var	_uvs = sprite_get_uvs(_spr[i], 0),
-				_uvsExists = (_uvs[0] != 0 || _uvs[1] != 0 || _uvs[2] != 1 || _uvs[3] != 1),
-				_x = floor(_surfW / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
-				_y = floor(_surfH / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
-				_w = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
-				_h = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
-				_cutDis = _w / 3,
-				_cutDir = 20,
-				_ox = (_h / 2) * dtan(_cutDir);
-				
-			if(i == 1){
-				_cutDis = _w - _cutDis;
-			}
-			_cutDis += 2;
+		with(surface_setup("sprMergeLoadout", _surfW, _surfH, 1)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
 			
-			draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(_spr[i], 0));
+			draw_set_color(c_white);
 			
-			with([ // [x, y]
-				[0,             0 ],
-				[_cutDis - _ox, 0 ],
-				[0,             _h],
-				[_cutDis + _ox, _h]
-			]){
-				var _pos = self;
-				
-				 // Flip:
+			 // Draw Sprite Halves:
+			for(var i = 0; i < array_length(_spr); i++){
+				var	_uvs = sprite_get_uvs(_spr[i], 0),
+					_uvsExists = (_uvs[0] != 0 || _uvs[1] != 0 || _uvs[2] != 1 || _uvs[3] != 1),
+					_x = floor(w / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
+					_y = floor(h / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
+					_w = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
+					_h = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
+					_cutDis = _w / 3,
+					_cutDir = 20,
+					_ox = (_h / 2) * dtan(_cutDir);
+					
 				if(i == 1){
-					_pos[0] = _w - _pos[0];
-					_pos[1] = _h - _pos[1];
+					_cutDis = _w - _cutDis;
+				}
+				_cutDis += 2;
+				
+				draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(_spr[i], 0));
+				
+				with([ // [x, y]
+					[0,             0 ],
+					[_cutDis - _ox, 0 ],
+					[0,             _h],
+					[_cutDis + _ox, _h]
+				]){
+					var _pos = self;
+					
+					 // Flip:
+					if(i == 1){
+						_pos[0] = _w - _pos[0];
+						_pos[1] = _h - _pos[1];
+					}
+					
+					 // Draw Vertex:
+					var	_dx = _pos[0] + _x,
+						_dy = _pos[1] + _y;
+						
+					draw_vertex_texture(_dx, _dy, _pos[0] / _w, _pos[1] / _h);
 				}
 				
-				 // Draw Vertex:
-				var	_dx = _pos[0] + _x,
-					_dy = _pos[1] + _y;
-					
-				draw_vertex_texture(_dx, _dy, _pos[0] / _w, _pos[1] / _h);
+				draw_primitive_end();
 			}
 			
-			draw_primitive_end();
+			 // Done:
+			surface_reset_target();
+			free = true;
+			
+			 // Add Sprite:
+			surface_save(surf, name + ".png");
+			var _sprNew = sprite_add_weapon(name + ".png", w / 2, h / 2);
+			lq_set(spr.MergeWepLoadout, _sprName, _sprNew);
+			return _sprNew;
 		}
-		
-		 // Save Sprite:
-		surface_reset_target();
-		surface_save(_surf, "sprMergeLoadout.png");
-		surface_destroy(_surf);
-		
-		 // Add Sprite:
-		var s = sprite_add_weapon("sprMergeLoadout.png", _surfW / 2, _surfH / 2);
-		lq_set(spr.MergeWepLoadout, _sprName, s);
-		
-		return s;
 	}
 	
 	return -1;
 	
-#define weapon_merge_subtext(_stock, _front) // Doing this here so that the sprite doesnt get unloaded with ntte.mod
+#define weapon_merge_subtext(_stock, _front)
+	/*
+		Used to create merged weapon pickup indicator banner sprites
+		Returns a new sprite of the "Stock Name + Front Name" in fntSmall over a transparent banner
+		Doing this here so that the sprite doesnt get unloaded with ntte.mod
+	*/
+	
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
 	if(lq_exists(spr.MergeWepText, _sprName)){
 		return lq_get(spr.MergeWepText, _sprName);
@@ -2255,65 +2668,80 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		
 		var	_text = weapon_get_name(_stock) + " + " + weapon_get_name(_front),
 			_topSpace = 2,
-			_surfw = string_width(_text) + 4,
-			_surfh = string_height(_text) + 2 + _topSpace,
-			_surf = surface_create(_surfw, _surfh);
+			_surfW = string_width(_text) + 4,
+			_surfH = string_height(_text) + 2 + _topSpace;
 			
-		surface_set_target(_surf);
-		draw_clear_alpha(0, 0);
-		
-		 // Background:
-		var	_x1 = -1,
-			_y1 = -1,
-			_x2 = _x1 + _surfw,
-			_y2 = _y1 + _surfh;
+		with(surface_setup("sprMergeText", _surfW, _surfH, 1)){
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
 			
-		draw_set_alpha(0.8);
-		draw_set_color(c_black);
-		draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
-		draw_set_alpha(1);
-		
-		 // Text:
-		draw_text_nt(floor(_surfw / 2), floor((_surfh + _topSpace) / 2), _text);
-		
-		 // Save Sprite:
-		surface_reset_target();
-		surface_save(_surf, "sprMergeText.png");
-		surface_destroy(_surf);
-		var s = sprite_add("sprMergeText.png", 1, (_surfw / 2), (_surfh / 2));
-		lq_set(spr.MergeWepText, _sprName, s);
-		
-		return s;
+			 // Background:
+			var	_x1 = -1,
+				_y1 = -1,
+				_x2 = _x1 + w,
+				_y2 = _y1 + h;
+				
+			draw_set_alpha(0.8);
+			draw_set_color(c_black);
+			draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
+			draw_set_alpha(1);
+			
+			 // Text:
+			draw_text_nt(floor(w / 2), floor((h + _topSpace) / 2), _text);
+			
+			 // Done:
+			surface_reset_target();
+			free = true;
+			
+			 // Add Sprite:
+			surface_save(surf, name + ".png");
+			var _sprNew = sprite_add(name + ".png", 1, w / 2, h / 2);
+			lq_set(spr.MergeWepText, _sprName, _sprNew);
+			return _sprNew;
+		}
 	}
+	
+	return -1;
 
 #define wep_locked_sprite(_sprite)
-	var	_surfW = sprite_get_width(_sprite) + 2,
-		_surfH = sprite_get_height(_sprite) + 2,
-		_surf = surface_create(_surfW, _surfH),
-		_x = sprite_get_xoffset(_sprite) + 1,
-		_y = sprite_get_yoffset(_sprite) + 1;
-		
-	surface_set_target(_surf);
+	/*
+		Used to automatically create locked weapon sprites
+		Returns a new sprite made of the given sprite drawn in flat black with a white outline
+	*/
 	
-	 // Outline:
-	d3d_set_fog(true, c_white, 0, 0);
-	for(var d = 0; d < 360; d += 90){
-		draw_sprite(_sprite, 0, _x + dcos(d), _y + dsin(d));
+	var	_sprX = sprite_get_xoffset(_sprite) + 1,
+		_sprY = sprite_get_yoffset(_sprite) + 1,
+		_surfW = sprite_get_width(_sprite) + 2,
+		_surfH = sprite_get_height(_sprite) + 2;
+		
+	with(surface_setup("sprLockedWep", _surfW, _surfH, 1)){
+		surface_set_target(surf);
+		draw_clear_alpha(0, 0);
+		
+		with(UberCont){
+			 // Outline:
+			draw_set_fog(true, c_white, 0, 0);
+			for(var d = 0; d < 360; d += 90){
+				draw_sprite(_sprite, 0, _sprX + dcos(d), _sprY + dsin(d));
+			}
+			
+			 // Main:
+			draw_set_fog(true, c_black, 0, 0);
+			draw_sprite(_sprite, 0, _sprX, _sprY);
+			draw_set_fog(false, 0, 0, 0);
+		}
+		
+		 // Done:
+		surface_reset_target();
+		free = true;
+		
+		 // Add Sprite:
+		surface_save(surf, name + ".png");
+		return sprite_add_weapon(name + ".png", _sprX, _sprY);
 	}
 	
-	 // Main:
-	d3d_set_fog(true, c_black, 0, 0);
-	draw_sprite(_sprite, 0, _x, _y);
-	d3d_set_fog(false, 0, 0, 0);
-	
-	 // Save Sprite:
-	surface_reset_target();
-	surface_save(_surf, "sprLockedWep.png");
-	surface_destroy(_surf);
-	return sprite_add_weapon("sprLockedWep.png", _x, _y);
-	
 #define cleanup
-	if(global.sav_auto) save();
+	if(saveAuto) save_ntte();
 	
 	 // Clear Surfaces/Shaders:
 	with(surfList) if(surf != -1) surface_destroy(surf);

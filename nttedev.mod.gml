@@ -75,13 +75,13 @@
 			var	_argSplit = string_split(_arg, "="),
 				_name = string_trim(_argSplit[0]),
 				_all = (_name == ""),
-				_value = ((array_length(_argSplit) > 1 || _all) ? json_decode((array_length(_argSplit) > 1) ? _argSplit[1] : "") : !mod_script_call_nc("mod", "telib", "unlock_get", _name));
+				_value = ((array_length(_argSplit) > 1 || _all) ? json_decode((array_length(_argSplit) > 1) ? _argSplit[1] : "") : !mod_script_call_nc("mod", "teassets", "unlock_get", _name));
 				
 			if(_value == json_error){
 				if(_all){
 					_value = false;
 					with(global.unlock){
-						var _unlock = mod_script_call_nc("mod", "telib", "unlock_get", self);
+						var _unlock = mod_script_call_nc("mod", "teassets", "unlock_get", self);
 						if(is_real(_unlock) && !_unlock){
 							_value = true;
 							break;
@@ -99,17 +99,17 @@
 			 // Set Unlock(s):
 			if(_all){
 				with(global.unlock){
-					if(is_real(mod_script_call_nc("mod", "telib", "unlock_get", self))){
-						mod_script_call_nc("mod", "telib", "save_set", "unlock:" + self, _value);
+					if(is_real(mod_script_call_nc("mod", "teassets", "unlock_get", self))){
+						mod_script_call_nc("mod", "teassets", "save_set", "unlock:" + self, _value);
 					}
 				}
 				mod_script_call_nc("mod", "telib", "unlock_splat", "EVERYTHING " + (_value ? "UNLOCKED" : "@rLOCKED"), (_value ? "THIS IS SO EPIC" : "BRO WTF"), -1, -1);
 			}
-			else mod_script_call_nc("mod", "telib", "unlock_set", _name, _value);
+			else mod_script_call_nc("mod", "teassets", "unlock_set", _name, _value);
 			
 			 // Update:
 			with(global.unlock){
-				chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "telib", "unlock_get", self)));
+				chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
 			}
 			
 			return true;
@@ -191,9 +191,10 @@
 	chat_comp_add_arg("unlock", 2, "0");
 	chat_comp_add_arg("unlock", 2, "1");
 	if(fork()){
-		while(!mod_exists("mod", "telib")) wait 0;
+		while(!mod_exists("mod", "teassets")) wait 0;
+		wait 10;
 		with(global.unlock){
-			chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "telib", "unlock_get", self)));
+			chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
 		}
 		exit;
 	}
@@ -256,7 +257,7 @@
 					_renameList = lq_defget(_info, "rename", {}),
 					_log = [
 						_path,
-						""
+						"",
 						"* Script renamed on these lines",
 						"- Script detected on these lines (requires manual deletion)",
 						"? Script detected on these lines, but is likely part of something else (like how 'draw_sprite' is in 'draw_sprite_ext')",

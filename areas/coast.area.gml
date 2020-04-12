@@ -1,59 +1,50 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	mus = mod_variable_get("mod", "teassets", "mus");
-	sav = mod_variable_get("mod", "teassets", "sav");
 	
 	DebugLag = false;
 	
-	 // Surfaces:
-	surfTrans    = surflist_set("CoastTrans",    0, 0, 0, 0);
-	surfFloor    = surflist_set("CoastFloor",    0, 0, 0, 0);
-	surfWaves    = surflist_set("CoastWaves",    0, 0, game_width, game_height);
-	surfWavesSub = surflist_set("CoastWavesSub", 0, 0, game_width, game_height);
-	surfSwim     = surflist_set("CoastSwim",     0, 0, 200, 200);
-	surfSwimBot  = surflist_set("CoastSwimBot",  0, 0, 0, 0);
-	surfSwimTop  = surflist_set("CoastSwimTop",  0, 0, 0, 0);
-	with([surfTrans, surfFloor]) reset = true;
-	with(surfSwim){
-		inst_visible = [];
-	}
-	with([surfTrans, surfFloor]){
-		border = 32;
-	}
-	with([surfWaves, surfWavesSub]){
-		border = 8;
-	}
-	global.floor_num = 0;
+	 // Ocean:
+	global.sea_inst = [];
+	global.sea_depth = object_get_depth(Floor) + 10;
 	
-	 // Ocean Depth:
-	global.seaDepth = 10.1;
-	
-	 // area_pop_enemies Counter:
-	global.spawn_enemy = 0;
+	 // # of times that 'area_pop_enemies' must be called before it spawns another enemy, to reduce enemy spawns:
+	global.pop_enemies_wait = 0;
 	
 	 // Ultra Bolt Fix:
 	global.ultraboltfix_floors = [];
 	
+	/// Objects w/ Draw Events:
+		hasDrawEvent = [];
+		for(var i = 0; object_exists(i); i++){
+			hasDrawEvent[i] = false;
+		}
+		
+		 // Manually Set:
+		with([Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, WaterShader, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, LightBeam, TV, SentryGun, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, QuitSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw]){
+			hasDrawEvent[self] = true;
+		}
+		
+		 // Check for Parent Draw Events:
+		for(var i = 0; i < array_length(hasDrawEvent); i++){
+			var o = i;
+			while(!hasDrawEvent[i]){
+				o = object_get_parent(o);
+				if(o >= 0) hasDrawEvent[i] = hasDrawEvent[o];
+				else break;
+			}
+		}
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
-#macro mus global.mus
-#macro sav global.sav
+#macro mus snd.mus
 
 #macro DebugLag global.debug_lag
 
-#macro surfTrans    global.surfTrans
-#macro surfFloor    global.surfFloor
-#macro surfWaves    global.surfWaves
-#macro surfWavesSub global.surfWavesSub
-#macro surfSwim     global.surfSwim
-#macro surfSwimBot  global.surfSwimBot
-#macro surfSwimTop  global.surfSwimTop
-#macro surfScale    1/3 + (2/3 * option_get("waterQualityMain"))
-#macro surfScaleTop 1/2 + (1/2 * option_get("waterQualityTop"))
-
 #macro WadeColor make_color_rgb(44, 37, 122)
+
+#macro hasDrawEvent global.draw_event_list
 
 #define area_subarea           return 3;
 #define area_goal              return 100;
@@ -80,42 +71,29 @@
 	
 #define area_sprite(_spr)
 	 // No Walls:
-	if(instance_number(Wall) <= 1 || array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
-		with(other){
-			switch(variable_instance_get(self, "object_index")){
-				case Wall:
-					
-					 // Delete:
-					instance_delete(self);
-					
-					break;
-					
-				case FloorExplo:
-					
-					 // Destroy Colliding Wall Decals:
-					with(instances_meeting(x, y, GameObject)){
-						event_perform(ev_collision, FloorExplo);
-						if(!instance_exists(other)) break;
+	if(instance_number(Wall) <= 1 || array_length(instances_matching(CustomDraw, "name", "sea_draw")) > 0){
+		with([self, other]){
+			if(instance_is(self, Wall)){
+				instance_delete(self);
+			}
+			
+			 // Rock Decals:
+			else if(instance_is(self, TopSmall)){
+				if(instance_exists(GenCont)){
+					if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
+						obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
 					}
-					
-					 // Delete:
-					instance_delete(self);
-					
-					break;
-					
-				case TopSmall:
-					
-					 // Rock Decals:
-					if(instance_exists(GenCont)){
-						if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
-							obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
-						}
-					}
-					
-					 // Delete:
-					instance_delete(self);
-					
-					break;
+				}
+				instance_delete(self);
+			}
+			
+			 // Destroy Wall Decals:
+			else if(instance_is(self, FloorExplo)){
+				with(instances_meeting(x, y, GameObject)){
+					event_perform(ev_collision, FloorExplo);
+					if(!instance_exists(other)) break;
+				}
+				instance_delete(self);
 			}
 		}
 	}
@@ -123,8 +101,8 @@
 	 // Sprites:
 	switch(_spr){
 		 // Floors:
-		case sprFloor1      : return spr.FloorCoast;
-		case sprFloor1B     : return spr.FloorCoastB;
+		case sprFloor1      : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorCoast;
+		case sprFloor1B     : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorCoastB;
 		case sprFloor1Explo : return sprFloor1Explo;
 		case sprDetail1     : return spr.DetailCoast;
 		
@@ -141,6 +119,13 @@
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
+	
+	 // Reset 'area_pop_enemies' Counter:
+	global.pop_enemies_wait = 0;
+	
+#define area_setup_floor
+	 // Footsteps:
+	material = 1;
 	
 #define area_start
 	 // Remember you were here:
@@ -241,8 +226,8 @@
 	}
 	
 	 // Bind Sea Drawing Scripts:
-	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) <= 0){
-		with(script_bind_draw(darksea_draw, global.seaDepth)){
+	if(array_length(instances_matching(CustomDraw, "name", "sea_draw")) <= 0){
+		with(script_bind_draw(sea_draw, global.sea_depth)){
 			name = script[2];
 			wave = 0;
 			wave_dis = 6;
@@ -250,18 +235,19 @@
 			flash = 0;
 		}
 	}
-	if(array_length(instances_matching(CustomDraw, "name", "swimtop_draw")) <= 0){
-		with(script_bind_draw(swimtop_draw, -1)) name = script[2];
+	if(array_length(instances_matching(CustomDraw, "name", "seatop_draw")) <= 0){
+		with(script_bind_draw(seatop_draw, -1)){
+			name = script[2];
+		}
+	}
+	
+	 // Reset Floor Surfaces:
+	with(surface_setup("CoastFloor", null, null, null)){
+		reset = true;
 	}
 	
 	 // who's that bird?
 	unlock_set("race:parrot", true);
-	
-	 // Reset Surfaces:
-	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
-		active = true;
-		if("reset" in self) reset = true;
-	}
 	
 #define area_finish
 	lastarea = area;
@@ -288,347 +274,84 @@
 		wading = 0;
 	}
 	
-	 // Disable Surfaces:
-	with([surfTrans, surfFloor, surfWaves, surfWavesSub, surfSwim, surfSwimBot, surfSwimTop]){
-		active = false;
-	}
-	
 #define area_step
-	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
+	if(array_length(instances_matching(CustomDraw, "name", "sea_draw")) > 0){
+		if(DebugLag) trace_time();
+		
 		 // Water Wading:
 		if(instance_exists(Floor)){
-			with(surfSwim) if(surface_exists(surf) && surface_exists(surfSwimTop.surf) && surface_exists(surfSwimBot.surf)){
-				if(DebugLag) trace_time();
+			var	_depthMax = global.sea_depth,
+				_depthMin = variable_instance_get(SubTopCont, "depth", object_get_depth(SubTopCont)),
+				_inst = array_combine(
+					array_combine(
+						[Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme],
+						instances_matching(Pickup, "mask_index", mskPickup)
+					),
+					instances_matching(CustomSlash, "name", "ClamShield")
+				);
 				
-				 // Setup:
-				var	_surfSwim = surf,
-					_surfSwimW = w,
-					_surfSwimH = h,
-					_surfSwimTexture = surface_get_texture(_surfSwim),
-					_surfScale = surfScale,
-					_surfScaleTop = surfScaleTop,
-					_vx = view_xview_nonsync,
-					_vy = view_yview_nonsync,
-					_vw = game_width,
-					_vh = game_height,
-					_x = floor(_vx / _vw) * _vw,
-					_y = floor(_vy / _vh) * _vh,
-					_inst = [Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme];
-					
-				_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
-				_inst = instances_matching(instances_matching(instances_matching_lt(_inst, "depth", global.seaDepth), "visible", true), "nowade", null, false);
-				
-				/// a lazy fix broe
-				if(array_length(instances_matching_gt(instances_matching(CustomEnemy, "name", "Palanking"), "intro_pan", 0)) > 0){
-					with(instances_matching(instances_matching(instances_matching_lt(Player, "depth", global.seaDepth), "visible", false), "nowade", null, false)){
-						array_push(_inst, id);
-					}
-				}
-				///
-				
-				with(instances_matching(_inst, "wading", null)){
-					wading = 0;
-					wading_clamp = 0;
-					wading_sink = 0;
-					wading_xprevious = x;
-					wading_yprevious = y;
-					wading_z = 0;
-					wading_h = 0;
-					if(object_index == Van) wading_clamp = 40;
-					if(instance_is(self, Corpse)) wading_sink = 1;
-				}
-				
-				with([surfSwimBot, surfSwimTop]){
-					x = _x;
-					y = _y;
-					var s = ((self == surfSwimBot) ? _surfScale : _surfScaleTop);
-					w = _vw * 2 * s;
-					h = _vh * 2 * s;
-					
-					surface_set_target(surf);
-					draw_clear_alpha(0, 0);
-				}
-				surface_reset_target();
-				
-				 // Find Dudes In/Out of Water:
-				inst_visible = [];
-				with(_inst){
-					 // In Water:
-					var _dis = distance_to_object(Floor);
-					if(_dis > 4){
-						if(wading <= 0){
-							wading_xprevious = x - hspeed_raw;
-							wading_yprevious = y - vspeed_raw;
-							
-							 // Splash:
-							repeat(irandom_range(4, 8)) instance_create(x, y, Sweat/*Bubble*/);
-							sound_pitch(sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0), 1.5 + random(0.5));
-						}
-						array_push(other.inst_visible, id);
-						wading = _dis;
-						
-						 // Splashies:
-						if(random(20) < min(speed_raw, 4)){
-							with(instance_create(x, y, Dust)){
-								motion_add(other.direction + orandom(10), 3);
-							}
-						}
-					}
-					
-					 // Out of Water:
-					else{
-						if(wading > 0){
-							 // Sploosh:
-							sound_pitch(sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0), 1 + random(0.25));
-							repeat(5 + random(5)) with(instance_create(x, y, Sweat)){
-								motion_add(other.direction, other.speed);
-							}
-						}
-						wading = 0;
-					}
-				}
-				
-				if(DebugLag) trace_time("coast_area_step Wading Setup");
-				
-				 // Water Wading Drawing:
-				if(DebugLag) trace_time();
-				
-				var	_charmShader = shadlist_get("Charm"),
-					_charmOption = option_get("outlineCharm"),
-					_charmCanOutline = (_charmOption > 0 && (_charmOption < 2 || player_get_outlines(player_find_local_nonsync())));
-					
-				with(other){
-					with(instances_seen_nonsync(instances_matching_gt(_inst, "wading", 0), 24, 24)){
-						var	o = (object_index == Player),
-							_z = 2,
-							_wh = _z + (sprite_height - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2),
-							_surfSwimX = x - (_surfSwimW / 2),
-							_surfSwimY = y - (_surfSwimH / 2);
-							
-						if(!o || !instance_exists(Portal)){
-							if(wading_clamp) _wh = min(_wh, wading_clamp);
-							else _wh = min(_wh, sprite_yoffset);
-						}
-						
-						 // Bobbing:
-						if(wading > sprite_height || !instance_is(id, hitme)){
-							var	_bobspd = 1/10,
-								_bobmax = min(wading / sprite_height, 2) / (1 + (wading_sink / 10)),
-								_bob = _bobmax * sin((current_frame + x + y) * _bobspd);
-								
-							_z += _bob;
-							_wh += _bob;
-						}
-						
-						if(wading_sink != 0){
-							_wh += wading_sink / 8;
-							_z += wading_sink / 5;
-						}
-						
-						 // Save + Temporarily Set Vars:
-						var s = {};
-						if(o){
-							 // Disable Laser Sight:
-							if(canscope){
-								s.canscope = canscope;
-								canscope = 0;
-							}
-							
-							 // Sucked Into Abyss:
-							if(instance_exists(Portal)){
-								s.image_xscale = image_xscale;
-								s.image_yscale = image_yscale;
-								s.image_alpha  = image_alpha;
-								with(instance_nearest(x, y, Portal)) if(endgame < 100){
-									with(other){
-										var f = min(0.5 + (other.endgame / 60), 1);
-										image_xscale *= f;
-										image_yscale *= f;
-										image_alpha  *= f;
-										_wh += (1 - f) * 48;
-										_z += (1 - f) * 48;
-									}
-								}
-							}
-						}
-						
-						wading_z = _z;
-						wading_h = _wh;
-						
-						 // Call Draw Event to Surface:
-						surface_set_target(_surfSwim);
-						draw_clear_alpha(0, 0);
-						
-						var _x = x, _y = y;
-						x -= _surfSwimX;
-						y -= _surfSwimY;
-						if("right" in self || "rotation" in self) event_perform(ev_draw, 0);
-						else draw_self();
-						x = _x;
-						y = _y;
-						
-						surface_reset_target();
-						
-						 // Set Saved Vars:
-						if(lq_size(s) > 0){
-							for(var i = 0; i < lq_size(s); i++){
-								var k = lq_get_key(s, i);
-								variable_instance_set(id, k, lq_get(s, k));
-							}
-						}
-						
-						 // Offset:
-						var	l = min(speed_raw, point_distance(x, y, wading_xprevious, wading_yprevious)),
-							d = direction,
-							_ox = lengthdir_x(l, d),
-							_oy = lengthdir_y(l, d);
-							
-						_surfSwimX += _ox;
-						_surfSwimY += _oy;
-						
-						 // Draw Top:
-						var	_yoff = _surfSwimH - ((_surfSwimH / 2) - (sprite_height - sprite_yoffset)),
-							t = _yoff - _wh;
-							
-						with(surfSwimTop){
-							var	_surfx = x,
-								_surfy = y;
-								
-							surface_set_target(surf);
-							
-							with(other){
-								 // Manually Draw Laser Sights:
-								if(o && canscope){
-									draw_set_color(make_color_rgb(250, 54, 0));
-									
-									var _wep = [wep];
-									if(race == "steroids") _wep = [wep, bwep];
-									for(var i = 0; i < array_length(_wep); i++) if(weapon_get_laser_sight(_wep[i])){
-										var	_sx = x + _ox,
-											_sy = y + _oy + _z - (i * 4),
-											_lx = _sx,
-											_ly = _sy,
-											_md = 1000, // Max Distance
-											d = _md,    // Distance
-											m = 0;      // Minor hitscan increment distance
-											
-										while(d > 0){ // A strange but fast hitscan system
-											 // Major Hitscan Mode:
-											if(m <= 0){
-												_lx = _sx + lengthdir_x(d, gunangle);
-												_ly = _sy + lengthdir_y(d, gunangle);
-												d -= sqrt(_md);
-												
-												 // Enter minor hitscan mode once no walls on path:
-												if(!collision_line(_sx, _sy, _lx, _ly, Wall, 0, 0)){
-													m = 2;
-													d = sqrt(_md);
-												}
-											}
-											
-											 // Minor Hitscan Mode:
-											else{
-												if(position_meeting(_lx, _ly, Wall)) break;
-												_lx += lengthdir_x(m, gunangle);
-												_ly += lengthdir_y(m, gunangle);
-												d -= m;
-											}
-										}
-										
-										 // Draw Laser:
-										var	_ox = lengthdir_x(right, gunangle - 90),
-											_oy = lengthdir_y(right, gunangle - 90),
-											_dx=[	_sx,
-													_sx + ((_lx - _sx) / 10),// ~ ~
-													_lx
-												],
-											_dy=[	_sy,
-													_sy + ((_ly - _sy) / 10),
-													_ly
-												];
-												
-										draw_primitive_begin(pr_trianglestrip);
-										draw_set_alpha((sin(degtorad(gunangle)) * 5) - (max(_wh - (sprite_yoffset - 2), 0)));
-										for(var j = 0; j < array_length(_dx); j++){
-											draw_vertex((_dx[j] - _surfx      ) * _surfScaleTop, (_dy[j] - _surfy      ) * _surfScaleTop);
-											draw_vertex((_dx[j] - _surfx + _ox) * _surfScaleTop, (_dy[j] - _surfy + _oy) * _surfScaleTop);
-											draw_set_alpha(1);
-										}
-										draw_primitive_end();
-										
-										//draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
-									}
-									draw_set_alpha(1);
-								}
-								
-								 // Self:
-								var	_x = (_surfSwimX      - _surfx) * _surfScaleTop,
-									_y = (_surfSwimY + _z - _surfy) * _surfScaleTop;
-									
-								draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
-								
-								 // Charmed Enemy Drawing:
-								if("ntte_charm" in self && ntte_charm.charmed){
-									 // Outlines:
-									if(_charmCanOutline){
-										draw_set_fog(true, player_get_color(player_find_local_nonsync()), 0, 0);
-										for(var a = 0; a <= 360; a += 90){
-											var	_dx = _x,
-												_dy = _y;
-												
-											if(a >= 360) draw_set_fog(false, 0, 0, 0);
-											else{
-												_dx += dcos(a);
-												_dy -= dsin(a);
-											}
-											
-											draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _dx, _dy, _surfScaleTop, _surfScaleTop, c_white, 1);
-										}
-									}
-									
-									 // Eyes:
-									if(shadlist_setup(
-										_charmShader,
-										_surfSwimTexture,
-										[_surfSwimW, _surfSwimH]
-									)){
-										draw_surface_part_ext(_surfSwim, 0, 0, _surfSwimW, t, _x, _y, _surfScaleTop, _surfScaleTop, c_white, 1);
-										shader_reset();
-									}
-								}
-							}
-							
-							 // Water Interference Line Thing:
-							draw_set_fog(true, c_white, 0, 0);
-							draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, 1, _x, _y + (t * _surfScaleTop), _surfScaleTop, _surfScaleTop, c_white, 0.8);
-							draw_set_fog(false, 0, 0, 0);
-						}
-						
-						 // Draw Bottom:
-						with(surfSwimBot){
-							surface_set_target(surf);
-							draw_surface_part_ext(_surfSwim, 0, t, _surfSwimW, (_surfSwimH - t), (_surfSwimX - x) * _surfScale, (_surfSwimY - y + _z + t) * _surfScale, _surfScale, _surfScale, c_white, (1 - (other.wading_sink / 120)));
-						}
-						
-						surface_reset_target();
-						
-						wading_xprevious = x;
-						wading_yprevious = y;
-					}
-				}
-				
-				if(DebugLag) trace_time("coast_area_step Wading Drawing");
+			_inst = instances_matching_lt(_inst, "depth", _depthMax);
+			_inst = instances_matching(_inst, "visible", true);
+			_inst = instances_matching_ne(_inst, "canwade", false);
+			
+			 // Instance Setup:
+			with(instances_matching(_inst, "wading", null)){
+				wading = 0;
+				wading_sink = instance_is(self, Corpse);
+				wading_clamp = ((object_index == Van) ? 40 : 0);
 			}
+			
+			 // Find Dudes In/Out of Water:
+			//var _list = [];
+			with(_inst){
+				 // In Water:
+				var _dis = distance_to_object(Floor);
+				if(_dis > 4 && depth > _depthMin){
+					if(wading <= 0){
+						 // Splash:
+						repeat(irandom_range(4, 8)){
+							instance_create(x, y, Sweat/*Bubble*/);
+						}
+						sound_play_hit_ext(choose(sndOasisChest, sndOasisMelee), 1.5 + random(0.5), 1);
+					}
+					wading = _dis;
+					
+					 // Splashies:
+					if(random(20) < min(speed_raw, 4)){
+						with(instance_create(x, y, Dust)){
+							motion_add(other.direction + orandom(10), 3);
+						}
+					}
+					
+					//array_push(_list, [id, y]);
+				}
+				
+				 // Out of Water:
+				else if(wading > 0){
+					wading = 0;
+					
+					 // Sploosh:
+					repeat(irandom_range(5, 9)){
+						scrFX(x, y, [direction, speed], Sweat);
+					}
+					sound_play_hit_ext(choose(sndOasisChest, sndOasisMelee), 1 + random(0.25), 1);
+				}
+			}
+			/*array_sort_sub(_list, 1, true);
+			global.sea_inst = array_create(array_length(_list), noone);
+			for(var i = array_length(_list) - 1; i >= 0; i--){
+				global.sea_inst[i] = _list[i];
+			}*/
+			global.sea_inst = instances_matching_gt(_inst, "wading", 0);
 			
 			 // Corpse Sinking:
-			if(DebugLag) trace_time();
-			with(instances_matching_gt(instances_matching_lt(instances_matching(instances_matching_le(instances_matching_gt(Corpse, "wading", 30), "speed", 0), "image_speed", 0), "size", 3), "wading_sink", 0)){
-				if(wading_sink++ >= 120) instance_destroy();
+			with(instances_matching_gt(instances_matching_lt(instances_matching(instances_matching(instances_matching_gt(Corpse, "wading", 30), "speed", 0), "image_speed", 0), "size", 3), "wading_sink", 0)){
+				if(wading_sink++ >= 120){
+					instance_destroy();
+				}
 			}
-			if(DebugLag) trace_time("coast_area_step Wading Sink");
 			
 			 // Push Stuff to Shore:
-			if(DebugLag) trace_time();
 			with(instances_matching(instances_matching_ge([hitme, Pickup, chestprop], "wading", 80), "visible", true)){
 				if(
 					distance_to_object(Portal) > 96 &&
@@ -652,20 +375,14 @@
 					}
 				}
 			}
-			if(DebugLag) trace_time("coast_area_step Wading Push");
 			
-			 // Set Visibility of Swimming Objects Before & After Drawing Events:
-			script_bind_draw(corpse_fix, 10000000);
-			script_bind_step(reset_visible,   0, false);
-			script_bind_draw(reset_visible, -14, true);
+			 // Set Visibility of Swimming Objects Before & After Drawing:
+			script_bind_step(sea_inst_visible, 0,         false); // BackCont is dumb and idiot
+			script_bind_draw(sea_inst_visible, _depthMax, false);
+			script_bind_draw(sea_inst_visible, _depthMin, true);
 			
-			 // Fix Spirit:
-			if(skill_get(mut_strong_spirit)){
-				script_bind_draw(draw_spiritfix, -8, instances_matching(Player, "visible", true));
-			}
+			if(DebugLag) trace_time("coast_area_step Wading");
 		}
-		
-		if(DebugLag) trace_time();
 		
 		 // Explosion debris splash FX:
 		with(Explosion) if(chance_ct(1, 5)){
@@ -678,43 +395,44 @@
 		}
 		
 		 // Destroy Projectiles Too Far Away:
-		with(instances_matching_le(instances_matching_gt(projectile, "speed", 0), "friction", 0)){
-			if(distance_to_object(Player) > 1000) instance_destroy();
+		if(instance_exists(Player)){
+			with(instances_matching_gt(projectile, "speed", 0)){
+				if(distance_to_object(Player) > 1000 && distance_to_object(Floor) > 1000){
+					instance_destroy();
+				}
+			}
 		}
 		
-		 // Player Leaving Level:
-		with(Player){
-			 // Wading Players:
-			if("wading" in self && wading > 0){
-				 // Player Moves 20% Slower in Water:
-				if(!skill_get(mut_extra_feet) && speed > 0){
-					var f = ((race == "fish") ? 0 : -0.2);
-					if(f != 0){
-						x += hspeed * f;
-						y += vspeed * f;
-					}
+		 // Wading Players:
+		with(instances_matching_gt(Player, "wading", 0)){
+			 // Player Moves 20% Slower in Water:
+			if(!skill_get(mut_extra_feet) && speed > 0){
+				var f = ((race == "fish") ? 0 : -0.2);
+				if(f != 0){
+					x += hspeed_raw * f;
+					y += vspeed_raw * f;
 				}
-				
-				 // Walk into Sea for Next Level:
-				var n = instance_nearest(x, y, Portal);
-				if(instance_exists(n) && n.endgame >= 100){
-					if(wading > 120 || !instance_exists(Floor)){
-						if(n.type == 2){
-							instance_create(x, y, Portal);
-						}
-						else{
-							n.x = x;
-							n.y = y;
-							n.xstart = x;
-							n.ystart = y;
-						}
+			}
+			
+			 // Walk into Sea for Next Level:
+			var n = instance_nearest(x, y, Portal);
+			if(instance_exists(n) && n.endgame >= 100){
+				if(wading > 120 || !instance_exists(Floor)){
+					if(n.type == 2){
+						instance_create(x, y, Portal);
+					}
+					else{
+						n.x = x;
+						n.y = y;
+						n.xstart = x;
+						n.ystart = y;
 					}
 				}
 			}
 		}
 		
 		 // Spinny Water Shells:
-		with(Shell) if(!place_meeting(x, y, Floor)){
+		with(Shell) if(!position_meeting(x, y, Floor)){
 			y += sin((x + y + current_frame) / 10) * 0.1 * current_time_scale;
 		}
 		
@@ -749,14 +467,14 @@
 		
 		 // Prevent Enemies Drowning:
 		with(Player) alarm10 = max(alarm10, 90);
+		
+		if(DebugLag) trace_time("coast_area_step");
 	}
 	
-	if(DebugLag) trace_time("coast_area_step");
-	
 #define area_end_step
-	if(DebugLag) trace_time();
-	
-	if(array_length(instances_matching(CustomDraw, "name", "darksea_draw")) > 0){
+	if(array_length(instances_matching(CustomDraw, "name", "sea_draw")) > 0){
+		if(DebugLag) trace_time();
+		
 		 // Wall Stuff:
 		with(instances_matching(Wall, "visible", false)) visible = true;
 		with(TopSmall) instance_destroy();
@@ -769,7 +487,7 @@
 				
 				image_alpha = 0;
 				sound_stop(sndPortalOpen);
-				with(instances_matching(CustomDraw, "name", "darksea_draw")) flash = 0;
+				with(instances_matching(CustomDraw, "name", "sea_draw")) flash = 0;
 				
 				 // Player Touched It:
 				if(endgame < 100){
@@ -838,8 +556,9 @@
 		
 		 // Watery Dust:
 		with(instances_matching(Dust, "coast_water", null)){
-			coast_water = 1;
-			if(!place_meeting(x, y, Floor)){
+			coast_water = !position_meeting(x, y, Floor);
+			
+			if(coast_water){
 				if(chance(1, 10 + instance_number(AcidStreak))){
 					sound_play_hit(sndOasisCrabAttack, 0.1);
 					with(scrFX(x, y, 2, "WaterStreak")){
@@ -862,18 +581,18 @@
 		
 		 // Watery Explosion Sounds:
 		with(instances_matching(Explosion, "coast_water", null)){
-			coast_water = false;
-			if(!position_meeting(x, y, Floor)){
-				coast_water = true;
+			coast_water = !position_meeting(x, y, Floor);
+			
+			if(coast_water){
 				sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
 			}
 		}
 		
 		 // Watery Melting Scorch Marks:
 		with(instances_matching(MeltSplat, "coast_water", null)){
-			coast_water = false;
-			if(!position_meeting(x, y, Floor)){
-				coast_water = true;
+			coast_water = !position_meeting(x, y, Floor);
+			
+			if(coast_water){
 				sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
 				repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
 					if(chance(1, 6)) scrFX(x, y, 4, "WaterStreak");
@@ -887,9 +606,9 @@
 		with(global.ultraboltfix_floors) if(instance_exists(self)){
 			instance_delete(id);
 		}
+		
+		if(DebugLag) trace_time("coast_area_end_step");
 	}
-	
-	if(DebugLag) trace_time("coast_area_end_step");
 	
 #define area_effect(_vx, _vy)
 	var	_x = _vx + random(game_width),
@@ -973,8 +692,8 @@
 	var	_x = x + 16,
 		_y = y + 16;
 		
-	if(global.spawn_enemy-- <= 0){
-		global.spawn_enemy = 1;
+	if(global.pop_enemies_wait-- <= 0){
+		global.pop_enemies_wait = 1;
 		
 		 // Loop Spawns:
 		if(GameCont.loops > 0 && chance(1, 3)){
@@ -1085,7 +804,7 @@
 				
 				if(!position_meeting(_x, _y, Floor)){
 					with(instance_create(_x, _y, Detail)){
-						depth = ceil(global.seaDepth);
+						depth = global.sea_depth + 1;
 					}
 				}
 			}
@@ -1094,91 +813,105 @@
 	
 	
 /// Misc
-#define corpse_fix
-	instance_destroy();
-	with(instances_matching(instances_matching_ne(Corpse, "object_index", CorpseActive), "visible_fix", null)){
-		visible_fix = true;
-		if("wading" in self && wading > 0) visible = false;
-	}
-	
-#define darksea_draw
+#define sea_draw
 	if(DebugLag) trace_time();
 	
 	wave += current_time_scale;
 	
-	 // Water Surfaces Follow Screen:
-	var	_surfScale = surfScale,
-		_vx = view_xview_nonsync,
-		_vy = view_yview_nonsync,
-		_vw = game_width,
-		_vh = game_height;
+	var	_wave           = wave,
+		_vx             = view_xview_nonsync,
+		_vy             = view_yview_nonsync,
+		_vw             = game_width,
+		_vh             = game_height,
+		_surfScaleTop   = option_get("quality:main"),
+		_surfScaleBot   = option_get("quality:minor"),
+		_surfFloorExt   = 32,
+		_surfFloorW     = (_vw + _surfFloorExt) * 2,
+		_surfFloorH     = (_vh + _surfFloorExt) * 2,
+		_surfFloor      = surface_setup("CoastFloor", _surfFloorW, _surfFloorH, _surfScaleBot),
+		_surfTrans      = surface_setup("CoastTrans", _surfFloorW, _surfFloorH, _surfScaleBot),
+		_surfWavesExt   = 8,
+		_surfWavesW     = _vw + (_surfWavesExt * 2),
+		_surfWavesH     = _vh + (_surfWavesExt * 2),
+		_surfWaves      = surface_setup("CoastWaves",    _surfWavesW, _surfWavesH, _surfScaleBot),
+		_surfWavesSub   = surface_setup("CoastWavesSub", _surfWavesW, _surfWavesH, _surfScaleBot),
+		_surfSwimW      = _vw,
+		_surfSwimH      = _vh,
+		_surfSwimBot    = surface_setup("CoastSwimBot",    _surfSwimW, _surfSwimH, _surfScaleBot),
+		_surfSwimTop    = surface_setup("CoastSwimTop",    _surfSwimW, _surfSwimH, _surfScaleTop),
+		_surfSwimTopSub = surface_setup("CoastSwimTopSub", _surfSwimW, _surfSwimH, _surfScaleTop),
+		_surfSwimScreen = surface_setup("CoastSwimScreen", _surfSwimW, _surfSwimH, _surfScaleBot);
 		
-	with([surfTrans, surfFloor]){
-		var	_x = (floor(_vx / _vw) * _vw) - border,
-			_y = (floor(_vy / _vh) * _vh) - border;
-			
-		if(x != _x || y != _y){
-			x = _x;
-			y = _y;
-			reset = true;
-		}
-		w = (_vw + border) * 2 * _surfScale;
-		h = (_vh + border) * 2 * _surfScale;
-	}
-	with([surfWaves, surfWavesSub]){
-		x = _vx - border;
-		y = _vy - border;
-		w = (_vw + (border * 2)) * _surfScale;
-		h = (_vh + (border * 2)) * _surfScale;
-	}
-	
-	var _wave = wave;
-	
-	 // Floors Created / Floors Destroyed:
-	if(global.floor_num != instance_number(Floor)){
-		global.floor_num = instance_number(Floor);
-		with(surfFloor) reset = true;
-	}
+	if(DebugLag) trace_time("sea_draw Setup");
 	
 	 // Draw Floors to Surface:
-	with(surfFloor) if(surface_exists(surf)){
-		if(reset){
-			reset = false;
-			with(surfTrans) reset = true;
+	with(_surfFloor){
+		var	_surfX = pfloor(_vx, _vw) - _surfFloorExt,
+			_surfY = pfloor(_vy, _vh) - _surfFloorExt,
+			_surfScale = scale;
 			
+		if(
+			reset
+			|| x != _surfX
+			|| y != _surfY
+			|| (instance_number(Floor) != lq_defget(self, "floor_num", 0))
+			|| (instance_exists(Floor) && lq_defget(self, "floor_min", 0) < Floor.id)
+		){
+			reset = false;
+			
+			 // Update Transition Tiles:
+			_surfTrans.reset = true;
+			
+			 // Update Vars:
+			x = _surfX;
+			y = _surfY;
+			floor_num = instance_number(Floor);
+			floor_min = GameObject.id;
+			
+			 // Draw Floors:
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 			
-			 // Draw Floors in White:
-			with(instance_rectangle_bbox(x, y, x + (w / _surfScale), y + (h / _surfScale), instances_matching(Floor, "visible", true))){
+			with(instance_rectangle_bbox(x, y, x + w, y + h, instances_matching(Floor, "visible", true))){
 				var _spr = ((sprite_index == spr.FloorCoastB) ? spr.FloorCoast : sprite_index);
-				draw_sprite_ext(_spr, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+				draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
 			
 			surface_reset_target();
 		}
 	}
 	
-	 // Underwater Transition Tile Surface:
-	with(surfTrans) if(surface_exists(surf)){
+	 // Underwater Transition Tiles:
+	with(_surfTrans){
+		x = _surfFloor.x;
+		y = _surfFloor.y;
+		
+		 // Setup:
 		if(reset){
 			reset = false;
+			
+			var	_surfX = x,
+				_surfY = y,
+				_surfScale = scale;
 			
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 			
 			 // Main Drawing:
 			var _dis = 32;
-			with(surfFloor) if(surface_exists(surf)){
-				var	_x = x - other.x,
-					_y = y - other.y;
+			with(_surfFloor){
+				var	_x = (x - _surfX),
+					_y = (y - _surfY);
 					
-				draw_surface(surf, _x, _y);
+				draw_surface_scale(surf, _x * _surfScale, _y * _surfScale, _surfScale / scale);
+				
 				for(var a = 0; a < 360; a += 45){
-					var	_ox = lengthdir_x(_dis, a) * _surfScale,
-						_oy = lengthdir_y(_dis, a) * _surfScale;
-						
-					draw_surface(surf, _x + _ox, _y + _oy);
+					draw_surface_scale(
+						surf,
+						(_x + lengthdir_x(_dis, a)) * _surfScale,
+						(_y + lengthdir_y(_dis, a)) * _surfScale,
+						_surfScale / scale
+					);
 				}
 			}
 			
@@ -1186,9 +919,9 @@
 			var	_spr = spr.FloorCoast,
 				_sprNum = sprite_get_number(_spr);
 				
-			with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis + (w / _surfScale), y + _dis + (h / _surfScale), instances_matching(Floor, "visible", true))){
-				var	_x = x - other.x,
-					_y = y - other.y;
+			with(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis + w, y + _dis + h, instances_matching(Floor, "visible", true))){
+				var	_x = x - _surfX,
+					_y = y - _surfY;
 					
 				for(var a = 0; a < 360; a += 90){
 					var	_ox = lengthdir_x(_dis, a),
@@ -1199,7 +932,7 @@
 							for(var i = 2; i <= f; i++){
 								var	_dx = _x + (_ox * i),
 									_dy = _y + (_oy * i),
-									_img = floor((_dx + other.x + _dy + other.y) / 32) % _sprNum;
+									_img = floor((_dx + _surfX + _dy + _surfY) / 32) % _sprNum;
 									
 								draw_sprite_ext(_spr, _img, _dx * _surfScale, _dy * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 							}
@@ -1210,95 +943,22 @@
 			}
 			
 			 // Details:
-			with(instances_matching(instances_matching_le(instances_matching_ge(Detail, "depth", global.seaDepth), "depth", ceil(global.seaDepth)), "visible", true)){
-				draw_sprite_ext(sprite_index, image_index, (x - other.x) * _surfScale, (y - other.y) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+			with(instances_matching(instances_matching(Detail, "depth", global.sea_depth + 1), "visible", true)){
+				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
 			
 			surface_reset_target();
 		}
+		
+		 // Draw:
+		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
-	 // Wavey Foam stuff:
-	var	_waveInt = 40,															// How often waves occur in frames, affects wave speed
-		_waveOutMax = wave_dis,													// Max travel distance
-		_waveSpeed = _waveOutMax + 0.1,											// Wave speed
-		_waveAng = wave_ang,													// Angular Offset
-		_iRad = _waveSpeed * cos(((_wave % _waveInt) * (pi / _waveInt)) + pi),  // Inner radius
-		_oRad = _iRad + min(_waveOutMax - _iRad, _iRad),						// Outer radius
-		_waveCanDraw = (_oRad > _iRad && _oRad > 0);							// Saves gpu time by not drawing when nothing is gonna show up
-		
-	if(_waveCanDraw){
-		 // Draw Raw Foam:
-		with(surfWavesSub) if(surface_exists(surf)){
-			var	_surfx = x,
-				_surfy = y;
-				
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			draw_set_fog(true, c_white, 0, 0);
-			
-			 // Floors:
-			with(surfFloor) if(surface_exists(surf)){
-				draw_surface(surf, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale);
-			}
-			
-			// PalanKing:
-			with(instances_matching(instances_matching(CustomEnemy, "name", "Palanking"), "visible", true)){
-				if(z <= 4 && !place_meeting(x, y, Floor)){
-					draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, 0, c_white, 1);
-				}
-			}
-			
-			 // Thing:
-			with(instances_matching(instances_matching(CustomHitme, "name", "Creature"), "visible", true)){
-				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
-			}
-			
-			 // Rock Decals:
-			with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
-				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
-			}
-			with(instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true)){
-				draw_sprite_ext(spr_foam, image_index, (x - _surfx) * _surfScale, (y - _surfy) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
-			}
-			
-			draw_set_fog(false, 0, 0, 0);
-		}
-		
-		 // Animate Foam (Part player sees):
-		with(surfWaves) if(surface_exists(surf)){
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			with([_oRad, _iRad]){
-				var r = self * _surfScale;
-				with(surfWavesSub) if(surface_exists(surf)){
-					for(var a = _waveAng; a < _waveAng + 360; a += 45){
-						draw_surface(surf, lengthdir_x(r, a) - (border * _surfScale), lengthdir_y(r, a) - (border * _surfScale)); 
-					}
-				}
-				draw_set_blend_mode(bm_subtract);
-			}
-			draw_set_blend_mode(bm_normal);
-		}
-		
-		surface_reset_target();
-	}
-	else{
-		wave_dis = round(5.5 + (0.5 * sin(_wave / 200)) + random(1));
-		wave_ang = round(random(45) / 15) * 15;
-	}
-	
-	 // Draw Sea Transition Floor Tiles:
-	with(surfTrans) if(surface_exists(surf)){
-		draw_surface_cropped(surf, 1 / _surfScale, x, y);
-		// draw_surface_part_ext(surf, (_vx - x) * _surfScale, (_vy - y) * _surfScale, _vw, _vh, _vx, _vy, 1 / _surfScale, 1 / _surfScale, c_white, 1);
-	}
+	if(DebugLag) trace_time("sea_draw Floors");
 	
 	 // Submerged Rock Decals:
 	with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
-		var _hurt = (nexthurt > current_frame + 3);
+		var	_hurt = (sprite_index == spr_hurt && image_index < 1);
 		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		if(_hurt) draw_set_fog(false, 0, 0, 0);
@@ -1307,28 +967,276 @@
 		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	}
 	
-	 // Bottom Halves of Things:
+	 // Palanking's Bottom:
 	draw_set_fog(true, WadeColor, 0, 0);
-		
-		 // Palanking:
-		with(instances_matching(CustomEnemy, "name", "Palanking")) if(visible){
-			draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-		}
-		with(instances_matching(CustomHitme, "name", "Creature")) if(visible){
-			draw_sprite_ext(spr_bott, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-		}
-		
-		// Most Swimming Objects:
-		with(surfSwimBot) if(surface_exists(surf)){
-			draw_surface_cropped(surf, 1 / _surfScale, x, y);
-		}
-		
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Palanking"), "visible", true)){
+		draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	}
+	with(instances_matching(instances_matching(CustomHitme, "name", "Creature"), "visible", true)){
+		draw_sprite_ext(spr_bott, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	}
 	draw_set_fog(false, 0, 0, 0);
 	
+	if(DebugLag) trace_time("sea_draw Bottoms");
+	
+	/// Water Wading Objects:
+		
+		 // Surface Setup:
+		with([_surfSwimBot, _surfSwimTop, _surfSwimTopSub, _surfSwimScreen]){
+			x = _vx;
+			y = _vy;
+			
+			 // Clear:
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			surface_reset_target();
+		}
+		
+		 // Copy Screen:
+		draw_set_blend_mode_ext(bm_one, bm_zero);
+		surface_screenshot(_surfSwimScreen.surf);
+		draw_set_blend_mode(bm_normal);
+		
+		 // Find Co-op Screen Bounding Area:
+		var	_x1 = null,
+			_y1 = null,
+			_x2 = null,
+			_y2 = null;
+			
+		for(var i = 0; i < maxp; i++){
+			if(player_is_active(i)){
+				var	_x = view_xview[i],
+					_y = view_yview[i];
+					
+				if(is_undefined(_x1) || _x       > _x1) _x1 = _x;
+				if(is_undefined(_y1) || _y       > _y1) _y1 = _y;
+				if(is_undefined(_x2) || _x + _vw < _x2) _x2 = _x + _vw;
+				if(is_undefined(_y2) || _y + _vh < _y2) _y2 = _y + _vh;
+			}
+		}
+		
+		 // Drawing Water Wading Objects:
+		var _charmOutline = option_get("outline:charm");
+		with(instances_matching_gt(instance_rectangle_bbox(_x1 - 24, _y1 - 24, _x2 + 24, _y2 + 24, global.sea_inst), "wading", 0)){
+			var _isPlayer = (object_index == Player),
+				_sprH = sprite_get_height(sprite_index),
+				_sprY = sprite_get_yoffset(sprite_index);
+				
+			 // Clear Screen:
+			draw_clear_alpha(0, 0);
+			
+			/// Z-Axis / Water Height:
+				var	_z  = 2,
+					_wh = (_sprH - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2);
+					
+				 // Clamp Water Height:
+				if(!_isPlayer || !instance_exists(Portal)){
+					_wh = min(_wh, ((wading_clamp > 0) ? wading_clamp : _sprY));
+				}
+				
+				 // Bobbing:
+				if(wading > _sprH || !instance_is(id, hitme)){
+					var _bobMax = min(wading / _sprH, 2) / (1 + (wading_sink / 10));
+					_z += _bobMax * sin((_wave + x + y) / 10);
+				}
+				
+				 // Sinking:
+				if(wading_sink != 0){
+					_z += wading_sink / 5;
+				}
+				
+			 // Store + Temporarily Set Player Vars:
+			if(_isPlayer){
+				var _save = {};
+				
+				 // Sucked Into Abyss:
+				if(instance_exists(Portal)){
+					_save.image_xscale = image_xscale;
+					_save.image_yscale = image_yscale;
+					_save.image_alpha  = image_alpha;
+					with(instance_nearest(x, y, Portal)) if(endgame < 100){
+						with(other){
+							var _num = min(0.5 + (other.endgame / 60), 1);
+							image_xscale *= _num;
+							image_yscale *= _num;
+							image_alpha  *= _num;
+							_z += 48 * (1 - _num);
+						}
+					}
+				}
+				
+				 // Manually Draw Laser Sights:
+				if(canscope){
+					_save.canscope = canscope;
+					canscope = false;
+				}
+			}
+			
+			 // Call Draw Event:
+			y += _z;
+			if(hasDrawEvent[object_index]){
+				event_perform(ev_draw, 0);
+			}
+			else draw_self();
+			y -= _z;
+			
+			 // Reset Player Vars:
+			if(_isPlayer){
+				for(var i = 0; i < lq_size(_save); i++){
+					var k = lq_get_key(_save, i);
+					variable_instance_set(id, k, lq_get(_save, k));
+				}
+			}
+			
+			 // Bottom Half:
+			draw_set_alpha(1 - (wading_sink / 120));
+			surface_screenshot(_surfSwimBot.surf);
+			draw_set_alpha(1);
+			
+			 // Top Half:
+			with(_surfSwimTopSub){
+				 // Copy Screen:
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				surface_screenshot(surf);
+				
+				 // Top Half:
+				var	_surfSwimTopX = _surfSwimTop.x,
+					_surfSwimTopY = _surfSwimTop.y,
+					_surfSwimTopScale = _surfSwimTop.scale;
+					
+				surface_set_target(_surfSwimTop.surf);
+					
+					var	_x = x - _surfSwimTopX,
+						_y = y - _surfSwimTopY,
+						_w = w * scale,
+						_h = (((other.y - y) + (_sprH - _sprY)) - _wh) * scale;
+						
+					 // Manually Draw Laser Sights:
+					if(_isPlayer){
+						with(other) if(canscope && !instance_exists(PlayerSit)){
+							draw_set_color(make_color_rgb(250, 54, 0));
+							
+							var _wep = ((race == "steroids") ? [wep, bwep] : [wep]);
+							
+							for(var i = 0; i < array_length(_wep); i++){
+								if(weapon_get_laser_sight(_wep[i])){
+									var	_sx = x,
+										_sy = y + _z - (i * 4),
+										_lx = _sx,
+										_ly = _sy,
+										_md = 1000, // Max Distance
+										d = _md,    // Distance
+										m = 0;      // Minor hitscan increment distance
+										
+									while(d > 0){ // A strange but fast hitscan system
+										 // Major Hitscan Mode:
+										if(m <= 0){
+											_lx = _sx + lengthdir_x(d, gunangle);
+											_ly = _sy + lengthdir_y(d, gunangle);
+											d -= sqrt(_md);
+											
+											 // Enter minor hitscan mode once no walls on path:
+											if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
+												m = 2;
+												d = sqrt(_md);
+											}
+										}
+										
+										 // Minor Hitscan Mode:
+										else{
+											if(position_meeting(_lx, _ly, Wall)) break;
+											_lx += lengthdir_x(m, gunangle);
+											_ly += lengthdir_y(m, gunangle);
+											d -= m;
+										}
+									}
+									
+									 // Draw Laser:
+									_sx = (_sx - _surfSwimTopX) * _surfSwimTopScale;
+									_sy = (_sy - _surfSwimTopY) * _surfSwimTopScale;
+									_lx = (_lx - _surfSwimTopX) * _surfSwimTopScale;
+									_ly = (_ly - _surfSwimTopY) * _surfSwimTopScale;
+									
+									var	_cdis = lerp(4, 48, abs(angle_difference(gunangle, 90)) / 180) * _surfSwimTopScale,
+										_cx = _sx + lengthdir_x(_cdis, gunangle),
+										_cy = _sy + lengthdir_y(_cdis, gunangle),
+										_ox = lengthdir_x(right, gunangle - 90) * _surfSwimTopScale,
+										_oy = lengthdir_y(right, gunangle - 90) * _surfSwimTopScale;
+										
+									draw_primitive_begin(pr_trianglestrip);
+									draw_set_alpha(0);
+									draw_vertex(_sx,       _sy      );
+									draw_vertex(_sx + _ox, _sy + _oy);
+									draw_set_alpha(1);
+									draw_vertex(_cx,       _cy      );
+									draw_vertex(_cx + _ox, _cy + _oy);
+									draw_vertex(_lx,       _ly      );
+									draw_vertex(_lx + _ox, _ly + _oy);
+									draw_primitive_end();
+									
+									//draw_sprite_ext(sprLaserSight, -1, _sx, _sy, (point_distance(_sx, _sy, _lx, _ly) / 2) + 2, 1, gunangle, c_white, 1);
+								}
+							}
+						}
+					}
+					
+					 // Charmed Enemy Drawing:
+					if("ntte_charm" in other && other.ntte_charm.charmed){
+						var _charm = other.ntte_charm;
+						
+						 // Outlines:
+						if(_charmOutline){
+							var _charmColor = player_get_color(player_is_active(_charm.index) ? _charm.index : player_find_local_nonsync());
+							draw_set_fog(true, _charmColor, 0, 0);
+							for(var a = 0; a < 360; a += 90){
+								draw_surface_part(surf, 0, 0, _w, _h, _x + dcos(a), _y - dsin(a));
+							}
+							draw_set_fog(false, 0, 0, 0);
+						}
+						
+						 // Self:
+						draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
+						
+						 // Eyes:
+						if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
+							draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
+							shader_reset();
+						}
+					}
+					
+					 // Self:
+					else draw_surface_part(surf, 0, 0, _w, _h, _x, _y);
+					
+					 // Water Interference Line:
+					draw_set_fog(true, c_white, 0, 0);
+					draw_surface_part_ext(surf, 0, _h, _w, max(1, scale), _x, _y + _h, 1, 1, c_white, 0.8);
+					draw_set_fog(false, 0, 0, 0);
+					
+				surface_reset_target();
+			}
+		}
+		
+		 // Redraw Screen:
+		with(_surfSwimScreen){
+			draw_set_blend_mode_ext(bm_one, bm_zero);
+			draw_surface_scale(surf, x, y, 1 / scale);
+			draw_set_blend_mode(bm_normal);
+		}
+		
+		 // Draw Bottom Halves:
+		with(_surfSwimBot){
+			draw_set_fog(true, WadeColor, 0, 0);
+			draw_surface_scale(surf, x, y, 1 / scale);
+			draw_set_fog(false, 0, 0, 0);
+		}
+		
+		if(DebugLag) trace_time("sea_draw Wading");
+		
 	 // Draw Sea:
 	draw_set_color(background_color);
 	draw_set_alpha(0.6);
-	draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
+	draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, false);
 	draw_set_alpha(1);
 	
 	 // Caustics:
@@ -1336,14 +1244,102 @@
 	draw_sprite_tiled(spr.CoastTrans, 0, sin(_wave * 0.02) * 4, sin(_wave * 0.05) * 2);
 	draw_set_alpha(1);
 	
+	if(DebugLag) trace_time("sea_draw Sea");
+	
 	 // Foam:
+	var	_waveInt     = 40,                                                            // How often waves occur in frames, affects wave speed
+		_waveOutMax  = wave_dis,                                                      // Max travel distance
+		_waveSpeed   = _waveOutMax + 0.1,                                             // Wave speed
+		_waveAng     = wave_ang,                                                      // Angular Offset
+		_iRad        = _waveSpeed * cos(((_wave % _waveInt) * (pi / _waveInt)) + pi), // Inner radius
+		_oRad        = _iRad + min(_waveOutMax - _iRad, _iRad),                       // Outer radius
+		_waveCanDraw = (_oRad > _iRad && _oRad > 0);                                  // Saves gpu time by not drawing when nothing is gonna show up
+		
 	if(_waveCanDraw){
-		with(surfWaves) if(surface_exists(surf)){
-			draw_surface_ext(surf, _vx, _vy, 1 / _surfScale, 1 / _surfScale, 0, c_white, 1);
+		var	_surfX = _vx - _surfWavesExt,
+			_surfY = _vy - _surfWavesExt;
+			
+		 // Draw Raw Foam:
+		with(_surfWavesSub){
+			x = _surfX;
+			y = _surfY;
+			
+			var _surfScale = scale;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			draw_set_fog(true, c_white, 0, 0);
+				
+				 // Floors:
+				with(_surfFloor){
+					draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+				}
+				
+				// PalanKing:
+				with(instances_matching(instances_matching(CustomEnemy, "name", "Palanking"), "visible", true)){
+					if(z <= 4 && !place_meeting(x, y, Floor)){
+						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, 0, c_white, 1);
+					}
+				}
+				
+				 // Thing:
+				with(instances_matching(instances_matching(CustomHitme, "name", "Creature"), "visible", true)){
+					draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+				}
+				
+				 // Rock Decals:
+				with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
+					draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+				}
+				with(instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true)){
+					draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+				}
+				
+			draw_set_fog(false, 0, 0, 0);
+			surface_reset_target();
+		}
+		
+		 // Animate Foam (Part player sees):
+		with(_surfWaves){
+			x = _surfX;
+			y = _surfY;
+			
+			var _surfScale = scale;
+			
+			 // Draw:
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+				
+				with([_oRad, _iRad]){
+					var _radius = self;
+					with(_surfWavesSub){
+						for(var _ang = _waveAng; _ang < _waveAng + 360; _ang += 45){
+							draw_surface_scale(
+								surf,
+								(x - _surfX + lengthdir_x(_radius, _ang)) * _surfScale,
+								(y - _surfY + lengthdir_y(_radius, _ang)) * _surfScale,
+								_surfScale / scale
+							);
+						}
+					}
+					draw_set_blend_mode(bm_subtract);
+				}
+				draw_set_blend_mode(bm_normal);
+				
+			surface_reset_target();
+			
+			 // Finished Product, Bro:
+			draw_surface_scale(surf, x, y, 1 / scale);
 		}
 	}
+	else{
+		wave_dis = round(5.5 + (0.5 * sin(_wave / 200)) + random(1));
+		wave_ang = round(random(45) / 15) * 15;
+	}
 	
-	 // Flash Sea w/ Level Over:
+	if(DebugLag) trace_time("sea_draw Foam");
+	
+	 // Level Over, Flash Sea:
 	if(instance_exists(Portal)){
 		var	_flashInt = 300, // Flash every X frames
 			_flashDur = 30,  // Flash lasts X frames
@@ -1381,54 +1377,40 @@
 				repeat(3) scrFX(x, y, 3, Dust);
 			}
 		}
+		
 		flash += current_time_scale;
 	}
 	
-	if(DebugLag) trace_time("darksea_draw");
+	if(DebugLag) trace_time("sea_draw Flash");
 	
-#define swimtop_draw
+#define seatop_draw
 	if(DebugLag) trace_time();
 	
 	 // Top Halves of Swimming Objects:
-	with(surfSwimTop) if(surface_exists(surf)){
-		draw_surface_cropped(surf, 1 / surfScaleTop, x, y);
+	with(surface_setup("CoastSwimTop", null, null, null)){
+		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
-	if(DebugLag) trace_time("coast_swimtop_draw");
+	if(DebugLag) trace_time("coast_seatop_draw");
 	
-#define reset_visible(_visible)
+#define sea_inst_visible(_visible)
+	if(DebugLag) trace_time();
+	
+	with(instances_matching_ne(global.sea_inst, "visible", _visible)){
+		visible = _visible;
+	}
+	
+	if(DebugLag) trace_time(`sea_inst_visible(${depth})`);
+	
 	instance_destroy();
-	
-	with(surfSwim){
-		var _inst = inst_visible;
-		with(_inst){
-			if(instance_exists(self) && visible != _visible) visible = _visible;
-			else _inst[array_find_index(_inst, self)] = noone;
-		}
-	}
-	
-#define draw_spiritfix(_inst)
-	with(instances_matching_gt(_inst, "wading", 0)){
-		if(canspirit){
-			draw_sprite(sprHalo, -1, x, y + sin(wave / 10));
-		}
-	}
-	instance_destroy();
-	
- // Draws only the visible parts of a larger surface, with scaling and offset options
-#define draw_surface_cropped /// draw_surface_cropped(_surf, _scale = 1, _xoffset = 0, _yoffset = 0)
-	var _surf = argument[0];
-var _scale = argument_count > 1 ? argument[1] : 1;
-var _xoffset = argument_count > 2 ? argument[2] : 0;
-var _yoffset = argument_count > 3 ? argument[3] : 0;
-	
-	draw_surface_part_ext(_surf, (view_xview_nonsync - _xoffset) / _scale, (view_yview_nonsync - _yoffset) / _scale, game_width, game_height, view_xview_nonsync, view_yview_nonsync, _scale, _scale, c_white, 1)
 	
 	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1442,21 +1424,19 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define surflist_set(_name, _x, _y, _width, _height)                                    return  mod_script_call_nc('mod', 'teassets', 'surflist_set', _name, _x, _y, _width, _height);
-#define surflist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'surflist_get', _name);
-#define shadlist_set(_name, _vertex, _fragment)                                         return  mod_script_call_nc('mod', 'teassets', 'shadlist_set', _name, _vertex, _fragment);
-#define shadlist_get(_name)                                                             return  mod_script_call_nc('mod', 'teassets', 'shadlist_get', _name);
-#define shadlist_setup(_shader, _texture, _args)                                        return  mod_script_call_nc('mod', 'telib', 'shadlist_setup', _shader, _texture, _args);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'telib', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'telib', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'telib', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'telib', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'telib', 'unlock_set', _name, _value);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -1464,6 +1444,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
+#define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
 #define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
@@ -1475,6 +1456,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
+#define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc('mod', 'telib', 'array_combine', _array1, _array2);
@@ -1499,7 +1481,7 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
 #define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
-#define area_get_sprite(_area, _spr)                                                    return  mod_script_call_nc('mod', 'telib', 'area_get_sprite', _area, _spr);
+#define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
@@ -1550,4 +1532,3 @@ var _yoffset = argument_count > 3 ? argument[3] : 0;
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define instance_clone()																return  mod_script_call(   'mod', 'telib', 'instance_clone');

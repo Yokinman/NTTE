@@ -1,7 +1,7 @@
 #define init
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprTeleportGun.png", 4, 4);
 	global.sprWepLocked = mskNone;
-
+	
 #define weapon_name   return (weapon_avail() ? "TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "DON'T BLINK";
 #define weapon_type   return 0;  // "Melee"
@@ -17,7 +17,7 @@
 #define weapon_fire(w)
 	var f = wepfire_init(w);
 	w = f.wep;
-
+	
 	with obj_create(x, y, "PortalBullet"){
 		image_speed = 2.5;
 		mask_index  = mskBullet1;
@@ -28,9 +28,10 @@
 		motion_add(creator.gunangle, 26);
 		image_angle = direction;
 	}
-
+	
 	weapon_post(0, 16, 0);
-
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
