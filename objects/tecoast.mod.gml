@@ -3467,7 +3467,7 @@
 			switch(type){
 				case seal_shield:
 					
-					if(shield && chance(1, 3)){
+					if(shield){
 						scrAim(angle_lerp(_aimLast, direction, 1/5));
 					}
 					

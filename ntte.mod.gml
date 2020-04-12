@@ -43,9 +43,7 @@
 	global.hud_reroll = null;
 	
 	 // Crystal Heart Guarantee:
-	global.crystal_heart_guarantee = false;
-	global.crystal_heart_area      = null;
-	global.crystal_heart_subarea   = null;
+	heartSpawn = {};
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -78,6 +76,8 @@
 #macro area_jungle       105
 #macro area_hq           106
 #macro area_crib         107
+
+#macro heartSpawn global.heart_spawn
 
 #define game_start
 	 // Reset:
@@ -122,24 +122,20 @@
 	}
 	
 	 // Determine Crystal Heart Area:
-	if(global.crystal_heart_guarantee){
-		global.crystal_heart_guarantee = false;
+	var _num = save_get("heart:spawn", 0);
+	if(_num > 0){
+		save_set("heart:spawn", _num - 1);
 		
 		/*
 			- Excludes desert
 			- Excludes boss levels
 		*/
 		
-		var	_area = irandom_range(2, 7),
-			_sub  = irandom_range(1, max(1, area_get_subarea(_area) - 1));
-			
-		global.crystal_heart_area    = _area;
-		global.crystal_heart_subarea = _sub;
+		heartSpawn.area = irandom_range(2, 7);
+		heartSpawn.suba = irandom_range(1, max(1, area_get_subarea(heartSpawn.area) - 1));
+		heartSpawn.loop = 0;
 	}
-	else{
-		global.crystal_heart_area    = null;
-		global.crystal_heart_subarea = null;
-	}
+	else heartSpawn = {};
 	
 #define level_start // game_start but every level
 	var	_spawnX = 10016,
@@ -241,8 +237,12 @@
 		}
 		
 		 // Guaranteed Spawn:
-		if(GameCont.loops <= 0){
-			if(GameCont.area == global.crystal_heart_area && GameCont.subarea == global.crystal_heart_subarea){
+		if(lq_size(heartSpawn) > 0){
+			if(
+				lq_defget(heartSpawn, "area", GameCont.area)    == GameCont.area    &&
+				lq_defget(heartSpawn, "suba", GameCont.subarea) == GameCont.subarea &&
+				lq_defget(heartSpawn, "loop", GameCont.loops)   == GameCont.loops
+			){
 				_heartNum++;
 			}
 		}
@@ -339,7 +339,10 @@
 			
 			 // Guarantee Crystal Heart Spawn Next Run:
 			if(GameCont.loops > 0){
-				global.crystal_heart_guarantee = true;
+				var _num = save_get("heart:spawn", 0);
+				if(_num <= 0){
+					save_set("heart:spawn", _num + 1);
+				}
 			}
 			
 			 // Guitar Grounded:
