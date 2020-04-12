@@ -1,12 +1,12 @@
 #define init
-	global.sprWep = sprite_add_weapon("../sprites/weps/sprBubbleRifle.png", 2, 5);
+	global.sprWep = sprite_add_weapon("../sprites/weps/sprTeleportGun.png", 4, 4);
 	global.sprWepLocked = mskNone;
 
 #define weapon_name   return (weapon_avail() ? "TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "DON'T BLINK";
 #define weapon_type   return 0;  // "Melee"
 #define weapon_cost   return 2;  // 0 Ammo
-#define weapon_load   return 20; // 1.50 Seconds
+#define weapon_load   return 35; // 1.50 Seconds
 #define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
@@ -19,13 +19,13 @@
 	w = f.wep;
 
 	with obj_create(x, y, "PortalBullet"){
-		image_speed = 4;
+		image_speed = 2.5;
 		mask_index  = mskBullet1;
 		creator 		= other;
 		team 				= other.team;
 		damage 			= 20;
 
-		motion_add(creator.gunangle, 20);
+		motion_add(creator.gunangle, 26);
 		image_angle = direction;
 	}
 

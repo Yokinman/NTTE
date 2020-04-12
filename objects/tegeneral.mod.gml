@@ -3665,6 +3665,23 @@
 		image_yscale = image_xscale;
 	}
 
+	// Extra Player fire stuff:
+	if(instance_exists(creator)) && creator.team = 2{
+		with instance_create(x, y, MeatExplosion){
+			sprite_index = sprPortalShock;
+			image_alpha  = 0;
+			image_xscale = .55;
+			image_yscale = .55;
+			creator = other.creator;
+			team    = other.team;
+			damage  = 12;
+			sleep(80);
+
+			on_wall = void;
+		}
+	}
+
+#define void
 
 #define PortalGuardian_create(_x, _y)
 	/*
