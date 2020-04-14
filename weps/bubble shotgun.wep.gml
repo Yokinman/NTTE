@@ -32,7 +32,7 @@
 	for(var i = 0; i < 5; i++){
 		with(obj_create(x, y, "BubbleBomb")){
 			move_contact_solid(other.gunangle, 6 + (i * 8));
-			motion_add(other.gunangle + (orandom(12) * other.accuracy), 9 + random(1));
+			motion_add(other.gunangle + orandom(12 * other.accuracy), 9 + random(1));
 			creator = f.creator;
 			team = other.team;
 			image_speed += (irandom_range(-2, 2) / 50);

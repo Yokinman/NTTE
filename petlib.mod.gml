@@ -2389,7 +2389,7 @@
 				}
 				can_prism_duplicate = false;
 				
-				if(!prism_duplicate && object_index != ThrownWep){
+				if(!prism_duplicate){
 					with(other){
 						speed *= 0.5;
 						stat.splits++;
@@ -2413,100 +2413,102 @@
 					sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 2.4);
 					other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
 					
-					 // Duplicate:
-					var	_copy = instance_clone(),
-						_accuracy = variable_instance_get(other.leader, "accuracy", 1);
+					 // Curse:
+					var _cursed = ("curse" in self && !curse);
+					if(_cursed){
+						curse = true;
 						
-					switch(_copy.object_index){
-						case Laser:
-							var	l = point_distance(xstart, ystart, other.x, other.y) + 12,
-								d = image_angle;
-								
-							with(_copy){
-								x = other.xstart + lengthdir_x(l, d);
-								y = other.ystart + lengthdir_y(l, d);
-								xstart = x;
-								ystart = y;
-								image_angle += orandom(20 * _accuracy);
-								event_perform(ev_alarm, 0);
+						 // FX:
+						for(var i = 0; i < 3; i++){
+							with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
+								image_angle = direction;
+								sprite_index = spr.WaterStreak;
+								image_speed = random_range(0.2, 0.4);
+								image_blend = make_color_rgb(103, 27, 131);
+								depth = -4;
 							}
-							break;
+						}
+						sound_play_pitch(sndCursedChest, 0.8);
+					}
+					
+					 // Duplicate:
+					if(!_cursed || variable_instance_get(self, "name") != "Trident"){
+						var	_clone = instance_clone(),
+							_accuracy = variable_instance_get(other.leader, "accuracy", 1);
 							
-						case Lightning:
-							for(var i = id + ceil(ammo); (i > id || instance_is(i, Lightning) || !instance_exists(i)); i--){
-								if(instance_is(i, Lightning)) with(i){
-									prism_duplicate = true;
-								}
-							}
-							with(_copy){
-								image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
-								ammo = min(30, ammo);
+						 // LWO Weapon Fix:
+						if("wep" in self) _clone.wep = wep;
+						
+						 // Object-Specific:
+						switch(_clone.object_index){
+							
+							case Laser:
 								
-								 // Split Lightning:
-								var	_varCopy = variable_instance_get_names(id),
-									_varNo = [
-										"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
-										"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
-									];
+								 // Manually Offset Lasers:
+								var	l = point_distance(xstart, ystart, other.x, other.y) + 12,
+									d = image_angle;
 									
-								event_perform(ev_alarm, 0);
-								with(instances_matching_gt(Lightning, "id", id)){
-									prism_duplicate = true;
-									with(_varCopy){
-										if(!array_exists(_varNo, self)){
-											variable_instance_set(other, self, variable_instance_get(_copy, self));
+								with(_clone){
+									x = other.xstart + lengthdir_x(l, d);
+									y = other.ystart + lengthdir_y(l, d);
+									xstart = x;
+									ystart = y;
+									image_angle += orandom(20 * _accuracy);
+									event_perform(ev_alarm, 0);
+								}
+								
+								break;
+								
+							case Lightning:
+								
+								 // No Cloning Other Lightning Within the Chain:
+								for(
+									var i = id + ceil(ammo);
+									(i > id || instance_is(i, Lightning) || !instance_exists(i));
+									i--
+								){
+									if(instance_is(i, Lightning)) with(i){
+										prism_duplicate = true;
+									}
+								}
+								
+								 // Make Lightning Epic:
+								with(_clone){
+									 // Offset Direction:
+									image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
+									
+									 // Grow:
+									var	_varCopy = variable_instance_get_names(id),
+										_varNo = [
+											"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
+											"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
+										];
+										
+									ammo = min(30, ammo);
+									event_perform(ev_alarm, 0);
+									with(instances_matching_gt(Lightning, "id", id)){
+										prism_duplicate = true;
+										with(_varCopy){
+											if(!array_exists(_varNo, self)){
+												variable_instance_set(other, self, variable_instance_get(_clone, self));
+											}
 										}
 									}
 								}
-							}
-							break;
-							
-						default:
-							var _off = random_range(4, 16) * _accuracy;
-							with([id, _copy]){
-								direction += _off;
-								image_angle += _off;
-								_off *= -1;
-							}
-							
-							 // Custom Projectile Fixes:
-							with(_copy){
-								if("wep" in self){
-									wep = other.wep;
+								
+								break;
+								
+							default:
+								
+								 // Offset Direction:
+								var _off = random_range(4, 16) * _accuracy;
+								with([id, _clone]){
+									direction += _off;
+									image_angle += _off;
+									_off *= -1;
 								}
 								
-								if(instance_is(self, CustomProjectile)){
-									switch(variable_instance_get(self, "name")){
-										case "Bone":
-											broken = true;
-											break;
-											
-										case "Trident":
-											if(!curse){
-												wep = wep_none;
-												instance_delete(id);
-												with(other){
-													curse = true;
-													direction -= _off;
-													image_angle -= _off;
-													
-													 // FX:
-													for(var i = 0; i < 3; i++){
-														with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
-															image_angle = direction;
-															sprite_index = spr.WaterStreak;
-															image_speed = random_range(0.2, 0.4);
-															image_blend = make_color_rgb(103, 27, 131);
-															depth = -4;
-														}
-													}
-													sound_play_pitch(sndCursedChest, 0.8);
-												}
-											}
-											break;
-									}
-								}
-							}
+						}
 					}
 					
 					prism_duplicate = true;

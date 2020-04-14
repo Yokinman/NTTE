@@ -608,6 +608,7 @@
 		damage = 34;
 		force = 1;
 		typ = 1;
+		curse = false;
 		creator = noone;
 		rotation = 0;
 		rotspeed = (1 / 3) * choose(-1, 1);
@@ -716,6 +717,7 @@
 	 // Pickupable:
 	else with(instance_create(x, y, WepPickup)){
 		wep = "crabbone";
+		curse = other.curse;
 		rotation = other.rotation;
 	}
 

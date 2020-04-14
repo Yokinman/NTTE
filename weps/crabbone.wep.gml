@@ -10,7 +10,7 @@
 
 #define weapon_name  return "BONE";
 #define weapon_text  return "BONE THE FISH"; // yokin no
-#define weapon_load  return 6;  // 0.2 Seconds
+#define weapon_load  return (variable_instance_get(self, "curse", false) ? 30 : 6); // 0.2 Seconds
 #define weapon_swap  return sndBloodGamble;
 
 #define weapon_type(w)
@@ -18,14 +18,14 @@
 	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
 		with(other) return weapon_get_type((w == wep) ? bwep : wep);
 	}
-	return 0; // Melee
+	
+	 // Melee:
+	return 0;
 	
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
-	if(variable_instance_get(self, "curse", 0) <= 0 && variable_instance_get(other, "curse", 0) <= 0){ // No cursed bones
-		with(Player) if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
-			return 4;
-		}
+	with(Player) if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
+		return 4;
 	}
 	
 	 // If not, it don't:
@@ -43,14 +43,42 @@
 	var f = wepfire_init(w);
 	w = f.wep;
 	
+	 // Cursed:
+	var _curse = variable_instance_get(self, "curse", false);
+	if(_curse){
+	    var	_flip = sign(wepangle),
+	    	l = 10 + (10 * skill_get(mut_long_arms)),
+	    	d = gunangle;
+	    	
+	    with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BoneSlash")){
+	        motion_add(other.gunangle + orandom(5 * other.accuracy), 2 + (3 * skill_get(mut_long_arms)));
+	        image_angle = direction;
+	        rotspeed = -2 * _flip;
+	        creator = f.creator;
+	        team = other.team;
+	        image_xscale *= 3/4;
+	        image_yscale = image_xscale * _flip;
+	    }
+	    
+	     // Effects:
+	    wepangle *= -1;
+	    weapon_post(-8, 12, 1);
+	    motion_add(other.aimDirection, 4);
+	    sound_play_gun(sndScrewdriver, 0.2, 0.6);
+		sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+		sound_play(sndCursedReminder);
+	    instance_create(x, y, Dust);
+	}
+	
 	 // Fire:
-	if(wepammo_fire(w)){
+	else if(wepammo_fire(w)){
 		 // Throw Bone:
 		with(obj_create(x, y, "Bone")){
 			motion_add(other.gunangle, 16);
 			rotation = direction;
 			creator = f.creator;
 			team = other.team;
+			curse = _curse;
 			
 			 // Death to Free Bones:
 			if(other.infammo != 0) broken = true;
@@ -101,6 +129,12 @@
 							else with(instance_create(x, y, PopupText)){
 								text = "+1 BONE";
 							}
+						}
+						
+						 // Curse:
+						if(curse > other.curse){
+							other.curse = curse;
+							sound_play_pitch(sndCursedChest, 1.2);
 						}
 						
 						 // Epic Time:

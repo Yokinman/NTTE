@@ -21,10 +21,10 @@
 	with obj_create(x, y, "PortalBullet"){
 		image_speed = 2.5;
 		mask_index  = mskBullet1;
-		creator 		= other;
-		team 				= other.team;
-		damage 			= 20;
-
+		creator     = other;
+		team        = other.team;
+		damage      = 20;
+		
 		motion_add(creator.gunangle, 26);
 		image_angle = direction;
 	}

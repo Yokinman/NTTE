@@ -757,7 +757,7 @@
 		force = 8;
 		heavy = false;
 		walled = false;
-		rotspd = 0;
+		rotspeed = 0;
 		setup = true;
 
 		return id;
@@ -792,7 +792,7 @@
 
 #define BoneSlash_step
 	 // Brotate:
-	image_angle += (rotspd * current_time_scale);
+	image_angle += (rotspeed * current_time_scale);
 	
 #define BoneSlash_hit
 	if(setup) BoneSlash_setup();
@@ -3611,12 +3611,14 @@
 	 // Teleport:
 	if(instance_exists(creator)) with(creator){
 		 // Disappear:
-		with(instance_create(x, y, BulletHit)){
-			sprite_index = other.spr_disappear;
-			image_xscale = other.image_xscale * other.right;
-			image_yscale = other.image_yscale;
-			image_angle = other.image_angle;
-			depth = other.depth - 1;
+		if("spr_disappear" in other){
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = other.spr_disappear;
+				image_xscale = other.image_xscale * other.right;
+				image_yscale = other.image_yscale;
+				image_angle = other.image_angle;
+				depth = other.depth - 1;
+			}
 		}
 		
 		 // Move:
@@ -3666,18 +3668,17 @@
 	}
 
 	// Extra Player fire stuff:
-	if(instance_exists(creator)) && creator.team = 2{
-		with instance_create(x, y, MeatExplosion){
+	if(instance_is(creator, Player)){
+		with(instance_create(x, y, MeatExplosion)){
 			sprite_index = sprPortalShock;
-			image_alpha  = 0;
 			image_xscale = .55;
 			image_yscale = .55;
+			image_alpha  = 0;
 			creator = other.creator;
+			hitid   = other.hitid;
 			team    = other.team;
 			damage  = 12;
 			sleep(80);
-
-			on_wall = void;
 		}
 	}
 

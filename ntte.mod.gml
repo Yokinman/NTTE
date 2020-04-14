@@ -1613,19 +1613,19 @@
 			}
 			
 			 // CampChar Management:
-			var	_playersTotal = 0,
-				_playersLocal = 0;
-				
-			for(var i = 0; i < maxp; i++){
-				_playersTotal += player_is_active(i);
-				_playersLocal += player_is_local_nonsync(i);
-			}
 			for(var i = 0; i < maxp; i++) if(player_is_active(i)){
 				var _race = player_get_race(i);
 				if(array_exists(raceList, _race)){
 					with(instances_matching(CampChar, "race", _race)){
 						 // Pan Camera:
-						if(_playersLocal <= 1 || _playersTotal > _playersLocal){
+						var _local = false;
+						for(var j = 0; j < maxp; j++){
+							if(j != i && player_get_uid(j) == player_get_uid(i)){
+								_local = true;
+								break;
+							}
+						}
+						if(!_local){
 							with(instances_matching(CampChar, "num", 17)){
 								var	_x1 = x,
 									_y1 = y,
@@ -3425,7 +3425,7 @@
 #define CampChar_create(_x, _y, _race)
 	_race = race_get_name(_race);
 	with(instance_create(_x, _y, CampChar)){
-		num = _race;
+		num = char_random;
 		race = _race;
 		
 		 // Visual:

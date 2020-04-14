@@ -147,12 +147,12 @@
 				image_yscale = _flip;
 				
 				creator = f.creator;
-				team	= other.team;
-				heavy	= _heavy;
-				rotspd	= (-3 * _flip);
+				team     = other.team;
+				heavy    = _heavy;
+				rotspeed = (-3 * _flip);
 				
-				direction	= d;
-				speed		= 2.5 + (2 * _skill);
+				direction   = d;
+				speed       = 2.5 + (2 * _skill);
 				image_angle = direction;
 			}
 			

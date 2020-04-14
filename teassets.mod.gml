@@ -1630,11 +1630,9 @@
 		exit;
 	}
 	
-	 // Surface Storage:
-	surfList = [];
-	
-	 // Shader Storage:
-	shadList = [];
+	 // Surface/Shader Storage:
+	global.surf = {};
+	global.shad = {};
 	
 	 // Mod Lists:
 	areaList = ["coast", "oasis", "lair", "pizza", "red", "trench"];
@@ -1704,9 +1702,6 @@
 #macro raceList global.race
 #macro crwnList global.crwn
 #macro wepsList global.weps
-
-#macro surfList global.surf
-#macro shadList global.shad
 
 #macro save     global.save
 #macro saveAuto global.save_auto
@@ -1988,14 +1983,11 @@
 	
 #define surface_setup(_name, _w, _h, _scale)
 	/*
-		Returns a LWO from the global surface list that contains a surface and its variables
-		Initializes and stores the LWO if it isn't already found in the global surface list
+		Assigns a surface to the given name and stores it in 'global.surf' for future calls
+		Automatically recreates the surface it doesn't exist or match the given width/height
+		Destroys the surface if it hasn't been used for 30 frames, to free up memory
+		Returns a LWO containing the surface itself and relevant vars
 		
-		Auto:
-			Creates the surface if it doesn't exist
-			Destroys and recreates the surface if it doesn't match the given width/height
-			Destroys the surface if it hasn't been retrieved for 30 frames, to free up memory
-			
 		Args:
 			name  - The name used to store & retrieve the shader
 			w/h   - The width/height of the surface
@@ -2008,19 +2000,36 @@
 			surf  - The surface itself
 			time  - # of frames until the surface is destroyed, not counting when the game is paused
 			        Is set to 30 frames by default, set -1 to disable the timer
-			reset - Is set to 'true' when the surface is created or the game pauses
 			free  - Set to 'true' if you aren't going to use this surface anymore (removes it from the list when 'time' hits 0)
+			reset - Is set to 'true' when the surface is created or the game pauses
 			scale - The scale or quality of the surface
 			w/h   - The drawing width/height of the surface
 			x/y   - The drawing position of the surface, you can set this manually
+			
+		Ex:
+			with(surface_setup("Test", game_width, game_height, game_scale_nonsync)){
+				x = view_xview_nonsync;
+				y = view_yview_nonsync;
+				
+				 // Setup:
+				if(reset){
+					reset = false;
+					surface_set_target(surf);
+					draw_clear_alpha(0, 0);
+					draw_circle((w / 2) * scale, (h / 2) * scale, 50 * scale, false);
+					surface_reset_target();
+				}
+				
+				 // Draw Surface:
+				draw_surface_scale(surf, x, y, 1 / scale);
+			}
 	*/
 	
 	 // Retrieve Surface:
-	var _surf = noone;
-	with(surfList) if(name == _name){
-		_surf = self;
-		break;
+	if(!mod_variable_exists("mod", mod_current, "surf")){
+		global.surf = {};
 	}
+	var _surf = lq_defget(global.surf, _name, noone);
 	
 	 // Initialize Surface:
 	if(!is_object(_surf)){
@@ -2036,7 +2045,44 @@
 			x     : 0,
 			y     : 0
 		};
-		array_push(surfList, _surf);
+		lq_set(global.surf, _name, _surf);
+		
+		 // Auto-Management:
+		with(_surf){
+			if(fork()){
+				while(true){
+					 // Deactivate Unused Surfaces:
+					if(time >= 0 && --time <= 0){
+						time = -1;
+						surface_destroy(surf);
+						
+						 // Remove From List:
+						if(free){
+							var	_new = {};
+							for(var i = 0; i < lq_size(global.surf); i++){
+								var _key = lq_get_key(global.surf, i);
+								if(_key != name){
+									lq_set(_new, _key, lq_get_value(global.surf, i));
+								}
+							}
+							global.surf = _new;
+							break;
+						}
+					}
+					
+					 // Game Paused:
+					else for(var i = 0; i < maxp; i++){
+						if(button_pressed(i, "paus")){
+							reset = true;
+							break;
+						}
+					}
+					
+					wait 0;
+				}
+				exit;
+			}
+		}
 	}
 	
 	 // Surface Setup:
@@ -2060,7 +2106,7 @@
 	
 #define shader_setup(_name, _texture, _args)
 	/*
-		Performs setup code for the shader associated with the given name
+		Performs general and shader-specific setup code, and enables the given shader
 		Returns 'true' if the shader exists and was enabled for drawing, 'false' otherwise
 		Use 'shader_add()' to initialize the shader before calling this script
 		
@@ -2076,38 +2122,38 @@
 			}
 	*/
 	
-	with(shadList) if(name == _name){
-		if(shad != -1){
-			 // Matrix:
-			shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
-			
-			 // Shader-Specific:
-			switch(name){
-				case "Charm":
-					var	_w = _args[0],
-						_h = _args[1];
+	if(mod_variable_exists("mod", mod_current, "shad")){
+		with(lq_defget(global.shad, _name, noone)){
+			if(shad != -1){
+				 // Matrix:
+				shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
+				
+				 // Shader-Specific:
+				switch(name){
+					case "Charm":
+						var	_w = _args[0],
+							_h = _args[1];
+							
+						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+						break;
 						
-					shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
-					break;
-					
-				case "SludgePool":
-					var	_w = _args[0],
-						_h = _args[1],
-						_color = _args[2];
-						
-					shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
-					shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
-					break;
+					case "SludgePool":
+						var	_w = _args[0],
+							_h = _args[1],
+							_color = _args[2];
+							
+						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+						shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
+						break;
+				}
+				
+				 // Enable Shader & Stage Texture:
+				shader_set(shad);
+				texture_set_stage(0, _texture);
+				
+				return true;
 			}
-			
-			 // Enable Shader & Stage Texture:
-			shader_set(shad);
-			texture_set_stage(0, _texture);
-			
-			return true;
 		}
-		
-		break;
 	}
 	
 	return false;
@@ -2115,8 +2161,8 @@
 #define shader_add(_name, _vertex, _fragment)
 	/*
 		Initializes and stores a shader in the global shader list
-		Returns the shader LWO so its variables can be referenced
 		To prevent crashes, the shader is not created until the 'Menu' object no longer exists and the player has shaders enabled in NTTE's options
+		Returns a LWO containing the shader itself and relevant vars
 		
 		Args:
 			name     - The name used to store & retrieve the shader
@@ -2134,11 +2180,10 @@
 	*/
 	
 	 // Retrieve Shader:
-	var _shad = noone;
-	with(shadList) if(name == _name){
-		_shad = self;
-		break;
+	if(!mod_variable_exists("mod", mod_current, "shad")){
+		global.shad = {};
 	}
+	var _shad = lq_defget(global.shad, _name, noone);
 	
 	 // Initialize Shader:
 	if(_shad == noone){
@@ -2148,7 +2193,30 @@
 			vert : "",
 			frag : ""
 		};
-		array_push(shadList, _shad);
+		lq_set(global.shad, _name, _shad);
+		
+		 // Auto-Management:
+		with(_shad){
+			if(fork()){
+				while(true){
+					 // Create Shaders:
+					if(option_get("shaders")){
+						if(shad == -1 && !instance_exists(Menu)){
+							shad = shader_create(vert, frag);
+						}
+					}
+					
+					 // Shaders Disabled:
+					else if(shad != -1){
+						shader_destroy(shad);
+						shad = -1;
+					}
+					
+					wait 0;
+				}
+				exit;
+			}
+		}
 	}
 	
 	 // Shader Setup:
@@ -2280,42 +2348,6 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		}
 	}
 	
-	 // Deactivate Unused Surfaces:
-	with(surfList){
-		if(time >= 0 && --time <= 0){
-			time = -1;
-			surface_destroy(surf);
-			
-			 // Remove From List:
-			if(free){
-				var	_index = array_find_index(surfList, self),
-					_new = array_slice(surfList, 0, _index);
-					
-				array_copy(_new, array_length(_new), surfList, _index + 1, array_length(surfList) - (_index + 1));
-				surfList = _new;
-			}
-		}
-	}
-	
-	 // Shader Setup:
-	if(option_get("shaders")){
-		if(!instance_exists(Menu)){
-			with(shadList) if(shad == -1){
-				try{
-					shad = shader_create(vert, frag);
-				}
-				catch(_error){
-					trace(_error);
-					shad = -1;
-				}
-			}
-		}
-	}
-	else with(shadList) if(shad != -1){
-		shader_destroy(shad);
-		shad = -1;
-	}
-	
 	 // Locked Weapon Spriterize:
 	with(wepsList){
 		var _name = self;
@@ -2336,12 +2368,9 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 #define draw_pause
-	 // Reset Surfaces:
-	with(surfList) reset = true;
-	
-	 // Remind Player:
 	draw_set_projection(0);
 	
+	 // Remind Player:
 	if(option_get("reminders")){
 		var d = current_time_scale;
 		with(global.remind){
@@ -2744,8 +2773,14 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	if(saveAuto) save_ntte();
 	
 	 // Clear Surfaces/Shaders:
-	with(surfList) if(surf != -1) surface_destroy(surf);
-	with(shadList) if(shad != -1) shader_destroy(shad);
+	for(var i = 0; i < lq_size(global.surf); i++){
+		var _surf = lq_get_value(global.surf, i).surf;
+		if(_surf != -1) surface_destroy(_surf);
+	}
+	for(var i = 0; i < lq_size(global.shad); i++){
+		var _shad = lq_get_value(global.shad, i).shad;
+		if(_shad != -1) surface_destroy(_shad);
+	}
 	
 	 // No Crash:
 	with(raceList){
