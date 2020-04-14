@@ -792,7 +792,7 @@
 
 #define BoneSlash_step
 	 // Brotate:
-	image_angle += (rotspeed * current_time_scale);
+	image_angle += rotspeed * current_time_scale;
 	
 #define BoneSlash_hit
 	if(setup) BoneSlash_setup();
@@ -868,7 +868,7 @@
 					image_blend = choose(c_white, make_color_rgb(208, 197, 180), make_color_rgb(157, 133, 098), make_color_rgb(111, 082, 043));
 				}
 			}
-			sound_play_hit_ext(sndMeleeWall, 2 + orandom(0.3), 1);
+			sound_play_hit_ext(sndMeleeWall, 1.2 + random(0.5), 0.5);
 		}
 	}
 

@@ -3417,7 +3417,7 @@
 	instance_destroy();
 	
 #define CharSelect_draw_new(_inst)
-	with(_inst) if(visible){
+	with(instances_matching(_inst, "visible", true)){
 		draw_sprite(sprNew, image_index, view_xview_nonsync + xstart + (alarm1 > 0), view_yview_nonsync + ystart - mouseover);
 	}
 	instance_destroy();
@@ -3425,8 +3425,8 @@
 #define CampChar_create(_x, _y, _race)
 	_race = race_get_name(_race);
 	with(instance_create(_x, _y, CampChar)){
-		num = char_random;
 		race = _race;
+		num = 0;
 		
 		 // Visual:
 		spr_slct = race_get_sprite(_race, sprFishMenu);

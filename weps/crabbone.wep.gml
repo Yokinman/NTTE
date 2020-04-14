@@ -2,15 +2,16 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
 	
 	lwoWep = {
-		wep  : mod_current,
-		ammo : 1
+		wep   : mod_current,
+		ammo  : 1,
+		combo : 0
 	};
 	
 #macro lwoWep global.lwoWep
 
 #define weapon_name  return "BONE";
 #define weapon_text  return "BONE THE FISH"; // yokin no
-#define weapon_load  return (variable_instance_get(self, "curse", false) ? 30 : 6); // 0.2 Seconds
+#define weapon_load  return ((variable_instance_get(self, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 #define weapon_swap  return sndBloodGamble;
 
 #define weapon_type(w)
@@ -44,30 +45,44 @@
 	w = f.wep;
 	
 	 // Cursed:
-	var _curse = variable_instance_get(self, "curse", false);
-	if(_curse){
-	    var	_flip = sign(wepangle),
-	    	l = 10 + (10 * skill_get(mut_long_arms)),
-	    	d = gunangle;
-	    	
-	    with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BoneSlash")){
-	        motion_add(other.gunangle + orandom(5 * other.accuracy), 2 + (3 * skill_get(mut_long_arms)));
-	        image_angle = direction;
-	        rotspeed = -2 * _flip;
-	        creator = f.creator;
-	        team = other.team;
-	        image_xscale *= 3/4;
-	        image_yscale = image_xscale * _flip;
-	    }
-	    
-	     // Effects:
-	    wepangle *= -1;
-	    weapon_post(-8, 12, 1);
-	    motion_add(other.aimDirection, 4);
-	    sound_play_gun(sndScrewdriver, 0.2, 0.6);
-		sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
-		sound_play(sndCursedReminder);
-	    instance_create(x, y, Dust);
+	var _curse = variable_instance_get(self, "curse", 0);
+	if(_curse > 0){
+		var	_skill = skill_get(mut_long_arms),
+			_flip  = sign(wepangle),
+			_heavy = ((++w.combo % 2) == 0),
+			_dis = lerp(10, 20, _skill),
+			_dir = gunangle;
+			
+		with(obj_create(x + hspeed + lengthdir_x(_dis, _dir), y + vspeed + lengthdir_y(_dis, _dir), "BoneSlash")){
+			motion_add(
+				_dir + orandom(5 * other.accuracy),
+				lerp(2, 4, _skill)
+			);
+			
+			image_angle   = direction;
+			image_xscale *= 3/4;
+			image_yscale *= 3/4 * _flip;
+			rotspeed      = -2 * _flip;
+			heavy         = _heavy;
+			team          = other.team;
+			creator       = f.creator;
+		}
+		
+		
+		sound_play_gun(sndWrench, 0.3, 0.5);
+		sound_play_pitchvol(sndBloodGamble, (_heavy ? 0.5 : 0.7) + random(0.2), (_heavy ? 0.7 : 0.5));
+		sound_play_hit(sndCursedReminder, 0.1);
+		if(_heavy){
+			sound_play_pitch(sndHammer, 1 + random(0.2));
+		}
+		
+		 // Effects:
+		instance_create(x, y, Dust);
+		weapon_post(-9 - (3 * _heavy), 12 + (8 * _heavy), 1);
+		motion_add(_dir - (20 * _flip), 3 + _heavy);
+		if(_heavy) sleep(10);
+		
+		wepangle *= -1;
 	}
 	
 	 // Fire:
@@ -85,7 +100,6 @@
 		}
 		
 		 // Effects:
-		wepangle *= -1;
 		weapon_post(-10, -4, 4);
 		sound_play(sndChickenThrow);
 		sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
@@ -93,6 +107,8 @@
 			motion_add(other.gunangle, 1);
 			image_angle = direction + 180;
 		}
+		
+		wepangle *= -1;
 	}
 	
 	 // Gone:
@@ -132,9 +148,10 @@
 						}
 						
 						 // Curse:
-						if(curse > other.curse){
-							other.curse = curse;
+						if(curse > variable_instance_get(other, b + "curse")){
+							variable_instance_set(other, b + "curse", curse);
 							sound_play_pitch(sndCursedChest, 1.2);
+							repeat(8) scrFX([x, 8], [y, 8], random(1), Curse);
 						}
 						
 						 // Epic Time:
@@ -143,7 +160,9 @@
 						}
 						
 						 // Effects:
-						with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
+						with(instance_create(x, y, DiscDisappear)){
+							image_angle = other.rotation;
+						}
 						with(other){
 							sound_play_pitch(sndHPPickup, 4);
 							sound_play_pitch(sndPickupDisappear, 1.2);

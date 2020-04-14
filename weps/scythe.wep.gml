@@ -138,22 +138,23 @@
 		//#region SCYTHE:
 		case 0:
 			var	_skill = skill_get(mut_long_arms),
-				_heavy = (++w.combo % 3 == 0),
+				_heavy = ((++w.combo % 3) == 0),
 				_flip = sign(wepangle),
-				l = 10 + (10 * _skill),
-				d = gunangle + orandom(4 * accuracy);
+				_dis = 10 + (10 * _skill),
+				_dir = gunangle + orandom(4 * accuracy);
 				
-			with(obj_create(x + hspeed + lengthdir_x(l, d), y + vspeed + lengthdir_y(l, d), "BoneSlash")){
-				image_yscale = _flip;
+			with(obj_create(x + hspeed + lengthdir_x(_dis, _dir), y + vspeed + lengthdir_y(_dis, _dir), "BoneSlash")){
+				motion_add(
+					_dir,
+					lerp(2.5, 4.5, _skill)
+				);
 				
-				creator = f.creator;
-				team     = other.team;
-				heavy    = _heavy;
-				rotspeed = (-3 * _flip);
-				
-				direction   = d;
-				speed       = 2.5 + (2 * _skill);
-				image_angle = direction;
+				image_angle   = direction;
+				image_yscale *= _flip;
+				rotspeed      = -3 * _flip;
+				heavy         = _heavy;
+				team          = other.team;
+				creator       = f.creator;
 			}
 			
 			 // Sounds:
@@ -164,10 +165,11 @@
 			}
 			
 			 // Effects:
-			wepangle *= -1;
-			motion_add(d + (30 * sign(wepangle)), 3 + _heavy);
+			motion_add(_dir - (30 * _flip), 3 + _heavy);
 			weapon_post((_heavy ? -5 : 5), 6 + (10 * _heavy), 2);
 			if(_heavy) sleep(12);
+			
+			wepangle *= -1;
 			
 			break;
 		//#endregion
