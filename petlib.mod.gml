@@ -1103,7 +1103,7 @@
 				}
 				
 				 // Shake:
-				view_shake_at(x, y, dash_charge * 10);
+				view_shake_at(x, y, dash_charge * 5);
 				
 				 // Sound:
 				var	_inst = (instance_exists(Player) ? instance_nearest(x, y, Player) : self),
@@ -1822,12 +1822,10 @@
 			
 			 // Alert:
 			with(scrAlert(id, spr_icon)){
-				spr_alert = sprCurse;
-				alert_col = c_white;
-				snd_flash = sndCursedChest;
+				alert = { spr:sprCurse, y:3 };
 				alarm0 = 90;
-				alert_y = 3;
 				flash = 10;
+				snd_flash = sndCursedChest;
 			}
 		}
 	}

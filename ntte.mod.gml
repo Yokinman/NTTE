@@ -1876,28 +1876,48 @@
 		}
 	}
 	
-	 // Delete IDPDChest Cheese:
-	with(instances_matching(ChestOpen, "portalpoof_check", null)){
-		portalpoof_check = false;
+	 // IDPD Chest Alerts:
+	with(instances_matching(ChestOpen, "ntte_chestalert_check", null)){
+		ntte_chestalert_check = false;
+		
 		if(sprite_index == sprIDPDChestOpen && instance_exists(IDPDSpawn)){
-			portalpoof_check = true;
+			ntte_chestalert_check = true;
+			
+			 // Alert:
+			var _spr = spr.PopoAlert;
+			if(array_length(instances_matching(IDPDSpawn, "elite", true)) > 0) _spr = spr.PopoEliteAlert;
+			if(array_length(instances_matching(IDPDSpawn, "freak", true)) > 0) _spr = spr.PopoFreakAlert;
+			with(scrAlert(self, _spr)){
+				vspeed = -0.8;
+				image_speed = 0.1;
+				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
+				blink = 20;
+				flash = 6;
+				snd_flash = sndIDPDNadeAlmost;
+			}
+			
+			 // No Cheese:
 			portal_poof();
 		}
 	}
 	
-	 // Van Alert:
+	 // Van Alerts:
 	with(instances_matching(VanSpawn, "ntte_vanalert_check", null)){
 		ntte_vanalert_check = true;
 		
-		if(!point_seen(x, y, -1)){
-			var _side = choose(-1, 1);
-			with(instance_nearest(x, y, Player)){
-				if(x != other.x) _side = sign(x - other.x);
-			}
-			with(scrAlert(self, spr.VanAlert)){
-				image_xscale *= _side;
-				alert_x *= -1;
-			}
+		 // Side:
+		var _side = choose(-1, 1);
+		with(instance_nearest(x, y, Player)){
+			if(x != other.x) _side = sign(x - other.x);
+		}
+		
+		 // Alert:
+		with(scrAlert(noone, spr.VanAlert)){
+			image_xscale *= _side;
+			alert.x *= -1;
+			canview = false;
+			alarm0 = 12 + other.alarm0;
+			blink = 10;
 		}
 	}
 	
@@ -3330,80 +3350,62 @@
 				}
 			}
 			
-			 // Space Out Alert Indicators:
-			var _alert = instances_matching(CustomObject, "name", "AlertIndicator");
-			array_sort(_alert, true);
-			with(_alert){
-				xprevious = x;
-				yprevious = y;
-			}
-			with(_alert){
-				if(place_meeting(x, y, object_index)){
-					with(instances_meeting(x, y, _alert)){
-						var _ox = sign(xprevious - other.xprevious);
-						if(_ox < 0){ // Move Left
-							x = other.bbox_left - (1 + ((bbox_right + 1) - x));
-						}
-						else if(_ox > 0){ // Move Right
-							x = (other.bbox_right + 1) + (1 + (x - bbox_left));
-						}
-						else{ // Move Up
-							y = other.bbox_top - (1 + ((bbox_bottom + 1) - y));
-						}
-					}
-				}
-			}
-			
-			 // Alert Indicator Drawing:
-			with(instances_matching(_alert, "visible", true)){
-				var	_flash = max(1, flash),
-					_spr = sprite_index,
-					_img = image_index,
-					_xsc = image_xscale,
-					_ysc = image_yscale / _flash,
-					_ang = image_angle,
-					_col = image_blend,
-					_alp = abs(image_alpha),
-					_x1 = sprite_get_xoffset(_spr),
-					_y1 = sprite_get_yoffset(_spr),
-					_x2 = _x1 - sprite_get_width(_spr) + _gw,
-					_y2 = _y1 - sprite_get_height(_spr) + _gh,
-					_x = _vx + clamp(x - _vx, _x1 + 1, _x2 - 1),
-					_y = _vy + clamp(y - _vy, _y1 + 1, _y2 - 1) + ((3 / _flash) * (_flash - 1)),
-					_alertSpr = spr_alert,
-					_alertImg = current_frame * image_speed,
-					_alertX = _x + (alert_x * _xsc),
-					_alertY = _y + (alert_y * _ysc),
-					_alertAng = alert_ang,
-					_alertCol = alert_col,
-					_alertAlp = _alp;
+			 // Alert Indicators:
+			with(instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "visible", true)){
+				if(canview || !point_seen(x, y, player_find_local_nonsync())){
+					var	_flash    = max(1, flash),
+						_spr      = sprite_index,
+						_img      = image_index,
+						_xsc      = image_xscale,
+						_ysc      = image_yscale / _flash,
+						_ang      = image_angle,
+						_col      = image_blend,
+						_alp      = abs(image_alpha),
+						_x        = round(_vx + clamp(x - _vx, (x - bbox_left) + 1, _gw - ((bbox_right  + 1) - x) - 2)),
+						_y        = round(_vy + clamp(y - _vy, (y - bbox_top ) + 1, _gh - ((bbox_bottom + 1) - y) - 1) + ((3 / _flash) * (_flash - 1))),
+						_alertSpr = lq_defget(alert, "spr", -1),
+						_alertCan = sprite_exists(_alertSpr);
+						
+					if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
 					
-				if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
-				
-				 // ! Shadow:
-				if(sprite_exists(_alertSpr)){
-					for(var	_sx = -1; _sx <= 1; _sx++){
-						for(var	_sy = -1; _sy <= 2; _sy++){
-							draw_sprite_ext(_alertSpr, _alertImg, _alertX + (_sx * _xsc), _alertY + (_sy * _ysc), _xsc, _ysc, _alertAng, c_black, _alertAlp);
+					 // Alert (!) Shadow:
+					if(_alertCan){
+						var	_alertImg = lq_defget(alert, "img", current_frame * image_speed),
+							_alertX   = _x + (lq_defget(alert, "x", 0) * _xsc),
+							_alertY   = _y + (lq_defget(alert, "y", 0) * _ysc),
+							_alertXSc = lq_defget(alert, "xsc", _xsc),
+							_alertYSc = lq_defget(alert, "ysc", _ysc),
+							_alertAng = lq_defget(alert, "ang", 0),
+							_alertCol = lq_defget(alert, "col", c_white),
+							_alertAlp = lq_defget(alert, "alp", _alp);
+							
+						for(var	_ox = -1; _ox <= 1; _ox++){
+							for(var	_oy = -1; _oy <= 2; _oy++){
+								draw_sprite_ext(
+									_alertSpr,
+									_alertImg,
+									_alertX + lengthdir_x(_ox * _alertXSc, _ang) + lengthdir_x(_oy * _alertYSc, _ang - 90),
+									_alertY + lengthdir_y(_ox * _alertXSc, _ang) + lengthdir_y(_oy * _alertYSc, _ang - 90),
+									_alertXSc,
+									_alertYSc,
+									_alertAng,
+									c_black,
+									_alertAlp
+								);
+							}
 						}
 					}
+					
+					 // Main Icon:
+					draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+					
+					 // Alert (!)
+					if(_alertCan){
+						draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _alertXSc, _alertYSc, _alertAng, _alertCol, _alertAlp);
+					}
+					
+					if(flash > 0) draw_set_fog(false, 0, 0, 0);
 				}
-				
-				 // Main:
-				draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-				
-				 // !
-				if(sprite_exists(_alertSpr)){
-					draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _xsc, _ysc, _alertAng, _alertCol, _alertAlp);
-				}
-				
-				if(flash > 0) draw_set_fog(false, 0, 0, 0);
-			}
-			
-			 // Reset Alert Indicator Positions:
-			with(_alert){
-				x = xprevious;
-				y = yprevious;
 			}
 		}
 	}

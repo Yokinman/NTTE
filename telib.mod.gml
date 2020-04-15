@@ -1087,6 +1087,7 @@
 		with(obj_create(_x, _y, "AlertIndicator")){
 			target = _inst;
 			sprite_index = _sprite;
+			image_index = irandom(image_number - 1);
 			
 			 // Auto-Offset:
 			if(instance_exists(target)){
@@ -1095,7 +1096,7 @@
 					
 				target_y = -(1 + _h1 + _h2);
 			}
-			alert_x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
+			alert.x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
 			
 			return id;
 		}

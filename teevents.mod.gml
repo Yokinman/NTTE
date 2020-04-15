@@ -770,8 +770,8 @@
 					 // ?
 					else with(inst) if(instance_is(self, enemy) && my_health > 0){
 						with(scrAlert(self, -1)){
-							spr_alert = spr.AlertIndicatorMystery;
-							alert_col = c_yellow;
+							alert.spr = spr.AlertIndicatorMystery;
+							alert.col = c_yellow;
 							target_y -= 2;
 							alarm0 = irandom_range(50, 70);
 							blink = irandom_range(6, 15);
@@ -1271,12 +1271,9 @@
 	with(instance_nearest(10016, 10016, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
-			with(scrAlert(id, spr.PopoAmbushAlert)){
+			with(scrAlert(id, spr.PopoEliteAlert)){
 				image_speed = 0.1;
-				spr_alert = spr.AlertIndicatorPopoAmbush;
-				alert_col = c_white;
-				alert_x = -5;
-				alert_y = 5;
+				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
 				target_x = -3;
 				target_y = -24;
 				alarm0 = other.alarm0;

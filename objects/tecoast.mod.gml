@@ -1579,7 +1579,9 @@
 					hold_x = x - other.x;
 					hold_y = y - other.y;
 					motion_add(point_direction(x, y, other.x + _x, other.y + _y) + orandom(10), walkspeed);
-					if(distance_to_point(_x, _y) < 8 || distance_to_object(other) < 8) hold = true;
+					if(distance_to_point(other.x + _x, other.y + _y) < 8 || distance_to_object(other) < 8){
+						hold = true;
+					}
 				}
 			}
 		}
@@ -1884,7 +1886,7 @@
 	}
 	
 #define Palanking_end_step
-	with(instances_matching_ne(seal, "hold_x", null)){
+	with(instances_matching_ne(instances_matching_ne(instances_matching(seal, "hold", true), "hold_x", null), "hold_y", null)){
 		if(mask_index != mskNone){
 			x = other.x + hold_x;
 			y = other.y + hold_y;
@@ -1902,16 +1904,16 @@
 	
 	 // Palanquin Bottom:
 	if(z > 4 || place_meeting(x, y, Floor)){
-		if(h) d3d_set_fog(true, image_blend, 0, 0);
+		if(h) draw_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-		if(h) d3d_set_fog(false, 0, 0, 0);
+		if(h) draw_set_fog(false, 0, 0, 0);
 	}
 	
 	 // Self:
 	h = (h && sprite_index != spr_hurt);
-	if(h) d3d_set_fog(true, image_blend, 0, 0);
+	if(h) draw_set_fog(true, image_blend, 0, 0);
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	if(h) d3d_set_fog(false, 0, 0, 0);
+	if(h) draw_set_fog(false, 0, 0, 0);
 	
 #define Palanking_alrm0
 	if(intro_pan <= 0){
@@ -2195,9 +2197,9 @@
 
 #define scrSealSpawn(_xstart, _ystart, _dir, _delay)
 	var s = {
-		x : _xstart,
-		y : _ystart,
-		num : seal_max,
+		x     : _xstart,
+		y     : _ystart,
+		num   : seal_max,
 		delay : _delay,
 		alert : (intro_pan <= 0),
 	};
@@ -2213,7 +2215,9 @@
 			}
 			s.x = x;
 			s.y = y;
-			if(!point_seen(x, y, -1)) s.alert = true;
+			if(s.alert && point_seen(x, y, -1)){
+				s.alert = false;
+			}
 			instance_destroy();
 		}
 	}
@@ -2281,10 +2285,10 @@
 
 #define PalankingDie_draw
 	var h = (image_index < 1);
-	if(h) d3d_set_fog(1, image_blend, 0, 0);
+	if(h) draw_set_fog(1, image_blend, 0, 0);
 	draw_sprite_ext(spr.PalankingBott, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, 1);
-	if(h) d3d_set_fog(0, 0, 0, 0);
+	if(h) draw_set_fog(0, 0, 0, 0);
 
 #define PalankingDie_destroy
 	sound_play_pitchvol(sndWallBreakRock, 0.8, 0.8);

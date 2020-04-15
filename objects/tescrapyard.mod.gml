@@ -619,8 +619,8 @@
 			with(my_alert) instance_destroy();
 			my_alert = scrAlert(self, spr.SludgePoolAlert);
 			with(my_alert){
-				spr_alert = spr.AlertIndicatorMystery;
-				alert_col = c_yellow;
+				alert.spr = spr.AlertIndicatorMystery;
+				alert.col = c_yellow;
 				target_y -= 4;
 				alarm0 = -1;
 			}
@@ -629,7 +629,7 @@
 	
 	 // Bubblin'
 	if(instance_exists(my_alert) && my_alert.sprite_index == spr.SludgePoolAlert){
-		my_alert.alert_ang = sin(current_frame * 0.1) * 20;
+		my_alert.alert.ang = sin(current_frame * 0.1) * 20;
 		
 		 // Bubbles:
 		if(chance_ct(1, 30) || frame_active(15)){
@@ -752,11 +752,11 @@
 	 // Alert:
 	with(my_alert){
 		sprite_index = spr.PetSalamanderIcon;
-		spr_alert = spr.AlertIndicator;
-		snd_flash = sndSalamanderEndFire;
-		alert_ang = 0;
+		alert.spr = spr.AlertIndicator;
+		alert.ang = 0;
 		alarm0 = 90;
 		flash = 3;	
+		snd_flash = sndSalamanderEndFire;
 	}
 	
 	

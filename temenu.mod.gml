@@ -259,7 +259,7 @@
 	
 	 // Loadout Crown System:
 	crownLoadout = {
-		size : [],
+		compare : [],
 		race : {},
 		camp : crwn_none
 	};
@@ -331,7 +331,7 @@
 #macro loadoutTip    global.loadout_tooltip
 
 #macro crownLoadout global.loadout_crown
-#macro crownSize    crownLoadout.size
+#macro crownCompare crownLoadout.compare
 #macro crownRace    crownLoadout.race
 #macro crownCamp    crownLoadout.camp
 #macro crownIconW   28
@@ -808,16 +808,16 @@
 					draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
 					surface_reset_target();
 					
-					 // Compare Size w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
+					 // Compare MD5 Hashes w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
 					var f = crownPath + string(crwn) + crownPathD;
 					surface_save(_surfCrown, f);
 					surface_destroy(_surfCrown);
 					file_load(f);
 					if(fork()){
 						wait 0;
-						var _size = file_size(f);
-						locked = (_size == crownSize[crwn].lock);
-						if(_size == crownSize[crwn].slct){
+						var _hash = file_md5(f);
+						locked = (_hash == crownCompare[crwn].lock);
+						if(_hash == crownCompare[crwn].slct){
 							_crown.slct = crwn;
 						}
 						exit;
@@ -907,9 +907,9 @@
 			}
 		}
 		
-		 // Generate Comparison Sizes:
-		if(array_length(crownSize) <= 0){
-			with(surface_setup("CrownSize", _w, _h, 1)){
+		 // Generate Comparison Files:
+		if(array_length(crownCompare) <= 0){
+			with(surface_setup("CrownCompare", _w, _h, 1)){
 				surface_set_target(surf);
 				
 				var _x = w / 2,
@@ -930,22 +930,21 @@
 						draw_sprite_ext(sprLockedLoadoutCrown, i, _x, _y, 1, 1, 0, c_gray, 1);
 						surface_save(other.surf, b);
 						
-						 // Store Sizes:
-						var _size = { slct:0, lock:0 };
-						array_push(crownSize, _size);
+						 // Store MD5 Hashes:
+						var _compare = { slct:"", lock:"" };
+						array_push(crownCompare, _compare);
 						file_load(a);
 						file_load(b);
 						if(fork()){
 							wait 0;
-							_size.slct = file_size(a);
-							_size.lock = file_size(b);
+							_compare.slct = file_md5(a);
+							_compare.lock = file_md5(b);
 							exit;
 						}
 					}
 				}
 				
 				surface_reset_target();
-				free = true;
 			}
 		}
 		
@@ -1083,7 +1082,7 @@
 			loadoutTip.text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn));
 		}
 	}
-	else crownSize = [];
+	else crownCompare = [];
 	
 	instance_destroy();
 	
@@ -1665,43 +1664,47 @@
 											var	_active = in_range(_menuSlct[_index], i, i + 2),
 												_spr = spr.GullIdle,
 												_img = (current_frame * 0.4),
+												_col = (_active ? c_white : c_gray),
 												_surfW = sprite_get_width(_spr),
 												_surfH = sprite_get_height(_spr),
 												_surfScale = [
 													option_get("quality:minor"),
 													option_get("quality:main")
-												];
+												],
+												_wadeColor = merge_color(
+													make_color_rgb(44, 37, 122),
+													make_color_rgb(27, 118, 184),
+													0.25 + (0.25 * sin(current_frame / 30))
+												),
+												_wadeHeight = _surfH / 2;
 												
 											for(var s = 0; s < array_length(_surfScale); s++){
 												with(surface_setup(`VisualQuality${s}`, _surfW, _surfH, _surfScale[s])){
-													x = _x - 32;
-													y = _y + 12;
+													x = _x - 20 - (w / 2);
+													y = _y + 24 - (h / 2);
 													
 													 // Draw Sprite:
+													var	_dx = (w / 2),
+														_dy = (h / 2) - (2 + sin(current_frame / 10));
+														
 													surface_set_target(surf);
 													draw_clear_alpha(0, 0);
-													
-													var	_dx = (w / 2) * scale,
-														_dy = ((h / 2) - (2 + sin(current_frame / 10))) * scale;
-														
 													with(UberCont){
-														draw_sprite_ext(_spr, _img, _dx, _dy, other.scale, other.scale, 0, (_active ? c_white : c_gray), 1);
+														if(s == 0) draw_set_fog(true, _wadeColor, 0, 0);
+														draw_sprite_ext(_spr, _img, _dx * other.scale, _dy * other.scale, other.scale, other.scale, 0, c_white, 1);
+														if(s == 0) draw_set_fog(false, 0, 0, 0);
 													}
-													
 													surface_reset_target();
 													draw_set_projection(0);
 													
-													 // Draw Clipped/Colored Surface:
+													 // Draw Clipped Surface:
 													if(s == 0){ // Bottom
-														var b = merge_color(make_color_rgb(44, 37, 122), make_color_rgb(27, 118, 184), 0.25 + (0.25 * sin(current_frame / 30)));
-														draw_set_fog(true, (_active ? b : merge_color(b, c_black, 0.5)), 0, 0);
-														draw_surface_part_ext(surf, 0, (h / 2) * scale, w * scale, (h / 2) * scale, x, y + (h / 2), 1 / scale, 1 / scale, c_white, 1);
-														draw_set_fog(false, 0, 0, 0);
+														draw_surface_part_ext(surf, 0, _wadeHeight * scale, w * scale, (h - _wadeHeight) * scale, x, y + _wadeHeight, 1 / scale, 1 / scale, _col, 1);
 													}
 													else{ // Top
-														draw_surface_part_ext(surf, 0, 0, w * scale, ((h / 2) + 1) * scale, x, y, 1 / scale, 1 / scale, c_white, 1);
-														draw_set_fog(true, (_active ? c_white : c_gray), 0, 0);
-														draw_surface_part_ext(surf, 0, (h / 2) * scale, w * scale, max(1, scale), x, y + (h / 2), 1 / scale, 1 / scale, c_white, 0.8);
+														draw_surface_part_ext(surf, 0, 0, w * scale, (_wadeHeight + 1) * scale, x, y, 1 / scale, 1 / scale, _col, 1);
+														draw_set_fog(true, _col, 0, 0);
+														draw_surface_part_ext(surf, 0, _wadeHeight * scale, w * scale, max(1, scale), x, y + _wadeHeight, 1 / scale, 1 / scale, c_white, 0.8);
 														draw_set_fog(false, 0, 0, 0);
 													}
 												}

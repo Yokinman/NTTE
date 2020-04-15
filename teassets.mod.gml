@@ -176,26 +176,28 @@
 		//#endregion
 		
 		//#region ALERTS
-		p = "enemies/Alerts/";
+		p = "alerts/";
 			
 			 // Alert Indicators:
-			AlertIndicator            = sprite(p + "sprAlertIndicator",            1, 1, 6);
-			AlertIndicatorMystery     = sprite(p + "sprAlertIndicatorMystery",     1, 2, 6);
-			AlertIndicatorPopoAmbush  = sprite(p + "sprAlertIndicatorPopoAmbush",  1, 4, 4);
-			AlertIndicatorOrchidSkill = sprite(p + "sprAlertIndicatorOrchidSkill", 1, 4, 4);
+			AlertIndicator        = sprite(p + "sprAlertIndicator",        1, 1, 6);
+			AlertIndicatorMystery = sprite(p + "sprAlertIndicatorMystery", 1, 2, 6);
+			AlertIndicatorPopo    = sprite(p + "sprAlertIndicatorPopo",    1, 4, 4);
+			AlertIndicatorOrchid  = sprite(p + "sprAlertIndicatorOrchid",  1, 4, 4);
 			
 			 // Alert Icons:
 			AllyAlert        = sprite(p + "sprAllyAlert",        1, 7, 7);
 			BanditAlert      = sprite(p + "sprBanditAlert",      1, 7, 7);
 			FlyAlert         = sprite(p + "sprFlyAlert",         1, 7, 7);
 			GatorAlert       = sprite(p + "sprGatorAlert",       1, 7, 7);
-			GatorAlbinoAlert = sprite(p + "sprAlbinoGatorAlert", 1, 7, 7);
+			GatorAlbinoAlert = sprite(p + "sprGatorAlbinoAlert", 1, 7, 7);
+			PopoAlert        = sprite(p + "sprPopoAlert",        3, 8, 8);
+			PopoEliteAlert   = sprite(p + "sprPopoEliteAlert",   3, 8, 8);
+			PopoFreakAlert   = sprite(p + "sprPopoFreakAlert",   1, 8, 8);
 			SealAlert        = sprite(p + "sprSealAlert",        1, 7, 7);
-			SealArcticAlert  = sprite(p + "sprArcticSealAlert",  1, 7, 7);
+			SealArcticAlert  = sprite(p + "sprSealArcticAlert",  1, 7, 7);
 			SkealAlert       = sprite(p + "sprSkealAlert",       1, 7, 7);
 			SludgePoolAlert  = sprite(p + "sprSludgePoolAlert",  1, 7, 7);
 			VanAlert         = sprite(p + "sprVanAlert",         1, 7, 7);
-			PopoAmbushAlert  = sprite(p + "sprPopoAmbushAlert",  3, 9, 9);
 			
 		//#endregion
 		

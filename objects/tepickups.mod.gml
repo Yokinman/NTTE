@@ -2490,10 +2490,10 @@
 					with(scrAlert(other, _icon[0])){
 						image_index = _icon[1];
 						image_speed = 0;
-						spr_alert = -1;
-						snd_flash = sndChest;
-						flash = 4;
+						alert = {};
 						alarm0 = other.time - (2 * blink);
+						flash = 4;
+						snd_flash = sndChest;
 					}
 				}
 			}
@@ -2745,13 +2745,15 @@
 		with(scrAlert(self, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
-			spr_alert = spr.AlertIndicatorOrchidSkill;
-			alert_col = c_white;
-			alert_x = 6;
-			alert_y = 6;
-			snd_flash = sndLevelUp;
+			alert = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
 			alarm0 = 60;
 			blink = 15;
+			snd_flash = sndLevelUp;
+			
+			 // Fix Overlap:
+			while(array_length(instances_meeting(target.x + target_x, target.y + target_y, instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", target))) > 0){
+				target_y -= 8;
+			}
 		}
 	}
 	
@@ -3916,8 +3918,8 @@
 			sprite_index = spr.VaultFlowerHurt;
 			with(scrAlert(self, skill_get_icon("reroll")[0])){
 				image_speed = 0;
+				alert = {};
 				snd_flash = sndLevelUp;
-				spr_alert = -1;
 			}
 			for(var a = 0; a < 360; a += (360 / 10)){
 				var	l = 8 + (8 * dcos(a * 4)),

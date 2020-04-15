@@ -34,12 +34,12 @@
 		Generally you should use 'scrAlert()' to create alert indicators
 		
 		Vars:
-			sprite_index      - The main sprite
-			spr_alert         - The alert/exclamation's sprite
-			alert_col         - The alert/exclamation's color
-			alert_x/alert_y   - The alert/exclamation's x/y offset from the main sprite
+			sprite_index      - The main icon sprite
+			alert             - A LWO containing alert/exclamation variables
+			                    Uses: spr, img, x (offset), y (offset), xsc, ysc, ang, col, alp
 			target            - The instance to follow, use 'noone' to stay still
 			target_x/target_y - The x/y offset used when following its target
+			canview           - True/false, can it be seen while in the view
 			alarm0            - How long before blinking out, set -1 to never blink out
 			blink             - How many times it should blink before destroying itself
 			flash             - How many frames its flash-in effect should take
@@ -49,13 +49,14 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.BanditAlert;
-		spr_alert = spr.AlertIndicator;
 		image_speed = 0.4;
-		image_alpha = -1;
-		alert_ang = 0;
-		alert_col = make_color_rgb(252, 56, 0);
-		alert_x = -5;
-		alert_y = 0;
+		image_alpha = -1; // CustomObject
+		alert = {
+			"spr" : spr.AlertIndicator,
+			"col" : make_color_rgb(252, 56, 0),
+			"x"   : -6,
+			"y"   : 0
+		};
 		
 		 // Sound:
 		snd_flash = sndSlider;
@@ -64,6 +65,7 @@
 		target = noone;
 		target_x = 0;
 		target_y = -16;
+		canview = true;
 		blink = 30;
 		flash = 3;
 		
@@ -1642,9 +1644,7 @@
 					with(scrAlert(self, spr.SealArcticAlert)){
 						flash = other.alarm0;
 						if(other.chest){
-							spr_alert = sprBreath;
-							alert_col = c_white;
-							alert_x   = 1;
+							alert = { spr:sprBreath, x:1, y:2 };
 						}
 					}
 				}
@@ -1664,9 +1664,7 @@
 			with(scrAlert(self, spr.SealArcticAlert)){
 				vspeed = -3;
 				if(other.chest){
-					spr_alert = sprBreath;
-					alert_col = c_white;
-					alert_x   = 1;
+					alert = { spr:sprBreath, x:1, y:2 };
 				}
 			}
 		}
@@ -3434,7 +3432,7 @@
 									case 2: // Warning
 										_reload = 9;
 										with(scrAlert(self, spr_icon)){
-											alert_x--;
+											alert.x--;
 											flash = 2;
 											blink = 10;
 											alarm0 = _reload + 5;
@@ -4982,10 +4980,10 @@
 						
 						 // Alert:
 						with(scrAlert(self, spr_icon)){
+							alert.x--;
+							alert.col = make_color_rgb(16, 226, 165);
 							flash = 6;
 							blink = 15;
-							alert_col = make_color_rgb(16, 226, 165);
-							alert_x--;
 						}
 					}
 				}
