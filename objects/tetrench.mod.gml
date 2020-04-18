@@ -551,39 +551,20 @@
 		Epic prop, drops bone
 	*/
 	
-	with(instance_create(_x, _y, CustomProp)){
+	with(instance_create(_x, _y, BigSkull)){
 		 // Visual:
 		spr_idle = spr.EelSkullIdle;
 		spr_hurt = spr.EelSkullHurt;
 		spr_dead = spr.EelSkullDead;
-
+		
 		 // Sound:
 		snd_hurt = sndOasisHurt;
 		snd_dead = sndOasisDeath;
-
-		 // Vars:
-		maxhealth = 50;
-		size = 2;
-
+		
 		return id;
 	}
-
-#define EelSkull_step
-	 // Over Pit:
-	if(pit_get(x, y)) my_health = 0;
-
-#define EelSkull_death
-	for(var a = direction; a < direction + 360; a += (360 / 4)){
-		with(instance_create(x, y, Dust)) motion_add(a, 3);
-	}
 	
-	 // Hmmm
-	with(instance_create(x, y + 8, WepPickup)){
-		wep = "crabbone";
-		motion_add(random(360), 3);
-	}
-
-
+	
 #define ElectroPlasma_create(_x, _y)
 	/*
 		A PlasmaBall-style projectile that arcs lightning to another instance, usually other ElectroPlasma
@@ -988,10 +969,6 @@
 		
 		return id;
 	}
-	
-#define Kelp_step
-	 // Over Pit:
-	if(pit_get(x, y)) my_health = 0;
 	
 	
 #define LightningDisc_create(_x, _y)
@@ -3802,18 +3779,18 @@
 		spr_dead = spr.VentDead;
 		spr_shadow = mskNone;
 		depth = -2;
-
+		
 		 // Sounds
 		snd_hurt = sndOasisHurt;
 		snd_dead = sndOasisExplosionSmall;
-
+		
 		 // Vars:
 		maxhealth = 12;
 		size = 1;
-
+		
 		return id;
 	}
-
+	
 #define Vent_step
 	 // Effects:
 	if(chance_ct(1, 5)){
@@ -3825,10 +3802,7 @@
 		//	motion_set(irandom_range(65,115),random_range(10,100));
 		//}
 	}
-
-	 // Over Pit:
-	if(pit_get(x, y)) my_health = 0;
-
+	
 #define Vent_death
 	if(!instance_exists(Spiral)) obj_create(x, y, "BubbleExplosion");
 
@@ -3987,7 +3961,7 @@
 /// Mod Events
 #define step
 	if(DebugLag) trace_time();
-
+	
 	 // Bind Angler Trail Drawing:
 	if(array_length(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0)) >= 0){
 		script_bind_draw(draw_anglertrail, -3);
@@ -4006,7 +3980,7 @@
 			}
 		}
 	}
-
+	
 	if(DebugLag) trace_time("tetrench_step");
 
 #define draw_bloom
@@ -4417,6 +4391,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -4500,3 +4475,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

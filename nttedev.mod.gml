@@ -157,7 +157,7 @@
 	
 	 // Pets:
 	chat_comp_add("pet", "(name)", "name of pet");
-	with(["Scorpion", "Parrot", "CoolGuy", "Salamander", "Mimic", "Slaughter", "Octo", "Spider", "Prism", "Orchid", "Weapon"]){
+	with(["Scorpion", "Parrot", "CoolGuy", "Salamander", "Mimic", "Slaughter", "Octo", "Spider", "Prism", "Orchid", "Twins", "Weapon"]){
 		chat_comp_add_arg("pet", 0, self);
 	}
 	

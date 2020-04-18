@@ -2428,6 +2428,8 @@
 #define Pet_step
 	wave += current_time_scale;
 	
+	if(path_delay > 0) path_delay -= current_time_scale;
+	
 	 // Don't Persist to Menu:
 	if(instance_exists(Menu)){
 		instance_delete(id);
@@ -2598,7 +2600,7 @@
 		can_take = false;
 		persistent = true;
 		
-		 // Pathfind to Leader:
+		 // Check if Target in Line of Sight:
 		var	_xtarget = leader.x,
 			_ytarget = leader.y,
 			_targetSeen = true;
@@ -2611,18 +2613,21 @@
 			}
 		}
 		
+		 // Create Path:
 		if(visible && can_path && !_targetSeen){
 			if(!path_reaches(path, _xtarget, _ytarget, path_wall)){
-				if(path_delay > 0) path_delay -= current_time_scale;
-				else{
-					path_delay = 30;
+				if(path_delay <= 0){
+					path_delay = 300;
 					path = path_create(x, y, _xtarget, _ytarget, path_wall);
 					path = path_shrink(path, path_wall, 10);
 				}
 			}
 			else path_delay = 0;
 		}
-		else path = [];
+		else{
+			path = [];
+			path_delay = 0;
+		}
 		
 		 // Breadcrumbs:
 		if(array_length(path) > 2 && (wave % 90) < 60 && chance_ct(1, 15 / maxspeed)){
@@ -5564,7 +5569,7 @@
 			
 			 // Draw Surface:
 			draw_set_fog(true, BackCont.shadcol, 0, 0);
-			draw_set_alpha(BackCont.shadalpha * 0.8);
+			draw_set_alpha(BackCont.shadalpha * 0.9);
 			draw_surface_scale(surf, x, y, 1 / scale);
 			draw_set_fog(false, 0, 0, 0);
 			draw_set_alpha(1);
@@ -5656,6 +5661,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -5739,3 +5745,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

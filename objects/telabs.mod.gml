@@ -33,27 +33,30 @@
 		team = 1;
 		wave = random(100);
 		setup = true;
-		var _pool = [];
-			/// Danger
-			repeat(3) array_push(_pool, Freak);
-			repeat(2) array_push(_pool, "FishFreak");
-			repeat(3) array_push(_pool, "Angler");
-			repeat(3) array_push(_pool, "PortalGuardian");
-			repeat(2) array_push(_pool, PopoFreak);
-			repeat(1) array_push(_pool, "CrystalHeart");
-			repeat(1) array_push(_pool, Bandit);
+		
+		 // Vat Pool:
+		var _pool = [
+			 // Danger:
+			[Freak,            3],
+			["FishFreak",      2],
+			["Angler",         3],
+			["PortalGuardian", 3],
+			[PopoFreak,        2],
+			["CrystalHeart",   1],
+			[Bandit,           1],
 			
-			/// Loot
-			repeat(1) array_push(_pool, WeaponChest);
-			repeat(1) array_push(_pool, "Backpack");
-			
+			 // Loot:
+			[WeaponChest,      1],
+			["Backpack",       1]
+		];
 		if(unlock_get("crown:crime")){
-			repeat(1) array_push(_pool, choose("CatChest", "BatChest"));
+			array_push(_pool, [choose("CatChest", "BatChest"), 1]);
 		}
-			
+		
+		 // :
 		thing = {};
 		with(thing){
-			type = _pool[irandom(array_length(_pool) - 1)];
+			type = pool(_pool);
 			color = make_color_rgb(40, 87, 9);
 			index = -1;
 			sprite = mskNone;
@@ -406,6 +409,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -489,3 +493,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

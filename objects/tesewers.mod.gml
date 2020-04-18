@@ -4751,22 +4751,17 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		styleb = 0;
 		
 		 // Room Type:
-		var _pool = [];
-			repeat(4) array_push(_pool, "WeaponChest");
-			repeat(4) array_push(_pool, "AmmoChest");
-			repeat(4) array_push(_pool, "Backpack");
-			repeat(3) array_push(_pool, "HealthChest");
-			repeat(2) array_push(_pool, "Pizza");
-			repeat(2) array_push(_pool, "Spider");
-			repeat(1) array_push(_pool, "FrogQueen");
-			
-		if(unlock_get("crown:crime")) 
-			repeat(3) array_push(_pool, "LairChest");
-			
-		if(skill_get(mut_shotgun_shoulders) <= 0)
-			repeat(2) array_push(_pool, "GatorStatue");
-			
-		type = _pool[irandom(array_length(_pool) - 1)];
+		type = pool([
+			[WeaponChest,   4],
+			[AmmoChest,     4],
+			["Backpack",    4],
+			[HealthChest,   3],
+			["LairChest",   3 * unlock_get("crown:crime")],
+			["Pizza",       2],
+			["GatorStatue", 2 * (skill_get(mut_shotgun_shoulders) <= 0)],
+			["RedSpider",   2],
+			[FrogQueen,     1]
+		]);
 		
 		 // Events:
 		on_destroy = script_ref_create(SewerDrain_destroy);
@@ -4857,7 +4852,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // Spiderize:
 				if(_roomType != "Pizza" && chance(2, 3)){
-					if(_roomType == "Spider" || (chance(1, 2) && !point_in_rectangle(other.x, other.y, bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1))){
+					if(_roomType == "RedSpider" || (chance(1, 2) && !point_in_rectangle(other.x, other.y, bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1))){
 						sprite_index = spr.FloorSewerWeb;
 						material = 5;
 						traction = 2;
@@ -4868,37 +4863,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			 // Room Gen:
 			var _ox = 24 * choose(-1, 1);
 			switch(_roomType){
-				case "WeaponChest":
-					
-					instance_create(x - _ox + orandom(1), y + orandom(1), WeaponChest);
-					instance_create(x + _ox + orandom(1), y + orandom(1), WeaponChest);
-					
+				case WeaponChest:
+				case AmmoChest:
+					obj_create(x - _ox + orandom(1), y + orandom(1), _roomType);
+					obj_create(x + _ox + orandom(1), y + orandom(1), _roomType);
 					break;
 					
-				case "AmmoChest":
-					
-					instance_create(x - _ox + orandom(1), y + orandom(1), AmmoChest);
-					instance_create(x + _ox + orandom(1), y + orandom(1), AmmoChest);
-					
-					break;
-					
-				case "HealthChest":
-					
-					instance_create(x, y, HealthChest);
-					
-					break;
-					
+				case HealthChest:
 				case "Backpack":
-					
-					obj_create(x, y, "Backpack");
-					
+					obj_create(x, y, _roomType);
 					break;
 					
 				case "LairChest":
-					
 					obj_create(x - _ox + orandom(1), y + orandom(1), "CatChest");
 					obj_create(x + _ox + orandom(1), y + orandom(1), "BatChest");
-					
 					break;
 					
 				case "Pizza":
@@ -4920,7 +4898,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 					break;
 					
-				case "Spider":
+				case "RedSpider":
 					
 					with(floors){
 						if(chance(2, 3) && !place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
@@ -4931,14 +4909,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 							
 							 // Enemies:
 							else{
-								obj_create(bbox_center_x, bbox_center_y, "RedSpider");
+								obj_create(bbox_center_x, bbox_center_y, _roomType);
 							}
 						}
 					}
 					
 					break;
 					
-				case "FrogQueen":
+				case FrogQueen:
 					
 					 // Cool Floors:
 					floor_set_style(1, null);
@@ -4947,7 +4925,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					floor_reset_style();
 					
 					 // Herself:
-					with(instance_create(x, y, FrogQueen)){
+					with(instance_create(x, y, _roomType)){
 						maxhealth = round(maxhealth / 2);
 						my_health = round(my_health / 2);
 						alarm3 = 60;
@@ -4961,7 +4939,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 				case "GatorStatue":
 					
-					with(obj_create(x, y - 4, "GatorStatue")){
+					with(obj_create(x, y - 4, _roomType)){
 						obj_create(x, y - 24, "CatLight");
 					}
 					
@@ -5374,20 +5352,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						_spawnDir = point_direction(bbox_center_x, bbox_center_y, _spawnX, _spawnY);
 					}
 					
-					 // Weighted Pool:
-					var _enemyPool = [];
-						repeat(5) array_push(_enemyPool, Gator);
-						repeat(2) array_push(_enemyPool, "BabyGator");
-						
-					if(GameCont.hard >= 4)
-						repeat(3) array_push(_enemyPool, BuffGator);
-						
-					if(GameCont.hard >= 6)
-						repeat(3) array_push(_enemyPool, "BoneGator");
-						
-					if(GameCont.hard >= 8)
-						repeat(2) array_push(_enemyPool, "AlbinoGator");
-						
 					 // Effects:
 					var	l = 4,
 						d = _spawnDir;
@@ -5408,12 +5372,19 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
 					
 					 // Spawn:
+					var _pool = [
+						[Gator,         5],
+						["BabyGator",   2],
+						[BuffGator,     3 * (GameCont.hard >= 4)],
+						["BoneGator",   3 * (GameCont.hard >= 6)],
+						["AlbinoGator", 2 * (GameCont.hard >= 8)]
+					];
 					while(enemies > 0){
 						enemies--;
 						
 						portal_poof();
 						
-						with(top_create(_spawnX, _spawnY, _enemyPool[irandom(array_length(_enemyPool) - 1)], _spawnDir, _spawnDis)){
+						with(top_create(_spawnX, _spawnY, pool(_pool), _spawnDir, _spawnDis)){
 							jump_time = 1;
 							idle_time = 0;
 							
@@ -5655,6 +5626,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -5738,3 +5710,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

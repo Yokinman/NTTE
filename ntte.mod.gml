@@ -415,161 +415,6 @@
 				}
 			}
 			
-			 // Blocked Room:
-			if(chance(1, 5)){
-				var	_minID = GameObject.id,
-					_w = 2,
-					_h = 2,
-					_type = "",
-					_dirOff = 0,
-					_floorDis = 32,
-					_spawnDis = 96,
-					_spawnFloor = FloorNormal;
-					
-				floor_set_align(32, 32, null, null);
-				
-				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-					var	_cx = x,
-						_cy = y;
-						
-					 // Decals:
-					with(instance_random(floors)){
-						obj_create(bbox_center_x, bbox_center_y, "TopDecal");
-					}
-					
-					 // Barrel Wall Entrance:
-					var	_ow = (_w * 32) / 2,
-						_oh = (_h * 32) / 2,
-						_ang = 90 * round(point_direction(xstart, ystart, x, y) / 90);
-						
-					for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-						var	_x = x + lengthdir_x(_ow + _floorDis + 1, _dir),
-							_y = y + lengthdir_y(_oh + _floorDis + 1, _dir),
-							_ox = abs(lengthdir_x(_ow + 1, _dir - 90)),
-							_oy = abs(lengthdir_y(_oh + 1, _dir - 90)),
-							_inst = instance_rectangle_bbox(_x - _ox, _y - _oy, _x + _ox, _y + _oy, Floor);
-							
-						if(array_length(_inst) > 0){
-							var	_doorSide = ((_dir % 180) == 0),
-								_doorDis = (_doorSide ? _h : _w) * 32,
-								_doorW = (_doorSide ? _floorDis : _doorDis) / 32,
-								_doorH = (_doorSide ? _doorDis : _floorDis) / 32,
-								_doorX = x + lengthdir_x(_ow + _floorDis - 8, _dir),
-								_doorY = y + lengthdir_y(_oh + _floorDis - 8, _dir);
-								
-							_cx += lengthdir_x((_floorDis / 2) - 8, _dir);
-							_cy += lengthdir_y((_floorDis / 2) - 8, _dir);
-							
-							 // Connect to Level:
-							floor_fill(
-								_x - lengthdir_x((_floorDis / 2) + 1, _dir),
-								_y - lengthdir_y((_floorDis / 2) + 1, _dir),
-								_doorW,
-								_doorH,
-								""
-							);
-							
-							 // Walls:
-							for(var _dis = 8; _dis < _doorDis; _dis += 16){
-								with(instance_create(
-									_doorX + lengthdir_x(_dis - (_doorDis / 2), _dir - 90) - 8,
-									_doorY + lengthdir_y(_dis - (_doorDis / 2), _dir - 90) - 8,
-									Wall
-								)){
-									if(!position_meeting(bbox_center_x + lengthdir_x(16, _dir), bbox_center_y + lengthdir_y(16, _dir), Wall)){
-										//topspr = spr.Wall1TopRubble;
-										//topindex = irandom(sprite_get_number(topspr) - 1);
-									}
-								}
-							}
-							
-							 // Barrel:
-							with(instance_nearest_bbox(x + orandom(1), y + orandom(1), _inst)){
-								with(instances_meeting(x, y, Wall)){
-									instance_destroy();
-								}
-								with(instance_create(bbox_center_x, bbox_center_y, Barrel)){
-									size = 2;
-									move_contact_solid(point_direction(x, y, _doorX, _doorY) + orandom(60), random(8));
-									
-									 // Go Away Bro:
-									with(instances_meeting(x, y, [chestprop, hitme])){
-										if(place_meeting(x, y, other)){
-											x = _cx;
-											y = _cy;
-											xstart = x;
-											ystart = y;
-										}
-									}
-								}
-							}
-							
-							 // No More Entrances:
-							if(chance(1, 3)) break;
-						}
-					}
-					
-					 // Secrets Within:
-					var _pool = [];
-						repeat(4) array_push(_pool, "Chest");
-						repeat(2) array_push(_pool, "Scorp");
-						repeat(2) array_push(_pool, "Skull");
-						repeat(1) array_push(_pool, "Dummy");
-						repeat(1) array_push(_pool, "Exile");
-						
-					switch(_pool[irandom(array_length(_pool) - 1)]){
-						case "Chest":
-							 // Pulls in the nearest existing chest:
-							with(instance_nearest_array(_cx, _cy, instances_matching_ne(chestprop, "name", "Backpack"))){
-								x = _cx;
-								y = _cy;
-							}
-							break;
-							
-						case "Scorp":
-							instance_create(_cx, _cy, GoldScorpion);
-							obj_create(_cx, _cy, "BabyScorpionGold");
-							obj_create(_cx, _cy, "TopDecal");
-							break;
-							
-						case "Skull":
-							var _skullMoved = false;
-							with(instances_matching(CustomHitme, "name", "CoastBossBecome")){
-								if(!_skullMoved){
-									_skullMoved = true;
-									xstart = _cx;
-									ystart = _cy;
-								}
-							}
-							if(!_skullMoved){
-								obj_create(_cx, _cy, "CowSkull");
-								obj_create(_cx, _cy, "BanditCamper");
-							}
-							break;
-							
-						case "Dummy":
-							instance_create(_cx, _cy, TutorialTarget);
-							repeat(4) obj_create(_cx, _cy, "TopDecal");
-							with(instances_matching_gt([Wall, TopSmall], "id", _minID)){
-								if(chance((instance_is(id, Wall) ? 1/3 : 1/5), 1)){
-									obj_create(x + 8, y + 8, "WallEnemy");
-								}
-							}
-							break;
-							
-						case "Exile":
-							obj_create(_cx, _cy, "BanditTent");
-							with(instances_matching_gt(Bandit, "id", _minID)){
-								obj_create(x, y, "BanditHiker");
-								instance_delete(id);
-							}
-							break;
-					}
-				}
-				
-				floor_reset_align();
-			}
-			
 			break;
 			
 		case area_sewers: /// SEWERS
@@ -1065,73 +910,73 @@
 	}
 	
 	 // Wall Enemies:
-	switch(GameCont.area){
-		case area_desert: // BANDITS
+	if(instance_exists(enemy)){
+		var	_spiderMain = true,
+			_spiderMainX = 0,
+			_spiderMainY = 0,
+			_spiderMainDis = 48 + (16 * GameCont.loops),
+			_spiderStrayNum = 8 + irandom(4) + (2 * GameCont.loops);
 			
-			with(array_shuffle(instances_matching(Wall, "", null))){
-				if(chance(1, 400)){
-					if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y + 16, Bones) && !place_meeting(x, y, TopPot)){
-						obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
-					}
-				}
-			}
-			
-			break;
-			
-		case area_caves: // SPIDERLINGS
-			
-			var	_main = true,
-				_mainX = 0,
-				_mainY = 0,
-				_mainDis = 48 + (16 * GameCont.loops),
-				_strayNum = 8 + irandom(4) + (2 * GameCont.loops);
-				
-			with(array_shuffle(instances_matching(Wall, "", null))){
-				if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, TopPot)){
-					var	_x = bbox_center_x,
-						_y = bbox_center_y;
+		with(array_shuffle(instances_matching_ne(Wall, "topspr", -1))){
+			if(!place_meeting(x, y, PortalClear) && !place_meeting(x, y, TopPot)){
+				switch(topspr){
+					case sprWall1Top: // BANDITS
 						
-					if(point_distance(_x, _y, _spawnX, _spawnY) > 64){
-						 // Central Wall:
-						if(_main){
-							_main = false;
-							_mainX = _x;
-							_mainY = _y;
-							
-							 // Wall Spider:
-							with(obj_create(_x, _y, "WallEnemy")){
-								special = true;
-								with(target){
-									sprite_index = spr.WallSpider;
-									image_index = irandom(image_number - 1);
-								}
-							}
-							sprite_index = spr.WallSpiderBot;
-							image_index = irandom(image_number - 1);
-							
-							 // TopSmalls:
-							with(TopSmall){
-								if(chance(1, 3) && point_distance(bbox_center_x, bbox_center_y, _mainX, _mainY) <= _mainDis){
-									obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
-								}
+						if(chance(1, 400)){
+							if(!place_meeting(x, y + 16, Bones)){
+								obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
 							}
 						}
 						
-						 // Central Mass:
-						else if(chance(2, 3) && point_distance(_x, _y, _mainX, _mainY) <= _mainDis){
-							obj_create(_x, _y, "WallEnemy");
+						break;
+						
+					case sprWall4Top: // SPIDERLINGS
+						
+						var	_x = bbox_center_x,
+							_y = bbox_center_y;
+							
+						if(point_distance(_x, _y, _spawnX, _spawnY) > 64){
+							 // Central Wall:
+							if(_spiderMain){
+								_spiderMain = false;
+								_spiderMainX = _x;
+								_spiderMainY = _y;
+								
+								 // Wall Spider:
+								with(obj_create(_x, _y, "WallEnemy")){
+									special = true;
+									with(target){
+										sprite_index = spr.WallSpider;
+										image_index = irandom(image_number - 1);
+									}
+								}
+								sprite_index = spr.WallSpiderBot;
+								image_index = irandom(image_number - 1);
+								
+								 // TopSmalls:
+								with(TopSmall){
+									if(chance(1, 3) && point_distance(bbox_center_x, bbox_center_y, _spiderMainX, _spiderMainY) <= _spiderMainDis){
+										obj_create(bbox_center_x, bbox_center_y, "WallEnemy");
+									}
+								}
+							}
+							
+							 // Central Mass:
+							else if(chance(2, 3) && point_distance(_x, _y, _spiderMainX, _spiderMainY) <= _spiderMainDis){
+								obj_create(_x, _y, "WallEnemy");
+							}
+							
+							 // Strays:
+							else if(_spiderStrayNum > 0){
+								_spiderStrayNum--;
+								obj_create(_x, _y, "WallEnemy");
+							}
 						}
 						
-						 // Strays:
-						else if(_strayNum > 0){
-							_strayNum--;
-							obj_create(_x, _y, "WallEnemy");
-						}
-					}
+						break;
 				}
 			}
-			
-			break;
+		}
 	}
 	
 	 // Top Spawns:
@@ -1949,6 +1794,107 @@
 		skillpoints--;
 	}
 	
+	
+	 // :
+	/*
+	if(button_pressed(0, "horn") && fork()){
+		var	_mx = mouse_x,
+			_my = mouse_y;
+			
+		wait 60;
+		
+		with(instance_nearest_bbox(_mx, _my, FloorNormal)){
+			var	_dir = round(point_direction(bbox_center_x, bbox_center_y, _mx, _my) / 90) * 90,
+				_x = bbox_center_x + lengthdir_x(32, _dir),
+				_y = bbox_center_y + lengthdir_y(32, _dir);
+				
+			 // :
+			with(instance_rectangle_bbox(_x - 16, _y - 16, _x + 15, _y + 15, Wall)){
+				var _side = sign(angle_difference(point_direction(_x, _y, bbox_center_x, bbox_center_y), _dir)),
+					_instTop = instance_create(x, y - 8, CustomObject),
+					_instOut = instance_create(x, y,     CustomObject);
+					
+				with(_instTop){
+					sprite_index = other.topspr;
+					image_index  = other.topindex;
+					image_speed = 0;
+					depth = -6;
+				}
+				with(_instOut){
+					sprite_index = other.outspr;
+					image_index  = other.outindex;
+					image_speed = 0;
+					depth = -6;
+				}
+				with(instance_create(x, y, CustomObject)){
+					sprite_index = other.sprite_index;
+					image_index  = other.image_index;
+					image_speed = 0;
+					
+					if(fork()){
+						var _moveA = 16,
+							_moveB = 16,
+							_moveDis = 1;
+							
+						while(instance_exists(self)){
+							if(chance(1, 5)){
+								scrFX(bbox_center_x, bbox_center_y, [_dir + 180, 2], Smoke);
+							}
+							if(_moveA > 0){
+								_moveA -= _moveDis;
+								x += lengthdir_x(_moveDis, _dir);
+								y += lengthdir_y(_moveDis, _dir);
+								with(_instTop){ x = other.x; y = other.y - 8; }
+								with(_instOut){ x = other.x; y = other.y; }
+							}
+							else if(_moveB > 0){
+								_moveB -= _moveDis;
+								x += lengthdir_x(_moveDis, _dir + (90 * _side));
+								y += lengthdir_y(_moveDis, _dir + (90 * _side));
+								with(_instTop){ x = other.x; y = other.y - 8; }
+								with(_instOut){ x = other.x; y = other.y; }
+							}
+							else{
+								with(instance_nearest(x, y, Wall)){
+									image_index = other.image_index;
+								}
+								with(_instTop){
+									with(instance_nearest(x, y + 8, Wall)){
+										topindex = other.image_index;
+									}
+									instance_destroy();
+								}
+								with(_instOut) instance_destroy();
+								instance_destroy();
+							}
+							
+							wait 0;
+						}
+						exit;
+					}
+				}
+			}
+			
+			 // :
+			var _minID = GameObject.id;
+			floor_set_style(1, null);
+			floor_set(_x - 16, _y - 16, true);
+			with(floor_set(_x - 16 + lengthdir_x(32, _dir), _y - 16 + lengthdir_y(32, _dir), true)){
+				repeat(1) instance_create(bbox_center_x + lengthdir_x(8, _dir), bbox_center_y + lengthdir_y(8, _dir), Freak);
+			}
+			with(floor_set(_x - 16 + lengthdir_x(64, _dir), _y - 16 + lengthdir_y(64, _dir), true)){
+				repeat(4) instance_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), Freak);
+			}
+			floor_reset_style();
+			with(floor_reveal(instances_matching_gt(Floor, "id", _minID), 6)){
+				move_dir = _dir;
+			}
+		}
+		
+		exit;
+	}
+	*/
+	
 	if(DebugLag) trace_time("ntte_step");
 
 #define end_step
@@ -2347,16 +2293,17 @@
 		with(instances_matching(GenCont, "ntte_event_check", null)){
 			ntte_event_check = true;
 			
-			if(GameCont.hard > 1){
-				var _list = mod_variable_get("mod", "teevents", "event_list");
-				for(var i = 0; i < array_length(_list); i++){
-					var	_scrt = _list[i],
-						_modType = _scrt[0],
-						_modName = _scrt[1],
-						_name = _scrt[2],
-						_area = mod_script_call(_modType, _modName, _name + "_area");
-						
-					if(_area == null || GameCont.area == _area || _area == -1){
+			var _list = mod_variable_get("mod", "teevents", "event_list");
+			for(var i = 0; i < array_length(_list); i++){
+				var	_scrt = _list[i],
+					_modType = _scrt[0],
+					_modName = _scrt[1],
+					_name = _scrt[2],
+					_area = mod_script_call(_modType, _modName, _name + "_area");
+					
+				if(_area == null || GameCont.area == _area){
+					var _hard = mod_script_call(_modType, _modName, _name + "_hard");
+					if(GameCont.hard >= ((_hard == null) ? 2 : _hard)){
 						var _chance = 1;
 						if(mod_script_exists(_modType, _modName, _name + "_chance")){
 							_chance = mod_script_call(_modType, _modName, _name + "_chance");
@@ -3507,6 +3454,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -3590,5 +3538,6 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
 #define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);

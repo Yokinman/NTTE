@@ -182,19 +182,19 @@
 		sprite_index = spr_idle;
 		mask_index = mskBandit;
 		depth = -2;
-
+		
 		 // Sound:
 		snd_hurt = sndGoldScorpionHurt;
 		snd_dead = sndGoldScorpionDead;
 		snd_mele = sndGoldScorpionMelee;
 		snd_fire = sndGoldScorpionFire;
-
+		
 		 // Vars:
 		gold = true;
 		maxhealth = 16;
 		my_health = maxhealth;
 		raddrop = 14;
-
+		
 		return id;
 	}
 	
@@ -247,6 +247,7 @@
 		my_health = maxhealth;
 		path = [];
 		path_delay = 0;
+		can_path = true;
 		
 		return id;
 	}
@@ -258,23 +259,28 @@
 	
 	 // Path to Player:
 	if(path_delay > 0) path_delay -= current_time_scale;
-	if(walk > 0 && instance_exists(target) && !in_sight(target)){
+	if(walk > 0 && instance_exists(target)){
 		var	_tx = target.x,
-			_ty = target.y,
-			_pathWall = Wall,
-			_pathDir = path_direction(path, x, y, _pathWall);
+			_ty = target.y;
 			
-		 // Follow Path:
-		if(path_reaches(path, _tx, _ty, _pathWall) && _pathDir != null){
-			direction = angle_lerp(direction, _pathDir, 0.25 * current_time_scale);
+		if(collision_line(x, y, _tx, _ty, Wall, false, false)){
+			var _pathDir = path_direction(path, x, y, Wall);
+			
+			 // Follow Path:
+			if(_pathDir != null && path_reaches(path, _tx, _ty, Wall)){
+				can_path = true;
+				direction = angle_lerp(direction, _pathDir, 0.25 * current_time_scale);
+			}
+			
+			 // Create Path:
+			else if(can_path && path_delay <= 0){
+				can_path = false;
+				path_delay = 60;
+				path = path_create(x, y, _tx, _ty, Wall);
+				path = path_shrink(path, Wall, 4);
+			}
 		}
-		
-		 // Create Path:
-		else if(path_delay <= 0){
-			path = path_create(x, y, _tx, _ty, _pathWall);
-			path = path_shrink(path, _pathWall, 4);
-			path_delay = 30;
-		}
+		else can_path = true;
 	}
 	
 	
@@ -1535,6 +1541,14 @@
 		spr_dead = spr.CowSkullDead;
 		sprite_index = spr_idle;
 		
+		 // Flies:
+		var	l = random(16),
+			d = 90 + orandom(110);
+			
+		with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "FlySpin")){
+			depth = other.depth;
+		}
+		
 		return id;
 	}
 	
@@ -1547,15 +1561,15 @@
 		image_speed = 0.4 + random(0.1);
 		image_xscale = choose(-1, 1);
 		depth = -9;
-
+		
 		 // Vars:
 		target = noone;
 		target_x = 0;
 		target_y = 0;
-
+		
 		return id;
 	}
-
+	
 #define FlySpin_end_step
 	if(target != noone){
 		if(instance_exists(target)){
@@ -1564,8 +1578,8 @@
 		}
 		else instance_destroy();
 	}
-
-
+	
+	
 #define PetVenom_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -1816,9 +1830,9 @@
 #define step
 	if(DebugLag) trace_time();
 	
-	 // Crab Skeletons Drop Bones:
+	 // Skeletons Drop Bones:
 	if(!instance_exists(GenCont)){
-		with(instances_matching([BonePile, BonePileNight], "my_bone_spawner", null)){
+		with(instances_matching([BonePile, BonePileNight, BigSkull], "my_bone_spawner", null)){
 			my_bone_spawner = obj_create(x, y, "BoneSpawner");
 			with(my_bone_spawner) creator = other;
 		}
@@ -1932,6 +1946,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -2015,3 +2030,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

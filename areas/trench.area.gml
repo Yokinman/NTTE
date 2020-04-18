@@ -176,8 +176,8 @@
 	}
 	
 	 // Fix Props:
-	with(instances_matching(CustomProp, "name", "Kelp", "Vent", "EelSkull")){
-		if(pit_get(x, y)){
+	with(instances_matching_le(prop, "size", 2)){
+		if(!instance_is(self, RadChest) && pit_get(x, y)){
 			with(array_shuffle(FloorNormal)){
 				var	_x = bbox_center_x,
 					_y = bbox_center_y;
@@ -267,6 +267,21 @@
 				
 			if(!place_meeting(_x, y, Wall)) x = _x;
 			if(!place_meeting(x, _y, Wall)) y = _y;
+		}
+	}
+	
+	 // No Props Above Pits:
+	with(instances_matching_le(instances_matching_gt(prop, "my_health", 0), "size", 2)){
+		if(pit_get(x, y)){
+			if(
+				!instance_is(self, RadChest)      &&
+				!instance_is(self, Car)           &&
+				!instance_is(self, CarVenus)      &&
+				!instance_is(self, CarVenusFixed) &&
+				!instance_is(self, CarThrow)
+			){
+				my_health = 0;
+			}
 		}
 	}
 	
@@ -991,6 +1006,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -1074,3 +1090,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

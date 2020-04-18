@@ -170,6 +170,8 @@
 #macro teamSpriteMap global.team_sprite_map
 #macro teamSpriteObjectMap global.team_sprite_object_map
 
+#macro infinity 1/0
+
 #define obj_create(_x, _y, _name)
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
@@ -1542,7 +1544,7 @@
 #define array_shuffle(_array)
 	var	_size = array_length(_array),
 		j, t;
-
+		
 	for(var i = 0; i < _size; i++){
 		j = irandom_range(i, _size - 1);
 		if(i != j){
@@ -1551,9 +1553,51 @@
 			_array[@j] = t;
 		}
 	}
-
+	
 	return _array;
-
+	
+#define pool(_pool)
+	/*
+		Accepts a LWO or array of value:weight pairs, and returns one of them based on random chance
+		
+		Ex:
+			pool({
+				"A" : 4, // 50%
+				"B" : 3, // 37.5%
+				"C" : 1  // 12.5%
+			})
+			pool([
+				[Bandit,    5], // 50%
+				[Scorpion,  3], // 30%
+				[BigMaggot, 1], // 10%
+				[Maggot,    1]  // 10%
+			])
+	*/
+	
+	 // Turn LWO Into Array:
+	if(is_object(_pool)){
+		var _poolNew = [];
+		for(var i = 0; i < lq_size(_pool); i++){
+			array_push(_poolNew, [lq_get_key(_pool, i), lq_get_value(_pool, i)]);
+		}
+		_pool = _poolNew;
+	}
+	
+	 // Roll Max Number:
+	var _roll = 0;
+	with(_pool) _roll += self[1];
+	_roll -= random(_roll);
+	
+	 // Find Rolled Value:
+	if(_roll > 0){
+		with(_pool){
+			_roll -= self[1];
+			if(_roll <= 0) return self[0];
+		}
+	}
+	
+	return null;
+	
 #define array_delete(_array, _index)
 	var _new = array_slice(_array, 0, _index);
 	array_copy(_new, array_length(_new), _array, _index + 1, array_length(_array) - (_index + 1));
@@ -1607,7 +1651,7 @@
 	*/
 	
 	var	_nearest = noone,
-		_disMax = 1000000;
+		_disMax = infinity;
 		
 	with(instances_matching(_inst, "", null)){
 		var _dis = point_distance(_x, _y, x, y);
@@ -1621,7 +1665,7 @@
 	
 #define instance_nearest_bbox(_x, _y, _inst)
 	/*
-		Returns the instance closest to a given point based on their bounding box, similar to how distance_to_point() works
+		Returns the instance closest to a given point based on their bounding box, similar to how 'distance_to_point()' works
 		Accepts an array argument like 'instance_nearest_array()' does
 		
 		Ex:
@@ -1629,12 +1673,72 @@
 	*/
 	
 	var	_nearest = noone,
-		_disMax = 1000000;
+		_disMax = infinity;
 		
 	with(instances_matching(_inst, "", null)){
 		var _dis = point_distance(_x, _y, clamp(_x, bbox_left, bbox_right + 1), clamp(_y, bbox_top, bbox_bottom + 1));
 		if(_dis < _disMax){
 			_disMax = _dis;
+			_nearest = id;
+		}
+	}
+	
+	return _nearest;
+	
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)
+	/*
+		Returns the instance closest to a given rectangle based on their position
+		If multiple instances are equally distant from the rectangle, a bias exists for the one closer to its center
+		Accepts an array argument like 'instance_nearest_array()' does
+		
+		Ex:
+			instance_nearest_rectangle(x, y, x + 160, y + 64, chestprop)
+	*/
+	
+	var	_cx = (_x1 + _x2) / 2,
+		_cy = (_y1 + _y2) / 2,
+		_nearest = noone,
+		_disAMax = infinity,
+		_disBMax = infinity;
+		
+	with(instances_matching(_inst, "", null)){
+		var	_disA = point_distance(clamp(x, _x1, _x2), clamp(y, _y1, _y2), x, y),
+			_disB = point_distance(_cx, _cy, x, y);
+			
+		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
+			_disAMax = _disA;
+			_disBMax = _disB;
+			_nearest = id;
+		}
+	}
+	
+	return _nearest;
+	
+#define instance_nearest_rectangle_bbox(_x1, _y1, _x2, _y2, _inst)
+	/*
+		Returns the instance closest to a given rectangle based on their bounding box, similar to how 'distance_to_object()' works
+		If multiple instances are equally distant from the rectangle, a bias exists for the one closer to its center
+		Accepts an array argument like 'instance_nearest_array()' does
+		
+		Ex:
+			instance_nearest_rectangle_bbox(x - 16, y - 16, x + 16, y + 16, Floor)
+	*/
+	
+	var	_cx = (_x1 + _x2) / 2,
+		_cy = (_y1 + _y2) / 2,
+		_nearest = noone,
+		_disAMax = infinity,
+		_disBMax = infinity;
+		
+	with(instances_matching(_inst, "", null)){
+		var	_x = clamp(_cx, bbox_left, bbox_right + 1),
+			_y = clamp(_cy, bbox_top, bbox_bottom + 1),
+			_disA = point_distance(clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _x, _y),
+			_disB = point_distance(_cx, _cy, _x, _y);
+			
+		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
+			_disAMax = _disA;
+			_disBMax = _disB;
 			_nearest = id;
 		}
 	}
@@ -2893,7 +2997,7 @@
 	if(_gridWAuto || _gridHAuto || _gridXAuto || _gridYAuto){
 		if(!instance_exists(FloorMaker)){
 			 // Align to Nearest Floor:
-			with(instance_nearest_bbox(_x + (_w / 2), _y + (_h / 2), Floor)){
+			with(instance_nearest_rectangle_bbox(_x, _y, _x + _w, _y + _h, Floor)){
 				if(_gridXAuto){
 					_gridX = x;
 					_gridXBias = bbox_center_x - (_x + (_w / 2));
@@ -3791,7 +3895,7 @@
 
 	 // Find Nearest Unobstructed Point on Path:
 	var	_nearest = -1,
-		_disMax = 1000000;
+		_disMax = infinity;
 
 	for(var i = 0; i < array_length(_path); i++){
 		var	_px = _path[i, 0],
@@ -5036,10 +5140,10 @@
 			if(array_find_index(_instList, self) < 0){
 				array_push(_instList, self);
 				array_push(_varsList, {
-					targ : _target,
-					path : [],
-					path_delay : 0,
-					heal : 0
+					targ     : _target,
+					path     : [],
+					can_path : true,
+					heal     : 0
 				});
 			}
 		}
@@ -5090,6 +5194,8 @@
 						if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw = 0;
 						if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw = 0;
 						speed = max(_min, speed);
+						if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw = 0;
+						if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw = 0;
 					}
 				}
 				else _vars.path = [];
@@ -5126,27 +5232,32 @@
 			else if(speed <= friction_raw * 2){
 				speed = max(speed, friction_raw);
 				
-				if(!path_reaches(_path, _tx, _ty, Wall)){
-					if(_vars.path_delay > 0) _vars.path_delay -= current_time_scale;
-					else{
-						_path = path_create(x, y, _tx, _ty, Wall);
-						_path = path_shrink(_path, Wall, 2);
-						_vars.path = _path;
-						_vars.path_delay = 30;
-						
-						 // Send Path to Bros:
-						var j = 0;
-						with(_instList){
-							var v = _varsList[j++];
-							if(v.targ == _targ && array_length(v.path) <= 0 && self != other){
-								if(instance_exists(self) && !collision_line(x, y, other.x, other.y, Wall, false, false)){
-									v.path = _path;
-								}
+				 // Target in Sight:
+				if(!_vars.can_path){
+					if(!collision_line(x, y, _tx, _ty, Wall, false, false)){
+						_vars.can_path = true;
+					}
+				}
+				
+				 // Create Path:
+				if(_vars.can_path && !path_reaches(_path, _tx, _ty, Wall)){
+					_path = path_create(x, y, _tx, _ty, Wall);
+					_path = path_shrink(_path, Wall, 2);
+					_vars.path = _path;
+					_vars.can_path = false;
+					
+					 // Send Path to Bros:
+					var j = 0;
+					with(_instList){
+						var v = _varsList[j++];
+						if(v.targ == _targ && array_length(v.path) <= 0 && self != other){
+							if(instance_exists(self) && !collision_line(x, y, other.x, other.y, Wall, false, false)){
+								v.path = _path;
+								v.can_path = false;
 							}
 						}
 					}
 				}
-				else _vars.path_delay = 0;
 			}
 			i++;
 		}

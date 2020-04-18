@@ -299,7 +299,7 @@
 				
 				 // Disable Collision:
 				if(mask_index != mskNone){
-					other.mask_index = other.mask_index;
+					other.mask_index = mask_index;
 					mask_index = mskNone;
 				}
 			}
@@ -662,34 +662,26 @@
 			speed = 1.5 + orandom(0.2);
 			direction = d;
 			
-			var _pool = [AmmoChest, WeaponChest, HealthChest, "Backpack", "OrchidChest"];
-			// if(chance(1, 2)) array_push(_pool, "Backpack");
-			
-			if(crown_current == crwn_love){
-				for(var i = 0; i < array_length(_pool); i++){
-					_pool[i] = AmmoChest;
-				}
-			}
-			
-			/*
+			 // Decide Chest:
+			var _obj = pool([
+				[AmmoChest,     1],
+				[WeaponChest,   1],
+				[HealthChest,   1],
+				["Backpack",    1],
+				["OrchidChest", 1]
+			]);
 			switch(crown_current){
 				case crwn_love:
-					for(var i = 0; i < array_length(_pool); i++){
-						_pool[i] = AmmoChest;
-					}
+					_obj = AmmoChest;
 					break;
 					
 				case crwn_life:
-					for(var i = 0; i < array_length(_pool); i++){
-						if(_pool[i] == RadChest && chance(2, 3)){
-							_pool[i] = HealthChest;
-						}
+					if(_obj == RadChest && chance(2, 3)){
+						_obj = HealthChest;
 					}
 					break;
 			}
-			*/
-			
-			target = obj_create(x, y, _pool[irandom(array_length(_pool) - 1)]);
+			target = obj_create(x, y, _obj);
 			
 			event_perform(ev_step, ev_step_end);
 		}
@@ -813,22 +805,23 @@
 		spawn_time = 0;
 		spawn_inst = [];
 		
-		 // Main Loot:
-		var _pool = [];
-			repeat(4) array_push(_pool, "BuriedVaultChest");
-			repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest));
-			// repeat(1) array_push(_pool, ((crown_current == crwn_love) ? AmmoChest : RadChest));
+		 // Decide Loot:
+		var _obj = pool([
+			["BuriedVaultChest", 4],
+			[BigWeaponChest,     1],
+			//[RadChest,         1],
+			[ProtoChest,         1 * (!instance_exists(ProtoChest))],
+			[ProtoStatue,        2 * (GameCont.subarea == 2)], // (proto statues do not support non-subarea of 2)
+			[EnemyHorror,        1/5]
+		]);
+		if(crown_current == crwn_love){
+			if(_obj == BigWeaponChest || _obj == RadChest){
+				_obj = AmmoChest;
+			}
+		}
 		
-		if(!instance_exists(ProtoChest))
-			repeat(1) array_push(_pool, ProtoChest);
-		
-		if(GameCont.subarea == 2) // (proto statues do not support non-subarea of 2)
-			repeat(2) array_push(_pool, ProtoStatue);
-		
-		if(chance(1, 5))
-			repeat(1) array_push(_pool, EnemyHorror);
-			
-		target = obj_create(x, y + 2, _pool[irandom(array_length(_pool) - 1)]);
+		 // Create Loot:
+		target = obj_create(x, y + 2, _obj);
 		if(!instance_exists(target)){
 			with(instances_matching_gt(chestprop, "id", target)){
 				other.target = id;
@@ -1037,8 +1030,8 @@
 		with(Player){
 			 // Races:
 			switch(race){
-				case "rogue":	array_push(_pool, "rogue");		break;
-				case "parrot":	array_push(_pool, "parrot");	break;
+				case "rogue"  : array_push(_pool, "rogue");  break;
+				case "parrot" : array_push(_pool, "parrot"); break;
 			}
 			
 			 // Bone:
@@ -3849,7 +3842,7 @@
 		 // Vars:
 		mask_index = mskBigSkull;
 		maxhealth = 30;
-		size = 2;
+		size = 3;
 		skill = mut_last_wish;
 		alive = global.VaultFlower_alive;
 		pickup_indicator = noone;
@@ -5013,6 +5006,7 @@
 #define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
+#define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
@@ -5096,3 +5090,4 @@
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
