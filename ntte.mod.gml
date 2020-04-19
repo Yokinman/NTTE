@@ -1794,107 +1794,6 @@
 		skillpoints--;
 	}
 	
-	
-	 // :
-	/*
-	if(button_pressed(0, "horn") && fork()){
-		var	_mx = mouse_x,
-			_my = mouse_y;
-			
-		wait 60;
-		
-		with(instance_nearest_bbox(_mx, _my, FloorNormal)){
-			var	_dir = round(point_direction(bbox_center_x, bbox_center_y, _mx, _my) / 90) * 90,
-				_x = bbox_center_x + lengthdir_x(32, _dir),
-				_y = bbox_center_y + lengthdir_y(32, _dir);
-				
-			 // :
-			with(instance_rectangle_bbox(_x - 16, _y - 16, _x + 15, _y + 15, Wall)){
-				var _side = sign(angle_difference(point_direction(_x, _y, bbox_center_x, bbox_center_y), _dir)),
-					_instTop = instance_create(x, y - 8, CustomObject),
-					_instOut = instance_create(x, y,     CustomObject);
-					
-				with(_instTop){
-					sprite_index = other.topspr;
-					image_index  = other.topindex;
-					image_speed = 0;
-					depth = -6;
-				}
-				with(_instOut){
-					sprite_index = other.outspr;
-					image_index  = other.outindex;
-					image_speed = 0;
-					depth = -6;
-				}
-				with(instance_create(x, y, CustomObject)){
-					sprite_index = other.sprite_index;
-					image_index  = other.image_index;
-					image_speed = 0;
-					
-					if(fork()){
-						var _moveA = 16,
-							_moveB = 16,
-							_moveDis = 1;
-							
-						while(instance_exists(self)){
-							if(chance(1, 5)){
-								scrFX(bbox_center_x, bbox_center_y, [_dir + 180, 2], Smoke);
-							}
-							if(_moveA > 0){
-								_moveA -= _moveDis;
-								x += lengthdir_x(_moveDis, _dir);
-								y += lengthdir_y(_moveDis, _dir);
-								with(_instTop){ x = other.x; y = other.y - 8; }
-								with(_instOut){ x = other.x; y = other.y; }
-							}
-							else if(_moveB > 0){
-								_moveB -= _moveDis;
-								x += lengthdir_x(_moveDis, _dir + (90 * _side));
-								y += lengthdir_y(_moveDis, _dir + (90 * _side));
-								with(_instTop){ x = other.x; y = other.y - 8; }
-								with(_instOut){ x = other.x; y = other.y; }
-							}
-							else{
-								with(instance_nearest(x, y, Wall)){
-									image_index = other.image_index;
-								}
-								with(_instTop){
-									with(instance_nearest(x, y + 8, Wall)){
-										topindex = other.image_index;
-									}
-									instance_destroy();
-								}
-								with(_instOut) instance_destroy();
-								instance_destroy();
-							}
-							
-							wait 0;
-						}
-						exit;
-					}
-				}
-			}
-			
-			 // :
-			var _minID = GameObject.id;
-			floor_set_style(1, null);
-			floor_set(_x - 16, _y - 16, true);
-			with(floor_set(_x - 16 + lengthdir_x(32, _dir), _y - 16 + lengthdir_y(32, _dir), true)){
-				repeat(1) instance_create(bbox_center_x + lengthdir_x(8, _dir), bbox_center_y + lengthdir_y(8, _dir), Freak);
-			}
-			with(floor_set(_x - 16 + lengthdir_x(64, _dir), _y - 16 + lengthdir_y(64, _dir), true)){
-				repeat(4) instance_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), Freak);
-			}
-			floor_reset_style();
-			with(floor_reveal(instances_matching_gt(Floor, "id", _minID), 6)){
-				move_dir = _dir;
-			}
-		}
-		
-		exit;
-	}
-	*/
-	
 	if(DebugLag) trace_time("ntte_step");
 
 #define end_step
@@ -3450,8 +3349,6 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
-#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
-#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
@@ -3460,6 +3357,8 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define variable_instance_get_list(_inst)                                               return  mod_script_call_nc('mod', 'telib', 'variable_instance_get_list', _inst);
+#define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);

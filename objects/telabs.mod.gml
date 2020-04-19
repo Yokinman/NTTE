@@ -11,6 +11,174 @@
 
 #macro DebugLag global.debug_lag
 
+#define FreakChamber_create(_x, _y)
+	/*
+		Freak 
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		slide_path = [
+			[45, 0,  0], // Delay
+			[16, 0,  1],
+			[10, 0,  0], // Delay
+			[16, 90, 1]
+		];
+		time = 90;
+		size = 3;
+		
+		return id;
+	}
+	
+#define FreakChamber_step
+	if(time > 0) time -= current_time_scale;
+	else instance_destroy();
+	
+#define FreakChamber_destroy
+	if(instance_exists(Player)){
+		var	_slidePath = slide_path,
+			_dis = 32 * size;
+			
+		with(instance_nearest_bbox(x, y, FloorNormal)){
+			var	_fx = bbox_center_x,
+				_fy = bbox_center_y,
+				_fw = bbox_width,
+				_fh = bbox_height,
+				_p = instance_nearest(x, y, Player);
+				
+			if(
+				point_distance(_fx, _fy, _p.x, _p.y) < 128
+				&&
+				!collision_line(_fx, _fy, _p.x, _p.y, Wall, false, false)
+			){
+				var _ang = round(point_direction(_fx, _fy, x, y) / 90) * 90;
+				
+				for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+					var	_w = max(1, abs(lengthdir_x(_dis, _dir)) / 32),
+						_h = max(1, abs(lengthdir_y(_dis, _dir)) / 32),
+						_cx = _fx + lengthdir_x((_fw / 2) + (_dis / 2), _dir),
+						_cy = _fy + lengthdir_y((_fh / 2) + (_dis / 2), _dir),
+						_ox = lengthdir_x(32, _dir),
+						_oy = lengthdir_y(32, _dir),
+						_x1 = _cx - (_w * 16),
+						_y1 = _cy - (_h * 16),
+						_x2 = _cx + (_w * 16),
+						_y2 = _cy + (_h * 16);
+						
+					if(array_length(instance_rectangle_bbox(_x1 + max(0, _ox), _y1 + max(0, _oy), _x2 + min(0, _ox) - 1, _y2 + min(0, _oy) - 1, [Floor, Wall, TopSmall])) <= 0){
+						var	_wall = [],
+							_tops = [];
+							
+						 // Store Walls:
+						with(instance_rectangle_bbox(_x1, _y1, _x2 - 1, _y2 - 1, Wall)){
+							array_push(_wall, variable_instance_get_list(self));
+							instance_delete(id);
+						}
+						with(instance_rectangle_bbox(_x1 - 16, _y1 - 16, _x2 + 15, _y2 + 15, TopSmall)){
+							array_push(_tops, variable_instance_get_list(self));
+							instance_delete(id);
+						}
+						
+						 // Generate Room:
+						var _minID = GameObject.id;
+						floor_set_style(1, null);
+						var _floors = floor_fill(_cx, _cy, _w, _h, "");
+						floor_reset_style();
+						with(instances_matching_gt(Wall, "id", _minID)){
+							topspr = area_get_sprite(GameCont.area, sprWall1Trans);
+							if(sprite_index == sprWall6Bot){
+								sprite_index = spr.Wall6BotTrans;
+							}
+						}
+						
+						 // Reveal Tiles:
+						var _reveal = [];
+						with(instances_matching_ne(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), "id", instance_nearest_bbox(_fx, _fy, _floors))){
+							var _can = true;
+							
+							 // TopSmall Override:
+							if(!instance_is(self, Floor)){
+								with(_tops) if(x == other.x && y == other.y){
+									_can = false;
+									break;
+								}
+							}
+							
+							if(_can) array_push(_reveal, id);
+						}
+						with(floor_reveal(_reveal, 15)){
+							move_dis = 0;
+							flash_color = color;
+							
+							 // Delay:
+							for(var i = 0; i < min(2, array_length(_slidePath)); i++){
+								time += _slidePath[i, 0];
+							}
+						}
+						
+						 // Freaks:
+						repeat(4 + irandom(4)){
+							with(instance_create(_cx + orandom(8), _cy + orandom(8), Freak)){
+								walk = true;
+								direction = random(360);
+							}
+						}
+						
+						 // Sliding Doors:
+						with(_wall){
+							with(instance_create(x, y, object_index)){
+								variable_instance_set_list(self, other);
+								
+								 // Resprite:
+								if(sprite_index == sprWall6Bot && !visible){
+									sprite_index = spr.Wall6BotTrans;
+								}
+								
+								 // Slide:
+								with(obj_create(x, y, "WallSlide")){
+									slide_inst = [other];
+									slide_path = array_clone_deep(_slidePath);
+									smoke = 1/5;
+									
+									 // Adjust Direction:
+									with(other){
+										var	_slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _cx, _cy)));
+										with(other.slide_path){
+											self[@1] = _dir + (self[1] * _slideSide);
+										}
+									}
+								}
+							}
+						}
+						with(_tops){
+							var _instOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
+							
+							 // Resprite Walls/TopSmalls:
+							if(array_length(_instOverride) > 0){
+								with(_instOverride){
+									if(instance_is(self, Wall)){
+										topspr   = other.sprite_index;
+										topindex = other.image_index;
+									}
+									else{
+										sprite_index = other.sprite_index;
+										image_index  = other.image_index;
+									}
+								}
+							}
+							
+							 // Recreate TopSmall:
+							else variable_instance_set_list(instance_create(x, y, object_index), self);
+						}
+						
+						exit;
+					}
+				}
+			}
+		}
+	}
+	
+	
 #define LabsVat_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -365,6 +533,149 @@
 	*/
 	
 	
+#define WallSlide_create(_x, _y)
+	/*
+		A Wall that slides around
+		
+		Vars:
+			slide_inst  - An array containing the Wall instances to slide
+			slide_path  - A 2D array containing values to set: [time, direction, speed]
+			              Leaving any values undefined will maintain the current value
+			slide_index - The current index of 'slide_path' that the walls is following
+			slide_loop  - Should the walls continue sliding on their path forever, true/false
+			slide_time  - Number of frames until the next sliding motion
+			smoke       - Chance to create Smoke, used for Labs freak dispensers
+			
+		Ex:
+			with(obj_create(x, y, "WallSlide")){
+				slide_inst = [
+					instance_create(x, y, Wall)
+				];
+				slide_path = [
+					[16, 90],   // Move up 16
+					[90, 0, 0], // Wait 3 seconds
+					[32, 0, 1]  // Move right 32
+				];
+			}
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		slide_inst  = [];
+		slide_path  = [];
+		slide_index = -1;
+		slide_loop  = false;
+		slide_time  = 0;
+		smoke       = 0;
+		direction   = 0;
+		speed       = 1;
+		
+		return id;
+	}
+	
+#define WallSlide_end_step
+	slide_inst = instances_matching(slide_inst, "", null);
+	
+	if(array_length(slide_inst) > 0){
+		 // Next:
+		var _pathTries = array_length(slide_path);
+		if(slide_time > 0){
+			slide_time -= current_time_scale;
+		}
+		while(slide_time <= 0){
+			slide_index++;
+			
+			 // Start Again:
+			if(slide_loop){
+				slide_index %= array_length(slide_path);
+			}
+			
+			 // Grab Values:
+			if(
+				_pathTries-- > 0
+				&& slide_index >= 0
+				&& slide_index < array_length(slide_path)
+			){
+				var _current = slide_path[slide_index];
+				if(array_length(_current) > 0) slide_time = _current[0];
+				if(array_length(_current) > 1) direction  = _current[1];
+				if(array_length(_current) > 2) speed      = _current[2];
+				
+				 // Tile Override:
+				with(slide_inst){
+					if(position_meeting(x, y, TopSmall)){
+						with(instances_matching(instances_matching(instances_matching_ne(TopSmall, "id", id), "x", x), "y", y)){
+							instance_destroy();
+						}
+					}
+				}
+			}
+			
+			 // Done:
+			else{
+				instance_destroy();
+				exit;
+			}
+		}
+		
+		 // Slide Walls:
+		var	_mx = hspeed_raw,
+			_my = vspeed_raw;
+			
+		with(slide_inst){
+			x += _mx;
+			y += _my;
+			
+			 // Collision:
+			if(_mx != 0 || _my != 0){
+				if(place_meeting(x, y, hitme) || place_meeting(x, y, chestprop)){
+					with(instances_meeting(x, y, [hitme, chestprop])){
+						if(place_meeting(x, y, other)){
+							if(!place_meeting(x + _mx, y, other)) x += _mx;
+							if(!place_meeting(x, y + _my, other)) y += _my;
+						}
+					}
+				}
+			}
+			
+			 // Visual:
+			depth = min(depth, -1);
+			visible = place_meeting(x, y + 16, Floor);
+			l = 0;
+			r = 0;
+			w = 24;
+			h = 24;
+			
+			 // Effects:
+			if(other.smoke > 0 && chance_ct(other.smoke, 1)){
+				scrFX(bbox_center_x, bbox_center_y, [other.direction + 180, 2], Smoke);
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define WallSlide_destroy
+	with(instances_matching(slide_inst, "", null)){
+		 // Visual:
+		depth = max(depth, 0);
+		visible = place_meeting(x, y + 16, Floor);
+		l = (place_free(x - 16, y) ?  0 :  4);
+		w = (place_free(x + 16, y) ? 24 : 20) - l;
+		r = (place_free(x, y - 16) ?  0 :  4);
+		h = (place_free(x, y + 16) ? 24 : 20) - r;
+		
+		 // Wall Override:
+		with(instances_matching(instances_matching(instances_matching_ne(Wall, "id", id), "x", x), "y", y)){
+			var _inst = other;
+			with(["image_blend", "topspr", "topindex", "l", "h", "w", "r"]){
+				variable_instance_set(_inst, self, variable_instance_get(other, self));
+			}
+			instance_delete(id);
+			break;
+		}
+	}
+	
+	
 /// Scripts
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
@@ -405,8 +716,6 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
-#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
-#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
@@ -415,6 +724,8 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define variable_instance_get_list(_inst)                                               return  mod_script_call_nc('mod', 'telib', 'variable_instance_get_list', _inst);
+#define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);

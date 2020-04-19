@@ -770,6 +770,9 @@
 		m = "areas/Labs/";
 		p = m;
 			
+			 // Walls:
+			Wall6BotTrans = sprite(p + "sprWall6BotTrans", 4, 0, 0);
+			
 			//#region PROPS
 			p = m + "Props/";
 				

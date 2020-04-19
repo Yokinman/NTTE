@@ -15,7 +15,7 @@
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "WarpPortal"],
-		"telabs"      : ["LabsVat"]
+		"telabs"      : ["FreakChamber", "LabsVat", "WallSlide"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -1783,46 +1783,6 @@
 		
 	return ((_max > 0) ? _inst[irandom(_max - 1)] : noone);
 	
-#define instance_create_copy(_x, _y, _obj)
-	var	_inst = self,
-		_instNew = obj_create(_x, _y, _obj);
-		
-	if(instance_exists(_instNew)){
-		var _isCustom = (string_pos("Custom", object_get_name(_instNew.object_index)) == 1);
-		
-		with(variable_instance_get_names(_inst)){
-			if(!variable_is_readonly(_instNew, self)){
-				if(!_isCustom || string_pos("on_", self) != 1 || is_array(variable_instance_get(_inst, self))){
-					variable_instance_set(_instNew, self, variable_instance_get(_inst, self));
-				}
-			}
-		}
-		
-		with(_instNew){
-			x = _x;
-			y = _y;
-			xprevious = x;
-			yprevious = y;
-		}
-	}
-	
-	return _instNew;
-	
-#define instance_create_lq(_x, _y, _lq)
-	var	_inst = obj_create(_x, _y, lq_defget(_lq, "object_index", (is_real(_lq) ? _lq : GameObject))),
-		_lqSize = lq_size(_lq);
-		
-	if(instance_exists(_inst)){
-		for(var i = 0; i < _lqSize; i++){
-			var k = lq_get_key(_lq, i);
-			if(!variable_is_readonly(_inst, k)){
-				variable_instance_set(_inst, k, lq_get_value(_lq, i));
-			}
-		}
-	}
-	
-	return _inst;
-	
 #define instance_clone()
 	/*
 		Duplicates an instance like 'instance_copy(false)' and clones all of their data structures
@@ -1907,6 +1867,40 @@
 	}
 	
 	return _new;
+	
+#define variable_instance_get_list(_inst)
+	/*
+		Returns all of a given instance's variable names and values as a LWO
+	*/
+	
+	var _list = {};
+	
+	with(variable_instance_get_names(_inst)){
+		lq_set(_list, self, variable_instance_get(_inst, self));
+	}
+	
+	return _list;
+	
+#define variable_instance_set_list(_inst, _list)
+	/*
+		Sets all of a given LWO's variable names and values on a given instance
+	*/
+	
+	if(instance_exists(_inst)){
+		var	_listMax = lq_size(_list),
+			_isCustom = (string_pos("Custom", object_get_name(_inst.object_index)) == 1);
+			
+		for(var i = 0; i < _listMax; i++){
+			var _name = lq_get_key(_list, i);
+			if(!variable_is_readonly(_inst, _name)){
+				if(_isCustom && string_pos("on_", self) == 1){
+					try variable_instance_set(_inst, _name, lq_get_value(_list, i));
+					catch(_error){}
+				}
+				else variable_instance_set(_inst, _name, lq_get_value(_list, i));
+			}
+		}
+	}
 	
 #define surface_clone(_surf)
 	/*
@@ -2576,19 +2570,21 @@
 	with(script_bind_draw(floor_reveal_draw, -8)){
 		list = [];
 		
-		with(_floors) if(instance_exists(self)){
+		with(instances_matching(_floors, "", null)){
 			array_push(other.list, {
-				inst     : id,
-				time     : _maxTime,
-				time_max : _maxTime,
-				color    : background_color,
-				flash    : false,
-				move_dis : 4,
-				move_dir : 90,
-				ox       : 0,
-				oy       : -8,
-				bx       : 0,
-				by       : 0
+				inst        : self,
+				bind        : other,
+				time        : _maxTime,
+				time_max    : _maxTime,
+				color       : background_color,
+				flash_color : c_white,
+				flash       : false,
+				move_dis    : 4,
+				move_dir    : 90,
+				ox          : 0,
+				oy          : -8,
+				bx          : 0,
+				by          : 0
 			})
 		}
 		
@@ -2602,14 +2598,15 @@
 			if(time > 0){
 				time -= current_time_scale;
 				
-				var	t = clamp(time / time_max, 0, 1),
-					_ox = ox + lengthdir_x(move_dis * (1 - t), move_dir),
-					_oy = oy + lengthdir_y(move_dis * (1 - t), move_dir),
+				var	_num = clamp(time / time_max, 0, 1),
+					_col = merge_color(flash_color, color, (flash ? ((time > time_max) ? 1 : (1 - _num)) : _num)),
+					_ox = ox + lengthdir_x(move_dis * (1 - _num), move_dir),
+					_oy = oy + lengthdir_y(move_dis * (1 - _num), move_dir),
 					_bx = bx,
 					_by = by;
 					
-				draw_set_alpha(t);
-				draw_set_color(merge_color(c_white, color, (flash ? ((time > time_max) ? 1 : (1 - t)) : t)));
+				draw_set_alpha(_num);
+				draw_set_color(_col);
 				
 				with(inst){
 					draw_rectangle(bbox_left + _ox - _bx, bbox_top + _oy - _by, bbox_right + _ox + _bx, bbox_bottom + _oy + _by, false);
@@ -5346,8 +5343,9 @@
 			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
 				var _newObj = _objList[_objIndex];
 				if(_obj != _newObj){
-					with(instance_create_copy(x, y, _newObj)){
+					with(instance_create(x, y, _newObj)){
 						array_push(_newInst, id);
+						variable_instance_set_list(self, variable_instance_get_list(other));
 						instance_delete(other);
 						
 						if(array_exists(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj)){

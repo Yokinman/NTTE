@@ -1463,53 +1463,6 @@
 			}
 		}
 		
-		/*
-		 // Attack:
-		if(
-			(chance(2, 3) && in_distance(target, 64))
-			||
-			(!_targetSeen && cantunnel && collision_circle(x + lengthdir_x(8, _targetDir), y + lengthdir_y(8, _targetDir), 8, Wall, false, false))
-		){
-			alarm1 = 45;
-			walk = 0;
-			speed /= 2;
-			scrRight(_targetDir);
-			
-			 // Plasma Bite:
-			for(var _spd = 0; _spd < (_targetSeen ? 4 : 2); _spd += random_range(1, 1.5)){
-				var	_dis = 12,
-					_dir = _targetDir + orandom(lerp(20, 10, _spd / 4)),
-					_x = x + lengthdir_x(_dis, _dir),
-					_y = y + lengthdir_y(_dis, _dir);
-					
-				with(team_instance_sprite(1, enemy_shoot_ext(_x, _y, PlasmaImpact, _dir, _spd))){
-					damage = 4;
-					mask_index = -1;
-					image_xscale = lerp(0.7, 0.2, _spd / 4);
-					image_yscale = image_xscale;
-					image_speed += orandom(0.1);
-					friction = 0.1;
-					
-					 // Tunnel Time:
-					if(!_targetSeen){
-						with(instance_create_copy(x, y, PortalClear)) visible = false;
-					}
-				}
-			}
-			
-			 // Effects:
-			sound_play_hit_ext(sndSharpTeeth, 1 + orandom(0.2), 0.8);
-			sound_play_hit_ext(sndPlasmaHit, 1 + orandom(0.5), 1.5);
-			sprite_index = spr_hurt;
-			image_index = 0;
-			
-			 // Debris Protection:
-			if(!_targetSeen){
-				nexthurt = current_frame + 6;
-			}
-		}
-		*/
-		
 		 // Towards Target:
 		else if(_targetSeen || cantunnel){
 			scrWalk(_targetDir + orandom(10), 15);
@@ -2639,8 +2592,6 @@
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
-#define instance_create_copy(_x, _y, _obj)                                              return  mod_script_call(   'mod', 'telib', 'instance_create_copy', _x, _y, _obj);
-#define instance_create_lq(_x, _y, _lq)                                                 return  mod_script_call_nc('mod', 'telib', 'instance_create_lq', _x, _y, _lq);
 #define instance_nearest_array(_x, _y, _inst)                                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_array', _x, _y, _inst);
 #define instance_nearest_bbox(_x, _y, _inst)                                            return  mod_script_call_nc('mod', 'telib', 'instance_nearest_bbox', _x, _y, _inst);
 #define instance_nearest_rectangle(_x1, _y1, _x2, _y2, _inst)                           return  mod_script_call_nc('mod', 'telib', 'instance_nearest_rectangle', _x1, _y1, _x2, _y2, _inst);
@@ -2649,6 +2600,8 @@
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'instances_at', _x, _y, _obj);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define variable_instance_get_list(_inst)                                               return  mod_script_call_nc('mod', 'telib', 'variable_instance_get_list', _inst);
+#define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
