@@ -13,7 +13,7 @@
 
 #define FreakChamber_create(_x, _y)
 	/*
-		Freak 
+		Creates an epic room on the side of the level that releases freaks
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
@@ -39,7 +39,7 @@
 		var	_slidePath = slide_path,
 			_dis = 32 * size;
 			
-		with(instance_nearest_bbox(x, y, FloorNormal)){
+		with(array_shuffle(FloorNormal)){
 			var	_fx = bbox_center_x,
 				_fy = bbox_center_y,
 				_fw = bbox_width,
@@ -180,6 +180,10 @@
 	
 	
 #define LabsVat_create(_x, _y)
+	/*
+		A giant version of the MutantTube, which can contain special enemies or loot
+	*/
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.LabsVatIdle;
@@ -535,7 +539,7 @@
 	
 #define WallSlide_create(_x, _y)
 	/*
-		A Wall that slides around
+		A controller that slides Walls around
 		
 		Vars:
 			slide_inst  - An array containing the Wall instances to slide
@@ -631,8 +635,8 @@
 				if(place_meeting(x, y, hitme) || place_meeting(x, y, chestprop)){
 					with(instances_meeting(x, y, [hitme, chestprop])){
 						if(place_meeting(x, y, other)){
-							if(!place_meeting(x + _mx, y, other)) x += _mx;
-							if(!place_meeting(x, y + _my, other)) y += _my;
+							if(!place_meeting(x + _mx, y, Wall)) x += _mx;
+							if(!place_meeting(x, y + _my, Wall)) y += _my;
 						}
 					}
 				}
