@@ -63,6 +63,7 @@
 	var	_ang       = round(random(360) / 90) * 90,
 		_hallDis   = 32 * hallway_size,
 		_slidePath = slide_path,
+		_target    = instance_nearest(x, y, Player),
 		_open      = false;
 		
 	with(array_shuffle(FloorNormal)){
@@ -71,158 +72,161 @@
 			_fw = bbox_width,
 			_fh = bbox_height;
 			
-		with(other){
-			for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-				var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
-					_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
-					_hallX = _fx + lengthdir_x((_fw / 2) + (_hallDis / 2), _dir),
-					_hallY = _fy + lengthdir_y((_fh / 2) + (_hallDis / 2), _dir),
-					_hallXOff = lengthdir_x(32, _dir),
-					_hallYOff = lengthdir_y(32, _dir);
-					
-				if(
-					array_length(instance_rectangle_bbox(
-						_hallX - (_hallW * 16) + max(0, _hallXOff),
-						_hallY - (_hallH * 16) + max(0, _hallYOff),
-						_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
-						_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
-						[Floor, Wall, TopSmall]
-					)) <= 0
-				){
-					var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
-					x = _fx + lengthdir_x((_fw / 2) + _hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
-					y = _fy + lengthdir_y((_fh / 2) + _hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
-					
-					image_angle = _dir;
-					
-					if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall)){
-						var	_x = bbox_center_x,
-							_y = bbox_center_y,
-							_w = bbox_width  / 32,
-							_h = bbox_height / 32;
-							
-						 // Store Walls:
-						var	_wall = [],
-							_tops = [];
-							
-						with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
-							array_push(_wall, variable_instance_get_list(self));
-							instance_delete(id);
-						}
-						with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
-							array_push(_tops, variable_instance_get_list(self));
-							instance_delete(id);
-						}
-						with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
-							array_push(_tops, variable_instance_get_list(self));
-							instance_delete(id);
-						}
+		if(!collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false) && point_distance(_fx, _fy, _target.x, _target.y) < 128){
+			with(other){
+				for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+					var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
+						_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
+						_hallX = _fx + lengthdir_x((_fw / 2) + (_hallDis / 2), _dir),
+						_hallY = _fy + lengthdir_y((_fh / 2) + (_hallDis / 2), _dir),
+						_hallXOff = lengthdir_x(32, _dir),
+						_hallYOff = lengthdir_y(32, _dir);
 						
-						 // Generate Room:
-						var _minID = GameObject.id;
-						floor_set_style(1, null);
-						var _hallFloor = floor_fill(_hallX, _hallY, _hallW, _hallH, "");
-						floor_fill(_x, _y, _w, _h, "");
-						floor_reset_style();
-						with(instances_matching_gt(Wall, "id", _minID)){
-							topspr = area_get_sprite(GameCont.area, sprWall1Trans);
-							if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
-						}
+					if(
+						array_length(instance_rectangle_bbox(
+							_hallX - (_hallW * 16) + max(0, _hallXOff),
+							_hallY - (_hallH * 16) + max(0, _hallYOff),
+							_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
+							_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
+							[Floor, Wall, TopSmall]
+						)) <= 0
+					){
+						var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
+						x = _fx + lengthdir_x((_fw / 2) + _hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
+						y = _fy + lengthdir_y((_fh / 2) + _hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
 						
-						 // Reveal Tiles:
-						var _reveal = [];
-						with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
-							var _can = true;
+						image_angle = _dir;
+						
+						if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall)){
+							var	_x = bbox_center_x,
+								_y = bbox_center_y,
+								_w = bbox_width  / 32,
+								_h = bbox_height / 32;
+								
+							 // Store Walls:
+							var	_wall = [],
+								_tops = [];
+								
+							with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
+								array_push(_wall, variable_instance_get_list(self));
+								instance_delete(id);
+							}
+							with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
+								array_push(_tops, variable_instance_get_list(self));
+								instance_delete(id);
+							}
+							with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
+								array_push(_tops, variable_instance_get_list(self));
+								instance_delete(id);
+							}
 							
-							 // Don't Cover Doors:
-							if(array_exists(_hallFloor, id)){
-								with(_wall){
-									if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
-										_can = false;
-										break;
+							 // Generate Room:
+							var _minID = GameObject.id;
+							floor_set_style(1, null);
+							var _hallFloor = floor_fill(_hallX, _hallY, _hallW, _hallH, "");
+							floor_fill(_x, _y, _w, _h, "");
+							floor_reset_style();
+							with(instances_matching_gt(Wall, "id", _minID)){
+								topspr = area_get_sprite(GameCont.area, sprWall1Trans);
+								if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
+							}
+							
+							 // Reveal Tiles:
+							var _reveal = [];
+							with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
+								var _can = true;
+								
+								 // Don't Cover Doors:
+								if(array_exists(_hallFloor, id)){
+									with(_wall){
+										if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
+											_can = false;
+											break;
+										}
 									}
 								}
-							}
-							
-							 // Don't Cover Pre-Existing TopSmalls:
-							if(instance_is(self, Wall) || instance_is(self, TopSmall)){
-								with(_tops){
-									if(x == other.x && y == other.y){
-										_can = false;
-										break;
+								
+								 // Don't Cover Pre-Existing TopSmalls:
+								if(instance_is(self, Wall) || instance_is(self, TopSmall)){
+									with(_tops){
+										if(x == other.x && y == other.y){
+											_can = false;
+											break;
+										}
 									}
 								}
-							}
-							
-							if(_can) array_push(_reveal, id);
-						}
-						with(floor_reveal(_reveal, 15)){
-							move_dis = 0;
-							flash_color = color;
-							
-							 // Delay:
-							for(var i = 0; i < min(2, array_length(_slidePath)); i++){
-								time += _slidePath[i, 0];
-							}
-						}
-						
-						 // Freaks:
-						repeat(4 + irandom(4)){
-							with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
-								walk = true;
-								direction = random(360);
-							}
-						}
-						
-						 // Sliding Doors:
-						with(_wall){
-							with(instance_create(x, y, object_index)){
-								variable_instance_set_list(self, other);
 								
-								 // Resprite:
-								if(sprite_index == sprWall6Bot && !visible){
-									sprite_index = spr.Wall6BotTrans;
+								if(_can) array_push(_reveal, id);
+							}
+							with(floor_reveal(_reveal, 15)){
+								move_dis = 0;
+								flash_color = color;
+								
+								 // Delay:
+								for(var i = 0; i < min(2, array_length(_slidePath)); i++){
+									time += _slidePath[i, 0];
 								}
-								
-								 // Slide:
-								with(obj_create(x, y, "WallSlide")){
-									slide_inst = [other];
-									slide_path = array_clone_deep(_slidePath);
-									smoke = 1/5;
+							}
+							
+							 // Freaks:
+							repeat(4 + irandom(4)){
+								with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
+									walk = true;
+									direction = random(360);
+								}
+							}
+							//obj_create(_x, _y, "LabsVat");
+							
+							 // Sliding Doors:
+							with(_wall){
+								with(instance_create(x, y, object_index)){
+									variable_instance_set_list(self, other);
 									
-									 // Adjust Direction:
-									with(other){
-										var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
-										with(other.slide_path){
-											self[@1] = _dir + (self[1] * _slideSide);
+									 // Resprite:
+									if(sprite_index == sprWall6Bot && !visible){
+										sprite_index = spr.Wall6BotTrans;
+									}
+									
+									 // Slide:
+									with(obj_create(x, y, "WallSlide")){
+										slide_inst = [other];
+										slide_path = array_clone_deep(_slidePath);
+										smoke = 1/5;
+										
+										 // Adjust Direction:
+										with(other){
+											var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
+											with(other.slide_path){
+												self[@1] = _dir + (self[1] * _slideSide);
+											}
 										}
 									}
 								}
 							}
-						}
-						with(_tops){
-							var _wallOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
-							
-							 // Resprite Walls/TopSmalls:
-							if(array_length(_wallOverride) > 0){
-								with(_wallOverride){
-									if(instance_is(self, Wall)){
-										topspr   = other.sprite_index;
-										topindex = other.image_index;
-									}
-									else{
-										sprite_index = other.sprite_index;
-										image_index  = other.image_index;
+							with(_tops){
+								var _wallOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
+								
+								 // Resprite Walls/TopSmalls:
+								if(array_length(_wallOverride) > 0){
+									with(_wallOverride){
+										if(instance_is(self, Wall)){
+											topspr   = other.sprite_index;
+											topindex = other.image_index;
+										}
+										else{
+											sprite_index = other.sprite_index;
+											image_index  = other.image_index;
+										}
 									}
 								}
+								
+								 // Recreate TopSmall:
+								else variable_instance_set_list(instance_create(x, y, object_index), self);
 							}
 							
-							 // Recreate TopSmall:
-							else variable_instance_set_list(instance_create(x, y, object_index), self);
+							_open = true;
+							break;
 						}
-						
-						_open = true;
-						break;
 					}
 				}
 			}
