@@ -13,68 +13,107 @@
 
 #define FreakChamber_create(_x, _y)
 	/*
-		Creates an epic room on the side of the level that releases freaks
+		Creates an epic room on the side of the level that opens to release freaks
+		
+		Vars:
+			image_xscale - Room's length
+			image_yscale - Room's height
+			hallway_size - Hallway's length
+			slide_path   - The sliding door's path, see 'WallSlide_create()'
+			               The direction value is altered based on the room's angle
+			alarm0       - Delay before opening, is set when a Player passes nearby
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
+		mask_index = mskFloor;
+		image_xscale = 2;
+		image_yscale = 1;
+		hallway_size = 1;
+		alarm0 = -1;
 		slide_path = [
-			[45, 0,  0], // Delay
-			[16, 0,  1],
-			[10, 0,  0], // Delay
+			[45,  0, 0], // Delay
+			[16,  0, 1],
+			[10,  0, 0], // Delay
 			[16, 90, 1]
 		];
-		time = 90;
-		size = 3;
 		
 		return id;
 	}
 	
 #define FreakChamber_step
-	if(time > 0) time -= current_time_scale;
-	else instance_destroy();
+	if(alarm0 < 0){
+		 // No Portal:
+		if(!instance_exists(enemy) && !instance_exists(becomenemy)){
+			alarm0 = 1;
+		}
+		
+		 // Wait for Nearby Player:
+		else if(instance_exists(Player)){
+			var _target = instance_nearest(x, y, Player);
+			if(in_sight(_target) && in_distance(_target, 64)){
+				alarm0 = 60;
+			}
+		}
+	}
 	
-#define FreakChamber_destroy
-	if(instance_exists(Player)){
-		var	_slidePath = slide_path,
-			_dis = 32 * size;
+#define FreakChamber_alrm0
+	alarm0 = 30;
+	
+	var	_ang       = round(random(360) / 90) * 90,
+		_hallDis   = 32 * hallway_size,
+		_slidePath = slide_path,
+		_open      = false;
+		
+	with(array_shuffle(FloorNormal)){
+		var	_fx = bbox_center_x,
+			_fy = bbox_center_y,
+			_fw = bbox_width,
+			_fh = bbox_height;
 			
-		with(array_shuffle(FloorNormal)){
-			var	_fx = bbox_center_x,
-				_fy = bbox_center_y,
-				_fw = bbox_width,
-				_fh = bbox_height,
-				_p = instance_nearest(x, y, Player);
-				
-			if(
-				point_distance(_fx, _fy, _p.x, _p.y) < 128
-				&&
-				!collision_line(_fx, _fy, _p.x, _p.y, Wall, false, false)
-			){
-				var _ang = round(point_direction(_fx, _fy, x, y) / 90) * 90;
-				
-				for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-					var	_w = max(1, abs(lengthdir_x(_dis, _dir)) / 32),
-						_h = max(1, abs(lengthdir_y(_dis, _dir)) / 32),
-						_cx = _fx + lengthdir_x((_fw / 2) + (_dis / 2), _dir),
-						_cy = _fy + lengthdir_y((_fh / 2) + (_dis / 2), _dir),
-						_ox = lengthdir_x(32, _dir),
-						_oy = lengthdir_y(32, _dir),
-						_x1 = _cx - (_w * 16),
-						_y1 = _cy - (_h * 16),
-						_x2 = _cx + (_w * 16),
-						_y2 = _cy + (_h * 16);
-						
-					if(array_length(instance_rectangle_bbox(_x1 + max(0, _ox), _y1 + max(0, _oy), _x2 + min(0, _ox) - 1, _y2 + min(0, _oy) - 1, [Floor, Wall, TopSmall])) <= 0){
+		with(other){
+			for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+				var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
+					_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
+					_hallX = _fx + lengthdir_x((_fw / 2) + (_hallDis / 2), _dir),
+					_hallY = _fy + lengthdir_y((_fh / 2) + (_hallDis / 2), _dir),
+					_hallXOff = lengthdir_x(32, _dir),
+					_hallYOff = lengthdir_y(32, _dir);
+					
+				if(
+					array_length(instance_rectangle_bbox(
+						_hallX - (_hallW * 16) + max(0, _hallXOff),
+						_hallY - (_hallH * 16) + max(0, _hallYOff),
+						_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
+						_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
+						[Floor, Wall, TopSmall]
+					)) <= 0
+				){
+					var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
+					x = _fx + lengthdir_x((_fw / 2) + _hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
+					y = _fy + lengthdir_y((_fh / 2) + _hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
+					
+					image_angle = _dir;
+					
+					if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall)){
+						var	_x = bbox_center_x,
+							_y = bbox_center_y,
+							_w = bbox_width  / 32,
+							_h = bbox_height / 32;
+							
+						 // Store Walls:
 						var	_wall = [],
 							_tops = [];
 							
-						 // Store Walls:
-						with(instance_rectangle_bbox(_x1, _y1, _x2 - 1, _y2 - 1, Wall)){
+						with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
 							array_push(_wall, variable_instance_get_list(self));
 							instance_delete(id);
 						}
-						with(instance_rectangle_bbox(_x1 - 16, _y1 - 16, _x2 + 15, _y2 + 15, TopSmall)){
+						with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
+							array_push(_tops, variable_instance_get_list(self));
+							instance_delete(id);
+						}
+						with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
 							array_push(_tops, variable_instance_get_list(self));
 							instance_delete(id);
 						}
@@ -82,25 +121,36 @@
 						 // Generate Room:
 						var _minID = GameObject.id;
 						floor_set_style(1, null);
-						var _floors = floor_fill(_cx, _cy, _w, _h, "");
+						var _hallFloor = floor_fill(_hallX, _hallY, _hallW, _hallH, "");
+						floor_fill(_x, _y, _w, _h, "");
 						floor_reset_style();
 						with(instances_matching_gt(Wall, "id", _minID)){
 							topspr = area_get_sprite(GameCont.area, sprWall1Trans);
-							if(sprite_index == sprWall6Bot){
-								sprite_index = spr.Wall6BotTrans;
-							}
+							if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
 						}
 						
 						 // Reveal Tiles:
 						var _reveal = [];
-						with(instances_matching_ne(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), "id", instance_nearest_bbox(_fx, _fy, _floors))){
+						with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
 							var _can = true;
 							
-							 // TopSmall Override:
-							if(!instance_is(self, Floor)){
-								with(_tops) if(x == other.x && y == other.y){
-									_can = false;
-									break;
+							 // Don't Cover Doors:
+							if(array_exists(_hallFloor, id)){
+								with(_wall){
+									if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
+										_can = false;
+										break;
+									}
+								}
+							}
+							
+							 // Don't Cover Pre-Existing TopSmalls:
+							if(instance_is(self, Wall) || instance_is(self, TopSmall)){
+								with(_tops){
+									if(x == other.x && y == other.y){
+										_can = false;
+										break;
+									}
 								}
 							}
 							
@@ -118,7 +168,7 @@
 						
 						 // Freaks:
 						repeat(4 + irandom(4)){
-							with(instance_create(_cx + orandom(8), _cy + orandom(8), Freak)){
+							with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
 								walk = true;
 								direction = random(360);
 							}
@@ -142,7 +192,7 @@
 									
 									 // Adjust Direction:
 									with(other){
-										var	_slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _cx, _cy)));
+										var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
 										with(other.slide_path){
 											self[@1] = _dir + (self[1] * _slideSide);
 										}
@@ -151,11 +201,11 @@
 							}
 						}
 						with(_tops){
-							var _instOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
+							var _wallOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
 							
 							 // Resprite Walls/TopSmalls:
-							if(array_length(_instOverride) > 0){
-								with(_instOverride){
+							if(array_length(_wallOverride) > 0){
+								with(_wallOverride){
 									if(instance_is(self, Wall)){
 										topspr   = other.sprite_index;
 										topindex = other.image_index;
@@ -171,11 +221,20 @@
 							else variable_instance_set_list(instance_create(x, y, object_index), self);
 						}
 						
-						exit;
+						_open = true;
+						break;
 					}
 				}
 			}
 		}
+		
+		if(_open) break;
+	}
+	
+	 // Case Closed:
+	if(_open){
+		if(instance_exists(enemy)) portal_poof();
+		instance_destroy();
 	}
 	
 	
@@ -252,9 +311,10 @@
 #define LabsVat_setup
 	setup = false;
 	
-	var _x = x,
+	var	_x = x,
 		_y = y,
 		_canWatch = false;
+		
 	with(thing){
 		switch(type){
 			case "MergedWep":
@@ -681,6 +741,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

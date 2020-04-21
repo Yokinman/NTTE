@@ -152,6 +152,23 @@
 
 #macro DebugLag global.debug_lag
 
+#macro area_campfire     0
+#macro area_desert       1
+#macro area_sewers       2
+#macro area_scrapyards   3
+#macro area_caves        4
+#macro area_city         5
+#macro area_labs         6
+#macro area_palace       7
+#macro area_vault        100
+#macro area_oasis        101
+#macro area_pizza_sewers 102
+#macro area_mansion      103
+#macro area_cursed_caves 104
+#macro area_jungle       105
+#macro area_hq           106
+#macro area_crib         107
+
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
 #macro anim_end (image_index + image_speed_raw >= image_number)
 
@@ -2112,7 +2129,7 @@
 			scrSetup     - Script reference, called right before floor generation
 			
 		Ex:
-			var _genID = area_generate(3, 1, x, y, false, 0, null);
+			var _genID = area_generate(area_scrapyards, 3, x, y, false, 0, null);
 			with(instances_matching_gt(chestprop, "id", _genID)){
 				instance_delete(id);
 			}
@@ -2421,15 +2438,15 @@
 	 // Secret Area:
 	else if(real(_area) >= 100){
 		switch(_area){
-			case 100:
+			case area_vault:
 				a = ["???"];
 				break;
 				
-			case 106:
+			case area_hq:
 				a = ["HQ", _subarea];
 				break;
 				
-			case 107:
+			case area_mansion:
 				a = ["$$$"];
 				break;
 				
@@ -2440,7 +2457,7 @@
 	
 	 // Victory:
 	if(GameCont.win == true){
-		if(_area == 7 || _area == 106){
+		if(_area == area_palace || _area == area_labs){
 			a = ["END", (_area >= 100) ? 2 : 1];
 		}
 	}
@@ -2466,7 +2483,7 @@
 #define area_get_subarea(_area)
 	if(is_real(_area)){
 		 // Secret Areas:
-		if(_area == 106) return 3;
+		if(_area == area_hq) return 3;
 		if(_area >= 100) return 1;
 		
 		 // Transition Area:
@@ -2498,7 +2515,7 @@
 
 #define area_get_underwater(_area)
 	if(is_real(_area)){
-		return (_area == 101);
+		return (_area == area_oasis);
 	}
 
 	 // Custom Area:
@@ -2835,9 +2852,9 @@
 		Returns a given area's variant of the given sprite
 		
 		Ex:
-			area_get_sprite(2, sprFloor1)  == sprFloor2
-			area_get_sprite(5, sprDebris1) == sprDebris5
-			area_get_sprite(4, sprBones)   == sprCaveDecal
+			area_get_sprite(area_sewers, sprFloor1) == sprFloor2
+			area_get_sprite(area_city, sprDebris1)  == sprDebris5
+			area_get_sprite(area_caves, sprBones)   == sprCaveDecal
 	*/
 	
 	 // Store Sprites:

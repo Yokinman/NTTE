@@ -2137,7 +2137,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define Cat_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		var _snow = (GameCont.area == 5);
+		var _snow = (GameCont.area == area_city);
 		spr_idle      = (_snow ?  spr.CatSnowIdle    : spr.CatIdle);
 		spr_walk      = (_snow ?  spr.CatSnowWalk    : spr.CatWalk);
 		spr_hurt      = (_snow ?  spr.CatSnowHurt    : spr.CatHurt);
@@ -3182,8 +3182,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Auto-Sprite:
 		switch(GameCont.area){
-			case 102:
 			case "pizza":
+			case area_pizza_sewers:
 				sprite_index = spr.PizzaDoor;
 				break;
 		}
@@ -4747,7 +4747,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sprite_index = spr_idle;
 		
 		 // Vars:
-		area = 2;
+		area = area_sewers;
 		styleb = 0;
 		
 		 // Room Type:
@@ -5331,7 +5331,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(DebugLag) trace_time();
 	
 	 // Crown of Crime:
-	if(!(GameCont.area == 7 && GameCont.subarea == 3)){
+	if(!(GameCont.area == area_palace && GameCont.subarea == 3)){
 		with(instances_matching(Crown, "ntte_crown", "crime")){
 			 // Watch where you're going bro:
 			if(hspeed != 0 && sign(image_xscale) != sign(hspeed)){
@@ -5583,6 +5583,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

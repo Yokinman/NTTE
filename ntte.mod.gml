@@ -60,23 +60,6 @@
 #macro cMusic    global.sound_current.mus
 #macro cAmbience global.sound_current.amb
 
-#macro area_campfire     0
-#macro area_desert       1
-#macro area_sewers       2
-#macro area_scrapyards   3
-#macro area_caves        4
-#macro area_city         5
-#macro area_labs         6
-#macro area_palace       7
-#macro area_vault        100
-#macro area_oasis        101
-#macro area_pizza        102
-#macro area_mansion      103
-#macro area_cursed_caves 104
-#macro area_jungle       105
-#macro area_hq           106
-#macro area_crib         107
-
 #macro heartSpawn global.heart_spawn
 
 #define game_start
@@ -663,6 +646,15 @@
 			
 		case area_labs: /// LABS
 			
+			 // Freak Chambers:
+			with(FloorNormal){
+				if(chance(1, 50)){
+					if(place_free(x, y) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 128){
+						obj_create(bbox_center_x, bbox_center_y, "FreakChamber");
+					}
+				}
+			}
+			
 			 // Labs Vat:
 			repeat(1 + chance(1, 3)){
 				var	_w = 2,
@@ -682,33 +674,6 @@
 				
 				floor_reset_align();
 				floor_reset_style();
-			}
-			
-			 // Top Spawns:
-			_topChance *= (1 + (0.5 * GameCont.loops));
-			_topSpawn = [
-				[Freak,			1],
-				[ExploFreak,	1/5]
-			];
-			with(TechnoMancer){
-				var	_spawnAng = random(360),
-					_spawnNum = irandom_range(3, 5);
-					
-				for(var _spawnDir = _spawnAng; _spawnDir < _spawnAng + 360; _spawnDir += (360 / _spawnNum)){
-					with(top_create(x, y, choose(Server, Terminal), _spawnDir, 32)){
-						if(instance_is(target, Terminal) && distance_to_object(Floor) > 16){
-							var	l = 16,
-								d = 270 + orandom(70);
-								
-							with(top_create(target.x + lengthdir_x(l, d), target.y + lengthdir_y(l, d), Necromancer, d, 0)){
-								with(target){
-									gunangle = d + 180;
-									scrRight(gunangle);
-								}
-							}
-						}
-					}
-				}
 			}
 			
 			 // Loop Spawns:
@@ -1141,17 +1106,7 @@
 	}
 	
 	 // Big Decals:
-	var _chance = 1/8;
-	if(area_get_subarea(GameCont.area) <= 1){
-		 // Secret Levels:
-		if(is_real(GameCont.area) && GameCont.area >= 100){
-			_chance = 1/2;
-		}
-		
-		 // Transition Levels:
-		else _chance = 1/4;
-	}
-	if(chance(_chance, 1) && instance_exists(Player)){
+	if(chance(1, (area_get_subarea(GameCont.area) > 1) ? 8 : 4)){
 		with(instance_random(TopSmall)){
 			obj_create(x, y, "BigDecal");
 		}
@@ -1997,9 +1952,10 @@
 			ntte_spiral = true;
 			
 			switch(GameCont.area){
-				case 1: // Another Universe Fallen
+				
+				case area_desert: // Another Universe Fallen
 					
-					if(GameCont.lastarea == 0 && instance_exists(GenCont)){
+					if(GameCont.lastarea == area_campfire && instance_exists(GenCont)){
 						var s = spr.SpiralDebrisNothing;
 						for(var i = 0; i < sprite_get_number(s); i++){
 							var	l = 24,
@@ -3310,6 +3266,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

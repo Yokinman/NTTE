@@ -12,11 +12,11 @@
 #macro DebugLag global.debug_lag
 
 #define area_subarea           return 1;
-#define area_next              return 3; // SCRAPYARDS
+#define area_next              return area_scrapyards;
 #define area_music             return mus102;
 #define area_ambience          return amb102;
-#define area_background_color  return area_get_background_color(102);
-#define area_shadow_color      return area_get_shadow_color(102);
+#define area_background_color  return area_get_background_color(area_pizza_sewers);
+#define area_shadow_color      return area_get_shadow_color(area_pizza_sewers);
 #define area_fog               return sprFog102;
 #define area_darkness          return true;
 #define area_secret            return true;
@@ -83,7 +83,7 @@
 			}
 			
 			 // Set Area to Pizza Sewers & Call room_start:
-			area = 102;
+			area = area_pizza_sewers;
 			subarea = 1;
 			loops = 0;
 			with(self) event_perform(ev_other, ev_room_start);
@@ -119,8 +119,7 @@
 	with(Floor){
 		if(place_meeting(x, y, PizzaBox) || place_meeting(x, y, HealthChest) || place_meeting(x, y, HPPickup)){
 			styleb = true;
-			sprite_index = area_sprite(sprFloor1B);
-			area_setup_floor();
+			sprite_index = area_get_sprite(mod_current, sprFloor1B);
 		}
 	}
 	with(HPPickup) alarm0 *= 2;
@@ -329,6 +328,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

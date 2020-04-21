@@ -629,27 +629,27 @@
 			var a = [GameCont.area, area];
 			if(chance(1, 2)){
 				switch(GameCont.area){
-					case 0        :               break; // CAMPFIRE
-					case 1        : a = [2, 3];   break; // DESERT
-					case "coast"  : a = [3, 105]; break; // COAST
-					case 101      :
-					case "oasis"  : a = [2, 6];   break; // OASIS
-					case "trench" : a = [2, 4];   break; // TRENCH
-					case 2        : a = [4];      break; // SEWERS
-					case 102      :
-					case "pizza"  :               break; // PIZZA SEWERS
-					case "lair"   :               break; // LAIR
-					case 3        : a = [2, 5];   break; // SCRAPYARDS
-					case 103      :               break; // VENUZ MANSION
-					case 107      :               break; // THE CRIB
-					case 4        : a = [6];      break; // CRYSTAL CAVES
-					case 104      :               break; // CURSED CRYSTAL CAVES
-					case 5        : a = [6, 7];   break; // FROZEN CITY
-					case 105      :               break; // JUNGLE
-					case 6        : a = [2, 4];   break; // LABS
-					case 7        : a = [3, 6];   break; // PALACE
-					case 106      :               break; // IDPD HEADQUARTERS
-					case "red"    :               break; // WARP ZONE
+					case area_campfire     :                                     break;
+					case area_desert       : a = [area_sewers, area_scrapyards]; break;
+					case "coast"           : a = [area_scrapyards, area_jungle]; break;
+					case area_oasis        :
+					case "oasis"           : a = [area_sewers, area_labs];       break;
+					case "trench"          : a = [area_sewers, area_caves];      break;
+					case area_sewers       : a = [area_caves];                   break;
+					case area_pizza_sewers :
+					case "pizza"           :                                     break;
+					case "lair"            :                                     break;
+					case area_scrapyards   : a = [area_sewers, area_city];       break;
+					case area_mansion      :                                     break;
+					case area_crib         :                                     break;
+					case area_caves        : a = [area_labs];                    break;
+					case area_cursed_caves :                                     break;
+					case area_city         : a = [area_labs, area_palace];       break;
+					case area_jungle       :                                     break;
+					case area_labs         : a = [area_sewers, area_caves];      break;
+					case area_palace       : a = [area_scrapyards, area_labs];   break;
+					case area_hq           :                                     break;
+					case "red"             :                                     break;
 				}
 			}
 			
@@ -1530,8 +1530,8 @@
 		direction = random(360);
 		
 		 // Cursed:
-		curse = (GameCont.area == 104);
-		if(curse){
+		curse = (GameCont.area == area_cursed_caves);
+		if(curse > 0){
 			spr_idle = spr.InvSpiderlingIdle;
 			spr_walk = spr.InvSpiderlingWalk;
 			spr_hurt = spr.InvSpiderlingHurt;
@@ -1553,7 +1553,7 @@
 	
 #define Spiderling_alrm0
 	 // Shhh dont tell anybody
-	var _obj = ((GameCont.area == 104) ? InvSpider : Spider);
+	var _obj = ((curse > 0) ? InvSpider : Spider);
 	with(instance_create(x, y, _obj)){
 		x = other.x;
 		y = other.y;
@@ -1599,7 +1599,9 @@
 	}
 	
 	 // Cursed:
-	if(curse) instance_create(x, y, Curse);
+	if(curse > 0) repeat(curse){
+		instance_create(x, y, Curse);
+	}
 	
 	 // Move Towards Target:
 	if(in_sight(target) && in_distance(target, 96)){
@@ -2192,14 +2194,19 @@
 	 // Scramble Cursed Caves Weapons:
 	with(instances_matching(WepPickup, "cursedcavescramble_check", null)){
 		cursedcavescramble_check = false;
-		if(GameCont.area == 104){
+		
+		if(GameCont.area == area_cursed_caves){
 			if(roll && wep_get(wep) != "merge"){
 				if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
 					cursedcavescramble_check = true;
+					
+					 // Reset Merged Weapon Text:
 					mergewep_indicator = null;
 					
+					 // Curse:
 					curse = max(1, curse);
 					
+					 // Scramble:
 					var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
 					if(array_length(_part) >= 2){
 						wep = wep_merge(_part[0], _part[1]);
@@ -2553,6 +2560,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

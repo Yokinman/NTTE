@@ -13,11 +13,11 @@
 
 #define area_subarea           return 1;
 #define area_goal              return 130;
-#define area_next              return [3, 3]; // SCRAPYARDS (BOSS)
+#define area_next              return [area_scrapyards, 3];
 #define area_music             return mus101;
 #define area_ambience          return amb101;
-#define area_background_color  return area_get_background_color(101);
-#define area_shadow_color      return area_get_shadow_color(101);
+#define area_background_color  return area_get_background_color(area_oasis);
+#define area_shadow_color      return area_get_shadow_color(area_oasis);
 #define area_darkness          return false;
 #define area_secret            return true;
 #define area_underwater        return true;
@@ -302,6 +302,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

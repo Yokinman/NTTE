@@ -182,7 +182,7 @@
 			
 			 // Specifics:
 			switch(area){
-				case 3: // Ravens
+				case area_scrapyards: // Ravens
 					
 					var	_ang = random(360),
 						_dis = 8;
@@ -196,8 +196,8 @@
 					
 					break;
 
-				case 4:
-				case 104: // Face drill
+				case area_caves:
+				case area_cursed_caves: // Face drill
 					
 					with(instance_nearest_bbox(x, y, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 16), "bbox_bottom", y + 48))){
 						var _fx = bbox_center_x;
@@ -285,7 +285,8 @@
 		_y = y + 16;
 		
 	switch(area){
-		case 1: /// Bones
+		
+		case area_desert: /// Bones
 		
 			repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
 				motion_set(irandom(359), random_range(3, 6));
@@ -298,7 +299,7 @@
 			
 			break;
 			
-		case 2: /// Egg Vat
+		case area_sewers: /// Egg Vat
 		
 			repeat(irandom_range(3, 5)){
 				with(instance_create(_x + orandom(16), _y + random(24), FrogEgg)){
@@ -325,7 +326,7 @@
 			
 			break;
 			
-		case 3: /// Nest Bits
+		case area_scrapyards: /// Nest Bits
 		
 			repeat(irandom_range(12, 14)){
 				with(instance_create(_x + orandom(24), _y - random(8) + orandom(12), Feather)){
@@ -344,8 +345,8 @@
 			
 			break;
 			
-		case 4:
-		case 104: /// Spider Nest
+		case area_caves:
+		case area_cursed_caves: /// Spider Nest
 		
 			 // Floorify:
 			var	_cx = _x,
@@ -396,7 +397,7 @@
 			
 			break;
 			
-		case 7: /// Enormous Headphone Jack
+		case area_palace: /// Enormous Headphone Jack
 		
 			 // Explo:
 			var	_ang = random(360),
@@ -422,7 +423,8 @@
 			
 			break;
 			
-		case "pizza": /// Pizza time
+		case "pizza":
+		case area_pizza_sewers: /// Pizza time
 		
 			repeat(irandom_range(4, 6)){
 				obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
@@ -443,7 +445,8 @@
 			
 			break;
 			
-		case "oasis": // Life
+		case "oasis":
+		case area_oasis: // Life
 			
 			 // Floorify:
 			var	_cx = _x,
@@ -896,7 +899,7 @@
 		floor_min = 0;
 		layout = [];
 		layout_delay = 10;
-		area = 100;
+		area = area_vault;
 		
 		return id;
 	}
@@ -3905,17 +3908,17 @@
 	
 	 // Normal:
 	switch(_area){
-		case 0   : return instance_create(_x, _y, TopDecalNightDesert);
-		case 1   : return instance_create(_x, _y, TopDecalDesert);
-		case 2   : return instance_create(_x, _y, TopDecalSewers);
-		case 3   : return instance_create(_x, _y, TopDecalScrapyard);
-		case 4   : return instance_create(_x, _y, TopDecalCave);
-		case 5   : return instance_create(_x, _y, TopDecalCity);
-		case 7   : return instance_create(_x, _y, TopDecalPalace);
-		case 102 : return instance_create(_x, _y, TopDecalPizzaSewers);
-		case 104 : return instance_create(_x, _y, TopDecalInvCave);
-		case 105 : return instance_create(_x, _y, TopDecalJungle);
-		case 106 : return instance_create(_x, _y, TopPot);
+		case area_campfire     : return instance_create(_x, _y, TopDecalNightDesert);
+		case area_desert       : return instance_create(_x, _y, TopDecalDesert);
+		case area_sewers       : return instance_create(_x, _y, TopDecalSewers);
+		case area_scrapyards   : return instance_create(_x, _y, TopDecalScrapyard);
+		case area_caves        : return instance_create(_x, _y, TopDecalCave);
+		case area_city         : return instance_create(_x, _y, TopDecalCity);
+		case area_palace       : return instance_create(_x, _y, TopDecalPalace);
+		case area_pizza_sewers : return instance_create(_x, _y, TopDecalPizzaSewers);
+		case area_cursed_caves : return instance_create(_x, _y, TopDecalInvCave);
+		case area_jungle       : return instance_create(_x, _y, TopDecalJungle);
+		case area_hq           : return instance_create(_x, _y, TopPot);
 	}
 	
 	return noone;
@@ -4001,7 +4004,7 @@
 					 // Trail:
 					if(chance_ct(sqr(_spd), 90)){
 						var	o = abs(sprite_width / 16),
-							_leaf = (GameCont.area == 105);
+							_leaf = (GameCont.area == area_jungle);
 							
 						with(instance_create(x + orandom(o), y + o + random(o), (_leaf ? Feather : Dust))){
 							if(_leaf){
@@ -4171,7 +4174,7 @@
 								}
 								
 								 // Cold:
-								if(GameCont.area == 5 && chance(2, 3)){
+								if(GameCont.area == area_city && chance(2, 3)){
 									with(instance_create(x, y, Breath)){
 										image_xscale = sign(other.image_xscale) * variable_instance_get(other, "right", 1);
 										depth = -8;
@@ -4804,16 +4807,31 @@
 	var	_area = GameCont.area,
 		_spr = -1;
 		
+	 // Determine Type:
+	with(instances_at(_x, _y, [TopSmall, Wall])){
+		switch(instance_is(self, Wall) ? topspr : sprite_index){
+			case sprWall1Top:
+			case sprWall1Trans:
+				_area = area_desert;
+				break;
+				
+			case sprWall4Top:
+			case sprWall4Trans:
+				_area = area_caves;
+				break;
+		}
+	}
 	switch(_area){
-		case 1: // DESERT
+		case area_desert:
 			_spr = spr.WallBandit;
 			break;
 			
-		case 4: // CRYSTAL CAVES
+		case area_caves:
 			_spr = (position_meeting(_x, _y, Wall) ? spr.WallSpiderling : spr.WallSpiderlingTrans);
 			break;
 	}
 	
+	 // Create:
 	if(sprite_exists(_spr)){
 		with(instance_create(_x, _y, CustomObject)){
 			 // Vars:
@@ -4838,14 +4856,14 @@
 			 // Area-Specific:
 			switch(area){
 				
-				case 1: // DESERT
+				case area_desert:
 					
 					 // Variation:
 					with(target) image_xscale = choose(-1, 1);
 					
 					break;
 					
-				case 4: // CRYSTAL CAVES
+				case area_caves:
 					
 					 // No Orange Crystals:
 					with(instances_at(x, y, Wall)){
@@ -4869,7 +4887,7 @@
 		
 		switch(area){
 			
-			case 1: // DESERT
+			case area_desert:
 				
 				eyeblink += current_time_scale;
 				
@@ -4910,7 +4928,7 @@
 				
 				break;
 				
-			case 4: // CRYSTAL CAVES
+			case area_caves:
 				
 				 // Sparkle:
 				if(special > 0 && chance_ct(special, 90)){
@@ -4932,7 +4950,7 @@
 	if(position_meeting(x, y, FloorExplo)){
 		switch(area){
 			
-			case 1: // DESERT
+			case area_desert:
 				
 				with(instance_create(x, y, Bandit)){
 					wkick = 8;
@@ -4981,7 +4999,7 @@
 				
 				break;
 				
-			case 4: // CRYSTAL CAVES
+			case area_caves: // CRYSTAL CAVES
 				
 				 // Special Spider:
 				if(special){
@@ -5590,13 +5608,13 @@
 	if(DebugLag) trace_time();
 	
 	 // Big Decals:
-	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)) if(visible){
+	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
 		draw_circle(x, y, 96, false);
 	}
 	
 	 // Pets:
-	with(instances_matching(CustomHitme, "name", "Pet")){
-		if(visible && light && light_radius[1] > 0){
+	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
+		if(light && light_radius[1] > 0){
 			draw_circle(x, y, light_radius[1] + orandom(1), false);
 		}
 	}
@@ -5609,13 +5627,13 @@
 	if(DebugLag) trace_time();
 	
 	 // Big Decals:
-	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", 4, 104)) if(visible){
+	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
 		draw_circle(x, y, 40, false);
 	}
 	
 	 // Pets:
-	with(instances_matching(CustomHitme, "name", "Pet")){
-		if(visible && light && light_radius[0] > 0){
+	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
+		if(light && light_radius[0] > 0){
 			draw_circle(x, y, light_radius[0] + orandom(1), false);
 		}
 	}
@@ -5624,6 +5642,22 @@
 	
 	
 /// Scripts
+#macro  area_campfire                                                                           0
+#macro  area_desert                                                                             1
+#macro  area_sewers                                                                             2
+#macro  area_scrapyards                                                                         3
+#macro  area_caves                                                                              4
+#macro  area_city                                                                               5
+#macro  area_labs                                                                               6
+#macro  area_palace                                                                             7
+#macro  area_vault                                                                              100
+#macro  area_oasis                                                                              101
+#macro  area_pizza_sewers                                                                       102
+#macro  area_mansion                                                                            103
+#macro  area_cursed_caves                                                                       104
+#macro  area_jungle                                                                             105
+#macro  area_hq                                                                                 106
+#macro  area_crib                                                                               107
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
