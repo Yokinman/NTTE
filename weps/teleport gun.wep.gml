@@ -2,11 +2,18 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprTeleportGun.png", 4, 4);
 	global.sprWepLocked = mskNone;
 	
+	lwoWep = {
+		wep : mod_current,
+		inst : noone
+	};
+	
+#macro lwoWep global.lwoWep
+	
 #define weapon_name   return (weapon_avail() ? "TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "DON'T BLINK";
 #define weapon_type   return 0;  // "Melee"
 #define weapon_cost   return 2;  // 0 Ammo
-#define weapon_load   return 35; // 1.50 Seconds
+#define weapon_load   return 15; // 0.5 Seconds
 #define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
@@ -18,18 +25,40 @@
 	var f = wepfire_init(w);
 	w = f.wep;
 	
-	with obj_create(x, y, "PortalBullet"){
+	 // Projectile:
+	with(obj_create(x, y, "PortalBullet")){
 		image_speed = 2.5;
 		mask_index  = mskBullet1;
 		creator     = other;
 		team        = other.team;
-		damage      = 20;
+		damage      = 25;
 		
 		motion_add(creator.gunangle, 26);
 		image_angle = direction;
+		
+		 // Remember Me:
+		w.inst = id;
 	}
 	
-	weapon_post(0, 16, 0);
+	 // Effects:
+	motion_add(gunangle, 4);
+	move_contact_solid(gunangle, 12);
+	weapon_post(8, 16, 0);
+	
+#define step(_primary)
+	var	b = (_primary ? "" : "b"),
+		w = variable_instance_get(self, b + "wep");
+		
+	 // LWO Setup:
+	if(!is_object(w)){
+		w = lq_clone(lwoWep);
+		variable_instance_set(self, b + "wep", w);
+	}
+	
+	 // Dynamic Reload:
+	if(instance_exists(w.inst)){
+		variable_instance_set(self, b + "reload", weapon_get_load(mod_current));
+	}
 	
 	
 /// Scripts

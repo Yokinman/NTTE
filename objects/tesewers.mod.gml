@@ -1790,16 +1790,31 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		team = 1;
+		force = 1;
 		creator = noone;
 		candeflect = false;
+		can_effect = true;
 		
+		/*
 		 // Effects:
 		repeat(12 + irandom(6)){
 			scrFX(x, y, 4 + random(4), Dust);
 		}
+		*/
 		
 		return id;
 	}
+	
+#define BatScreech_step
+/*
+	if(can_effect && chance(1, 3)){
+		var l = random(min((sprite_width * image_xscale), (sprite_height * image_yscale)) / 2),
+			d = random(360);
+		with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4], Dust)){
+			friction = 0.4;
+		}
+	}
+*/
 	
 #define BatScreech_projectile
 	with(other){
@@ -1838,7 +1853,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Push Dudes Away:
 	with(instances_matching_ne(hitme, "team", team)){
 		if(place_meeting(x, y, other)){
-			motion_add(point_direction(other.x, other.y, x, y), 1);
+			motion_add(point_direction(other.x, other.y, x, y), other.force);
 		}
 	}
 	
