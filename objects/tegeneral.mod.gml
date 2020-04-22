@@ -3661,7 +3661,7 @@
 		if("spr_appear" in self){
 			sprite_index = spr_appear;
 		}
-		sound_play_hit_ext(sndPortalAppear, 3, 1.5);
+		sound_play_hit_ext(sndPortalAppear, 3, (instance_is(id, Player) ? 0.5 : 1.5));
 	}
 	
 	 // Creator Dead:
@@ -3673,16 +3673,63 @@
 
 	// Extra Player fire stuff:
 	if(instance_is(creator, Player)){
+		/*
 		with(instance_create(x, y, MeatExplosion)){
 			sprite_index = sprPortalShock;
-			image_xscale = .55;
-			image_yscale = .55;
+			image_xscale = 0.55;
+			image_yscale = 0.55;
 			image_alpha  = 0;
 			creator = other.creator;
 			hitid   = other.hitid;
 			team    = other.team;
 			damage  = 12;
-			sleep(80);
+		}
+		*/
+		var _minID = GameObject.id;
+		with(obj_create(x, y, "BatScreech")){
+			image_alpha = 0;
+			creator = other.creator;
+			team	= other.team;
+			force  *= 3/2;
+		}
+		with(instances_matching_gt(Dust, "id", _minID)){
+			instance_delete(id);
+		}
+		
+		 // Lightning:
+		for(var i = 0; i < 360; i += 360 / 4){
+			var d = direction + i;
+			
+			with(instance_create(x, y, Lightning)){
+				image_angle = d;
+				creator = other.creator;
+				team = creator.team;
+				ammo = irandom_range(5, 10);
+				event_perform(ev_alarm, 0);
+			}
+			with(instances_matching_gt(Lightning, "id", _minID)){
+				sprite_index = spr.PortalBulletLightning;
+				image_index = 0;
+				image_speed += (1 - (min(distance_to_object(creator), 48) / 48)) / 8;
+			}
+			with(instances_matching_gt(LightningHit, "id", _minID)){
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = sprThrowHit;
+					image_xscale = 2/3;
+					image_yscale = image_xscale;
+				}
+				instance_delete(id);
+			}
+		}
+		
+		 // Effects:
+		sleep(80);
+		view_shake_at(x, y, 40);
+		with(instance_create(x, y, CaveSparkle)){
+			sprite_index = spr.PortalBulletHit;
+		}
+		with(creator){
+			motion_add(direction + 180, 4);
 		}
 	}
 

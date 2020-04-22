@@ -134,9 +134,11 @@
 				mask = [true, 0];
 			}
 			
-			 // Portal Guardian:
-			PortalBullet      = sprite(p + "sprPortalBullet",      4, 12, 12);
-			PortalBulletSpawn = sprite(p + "sprPortalBulletSpawn", 7, 26, 26);
+			 // Portal Bullet:
+			PortalBullet    	  = sprite(p + "sprPortalBullet",   	   4, 12, 12);
+			PortalBulletHit		  = sprite(p + "sprPortalBulletHit",	   4, 16, 16);
+			PortalBulletSpawn	  = sprite(p + "sprPortalBulletSpawn",	   7, 26, 26);
+			PortalBulletLightning = sprite(p + "sprPortalBulletLightning", 4, 0,  1);
 			
 			 // Quasar Beam:
 			QuasarBeam      = sprite(p + "sprQuasarBeam",      2,  0, 16);
@@ -770,8 +772,9 @@
 		m = "areas/Labs/";
 		p = m;
 			
-			 // Walls:
-			Wall6BotTrans = sprite(p + "sprWall6BotTrans", 4, 0, 0);
+			 // Freak Chamber:
+			Wall6BotTrans	  = sprite(p + "sprWall6BotTrans",	   4, 0,  0);
+			FreakChamberAlarm = sprite(p + "sprFreakChamberAlarm", 4, 12, 12);
 			
 			//#region PROPS
 			p = m + "Props/";
