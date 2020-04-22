@@ -380,7 +380,16 @@
 			case "Maggot":
 				
 				 // Centerpiece:
-				instance_create(_cx + orandom(4), _cy + orandom(4), choose(BonePile, MaggotSpawn, RadMaggotChest, AmmoChest, WeaponChest));
+				var	_obj = choose(BonePile, MaggotSpawn, RadMaggotChest, AmmoChest, WeaponChest),
+					_num = 1;
+					
+				if(object_is_ancestor(_obj, chestprop) || object_is_ancestor(_obj, RadChest) || _obj == RadChest){
+					_num += skill_get(mut_open_mind);
+				}
+				
+				if(_num > 0) repeat(_num){
+					chest_create(_cx + orandom(4), _cy + orandom(4), _obj);
+				}
 				
 				 // Maggots:
 				repeat(irandom_range(3, 5)){
@@ -1104,7 +1113,7 @@
 									_obj = choose("BatChest", "CatChest");
 								}
 								
-								with(obj_create(_x, _y, _obj)){
+								with(chest_create(_x, _y, _obj)){
 									x = xstart;
 									y = ystart;
 								}
@@ -1504,19 +1513,19 @@
 			
 		/*
 		 // Corner Vats:
-		array_push(_vatList, obj_create(x - 64, y - 44, "LabsVat"));
-		array_push(_vatList, obj_create(x - 56, y + 36, "LabsVat"));
-		array_push(_vatList, obj_create(x + 64, y - 44, "LabsVat"));
-		array_push(_vatList, obj_create(x + 56, y + 36, "LabsVat"));
+		array_push(_vatList, obj_create(x - 64, y - 44, "MutantVat"));
+		array_push(_vatList, obj_create(x - 56, y + 36, "MutantVat"));
+		array_push(_vatList, obj_create(x + 64, y - 44, "MutantVat"));
+		array_push(_vatList, obj_create(x + 56, y + 36, "MutantVat"));
 		
 		 // Central Vat:
-		_vatList = array_combine([obj_create(x, y - 16, "LabsVat")], array_shuffle(_vatList));
+		_vatList = array_combine([obj_create(x, y - 16, "MutantVat")], array_shuffle(_vatList));
 		*/
 		
 		 // Vats:
-		array_push(_vatList, obj_create(x - 64, y - 24, "LabsVat"));
-		array_push(_vatList, obj_create(x + 64, y - 24, "LabsVat"));
-		_vatList = array_combine([obj_create(x, y - 40, "LabsVat")], array_shuffle(_vatList));
+		array_push(_vatList, obj_create(x - 64, y - 24, "MutantVat"));
+		array_push(_vatList, obj_create(x + 64, y - 24, "MutantVat"));
+		_vatList = array_combine([obj_create(x, y - 40, "MutantVat")], array_shuffle(_vatList));
 
 		 // Props:
 		with(_vatList){
@@ -1726,7 +1735,7 @@
 	
 	 // Replace Chest:
 	with(AmmoChest){
-		instance_create(x, y, IDPDChest);
+		chest_create(x, y, IDPDChest);
 		instance_delete(id);
 	}
 	
@@ -1952,6 +1961,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

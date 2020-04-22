@@ -584,7 +584,7 @@
 	
 	 // Pickups:
 	if(chance(1, 10)){
-		with(instance_create(x, y, BigWeaponChest)){
+		with(chest_create(x, y, BigWeaponChest)){
 			motion_add(random(360), 2);
 			repeat(12) scrFX(x, y, random_range(4, 6), Dust);
 		}
@@ -1858,7 +1858,7 @@
 	with(instances_matching_le(instances_matching(Bandit, "name", "BanditHiker"), "my_health", 0)){
 		speed /= 2;
 		with(obj_create(x, y, "BackpackPickup")){
-			target = obj_create(x, y, "Backpack");
+			target = chest_create(x, y, "Backpack");
 			direction = other.direction + orandom(10);
 			event_perform(ev_step, ev_step_end);
 		}
@@ -1950,6 +1950,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

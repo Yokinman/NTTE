@@ -16,243 +16,426 @@
 		Creates an epic room on the side of the level that opens to release freaks
 		
 		Vars:
-			image_xscale - Room's length
+			image_xscale - Room's width
 			image_yscale - Room's height
 			hallway_size - Hallway's length
+			type         - The type of room to create: "Freak", "Explo", "Rhino", "Vat"
+			open         - Can the room open anywhere, true/false
+			setup        - Perform type-specific setup code, true/false
+			alarm0       - Delay before opening, is set when a Player passes nearby
 			slide_path   - The sliding door's path, see 'WallSlide_create()'
 			               The direction value is altered based on the room's angle
-			alarm0       - Delay before opening, is set when a Player passes nearby
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
 		mask_index = mskFloor;
-		image_xscale = 2;
+		image_xscale = 1;
 		image_yscale = 1;
 		hallway_size = 1;
-		alarm0 = -1;
+		type = pool({
+			"Freak" : 8,
+			"Rhino" : 4,
+			"Explo" : 4,
+			"Vat"   : 1
+		});
+		open = false;
+		setup = true;
 		slide_path = [
-			[45,  0, 0], // Delay
-			[16,  0, 1],
-			[10,  0, 0], // Delay
-			[16, 90, 1]
+			[45,  0, 0, [sndToxicBoltGas,  0.4 + random(0.1), 1  ]], // Delay
+			[16,  0, 1, [sndTurretFire,    0.3 + random(0.1), 0.9]], // Inset
+			[10,  0, 0, [sndToxicBoltGas,  0.3 + random(0.1), 0.5]], // Delay
+			[16, 90, 1, [sndSwapMotorized, 0.5 + random(0.1), 1  ]]  // Open
 		];
 		
 		return id;
 	}
 	
+#define FreakChamber_setup
+	setup = false;
+	
+	 // Type Setup:
+	var _loop = round(GameCont.loops * random_range(0.25, 0.5));
+	switch(type){
+		case "Freak":
+			if(GameCont.loops > 0 && chance(1, 3)){
+				image_yscale *= 2 + _loop;
+				hallway_size *= 1 + irandom(1) + floor(_loop / 2);
+			}
+			else{
+				image_xscale *= 2 + _loop;
+			}
+			break;
+			
+		case "Explo":
+			if(GameCont.loops > 0){
+				image_xscale *= 2 + min(2, floor(GameCont.loops / 5));
+				image_yscale *= 2 + min(2, floor(GameCont.loops / 5));
+			}
+			break;
+			
+		case "Rhino":
+			image_xscale *= 2 + _loop;
+			break;
+			
+		case "Vat":
+			image_xscale *= 3;
+			image_yscale *= 3;
+			hallway_size *= irandom_range(1, 3);
+			break;
+	}
+	
 #define FreakChamber_step
-	if(alarm0 < 0){
-		 // No Portal:
-		if(!instance_exists(enemy) && !instance_exists(becomenemy)){
+	if(setup) FreakChamber_setup();
+	
+	 // No Portal:
+	if(!instance_exists(enemy) && !instance_exists(becomenemy)){
+		if(!open){
+			open = true;
 			alarm0 = 1;
 		}
-		
-		 // Wait for Nearby Player:
-		else if(instance_exists(Player)){
-			var _target = instance_nearest(x, y, Player);
-			if(in_sight(_target) && in_distance(_target, 64)){
-				alarm0 = 60;
-			}
+	}
+	
+	 // Wait for Nearby Player:
+	else if(alarm0 < 0 && instance_exists(Player)){
+		var _target = instance_nearest(x, y, Player);
+		if(open || (in_sight(_target) && in_distance(_target, 64))){
+			alarm0 = 60;
 		}
 	}
 	
 #define FreakChamber_alrm0
-	alarm0 = 30;
+	alarm0 = 60;
 	
-	var	_ang       = round(random(360) / 90) * 90,
-		_hallDis   = 32 * hallway_size,
-		_slidePath = slide_path,
-		_target    = instance_nearest(x, y, Player),
-		_open      = false;
-		
-	with(array_shuffle(FloorNormal)){
-		var	_fx = bbox_center_x,
-			_fy = bbox_center_y,
-			_fw = bbox_width,
-			_fh = bbox_height;
+	if(instance_exists(Player)){
+		var	_open       = false,
+			_ang        = round(random(360) / 90) * 90,
+			_target     = instance_nearest(x, y, Player),
+			_hallDis    = 32 * hallway_size,
+			_slidePath  = slide_path,
+			_spawnFloor = [];
 			
-		if(!collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false) && point_distance(_fx, _fy, _target.x, _target.y) < 128){
-			with(other){
-				for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-					var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
-						_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
-						_hallX = _fx + lengthdir_x((_fw / 2) + (_hallDis / 2), _dir),
-						_hallY = _fy + lengthdir_y((_fh / 2) + (_hallDis / 2), _dir),
-						_hallXOff = lengthdir_x(32, _dir),
-						_hallYOff = lengthdir_y(32, _dir);
+		 // Sort Floors by Distance to Player:
+		with(FloorNormal){
+			var	_fx = bbox_center_x,
+				_fy = bbox_center_y;
+				
+			if(other.open || !collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false)){
+				if(place_free(x, y)){
+					array_push(_spawnFloor, [
+						max(64, point_distance(_fx, _fy, _target.x, _target.y)) + random(32),
+						{
+							x : _fx,
+							y : _fy,
+							w : bbox_width,
+							h : bbox_height
+						}
+					]);
+				}
+			}
+		}
+		if(instance_number(FloorExplo) > instance_number(Floor) / 2){
+			with(FloorExplo){
+				if(
+					position_meeting(x + 16, y, FloorExplo) &&
+					position_meeting(x, y + 16, FloorExplo) &&
+					position_meeting(x + 16, y + 16, FloorExplo)
+				){
+					var	_fx = x + 16,
+						_fy = y + 16;
 						
-					if(
-						array_length(instance_rectangle_bbox(
-							_hallX - (_hallW * 16) + max(0, _hallXOff),
-							_hallY - (_hallH * 16) + max(0, _hallYOff),
-							_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
-							_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
-							[Floor, Wall, TopSmall]
-						)) <= 0
-					){
-						var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
-						x = _fx + lengthdir_x((_fw / 2) + _hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
-						y = _fy + lengthdir_y((_fh / 2) + _hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
-						
-						image_angle = _dir;
-						
-						if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall)){
-							var	_x = bbox_center_x,
-								_y = bbox_center_y,
-								_w = bbox_width  / 32,
-								_h = bbox_height / 32;
-								
-							 // Store Walls:
-							var	_wall = [],
-								_tops = [];
-								
-							with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
-								array_push(_wall, variable_instance_get_list(self));
-								instance_delete(id);
-							}
-							with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
-								array_push(_tops, variable_instance_get_list(self));
-								instance_delete(id);
-							}
-							with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
-								array_push(_tops, variable_instance_get_list(self));
-								instance_delete(id);
-							}
-							
-							 // Generate Room:
-							var _minID = GameObject.id;
-							floor_set_style(1, null);
-							var _hallFloor = floor_fill(_hallX, _hallY, _hallW, _hallH, "");
-							floor_fill(_x, _y, _w, _h, "");
-							floor_reset_style();
-							with(instances_matching_gt(Wall, "id", _minID)){
-								topspr = area_get_sprite(GameCont.area, sprWall1Trans);
-								if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
-							}
-							
-							 // Reveal Tiles:
-							var _reveal = [];
-							with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
-								var _can = true;
-								
-								 // Don't Cover Doors:
-								if(array_exists(_hallFloor, id)){
-									with(_wall){
-										if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
-											_can = false;
-											break;
-										}
-									}
+					if(other.open || !collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false)){
+						if(place_free(x, y)){
+							array_push(_spawnFloor, [
+								max(64, point_distance(_fx, _fy, _target.x, _target.y)) + random(32),
+								{
+									x : _fx,
+									y : _fy,
+									w : 32,
+									h : 32
 								}
-								
-								 // Don't Cover Pre-Existing TopSmalls:
-								if(instance_is(self, Wall) || instance_is(self, TopSmall)){
-									with(_tops){
-										if(x == other.x && y == other.y){
-											_can = false;
-											break;
-										}
-									}
-								}
-								
-								if(_can) array_push(_reveal, id);
-							}
-							with(floor_reveal(_reveal, 15)){
-								move_dis = 0;
-								flash_color = color;
-								
-								 // Delay:
-								for(var i = 0; i < min(2, array_length(_slidePath)); i++){
-									time += _slidePath[i, 0];
-								}
-							}
-							
-							 // Freaks:
-							repeat(4 + irandom(4)){
-								with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
-									walk = true;
-									direction = random(360);
-								}
-							}
-							//obj_create(_x, _y, "LabsVat");
-							
-							 // Sliding Doors:
-							with(_wall){
-								with(instance_create(x, y, object_index)){
-									variable_instance_set_list(self, other);
-									
-									 // Resprite:
-									if(sprite_index == sprWall6Bot && !visible){
-										sprite_index = spr.Wall6BotTrans;
-									}
-									
-									 // Slide:
-									with(obj_create(x, y, "WallSlide")){
-										slide_inst = [other];
-										slide_path = array_clone_deep(_slidePath);
-										smoke = 1/5;
-										
-										 // Adjust Direction:
-										with(other){
-											var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
-											with(other.slide_path){
-												self[@1] = _dir + (self[1] * _slideSide);
-											}
-										}
-									}
-								}
-							}
-							with(_tops){
-								var _wallOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
-								
-								 // Resprite Walls/TopSmalls:
-								if(array_length(_wallOverride) > 0){
-									with(_wallOverride){
-										if(instance_is(self, Wall)){
-											topspr   = other.sprite_index;
-											topindex = other.image_index;
-										}
-										else{
-											sprite_index = other.sprite_index;
-											image_index  = other.image_index;
-										}
-									}
-								}
-								
-								 // Recreate TopSmall:
-								else variable_instance_set_list(instance_create(x, y, object_index), self);
-							}
-							
-							_open = true;
-							break;
+							]);
 						}
 					}
 				}
 			}
 		}
+		array_sort_sub(_spawnFloor, 0, true);
 		
-		if(_open) break;
+		 // Create Room:
+		with(_spawnFloor){
+			var _floor = self[1];
+			with(other){
+				for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+					var	_fx = _floor.x + lengthdir_x(_floor.w / 2, _dir),
+						_fy = _floor.y + lengthdir_y(_floor.h / 2, _dir);
+						
+					if(!position_meeting(_fx + dcos(_dir), _fy - dsin(_dir), Floor)){
+						var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
+							_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
+							_hallX = _fx + lengthdir_x(_hallDis / 2, _dir),
+							_hallY = _fy + lengthdir_y(_hallDis / 2, _dir),
+							_hallXOff = lengthdir_x(32, _dir),
+							_hallYOff = lengthdir_y(32, _dir);
+							
+						if(
+							array_length(instance_rectangle_bbox(
+								_hallX - (_hallW * 16) + max(0, _hallXOff),
+								_hallY - (_hallH * 16) + max(0, _hallYOff),
+								_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
+								_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
+								[Floor, Wall, TopSmall, TopPot, Bones]
+							)) <= 0
+						){
+							var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
+							x = _fx + lengthdir_x(_hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
+							y = _fy + lengthdir_y(_hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
+							
+							image_angle = _dir;
+							
+							if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall) && !place_meeting(x, y, TopPot) && !place_meeting(x, y, Bones)){
+								var	_x = bbox_center_x,
+									_y = bbox_center_y,
+									_w = bbox_width  / 32,
+									_h = bbox_height / 32;
+									
+								 // Store Walls:
+								var	_wall = [],
+									_tops = [];
+									
+								with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
+									array_push(_wall, variable_instance_get_list(self));
+									instance_delete(id);
+								}
+								with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
+									array_push(_tops, variable_instance_get_list(self));
+									instance_delete(id);
+								}
+								with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
+									array_push(_tops, variable_instance_get_list(self));
+									instance_delete(id);
+								}
+								
+								 // Generate Room:
+								floor_set_style(1, null);
+								
+								var	_minID = GameObject.id,
+									_floorHall = floor_fill(_hallX, _hallY, _hallW, _hallH, ""),
+									_floorMain = floor_fill(_x, _y, _w, _h, "");
+									
+								with(instances_matching_gt(Wall, "id", _minID)){
+									topspr = area_get_sprite(GameCont.area, sprWall1Trans);
+									if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
+								}
+								with(instances_matching_gt(Floor, "id", _minID)){
+									if(chance(1, 5)){
+										var s = styleb;
+										styleb = false;
+										instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
+										styleb = s;
+									}
+									depth = 10;
+								}
+								
+								floor_reset_style();
+								
+								 // Reveal Tiles:
+								var _reveal = [];
+								with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
+									var _can = true;
+									
+									 // Don't Cover Doors:
+									if(array_exists(_floorHall, id)){
+										with(_wall){
+											if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
+												_can = false;
+												break;
+											}
+										}
+									}
+									
+									 // Don't Cover Pre-Existing TopSmalls:
+									if(instance_is(self, Wall) || instance_is(self, TopSmall)){
+										with(_tops){
+											if(x == other.x && y == other.y){
+												_can = false;
+												break;
+											}
+										}
+									}
+									
+									if(_can) array_push(_reveal, id);
+								}
+								with(floor_reveal(_reveal, 15)){
+									move_dis = 0;
+									flash_color = color;
+									
+									 // Delay:
+									for(var i = 0; i < min(2, array_length(_slidePath)); i++){
+										time += _slidePath[i, 0];
+									}
+								}
+								
+								 // Freaks:
+								switch(type){
+									case "Freak":
+										
+										with(_floorMain){
+											repeat(2 + irandom(2)){
+												with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
+													walk = true;
+													direction = random(360);
+												}
+											}
+										}
+										
+										break;
+										
+									case "Explo":
+										
+										repeat(1 + (random_range(2, 3) * GameCont.loops)){
+											with(instance_create(_x + orandom(4), _y + orandom(4), ExploFreak)){
+												walk = true;
+												direction = random(360);
+												for(var i = 0; i < array_length(_slidePath); i++){
+													alarm1 += _slidePath[i, 0];
+												}
+											}
+										}
+										
+										 // Scorchmarks:
+										with(_floorMain) if(chance(1, 3)){
+											with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Scorchmark)){
+												sprite_index = spr.FirePitScorch;
+												image_index = irandom(image_number - 1);
+												image_speed = 0;
+												image_angle = random(360);
+											}
+										}
+										
+										break;
+										
+									case "Rhino":
+										
+										with(_floorMain){
+											instance_create(bbox_center_x, bbox_center_y, RhinoFreak);
+										}
+										
+										break;
+										
+									case "Vat":
+										
+										obj_create(_x, _y - 4, "MutantVat");
+										instance_create(_x + choose(-32, 32), _y - 2 + choose(-32, 32), Terminal);
+										
+										break;
+								}
+								
+								 // Sliding Doors:
+								with(_tops){
+									var _wallOverride = instances_matching(instances_matching(Wall, "x", x), "y", y);
+									
+									 // Resprite Walls/TopSmalls:
+									if(array_length(_wallOverride) > 0){
+										with(_wallOverride){
+											if(instance_is(self, Wall)){
+												topspr   = other.sprite_index;
+												topindex = other.image_index;
+											}
+											else{
+												sprite_index = other.sprite_index;
+												image_index  = other.image_index;
+											}
+										}
+									}
+									
+									 // Create TopSmall Wall:
+									else with(instance_create(x, y, Wall)){
+										topspr = other.sprite_index;
+										topindex = other.image_index;
+										image_blend = other.image_blend;
+										image_alpha = other.image_alpha;
+										
+										 // Resprite:
+										if(sprite_index == sprWall6Bot){
+											sprite_index = spr.Wall6BotTrans;
+										}
+										
+										 // Slide:
+										with(obj_create(x, y, "WallSlide")){
+											slide_inst = [other];
+											slide_path = array_clone_deep(_slidePath);
+											
+											 // Adjust Direction / Movement:
+											with(other){
+												var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
+												with(other.slide_path){
+													self[@1] = _dir + (self[1] * _slideSide);
+												}
+												other.slide_path[1, 2] = 0;
+											}
+										}
+									}
+								}
+								with(_wall){
+									with(instance_create(x, y, object_index)){
+										variable_instance_set_list(self, other);
+										depth = min(depth, -1);
+										
+										 // Resprite:
+										if(sprite_index == sprWall6Bot && !visible){
+											sprite_index = spr.Wall6BotTrans;
+										}
+										
+										 // Slide:
+										with(obj_create(x, y, "WallSlide")){
+											slide_inst = [other];
+											slide_path = array_clone_deep(_slidePath);
+											smoke = 1/5;
+											
+											 // Adjust Direction:
+											with(other){
+												var _slideSide = sign(angle_difference(_dir, point_direction(bbox_center_x, bbox_center_y, _x, _y)));
+												with(other.slide_path){
+													self[@1] = _dir + (self[1] * _slideSide);
+												}
+											}
+										}
+									}
+								}
+								
+								_open = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			
+			if(_open) break;
+		}
+		
+		 // Case Closed:
+		if(_open){
+			instance_destroy();
+			if(instance_exists(enemy)) portal_poof();
+		}
 	}
 	
-	 // Case Closed:
-	if(_open){
-		if(instance_exists(enemy)) portal_poof();
-		instance_destroy();
-	}
 	
-	
-#define LabsVat_create(_x, _y)
+#define MutantVat_create(_x, _y)
 	/*
 		A giant version of the MutantTube, which can contain special enemies or loot
 	*/
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.LabsVatIdle;
-		spr_hurt = spr.LabsVatHurt;
-		spr_dead = spr.LabsVatDead;
-		spr_back = spr.LabsVatBack;
+		spr_idle = spr.MutantVatIdle;
+		spr_hurt = spr.MutantVatHurt;
+		spr_dead = spr.MutantVatDead;
+		spr_back = spr.MutantVatBack;
+		spr_shadow = shd64B;
+		spr_shadow_y = 12;
 		sprite_index = spr_idle;
 		depth = -1;
 		
@@ -312,7 +495,7 @@
 		return id;
 	}
 	
-#define LabsVat_setup
+#define MutantVat_setup
 	setup = false;
 	
 	var	_x = x,
@@ -392,16 +575,16 @@
 		alarm2 = 90;
 	}
 	
-#define LabsVat_step
-	if(setup) LabsVat_setup();
+#define MutantVat_step
+	if(setup) MutantVat_setup();
 	wave += current_time_scale;
 	x = xstart;
 	y = ystart;
 
 	 // Draw Back:
-	script_bind_draw(LabsVat_draw_back, depth + 1/100, id);
+	script_bind_draw(MutantVat_draw_back, depth + 1/100, id);
 	
-#define LabsVat_draw_back(_inst)
+#define MutantVat_draw_back(_inst)
 	with(_inst){
 		var _imageIndex = (wave * image_speed);
 		draw_sprite_ext(spr_back, _imageIndex, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
@@ -430,7 +613,7 @@
 	 // Goodbye:
 	instance_destroy();
 	
-#define LabsVat_alrm1
+#define MutantVat_alrm1
 	alarm1 = 10 + random(10);
 	
 	projectile_hit_np(id, 10, 0, 0);
@@ -444,18 +627,18 @@
 		}
 	}
 	
-#define LabsVat_alrm2
+#define MutantVat_alrm2
 	alarm2 = 30 + random(60);
 	var _target = instance_nearest(x, y, Player);
 	if(in_sight(_target)){
 		thing.right = (x > _target.x ? -1 : 1);
 	}
 	
-#define LabsVat_death
+#define MutantVat_death
 	 // Effects:
 	repeat(24){
 		with(instance_create(x, y, Shell)){
-			sprite_index = spr.LabsVatGlass;
+			sprite_index = spr.MutantVatGlass;
 			image_index = irandom(image_number - 1);
 			image_speed = 0;
 			motion_set(random(360), random_range(2, 6));
@@ -464,7 +647,7 @@
 		}
 	}
 	with(obj_create(x, y, "BuriedVaultChestDebris")){
-		sprite_index = spr.LabsVatLid;
+		sprite_index = spr.MutantVatLid;
 		mask_index = mskExploder;
 		zfriction /= 2;
 		zspeed *= 2/3;
@@ -493,19 +676,24 @@
 	var _x = x,
 		_y = y,
 		_minID = GameObject.id;
+		
 	with(thing){
 		var _wep = wep;
+		
 		switch(type){
 			case Bandit:
 			case Freak:
 			case PopoFreak:
 			case "PortalGuardian":
+				obj_create(_x, _y, type);
+				break;
+				
 			case WeaponChest:
 			case "OrchidChest":
 			case "Backpack":
 			case "CatChest":
 			case "BatChest":
-				obj_create(_x, _y, type);
+				chest_create(_x, _y, type);
 				break;
 				
 			case "MergedWep":
@@ -607,8 +795,9 @@
 		
 		Vars:
 			slide_inst  - An array containing the Wall instances to slide
-			slide_path  - A 2D array containing values to set: [time, direction, speed]
-			              Leaving any values undefined will maintain the current value
+			slide_path  - A 2D array containing values: [time, direction, speed, sound]
+			              Leaving out direction or speed will maintain the current value
+			              Sound can be in the form of an index, or an array of [snd, pit, vol]
 			slide_index - The current index of 'slide_path' that the walls is following
 			slide_loop  - Should the walls continue sliding on their path forever, true/false
 			slide_time  - Number of frames until the next sliding motion
@@ -620,9 +809,9 @@
 					instance_create(x, y, Wall)
 				];
 				slide_path = [
-					[16, 90],   // Move up 16
-					[90, 0, 0], // Wait 3 seconds
-					[32, 0, 1]  // Move right 32
+					[16, 90   ], // Move up 16
+					[90,  0, 0], // Wait 3 seconds
+					[32,  0, 1]  // Move right 32
 				];
 			}
 	*/
@@ -646,43 +835,59 @@
 	
 	if(array_length(slide_inst) > 0){
 		 // Next:
-		var _pathTries = array_length(slide_path);
-		if(slide_time > 0){
-			slide_time -= current_time_scale;
-		}
-		while(slide_time <= 0){
-			slide_index++;
-			
-			 // Start Again:
-			if(slide_loop){
-				slide_index %= array_length(slide_path);
-			}
-			
-			 // Grab Values:
-			if(
-				_pathTries-- > 0
-				&& slide_index >= 0
-				&& slide_index < array_length(slide_path)
-			){
-				var _current = slide_path[slide_index];
-				if(array_length(_current) > 0) slide_time = _current[0];
-				if(array_length(_current) > 1) direction  = _current[1];
-				if(array_length(_current) > 2) speed      = _current[2];
-				
-				 // Tile Override:
-				with(slide_inst){
-					if(position_meeting(x, y, TopSmall)){
-						with(instances_matching(instances_matching(instances_matching_ne(TopSmall, "id", id), "x", x), "y", y)){
-							instance_destroy();
+		if(slide_time > 0) slide_time -= current_time_scale;
+		if(slide_time <= 0){
+			 // Tile Override:
+			with(slide_inst){
+				if(position_meeting(x, y, Wall) || position_meeting(x, y, TopSmall)){
+					with(instances_matching_lt(instances_matching(instances_matching(Wall, "x", x), "y", y), "id", id)){
+						var _inst = other;
+						with(["image_blend", "topspr", "topindex", "l", "h", "w", "r"]){
+							variable_instance_set(_inst, self, variable_instance_get(other, self));
 						}
+						instance_delete(id);
 					}
 				}
 			}
 			
-			 // Done:
-			else{
-				instance_destroy();
-				exit;
+			 // Next:
+			var _pathTries = array_length(slide_path);
+			while(slide_time <= 0){
+				slide_index++;
+				
+				 // Start Again:
+				if(slide_loop){
+					slide_index %= array_length(slide_path);
+				}
+				
+				 // Grab Values:
+				if(
+					_pathTries-- > 0
+					&& slide_index >= 0
+					&& slide_index < array_length(slide_path)
+				){
+					var _current = slide_path[slide_index];
+					if(array_length(_current) > 0) slide_time = _current[0];
+					if(array_length(_current) > 1) direction  = _current[1];
+					if(array_length(_current) > 2) speed      = _current[2];
+					
+					 // Sound:
+					if(array_length(_current) > 3){
+						var _snd = _current[3];
+						if(is_array(_snd)){
+							sound_play_hit_ext(_snd[0], _snd[1], _snd[2]);
+						}
+						else{
+							sound_play_hit(_snd, 0);
+						}
+					}
+				}
+				
+				 // Done:
+				else{
+					instance_destroy();
+					exit;
+				}
 			}
 		}
 		
@@ -696,8 +901,8 @@
 			
 			 // Collision:
 			if(_mx != 0 || _my != 0){
-				if(place_meeting(x, y, hitme) || place_meeting(x, y, chestprop)){
-					with(instances_meeting(x, y, [hitme, chestprop])){
+				if(place_meeting(x, y, hitme)){
+					with(instances_meeting(x, y, hitme)){
 						if(place_meeting(x, y, other)){
 							if(!place_meeting(x + _mx, y, Wall)) x += _mx;
 							if(!place_meeting(x, y + _my, Wall)) y += _my;
@@ -723,24 +928,14 @@
 	else instance_destroy();
 	
 #define WallSlide_destroy
+	 // Visual Fix:
 	with(instances_matching(slide_inst, "", null)){
-		 // Visual:
 		depth = max(depth, 0);
 		visible = place_meeting(x, y + 16, Floor);
 		l = (place_free(x - 16, y) ?  0 :  4);
 		w = (place_free(x + 16, y) ? 24 : 20) - l;
 		r = (place_free(x, y - 16) ?  0 :  4);
 		h = (place_free(x, y + 16) ? 24 : 20) - r;
-		
-		 // Wall Override:
-		with(instances_matching(instances_matching(instances_matching_ne(Wall, "id", id), "x", x), "y", y)){
-			var _inst = other;
-			with(["image_blend", "topspr", "topindex", "l", "h", "w", "r"]){
-				variable_instance_set(_inst, self, variable_instance_get(other, self));
-			}
-			instance_delete(id);
-			break;
-		}
 	}
 	
 	
@@ -792,6 +987,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

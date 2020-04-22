@@ -1299,7 +1299,7 @@
 	
 	 // Pickups:
 	repeat(2) pickup_drop(1000, 0);
-	with(obj_create(x, y, "BatChest")){
+	with(chest_create(x, y, "BatChest")){
 		motion_set(random(360), 4);
 		friction = 0.4;
 	}
@@ -2884,7 +2884,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 	 // Pickups:
 	repeat(2) pickup_drop(1000, 0);
-	with(obj_create(x, y, "CatChest")){
+	with(chest_create(x, y, "CatChest")){
 		motion_set(random(360), 4);
 		friction = 0.4;
 	}
@@ -4865,18 +4865,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			switch(_roomType){
 				case WeaponChest:
 				case AmmoChest:
-					obj_create(x - _ox + orandom(1), y + orandom(1), _roomType);
-					obj_create(x + _ox + orandom(1), y + orandom(1), _roomType);
+					chest_create(x - _ox + orandom(1), y + orandom(1), _roomType);
+					chest_create(x + _ox + orandom(1), y + orandom(1), _roomType);
 					break;
 					
 				case HealthChest:
 				case "Backpack":
-					obj_create(x, y, _roomType);
+					chest_create(x, y, _roomType);
 					break;
 					
 				case "LairChest":
-					obj_create(x - _ox + orandom(1), y + orandom(1), "CatChest");
-					obj_create(x + _ox + orandom(1), y + orandom(1), "BatChest");
+					chest_create(x - _ox + orandom(1), y + orandom(1), "CatChest");
+					chest_create(x + _ox + orandom(1), y + orandom(1), "BatChest");
 					break;
 					
 				case "Pizza":
@@ -4887,7 +4887,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						
 						 // Pizza:
 						if(chance(2, 3)){
-							obj_create(bbox_center_x + orandom(4) + random(16 * sign(_ox)), bbox_center_y + orandom(4), choose("PizzaChest", "PizzaStack"));
+							var _px = bbox_center_x + orandom(4) + random(16 * sign(_ox)),
+								_py = bbox_center_y + orandom(4);
+								
+							if(chance(1, 2)){
+								obj_create(_px, _py, "PizzaStack");
+							}
+							else{
+								chest_create(_px, _py, "PizzaChest");
+							}
 						}
 					}
 					
@@ -4931,8 +4939,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						alarm3 = 60;
 						
 						 // Ammo:
-						instance_create(other.x1 + 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
-						instance_create(other.x2 - 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
+						chest_create(other.x1 + 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
+						chest_create(other.x2 - 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
 					}
 					
 					break;
@@ -5630,6 +5638,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

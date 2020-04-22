@@ -776,13 +776,13 @@
 			//#region PROPS
 			p = m + "Props/";
 				
-				 // Labs Vat:
-				LabsVatIdle  = sprite(p + "sprLabsVatIdle",  1, 32, 32);
-				LabsVatHurt  = sprite(p + "sprLabsVatHurt",  3, 32, 32);
-				LabsVatDead  = sprite(p + "sprLabsVatDead",  3, 32, 32);
-				LabsVatBack  = sprite(p + "sprLabsVatBack",  6, 32, 32);
-				LabsVatLid   = sprite(p + "sprLabsVatLid",   8, 24, 24);
-				LabsVatGlass = sprite(p + "sprLabsVatGlass", 4, 6,  6);
+				 // Mutant Vat:
+				MutantVatIdle  = sprite(p + "sprMutantVatIdle",  1, 32, 32);
+				MutantVatHurt  = sprite(p + "sprMutantVatHurt",  3, 32, 32);
+				MutantVatDead  = sprite(p + "sprMutantVatDead",  3, 32, 32);
+				MutantVatBack  = sprite(p + "sprMutantVatBack",  6, 32, 32);
+				MutantVatLid   = sprite(p + "sprMutantVatLid",   8, 24, 24);
+				MutantVatGlass = sprite(p + "sprMutantVatGlass", 4, 6,  6);
 				
 			//#endregion
 			

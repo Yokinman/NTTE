@@ -1681,21 +1681,13 @@
 	
 	 // Pickups:
 	if(chest){
-		var	_num = 1 + skill_get(mut_open_mind),
-			_obj = (chance(1, 5) ? "Backpack" : choose(WeaponChest, AmmoChest));
-			
-		switch(crown_current){
-			case crwn_love:
-				_obj = AmmoChest;
-				break;
-				
-			case crwn_life:
-				if(chance(2, 3)) _obj = HealthChest;
-				break;
-		}
-		
+		var	_num = 1 + skill_get(mut_open_mind);
 		if(_num > 0) repeat(_num){
-			with(obj_create(x, y, _obj)){
+			var _obj = (chance(1, 5) ? "Backpack" : choose(WeaponChest, AmmoChest));
+			if(crown_current == crwn_life && chance(2, 3)){
+				_obj = HealthChest;
+			}
+			with(chest_create(x, y, _obj)){
 				motion_add(random(360), 1);
 			}
 		}
@@ -3623,7 +3615,7 @@
 	 // Teleport:
 	if(instance_exists(creator)) with(creator){
 		 // Disappear:
-		if("spr_disappear" in other){
+		if("spr_disappear" in self){
 			with(instance_create(x, y, BulletHit)){
 				sprite_index = other.spr_disappear;
 				image_xscale = other.image_xscale * other.right;
@@ -5352,10 +5344,13 @@
 					case IDPDChest:
 					case BigWeaponChest:
 					case BigCursedChest:
-						num = 18; break;
+						num = 18;
+						break;
+						
 					case GiantWeaponChest:
 					case GiantAmmoChest:
-						num = 60; break;
+						num = 60;
+						break;
 				}
 			}
 		}
@@ -5689,6 +5684,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

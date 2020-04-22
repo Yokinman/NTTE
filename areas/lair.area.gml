@@ -689,7 +689,7 @@
 				
 			for(var i = 0; i < array_length(_chest); i++){
 				if(!instance_exists(_chest[i])){
-					instance_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
+					chest_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
 				}
 			}
 			
@@ -826,12 +826,14 @@
 				_num = random_range(2, 4);
 				
 			for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-				var l = random(24);
-				obj_create(
-					_cx + lengthdir_x(l, d),
-					_cy + lengthdir_y(l, d),
-					choose("PizzaStack", "PizzaStack", "PizzaChest", MoneyPile)
-				);
+				var	l = random(24),
+					_px = _cx + lengthdir_x(l, d),
+					_py = _cy + lengthdir_y(l, d);
+					
+				if(chance(1, 4)){
+					chest_create(_px, _py, "PizzaChest");
+				}
+				else obj_create(_px, _py, choose("PizzaStack", "PizzaStack", MoneyPile));
 			}
 			
 			 // Center Floor:
@@ -1267,6 +1269,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

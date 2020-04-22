@@ -143,8 +143,9 @@
 		}
 		with(instances_matching_gt([Pickup, chestprop, hitme], "id", _objMin)){
 			switch(object_index){
-				case AmmoPickup:
 				
+				case AmmoPickup:
+					
 					 // Portal Strikes:
 					if(chance(_rogue, 5)){
 						instance_create(x, y, RoguePickup);
@@ -163,21 +164,22 @@
 					break;
 					
 				case AmmoChest:
-				
+					
 					 // Portal Strikes:
 					if(chance(_rogue, 5)){
-						instance_create(x, y, RogueChest);
+						chest_create(x, y, RogueChest);
 						instance_delete(id);
 						break;
 					}
 					
 					 // Cursed:
 					if(_curse){
-						obj_create(x, y, "CursedAmmoChest");
+						chest_create(x, y, "CursedAmmoChest");
 						instance_delete(id);
 					}
 					
 					break;
+					
 			}
 		}
 		
@@ -655,35 +657,25 @@
 	
 	 // Loot:
 	var _ang = random(360);
-	for(var d = _ang; d < _ang + 360; d += (360 / num)){
-		with(obj_create(x, y, "BackpackPickup")){
-			zfriction = 0.6;
-			zspeed = random_range(3, 4);
-			speed = 1.5 + orandom(0.2);
-			direction = d;
-			
-			 // Decide Chest:
-			var _obj = pool([
-				[AmmoChest,     1],
-				[WeaponChest,   1],
-				[HealthChest,   1],
-				["Backpack",    1],
-				["OrchidChest", 1]
-			]);
-			switch(crown_current){
-				case crwn_love:
-					_obj = AmmoChest;
-					break;
-					
-				case crwn_life:
-					if(_obj == RadChest && chance(2, 3)){
-						_obj = HealthChest;
-					}
-					break;
+	if(num > 0){
+		for(var d = _ang; d < _ang + 360; d += (360 / num)){
+			with(obj_create(x, y, "BackpackPickup")){
+				zfriction = 0.6;
+				zspeed = random_range(3, 4);
+				speed = 1.5 + orandom(0.2);
+				direction = d;
+				
+				 // Decide Chest:
+				target = chest_create(x, y, pool([
+					[AmmoChest,     1],
+					[WeaponChest,   1],
+					[HealthChest,   1],
+					["Backpack",    1],
+					["OrchidChest", 1]
+				]));
+				
+				event_perform(ev_step, ev_step_end);
 			}
-			target = obj_create(x, y, _obj);
-			
-			event_perform(ev_step, ev_step_end);
 		}
 	}
 	
@@ -805,28 +797,15 @@
 		spawn_time = 0;
 		spawn_inst = [];
 		
-		 // Decide Loot:
-		var _obj = pool([
+		 // Loot:
+		target = chest_create(x, y + 2, pool([
 			["BuriedVaultChest", 4],
 			[BigWeaponChest,     1],
 			//[RadChest,         1],
 			[ProtoChest,         1 * (!instance_exists(ProtoChest))],
 			[ProtoStatue,        2 * (GameCont.subarea == 2)], // (proto statues do not support non-subarea of 2)
 			[EnemyHorror,        1/5]
-		]);
-		if(crown_current == crwn_love){
-			if(_obj == BigWeaponChest || _obj == RadChest){
-				_obj = AmmoChest;
-			}
-		}
-		
-		 // Create Loot:
-		target = obj_create(x, y + 2, _obj);
-		if(!instance_exists(target)){
-			with(instances_matching_gt(chestprop, "id", target)){
-				other.target = id;
-			}
-		}
+		]));
 		with(target){
 			x = xstart;
 			y = ystart;
@@ -862,37 +841,28 @@
 			}
 		}
 		
-		 // Extra Loot:
+		 // Rads:
 		var	_rad = (instance_is(target, RadChest) ? 30 : 15),
 			_num = irandom_range(1, 2) + floor(_rad / 15) + skill_get(mut_open_mind),
 			_ang = random(360);
 			
-		if(_num > 0) for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			var	l = random_range(16, 40),
-				d = _dir + orandom((360 / _num) * 0.4),
-				o = RadChest;
-				
-			switch(crown_current){
-				case crwn_love:
-					o = AmmoChest;
-					break;
+		if(_num > 0){
+			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+				var	l = random_range(16, 40),
+					d = _dir + orandom((360 / _num) * 0.4);
 					
-				case crwn_life:
-					if(chance(2, 3)) o = HealthChest;
-					break;
-			}
-			
-			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), o)){
-				if(instance_is(self, RadChest)){
-					if(chance(1, 6)){
-						spr_idle = sprRadChestBig;
-						spr_hurt = sprRadChestBigHurt;
-						spr_dead = sprRadChestBigDead;
-					}
-					else{
-						spr_idle = sprRadChest;
-						spr_hurt = sprRadChestHurt;
-						spr_dead = sprRadChestCorpse;
+				with(chest_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RadChest)){
+					if(instance_is(self, RadChest)){
+						if(chance(1, 6)){
+							spr_idle = sprRadChestBig;
+							spr_hurt = sprRadChestBigHurt;
+							spr_dead = sprRadChestBigDead;
+						}
+						else{
+							spr_idle = sprRadChest;
+							spr_hurt = sprRadChestHurt;
+							spr_dead = sprRadChestCorpse;
+						}
 					}
 				}
 			}
@@ -907,10 +877,8 @@
 		 // Holding Loot:
 		if(
 			place_meeting(x, y, target)
-			&&
-			(!instance_is(target, ProtoChest) || target.sprite_index != sprProtoChestOpen)
-			&&
-			(!instance_is(target, ProtoStatue) || target.my_health >= target.maxhealth * 0.7)
+			&& (!instance_is(target, ProtoChest) || target.sprite_index != sprProtoChestOpen)
+			&& (!instance_is(target, ProtoStatue) || target.my_health >= target.maxhealth * 0.7)
 		){
 			image_index = 0;
 			
@@ -1158,11 +1126,13 @@
 	image_blend = c_white;
 	
 	 // Crown of Bonus:
-	if(crown_current == "bonus") switch(drop){
-		case "ammo":         drop = "ammo_bonus";         break;
-		case "health":       drop = "health_bonus";       break;
-		case "ammo_chest":   drop = "ammo_bonus_chest";   break;
-		case "health_chest": drop = "health_bonus_chest"; break;
+	if(crown_current == "bonus"){
+		switch(drop){
+			case "ammo"         : drop = "ammo_bonus";         break;
+			case "health"       : drop = "health_bonus";       break;
+			case "ammo_chest"   : drop = "ammo_bonus_chest";   break;
+			case "health_chest" : drop = "health_bonus_chest"; break;
+		}
 	}
 	
 	 // Shop Setup:
@@ -2277,7 +2247,7 @@
 		 // Visual:
 		spr_dead = spr.OrchidChestOpen;
 		sprite_index = spr.OrchidChest;
-		// spr_shadow_y = 2;
+		//spr_shadow_y = 2;
 		
 		 // Sounds:
 		snd_open = sndChest;
@@ -3333,16 +3303,16 @@
 #define PalankingStatue_death
 	var _minID = GameObject.id;
 	pickup_drop(10000, 0);
-	obj_create(x, y, "Backpack");
+	chest_create(x, y, "Backpack");
 
 	 // Become Big:
-	with(instances_matching_gt(AmmoPickup, "id", _minID)){
-		instance_create(x, y, AmmoChest);
-		instance_delete(id);
-	}
-	
-	with(instances_matching_gt(HPPickup, "id", _minID)){
-		instance_create(x, y, HealthChest);
+	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
+		if(instance_is(self, AmmoPickup) || instance_is(self, AmmoChest)){
+			chest_create(x, y, AmmoChest);
+		}
+		else if(instance_is(self, HPPickup) || instance_is(self, HealthChest)){
+			chest_create(x, y, HealthChest);
+		}
 		instance_delete(id);
 	}
 	
@@ -3468,36 +3438,36 @@
 		spr_idle = sprPizzaBox;
 		spr_hurt = sprPizzaBoxHurt;
 		spr_dead = sprPizzaBoxDead;
-
+		
 		 // Sound:
 		snd_hurt = sndHitPlant;
 		snd_dead = sndPizzaBoxBreak;
-
+		
 		 // Vars:
 		maxhealth = 4;
 		size = 1;
 		num = choose(1, 2);
-
+		
 		 // Big luck:
 		if(chance(1, 10)) num = 4;
-
+		
 		return id;
 	}
-
+	
 #define PizzaStack_death
 	 // Big:
 	if(num >= 4){
 		sound_play_pitch(snd_dead, 0.6);
 		snd_dead = -1;
 	}
-
+	
 	 // +Yum
 	repeat(num){
 		obj_create(x + orandom(2 * num), y + orandom(2 * num), "Pizza");
 		instance_create(x + orandom(4), y + orandom(4), Dust);
 	}
-
-
+	
+	
 #define SpiritPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -4624,7 +4594,7 @@
 				
 				 // Spawn:
 				if(cursedammochest_check){
-					obj_create(x, y, "CursedAmmoChest");
+					chest_create(x, y, "CursedAmmoChest");
 					instance_delete(id);
 				}
 			}
@@ -5010,6 +4980,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

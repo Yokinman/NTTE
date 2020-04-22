@@ -196,7 +196,7 @@
 			if(distance_to_object(Player) > 80){
 				if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
 					 // Backpack:
-					obj_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Backpack");
+					chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Backpack");
 					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					 // Flavor Corpse:
@@ -655,27 +655,6 @@
 				}
 			}
 			
-			 // Labs Vat:
-			repeat(1 + chance(1, 3)){
-				var	_w = 2,
-					_h = 3,
-					_type = "",
-					_dirOff = 0,
-					_floorDis = 0,
-					_spawnDis = 96,
-					_spawnFloor = FloorNormal;
-					
-				floor_set_align(32, 32, null, null);
-				floor_set_style(1, null);
-				
-				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-					obj_create(x, y, "LabsVat");
-				}
-				
-				floor_reset_align();
-				floor_reset_style();
-			}
-			
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				with(Freak) if(chance(1, 5)){
@@ -1013,26 +992,30 @@
 							var	l = 160,
 								d = _dir;
 								
-							with(top_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), ((crown_current == crwn_love) ? AmmoChest : BigWeaponChest), d, l)){
-								top_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest, -1, -1);
-								top_create(x, y, Cactus, d + 180 + orandom(90), -1);
+							with(chest_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), BigWeaponChest)){
+								with(top_create(x, y, self, d, l)){
+									with(chest_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest)){
+										top_create(x, y, self, -1, -1);
+									}
+									top_create(x, y, Cactus, d + 180 + orandom(90), -1);
+								}
 								
 								 // Skipping Doesn't Count:
-								if(instance_is(target, BigWeaponChest)) GameCont.nochest -= 2;
+								if(instance_is(self, BigWeaponChest)) GameCont.nochest -= 2;
 							}
 							break;
 							
 						case "Chest":
 							var _obj = AmmoChest;
-							if(crown_current != crwn_love){
-								if(crown_current == crwn_life && chance(2, 3)){
-									_obj = HealthChest;
-								}
-								else with(Player) if(my_health < maxhealth / 2 && chance(1, 2)){
-									_obj = HealthChest;
-								}
+							if(crown_current == crwn_life && chance(2, 3)){
+								_obj = HealthChest;
 							}
-							with(top_create(_x, _y - 16, _obj, 0, 0)) spr_shadow_y--;
+							else with(Player) if(my_health < maxhealth / 2 && chance(1, 2)){
+								_obj = HealthChest;
+							}
+							with(chest_create(_x, _y - 16, _obj)){
+								with(top_create(x, y, self, 0, 0)) spr_shadow_y--;
+							}
 							break;
 							
 						case "Wep":
@@ -1332,7 +1315,7 @@
 		 // Cat Chests:
 		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
 			if(instance_is(self, _crimePick) || chance(_lair, 5)){
-				obj_create(x, y, "CatChest");
+				chest_create(x, y, "CatChest");
 				instance_delete(id);
 			}
 		}
@@ -1340,7 +1323,7 @@
 		 // Bat Chests:
 		with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
 			if(instance_is(self, _crimePick) || chance(_lair, 5)){
-				with(obj_create(x, y, "BatChest")){
+				with(chest_create(x, y, "BatChest")){
 					big = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
 					curse = other.curse;
 				}
@@ -3313,6 +3296,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

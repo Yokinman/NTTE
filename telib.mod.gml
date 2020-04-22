@@ -15,7 +15,7 @@
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "WarpPortal"],
-		"telabs"      : ["FreakChamber", "LabsVat", "WallSlide"]
+		"telabs"      : ["FreakChamber", "MutantVat", "WallSlide"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -485,10 +485,10 @@
 		_isDraw = instance_is(self, CustomDraw);
 		
 	switch(object_index){
-		case CustomStep:      _varName += "step";       break;
-		case CustomBeginStep: _varName += "begin_step"; break;
-		case CustomEndStep:   _varName += "end_step";   break;
-		case CustomDraw:      _varName += "draw";       break;
+		case CustomStep      : _varName += "step";       break;
+		case CustomBeginStep : _varName += "begin_step"; break;
+		case CustomEndStep   : _varName += "end_step";   break;
+		case CustomDraw      : _varName += "draw";       break;
 	}
 	
 	 // Searching all GameObjects to fix instance_copy():
@@ -788,6 +788,59 @@
 	}
 	
 	return instance_exists(target);
+	
+#define chest_create(_x, _y, _obj)
+	/*
+		Creates a given chest with some special spawn conditions applied, such as Crown of Love, Crown of Life, and Rogue
+		
+		Ex:
+			chest_create(x, y, WeaponChest)
+			chest_create(x, y, "BatChest")
+	*/
+	
+	if(
+		is_string(_obj)
+		|| _obj == chestprop
+		|| _obj == RadChest
+		|| object_is_ancestor(_obj, chestprop)
+		|| object_is_ancestor(_obj, RadChest)
+	){
+		 // Rad Canisters:
+		if(is_real(_obj) && (_obj == RadChest || object_is_ancestor(_obj, RadChest))){
+			 // More Health Chests:
+			if(chance(2, 3) && crown_current == crwn_life){
+				_obj = HealthChest;
+			}
+			
+			 // Rogue:
+			else for(var i = 0; i < maxp; i++){
+				if(player_get_race(i) == "rogue"){
+					_obj = RogueChest;
+					break;
+				}
+			}
+		}
+		
+		 // Only Ammo Chests:
+		if(crown_current == crwn_love){
+			if(!is_real(_obj) || !object_is_ancestor(_obj, AmmoChest)){
+				if(!array_exists([ProtoChest, RogueChest, "Backpack", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "SunkenChest"], _obj)){
+					_obj = AmmoChest;
+				}
+			}
+		}
+	}
+	
+	var _inst = obj_create(_x, _y, _obj);
+	
+	 // Replaced:
+	if(!instance_exists(_inst)){
+		with(instances_matching_gt(chestprop, "id", _inst)){
+			_inst = min(_inst, id);
+		}
+	}
+	
+	return _inst;
 	
 #define chance(_numer, _denom)
 	return random(_denom) < _numer;

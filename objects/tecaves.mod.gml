@@ -820,28 +820,17 @@
 		_genID = area_generate(area, subarea, x, y, false, false, _scrt);
 		
 	if(is_real(_genID)){
-		var _chest = chest_type;
-		
+		var	_disMin = -1,
+			_chest = chest_type,
+			_chestX = x,
+			_chestY = y;
+			
 		 // Delete Chests:
 		with(instances_matching_gt([RadChest, chestprop], "id", _genID)){
 			instance_delete(id);
 		}
 		
-		 // Rogue:
-		if(_chest == RadChest || object_is_ancestor(_chest, RadChest)){
-			for(var i = 0; i < maxp; i++){
-				if(player_get_race(i) == "rogue"){
-					_chest = RogueChest;
-					break;
-				}
-			}
-		}
-		
 		 // Spawn Chest on Furthest Floor:
-		var	_disMin = -1,
-			_chestX = x,
-			_chestY = y;
-			
 		with(instances_matching_gt(FloorNormal, "id", _genID)){
 			var	_x = bbox_center_x,
 				_y = bbox_center_y,
@@ -855,7 +844,7 @@
 				}
 			}
 		}
-		with(instance_create(_chestX, _chestY, chest_type)){
+		with(chest_create(_chestX, _chestY, chest_type)){
 			with(instances_meeting(x, y, CrystalProp)){
 				instance_delete(id);
 			}
@@ -2607,6 +2596,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

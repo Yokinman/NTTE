@@ -173,22 +173,25 @@
 		sound_play_pitchvol(sndFrogExplode,     1.2 + random(0.8), 0.8);
 		
 		 // Determine Pizza Output:
-		var o;
+		var _inst = noone,
+			_x = x + orandom(4),
+			_y = y + orandom(4);
+			
 		if(chance(1, 2) && !chance(4, poop)){
-			o = "PizzaChest";
+			_inst = chest_create(_x, _y, "PizzaChest");
 			poop -= 2;
 		}
 		else if(poop >= 2 && chance(1, 3)){
-			o = "PizzaStack";
+			_inst = obj_create(_x, _y, "PizzaStack");
 			poop -= 2;
 		}
 		else{
-			o = "Pizza";
+			_inst = obj_create(_x, _y, "Pizza");
 			poop--;
 		}
 		
 		 // Excrete:
-		with(obj_create(x + orandom(4), y + orandom(4), o)){
+		with(_inst){
 			hspeed = 3 * -other.right;
 			vspeed = orandom(1);
 			if(instance_is(self, prop)){
@@ -3540,6 +3543,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
