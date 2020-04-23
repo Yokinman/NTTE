@@ -1508,7 +1508,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	image_angle += 40 * current_time_scale;
 	
 	 // Targeting:
-	var	_disMax = 1000000,
+	var	_disMax = infinity,
 		_wepVar = ["wep", "bwep"];
 		
 	for(var i = 0; i < array_length(_wepVar); i++){
@@ -5622,6 +5622,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

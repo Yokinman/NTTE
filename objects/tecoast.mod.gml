@@ -4521,15 +4521,15 @@
 			if(!in_sight(n)){
 				var	_x = x + hspeed,
 					_y = y + vspeed,
-					_disMax = 1000000;
+					_disMax = 160;
 					
-				with(instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone, sprVoid)){
-					if(in_sight(other) && in_distance(other, 160)){
-						if(array_length(instances_matching(PopoShield, "creator", id)) <= 0){
+				with(instances_matching_ne(instances_matching_ne(instance_rectangle(_x - _disMax, _y - _disMax, _x + _disMax, _y + _disMax, [enemy, Player, Sapling, Ally, SentryGun, CustomHitme]), "team", team, 0), "mask_index", mskNone, sprVoid)){
+					var _dis = point_distance(x, y, _x, _y);
+					if(_dis < _disMax){
+						if(in_sight(other)){
 							if(lq_defget(other.hit_list, string(self), 0) <= other.hit_time){
-								var d = point_distance(x, y, _x, _y);
-								if(d < _disMax){
-									_disMax = d;
+								if(array_length(instances_matching(PopoShield, "creator", id)) <= 0){
+									_disMax = _dis;
 									other.marrow_target = id;
 								}
 							}
@@ -4998,6 +4998,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

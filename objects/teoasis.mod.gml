@@ -1662,6 +1662,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

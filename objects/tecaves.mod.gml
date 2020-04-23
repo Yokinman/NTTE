@@ -1379,6 +1379,7 @@
 	
 	return _inst;
 	
+	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1406,8 +1407,7 @@
 		maxspeed = 4;
 		canmelee = true;
 		meleedamage = 2;
-		cantunnel = false;
-		bullet_sound = noone;
+		target_seen = false;
 		
 		 // Alarms:
 		alarm1 = irandom_range(30, 60);
@@ -1422,7 +1422,7 @@
 		var	_targetDir = point_direction(x, y, target.x, target.y),
 			_targetSeen = in_sight(target);
 			
-		if(_targetSeen) cantunnel = true;
+		if(_targetSeen) target_seen = true;
 		
 		 // Attack:
 		if(chance(2, 3) && in_distance(target, 96)){
@@ -1453,7 +1453,7 @@
 		}
 		
 		 // Towards Target:
-		else if(_targetSeen || cantunnel){
+		else if(_targetSeen || target_seen){
 			scrWalk(_targetDir + orandom(10), 15);
 		}
 		
@@ -1469,7 +1469,7 @@
 	
 #define RedSpider_hurt(_hitdmg, _hitvel, _hitdir)
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
-	cantunnel = true;
+	target_seen = true;
 	
 #define RedSpider_death
 	pickup_drop(20, 0);
@@ -2565,6 +2565,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

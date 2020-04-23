@@ -2680,6 +2680,13 @@
 				
 				with(inst){
 					draw_rectangle(bbox_left + _ox - _bx, bbox_top + _oy - _by, bbox_right + _ox + _bx, bbox_bottom + _oy + _by, false);
+					
+					 // Death:
+					if(instance_is(self, Floor)){
+						if(place_meeting(x, y, Explosion) || place_meeting(x, y, PortalClear) || place_meeting(x, y, EnergyHammerSlash)){
+							other.time = 0;
+						}
+					}
 				}
 			}
 			
@@ -3833,8 +3840,8 @@
 			_sy = _search[1],
 			_sp = _search[2];
 
-		if(_sp >= 1000000) break; // No more searchable tiles
-		_search[2] = 1000000;
+		if(_sp >= infinity) break; // No more searchable tiles
+		_search[2] = infinity;
 
 		 // Sort Through Neighboring Tiles:
 		var _costSoFar = _gridCost[# _sx, _sy];

@@ -152,8 +152,8 @@
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Vector Plasma:
-			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      9, 8, 8);
-			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 9, 8, 8);
+			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
+			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5, 8, 8);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);

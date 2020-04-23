@@ -460,7 +460,7 @@
 	 // Search for New Jelly:
 	if(in_distance(target, 160)){
 		if(arc_inst == noone){
-			var _disMax = 1000000;
+			var _disMax = infinity;
 			with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")){
 				if(arc_num < arc_max){
 					var _dis = point_distance(x, y, other.x, other.y);
@@ -1600,13 +1600,15 @@
 	
 	 // Find Nearest Visible Player:
 	var	_target = noone,
-		d = 1000000;
+		_disMax = infinity;
 		
-	with(Player) if(!collision_line(other.posx, other.posy, x, y, Wall, false, false)){
+	with(Player){
 		var _dis = point_distance(other.posx, other.posy, x, y);
-		if(_dis < d){
-			_target = id;
-			d = _dis;
+		if(_dis < _disMax){
+			if(!collision_line(other.posx, other.posy, x, y, Wall, false, false)){
+				_target = id;
+				_disMax = _dis;
+			}
 		}
 	}
 	
@@ -4364,6 +4366,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

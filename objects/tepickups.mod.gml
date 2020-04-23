@@ -809,6 +809,7 @@
 		with(target){
 			x = xstart;
 			y = ystart;
+			
 			switch(object_index){
 				case EnemyHorror:
 					instance_create(x, y, PortalShock);
@@ -838,6 +839,11 @@
 					spr_hurt = sprRadChestBigHurt;
 					spr_dead = sprRadChestBigDead;
 					break;
+			}
+			
+			 // Fix:
+			with(instances_matching_gt(PortalClear, "id", id)){
+				instance_destroy();
 			}
 		}
 		
@@ -2026,7 +2032,7 @@
 	
 	 // Find Nearest Attractable Player:
 	var	_nearest = noone,
-		_disMax = (instance_exists(Portal) ? 1000000 : pull_dis),
+		_disMax = (instance_exists(Portal) ? infinity : pull_dis),
 		e = on_pull;
 		
 	if(!mod_script_exists(e[0], e[1], e[2])){
@@ -4949,6 +4955,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

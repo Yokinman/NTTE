@@ -1637,7 +1637,7 @@
 				
 				 // Targeting:
 				if(sprite_index != spr_fire){
-					var _disMax = 1000000;
+					var _disMax = infinity;
 					with(pet_target_inst){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
@@ -1742,10 +1742,10 @@
 	 // Vars:
 	maxspeed = 3.4;
 	web_list = [];
-	web_list_x1 = 1000000;
-	web_list_y1 = 1000000;
-	web_list_x2 = 0;
-	web_list_y2 = 0;
+	web_list_x1 = +infinity;
+	web_list_y1 = +infinity;
+	web_list_x2 = -infinity;
+	web_list_y2 = -infinity;
 	web_add_l = 8;
 	web_add_side = choose(-90, 90);
 	web_add_d = direction + web_add_side;
@@ -1909,24 +1909,24 @@
 		frame : other.web_frame + 120,
 		wading : (GameCont.area == "coast" && !position_meeting(_x, _y, Floor))
 	});
-
-	web_list_x1 = min(_x, web_list_x1);
-	web_list_y1 = min(_y, web_list_y1);
-	web_list_x2 = max(_x, web_list_x2);
-	web_list_y2 = max(_y, web_list_y2);
-
+	
+	if(_x < web_list_x1) web_list_x1 = _x;
+	if(_y < web_list_y1) web_list_y1 = _y;
+	if(_x > web_list_x2) web_list_x2 = _x;
+	if(_y > web_list_y2) web_list_y2 = _y;
+	
 #define Spider_web_delete(_index)
 	web_list = array_delete(web_list, _index);
-
-	web_list_x1 = 1000000;
-	web_list_y1 = 1000000;
-	web_list_x2 = 0;
-	web_list_y2 = 0;
+	
+	web_list_x1 = +infinity;
+	web_list_y1 = +infinity;
+	web_list_x2 = -infinity;
+	web_list_y2 = -infinity;
 	with(web_list){
-		other.web_list_x1 = min(x, other.web_list_x1);
-		other.web_list_y1 = min(y, other.web_list_y1);
-		other.web_list_x2 = max(x, other.web_list_x2);
-		other.web_list_y2 = max(y, other.web_list_y2);
+		if(x < other.web_list_x1) other.web_list_x1 = x;
+		if(y < other.web_list_y1) other.web_list_y1 = y;
+		if(x > other.web_list_x2) other.web_list_x2 = x;
+		if(y > other.web_list_y2) other.web_list_y2 = y;
 	}
 	
 	
@@ -2306,7 +2306,7 @@
 			 // Move Toward Nearest Seen Pit:
 			else{
 				var	_dir = -1,
-					_disMax = 1000000;
+					_disMax = infinity;
 					
 				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
 					var	_x = bbox_center_x,
@@ -3231,10 +3231,10 @@
 		else with(_inst){
 			web_list = [];
 			web_timer = web_timer_max;
-			web_list_x1 = 1000000;
-			web_list_y1 = 1000000;
-			web_list_x2 = 0;
-			web_list_y2 = 0;
+			web_list_x1 = +infinity;
+			web_list_y1 = +infinity;
+			web_list_x2 = -infinity;
+			web_list_y2 = -infinity;
 		}
 	}
 	
@@ -3250,7 +3250,7 @@
 			orchidmantisradattract_check = true;
 			
 			var	_target = noone,
-				_disMax = 1000000;
+				_disMax = infinity;
 				
 			with(_targetInst){
 				if(instance_exists(leader) && array_length(skill_inst) <= 0){
@@ -3512,6 +3512,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

@@ -1163,8 +1163,8 @@
 				
 				 // Cool Reveal:
 				view_shake_at(_sx, _sy, 20);
-				sound_play_pitchvol(sndStatueCharge, 1.6 + orandom(0.2), 1);
-				sound_play_pitchvol(sndStatueDead, 0.4 + random(0.1), 1);
+				sound_play_pitch(sndStatueCharge, 1.6 + orandom(0.2));
+				sound_play_pitch(sndStatueDead, 0.4 + random(0.1));
 				with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 4)){
 					time = (point_distance(inst.x, inst.y, _sx, _sy) - 16) / 4;
 				}
@@ -5700,6 +5700,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

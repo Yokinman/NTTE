@@ -2486,57 +2486,65 @@
 #define ntte_hud(_visible)
 	if(DebugLag) trace_time();
 	
-	 // Setup:
-	var	_players = 0,
-		_pause = false,
-		_vx = view_xview_nonsync,
+	var	_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_gw = game_width,
 		_gh = game_height,
 		_ox = _vx,
-		_oy = _vy,
-		_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),
-		_surfMain   = surface_setup("HUDMain",   _gw, _gh, game_scale_nonsync),
-		_surfSkill  = surface_setup("HUDSkill",  _gw, _gh, game_scale_nonsync);
+		_oy = _vy;
 		
-	with([_surfMain, _surfSkill, _surfScreen]){
-		x = _vx;
-		y = _vy;
-		
-		 // Clear:
-		surface_set_target(surf);
-		draw_clear_alpha(0, 0);
-		surface_reset_target();
-	}
-	
 	 // Pause Imminent:
-	for(var i = 0; i < maxp; i++){
-		if(button_pressed(i, "paus") && instance_exists(Player)){
-			_pause = true;
+	var _pause = false;
+	if(instance_exists(Player)){
+		for(var i = 0; i < maxp; i++){
+			if(button_pressed(i, "paus")){
+				_pause = true;
+				break;
+			}
 		}
 	}
 	
-	 // Co-op Rad Canister Offset:
-	for(var i = 0; i < maxp; i++) _players += player_is_active(i);
-	if(_players > 1) _ox -= 17;
-	
-	 // Determine which sides of the screen player HUD is On:
-	var	_hudSide = array_create(maxp, 0),
-		n = 0;
+	/// Co-op:
+		var _players = 0;
+		for(var i = 0; i < maxp; i++){
+			_players += player_is_active(i);
+		}
 		
-	for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
-	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (n++ & 1);
-	
-	 // Copy & Clear Screen:
-	with(_surfScreen){
-		draw_set_blend_mode_ext(bm_one, bm_zero);
-		surface_screenshot(surf);
-		draw_set_alpha(0);
-		draw_surface_scale(surf, x, y, 1 / scale);
-		draw_set_alpha(1);
-		draw_set_blend_mode(bm_normal);
-	}
-	
+		 // Rad Canister Offset:
+		if(_players > 1) _ox -= 17;
+		
+		 // Determine which side of the screen each player's HUD is on:
+		var	_hudSide = array_create(maxp, 0),
+			_num = 0;
+			
+		for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_num++ & 1);
+		for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_num++ & 1);
+		
+	/// Surface Setup:
+		var	_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),
+			_surfMain   = surface_setup("HUDMain",   _gw, _gh, game_scale_nonsync),
+			_surfSkill  = surface_setup("HUDSkill",  _gw, _gh, game_scale_nonsync);
+			
+		with([_surfMain, _surfSkill, _surfScreen]){
+			x = _vx;
+			y = _vy;
+			
+			 // Clear:
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			surface_reset_target();
+		}
+		
+		 // Copy & Clear Screen:
+		with(_surfScreen){
+			draw_set_blend_mode_ext(bm_one, bm_zero);
+			surface_screenshot(surf);
+			draw_set_alpha(0);
+			draw_surface_scale(surf, x, y, 1 / scale);
+			draw_set_alpha(1);
+			draw_set_blend_mode(bm_normal);
+		}
+		
 	 // Mutation HUD:
 	var	_skillType = [],
 		_skillList = [];
@@ -2617,19 +2625,19 @@
 								_img = _icon[1];
 								
 							if(sprite_exists(_spr)){
-								var	_time = 1000000000,
-									_timeMax = 1000000000,
-									_colSub = c_dkgray,
-									_colTop = c_white,
-									_flash = false;
+								var	_time    = infinity,
+									_timeMax = infinity,
+									_colSub  = c_dkgray,
+									_colTop  = c_white,
+									_flash   = false;
 									
 								 // Get Orchid Skill With Least Time:
 								with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
 									if(time < _time){
-										_time = time;
+										_time    = time;
 										_timeMax = time_max;
-										_colSub = color2;
-										_colTop = color1;
+										_colSub  = color2;
+										_colTop  = color1;
 									}
 									if(flash) _flash = true;
 								}
@@ -3265,6 +3273,7 @@
 #macro  area_jungle                                                                             105
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
+#macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
