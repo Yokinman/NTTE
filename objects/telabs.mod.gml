@@ -112,47 +112,28 @@
 			_ang        = round(random(360) / 90) * 90,
 			_target     = instance_nearest(x, y, Player),
 			_hallDis    = 32 * hallway_size,
-			_slidePath  = slide_path,
+			_slidePath  = slide_path;
+			
+		 // Sort Potential Spawn Positions by Distance:
+		var	_fw = 32,
+			_fh = 32,
 			_spawnFloor = [];
 			
-		 // Sort Floors by Distance to Player:
-		with(FloorNormal){
-			var	_fx = bbox_center_x,
-				_fy = bbox_center_y;
-				
-			if(other.open || !collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false)){
-				if(place_free(x, y)){
-					array_push(_spawnFloor, [
-						max(64, point_distance(_fx, _fy, _target.x, _target.y)) + random(32),
-						{
-							x : _fx,
-							y : _fy,
-							w : bbox_width,
-							h : bbox_height
-						}
-					]);
-				}
-			}
-		}
-		if(instance_number(FloorExplo) > instance_number(Floor) / 2){
-			with(FloorExplo){
-				if(
-					position_meeting(x + 16, y, FloorExplo) &&
-					position_meeting(x, y + 16, FloorExplo) &&
-					position_meeting(x + 16, y + 16, FloorExplo)
-				){
-					var	_fx = x + 16,
-						_fy = y + 16;
+		with(Floor){
+			for(var _fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+				for(var _fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+					var	_cx = _fx + (_fw / 2),
+						_cy = _fy + (_fh / 2);
 						
-					if(other.open || !collision_line(_fx, _fy, _target.x, _target.y, Wall, false, false)){
-						if(place_free(x, y)){
+					if(!collision_rectangle(_fx, _fy, _fx + _fw - 1, _fy + _fh - 1, Wall, false, false)){
+						if(other.open || !collision_line(_cx, _cy, _target.x, _target.y, Wall, false, false)){
 							array_push(_spawnFloor, [
-								max(64, point_distance(_fx, _fy, _target.x, _target.y)) + random(32),
+								max(64 * (1 + instance_is(self, FloorExplo)), point_distance(_cx, _cy, _target.x, _target.y)) + random(32),
 								{
-									x : _fx,
-									y : _fy,
-									w : 32,
-									h : 32
+									x : _cx,
+									y : _cy,
+									w : _fw,
+									h : _fh
 								}
 							]);
 						}
