@@ -182,9 +182,9 @@
 #macro objList global.object_list
 #macro objScrt global.object_scrt
 
-#macro spriteTeamStart 1
-#macro spriteTeamMap global.sprite_team_map
-#macro teamSpriteMap global.team_sprite_map
+#macro spriteTeamStart     1
+#macro spriteTeamMap       global.sprite_team_map
+#macro teamSpriteMap       global.team_sprite_map
 #macro teamSpriteObjectMap global.team_sprite_object_map
 
 #macro infinity 1/0
@@ -1963,7 +1963,7 @@
 		for(var i = 0; i < _listMax; i++){
 			var _name = lq_get_key(_list, i);
 			if(!variable_is_readonly(_inst, _name)){
-				if(_isCustom && string_pos("on_", self) == 1){
+				if(_isCustom && string_pos("on_", _name) == 1){
 					try variable_instance_set(_inst, _name, lq_get_value(_list, i));
 					catch(_error){}
 				}
@@ -3057,6 +3057,11 @@
 	floor_set_align(null, null, null, null);
 	
 #define floor_align(_w, _h, _x, _y)
+	/*
+		Aligns a given rectangle to the floor grid
+		Has a bias towards nearby floors to help prevent the rectangle from being disconnected from the level
+	*/
+	
 	var	_gridWAuto = is_undefined(global.floor_align_w),
 		_gridHAuto = is_undefined(global.floor_align_h),
 		_gridXAuto = is_undefined(global.floor_align_x),
@@ -3070,23 +3075,28 @@
 		
 	if(_gridWAuto || _gridHAuto || _gridXAuto || _gridYAuto){
 		if(!instance_exists(FloorMaker)){
+			var	_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
+				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
+				
 			 // Align to Nearest Floor:
-			with(instance_nearest_rectangle_bbox(_x, _y, _x + _w, _y + _h, Floor)){
-				if(_gridXAuto){
-					_gridX = x;
-					_gridXBias = bbox_center_x - (_x + (_w / 2));
-				}
-				if(_gridYAuto){
-					_gridY = y;
-					_gridYBias = bbox_center_y - (_y + (_h / 2));
+			if(_gridXAuto || _gridYAuto){
+				with(instance_nearest_rectangle_bbox(_fx, _fy, _fx + _w, _fy + _h, Floor)){
+					if(_gridXAuto){
+						_gridX = x;
+						_gridXBias = bbox_center_x - (_x + (_w / 2));
+						_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias);
+					}
+					if(_gridYAuto){
+						_gridY = y;
+						_gridYBias = bbox_center_y - (_y + (_h / 2));
+						_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
+					}
 				}
 			}
 			
 			 // Align to Largest Colliding Floor:
 			var	_fwMax = _gridW,
-				_fhMax = _gridH,
-				_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
-				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
+				_fhMax = _gridH;
 				
 			with(instance_rectangle_bbox(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor)){
 				var	_fw = bbox_width,
@@ -3094,7 +3104,9 @@
 					
 				if(_fw >= _fwMax){
 					_fwMax = _fw;
-					if(_gridWAuto) _gridW = _fwMax;
+					if(_gridWAuto){
+						_gridW = _fwMax;
+					}
 					if(_gridXAuto){
 						_gridX = x;
 						_gridXBias = bbox_center_x - (_x + (_w / 2));
@@ -3102,7 +3114,9 @@
 				}
 				if(_fh >= _fhMax){
 					_fhMax = _fh;
-					if(_gridHAuto) _gridH = _fhMax;
+					if(_gridHAuto){
+						_gridH = _fhMax;
+					}
 					if(_gridYAuto){
 						_gridY = y;
 						_gridYBias = bbox_center_y - (_y + (_h / 2));
@@ -3112,9 +3126,8 @@
 			
 			 // No Unnecessary Bias:
 			if(_gridXBias != 0 || _gridYBias != 0){
-				var	_fx = _gridX + floor_align_round(_x - _gridX, _gridW, 0),
-					_fy = _gridY + floor_align_round(_y - _gridY, _gridH, 0);
-					
+				_fx = _gridX + floor_align_round(_x - _gridX, _gridW, 0);
+				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, 0);
 				if(collision_rectangle(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor, false, false)){
 					_gridXBias = 0;
 					_gridYBias = 0;
@@ -3203,9 +3216,14 @@
 		with(_floormaker) instance_destroy();
 		GameCont.area = _lastArea;
 		with(_inst){
-			 // Clear Area:
 			if(!instance_exists(FloorMaker)){
+				 // Clear Area:
 				wall_clear(bbox_left, bbox_top, bbox_right, bbox_bottom);
+				
+				 // Details:
+				if(chance(1, 6)){
+					instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
+				}
 			}
 			
 			 // Wallerize:
@@ -3275,10 +3293,13 @@
 				}
 			}
 		}
-		instance_delete(id);
-	}
-	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, SnowFloor)){
-		instance_delete(id);
+		with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, Detail)){
+			instance_destroy();
+		}
+		with(instances_meeting(x, y, SnowFloor)){
+			instance_destroy();
+		}
+		instance_destroy();
 	}
 	
 #define floor_tunnel(_x1, _y1, _x2, _y2)
@@ -3480,12 +3501,12 @@
 	 // Done:
 	return {
 		floors : _floors,
-		x  : (_x1 + _x2) / 2,
-		y  : (_y1 + _y2) / 2,
-		x1 : _x1,
-		y1 : _y1,
-		x2 : _x2,
-		y2 : _y2,
+		x      : (_x1 + _x2) / 2,
+		y      : (_y1 + _y2) / 2,
+		x1     : _x1,
+		y1     : _y1,
+		x2     : _x2,
+		y2     : _y2,
 		xstart : _sx,
 		ystart : _sy
 	};
@@ -5420,7 +5441,7 @@
 			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
 				var _newObj = _objList[_objIndex];
 				if(_obj != _newObj){
-					with(instance_create(x, y, _newObj)){
+					with(obj_create(x, y, _newObj)){
 						array_push(_newInst, id);
 						variable_instance_set_list(self, variable_instance_get_list(other));
 						instance_delete(other);
@@ -5430,23 +5451,24 @@
 							
 							 // Destruction Sprite:
 							switch(_sprAlly){
-								case sprHeavyBullet:		spr_dead = sprHeavyBulletHit;	break;
-								case sprAllyBullet:			spr_dead = sprAllyBulletHit;	break;
-								case sprBullet2:
-								case sprBullet2Disappear:	spr_dead = sprBullet2Disappear;	break;
-								case sprSlugBullet:
-								case sprSlugDisappear:		spr_dead = sprSlugHit;			break;
-								case sprHeavySlug:
-								case sprHeavySlugDisappear:	spr_dead = sprHeavySlugHit;		break;
-								case sprFlakBullet:			spr_dead = sprFlakHit;			break;
-								case sprSuperFlakBullet:	spr_dead = sprSuperFlakHit;		break;
-								case sprPlasmaBall:			spr_dead = sprPlasmaImpact;		break;
-								default:					spr_dead = sprBulletHit;
+								case sprHeavyBullet        : spr_dead = sprHeavyBulletHit;   break;
+								case sprAllyBullet         : spr_dead = sprAllyBulletHit;    break;
+								case sprBullet2            :
+								case sprBullet2Disappear   : spr_dead = sprBullet2Disappear; break;
+								case sprSlugBullet         :
+								case sprSlugDisappear      : spr_dead = sprSlugHit;          break;
+								case sprHeavySlug          :
+								case sprHeavySlugDisappear : spr_dead = sprHeavySlugHit;     break;
+								case sprFlakBullet         : spr_dead = sprFlakHit;          break;
+								case sprSuperFlakBullet    : spr_dead = sprSuperFlakHit;     break;
+								case sprPlasmaBall         : spr_dead = sprPlasmaImpact;     break;
+								default                    : spr_dead = sprBulletHit;
 							}
 							spr_dead = team_get_sprite(_team, spr_dead);
 							
 							 // Specifics:
 							switch(_newObj){
+								
 								case "CustomFlak":
 								
 									 // Specifics:
@@ -5509,6 +5531,7 @@
 									}
 									
 									break;
+									
 							}
 						}
 					}

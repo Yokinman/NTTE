@@ -1295,10 +1295,9 @@
 		}
 		
 		 // Create Projectile:
-		with(instance_create(x, y, _lq.object_index)){
-			variable_instance_set_list(self, variable_instance_get_list(other));
-			team_instance_sprite(sprite_get_team(sprite_index), self);
-		}
+		var _inst = obj_create(x, y, _lq.object_index);
+		variable_instance_set_list(_inst, _lq);
+		team_instance_sprite(sprite_get_team(sprite_index), _inst);
 	}
 	
 	 // Effects:
@@ -1523,10 +1522,9 @@
 			}
 			
 			 // Create Projectile:
-			with(instance_create(x, y, _lq.object_index)){
-				variable_instance_set_list(self, variable_instance_get_list(other));
-				team_instance_sprite(sprite_get_team(sprite_index), self);
-			}
+			var _inst = obj_create(x, y, _lq.object_index);
+			variable_instance_set_list(_inst, _lq);
+			team_instance_sprite(sprite_get_team(sprite_index), _inst);
 		}
 		instance_create(x, y, PortalClear);
 		sleep(10);

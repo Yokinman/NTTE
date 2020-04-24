@@ -235,11 +235,6 @@
 		var	_cx = x,
 			_cy = y;
 			
-		 // Details:
-		with(floors) if(chance(1, 6)){
-			instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
-		}
-		
 		 // Decals:
 		with(instance_random(floors)){
 			obj_create(bbox_center_x, bbox_center_y, "TopDecal");
@@ -455,8 +450,8 @@
 						part++;
 						
 						 // Details:
-						with(other.floors){
-							with(instances_meeting(x, y, Detail)) instance_destroy();
+						with(instances_matching_gt(Detail, "id", _minID)){
+							instance_destroy();
 						}
 						var a = GameCont.area;
 						GameCont.area = "coast";
@@ -665,7 +660,7 @@
 	var _minID = GameObject.id;
 	
 	floor_set_align(32, 32, null, null);
-	floor_set_style(1, GameCont.area);
+	floor_set_style(1, null);
 	
 	with(floor_room_create(_x, _y, _w, _h, _type, point_direction(_spawnX, _spawnY, _x, _y), _dirOff, _floorDis)){
 		 // Tendril Floors:
@@ -694,8 +689,9 @@
 		}
 		
 		 // Tendril Floors Setup:
-		var	_nestTinyNum = random_range(5, 6),
-			_burrowNum = random_range(3, 4);
+		var	_nestTinyNum = irandom_range(5, 6),
+			_burrowNum = irandom_range(3, 4),
+			_propNum = irandom_range(1, 3);
 			
 		with(array_shuffle(instances_matching_gt(FloorNormal, "id", _minID))){
 			var	_fx = bbox_center_x,
@@ -703,26 +699,53 @@
 				_cx = other.x,
 				_cy = other.y;
 				
-			 // Enemies:
-			if(!place_meeting(x, y, enemy)){
+			if(!place_meeting(x, y, hitme)){
+				 // Enemies:
 				if(_nestTinyNum > 0){
 					_nestTinyNum--;
 					with(instance_create(_fx, _fy, MaggotSpawn)){
 						x = xstart;
 						y = ystart;
 						move_contact_solid(point_direction(_cx, _cy, x, y) + orandom(120), random(16));
-						instance_create(x, y, Maggot);
+						with(instance_create(x, y, Maggot)){
+							with(obj_create(x, y, "FlySpin")){
+								target = other;
+								target_x = orandom(8);
+								target_y = -random(4);
+							}
+						}
 					}
 				}
 				else if(_burrowNum > 0){
 					_burrowNum--;
 					obj_create(_fx, _fy, "WantBigMaggot");
+					
+					 // Dead Thing:
+					if(chance(1, 3)){
+						instance_create(_fx + orandom(4), _fy + orandom(4), BonePile);
+					}
+					else with(instance_create(_fx + orandom(4), _fy + orandom(4), Corpse)){
+						sprite_index = sprMSpawnDead;
+						image_xscale = choose(-1, 1);
+						size = 2;
+					}
+					
+					 // Fly:
+					obj_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), "FlySpin");
+				}
+				
+				 // Cacti:
+				else if(_propNum > 0){
+					_propNum--;
+					with(instance_create(_fx, _fy, Cactus)){
+						obj_create(x + orandom(8), y + orandom(8), "FlySpin");
+					}
 				}
 			}
 			
-			 // Remove Details:
-			with(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Detail)){
-				instance_destroy();
+			 // Cactus Fix:
+			else with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, Cactus)){
+				event_perform(ev_create, 0);
 			}
 		}
 		

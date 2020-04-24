@@ -572,7 +572,10 @@
 			
 			 // Rare:
 			if(instance_is(self, JungleFly) && GameCont.loops <= 0){
-				scrAlert(self, spr.FlyAlert);
+				with(scrAlert(self, spr.FlyAlert)){
+					alarm0 = 75;
+					blink = 20;
+				}
 			}
 		}
 	}
@@ -1541,7 +1544,7 @@
 		spr_dead = spr.CowSkullDead;
 		sprite_index = spr_idle;
 		
-		 // Flies:
+		 // Fly:
 		var	l = random(16),
 			d = 90 + orandom(110);
 			
