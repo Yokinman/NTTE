@@ -131,13 +131,6 @@
 			floor_fill(_x + 16, _y + 16, 3, 3, "round");
 		}
 		
-	/// Turn:
-		var _trn = 0;
-		if(chance(3, 7)){
-			_trn = choose(90, -90, 180);
-		}
-		direction += _trn;
-		
 	/// Chests:
 		if(_trn == 180 && _outOfSpawn){
 			floor_make(_x, _y, choose(WeaponChest, AmmoChest));
@@ -146,7 +139,7 @@
 	/// Don't Move:
 		if(!variable_instance_get(GenCont, "iswarpzone", true)){
 			if("direction_start" not in self){
-				direction_start = direction - _trn;
+				direction_start = direction;
 			}
 			
 			var _ox = lengthdir_x(32, direction),
@@ -158,6 +151,13 @@
 				direction = round(direction_start / 90) * 90;
 			}
 		}
+		
+	/// Turn:
+		var _trn = 0;
+		if(chance(3, 7)){
+			_trn = choose(90, -90, 180);
+		}
+		direction += _trn;
 		
 #define area_pop_enemies
 	var	_x = x + 16,
