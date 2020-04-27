@@ -3158,7 +3158,8 @@
 	with(instances_matching(LaserCannon, "creator", id)){
 		time = 1 + floor(abs(angle_difference(other.gunangle, other.gunangle_goal)) / 4);
 	}
-	with(instances_matching(instances_matching(Laser, "creator", id), "sprite_index", sprLaser)){
+	with(instances_matching(instances_matching(Laser, "creator", id), "petweaponbosslaser_check", null)){
+		petweaponbosslaser_check = true;
 		image_yscale = 1.4;
 		hitid = other.hitid;
 		team_instance_sprite(1, self);

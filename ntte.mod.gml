@@ -2178,6 +2178,14 @@
 	}
 	script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
 	
+	 // Turret Fix:
+	with(instances_matching(Turret, "mask_index_fix_brooooo", null)){
+		mask_index_fix_brooooo = true;
+		if(mask_index == mskNone && !canfly){
+			mask_index = mskScorpion;
+		}
+	}
+	
 	if(DebugLag) trace_time("ntte_end_step");
 	
 	instance_destroy();

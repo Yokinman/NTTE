@@ -12,7 +12,7 @@
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", "BossHealFX", "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
+		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "WarpPortal"],
 		"telabs"      : ["FreakChamber", "MutantVat", "WallSlide"]
@@ -792,6 +792,7 @@
 #define chest_create(_x, _y, _obj)
 	/*
 		Creates a given chest with some special spawn conditions applied, such as Crown of Love, Crown of Life, and Rogue
+		!!! Don't use this for replacing chests with custom chests, put that in level_start or something
 		
 		Ex:
 			chest_create(x, y, WeaponChest)

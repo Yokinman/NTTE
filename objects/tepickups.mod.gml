@@ -977,117 +977,73 @@
 	
 #define CatChest_open
 	instance_create(x, y, PortalClear);
-
+	
 	 // Manually Create ChestOpen to Link Shops:
 	var _open = instance_create(x, y, ChestOpen);
 	_open.sprite_index = spr_dead;
 	spr_dead = -1;
-
-	 // Create Shops:
-	var	o = 50,
-		_shop = [];
-
-	for(var a = -o; a <= o; a += o){
-		var	l = 28,
-			d = a + 90;
-
-		with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "ChestShop")){
-			type = ChestShop_basic;
-			creator = _open;
-			array_push(_shop, id);
+	
+	 // Shop Pool:
+	var	_hard = GameCont.hard,
+		_pool = {
+			"ammo"         : 1,
+			"health"       : 1,
+			"rads"         : 1,
+			"ammo_bonus"   : 1   * (_hard >= 6),
+			"health_bonus" : 1   * (_hard >= 6),
+			"soda"         : 0.5 * (_hard >= 10 && mod_exists("mod", "defpack tools")),
+			"spirit"       : 0.3 * (_hard >= 12),
+			"turret"       : 0.7 * (GameCont.loops > 0),
+			"rogue"        : 0,
+			"parrot"       : 0,
+			"bone"         : 0,
+			"bones"        : 0
+		};
+		
+	with(Player){
+		 // Character-Specific:
+		switch(race){
+			case "rogue"  : _pool.rogue++;  break;
+			case "parrot" : _pool.parrot++; break;
+		}
+		
+		 // Bones:
+		if(_hard >= 4){
+			if((wep_get(wep) == "crabbone" || wep_get(bwep) == "crabbone")){
+				_pool.bone = 0.5;
+			}
+		}
+		if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+			_pool.bones++;
 		}
 	}
-
-	/// Randomize Items:
-		var _pool = ["ammo", "health", "rads"];
-		
-		with(Player){
-			 // Races:
-			switch(race){
-				case "rogue"  : array_push(_pool, "rogue");  break;
-				case "parrot" : array_push(_pool, "parrot"); break;
-			}
+	
+	 // Create Shops:
+	var _angOff = 50;
+	for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff){
+		var	_dis = 28,
+			_dir = _ang + 90;
 			
-			 // Bone:
-			if(GameCont.hard >= 4 && (wep_get(wep) == "crabbone" || wep_get(bwep) == "crabbone") && chance(1, 2)){
-				array_push(_pool, "bone");
-			}
-			if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-				array_push(_pool, "bones");
-			}
-		}
-		
-		 // Bonus:
-		if(GameCont.hard >= 6){
-			array_push(_pool, "ammo_bonus");
-			array_push(_pool, "health_bonus");
-		}
-		if(GameCont.hard >= 12 && chance(1, 5)){
-			array_push(_pool, "spirit");
-		}
-		
-		 // Crowns:
-		switch(crown_current){
-			case crwn_life:
-				while(true){
-					var i = array_find_index(_pool, "health");
-					if(i >= 0) _pool[i] = "ammo";
-					else break;
-				}
-				break;
-				
-			case crwn_guns:
-				while(true){
-					var i = array_find_index(_pool, "ammo");
-					if(i >= 0) _pool[i] = "health";
-					else break;
-				}
-				break;
-		}
-		
-		 // Loop:
-		if(GameCont.loops > 0){
-			while(true){
-				var i = array_find_index(_pool, "rads");
-				if(i >= 0) _pool[i] = "rads_chest";
-				else break;
-			}
-			while(true){
-				var i = array_find_index(_pool, "ammo");
-				if(i >= 0) _pool[i] = "ammo_chest";
-				else break;
-			}
-			while(true){
-				var i = array_find_index(_pool, "health");
-				if(i >= 0) _pool[i] = "health_chest";
-				else break;
-			}
+		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "ChestShop")){
+			type = ChestShop_basic;
+			creator = _open;
 			
-			 // Beep Boop:
-			if(chance(2, 3)){
-				array_push(_pool, "turret");
+			 // Decide Item:
+			var _drop = pool(_pool);
+			if(!is_undefined(_drop)){
+				drop = _drop;
+				lq_set(_pool, drop, lq_get(_pool, drop) - 1);
 			}
 		}
-		
-		 // Important:
-		if(GameCont.hard >= 10 && mod_exists("mod", "defpack tools") && chance(1, 2)){
-			array_push(_pool, "soda");
-		}
-		
-		 // Decide:
-		with(_shop){
-			var i = irandom(array_length(_pool) - 1);
-			drop = _pool[i];
-			_pool = array_delete(_pool, i);
-		}
-
+	}
+	
 	 // Effects:
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
 	//sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
 	repeat(6) scrFX(x, y, 3, Dust);
-
-
+	
+	
 #macro ChestShop_basic	0
 #macro ChestShop_wep	1
 
@@ -1099,7 +1055,7 @@
 		image_blend = c_white;
 		image_alpha = 0.7;
 		depth = -8;
-
+		
 		 // Vars:
 		mask_index = mskWepPickup;
 		friction = 0.4;
@@ -1117,10 +1073,10 @@
 		soda = "";
 		curse = false;
 		setup = true;
-
+		
 		return id;
 	}
-
+	
 #define ChestShop_setup
 	setup = false;
 	
@@ -1131,14 +1087,50 @@
 	sprite_index = sprAmmo;
 	image_blend = c_white;
 	
-	 // Crown of Bonus:
-	if(crown_current == "bonus"){
+	 // Loop:
+	if(GameCont.loops > 0){
 		switch(drop){
-			case "ammo"         : drop = "ammo_bonus";         break;
-			case "health"       : drop = "health_bonus";       break;
-			case "ammo_chest"   : drop = "ammo_bonus_chest";   break;
-			case "health_chest" : drop = "health_bonus_chest"; break;
+			case "ammo"   : drop = "ammo_chest";   break;
+			case "health" : drop = "health_chest"; break;
+			case "rads"   : drop = "rads_chest";   break;
 		}
+	}
+	
+	 // Crowns:
+	switch(crown_current){
+		case crwn_love:
+			switch(drop){
+				case "health"             :
+				case "rads"               :
+				case "spirit"             : drop = "ammo";             break;
+				case "health_chest"       :
+				case "rads_chest"         :
+				case "turret"             : drop = "ammo_chest";       break;
+				case "health_bonus"       : drop = "ammo_bonus";       break;
+				case "health_bonus_chest" : drop = "ammo_bonus_chest"; break;
+			}
+			break;
+			
+		case crwn_life:
+			if(drop == "health"){
+				drop = "ammo";
+			}
+			break;
+			
+		case crwn_guns:
+			if(drop == "ammo"){
+				drop = "health";
+			}
+			break;
+			
+		case "bonus":
+			switch(drop){
+				case "ammo"         : drop = "ammo_bonus";         break;
+				case "ammo_chest"   : drop = "ammo_bonus_chest";   break;
+				case "health"       : drop = "health_bonus";       break;
+				case "health_chest" : drop = "health_bonus_chest"; break;
+			}
+			break;
 	}
 	
 	 // Shop Setup:

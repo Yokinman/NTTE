@@ -1125,28 +1125,31 @@
 							}
 							
 							 // Loot:
-							for(var _side = -1; _side <= 1; _side++){
-								var	_ox = ((_side == 0) ? -24 : -32),
-									_oy = -32,
-									_x = _cx + lengthdir_x((_w / 2) + _ox, _dir) + (lengthdir_x((_w / 2) + _oy, _dir - 90) * _side) + orandom(2),
-									_y = _cy + lengthdir_y((_h / 2) + _ox, _dir) + (lengthdir_y((_h / 2) + _oy, _dir - 90) * _side) + orandom(2),
-									_obj = choose(choose(WeaponChest, AmmoChest), AmmoChestMystery, MoneyPile);
+							var _num = 3 + skill_get(mut_open_mind);
+							if(_num > 0){
+								for(var _side = ((_num > 1) ? -1 : 0); _side <= 1; _side += 2 / (_num - 1)){
+									var	_ox = ((abs(_side) < 1) ? -24 : -32),
+										_oy = -32,
+										_x = _cx + lengthdir_x((_w / 2) + _ox, _dir) + (lengthdir_x((_w / 2) + _oy, _dir - 90) * _side) + orandom(2),
+										_y = _cy + lengthdir_y((_h / 2) + _ox, _dir) + (lengthdir_y((_h / 2) + _oy, _dir - 90) * _side) + orandom(2),
+										_obj = choose(choose(WeaponChest, AmmoChest), AmmoChestMystery, MoneyPile);
+										
+									if(abs(_side) < 1){
+										_obj = choose("BatChest", "CatChest");
+									}
 									
-								if(_side == 0){
-									_obj = choose("BatChest", "CatChest");
-								}
-								
-								with(chest_create(_x, _y, _obj)){
-									x = xstart;
-									y = ystart;
-								}
-								
-								 // Light:
-								with(obj_create(_x, _y - 24, "CatLight")){
-									w1 = 12;
-									w2 = random_range(18, 22);
-									h1 = 28
-									h2 = 6;
+									with(chest_create(_x, _y, _obj)){
+										x = xstart;
+										y = ystart;
+									}
+									
+									 // Light:
+									with(obj_create(_x, _y - 24, "CatLight")){
+										w1 = 12;
+										w2 = random_range(18, 22);
+										h1 = 28
+										h2 = 6;
+									}
 								}
 							}
 							

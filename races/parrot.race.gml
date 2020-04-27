@@ -47,129 +47,31 @@
 		sampler2D s0;
 		uniform float2 pixelSize;
 		
-		//float3 RGBtoHSV(in float3 RGB)
-		//{
-		//	float R = RGB.r,
-		//		  G = RGB.g,
-		//		  B = RGB.b,
-		//		  H = 0.0,
-		//		  S = 0.0,
-		//		  V = 0.0,
-		//		  maxRGB = max(max(R, G), B);
-		//		  
-		//	if(maxRGB != 0){
-		//		float delta = maxRGB - min(min(R, G), B);
-		//		
-		//		 // Hue:
-		//		if(R == maxRGB){
-		//			// -1 ~ 1, Yellow to Magenta
-		//			H = ((G - B) / delta);
-		//		}
-		//		else if(G == maxRGB){
-		//			// 1 ~ 3, Cyan to Yellow
-		//			H = 2 + ((B - R) / delta);
-		//		}
-		//		else{
-		//			// 3 ~ 5, Magenta to Cyan
-		//			H = 4 + ((R - G) / delta);
-		//		}
-		//		H *= (60.0 / 360.0);
-		//		if(H < 0) H++;
-		//		
-		//		 // Saturation:
-		//		S = delta / maxRGB;
-		//		
-		//		 // Value:
-		//		V = maxRGB;
-		//	}
-		//	
-		//	return float3(H, S, V);
-		//}
-		//
-		//bool isEyeColor(in float3 HSV)
-		//{
-		//	if(HSV.y > 0.8 && HSV.z > 0.33){
-		//		if(HSV.x < (10.0 / 360.0)){
-		//			return true;
-		//		}
-		//		if(HSV.z > 0.75){
-		//			if(
-		//				HSV.x < ( 20.0 / 360.0) ||
-		//				HSV.x > (345.0 / 360.0)
-		//			){
-		//				return true;
-		//			}
-		//		}
-		//	}
-		//	return false;
-		//}
-		//
-		//float4 main(PixelShaderInput INPUT) : SV_TARGET
-		//{
-		//	float4 RGBA = tex2D(s0, INPUT.vTexcoord);
-		//	
-		//	if(RGBA.r > RGBA.g && RGBA.r > RGBA.b){
-		//		float3 HSV = RGBtoHSV(RGBA.rgb);
-		//		
-		//		 // Turn Green if Red:
-		//		if(isEyeColor(HSV)){
-		//			return RGBA.grba;
-		//		}
-		//		
-		//		 // Turn Green if Yellow-ish or Almost-Red & Adjacent to Red:
-		//		if(
-		//			(
-		//				HSV.y > 0.7		&&
-		//				HSV.z > 0.95	&&
-		//				(
-		//					HSV.x >= (20.0 / 360.0)	&&
-		//					HSV.x <  (40.0 / 360.0)
-		//				)
-		//			)
-		//			||
-		//			(
-		//				HSV.y > 0.8		&&
-		//				HSV.z > 0.33	&&
-		//				(
-		//					HSV.x > (345.0 / 360.0)	||
-		//					HSV.x < ( 20.0 / 360.0)
-		//				)
-		//			)
-		//		){
-		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY - float2(pixelSize.x, 0.0)).rgb))) return RGBA.grba;
-		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY + float2(pixelSize.x, 0.0)).rgb))) return RGBA.grba;
-		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY - float2(0.0, pixelSize.y)).rgb))) return RGBA.grba;
-		//			if(isEyeColor(RGBtoHSV(tex2D(s0, XY + float2(0.0, pixelSize.y)).rgb))) return RGBA.grba;
-		//			// i wanna do a flood fill search but i cannot figure out how cause shaders suck ass fuck
-		//		}
-		//	}
-		//	
-		//	 // Return Blank Pixel:
-		//	return float4(0.0, 0.0, 0.0, 0.0);
-		//}
-		
 		bool isEyeColor(in float3 RGB)
 		{
-			float R = round(RGB.r * 255.0);
-			float G = round(RGB.g * 255.0);
-			float B = round(RGB.b * 255.0);
-			if(
-				R == 252.0 && G == 56.0 && B ==  0.0 ||	//  Standard enemy eye color
-				R == 199.0 && G ==  0.0 && B ==  0.0 ||	//  Freak eye color
-				R ==  95.0 && G ==  0.0 && B ==  0.0 ||	//  Freak eye color
-				R == 163.0 && G ==  5.0 && B ==  5.0 ||	//  Buff gator ammo
-				R == 105.0 && G ==  3.0 && B ==  3.0 ||	//  Buff gator ammo
-				R == 255.0 && G ==  0.0 && B ==  0.0 ||	//  Wolf eye color
-				R == 165.0 && G ==  9.0 && B == 43.0 ||	//  Snowbot eye color
-				R == 194.0 && G == 42.0 && B ==  0.0 ||	//  Explo freak color
-				R == 122.0 && G == 27.0 && B ==  0.0 ||	//  Explo freak color
-				R == 156.0 && G == 20.0 && B == 31.0 ||	//  Turret eye color
-				R ==  99.0 && G ==  9.0 && B == 17.0 ||	//  Turret color
-				R == 112.0 && G ==  0.0 && B == 17.0 ||	//  Necromancer eye color
-				R == 210.0 && G == 32.0 && B == 71.0 ||	//  Jungle fly eye color
-				R == 179.0 && G == 27.0 && B == 60.0	//  Jungle fly eye color
-			){
-				return true;
+			if(RGB.r > RGB.g + RGB.b){
+				float R = round(RGB.r * 255.0);
+				float G = round(RGB.g * 255.0);
+				float B = round(RGB.b * 255.0);
+				if(
+					R == 252.0 && G ==  56.0 && B ==  0.0 || //  Standard enemy eye color
+					R == 199.0 && G ==   0.0 && B ==  0.0 || //  Freak eye color
+					R ==  95.0 && G ==   0.0 && B ==  0.0 || //  Freak eye color
+					R == 163.0 && G ==   5.0 && B ==  5.0 || //  Buff gator ammo
+					R == 105.0 && G ==   3.0 && B ==  3.0 || //  Buff gator ammo
+					R == 255.0 && G ==   0.0 && B ==  0.0 || //  Wolf eye color
+					R == 165.0 && G ==   9.0 && B == 43.0 || //  Snowbot eye color
+					R == 194.0 && G ==  42.0 && B ==  0.0 || //  Explo freak color
+					R == 122.0 && G ==  27.0 && B ==  0.0 || //  Explo freak color
+					R == 156.0 && G ==  20.0 && B == 31.0 || //  Turret eye color
+					R == 255.0 && G == 134.0 && B == 47.0 || //  Turret eye color
+					R ==  99.0 && G ==   9.0 && B == 17.0 || //  Turret color
+					R == 112.0 && G ==   0.0 && B == 17.0 || //  Necromancer eye color
+					R == 210.0 && G ==  32.0 && B == 71.0 || //  Jungle fly eye color
+					R == 179.0 && G ==  27.0 && B == 60.0    //  Jungle fly eye color
+				){
+					return true;
+				}
 			}
 			return false;
 		}
@@ -179,13 +81,13 @@
 			float4 RGBA = tex2D(s0, INPUT.vTexcoord);
 			
 			 // Red Eyes to Green:
-			if(RGBA.r > RGBA.g && RGBA.r > RGBA.b){
+			if(RGBA.r > RGBA.g + RGBA.b){
 				if(
-					isEyeColor(RGBA.rgb)													||
-					isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(pixelSize.x, 0.0)).rgb)	||
-					isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(pixelSize.x, 0.0)).rgb)	||
-					isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(0.0, pixelSize.y)).rgb)	||
-					isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(0.0, pixelSize.y)).rgb)
+					isEyeColor(RGBA.rgb)
+					|| isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(pixelSize.x, 0.0)).rgb)
+					|| isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(pixelSize.x, 0.0)).rgb)
+					|| isEyeColor(tex2D(s0, INPUT.vTexcoord - float2(0.0, pixelSize.y)).rgb)
+					|| isEyeColor(tex2D(s0, INPUT.vTexcoord + float2(0.0, pixelSize.y)).rgb)
 				){
 					return RGBA.grba;
 				}
@@ -973,7 +875,7 @@
 						 // Ally-ify Projectiles:
 						team_instance_sprite(
 							variable_instance_get(self, "team", _vars.team),
-							instances_matching(instances_matching_gt(projectile, "id", _minID), "creator", self, noone)
+							instances_matching(instances_matching_gt([projectile, LaserCannon], "id", _minID), "creator", self, noone)
 						);
 					}
 					

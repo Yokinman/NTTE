@@ -2041,9 +2041,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		return id;
 	}
-
-
-#define BossHealFX_create(_x, _y)
+	
+	
+/*#define BossHealFX_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		image_blend = make_color_rgb(133, 249, 26);
@@ -2059,9 +2059,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		wave = random(100);
 		
 		return id;
-	}
+	}*/
 	
-#define BossHealFX_step
+/*#define BossHealFX_step
 	if(!instance_exists(target)){
 		instance_destroy();
 		exit;
@@ -2103,9 +2103,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		instance_destroy();
-	}
+	}*/
 	
-#define BossHealFX_end_step
+/*#define BossHealFX_end_step
 	 // Trail:
 	var	l = point_distance(x, y, xprevious, yprevious),
 		d = point_direction(x, y, xprevious, yprevious);
@@ -2116,11 +2116,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		image_yscale = other.image_yscale;
 		image_xscale = l;
 		image_angle = d;
-	}
+	}*/
 	
-#define BossHealFX_draw
+/*#define BossHealFX_draw
 	draw_set_color(image_blend);
-	draw_circle(x - 1, y - 1, image_yscale, false);
+	draw_circle(x - 1, y - 1, image_yscale, false);*/
 	
 	
 #define Cabinet_create(_x, _y)
@@ -4878,20 +4878,38 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			 // Room Gen:
 			var _ox = 24 * choose(-1, 1);
 			switch(_roomType){
+				
 				case WeaponChest:
 				case AmmoChest:
-					chest_create(x - _ox + orandom(1), y + orandom(1), _roomType);
-					chest_create(x + _ox + orandom(1), y + orandom(1), _roomType);
-					break;
-					
 				case HealthChest:
 				case "Backpack":
-					chest_create(x, y, _roomType);
-					break;
-					
 				case "LairChest":
-					chest_create(x - _ox + orandom(1), y + orandom(1), "CatChest");
-					chest_create(x + _ox + orandom(1), y + orandom(1), "BatChest");
+					
+					var	_num = 2 + skill_get(mut_open_mind),
+						_obj = [_roomType];
+						
+					 // Type-Specific:
+					switch(_roomType){
+						case HealthChest:
+						case "Backpack":
+							_num--;
+							break;
+							
+						case "LairChest":
+							_obj = ["BatChest", "CatChest"];
+							break;
+					}
+					
+					 // Create Objects:
+					if(_num <= 1) _ox = 0;
+					for(var i = 0; i < _num; i++){
+						chest_create(
+							x + orandom(1) + lerp(-_ox, _ox, i / (_num - 1)),
+							y + orandom(1),
+							_obj[i % array_length(_obj)]
+						);
+					}
+					
 					break;
 					
 				case "Pizza":
@@ -4954,8 +4972,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						alarm3 = 60;
 						
 						 // Ammo:
-						chest_create(other.x1 + 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
-						chest_create(other.x2 - 16 + orandom(1), y + orandom(1), choose(AmmoChest, WeaponChest));
+						_ox = (((_w * 32) / 2) - 16) * sign(_ox);
+						var _num = 2 + skill_get(mut_open_mind);
+						for(var i = 0; i < _num; i++){
+							chest_create(
+								x + orandom(1) + lerp(-_ox, _ox, i / (_num - 1)),
+								y + orandom(1),
+								choose(AmmoChest, WeaponChest)
+							);
+						}
 					}
 					
 					break;
@@ -4967,6 +4992,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					}
 					
 					break;
+					
 			}
 			
 			 // Walls:
@@ -5173,7 +5199,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Visual:
 		sprite_index = spr.VenomFlak;
 		image_speed = 0.4;
-
+		
 		 // Vars:
 		friction = 0.4;
 		damage = 6;
@@ -5181,13 +5207,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		typ = 1;
 		creator = noone;
 		charging = true;
-
+		
 		 // Alarms:
 		alarm0 = max(1, 15 / (1 + (0.5 * GameCont.loops)));
-
+		
 		return id;
 	}
-
+	
 #define VenomFlak_step
 	if(charging){
 		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0) + (0.5 * GameCont.loops);
