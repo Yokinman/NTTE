@@ -80,7 +80,7 @@
 			 // Rock Decals:
 			else if(instance_is(self, TopSmall)){
 				if(instance_exists(GenCont)){
-					if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, Floor, false, false)){
+					if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, Floor, false, false)){
 						obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
 					}
 				}
@@ -134,6 +134,7 @@
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
 		case 1: // Shell
+			
 			with(instance_random(Floor)){
 				with(obj_create(bbox_center_x, bbox_center_y, "CoastBigDecal")){
 					 // Avoid Floors:
@@ -153,9 +154,29 @@
 					}
 				}
 			}
+			
+			break;
+			
+		case 2: // Treasure
+			
+			if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
+				with(instance_random(FloorNormal)){
+					with(chest_create(bbox_center_x, bbox_center_y, "SunkenChest")){
+						var	_dis = 160 + orandom(32),
+							_dir = random(360);
+							
+						while(distance_to_object(Floor) < _dis){
+							x += lengthdir_x(16, _dir);
+							y += lengthdir_y(16, _dir);
+						}
+					}
+				}
+			}
+			
 			break;
 			
 		case 3: // Boss
+			
 			with(obj_create(10016, 10016, "Palanking")){
 				var d = random(360);
 				while(distance_to_object(Floor) < 160){
@@ -166,23 +187,8 @@
 				xstart = x;
 				ystart = y;
 			}
+			
 			break;
-	}
-	
-	 // Secret:
-	if(chance(1, 40) && variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
-		with(instance_random(WeaponChest)){
-			var	l = 64,
-				d = random(360);
-				
-			with(instance_furthest(x - 16, y - 16, Floor)){
-				d = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
-			}
-			
-			chest_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "SunkenChest");
-			
-			instance_delete(id);
-		}
 	}
 	
 	 // Spawn Thing:
@@ -352,25 +358,35 @@
 			}
 			
 			 // Push Stuff to Shore:
-			with(instances_matching(instances_matching_ge([hitme, Pickup, chestprop], "wading", 80), "visible", true)){
+			var _instPush = array_combine(
+				array_combine(
+					instances_matching(instances_matching_ge(hitme, "wading", 80), "visible", true),
+					instances_matching_ge(Pickup, "wading", 80)
+				),
+				instances_matching_ge(chestprop, "wading", 192)
+			);
+			with(_instPush){
 				if(
 					distance_to_object(Portal) > 96 &&
 					(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)
 				){
 					if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
-						var n = instance_nearest(x - 16, y - 16, Floor);
-						motion_add_ct(point_direction(x, y, n.x, n.y), 3 + ((wading - 80)) / 16);
+						var _n = instance_nearest(x - 16, y - 16, Floor),
+							_dir = point_direction(x, y, _n.x, _n.y),
+							_spd = (instance_is(self, hitme) ? 3 + ((wading - 80) / 16) : 0.8);
+							
+						motion_add_ct(_dir, _spd);
 						
 						 // Extra Player Push:
-						if(wading > 120 && instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
-							var	l = ((wading - 120) / 10) * current_time_scale,
-								d = point_direction(x, y, n.x, n.y);
+						if(wading > 120){
+							if(instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
+								var _dis = ((wading - 120) / 10) * current_time_scale;
+								x += lengthdir_x(_dis, _dir);
+								y += lengthdir_y(_dis, _dir);
 								
-							x += lengthdir_x(l, d);
-							y += lengthdir_y(l, d);
-							
-							 // FX:
-							if(chance_ct(1, 2)) instance_create(x, y, Dust);
+								 // FX:
+								if(chance_ct(1, 2)) instance_create(x, y, Dust);
+							}
 						}
 					}
 				}
@@ -769,7 +785,7 @@
 	}
 	
 	 // Mine:
-	else if(chance(1, 80)){
+	else if(GameCont.subarea == 3 && chance(1, 40)){
 		with(obj_create(_x + orandom(8), _y + orandom(8), "SealMine")){
 			 // Move to sea:
 			if(!other.styleb){
@@ -1031,7 +1047,7 @@
 					
 				 // Clamp Water Height:
 				if(!_isPlayer || !instance_exists(Portal)){
-					_wh = min(_wh, ((wading_clamp > 0) ? wading_clamp : _sprY));
+					_wh = min(_wh, ((wading_clamp > 0) ? wading_clamp : _sprY - 2));
 				}
 				
 				 // Bobbing:

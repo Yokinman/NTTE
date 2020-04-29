@@ -3565,6 +3565,7 @@
 		 // Vars:
 		num = 2;
 		wep = "merge";
+		skeal = false;
 		if(GameCont.area == "coast"){
 			wep = "trident";
 			if(mod_exists("weapon", wep)){
@@ -3588,11 +3589,39 @@
 		}
 	}
 	
-#define SunkenChest_open
-	with(instance_create(x, y, PortalClear)){
-		image_xscale *= 1.5;
-		image_yscale = image_xscale;
+	 // Ancient Treasure Guards:
+	var _num = 3 * skeal;
+	if(_num > 0){
+		if(in_distance(Player, 192) && in_sight(Player)){
+			skeal = 0;
+			
+			 // Skeals:
+			var _ang = random(360);
+			for(var d = _ang; d < _ang + 360; d += 360 / _num){
+				var	_dis = 32,
+					_dir = d + orandom(30);
+					
+				obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SunkenSealSpawn");
+			}
+			
+			 // Clear Area:
+			with(instance_create(x, y, PortalClear)){
+				image_xscale = 1.2;
+				image_yscale = image_xscale;
+			}
+			
+			 // Alert:
+			with(scrAlert(self, spr.SkealAlert)){
+				flash = 10;
+			}
+			
+			 // Sound:
+			sound_play_pitchvol(sndMutant14Turn, 0.2 + random(0.1), 1);
+		}
 	}
+	
+#define SunkenChest_open
+	instance_create(x, y, PortalClear);
 	
 	 // Sunken Chest Count:
 	with(GameCont){
@@ -3617,9 +3646,10 @@
 	
 	 // Weapon:
 	var _num = 1 + ultra_get("steroids", 1);
-	if(_num > 0) repeat(_num){
+	if(_num > 0){
 		var _wep = wep;
 		
+		 // Golden Merged Weapon:
 		if(_wep == "merge"){
 			var _part = mod_script_call("weapon", _wep, "weapon_merge_decide_raw", 0, GameCont.hard, -1, -1, true);
 			if(array_length(_part) >= 2){
@@ -3627,9 +3657,13 @@
 			}
 		}
 		
-		with(instance_create(x, y, WepPickup)){
-			wep = _wep;
-			ammo = true;
+		 // Create:
+		repeat(_num){
+			with(instance_create(x, y, WepPickup)){
+				wep = _wep;
+				ammo = true;
+			}
+			if(is_object(_wep)) _wep = lq_clone(_wep);
 		}
 	}
 	
@@ -3653,6 +3687,7 @@
 		}
 	}
 	
+	/*
 	 // Skealetons:
 	if(num + 1 > 0){
 		var _ang = random(360);
@@ -3677,7 +3712,7 @@
 					_spawnDir = d,
 					_spawnDis = random_range(320, 400);
 					
-				with(instance_nearest_bbox(x + lengthdir_x(32, _spawnDir), y + lengthdir_y(32, _spawnDir), TopSmall)){
+				with(instance_nearest(x - 8 + lengthdir_x(32, _spawnDir), y - 8 + lengthdir_y(32, _spawnDir), TopSmall)){
 					_spawnDir = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
 				}
 				
@@ -3705,6 +3740,7 @@
 			}
 		}
 	}
+	*/
 	
 	
 #define SunkenCoin_create(_x, _y)
@@ -3737,63 +3773,6 @@
 	
 #define SunkenCoin_open
 	if(speed > 0) return true;
-	
-	
-#define SunkenSealSpawn_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		var _inCoast = (GameCont.area == "coast" || (GameCont.area == area_vault && GameCont.lastarea == "coast"));
-		
-		 // Vars:
-		mask_index = mskBandit;
-		type = irandom_range(1, 3);
-		skeal = !_inCoast;
-		
-		 // Alarms:
-		alarm0 = 30 + (10 * array_length(instances_matching(CustomObject, "name", "SunkenSealSpawn")));
-		
-		return id;
-	}
-	
-#define SunkenSealSpawn_step
-	portal_poof();
-	
-	 // Make Room:
-	if(place_meeting(x, y, Wall)){
-		with(instances_meeting(x, y, Wall)){
-			if(place_meeting(x, y, other)){
-				instance_create(x, y, FloorExplo);
-				instance_destroy();
-			}
-		}
-	}
-	
-	 // Unburrowing FX:
-	if(chance_ct(1, 2)){
-		with(scrFX(x, y + random(4), 1.5, Dust)){
-			depth = -4;
-			waterbubble = false;
-		}
-	}
-	
-#define SunkenSealSpawn_alrm0
-	with(obj_create(x, y, "Seal")){
-		skeal = other.skeal;
-		type = other.type;
-		
-		 // Alert:
-		with(scrAlert(self, (skeal ? spr.SkealAlert : spr.SealAlert))){
-			blink = 20;
-		}
-		
-		 // Sound:
-		if(skeal){
-			sound_play_hit_ext(sndBloodGamble, 1.6 + random(0.2), 1.8);
-		}
-		sound_play_hit(sndChickenRegenHead, 0.1);
-		sound_play_pitchvol(sndSharpTeeth, 0.6 + random(0.4), 0.4);
-	}
-	
-	instance_destroy();
 	
 	
 #define VaultFlower_create(_x, _y)

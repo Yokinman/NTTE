@@ -4449,15 +4449,13 @@
 		}
 		
 		 // Restore Vars:
-		for(var i = 0; i < lq_size(other.target_save); i++){
-			variable_instance_set(id, lq_get_key(other.target_save, i), lq_get_value(other.target_save, i));
-		}
+		variable_instance_set_list(id, other.target_save);
 		
 		 // Not today, Walls:
 		if(other.unstick && place_meeting(x, y, Wall)){
 			if(place_meeting(x, y, Floor)){
 				 // Emergency:
-				if(!instance_budge(Wall, -1)){
+				if(other.maxspeed <= 0 || !instance_budge(Wall, -1)){
 					 // Emergency+:
 					with(instance_create(x, y, PortalClear)){
 						mask_index = other.mask_index;

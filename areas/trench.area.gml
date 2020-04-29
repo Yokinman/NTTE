@@ -134,6 +134,7 @@
 		instance_delete(id);
 	}
 	
+	/*
 	 // Secret:
 	if(chance(1, 40) && variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(WeaponChest)){
@@ -142,6 +143,7 @@
 			instance_delete(id);
 		}
 	}
+	*/
 	
 	switch(GameCont.subarea){
 		 // Small Pit Boy:

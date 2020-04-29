@@ -7,10 +7,10 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	objList = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "SunkenSealSpawn", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
-		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "WaterStreak"],
+		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
@@ -46,6 +46,8 @@
 		[[spr.EnemySlug,				"CustomShell"	],	[sprSlugBullet,			Slug				],	[sprPopoSlug,			PopoSlug		]], // Slug
 		[[spr.EnemySlugDisappear,		"CustomShell"	],	[sprSlugDisappear,		Slug				],	[sprPopoSlugDisappear,	PopoSlug		]], // Slug Disappear
 		[[spr.EnemySlugHit								],	[sprSlugHit									],	[sprIDPDBulletHit						]], // Slug Hit
+		[[spr.EnemySlug,				"CustomShell"	],	[sprHyperSlug,			Slug				],	[sprPopoSlug,			PopoSlug		]], // Hyper Slug
+		[[spr.EnemySlugDisappear,		"CustomShell"	],	[sprHyperSlugDisappear,	Slug				],	[sprPopoSlugDisappear,	PopoSlug		]], // Hyper Slug Disappear
 		[[spr.EnemyHeavySlug,			"CustomShell"	],	[sprHeavySlug,			HeavySlug			],	[										]], // Heavy Slug
 		[[spr.EnemyHeavySlugDisappear,	"CustomShell"	],	[sprHeavySlugDisappear,	HeavySlug			],	[										]], // Heavy Slug Disappear
 		[[spr.EnemyHeavySlugHit							],	[sprHeavySlugHit,							],	[										]], // Heavy Slug Hit
@@ -74,6 +76,9 @@
 		[[spr.EnemyPlasmaTrail							],	[sprPlasmaTrail								],	[sprPopoPlasmaTrail						]], // Plasma Particle
 		[[spr.EnemyVlasmaBullet							],	[spr.VlasmaBullet							],	[										]], // Vector Plasma
 		[[sprEnemySlash									],	[sprSlash									],	[sprEnemySlash							]]  // Slash
+		// Devastator
+		// Lightning Cannon
+		// Hyper Slug (kinda)
 	];
 	
 	spriteTeamMap = ds_map_create();
@@ -4781,16 +4786,20 @@
 					spawn_dis = _spawnDis;
 				}
 				if(spawn_dis > 0){
-					var l = 4;
-					while(
-						distance_to_object(Floor)        < spawn_dis      ||
-						distance_to_object(PortalClear)  < spawn_dis + 16 ||
-						distance_to_object(Bones)        < 16             ||
-						distance_to_object(TopPot)       < 8              ||
-						distance_to_object(CustomObject) < 8
-					){
-						x += lengthdir_x(l, spawn_dir);
-						y += lengthdir_y(l, spawn_dir);
+					while(true){
+						var _dis = max(
+							spawn_dis      - distance_to_object(Floor),
+							spawn_dis + 16 - distance_to_object(PortalClear),
+							16             - distance_to_object(Bones),
+							8              - distance_to_object(TopPot),
+							8              - distance_to_object(CustomObject)
+						);
+						if(_dis > 0){
+							_dis = max(1, _dis);
+							x += lengthdir_x(_dis, spawn_dir);
+							y += lengthdir_y(_dis, spawn_dir);
+						}
+						else break;
 					}
 				}
 				x = round(x);
@@ -4801,7 +4810,7 @@
 					if(instance_is(target, enemy)){
 						 // Setup Time Until Jump Mode:
 						if(jump_time == 0){
-							with(instance_nearest_bbox(x, y, Floor)){
+							with(instance_nearest(x - 16, y - 16, Floor)){ //instance_nearest_bbox(x, y, Floor)){
 								other.jump_time = 90 + (distance_to_object(Player) * (2 + GameCont.loops));
 							}
 						}
@@ -4855,7 +4864,7 @@
 				}
 				
 				 // Insta-Land:
-				var n = instance_nearest_bbox(x, y, Floor);
+				var n = instance_nearest(x - 16, y - 16, Floor); //instance_nearest_bbox(x, y, Floor);
 				if(
 					instance_exists(n)                                                                                                            &&
 					!instance_exists(NothingSpiral)                                                                                               &&
@@ -5457,7 +5466,9 @@
 								case sprBullet2            :
 								case sprBullet2Disappear   : spr_dead = sprBullet2Disappear; break;
 								case sprSlugBullet         :
-								case sprSlugDisappear      : spr_dead = sprSlugHit;          break;
+								case sprSlugDisappear      :
+								case sprHyperSlug          :
+								case sprHyperSlugDisappear : spr_dead = sprSlugHit;          break;
 								case sprHeavySlug          :
 								case sprHeavySlugDisappear : spr_dead = sprHeavySlugHit;     break;
 								case sprFlakBullet         : spr_dead = sprFlakHit;          break;

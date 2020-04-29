@@ -74,6 +74,23 @@
 		instance_delete(id);
 	}
 	
+	 // Bab Skull:
+	if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
+		with(array_shuffle(FloorNormal)){
+			if(point_distance(bbox_center_x, bbox_center_y, 10016, 10016) > 48){
+				if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
+					obj_create(bbox_center_x, bbox_center_y, "OasisPetBecome");
+					break;
+				}
+			}
+		}
+	}
+	
+	 // Cool Crack:
+	with(instance_nearest_bbox(10016, 10016, FloorNormal)){
+		obj_create(bbox_center_x, bbox_center_y, "Crack");
+	}
+	
 	 // Secret Chest Room:
 	if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(Floor)){
@@ -87,8 +104,10 @@
 				_floorDis = 64;
 				
 			with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-				chest_create(x, y, "SunkenChest");
-				instance_create(x, y - 8, LightBeam);
+				with(chest_create(x, y, "SunkenChest")){
+					skeal = true;
+					instance_create(x, y - 8, LightBeam);
+				}
 				
 				 // Softlock Prevention:
 				with(obj_create(x1, y1, "SunkenRoom")){
@@ -106,17 +125,22 @@
 		}
 	}
 	
-	 // Bab Skull:
-	if(GameCont.subarea == 1 && instance_exists(Floor) && instance_exists(Player)){
-		with(array_shuffle(FloorNormal)){
-			if(point_distance(bbox_center_x, bbox_center_y, 10016, 10016) > 48){
-				if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop) && !place_meeting(x, y, Wall)){
-					obj_create(bbox_center_x, bbox_center_y, "OasisPetBecome");
-					break;
-				}
-			}
+	 // Top Props:
+	with(instances_matching([TopSmall, Wall], "", null)){
+		if(chance(1, 300)){
+			top_create(
+				random_range(bbox_left, bbox_right + 1),
+				random_range(bbox_top, bbox_bottom + 1),
+				pool([
+					[OasisBarrel, 1],
+					[Anchor,      1/4]
+				]),
+				-1,
+				-1
+			);
 		}
 	}
+	
 	
 #define area_finish
 	lastarea = area;
@@ -134,21 +158,6 @@
 	
 	 // Next Subarea: 
 	else subarea++;
-	
-#define area_step
-	if(DebugLag) trace_time();
-	
-	 // Spawn cool crack effect:
-	if(instance_exists(Portal)){
-		var _crack = instances_matching(CustomObject, "name", "Crack");
-		if(array_length(_crack) <= 0){
-			with(instance_nearest_bbox(10016, 10016, FloorNormal)){
-				obj_create(bbox_center_x, bbox_center_y, "Crack");
-			}
-		}
-	}
-	
-	if(DebugLag) trace_time("oasis_area_step");
 	
 #define area_effect(_vx, _vy)
 	var	_x = _vx + random(game_width),

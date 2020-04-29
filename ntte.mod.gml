@@ -758,20 +758,22 @@
 			
 			break;
 			
+			/*
 		case area_oasis:
 		case "oasis":
 			
 			 // Top Spawns:
 			_topSpawn = [
-				[BoneFish,		1],
-				["Puffer",		1],
-				["Hammerhead",	(GameCont.loops > 0)],
-				[Freak,			(GameCont.loops > 0) / 2],
-				[OasisBarrel,	1],
-				[Anchor,		1/4]
+				[BoneFish,     1],
+				["Puffer",     1],
+				["Hammerhead", (GameCont.loops > 0)],
+				[Freak,		   (GameCont.loops > 0) / 2],
+				[OasisBarrel,  1],
+				[Anchor,       1/4]
 			];
 			
 			break;
+			*/
 			
 		case area_mansion: /// MANSIOM  its MANSION idiot, who wrote this
 			

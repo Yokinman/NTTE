@@ -3029,8 +3029,48 @@
 		case proj_create:
 			if(object_index == Disc) return true; // No discs
 			
-			o.time = 50;
-			o.team_change = (speed > 0);
+			var _obj = object_index;
+			
+			 // Resprite:
+			with(team_instance_sprite(1, self)){
+				o.time = 50;
+				o.team_change = (speed > 0);
+			
+				 // Auto-Hitid:
+				if(hitid == -1){
+					var	_sprt = sprite_index,
+						_name = string_letters(object_get_name(_obj));
+						
+					switch(_obj){
+						case Bullet2:
+							_name = "Shell";
+							break;
+							
+						case Laser:
+						case EnemyLaser:
+							_sprt = sprEnemyLaserStart;
+							break;
+							
+						case PlasmaBig:
+							_name = "BigPlasma";
+							break;
+							
+						case PlasmaHuge:
+							_name = "HugePlasma";
+							break;
+					}
+					
+					 // Auto-Space:
+					for(var i = 2; i <= string_length(_name); i++){
+						var _char = string_char_at(_name, i);
+						if(_char == string_upper(_char)){
+							_name = string_insert(" ", _name, i++);
+						}
+					}
+					
+					hitid = [_sprt, _name];
+				}
+			}
 			break;
 			
 		case proj_step:
@@ -3085,7 +3125,7 @@
 					y -= vspeed_raw * (1 - _spd);
 				}
 			}
-			else if(object_index == Laser){
+			else if(object_index == Laser || object_index == EnemyLaser){
 				if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 					var _inst = instance_copy(false);
 					with(_inst){
@@ -3109,7 +3149,6 @@
 						
 						 // Scary laser:
 						team = -1;
-						if(hitid == -1) hitid = [sprLaserEnd, "LASER"];
 						
 						 // Effects:
 						sound_play_hit(sndDiscBounce, 0.3);
@@ -3130,25 +3169,8 @@
 			if(o.team_change && !place_meeting(x, y, creator)){
 				o.team_change = false;
 				team = -1;
-				
-				 // Auto-Hitid:
-				if(hitid == -1){
-					var n = object_get_name(object_index);
-					switch(n){
-						case "Bullet1":	n = "Bullet";	break;
-						case "Bullet2":	n = "Shell";	break;
-						default:
-							 // Auto-Space:
-							for(var i = 2; i <= string_length(n); i++){
-								var c = string_char_at(n, i);
-								if(c == string_upper(c)){
-									n = string_insert(" ", n, i++);
-								}
-							}
-					}
-					hitid = [object_get_sprite(object_index), n];
-				}
 			}
+			
 			break;
 	}
 	

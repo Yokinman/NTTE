@@ -13,6 +13,7 @@
 			sndBouncerShotgun,
 			sndBouncerSmg,
 			sndClusterLauncher,
+			sndConfettiGun,
 			sndCrossbow,
 			sndDiscgun,
 			sndDoubleMinigun,
@@ -40,6 +41,7 @@
 			sndGrenade,
 			sndGrenadeRifle,
 			sndGrenadeShotgun,
+			sndGruntFire,
 			sndGunGun,
 			sndHeavyCrossbow,
 			sndHeavyMachinegun,
@@ -82,6 +84,7 @@
 			sndSuperSplinterGun,
 			sndToxicLauncher,
 			sndTripleMachinegun,
+			sndTurretFire,
 			sndUltraPistol,
 			sndWaveGun
 			],
@@ -89,7 +92,8 @@
 			sndBlackSword,
 			sndBloodHammer,
 			sndChickenSword,
-			sndClusterOpen,
+			//sndClusterOpen,
+			sndCrossReload,
 			sndEnergyHammer,
 			sndEnergyHammerUpg,
 			sndEnergyScrewdriver,
@@ -103,8 +107,8 @@
 			sndHammer,
 			sndJackHammer,
 			sndScrewdriver,
+			sndShotReload,
 			sndShovel,
-			sndToxicBoltGas,
 			sndUltraShovel,
 			sndWrench
 			],
@@ -136,33 +140,39 @@
 			sndBloodCannon,
 			sndDoubleFireShotgun,
 			sndDoubleShotgun,
-			sndFlakExplode,
-			sndFlameCannon,
-			sndRocket,
 			sndEraser,
 			sndExplosionS,
+			sndFlakExplode,
+			sndFlameCannon,
 			sndHeavySlugger,
 			sndHyperSlugger,
+			sndIDPDNadeExplo,
 			sndLightningCannon,
 			sndLightningShotgun,
 			sndLightningShotgunUpg,
 			sndPlasmaBig,
 			sndPlasmaHit,
+			sndRocket,
 			sndSawedOffShotgun,
 			sndSuperBazooka,
 			sndUltraCrossbow,
 			sndUltraGrenade,
 			sndUltraShotgun,
 			sndUltraLaser,
-			sndUltraLaserUpg
+			sndUltraLaserUpg,
+			sndWallBreakRock
 			],
 		"sndOasisPopo" : [
 			sndEliteIDPDPortalSpawn,
 			sndIDPDPortalSpawn
 			],
 		"sndOasisPortal" : [
+			sndGoldRocketFly,
+			sndPortalOpen,
+			sndRocketFly,
 			sndLaserCannonCharge,
-			sndPortalOpen
+			sndPlasmaReload,
+			sndPlasmaReloadUpg
 			],
 		"sndOasisChest" : [
 			sndAmmoChest,
@@ -170,12 +180,17 @@
 			sndBigWeaponChest,
 			sndChest,
 			sndCursedChest,
-			sndGoldChest,
+			//sndGoldChest,
 			sndHealthChest,
 			sndHealthChestBig,
+			sndHitWall,
+			sndShotgunHitWall,
+			sndToxicBoltGas,
 			sndWeaponChest
 			],
 		"sndOasisHurt" : [
+			sndBoltHitWall,
+			sndMeleeWall,
 			sndMutant1Hurt,
 			sndMutant2Hurt,
 			sndMutant3Hurt,
@@ -194,6 +209,8 @@
 			sndMutant16Hurt
 			],
 		"sndOasisDeath" : [
+			sndEliteShielderFire,
+			sndGrenadeHitWall,
 			sndMutant1Dead,
 			sndMutant2Dead,
 			sndMutant3Dead,
@@ -642,52 +659,67 @@
 		 // Visual:
 		sprite_index = spr.Crack;
 		image_speed = 0;
+		depth = 5;
+		visible = false;
 		
 		 // Vars:
 		mask_index = mskWepPickup;
-		
-		 // Notice me bro:
-		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 8);
-		repeat(3) scrFX(x, y, 2, Smoke);
 		
 		return id;
 	}
 	
 #define Crack_step
-	if(image_index < 1){
-		if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion)){
-			image_index = 1;
+	if(visible){
+		if(image_index < 1){
+			 // Effects:
+			if(chance_ct(1, 4)){
+				with(instance_create(x, y, Bubble)){
+					motion_set(90 + orandom(5), 4 + random(3));
+					friction = 0.2;
+				}
+			}
 			
-			 // Open effects:
-			sound_play_pitchvol(sndPillarBreak,     0.8, 1.2);
-			sound_play_pitchvol(sndOasisPortal,     1.0, 0.3);
-			sound_play_pitchvol(sndSnowTankShoot,   0.6, 0.3);
-			
-			sleep(50);
-			view_shake_at(x, y, 20);
-			
-			repeat(5 + irandom(5)) with(instance_create(x, y, Debris))
-				motion_set(random(360), 3 + random(5));
+			 // Open:
+			if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion)){
+				image_index = 1;
 				
-			repeat(10 + irandom(10)) with(instance_create(x, y, Bubble))
-				motion_set(random(360), 1 + random(2));
+				 // Effects:
+				sleep(50);
+				view_shake_at(x, y, 20);
+				repeat(5 + irandom(5)){
+					with(instance_create(x, y, Debris)){
+						motion_set(random(360), 3 + random(5));
+					}
+				}
+				repeat(10 + irandom(10)){
+					with(instance_create(x, y, Bubble)){
+						motion_set(random(360), 1 + random(2));
+					}
+				}
 				
-			 // Portal
-			with(instance_create(x, y, Portal)){
-				sound_stop(sndPortalOpen);
-				image_alpha = 0;
+				 // Sound:
+				sound_play_pitchvol(sndPillarBreak,   0.8, 1.2);
+				sound_play_pitchvol(sndOasisPortal,   1,   0.3);
+				sound_play_pitchvol(sndSnowTankShoot, 0.6, 0.3);
+				
+				 // Portal:
+				with(instance_create(x, y, Portal)){
+					sound_stop(sndPortalOpen);
+					image_alpha = 0;
+				}
 				GameCont.area = "trench";
 				GameCont.subarea = 0;
 			}
 		}
+	}
+	
+	 // Activate:
+	else if(instance_exists(Portal)){
+		visible = true;
 		
-		 // Bubble effects:
-		else if(chance_ct(1, 4)){
-			with(instance_create(x, y, Bubble)){
-				motion_set(90 + orandom(5), 4 + random(3));
-				friction = 0.2;
-			}
-		}
+		 // Notice me bro:
+		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 8);
+		repeat(3) scrFX(x, y, 2, Smoke);
 	}
 	
 	
@@ -1047,6 +1079,7 @@
 		 // Sound:
 		snd_hurt = sndOasisHurt;
 		snd_dead = sndOasisDeath;
+		snd_mele = sndOasisMelee;
 		
 		 // Vars:
 		mask_index = mskFreak;
@@ -1190,12 +1223,20 @@
 	
 #define SunkenRoom_step
 	if(instance_exists(Floor)){
-		if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+		if(
+			place_meeting(x, y, Player) ||
+			place_meeting(x, y, Portal) ||
+			place_meeting(x, y, enemy)
+		){
 			var _tunnel = false;
 			
 			 // Player/Enemy Check:
-			with(floors) if(instance_exists(self)){
-				if(place_meeting(x, y, Player) || place_meeting(x, y, enemy)){
+			with(instances_matching(floors, "", null)){
+				if(
+					place_meeting(x, y, Player) ||
+					place_meeting(x, y, Portal) ||
+					place_meeting(x, y, enemy)
+				){
 					_tunnel = true;
 					break;
 				}
@@ -1248,6 +1289,67 @@
 	}
 	
 	
+#define SunkenSealSpawn_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		//var _inCoast = (GameCont.area == "coast" || (GameCont.area == area_vault && GameCont.lastarea == "coast"));
+		
+		 // Vars:
+		mask_index = mskBandit;
+		type = irandom_range(1, 3);
+		skeal = true;//!_inCoast;
+		
+		 // Alarms:
+		alarm0 = 30 + (10 * array_length(instances_matching(CustomObject, "name", "SunkenSealSpawn")));
+		
+		 // :
+		repeat(3){
+			instance_create(x, y, Smoke);
+		}
+		
+		return id;
+	}
+	
+#define SunkenSealSpawn_step
+	portal_poof();
+	
+	 // Make Room:
+	if(place_meeting(x, y, Wall)){
+		with(instances_meeting(x, y, Wall)){
+			if(place_meeting(x, y, other)){
+				instance_create(x, y, FloorExplo);
+				instance_destroy();
+			}
+		}
+	}
+	
+	 /*
+	 // Unburrowing FX:
+	if(chance_ct(1, 2)){
+		with(scrFX(x, y + random(4), 1.5, Dust)){
+			image_blend = merge_color(c_aqua, c_white, 0.6);
+			depth = -4;
+			waterbubble = false;
+		}
+	}
+	*/
+	
+#define SunkenSealSpawn_alrm0
+	with(obj_create(x, y, "Seal")){
+		skeal = other.skeal;
+		type = other.type;
+		
+		 // Effects:
+		instance_create(x, y, AssassinNotice);
+		if(skeal){
+			sound_play_hit_ext(sndBloodGamble, 1.6 + random(0.2), 1.8);
+		}
+		sound_play_hit(sndChickenRegenHead, 0.1);
+		sound_play_pitchvol(sndSharpTeeth, 0.6 + random(0.4), 0.4);
+	}
+	
+	instance_destroy();
+	
+	
 #define WaterStreak_create(_x, _y)
 	with(instance_create(_x, _y, AcidStreak)){
 		 // Visual:
@@ -1280,6 +1382,7 @@
 		 // Sound:
 		snd_hurt = sndScorpionHit;
 		snd_dead = sndScorpionDie;
+		snd_mele = sndScorpionMelee;
 		
 		 // Vars:
 		maxhealth = 12;

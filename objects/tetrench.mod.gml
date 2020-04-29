@@ -2080,8 +2080,8 @@
 			electroplasma_side *= -1;
 			
 			 // Sounds:
-			sound_play_pitch(sndOasisShoot, 		1.1 + random(0.3));
-			sound_play_pitchvol(sndGammaGutsProc,	0.9 + random(0.5), 0.4);
+			sound_play_pitch(sndOasisShoot,       1.1 + random(0.3));
+			sound_play_pitchvol(sndGammaGutsProc, 0.9 + random(0.5), 0.4);
 			
 			 // Effects:
 			instance_create(posx + orandom(8), posy + orandom(8), PortalL);
