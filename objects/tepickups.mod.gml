@@ -4192,6 +4192,7 @@
 #define WepPickupStick_create(_x, _y)
 	with(instance_create(_x, _y, WepPickup)){
 		 // Vars:
+		mask_index = mskShield;
 		stick_target = noone;
 		stick_x = 0;
 		stick_y = 0;
@@ -4201,27 +4202,24 @@
 	}
 	
 #define WepPickupStick_step
-	var t = stick_target;
-	if(instance_exists(t)){
-		speed = 0;
+	if(instance_exists(stick_target)){
 		canwade = false;
 		rotspeed = 0;
 		
 		 // Stick in Target:
-		var	l = 24,
-			d = rotation;
-			
-		x = t.x + t.hspeed_raw + stick_x;
-		y = t.y + t.vspeed_raw + stick_y;
-		if("z" in t){
-			if(t.object_index == RavenFly || t.object_index == LilHunterFly){
-				y += t.z;
+		var _t = stick_target;
+		x = _t.x + _t.hspeed_raw + stick_x;
+		y = _t.y + _t.vspeed_raw + stick_y;
+		if("z" in _t){
+			if(_t.object_index == RavenFly || _t.object_index == LilHunterFly){
+				y += _t.z;
 			}
-			else y -= t.z;
+			else y -= _t.z;
 		}
-		visible = t.visible;
 		xprevious = x;
 		yprevious = y;
+		speed = 0;
+		visible = (_t.visible || instance_is(_t, NothingIntroMask));
 		
 		 // Deal Damage w/ Taken Out:
 		if(stick_damage != 0 && fork()){
@@ -4233,11 +4231,28 @@
 				_y = y;
 				
 			wait 0;
+			
 			if(!instance_exists(self)){
-				with(t){
-					repeat(3) instance_create(x, y, AllyDamage);
+				with(_t){
+					 // Effects:
+					var	_prop = (instance_is(self, prop) || instance_is(self, Nothing) || instance_is(self, Nothing2)),
+						_dis  = 24;
+						
+					repeat(3){
+						with(scrFX(
+							_x + lengthdir_x(_dis, _ang),
+							_y + lengthdir_y(_dis, _ang),
+							(_prop ? 2.5  : 0),
+							(_prop ? Dust : AllyDamage)
+						)){
+							depth = min(depth, other.depth - 1);
+						}
+					}
+					
+					 // Damage:
 					projectile_hit_raw(self, _damage, true);
-
+					
+					 // Kick:
 					with(instance_nearest_array(_x, _y, array_combine(instances_matching(Player, "wep", _wep), instances_matching(Player, "bwep", _wep)))){
 						if(wep == _wep){
 							wkick = 10;
@@ -4248,12 +4263,15 @@
 					}
 				}
 			}
+			
 			exit;
 		}
 	}
-	else{
+	else if(stick_target != noone){
+		stick_target = noone;
+		visible = true;
 		canwade = true;
-		if(rotspeed == 0) rotspeed = random_range(1, 2) * choose(-1, 1);
+		rotspeed = random_range(1, 2) * choose(-1, 1);
 	}
 	
 	

@@ -14,12 +14,17 @@
 #define FreakChamber_create(_x, _y)
 	/*
 		Creates an epic room on the side of the level that opens to release freaks
+		Waits for a certain amount of enemies to be killed or for the Player to pass nearby before spawning
 		
 		Vars:
 			image_xscale - Room's width
 			image_yscale - Room's height
 			hallway_size - Hallway's length
 			type         - The type of room to create: "Freak", "Explo", "Rhino", "Vat"
+			obj          - The freak object to create
+			num          - How many freak objects to create
+			enemies      - How many enemies existed on creation
+			spawnmoment  - Opens when this percentage of enemies are left
 			open         - Can the room open anywhere, true/false
 			setup        - Perform type-specific setup code, true/false
 			alarm0       - Delay before opening, is set when a Player passes nearby
@@ -39,10 +44,14 @@
 			"Explo" : 4,
 			"Vat"   : 1
 		});
+		obj = -1;
+		num = 1;
+		enemies = instance_number(enemy);
+		spawnmoment = random_range(0.3, 0.9);
 		open = false;
 		setup = true;
 		slide_path = [
-			[45,  0, 0, [sndToxicBoltGas,  0.4 + random(0.1), 1  ]], // Delay
+			[30,  0, 0, [sndToxicBoltGas,  0.4 + random(0.1), 1  ]], // Delay
 			[16,  0, 1, [sndTurretFire,    0.3 + random(0.1), 0.9]], // Inset
 			[10,  0, 0, [sndToxicBoltGas,  0.3 + random(0.1), 0.5]], // Delay
 			[16, 90, 1, [sndSwapMotorized, 0.5 + random(0.1), 1  ]]  // Open
@@ -55,30 +64,30 @@
 	setup = false;
 	
 	 // Type Setup:
-	var _loop = round(GameCont.loops * random_range(0.25, 0.5));
 	switch(type){
 		case "Freak":
-			if(GameCont.loops > 0 && chance(1, 3)){
-				image_yscale *= 2 + _loop;
-				hallway_size *= 1 + irandom(1) + floor(_loop / 2);
-			}
-			else{
-				image_xscale *= 2 + _loop;
-			}
+			obj = Freak;
+			var _num = num;
+			num *= (1 + GameCont.loops) * 2;
+			image_xscale *= 1 + ceil(num / 8);
+			num += irandom_range(2, 6) * _num;
 			break;
 			
 		case "Explo":
-			if(GameCont.loops > 0){
-				image_xscale *= 2 + min(2, floor(GameCont.loops / 5));
-				image_yscale *= 2 + min(2, floor(GameCont.loops / 5));
-			}
+			obj = ExploFreak;
+			num *= 1 + ceil(GameCont.loops / 2);
+			image_xscale *= 1 + ceil((num - 4) / 12);
+			image_yscale *= 1 + ceil((num - 4) / 12);
 			break;
 			
 		case "Rhino":
-			image_xscale *= 2 + _loop;
+			obj = RhinoFreak;
+			num *= 1 + ceil(GameCont.loops / 2);
+			image_xscale *= 1 + floor(num * 2/3);
 			break;
 			
 		case "Vat":
+			obj = Necromancer;
 			image_xscale *= 3;
 			image_yscale *= 3;
 			hallway_size *= irandom_range(1, 3);
@@ -88,19 +97,31 @@
 #define FreakChamber_step
 	if(setup) FreakChamber_setup();
 	
-	 // No Portal:
-	if(!instance_exists(enemy) && !instance_exists(becomenemy)){
+	 // Force Spawn:
+	if(instance_number(enemy) <= enemies * spawnmoment){
 		if(!open){
 			open = true;
-			alarm0 = 1;
+			alarm0 = (instance_exists(enemy) ? 30 : 1);
 		}
 	}
 	
 	 // Wait for Nearby Player:
 	else if(alarm0 < 0 && instance_exists(Player)){
 		var _target = instance_nearest(x, y, Player);
-		if(open || (in_sight(_target) && in_distance(_target, 64))){
+		if(open || (in_sight(_target) && in_distance(_target, 96))){
 			alarm0 = 60;
+		}
+	}
+	
+	 // Synchronize:
+	if(alarm0 > 0){
+		with(instances_matching_gt(instances_matching(object_index, "name", name), "alarm0", 0)){
+			if(alarm0 < other.alarm0){
+				other.alarm0 = alarm0;
+			}
+			else{
+				alarm0 = other.alarm0;
+			}
 		}
 	}
 	
@@ -204,10 +225,15 @@
 									_floorHall = floor_fill(_hallX, _hallY, _hallW, _hallH, ""),
 									_floorMain = floor_fill(_x, _y, _w, _h, "");
 									
+								floor_reset_style();
+								
+								 // Transition Walls:
 								with(instances_matching_gt(Wall, "id", _minID)){
 									topspr = area_get_sprite(GameCont.area, sprWall1Trans);
 									if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
 								}
+								
+								 // Details:
 								with(instances_matching_gt(Floor, "id", _minID)){
 									if(chance(1, 5)){
 										var s = styleb;
@@ -217,8 +243,6 @@
 									}
 									depth = 10;
 								}
-								
-								floor_reset_style();
 								
 								 // Reveal Tiles:
 								var _reveal = [];
@@ -247,7 +271,7 @@
 									
 									if(_can) array_push(_reveal, id);
 								}
-								with(floor_reveal(_reveal, 15)){
+								with(floor_reveal(_reveal, 10)){
 									move_dis = 0;
 									flash_color = color;
 									
@@ -258,32 +282,25 @@
 								}
 								
 								 // Freaks:
-								switch(type){
-									case "Freak":
-										
-										with(_floorMain){
-											repeat(2 + irandom(2)){
-												with(instance_create(_x + orandom(8), _y + orandom(8), Freak)){
+								if((is_real(obj) && object_exists(obj)) || is_string(obj)){
+									for(var i = 0; i < num; i++){
+										with(_floorMain[floor(((i + random(1)) / num) * array_length(_floorMain))]){
+											with(obj_create(bbox_center_x + orandom(4), bbox_center_y + orandom(4), other.obj)){
+												if(instance_is(self, enemy)){
 													walk = true;
 													direction = random(360);
+													for(var j = 0; j < array_length(_slidePath); j++){
+														alarm1 += _slidePath[j, 0];
+													}
 												}
 											}
 										}
-										
-										break;
-										
+									}
+								}
+								
+								 // Type-Specific:
+								switch(type){
 									case "Explo":
-										
-										repeat(1 + (random_range(2, 3) * GameCont.loops)){
-											with(instance_create(_x + orandom(4), _y + orandom(4), ExploFreak)){
-												walk = true;
-												direction = random(360);
-												for(var i = 0; i < array_length(_slidePath); i++){
-													alarm1 += _slidePath[i, 0];
-												}
-											}
-										}
-										
 										 // Scorchmarks:
 										with(_floorMain) if(chance(1, 3)){
 											with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Scorchmark)){
@@ -293,22 +310,11 @@
 												image_angle = random(360);
 											}
 										}
-										
-										break;
-										
-									case "Rhino":
-										
-										with(_floorMain){
-											instance_create(bbox_center_x, bbox_center_y, RhinoFreak);
-										}
-										
 										break;
 										
 									case "Vat":
-										
 										obj_create(_x, _y - 4, "MutantVat");
 										instance_create(_x + choose(-32, 32), _y - 2 + choose(-32, 32), Terminal);
-										
 										break;
 								}
 								
@@ -880,8 +886,8 @@
 			x += _mx;
 			y += _my;
 			
-			 // Collision:
 			if(_mx != 0 || _my != 0){
+				 // Collision:
 				if(place_meeting(x, y, hitme)){
 					with(instances_meeting(x, y, hitme)){
 						if(place_meeting(x, y, other)){
@@ -890,6 +896,9 @@
 						}
 					}
 				}
+				
+				 // Shake:
+				view_shake_max_at(bbox_center_x, bbox_center_y, 3);
 			}
 			
 			 // Visual:

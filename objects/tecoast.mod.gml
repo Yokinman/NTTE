@@ -4784,32 +4784,30 @@
 		}
 		
 		 // WepPickup:
-		var t = target;
-		with(obj_create(x, y, (instance_exists(t) ? "WepPickupStick" : WepPickup))){
+		var _stickTarget = target;
+		with(obj_create(x, y, (instance_exists(_stickTarget) ? "WepPickupStick" : WepPickup))){
 			wep = w;
 			curse = other.curse;
 			rotation = other.image_angle;
 			
 			 // Stick:
-			if(instance_exists(t)){
-				stick_target = t;
+			if(instance_exists(_stickTarget)){
+				stick_target = _stickTarget;
 				stick_damage = other.damage;
-				if(max(abs(t.sprite_width), abs(t.sprite_height)) > 64){
-					rotation = angle_lerp(rotation, point_direction(x, y, t.x, t.y), 1/2);
-					stick_x = x - t.x;
-					stick_y = y - t.y;
-				}
-				else{
-					var	l = 24,
-						d = rotation + 180;
+				with(stick_target){
+					var	_len = 24,
+						_dir = other.rotation;
 						
-					stick_x = lengthdir_x(l, d);
-					stick_y = lengthdir_y(l, d);
+					if(max(bbox_width, bbox_height) > _len + 8){
+						other.rotation = angle_lerp(_dir, point_direction(other.x, other.y, x, y), 1/2);
+					}
+					else{
+						other.x = x - lengthdir_x(_len, _dir);
+						other.y = y - lengthdir_y(_len, _dir);
+					}
 				}
-				
-				 // Bigger Hitbox:
-				image_xscale *= 2;
-				image_yscale = image_xscale;
+				stick_x = x - _stickTarget.x;
+				stick_y = y - _stickTarget.y;
 			}
 			
 			 // Determination:

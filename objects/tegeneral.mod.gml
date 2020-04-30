@@ -3524,7 +3524,7 @@
 		spr_idle = spr.PortalBullet;
 		sprite_index = spr_spwn;
 		image_speed = 0.4;
-		depth = -3;
+		depth = -5;
 		
 		 // Vars:
 		mask_index = mskNone;

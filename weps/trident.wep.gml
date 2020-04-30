@@ -27,7 +27,7 @@
 #define weapon_name(w)   return (weapon_avail(w) ? ((weapon_gold(w) != 0) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
 #define weapon_text(w)   return ((weapon_get_gold(w) != 0) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
 #define weapon_type(w)   return 0; // Melee
-#define weapon_area(w)   return (weapon_avail(w) ? 7 : -1); // 3-2
+#define weapon_area(w)   return ((weapon_avail(w) && weapon_get_gold(w) == 0) ? 7 : -1); // 3-2
 #define weapon_auto(w)   return true;
 #define weapon_melee(w)  return false;
 #define weapon_gold(w)   return (lq_defget(w, "gold", false) ? -1 : 0);

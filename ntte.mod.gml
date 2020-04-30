@@ -646,15 +646,6 @@
 			
 		case area_labs: /// LABS
 			
-			 // Freak Chambers:
-			with(FloorNormal){
-				if(chance(1, 50)){
-					if(place_free(x, y) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 128){
-						obj_create(bbox_center_x, bbox_center_y, "FreakChamber");
-					}
-				}
-			}
-			
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				with(Freak) if(chance(1, 5)){
@@ -669,9 +660,18 @@
 					obj_create(x, y, "Bat");
 					instance_delete(id);
 				}
-				with(LaserCrystal) if(chance(1, 2)){
+				with(LaserCrystal) if(chance(1, 4)){
 					obj_create(x, y, "PortalGuardian");
 					instance_delete(id);
+				}
+			}
+			
+			 // Freak Chambers:
+			with(FloorNormal){
+				if(chance(1 + GameCont.loops, 60 + GameCont.loops)){
+					if(place_free(x, y) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 128){
+						obj_create(bbox_center_x, bbox_center_y, "FreakChamber");
+					}
 				}
 			}
 			
@@ -1763,26 +1763,28 @@
 		}
 		
 		 // Labs Merged Weapons:
-		with(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale))){
+		with(instances_matching_gt(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale)), "alarm0", 0)){
 			if(place_meeting(x, y, WepPickup)){
 				with(instances_meeting(x, y, WepPickup)){
-					if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4) && weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
-						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
-						if(array_length(_part) >= 2){
-							wep = wep_merge(_part[0], _part[1]);
-							mergewep_indicator = null;
-							
-							 // FX:
-							sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
-							sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
-							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
-							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
-							with(instance_create(x, y + 2, ReviveFX)){
-								sprite_index = sprPopoRevive;
-								image_xscale = 0.8;
-								image_yscale = image_xscale;
-								image_blend = make_color_rgb(100, 255, 50);
-								depth = -2;
+					if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
+						if(weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
+							var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+							if(array_length(_part) >= 2){
+								wep = wep_merge(_part[0], _part[1]);
+								mergewep_indicator = null;
+								
+								 // FX:
+								sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
+								sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
+								sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
+								sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
+								with(instance_create(x, y + 2, ReviveFX)){
+									sprite_index = sprPopoRevive;
+									image_xscale = 0.8;
+									image_yscale = image_xscale;
+									image_blend = make_color_rgb(100, 255, 50);
+									depth = -2;
+								}
 							}
 						}
 					}
