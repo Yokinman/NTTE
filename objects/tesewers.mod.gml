@@ -4476,9 +4476,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Corpse:
-	with(corpse_drop(0, 0)){
-		image_index = 1 - image_speed;
-	}
+	corpse_drop(0, 0);
 	repeat(6){
 		with(instance_create(x + orandom(8), y + orandom(8), Debris)){
 			direction = angle_lerp(direction, 90, 1/4);
@@ -4512,7 +4510,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			else{
 				_dir += choose(0, 0, 0, 0, -90, 90);
-				if(((_dir + 360) % 360) == 270) _dir = 90;
+				if(abs(angle_difference(_dir, 90)) > 90){
+					_dir = 90;
+				}
 			}
 			
 			 // Move:
@@ -4545,19 +4545,30 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		with(instances_matching_gt(TopSmall, "id", _minID)) event_perform(ev_alarm, 0);
 		
 		 // Reveal Path:
-		with(floor_reveal(instances_matching_gt(_path, "bbox_bottom", _borderY), 8)){
-			oy = max(oy, _borderY - inst.y);
-			bx = 16;
-			flash = true;
+		var	_y    = y - 48,
+			_time = 7,
+			_wait = 0;
+			
+		with(floor_reveal(bbox_left, _y, bbox_right, y - 16 - 1, 10)){
 			color = _bgColor;
-			time += ((other.y - 32) - inst.bbox_bottom) / 8;
-			if(inst == _path[0]){
-				by = 8;
-				oy += by;
-				move_dis = 0;
-			}
+			_wait += time - _time;
 		}
-		
+		with(instances_matching_lt(_path, "bbox_top", _y)){
+			if(bbox_bottom > _borderY){
+				with(floor_reveal(bbox_left, bbox_top, bbox_right, min(_y - 1, bbox_bottom), _time)){
+					y1 = max(y1, _borderY - oy);
+					time += _wait;
+					color = _bgColor;
+				}
+			}
+			if(bbox_top < _borderY){
+				with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, _time)){
+					y2 = min(y2, _borderY - oy - 1);
+					time += _wait;
+				}
+			}
+			_wait += 3;
+		}
 	
 #define PizzaManholeCover_create(_x, _y)
 	repeat(2 + irandom(2)){
@@ -4828,7 +4839,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_minID = GameObject.id;
 			
 		with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-			floor_tunnel(x, y, _x, _y);
+			 // Entrance Hallway:
+			with(floor_tunnel(x, y2, _x, _y)){
+				floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 10);
+			}
+			
+			 // Walls:
+			with([
+				instance_create(x1,      y1 + 16, Wall),
+				instance_create(x2 - 16, y1 + 16, Wall),
+				instance_create(x1,      y2 - 32, Wall),
+				instance_create(x2 - 16, y2 - 32, Wall)
+			]){
+				if(chance(1, 2)){
+					topindex = irandom_range(1, sprite_get_number(topspr) - 1);
+				}
+			}
 			
 			 // Floor Setup:
 			var _detailNum = 4;
@@ -4995,37 +5021,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 			}
 			
-			 // Walls:
-			with([
-				instance_create(x1,      y1 + 16, Wall),
-				instance_create(x2 - 16, y1 + 16, Wall),
-				instance_create(x1,      y2 - 32, Wall),
-				instance_create(x2 - 16, y2 - 32, Wall)
-			]){
-				if(chance(1, 2)){
-					topindex = irandom_range(1, sprite_get_number(topspr) - 1);
-				}
-			}
-			
 			 // Decorate:
 			repeat(2) obj_create(x, y, "TopDecal");
 		}
 		
-		 // Reveal:
-		with(floor_reveal(
-			array_combine([id], instances_matching_gt(Floor, "id", _minID)),
-			10
-		)){
-			flash = true;
-			move_dis = 0;
-			
-			 // Offset:
-			if(inst == other){
-				by = 8;
-				oy = -32;
-			}
+		 // Reveal Room:
+		with(instances_matching_gt(Floor, "id", _minID)){
+			floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 10);
 		}
 	}
+	sleep(100);
 	
 	 // No Leaving:
 	if(instance_exists(enemy)) portal_poof();
@@ -5743,7 +5748,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');

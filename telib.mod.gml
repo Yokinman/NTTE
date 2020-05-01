@@ -157,6 +157,8 @@
 
 #macro DebugLag global.debug_lag
 
+#macro mod_type_current script_ref_create(0)[0]
+
 #macro area_campfire     0
 #macro area_desert       1
 #macro area_sewers       2
@@ -323,7 +325,7 @@
 				}
 
 				if(_isCustom){
-					on_create = script_ref_create_ext("mod", mod_current, "obj_create", _x, _y, _name);
+					on_create = script_ref_create(obj_create, _x, _y, _name);
 
 					 // Override Events:
 					var _override = ["step", "draw"];
@@ -485,6 +487,8 @@
 	if(DebugLag) trace_lag_end(name + "_draw");
 	
 #define ntte_bind
+	if(DebugLag) trace_time();
+	
 	 // Determine Event Type:
 	var	_varName = "ntte_bind_",
 		_isDraw = instance_is(self, CustomDraw);
@@ -522,6 +526,8 @@
 	}
 	else instance_destroy();
 	
+	if(DebugLag) trace_time(_varName);
+	
 #define step
 	if(DebugLag) script_bind_end_step(end_step_trace_lag, 0);
 	
@@ -533,7 +539,7 @@
 	
 #define end_step_trace_lag
 	trace("");
-	trace("Frame", current_frame, "Lag:")
+	trace("Frame", current_frame, "Lag:");
 	trace_lag();
 	instance_destroy();
 
@@ -1530,10 +1536,17 @@
 	}
 
 #define portal_pickups()
-	with(CustomEndStep) if(array_equals(script, ["mod", mod_current, "portal_pickups_step"])){
-		return id;
+	var _bind = instances_matching(CustomScript, "name", "portal_pickups_step");
+	
+	 // Bind Script:
+	if(array_length(_bind) <= 0){
+		_bind = script_bind_end_step(portal_pickups_step, 0);
+		with(_bind){
+			name = script[2];
+		}
 	}
-	return script_bind_end_step(portal_pickups_step, 0);
+	
+	return _bind;
 
 #define portal_pickups_step
 	instance_destroy();
@@ -2642,69 +2655,68 @@
 	
 	return _inst;
 
-#define floor_reveal(_floors, _maxTime)
-	with(script_bind_draw(floor_reveal_draw, -8)){
-		list = [];
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)
+	var	_bind = instances_matching(CustomScript, "name", "floor_reveal_draw"),
+		_reveal = {
+			creator     : noone,
+			x1          : _x1,
+			y1          : _y1,
+			x2          : _x2,
+			y2          : _y2,
+			ox          : 0,
+			oy          : -8,
+			time        : _time,
+			time_max    : _time,
+			color       : background_color,
+			flash       : true,
+			flash_color : c_white
+		};
 		
-		with(instances_matching(_floors, "", null)){
-			array_push(other.list, {
-				inst        : self,
-				bind        : other,
-				time        : _maxTime,
-				time_max    : _maxTime,
-				color       : background_color,
-				flash_color : c_white,
-				flash       : false,
-				move_dis    : 4,
-				move_dir    : 90,
-				ox          : 0,
-				oy          : -8,
-				bx          : 0,
-				by          : 0
-			})
+	 // Bind Script:
+	if(array_length(_bind) <= 0){
+		_bind = script_bind_draw(floor_reveal_draw, -8);
+		with(_bind){
+			name = script[2];
+			list = [];
 		}
-		
-		return list;
 	}
+	
+	 // Add to List:
+	with(_bind){
+		_reveal.creator = id;
+		array_push(list, _reveal);
+	}
+	
+	return _reveal;
 
 #define floor_reveal_draw
-	if(array_length(list) > 0){
-		with(list){
-			 // Revealing:
-			if(time > 0){
-				time -= current_time_scale;
+	var _destroyInst = [FloorExplo, Explosion, PortalClear, EnergyHammerSlash];
+	
+	with(list){
+		 // Revealing:
+		if(time > 0 && (time <= time_max || array_length(instance_rectangle_bbox(x1, y1, x2, y2, _destroyInst)) <= 0)){
+			var	_num = clamp(time / time_max, 0, 1),
+				_col = ((time > time_max) ? color : merge_color(flash_color, color, (flash ? (1 - _num) : _num)));
 				
-				var	_num = clamp(time / time_max, 0, 1),
-					_col = merge_color(flash_color, color, (flash ? ((time > time_max) ? 1 : (1 - _num)) : _num)),
-					_ox = ox + lengthdir_x(move_dis * (1 - _num), move_dir),
-					_oy = oy + lengthdir_y(move_dis * (1 - _num), move_dir),
-					_bx = bx,
-					_by = by;
-					
-				draw_set_alpha(_num);
-				draw_set_color(_col);
-				
-				with(inst){
-					draw_rectangle(bbox_left + _ox - _bx, bbox_top + _oy - _by, bbox_right + _ox + _bx, bbox_bottom + _oy + _by, false);
-					
-					 // Death:
-					if(instance_is(self, Floor)){
-						if(place_meeting(x, y, Explosion) || place_meeting(x, y, PortalClear) || place_meeting(x, y, EnergyHammerSlash)){
-							other.time = 0;
-						}
-					}
-				}
-			}
+			draw_set_alpha(_num);
+			draw_set_color(_col);
+			draw_rectangle(x1 + ox, y1 + oy, x2 + ox, y2 + oy, false);
 			
-			 // Done:
-			else other.list = array_delete_value(other.list, self);
+			time -= current_time_scale;
 		}
-		draw_set_alpha(1);
+		
+		 // Done:
+		else other.list = array_delete_value(other.list, self);
 	}
-	else instance_destroy();
+	draw_set_alpha(1);
+	
+	 // Goodbye:
+	if(array_length(list) <= 0){
+		instance_destroy();
+	}
 
 #define area_border(_y, _area, _color)
-	with(script_bind_draw(area_border_step, 10000, _y, _area, _color)){
+	with(script_bind_draw(area_border_step, infinity, _y, _area, _color)){
 		cavein = false;
 		cavein_dis = 800;
 		cavein_inst = [];
@@ -2886,9 +2898,9 @@
 		
 	draw_set_color(_color);
 	draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
-
+	
 	if(DebugLag) trace_time("area_border_step");
-
+	
 #define area_border_cavein(_y, _caveDis, _caveInst)
 	 // Delete:
 	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y + _caveDis), "object_index", Dust)){
@@ -2924,7 +2936,7 @@
 	*/
 	
 	 // Store Sprites:
-	if(!mod_variable_exists("mod", mod_current, "area_sprite_map")){
+	if(!mod_variable_exists(mod_type_current, mod_current, "area_sprite_map")){
 		var _map = ds_map_create();
 		_map[? 0  ] = [sprFloor0,   sprFloor0,    sprFloor0Explo,   sprWall0Trans,   sprWall0Bot,   sprWall0Out,   sprWall0Top,   sprDebris0,   sprDetail0,   sprNightBones,      sprNightDesertTopDecal];
 		_map[? 1  ] = [sprFloor1,   sprFloor1B,   sprFloor1Explo,   sprWall1Trans,   sprWall1Bot,   sprWall1Out,   sprWall1Top,   sprDebris1,   sprDetail1,   sprBones,           sprDesertTopDecal     ];
@@ -3470,7 +3482,7 @@
 	
 	 // Create Room:
 	var	_floorNumLast = array_length(FloorNormal),
-		_floors = mod_script_call_nc("mod", mod_current, "floor_fill", _x, _y, _w, _h, _type),
+		_floors = mod_script_call_nc(mod_type_current, mod_current, "floor_fill", _x, _y, _w, _h, _type),
 		_floorNum = array_length(FloorNormal),
 		_x1 = _x,
 		_y1 = _y,
@@ -5049,7 +5061,7 @@
 	return _inst;
 	
 #define trace_lag()
-	if(mod_variable_exists("mod", mod_current, "lag")){
+	if(mod_variable_exists(mod_type_current, mod_current, "lag")){
 		for(var i = 0; i < array_length(global.lag); i++){
 			var	_name = lq_get_key(global.lag, i),
 				_total = string(lq_get_value(global.lag, i).total),

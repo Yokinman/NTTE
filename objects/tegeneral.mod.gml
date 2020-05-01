@@ -1165,8 +1165,12 @@
 				view_shake_at(_sx, _sy, 20);
 				sound_play_pitch(sndStatueCharge, 1.6 + orandom(0.2));
 				sound_play_pitch(sndStatueDead, 0.4 + random(0.1));
-				with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID), 4)){
-					time = (point_distance(inst.x, inst.y, _sx, _sy) - 16) / 4;
+				with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
+					var _time = (point_distance(bbox_center_x, bbox_center_y, _sx, _sy) - 32) / 4.5;
+					with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 4)){
+						time = _time;
+						flash = false;
+					}
 				}
 				
 				GameCont.area = _areaCurrent;
@@ -5792,7 +5796,7 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');

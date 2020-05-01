@@ -338,8 +338,8 @@
 	RoomCenter = [_x, _y];
 	
 	 // Remove Starter Floor:
-	if(instance_is(self + 1, Floor)){
-		instance_delete(self + 1);
+	if(instance_is(id + 1, Floor)){
+		instance_delete(id + 1);
 	}
 	
 	 // Spawn Rooms:
@@ -355,29 +355,33 @@
 		var _done = true;
 		
 		 // Push Rooms Apart:
-		with(RoomList){
-			var	_x1 = x - 1,
-				_y1 = y - 1,
-				_x2 = _x1 + (w + 2),
-				_y2 = _y1 + (h + 2);
-				
-			with(RoomList) if(self != other){
-				if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
-					if(type != "Start"){
-						var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
-						if(chance(1, 2)){
-							_dir += choose(-90, -90, 90, 90, 180);
+		do{
+			_done = true;
+			with(RoomList){
+				var	_x1 = x - 1,
+					_y1 = y - 1,
+					_x2 = _x1 + (w + 2),
+					_y2 = _y1 + (h + 2);
+					
+				with(RoomList) if(self != other){
+					if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
+						if(type != "Start"){
+							var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
+							if(chance(1, 2)){
+								_dir += choose(-90, -90, 90, 90, 180);
+							}
+							
+							x += lengthdir_x(1, _dir);
+							y += lengthdir_y(1, _dir);
 						}
 						
-						x += lengthdir_x(1, _dir);
-						y += lengthdir_y(1, _dir);
+						_done = false;
 					}
-					
-					_done = false;
 				}
+				y = min(0 - floor(h / 2), y);
 			}
-			y = min(0 - floor(h / 2), y);
 		}
+		until (_done || RoomDebug);
 		
 		 // Special Rooms:
 		if(_done){
@@ -553,10 +557,16 @@
 	}
 	
 	 // Emergency Enemy Reserves:
-	while(instance_number(enemy) < 24){
-		with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorLair))){
-			if(!place_meeting(x, y, Wall)){
-				create_enemies(x + 16, y + 16, 1);
+	var _floors = [];
+	with(instances_matching(FloorNormal, "styleb", 0)){
+		if(!place_meeting(x, y, Wall)){
+			array_push(_floors, id);
+		}
+	}
+	if(array_length(_floors) > 0){
+		while(instance_number(enemy) < 24){
+			with(instance_random(_floors)){
+				create_enemies(bbox_center_x, bbox_center_y, 1);
 			}
 		}
 	}
@@ -588,9 +598,7 @@
 	
 	 // Fix stuck dudes:
 	with(enemy) if(place_meeting(x, y, Wall)){
-		if(!instance_budge(Wall, -1)){
-			instance_delete(id);
-		}
+		instance_budge(Wall, -1);
 	}
 	
 	 // Light up specific things:
@@ -1333,7 +1341,7 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');

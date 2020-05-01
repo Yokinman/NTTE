@@ -245,15 +245,14 @@
 								}
 								
 								 // Reveal Tiles:
-								var _reveal = [];
 								with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
-									var _can = true;
+									var _reveal = true;
 									
 									 // Don't Cover Doors:
 									if(array_exists(_floorHall, id)){
 										with(_wall){
 											if(rectangle_in_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, other.bbox_left, other.bbox_top, other.bbox_right, other.bbox_bottom)){
-												_can = false;
+												_reveal = false;
 												break;
 											}
 										}
@@ -263,21 +262,23 @@
 									if(instance_is(self, Wall) || instance_is(self, TopSmall)){
 										with(_tops){
 											if(x == other.x && y == other.y){
-												_can = false;
+												_reveal = false;
 												break;
 											}
 										}
 									}
 									
-									if(_can) array_push(_reveal, id);
-								}
-								with(floor_reveal(_reveal, 10)){
-									move_dis = 0;
-									flash_color = color;
-									
-									 // Delay:
-									for(var i = 0; i < min(2, array_length(_slidePath)); i++){
-										time += _slidePath[i, 0];
+									 // Reveal:
+									if(_reveal){
+										with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 10)){
+											flash = false;
+											flash_color = color;
+											
+											 // Delay:
+											for(var i = 0; i < min(2, array_length(_slidePath)); i++){
+												time += _slidePath[i, 0];
+											}
+										}
 									}
 								}
 								
@@ -1041,7 +1042,7 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');

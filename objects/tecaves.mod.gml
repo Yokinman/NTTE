@@ -813,6 +813,7 @@
 	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3);
 	sound_play_hit_ext(sndHyperCrystalSearch, 0.6 + random(0.3), 1.5);
 	view_shake_max_at(x, y, 20);
+	sleep(50);
 	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
 	
 	 // Tunnel Time:
@@ -851,17 +852,24 @@
 		}
 		
 		 // Prettify:
+		var _noReveal = [];
 		with(instances_matching_gt(Floor, "id", _genID)){
 			depth = 8;
 		}
 		with(instances_matching_gt(TopSmall, "id", _genID)){
-			if(chance(2, 5)) event_perform(ev_create, 0);
+			if(chance(2, 5)){
+				array_push(_noReveal, id);
+				event_perform(ev_create, 0);
+			}
 		}
 		
 		 // Reveal:
-		with(floor_reveal(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID), 6)){
-			flash = true;
-			move_dis = 0;
+		with(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID)){
+			if(!array_exists(_noReveal, id)){
+				with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 6)){
+					time_max *= 1.3;
+				}
+			}
 		}
 		
 		 // Red Crown Quality Assurance:
@@ -2660,7 +2668,7 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');

@@ -1772,11 +1772,15 @@
 		If the given event is a string then a script reference is automatically generated for teevents.mod
 		
 		Ex:
-			teevent_add(script_ref_create_ext("mod", mod_current, "MaggotPark"));
+			teevent_add(script_ref_create_ext(mod_type_current, mod_current, "MaggotPark"));
 			teevent_add("MaggotPark");
 	*/
 	
-	var _scrt = (is_array(_event) ? _event : script_ref_create_ext("mod", mod_current, _event));
+	var _scrt = (
+		is_array(_event)
+		? _event
+		: script_ref_create_ext(script_ref_create(0)[0], mod_current, _event)
+	);
 	
 	array_push(list, _scrt);
 	
@@ -1810,13 +1814,13 @@
 			
 			with(instance_create(_x, _y, CustomObject)){
 				name = "NTTEEvent";
-				mod_type = "mod";
+				mod_type = script_ref_create(0)[0];
 				mod_name = mod_current;
 				event = _name;
 				floors = [];
 				
 				 // Tip:
-				tip = mod_script_call("mod", mod_current, _name + "_text");
+				tip = mod_script_call(mod_type, mod_name, event + "_text");
 				if(is_string(tip) && tip != ""){
 					with(instances_matching(GenCont, "tip_ntte_event", null)){
 						tip_ntte_event = "@w" + other.tip;
@@ -2051,7 +2055,7 @@
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);
 #define floor_room(_spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis) return  mod_script_call_nc('mod', 'telib', 'floor_room', _spaX, _spaY, _spaDis, _spaFloor, _w, _h, _type, _dirOff, _floorDis);
-#define floor_reveal(_floors, _maxTime)                                                 return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _floors, _maxTime);
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)                                         return  mod_script_call_nc('mod', 'telib', 'floor_reveal', _x1, _y1, _x2, _y2, _time);
 #define floor_tunnel(_x1, _y1, _x2, _y2)                                                return  mod_script_call_nc('mod', 'telib', 'floor_tunnel', _x1, _y1, _x2, _y2);
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call(   'mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
