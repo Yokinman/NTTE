@@ -1825,7 +1825,7 @@
 			
 			 // Alert:
 			with(scrAlert(id, spr_icon)){
-				alert = { spr:sprCurse, y:3 };
+				alert = { spr:sprCurse, x:alert.x + 1, y:3 };
 				alarm0 = 90;
 				flash = 10;
 				snd_flash = sndCursedChest;
