@@ -277,8 +277,8 @@
 		spr_walk      = spr.CrystalBrainIdle;
 		spr_hurt      = spr.CrystalBrainHurt;
 		spr_dead      = spr.CrystalBrainDead;
-		spr_appear    = spr.CrystalRedShield;
-		spr_disappear = spr.CrystalRedShieldDisappear;
+		spr_appear    = spr.CrystalBrainAppear;
+		spr_disappear = spr.CrystalBrainDisappear;
 		spr_shadow = shd32;
 		spr_shadow_y = 6;
 		hitid = [spr_idle, "CRYSTAL BRAIN"];
@@ -413,6 +413,11 @@
 					}
 				}
 			}
+			
+			 // Effects:
+			if(chance_ct(2, 5)){
+				instance_create(x + orandom(12), y + orandom(12), Smoke);
+			}
 		}
 		
 		else{
@@ -519,6 +524,13 @@
 				 // Visual:
 				sprite_index = spr_disappear;
 				image_index = 0;
+				
+				 // Effects:
+				repeat(8){
+					with(scrFX(teleport_x, teleport_y, [random(360), random(2)], CrystTrail)){
+						sprite_index = spr.CrystalRedTrail;
+					}
+				}
 			}
 			
 			 // Watch Your Back:

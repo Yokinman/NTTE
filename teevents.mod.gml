@@ -1730,7 +1730,7 @@
 	
 #define PopoAmbush_text    return `${ttip}THE IDPD @wIS WAITING FOR YOU`;
 #define PopoAmbush_area    return area_palace;
-#define PopoAmbush_chance  return ((GameCont.subarea != 3) ? 1/3 : 0);
+#define PopoAmbush_chance  return ((GameCont.subarea != 3) ? clamp((GameCont.popolevel - 2), 0, 5) / 10 : 0);
 
 #define PopoAmbush_create
 	 // Ambush:

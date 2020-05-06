@@ -3581,7 +3581,7 @@
 		 // Swap Positions:
 		if(instance_exists(creator) && instance_exists(other)){
 			if(!instance_is(other, prop) && other.team != 0 && other.size < 6){
-				with(other){
+				with(other) if(!instance_is(id, Nothing) && !instance_is(id, Nothing2)){
 					x = other.creator.x;
 					y = other.creator.y;
 					xprevious = x;

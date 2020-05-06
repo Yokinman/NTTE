@@ -236,6 +236,15 @@
 					}
 				}
 				
+				 // Epify:
+				for(var i = 0; i < array_length(floors); i++){
+					with(floors[i]){
+						sprite_index = spr.FloorRedRoom;
+						image_index  = i;
+						trace(i)
+					}
+				}
+				
 				 // Portal:
 				with(instance_create(x - 16, y - 16, CustomObject)){
 					sprite_index = sprTop;

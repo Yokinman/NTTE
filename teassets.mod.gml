@@ -369,12 +369,14 @@
 			
 			 // Crystal Brain:
 			p = m + "CrystalBrain/";
-			CrystalBrainIdle     = sprite(p + "sprCrystalBrainIdle",      6, 24, 24);
-			CrystalBrainHurt     = sprite(p + "sprCrystalBrainHurt",      3, 24, 24);
-			CrystalBrainDead     = sprite(p + "sprCrystalBrainDead",      7, 24, 24);
-			CrystalBrainChunk    = sprite(p + "sprCrystalBrainChunk",     4,  8,  8);
-			CrystalBrainEffect   = sprite(p + "sprCrystalBrainEffect",   10,  8,  8);
-			CrystalBrainSurfMask = sprite(p + "sprCrystalBrainSurfMask",  1,  0,  0);
+			CrystalBrainIdle      = sprite(p + "sprCrystalBrainIdle",       6, 24, 24);
+			CrystalBrainHurt      = sprite(p + "sprCrystalBrainHurt",       3, 24, 24);
+			CrystalBrainDead      = sprite(p + "sprCrystalBrainDead",       7, 24, 24);
+			CrystalBrainAppear	  = sprite(p + "sprCrystalBrainAppear",	    4, 24, 24);
+			CrystalBrainDisappear = sprite(p + "sprCrystalBrainDisappear",  7, 24, 24);
+			CrystalBrainChunk     = sprite(p + "sprCrystalBrainChunk",      4,  8,  8);
+			CrystalBrainEffect    = sprite(p + "sprCrystalBrainEffect",    10,  8,  8);
+			CrystalBrainSurfMask  = sprite(p + "sprCrystalBrainSurfMask",   1,  0,  0);
 			
 			CloneOverlay       = sprite(p + "sprCloneOverlay",       8, 0, 0);
 			CloneOverlayCorpse = sprite(p + "sprCloneOverlayCorpse", 8, 0, 0);
@@ -1160,6 +1162,7 @@
 			FloorRed      = sprite(p + "sprFloorCrystal",      1, 2, 2);
 			FloorRedB     = sprite(p + "sprFloorCrystalB",     1, 2, 2);
 			FloorRedExplo = sprite(p + "sprFloorCrystalExplo", 4, 1, 1);
+			FloorRedRoom  = sprite(p + "sprFloorCrystalRoom",  4, 0, 0);
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:
