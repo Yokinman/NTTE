@@ -1162,7 +1162,7 @@
 			FloorRed      = sprite(p + "sprFloorCrystal",      1, 2, 2);
 			FloorRedB     = sprite(p + "sprFloorCrystalB",     1, 2, 2);
 			FloorRedExplo = sprite(p + "sprFloorCrystalExplo", 4, 1, 1);
-			FloorRedRoom  = sprite(p + "sprFloorCrystalRoom",  4, 0, 0);
+			FloorRedRoom  = sprite(p + "sprFloorCrystalRoom",  4, 2, 2);
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:

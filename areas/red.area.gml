@@ -241,7 +241,6 @@
 					with(floors[i]){
 						sprite_index = spr.FloorRedRoom;
 						image_index  = i;
-						trace(i)
 					}
 				}
 				
