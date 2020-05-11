@@ -44,6 +44,9 @@
 		}
 	}
 	
+	 // Lists of Objects Using Script Binding:
+	ntte_obj_bind = {};
+	
 	 // Projectile Team Variants:
 	var _teamGrid = [
 		[[spr.EnemyBullet,				EnemyBullet4	],	[sprBullet1,			Bullet1				],	[sprIDPDBullet,			IDPDBullet		]], // Bullet
@@ -206,6 +209,7 @@
 #macro ntte_obj_event global.object_event
 #macro ntte_obj_list  global.object_list
 #macro ntte_obj_scrt  global.object_scrt
+#macro ntte_obj_bind  global.object_bind
 
 #macro spriteTeamStart     1
 #macro spriteTeamMap       global.sprite_team_map
@@ -257,7 +261,7 @@
 					var _event = self;
 					if(("on_" + _event) not in _inst || is_undefined(variable_instance_get(_inst, "on_" + _event))){
 						var _varName = (_isCustom ? "on_" : "ntte_bind_") + _event;
-						if(_isCustom || (_varName not in _inst || is_undefined(variable_instance_get(_inst, _varName)))){
+						if(_isCustom || _varName not in _inst || is_undefined(variable_instance_get(_inst, _varName))){
 							var _modScrt = _name + "_" + _event;
 							
 							if(mod_script_exists(_modType, _modName, _modScrt)){
@@ -265,8 +269,16 @@
 								
 								 // Auto Script Binding:
 								if(!_isCustom){
-									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + _event);
-									if(array_length(_bind) <= 0 || _event == "draw"){
+									if(!lq_exists(ntte_obj_bind, _varName)){
+										lq_set(ntte_obj_bind, _varName, []);
+									}
+									
+									 // Bind Script:
+									var _bind = instances_matching(CustomScript, "name", _varName);
+									if(_event == "draw"){
+										_bind = instances_matching(_bind, "depth", _inst.depth);
+									}
+									if(array_length(_bind) <= 0){
 										switch(_event){
 											case "step"       : _bind = script_bind_step(ntte_bind, 0);           break;
 											case "begin_step" : _bind = script_bind_begin_step(ntte_bind, 0);     break;
@@ -274,13 +286,34 @@
 											case "draw"       : _bind = script_bind_draw(ntte_bind, _inst.depth); break;
 										}
 										with(_bind){
-											name = "NTTEBind_" + _event;
+											name = _varName;
 											inst = [];
+											inst_obj = lq_get(ntte_obj_bind, name);
 											persistent = true;
 										}
 									}
+									
+									 // Add Instance:
 									with(_bind){
 										array_push(inst, _inst);
+										
+										 // Add to Object List:
+										var _obj = _inst.object_index;
+										for(var i = _obj; object_exists(i); i = object_get_parent(i)){
+											if(array_exists(inst_obj, i)){
+												_obj = -1;
+												break;
+											}
+										}
+										if(object_exists(_obj)){
+											with(inst_obj){
+												if(object_is_ancestor(self, _obj)){
+													other.inst_obj = array_delete_value(other.inst_obj, self);
+												}
+											}
+											array_push(inst_obj, _obj);
+										}
+										lq_set(ntte_obj_bind, name, inst_obj);
 									}
 								}
 							}
@@ -354,8 +387,8 @@
 					}
 					
 					 // Bind Step Controller:
-					if(array_length(instances_matching(CustomScript, "name", "obj_step_begin")) <= 0){
-						with(script_bind_begin_step(obj_step_begin, 0)){
+					if(array_length(instances_matching(CustomScript, "name", "ntte_step_begin")) <= 0){
+						with(script_bind_begin_step(ntte_step_begin, 0)){
 							name = script[2];
 							persistent = true;
 						}
@@ -377,10 +410,10 @@
 		
 		return _list;
 	}
-
+	
 	return noone;
-
-#define obj_step_begin
+	
+#define ntte_step_begin
 	if(DebugLag) trace_time();
 	
 	var _obj = [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
@@ -411,15 +444,6 @@
 		}
 	}
 	
-	 // Animate:
-	with(instances_matching(_obj, "ntte_anim", true)){
-		if(sprite_index != spr_chrg){
-			if(sprite_index != spr_hurt || anim_end){
-				sprite_index = ((speed <= 0) ? spr_idle : spr_walk);
-			}
-		}
-	}
-	
 	 // Movement:
 	with(instances_matching(_obj, "ntte_walk", true)){
 		if(walk > 0){
@@ -429,52 +453,66 @@
 		if(speed > maxspeed) speed = maxspeed; // Max Speed
 	}
 	
-	if(DebugLag) trace_time("obj_step_begin");
+	 // Animate:
+	with(instances_matching(_obj, "ntte_anim", true)){
+		if(sprite_index != spr_chrg){
+			if(sprite_index != spr_hurt || anim_end){
+				sprite_index = ((speed <= 0) ? spr_idle : spr_walk);
+			}
+		}
+	}
+	
+	if(DebugLag) trace_time("ntte_step_begin");
 	
 #define ntte_bind
 	if(DebugLag) trace_time();
 	
+	var	_varName = name,
+		_isDraw = instance_is(self, CustomDraw);
+		
 	 // No Copies:
-	with(instances_matching_ne(instances_matching(object_index, "name", name), "id", id)){
+	with(instances_matching(instances_matching_ne(instances_matching(object_index, "name", name), "id", id), "depth", depth)){
+		other.inst = array_combine(other.inst, inst);
 		instance_destroy();
 	}
 	
-	 // Determine Event Type:
-	var	_varName = "ntte_bind_",
-		_isDraw = instance_is(self, CustomDraw);
-		
-	switch(object_index){
-		case CustomStep      : _varName += "step";       break;
-		case CustomBeginStep : _varName += "begin_step"; break;
-		case CustomEndStep   : _varName += "end_step";   break;
-		case CustomDraw      : _varName += "draw";       break;
+	 // Instances Changed Depth:
+	if(_isDraw){
+		with(instances_matching_ne(inst, "depth", depth)){
+			if(array_length(instances_matching(instances_matching(CustomDraw, "name", _varName), "depth", depth)) <= 0){
+				with(script_bind_draw(ntte_bind, depth)){
+					name = _varName;
+					inst = [other];
+					inst_obj = lq_get(ntte_obj_bind, name);
+					persistent = true;
+				}
+			}
+		}
 	}
 	
-	 // Searching all GameObjects to fix instance_copy():
-	if(!_isDraw){
-		inst = instances_matching_ne(GameObject, _varName, null);
-	}
-	else{
-		inst = instances_matching(inst, "", null);
+	 // Collect Instances:
+	inst = instances_matching_ne(inst_obj, _varName, null);
+	if(_isDraw){
+		inst = instances_matching(inst, "depth", depth);
 	}
 	
 	 // Run Events:
 	if(array_length(inst) > 0){
-		with(inst){
-			 // Depth:
-			if(_isDraw){
-				other.depth = depth - 0.0000000000001;
-				if(!visible) continue;
-			}
-			
-			 // Script:
+		with(_isDraw ? instances_matching(inst, "visible", true) : inst){
 			var _scrt = variable_instance_get(self, _varName);
 			if(array_length(_scrt) > 2){
 				mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
 			}
 		}
 	}
-	else instance_destroy();
+	
+	 // Goodbye:
+	else{
+		if(array_length(instances_matching(object_index, "name", name)) <= 1){
+			lq_set(ntte_obj_bind, name, []);
+		}
+		instance_destroy();
+	}
 	
 	if(DebugLag) trace_time(_varName);
 	
@@ -484,24 +522,24 @@
 		sleep(global.sleep_max);
 		global.sleep_max = 0;
 	}
-
+	
 #define draw_dark // Drawing Grays
 	draw_set_color(c_gray);
-
+	
 	 // Portal Disappearing Visual:
 	with(instances_matching(BulletHit, "name", "PortalPoof")){
 		draw_circle(x, y, 120 + random(6), false);
 	}
-
+	
 #define draw_dark_end // Drawing Clear
 	draw_set_color(c_black);
-
+	
 	 // Portal Disappearing Visual:
 	with(instances_matching(BulletHit, "name", "PortalPoof")){
 		draw_circle(x, y, 20 + random(8), false);
 	}
-
-
+	
+	
 /// Scripts
 #define draw_self_enemy()
 	image_xscale *= right;
@@ -5429,18 +5467,25 @@
 									 // Disappear Sprite:
 									switch(_sprAlly){
 										case sprSlugBullet:
-										case sprSlugDisappear:		spr_dead = sprSlugDisappear;		break;
+										case sprSlugDisappear:
+											spr_dead = sprSlugDisappear;
+											break;
+											
 										case sprHeavySlug:
-										case sprHeavySlugDisappear:	spr_dead = sprHeavySlugDisappear;	break;
-										default:					spr_dead = sprBullet2Disappear;
+										case sprHeavySlugDisappear:
+											spr_dead = sprHeavySlugDisappear;
+											break;
+											
+										default:
+											spr_dead = sprBullet2Disappear;
 									}
 									spr_fade = team_get_sprite(_team, spr_dead);
 									
 									 // Specifics:
 									switch(_obj){
-										case Slug:		bonus_damage = 2;	break;
-										case HeavySlug:	bonus_damage = 10;	break;
-										case PopoSlug:	bonus_damage = 0;	break;
+										case Slug      : bonus_damage = 2;  break;
+										case HeavySlug : bonus_damage = 10; break;
+										case PopoSlug  : bonus_damage = 0;  break;
 									}
 									
 									break;

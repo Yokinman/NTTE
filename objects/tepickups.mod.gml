@@ -1914,8 +1914,8 @@
 		nochest = 0; // Adds to GameCont.nochest if not grabbed
 		
 		 // Events:
-		on_step = ["", "", ""];
-		on_open = ["", "", ""];
+		on_step = null;
+		on_open = null;
 		
 		return id;
 	}
@@ -1923,7 +1923,7 @@
 #define CustomChest_step
 	 // Call Chest Step Event:
 	var e = on_step;
-	if(mod_script_exists(e[0], e[1], e[2])){
+	if(is_array(e)){
 		mod_script_call(e[0], e[1], e[2]);
 	}
 	
@@ -1943,7 +1943,7 @@
 			
 			 // Call Chest Open Event:
 			var e = on_open;
-			if(mod_script_exists(e[0], e[1], e[2])){
+			if(is_array(e)){
 				mod_script_call(e[0], e[1], e[2]);
 			}
 			
@@ -1997,10 +1997,10 @@
 		num = 1;
 		
 		 // Events:
-		on_step = ["", "", ""];
-		on_pull = ["", "", ""];
-		on_open = ["", "", ""];
-		on_fade = ["", "", ""];
+		on_step = null;
+		on_pull = script_ref_create(CustomPickup_pull);
+		on_open = null;
+		on_fade = null;
 		
 		return id;
 	}
@@ -2013,7 +2013,7 @@
 	
 	 // Call Chest Step Event:
 	var e = on_step;
-	if(mod_script_exists(e[0], e[1], e[2])){
+	if(is_array(e)){
 		mod_script_call(e[0], e[1], e[2]);
 	}
 	
@@ -2022,34 +2022,33 @@
 		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 	
-	 // Find Nearest Attractable Player:
-	var	_nearest = noone,
-		_disMax = (instance_exists(Portal) ? infinity : pull_dis),
-		e = on_pull;
-		
-	if(!mod_script_exists(e[0], e[1], e[2])){
-		e = script_ref_create(CustomPickup_pull);
-	}
-	
-	with(Player){
-		var _dis = point_distance(x, y, other.x, other.y);
-		if(_dis < _disMax){
-			with(other) if(mod_script_call(e[0], e[1], e[2])){
-				_disMax = _dis;
-				_nearest = other;
+	 // Attraction:
+	var e = on_pull;
+	if(is_array(e)){
+		var	_nearest = noone,
+			_disMax = (instance_exists(Portal) ? infinity : pull_dis);
+			
+		 // Find Nearest Attractable Player:
+		with(Player){
+			var _dis = point_distance(x, y, other.x, other.y);
+			if(_dis < _disMax){
+				with(other) if(mod_script_call(e[0], e[1], e[2])){
+					_disMax = _dis;
+					_nearest = other;
+				}
 			}
 		}
-	}
-	
-	 // Attraction:
-	if(_nearest != noone){
-		var	l = pull_spd * current_time_scale,
-			d = point_direction(x, y, _nearest.x, _nearest.y),
-			_x = x + lengthdir_x(l, d),
-			_y = y + lengthdir_y(l, d);
-
-		if(place_free(_x, y)) x = _x;
-		if(place_free(x, _y)) y = _y;
+		
+		 // Move:
+		if(_nearest != noone){
+			var	l = pull_spd * current_time_scale,
+				d = point_direction(x, y, _nearest.x, _nearest.y),
+				_x = x + lengthdir_x(l, d),
+				_y = y + lengthdir_y(l, d);
+				
+			if(place_free(_x, y)) x = _x;
+			if(place_free(x, _y)) y = _y;
+		}
 	}
 	
 	 // Pickup Collision:
@@ -2089,7 +2088,7 @@
 			else{
 				 // Call Fade Event:
 				var e = on_fade;
-				if(mod_script_exists(e[0], e[1], e[2])){
+				if(is_array(e)){
 					mod_script_call(e[0], e[1], e[2]);
 				}
 				
@@ -3382,7 +3381,7 @@
 		yoff = 0;
 		
 		 // Events:
-		on_meet = ["", "", ""];
+		on_meet = null;
 		
 		return id;
 	}
@@ -4473,7 +4472,7 @@
 				
 			with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
 				var e = on_pull;
-				if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
+				if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
 					var	l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
 						d = point_direction(x, y, other.x, other.y),
 						_x = x + lengthdir_x(l, d),
@@ -4492,7 +4491,7 @@
 			with(instances_meeting(x, y, global.pickup_custom)){
 				if(instance_exists(self) && place_meeting(x, y, other)){
 					var e = on_open;
-					if(!mod_script_exists(e[0], e[1], e[2]) || !mod_script_call(e[0], e[1], e[2])){
+					if(!is_array(e) || !mod_script_call(e[0], e[1], e[2])){
 						 // Effects:
 						if(sprite_exists(spr_open)){
 							with(instance_create(x, y, SmallChestPickup)){
@@ -4679,7 +4678,7 @@
 					with(instances_meeting(x, y, _inst)){
 						if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
 							var e = on_meet;
-							if(!mod_script_exists(e[0], e[1], e[2]) || mod_script_call(e[0], e[1], e[2])){
+							if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
 								if(_maxDepth == null || depth < _maxDepth){
 									_maxDepth = depth;
 									_maxDis = null;
