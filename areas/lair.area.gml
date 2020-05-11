@@ -360,8 +360,8 @@
 			with(RoomList){
 				var	_x1 = x - 1,
 					_y1 = y - 1,
-					_x2 = _x1 + (w + 2),
-					_y2 = _y1 + (h + 2);
+					_x2 = x + w + 1,
+					_y2 = y + h + 1;
 					
 				with(RoomList) if(self != other){
 					if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
@@ -373,11 +373,12 @@
 							
 							x += lengthdir_x(1, _dir);
 							y += lengthdir_y(1, _dir);
+							
+							_done = false;
 						}
-						
-						_done = false;
 					}
 				}
+				
 				y = min(0 - floor(h / 2), y);
 			}
 		}

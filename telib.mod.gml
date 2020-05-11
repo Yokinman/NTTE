@@ -5,7 +5,7 @@
 	DebugLag = false;
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
-	objList = {
+	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
@@ -19,14 +19,28 @@
 	};
 	
 	 // Auto Create Event Script References:
-	objScrt = {};
-	for(var i = 0; i < lq_size(objList); i++){
-		var	_modName = lq_get_key(objList, i),
-			_modObjs = lq_get_value(objList, i);
+	ntte_obj_scrt = {};
+	for(var i = 0; i < lq_size(ntte_obj_list); i++){
+		var	_modName = lq_get_key(ntte_obj_list, i),
+			_modObjs = lq_get_value(ntte_obj_list, i);
 			
 		with(_modObjs){
 			var _name = self;
-			lq_set(objScrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
+			lq_set(ntte_obj_scrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
+		}
+	}
+	
+	 // Object Event Reference:
+	ntte_obj_event = ds_map_create();
+	ntte_obj_event[? CustomObject    ] = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup"];
+	ntte_obj_event[? CustomHitme     ] = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "cleanup"];
+	ntte_obj_event[? CustomProp      ] = ["step", "death"];
+	ntte_obj_event[? CustomProjectile] = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim"];
+	ntte_obj_event[? CustomSlash     ] = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim", "grenade", "projectile"];
+	ntte_obj_event[? CustomEnemy     ] = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup"];
+	with(ds_map_keys(ntte_obj_event)){
+		for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
+			array_push(ntte_obj_event[? self], `alrm${i}`);
 		}
 	}
 	
@@ -186,8 +200,12 @@
 
 #macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
-#macro objList global.object_list
-#macro objScrt global.object_scrt
+#macro ntte_alarm_min 0
+#macro ntte_alarm_max 11
+
+#macro ntte_obj_event global.object_event
+#macro ntte_obj_list  global.object_list
+#macro ntte_obj_scrt  global.object_scrt
 
 #macro spriteTeamStart     1
 #macro spriteTeamMap       global.sprite_team_map
@@ -200,96 +218,63 @@
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
 	}
-
+	
 	 // Search for Create Event if Unstored:
-	if(!lq_exists(objScrt, _name) && is_string(_name)){
-		for(var i = 0; i < lq_size(objList); i++){
-			var _modName = lq_get_key(objList, i);
+	if(!lq_exists(ntte_obj_scrt, _name) && is_string(_name)){
+		for(var i = 0; i < lq_size(ntte_obj_list); i++){
+			var _modName = lq_get_key(ntte_obj_list, i);
 			if(mod_script_exists("mod", _modName, _name + "_create")){
-				lq_set(objScrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
+				lq_set(ntte_obj_scrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
 			}
 		}
 	}
-
+	
 	 // Creating Object:
-	if(lq_exists(objScrt, _name)){
+	if(lq_exists(ntte_obj_scrt, _name)){
 		 // Call Create Event:
-		var	_scrt = array_combine(lq_get(objScrt, _name), [_x, _y]),
+		var	_scrt = array_combine(lq_get(ntte_obj_scrt, _name), [_x, _y]),
 			_inst = script_ref_call(_scrt);
-
-		if(is_undefined(_inst) || _inst == 0) _inst = noone;
-
+			
+		if(is_undefined(_inst) || _inst == 0){
+			_inst = noone;
+		}
+		
 		 /// Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
 				name = _name;
-
-				var	_isCustom = (string_pos("Custom", object_get_name(_inst.object_index)) == 1),
-					_events = [];
-
-				if(_isCustom){
-					var _isEnemy = instance_is(self, CustomEnemy);
-
-					switch(object_index){
-						case CustomObject:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup"];
-							break;
-
-						case CustomHitme:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "cleanup"];
-							break;
-
-						case CustomProp:
-							_events = ["step", "death"];
-							break;
-
-						case CustomProjectile:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim"];
-							break;
-
-						case CustomSlash:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "hit", "wall", "anim", "grenade", "projectile"];
-							break;
-
-						case CustomEnemy:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup"];
-							break;
-
-						default:
-							_events = ["step", "begin_step", "end_step", "draw", "destroy", "hurt", "death", "cleanup", "hit", "wall", "anim", "grenade", "projectile"];
-					}
-
-					_events = array_combine(_events, ["alrm0", "alrm1", "alrm2", "alrm3", "alrm4", "alrm5", "alrm6", "alrm7", "alrm8", "alrm9", "alrm10"]);
-					if(!_isEnemy) array_push(_events, "alrm11");
-				}
-				else _events = ["step", "begin_step", "end_step", "draw"];
-
-				 // Scripts:
-				var	_modType = _scrt[0],
+				
+				var	_isCustom = ds_map_exists(ntte_obj_event, object_index),
+					_modType = _scrt[0],
 					_modName = _scrt[1];
-
-				with(_events){
-					var _varName = (_isCustom ? "on_" + self : "ntte_bind_" + self);
-					if(_varName not in other || is_undefined(variable_instance_get(other, _varName))){
-						var _modScrt = _name + "_" + self;
-						
-						if(mod_script_exists(_modType, _modName, _modScrt)){
-							variable_instance_set(other, _varName, [_modType, _modName, _modScrt]);
+					
+				 // Bind Events:
+				with(
+					_isCustom
+					? ntte_obj_event[? object_index]
+					: ["step", "begin_step", "end_step", "draw"]
+				){
+					var _event = self;
+					if(("on_" + _event) not in _inst || is_undefined(variable_instance_get(_inst, "on_" + _event))){
+						var _varName = (_isCustom ? "on_" : "ntte_bind_") + _event;
+						if(_isCustom || (_varName not in _inst || is_undefined(variable_instance_get(_inst, _varName)))){
+							var _modScrt = _name + "_" + _event;
 							
-							 // Auto Script Binding:
-							if(!_isCustom){
-								var _onScrt = variable_instance_get(other, "on_" + self, null);
-								if(array_length(_onScrt) < 3 || !mod_script_exists(_onScrt[0], _onScrt[1], _onScrt[2])){
-									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + self);
-									if(array_length(_bind) <= 0 || self == "draw"){
-										switch(self){
-											case "step":       _bind = script_bind_step(ntte_bind, 0);           break;
-											case "begin_step": _bind = script_bind_begin_step(ntte_bind, 0);     break;
-											case "end_step":   _bind = script_bind_end_step(ntte_bind, 0);       break;
-											case "draw":       _bind = script_bind_draw(ntte_bind, _inst.depth); break;
+							if(mod_script_exists(_modType, _modName, _modScrt)){
+								variable_instance_set(_inst, _varName, script_ref_create_ext(_modType, _modName, _modScrt));
+								
+								 // Auto Script Binding:
+								if(!_isCustom){
+									var _bind = instances_matching(CustomScript, "name", "NTTEBind_" + _event);
+									if(array_length(_bind) <= 0 || _event == "draw"){
+										switch(_event){
+											case "step"       : _bind = script_bind_step(ntte_bind, 0);           break;
+											case "begin_step" : _bind = script_bind_begin_step(ntte_bind, 0);     break;
+											case "end_step"   : _bind = script_bind_end_step(ntte_bind, 0);       break;
+											case "draw"       : _bind = script_bind_draw(ntte_bind, _inst.depth); break;
 										}
 										with(_bind){
-											name = "NTTEBind_" + other;
+											name = "NTTEBind_" + _event;
 											inst = [];
 											persistent = true;
 										}
@@ -299,139 +284,135 @@
 									}
 								}
 							}
-						}
-
-						 // Defaults:
-						else if(_isCustom) with(other){
-							switch(_varName){
-								case "on_hurt":
-									on_hurt = enemy_hurt;
-									break;
-
-								case "on_death":
-									if(_isEnemy){
-										on_death = enemy_death;
-									}
-									break;
-
-								case "on_draw":
-									if(_isEnemy){
-										on_draw = draw_self_enemy;
-									}
-									break;
-							}
-						}
-					}
-				}
-
-				if(_isCustom){
-					on_create = script_ref_create(obj_create, _x, _y, _name);
-
-					 // Override Events:
-					var _override = ["step", "draw"];
-					with(_override){
-						var _varName = "on_" + self;
-						if(_varName in other){
-							var	e = variable_instance_get(other, _varName),
-								_objScrt = script_ref_create(script_get_index("obj_" + self));
-
-							if(!is_array(e) || !array_equals(e, _objScrt)){
-								with(other){
-									variable_instance_set(id, "on_ntte_" + other, e);
-
-									 // Override Specifics:
-									switch(_varName){
-										case "on_step":
-											 // Setup Custom NTTE Event Vars:
-											if("ntte_anim" not in self){
-												ntte_anim = _isEnemy;
-											}
-											if("ntte_walk" not in self){
-												ntte_walk = ("walk" in self);
-											}
-											if(ntte_anim){
-												if("spr_chrg" not in self) spr_chrg = -1;
-											}
-											if(ntte_walk){
-												if("walkspeed" not in self) walkspeed = 0.8;
-												if("maxspeed" not in self) maxspeed = 3;
-											}
-											ntte_alarm_max = 0;
-											for(var i = 0; i <= 10; i++){
-												var a = `on_alrm${i}`;
-												if(a in self && variable_instance_get(id, a) != null){
-													ntte_alarm_max = i + 1;
-													if("ntte_alarm_min" not in self){
-														ntte_alarm_min = i;
-													}
-												}
-											}
-											if("ntte_alarm_min" not in self){
-												ntte_alarm_min = 0;
-											}
-											/*var _set = ["anim"];
-											with(_set){
-												var n = "on_ntte_" + self;
-												if(n not in other){
-													variable_instance_set(other, n, null);
-												}
-											}*/
-
-											 // Set on_step to obj_step only if needed:
-											if(ntte_anim || ntte_walk || ntte_alarm_max > 0 || (DebugLag && array_length(on_step) >= 3)){
-												on_step = _objScrt;
+							
+							 // Defaults:
+							else if(_isCustom){
+								with(_inst){
+									switch(_event){
+										case "hurt":
+											on_hurt = enemy_hurt;
+											break;
+											
+										case "death":
+											if(instance_is(self, CustomEnemy)){
+												on_death = enemy_death;
 											}
 											break;
-
-										case "on_draw":
-											if(DebugLag && array_length(on_draw) >= 3){
-												on_draw = _objScrt;
+											
+										case "draw":
+											if(instance_is(self, CustomEnemy)){
+												on_draw = draw_self_enemy;
 											}
 											break;
-
-										default:
-											variable_instance_set(id, _varName, []);
 									}
 								}
 							}
 						}
 					}
-
-					 // Auto-fill HP:
-					if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
-						if(my_health == 1) my_health = maxhealth;
+				}
+				
+				 // Automatic Stuff:
+				if(_isCustom){
+					on_create = script_ref_create(obj_create, _x, _y, _name);
+					
+					 // Animation:
+					if("ntte_anim" not in self){
+						if(instance_is(self, CustomEnemy)){
+							ntte_anim = true;
+						}
 					}
-
-					 // Auto-spr_idle:
-					if(sprite_index == -1 && "spr_idle" in self && instance_is(self, hitme)){
-						sprite_index = spr_idle;
+					if("ntte_anim" in self && ntte_anim){
+						if("spr_chrg" not in self){
+							spr_chrg = -1;
+						}
+					}
+					
+					 // Walking:
+					if("ntte_walk" not in self){
+						if("walk" in self){
+							ntte_walk = true;
+						}
+					}
+					if("ntte_walk" in self && ntte_walk){
+						if("walkspeed" not in self) walkspeed = 0.8;
+						if("maxspeed"  not in self) maxspeed = 3;
+					}
+					
+					 // hitmes:
+					if(instance_is(self, hitme)){
+						 // Fill HP:
+						if(my_health == 1){
+							if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
+								my_health = maxhealth;
+							}
+						}
+						
+						 // Set Sprite:
+						if(sprite_index == -1 && "spr_idle" in self){
+							sprite_index = spr_idle;
+						}
+					}
+					
+					 // Bind Step Controller:
+					if(array_length(instances_matching(CustomScript, "name", "obj_step_begin")) <= 0){
+						with(script_bind_begin_step(obj_step_begin, 0)){
+							name = script[2];
+							persistent = true;
+						}
 					}
 				}
 			}
 		}
-
+		
 		return _inst;
 	}
-
+	
 	 // Return List of Objects:
 	else if(is_undefined(_name)){
 		var _list = [];
-		for(var i = 0; i < lq_size(objList); i++){
-			_list = array_combine(_list, lq_get_value(objList, i));
+		
+		for(var i = 0; i < lq_size(ntte_obj_list); i++){
+			_list = array_combine(_list, lq_get_value(ntte_obj_list, i));
 		}
+		
 		return _list;
 	}
 
 	return noone;
 
-#define obj_step
-	if(DebugLag){
-		//trace_lag_bgn("Objects");
-		trace_lag_bgn(name);
+#define obj_step_begin
+	if(DebugLag) trace_time();
+	
+	var _obj = [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
+	
+	 // No Copies:
+	with(instances_matching_ne(instances_matching(object_index, "name", name), "id", id)){
+		instance_destroy();
+	}
+	
+	 // Alarms:
+	for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
+		var	_alrm = `on_alrm${i}`,
+			_inst = instances_matching_ne(instances_matching_ge(_obj, `alarm${i}`, 0), _alrm, null);
+			
+		array_sort(_inst, true);
+		
+		with(_inst){
+			var _num = alarm_get(i) - 1;
+			alarm_set(i, _num);
+			
+			 // Call Event:
+			if(_num == 0){
+				var _scrt = variable_instance_get(self, _alrm);
+				if(array_length(_scrt) >= 3){
+					mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
+				}
+			}
+		}
 	}
 	
 	 // Animate:
-	if(ntte_anim){
+	with(instances_matching(_obj, "ntte_anim", true)){
 		if(sprite_index != spr_chrg){
 			if(sprite_index != spr_hurt || anim_end){
 				sprite_index = ((speed <= 0) ? spr_idle : spr_walk);
@@ -440,7 +421,7 @@
 	}
 	
 	 // Movement:
-	if(ntte_walk){
+	with(instances_matching(_obj, "ntte_walk", true)){
 		if(walk > 0){
 			motion_add(direction, walkspeed);
 			walk -= current_time_scale;
@@ -448,46 +429,15 @@
 		if(speed > maxspeed) speed = maxspeed; // Max Speed
 	}
 	
-	 // Step:
-	script_ref_call(on_ntte_step);
-	if("ntte_alarm_max" not in self) exit;
-	
-	 // Alarms:
-	var r = (ntte_alarm_max - ntte_alarm_min);
-	if(r > 0){
-		var i = ntte_alarm_min;
-		repeat(r){ // repeat() is very slightly faster than a for loop here i think- big optimizations
-			var a = alarm_get(i);
-			if(a > 0){
-				 // Decrement Alarm:
-				a -= ceil(current_time_scale);
-				alarm_set(i, a);
-				
-				 // Call Alarm Event:
-				if(a <= 0){
-					alarm_set(i, -1);
-					script_ref_call(variable_instance_get(self, "on_alrm" + string(i)));
-					if("ntte_alarm_max" not in self) exit;
-				}
-			}
-			i++;
-		}
-	}
-	
-	if(DebugLag){
-		//trace_lag_end("Objects");
-		trace_lag_end(name);
-	}
-
-#define obj_draw // Only used for debugging lag
-	if(DebugLag) trace_lag_bgn(name + "_draw");
-	
-	script_ref_call(on_ntte_draw);
-	
-	if(DebugLag) trace_lag_end(name + "_draw");
+	if(DebugLag) trace_time("obj_step_begin");
 	
 #define ntte_bind
 	if(DebugLag) trace_time();
+	
+	 // No Copies:
+	with(instances_matching_ne(instances_matching(object_index, "name", name), "id", id)){
+		instance_destroy();
+	}
 	
 	 // Determine Event Type:
 	var	_varName = "ntte_bind_",
@@ -529,19 +479,11 @@
 	if(DebugLag) trace_time(_varName);
 	
 #define step
-	if(DebugLag) script_bind_end_step(end_step_trace_lag, 0);
-	
 	 // sleep_max():
 	if(global.sleep_max > 0){
 		sleep(global.sleep_max);
 		global.sleep_max = 0;
 	}
-	
-#define end_step_trace_lag
-	trace("");
-	trace("Frame", current_frame, "Lag:");
-	trace_lag();
-	instance_destroy();
 
 #define draw_dark // Drawing Grays
 	draw_set_color(c_gray);
@@ -3084,10 +3026,10 @@
 		_gridHAuto = is_undefined(global.floor_align_h),
 		_gridXAuto = is_undefined(global.floor_align_x),
 		_gridYAuto = is_undefined(global.floor_align_y),
-		_gridW = (_gridWAuto ? 16    : global.floor_align_w),
-		_gridH = (_gridHAuto ? 16    : global.floor_align_h),
-		_gridX = (_gridXAuto ? 10000 : global.floor_align_x),
-		_gridY = (_gridYAuto ? 10000 : global.floor_align_y),
+		_gridW     = (_gridWAuto ? 16    : global.floor_align_w),
+		_gridH     = (_gridHAuto ? 16    : global.floor_align_h),
+		_gridX     = (_gridXAuto ? 10000 : global.floor_align_x),
+		_gridY     = (_gridYAuto ? 10000 : global.floor_align_y),
 		_gridXBias = 0,
 		_gridYBias = 0;
 		
@@ -5028,7 +4970,8 @@
 	
 #define door_create(_x, _y, _dir)
 	/*
-		Create a CatDoor
+		Creates a double CatDoor for a normal Floor
+		Returns an array containing both doors
 		
 		Ex:
 			with(FloorNormal){
@@ -5059,43 +5002,6 @@
 	}
 	
 	return _inst;
-	
-#define trace_lag()
-	if(mod_variable_exists(mod_type_current, mod_current, "lag")){
-		for(var i = 0; i < array_length(global.lag); i++){
-			var	_name = lq_get_key(global.lag, i),
-				_total = string(lq_get_value(global.lag, i).total),
-				_str = "";
-				
-			while(string_length(_total) > 0){
-				var p = string_length(_total) - 3;
-				_str = string_delete(_total, 1, p) + " " + _str;
-				_total = string_copy(_total, 1, p);
-			}
-			
-			trace(_name + ":", _str + "us");
-		}
-	}
-	global.lag = {};
-	
-#define trace_lag_bgn(_name)
-	_name = string(_name);
-	if(!lq_exists(global.lag, _name)){
-		lq_set(global.lag, _name, {
-			timer : 0,
-			total : 0
-		});
-	}
-	with(lq_get(global.lag, _name)){
-		timer = get_timer_nonsync();
-	}
-	
-#define trace_lag_end(_name)
-	var _timer = get_timer_nonsync();
-	with(lq_get(global.lag, string(_name))){
-		total += (_timer - timer);
-		timer = _timer;
-	}
 	
 #define player_create(_x, _y, _index)
 	/*

@@ -3038,7 +3038,7 @@
 									
 								case Bolt: // Bolt Marrow Fix
 									variable_instance_set_list(
-										instance_create(x, y, "DiverHarpoon"),
+										obj_create(x, y, "DiverHarpoon"),
 										variable_instance_get_list(self)
 									);
 									break;
