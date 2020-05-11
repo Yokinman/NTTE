@@ -218,23 +218,25 @@
 					_y = y,
 					_moveDis = 32;
 					
-				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
+				//with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
 					while(
-						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+						point_distance(_x, _y, xstart, ystart) > _moveDis / 2
 						&&
 						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _floorHallwaySearch)) <= 0
 					){
 						 // Floor + Props:
-						with(floor_set(_x, _y, true)){
-							area_pop_props();
+						if(array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, FloorNormal)) <= 0){
+							with(floor_set(_x, _y, true)){
+								area_pop_props();
+							}
 						}
 						
 						 // Move:
-						var _moveDir = round((point_direction(_x, _y, other.xstart, other.ystart) + orandom(60)) / 90) * 90;
+						var _moveDir = round((point_direction(_x, _y, xstart, ystart) + orandom(60)) / 90) * 90;
 						_x += lengthdir_x(_moveDis, _moveDir);
 						_y += lengthdir_y(_moveDis, _moveDir);
 					}
-				}
+				//}
 				
 				 // Epify:
 				for(var i = 0; i < array_length(floors); i++){
@@ -247,7 +249,7 @@
 				 // Portal:
 				with(instance_create(x - 16, y - 16, CustomObject)){
 					sprite_index = sprTop;
-					with(instances_meeting(x, y, [Wall, prop])) instance_delete(id);
+					visible = false;
 				}
 			}
 			
