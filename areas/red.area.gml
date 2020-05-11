@@ -197,7 +197,7 @@
 	
 	 // Warp Rooms:
 	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
-		if(chance(1, 15) || array_length(instances_matching(CustomObject, "sprite_index", sprTop)) <= 0){
+		if(chance(1, 20) || array_length(instances_matching(CustomObject, "sprite_index", sprTop)) <= 0){
 			var _w = 2,
 				_h = 2,
 				_type = "",
@@ -214,29 +214,29 @@
 			
 			with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 				 // Hallway:
-				var	_x = x,
-					_y = y,
-					_moveDis = 32;
-					
-				//with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
+				with(instance_random(floors)){
+					var	_x = bbox_center_x,
+						_y = bbox_center_y,
+						_moveDis = 32;
+						
 					while(
-						point_distance(_x, _y, xstart, ystart) > _moveDis / 2
+						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
 						&&
-						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _floorHallwaySearch)) <= 0
+						(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, _floorHallwaySearch)) <= 0)
 					){
 						 // Floor + Props:
-						if(array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, FloorNormal)) <= 0){
-							with(floor_set(_x, _y, true)){
+						if(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, FloorNormal)) <= 0){
+							with(floor_set(_x - 16, _y - 16, true)){
 								area_pop_props();
 							}
 						}
 						
 						 // Move:
-						var _moveDir = round((point_direction(_x, _y, xstart, ystart) + orandom(60)) / 90) * 90;
+						var _moveDir = round((point_direction(_x, _y, other.xstart, other.ystart) + orandom(60)) / 90) * 90;
 						_x += lengthdir_x(_moveDis, _moveDir);
 						_y += lengthdir_y(_moveDis, _moveDir);
 					}
-				//}
+				}
 				
 				 // Epify:
 				for(var i = 0; i < array_length(floors); i++){
