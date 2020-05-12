@@ -1,15 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #macro Pet instances_matching(CustomHitme, "name", "Pet")
 
@@ -3211,10 +3209,8 @@
 	}
 	
 	
-/// Mod Events
-#define step
-	if(DebugLag) trace_time();
-	
+/// GENERAL
+#define ntte_step
 	var _petInst = Pet;
 	
 	 // Spider Webs:
@@ -3294,8 +3290,6 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("petlib_step");
-	
 #define octobubble_draw
 	instance_destroy();
 	
@@ -3304,20 +3298,8 @@
 		draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 	}
 	
-#define web_draw_post
-	instance_destroy();
-	
-	 // Web Bloom:
-	with(surface_setup("PetWeb", null, null, null)){
-		draw_set_alpha(1/3);
-		draw_set_blend_mode(bm_add);
-		draw_surface_scale(surf, x, y, 1 / scale);
-		draw_set_blend_mode(bm_normal);
-		draw_set_alpha(1);
-	}
-	
 #define web_end_step(_inst)
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	_inst = instances_matching(_inst, "", null);
 	
@@ -3479,7 +3461,7 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("petlib_web_end_step");
+	if(lag) trace_time("petlib_web_end_step");
 	
 	instance_destroy();
 	
@@ -3494,8 +3476,20 @@
 		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
+#define web_draw_post
+	instance_destroy();
 	
-/// Scripts
+	 // Web Bloom:
+	with(surface_setup("PetWeb", null, null, null)){
+		draw_set_alpha(1/3);
+		draw_set_blend_mode(bm_add);
+		draw_surface_scale(surf, x, y, 1 / scale);
+		draw_set_blend_mode(bm_normal);
+		draw_set_alpha(1);
+	}
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

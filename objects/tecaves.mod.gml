@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Surfaces:
 	surfWallShineMask = surface_setup("RedWallShineMask", null, null, null);
@@ -18,8 +17,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #macro surfWallShineMask global.surfWallShineMask
 
@@ -2119,12 +2117,8 @@
 	}
 	
 	
-/// Mod Events:
-#define step
-	script_bind_end_step(end_step, 0);
-	
-	if(DebugLag) trace_time();
-	
+/// GENERAL
+#define ntte_step
 	 // Wall Shine:
 	with(surfWallShineMask){
 		if(
@@ -2189,11 +2183,7 @@
 	}
 	*/
 	
-	if(DebugLag) trace_time("tecaves_step");
-	
-#define end_step
-	if(DebugLag) trace_time();
-	
+#define ntte_end_step
 	 // Spider Cocoons:
 	with(Cocoon){
 		obj_create(x, y, "NewCocoon");
@@ -2225,15 +2215,9 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tecaves_end_step");
-	
-	instance_destroy();
-	
-#define draw_shadows
-	if(DebugLag) trace_time();
-
+#define ntte_shadows
 	 // Mortar Plasma:
-	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
 		if(position_meeting(x, y, Floor)){
 			var	_percent = clamp(96 / z, 0.1, 1),
 				_w = ceil(18 * _percent),
@@ -2244,58 +2228,44 @@
 			draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
 		}
 	}
-
-	if(DebugLag) trace_time("tecaves_draw_shadows");
-
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
-
-	if(DebugLag) trace_time();
-
+	
+#define ntte_dark // Drawing Grays
 	 // Crystal Heart:
-	with(instances_matching(CustomEnemy, "name", "CrystalHeart")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
 		draw_crystal_heart_dark(45, 72 + random(2), 3);
 	}
 	
 	 // Mortar:
-	with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true)){
 		if(sprite_index == spr_fire){
 			draw_circle(x + (6 * right), y - 16, 48 - alarm1 + orandom(4), false)
 		}
 	}
 
 	 // Mortar Plasma:
-	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
 		draw_circle(x, y - z, 64 + orandom(1), false);
 	}
-
-	if(DebugLag) trace_time("tecaves_draw_dark");
-
-#define draw_dark_end // Drawing Clear
-	draw_set_color(c_black);
 	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark_end // Drawing Clear
 	 // Crystal Heart:
-	with(instances_matching(CustomEnemy, "name", "CrystalHeart")){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
 		draw_crystal_heart_dark(15, 24 + random(2), 2);
 	}
 	
 	 // Mortar:
-	with(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true)){
 		if(sprite_index == spr_fire){
 			draw_circle(x + (6 * right), y - 16, 24 - alarm1 + orandom(4), false)
 		}
 	}
 	
 	 // Mortar Plasma:
-	with(instances_matching(CustomProjectile, "name", "MortarPlasma")) if(visible){
+	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
 		draw_circle(x, y - z, 32 + orandom(1), false);
 	}
 	
-	if(DebugLag) trace_time("tecaves_draw_dark_end");
-	
-#define draw_bloom
+#define ntte_bloom
 	 // Crystal Heart Projectile:
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
@@ -2331,6 +2301,8 @@
 	draw_primitive_end();
 	
 #define draw_wall_shine
+	if(lag) trace_time();
+	
 	var	_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_gw = game_width,
@@ -2449,9 +2421,13 @@
 		}
 	}
 	
+	if(lag) trace_time(script[2]);
+	
 	instance_destroy();
 	
 #define draw_fake_walls(_inst, _sprite, _frame)
+	if(lag) trace_time();
+	
 	var _vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_gw = game_width,
@@ -2516,10 +2492,14 @@
 		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
+	if(lag) trace_time(script[2]);
+	
 	 // Goodbye:
 	instance_destroy();
 	
 #define draw_clones(_inst, _sprite, _speed)
+	if(lag) trace_time();
+	
 	var _vx = view_xview_nonsync,
 		_vy = view_yview_nonsync,
 		_gw = game_width,
@@ -2564,11 +2544,13 @@
 		draw_set_blend_mode(bm_normal);
 	}
 	
+	if(lag) trace_time(script[2]);
+	
 	 // Goodbye:
 	instance_destroy();
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

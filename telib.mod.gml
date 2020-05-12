@@ -1,14 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
-		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "BoneSpawner", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
+		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
@@ -44,8 +43,13 @@
 		}
 	}
 	
-	 // Lists of Objects Using Script Binding:
-	ntte_obj_bind = {};
+	 // Script Binding Object Lists:
+	ntte_obj_bind = {
+		"begin_step" : [],
+		"step"       : [],
+		"end_step"   : [],
+		"draw"       : [],
+	};
 	
 	 // Projectile Team Variants:
 	var _teamGrid = [
@@ -171,8 +175,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #macro mod_type_current script_ref_create(0)[0]
 
@@ -269,38 +272,37 @@
 								
 								 // Auto Script Binding:
 								if(!_isCustom){
-									if(!lq_exists(ntte_obj_bind, _varName)){
-										lq_set(ntte_obj_bind, _varName, []);
+									if(!lq_exists(ntte_obj_bind, _event)){
+										lq_set(ntte_obj_bind, _event, []);
 									}
 									
 									 // Bind Script:
-									var _bind = instances_matching(CustomScript, "name", _varName);
+									var _bind = instances_matching(instances_matching(CustomScript, "name", "obj_bind"), "type", _event);
 									if(_event == "draw"){
 										_bind = instances_matching(_bind, "depth", _inst.depth);
 									}
 									if(array_length(_bind) <= 0){
 										switch(_event){
-											case "step"       : _bind = script_bind_step(ntte_bind, 0);           break;
-											case "begin_step" : _bind = script_bind_begin_step(ntte_bind, 0);     break;
-											case "end_step"   : _bind = script_bind_end_step(ntte_bind, 0);       break;
-											case "draw"       : _bind = script_bind_draw(ntte_bind, _inst.depth); break;
+											case "step"       : _bind = script_bind_step(obj_bind, 0);           break;
+											case "begin_step" : _bind = script_bind_begin_step(obj_bind, 0);     break;
+											case "end_step"   : _bind = script_bind_end_step(obj_bind, 0);       break;
+											case "draw"       : _bind = script_bind_draw(obj_bind, _inst.depth); break;
 										}
 										with(_bind){
-											name = _varName;
+											name = script[2];
+											type = _event;
 											inst = [];
-											inst_obj = lq_get(ntte_obj_bind, name);
+											inst_obj = lq_get(ntte_obj_bind, type);
 											persistent = true;
 										}
 									}
-									
-									 // Add Instance:
 									with(_bind){
 										array_push(inst, _inst);
 										
 										 // Add to Object List:
 										var _obj = _inst.object_index;
-										for(var i = _obj; object_exists(i); i = object_get_parent(i)){
-											if(array_exists(inst_obj, i)){
+										with(inst_obj){
+											if(object_is_ancestor(_obj, self)){
 												_obj = -1;
 												break;
 											}
@@ -313,7 +315,10 @@
 											}
 											array_push(inst_obj, _obj);
 										}
-										lq_set(ntte_obj_bind, name, inst_obj);
+										with(instances_matching(instances_matching(CustomScript, "name", name), "type", type)){
+											inst_obj = other.inst_obj;
+										}
+										lq_set(ntte_obj_bind, type, inst_obj);
 									}
 								}
 							}
@@ -385,14 +390,6 @@
 							sprite_index = spr_idle;
 						}
 					}
-					
-					 // Bind Step Controller:
-					if(array_length(instances_matching(CustomScript, "name", "ntte_step_begin")) <= 0){
-						with(script_bind_begin_step(ntte_step_begin, 0)){
-							name = script[2];
-							persistent = true;
-						}
-					}
 				}
 			}
 		}
@@ -413,15 +410,15 @@
 	
 	return noone;
 	
-#define ntte_step_begin
-	if(DebugLag) trace_time();
+#define obj_step
+	/*
+		Performs alarms, movement, and animation code for NTTE's "Custom" objects
+		Called from ntte.mod's 'ntte_begin_step' event
+	*/
+	
+	if(lag) trace_time();
 	
 	var _obj = [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
-	
-	 // No Copies:
-	with(instances_matching_ne(instances_matching(object_index, "name", name), "id", id)){
-		instance_destroy();
-	}
 	
 	 // Alarms:
 	for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
@@ -462,28 +459,34 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("ntte_step_begin");
+	if(lag) trace_time("obj_step");
 	
-#define ntte_bind
-	if(DebugLag) trace_time();
+#define obj_bind
+	/*
+		A script bind controller that calls scripts for NTTE's non-"Custom" objects
+	*/
 	
-	var	_varName = name,
-		_isDraw = instance_is(self, CustomDraw);
+	if(lag) trace_time();
+	
+	var	_varName = "ntte_bind_" + type,
+		_isDraw  = (type == "draw"),
+		_bind    = instances_matching(instances_matching(CustomScript, "name", name), "type", type);
 		
 	 // No Copies:
-	with(instances_matching(instances_matching_ne(instances_matching(object_index, "name", name), "id", id), "depth", depth)){
+	with(instances_matching(instances_matching_ne(_bind, "id", id), "depth", depth)){
 		other.inst = array_combine(other.inst, inst);
 		instance_destroy();
 	}
 	
-	 // Instances Changed Depth:
+	 // Changed Depth:
 	if(_isDraw){
 		with(instances_matching_ne(inst, "depth", depth)){
-			if(array_length(instances_matching(instances_matching(CustomDraw, "name", _varName), "depth", depth)) <= 0){
-				with(script_bind_draw(ntte_bind, depth)){
-					name = _varName;
+			if(array_length(instances_matching(_bind, "depth", depth)) <= 0){
+				with(script_bind_draw(obj_bind, depth)){
+					name = script[2];
+					type = "draw";
 					inst = [other];
-					inst_obj = lq_get(ntte_obj_bind, name);
+					inst_obj = lq_get(ntte_obj_bind, type);
 					persistent = true;
 				}
 			}
@@ -496,25 +499,23 @@
 		inst = instances_matching(inst, "depth", depth);
 	}
 	
-	 // Run Events:
-	if(array_length(inst) > 0){
-		with(_isDraw ? instances_matching(inst, "visible", true) : inst){
-			var _scrt = variable_instance_get(self, _varName);
-			if(array_length(_scrt) > 2){
-				mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
-			}
+	 // Call Scripts:
+	with(_isDraw ? instances_matching(inst, "visible", true) : inst){
+		var _scrt = variable_instance_get(self, _varName);
+		if(array_length(_scrt) > 2){
+			mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
 		}
 	}
 	
+	if(lag) trace_time(name + "_" + type);
+	
 	 // Goodbye:
-	else{
-		if(array_length(instances_matching(object_index, "name", name)) <= 1){
-			lq_set(ntte_obj_bind, name, []);
+	if(array_length(inst) <= 0){
+		if(array_length(instances_matching(_bind, "inst_obj", inst_obj)) <= 1){
+			lq_set(ntte_obj_bind, type, []);
 		}
 		instance_destroy();
 	}
-	
-	if(DebugLag) trace_time(_varName);
 	
 #define step
 	 // sleep_max():
@@ -523,24 +524,8 @@
 		global.sleep_max = 0;
 	}
 	
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
 	
-	 // Portal Disappearing Visual:
-	with(instances_matching(BulletHit, "name", "PortalPoof")){
-		draw_circle(x, y, 120 + random(6), false);
-	}
-	
-#define draw_dark_end // Drawing Clear
-	draw_set_color(c_black);
-	
-	 // Portal Disappearing Visual:
-	with(instances_matching(BulletHit, "name", "PortalPoof")){
-		draw_circle(x, y, 20 + random(8), false);
-	}
-	
-	
-/// Scripts
+/// SCRIPTS
 #define draw_self_enemy()
 	image_xscale *= right;
 	draw_self(); // This is faster than draw_sprite_ext yea
@@ -2713,7 +2698,7 @@
 	}
 	
 #define area_border_step(_y, _area, _color)
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	var	_fix = false,
 		_caveInst = cavein_inst;
@@ -2879,7 +2864,7 @@
 	draw_set_color(_color);
 	draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
 	
-	if(DebugLag) trace_time("area_border_step");
+	if(lag) trace_time("area_border_step");
 	
 #define area_border_cavein(_y, _caveDis, _caveInst)
 	 // Delete:

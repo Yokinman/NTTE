@@ -1586,12 +1586,12 @@
 	}
 	
 	 // SAVE FILE //
-	saveAuto = false;
+	save_auto = false;
 	save = {};
 	
 	if(fork()){
 		 // Load Existing Save:
-		var _path = savePath;
+		var _path = save_path;
 		wait file_load(_path);
 		
 		if(file_loaded(_path) && file_exists(_path)){
@@ -1619,7 +1619,7 @@
 				}
 				
 				 // Enable Auto Saving:
-				saveAuto = true;
+				save_auto = true;
 				
 				exit;
 			}
@@ -1639,7 +1639,7 @@
 		
 		 // New Save File:
 		save_ntte();
-		saveAuto = true;
+		save_auto = true;
 		exit;
 	}
 	
@@ -1648,10 +1648,10 @@
 	global.shad = {};
 	
 	 // Mod Lists:
-	areaList = ["coast", "oasis", "lair", "pizza", "red", "trench"];
-	raceList = ["parrot", "bee"];
-	crwnList = ["bonus", "crime", "red"];
-	wepsList = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+	ntte_area = ["coast", "oasis", "lair", "pizza", "red", "trench"];
+	ntte_race = ["parrot", "bee"];
+	ntte_crwn = ["bonus", "crime", "red"];
+	ntte_weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 	
 	 // Reminders:
 	global.remind = [];
@@ -1711,20 +1711,20 @@
 #macro shn24  spr.Shine24
 #macro shn64  spr.Shine64
 
-#macro areaList global.area
-#macro raceList global.race
-#macro crwnList global.crwn
-#macro wepsList global.weps
+#macro ntte_area global.area
+#macro ntte_race global.race
+#macro ntte_crwn global.crwn
+#macro ntte_weps global.weps
 
 #macro save     global.save
-#macro saveAuto global.save_auto
-#macro savePath "save.sav"
+#macro save_auto global.save_auto
+#macro save_path "save.sav"
 
 #macro game_scale_nonsync game_screen_get_width_nonsync() / game_width
 
 #define save_ntte()
 	if(player_is_local_nonsync(player_find_local_nonsync())){
-		string_save(json_encode(save), savePath);
+		string_save(json_encode(save), save_path);
 	}
 	
 #define save_get(_name, _default)
@@ -2362,7 +2362,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 	 // Locked Weapon Spriterize:
-	with(wepsList){
+	with(ntte_weps){
 		var _name = self;
 		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
 			var _spr = mod_variable_get("weapon", _name, "sprWep");
@@ -2373,7 +2373,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 	 // Autosave:
-	if(saveAuto){
+	if(save_auto){
 		with(instances_matching(GameCont, "ntte_autosave", null)){
 			save_ntte();
 			ntte_autosave = true;
@@ -2783,7 +2783,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 #define cleanup
-	if(saveAuto) save_ntte();
+	if(save_auto) save_ntte();
 	
 	 // Clear Surfaces/Shaders:
 	for(var i = 0; i < lq_size(global.surf); i++){
@@ -2796,7 +2796,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 	 // No Crash:
-	with(raceList){
+	with(ntte_race){
 		with(instances_matching([CampChar, CharSelect], "race", self)){
 			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
 				motion_add(random(360), random(random(8)));

@@ -1,15 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define AlbinoBolt_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -5056,11 +5054,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_shadow = shd24;
 		image_speed = 0.4;
 		depth = -2;
-
+		
 		 // Sound:
 		snd_hurt = sndTurtleHurt;
 		snd_dead = sndTurtleDead1;
-
+		
 		 // Vars:
 		mask_index = mskBandit;
 		friction = 0.4;
@@ -5073,10 +5071,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		notice_max = 80;
 		notice = notice_max;
 		become = Turtle;
-
+		
 		return id;
 	}
-
+	
 #define TurtleCool_step
 	if(!point_seen(x, y, -1) && patience > 0) exit;
 
@@ -5340,18 +5338,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define VenomFlak_destroy
 	instance_create(x, y, PortalClear);
 	if(!instance_is(creator, Player)) pickup_drop(50, 0);
-
+	
 	 // Effects:
 	for(var a = 0; a < 360; a += (360 / 20)){
 		scrFX(x, y, [a, 4 + random(4)], Smoke);
 	}
-
+	
 	view_shake_at(x, y, 20);
-
+	
 	sound_play_pitchvol(sndHeavyMachinegun, 1,					0.8);
 	sound_play_pitchvol(sndSnowTankShoot,	1.4,				0.7);
 	sound_play_pitchvol(sndFrogEggHurt,		0.4 + random(0.2),	3.5);
-
+	
 	 // Projectiles:
 	for(var d = 0; d < 360; d += (360 / 12)){
 		 // Venom Lines:
@@ -5359,7 +5357,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			for(var i = 0; i <= 4; i++){
 				with(enemy_shoot("VenomPellet", direction + d + orandom(2 + i), 2 * i)){
 					move_contact_solid(direction, 4 + (4 * i));
-
+					
 					 // Effects:
 					with(instance_create(x, y, AcidStreak)){
 						motion_set(other.direction + orandom(4), other.speed * 0.8);
@@ -5368,7 +5366,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 			}
 		}
-
+		
 		 // Individual:
 		else{
 			with(enemy_shoot("VenomPellet", direction + d + orandom(2), 5.8 + random(0.4))){
@@ -5376,125 +5374,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
-
-/// Mod Events
-#define step
-	script_bind_step(post_step, 0);
 	
-	if(DebugLag) trace_time();
 	
-	 // Crown of Crime:
-	if(!(GameCont.area == area_palace && GameCont.subarea == 3)){
-		with(instances_matching(Crown, "ntte_crown", "crime")){
-			 // Watch where you're going bro:
-			if(hspeed != 0 && sign(image_xscale) != sign(hspeed)){
-				image_xscale = abs(image_xscale) * sign(hspeed);
-			}
-			
-			 // Spawn Enemies:
-			if(enemies > 0){
-				enemy_time -= current_time_scale;
-				
-				if(enemy_time <= 0){
-					var	_spawnX = x,
-						_spawnY = y,
-						_spawnDis = 240,
-						_spawnDir = random(360);
-						
-					with(instance_furthest(_spawnX - 16, _spawnY - 16, Floor)){
-						_spawnDir = point_direction(bbox_center_x, bbox_center_y, _spawnX, _spawnY);
-					}
-					
-					 // Effects:
-					var	l = 4,
-						d = _spawnDir;
-						
-					with(instance_create(x + lengthdir_x(l, d), y + 8 + lengthdir_y(l, d), AssassinNotice)){
-						hspeed = other.hspeed;
-						vspeed = other.vspeed;
-						motion_add(d, 2);
-						friction = 0.2;
-						depth = -9;
-					}
-					repeat(3) with(instance_create(x, y, Smoke)){
-						image_xscale /= 2;
-						image_yscale /= 2;
-						hspeed += other.hspeed / 2;
-						vspeed += other.vspeed / 2;
-					}
-					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
-					
-					 // Spawn:
-					var _pool = [
-						[Gator,         5],
-						["BabyGator",   2],
-						[BuffGator,     3 * (GameCont.hard >= 4)],
-						["BoneGator",   3 * (GameCont.hard >= 6)],
-						["AlbinoGator", 2 * (GameCont.hard >= 8)]
-					];
-					while(enemies > 0){
-						enemies--;
-						
-						portal_poof();
-						
-						with(top_create(_spawnX, _spawnY, pool(_pool), _spawnDir, _spawnDis)){
-							jump_time = 1;
-							idle_time = 0;
-							
-							_spawnX = x;
-							_spawnY = y;
-							_spawnDir = random(360);
-							_spawnDis = -1;
-							
-							with(target){
-								 // Type-Specific:
-								switch(object_index){
-									case "BabyGator":
-										 // Babies Stick Together:
-										var n = 1 + irandom(1 + GameCont.loops);
-										repeat(n) with(top_create(x, y, "BabyGator", random(360), -1)){
-											jump_time = 1;
-										}
-										break;
-										
-									case FastRat: // maybe?
-										 // The Horde:
-										var n = 3 + irandom(3 + GameCont.loops);
-										repeat(n) with(top_create(x, y, FastRat, random(360), -1)){
-											jump_time = 1;
-										}
-										
-										 // Large and in Charge:
-										with(top_create(x, y, RatkingRage, random(360), -1)){
-											jump_time = 1;
-										}
-										break;
-								}
-								
-								 // Poof:
-								repeat(3){
-									with(instance_create(x + orandom(8), y + orandom(8), Dust)){
-										depth = other.depth - 1;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
+/// GENERAL
+#define ntte_step
 	 // Dissipate Cat Gas Faster:
 	with(instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1)){
 		growspeed -= random(0.002 * current_time_scale);
 	}
-	
-	if(DebugLag) trace_time("tesewers_step");
-	
-#define post_step
-	if(DebugLag) trace_time();
 	
 	 // Lair Turrets:
 	with(instances_matching(Turret, "sprite_index", spr.LairTurretAppear)){
@@ -5530,13 +5417,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		instance_delete(id);
 	}
 	
-	if(DebugLag) trace_time("tesewers_post_step");
-	
-	instance_destroy();
-	
-#define draw_shadows
-	if(DebugLag) trace_time();
-	
+#define ntte_shadows
 	 // Doors:
 	with(instances_matching(instances_matching(CustomHitme, "name", "CatDoor"), "visible", true)){
 		var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
@@ -5550,13 +5431,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 	}
 	
-	if(DebugLag) trace_time("tesewers_draw_shadows");
-	
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark // Drawing Grays
 	 // Cat Light:
 	var _border = 2;
 	with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
@@ -5564,67 +5439,57 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Manhole Cover:
-	with(instances_matching(CustomObject, "name", "PizzaManholeCover")) if(visible){
+	with(instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true)){
 		draw_circle(xstart, ystart - 16, 40 + random(2), false);
 	}
 	
 	 // TV:
-	with(TV) if(visible){
+	with(instances_matching(TV, "visible", true)){
 		draw_circle(x, y, 64 + random(2), false);
 	}
 	
 	 // Big Bat:
-	with(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss"), "visible", true)){
 		draw_circle(x, y, 64 + random(2), false);
 	}
 	
 	 // Big Manhole:
-	with(instances_matching(CustomObject, "name", "CatHoleBig")) if(visible){
+	with(instances_matching(instances_matching(CustomObject, "name", "CatHoleBig"), "visible", true)){
 		draw_circle(x, y, 192 + random(2), false);
 	}
 	
-	if(DebugLag) trace_time("tesewers_draw_dark");
-	
-#define draw_dark_end // Drawing Clear
-	draw_set_color(c_black);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark_end // Drawing Clear
 	 // Cat Light:
 	with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
 		draw_catlight(x, y, w1, w2, h1, h2, offset);
 	}
 	
 	 // Manhole Cover:
-	with(instances_matching(CustomObject, "name", "PizzaManholeCover")) if(visible){
+	with(instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true)){
 		var o = 0;
 		if(chance(1, 2)) o = orandom(1);
 		draw_catlight(xstart, ystart - 32, 16, 19, 28, 8, o);
 	}
 	
 	 // TV:
-	with(TV) if(visible){
+	with(instances_matching(TV, "visible", true)){
 		var o = orandom(1);
 		draw_catlight(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
 	}
 	
 	 // Big Bat:
-	with(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss"), "visible", true)){
 		draw_circle(x, y, 28 + random(2), false);
 	}
 	
-	if(DebugLag) trace_time("tesewers_draw_dark_end");
-	
-#define draw_bloom
-	if(DebugLag) trace_time();
-	
+#define ntte_bloom
 	 // Projectiles:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "VenomFlak", "GatorStatueFlak"), "visible", true)){
+	with(instances_matching(CustomProjectile, "name", "VenomFlak", "GatorStatueFlak")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 	
 	 // Flame Spark:
-	with(instances_matching(instances_matching(Sweat, "name", "FlameSpark"), "visible", true)){
+	with(instances_matching(Sweat, "name", "FlameSpark")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
 	}
 	
@@ -5633,10 +5498,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 	}
 	
-	if(DebugLag) trace_time("tesewers_draw_bloom");
 	
-	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

@@ -6,8 +6,7 @@
 	
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Charm:
 	shader_add("Charm",
@@ -126,8 +125,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 /// General
 #define race_name            return "PARROT";
@@ -504,7 +502,7 @@
 	}
 	
 #define step
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	 /// ACTIVE : Charm
 	if(player_active && canspec){
@@ -655,7 +653,7 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("parrot_step");
+	if(lag) trace_time(mod_current + "_step");
 	
 #define step_charm_hplink
 	 /// ULTRA B : Flock Together / HP Link
@@ -730,7 +728,7 @@
 	instance_destroy();
 	
 #define charm_step
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	var	_instList = array_clone(inst),
 		_varsList = array_clone(vars),
@@ -1218,12 +1216,14 @@
 		instance_destroy();
 	}
 	
-	if(DebugLag) trace_time(`charm_step ${_instNum}`);
+	if(lag) trace_time(script[2] + " " + string(_instNum));
 	
 #define charm_draw(_inst, _index)
 	/*
 		Draws green eyes and outlines for charmed enemies
 	*/
+	
+	if(lag) trace_time();
 	
 	if(_index < 0) _index = player_find_local_nonsync();
 	
@@ -1307,6 +1307,8 @@
 		}
 	}
 	
+	if(lag) trace_time(script[2] + " " + string(_index));
+	
 	instance_destroy();
 	
 #define cleanup
@@ -1316,7 +1318,7 @@
 	}
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

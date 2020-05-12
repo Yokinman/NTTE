@@ -1,15 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-
-	DebugLag = false;
+	lag = false;
 
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define BabyScorpion_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -695,7 +693,7 @@
 
 #define Bone_destroy
 	instance_create(x, y, Dust);
-
+	
 	 // Darn:
 	if(broken){
 		sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2.5);
@@ -722,44 +720,15 @@
 			motion_add(random(360), 2);
 		}
 	}
-
+	
 	 // Pickupable:
 	else with(instance_create(x, y, WepPickup)){
 		wep = "crabbone";
 		curse = other.curse;
 		rotation = other.rotation;
 	}
-
-
-#define BoneSpawner_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		creator = noone;
-		return id;
-	}
-
-#define BoneSpawner_end_step
-	if(instance_exists(creator)){
-		 // Follow Creator:
-		x = creator.x;
-		y = creator.y;
-	}
-	else{
-		if(position_meeting(x, y, Corpse)){
-			 // Enter the bone zone:
-			with(instance_create(x, y, WepPickup)){
-				wep = "crabbone";
-				motion_add(random(360), 3);
-			}
 	
-			 // Effects:
-			repeat(2) with(instance_create(x, y, Dust)){
-				motion_add(random(360), 3);
-			}
-		}
-		instance_destroy();
-	}
-
-
+	
 #define CoastBossBecome_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -1829,32 +1798,13 @@
 	}
 	
 	
-/// Mod Events
-#define step
-	if(DebugLag) trace_time();
-	
-	 // Skeletons Drop Bones:
-	if(!instance_exists(GenCont)){
-		with(instances_matching([BonePile, BonePileNight, BigSkull], "my_bone_spawner", null)){
-			my_bone_spawner = obj_create(x, y, "BoneSpawner");
-			with(my_bone_spawner) creator = other;
-		}
-	}
-	
+/// GENERAL
+#define ntte_begin_step
 	 // Baby Scorpion Spawn:
 	with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
 		repeat(babyscorp_drop){
 			obj_create(x, y, "BabyScorpion");
 		}
-	}
-	
-	 // Separate Bones:
-	with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
-		if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
-			wep.ammo--;
-			with(instance_create(x, y, WepPickup)) wep = "crabbone";
-		}
-		else crabbone_splitcheck = true;
 	}
 	
 	 // Hiker Backpack:
@@ -1876,21 +1826,36 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tedesert_step");
+#define ntte_step
+	 // Separate Bones:
+	with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
+		if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
+			wep.ammo--;
+			with(instance_create(x, y, WepPickup)) wep = "crabbone";
+		}
+		else crabbone_splitcheck = true;
+	}
 	
-#define draw_bloom
-	if(DebugLag) trace_time();
+#define ntte_end_step
+	 // Skeletons Drop Bones:
+	with(instances_matching_le([BonePile, BonePileNight, BigSkull], "my_health", 0)){
+		 // Enter the bone zone:
+		with(instance_create(x, y, WepPickup)){
+			wep = "crabbone";
+			motion_add(random(360), 3);
+		}
+		
+		 // Effects:
+		repeat(2) scrFX(x, y, 3, Dust);
+	}
 	
+#define ntte_bloom
 	 // Scorp Pet Attack:
-	with(instances_matching(CustomProjectile, "name", "PetVenom")) if(visible){
+	with(instances_matching(instances_matching(CustomProjectile, "name", "PetVenom"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
 	}
 	
-	if(DebugLag) trace_time("tedesert_draw_bloom");
-	
-#define draw_shadows
-	if(DebugLag) trace_time();
-	
+#define ntte_shadows
 	 // SharkBoss Loop Train:
 	with(instances_matching(CustomEnemy, "name", "CoastBoss")){
 		for(var i = 0; i < array_length(fish_train); i++){
@@ -1902,10 +1867,8 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tedesert_draw_shadows");
 	
-	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

@@ -1,15 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define FreakChamber_create(_x, _y)
 	/*
@@ -930,7 +928,54 @@
 	}
 	
 	
-/// Scripts
+/// GENERAL
+#define ntte_begin_step
+	 // Weapon Necromancy:
+	with(instances_matching_gt(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale)), "alarm0", 0)){
+		if(place_meeting(x, y, WepPickup)){
+			with(instances_meeting(x, y, WepPickup)){
+				if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
+					if(weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
+						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+						if(array_length(_part) >= 2){
+							wep = wep_merge(_part[0], _part[1]);
+							mergewep_indicator = null;
+							
+							 // FX:
+							sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
+							sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
+							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
+							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
+							with(instance_create(x, y + 2, ReviveFX)){
+								sprite_index = sprPopoRevive;
+								image_xscale = 0.8;
+								image_yscale = image_xscale;
+								image_blend = make_color_rgb(100, 255, 50);
+								depth = -2;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+#define ntte_end_step
+	 // Fish Freaks:
+	if(GameCont.loops > 0 && GameCont.area == area_labs){
+		with(instances_matching(Freak, "fish_freak", null)){
+			fish_freak = chance(1, 7);
+			if(fish_freak){
+				spr_idle = spr.FishFreakIdle;
+				spr_walk = spr.FishFreakWalk;
+				spr_hurt = spr.FishFreakHurt;
+				spr_dead = spr.FishFreakDead;
+			}
+		}
+	}
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

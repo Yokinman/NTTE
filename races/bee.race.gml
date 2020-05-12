@@ -6,15 +6,13 @@
 	
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define race_name            return "BEE";
 #define race_text            return "PASSIVE#ACTIVE";
@@ -224,11 +222,11 @@
 	}
 	
 #define step
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	
 	
-	if(DebugLag) trace_time(mod_current + "_step");
+	if(lag) trace_time(mod_current + "_step");
 	
 #define cleanup
 	with(Loadout){
@@ -237,7 +235,7 @@
 	}
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

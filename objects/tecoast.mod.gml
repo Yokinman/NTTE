@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Palanking Camera Pan, for Pause Screen:
 	global.palankingPan = [0, 0];
@@ -14,8 +13,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define BloomingAssassin_create(_x, _y)
 	with(instance_create(_x, _y, JungleAssassin)){
@@ -4819,10 +4817,8 @@
 	}
 	
 	
-/// Mod Events
-#define step
-	if(DebugLag) trace_time();
-	
+/// GENERAL
+#define ntte_step
 	 // Harpoon Connections:
 	with(global.poonRope){
 		var	_rope = self,
@@ -4914,9 +4910,7 @@
 		else Harpoon_unrope(_rope);
 	}
 	
-	if(DebugLag) trace_time("tecoast_step");
-	
-#define draw_shadows
+#define ntte_shadows
 	 // Shield Shadows:
 	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)){
 		var	l = -8 - (1 * image_yscale),
@@ -4927,29 +4921,17 @@
 		draw_sprite_ext(spr_shadow, 0, _x, _y, image_yscale, image_xscale, image_angle + 90, c_white, 1);
 	}
 	
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark // Drawing Grays
 	 // Divers:
-	with(instances_matching(CustomEnemy, "name", "Diver")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true)){
 		draw_circle(x, y, 40 + orandom(1), false);
 	}
 	
-	if(DebugLag) trace_time("tecoast_draw_dark");
-	
-#define draw_dark_end // Drawing Clear
-	draw_set_color(c_black);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark_end // Drawing Clear
 	 // Divers:
-	with(instances_matching(CustomEnemy, "name", "Diver")) if(visible){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true)){
 		draw_circle(x, y, 16 + orandom(1), false);
 	}
-	
-	if(DebugLag) trace_time("tecoast_draw_dark_end");
 	
 #define draw_gui_end
 	 // Palanking camera pan here so that pausing doesn't jank things:
@@ -4962,6 +4944,7 @@
 	
 #define draw_rope(_rope)
 	instance_destroy();
+	
 	with(_rope) if(instance_exists(link1) && instance_exists(link2)){
 		var	_x1 = link1.x,
 			_y1 = link1.y,
@@ -4979,7 +4962,7 @@
 	}
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

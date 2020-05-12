@@ -72,7 +72,7 @@
 		sound_play_pitch(sndPlasmaMinigunUpg,       0.4 * _pitch);
 		
 	
- /// Scripts
+/// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

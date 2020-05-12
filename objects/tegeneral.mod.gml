@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-
-	DebugLag = false;
+	lag = false;
 	
 	 // Top Object Searching:
 	TopObjectSearchMap = ds_map_create();
@@ -22,8 +21,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #macro TopObjectSearch [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
 #macro TopObjectSearchMap global.top_object_search_map
@@ -3735,9 +3733,8 @@
 			motion_add(direction + 180, 4);
 		}
 	}
-
-#define void
-
+	
+	
 #define PortalGuardian_create(_x, _y)
 	/*
 		A rare palace enemy, shoots a projectile that swaps positions with itself and whatever it hit
@@ -3782,7 +3779,7 @@
 	
 #define PortalGuardian_step
 	 // Hovery:
-	if(array_length(instances_meeting(x, y, instances_matching(projectile, "creator", id))) <= 0){
+	if(!place_meeting(x, y, projectile) || array_length(instances_meeting(x, y, instances_matching(projectile, "creator", id))) <= 0){
 		speed = max(1, speed);
 	}
 	
@@ -3795,7 +3792,9 @@
 			sprite_index = spr_idle;
 			
 			 // Effects:
-			repeat(8) scrFX(x, y, 3, Dust);
+			repeat(8){
+				scrFX(x, y, 3, Dust);
+			}
 			repeat(3){
 				with(instance_create(x + orandom(16), y + orandom(16), PortalL)){
 					depth = other.depth - 1;
@@ -3824,7 +3823,7 @@
 		if(in_sight(target)){
 			 // Attack:
 			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
-				enemy_shoot("PortalBullet", gunangle, 9);
+				enemy_shoot("PortalBullet", gunangle, 8);
 				
 				 // Sound:
 				sound_play_pitchvol(sndPortalOld, 2 + random(2), 1.5);
@@ -5088,17 +5087,95 @@
 	}
 	
 	
-/// Mod Events
+/// GENERAL
 #define game_start
 	 // Delete:
 	with(instances_matching(CustomHitme, "name", "Pet")) instance_delete(id);
 	with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_delete(id);
 	
-#define step
-	if(DebugLag) trace_time();
+#define ntte_step
+	 // Auto-Topify New Objects:
+	with(TopObjectSearch){
+		var _object = self;
+		if(instance_exists(_object)){
+			var _lastID = TopObjectSearchMap[? _object];
+			if(_object.id > _lastID){
+				TopObjectSearchMap[? _object] = _object.id;
+				
+				if(_object == Effect){
+					_object = instances_matching_ne(_object, "object_index", Smoke, Bubble);
+					if(array_length(_object) <= 0) continue;
+				}
+				
+				var _topObject = instances_matching(CustomObject, "name", "TopObject");
+				if(array_length(_topObject) > 0){
+					with(array_flip(instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null))){
+						if(
+							!position_meeting(x, y, Floor)
+							||
+							(place_meeting(x, y, Wall) && (instance_is(self, hitme) || instance_is(self, chestprop) || instance_is(self, Corpse) || instance_is(self, ChestOpen)))
+						){
+							with(
+								instances_matching_ge(
+								instances_matching_le(
+								instances_matching_ge(
+								instances_matching_le(
+								_topObject,
+								"search_x1", xstart),
+								"search_x2", xstart),
+								"search_y1", ystart),
+								"search_y2", ystart)
+							){
+								//if(array_length(instances_meeting(x, y, instances_matching_lt([PortalClear, PortalShock], "id", other))) <= 0){
+									if(
+										"creator" not in other
+										|| !instance_exists(other.creator)
+										|| other.creator == target
+										|| !instance_exists(target)
+										|| ("target" in other && other.target == target)
+									){
+										with(other){
+											 // Effects:
+											if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
+												if(instance_is(self, MeltSplat)){
+													instance_destroy();
+												}
+												else depth = min(depth, -6.01);
+											}
+											else if(instance_is(self, SharpTeeth)){
+												depth = min(depth, -8);
+											}
+											
+											 // Epic Stuff:
+											else if(fork()){
+												if(instance_is(self, hitme) || instance_is(self, projectile)){
+													var _wall = instances_meeting(x, y, Wall);
+													wait 0;
+													if(!instance_exists(self) || array_length(instances_matching(_wall, "", null)) < array_length(_wall)){
+														exit;
+													}
+												}
+												top_create(x, y, id, 0, 0);
+												exit;
+											}
+										}
+										
+										break;
+									}
+									
+									if(!instance_exists(other)) break;
+								//}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	
+	 // Top Object Floor Collision:
 	if(instance_exists(Floor)){
-		 // New Floors:
+		 // Update Floor Bounding Box:
 		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
 			global.floor_num = instance_number(Floor);
 			global.floor_min = GameObject.id;
@@ -5116,7 +5193,7 @@
 			}
 		}
 		
-		 // Top Object Floor-Collision:
+		 // Floor Collision:
 		var _topObject = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
 		with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, _topObject)){
 			if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
@@ -5245,140 +5322,6 @@
 			}
 		}
 	}
-
-	 // Pet Leveling Up FX:
-	with(instances_matching(LevelUp, "nttepet_levelup", null)){
-		nttepet_levelup = true;
-		if(instance_is(creator, Player)){
-			if("ntte_pet" in creator) with(creator.ntte_pet){
-				if(instance_exists(self)) with(other){
-					instance_copy(false).creator = other;
-				}
-			}
-		}
-	}
-	
-	 // Bind Events:
-	script_bind_step(step_post, 0);
-	if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
-		script_bind_draw(draw_shadows_top, -6.001);
-	}
-
-	if(DebugLag) trace_time("tegeneral_step");
-
-#define step_post
-	instance_destroy();
-	
-	if(DebugLag) trace_time();
-	
-	 // Auto-Topify New Objects:
-	with(TopObjectSearch){
-		var _object = self;
-		if(instance_exists(_object)){
-			var _lastID = TopObjectSearchMap[? _object];
-			if(_object.id > _lastID){
-				TopObjectSearchMap[? _object] = _object.id;
-				
-				if(_object == Effect){
-					_object = instances_matching_ne(_object, "object_index", Smoke, Bubble);
-					if(array_length(_object) <= 0) continue;
-				}
-				
-				var _topObject = instances_matching(CustomObject, "name", "TopObject");
-				if(array_length(_topObject) > 0){
-					with(array_flip(instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null))){
-						if(
-							!position_meeting(x, y, Floor)
-							||
-							(place_meeting(x, y, Wall) && (instance_is(self, hitme) || instance_is(self, chestprop) || instance_is(self, Corpse) || instance_is(self, ChestOpen)))
-						){
-							with(
-								instances_matching_ge(
-								instances_matching_le(
-								instances_matching_ge(
-								instances_matching_le(
-								_topObject,
-								"search_x1", xstart),
-								"search_x2", xstart),
-								"search_y1", ystart),
-								"search_y2", ystart)
-							){
-								//if(array_length(instances_meeting(x, y, instances_matching_lt([PortalClear, PortalShock], "id", other))) <= 0){
-									if(
-										"creator" not in other
-										|| !instance_exists(other.creator)
-										|| other.creator == target
-										|| !instance_exists(target)
-										|| ("target" in other && other.target == target)
-									){
-										with(other){
-											 // Effects:
-											if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
-												if(instance_is(self, MeltSplat)){
-													instance_destroy();
-												}
-												else depth = min(depth, -6.01);
-											}
-											else if(instance_is(self, SharpTeeth)){
-												depth = min(depth, -8);
-											}
-											
-											 // Epic Stuff:
-											else if(fork()){
-												if(instance_is(self, hitme) || instance_is(self, projectile)){
-													var _wall = instances_meeting(x, y, Wall);
-													wait 0;
-													if(!instance_exists(self) || array_length(instances_matching(_wall, "", null)) < array_length(_wall)){
-														exit;
-													}
-												}
-												top_create(x, y, id, 0, 0);
-												exit;
-											}
-										}
-										
-										break;
-									}
-									
-									if(!instance_exists(other)) break;
-								//}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	 // Teamify Deflections:
-	with(instances_matching([Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, CrystalShield, PopoShield], "", null)){
-		x += hspeed_raw;
-		y += vspeed_raw;
-		
-		var o = 32;
-		with(instance_rectangle_bbox(bbox_left - o, bbox_top - o, bbox_right + o, bbox_bottom + o, instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team))){
-			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-				if(sprite_get_team(sprite_index) != 3 && fork()){
-					var	t = other.team,
-						h = variable_instance_get(other, "hitid");
-						
-					wait 0;
-					
-					if(instance_exists(self) && team == t){
-						if(hitid == -1 && !is_undefined(h)){
-							hitid = h;
-						}
-						team_instance_sprite(((team == 3) ? 1 : team), self);
-					}
-					
-					exit;
-				}
-			}
-		}
-		
-		x -= hspeed_raw;
-		y -= vspeed_raw;
-	}
 	
 	 // Chests Give Feathers:
 	if(!instance_exists(GenCont)){
@@ -5421,11 +5364,45 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tegeneral_step_post");
+	 // Pet Leveling Up FX:
+	with(instances_matching(LevelUp, "nttepet_levelup", null)){
+		nttepet_levelup = true;
+		if(instance_is(creator, Player)){
+			if("ntte_pet" in creator) with(creator.ntte_pet){
+				if(instance_exists(self)) with(other){
+					instance_copy(false).creator = other;
+				}
+			}
+		}
+	}
 	
-#define draw_bloom
-	if(DebugLag) trace_time();
+#define ntte_dark // Drawing Grays
+	 // Big Decals:
+	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
+		draw_circle(x, y, 96, false);
+	}
 	
+	 // Pets:
+	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
+		if(light && light_radius[1] > 0){
+			draw_circle(x, y, light_radius[1] + orandom(1), false);
+		}
+	}
+	
+#define ntte_dark_end // Drawing Clear
+	 // Big Decals:
+	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
+		draw_circle(x, y, 40, false);
+	}
+	
+	 // Pets:
+	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
+		if(light && light_radius[0] > 0){
+			draw_circle(x, y, light_radius[0] + orandom(1), false);
+		}
+	}
+	
+#define ntte_bloom
 	 // Custom Bullets/Plasma:
 	with(instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
@@ -5479,11 +5456,7 @@
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 	
-	if(DebugLag) trace_time("tegeneral_draw_bloom");
-
-#define draw_shadows
-	if(DebugLag) trace_time();
-	
+#define ntte_shadows
 	 // Bubble Bombs:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
 		var	f = min((z / 6) - 4, 6),
@@ -5513,178 +5486,8 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tegeneral_draw_shadows");
 	
-#define draw_shadows_top
-	instance_destroy();
-	
-	if(DebugLag) trace_time();
-	
-	var	_inst = instances_matching_ne(
-		instances_matching_ge(
-			instances_matching(
-				array_combine(
-					instances_matching(CustomObject, "name", "TopObject"),
-					instances_matching(CustomProjectile, "name", "MortarPlasma")
-				),
-				"visible", true
-			),
-			"z", 8
-		),
-		"spr_shadow", -1
-	);
-	
-	if(array_length(_inst) > 0){
-		var	_vx                = view_xview_nonsync,
-			_vy                = view_yview_nonsync,
-			_gw                = game_width,
-			_gh                = game_height,
-			_surfScale         = option_get("quality:minor"),
-			_surfTopShadowMask = surface_setup("TopShadowMask", _gw * 2, _gh * 2, _surfScale),
-			_surfTopShadow     = surface_setup("TopShadow",     _gw,     _gh,     _surfScale);
-			
-		with(_surfTopShadowMask){
-			var	_surfX = pfloor(_vx, _gw),
-				_surfY = pfloor(_vy, _gh);
-				
-			if(
-				reset
-				|| x != _surfX
-				|| y != _surfY
-				|| (instance_number(Floor) != lq_defget(self, "floor_num", 0))
-				|| (instance_number(Wall)  != lq_defget(self, "wall_num",  0))
-				|| (instance_exists(Floor) && lq_defget(self, "floor_min", 0) < Floor.id)
-				|| (instance_exists(Wall)  && lq_defget(self, "wall_min",  0) < Wall.id)
-			){
-				reset = false;
-				
-				 // Update Vars:
-				x = _surfX;
-				y = _surfY;
-				floor_num = instance_number(Floor);
-				wall_num  = instance_number(Wall);
-				floor_min = GameObject.id;
-				wall_min  = GameObject.id;
-				
-				 // Floor Mask:
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-					
-					 // Draw Floors:
-					with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
-					}
-					
-					 // Cut Out Walls:
-					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-					with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
-						draw_sprite_ext(outspr, outindex, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-					}
-					draw_set_blend_mode(bm_normal);
-					
-				surface_reset_target();
-			}
-		}
-		
-		with(_surfTopShadow){
-			x = _vx;
-			y = _vy;
-			
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-				
-				 // Draw Shadows:
-				with(instances_seen_nonsync(_inst, 8, 8)){
-					switch(name){
-						case "MortarPlasma":
-							var	_percent = clamp(96 / (z - 8), 0.1, 1),
-								_w = ceil(18 * _percent) * _surfScale,
-								_h = ceil(6 * _percent) * _surfScale,
-								_x = (x - other.x) * _surfScale,
-								_y = (y - other.y - 8) * _surfScale;
-								
-							draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
-							
-							break;
-							
-						default:
-							var	_x = x + spr_shadow_x - other.x,
-								_y = y + spr_shadow_y - other.y - 8;
-								
-							if(_surfScale == 1){
-								draw_sprite(spr_shadow, 0, _x, _y);
-							}
-							else{
-								draw_sprite_ext(spr_shadow, 0, _x * _surfScale, _y * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-							}
-					}
-				}
-				
-				 // Cut Out Floors:
-				with(_surfTopShadowMask){
-					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-					draw_surface_scale(
-						surf,
-						(x - other.x) * other.scale,
-						(y - other.y) * other.scale,
-						other.scale / scale
-					);
-					draw_set_blend_mode(bm_normal);
-				}
-				
-			surface_reset_target();
-			
-			 // Draw Surface:
-			draw_set_fog(true, BackCont.shadcol, 0, 0);
-			draw_set_alpha(BackCont.shadalpha * 0.9);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_fog(false, 0, 0, 0);
-			draw_set_alpha(1);
-		}
-	}
-	
-	if(DebugLag) trace_time("tegeneral_draw_shadows_top");
-	
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
-	
-	if(DebugLag) trace_time();
-	
-	 // Big Decals:
-	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
-		draw_circle(x, y, 96, false);
-	}
-	
-	 // Pets:
-	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
-		if(light && light_radius[1] > 0){
-			draw_circle(x, y, light_radius[1] + orandom(1), false);
-		}
-	}
-	
-	if(DebugLag) trace_time("tegeneral_draw_dark");
-	
-#define draw_dark_end // Drawing Clear
-	draw_set_color(c_black);
-	
-	if(DebugLag) trace_time();
-	
-	 // Big Decals:
-	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
-		draw_circle(x, y, 40, false);
-	}
-	
-	 // Pets:
-	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
-		if(light && light_radius[0] > 0){
-			draw_circle(x, y, light_radius[0] + orandom(1), false);
-		}
-	}
-	
-	if(DebugLag) trace_time("tegeneral_draw_dark_end");
-	
-	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

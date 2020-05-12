@@ -4459,7 +4459,7 @@
 	return ((string_pos("Slash", object_get_name(_obj)) >= 1) ? 1 : ((string_pos("Shank", object_get_name(_obj)) >= 1) ? 2 : 0));
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

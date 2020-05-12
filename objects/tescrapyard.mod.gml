@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Sludge Pool:
 	shadSludgePool = shader_add("SludgePool",
@@ -65,7 +64,7 @@
 #macro snd global.snd
 #macro mus snd.mus
 
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #macro shadSludgePool global.shadSludgePool
 
@@ -1022,14 +1021,14 @@
 	canfly = _tf;
 	if(_tf = 1) mask_index = mskBanditBoss; 
 	else mask_index = mskBandit;
-
-
-/// Mod Events
-#define step
-	if(DebugLag) trace_time();
 	
+	
+/// GENERAL
+#define ntte_end_step
 	 // Bind Events:
-	script_bind_draw(draw_ravenflys, -8);
+	if(instance_exists(RavenFly)){
+		script_bind_draw(draw_ravenflys, -8);
+	}
 	if(array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0){
 		script_bind_draw(draw_sludge, -4);
 	}
@@ -1039,16 +1038,16 @@
 		verticalcar_check = (image_index == 0 && chance(1, 2));
 		if(verticalcar_check) sprite_index = spr.TopDecalScrapyardAlt;
 	}
-
-	if(DebugLag) trace_time("tescrapyard_step");
 	
-#define draw_shadows
+#define ntte_shadows
 	 // Saw Traps:
-	with(instances_matching(CustomHitme, "name", "SawTrap")) if(visible){
+	with(instances_matching(instances_matching(CustomHitme, "name", "SawTrap"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
 	}
 
 #define draw_ravenflys
+	if(lag) trace_time();
+	
 	 // RavenFlys draw at like -6 depth, not cool bro:
 	with(RavenFly){
 		y += z;
@@ -1057,9 +1056,14 @@
 		y -= z;
 		image_xscale /= right;
 	}
+	
+	if(lag) trace_time(script[2]);
+	
 	instance_destroy();
 	
 #define draw_sludge
+	if(lag) trace_time();
+	
 	var	_surfX = view_xview_nonsync,
 		_surfY = view_yview_nonsync,
 		_surfW = game_width,
@@ -1129,10 +1133,12 @@
 		}
 	}
 	
+	if(lag) trace(script[2]);
+	
 	instance_destroy();
-
-
-/// Scripts
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

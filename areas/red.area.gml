@@ -1,17 +1,17 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
-#macro isWallFake ("name" in id && name == "WallFake")
+#macro isWallFake ("name" in self && name == "WallFake")
 
 #define area_subarea           return 1;
 #define area_goal              return 60;
@@ -94,19 +94,6 @@
 	
 	 // Next Subarea: 
 	else subarea++;
-	
-#define area_effect(_vx, _vy)
-	 // Cool Particles:
-	var _floor = instances_matching(Floor, "sprite_index", spr.FloorRed);
-	with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
-		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
-			depth = -8;
-			alarm0 = 40 + random(40);
-			motion_set(random(360), random(0.2));
-		}
-	}
-	
-	return irandom(40);
 	
 #define area_make_floor
 	var	_x = x,
@@ -341,8 +328,21 @@
 		}
 	}
 	
+#define area_effect(_vx, _vy)
+	 // Cool Particles:
+	var _floor = instances_matching(Floor, "sprite_index", spr.FloorRed);
+	with(instance_random(instance_rectangle_bbox(_vx, _vy, _vx + game_height, _vy + game_width, _floor))){
+		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+			depth = -8;
+			alarm0 = 40 + random(40);
+			motion_set(random(360), random(0.2));
+		}
+	}
 	
-/// Scripts
+	return irandom(40);
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

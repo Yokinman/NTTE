@@ -35,7 +35,7 @@
 	motion_add(gunangle + 180, 5);
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

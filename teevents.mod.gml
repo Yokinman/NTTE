@@ -1,6 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
+	lag = false;
 	
 	/*
 		1) Add an event using 'teevent_add(_event)'
@@ -40,6 +41,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
 #macro ttip global.event_tip
 #macro list global.event_list
@@ -1848,13 +1850,13 @@
 	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);
 	
 	
-/// Mod Events
+/// GENERAL
 #define game_start
 	 // Pet History:
 	global.livePets = {};
 	global.pastPets = {};
 	
-#define step
+#define ntte_begin_step
 	 // No Infinite Rads:
 	if(GameCont.loops <= 0){
 		with(instances_matching(PopoFreak, "ntte_raddrop", null)){
@@ -1943,7 +1945,7 @@
 	// trace(lq_size(global.livePets), lq_size(global.pastPets));
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

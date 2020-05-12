@@ -1,47 +1,21 @@
-/// Copy-paste and rename this file when you're adding a new area mod
-
-/*  Rules                                                                                           *\
- - All code under a #define should be indented one extra so that it stands out
- - Try to keep all #defines in the order of how this template file has them
- - If you aren't using an event, such as area_begin_step, then remove it
- - If you need to add a script that doesn't follow the '#define area_' naming:
-	 Place it between the general area code section and scripts section
-	 Add a '/// Misc' (or whatever you want to call it) comment before that section, like with the scripts section
-	 Double space the area between that section and the scripts and general area code sections
-
-Example Code (Ignore extra space before #define here):
- #define area_step
-	script_bind_draw(draw_sea, 0);
-
- #define area_pop_enemies
-	obj_create(_x, _y, "TrafficCrab");
- 
- #define area_pop_props
-	instance_create(_x, _y, Cactus);
-
-
-/// Misc
- #define draw_sea
-	instance_destroy();
-	draw_sprite(sprSea, 0, 0, 0);
-
-
-/// Scripts
-blah blah blah
-
-\*  ^^ Delete this line and all above after copy-pasting ^^                                         */
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
+	lag = false;
 	
-	DebugLag = false;
+	/*
+		- Copy this file, rename it, and delete this note to make a new area
+		- All code in a script should be indented one extra so that it stands out
+		- Try to keep all scripts in the order that this file has them
+	*/
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
 #define area_subarea           return 3;
 #define area_goal              return 110;
@@ -120,30 +94,6 @@ blah blah blah
 	 // Next Subarea: 
 	else subarea++;
 	
-#define area_step
-	if(DebugLag) trace_time();
-	if(DebugLag) trace_time("template_area_step");
-
-#define area_begin_step
-	if(DebugLag) trace_time();
-	if(DebugLag) trace_time("template_area_begin_step");
-
-#define area_end_step
-	if(DebugLag) trace_time();
-	if(DebugLag) trace_time("template_area_end_step");
-
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-		
-	 // Wind:
-	var f = instance_nearest(_x, _y, Floor);
-	with(f){
-		instance_create(x + random(32), y + random(32), Wind);
-	}
-	
-	return random(60);
-	
 #define area_make_floor
 	var	_x = x,
 		_y = y,
@@ -206,8 +156,35 @@ blah blah blah
 		instance_create(x, y, Bandit);
 	}
 	
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Wind:
+	var f = instance_nearest(_x, _y, Floor);
+	with(f){
+		instance_create(x + random(32), y + random(32), Wind);
+	}
 	
-/// Scripts
+	return random(60);
+	
+#define ntte_step
+	if(area_active){
+		
+	}
+	
+#define ntte_begin_step
+	if(area_active){
+		
+	}
+	
+#define ntte_end_step
+	if(area_active){
+		
+	}
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

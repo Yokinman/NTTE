@@ -1,14 +1,13 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Rooms:
 	var L = true;
-	RoomCenter = [10000, 10000];
-	RoomList = [];
-	RoomType = {
+	room_center = [10000, 10000];
+	room_list = [];
+	room_type = {
 		 // SPECIAL:
 		"Start" : {
 			w : 3,
@@ -180,8 +179,8 @@
 	};
 	
 	 // Set Room Defaults:
-	for(var i = 0; i < lq_size(RoomType); i++){
-		var	t = lq_get_value(RoomType, i),
+	for(var i = 0; i < lq_size(room_type); i++){
+		var	t = lq_get_value(room_type, i),
 			_default = { w : 1, h : 1, carpet : 0, special : 0 };
 			
 		for(var j = 0; j < lq_size(_default); j++){
@@ -199,13 +198,14 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
-#macro RoomDebug  false
-#macro RoomList   global.room_list
-#macro RoomType   global.room_type
-#macro RoomCenter global.room_center
+#macro room_debug  false
+#macro room_list   global.room_list
+#macro room_type   global.room_type
+#macro room_center global.room_center
 
 //#macro surfCarpet global.surfCarpet
 
@@ -260,8 +260,8 @@
 	safespawn = 0;
 	
 	 // Rooms:
-	RoomList = [];
-	if(RoomDebug) script_bind_draw(RoomDebug_draw, 0);
+	room_list = [];
+	if(room_debug) script_bind_draw(room_debug_draw, 0);
 	
 #define area_setup_floor
 	 // Fix Depth:
@@ -300,42 +300,16 @@
 	
 #define area_transit
 	 // Debug:
-	if(RoomDebug) GameCont.area = mod_current;
+	if(room_debug) GameCont.area = mod_current;
 	
 	 // Reset Carpet Surface:
 	//surfCarpet.reset = true;
-	
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-		
-	 // Drips:
-	var f = instance_nearest(_x, _y, Floor);
-	with(f) instance_create(x + random(32), y + random(32), Drip);
-	
-	return 30 + random(20);
-	
-#define area_begin_step
-	if(DebugLag) trace_time();
-	
-	 // Resprite turrets iam smash brother and i dont want to recode turrets:
-	with(instances_matching_ne(Turret, "hitid", "LairTurret")){
-		hitid = "LairTurret";
-		spr_idle = spr.LairTurretAppear;
-		spr_walk = spr.LairTurretAppear;
-		spr_hurt = spr.LairTurretAppear;
-		spr_dead = spr.LairTurretDead;
-		spr_fire = spr.LairTurretFire;
-		sprite_index = spr_idle;
-	}
-	
-	if(DebugLag) trace_time("lair_area_step");
 	
 #define area_make_floor
 	var	_x = 10016 - 16,
 		_y = 10016 - 16;
 		
-	RoomCenter = [_x, _y];
+	room_center = [_x, _y];
 	
 	 // Remove Starter Floor:
 	if(instance_is(id + 1, Floor)){
@@ -343,10 +317,10 @@
 	}
 	
 	 // Spawn Rooms:
-	if(array_length(RoomList) < 4){
+	if(array_length(room_list) < 4){
 		var k = "";
-		do k = lq_get_key(RoomType, irandom(lq_size(RoomType) - 1));
-		until (lq_get(RoomType, k).special == false);
+		do k = lq_get_key(room_type, irandom(lq_size(room_type) - 1));
+		until (lq_get(room_type, k).special == false);
 		room_create(irandom_range(-1, 1), irandom_range(-1, 1), k);
 	}
 	
@@ -357,13 +331,13 @@
 		 // Push Rooms Apart:
 		do{
 			_done = true;
-			with(RoomList){
+			with(room_list){
 				var	_x1 = x - 1,
 					_y1 = y - 1,
 					_x2 = x + w + 1,
 					_y2 = y + h + 1;
 					
-				with(RoomList) if(self != other){
+				with(room_list) if(self != other){
 					if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
 						if(type != "Start"){
 							var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
@@ -382,14 +356,14 @@
 				y = min(0 - floor(h / 2), y);
 			}
 		}
-		until (_done || RoomDebug);
+		until (_done || room_debug);
 		
 		 // Special Rooms:
 		if(_done){
 			var	_boss = false,
 				_strt = false;
 				
-			with(RoomList){
+			with(room_list){
 				if(type == "Boss") _boss = true;
 				else if(type == "Start") _strt = true;
 			}
@@ -397,8 +371,8 @@
 			 // Starting Room:
 			if(!_strt){
 				var _maxY = 0;
-				with(RoomList) if(y > _maxY) _maxY = y + floor(h / 2);
-				with(RoomList) y -= _maxY;
+				with(room_list) if(y > _maxY) _maxY = y + floor(h / 2);
+				with(room_list) y -= _maxY;
 				
 				room_create(-1, -1, "Start");
 				
@@ -410,7 +384,7 @@
 				var	_maxDis = -1,
 					_furthest = noone;
 					
-				with(RoomList){
+				with(room_list){
 					var _dis = point_distance(0, 0, x + (w / 2), y + (h / 2));
 					if(_dis > _maxDis){
 						_furthest = self;
@@ -429,9 +403,9 @@
 		if(_done){
 			 // Determine Hallway Connections:
 			for(var i = 0; i <= 1; i++){
-				with(RoomList) if(!is_object(link)){
+				with(room_list) if(!is_object(link)){
 					var _minDis = 10000;
-					with(RoomList) if(self != other){
+					with(room_list) if(self != other){
 						var _dis = point_distance(x + (w / 2), y + (h / 2), other.x + (other.w / 2), other.y + (other.h / 2));
 						if(_dis < _minDis && (!is_object(link) || i)){
 							other.link = self;
@@ -442,11 +416,11 @@
 				}
 			}
 			
-			if(!RoomDebug || button_pressed(0, "east")){
+			if(!room_debug || button_pressed(0, "east")){
 				 // Make Rooms:
 				var o = 32;
 				styleb = false;
-				with(RoomList){
+				with(room_list){
 					for(var _fy = 0; _fy < array_length(layout); _fy++){
 						var l = layout[_fy];
 						for(var _fx = 0; _fx < array_length(l); _fx++){
@@ -459,7 +433,7 @@
 				
 				 // Make Hallways:
 				styleb = true;
-				with(RoomList) with(link){
+				with(room_list) with(link){
 					var	_fx = x + floor(w / 2),
 						_fy = y + floor(h / 2),
 						_tx = other.x + floor(other.w / 2),
@@ -497,7 +471,7 @@
 				with(FloorMaker) instance_destroy();
 			}
 			
-			else if(RoomDebug && button_pressed(0, "west")) RoomList = [];
+			else if(room_debug && button_pressed(0, "west")) room_list = [];
 		}
 	}
 	
@@ -538,7 +512,7 @@
 	
 #define area_pop_extras
 	 // Populate Rooms:
-	with(RoomList){
+	with(room_list){
 		room_pop();
 		
 		// Cat Spawners:
@@ -613,8 +587,32 @@
 		h2 = 16;
 	}
 	
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Drips:
+	var f = instance_nearest(_x, _y, Floor);
+	with(f) instance_create(x + random(32), y + random(32), Drip);
 	
-/// Rooms
+	return 30 + random(20);
+	
+#define ntte_begin_step
+	if(area_active){
+		 // Resprite turrets iam smash brother and i dont want to recode turrets:
+		with(instances_matching_ne(Turret, "hitid", "LairTurret")){
+			hitid = "LairTurret";
+			spr_idle = spr.LairTurretAppear;
+			spr_walk = spr.LairTurretAppear;
+			spr_hurt = spr.LairTurretAppear;
+			spr_dead = spr.LairTurretDead;
+			spr_fire = spr.LairTurretFire;
+			sprite_index = spr_idle;
+		}
+	}
+	
+	
+/// ROOMS
 #define room_create(_x, _y, _type)
 	with({}){
 		x = _x;
@@ -624,8 +622,8 @@
 		floors = [];
 		
 		 // Grab Room Vars:
-		if(lq_exists(RoomType, type)){
-			var t = lq_get(RoomType, type);
+		if(lq_exists(room_type, type)){
+			var t = lq_get(room_type, type);
 			for(var i = 0; i < lq_size(t); i++){
 				var k = lq_get_key(t, i);
 				lq_set(self, k, lq_get(t, k));
@@ -654,7 +652,7 @@
 			}
 		}
 		
-		array_push(RoomList, self);
+		array_push(room_list, self);
 		return self;
 	}
 	
@@ -665,8 +663,8 @@
 	}
 	
 #define room_pop
-	var	_x = RoomCenter[0] + (x * 32), // Left
-		_y = RoomCenter[1] + (y * 32), // Top
+	var	_x = room_center[0] + (x * 32), // Left
+		_y = room_center[1] + (y * 32), // Top
 		_w = w * 32, // Width
 		_h = h * 32, // Height
 		_cx = _x + (_w / 2), // Center X
@@ -1054,8 +1052,8 @@
 #define draw_rugs
 	if(!instance_exists(GenCont)){
 		with(surface_setup("LairCarpet", null, null, 1)){
-			x = RoomCenter[0] - (w / 2);
-			y = RoomCenter[1] - (h / 2);
+			x = room_center[0] - (w / 2);
+			y = room_center[1] - (h / 2);
 			
 			 // Setup Carpets:
 			if(reset){
@@ -1064,7 +1062,7 @@
 				surface_set_target(surf);
 				draw_clear_alpha(0, 0);
 				
-				with(RoomList) if(carpeted){
+				with(room_list) if(carpeted){
 					var	_o = 32,
 						_s = spr.Rug,
 						_i = 8,
@@ -1108,7 +1106,7 @@
 								}
 								
 								with(other){ // cant call draw_sprite in lightweight object, sad
-									draw_sprite(_s[n], _i, RoomCenter[0] + ((other.x + xx) * _o) - x, RoomCenter[1] + ((other.y + yy) * _o) - y);
+									draw_sprite(_s[n], _i, room_center[0] + ((other.x + xx) * _o) - x, room_center[1] + ((other.y + yy) * _o) - y);
 								}
 							}
 						}
@@ -1125,7 +1123,7 @@
 		}
 	}
 	
-#define RoomDebug_draw
+#define room_debug_draw
 	if(instance_exists(GenCont)){
 		depth = GenCont.depth - 1;
 		
@@ -1140,7 +1138,7 @@
 			
 		 // Hallways:
 		draw_set_color(c_dkgray);
-		with(RoomList){
+		with(room_list){
 			if(is_object(link)) with(link){
 				var	_fx = x + floor(w / 2),
 					_fy = y + floor(h / 2),
@@ -1207,7 +1205,7 @@
 		
 		 // Rooms:
 		draw_set_color(c_white);
-		with(RoomList){
+		with(room_list){
 			draw_set_color(special ? c_purple : c_white);
 			for(var _fy = 0; _fy < array_length(layout); _fy++){
 				var l = layout[_fy];
@@ -1230,7 +1228,7 @@
 	else instance_destroy();
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

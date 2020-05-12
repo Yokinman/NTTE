@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Custom Pickup Instances (Used in step):
 	global.pickup_custom = [];
@@ -20,8 +19,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -4274,7 +4272,7 @@
 	}
 	
 	
-/// Mod Events
+/// GENERAL
 #define game_start
 	 // Reset:
 	global.sPickupsNum = 1;
@@ -4284,12 +4282,7 @@
 	 // Delete Orchid Skills:
 	with(instances_matching(CustomObject, "name", "OrchidSkill")) instance_delete(id);
 	
-#define step
-	script_bind_step(post_step, 0);
-	script_bind_end_step(end_step, 0);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_begin_step
 	 // Overstock / Bonus Ammo:
 	with(instances_matching(instances_matching(instances_matching_gt(Player, "ammo_bonus", 0), "infammo", 0), "can_shoot", true)){
 		if(player_active){
@@ -4463,66 +4456,8 @@
 	if(_drawSpirit){
 		script_bind_draw(draw_bonus_spirit, -8);
 	}
-	
-	 // Eyes Custom Pickup Attraction:
-	with(instances_matching(Player, "race", "eyes")){
-		if(player_active && canspec && button_check(index, "spec")){
-			var	_vx = view_xview[index],
-				_vy = view_yview[index];
-				
-			with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
-				var e = on_pull;
-				if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
-					var	l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
-						d = point_direction(x, y, other.x, other.y),
-						_x = x + lengthdir_x(l, d),
-						_y = y + lengthdir_y(l, d);
-						
-					if(place_free(_x, y)) x = _x;
-					if(place_free(x, _y)) y = _y;
-				}
-			}
-		}
-	}
-	
-	 // Grabbing Custom Pickups:
-	with(instances_matching([Player, Portal], "", null)){
-		if(place_meeting(x, y, Pickup)){
-			with(instances_meeting(x, y, global.pickup_custom)){
-				if(instance_exists(self) && place_meeting(x, y, other)){
-					var e = on_open;
-					if(!is_array(e) || !mod_script_call(e[0], e[1], e[2])){
-						 // Effects:
-						if(sprite_exists(spr_open)){
-							with(instance_create(x, y, SmallChestPickup)){
-								sprite_index = other.spr_open;
-								image_xscale = other.image_xscale;
-								image_yscale = other.image_yscale;
-								image_angle = other.image_angle;
-							}
-						}
-						sound_play(snd_open);
-						
-						instance_destroy();
-					}
-				}
-			}
-		}
-	}
-	global.pickup_custom = [];
-	
-	if(DebugLag) trace_time("tepickups_step");
 
-#define post_step
-	if(DebugLag) trace_time();
-	
-	 // Fix Steroids Mystery Chests:
-	if(ultra_get("steroids", 2)){
-		with(instances_matching(AmmoChestMystery, "sprite_index", sprAmmoChestMystery)){
-			sprite_index = sprAmmoChestSteroids;
-		}
-	}
-	
+#define ntte_step
 	 // More:
 	var _minHard = 8;
 	if(instance_exists(GenCont)){
@@ -4630,7 +4565,7 @@
 					image_blend = merge_color(image_blend, c_blue, random(0.25));
 				}
 			}
-	
+			
 			 // Prevent Low Ammo PopupTexts:
 			if(ammo[t] + ammo_bonus >= c && infammo == 0){
 				var o = 10;
@@ -4644,6 +4579,53 @@
 			}
 		}
 	}
+	
+	 // Eyes Custom Pickup Attraction:
+	with(instances_matching(Player, "race", "eyes")){
+		if(player_active && canspec && button_check(index, "spec")){
+			var	_vx = view_xview[index],
+				_vy = view_yview[index];
+				
+			with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
+				var e = on_pull;
+				if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
+					var	l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
+						d = point_direction(x, y, other.x, other.y),
+						_x = x + lengthdir_x(l, d),
+						_y = y + lengthdir_y(l, d);
+						
+					if(place_free(_x, y)) x = _x;
+					if(place_free(x, _y)) y = _y;
+				}
+			}
+		}
+	}
+	
+	 // Grabbing Custom Pickups:
+	with(instances_matching([Player, Portal], "", null)){
+		if(place_meeting(x, y, Pickup)){
+			with(instances_meeting(x, y, global.pickup_custom)){
+				if(instance_exists(self) && place_meeting(x, y, other)){
+					var e = on_open;
+					if(!is_array(e) || !mod_script_call(e[0], e[1], e[2])){
+						 // Effects:
+						if(sprite_exists(spr_open)){
+							with(instance_create(x, y, SmallChestPickup)){
+								sprite_index = other.spr_open;
+								image_xscale = other.image_xscale;
+								image_yscale = other.image_yscale;
+								image_angle = other.image_angle;
+							}
+						}
+						sound_play(snd_open);
+						
+						instance_destroy();
+					}
+				}
+			}
+		}
+	}
+	global.pickup_custom = [];
 	
 	 // Pickup Indicator Collision:
 	var _inst = instances_matching(CustomObject, "name", "PickupIndicator");
@@ -4730,13 +4712,7 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tepickups_post_step");
-	
-	instance_destroy();
-	
-#define end_step
-	if(DebugLag) trace_time();
-	
+#define ntte_end_step
 	 // Overheal / Bonus HP:
 	with(instances_matching_gt(Player, "my_health_bonus", 0)){
 		drawlowhp = 0;
@@ -4812,27 +4788,22 @@
 		my_health_bonus_hold = my_health;
 	}
 	
-	if(DebugLag) trace_time("tepickups_end_step");
+	 // Fix Steroids Mystery Chests:
+	if(ultra_get("steroids", 2)){
+		with(instances_matching(AmmoChestMystery, "sprite_index", sprAmmoChestMystery)){
+			sprite_index = sprAmmoChestSteroids;
+		}
+	}
 	
-	instance_destroy();
-	
-#define draw_shadows
-	if(DebugLag) trace_time();
-	
+#define ntte_shadows
 	 // Weapons Stuck in Ground:
 	with(instances_matching(CustomObject, "name", "WepPickupGrounded")){
 		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 	}
 	
-	if(DebugLag) trace_time("tepickups_draw_shadows");
-	
-#define draw_dark // Drawing Grays
-	draw_set_color(c_gray);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark // Drawing Grays
 	 // Shops:
-	with(instances_matching(CustomObject, "name", "ChestShop")) if(visible){
+	with(instances_matching(instances_matching(CustomObject, "name", "ChestShop"), "visible", true)){
 		var	_x = x,
 			_y = y,
 			_radius = (80 * clamp(open_state, 0, 1)) + random(1);
@@ -4846,24 +4817,18 @@
 	}
 	
 	 // Bonus Pickups:
-	with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")) if(visible){
+	with(instances_matching(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup"), "visible", true)){
 		draw_circle(x, y, 48 + random(2), false);
 	}
 	
 	 // Vault Flower:
-	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true)){
+	with(instances_matching(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true), "visible", true)){
 		draw_circle(x, y, 64 + (2 * sin(current_frame / 10)), false);
 	}
 	
-	if(DebugLag) trace_time("tepickups_draw_dark");
-	
-#define draw_dark_end // Drawing Clears
-	draw_set_color(c_black);
-	
-	if(DebugLag) trace_time();
-	
+#define ntte_dark_end // Drawing Clears
 	 // Shops:
-	with(instances_matching(CustomObject, "name", "ChestShop")) if(visible){
+	with(instances_matching(instances_matching(CustomObject, "name", "ChestShop"), "visible", true)){
 		var	_x = x,
 			_y = y,
 			_radius = (32 * clamp(open_state, 0, 1)) + random(1);
@@ -4877,19 +4842,17 @@
 	}
 	
 	 // Bonus Pickups:
-	with(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup")) if(visible){
+	with(instances_matching(instances_matching(Pickup, "name", "OverhealPickup", "OverstockPickup"), "visible", true)){
 		draw_circle(x, y, 16 + random(2), false);
 	}
 	
 	 // Vault Flower:
-	with(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true)){
+	with(instances_matching(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true), "visible", true)){
 		draw_circle(x, y, 24 + (2 * sin(current_frame / 10)), false);
 	}
 	
-	if(DebugLag) trace_time("tepickups_draw_dark_end");
-	
 #define draw_bonus_spirit
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	with(instances_matching_ne(Player, "bonus_spirit", null)){
 		if(visible || variable_instance_get(self, "wading", 0) > 0){
@@ -4917,7 +4880,7 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("tepickups_draw_bonus_spirit");
+	if(lag) trace_time(script[2]);
 	
 	 // Goodbye Bro:
 	instance_destroy();
@@ -4926,7 +4889,7 @@
 #macro bonusSpiritLose { active: false }
 
 
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

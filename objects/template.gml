@@ -44,30 +44,31 @@ Example Code (Ignore extra space before #define here):
 	my_health = 0;
     
     
-/// Mod Events
- #define step
+/// GENERAL
+ #define ntte_step
 	with(Catobjects) x += 20;
     
- #define draw_shadows
+ #define ntte_shadows
 	with(Batboys) draw_sprite(shd24, 0, x, y);
     
     
-/// Scripts
+/// SCRIPTS
 blah blah blah
 
 \*  ^^ Delete this line and all above after copy-pasting ^^                                         */
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
 
-
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

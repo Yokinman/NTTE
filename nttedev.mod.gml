@@ -308,7 +308,7 @@
 						 // Remove File's Script Block + Append New Script Block:
 						_fileString = string_copy(_fileString, 1, string_length(string_rtrim(_fileString)) - string_length(_fileScrtString));
 						if(string_pos(lnbreak, string_delete(_fileString, 1, string_length(_fileString) - 2)) <= 0){
-							_fileString = string_rtrim(_fileString) + string_repeat(lnbreak, 3) + "/// Scripts" + lnbreak;
+							_fileString = string_rtrim(_fileString) + string_repeat(lnbreak, 3) + "/// SCRIPTS" + lnbreak;
 						}
 						_fileString += scriptblock_encode(_fileScrtNew);
 						

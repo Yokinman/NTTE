@@ -1,15 +1,15 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
 #define area_subarea           return 1;
 #define area_next              return area_scrapyards;
@@ -218,36 +218,6 @@
 	 // Next Subarea: 
 	else subarea++;
 	
-#define area_end_step
-	if(DebugLag) trace_time();
-	
-	 // Allow Portal:
-	if(instance_number(enemy) > 0){
-		with(instances_matching(becomenemy, "name", "PortalPrevent")){
-			instance_destroy();
-		}
-	}
-	
-	 // Yummy HP:
-	with(instances_matching(HPPickup, "sprite_index", sprHP)){
-		sprite_index = sprSlice;
-		num = ceil(num / 2);
-	}
-	
-	if(DebugLag) trace_time("pizza_area_end_step");
-	
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-		
-	 // Cheesy Drips:
-	var f = instance_nearest(_x, _y, Floor);
-	with(f) with(instance_create(x + random_range(8, 32), y + random_range(8, 32), Drip)){
-		sprite_index = sprCheeseDrip;
-	}
-	
-	return random(120);
-	
 #define area_make_floor
 	var	_den = GenCont.turtle_den,
 		_scale = (goal / ((_den.cols_max * _den.rows_max) + 2));
@@ -326,8 +296,36 @@
 		else if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
 	}
 	
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Cheesy Drips:
+	var f = instance_nearest(_x, _y, Floor);
+	with(f) with(instance_create(x + random_range(8, 32), y + random_range(8, 32), Drip)){
+		sprite_index = sprCheeseDrip;
+	}
 	
-/// Scripts
+	return random(120);
+	
+#define ntte_step
+	if(area_active){
+		 // Yummy HP:
+		with(instances_matching(HPPickup, "sprite_index", sprHP)){
+			sprite_index = sprSlice;
+			num = ceil(num / 2);
+		}
+		
+		 // Allow Portal:
+		if(instance_number(enemy) > 0){
+			with(instances_matching(becomenemy, "name", "PortalPrevent")){
+				instance_destroy();
+			}
+		}
+	}
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

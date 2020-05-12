@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Pit Surfaces:
 	surfPit        = surface_setup("TrenchPit",        null, null, null);
@@ -28,8 +27,9 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
 #macro surfPit        global.surfPit
 #macro surfPitWallTop global.surfPitWallTop
@@ -229,145 +229,6 @@
 	 // Reset Pit:
 	ds_grid_clear(global.pit_grid, false);
 
-#define area_step
-	if(DebugLag) trace_time();
-	
-	 // Player Above Pits:
-	with(Player){
-		var _pit = pit_get(x, bbox_bottom);
-		
-		 // Do a spin:
-		if(speed < maxspeed - friction){
-			if(_pit){
-				var	_x = x + cos(wave / 10) * 0.25 * right,
-					_y = y + sin(wave / 10) * 0.25 * right;
-					
-				if(!place_meeting(_x, y, Wall)) x = _x;
-				if(!place_meeting(x, _y, Wall)) y = _y;
-			}
-		}
-		
-		 // Pit Transition FX:
-		if(speed > 0 && _pit != pit_get(x - hspeed_raw, bbox_bottom - vspeed_raw)){
-			repeat(3) with(instance_create(x, y, Smoke)){
-				motion_add(other.direction, other.speed / (_pit ? 2 : 3));
-				if(!_pit) sprite_index = sprDust;
-			}
-			sound_play_pitchvol(
-				asset_get_index("sndFootPlaRock" + choose("1", "3", "4", "5", "6")),
-				0.5 + orandom(0.1),
-				(_pit ? 0.8 : 0.5)
-			);
-		}
-	}
-	
-	 // Floaty Effects Above Pits:
-	with(instances_matching([WepPickup, chestprop, RadChest], "speed", 0)){
-		if(pit_get(x, bbox_bottom)){
-			var	_x = x + cos((current_frame + x + y) / 10) * 0.15,
-				_y = y + sin((current_frame + x + y) / 10) * 0.15;
-				
-			if(!place_meeting(_x, y, Wall)) x = _x;
-			if(!place_meeting(x, _y, Wall)) y = _y;
-		}
-	}
-	
-	 // No Props Above Pits:
-	with(instances_matching_le(instances_matching_gt(prop, "my_health", 0), "size", 2)){
-		if(pit_get(x, y)){
-			if(
-				!instance_is(self, RadChest)      &&
-				!instance_is(self, Car)           &&
-				!instance_is(self, CarVenus)      &&
-				!instance_is(self, CarVenusFixed) &&
-				!instance_is(self, CarThrow)
-			){
-				my_health = 0;
-			}
-		}
-	}
-	
-	 // Stuff Falling Into Pits:
-	with(instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", sprPStatDead)){
-		if(instance_exists(enemy) || instance_exists(Portal)){
-			if(speed <= 0) trenchpit_check = true;
-			if(pit_get(x, y)){
-				pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
-				instance_destroy();
-			}
-		}
-	}
-	with(instances_matching_le(instances_matching([ChestOpen, Debris, Shell, Feather], "trenchpit_check", null), "speed", 1)){
-		if(speed <= 0) trenchpit_check = true;
-		if(pit_get(x, bbox_bottom)){
-			pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
-			instance_destroy();
-		}
-	}
-	
-	 // Destroy PitSink Objects, Lag Helper:
-	var	s = instances_matching(CustomObject, "name", "PitSink"),
-		m = array_length(s);
-		
-	while(m > 80) with(s[--m]) instance_destroy();
-	
-	if(DebugLag) trace_time("trench_step");
-	
-#define area_end_step
-	if(DebugLag) trace_time();
-	
-	 // Update Pit Grid:
-	if(instance_exists(Floor)){
-		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
-			global.floor_num = instance_number(Floor);
-			global.floor_min = GameObject.id;
-			
-			 // Non-Pits:
-			with(instances_matching_ne(FloorPitless, "trenchpit_check", false)){
-				trenchpit_check = false;
-				for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-					for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-						pit_set(_x, _y, false);
-					}
-				}
-			}
-			
-			 // Pits:
-			with(instances_matching_ne(FloorPit, "trenchpit_check", true)){
-				trenchpit_check = true;
-				for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-					for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-						pit_set(_x, _y, true);
-					}
-				}
-			}
-		}
-	}
-	
-	if(DebugLag) trace_time("trench_end_step");
-
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-
-	 // Player Bubbles:
-	if(chance(1, 4)){
-		with(Player) instance_create(x, y, Bubble);
-	}
-
-	 // Pet Bubbles:
-	if(chance(1, 4)){
-		with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
-	}
-
-	 // Floor Bubbles:
-	else{
-		var f = instance_nearest(_x, _y, Floor);
-		with(f) instance_create(x + random(32), y + random(32), Bubble);
-	}
-
-	return 30 + random(20);
-
 #define area_make_floor
 	var	_x = x,
 		_y = y,
@@ -531,9 +392,144 @@
 	if(GameCont.subarea != 3 && chance((1 + GameCont.loops), 25)){
 		repeat(20 + irandom(10)) obj_create(0, 0, "WantEel");
 	}
+
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Player Bubbles:
+	if(chance(1, 4)){
+		with(Player) instance_create(x, y, Bubble);
+	}
+	
+	 // Pet Bubbles:
+	if(chance(1, 4)){
+		with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
+	}
+	
+	 // Floor Bubbles:
+	else{
+		var f = instance_nearest(_x, _y, Floor);
+		with(f) instance_create(x + random(32), y + random(32), Bubble);
+	}
+	
+	return 30 + random(20);
+	
+#define ntte_step
+	if(area_active){
+		 // Player Above Pits:
+		with(Player){
+			var _pit = pit_get(x, bbox_bottom);
+			
+			 // Do a spin:
+			if(speed < maxspeed - friction){
+				if(_pit){
+					var	_x = x + cos(wave / 10) * 0.25 * right,
+						_y = y + sin(wave / 10) * 0.25 * right;
+						
+					if(!place_meeting(_x, y, Wall)) x = _x;
+					if(!place_meeting(x, _y, Wall)) y = _y;
+				}
+			}
+			
+			 // Pit Transition FX:
+			if(speed > 0 && _pit != pit_get(x - hspeed_raw, bbox_bottom - vspeed_raw)){
+				repeat(3) with(instance_create(x, y, Smoke)){
+					motion_add(other.direction, other.speed / (_pit ? 2 : 3));
+					if(!_pit) sprite_index = sprDust;
+				}
+				sound_play_pitchvol(
+					asset_get_index("sndFootPlaRock" + choose("1", "3", "4", "5", "6")),
+					0.5 + orandom(0.1),
+					(_pit ? 0.8 : 0.5)
+				);
+			}
+		}
+		
+		 // Floaty Effects Above Pits:
+		with(instances_matching([WepPickup, chestprop, RadChest], "speed", 0)){
+			if(pit_get(x, bbox_bottom)){
+				var	_x = x + cos((current_frame + x + y) / 10) * 0.15,
+					_y = y + sin((current_frame + x + y) / 10) * 0.15;
+					
+				if(!place_meeting(_x, y, Wall)) x = _x;
+				if(!place_meeting(x, _y, Wall)) y = _y;
+			}
+		}
+		
+		 // No Props Above Pits:
+		with(instances_matching_le(instances_matching_gt(prop, "my_health", 0), "size", 2)){
+			if(pit_get(x, y)){
+				if(
+					!instance_is(self, RadChest)      &&
+					!instance_is(self, Car)           &&
+					!instance_is(self, CarVenus)      &&
+					!instance_is(self, CarVenusFixed) &&
+					!instance_is(self, CarThrow)
+				){
+					my_health = 0;
+				}
+			}
+		}
+		
+		 // Stuff Falling Into Pits:
+		with(instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", sprPStatDead)){
+			if(instance_exists(enemy) || instance_exists(Portal)){
+				if(speed <= 0) trenchpit_check = true;
+				if(pit_get(x, y)){
+					pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
+					instance_destroy();
+				}
+			}
+		}
+		with(instances_matching_le(instances_matching([ChestOpen, Debris, Shell, Feather], "trenchpit_check", null), "speed", 1)){
+			if(speed <= 0) trenchpit_check = true;
+			if(pit_get(x, bbox_bottom)){
+				pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
+				instance_destroy();
+			}
+		}
+		
+		 // Destroy PitSink Objects, Lag Helper:
+		var	s = instances_matching(CustomObject, "name", "PitSink"),
+			m = array_length(s);
+			
+		while(m > 80) with(s[--m]) instance_destroy();
+	}
+	
+#define ntte_end_step
+	if(area_active){
+		 // Update Pit Grid:
+		if(instance_exists(Floor)){
+			if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
+				global.floor_num = instance_number(Floor);
+				global.floor_min = GameObject.id;
+				
+				 // Non-Pits:
+				with(instances_matching_ne(FloorPitless, "trenchpit_check", false)){
+					trenchpit_check = false;
+					for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+						for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+							pit_set(_x, _y, false);
+						}
+					}
+				}
+				
+				 // Pits:
+				with(instances_matching_ne(FloorPit, "trenchpit_check", true)){
+					trenchpit_check = true;
+					for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+						for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+							pit_set(_x, _y, true);
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	
-/// Pit Code:
+/// PITS
 #define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
 	with(instance_create(_x, _y, CustomObject)){
 		name = "PitSink";
@@ -581,7 +577,7 @@
 	
 #define pit_draw
 	if(!instance_exists(GenCont)){
-		if(DebugLag) trace_time();
+		if(lag) trace_time();
 		
 		var	_vx             = view_xview_nonsync,
 			_vy             = view_yview_nonsync,
@@ -944,7 +940,7 @@
 			draw_surface_scale(surf, x, y, 1 / scale);
 		}
 		
-		if(DebugLag) trace_time("trench_pit_draw");
+		if(lag) trace_time("trench_pit_draw");
 	}
 	
 #define pit_get(_x, _y)
@@ -964,7 +960,7 @@
 	}
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

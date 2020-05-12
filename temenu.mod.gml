@@ -1,12 +1,15 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
+	lag = false;
 	
-	areaList = mod_variable_get("mod", "teassets", "area");
-	raceList = mod_variable_get("mod", "teassets", "race");
-	crwnList = mod_variable_get("mod", "teassets", "crwn");
-	wepsList = mod_variable_get("mod", "teassets", "weps");
+	 // Mod Lists:
+	ntte_area = mod_variable_get("mod", "teassets", "area");
+	ntte_race = mod_variable_get("mod", "teassets", "race");
+	ntte_crwn = mod_variable_get("mod", "teassets", "crwn");
+	ntte_weps = mod_variable_get("mod", "teassets", "weps");
 	
+	 // Menu Layout:
 	NTTEMenu = {
 		"open"			: false,
 		"slct"			: array_create(maxp, menu_base),
@@ -226,7 +229,7 @@
 	}
 	
 	 // Race Stats:
-	with(raceList){
+	with(ntte_race){
 		var	_race = self,
 			_path = "race:" + _race + ":",
 			_stat = [
@@ -290,11 +293,12 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro areaList global.area
-#macro raceList global.race
-#macro crwnList global.crwn
-#macro wepsList global.weps
+#macro ntte_area global.area
+#macro ntte_race global.race
+#macro ntte_crwn global.crwn
+#macro ntte_weps global.weps
 
 #macro NTTEMenu         global.menu
 #macro MenuOpen         NTTEMenu.open
@@ -410,7 +414,8 @@
 	}
 	GameCont.crownpoints = _crownPoints;
 	
-#define step
+#define ntte_begin_step
+	 // Bind Events:
 	script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1);
 	
 	 // Loadout Crowns/Weapons:
@@ -950,7 +955,7 @@
 		
 		 // Adding Custom Crowns:
 		if(array_length(_crown.custom.icon) <= 0){
-			with(array_combine(crwnList, [crwn_random])){
+			with(array_combine(ntte_crwn, [crwn_random])){
 				with({
 					crwn : self,
 					locked : false,

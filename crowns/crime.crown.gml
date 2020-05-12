@@ -38,11 +38,117 @@
 		sound_play_pitchvol(sndBigWeaponChest, 0.2, 1.5);
 	}
 	
+#define step
+	 // Bounty Hunters:
+	if(!(GameCont.area == 7 && GameCont.subarea == 3)){
+		with(instances_matching(Crown, "ntte_crown", "crime")){
+			 // Watch where you're going bro:
+			if(hspeed != 0 && sign(image_xscale) != sign(hspeed)){
+				image_xscale = abs(image_xscale) * sign(hspeed);
+			}
+			
+			 // Spawn Enemies:
+			if(enemies > 0){
+				enemy_time -= current_time_scale;
+				
+				if(enemy_time <= 0){
+					var	_spawnX = x,
+						_spawnY = y,
+						_spawnDis = 240,
+						_spawnDir = random(360);
+						
+					with(instance_furthest(_spawnX - 16, _spawnY - 16, Floor)){                                                                           
+						_spawnDir = point_direction((bbox_left + bbox_right + 1) / 2, (bbox_top + bbox_bottom + 1) / 2, _spawnX, _spawnY);
+					}
+					
+					 // Effects:
+					var	l = 4,
+						d = _spawnDir;
+						
+					with(instance_create(x + lengthdir_x(l, d), y + 8 + lengthdir_y(l, d), AssassinNotice)){
+						hspeed = other.hspeed;
+						vspeed = other.vspeed;
+						motion_add(d, 2);
+						friction = 0.2;
+						depth = -9;
+					}
+					repeat(3) with(instance_create(x, y, Smoke)){
+						image_xscale /= 2;
+						image_yscale /= 2;
+						hspeed += other.hspeed / 2;
+						vspeed += other.vspeed / 2;
+					}
+					sound_play_pitch(sndIDPDNadeAlmost, 0.8);
+					
+					 // Spawn:
+					var _pool = [
+						[Gator,         5],
+						["BabyGator",   2],
+						[BuffGator,     3 * (GameCont.hard >= 4)],
+						["BoneGator",   3 * (GameCont.hard >= 6)],
+						["AlbinoGator", 2 * (GameCont.hard >= 8)]
+					];
+					while(enemies > 0){
+						enemies--;
+						
+						portal_poof();
+						
+						with(top_create(_spawnX, _spawnY, pool(_pool), _spawnDir, _spawnDis)){
+							jump_time = 1;
+							idle_time = 0;
+							
+							_spawnX = x;
+							_spawnY = y;
+							_spawnDir = random(360);
+							_spawnDis = -1;
+							
+							with(target){
+								 // Type-Specific:
+								switch(object_index){
+									case "BabyGator":
+										 // Babies Stick Together:
+										var n = 1 + irandom(1 + GameCont.loops);
+										repeat(n) with(top_create(x, y, "BabyGator", random(360), -1)){
+											jump_time = 1;
+										}
+										break;
+										
+									case FastRat: // maybe?
+										 // The Horde:
+										var n = 3 + irandom(3 + GameCont.loops);
+										repeat(n) with(top_create(x, y, FastRat, random(360), -1)){
+											jump_time = 1;
+										}
+										
+										 // Large and in Charge:
+										with(top_create(x, y, RatkingRage, random(360), -1)){
+											jump_time = 1;
+										}
+										break;
+								}
+								
+								 // Poof:
+								repeat(3){
+									with(instance_create(x + orandom(8), y + orandom(8), Dust)){
+										depth = other.depth - 1;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	
-/// Scripts
+	
+/// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
+#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

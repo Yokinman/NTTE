@@ -1,15 +1,15 @@
 #define init
     spr = mod_variable_get("mod", "teassets", "spr");
     snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
-#macro DebugLag global.debug_lag
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
 
 #define area_subarea           return 1;
 #define area_goal              return 130;
@@ -159,28 +159,6 @@
 	 // Next Subarea: 
 	else subarea++;
 	
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-		
-	 // Player Bubbles:
-	if(chance(1, 4)){
-		with(Player) instance_create(x, y, Bubble);
-	}
-	
-	 // Pet Bubbles:
-	if(chance(1, 4)){
-		with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
-	}
-	
-	 // Floor Bubbles:
-	else{
-		var f = instance_nearest(_x, _y, Floor);
-		with(f) instance_create(x + random(32), y + random(32), Bubble);
-	}
-	
-	return 30 + random(20);
-	
 #define area_make_floor
 	var	_x = x,
 		_y = y,
@@ -309,8 +287,30 @@
 		obj_create(x, y, "Diver");
 	}
 	
+#define area_effect(_vx, _vy)
+	var	_x = _vx + random(game_width),
+		_y = _vy + random(game_height);
+		
+	 // Player Bubbles:
+	if(chance(1, 4)){
+		with(Player) instance_create(x, y, Bubble);
+	}
 	
-/// Scripts
+	 // Pet Bubbles:
+	if(chance(1, 4)){
+		with(instances_matching(CustomHitme, "name", "Pet")) instance_create(x, y, Bubble);
+	}
+	
+	 // Floor Bubbles:
+	else{
+		var f = instance_nearest(_x, _y, Floor);
+		with(f) instance_create(x + random(32), y + random(32), Bubble);
+	}
+	
+	return 30 + random(20);
+	
+	
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2

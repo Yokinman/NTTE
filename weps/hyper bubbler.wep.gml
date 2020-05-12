@@ -36,7 +36,7 @@
 	sound_play_pitchvol(sndHyperSlugger,    0.9 + random(0.3), 0.6);
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

@@ -1,8 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
-	
-	DebugLag = false;
+	lag = false;
 	
 	 // Underwater Stuff:
 	global.waterBubblePop = [];
@@ -238,8 +237,7 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
-
-#macro DebugLag global.debug_lag
+#macro lag global.debug_lag
 
 #define BubbleBomb_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1463,10 +1461,17 @@
 	}
 	
 	
-/// Mod Events
-#define step
-	if(DebugLag) trace_time();
+/// GENERAL
+#define ntte_begin_step
+	 // Replace Lame MineExplosion:
+	with(instances_matching_gt(instances_matching_le(MineExplosion, "alarm0", ceil(current_time_scale)), "alarm0", 0)){
+		with(obj_create(x, y - 12, "SealMine")){
+			my_health = 0;
+		}
+		instance_destroy();
+	}
 	
+#define ntte_step
 	 // Underwater Sounds:
 	if(global.waterSoundActive){
 		if(!area_get_underwater(GameCont.area) && GameCont.area != area_oasis){
@@ -1479,19 +1484,17 @@
 	
 	 // Reset Bubbles:
 	if(instance_exists(GenCont)){
-		with(global.waterBubblePop) with(self[0]) spr_bubble_pop_check = null
+		with(global.waterBubblePop){
+			with(self[0]) spr_bubble_pop_check = null;
+		}
 		global.waterBubblePop = [];
 	}
 	
-	 // Replace Lame MineExplosion:
-	with(instances_matching(MineExplosion, "alarm0", ceil(current_time_scale))){
-		with(obj_create(x, y - 12, "SealMine")) my_health = 0;
-		instance_destroy();
-	}
-	
-	if(DebugLag) trace_time("teoasis_step");
-	
 #define underwater_step
+	 // Bind Events:
+	script_bind_end_step(underwater_end_step, 0);
+	script_bind_draw(underwater_draw, -3);
+	
 	 // Lightning:
 	with(Lightning){
 		image_index -= image_speed_raw * 0.75;
@@ -1565,13 +1568,10 @@
 		}
 	}
 	
-	with(script_bind_draw(underwater_draw, -3)) name = script[2];
-	with(script_bind_end_step(underwater_end_step, 0)) name = script[2];
-	
 #define underwater_end_step
 	instance_destroy();
 	
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	 // Snuff Flames:
 	with(instances_matching([GroundFlame, BlueFlame], "waterbubble", null)){
@@ -1644,12 +1644,12 @@
 		}
 	}
 	
-	if(DebugLag) trace_time("underwater_end_step");
+	if(lag) trace_time("underwater_end_step");
 	
 #define underwater_draw
 	instance_destroy();
 	
-	if(DebugLag) trace_time();
+	if(lag) trace_time();
 	
 	 // Air Bubbles:
 	with(instances_matching(hitme, "spr_bubble", null)){
@@ -1712,7 +1712,7 @@
 	}
 	
 	 // Boiling Water:
-	draw_set_fog(1, make_color_rgb(255, 70, 45), 0, 0);
+	draw_set_fog(true, make_color_rgb(255, 70, 45), 0, 0);
 	draw_set_blend_mode(bm_add);
 	with(instances_matching_ne(Flame, "sprite_index", sprFishBoost)){
 		var	s = 1.5,
@@ -1721,9 +1721,9 @@
 		draw_sprite_ext(sprDragonFire, image_index + 2, x, y, image_xscale * s, image_yscale * s, image_angle, image_blend, image_alpha * a);
 	}
 	draw_set_blend_mode(bm_normal);
-	draw_set_fog(0, 0, 0, 0);
+	draw_set_fog(false, 0, 0, 0);
 	
-	if(DebugLag) trace_time("underwater_draw");
+	if(lag) trace_time("underwater_draw");
 	
 #define underwater_sound(_state)
 	global.waterSoundActive = _state;
@@ -1748,7 +1748,7 @@
 	}
 	
 	
-/// Scripts
+/// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
