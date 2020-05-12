@@ -3542,7 +3542,9 @@
 	 // Fire:
 	if(sprite_index == spr_spwn){
 		sprite_index = spr_idle;
-		mask_index = mskSuperFlakBullet;
+		if(mask_index == mskNone){
+			mask_index = mskSuperFlakBullet;
+		}
 		
 		 // FX:
 		sound_play_pitch(sndGuardianHurt, 1.5 + orandom(0.2));
@@ -3553,15 +3555,35 @@
 	 // Spawning:
 	if(sprite_index == spr_spwn){
 		if(instance_exists(creator)){
-			var	l = 4,
+			var	l = 12,
 				d = direction;
 				
 			x = creator.x + lengthdir_x(l, d);
 			y = creator.y + lengthdir_y(l, d);
 		}
-		else{
-			x -= hspeed_raw;
-			y -= vspeed_raw;
+		x -= hspeed_raw;
+		y -= vspeed_raw;
+	}
+	
+	 // Slow Down:
+	else{
+		var	_slowMax = 0.5,
+			_slowDis = 32;
+			
+		if(distance_to_object(hitme) < _slowDis){
+			with(instance_rectangle_bbox(x - _slowDis, y - _slowDis, x + _slowDis, y + _slowDis, instances_matching_gt(instances_matching(hitme, "team", team), "size", 0))){
+				if(_slowMax > 0){
+					if(distance_to_object(other) < _slowDis){
+						var _slow = min(_slowMax, size / 20);
+						with(other){
+							_slowMax -= _slow;
+							x -= hspeed_raw * _slow;
+							y -= vspeed_raw * _slow;
+						}
+					}
+				}
+				else break;
+			}
 		}
 	}
 	
@@ -3577,11 +3599,17 @@
 		projectile_hit_push(other, damage, force);
 		
 		 // Swap Positions:
-		if(instance_exists(creator) && instance_exists(other)){
+		if(instance_exists(other)){
 			if(!instance_is(other, prop) && other.team != 0 && other.size < 6){
-				with(other) if(!instance_is(id, Nothing) && !instance_is(id, Nothing2)){
-					x = other.creator.x;
-					y = other.creator.y;
+				with(other){
+					if(instance_exists(other.creator)){
+						x = other.creator.x;
+						y = other.creator.y;
+					}
+					else{
+						x = other.xstart;
+						y = other.ystart;
+					}
 					xprevious = x;
 					yprevious = y;
 					
@@ -3823,7 +3851,7 @@
 		if(in_sight(target)){
 			 // Attack:
 			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
-				enemy_shoot("PortalBullet", gunangle, 8);
+				enemy_shoot("PortalBullet", gunangle, 10);
 				
 				 // Sound:
 				sound_play_pitchvol(sndPortalOld, 2 + random(2), 1.5);
@@ -5375,6 +5403,21 @@
 			}
 		}
 	}
+	
+	 /*
+	 // Possibilities:
+	if(button_pressed(0, "horn")){
+		with(instances_matching(Portal, "sprite_index", sprPortal)){
+			with(obj_create(x, y, "PortalGuardian")){
+				x = xstart;
+				y = ystart;
+				sprite_index = spr_appear;
+				right = other.image_xscale;
+			}
+			instance_destroy();
+		}
+	}
+	*/
 	
 #define ntte_dark // Drawing Grays
 	 // Big Decals:

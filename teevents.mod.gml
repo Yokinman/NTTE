@@ -1740,7 +1740,7 @@
 	with(instance_nearest(10016, 10016, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
-			with(scrAlert(id, spr.PopoEliteAlert)){
+			with(scrAlert(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
 				image_speed = 0.1;
 				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
 				target_x = -3;

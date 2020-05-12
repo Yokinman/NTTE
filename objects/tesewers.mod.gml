@@ -142,7 +142,7 @@
 	
 			 // Effects:
 			sound_play_pitchvol(
-				((other.ammo & 1) ? sndTurretFire : sndSplinterPistol),
+				((ammo & 1) ? sndTurretFire : sndSplinterPistol),
 				1 + orandom(0.2),
 				1.2
 			);

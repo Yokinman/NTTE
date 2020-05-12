@@ -301,8 +301,8 @@
 										
 										 // Add to Object List:
 										var _obj = _inst.object_index;
-										with(inst_obj){
-											if(object_is_ancestor(_obj, self)){
+										for(var i = _obj; object_exists(i); i = object_get_parent(i)){
+											if(array_exists(inst_obj, i)){
 												_obj = -1;
 												break;
 											}
@@ -435,7 +435,7 @@
 			if(_num == 0){
 				var _scrt = variable_instance_get(self, _alrm);
 				if(array_length(_scrt) >= 3){
-					mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
+					with(self) mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
 				}
 			}
 		}

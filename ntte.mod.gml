@@ -9,7 +9,7 @@
 	ntte_crwn = mod_variable_get("mod", "teassets", "crwn");
 	ntte_weps = mod_variable_get("mod", "teassets", "weps");
 	
-	 // Call Mods:
+	 // List of Mods to Call:
 	ntte_call_mods = [];
 	
 	 // level_start():
@@ -1386,38 +1386,70 @@
 	
 	var _scrt = "ntte_" + _call;
 	
+	 // Compile Mod Calling List:
+	if(array_length(ntte_call_mods) <= 0){
+		 // General Mods:
+		with([
+			["mod", "teevents"],
+			["mod", "petlib"]
+		]){
+			var	_type = self[0],
+				_name = self[1];
+				
+			array_push(
+				ntte_call_mods,
+				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
+			);
+		}
+		
+		 // Area Mods:
+		with(ntte_area){
+			var	_type = "area",
+				_name = self;
+				
+			array_push(
+				ntte_call_mods,
+				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
+			);
+		}
+		
+		 // Object Mods:
+		var _objList = mod_variable_get("mod", "telib", "object_list");
+		for(var i = 0; i < lq_size(_objList); i++){
+			var	_type = "mod",
+				_name = lq_get_key(_objList, i);
+				
+			array_push(
+				ntte_call_mods,
+				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
+			);
+		}
+		
+		 // Debugging Lag:
+		if(lag || instance_exists(PauseButton) || instance_exists(BackMainMenu)){
+			with(ntte_call_mods){
+				self[@2] = false;
+			}
+		}
+	}
+	
+	 // Call Scripts:
 	with(ntte_call_mods){
 		var	_type = self[0],
 			_name = self[1];
 			
 		if(mod_script_exists(_type, _name, _scrt)){
-			var _debug = (
-				!lag
-				&& mod_variable_exists(_type, _name, "debug_lag")
-				&& mod_variable_get(_type, _name, "debug_lag")
-				&& (_call != "shadows" || (!instance_exists(PauseButton) && !instance_exists(BackMainMenu)))
-			);
+			var _lag = self[2];
+			if(_lag) trace_time();
 			
-			if(_debug) trace_time();
+			with(other) mod_script_call(_type, _name, _scrt);
 			
-			with(other) mod_script_call_self(_type, _name, _scrt);
-			
-			if(_debug) trace_time(_name + "_" + _call);
+			if(_lag) trace_time(_name + "_" + _call);
 		}
 	}
 	
 #define ntte_begin_step
 	if(lag) trace_time();
-	
-	 // Compile Mod Calling List:
-	ntte_call_mods = [["mod", "teevents"], ["mod", "petlib"]];
-	with(ntte_area){
-		array_push(ntte_call_mods, ["area", self]);
-	}
-	var _objList = mod_variable_get("mod", "telib", "object_list");
-	for(var i = 0; i < lq_size(_objList); i++){
-		array_push(ntte_call_mods, ["mod", lq_get_key(_objList, i)]);
-	}
 	
 	 // Character Selection Menu:
 	if(instance_exists(Menu)){
@@ -1538,15 +1570,6 @@
 			 // Underwater Area:
 			if(area_get_underwater(_area)){
 				mod_script_call("mod", "teoasis", "underwater_step");
-			}
-			
-			 // Step(s):
-			mod_script_call("area", _area, "area_step");
-			if(mod_script_exists("area", _area, "area_begin_step")){
-				script_bind_begin_step(area_step, 0);
-			}
-			if(mod_script_exists("area", _area, "area_end_step")){
-				script_bind_end_step(area_step, 0);
 			}
 			
 			 // Floor FX:
@@ -2484,6 +2507,9 @@
 	global.pet_mapicon_pause_force = false;
 	
 #define draw_gui_end
+	 // Reset Mod Calling List:
+	ntte_call_mods = [];
+	
 	 // Custom Sound Volume:
 	for(var i = 0; i < array_length(global.sound_current); i++){
 		var c = lq_get_value(global.sound_current, i);
@@ -2521,37 +2547,6 @@
 	
 	 // NTTE Time Stat:
 	stat_set("time", stat_get("time") + (current_time_scale / 30));
-
-#define area_step
-	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
-		var a = array_find_index(ntte_area, GameCont.area);
-		if(a < 0 && GameCont.area = area_vault){
-			a = array_find_index(ntte_area, GameCont.lastarea);
-		}
-		if(a >= 0){
-			var	_area = ntte_area[a],
-				_scrt = "step";
-				
-			switch(object_index){
-				case CustomBeginStep:
-					_scrt = "begin_step";
-					break;
-		
-				case CustomEndStep:
-					_scrt = "end_step";
-					break;
-			}
-			
-			try{
-				mod_script_call("area", _area, "area_" + _scrt);
-			}
-			catch(_error){
-				trace_error(_error);
-			}
-		}
-	}
-	
-	instance_destroy();
 	
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
