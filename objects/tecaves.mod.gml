@@ -634,39 +634,6 @@
 		dark_vertices_offsets = [];
 		repeat(dark_vertices) array_push(dark_vertices_offsets, random(1));
 		
-		 // Red Crown:
-		if(crown_current == "red"){
-			var a = [GameCont.area, "red"];
-			if(chance(1, 2)){
-				switch(GameCont.area){
-					case area_campfire     :                                     break;
-					case area_desert       : a = [area_sewers, area_scrapyards]; break;
-					case "coast"           : a = [area_scrapyards, area_jungle]; break;
-					case area_oasis        :
-					case "oasis"           : a = [area_sewers, area_labs];       break;
-					case "trench"          : a = [area_sewers, area_caves];      break;
-					case area_sewers       : a = [area_caves];                   break;
-					case area_pizza_sewers :
-					case "pizza"           :                                     break;
-					case "lair"            :                                     break;
-					case area_scrapyards   : a = [area_sewers, area_city];       break;
-					case area_mansion      :                                     break;
-					case area_crib         :                                     break;
-					case area_caves        : a = [area_labs];                    break;
-					case area_cursed_caves :                                     break;
-					case area_city         : a = [area_labs, area_palace];       break;
-					case area_jungle       :                                     break;
-					case area_labs         : a = [area_sewers, area_caves];      break;
-					case area_palace       : a = [area_scrapyards, area_labs];   break;
-					case area_hq           :                                     break;
-					case "red"             :                                     break;
-				}
-			}
-			
-			 // Decision Making:
-			area = a[irandom(array_length(a) - 1)];
-		}
-		
 		return id;
 	}
 	
@@ -763,7 +730,40 @@
 		chest_type = AmmoChest;
 		area = "red";
 		subarea = 1;
-		areaseed = random_get_seed();
+		areaseed = random_get_seed() + irandom(1000);
+		
+		 // Red Crown:
+		if(crown_current == "red"){
+			var a = [GameCont.area, area];
+			if(chance(1, 2)){
+				switch(GameCont.area){
+					case area_campfire     :                                     break;
+					case area_desert       : a = [area_sewers, area_scrapyards]; break;
+					case "coast"           : a = [area_scrapyards, area_jungle]; break;
+					case area_oasis        :
+					case "oasis"           : a = [area_sewers, area_labs];       break;
+					case "trench"          : a = [area_sewers, area_caves];      break;
+					case area_sewers       : a = [area_caves];                   break;
+					case area_pizza_sewers :
+					case "pizza"           :                                     break;
+					case "lair"            :                                     break;
+					case area_scrapyards   : a = [area_sewers, area_city];       break;
+					case area_mansion      :                                     break;
+					case area_crib         :                                     break;
+					case area_caves        : a = [area_labs];                    break;
+					case area_cursed_caves :                                     break;
+					case area_city         : a = [area_labs, area_palace];       break;
+					case area_jungle       :                                     break;
+					case area_labs         : a = [area_sewers, area_caves];      break;
+					case area_palace       : a = [area_scrapyards, area_labs];   break;
+					case area_hq           :                                     break;
+					case "red"             :                                     break;
+				}
+			}
+			
+			 // Decision Making:
+			area = a[irandom(array_length(a) - 1)];
+		}
 		
 		 // Alarms:
 		alarm0 = 12;
