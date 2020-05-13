@@ -636,7 +636,7 @@
 		
 		 // Red Crown:
 		if(crown_current == "red"){
-			var a = [GameCont.area, area];
+			var a = [GameCont.area, "red"];
 			if(chance(1, 2)){
 				switch(GameCont.area){
 					case area_campfire     :                                     break;
