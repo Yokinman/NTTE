@@ -1390,6 +1390,7 @@
 	if(array_length(ntte_call_mods) <= 0){
 		 // General Mods:
 		with([
+			["mod", "temenu"],
 			["mod", "teevents"],
 			["mod", "petlib"]
 		]){
@@ -1499,7 +1500,8 @@
 							}
 						}
 						if(!_local){
-							with(instances_matching(CampChar, "num", 17)){
+							var _char = instances_matching(CampChar, "num", 17);
+							with(_char[array_length(_char) - 1]){
 								var	_x1 = x,
 									_y1 = y,
 									_x2 = other.x,
@@ -1511,8 +1513,6 @@
 									point_direction(_x1, _y1, _x2, _y2),
 									point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
 								);
-								
-								break;
 							}
 						}
 						
@@ -3478,7 +3478,7 @@
 	_race = race_get_name(_race);
 	with(instance_create(_x, _y, CampChar)){
 		race = _race;
-		num = 0;
+		num = 0.1;
 		
 		 // Visual:
 		spr_slct = race_get_sprite(_race, sprFishMenu);

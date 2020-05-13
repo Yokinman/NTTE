@@ -3599,37 +3599,40 @@
 		projectile_hit_push(other, damage, force);
 		
 		 // Swap Positions:
-		if(instance_exists(other)){
-			if(!instance_is(other, prop) && other.team != 0 && other.size < 6){
-				with(other){
-					if(instance_exists(other.creator)){
-						x = other.creator.x;
-						y = other.creator.y;
-					}
-					else{
-						x = other.xstart;
-						y = other.ystart;
-					}
-					xprevious = x;
-					yprevious = y;
-					
-					 // Effects:
-					with(instance_create(x, y, BulletHit)){
-						sprite_index = sprPortalDisappear;
-						depth = other.depth - 1;
-						image_angle = 0;
-					}
-					repeat(3) scrFX(x, y, 2, Smoke);
-					sound_play_hit_ext(sndPortalAppear, 2.5, 2);
-					
-					 // Just in Case:
-					with(instance_create(x, y, PortalClear)){
-						mask_index = other.mask_index;
-						sprite_index = other.sprite_index;
-						image_xscale = other.image_xscale;
-						image_yscale = other.image_yscale;
-						image_angle = other.image_angle;
-					}
+		with(other){
+			if(!instance_is(self, prop) && team != 0 && size < 6){
+				if(instance_exists(other.creator)){
+					x = other.creator.x;
+					y = other.creator.y;
+				}
+				else{
+					x = other.xstart;
+					y = other.ystart;
+				}
+				xprevious = x;
+				yprevious = y;
+				
+				 // Effects:
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = sprPortalDisappear;
+					depth = other.depth - 1;
+					image_angle = 0;
+				}
+				repeat(3) scrFX(x, y, 2, Smoke);
+				sound_play_hit_ext(sndPortalAppear, 2.5, 2);
+				
+				 // Just in Case:
+				with(instance_create(x, y, PortalClear)){
+					mask_index = other.mask_index;
+					sprite_index = other.sprite_index;
+					image_xscale = other.image_xscale;
+					image_yscale = other.image_yscale;
+					image_angle = other.image_angle;
+				}
+				
+				 // Portal:
+				if("portal" in other.creator && other.creator.portal){
+					other.creator.my_health = 0;
 				}
 			}
 		}
@@ -3642,55 +3645,57 @@
 	sound_play_hit_ext(sndGuardianDisappear, 2, 2);
 	
 	 // Teleport:
-	if(instance_exists(creator)) with(creator){
-		 // Disappear:
-		if("spr_disappear" in self){
-			with(instance_create(x, y, BulletHit)){
-				sprite_index = other.spr_disappear;
-				image_xscale = other.image_xscale * other.right;
-				image_yscale = other.image_yscale;
-				image_angle = other.image_angle;
-				depth = other.depth - 1;
+	if(instance_exists(creator) && ("my_health" not in creator || creator.my_health > 0)){
+		with(creator){
+			 // Disappear:
+			if("spr_disappear" in self){
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = other.spr_disappear;
+					image_xscale = other.image_xscale * other.right;
+					image_yscale = other.image_yscale;
+					image_angle = other.image_angle;
+					depth = other.depth - 1;
+				}
 			}
-		}
-		
-		 // Move:
-		x = other.x;
-		y = other.y;
-		xprevious = x;
-		yprevious = y;
-		
-		 // Unwall:
-		if(place_meeting(x, y, Wall)){
-			var	_tx = x,
-				_ty = y,
-				_disMax = 16;
-				
-			with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
-				for(var _x = bbox_left; _x <= bbox_right + 1; _x += 4){
-					for(var _y = bbox_top; _y <= bbox_bottom + 1; _y += 4){
-						var _dis = point_distance(_x, _y, _tx, _ty);
-						if(_dis < _disMax){
-							with(other) if(!place_meeting(_x, _y, Wall)){
-								_tx = _x;
-								_ty = _y;
-								_disMax = _dis;
+			
+			 // Move:
+			x = other.x;
+			y = other.y;
+			xprevious = x;
+			yprevious = y;
+			
+			 // Unwall:
+			if(place_meeting(x, y, Wall)){
+				var	_tx = x,
+					_ty = y,
+					_disMax = 16;
+					
+				with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
+					for(var _x = bbox_left; _x <= bbox_right + 1; _x += 4){
+						for(var _y = bbox_top; _y <= bbox_bottom + 1; _y += 4){
+							var _dis = point_distance(_x, _y, _tx, _ty);
+							if(_dis < _disMax){
+								with(other) if(!place_meeting(_x, _y, Wall)){
+									_tx = _x;
+									_ty = _y;
+									_disMax = _dis;
+								}
 							}
 						}
 					}
 				}
+				
+				x = _tx;
+				y = _ty;
 			}
 			
-			x = _tx;
-			y = _ty;
+			 // Appear:
+			image_index = 0;
+			if("spr_appear" in self){
+				sprite_index = spr_appear;
+			}
+			sound_play_hit_ext(sndPortalAppear, 3, (instance_is(id, Player) ? 0.5 : 1.5));
 		}
-		
-		 // Appear:
-		image_index = 0;
-		if("spr_appear" in self){
-			sprite_index = spr_appear;
-		}
-		sound_play_hit_ext(sndPortalAppear, 3, (instance_is(id, Player) ? 0.5 : 1.5));
 	}
 	
 	 // Creator Dead:
@@ -3795,6 +3800,7 @@
 		walkspeed = 0.8;
 		maxspeed = 4;
 		gunangle = random(360);
+		portal = false;
 		
 		 // Alarms:
 		alarm1 = 40 + irandom(20);
@@ -3889,6 +3895,14 @@
 	
 	 // Pickups:
 	pickup_drop(40, 10);
+	
+	 // Portal:
+	if(portal){
+		speed = 0;
+		with(instance_create(x, y, Portal)){
+			portalguardian_time = -1;
+		}
+	}
 	
 	
 #define PortalPrevent_create(_x, _y)
@@ -5122,6 +5136,93 @@
 	with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_delete(id);
 	
 #define ntte_step
+	 // Chests Give Feathers:
+	if(!instance_exists(GenCont)){
+		with(instances_matching(chestprop, "my_feather_storage", null)){
+			my_feather_storage = obj_create(x, y, "ParrotChester");
+			
+			 // Vars:
+			with(my_feather_storage){
+				creator = other;
+				switch(other.object_index){
+					case IDPDChest:
+					case BigWeaponChest:
+					case BigCursedChest:
+						num = 18;
+						break;
+						
+					case GiantWeaponChest:
+					case GiantAmmoChest:
+						num = 60;
+						break;
+				}
+			}
+		}
+		
+		 // Throne Butt : Pickups Give Feathers
+		if(skill_get(mut_throne_butt) > 0){
+			with(instances_matching(Pickup, "my_feather_storage", null)){
+				my_feather_storage = noone;
+				if(mask_index == mskPickup){
+					my_feather_storage = obj_create(x, y, "ParrotChester");
+					
+					 // Vars:
+					with(my_feather_storage){
+						creator = other;
+						small = true;
+						num = ceil(2 * skill_get(mut_throne_butt));
+					}
+				}
+			}
+		}
+	}
+	
+	 // Pet Leveling Up FX:
+	with(instances_matching(LevelUp, "nttepet_levelup", null)){
+		nttepet_levelup = true;
+		if(instance_is(creator, Player)){
+			if("ntte_pet" in creator) with(creator.ntte_pet){
+				if(instance_exists(self)) with(other){
+					instance_copy(false).creator = other;
+				}
+			}
+		}
+	}
+	
+	 // Real Portal Guardian:
+	with(instances_matching_ge(instances_matching_ge(instances_matching(Portal, "sprite_index", sprPortal), "image_alpha", 1), "endgame", 100)){
+		if("portalguardian_time" not in self){
+			var _spawn = instance_exists(RadChest);
+			if(_spawn){
+				with(Player){
+					if(my_health < maxhealth){
+						_spawn = false;
+						break;
+					}
+				}
+			}
+			portalguardian_time = (chance(1, 1) ? irandom_range(30, 90) : -1);
+		}
+		if(portalguardian_time >= 0){
+			if(portalguardian_time > 0){
+				portalguardian_time -= min(portalguardian_time, current_time_scale);
+			}
+			
+			 // :
+			else if(point_seen_ext(x, y, -24, -24, -1)){
+				with(obj_create(x, y, "PortalGuardian")){
+					x = xstart;
+					y = ystart;
+					sprite_index = spr_appear;
+					right = other.image_xscale;
+					portal = true;
+				}
+				sound_play_hit_ext(asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`), 2 + orandom(0.1), 3);
+				instance_destroy();
+			}
+		}
+	}
+	
 	 // Auto-Topify New Objects:
 	with(TopObjectSearch){
 		var _object = self;
@@ -5351,74 +5452,6 @@
 		}
 	}
 	
-	 // Chests Give Feathers:
-	if(!instance_exists(GenCont)){
-		with(instances_matching(chestprop, "my_feather_storage", null)){
-			my_feather_storage = obj_create(x, y, "ParrotChester");
-			
-			 // Vars:
-			with(my_feather_storage){
-				creator = other;
-				switch(other.object_index){
-					case IDPDChest:
-					case BigWeaponChest:
-					case BigCursedChest:
-						num = 18;
-						break;
-						
-					case GiantWeaponChest:
-					case GiantAmmoChest:
-						num = 60;
-						break;
-				}
-			}
-		}
-		
-		 // Throne Butt : Pickups Give Feathers
-		if(skill_get(mut_throne_butt) > 0){
-			with(instances_matching(Pickup, "my_feather_storage", null)){
-				my_feather_storage = noone;
-				if(mask_index == mskPickup){
-					my_feather_storage = obj_create(x, y, "ParrotChester");
-					
-					 // Vars:
-					with(my_feather_storage){
-						creator = other;
-						small = true;
-						num = ceil(2 * skill_get(mut_throne_butt));
-					}
-				}
-			}
-		}
-	}
-	
-	 // Pet Leveling Up FX:
-	with(instances_matching(LevelUp, "nttepet_levelup", null)){
-		nttepet_levelup = true;
-		if(instance_is(creator, Player)){
-			if("ntte_pet" in creator) with(creator.ntte_pet){
-				if(instance_exists(self)) with(other){
-					instance_copy(false).creator = other;
-				}
-			}
-		}
-	}
-	
-	 /*
-	 // Possibilities:
-	if(button_pressed(0, "horn")){
-		with(instances_matching(Portal, "sprite_index", sprPortal)){
-			with(obj_create(x, y, "PortalGuardian")){
-				x = xstart;
-				y = ystart;
-				sprite_index = spr_appear;
-				right = other.image_xscale;
-			}
-			instance_destroy();
-		}
-	}
-	*/
-	
 #define ntte_dark // Drawing Grays
 	 // Big Decals:
 	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
@@ -5432,6 +5465,11 @@
 		}
 	}
 	
+	 // Portal Guardians:
+	with(instances_matching(CustomEnemy, "name", "PortalGuardian")){
+		draw_circle(x, y, 92 + random(6), false);
+	}
+	
 #define ntte_dark_end // Drawing Clear
 	 // Big Decals:
 	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
@@ -5443,6 +5481,11 @@
 		if(light && light_radius[0] > 0){
 			draw_circle(x, y, light_radius[0] + orandom(1), false);
 		}
+	}
+	
+	 // Portal Guardians:
+	with(instances_matching(CustomEnemy, "name", "PortalGuardian")){
+		draw_circle(x, y, 24 + random(4), false);
 	}
 	
 #define ntte_bloom

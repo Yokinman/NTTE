@@ -1466,7 +1466,7 @@
 	
 	if(
 		instance_exists(Portal) &&
-		array_length(instances_matching_gt(instances_matching_gt(instances_matching_ne(Portal, "type", 2), "endgame", 0), "image_alpha", 0)) >= instance_number(Portal)
+		array_length(instances_matching_ge(instances_matching_gt(instances_matching_ne(Portal, "type", 2), "endgame", 0), "image_alpha", 1)) >= instance_number(Portal)
 	){
 		with(Portal) if(endgame >= 0){
 			sound_stop(sndPortalClose);
@@ -3031,32 +3031,32 @@
 	floor_set_style(null, null);
 	
 #define floor_set_align(_alignW, _alignH, _alignX, _alignY)
-	global.floor_align_w = _alignW;
-	global.floor_align_h = _alignH;
 	global.floor_align_x = _alignX;
 	global.floor_align_y = _alignY;
+	global.floor_align_w = _alignW;
+	global.floor_align_h = _alignH;
 	
 #define floor_reset_align()
 	floor_set_align(null, null, null, null);
 	
-#define floor_align(_w, _h, _x, _y)
+#define floor_align(_x, _y, _w, _h, _type)
 	/*
 		Aligns a given rectangle to the floor grid
 		Has a bias towards nearby floors to help prevent the rectangle from being disconnected from the level
 	*/
 	
-	var	_gridWAuto = is_undefined(global.floor_align_w),
-		_gridHAuto = is_undefined(global.floor_align_h),
-		_gridXAuto = is_undefined(global.floor_align_x),
+	var	_gridXAuto = is_undefined(global.floor_align_x),
 		_gridYAuto = is_undefined(global.floor_align_y),
-		_gridW     = (_gridWAuto ? 16    : global.floor_align_w),
-		_gridH     = (_gridHAuto ? 16    : global.floor_align_h),
+		_gridWAuto = is_undefined(global.floor_align_w),
+		_gridHAuto = is_undefined(global.floor_align_h),
 		_gridX     = (_gridXAuto ? 10000 : global.floor_align_x),
 		_gridY     = (_gridYAuto ? 10000 : global.floor_align_y),
+		_gridW     = (_gridWAuto ? 16    : global.floor_align_w),
+		_gridH     = (_gridHAuto ? 16    : global.floor_align_h),
 		_gridXBias = 0,
 		_gridYBias = 0;
 		
-	if(_gridWAuto || _gridHAuto || _gridXAuto || _gridYAuto){
+	if(_gridXAuto || _gridYAuto || _gridWAuto || _gridHAuto){
 		if(!instance_exists(FloorMaker)){
 			var	_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
 				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
@@ -3111,7 +3111,14 @@
 			if(_gridXBias != 0 || _gridYBias != 0){
 				_fx = _gridX + floor_align_round(_x - _gridX, _gridW, 0);
 				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, 0);
-				if(collision_rectangle(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor, false, false)){
+				if(
+					(_type == "round")
+					? (
+						collision_rectangle(_fx + 32, _fy,     _fx + _w - 32 - 1, _fy + _h - 1,      Floor, false, false) ||
+						collision_rectangle(_fx,      _fy + 32, _fx + _w - 1,     _fy + _h - 32 - 1, Floor, false, false)
+					)
+					: collision_rectangle(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor, false, false)
+				){
 					_gridXBias = 0;
 					_gridYBias = 0;
 				}
@@ -3120,10 +3127,10 @@
 		
 		 // FloorMaker:
 		else with(instance_nearest(_x + max(0, (_w / 2) - 16), _y + max(0, (_h / 2) - 16), FloorMaker)){
-			if(_gridXAuto) _gridW = min(_w, 32);
-			if(_gridYAuto) _gridH = min(_h, 32);
-			if(_gridWAuto) _gridX = x;
-			if(_gridHAuto) _gridY = y;
+			if(_gridXAuto) _gridX = x;
+			if(_gridYAuto) _gridY = y;
+			if(_gridWAuto) _gridW = min(_w, 32);
+			if(_gridHAuto) _gridH = min(_h, 32);
 		}
 	}
 	
@@ -3163,7 +3170,7 @@
 			_h = ((sprite_get_bbox_bottom(_msk) + 1) - sprite_get_bbox_top (_msk));
 			
 		 // Align to Adjacent Floors:
-		var _gridPos = floor_align(_w, _h, _x, _y);
+		var _gridPos = floor_align(_x, _y, _w, _h, "");
 		_x = _gridPos[0];
 		_y = _gridPos[1];
 		
@@ -4946,38 +4953,40 @@
 				####
 	*/
 	
-	var o = 32;
-	_w *= o;
-	_h *= o;
+	var	_ow = 32,
+		_oh = 32;
+		
+	_w *= _ow;
+	_h *= _oh;
 	
 	 // Center & Align:
 	_x -= (_w / 2);
 	_y -= (_h / 2);
-	var _gridPos = floor_align(_w, _h, _x, _y);
+	var _gridPos = floor_align(_x, _y, _w, _h, _type);
 	_x = _gridPos[0];
 	_y = _gridPos[1];
 	
 	 // Floors:
-	var	_aw = global.floor_align_w,
-		_ah = global.floor_align_h,
-		_ax = global.floor_align_x,
+	var	_ax = global.floor_align_x,
 		_ay = global.floor_align_y,
+		_aw = global.floor_align_w,
+		_ah = global.floor_align_h,
 		_inst = [];
 		
-	floor_set_align(o, o, _x, _y);
+	floor_set_align(_ow, _oh, _x, _y);
 	
-	for(var _ox = 0; _ox < _w; _ox += o){
-		for(var _oy = 0; _oy < _h; _oy += o){
+	for(var _ox = 0; _ox < _w; _ox += _ow){
+		for(var _oy = 0; _oy < _h; _oy += _oh){
 			var _make = true;
 			
 			 // Type-Specific:
 			switch(_type){
 				case "round": // No Corner Floors
-					_make = ((_ox != 0 && _ox != _w - o) || (_oy != 0 && _oy != _h - o));
+					_make = ((_ox != 0 && _ox != _w - _ow) || (_oy != 0 && _oy != _h - _oh));
 					break;
 					
 				case "ring": // No Inner Floors
-					_make = (_ox == 0 || _oy == 0 || _ox == _w - o || _oy == _h - o);
+					_make = (_ox == 0 || _oy == 0 || _ox == _w - _ow || _oy == _h - _oh);
 					break;
 			}
 			
