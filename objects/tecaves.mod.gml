@@ -13,6 +13,10 @@
 	 // Clone Base Color:
 	baseCloneCol = make_color_rgb(145, 0, 43);
 	
+	 // Client-Side Darkness:
+	clientDarknessCoeff = array_create(maxp, 0);
+	clientDarknessFloor = [];
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -21,11 +25,35 @@
 
 #macro surfWallShineMask global.surfWallShineMask
 
-#macro WallFake              instances_matching(FloorNormal, "ntte_wallfake", true)
+#macro WallFake              instances_matching(FloorNormal, "name", "WallFake")
 #macro wallFakePlayerVisible global.wallFakePlayerVisible
 #macro wallFakeTransitionCol global.wallFakeTransitionCol
 
+#macro clientDarknessCoeff global.clientDarknessCoeff
+#macro clientDarknessFloor global.clientDarknessFloor
+
 #macro baseCloneCol global.cloneCol
+
+#define ChaosHeart_create(_x, _y)
+	/*
+		A special variant of crystal hearts unique to the red crown.
+		Generates random areas on death and cannot be used to access the warp zone.
+	*/
+	with(obj_create(_x, _y, "CrystalHeart")){
+		 // Visual:
+		spr_idle = spr.ChaosHeartIdle;
+		spr_walk = spr.ChaosHeartIdle;
+		spr_hurt = spr.ChaosHeartHurt;
+		spr_dead = spr.ChaosHeartDead;
+		hitid = [spr_idle, "CHAOTIC CRYSTAL HEART"];
+		sprite_index = spr_idle;
+		
+		 // Vars:
+		white = true;
+		meleedamage = 4;
+		
+		return id;
+	}
 
 #define Clone_create(_x, _y)
 	/*
@@ -267,6 +295,8 @@
 			max_tele_dist         - Maximum distance from the player the brain can teleport to.
 			dying                 - Boolean. Tracks if the brain has entered its death phase.
 			death_throes          - The remaining number of throes in the death phase.
+			parts				  - Used in death anim.
+			shake				  - Used in death anim.
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -275,6 +305,7 @@
 		spr_walk      = spr.CrystalBrainIdle;
 		spr_hurt      = spr.CrystalBrainHurt;
 		spr_dead      = spr.CrystalBrainDead;
+		spr_part	  = spr.CrystalBrainPart;
 		spr_appear    = spr.CrystalBrainAppear;
 		spr_disappear = spr.CrystalBrainDisappear;
 		spr_shadow = shd32;
@@ -310,6 +341,8 @@
 		candie = false;
 		dying = false;
 		death_throes = irandom_range(3, 4);
+		parts = [];
+		shake = 2;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -376,6 +409,15 @@
 			minspeed = 0;
 			maxspeed = 8;
 			
+			 // Parts:
+			repeat(sprite_get_number(spr_part)){
+				array_push(parts, {
+					angle : 0,
+					x_off : 0,
+					y_off : 0
+				});
+			}
+			
 			sound_play_hit(sndLightningCrystalCharge, 0.3);
 		}
 		
@@ -386,8 +428,9 @@
 		var _still = (speed <= minspeed);
 		if(death_throes > 0){
 			
-			x += orandom(2);
-			y += orandom(2);
+			x += orandom(shake);
+			y += orandom(shake);
+			
 			if(_still){
 				death_throes--;
 				
@@ -410,6 +453,13 @@
 						image_speed = 0;
 					}
 				}
+				
+				 // Falling Apart:
+				with(parts){
+					x_off += orandom(10);
+					y_off += orandom(10);
+					angle += orandom(30);
+				}
 			}
 			
 			 // Effects:
@@ -430,10 +480,32 @@
 	canfly = teleport;
 	
 #define CrystalBrain_draw
-	var	_x = (teleport ? teleport_x : x),
-		_y = (teleport ? teleport_y : y);
 		
-	draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	if(dying){
+		var _hurt = (sprite_index == spr_hurt && image_index < 1);
+			
+		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+		for(var i = 0; i < array_length(parts); i++){
+			var p = parts[i];
+			
+			 // Ghost:
+			if(i == floor(sprite_get_number(spr_part) / 2)){
+				draw_set_blend_mode(bm_add);
+				draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * 2/3);
+				draw_set_blend_mode(bm_normal);
+			}
+			
+			 // Fragments:
+			draw_sprite_ext(spr_part, i, x + p.x_off + orandom(shake), y + p.y_off + orandom(shake), image_xscale * right, image_yscale, image_angle + p.angle, image_blend, image_alpha);
+		}
+		if(_hurt) draw_set_fog(false, c_white, 0, 0);
+	}
+	else{
+		var	_x = (teleport ? teleport_x : x),
+			_y = (teleport ? teleport_y : y);
+			
+		draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
+	}
 	
 	/* DEPRICATED - FUNKY DRAW EFFECT
 	var _yoff = sin(wave / 20);
@@ -490,7 +562,7 @@
 	if(!teleport){
 		if(enemy_target(x, y)){
 			var _targetDir = point_direction(x, y, target.x, target.y),
-				_canWarp = true;
+				_canWarp = my_health < maxhealth;
 			
 			if(in_sight(target)){
 			
@@ -625,6 +697,7 @@
 		walk = 0;
 		walkspeed = 0.3;
 		maxspeed = 2;
+		white = false;
 		
 		 // Alarms:
 		alarm1 = 30;
@@ -638,46 +711,69 @@
 	}
 	
 #define CrystalHeart_step
-	 // Effects:
-	if(chance_ct(1, 10)){
-		with(scrFX([x, 6], [y, 12], random(1), LaserCharge)){
-			alarm0 = 10 + random(10);
+	if(white){
+		
+		 // Effects:
+		if(chance_ct(1, 20)){
+			with(scrFX([x, 6], [y, 12], [90, random_range(0.2, 0.5)], LaserCharge)){
+				sprite_index = sprSpiralStar;
+				image_index = choose(0, irandom(image_number - 1));
+				depth = other.depth - 1;
+				alarm0 = random_range(15, 30);
+			}
+		}
+		if(chance_ct(1, 25)){
+			with(instance_create(x + orandom(6), y + orandom(12), BulletHit)){
+				sprite_index = sprThrowHit;
+				image_xscale = 0.2 + random(0.3);
+				image_yscale = image_xscale;
+				depth = other.depth - 1;
+			}
 		}
 	}
+	else{
+		
+		 // Effects:
+		if(chance_ct(1, 10)){
+			with(scrFX([x, 6], [y, 12], random(1), LaserCharge)){
+				alarm0 = 10 + random(10);
+			}
+		}
 	
-	 // Manual Contact Damage:
-	if(canmelee == true && place_meeting(x, y, hitme)){
-		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
-			if(place_meeting(x, y, other)){
-				with(other) if(projectile_canhit_melee(other)){
-					 // Fixes:
-					var	_lastFreeze = UberCont.opt_freeze,
-						_lastGamma = skill_get(mut_gamma_guts);
+		 // Manual Contact Damage:
+		if(canmelee == true && place_meeting(x, y, hitme)){
+			with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+				if(place_meeting(x, y, other)){
+					with(other) if(projectile_canhit_melee(other)){
+						 // Fixes:
+						var	_lastFreeze = UberCont.opt_freeze,
+							_lastGamma = skill_get(mut_gamma_guts);
+							
+						if(!instance_is(other, Player)){
+							UberCont.opt_freeze = 0;
+							skill_set(mut_gamma_guts, 0);
+							sound_play_hit(snd_mele, 0.1);
+						}
 						
-					if(!instance_is(other, Player)){
-						UberCont.opt_freeze = 0;
-						skill_set(mut_gamma_guts, 0);
-						sound_play_hit(snd_mele, 0.1);
-					}
-					
-					 // Damage:
-					meleedamage = max(1, other.my_health - 1);
-					event_perform(ev_collision, (instance_is(other, Player) ? Player : prop));
-					meleedamage = 0;
-					
-					 // Reset Fixes:
-					if(!instance_is(other, Player)){
-						UberCont.opt_freeze = _lastFreeze;
-						skill_set(mut_gamma_guts, _lastGamma);
-					}
-					else{
-						my_health = 0;
-						GameCont.area = "red";
-						GameCont.subarea = 0;
-						GameCont.killenemies = true;
-						sound_play_music(-1);
-						with(obj_create(x, y, "WarpPortal")){
-							event_perform(ev_step, ev_step_normal);
+						 // Damage:
+						meleedamage = max(1, other.my_health - 1);
+						event_perform(ev_collision, (instance_is(other, Player) ? Player : prop));
+						meleedamage = 0;
+						
+						 // Reset Fixes:
+						if(!instance_is(other, Player)){
+							UberCont.opt_freeze = _lastFreeze;
+							skill_set(mut_gamma_guts, _lastGamma);
+						}
+						else{
+							my_health = 0;
+							GameCont.area = "red";
+							GameCont.subarea = 0;
+							GameCont.killenemies = true;
+							sound_play_music(-1);
+							with(obj_create(x, y, "WarpPortal")){
+								event_perform(ev_step, ev_step_normal);
+							}
 						}
 					}
 				}
@@ -705,6 +801,39 @@
 	for(var i = 0; i < 3; i++){
 		with(enemy_shoot("CrystalHeartProj", (direction + (i * 120)) + orandom(4), 4)){
 			chest_type = _chestTypes[i];
+			
+			 // Chaos Heart Area Decision:
+			if(other.white){
+				var a = [GameCont.area, area];
+				if(chance(1, 2)){
+					switch(GameCont.area){
+						case area_campfire     :                                     break;
+						case area_desert       : a = [area_sewers, area_scrapyards]; break;
+						case "coast"           : a = [area_scrapyards, area_jungle]; break;
+						case area_oasis        :
+						case "oasis"           : a = [area_sewers, area_labs];       break;
+						case "trench"          : a = [area_sewers, area_caves];      break;
+						case area_sewers       : a = [area_caves];                   break;
+						case area_pizza_sewers :
+						case "pizza"           :                                     break;
+						case "lair"            :                                     break;
+						case area_scrapyards   : a = [area_sewers, area_city];       break;
+						case area_mansion      :                                     break;
+						case area_crib         :                                     break;
+						case area_caves        : a = [area_labs];                    break;
+						case area_cursed_caves :                                     break;
+						case area_city         : a = [area_labs, area_palace];       break;
+						case area_jungle       :                                     break;
+						case area_labs         : a = [area_sewers, area_caves];      break;
+						case area_palace       : a = [area_scrapyards, area_labs];   break;
+						case area_hq           :                                     break;
+						case "red"             :                                     break;
+					}
+				}
+				
+				 // Decision Making:
+				area = a[irandom(array_length(a) - 1)];
+			}
 		}
 	}
 	
@@ -715,7 +844,9 @@
 #define CrystalHeartProj_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
-		sprite_index = spr.CrystalHeartProj;
+		spr_bot = spr.CrystalHeartProjMid;
+		spr_top = spr.CrystalHeartProjOut;
+		sprite_index = spr_top;
 		image_speed = 0.4;
 		
 		 // Vars:
@@ -731,39 +862,7 @@
 		areaseed = random_get_seed() + irandom(1000);
 		chest_type = AmmoChest;
 		floor_goal = 10 + irandom(10);
-		
-		 // Red Crown:
-		if(crown_current == "red"){
-			var a = [GameCont.area, area];
-			if(chance(1, 2)){
-				switch(GameCont.area){
-					case area_campfire     :                                     break;
-					case area_desert       : a = [area_sewers, area_scrapyards]; break;
-					case "coast"           : a = [area_scrapyards, area_jungle]; break;
-					case area_oasis        :
-					case "oasis"           : a = [area_sewers, area_labs];       break;
-					case "trench"          : a = [area_sewers, area_caves];      break;
-					case area_sewers       : a = [area_caves];                   break;
-					case area_pizza_sewers :
-					case "pizza"           :                                     break;
-					case "lair"            :                                     break;
-					case area_scrapyards   : a = [area_sewers, area_city];       break;
-					case area_mansion      :                                     break;
-					case area_crib         :                                     break;
-					case area_caves        : a = [area_labs];                    break;
-					case area_cursed_caves :                                     break;
-					case area_city         : a = [area_labs, area_palace];       break;
-					case area_jungle       :                                     break;
-					case area_labs         : a = [area_sewers, area_caves];      break;
-					case area_palace       : a = [area_scrapyards, area_labs];   break;
-					case area_hq           :                                     break;
-					case "red"             :                                     break;
-				}
-			}
-			
-			 // Decision Making:
-			area = a[irandom(array_length(a) - 1)];
-		}
+		setup = true;
 		
 		 // Alarms:
 		alarm0 = 12;
@@ -771,21 +870,52 @@
 		return id;
 	}
 	
+#define CrystalHeartProj_setup
+	setup = false;
+	
+	 // Colorize:
+	var c = image_blend;
+	if(is_real(area)){
+		c = area_get_background_color(area);
+	}
+	else{
+		var _scrt = "area_background_color";
+		if(mod_script_exists("area", area, _scrt)){
+			c = mod_script_call("area", area, _scrt);
+		}
+	}
+	if(c != image_blend){
+		var h = color_get_hue(c),
+			s = color_get_saturation(c),
+			v = lerp(color_get_value(c), 255, 0.5);
+			
+		image_blend = make_color_hsv(h, s, v);
+	}
+	
 #define CrystalHeartProj_step
+	if(setup) CrystalHeartProj_setup();
+
 	 // Effects:
-	if(chance_ct(2, 3)){
+	if(area == "red" && chance_ct(2, 3)){
 		with(scrFX([x, 6], [y, 6], random(1), LaserCharge)){
 			alarm0 = 5 + random(15);
 		}
 	}
 	if(current_frame_active) with(instance_create(x, y, DiscTrail)){
-		image_blend = make_color_rgb(253, 0, 67);
+		sprite_index = spr.CrystalHeartProjTrail;
+		image_blend = other.image_blend;
+		image_angle = random(360);
+		depth = other.depth + 1;
 	}
 	
 	 // Coast:
 	if(!place_meeting(x, y, Floor)){
 		instance_destroy();
 	}
+	
+#define CrystalHeartProj_draw
+	draw_sprite_ext(spr_bot,	  image_index, x, y, image_xscale, image_yscale, image_angle, c_white,	   image_alpha);
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	
 #define CrystalHeartProj_alrm0
 	alarm0 = 1;
@@ -870,6 +1000,17 @@
 			if(chance(2, 5)){
 				array_push(_noReveal, id);
 				event_perform(ev_create, 0);
+			}
+		}
+		
+		 // Clientside Darkness:
+		var _darkAreas = [area_sewers, area_caves, area_labs, "pizza", "lair", "trench"];
+		if(array_exists(_darkAreas, area) && !array_exists(_darkAreas, GameCont.area)){
+			with(instances_matching_gt(Floor, "id", _genID)){
+				array_push(clientDarknessFloor, id);
+			}
+			with(TopCont){
+				darkness = true;
 			}
 		}
 		
@@ -1985,6 +2126,62 @@
 	}
 	
 	
+#define Warp_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_open = spr.WarpOpen;
+		sprite_index = spr.Warp;
+		image_speed = 0.4;
+		depth = -7;
+		
+		 // Vars:
+		mask_index = mskWepPickup;
+		open = false;
+		
+		 // Alarms:
+		alarm0 = 30;
+		
+		return id;
+	}
+	
+#define Warp_step
+	image_angle += current_time_scale;
+	
+	 // Sparkly:
+	if(chance_ct(1, 15)){
+		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+			sprite_index = sprSpiralStar;
+			image_index = choose(0, irandom(image_number - 1));
+			alarm0 = random_range(15, 30);
+			motion_set(90, random_range(0.2, 0.5));
+		}
+	}
+	if(chance_ct(1, 20)){
+		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), BulletHit)){
+			sprite_index = sprThrowHit;
+			image_xscale = 0.2 + random(0.3);
+			image_yscale = image_xscale;
+		}
+	}
+	
+#define Warp_draw
+	draw_set_blend_mode(bm_add);
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha / 10);
+	draw_set_blend_mode(bm_normal);
+	
+#define Warp_alrm0
+	if(instance_number(enemy) - instance_number(Van) <= 0){
+		var p = instance_nearest(x, y, Player);
+		if(instance_exists(p) && !place_meeting(x, y, p)){
+			open = true;
+			sprite_index = spr_open;
+			
+			exit;
+		}
+	}
+
+	alarm0 = 30 + random(60);
+
 #define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2150,7 +2347,7 @@
 	}
 	
 	 // Fake Walls:
-	var _inst = instances_matching(Floor, "name", "WallFake");
+	var _inst = WallFake;
 	if(array_length(_inst) > 0){
 		var _frame = (current_frame / 10) % sprite_get_number(spr.WallFakeBot);
 		script_bind_draw(draw_fake_walls,  0, instances_matching(_inst, "bot_free", true), spr.WallFakeBot, _frame);
@@ -2182,6 +2379,33 @@
 		script_bind_draw(draw_clones, 1, _corpse, spr.CloneOverlayCorpse, 0.2);
 	}
 	*/
+		
+	 // Client-Side Darkness:
+	clientDarknessFloor = instances_matching(clientDarknessFloor, "", null);
+	with(Player){
+		if(array_length(clientDarknessFloor) > 0){
+			var _num = clientDarknessCoeff[index],
+				_spd = current_time_scale / 5,
+				_inDark = false;
+				
+			with(instances_meeting(x, y, clientDarknessFloor)){
+				_inDark = true;
+				break;
+			}
+			
+			if(_inDark){
+				_num -= _spd;
+			}
+			else{
+				_num += _spd;
+			}
+			
+			clientDarknessCoeff[index] = clamp(_num, 0, 1);
+		}	
+		else{
+			clientDarknessCoeff[index] = 1;
+		}
+	}
 	
 #define ntte_end_step
 	 // Spider Cocoons:
@@ -2248,9 +2472,20 @@
 	}
 	
 #define ntte_dark_end // Drawing Clear
-	 // Crystal Heart:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
-		draw_crystal_heart_dark(15, 24 + random(2), 2);
+	 // Client-Side Darkness:
+	if(array_length(clientDarknessFloor) > 0){
+		var _alph = draw_get_alpha(),
+			_vx = view_xview_nonsync,
+			_vy = view_yview_nonsync;
+			
+		draw_set_alpha(clientDarknessCoeff[player_find_local_nonsync()]);
+		draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
+		draw_set_alpha(_alph);
+	
+		 // Crystal Heart:
+		with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
+			draw_crystal_heart_dark(15, 24 + random(2), 2);
+		}
 	}
 	
 	 // Mortar:
@@ -2268,7 +2503,17 @@
 #define ntte_bloom
 	 // Crystal Heart Projectile:
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		 // Copy pasting code is truly so epic:
+		image_xscale *= _scale;
+		image_yscale *= _scale;
+		image_alpha  *= _alpha;
+		event_perform(ev_draw, 0);
+		image_xscale /= _scale;
+		image_yscale /= _scale;
+		image_alpha  /= _alpha;
 	}
 	
 	 // Teleport FX:

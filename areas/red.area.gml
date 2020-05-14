@@ -188,7 +188,7 @@
 	
 	 // Warp Rooms:
 	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
-		if(chance(1, 20) || array_length(instances_matching(CustomObject, "sprite_index", sprTop)) <= 0){
+		if(chance(1, 20) || array_length(instances_matching(CustomObject, "name", "Warp")) <= 0){
 			var _w = 2,
 				_h = 2,
 				_type = "",
@@ -238,9 +238,8 @@
 				}
 				
 				 // Portal:
-				with(instance_create(x - 16, y - 16, CustomObject)){
-					sprite_index = sprTop;
-					visible = false;
+				with(obj_create(x, y - 8, "Warp")){
+					
 				}
 			}
 			
