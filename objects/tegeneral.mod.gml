@@ -3632,7 +3632,9 @@
 				
 				 // Portal:
 				if("portal" in other.creator && other.creator.portal){
-					other.creator.my_health = 0;
+					if(instance_is(self, Player)){
+						other.creator.my_health = 0;
+					}
 				}
 			}
 		}
@@ -3907,10 +3909,22 @@
 	
 #define PortalPrevent_create(_x, _y)
 	/*
-		Creates a becomenemy to prevent Corpses from creating Portals
+		Prevent Corpses from creating Portals
+		
+		Vars:
+			creator - Destroys itself if this instance no longer exists
 	*/
 	
-	return instance_create(_x, _y, becomenemy);
+	with(instance_create(_x, _y, becomenemy)){
+		creator = noone;
+		return id;
+	}
+	
+#define PortalPrevent_step
+	 // Die:
+	if(creator != noone && !instance_exists(creator)){
+		instance_destroy();
+	}
 	
 	
 #define ReviveNTTE_create(_x, _y)
@@ -5190,17 +5204,9 @@
 	}
 	
 	 // Real Portal Guardian:
-	with(instances_matching_ge(instances_matching_ge(instances_matching(Portal, "sprite_index", sprPortal), "image_alpha", 1), "endgame", 100)){
+	/*
+	with(instances_matching_ge(instances_matching_ge(instances_matching_ne(Portal, "type", 1), "image_alpha", 1), "endgame", 100)){
 		if("portalguardian_time" not in self){
-			var _spawn = instance_exists(RadChest);
-			if(_spawn){
-				with(Player){
-					if(my_health < maxhealth){
-						_spawn = false;
-						break;
-					}
-				}
-			}
 			portalguardian_time = (chance(1, 1) ? irandom_range(30, 90) : -1);
 		}
 		if(portalguardian_time >= 0){
@@ -5222,6 +5228,7 @@
 			}
 		}
 	}
+	*/
 	
 	 // Auto-Topify New Objects:
 	with(TopObjectSearch){

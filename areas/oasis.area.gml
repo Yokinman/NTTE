@@ -9,13 +9,12 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
+#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
 
 #define area_subarea           return 1;
 #define area_goal              return 130;
 #define area_next              return [area_scrapyards, 3];
-#define area_music             return mus101;
-#define area_ambience          return amb101;
 #define area_background_color  return area_get_background_color(area_oasis);
 #define area_shadow_color      return area_get_shadow_color(area_oasis);
 #define area_darkness          return false;
@@ -54,11 +53,18 @@
 		case sprBones       : return sprCoral;
 	}
 	
+#define area_music
+	sound_play_music(mus101);
+	sound_play_ambient(amb101);
+	
 #define area_setup
 	goal             = area_goal();
 	background_color = area_background_color();
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
+	
+	 // Remember:
+	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	 // Fix Depth:

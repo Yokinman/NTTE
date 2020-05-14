@@ -200,7 +200,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
+#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
 
 #macro room_debug  false
 #macro room_list   global.room_list
@@ -212,8 +213,6 @@
 #define area_subarea           return 1;
 #define area_goal              return 110;
 #define area_next              return area_scrapyards;
-#define area_music             return [mus.Lair, 0.6];
-#define area_ambience          return amb102;
 #define area_background_color  return make_color_rgb(160, 157, 75);
 #define area_shadow_color      return area_get_shadow_color(area_pizza_sewers);
 #define area_fog               return sprFog102;
@@ -249,6 +248,17 @@
 		case sprBones       : return spr.WallDecalLair;
 	}
 	
+#define area_music
+	 // Music:
+	if(sound_play_music(mus.Lair)){
+		var s = sound_play_pitchvol(0, 0, 0);
+		sound_stop(s);
+		sound_volume(s - 1, 0.6);
+	}
+	
+	 // Ambience:
+	sound_play_ambient(amb102);
+	
 #define area_setup
 	goal             = area_goal();
 	background_color = area_background_color();
@@ -262,6 +272,9 @@
 	 // Rooms:
 	room_list = [];
 	if(room_debug) script_bind_draw(room_debug_draw, 0);
+	
+	 // Remember:
+	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	 // Fix Depth:
@@ -281,9 +294,6 @@
 #define area_finish
 	lastarea = area;
 	lastsubarea = subarea;
-	
-	 // Remember you were here:
-	with(GameCont) visited_lair = true;
 	
 	 // Area End:
 	if(subarea >= area_subarea()){
@@ -690,14 +700,12 @@
 			instance_create(_x + _w - 96, _y + _h - 96, Wall);
 			
 			 // Spawn backup chests
-			var	_chest = [RadChest, AmmoChest, WeaponChest],
+			var	_chest = [RadChest, "CatChest", "BatChest"],
 				_dis = 176,
 				_dir = round(random(360) / 90) * 90;
 				
 			for(var i = 0; i < array_length(_chest); i++){
-				if(!instance_exists(_chest[i])){
-					chest_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
-				}
+				chest_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
 			}
 			
 			break;

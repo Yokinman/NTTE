@@ -29,7 +29,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
+#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
 
 #macro surfPit        global.surfPit
 #macro surfPitWallTop global.surfPitWallTop
@@ -42,8 +43,6 @@
 #define area_subarea           return 3;
 #define area_goal              return 150;
 #define area_next              return area_city;
-#define area_music             return mus.Trench;
-#define area_ambience          return amb101;
 #define area_background_color  return make_color_rgb(100, 114, 127);
 #define area_shadow_color      return c_black;
 #define area_darkness          return true;
@@ -95,6 +94,10 @@
 			return spr.TopDecalTrench;
 	}
 	
+#define area_music
+	sound_play_music(mus.Trench);
+	sound_play_ambient(amb101);
+	
 #define area_setup
 	goal             = area_goal();
 	background_color = area_background_color();
@@ -103,6 +106,9 @@
 	
 	 // Tunnel Spawn:
 	safespawn += 2;
+	
+	 // Remember:
+	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	if(styleb){

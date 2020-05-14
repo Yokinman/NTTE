@@ -25,15 +25,14 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
+#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
 
 #macro wading_color make_color_rgb(44, 37, 122)
 
 #define area_subarea           return 3;
 #define area_goal              return 100;
 #define area_next              return "oasis";
-#define area_music             return [mus.Coast, 0.5];
-#define area_ambience          return amb0b;
 #define area_background_color  return make_color_rgb(27, 118, 184);
 #define area_shadow_color      return c_black;
 #define area_darkness          return false;
@@ -97,6 +96,17 @@
 		case sprDebris1     : return sprDebris1;
 	}
 	
+#define area_music
+	 // Music:
+	if(sound_play_music(mus.Coast)){
+		var s = sound_play_pitchvol(0, 0, 0);
+		sound_stop(s);
+		sound_volume(s - 1, 0.5);
+	}
+	
+	 // Ambience:
+	sound_play_ambient(amb0b);
+	
 #define area_setup
 	goal             = area_goal();
 	background_color = area_background_color();
@@ -106,14 +116,14 @@
 	 // Reset 'area_pop_enemies' Counter:
 	global.pop_enemies_wait = 0;
 	
+	 // Remember:
+	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
+	
 #define area_setup_floor
 	 // Footsteps:
 	material = 1;
 	
 #define area_start
-	 // Remember you were here:
-	with(GameCont) visited_coast = true;
-	
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
 		case 1: // Shell

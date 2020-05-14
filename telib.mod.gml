@@ -1464,34 +1464,51 @@
 		Get rid of portals, but make it look cool
 	*/
 	
-	if(
-		instance_exists(Portal) &&
-		array_length(instances_matching_ge(instances_matching_gt(instances_matching_ne(Portal, "type", 2), "endgame", 0), "image_alpha", 1)) >= instance_number(Portal)
-	){
-		with(Portal) if(endgame >= 0){
-			sound_stop(sndPortalClose);
-			with(instance_create(x, y, BulletHit)){
-				name = "PortalPoof";
-				sprite_index = sprPortalDisappear;
-				image_xscale = other.image_xscale;
-				image_yscale = other.image_yscale;
-				image_angle = other.image_angle;
-				image_blend = other.image_blend;
-				image_alpha = other.image_alpha;
-				depth = other.depth;
+	with(instances_matching_ge(instances_matching_ge(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 0), "image_alpha", 1)){
+		sound_stop(sndPortalClose);
+		sound_stop(sndPortalLoop);
+		
+		 // Guardian:
+		if(type == 1 && endgame >= 100 && chance(1, 2)){
+			with(obj_create(x, y, "PortalGuardian")){
+				x = xstart;
+				y = ystart;
+				sprite_index = spr_appear;
+				right = other.image_xscale;
+				portal = true;
 			}
-			instance_destroy();
+			sound_play_hit_ext(
+				asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
+				2 + orandom(0.1),
+				3
+			);
 		}
-		if(fork()){
-			while(instance_exists(Portal)) wait 0;
-			with(Player){
-				if(mask_index == mskNone) mask_index = mskPlayer;
-				if(angle != 0){
-					if(skill_get(mut_throne_butt)) angle = 0;
-					else roll = true;
-				}
+		
+		 // Normal:
+		else with(instance_create(x, y, BulletHit)){
+			name = "PortalPoof";
+			sprite_index = sprPortalDisappear;
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale;
+			image_angle = other.image_angle;
+			image_blend = other.image_blend;
+			image_alpha = other.image_alpha;
+			depth = other.depth;
+		}
+		
+		instance_destroy();
+	}
+	
+	 // Rescue Players:
+	if(array_length(instances_matching_lt(Portal, "endgame", 100)) <= 0){
+		with(Player){
+			if(mask_index == mskNone){
+				mask_index = ((race == char_bigdog) ? mskScrapBoss : mskPlayer);
 			}
-			exit;
+			if(angle != 0){
+				if(skill_get(mut_throne_butt) > 0) angle = 0;
+				else roll = true;
+			}
 		}
 	}
 	
@@ -2257,7 +2274,7 @@
 			 // Music:
 			if(_setArea){
 				with(MusCont){
-					event_perform(ev_alarm, 11);
+					alarm_set(11, 1);
 				}
 			}
 			

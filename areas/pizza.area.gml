@@ -9,12 +9,11 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && variable_instance_get(GameCont, "area_original", GameCont.area) == mod_current)
+#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
+#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
 
 #define area_subarea           return 1;
 #define area_next              return area_scrapyards;
-#define area_music             return mus102;
-#define area_ambience          return amb102;
 #define area_background_color  return area_get_background_color(area_pizza_sewers);
 #define area_shadow_color      return area_get_shadow_color(area_pizza_sewers);
 #define area_fog               return sprFog102;
@@ -49,6 +48,10 @@
 		case sprTopPot      : return sprTopDecalPizzaSewers;
 		case sprBones       : return sprPizzaSewerDecal;
 	}
+	
+#define area_music
+	sound_play_music(mus102);
+	sound_play_ambient(amb102);
 	
 #define area_setup
 	background_color = area_background_color();
@@ -104,6 +107,9 @@
 		trace_error(_error);
 	}
 	
+	 // Remember:
+	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
+	
 #define area_setup_floor
 	 // Fix Depth:
 	if(styleb) depth = 8;
@@ -112,8 +118,12 @@
 	material = (styleb ? 6 : 2);
 	
 #define area_start
-	instance_delete(instances_matching(Wall, "", null)[0]);
-	obj_create(0, 0, "PortalPrevent");
+	 // Delete SpawnWall:
+	if(instance_exists(Wall)){
+		with(Wall.id) if(place_meeting(x, y, Floor)){
+			instance_destroy();
+		}
+	}
 	
 	 // So much pizza:
 	with(Floor){
@@ -124,15 +134,12 @@
 	}
 	with(HPPickup) alarm0 *= 2;
 	
-	 // Spawn Stuff:
-	if(instance_exists(Player)) with(Player.id){
-		 // Open Manhole:
-		obj_create(x, y, "PizzaManholeCover");
-		
-		 // Door:
-		with(instance_nearest_bbox(x, y, Floor)){
-			door_create(x + 16, y - 16, 90);
-		}
+	 // Open Manhole:
+	obj_create(10016, 10016, "PizzaManholeCover");
+	
+	 // Door:
+	with(instance_nearest_bbox(10016, 10016, Floor)){
+		door_create(x + 16, y - 16, 90);
 	}
 	
 	 // Turt Squad:
@@ -314,13 +321,6 @@
 		with(instances_matching(HPPickup, "sprite_index", sprHP)){
 			sprite_index = sprSlice;
 			num = ceil(num / 2);
-		}
-		
-		 // Allow Portal:
-		if(instance_number(enemy) > 0){
-			with(instances_matching(becomenemy, "name", "PortalPrevent")){
-				instance_destroy();
-			}
 		}
 	}
 	

@@ -19,13 +19,6 @@
 	global.area_update = false;
 	global.area_mapdata = [];
 	
-	 // Custom Music/Ambience Fix:
-	global.music_update = false;
-	global.sound_current = {
-		mus : { snd: -1, vol: 1, pos: 0, hold: mus.Placeholder },
-		amb : { snd: -1, vol: 1, pos: 0, hold: mus.amb.Placeholder }
-	};
-	
 	 // Pets:
 	global.pet_max = 1;
 	global.pet_mapicon = array_create(maxp, []);
@@ -135,26 +128,19 @@
 	
 	 // Top Decal Fix:
 	with(TopPot){
-		if(place_meeting(x, y, FloorExplo)){
-			with(instances_meeting(x, y, FloorExplo)){
-				if(place_meeting(x, y, other) && place_meeting(x, y, PortalClear)){
-					with(other){
-						while(place_meeting(x, y, Floor)){
-							x += lengthdir_x(16, dir);
-							y += lengthdir_y(16, dir);
-						}
-					}
-					break;
-				}
-			}
+		while(place_meeting(x, y, Wall) && place_meeting(x, y, PortalClear)){
+			x += lengthdir_x(16, dir);
+			y += lengthdir_y(16, dir);
 		}
 	}
 	
 	 // Visibilize Pets:
-	with(instances_matching(CustomHitme, "name", "Pet")) visible = true;
+	with(instances_matching(CustomHitme, "name", "Pet")){
+		visible = true;
+	}
 	
 	 // Flavor Big Cactus:
-	if(chance(1, ((GameCont.area == area_campfire) ? 3 : 10))){
+	if(chance(1, 3 * area_get_subarea(GameCont.area))){
 		with(instance_random([Cactus, NightCactus])){
 			obj_create(x, y, "BigCactus");
 			instance_delete(id);
@@ -1307,7 +1293,7 @@
 	
 	 // Lair Chests:
 	var	_crime = (crown_current == "crime"),
-		_lair = variable_instance_get(GameCont, "visited_lair", false);
+		_lair = (variable_instance_get(GameCont, "visited_lair", 0) > 0);
 		
 	if(_lair || _crime){
 		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
@@ -1452,6 +1438,16 @@
 #define ntte_begin_step
 	if(lag) trace_time();
 	
+	 // Manually Recreating Pause/Loading/GameOver Map:
+	if(global.area_update){
+		global.area_update = false;
+		
+		with(GameCont){
+			var i = waypoints - 1;
+			if(i >= 0) global.area_mapdata[i] = [area, subarea, loops];
+		}
+	}
+	
 	 // Character Selection Menu:
 	if(instance_exists(Menu)){
 		if(!mod_exists("mod", "teloader")){
@@ -1557,10 +1553,7 @@
 	}
 	
 	 // NTTE Areas:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
-		global.music_update = true;
-	}
-	else{
+	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		var _area = (
 			(GameCont.area == area_vault)
 			? GameCont.lastarea
@@ -1573,7 +1566,7 @@
 			}
 			
 			 // Floor FX:
-			with(BackCont) if(alarm0 > 0 && alarm0 <= ceil(current_time_scale)){
+			with(instances_matching_le(instances_matching_gt(BackCont, "alarm0", 0), "alarm0", ceil(current_time_scale))){
 				var _scrt = "area_effect";
 				if(mod_script_exists("area", _area, _scrt)){
 					 // Pick Random Player's Screen:
@@ -1589,43 +1582,14 @@
 		}
 	}
 	
-	 // Play NTTE Music / Ambience:
-	if(global.music_update){
-		global.music_update = false;
-		
-		var _area = variable_instance_get(GameCont, "area_original", GameCont.area);
-		if(array_exists(ntte_area, _area)){
-			var _scrt = ["area_music", "area_ambience"];
-			for(var i = 0; i < lq_size(global.sound_current); i++){
-				var _type = lq_get_key(global.sound_current, i);
-				if(mod_script_exists("area", _area, _scrt[i])){
-					var s = mod_script_call("area", _area, _scrt[i]);
-					if(!is_array(s)) s = [s];
-					
-					while(array_length(s) < 3) array_push(s, -1);
-					if(s[1] == -1) s[1] = 1;
-					if(s[2] == -1) s[2] = 0;
-					
-					with(sound_play_ntte(_type, s[0])){
-						vol = s[1];
-						pos = s[2];
-					}
-				}
+	 // NTTE Area Music / Ambience:
+	if(array_exists(ntte_area, GameCont.area)){
+		with(MusCont){
+			if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
+				alarm_set(11, -1);
+				mod_script_call("area", GameCont.area, "area_music");
 			}
 		}
-	}
-	
-	 // Fix for Custom Tracks Stopping Between Levels:
-	for(var i = 0; i < lq_size(global.sound_current); i++){
-		var	_type = lq_get_key(global.sound_current, i),
-			c = lq_get_value(global.sound_current, i);
-			
-		if(audio_is_playing(c.hold)){
-			if(!audio_is_playing(c.snd)){
-				audio_sound_set_track_position(audio_play_sound(c.snd, 0, true), c.pos);
-			}
-		}
-		else audio_stop_sound(c.snd);
 	}
 	
 	 // Game Win Crown Unlock:
@@ -1769,6 +1733,19 @@
 		}
 	}
 	
+	 // Proto Statue Poof Portal:
+	with(ProtoStatue){
+		if(my_health < maxhealth * 0.7){
+			portal_poof();
+		}
+	}
+	if(
+		array_length(instances_matching(Portal, "type", 2)) > 0 ||
+		array_length(instances_matching_lt(Portal, "image_alpha", 1)) > 0
+	){
+		portal_poof();
+	}
+	
 	 // Portal Weapons:
 	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
 		with(WepPickup){
@@ -1892,23 +1869,6 @@
 		}
 	}
 	script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
-	
-	 // New Area:
-	if(global.area_update){
-		global.area_update = false;
-		
-		with(GameCont){
-			 // Original Area:
-			area_original = area;
-			
-			 // Manually Recreating Pause/Loading/GameOver Map:
-			var i = waypoints - 1;
-			if(i >= 0) global.area_mapdata[i] = [area, subarea, loops];
-		}
-		
-		 // Refresh Music:
-		global.music_update = true;
-	}
 	
 	try{
 		 // Last Wish:
@@ -2510,14 +2470,6 @@
 	 // Reset Mod Calling List:
 	ntte_call_mods = [];
 	
-	 // Custom Sound Volume:
-	for(var i = 0; i < array_length(global.sound_current); i++){
-		var c = lq_get_value(global.sound_current, i);
-		if(c.snd != -1){
-			audio_sound_gain(c.snd, audio_sound_get_gain(c.hold) * c.vol, 0);
-		}
-	}
-
 	 // Draw on Pause Screen but Below draw_pause Depth:
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
 		script_bind_draw(draw_pause_pre, UberCont.depth - 0.1);
@@ -3504,12 +3456,6 @@
 		}
 		
 		return id;
-	}
-	
-#define cleanup
-	 // Stop Area Music/Ambience:
-	for(var i = 0; i < lq_size(global.sound_current); i++){
-		audio_stop_sound(lq_get_value(global.sound_current, i).snd);
 	}
 	
 	

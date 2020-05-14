@@ -720,17 +720,17 @@
 		
 		 // Vars:
 		mask_index = mskFlakBullet;
-		floor_goal = 10 + irandom(10);
+		friction = 0.4;
 		damage = 3;
 		force = 12;
 		typ = 0;
 		maxspeed = 12;
-		friction = 0.4;
 		wall_break = 3;
-		chest_type = AmmoChest;
 		area = "red";
 		subarea = 1;
 		areaseed = random_get_seed() + irandom(1000);
+		chest_type = AmmoChest;
+		floor_goal = 10 + irandom(10);
 		
 		 // Red Crown:
 		if(crown_current == "red"){

@@ -755,10 +755,9 @@
 		with(pickup_indicator) on_meet = script_ref_create(CoastBossBecome_PickupIndicator_meet);
 		
 		 // Part Bonus:
-		if(variable_instance_get(GameCont, "visited_coast", false)){
-			part = 1;
-		}
-		part = min(part + GameCont.loops, 2);
+		part += variable_instance_get(GameCont, "visited_coast", 0);
+		part += GameCont.loops;
+		part = min(part, 2);
 		
 		return id;
 	}
