@@ -375,6 +375,7 @@
 			CrystalBrainAppear	  = sprite(p + "sprCrystalBrainAppear",	    4, 24, 24);
 			CrystalBrainDisappear = sprite(p + "sprCrystalBrainDisappear",  7, 24, 24);
 			CrystalBrainChunk     = sprite(p + "sprCrystalBrainChunk",      4,  8,  8);
+			CrystalBrainPart	  = sprite(p + "sprCrystalBrainPart",		7,  24, 24);
 			CrystalBrainEffect    = sprite(p + "sprCrystalBrainEffect",    10,  8,  8);
 			CrystalBrainSurfMask  = sprite(p + "sprCrystalBrainSurfMask",   1,  0,  0);
 			
@@ -383,10 +384,17 @@
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
-			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle", 10, 24, 24);
-			CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
-			CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
-			CrystalHeartProj = sprite(p + "sprCrystalHeartProj",  2, 10, 10);
+			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle",  10, 24, 24);
+			CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",   3, 24, 24);
+			CrystalHeartDead = sprite(p + "sprCrystalHeartDead",  22, 24, 24);
+			
+			ChaosHeartIdle = sprite(p + "sprChaosHeartIdle",  10, 24, 24);
+			ChaosHeartHurt = sprite(p + "sprChaosHeartHurt",   3, 24, 24);
+			ChaosHeartDead = sprite(p + "sprChaosHeartDead",  22, 24, 24);
+			
+			CrystalHeartProjOut   = sprite(p + "sprCrystalHeartProjOut",   2, 10, 10);
+			CrystalHeartProjMid   = sprite(p + "sprCrystalHeartProjMid",   2, 10, 10);
+			CrystalHeartProjTrail = sprite(p + "sprCrystalHeartProjTrail", 4, 10, 10);
 			
 			 // Diver:
 			p = m + "Diver/";
@@ -1180,9 +1188,14 @@
 			 // Decals:
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
+			 // Warp:
+			Warp	 = sprite(p + "sprWarp",     2, 16, 16);
+			WarpOpen = sprite(p + "sprWarpOpen", 4, 32, 32);
+			
 			 // Misc:
 			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
 			SpiralStarfield = sprite(p + "sprSpiralStarfield", 2,  32,  32);
+			RedDot			= sprite(p + "sprRedDot",		   9,  8,   8);
 			
 			//#region PROPS
 			p = m + "Props/";

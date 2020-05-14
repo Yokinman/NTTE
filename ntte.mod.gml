@@ -196,12 +196,9 @@
 	
 	 // Crystal Hearts:
 	if(_normalArea){
-		var _heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard));
-		
-		 // Red Crown:
-		if(crown_current == "red"){
-			_heartNum += (GameCont.subarea == 1) + chance(1, 5);
-		}
+		var _heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard)),
+			_redCrown = (crown_current == "red"),
+			_crownNum = ((GameCont.subarea == 1) + chance(1, 5)) * _redCrown;
 		
 		 // Guaranteed Spawn:
 		if(lq_size(heart_spawn) > 0){
@@ -211,14 +208,17 @@
 				lq_defget(heart_spawn, "loop", GameCont.loops)   == GameCont.loops
 			){
 				_heartNum++;
+				
+				 // No Repeat Visits:
+				heart_spawn = {};
 			}
 		}
 		
 		 // Spawn:
-		if(_heartNum > 0){
+		if(_heartNum > 0 || _crownNum > 0){
 			 // Find Spawnable Tiles:
 			var _spawnFloor = [];
-			with(FloorNormal){
+			with(instances_matching_ne(FloorNormal, "name", "WallFake")){
 				if(instance_exists(Player) && distance_to_object(Player) > 128){
 					if(!instance_exists(Wall) || distance_to_object(Wall) < 34){
 						array_push(_spawnFloor, id);
@@ -228,9 +228,10 @@
 			
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
-				repeat(_heartNum){
+				repeat(_heartNum + _crownNum){
 					with(_spawnFloor[irandom(array_length(_spawnFloor) - 1)]){
-						with(obj_create(bbox_center_x, bbox_center_y + 2, "CrystalHeart")){
+						var _type = ((GameCont.area == "red" || _crownNum-- > 0) ? "ChaosHeart" : "CrystalHeart")
+						with(obj_create(bbox_center_x, bbox_center_y + 2, _type)){
 							with(instance_create(x, y, PortalClear)){
 								mask_index = other.mask_index;
 							}
@@ -2274,7 +2275,7 @@
 	with(instances_matching(BulletHit, "name", "PortalPoof")){
 		draw_circle(x, y, 20 + random(8), false);
 	}
-	
+
 	 // Call Scripts:
 	ntte_call("dark_end");
 	
