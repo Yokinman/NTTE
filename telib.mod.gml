@@ -209,6 +209,7 @@
 #macro ntte_alarm_min 0
 #macro ntte_alarm_max 11
 
+#macro ntte_obj_base  [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
 #macro ntte_obj_event global.object_event
 #macro ntte_obj_list  global.object_list
 #macro ntte_obj_scrt  global.object_scrt
@@ -410,15 +411,60 @@
 	
 	return noone;
 	
-#define obj_step
+#define obj_begin_step
 	/*
 		Performs alarms, movement, and animation code for NTTE's "Custom" objects
 		Called from ntte.mod's 'ntte_begin_step' event
 	*/
 	
-	if(lag) trace_time();
+	var _obj = ntte_obj_base;
 	
-	var _obj = [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
+	 // Debugging Lag:
+	if(lag){
+		trace("");
+		
+		 // Override Events:
+		with(instances_matching_ne(_obj, "on_begin_step", null)){
+			if(array_length(on_begin_step) >= 3){
+				ntte_begin_step = on_begin_step;
+				on_begin_step = [];
+			}
+		}
+		with(instances_matching_ne(_obj, "on_step", null)){
+			if(array_length(on_step) >= 3){
+				ntte_step = on_step;
+				on_step = [];
+			}
+		}
+		with(instances_matching_ne(_obj, "on_end_step", null)){
+			if(array_length(on_end_step) >= 3){
+				ntte_end_step = on_end_step;
+				on_end_step = [];
+			}
+		}
+		
+		 // Bind Events:
+		if(array_length(instances_matching(CustomScript, "name", "obj_step")) <= 0){
+			with(script_bind_step(obj_step, 0)){
+				name = script[2];
+				persistent = true;
+			}
+		}
+		if(array_length(instances_matching(CustomScript, "name", "obj_end_step")) <= 0){
+			with(script_bind_end_step(obj_end_step, 0)){
+				name = script[2];
+				persistent = true;
+			}
+		}
+		
+		 // Manual Begin Step:
+		var _inst = instances_matching_ne(_obj, "ntte_begin_step", null);
+		trace_time();
+		with(_inst){
+			mod_script_call(ntte_begin_step[0], ntte_begin_step[1], ntte_begin_step[2]);
+		}
+		trace_time("obj_begin_step");
+	}
 	
 	 // Alarms:
 	for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
@@ -459,7 +505,61 @@
 		}
 	}
 	
+	if(lag) trace_time("obj_begin_step Misc");
+	
+#define obj_step
+	/*
+		Manually performs all "Custom" object step events for debugging lag
+	*/
+	
+	var	_obj = ntte_obj_base,
+		_inst = instances_matching_ne(_obj, "ntte_step", null);
+		
+	if(lag) trace_time();
+	
+	with(_inst){
+		mod_script_call(ntte_step[0], ntte_step[1], ntte_step[2]);
+	}
+	
 	if(lag) trace_time("obj_step");
+	
+	 // Goodbye:
+	else instance_destroy();
+	
+#define obj_end_step
+	/*
+		Manually performs all "Custom" object end step events for debugging lag
+	*/
+	
+	var	_obj = ntte_obj_base,
+		_inst = instances_matching_ne(_obj, "ntte_end_step", null);
+		
+	if(lag) trace_time();
+	
+	with(_inst){
+		mod_script_call(ntte_end_step[0], ntte_end_step[1], ntte_end_step[2]);
+	}
+	
+	if(lag) trace_time("obj_end_step");
+	
+	 // Goodbye:
+	else{
+		instance_destroy();
+		
+		 // Reset Events:
+		with(instances_matching_ne(_obj, "ntte_begin_step", null)){
+			on_begin_step = ntte_begin_step;
+			ntte_begin_step = null;
+		}
+		with(instances_matching_ne(_obj, "ntte_step", null)){
+			on_step = ntte_step;
+			ntte_step = null;
+		}
+		with(instances_matching_ne(_obj, "ntte_end_step", null)){
+			on_end_step = ntte_end_step;
+			ntte_end_step = null;
+		}
+	}
 	
 #define obj_bind
 	/*
@@ -1315,41 +1415,37 @@
 	for(var i = 0; i < maxp; i++) n += player_is_active(i);
 	return round(_hp * (1 + ((1/3) * GameCont.loops)) * (1 + (0.5 * (n - 1))));
 
-#define boss_intro(_name, _sound, _music)
-	var	s = sound_play(_sound),
-		m = sound_play_ntte("mus", _music);
-		
-	with(MusCont) alarm_set(3, -1);
+#define boss_intro(_name)
+	/*
+		Plays a given boss's intro and their music
+	*/
+	
+	 // Music:
+	with(MusCont){
+		alarm_set(2, 1);
+		alarm_set(3, -1);
+	}
 	
 	 // Bind begin_step to fix TopCont.darkness flash
 	if(_name != ""){
-		var _bind = instance_create(0, 0, CustomBeginStep);
-		with(_bind){
+		with(script_bind_begin_step(boss_intro_step, 0)){
 			boss = _name;
-			replaced = false;
-			sound = s;
-			music = m;
-			delay = 0;
 			loops = 0;
+			replaced = false;
+			
+			 // Co-op Delay:
+			delay = 0;
 			for(var i = 0; i < maxp; i++){
-				delay += player_is_active(i);
+				delay += player_is_active(i) * current_time_scale;
 			}
+			
+			return id;
 		}
-		
-		 // wait hold on:
-		if(fork()){
-			wait 0;
-			with(_bind) script = script_ref_create(boss_intro_step);
-			exit;
-		}
-		
-		return _bind;
 	}
 	
 	return noone;
 
 #define boss_intro_step
-	 // Delay in Co-op:
 	if(delay > 0){
 		delay -= current_time_scale;
 		
@@ -1358,9 +1454,9 @@
 			if(!replaced){
 				replaced = true;
 				var _path = "sprites/intros/";
-				sprite_replace_image(sprBossIntro,          _path + "spr" + boss + "Main.png", 0);
-				sprite_replace_image(sprBossIntroBackLayer, _path + "spr" + boss + "Back.png", 0);
-				sprite_replace_image(sprBossName,           _path + "spr" + boss + "Name.png", 0);
+				sprite_replace_image(sprBossIntro,          `${_path}spr${boss}Main.png`, 0);
+				sprite_replace_image(sprBossIntroBackLayer, `${_path}spr${boss}Back.png`, 0);
+				sprite_replace_image(sprBossName,           `${_path}spr${boss}Name.png`, 0);
 			}
 			
 			 // Call Big Bandit's Intro:
@@ -1464,12 +1560,21 @@
 		Get rid of portals, but make it look cool
 	*/
 	
+	var _rescue = false;
+	
 	with(instances_matching_ge(instances_matching_ge(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 0), "image_alpha", 1)){
 		sound_stop(sndPortalClose);
 		sound_stop(sndPortalLoop);
 		
 		 // Guardian:
-		if(type == 1 && endgame >= 100 && chance(1, 2)){
+		if(
+			visible
+			&& type == 1
+			&& endgame >= 100
+			&& !place_meeting(x, y, PortalShock)
+			&& point_seen_ext(x, y, -8, -8, -1)
+			&& chance(1, 2)
+		){
 			with(obj_create(x, y, "PortalGuardian")){
 				x = xstart;
 				y = ystart;
@@ -1496,12 +1601,19 @@
 			depth = other.depth;
 		}
 		
+		 // Rescue Players:
+		with(Player){
+			if(in_sight(other)){
+				array_push(_rescue, self);
+			}
+		}
+		
 		instance_destroy();
 	}
 	
 	 // Rescue Players:
 	if(array_length(instances_matching_lt(Portal, "endgame", 100)) <= 0){
-		with(Player){
+		with(_rescue){
 			if(mask_index == mskNone){
 				mask_index = ((race == char_bigdog) ? mskScrapBoss : mskPlayer);
 			}
@@ -5118,42 +5230,6 @@
 		UberCont.opt_shake = _shake;
 	}
 	
-#define sound_play_ntte(_type, _snd)
-	/*
-		Used for playing NTTE's music and ambience
-		Type can be "amb" or "mus"
-		
-		Ex:
-			sound_play_ntte("mus", mus.SealKing);
-	*/
-	
-	var c = lq_get(mod_variable_get("mod", "ntte", "sound_current"), _type);
-	
-	 // Stop Previous Track:
-	if(_snd != c.snd){
-		audio_stop_sound(c.snd);
-	}
-	
-	 // Set Stuff:
-	c.snd = _snd;
-	c.vol = 1;
-	c.pos = 0;
-	
-	 // Play Track:
-	switch(_type){
-		case "mus":
-			sound_play_music(-1);
-			sound_play_music(c.hold);
-			break;
-			
-		case "amb":
-			sound_play_ambient(-1);
-			sound_play_ambient(c.hold);
-			break;
-	}
-	
-	return c;
-
 #define sound_play_hit_ext(_sound, _pitch, _volume)
 	/*
 		'sound_play_hit()' distance-based sound, but with pitch and volume arguments

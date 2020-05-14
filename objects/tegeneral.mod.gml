@@ -3149,11 +3149,8 @@
 	 // Boss Intro:
 	if(!intro && sprite_index != spr_hide && sprite_index != spr_spwn){
 		intro = true;
-		boss_intro(
-			(curse ? "PetWeaponCursed" : "PetWeapon"),
-			(curse ? sndBigCursedChest : sndBigWeaponChest),
-			musBoss1
-		);
+		boss_intro(curse ? "PetWeaponCursed" : "PetWeapon");
+		sound_play(curse ? sndBigCursedChest : sndBigWeaponChest);
 	}
 	
 	 // Laser Cannon:
@@ -3471,7 +3468,13 @@
 	
 #define PetWeaponBoss_death
 	 // Boss Win Music:
-	with(MusCont) alarm_set(1, 1);
+	with(MusCont){
+		var _area = GameCont.area;
+		GameCont.area = -1;
+		event_perform(ev_alarm, 11);
+		GameCont.area = _area;
+		alarm_set(1, 1);
+	}
 	
 	 // Player Win:
 	if(stat_battle){
@@ -3901,9 +3904,7 @@
 	 // Portal:
 	if(portal){
 		speed = 0;
-		with(instance_create(x, y, Portal)){
-			portalguardian_time = -1;
-		}
+		instance_create(x, y, Portal);
 	}
 	
 	
@@ -5203,33 +5204,6 @@
 		}
 	}
 	
-	 // Real Portal Guardian:
-	/*
-	with(instances_matching_ge(instances_matching_ge(instances_matching_ne(Portal, "type", 1), "image_alpha", 1), "endgame", 100)){
-		if("portalguardian_time" not in self){
-			portalguardian_time = (chance(1, 1) ? irandom_range(30, 90) : -1);
-		}
-		if(portalguardian_time >= 0){
-			if(portalguardian_time > 0){
-				portalguardian_time -= min(portalguardian_time, current_time_scale);
-			}
-			
-			 // :
-			else if(point_seen_ext(x, y, -24, -24, -1)){
-				with(obj_create(x, y, "PortalGuardian")){
-					x = xstart;
-					y = ystart;
-					sprite_index = spr_appear;
-					right = other.image_xscale;
-					portal = true;
-				}
-				sound_play_hit_ext(asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`), 2 + orandom(0.1), 3);
-				instance_destroy();
-			}
-		}
-	}
-	*/
-	
 	 // Auto-Topify New Objects:
 	with(TopObjectSearch){
 		var _object = self;
@@ -5670,7 +5644,7 @@
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
-#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
@@ -5698,7 +5672,6 @@
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
-#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);

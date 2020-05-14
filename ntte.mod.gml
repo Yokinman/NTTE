@@ -19,6 +19,11 @@
 	global.area_update = false;
 	global.area_mapdata = [];
 	
+	 // Music / Ambience:
+	global.mus_area = GameCont.area;
+	global.mus_current = -1;
+	global.amb_current = -1;
+	
 	 // Pets:
 	global.pet_max = 1;
 	global.pet_mapicon = array_create(maxp, []);
@@ -1436,6 +1441,11 @@
 	}
 	
 #define ntte_begin_step
+	if(lag) trace("");
+	
+	 // NTTE Object Code:
+	mod_script_call("mod", "telib", "obj_begin_step");
+	
 	if(lag) trace_time();
 	
 	 // Manually Recreating Pause/Loading/GameOver Map:
@@ -1581,16 +1591,7 @@
 			}
 		}
 	}
-	
-	 // NTTE Area Music / Ambience:
-	if(array_exists(ntte_area, GameCont.area)){
-		with(MusCont){
-			if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
-				alarm_set(11, -1);
-				mod_script_call("area", GameCont.area, "area_music");
-			}
-		}
-	}
+	ntte_music();
 	
 	 // Game Win Crown Unlock:
 	with(instances_matching_le(instances_matching_gt(PlayerSit, "alarm0", 0), "alarm0", ceil(current_time_scale))){
@@ -1668,13 +1669,7 @@
 		}
 	}
 	
-	if(lag){
-		trace("");
-		trace_time("ntte_begin_step");
-	}
-	
-	 // NTTE Object Code:
-	mod_script_call("mod", "telib", "obj_step");
+	if(lag) trace_time("ntte_begin_step");
 	
 #define ntte_step
 	if(lag) trace_time();
@@ -1733,17 +1728,14 @@
 		}
 	}
 	
-	 // Proto Statue Poof Portal:
-	with(ProtoStatue){
-		if(my_health < maxhealth * 0.7){
-			portal_poof();
+	 // Proto Statue Destroys Portal:
+	if(instance_exists(enemy) || instance_exists(IDPDSpawn)){
+		with(instances_matching(ProtoStatue, "ntte_portalpoof_check", null)){
+			if(my_health < maxhealth * 0.7){
+				ntte_portalpoof_check = true;
+				portal_poof();
+			}
 		}
-	}
-	if(
-		array_length(instances_matching(Portal, "type", 2)) > 0 ||
-		array_length(instances_matching_lt(Portal, "image_alpha", 1)) > 0
-	){
-		portal_poof();
 	}
 	
 	 // Portal Weapons:
@@ -1992,6 +1984,9 @@
 		with(instances_matching(SpiralCont, "ntte_spiral", null)){
 			ntte_spiral = true;
 			
+			var _lastTimeScale = current_time_scale;
+			current_time_scale = 1;
+			
 			switch(GameCont.area){
 				
 				case area_desert: // Another Universe Fallen
@@ -2007,9 +2002,10 @@
 								image_index = i;
 								turnspeed *= 2/3;
 								angle = d;
-								with(self) repeat(irandom_range(25, 40) / current_time_scale){
-									event_perform(ev_step, ev_step_normal);
-									if(!instance_exists(self)) break;
+								
+								 // Fast Forward:
+								repeat(irandom_range(25, 40)){
+									with(self) event_perform(ev_step, ev_step_normal);
 								}
 							}
 						}
@@ -2028,8 +2024,8 @@
 					
 					 // Reset:
 					with(Spiral) instance_destroy();
-					with(self) repeat(30 / current_time_scale){
-						event_perform(ev_step, ev_step_normal);
+					repeat(30){
+						with(self) event_perform(ev_step, ev_step_normal);
 						with(Spiral) event_perform(ev_step, ev_step_normal);
 						with(SpiralStar) event_perform(ev_step, ev_step_normal);
 					}
@@ -2042,8 +2038,10 @@
 							image_xscale *= 2/3;
 							image_yscale *= 2/3;
 							image_angle = random(360);
-							with(self) repeat(random(10) / current_time_scale){
-								event_perform(ev_step, ev_step_normal);
+							
+							 // Fast Forward:
+							repeat(irandom(10)){
+								with(self) event_perform(ev_step, ev_step_normal);
 							}
 						}
 					}
@@ -2053,8 +2051,10 @@
 						sprite_index = spr.Manhole;
 						image_index = 5;
 						turnspeed *= 2/3;
-						with(self) repeat(irandom_range(8, 12) / current_time_scale){
-							event_perform(ev_step, ev_step_normal);
+						
+						 // Fast Forward:
+						repeat(irandom_range(8, 12)){
+							with(self) event_perform(ev_step, ev_step_normal);
 						}
 					}
 					
@@ -2082,8 +2082,10 @@
 							sprite_index = other.spr_hurt;
 							image_index  = 1;
 							turnspeed *= 2/3;
-							with(self) repeat(irandom_range(8, 12) / current_time_scale){
-								event_perform(ev_step, ev_step_normal);
+							
+							 // Fast Forward:
+							repeat(irandom_range(8, 12)){
+								with(self) event_perform(ev_step, ev_step_normal);
 							}
 						}
 					}
@@ -2107,11 +2109,15 @@
 				repeat(12) with(instance_create(x, y, SpiralStar)){
 					sprite_index = sprBubble;
 					image_speed  = random(0.2);
-					with(self) repeat(irandom_range(12, 48) / current_time_scale){
-						event_perform(ev_step, ev_step_normal);
+					
+					 // Fast Forward:
+					repeat(irandom_range(12, 48)){
+						with(self) event_perform(ev_step, ev_step_normal);
 					}
 				}
 			}
+			
+			current_time_scale = _lastTimeScale;
 		}
 		if(GameCont.area == "red"){
 			 // Starfield:
@@ -2469,6 +2475,11 @@
 #define draw_gui_end
 	 // Reset Mod Calling List:
 	ntte_call_mods = [];
+	
+	 // NTTE Music / Ambience:
+	if(array_length(instances_matching(CustomScript, "name", "ntte_begin_step")) <= 0){
+		ntte_music();
+	}
 	
 	 // Draw on Pause Screen but Below draw_pause Depth:
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
@@ -3420,6 +3431,62 @@
 	
 	instance_destroy();
 	
+#define ntte_music()
+	/*
+		Overrides MusCont's alarms for playing area-specific music and ambience
+	*/
+	
+	var _area = GameCont.area;
+	
+	with(MusCont){
+		var	_mus = null,
+			_amb = null;
+			
+		 // Boss Music:
+		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
+			if(array_exists(ntte_area, _area)){
+				if(mod_script_exists("area", _area, "area_music_boss")){
+					alarm_set(2, -1);
+					_mus = mod_script_call("area", _area, "area_music_boss");
+				}
+			}
+		}
+		
+		 // Music / Ambience:
+		if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
+			if(array_exists(ntte_area, _area)){
+				if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
+					alarm_set(11, -1);
+					
+					 // Update MusCont:
+					if(_area != global.mus_area){
+						event_perform(ev_alarm, 11);
+					}
+					
+					_mus = mod_script_call("area", _area, "area_music");
+					_amb = mod_script_call("area", _area, "area_ambient");
+				}
+			}
+			global.mus_area = _area;
+		}
+		
+		 // Play:
+		if(is_real(_mus)){
+			if(sound_play_music(_mus)){
+				var _snd = sound_play_pitchvol(0, 0, 0);
+				sound_stop(_snd);
+				global.mus_current = _snd - 1;
+			}
+		}
+		if(is_real(_amb)){
+			if(sound_play_ambient(_amb)){
+				var _snd = sound_play_pitchvol(0, 0, 0);
+				sound_stop(_snd);
+				global.amb_current = _snd - 1;
+			}
+		}
+	}
+	
 #define CharSelect_draw_new(_inst)
 	with(instances_matching(_inst, "visible", true)){
 		draw_sprite(sprNew, image_index, view_xview_nonsync + xstart + (alarm1 > 0), view_yview_nonsync + ystart - mouseover);
@@ -3549,7 +3616,7 @@
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
-#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
@@ -3577,7 +3644,6 @@
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
-#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);

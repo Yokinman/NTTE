@@ -1568,9 +1568,6 @@
 			var p = "sounds/music/";
 			amb = {};
 			
-			Placeholder     = sound_add(p + "musPlaceholder.ogg");
-			amb.Placeholder = sound_add(p + "musPlaceholder.ogg");
-			
 			 // Areas:
 			Coast  = sound_add(p + "musCoast.ogg");
 			Trench = sound_add(p + "musTrench.ogg");

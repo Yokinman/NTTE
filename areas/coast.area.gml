@@ -33,6 +33,9 @@
 #define area_subarea           return 3;
 #define area_goal              return 100;
 #define area_next              return "oasis";
+#define area_music             return mus.Coast;
+#define area_music_boss        return mus.SealKing;
+#define area_ambient           return amb0b;
 #define area_background_color  return make_color_rgb(27, 118, 184);
 #define area_shadow_color      return c_black;
 #define area_darkness          return false;
@@ -95,17 +98,6 @@
 		case sprWall1Trans  : return sprWall1Trans;
 		case sprDebris1     : return sprDebris1;
 	}
-	
-#define area_music
-	 // Music:
-	if(sound_play_music(mus.Coast)){
-		var s = sound_play_pitchvol(0, 0, 0);
-		sound_stop(s);
-		sound_volume(s - 1, 0.5);
-	}
-	
-	 // Ambience:
-	sound_play_ambient(amb0b);
 	
 #define area_setup
 	goal             = area_goal();
@@ -574,21 +566,24 @@
 					(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)
 				){
 					if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
-						var _n = instance_nearest(x - 16, y - 16, Floor),
-							_dir = point_direction(x, y, _n.x, _n.y),
-							_spd = (instance_is(self, hitme) ? 3 + ((wading - 80) / 16) : 0.8);
+						var _player = instance_is(self, Player),
+							_target = instance_nearest(x - 16, y - 16, Floor),
+							_dir    = point_direction(x, y, _target.x, _target.y),
+							_spd    = (_player ? (3 + ((wading - 80) / 16)) : 0.8);
 							
 						motion_add_ct(_dir, _spd);
 						
 						 // Extra Player Push:
-						if(wading > 120){
-							if(instance_is(self, Player) && array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
+						if(_player && wading > 120){
+							if(array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
 								var _dis = ((wading - 120) / 10) * current_time_scale;
 								x += lengthdir_x(_dis, _dir);
 								y += lengthdir_y(_dis, _dir);
 								
 								 // FX:
-								if(chance_ct(1, 2)) instance_create(x, y, Dust);
+								if(chance_ct(1, 2)){
+									instance_create(x, y, Dust);
+								}
 							}
 						}
 					}
@@ -677,7 +672,7 @@
 			if(type != 2){
 				coast_portal = true;
 				
-				image_alpha = 0;
+				visible = false;
 				sound_stop(sndPortalOpen);
 				with(instances_matching(CustomDraw, "name", "sea_draw")) flash = 0;
 				
@@ -1482,7 +1477,7 @@
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
-#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
@@ -1510,7 +1505,6 @@
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
-#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);

@@ -3696,8 +3696,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Dim Music:
 	if(phase > 0 && phase <= 3){
-		var _mus = lq_defget(mod_variable_get("mod", "ntte", "sound_current"), "mus", { vol : 1 });
-		_mus.vol += min(0, (((phase == 3) ? 0 : 0.4) - _mus.vol) * 0.05 * current_time_scale);
+		var	_mus = mod_variable_get("mod", "ntte", "mus_current"),
+			_vol = audio_sound_get_gain(_mus);
+			
+		if(audio_is_playing(_mus)){
+			sound_volume(_mus, _vol + min(0, (((phase == 3) ? 0 : 0.4) - _vol) * 0.05 * current_time_scale));
+		}
 	}
 	
 	 // Hole Collision:
@@ -3905,7 +3909,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 #define CatHoleBig_alrm2
-	boss_intro("CatBat", sndScorpionFireStart, mus.BigShots);
+	boss_intro("CatBat");
+	sound_play(sndScorpionFireStart);
 	
 #define CatHoleBig_draw
 	draw_sprite(spr_bot, 0, x, y);
@@ -5211,7 +5216,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		friction = 0.4;
 		damage = 6;
 		force = 6;
-		typ = 1;
+		typ = 2;
 		creator = noone;
 		charging = true;
 		
@@ -5225,24 +5230,27 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(charging){
 		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0) + (0.5 * GameCont.loops);
 		speed += friction_raw + (0.3 * _angry * current_time_scale);
-
+		
 		 // Follow Creator:
 		if(instance_exists(creator)){
-			xstart = creator.x + (hspeed * 0.5);
-			ystart = creator.y + (vspeed * 0.5);
-			creator.wkick += random_range(1, 2) * current_time_scale;
+			var	_dis = min(20, speed * 1.5),
+				_dir = direction;
+				
+			xstart = creator.x + lengthdir_x(_dis, _dir);
+			ystart = creator.y + lengthdir_y(_dis, _dir);
+			
+			 // Kick:
+			if("wkick" in creator && creator.wkick < 8){
+				creator.wkick += random_range(1, 2) * current_time_scale;
+			}
 		}
-
-    // Change angle with creator if Creator is Player:
-    if (creator.object_index) = Player{
-      direction = creator.gunangle;
-    }
-
-		x = xstart;
-		y = ystart;
+		
+		 // Stay:
+		x = xstart - hspeed_raw;
+		y = ystart - vspeed_raw;
 		xprevious = x;
 		yprevious = y;
-
+		
 		 // Effects 1:
 		if(chance_ct(1, 4)){
 			var f = 0.6;
@@ -5250,7 +5258,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				sprite_index = spr.AcidPuff;
 				image_angle = other.direction + orandom(60);
 				depth = -2;
-
+				
 				if(instance_exists(other.creator)){
 					x += other.creator.hspeed;
 					y += other.creator.vspeed;
@@ -5266,7 +5274,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
 	 // Effects 3:
 	if(chance_ct(1, 3)){
 		with(instance_create(x + orandom(6), y + 16 + orandom(6), RecycleGland)){
@@ -5274,59 +5282,60 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			depth = 0;
 		}
 	}
-
+	
 #define VenomFlak_hit
 	if(charging){
 		if(projectile_canhit_melee(other)) projectile_hit(other, 1);
 	}
-
+	
 	else{
 		if(projectile_canhit(other)){
 			projectile_hit(other, damage, force, direction);
-
+			
 			instance_destroy();
 		}
 	}
-
+	
 #define VenomFlak_draw
 	if(charging){
 		var _scale = 0.25 + (1 - (alarm0 / 15)) + random(0.2);
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, image_angle, image_blend, image_alpha);
 	}
 	else draw_self();
-
+	
 #define VenomFlak_alrm0
 	if(charging){
 		charging = false;
-
+		
 		alarm0 = 40;
-
+		typ = 1;
+		
 		with(creator){
 			 // Fire:
 			motion_add(gunangle + 180, maxspeed);
-
+			
 			 // Effects:
 			wkick = min(wkick + 9, 16);
 			sound_play_pitchvol(sndFlakCannon,			0.8,				0.4);
 			sound_play_pitchvol(sndCrystalRicochet,		1.4 + random(0.4),	0.8);
 			sound_play_pitchvol(sndLightningRifleUpg,	0.8,				0.4);
-
+			
 			repeat(3 + irandom(2)){
 				scrFX([x, 6], [y, 6], [gunangle + orandom(2), 4 + random(4)], Smoke);
 			}
 		}
 	}
-
+	
 	 // Explode:
 	else instance_destroy();
-
+	
 #define VenomFlak_wall
 	if(!charging && speed > 1){
 		 // Bounce:
 		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
 		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
 		speed = min(speed, 8);
-	
+		
 		 // Effects:
 		with instance_create(x, y, AcidStreak){
 			motion_set(other.direction, 3);
@@ -5334,11 +5343,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			 // fat splat:
 			image_yscale *= 2;
 		}
-	
+		
 		sound_play_pitchvol(sndShotgunHitWall,	1.2, 1);
 		sound_play_pitchvol(sndFrogEggHurt,		0.7, 0.2);
 	}
-
+	
 #define VenomFlak_destroy
 	instance_create(x, y, PortalClear);
 	if(!instance_is(creator, Player)) pickup_drop(50, 0);
@@ -5593,7 +5602,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
-#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
@@ -5621,7 +5630,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
-#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);

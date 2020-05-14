@@ -783,7 +783,7 @@
 	
 	
 #define BuriedVaultPedestal_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
+	with(instance_create(_x, _y, CrownPed)){
 		 // Visual:
 		sprite_index = spr.BuriedVaultChestBase;
 		image_speed = 0.4;
@@ -930,16 +930,22 @@
 			}
 		}
 		
-		 // Begin Spawnage
+		 // Begin Spawnage:
 		else{
-			other.spawn_time = 30;
+			spawn_time = 30;
 			GameCont.buried_vaults = variable_instance_get(GameCont, "buried_vaults", 0) + 1;
 			portal_poof();
 			
 			 // Sound/Music:
 			sound_play_pitch(sndCrownGuardianDisappear, 0.7 + random(0.2));
-			//sound_play_music(mus100b);
-			//with(MusCont) alarm_set(3, -1);
+			with(MusCont){
+				var _area = GameCont.area;
+				GameCont.area = -1;
+				event_perform(ev_alarm, 11);
+				GameCont.area = _area;
+				alarm_set(3, -1);
+				alarm_set(4, 1);
+			}
 		}
 	}
 	
@@ -947,15 +953,6 @@
 	if(instance_is(target, ProtoStatue) && target.canim > 0){
 		image_index = max(0, (image_number - 1) - (0.5 * target.canim));
 		image_speed = 0.4;
-	}
-	
-#define BuriedVaultPedestal_end_step
-	 // Music Fix:
-	with(instances_matching_le(spawn_inst, "my_health", 0)){
-		var m = -1;
-		with(MusCont) m = alarm_get(1);
-		instance_destroy();
-		with(MusCont) alarm_set(1, m);
 	}
 	
 	
@@ -4979,7 +4976,7 @@
 #define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
-#define boss_intro(_name, _sound, _music)                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name, _sound, _music);
+#define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
@@ -5007,7 +5004,6 @@
 #define floor_walls()                                                                   return  mod_script_call(   'mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call(   'mod', 'telib', 'wall_tops');
 #define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
-#define sound_play_ntte(_type, _snd)                                                    return  mod_script_call_nc('mod', 'telib', 'sound_play_ntte', _type, _snd);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call(   'mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
