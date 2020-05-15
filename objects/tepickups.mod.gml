@@ -2837,11 +2837,11 @@
 		sprite_index = spr.OverhealPickup;
 		spr_open = -1;
 		spr_fade = -1;
-
+		
 		 // Sounds:
 		snd_open = (_skill ? sndHPPickupBig : sndHPPickup);
 		snd_fade = sndPickupDisappear;
-
+		
 		 // Vars:
 		mask_index = mskPickup;
 		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
@@ -2865,22 +2865,15 @@
 	if(!instance_is(other, Player)) _inst = Player;
 	
 	 // Bonus HP:
-	var	_num = num,
-		_max = 8;
-
+	var _num = num;
 	with(_inst){
-		my_health_bonus = min(_max, variable_instance_get(id, "my_health_bonus", 0) + _num);
+		my_health_bonus = variable_instance_get(id, "my_health_bonus", 0) + _num;
 		my_health_bonus_hold = my_health;
-
+		my_health_bonus_hud_flash = 3;
+		
 		 // Effects:
 		with(instance_create(x, y, PopupText)){
-			if(other.my_health_bonus < _max){
-				text = `+${_num}`;
-			}
-			else{
-				text = "MAX";
-			}
-			text += ` @5(${spr.BonusText}:-0.3) HP`;
+			text = `+${_num} @5(${spr.BonusText}:-0.3) HP`;
 		}
 		with(instance_create(x, y, HealFX)){
 			sprite_index = (skill_get(mut_second_stomach) ? spr.OverhealBigFX : spr.OverhealFX);

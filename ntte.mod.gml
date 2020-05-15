@@ -2962,10 +2962,25 @@
 			with(_player){
 				 // Bonus HP:
 				if("my_health_bonus" in self){
+					 // Max Bonus HP:
+					if("my_health_bonus_max" not in self){
+						my_health_bonus_max = 0;
+					}
+					my_health_bonus_max = ((my_health_bonus > 0) ? max(my_health_bonus, my_health_bonus_max) : 0);
+					
+					 // Expand HUD:
 					if("my_health_bonus_hud" not in self){
 						my_health_bonus_hud = 0;
 					}
 					my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
+					
+					 // Flash:
+					if("my_health_bonus_hud_flash" not in self){
+						my_health_bonus_hud_flash = 0;
+					}
+					if(my_health_bonus_hud_flash >= 0){
+						my_health_bonus_hud_flash -= current_time_scale;
+					}
 				}
 				
 				 // Feathers:
@@ -3019,14 +3034,14 @@
 						
 						 // Filling:
 						if(my_health_bonus > 0){
-							if(sprite_index == spr_hurt && image_index < 1){
+							if((sprite_index == spr_hurt && image_index < 1) || my_health_bonus_hud_flash >= 0){
 								draw_set_color(c_white);
 							}
 							else{
 								draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
 							}
 							
-							draw_rectangle(_x1, _y2 - max(1, my_health_bonus), _x2 - _flip, _y2 - 1, false);
+							draw_rectangle(_x1, _y2 - clamp(8 * (my_health_bonus / my_health_bonus_max), 1, 8), _x2 - _flip, _y2 - 1, false);
 						}
 					}
 				}

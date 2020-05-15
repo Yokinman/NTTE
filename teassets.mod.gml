@@ -372,10 +372,10 @@
 			CrystalBrainIdle      = sprite(p + "sprCrystalBrainIdle",       6, 24, 24);
 			CrystalBrainHurt      = sprite(p + "sprCrystalBrainHurt",       3, 24, 24);
 			CrystalBrainDead      = sprite(p + "sprCrystalBrainDead",       7, 24, 24);
-			CrystalBrainAppear	  = sprite(p + "sprCrystalBrainAppear",	    4, 24, 24);
+			CrystalBrainAppear    = sprite(p + "sprCrystalBrainAppear",	    4, 24, 24);
 			CrystalBrainDisappear = sprite(p + "sprCrystalBrainDisappear",  7, 24, 24);
 			CrystalBrainChunk     = sprite(p + "sprCrystalBrainChunk",      4,  8,  8);
-			CrystalBrainPart	  = sprite(p + "sprCrystalBrainPart",		7,  24, 24);
+			CrystalBrainPart      = sprite(p + "sprCrystalBrainPart",       7, 24, 24);
 			CrystalBrainEffect    = sprite(p + "sprCrystalBrainEffect",    10,  8,  8);
 			CrystalBrainSurfMask  = sprite(p + "sprCrystalBrainSurfMask",   1,  0,  0);
 			
@@ -1195,7 +1195,7 @@
 			 // Misc:
 			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
 			SpiralStarfield = sprite(p + "sprSpiralStarfield", 2,  32,  32);
-			RedDot			= sprite(p + "sprRedDot",		   9,  8,   8);
+			RedDot          = sprite(p + "sprRedDot",          9,   8,   8);
 			
 			//#region PROPS
 			p = m + "Props/";

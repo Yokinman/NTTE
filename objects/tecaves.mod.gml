@@ -39,6 +39,7 @@
 		A special variant of crystal hearts unique to the red crown.
 		Generates random areas on death and cannot be used to access the warp zone.
 	*/
+	
 	with(obj_create(_x, _y, "CrystalHeart")){
 		 // Visual:
 		spr_idle = spr.ChaosHeartIdle;
@@ -295,8 +296,8 @@
 			max_tele_dist         - Maximum distance from the player the brain can teleport to.
 			dying                 - Boolean. Tracks if the brain has entered its death phase.
 			death_throes          - The remaining number of throes in the death phase.
-			parts				  - Used in death anim.
-			shake				  - Used in death anim.
+			parts                 - Used in death anim.
+			shake                 - Used in death anim.
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
