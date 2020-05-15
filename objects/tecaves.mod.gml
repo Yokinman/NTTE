@@ -115,6 +115,7 @@
 						if(!array_exists([
 							"CrystalBrain", 
 							"CrystalHeart",
+							"ChaosHeart",
 							"Palanking", 
 							"PitSquid", 
 							"PitSquidArm", 
@@ -297,7 +298,6 @@
 			dying                 - Boolean. Tracks if the brain has entered its death phase.
 			death_throes          - The remaining number of throes in the death phase.
 			parts                 - Used in death anim.
-			shake                 - Used in death anim.
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -343,7 +343,6 @@
 		dying = false;
 		death_throes = irandom_range(3, 4);
 		parts = [];
-		shake = 2;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -426,11 +425,8 @@
 		walk = 0;
 		
 		 // Mid Death:
-		var _still = (speed <= minspeed);
+		var _still = (speed <= minspeed || (x == xprevious && y == yprevious));
 		if(death_throes > 0){
-			
-			x += orandom(shake);
-			y += orandom(shake);
 			
 			if(_still){
 				death_throes--;
@@ -457,9 +453,9 @@
 				
 				 // Falling Apart:
 				with(parts){
-					x_off += orandom(10);
-					y_off += orandom(10);
-					angle += orandom(30);
+					x_off += orandom(8);
+					y_off += orandom(8);
+					angle += orandom(4);
 				}
 			}
 			
@@ -497,7 +493,7 @@
 			}
 			
 			 // Fragments:
-			draw_sprite_ext(spr_part, i, x + p.x_off + orandom(shake), y + p.y_off + orandom(shake), image_xscale * right, image_yscale, image_angle + p.angle, image_blend, image_alpha);
+			draw_sprite_ext(spr_part, i, x + p.x_off + orandom(2), y + p.y_off + orandom(2), image_xscale * right, image_yscale, image_angle + p.angle, image_blend, image_alpha);
 		}
 		if(_hurt) draw_set_fog(false, c_white, 0, 0);
 	}
@@ -699,6 +695,7 @@
 		walkspeed = 0.3;
 		maxspeed = 2;
 		white = false;
+		natural_death = false;
 		
 		 // Alarms:
 		alarm1 = 30;
@@ -788,6 +785,14 @@
 	 // Wander:
 	scrWalk(random(360), [10, 40]);
 	
+#define CrystalHeart_hurt(_hitdmg, _hitvel, _hitdir)
+	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+	
+	 // Anti "Wack Shit" Protocol:
+	if(my_health <= 0){
+		natural_death = true;
+	}
+	
 #define CrystalHeart_death
 	 // Sound:
 	if(place_meeting(x, y, Portal) && GameCont.area == "red"){
@@ -797,43 +802,61 @@
 	}
 	
 	 // Unfold:
-	instance_create(x, y, PortalClear);
-	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
-	for(var i = 0; i < 3; i++){
-		with(enemy_shoot("CrystalHeartProj", (direction + (i * 120)) + orandom(4), 4)){
-			chest_type = _chestTypes[i];
-			
-			 // Chaos Heart Area Decision:
-			if(other.white){
-				var a = [GameCont.area, area];
-				if(chance(1, 2)){
-					switch(GameCont.area){
-						case area_campfire     :                                     break;
-						case area_desert       : a = [area_sewers, area_scrapyards]; break;
-						case "coast"           : a = [area_scrapyards, area_jungle]; break;
-						case area_oasis        :
-						case "oasis"           : a = [area_sewers, area_labs];       break;
-						case "trench"          : a = [area_sewers, area_caves];      break;
-						case area_sewers       : a = [area_caves];                   break;
-						case area_pizza_sewers :
-						case "pizza"           :                                     break;
-						case "lair"            :                                     break;
-						case area_scrapyards   : a = [area_sewers, area_city];       break;
-						case area_mansion      :                                     break;
-						case area_crib         :                                     break;
-						case area_caves        : a = [area_labs];                    break;
-						case area_cursed_caves :                                     break;
-						case area_city         : a = [area_labs, area_palace];       break;
-						case area_jungle       :                                     break;
-						case area_labs         : a = [area_sewers, area_caves];      break;
-						case area_palace       : a = [area_scrapyards, area_labs];   break;
-						case area_hq           :                                     break;
-						case "red"             :                                     break;
-					}
-				}
+	if(natural_death){
+		instance_create(x, y, PortalClear);
+		var _chestTypes = [AmmoChest, WeaponChest, RadChest];
+		for(var i = 0; i < 3; i++){
+			with(enemy_shoot("CrystalHeartProj", (direction + (i * 120)) + orandom(4), 4)){
+				chest_type = _chestTypes[i];
 				
-				 // Decision Making:
-				area = a[irandom(array_length(a) - 1)];
+				 // Chaos Heart Area Decision:
+				if(other.white){
+					var _area = [GameCont.area, area],
+						_loop = GameCont.loops,
+						_cont = true;
+						
+					 // Decision Making Two:
+					if(chance(1, 2)){
+						var a = [GameCont.area];
+						while(_cont){
+							switch(a[irandom(array_length(a) - 1)]){
+								case area_campfire     :                                     break;
+								case area_desert       : a = [area_sewers, area_scrapyards]; break;
+								case "coast"           : a = [area_scrapyards, area_jungle]; break;
+								case area_oasis        :
+								case "oasis"           : a = [area_sewers, area_labs];       break;
+								case "trench"          : a = [area_sewers, area_caves];      break;
+								case area_sewers       : a = [area_caves];                   break;
+								case area_pizza_sewers :
+								case "pizza"           :                                     break;
+								case "lair"            :                                     break;
+								case area_scrapyards   : a = [area_sewers, area_city];       break;
+								case area_mansion      :                                     break;
+								case area_crib         :                                     break;
+								case area_caves        : a = [area_labs];                    break;
+								case area_cursed_caves :                                     break;
+								case area_city         : a = [area_labs, area_palace];       break;
+								case area_jungle       :                                     break;
+								case area_labs         : a = [area_sewers, area_caves];      break;
+								case area_palace       : a = [area_scrapyards, area_labs];   break;
+								case area_hq           :                                     break;
+								case "red"             :                                     break;
+							}
+							
+							 // Decrement Loop:
+							_cont = (_loop >= 1 && chance(1, 2));
+							if(_cont){
+								_loop--;
+							}
+						}
+						
+						 // Woah:
+						_area = a;
+					}
+					
+					area = _area[irandom(array_length(_area) - 1)];
+					loop = _loop;
+				}
 			}
 		}
 	}
@@ -861,6 +884,7 @@
 		area = "red";
 		subarea = 1;
 		areaseed = random_get_seed() + irandom(1000);
+		loop = GameCont.loops;
 		chest_type = AmmoChest;
 		floor_goal = 10 + irandom(10);
 		setup = true;
@@ -957,9 +981,15 @@
 	sleep(50);
 	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
 	
+	 // Loopify:
+	var _loop = GameCont.loops;
+	GameCont.loops = loop;
+	
 	 // Tunnel Time:
 	var	_scrt = script_ref_create(CrystalHeartProj_area_generate_setup, floor_goal, direction, areaseed),
 		_genID = area_generate(area, subarea, x, y, false, false, _scrt);
+		
+	GameCont.loops = _loop;
 		
 	if(is_real(_genID)){
 		var	_disMin = -1,

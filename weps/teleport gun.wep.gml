@@ -17,9 +17,9 @@
 #define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return unlock_get("pack:oasis");
+#define weapon_avail  return true; // unlock_get("pack:oasis"); // wtf
 #define weapon_melee  return false;
-#define weapon_rads   return 16;
+#define weapon_rads   return 0; // 16;
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);
