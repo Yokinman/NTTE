@@ -36,8 +36,8 @@
 
 #define ChaosHeart_create(_x, _y)
 	/*
-		A special variant of crystal hearts unique to the red crown.
-		Generates random areas on death and cannot be used to access the warp zone.
+		A special variant of crystal hearts unique to the red crown
+		Generates random areas on death and cannot be used to access the warp zone
 	*/
 	
 	with(obj_create(_x, _y, "CrystalHeart")){
@@ -58,18 +58,18 @@
 
 #define Clone_create(_x, _y)
 	/*
-		Clone handler object for enemies duplicated by crystal brains.
+		Clone handler object for enemies duplicated by crystal brains
 		
 		Vars:
-			spr_overlay - An array containing the overlay sprites. Meant to be accessed with 'flash' as the index.
-			clone_color - Base blend color for clones.
-			wave        - Incrementing variable.
-			clone_of    - Tracks the ID of the enemy cloned.
-			creator     - The brain that created the enemy.
-			target      - The enemy being handled.
-			time        - Time in frames until the enemy is destroyed; does not decrement while the brain is alive.
-			team        - Determines the team from which enemies will be cloned.
-			flash       - Boolean. Used as an index for referencing 'spr_overlay'.
+			spr_overlay - An array containing the overlay sprites. Meant to be accessed with 'flash' as the index
+			clone_color - Base blend color for clones
+			wave        - Incrementing variable
+			clone_of    - Tracks the ID of the enemy cloned
+			creator     - The brain that created the enemy
+			target      - The enemy being handled
+			time        - Time in frames until the enemy is destroyed; does not decrement while the brain is alive
+			team        - Determines the team from which enemies will be cloned
+			flash       - Boolean. Used as an index for referencing 'spr_overlay'
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
@@ -287,17 +287,17 @@
 		Mastermind. Clones enemies.
 		
 		Vars:
-			target_x/y            - Coordinates the brain will try to navigate to.
-			motion_obj            - Separate object for avoiding wall collision. Trades motion and position data with the brain.
-			clone_num             - Number of currently active clones. Cannot excede 'clone_max'.
-			clone_max             - Max clone count.
-			teleport              - Boolean. Indicates if the brain is currently teleporting.
-			teleport_x/teleport_y - Position to draw at during teleportation. Doubles as a destination coordinate.
-			min_tele_dist         - Minimum distance from the player the brain can teleport to.
-			max_tele_dist         - Maximum distance from the player the brain can teleport to.
-			dying                 - Boolean. Tracks if the brain has entered its death phase.
-			death_throes          - The remaining number of throes in the death phase.
-			parts                 - Used in death anim.
+			target_x/y            - Coordinates the brain will try to navigate to
+			motion_obj            - Separate object for avoiding wall collision. Trades motion and position data with the brain
+			clone_num             - Number of currently active clones. Cannot excede 'clone_max'
+			clone_max             - Max clone count
+			teleport              - Boolean. Indicates if the brain is currently teleporting
+			teleport_x/teleport_y - Position to draw at during teleportation. Doubles as a destination coordinate
+			min_tele_dist         - Minimum distance from the player the brain can teleport to
+			max_tele_dist         - Maximum distance from the player the brain can teleport to
+			dying                 - Boolean. Tracks if the brain has entered its death phase
+			death_throes          - The remaining number of throes in the death phase
+			parts                 - Used in death anim
 	*/
 
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -2486,7 +2486,7 @@
 	
 #define ntte_dark // Drawing Grays
 	 // Crystal Heart:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
 		draw_crystal_heart_dark(45, 72 + random(2), 3);
 	}
 	
@@ -2512,9 +2512,9 @@
 		draw_set_alpha(clientDarknessCoeff[player_find_local_nonsync()]);
 		draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
 		draw_set_alpha(_alph);
-	
+		
 		 // Crystal Heart:
-		with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart"), "visible", true)){
+		with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
 			draw_crystal_heart_dark(15, 24 + random(2), 2);
 		}
 	}

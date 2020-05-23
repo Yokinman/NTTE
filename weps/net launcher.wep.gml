@@ -4,13 +4,13 @@
 	
 #define weapon_name         return (weapon_avail() ? "NET LAUNCHER" : "LOCKED");
 #define weapon_text         return "CATCH OF THE DAY";
+#define weapon_swap         return sndSwapExplosive;
+#define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area         return (weapon_avail() ? 8 : -1); // 3-3
 #define weapon_type         return 3;  // Bolt
 #define weapon_cost         return 10; // 10 Ammo
 #define weapon_load         return 36; // 1.2 Seconds
-#define weapon_area         return (weapon_avail() ? 8 : -1); // 3-3
-#define weapon_swap         return sndSwapExplosive;
-#define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_laser_sight  return false; // wtf why isnt this just called weapon_lasr/weapon_laser/weapon_sight
+#define weapon_laser_sight  return false;
 #define weapon_avail        return unlock_get("pack:coast");
 
 #define weapon_fire(w)

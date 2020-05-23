@@ -2258,25 +2258,26 @@
 		"inst" : [],
 		"vars" : []
 	});
-
+	
 #define flagprojcont_get(_flag)
 	return lq_get(flagProjCont, _flag);
-
+	
 #define wep_stat(w, _stat)
 	return lq_defget(lq_defget(w, "base", wepDefault), _stat, lq_defget(wepDefault, _stat, -1));
-
+	
 #define weapon_name(w)         return wep_stat(w, "name");
 #define weapon_text(w)         return wep_stat(w, "text");
 #define weapon_swap(w)         return wep_stat(w, "swap");
 #define weapon_area(w)         return -1;
-#define weapon_type(w)         return wep_stat(w, "type");
-#define weapon_load(w)         return wep_stat(w, "load");
-#define weapon_cost(w)         return (instance_is(self, Player) && wep_stat(w, "blod")) ? 0 : wep_stat(w, "cost");
-#define weapon_rads(w)         return wep_stat(w, "rads");
-#define weapon_auto(w)         return (instance_is(self, Player) && wep_stat(w, "blod") && ammo[wep_stat(w, "type")] < wep_stat(w, "cost") && infammo == 0) ? -1 : wep_stat(w, "auto");
-#define weapon_melee(w)        return wep_stat(w, "mele");
 #define weapon_gold(w)         return ((wep_stat(w, "gold") != 0) ? -1 : 0);
+#define weapon_type(w)         return wep_stat(w, "type");
+#define weapon_cost(w)         return wep_stat(w, "cost");
+#define weapon_rads(w)         return wep_stat(w, "rads");
+#define weapon_load(w)         return wep_stat(w, "load");
+#define weapon_auto(w)         return wep_stat(w, "auto");
+#define weapon_melee(w)        return wep_stat(w, "mele");
 #define weapon_laser_sight(w)  return wep_stat(w, "lasr");
+#define weapon_blood(w)        return (wep_stat(w, "blod") ? max(floor(weapon_get_cost(w) / 2), 1) : 0);
 
 #define weapon_sprt(w)
 	var _spr = wep_stat(w, "sprt");
@@ -2309,24 +2310,6 @@
 	if(is_object(w)){
 		var f = mod_script_call("mod", "telib", "wepfire_init", w);
 		w = f.wep;
-		
-		 // Blood Cost:
-		if(instance_is(self, Player)){
-			if(wep_stat(w, "blod") && infammo == 0){
-				var	_type = weapon_get_type(w),
-					_cost = wep_stat(w, "cost");
-					
-				if(_cost > 0){
-					if(ammo[_type] < _cost){
-						sound_play_hit(sndBloodHurt, 0.1);
-						projectile_hit_raw(self, max(floor(_cost / 2), 1), true);
-						lasthit = [weapon_get_sprt(w), weapon_get_name(w)];
-						ammo[_type] += _cost;
-					}
-					ammo[_type] -= _cost;
-				}
-			}
-		}
 		
 		GunCont(lq_defget(w, "base", wepDefault), x, y, team, f.creator, gunangle, accuracy);
 	}

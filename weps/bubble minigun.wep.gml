@@ -4,13 +4,13 @@
 	
 #define weapon_name   return (weapon_avail() ? "BUBBLE MINIGUN" : "LOCKED");
 #define weapon_text   return "SOAP EVERYWHERE";
-#define weapon_auto   return true;
+#define weapon_swap   return sndSwapMotorized;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 10 : -1); // 5-1
 #define weapon_type   return 4; // Explosive
 #define weapon_cost   return 3; // 3 Ammo
 #define weapon_load   return 3; // 0.1 Seconds
-#define weapon_area   return (weapon_avail() ? 10 : -1); // 5-1
-#define weapon_swap   return sndSwapMotorized;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_auto   return true;
 #define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded

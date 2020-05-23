@@ -28,7 +28,7 @@
 	sprite_index = spr_idle;
 	
 	 // Vars:
-	ntte_crown = "crime";
+	ntte_crown = mod_current;
 	enemy_time = 0;
 	enemies = 0;
 	

@@ -11,13 +11,13 @@
 
 #define weapon_name   return (weapon_avail() ? "QUASAR RIFLE" : "LOCKED");
 #define weapon_text   return "BLINDING LIGHT";
-#define weapon_auto   return true;
+#define weapon_swap   return sndSwapEnergy;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 16 : -1); // 7-3
 #define weapon_type   return 5;  // Energy
 #define weapon_cost   return 10; // 10 Ammo
 #define weapon_load   return 60; // 2 Seconds
-#define weapon_area   return (weapon_avail() ? 16 : -1); // 7-3
-#define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_auto   return true;
 #define weapon_avail  return unlock_get("pack:trench");
 
 #define weapon_fire(w)

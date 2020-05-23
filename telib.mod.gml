@@ -6,7 +6,7 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "OverhealChest", "OverhealMimic", "OverhealPickup", "OverstockChest", "OverstockMimic", "OverstockPickup", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
@@ -2160,17 +2160,19 @@
 	}
 	
 	 // Not Enough Ammo:
-	reload = 0;
+	reload = reloadspeed * current_time_scale;
 	if("anam" in _wep){
-		wkick = -3;
-		sound_play(sndEmpty);
-		with(instance_create(x, y, PopupText)){
-			target = other.index;
-			if(_wep.ammo > 0){
-				text = "NOT ENOUGH " + _wep.anam;
-			}
-			else{
-				text = "EMPTY";
+		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
+			wkick = -2;
+			sound_play(sndEmpty);
+			with(instance_create(x, y, PopupText)){
+				target = other.index;
+				if(_wep.ammo > 0){
+					text = "NOT ENOUGH " + _wep.anam;
+				}
+				else{
+					text = "EMPTY";
+				}
 			}
 		}
 	}

@@ -4,12 +4,12 @@
 	
 #define weapon_name   return (weapon_avail() ? "QUASAR CANNON" : "LOCKED");
 #define weapon_text   return "PULSATING";
-#define weapon_type   return 5;	// Energy
-#define weapon_cost   return 16;	// 16 Ammo
-#define weapon_load   return 159; // 5.3 Seconds
-#define weapon_area   return (weapon_avail() ? 18 : -1); // L1 1-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 18 : -1); // 1-1 L1
+#define weapon_type   return 5;   // Energy
+#define weapon_cost   return 16;  // 16 Ammo
+#define weapon_load   return 159; // 5.3 Seconds
 #define weapon_avail  return unlock_get("pack:trench");
 
 #define weapon_fire(w)

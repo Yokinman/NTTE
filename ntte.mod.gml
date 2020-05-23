@@ -13,7 +13,7 @@
 	ntte_call_mods = [];
 	
 	 // level_start():
-	global.level_start = instance_exists(GenCont);
+	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
 	
 	 // Area:
 	global.area_update = false;
@@ -201,10 +201,9 @@
 	
 	 // Crystal Hearts:
 	if(_normalArea){
-		var _heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard)),
-			_redCrown = (crown_current == "red"),
-			_crownNum = ((GameCont.subarea == 1) + chance(1, 5)) * _redCrown;
-		
+		var	_heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard)),
+			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
+			
 		 // Guaranteed Spawn:
 		if(lq_size(heart_spawn) > 0){
 			if(
@@ -220,7 +219,7 @@
 		}
 		
 		 // Spawn:
-		if(_heartNum > 0 || _crownNum > 0){
+		if(_heartNum > 0 || _chaosNum > 0){
 			 // Find Spawnable Tiles:
 			var _spawnFloor = [];
 			with(instances_matching_ne(FloorNormal, "name", "WallFake")){
@@ -233,15 +232,18 @@
 			
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
-				repeat(_heartNum + _crownNum){
-					with(_spawnFloor[irandom(array_length(_spawnFloor) - 1)]){
-						var _type = ((GameCont.area == "red" || _crownNum-- > 0) ? "ChaosHeart" : "CrystalHeart")
+				while((_heartNum + _chaosNum) > 0){
+					with(instance_random(_spawnFloor)){
+						var _type = ((GameCont.area == "red" || _chaosNum > 0) ? "ChaosHeart" : "CrystalHeart")
 						with(obj_create(bbox_center_x, bbox_center_y + 2, _type)){
 							with(instance_create(x, y, PortalClear)){
 								mask_index = other.mask_index;
 							}
 						}
 					}
+					
+					if(_chaosNum > 0) _chaosNum--;
+					else _heartNum--;
 				}
 			}
 		}
@@ -1621,12 +1623,59 @@
 	 // Call Scripts:
 	ntte_call("begin_step");
 	
+	 // NTTE Blood Weapons:
+	for(var i = 0; i < maxp; i++){
+		var	_fire = button_pressed(i, "fire"),
+			_spec = button_pressed(i, "spec");
+			
+		if(_fire || _spec){
+			with(ntte_weps){
+				var	_name = self,
+					_scrt = "weapon_blood";
+					
+				if(mod_script_exists("weapon", _name, "weapon_blood")){
+					var _wepList = [];
+					with(instances_matching(Player, "infammo", 0)){
+						if(player_active){
+							if(_fire && canfire >= 1){
+								array_push(_wepList, [id, wep]);
+							}
+							if(_spec && canspec && race == "steroids"){
+								array_push(_wepList, [id, bwep]);
+							}
+						}
+					}
+					with(_wepList){
+						var _wep = self[1];
+						if(wep_get(_wep) == _name){
+							with(self[0]){
+								var	_type = weapon_get_type(_wep),
+									_cost = weapon_get_cost(_wep);
+									
+								if(ammo[_type] < _cost && _type != 0){
+									var _blood = mod_script_call("weapon", _name, "weapon_blood", _wep);
+									if(_blood != 0){
+										ammo[_type] += _cost;
+										lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];
+										projectile_hit_raw(self, _blood, true);
+										sound_play_hit(sndBloodHurt, 0.1);
+										sleep(40);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	 // Player Death:
 	with(instances_matching_le(Player, "my_health", 0)){
 		if(fork()){
 			var	_x = x,
 				_y = y,
-				_save = ["ntte_pet", "feather_ammo", "ammo_bonus"],
+				_save = ["ntte_pet", "feather_ammo", "bonus_ammo"],
 				_vars = {},
 				_race = race;
 				
@@ -2961,26 +3010,29 @@
 			 // Non-nonsync Stuff:
 			with(_player){
 				 // Bonus HP:
-				if("my_health_bonus" in self){
+				if("bonus_health" in self){
+					if("bonus_health_max"  not in self) bonus_health_max = 0;
+					if("bonus_health_last" not in self) bonus_health_last = 0;
+					if("bonus_health_hud"  not in self) bonus_health_hud = 0;
+					
 					 // Max Bonus HP:
-					if("my_health_bonus_max" not in self){
-						my_health_bonus_max = 0;
+					if(bonus_health > 0){
+						if(bonus_health == bonus_health_last){
+							var _diff = (bonus_health - bonus_health_max);
+							if(abs(_diff) > 1/3){
+								_diff *= 0.25 * current_time_scale;
+							}
+							bonus_health_max += _diff;
+						}
+						bonus_health_max = max(bonus_health, bonus_health_max);
 					}
-					my_health_bonus_max = ((my_health_bonus > 0) ? max(my_health_bonus, my_health_bonus_max) : 0);
+					else bonus_health_max = 0;
+					
+					 // Last Bonus HP:
+					bonus_health_last = min(bonus_health_last, bonus_health_max);
 					
 					 // Expand HUD:
-					if("my_health_bonus_hud" not in self){
-						my_health_bonus_hud = 0;
-					}
-					my_health_bonus_hud += ((my_health_bonus > 0) - my_health_bonus_hud) * 0.5 * current_time_scale;
-					
-					 // Flash:
-					if("my_health_bonus_hud_flash" not in self){
-						my_health_bonus_hud_flash = 0;
-					}
-					if(my_health_bonus_hud_flash >= 0){
-						my_health_bonus_hud_flash -= current_time_scale;
-					}
+					bonus_health_hud += ((bonus_health > 0) - bonus_health_hud) * 0.5 * current_time_scale;
 				}
 				
 				 // Feathers:
@@ -3001,30 +3053,25 @@
 			
 			if(_HUDVisible || _HUDMain){
 				 // Bonus Ammo HUD:
-				with(instances_matching_gt(_player, "ammo_bonus", 0)){
-					var _text = `+${ammo_bonus}`;
-					
-					 // Subtle Color Wave:
-					for(var i = 1; i <= string_length(_text); i++){
-						var a = `@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin(((current_frame + (i * 8)) / 20) + ammo_bonus)))})`;
-						_text = string_insert(a, _text, i);
-						i += string_length(a);
-					}
-					
+				with(instances_matching_gt(_player, "bonus_ammo", 0)){
 					draw_set_font(fntSmall);
 					draw_set_halign(fa_right);
 					draw_set_valign(fa_top);
-					draw_text_nt(_ox + 66, _oy + 30 - (_players > 1), _text);
+					draw_text_nt(
+						_ox + 66,
+						_oy + 30 - (_players > 1),
+						`@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))))})+${bonus_ammo}`
+					);
 				}
 				
 				 // Bonus HP HUD:
-				with(instances_matching_ne(_player, "my_health_bonus", null)){
+				with(instances_matching_ne(_player, "bonus_health", null)){
 					var	_x1 = _ox + 106 - (85 * _side),
 						_y1 = _oy + 5,
-						_x2 = _x1 + (3 * my_health_bonus_hud * _flip),
+						_x2 = _x1 + (3 * bonus_health_hud * _flip),
 						_y2 = _y1 + 10;
 						
-					if((!_side && _x2 > _x1 + 1) || (_side && _x1 > _x2 + 1)){
+					if(_side ? (_x1 > _x2 + 1) : (_x2 > _x1 + 1)){
 						draw_set_color(c_black);
 						draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
 						draw_set_color(c_white);
@@ -3033,19 +3080,59 @@
 						draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
 						
 						 // Filling:
-						if(my_health_bonus > 0){
-							if((sprite_index == spr_hurt && image_index < 1) || my_health_bonus_hud_flash >= 0){
-								draw_set_color(c_white);
-							}
-							else{
-								draw_set_color(merge_color(c_aqua, c_blue, 0.15 + (0.05 * sin(current_frame / 40))));
+						var	_fx = ((_x1 + _x2) / 2) - _flip,
+							_fy = _y2 - 1,
+							_fw = _x2 - _x1,
+							_fh = _fy - (_y1 + 1),
+							_col = merge_color(c_aqua, c_blue, 0.15 + (0.05 * cos(current_frame / 20)));
+							
+						if(bonus_health_last > bonus_health){
+							draw_set_color(merge_color(_col, c_black, 0.5));
+							draw_line_width(_fx, _fy - max(_fh * (bonus_health_last / bonus_health_max), 1 / game_scale_nonsync), _fx, _fy, _fw);
+						}
+						if(bonus_health > 0){
+							var	_fy1 = _fy - max(_fh * (bonus_health / bonus_health_max), 1 / game_scale_nonsync),
+								_fy2 = _fy;
+								
+							draw_set_color(_col);
+							draw_line_width(_fx, _fy1, _fx, _fy2, _fw);
+							
+							 // Flash / Cell Highlight:
+							var	_flashHealth = (current_frame / 6) % (2 + bonus_health_max),
+								_flashHurt   = ((sprite_index == spr_hurt && image_index < 1 && player_active) || (lsthealth < my_health && lsthealth <= 1));
+								
+							if(
+								_flashHurt
+								|| bonus_health_last < bonus_health
+								|| (my_health <= 1 && _flashHealth < bonus_health && bonus_health == bonus_health_max)
+							){
+								var	_flashNum = (_flashHurt ? 0 : clamp(1 - (0.5 * abs(bonus_health - bonus_health_last)), 0, 1)),
+									_flashCol = merge_color(c_white, merge_color(_col, c_white, min(0.8, 1 - frac(_flashHealth))), _flashNum),
+									_flashY   = _fy,
+									_flashH   = max(_fh / bonus_health_max, 1 / game_scale_nonsync);
+									
+								if(_flashHealth < bonus_health){
+									_flashY = _fy - (_fh * ((floor(_flashHealth) + 0.5) / bonus_health_max));
+								}
+								
+								draw_set_color(_flashCol);
+								draw_line_width(_fx, lerp(_fy1, _flashY - (_flashH / 2), _flashNum), _fx, lerp(_fy2, _flashY + (_flashH / 2), _flashNum), _fw);
 							}
 							
-							draw_rectangle(_x1, _y2 - clamp(8 * (my_health_bonus / my_health_bonus_max), 1, 8), _x2 - _flip, _y2 - 1, false);
+							 // Text:
+							draw_set_font(fntSmall);
+							draw_set_halign(fa_right);
+							draw_set_valign(fa_top);
+							draw_text_nt(
+								_x2 + 1,
+								_y2 + 2,
+								`@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))})+${bonus_health}`
+							);
 						}
 					}
 				}
 				
+				 // Parrot:
 				with(instances_matching(_player, "race", "parrot")){
 					var _skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10));
 					
@@ -3153,7 +3240,7 @@
 					}
 					
 					 // Parrot Feathers:
-					var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "my_health_bonus_hud", 0) * _flip),
+					var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "bonus_health_hud", 0) * _flip),
 						_y = _oy + 11,
 						_spr = race_get_sprite(race, sprChickenFeather),
 						_sprHUD = race_get_sprite(race, sprRogueAmmoHUD),
@@ -3161,7 +3248,9 @@
 						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
 						_hudGoal = [feather_ammo, 0];
 						
-					with(instances_matching_ne(_feathers, "canhud", true)) if(canhold) canhud = true;
+					with(instances_matching_ne(_feathers, "canhud", true)){
+						if(canhold) canhud = true;
+					}
 					for(var i = 0; i < array_length(_hudGoal); i++){
 						_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
 					}
@@ -3246,11 +3335,23 @@
 									draw_set_font(fntM);
 									draw_set_halign(fa_left);
 									draw_set_valign(fa_top);
-									draw_text_nt(110, 7, `@(color:${c_red})LOW HP`);
+									draw_text_nt(_ox + 110, _oy + 7, `@(color:${c_red})LOW HP`);
 								}
 							}
 						}
 					}
+				}
+			}
+			
+			 // Non-nonsync Stuff Pt.2:
+			with(_player){
+				 // Bonus HP:
+				if("bonus_health" in self && sprite_index != spr_hurt){
+					var _diff = (bonus_health - bonus_health_last);
+					if(abs(_diff) > 1/5){
+						_diff *= current_time_scale / 3;
+					}
+					bonus_health_last += _diff;
 				}
 			}
 		}

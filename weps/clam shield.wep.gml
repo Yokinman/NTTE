@@ -14,14 +14,14 @@
 
 #define weapon_name      return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
 #define weapon_text      return "ROYAL GUARD";
-#define weapon_auto      return false;
-#define weapon_type      return 0;  // Melee
-#define weapon_load      return 30; // 1 Second
-#define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_melee     return true;
 #define weapon_swap      return sndSwapHammer;
 #define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
 #define weapon_sprt_hud  return global.sprWepHUD;
+#define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_type      return 0;  // Melee
+#define weapon_load      return 30; // 1 Second
+#define weapon_auto      return false;
+#define weapon_melee     return true;
 #define weapon_avail     return unlock_get("pack:coast");
 
 #define weapon_fire(w)

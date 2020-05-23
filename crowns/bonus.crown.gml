@@ -40,45 +40,55 @@
 	
 	 // Only Bonus Ammo/HP:
 	if(!instance_exists(GenCont) && !instance_exists(MenuGen)){
-		 // Overheal:
-		with(instances_matching(HPPickup, "sprite_index", sprHP)){
-			if(chance(1, 2)){
-				obj_create(x, y, "OverhealPickup");
-			}
-			instance_delete(id);
-		}
-		with(instances_matching(HealthChest, "sprite_index", sprHealthChest)){
-			chest_create(x, y, "OverhealChest");
-			instance_delete(id);
-		}
-		with(instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle)){
-			obj_create(x, y, "OverhealMimic");
-			instance_delete(id);
-		}
-		
-		 // Overstock:
-		with(instances_matching(AmmoPickup, "sprite_index", sprAmmo, sprCursedAmmo)){
+		 // Ammo:
+		with(instances_matching(AmmoPickup, "sprite_index", sprAmmo)){
+			var _num = 0;
+			
 			 // Get Average Bonus Ammo:
-			var _ammoBonus = 0;
-			with(instances_matching_gt(Player, "ammo_bonus", 0)){
-				_ammoBonus += ammo_bonus;
+			with(instances_matching_gt(Player, "bonus_ammo", 0)){
+				_num += bonus_ammo;
 			}
-			_ammoBonus /= instance_number(Player);
+			_num /= instance_number(Player);
 			
 			 // Chance to Spawn:
-			var _chance = 50 - min(40, (_ammoBonus / 3) - (15 * skill_get(mut_rabbit_paw)));
-			if(chance(_chance, 100)){
-				obj_create(x, y, "OverstockPickup");
+			if(chance(1, _num / 48)){
+				obj_create(x, y, "BonusAmmoPickup");
 			}
 			
 			instance_delete(id);
 		}
 		with(instances_matching(AmmoChest, "sprite_index", sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery, sprIDPDChest)){
-			chest_create(x, y, "OverstockChest");
+			chest_create(x, y, "BonusAmmoChest");
 			instance_delete(id);
 		}
 		with(instances_matching(Mimic, "spr_idle", sprMimicIdle)){
-			obj_create(x, y, "OverstockMimic");
+			obj_create(x, y, "BonusAmmoMimic");
+			instance_delete(id);
+		}
+		
+		 // Health:
+		with(instances_matching(HPPickup, "sprite_index", sprHP)){
+			var _num = 0;
+			
+			 // Get Average Bonus Ammo:
+			with(instances_matching_gt(Player, "bonus_health", 0)){
+				_num += bonus_health;
+			}
+			_num /= instance_number(Player);
+			
+			 // Chance to Spawn:
+			if(chance(1, _num / 4)){
+				obj_create(x, y, "BonusHealthPickup");
+			}
+			
+			instance_delete(id);
+		}
+		with(instances_matching(HealthChest, "sprite_index", sprHealthChest)){
+			chest_create(x, y, "BonusHealthChest");
+			instance_delete(id);
+		}
+		with(instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle)){
+			obj_create(x, y, "BonusHealthMimic");
 			instance_delete(id);
 		}
 	}

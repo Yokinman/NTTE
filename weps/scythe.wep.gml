@@ -76,22 +76,17 @@
 	var _index = lq_defget(_wep, "mode", 0);
 	return lq_defget(wepModes[_index], _name, false);
 	
-#define weapon_name   return (weapon_avail() ? scrWepModeInfo(argument0, "name") : "LOCKED");
-#define weapon_text   return choose("@rREASSEMBLED", "@gRADIATION@s DETERIORATES @wBONES", "@wMARROW @sFROM A HUNDRED @gMUTANTS");
-#define weapon_type   return 0; // Melee
-#define weapon_area   return (weapon_avail() ? 18 : -1); // 1-2 L1
-#define weapon_load   return scrWepModeInfo(argument0, "load");
-#define weapon_melee  return scrWepModeInfo(argument0, "mele");
-#define weapon_swap   return sndBloodGamble;
-#define weapon_avail  return unlock_get("wep:" + mod_current);
-#define weapon_unlock return "A PACKAGE DEAL";
+#define weapon_name    return (weapon_avail() ? scrWepModeInfo(argument0, "name") : "LOCKED");
+#define weapon_text    return choose("@rREASSEMBLED", "@gRADIATION@s DETERIORATES @wBONES", "@wMARROW @sFROM A HUNDRED @gMUTANTS");
+#define weapon_swap    return sndBloodGamble;
+#define weapon_area    return (weapon_avail() ? 18 : -1); // 1-2 L1
+#define weapon_type    return 0; // Melee
+#define weapon_load    return scrWepModeInfo(argument0, "load");
+#define weapon_auto    return scrWepModeInfo(argument0, "auto");
+#define weapon_melee   return scrWepModeInfo(argument0, "mele");
+#define weapon_avail   return unlock_get("wep:" + mod_current);
+#define weapon_unlock  return "A PACKAGE DEAL";
 
-#define weapon_auto(w)
-	if(lq_defget(w, "ammo", -1) >= lq_defget(w, "cost", -1) || variable_instance_get(self, "infammo", 0) != 0){
-		return scrWepModeInfo(w, "auto");
-	}
-	return -1;
-	
 #define weapon_sprt(w)
 	 // Draw Ammo:
 	if(is_object(w) && instance_is(self, Player)){
@@ -137,6 +132,7 @@
 	switch(w.mode){
 		//#region SCYTHE:
 		case 0:
+			
 			var	_skill = skill_get(mut_long_arms),
 				_heavy = ((++w.combo % 3) == 0),
 				_flip = sign(wepangle),
@@ -176,6 +172,7 @@
 		
 		//#region SHOTBOW:
 		case 1:
+			
 			if(wepammo_fire(w)){
 				 // Projectile:
 				var	d = gunangle + (accuracy * orandom(12)),
@@ -206,6 +203,7 @@
 		
 		//#region SLUGBOLT
 		case 2:
+			
 			if(wepammo_fire(w)){
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(4));

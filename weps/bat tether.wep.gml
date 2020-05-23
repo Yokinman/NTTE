@@ -14,11 +14,11 @@
 
 #define weapon_name   return (weapon_avail() ? "VAMPIRE" : "LOCKED");
 #define weapon_text   return "HEMOELECTRICITY";
+#define weapon_swap   return sndSwapEnergy;
+#define weapon_area   return (weapon_avail() ? 10 : -1); // 5-2
 #define weapon_type   return 0; // None
 #define weapon_load   return 5; // 0.16 Seconds
-#define weapon_area   return (weapon_avail() ? 10 : -1); // 5-2
 #define weapon_melee  return false;
-#define weapon_swap   return sndSwapEnergy;
 #define weapon_avail  return unlock_get("pack:lair");
 
 #define weapon_auto(w)

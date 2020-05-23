@@ -4,12 +4,12 @@
 	
 #define weapon_name   return (weapon_avail() ? "BUBBLE SHOTGUN" : "LOCKED");
 #define weapon_text   return "SUMMERTIME FUN";
+#define weapon_swap   return sndSwapExplosive;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 8 : -1); // 3-3
 #define weapon_type   return 4;  // Explosive
 #define weapon_cost   return 3;  // 3 Ammo
 #define weapon_load   return 23; // 0.77 Seconds
-#define weapon_area   return (weapon_avail() ? 8 : -1); // 3-3
-#define weapon_swap   return sndSwapExplosive;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded

@@ -11,18 +11,9 @@
 
 #define weapon_name  return "BONE";
 #define weapon_text  return "BONE THE FISH"; // yokin no
-#define weapon_load  return ((variable_instance_get(self, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 #define weapon_swap  return sndBloodGamble;
+#define weapon_load  return ((variable_instance_get(self, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 
-#define weapon_type(w)
-	 // Return Other Weapon's Ammo Type:
-	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
-		with(other) return weapon_get_type((w == wep) ? bwep : wep);
-	}
-	
-	 // Melee:
-	return 0;
-	
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
 	with(Player) if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
@@ -31,6 +22,15 @@
 	
 	 // If not, it don't:
 	return -1;
+	
+#define weapon_type(w)
+	 // Return Other Weapon's Ammo Type:
+	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
+		with(other) return weapon_get_type((w == wep) ? bwep : wep);
+	}
+	
+	 // Melee:
+	return 0;
 	
 #define weapon_sprt(w)
 	 // Custom Ammo Drawing:

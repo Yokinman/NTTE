@@ -1258,6 +1258,35 @@
 			BonePickupBig =[sprite(p + "sprBoneBigPickup0", 1, 8, 8, shn16),
 			                sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
 			
+			 // Bonus Pickups:
+			BonusFX                    = sprite(p + "sprBonusFX",                    13,  4, 12);
+			BonusFXPickupOpen          = sprite(p + "sprBonusFXPickupOpen",           6,  8,  8);
+			BonusFXPickupFade          = sprite(p + "sprBonusFXPickupFade",           5,  8,  8);
+			BonusFXChestOpen           = sprite(p + "sprBonusFXChestOpen",            8, 16, 16);
+			BonusHealFX                = sprite(p + "sprBonusHealFX",                 7,  8, 10);
+			BonusHealBigFX             = sprite(p + "sprBonusHealBigFX",              8, 12, 24);
+			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
+			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
+			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
+			BonusAmmoPickup            = sprite(p + "sprBonusAmmoPickup",             1,  5,  5, shn10);
+			BonusHealthPickup          = sprite(p + "sprBonusHealthPickup",           1,  5,  5, shn10);
+			BonusAmmoChest             = sprite(p + "sprBonusAmmoChest",             15,  8,  8);
+			BonusAmmoChestOpen         = sprite(p + "sprBonusAmmoChestOpen",          1,  8,  8);
+			BonusAmmoChestSteroids     = sprite(p + "sprBonusAmmoChestSteroids",     15, 12, 12);
+			BonusAmmoChestSteroidsOpen = sprite(p + "sprBonusAmmoChestSteroidsOpen",  1, 12, 12);
+			BonusHealthChest           = sprite(p + "sprBonusHealthChest",           15,  8,  8);
+			BonusHealthChestOpen       = sprite(p + "sprBonusHealthChestOpen",        1,  8,  8);
+			BonusAmmoMimicIdle         = sprite(p + "sprBonusAmmoMimicIdle",          1, 16, 16);
+			BonusAmmoMimicTell         = sprite(p + "sprBonusAmmoMimicTell",         12, 16, 16);
+			BonusAmmoMimicHurt         = sprite(p + "sprBonusAmmoMimicHurt",          3, 16, 16);
+			BonusAmmoMimicDead         = sprite(p + "sprBonusAmmoMimicDead",          6, 16, 16);
+			BonusAmmoMimicFire         = sprite(p + "sprBonusAmmoMimicFire",          4, 16, 16);
+			BonusHealthMimicIdle       = sprite(p + "sprBonusHealthMimicIdle",        1, 16, 16);
+			BonusHealthMimicTell       = sprite(p + "sprBonusHealthMimicTell",       10, 16, 16);
+			BonusHealthMimicHurt       = sprite(p + "sprBonusHealthMimicHurt",        3, 16, 16);
+			BonusHealthMimicDead       = sprite(p + "sprBonusHealthMimicDead",        6, 16, 16);
+			BonusHealthMimicFire       = sprite(p + "sprBonusHealthMimicFire",        4, 16, 16);
+			
 			 // Buried Vault:
 			BuriedVaultTopTiny     = sprite(p + "sprVaultTopTiny",     12,  0,  0);
 			BuriedVaultChest       = sprite(p + "sprVaultChest",        1, 12, 12, shn24);
@@ -1269,32 +1298,6 @@
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 13, 8);
 			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 13, 8);
-			
-			 // Overstock/Overheal:
-			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
-			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
-			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
-			OverhealFX                 = sprite(p + "sprOverhealFX",                  7,  8, 10);
-			OverhealBigFX              = sprite(p + "sprOverhealBigFX",               8, 12, 24);
-			OverstockFX                = sprite(p + "sprOverstockFX",                13,  4, 12);
-			OverhealPickup             = sprite(p + "sprOverhealPickup",              1,  5,  5, shn10);
-			OverstockPickup            = sprite(p + "sprOverstockPickup",             1,  5,  5, shn10);
-			OverhealChest              = sprite(p + "sprOverhealChest",              15,  8,  8);
-			OverstockChest             = sprite(p + "sprOverstockChest",             15,  8,  8);
-			OverstockChestSteroids     = sprite(p + "sprOverstockChestSteroids",     15, 12, 12);
-			OverhealChestOpen          = sprite(p + "sprOverhealChestOpen",           1,  8,  8);
-			OverstockChestOpen         = sprite(p + "sprOverstockChestOpen",          1,  8,  8);
-			OverstockChestSteroidsOpen = sprite(p + "sprOverstockChestSteroidsOpen",  1, 12, 12);
-			OverhealMimicIdle          = sprite(p + "sprOverhealMimicIdle",           1, 16, 16);
-			OverhealMimicTell          = sprite(p + "sprOverhealMimicTell",          10, 16, 16);
-			OverhealMimicHurt          = sprite(p + "sprOverhealMimicHurt",           3, 16, 16);
-			OverhealMimicDead          = sprite(p + "sprOverhealMimicDead",           6, 16, 16);
-			OverhealMimicFire          = sprite(p + "sprOverhealMimicFire",           4, 16, 16);
-			OverstockMimicIdle         = sprite(p + "sprOverstockMimicIdle",          1, 16, 16);
-			OverstockMimicTell         = sprite(p + "sprOverstockMimicTell",         12, 16, 16);
-			OverstockMimicHurt         = sprite(p + "sprOverstockMimicHurt",          3, 16, 16);
-			OverstockMimicDead         = sprite(p + "sprOverstockMimicDead",          6, 16, 16);
-			OverstockMimicFire         = sprite(p + "sprOverstockMimicFire",          4, 16, 16);
 			
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);

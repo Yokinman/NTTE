@@ -4,12 +4,12 @@
 	
 #define weapon_name   return (weapon_avail() ? "BUBBLE RIFLE" : "LOCKED");
 #define weapon_text   return "REFRESHING";
+#define weapon_swap   return sndSwapExplosive;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_type   return 4; // Explosive
 #define weapon_cost   return 2; // 2 Ammo
 #define weapon_load   return 9; // 0.3 Seconds
-#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_swap   return sndSwapExplosive;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded

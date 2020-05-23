@@ -4,13 +4,13 @@
 	
 #define weapon_name   return (weapon_avail() ? "LIGHTRING LAUNCHER" : "LOCKED");
 #define weapon_text   return "JELLY TECHNOLOGY";
-#define weapon_auto   return true;
+#define weapon_swap   return sndSwapEnergy;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_type   return 5;  // Energy
 #define weapon_cost   return 3;  // 3 Ammo
 #define weapon_load   return 37; // 1.23 Seconds
-#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_auto   return true;
 #define weapon_avail  return unlock_get("pack:trench");
 
 #define weapon_reloaded

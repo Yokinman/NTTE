@@ -11,15 +11,15 @@
 	
 #define weapon_name   return (weapon_avail() ? "TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "DON'T BLINK";
-#define weapon_type   return 0;  // "Melee"
-#define weapon_cost   return 2;  // 0 Ammo
-#define weapon_load   return 15; // 0.5 Seconds
-#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_avail  return true; // unlock_get("pack:oasis"); // wtf
+#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_type   return 0;  // "Melee"
+#define weapon_cost   return 2;  // 0 Ammo
+//#define weapon_rads   return 16;
+#define weapon_load   return 15; // 0.5 Seconds
 #define weapon_melee  return false;
-#define weapon_rads   return 0; // 16;
+#define weapon_avail  return true; // unlock_get("pack:oasis"); // wtf
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);
