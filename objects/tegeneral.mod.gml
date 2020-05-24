@@ -2302,7 +2302,7 @@
 		sprite_index = other.sprite_index;
 		image_angle = other.image_angle;
 		image_blend = other.image_blend_fade;
-		depth = ((!position_meeting(x, y, Floor) && !in_sight(other.creator)) ? -6.01 : 0);
+		depth = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
 	}
 	
 	 // Sound:
@@ -2555,13 +2555,13 @@
 	var _spin = 0;
 	if(visible || instance_exists(revive)){
 		with(instances_matching_ne(Portal, "sprite_index", sprPortalSpawn, sprBigPortalSpawn)){
-			if(point_distance(x, y, other.x, other.y) < 64 || (object_index == BigPortal && timer > 30)){
-				if(in_sight(other)){
+			if(instance_near(x, y, other, 64) || (object_index == BigPortal && timer > 30)){
+				if(instance_seen(x, y, other)){
 					with(other){
-						var	l = 4 * current_time_scale,
-							d = point_direction(x, y, other.x, other.y),
-							_x = x + lengthdir_x(l, d),
-							_y = y + lengthdir_y(l, d)
+						var	_l = 4 * current_time_scale,
+							_d = point_direction(x, y, other.x, other.y),
+							_x = x + lengthdir_x(_l, _d),
+							_y = y + lengthdir_y(_l, _d)
 							
 						if(place_free(_x, y)) x = _x;
 						if(place_free(x, _y)) y = _y;
@@ -2570,7 +2570,7 @@
 				}
 			}
 		}
-
+		
 		 // Enter:
 		if(place_meeting(x, y, Portal)){
 			repeat(3) instance_create(x, y, Dust);
@@ -3190,7 +3190,7 @@
 				case 0: /// MELEE
 					
 					 // Movement:
-					if(in_sight(target)){
+					if(instance_seen(x, y, target)){
 						scrWalk(_targetDir + choose(-60, 60), 5 + random(10));
 						alarm1 = walk;
 					}
@@ -3204,7 +3204,7 @@
 					 // Avoid:
 					with(instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team)){
 						if(abs(angle_difference(other.gunangle, point_direction(other.x, other.y, x, y))) < 60){
-							if(in_distance(other, 96)){
+							if(instance_near(x, y, other, 96)){
 								other.direction += 180;
 								break;
 							}
@@ -3216,7 +3216,7 @@
 				case 2: /// CLOSE RANGE
 					
 					 // Movement:
-					if(in_sight(target)){
+					if(instance_seen(x, y, target)){
 						scrWalk(gunangle + orandom(60), 20);
 						alarm1 = walk;
 					}
@@ -3311,8 +3311,8 @@
 				case 5: /// ENERGY
 				
 					 // Movement:
-					if(in_sight(target)){
-						if(in_distance(target, shootdis_max)){
+					if(instance_seen(x, y, target)){
+						if(instance_near(x, y, target, shootdis_max)){
 							if(chance(1, 3)){
 								scrWalk(random(360), random_range(5, 20));
 							}
@@ -3334,8 +3334,8 @@
 				default:
 				
 					 // Movement:
-					if(in_sight(target)){
-						if(in_distance(target, shootdis_max * 2/3)){
+					if(instance_seen(x, y, target)){
+						if(instance_near(x, y, target, shootdis_max * 2/3)){
 							scrWalk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
 						}
 						else{
@@ -3369,11 +3369,11 @@
 					alarm1 = walk;
 					
 					 // Searching:
-					if(!in_sight(target)){
+					if(!instance_seen(x, y, target)){
 						if(abs(angle_difference(gunangle_goal, _pathDir)) > 60){
 							gunangle_goal = _pathDir + orandom(60);
 						}
-						if(in_distance(target, 64)){
+						if(instance_near(x, y, target, 64)){
 							alarm1 += random(random(random(30)));
 							gunangle_goal = angle_lerp(gunangle_goal, _targetDir, 1/2);
 						}
@@ -3398,7 +3398,11 @@
 	
 	 // Shootin:
 	if(sprite_index != spr_spwn){
-		if(enemy_target(x, y) && in_sight(target) && in_distance(target, shootdis_max)){
+		if(
+			enemy_target(x, y)
+			&& instance_seen(x, y, target)
+			&& instance_near(x, y, target, shootdis_max)
+		){
 			if(abs(angle_difference(gunangle, point_direction(x, y, target.x, target.y))) < 30){
 				var _shot = false;
 				with(["", "b"]){
@@ -3410,7 +3414,7 @@
 							
 						if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
 							if(
-								(!weapon_get_laser_sight(_wep) && !in_distance(target, shootdis_min))
+								(!weapon_get_laser_sight(_wep) && !instance_near(x, y, target, shootdis_min))
 								||
 								variable_instance_get(self, b + "wep_laser") >= 1
 							){
@@ -3859,7 +3863,7 @@
 	if(enemy_target(x, y)){
 		scrAim(point_direction(x, y, target.x, target.y));
 		
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			 // Attack:
 			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
 				enemy_shoot("PortalBullet", gunangle, 10);
@@ -3873,7 +3877,7 @@
 				scrWalk(gunangle + (random_range(60, 100) * choose(-1, 1)), [20, 40]);
 				
 				 // Away From Target:
-				if(in_distance(target, 128)){
+				if(instance_near(x, y, target, 128)){
 					direction = gunangle + 180 + orandom(30);
 				}
 			}
@@ -4281,7 +4285,7 @@
 							}
 							
 							 // Let's Roll:
-							if(chance(1, 5) && in_distance(n, 160)){
+							if(chance(1, 5) && instance_near(x, y, n, 160)){
 								jump_time = 1;
 							}
 						}
@@ -4296,7 +4300,7 @@
 							 // Cmon Bros:
 							canmove = true;
 							with(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0)){
-								if(instance_exists(target) && target.object_index == other.target.object_index && in_distance(other, 64)){
+								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
 									jump_time = 0;
 									idle_time = random_range(10, 60);
 								}
@@ -4331,7 +4335,7 @@
 						 // Prepare to Fly w/ Bros:
 						if(zspeed == 0){
 							with(instances_matching(instances_matching(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0), "zspeed", 0), "speed", 0)){
-								if(instance_exists(target) && target.object_index == other.target.object_index && in_distance(other, 64)){
+								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
 									jump_time = 0;
 									idle_time = min(idle_time, random_range(10, 60));
 								}
@@ -4991,7 +4995,7 @@
 				var	n = instance_nearest(x, y, Player),
 					_dir = 90;
 					
-				if(instance_exists(n) && n.visible && (point_distance(x, y, n.x, n.y) < 140 || !position_meeting(x, y, Wall))){
+				if(instance_exists(n) && n.visible && (instance_near(x, y, n, 140) || !position_meeting(x, y, Wall))){
 					if(n.y < y - 8){
 						_dir = 270 + (30 * sin(eyeblink / 40));
 					}
@@ -5607,8 +5611,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -5658,10 +5662,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

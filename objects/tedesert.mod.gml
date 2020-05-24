@@ -68,7 +68,7 @@
 		alarm1 = (gold ? 2 : irandom_range(1, 3));
 		
 		 // Aim and walk:
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			scrAim(point_direction(x, y, target.x, target.y));
 		}
 		scrWalk(gunangle + orandom(10), alarm1 + 3);
@@ -103,18 +103,18 @@
 	}
 	
 	 // Normal AI:
-	else if(in_sight(target)){
+	else if(instance_seen(x, y, target)){
 		scrAim(point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed));
 		
 		 // Start attack:
-		if(in_distance(target, [32, 96]) && chance(2, 3)){
+		if(instance_near(x, y, target, [32, 96]) && chance(2, 3)){
 			alarm1 = 1;
 			ammo = 6 + irandom(2);
 			sound_play_pitch(snd_fire, 1.6);
 		}
 		
 		 // Move Away From Target:
-		else if(in_distance(target, 32)){
+		else if(instance_near(x, y, target, 32)){
 			alarm1 = 20 + irandom(30);
 			scrWalk(gunangle + 180 + orandom(40), [10, 20]);
 			scrAim(direction);
@@ -258,12 +258,11 @@
 	 // Path to Player:
 	if(path_delay > 0) path_delay -= current_time_scale;
 	if(walk > 0 && instance_exists(target)){
-		var	_tx = target.x,
-			_ty = target.y;
-			
-		if(collision_line(x, y, _tx, _ty, Wall, false, false)){
-			var _pathDir = path_direction(path, x, y, Wall);
-			
+		if(!instance_seen(x, y, target)){
+			var	_tx = target.x,
+				_ty = target.y,
+				_pathDir = path_direction(path, x, y, Wall);
+				
 			 // Follow Path:
 			if(_pathDir != null && path_reaches(path, _tx, _ty, Wall)){
 				can_path = true;
@@ -348,42 +347,42 @@
 		 // Visual:
 		spr_shadow = shd32;
 		spr_shadow_y = 4;
-		depth = -1.5;
+		depth = -1;
 		switch(GameCont.area){
 			case area_campfire:
 				spr_idle = spr.BigNightCactusIdle;
 				spr_hurt = spr.BigNightCactusHurt;
 				spr_dead = spr.BigNightCactusDead;
 				break;
-
+				
 			case "coast":
 				spr_idle = spr.BigBloomingCactusIdle;
 				spr_hurt = spr.BigBloomingCactusHurt;
 				spr_dead = spr.BigBloomingCactusDead;
 				break;
-
+				
 			default:
 				spr_idle = spr.BigCactusIdle;
 				spr_hurt = spr.BigCactusHurt;
 				spr_dead = spr.BigCactusDead;
 		}
-
+		
 		 // Sound:
 		snd_hurt = sndHitPlant;
 		snd_dead = sndPlantSnareTrapper;
-
+		
 		 // Vars:
 		maxhealth = 24;
 		size = 2;
-
+		
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
-		if(!in_distance(Player, 96) && place_meeting(x, y, Floor)){
+		if(!instance_near(x, y, Player, 96) && place_meeting(x, y, Floor)){
 			repeat(choose(2, 3)){
 				obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
 			}
 		}
-
+		
 		return id;
 	}
 
@@ -537,7 +536,11 @@
 	 // Fallin Apart:
 	if(my_health > 0){
 		enemy_target(x, y);
-		if(my_health <= 1 || distance_to_object(target) < 64 || (chance(1, 3) && in_sight(target))){
+		if(
+			my_health <= 1
+			|| distance_to_object(target) < 64
+			|| (chance(1, 3) && instance_seen(x, y, target))
+		){
 			my_health -= 2;
 		}
 	}
@@ -674,8 +677,7 @@
 	sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 3);
 
 	 // Break:
-	var i = instance_nearest_array(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"));
-	if(!in_distance(i, 32)){
+	if(!instance_near(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"), 32)){
 		broken = true;
 		instance_destroy();
 	}
@@ -1025,7 +1027,7 @@
 			var	_x = swim_target.x,
 				_y = swim_target.y;
 				
-			if(in_distance(swim_target, 100)){
+			if(instance_near(x, y, swim_target, 100)){
 				var	_dis = 80,
 					_dir = direction + (10 * right);
 					
@@ -1222,7 +1224,7 @@
 							var	l = 2,
 								d = _leader.direction + 180;
 								
-							while(in_distance(_leader, 24)){
+							while(instance_near(x, y, _leader, 24)){
 								x += lengthdir_x(l, d);
 								y += lengthdir_y(l, d);
 								direction = d;
@@ -1415,11 +1417,11 @@
 	alarm1 = 30 + random(20);
 	
 	if(enemy_target(x, y)){
-		if(in_distance(target, 160) && (variable_instance_get(target, "reload", 0) <= 0 || chance(2, 3))){
+		if(instance_near(x, y, target, 160) && (variable_instance_get(target, "reload", 0) <= 0 || chance(2, 3))){
 			scrAim(point_direction(x, y, target.x, target.y));
 			
 			 // Move Towards Target:
-			if((in_distance(target, 64) && chance(1, 2)) || chance(1, 4)){
+			if((instance_near(x, y, target, 64) && chance(1, 2)) || chance(1, 4)){
 				scrWalk(gunangle + orandom(10), [30, 40]);
 				alarm1 = walk + random(10);
 			}
@@ -1772,7 +1774,7 @@
 		unburrow_check_timer = random_range(120, 300);
 		
 		 // Unburrow:
-		if(in_distance(Player, 160) || !instance_exists(enemy)){
+		if(instance_near(x, y, Player, 160) || !instance_exists(enemy)){
 			sound_play_hit_big(sndBigMaggotUnburrowSand, 0.2);
 			sprite_index = sprBigMaggotAppear;
 			image_index = 0;
@@ -1921,8 +1923,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -1972,10 +1974,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

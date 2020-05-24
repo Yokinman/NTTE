@@ -9,7 +9,7 @@
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
-		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "Hammerhead", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
+		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
@@ -299,6 +299,12 @@
 									}
 									with(_bind){
 										array_push(inst, _inst);
+										
+										 // Depth Fix:
+										with(_inst){
+											depth++;
+											depth--;
+										}
 										
 										 // Add to Object List:
 										var _obj = _inst.object_index;
@@ -924,35 +930,62 @@
 
 #define chance_ct(_numer, _denom)
 	return random(_denom) < (_numer * current_time_scale);
-
-#define in_distance(_inst, _dis)
-	if(!instance_exists(_inst)) return false;
-
-	 // If '_inst' is an object, find nearest object:
-	if(object_exists(_inst)){
-		_inst = instance_nearest(x, y, _inst);
-	}
-
-	 // If '_dis' is an array it means [min, max], otherwise 'min = 0' and 'max = _dis':
-	if(!is_array(_dis)) _dis = [0, _dis];
-	else while(array_length(_dis) < 2){
-		array_push(_dis, 0);
-	}
-
-	 // Return if '_inst' is within min and max distances:
-	var d = point_distance(x, y, _inst.x, _inst.y);
-	return (d >= _dis[0] && d <= _dis[1]);
-
-#define in_sight(_inst)
-	if(!instance_exists(_inst)) return false;
 	
-	 // If '_inst' is an object, find nearest object:
-	if(object_exists(_inst)){
-		_inst = instance_nearest(x, y, _inst);
+#define instance_seen(_x, _y, _obj)
+	/*
+		Returns the nearest instance of the given object that is seen by the given position (no walls between)
+		
+		Args:
+			x/y - The position to check
+			obj - An object, instance, or array of instances
+	*/
+	
+	var	_inst   = noone,
+		_disMax = infinity,
+		
+	with(_obj){
+		if(!collision_line(_x, _y, x, y, Wall, false, false)){
+			var _dis = point_distance(_x, _y, x, y);
+			if(_dis < _disMax){
+				_disMax = _dis;
+				_inst = id;
+			}
+		}
 	}
 	
-	 // Return if '_inst' is in line of sight:
-	return !collision_line(x, y, _inst.x, _inst.y, Wall, false, false);
+	return _inst;
+	
+#define instance_near(_x, _y, _obj, _dis)
+	/*
+		Returns the nearest instance of the given object that is within the given distance of the given position
+		
+		Args:
+			x/y - The position to check
+			obj - An object, instance, or array of instances
+			dis - The distance to check, can be a single number for max distance or a 2-element array for [min, max]
+			
+		Ex:
+			instance_near(x, y, Player, 96)
+			instance_near(x, y, instances_matching(hitme, "team", 2), [32, 64])
+	*/
+	
+	var	_inst   = id,
+		_disMin = (is_array(_dis) ? _dis[0] : 0),
+		_disMax = (is_array(_dis) ? _dis[1] : _dis);
+		
+	with(
+		(is_real(_obj) && object_exists(_obj) && _disMin <= 0)
+		? instance_nearest(_x, _y, _obj)
+		: _obj
+	){
+		var _d = point_distance(_x, _y, x, y);
+		if(_d <= _disMax && _d >= _disMin){
+			_disMax = _d;
+			_inst = id;
+		}
+	}
+	
+	return _inst;
 	
 #define save_get(_name, _default)
 	return mod_script_call("mod", "teassets", "save_get", _name, _default);
@@ -1603,7 +1636,7 @@
 		
 		 // Rescue Players:
 		with(Player){
-			if(in_sight(other)){
+			if(instance_seen(x, y, other)){
 				array_push(_rescue, self);
 			}
 		}
@@ -1652,10 +1685,10 @@
 		 // Normal Pickups:
 		var _attractDis = 30 + (40 * _pluto);
 		with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "", null)){
-			var p = instance_nearest(x, y, Player);
-			if(point_distance(x, y, p.x, p.y) >= _attractDis){
+			var _p = instance_nearest(x, y, Player);
+			if(point_distance(x, y, _p.x, _p.y) >= _attractDis){
 				var	_dis = 6 * current_time_scale,
-					_dir = point_direction(x, y, p.x, p.y),
+					_dir = point_direction(x, y, _p.x, _p.y),
 					_x = x + lengthdir_x(_dis, _dir),
 					_y = y + lengthdir_y(_dis, _dir);
 					
@@ -1670,7 +1703,7 @@
 			
 		with(instances_matching([Rad, BigRad], "speed", 0)){
 			var s = instance_nearest(x, y, ProtoStatue);
-			if(distance_to_object(s) >= _attractDisProto || !in_sight(s)){
+			if(distance_to_object(s) >= _attractDisProto || !instance_seen(x, y, s)){
 				if(distance_to_object(Player) >= _attractDis){
 					var	p = instance_nearest(x, y, Player),
 						_dis = 12 * current_time_scale,
@@ -3161,7 +3194,7 @@
 #define floor_reset_style()
 	floor_set_style(null, null);
 	
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)
 	global.floor_align_x = _alignX;
 	global.floor_align_y = _alignY;
 	global.floor_align_w = _alignW;
@@ -4664,7 +4697,7 @@
 					 /// ENEMIES ///
 					case BoneFish:
 					case "Puffer":
-					case "Hammerhead":
+					case "HammerShark":
 						idle_walk = [0, 5];
 						idle_walk_chance = 1/2;
 						break;
@@ -4677,7 +4710,6 @@
 						jump *= 1.2;
 						idle_walk = [0, 5];
 						idle_walk_chance = 1;
-						spawn_dis = random_range(120, 192);
 						
 						 // Important:
 						target_save.my_health = 0;
@@ -4686,7 +4718,6 @@
 					case Freak:
 						idle_walk = [0, 5];
 						idle_walk_chance = 1;
-						spawn_dis = random_range(80, 240);
 						break;
 						
 					case JungleFly:
@@ -4738,7 +4769,6 @@
 					case GoldBarrel:
 					case ToxicBarrel:
 						jump *= 1.5;
-						spawn_dis = ((target.object_index == Barrel) ? 32 : 8);
 						spr_shadow = shd16;
 						spr_shadow_y = 4;
 						wobble = 8;
@@ -4770,10 +4800,6 @@
 						spr_shadow_y = 9;
 						break;
 						
-					case Car:
-						spawn_dis = 16;
-						break;
-						
 					case Cocoon:
 					case "NewCocoon":
 						spr_shadow = shd16;
@@ -4792,14 +4818,11 @@
 						break;
 						
 					case Generator:
-						spawn_dis = 64;
 						spr_shadow = ((target.image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
 						target_save.my_health = 0;
 						break;
 						
 					case Hydrant:
-						spawn_dis = random_range(32, 96);
-						
 						 // Icicle:
 						if(chance(1, 2) || target.spr_idle == sprIcicle) with(target){
 							spr_idle = sprIcicle;
@@ -4823,7 +4846,7 @@
 						break;
 						
 					case Pillar:
-						spr_shadow = shd32;
+						target.spr_idle = spr.TopPillar;
 						spr_shadow_y = -3;
 						break;
 						
@@ -4838,14 +4861,12 @@
 						break;
 						
 					case SmallGenerator:
-						spawn_dis = 32;
 						target.image_xscale = 1;
 						spr_shadow = target.spr_idle;
 						spr_shadow_y = 1;
 						break;
 						
 					case SnowMan:
-						spawn_dis = random_range(8, 40);
 						spr_shadow = sprNewsStand;
 						spr_shadow_y = 5;
 						break;
@@ -4855,7 +4876,6 @@
 						break;
 						
 					case Tires:
-						spawn_dis = random_range(16, 32);
 						spr_shadow_y = -1;
 						break;
 						
@@ -4941,7 +4961,7 @@
 						case BoneFish:
 						case Freak:
 						case "Puffer":
-						case "Hammerhead": // Swimming bro
+						case "HammerShark": // Swimming bro
 							if(area_get_underwater(GameCont.area)){
 								z += random_range(8, distance_to_object(Floor) / 2) * ((target.object_index == "Puffer") ? 0.5 : 1);
 							}
@@ -4972,6 +4992,14 @@
 							break;
 					}
 					
+				 // C'mere:
+				with(target){
+					x = other.x;
+					y = other.y - other.z;
+					xprevious = x;
+					yprevious = y;
+				}
+				
 				 // Underwater Time:
 				if(area_get_underwater(GameCont.area)){
 					jump /= 6;
@@ -5009,8 +5037,8 @@
 					for(var _ox = _west; _ox < _east; _ox += 16){
 						for(var _oy = _nort; _oy < _sout; _oy += 16){
 							if(chance(_chance, 1)){
-								var	_sx = floor(_ox / 16) * 16,
-									_sy = floor(_oy / 16) * 16;
+								var	_sx = pfloor(_ox, 16),
+									_sy = pfloor(_oy, 16);
 									
 								if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
 									instance_create(_sx, _sy, TopSmall);
@@ -5044,21 +5072,6 @@
 	}
 	
 	return noone;
-	
-#define floor_make(_x, _y, _obj)
-	/*
-		Creates a floor at the given position and creates an object on it
-		
-		Ex:
-			floor_make(x, y, WeaponChest)
-	*/
-	
-	with(floor_set(_x, _y, true)){
-		_x = x;
-		_y = y;
-	}
-	
-	return instance_create(_x + 16, _y + 16, _obj);
 	
 #define floor_fill(_x, _y, _w, _h, _type)
 	/*
@@ -5104,7 +5117,7 @@
 		_ah = global.floor_align_h,
 		_inst = [];
 		
-	floor_set_align(_ow, _oh, _x, _y);
+	floor_set_align(_x, _y, _ow, _oh);
 	
 	for(var _ox = 0; _ox < _w; _ox += _ow){
 		for(var _oy = 0; _oy < _h; _oy += _oh){
@@ -5127,7 +5140,7 @@
 		}
 	}
 	
-	floor_set_align(_aw, _ah, _ax, _ay);
+	floor_set_align(_ax, _ay, _aw, _ah);
 	
 	return _inst;
 	

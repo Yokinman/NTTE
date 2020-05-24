@@ -490,7 +490,7 @@
 		
 		 // Vars:
 		elite = true;
-		num = 2 * (1 + GameCont.loops);
+		num   = 2 * (1 + GameCont.loops);
 		
 		 // Vars:
 		alarm0 += 30;
@@ -561,7 +561,7 @@
 		
 		 // Vars:
 		mask_index = mskBigRad;
-		num = 10;
+		num        = 10;
 		
 		return id;
 	}
@@ -741,7 +741,7 @@
 	if(sprite_index == spr_chrg && anim_end){
 		sprite_index = spr_idle;
 	}
-	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+	else if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
 		sprite_index = spr_walk;
 	}
 	
@@ -803,8 +803,8 @@
 #define BonusAmmoPickup_pull
 	if(pull_delay <= 0){
 		 // Pull FX:
-		if(point_distance(x, y, other.x, other.y) < pull_dis || instance_exists(Portal)){
-			if(chance_ct(1, 2)){
+		if(chance_ct(1, 2)){
+			if(instance_near(x, y, other, pull_dis) || instance_exists(Portal)){
 				with(scrFX([x, 4], [y, 4], 0, FireFly)){
 					sprite_index = spr.BonusFX;
 					depth = other.depth - 1;
@@ -939,7 +939,7 @@
 	if(sprite_index == spr_chrg && anim_end){
 		sprite_index = spr_idle;
 	}
-	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+	else if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
 		sprite_index = spr_walk;
 	}
 	
@@ -1776,24 +1776,28 @@
 	if(instance_exists(creator) && chance_ct(1, 8 * ((open > 0) ? 1 : open_state))){
 		var	_x = creator.x,
 			_y = creator.y,
-			l = point_distance(_x, _y, x, y),
-			d = point_direction(_x, _y, x, y) + orandom(8);
+			_l = point_distance(_x, _y, x, y),
+			_d = point_direction(_x, _y, x, y) + orandom(8);
 
-		if(open > 0) l = random(l);
-		else l = random_range(l * (1 - open_state), l);
+		if(open > 0){
+			_l = random(_l);
+		}
+		else{
+			_l = random_range(_l * (1 - open_state), _l);
+		}
 
-		with(instance_create(_x + lengthdir_x(l, d) + orandom(4), _y + lengthdir_y(l, d) + orandom(4), BulletHit)){
-			motion_add(d + choose(0, 180), random(0.5));
+		with(instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_y(_l, _d) + orandom(4), BulletHit)){
+			motion_add(_d + choose(0, 180), random(0.5));
 			sprite_index = sprLightning;
 			image_blend = other.image_blend;
-			image_alpha = 1.5 * (l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
+			image_alpha = 1.5 * (_l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
 			image_angle = random(360);
 			depth = other.depth - 1;
 		}
 		
 		 // Curse:
 		if(curse && chance(1, 5)){
-			instance_create(_x + lengthdir_x(l, d) + orandom(4), _y + lengthdir_x(l, d) + orandom(4), Curse);
+			instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_x(_l, _d) + orandom(4), Curse);
 		}
 	}
 
@@ -2053,26 +2057,26 @@
 	if(instance_exists(creator)){
 		var	_sx = creator.x,
 			_sy = creator.y,
-			d = point_direction(_sx, _sy, _x, _y);
+			_d = point_direction(_sx, _sy, _x, _y);
 			
-		//d = angle_lerp(d, 90, 1 - clamp(open_state, 0, 1));
+		//_d = angle_lerp(_d, 90, 1 - clamp(open_state, 0, 1));
 		
-		var	w = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
-			h = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
-			_x1 = _sx + lengthdir_x(0.5, d),
-			_y1 = _sy + lengthdir_y(1, d),
-			_x2 = _sx + lengthdir_x(w, d) + lengthdir_x(h / 2, d - 90),
-			_y2 = _sy + lengthdir_y(w, d) + lengthdir_y(h / 2, d - 90),
-			_x3 = _sx + lengthdir_x(w, d) - lengthdir_x(h / 2, d - 90),
-			_y3 = _sy + lengthdir_y(w, d) - lengthdir_y(h / 2, d - 90);
+		var	_w = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
+			_h = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(_d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(_d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
+			_x1 = _sx + lengthdir_x(0.5, _d),
+			_y1 = _sy + lengthdir_y(1,   _d),
+			_x2 = _sx + lengthdir_x(_w, _d) + lengthdir_x(_h / 2, _d - 90),
+			_y2 = _sy + lengthdir_y(_w, _d) + lengthdir_y(_h / 2, _d - 90),
+			_x3 = _sx + lengthdir_x(_w, _d) - lengthdir_x(_h / 2, _d - 90),
+			_y3 = _sy + lengthdir_y(_w, _d) - lengthdir_y(_h / 2, _d - 90);
 			
 		if(type == ChestShop_wep){
 			_y2 = max(_y + 2, _y2);
 			_y3 = max(_y + 2, _y3);
 		}
 		
-		_x = _sx + lengthdir_x(w, d);
-		_y = _sy + lengthdir_y(w, d);
+		_x = _sx + lengthdir_x(_w, _d);
+		_y = _sy + lengthdir_y(_w, _d);
 		
 		draw_set_blend_mode(bm_add);
 		draw_set_color(merge_color(_col, c_blue, 0.4));
@@ -2224,7 +2228,7 @@
 	if(sprite_index == spr_chrg && anim_end){
 		sprite_index = spr_idle;
 	}
-	else if(sprite_index == spr_hurt && in_distance(Player, 48)){
+	else if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
 		sprite_index = spr_walk;
 	}
 	
@@ -2368,9 +2372,9 @@
 		 // Vars:
 		mask_index = mskPickup;
 		friction   = 0.2;
-		alarm0     = pickup_alarm(200 + random(30), 1/5);
-		blink      = 30;
 		num        = 1;
+		blink      = 30;
+		alarm0     = pickup_alarm(200 + random(30), 1/5);
 		pull_dis   = 40 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd   = 6;
 		
@@ -2393,8 +2397,8 @@
 	if(alarm0 >= 0 && --alarm0 == 0){
 		 // Blink:
 		if(blink >= 0){
-			alarm0 = 2;
 			blink--;
+			alarm0 = 2;
 			visible = !visible;
 		}
 		
@@ -2566,10 +2570,10 @@
 		
 		 // Vars:
 		mask_index = mskBigRad;
-		friction = 0.4;
-		alarm0 = pickup_alarm(90 + random(30), 1/5);
-		pull_spd = 8;
-		target = noone;
+		friction   = 0.4;
+		alarm0     = pickup_alarm(90 + random(30), 1/5);
+		pull_spd   = 8;
+		target     = noone;
 		
 		 // Events:
 		on_step = script_ref_create(HarpoonPickup_step);
@@ -3094,8 +3098,8 @@
 			image_index = _icon[1];
 			image_speed = 0;
 			alert       = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
-			alarm0      = 60;
 			blink       = 15;
+			alarm0      = 60;
 			snd_flash   = sndLevelUp;
 			
 			 // Fix Overlap:
@@ -3514,16 +3518,16 @@
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.SpiritPickup;
-		halo_sprite = sprStrongSpiritRefill;
-		halo_index = 0;
+		spr_halo = sprStrongSpiritRefill;
+		img_halo = 0;
 		
 		 // Sounds:
 		snd_open = sndAmmoPickup;
 		snd_fade = sndStrongSpiritLost;
 		
 		 // Vars:
-		alarm0     = pickup_alarm(90 + random(30), 1/5);
 		num        = 1 + (crown_current == crwn_haste); // haste confirmed epic
+		alarm0     = pickup_alarm(90 + random(30), 1/5);
 		pull_dis   = 30 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd   = 4;
 		pull_delay = 30;
@@ -3537,11 +3541,11 @@
 		
 		 // FX:
 		sound_play_pitchvol(sndStrongSpiritGain, 1.4 + random(0.3), 0.7);
-		repeat(5){
+		/*repeat(5){
 			with(scrFX(x, y, 3, Dust)){
 				depth = other.depth;
 			}
-		}
+		}*/
 		
 		return id;
 	}
@@ -3551,14 +3555,17 @@
 	wave += current_time_scale;
 	
 	 // Animate Halo:
-	if(halo_sprite != sprHalo){
-		halo_index += 0.4 * current_time_scale;
-		if(halo_index > sprite_get_number(halo_sprite) - 1) halo_sprite = sprHalo;
+	if(spr_halo != sprHalo){
+		img_halo += 0.4 * current_time_scale;
+		if(img_halo >= sprite_get_number(spr_halo)){
+			spr_halo = sprHalo;
+		}
 	}
 
 #define SpiritPickup_draw
+	 // Halos:
 	for(var i = 0; i < num; i++){
-		draw_sprite(halo_sprite, halo_index, x, (y + 3) + sin(wave * 0.1) - (i * 7));
+		draw_sprite(spr_halo, img_halo, x, (y + 3) + sin(wave * 0.1) - (i * 7));
 	}
 
 #define SpiritPickup_open
@@ -3636,7 +3643,7 @@
 	 // Ancient Treasure Guards:
 	var _num = 3 * skeal;
 	if(_num > 0){
-		if(in_distance(Player, 192) && in_sight(Player)){
+		if(instance_near(x, y, instance_seen(x, y, Player), 192)){
 			skeal = 0;
 			
 			 // Skeals:
@@ -4121,14 +4128,7 @@
 	}
 	
 #define WepPickupGrounded_end_step
-	var _portal = false;
-	with(Portal){
-		if(in_sight(other) && in_distance(other, 96)){
-			_portal = true;
-			break;
-		}
-	}
-	if(instance_exists(target) && !_portal){
+	if(instance_exists(target) && (!instance_exists(Portal) || !instance_near(x, y, instance_seen(x, y, Portal), 96))){
 		with(target){
 			image_alpha = 0;
 			
@@ -4489,9 +4489,9 @@
 			
 			 // Animate and Cull Spirits:
 			with(bonus_spirit){
-				if("active" not in self) active = true;
+				if("active"       not in self) active = true;
 				if("sprite_index" not in self) sprite_index = (active ? sprStrongSpiritRefill : sprStrongSpirit);
-				if("image_index" not in self) image_index = 0;
+				if("image_index"  not in self) image_index = 0;
 				
 				 // Animate:
 				if(active || sprite_index != mskNone){
@@ -4519,6 +4519,28 @@
 		script_bind_draw(draw_bonus_spirit, -8);
 	}
 	
+	/*
+	 // Spirit Pickups:
+	with(instances_matching_gt(instances_matching_le(instances_matching_lt(HPPickup, "blink", 0), "alarm0", ceil(current_time_scale)), "alarm0", 0)){
+		var	_can = true,
+			_spirit = 0;
+			
+		with(Player){
+			if(my_health < maxhealth){
+				_can = false;
+			}
+			if("bonus_spirit" in self){
+				_spirit += array_length(bonus_spirit);
+			}
+		}
+		if(_can && chance(1, 1 + _spirit)){
+			obj_create(x, y, "SpiritPickup");
+			instance_create(x, y, SmallChestFade);
+			instance_destroy();
+		}
+	}
+	*/
+	
 #define ntte_step
 	 // More:
 	var _minHard = 8;
@@ -4529,8 +4551,9 @@
 		}
 	}
 	
+	 // Replace Pickups / Chests:
 	else{
-		 // Spawning Overheal, Overstock, and Spirit Pickups:
+		 // Bonus, Spirit, and Hammerhead Pickups:
 		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
 			ntte_special_pickup = false;
 			
@@ -4555,7 +4578,7 @@
 							 // Overheal / Overstock Pickups:
 							else{
 								_sPickupsDec = 1;
-								obj_create(x, y, (instance_is(id, HPPickup) ? "BonusHealthPickup" : "BonusAmmoPickup"));
+								obj_create(x, y, (instance_is(self, HPPickup) ? "BonusHealthPickup" : "BonusAmmoPickup"));
 							}
 						}
 						
@@ -4609,6 +4632,9 @@
 				instance_delete(id);
 			}
 		}
+		
+		 // Bonus Chests:
+		
 	}
 	
 	 // Bonus Ammo / Overstock Cleanup:
@@ -4847,6 +4873,18 @@
 		}
 	}
 	
+#define ntte_shadows
+	 // Weapons Stuck in Ground:
+	with(instances_matching(CustomObject, "name", "WepPickupGrounded")){
+		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+	}
+	
+#define ntte_bloom
+	 // Bonus Ammo FX:
+	with(instances_matching(WepSwap, "name", "BonusAmmoFire")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * ((image_xscale + image_yscale) / 12));
+	}
+	
 #define ntte_dark // Drawing Grays
 	 // Shops:
 	with(instances_matching(instances_matching(CustomObject, "name", "ChestShop"), "visible", true)){
@@ -4865,6 +4903,11 @@
 	 // Bonus Pickups:
 	with(instances_matching(instances_matching(Pickup, "name", "BonusAmmoPickup", "BonusHealthPickup"), "visible", true)){
 		draw_circle(x, y, 48 + random(2), false);
+	}
+	
+	 // Bonus Chests:
+	with(instances_matching(instances_matching(chestprop, "name", "BonusAmmoChest", "BonusAmmoMimic", "BonusHealthChest", "BonusHealthMimic"), "visible", true)){
+		draw_circle(x, y, 64 + random(2), false);
 	}
 	
 	 // Vault Flower:
@@ -4892,21 +4935,14 @@
 		draw_circle(x, y, 16 + random(2), false);
 	}
 	
+	 // Bonus Chests:
+	with(instances_matching(instances_matching(chestprop, "name", "BonusAmmoChest", "BonusAmmoMimic", "BonusHealthChest", "BonusHealthMimic"), "visible", true)){
+		draw_circle(x, y, 16 + random(2), false);
+	}
+	
 	 // Vault Flower:
 	with(instances_matching(instances_matching(instances_matching(CustomProp, "name", "VaultFlower"), "alive", true), "visible", true)){
 		draw_circle(x, y, 24 + (2 * sin(current_frame / 10)), false);
-	}
-	
-#define ntte_bloom
-	 // Bonus Ammo FX:
-	with(instances_matching(WepSwap, "name", "BonusAmmoFire")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * ((image_xscale + image_yscale) / 12));
-	}
-	
-#define ntte_shadows
-	 // Weapons Stuck in Ground:
-	with(instances_matching(CustomObject, "name", "WepPickupGrounded")){
-		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 	}
 	
 #define draw_bonus_spirit
@@ -5000,8 +5036,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -5051,10 +5087,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

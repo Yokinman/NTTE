@@ -192,13 +192,10 @@
 				
 			obj_create(_n + lengthdir_x(_l,_d), _n + lengthdir_y(_l,_d), "Creature");
 			
-			var	_tries = 100,
-				_spawned = false;
-			while(_tries > 0 && !_spawned){
-				_tries--;
-				with(instance_random(Floor)) if(point_distance(x, y, 10000, 10000) > 200){
-					instance_create(x + 16, y + 16, Gator);
-					_spawned = true;
+			with(array_shuffle(instances_matching(Floor, "", null))){
+				if(point_distance(bbox_center_x, bbox_center_y, 10016, 10016) > 200){
+					instance_create(bbox_center_x, bbox_center_y, Gator);
+					break;
 				}
 			}
 			
@@ -289,7 +286,9 @@
 	/// Chests & Branching:
 		if(_trn == 180){
 			 // Weapon Chests:
-			if(_outOfSpawn) floor_make(_x, _y, WeaponChest);
+			if(_outOfSpawn){
+				instance_create(_x + 16, _y + 16, WeaponChest);
+			}
 			
 			 // Start New Island:
 			if(chance(1, 2)){
@@ -310,7 +309,9 @@
 		 // Ammo Chests + End Branch:
 		var n = instance_number(FloorMaker);
 		if(!chance(22, 19 + n)){
-			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+			if(_outOfSpawn){
+				instance_create(_x + 16, _y + 16, AmmoChest);
+			}
 			instance_destroy();
 		}
 		
@@ -854,8 +855,9 @@
 			surface_set_target(surf);
 			draw_clear_alpha(0, 0);
 			
+			var _spr = spr.FloorCoast;
 			with(instance_rectangle_bbox(x, y, x + w, y + h, instances_matching(Floor, "visible", true))){
-				var _spr = ((sprite_index == spr.FloorCoastB) ? spr.FloorCoast : sprite_index);
+				//var _spr = ((sprite_index == spr.FloorCoastB) ? spr.FloorCoast : sprite_index);
 				draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
 			
@@ -1440,8 +1442,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -1491,10 +1493,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

@@ -712,7 +712,7 @@
 				if(array_length(instances_matching(CustomHitme, "pickup", id)) <= 0){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
-						if(in_sight(other)){
+						if(instance_seen(x, y, other)){
 							_pickup = id;
 							_disMax = _dis;
 						}
@@ -1343,11 +1343,10 @@
 	
 	if(sprite_index != spr_shield){
 		if(instance_exists(leader)){
-			var _leaderSeeTarget = false;
-			with(leader) _leaderSeeTarget = in_sight(other.target);
+			var _leaderSeeTarget = instance_seen(leader.x, leader.y, target);
 			
 			 // Pathfinding:
-			if(path_dir != null && (!in_sight(target) || _leaderDis > 48)){
+			if(path_dir != null && (!instance_seen(x, y, target) || _leaderDis > 48)){
 				scrWalk(path_dir + orandom(15), 15);
 				return 1 + irandom(walk);
 			}
@@ -1360,7 +1359,7 @@
 				
 				 // Attacking:
 				if(instance_exists(target) && !instance_exists(my_venom)){
-					if(in_sight(target) && _leaderSeeTarget && _leaderDis <= 96){
+					if(instance_seen(x, y, target) && _leaderSeeTarget && _leaderDis <= 96){
 						if(chance(2, 3)){
 							sound_play_hit_ext(sndScorpionFireStart, 1.2, 3);
 
@@ -1582,8 +1581,7 @@
 			rotation += angle_difference((10 + (10 * sin((x + y) / 10))) * other.right, rotation) * 0.5 * current_time_scale;
 			
 			 // Portal Takes Bone:
-			var n = instance_nearest(x, y, Portal);
-			if(!visible || in_distance(n, 96)){
+			if(!visible || instance_near(x, y, Portal, 96)){
 				other.my_bone = noone;
 			}
 		}
@@ -1595,13 +1593,17 @@
 	if(sprite_index != spr_fire && sprite_index != spr_spwn){
 		if(instance_exists(leader)){
 			 // Pathfinding:
-			if(path_dir != null && (!in_sight(target) || _leaderDis > 96)){
+			if(path_dir != null && (!instance_seen(x, y, target) || _leaderDis > 96)){
 				scrWalk(path_dir + orandom(20), 12);
 				return 1 + irandom(walk);
 			}
 			
 			else{
-				if(in_sight(target) && point_distance(leader.x, leader.y, target.x, target.y) < 160 && target != my_bone){
+				if(
+					target != my_bone
+					&& instance_seen(x, y, target)
+					&& instance_near(leader.x, leader.y, target, 160)
+				){
 					 // Bite:
 					if(
 						(target.visible || !instance_is(target, WepPickup))
@@ -1639,7 +1641,7 @@
 					with(pet_target_inst){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
-							if(!instance_is(self, prop) && in_sight(other)){
+							if(!instance_is(self, prop) && instance_seen(x, y, other)){
 								_disMax = _dis;
 								other.target = id;
 							}
@@ -1647,18 +1649,18 @@
 					}
 					
 					 // Movin:
-					if(instance_exists(target) && !collision_line(leader.x, leader.y, target.x, target.y, Wall, false, false)){
+					if(instance_exists(target) && instance_seen(leader.x, leader.y, target)){
 						motion_add(point_direction(x, y, target.x, target.y) + orandom(10), 2);
 						scrRight(direction);
 					}
 					
 					 // Fetch:
-					if(!instance_exists(my_bone) && !in_sight(target)){
+					if(!instance_exists(my_bone) && !instance_seen(x, y, target)){
 						var _disMax = 160;
-						with(WepPickup) if(visible){
+						with(instances_matching(WepPickup, "visible", true)){
 							var _dis = point_distance(x, y, other.x, other.y);
 							if(_dis < _disMax){
-								if(wep_get(wep) == "crabbone" && in_sight(other)){
+								if(wep_get(wep) == "crabbone" && instance_seen(x, y, other)){
 									_disMax = _dis;
 									other.target = id;
 								}
@@ -1852,19 +1854,14 @@
 			
 			 // Find Larget:	
 			with(leader){
-				var _enemies = [];
-				with(enemy) if(in_sight(other) && in_distance(other, 256)){
-					array_push(_enemies, id);
-				}
-				
-				_target = instance_nearest_array(x, y, _enemies);
+				_target = instance_near(x, y, instance_seen(x, y, other), 256));
 			}
 				
 			var t = array_length(instances_matching(instances_matching(CustomProjectile, "name", "SpiderTangle"), "creator", leader));
 			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
 			
 				 // Snare Larget:
-				if(in_sight(_target)){
+				if(instance_seen(x, y, _target)){
 					var _targetDir = point_direction(x, y, _target.x, _target.y);
 					
 					with(obj_create(x, y, "SpiderTangle")){
@@ -2088,7 +2085,7 @@
 			_leaderDir = point_direction(x, y, _lx, _ly),
 			_leaderDis = point_distance(x, y, _lx, _ly);
 			
-		if(leader.visible && in_sight(leader) && _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/){
+		if(leader.visible && instance_seen(x, y, leader) && _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/){
 			 // Lightning Arcing Effects:
 			if(arcing < 1){
 				arcing += 0.15 * current_time_scale;
@@ -2166,7 +2163,7 @@
 							||
 							(instance_is(self, prop) && sprite_get_width(sprite_index) <= 24 && sprite_get_height(sprite_index) <= 24)
 						){
-							if(in_sight(other)){
+							if(instance_seen(x, y, other)){
 								_disMax = _dis;
 								_nearest = id;
 							}
@@ -2253,7 +2250,7 @@
 #define Octo_alrm0(_leaderDir, _leaderDis)
 	if(instance_exists(leader)){
 		 // Follow Leader Around:
-		if(_leaderDis > 64 || !in_sight(leader)){
+		if(_leaderDis > 64 || !instance_seen(x, y, leader)){
 			 // Pathfinding:
 			if(path_dir != null){
 				scrWalk(path_dir + orandom(10), 6);
@@ -2274,7 +2271,7 @@
 			scrRight(direction);
 			
 			 // More Aggressive:
-			if(arcing >= 1 && in_distance(enemy, 160) && "index" in leader){
+			if(arcing >= 1 && instance_near(x, y, enemy, 160) && "index" in leader){
 				motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
 			}
 			
@@ -2311,7 +2308,7 @@
 						_y = bbox_center_y,
 						_dis = point_distance(other.x, other.y, _x, _y);
 						
-					if(_dis < _disMax && !collision_line(other.x, other.y, _x, _y, Wall, false, false)){
+					if(_dis < _disMax && instance_seen(_x, _y, other)){
 						_dir = point_direction(other.x, other.y, _x, _y);
 						_disMax = _dis;
 					}
@@ -2444,12 +2441,12 @@
 							case Laser:
 								
 								 // Manually Offset Lasers:
-								var	l = point_distance(xstart, ystart, other.x, other.y) + 12,
-									d = image_angle;
+								var	_l = point_distance(xstart, ystart, other.x, other.y) + 12,
+									_d = image_angle;
 									
 								with(_clone){
-									x = other.xstart + lengthdir_x(l, d);
-									y = other.ystart + lengthdir_y(l, d);
+									x = other.xstart + lengthdir_x(_l, _d);
+									y = other.ystart + lengthdir_y(_l, _d);
 									xstart = x;
 									ystart = y;
 									image_angle += orandom(20 * _accuracy);
@@ -2830,7 +2827,7 @@
 	if(
 		sprite_index != spr_spwn
 		&& name == "Pet"
-		&& (in_sight(leader) || in_sight(target))
+		&& (instance_seen(x, y, leader) || instance_seen(x, y, target))
 		&& instance_is(leader, Player)
 	){
 		gunangle_goal = point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]);
@@ -2885,7 +2882,7 @@
 	}
 	
 	 // Aim:
-	if(instance_exists(target) && in_sight(target)){
+	if(instance_seen(x, y, target)){
 		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 	}
 	else target = noone;
@@ -2977,11 +2974,11 @@
 				 // Laser Sight:
 				if(weapon_get_laser_sight(wep)){
 					if(
-						in_sight(target)
-						|| (name == "Pet" && in_sight(leader))
+						instance_seen(x, y, target)
+						|| (name == "Pet" && instance_seen(x, y, leader))
 						|| (name == "PetWeaponBoss" && point_distance(x, y, cover_x, cover_y) < 24)
 					){
-						_wepLaser += current_time_scale / (in_distance(target, shootdis_min) ? 60 : 5);
+						_wepLaser += current_time_scale / (instance_near(x, y, target, shootdis_min) ? 60 : 5);
 					}
 					else if(_wepLaser > 0){
 						_wepLaser -= current_time_scale / 3;
@@ -3169,7 +3166,7 @@
 						var _disMax = 64;
 						with(pet_target_inst){
 							var _dis = point_distance(x, y, other.x, other.y);
-							if(_dis < _disMax && in_sight(other)){
+							if(_dis < _disMax && instance_seen(x, y, other)){
 								_disMax = _dis;
 								other.target = id;
 							}
@@ -3180,7 +3177,7 @@
 							var _disMax = 64;
 							with(pet_target_inst){
 								var _dis = point_distance(x, y, _mx, _my);
-								if(_dis < _disMax && in_sight(other)){
+								if(_dis < _disMax && instance_seen(x, y, other)){
 									_disMax = _dis;
 									other.target = id;
 								}
@@ -3542,8 +3539,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -3593,10 +3590,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

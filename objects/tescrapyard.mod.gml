@@ -196,7 +196,11 @@
 	
 	else{
 		 // Back Away:
-		if(enemy_target(x, y) && in_sight(target) && in_distance(target, 48)){
+		if(
+			enemy_target(x, y)
+			&& instance_seen(x, y, target)
+			&& instance_near(x, y, target, 48)
+		){
 			scrWalk(point_direction(target.x, target.y, x, y), random_range(10, 30));
 			scrRight(direction + 180);
 			alarm1 = walk;
@@ -295,7 +299,7 @@
 		spr_hurt = spr.SawTrapHurt;
 		hitid = [spr_idle, "SAWBLADE TRAP"];
 		image_speed = 0.4;
-		depth = 0;
+		depth = 1;
 		
 		 // Sound:
 		snd_hurt = sndHitMetal;
@@ -441,7 +445,7 @@
 	image_yscale *= _scale;
 	if(place_meeting(x, y, hitme)){
 		with(instances_meeting(x, y, hitme)){
-			if(place_meeting(x, y, other) && in_sight(other)){
+			if(place_meeting(x, y, other) && instance_seen(x, y, other)){
 				if(!instance_is(self, prop) || size <= 1){
 					 // Push:
 					if(!instance_is(self, prop) && (size < other.size || instance_is(self, Player))){
@@ -599,7 +603,7 @@
 	if(sprite_index == msk.SludgePool){
 		 // Raven Time:
 		if(!active){
-			if(in_sight(Player) && in_distance(Player, 96)){
+			if(instance_seen(x, y, Player) && instance_near(x, y, Player, 96)){
 				active = true;
 			}
 		}
@@ -658,8 +662,8 @@
 		}
 		
 		 // Activate Saladman:
-		if(alarm0 < 0 && in_sight(Player)){
-			if(point_seen_ext(x, y, -32, -32, -1) || in_distance(Player, 64)){
+		if(alarm0 < 0 && instance_seen(x, y, Player)){
+			if(point_seen_ext(x, y, -32, -32, -1) || instance_near(x, y, Player, 64)){
 				alarm0 = 150;
 				with(instance_nearest(x, y, Player)){
 					with(other) scrRight(point_direction(x, y, other.x, other.y));
@@ -861,7 +865,11 @@
 			alarm1 = 20 + random(10);
 			
 			 // Target:
-			if(enemy_target(x, y) && in_sight(target) && sign(right) == sign(target.x - x)){
+			if(
+				enemy_target(x, y)
+				&& instance_seen(x, y, target)
+				&& sign(right) == sign(target.x - x)
+			){
 				scrAim(point_direction(x, y, target.x, target.y));
 			}
 			
@@ -941,7 +949,7 @@
 			alarm1 = 2 + irandom(4);
 			
 			 // Target is near/alive:
-			if(in_distance(target, 256)) {
+			if(instance_near(x, y, target, 256)) {
 				var _targetDir = ceil(point_direction(x, y, target.x, target.y)/90) * 90;
 			}
 			
@@ -973,10 +981,10 @@
 	
 	 // Normal AI:
 	else {
-		if(in_distance(target, 256)) {
+		if(instance_near(x, y, target, 256)) {
 			scrAim(point_direction(x, y, target.x, target.y));
 			
-			if(in_sight(target) && chance(2, 3)) {
+			if(instance_seen(x, y, target) && chance(2, 3)) {
 				enemy_shoot(EnemyBullet1, gunangle, 6);
 			}
 			
@@ -1191,8 +1199,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -1242,10 +1250,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

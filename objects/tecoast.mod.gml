@@ -85,7 +85,7 @@
 	enemy_target(x, y);
 	
 	 // Become Man:
-	if(in_distance(target, 32) || (chance(1, 2) && in_distance(target, 128))){
+	if(instance_near(x, y, target, 32) || (chance(1, 2) && instance_near(x, y, target, 128))){
 		alarm1 = min(1, alarm1);
 		
 		 // Intimidating:
@@ -618,7 +618,7 @@
 	}
 
 	 // Pushed away from floors:
-	if(in_distance(Floor, 128)){
+	if(instance_near(x, y, Floor, 128)){
 		with(instance_nearest_bbox(x, y, Floor)){
 			var _dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
 			with(other) motion_add_ct(_dir, 3);
@@ -651,7 +651,7 @@
 		if !scared{
 			if instance_exists(_p){
 				 // investigate wading player
-				if(!in_distance(_p, 128)){
+				if(!instance_near(x, y, _p, 128)){
 					scrWalk(point_direction(x, y, _p.x, _p.y), [20, 30]);
 				}
 				else if(chance(1, 4)){
@@ -790,10 +790,10 @@
 	}
 	
 	else{
-		if(enemy_target(x, y) && in_sight(target)){
+		if(enemy_target(x, y) && instance_seen(x, y, target)){
 			scrAim(point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed));
 			
-			if(in_distance(target, [64, 320]) || array_length(instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", id)) > 0){
+			if(instance_near(x, y, target, [64, 320]) || array_length(instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", id)) > 0){
 				 // Prepare to Shoot:
 				if(reload <= 0 && chance(1, 2)){
 					alarm1 = 12;
@@ -984,13 +984,13 @@
 #define Gull_alrm1
 	alarm1 = 40 + irandom(30);
 
-	if(enemy_target(x, y) && in_sight(target)){
+	if(enemy_target(x, y) && instance_seen(x, y, target)){
 		scrAim(point_direction(x, y, target.x, target.y));
 
 		 // Target Nearby:
-		if(in_distance(target, [10, 480])){
+		if(instance_near(x, y, target, [10, 480])){
 			 // Attack:
-			if(in_distance(target, 60)){
+			if(instance_near(x, y, target, 60)){
 				alarm2 = 8;
 				instance_create(x, y, AssassinNotice);
 				sound_play_pitch(sndRavenScreech, 1.15 + random(0.1));
@@ -1099,7 +1099,7 @@
 			var n = instance_nearest_array(x, y, instances_matching_ne(instances_matching_ne(hitme, "team", team, 0), "mask_index", mskNone, sprVoid));
 			if(distance_to_object(n) < (16 * skill_get(mut_bolt_marrow))){
 				if(!place_meeting(x, y, n)){
-					if(in_sight(n)){
+					if(instance_seen(x, y, n)){
 						direction = point_direction(x, y, n.x, n.y);
 						image_angle = direction;
 					}
@@ -2030,13 +2030,13 @@
 #define Palanking_alrm1
 	alarm1 = 40 + random(20);
 	
-	if(enemy_target(x, y) && in_sight(target)){
+	if(enemy_target(x, y) && instance_seen(x, y, target)){
 		scrAim(point_direction(x, y, target.x, target.y));
 		scrWalk(gunangle + orandom(30), 60);
 		
 		 // Kingly Slap:
 		if(
-			(in_distance(target, 80) && array_length(Seal) > 2)
+			(instance_near(x, y, target, 80) && array_length(Seal) > 2)
 			||
 			(variable_instance_get(target, "reload", 0) > 0 && chance(1, 3))
 		){
@@ -2518,7 +2518,7 @@
 			if(!place_meeting(x, y, Floor) || place_meeting(x, y, Wall)){
 				if(!place_meeting(x, y, Floor)){
 					with(instance_nearest_bbox(x, y, Floor)){
-						if(collision_line(other.x, other.y, bbox_center_x, bbox_center_y, Wall, false, false)){
+						if(!instance_seen(bbox_center_x, bbox_center_y, other)){
 							with(other){
 								top_create(x, y, self, 0, 0);
 							}
@@ -2690,60 +2690,64 @@
 
 #define Pelican_alrm1
 	alarm1 = 40 + random(20); // 1-2 Seconds
-
+	
 	 // Flash (About to attack):
 	if(alarm2 >= 0){
 		var	_dis = 18,
 			_ang = gunangle + wepangle;
-
+			
 		with(instance_create(x + lengthdir_x(_dis, _ang), y + lengthdir_y(_dis, _ang), ThrowHit)){
 			image_speed = 0.5;
 			depth = -3;
 		}
 	}
-
+	
 	 // Aggroed:
-	if(enemy_target(x, y) && in_sight(target) && in_distance(target, 320)){
+	if(
+		enemy_target(x, y)
+		&& instance_seen(x, y, target)
+		&& instance_near(x, y, target, 320)
+	){
 		scrAim(point_direction(x, y, target.x, target.y));
-
+		
 		 // Attack:
-		if(((in_distance(target, 128) && chance(2, 3)) || chance(1, my_health)) && alarm2 < 0){
+		if(((instance_near(x, y, target, 128) && chance(2, 3)) || chance(1, my_health)) && alarm2 < 0){
 			alarm2 = chrg_time;
 			alarm1 = alarm2 - 10;
-
+			
 			 // Move away a tiny bit:
 			scrWalk(gunangle + 180 + orandom(10), 5);
-
+			
 			 // Warn:
 			instance_create(x, y, AssassinNotice).depth = -3;
 			sound_play_pitch(sndRavenHit, 0.5 + random(0.1));
 		}
-
+		
 		 // Move Toward Target:
 		else scrWalk(gunangle + orandom(10), [20, 30]);
 	}
-
+	
 	 // Wander:
 	else{
 		alarm1 = 90 + random(30);
 		scrWalk(random(360), [10, 15]);
 		scrAim(direction);
 	}
-
+	
 #define Pelican_alrm2
 	alarm1 = 40 + random(20);
-
+	
 	 // Dash:
 	dash = 12;
 	motion_set(gunangle, maxspeed);
-
+	
 	 // Heavy Slash:
 	with(enemy_shoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
 		sprite_index = sprHeavySlash;
 		friction = 0.4;
 		damage = 10;
 	}
-
+	
 	 // Misc. Visual/Sound:
 	wkick = -10;
 	wepangle = -wepangle;
@@ -2751,17 +2755,17 @@
 	sound_play(sndEnergyHammer);
 	sound_play_pitch(sndHammer, 0.75);
 	sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
-
+	
 #define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
 	if(dash > 0) _hitvel = min(_hitvel, speed - 1);
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
-
+	
 #define Pelican_death
 	var _minID = GameObject.id;
 	
 	pickup_drop(80, 0);
 	pickup_drop(60, 5);
-
+	
 	 // Hmm:
 	with(instances_matching(instances_matching_gt(WepPickup, "id", _minID), "wep", wep_sledgehammer)){
 		sprite_index = other.spr_weap;
@@ -2773,8 +2777,8 @@
 			image_speed = 0.35;
 		}
 	}
-
-
+	
+	
 #define Seal_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -3206,7 +3210,7 @@
 			
 		scrAim(point_direction(x, y, target.x, target.y));
 		
-		if(in_sight(target) || type == seal_none){
+		if(instance_seen(x, y, target) || type == seal_none){
 			 // Seal Types:
 			switch(type){
 				case seal_hookpole:
@@ -3214,14 +3218,14 @@
 					alarm1 = 10 + random(15);
 					
 					 // Too Close:
-					if(in_distance(target, 20)){
+					if(instance_near(x, y, target, 20)){
 						scrWalk(gunangle + 180 + orandom(60), 10);
 					}
 					
 					else{
 						if(chance(4, 5)){
 							 // Attack:
-							if(_canAttack && in_distance(target, 70)){
+							if(_canAttack && instance_near(x, y, target, 70)){
 								alarm1 = 30;
 								alarm2 = 10;
 								trident_dist = point_distance(x, y, target.x, target.y) - 24;
@@ -3250,7 +3254,7 @@
 						alarm1 = 15 + irandom(5);
 						
 						 // Dagger Time:
-						if(wkick == 0 && in_distance(target, 80)){
+						if(wkick == 0 && instance_near(x, y, target, 80)){
 							scrWalk(gunangle + orandom(10), [4, 8]);
 							
 							shield = false;
@@ -3273,11 +3277,11 @@
 					else{
 						alarm1 = 20 + random(10);
 						
-						if(in_distance(target, 120)){
+						if(instance_near(x, y, target, 120)){
 							scrWalk(gunangle + (180 * chance(1, 3)) + orandom(20), [5, 10]);
 							
 							 // Stabby:
-							if(_canAttack && in_distance(target, 80)){
+							if(_canAttack && instance_near(x, y, target, 80)){
 								with(enemy_shoot(Shank, gunangle, 3)){
 									damage = 2;
 								}
@@ -3318,7 +3322,7 @@
 				case seal_blunderbuss:
 					
 					 // Slide Away:
-					if(in_distance(target, 80)){
+					if(instance_near(x, y, target, 80)){
 						direction = gunangle + 180;
 						slide = 15;
 						alarm1 = slide + random(10);
@@ -3327,7 +3331,7 @@
 					 // Good Distance Away:
 					else{
 						 // Aim & Ignite Powder:
-						if(_canAttack && in_distance(target, 192) && chance(2, 3)){
+						if(_canAttack && instance_near(x, y, target, 192) && chance(2, 3)){
 							alarm1 = alarm1 + 90;
 							alarm2 = 15;
 							
@@ -3353,7 +3357,7 @@
 				case seal_mercenary:
 					
 					 // Slide Towards:
-					if(!in_distance(target, 160)){
+					if(!instance_near(x, y, target, 160)){
 						direction = gunangle + orandom(60);
 						slide = 15;
 						alarm1 = slide + random(20);
@@ -3404,7 +3408,7 @@
 				case seal_dasher:
 					
 					 // Move Away:
-					if(in_distance(target, 32) || chance(1, 4)){
+					if(instance_near(x, y, target, 32) || chance(1, 4)){
 						slide = 5 + random(5);
 						direction = gunangle + 180 + orandom(40);
 					}
@@ -3433,7 +3437,7 @@
 					else{
 						 // "Don't kill me!"
 						if(scared){
-							if(in_distance(target, 120) || chance(2, array_length(instances_matching(object_index, "name", name)))){
+							if(instance_near(x, y, target, 120) || chance(2, array_length(instances_matching(object_index, "name", name)))){
 								scrWalk(gunangle + 180 + orandom(50), [20, 30]);
 								if(chance(1, 3)) slide = walk - 5;
 								alarm1 = walk;
@@ -3447,7 +3451,7 @@
 						 // Idle:
 						else{
 							scrWalk(point_direction(x, y, xstart + orandom(24), ystart + orandom(24)), [5, 10]);
-							if(!in_distance(target, 120)){
+							if(!instance_near(x, y, target, 120)){
 								scrAim(direction);
 							}
 						}
@@ -3584,7 +3588,7 @@
 		case seal_dasher:
 			
 			 // Aim:
-			if(enemy_target(x, y) && in_sight(target)){
+			if(enemy_target(x, y) && instance_seen(x, y, target)){
 				scrAim(point_direction(x, y, target.x, target.y));
 			}
 			
@@ -3609,7 +3613,7 @@
 			 // Alert:
 			with(instances_matching(object_index, "name", name)){
 				if(!scared && type == other.type){
-					if(in_distance(other, 80)){
+					if(instance_near(x, y, other, 80)){
 						scared = true;
 						instance_create(x, y, AssassinNotice);
 					}
@@ -4058,7 +4062,7 @@
 			}
 		}
 
-		else if(in_sight(target)){
+		else if(instance_seen(x, y, target)){
 			scrAim(point_direction(x, y, target.x, target.y));
 
 			target_x = target.x;
@@ -4081,7 +4085,7 @@
 				 // On Land:
 				else{
 					 // Start Spinning Anchor:
-					if((in_distance(target, 180) && chance(3, 4)) || in_distance(target, 100)){
+					if((instance_near(x, y, target, 180) && chance(3, 4)) || instance_near(x, y, target, 100)){
 						alarm1 = 45;
 						anchor_spin = choose(-1, 1) * 5;
 						sound_play_pitch(sndRatMelee, 0.5 + orandom(0.1));
@@ -4103,9 +4107,9 @@
 				if(instance_exists(my_mine)){
 					alarm1 = 20;
 
-					if(in_distance(target, 144)){
+					if(instance_near(x, y, target, 144)){
 						 // Too Close:
-						if(in_distance(target, 48)){
+						if(instance_near(x, y, target, 48)){
 							scrWalk(gunangle + 180, 20);
 						}
 
@@ -4392,11 +4396,11 @@
 		else{
 			alarm1 = 35 + random(15);
 
-			if(in_sight(target)){
+			if(instance_seen(x, y, target)){
 				scrAim(point_direction(x, y, target.x, target.y));
 
 				 // Attack:
-				if(in_distance(target, 128)){
+				if(instance_near(x, y, target, 128)){
 					scrWalk(gunangle + (sweep_dir * random(90)), 1);
 
 					alarm1 = 1;
@@ -4425,7 +4429,7 @@
 		target = instance_nearest(x, y, Player);
 		
 		 // Awaken:
-		if(in_distance(target, 80) || chance(1, instance_number(enemy))){
+		if(instance_near(x, y, target, 80) || chance(1, instance_number(enemy))){
 			active = true;
 
 			 // Effects:
@@ -4517,7 +4521,7 @@
 	if(speed > 0){
 		if(skill_get(mut_bolt_marrow) > 0){
 			var n = marrow_target;
-			if(!in_sight(n)){
+			if(!instance_seen(x, y, n)){
 				var	_x = x + hspeed,
 					_y = y + vspeed,
 					_disMax = 160;
@@ -4525,7 +4529,7 @@
 				with(instances_matching_ne(instances_matching_ne(instance_rectangle(_x - _disMax, _y - _disMax, _x + _disMax, _y + _disMax, [enemy, Player, Sapling, Ally, SentryGun, CustomHitme]), "team", team, 0), "mask_index", mskNone, sprVoid)){
 					var _dis = point_distance(x, y, _x, _y);
 					if(_dis < _disMax){
-						if(in_sight(other)){
+						if(instance_seen(x, y, other)){
 							if(lq_defget(other.hit_list, string(self), 0) <= other.hit_time){
 								if(array_length(instances_matching(PopoShield, "creator", id)) <= 0){
 									_disMax = _dis;
@@ -4588,7 +4592,7 @@
 				}
 				
 				 // Rotatin:
-				if(in_distance(creator, 40)){
+				if(instance_near(x, y, creator, 40)){
 					d += 180;
 				}
 				image_angle = angle_lerp(image_angle, d, (0.05 * current_time_scale) / (curse_return_delay + 1));
@@ -4695,7 +4699,11 @@
 			if(skill_get(mut_bolt_marrow) > 0 && !instance_exists(marrow_target)){
 				Trident_step();
 			}
-			if(marrow_target != creator && in_sight(marrow_target) && in_distance(marrow_target, 160)){
+			if(
+				marrow_target != creator
+				&& instance_seen(x, y, marrow_target)
+				&& instance_near(x, y, marrow_target, 160)
+			){
 				if(in_range(abs(angle_difference(image_angle, point_direction(x, y, marrow_target.x, marrow_target.y))), 10, 160)){
 					_canWall = false;
 				}
@@ -5016,8 +5024,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -5067,10 +5075,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

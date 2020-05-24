@@ -721,14 +721,14 @@
 	}
 	
 	
-#define Hammerhead_create(_x, _y)
+#define HammerShark_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.HammerheadIdle;
-		spr_walk = spr.HammerheadIdle;
-		spr_hurt = spr.HammerheadHurt;
-		spr_dead = spr.HammerheadDead;
-		spr_chrg = spr.HammerheadChrg;
+		spr_idle = spr.HammerSharkIdle;
+		spr_walk = spr.HammerSharkIdle;
+		spr_hurt = spr.HammerSharkHurt;
+		spr_dead = spr.HammerSharkDead;
+		spr_chrg = spr.HammerSharkChrg;
 		spr_shadow = shd48;
 		spr_shadow_y = 2;
 		hitid = [spr_idle, "HAMMERHEAD"];
@@ -760,7 +760,7 @@
 		return id;
 	}
 	
-#define Hammerhead_step
+#define HammerShark_step
 	 // Swim in a circle:
 	if(rotate != 0){
 		rotate -= clamp(rotate, -1, 1) * current_time_scale;
@@ -829,15 +829,15 @@
 		}
 	}
 	
-#define Hammerhead_alrm1
+#define HammerShark_alrm1
 	alarm1 = 30 + random(20);
 	
-	if(enemy_target(x, y) && in_distance(target, 256)){
+	if(enemy_target(x, y) && instance_near(x, y, target, 256)){
 		var _targetDir = point_direction(x, y, target.x, target.y);
 		
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			 // Close Range Charge:
-			if(in_distance(target, 96) && chance(3, 4)){
+			if(instance_near(x, y, target, 96) && chance(3, 4)){
 				charge = 15 + random(10);
 				charge_wait = 15;
 				charge_dir = _targetDir;
@@ -876,7 +876,7 @@
 		alarm1 += random(walk);
 	}
 	
-#define Hammerhead_death
+#define HammerShark_death
 	pickup_drop(30, 8);
 	
 	
@@ -1139,10 +1139,10 @@
 	else if(sprite_index == spr_fire) sprite_index = spr_idle;
 	
 #define Puffer_draw
-	var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	if(h) d3d_set_fog(1, image_blend, 0, 0);
+	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_self_enemy();
-	if(h) d3d_set_fog(0, 0, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 #define Puffer_alrm1
 	alarm1 = 20 + random(30);
@@ -1152,7 +1152,11 @@
 			var _targetDir = point_direction(x, y, target.x, target.y);
 			
 			 // Puff Time:
-			if(in_sight(target) && in_distance(target, 256) && chance(1, 2)){
+			if(
+				chance(1, 2)
+				&& instance_seen(x, y, target)
+				&& instance_near(x, y, target, 256)
+			){
 				alarm1 = 30;
 				
 				scrWalk(_targetDir, 8);
@@ -1416,7 +1420,7 @@
 			}
 			
 			 // Chase player instead:
-			else if(in_sight(target)) {
+			else if(instance_seen(x, y, target)) {
 				var _targetDir = point_direction(x, y, target.x, target.y);
 				scrRight(_targetDir);
 				
@@ -1430,7 +1434,7 @@
 			}
 		}
 		 // No leader to follow:
-		else if(in_sight(target)) {
+		else if(instance_seen(x, y, target)) {
 			var _targetDir = point_direction(x, y, target.x, target.y);
 			
 			 // Sad chase :( :
@@ -1801,8 +1805,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -1852,10 +1856,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

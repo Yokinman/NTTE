@@ -106,7 +106,7 @@
 	 // Wait for Nearby Player:
 	else if(alarm0 < 0 && instance_exists(Player)){
 		var _target = instance_nearest(x, y, Player);
-		if(open || (in_sight(_target) && in_distance(_target, 96))){
+		if(open || (instance_seen(x, y, _target) && instance_near(x, y, _target, 96))){
 			alarm0 = 60;
 		}
 	}
@@ -145,7 +145,7 @@
 						_cy = _fy + (_fh / 2);
 						
 					if(!collision_rectangle(_fx, _fy, _fx + _fw - 1, _fy + _fh - 1, Wall, false, false)){
-						if(other.open || !collision_line(_cx, _cy, _target.x, _target.y, Wall, false, false)){
+						if(other.open || instance_seen(_cx, _cy, _target)){
 							array_push(_spawnFloor, [
 								max(64 * (1 + instance_is(self, FloorExplo)), point_distance(_cx, _cy, _target.x, _target.y)) + random(32),
 								{
@@ -576,23 +576,23 @@
 		draw_sprite_ext(spr_back, _imageIndex, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		
 		 // Draw Thing:
-		var _oc = chance(1, 30),
-			_ol = 2,
-			_od = random(360),
-			_xo = _oc * lengthdir_x(_ol, _od),
-			_yo = _oc * lengthdir_y(_ol, _od),
-			_sprite = thing.sprite,
-			_index = (thing.index == -1 ? _imageIndex : thing.index),
-			_x = x + _xo + (sin(wave / 10) * 2),
-			_y = y + _yo + (cos(wave / 10) * 3),
-			_xScale = (image_xscale * thing.right),
-			_yScale = image_yscale,
-			_angle = image_angle + sin(wave / 30) * 30,
-			_blend = c_white,
-			_alpha = image_alpha;
+		var _oc  = chance(1, 30),
+			_ol  = 2,
+			_od  = random(360),
+			_ox  = _oc * lengthdir_x(_ol, _od),
+			_oy  = _oc * lengthdir_y(_ol, _od),
+			_spr = thing.sprite,
+			_img = ((thing.index == -1) ? _imageIndex : thing.index),
+			_x   = x + _ox + (sin(wave / 10) * 2),
+			_y   = y + _oy + (cos(wave / 10) * 3),
+			_xsc = (image_xscale * thing.right),
+			_ysc = image_yscale,
+			_ang = image_angle + sin(wave / 30) * 30,
+			_col = c_white,
+			_alp = image_alpha;
 			
 		draw_set_fog(true, thing.color, 0, 0);
-		draw_sprite_ext(_sprite, _index, _x, _y, _xScale, _yScale, _angle, _blend, _alpha);
+		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 		draw_set_fog(false, c_white, 0, 0);
 	}
 	
@@ -615,9 +615,9 @@
 	
 #define MutantVat_alrm2
 	alarm2 = 30 + random(60);
-	var _target = instance_nearest(x, y, Player);
-	if(in_sight(_target)){
-		thing.right = (x > _target.x ? -1 : 1);
+	
+	with(instance_seen(x, y, Player)){
+		other.thing.right = ((other.x > x) ? -1 : 1);
 	}
 	
 #define MutantVat_death
@@ -1028,8 +1028,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -1079,10 +1079,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

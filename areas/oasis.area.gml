@@ -187,18 +187,22 @@
 	/// Chests & Branching:
 		 // Turn Arounds (Weapon Chests):
 		if(_trn == 180 && _outOfSpawn){
-			floor_make(_x, _y, WeaponChest);
+			instance_create(_x + 16, _y + 16, WeaponChest);
 		}
 		
 		 // Dead Ends (Ammo Chests):
 		var n = instance_number(FloorMaker);
 		if(!chance(20, 19 + n)){
-			if(_outOfSpawn) floor_make(_x, _y, AmmoChest);
+			if(_outOfSpawn){
+				instance_create(_x + 16, _y + 16, AmmoChest);
+			}
 			instance_destroy();
 		}
 		
 		 // Branch:
-		if(chance(1, 5)) instance_create(_x, _y, FloorMaker);
+		if(chance(1, 5)){
+			instance_create(_x, _y, FloorMaker);
+		}
 		
 #define area_pop_enemies
 	var	_x = x + 16,
@@ -235,7 +239,7 @@
 						if(chance(1, 2)) instance_create(_x, _y, Crab);
 					}
 					else{
-						obj_create(_x, _y, "Hammerhead");
+						obj_create(_x, _y, "HammerShark");
 					}
 				}
 			}
@@ -267,16 +271,7 @@
 		
 		 // Basic:
 		else if(_spawnDis > 96){
-			with(instance_create(_x, _y, choose(LightBeam, LightBeam, WaterPlant, WaterPlant, WaterMine, WaterMine, OasisBarrel))){
-				 // Offset Mine:
-				if(object_index == WaterMine && place_meeting(x, y - 32, Wall)){
-					if(!place_meeting(x, y + 32, Wall)){
-						y += 32;
-						yprevious = y;
-					}
-					depth = -1;
-				}
-			}
+			instance_create(_x, _y, choose(LightBeam, LightBeam, WaterPlant, WaterPlant, WaterMine, WaterMine, OasisBarrel));
 		}
 	}
 	
@@ -367,8 +362,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -418,10 +413,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

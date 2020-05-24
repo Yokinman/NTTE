@@ -54,17 +54,17 @@
 #define BanditCamp_chance  return ((GameCont.subarea == 3) ? 1/10 : 1/20);
 
 #define BanditCamp_create
-	var	_w = 5,
-		_h = 4,
-		_type = "",
-		_dirOff = 30,
-		_floorDis = -32,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 128,
+	var	_w          = 5,
+		_h          = 4,
+		_type       = "",
+		_dirOff     = 30,
+		_floorDis   = -32,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 128,
 		_spawnFloor = FloorNormal;
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		 // Dying Campfire:
@@ -172,18 +172,18 @@
 #define BlockedRoom_chance  return 1/3;
 
 #define BlockedRoom_create
-	var	_minID = GameObject.id,
-		_w = 2,
-		_h = 2,
-		_type = "",
-		_dirOff = 0,
-		_floorDis = 32,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 32,
+	var	_minID      = GameObject.id,
+		_w          = 2,
+		_h          = 2,
+		_type       = "",
+		_dirOff     = 0,
+		_floorDis   = 32,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 32,
 		_spawnFloor = FloorNormal;
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	 // Type Setup:
 	type = pool({
@@ -623,21 +623,21 @@
 #define MaggotPark_chance  return 1/50;
 
 #define MaggotPark_create
-	var	_x = x,
-		_y = y,
-		_num = 3,
-		_ang = random(360),
-		_nestNum = _num,
-		_nestDir = _ang,
-		_nestDis = 12 + (4 * _nestNum),
-		_w = ceil(((2 * (_nestDis + 32)) + 32) / 32),
-		_h = _w,
-		_type = "round",
-		_dirOff = 0,
-		_floorDis = -32,
-		_spawnX = _x,
-		_spawnY = _y,
-		_spawnDis = 160,
+	var	_x          = x,
+		_y          = y,
+		_num        = 3,
+		_ang        = random(360),
+		_nestNum    = _num,
+		_nestDir    = _ang,
+		_nestDis    = 12 + (4 * _nestNum),
+		_w          = ceil(((2 * (_nestDis + 32)) + 32) / 32),
+		_h          = _w,
+		_type       = "round",
+		_dirOff     = 0,
+		_floorDis   = -32,
+		_spawnX     = _x,
+		_spawnY     = _y,
+		_spawnDis   = 160,
 		_spawnFloor = FloorNormal;
 		
 	 // Find Spawn Location:
@@ -661,7 +661,7 @@
 	 // Generate Area:
 	var _minID = GameObject.id;
 	
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	floor_set_style(1, null);
 	
 	with(floor_room_create(_x, _y, _w, _h, _type, point_direction(_spawnX, _spawnY, _x, _y), _dirOff, _floorDis)){
@@ -807,20 +807,20 @@
 	}
 	
 	 // Scorpion Nests:
-	var	_minID = GameObject.id,
-		_spawnX = x,
-		_spawnY = y,
+	var	_minID      = GameObject.id,
+		_spawnX     = x,
+		_spawnY     = y,
 		_spawnFloor = FloorNormal;
 		
 	repeat(3){
-		var	_w = irandom_range(3, 5),
-			_h = _w,
-			_type = ((min(_w, _h) > 3) ? "round" : ""),
-			_dirOff = 90,
+		var	_w        = irandom_range(3, 5),
+			_h        = _w,
+			_type     = ((min(_w, _h) > 3) ? "round" : ""),
+			_dirOff   = 90,
 			_floorDis = 0,
 			_spawnDis = 64 + (_w * 16);
 			
-		floor_set_align(32, 32, null, null);
+		floor_set_align(null, null, 32, 32);
 		
 		with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 			 // Family:
@@ -894,18 +894,18 @@
 #define SewerPool_chance  return 1/5;
 
 #define SewerPool_create
-	var	_w = 2,
-		_h = 4,
-		_type = "",
-		_dirStart = 90,
-		_dirOff = 0,
-		_floorDis = -32,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 96,
+	var	_w          = 2,
+		_h          = 4,
+		_type       = "",
+		_dirStart   = 90,
+		_dirOff     = 0,
+		_floorDis   = -32,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 96,
 		_spawnFloor = [];
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	 // Get Potential Spawn Floors:
 	var _floorNormal = FloorNormal;
@@ -965,13 +965,13 @@
 	
 	with(array_shuffle(FloorNormal)){
 		if(!place_meeting(x, y, Wall)){
-			var	_fx = bbox_center_x,
-				_fy = bbox_center_y,
-				_w = 5 * 32,
-				_h = 4 * 32,
-				_ang = 90 * irandom(3),
+			var	_fx     = bbox_center_x,
+				_fy     = bbox_center_y,
+				_w      = 5 * 32,
+				_h      = 4 * 32,
+				_ang    = 90 * irandom(3),
 				_border = 32,
-				_end = false;
+				_end    = false;
 				
 			for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
 				if(!place_meeting(x + lengthdir_x(32, _dir), y + lengthdir_y(32, _dir), Floor)){
@@ -1174,7 +1174,7 @@
 	if(array_length(inst) > 0){
 		with(inst){
 			 // Deactivate:
-			if(instance_exists(self) && !in_sight(Player) && sprite_index != spr_hurt){
+			if(instance_exists(self) && !instance_seen(x, y, Player) && sprite_index != spr_hurt){
 				alarm1 = -1;
 				if(instance_is(self, GatorSmoke)) timer = 0;
 			}
@@ -1201,7 +1201,7 @@
 							if(alarm1 < 0) alarm1 = 25 + random(10);
 							
 							 // Alerted:
-							if(enemy_target(x, y) && in_sight(target) && my_health > 0){
+							if(enemy_target(x, y) && instance_seen(x, y, target) && my_health > 0){
 								_alert = true;
 								
 								var _ready = (sign(right) == sign(dcos(gunangle)));
@@ -1260,19 +1260,19 @@
 #define RavenArena_chance  return ((GameCont.subarea != 3) ? 1/30 : 0);
 
 #define RavenArena_create
-	var	_w = 6 + ceil(GameCont.loops / 2.5),
-		_h = _w,
-		_type = "round",
-		_dirOff = 60,
-		_floorDis = 0,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 32,
+	var	_w          = 6 + ceil(GameCont.loops / 2.5),
+		_h          = _w,
+		_type       = "round",
+		_dirOff     = 60,
+		_floorDis   = 0,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 32,
 		_spawnFloor = FloorNormal,
-		_instTop = [],
-		_instIdle = [];
+		_instTop    = [],
+		_instIdle   = [];
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		other.x = x;
@@ -1308,7 +1308,7 @@
 		}
 		
 		 // Front Row Seating:
-		with(Wall) if(place_meeting(x, y, Floor) && !collision_line(bbox_center_x, bbox_center_y, other.x, other.y, Wall, false, true)){
+		with(Wall) if(place_meeting(x, y, Floor) && instance_seen(bbox_center_x, bbox_center_y, other)){
 			if(chance(1, 4)){
 				with(top_create(bbox_center_x + orandom(2), y - 8 + orandom(2), "TopRaven", 0, 0)){
 					array_push(_instTop, id);
@@ -1403,7 +1403,7 @@
 	}
 	
 	 // Activate Ravens:
-	if(in_distance(Player, 96)){
+	if(instance_near(x, y, Player, 96)){
 		var _time = 60;
 		with(instances_matching_lt(inst_top, "jump_time", 0)){
 			jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
@@ -1462,18 +1462,18 @@
 #define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("pack:coast")) ? 1/7 : 0);
 
 #define SealPlaza_create
-	var	_minID = GameObject.id,
-		_w = 6,
-		_h = 6,
-		_type = "",
-		_dirOff = 0,
-		_floorDis = -64,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 160,
+	var	_minID      = GameObject.id,
+		_w          = 6,
+		_h          = 6,
+		_type       = "",
+		_dirOff     = 0,
+		_floorDis   = -64,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 160,
 		_spawnFloor = FloorNormal;
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		var	_iglooW = 3,
@@ -1523,17 +1523,17 @@
 #define MutantVats_area    return area_labs;
 #define MutantVats_chance  return lq_size(global.pastPets);
 #define MutantVats_create
-	var _spawnX = x,
-		_spawnY = y,
-		_spawnDis = 128,
+	var _spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 128,
 		_spawnFloor = FloorNormal,
-		_w = 6,
-		_h = 5,
-		_type = "",
-		_dirOff = 0,
-		_floorDis = 0;
+		_w          = 6,
+		_h          = 5,
+		_type       = "",
+		_dirOff     = 0,
+		_floorDis   = 0;
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		var _petList = global.pastPets,
@@ -1620,21 +1620,21 @@
 		we epic
 	*/
 	
-	var	_minID = GameObject.id,
+	var	_minID      = GameObject.id,
 		_skillArray = PalaceShrine_skills(),
 		_skillCount = min(array_length(_skillArray), 2 + irandom(2)),
-		_w = choose(3, 4),
-		_h = choose(3, 4),
-		_type = "",
-		_dirOff = 0,
-		_dirStart = random(360),
-		_floorDis = 0,
-		_spawnX = x,
-		_spawnY = y,
-		_spawnDis = 128,
+		_w          = choose(3, 4),
+		_h          = choose(3, 4),
+		_type       = "",
+		_dirOff     = 0,
+		_dirStart   = random(360),
+		_floorDis   = 0,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 128,
 		_spawnFloor = FloorNormal;
 		
-	floor_set_align(32, 32, null, null);
+	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 		
@@ -1998,8 +1998,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -2049,10 +2049,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

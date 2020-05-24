@@ -282,7 +282,7 @@
 		gonnafire--;
 		
 		 // Can't Aim if you Can't See:
-		if(enemy_target(x, y) && in_sight(target)){
+		if(enemy_target(x, y) && instance_seen(x, y, target)){
 			var _clamp = 2.4 * aim_factor;
 			scrAim(gunangle + clamp(angle_difference(point_direction(x, y, target.x, target.y), gunangle), -_clamp, _clamp));
 		}
@@ -304,7 +304,7 @@
 	else if(enemy_target(x, y)){
 		var _targetDir = point_direction(x, y, target.x, target.y);
 		
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			scrAim(_targetDir);
 			cangrenade = true;
 			
@@ -326,7 +326,7 @@
 			grenades > 0
 			&& cangrenade
 			&& chance(1, 2)
-			&& in_distance(target, 160)
+			&& instance_near(x, y, target, 160)
 			&& array_length(instances_matching(instances_matching(projectile, "creator", id), "team", team)) <= 0
 		){
 			grenades--;
@@ -641,7 +641,11 @@
 #define BabyGator_alrm1
 	alarm1 = 30 + random(60);
 	
-	if(enemy_target(x, y) && in_sight(target) && in_distance(target, 160)){
+	if(
+		enemy_target(x, y)
+		&& instance_seen(x, y, target)
+		&& instance_near(x, y, target, 160)
+	){
 		scrAim(point_direction(x, y, target.x, target.y));
 		
 		 // Attack:
@@ -805,24 +809,24 @@
 	}
 	
 	else{
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			scrAim(point_direction(x, y, target.x, target.y));
 			
 			 // Walk to target:
-			if(!in_distance(target, 75)){
+			if(!instance_near(x, y, target, 75)){
 				if(chance(4, 5)){
 					scrWalk(gunangle + orandom(8), [15, 35]);
 				}
 			}
 			
 			 // Walk away from target:
-			else if(in_distance(target, 50)){
+			else if(instance_near(x, y, target, 50)){
 				scrWalk(gunangle + 180 + orandom(12), [10, 15]);
 				alarm1 = walk;
 			}
 			
 			 // Attack target:
-			if(chance(2, 5) && in_distance(target, [50, 200])){
+			if(chance(2, 5) && instance_near(x, y, target, [50, 200])){
 				alarm1 = 10;
 				canfire = true;
 				instance_create(x + (4 * right), y, AssassinNotice);
@@ -851,7 +855,7 @@
 		else{
 			 // Follow nearest ally:
 			var c = instance_nearest_array(x, y, instances_matching(CustomEnemy, "name", "Cat", "CatBoss", "BatBoss"));
-			if(in_sight(c) && !in_distance(c, 64)){
+			if(instance_seen(x, y, c) && !instance_near(x, y, c, 64)){
 				scrWalk(point_direction(x, y, c.x, c.y) + orandom(8), [15, 35]);
 			}
 			
@@ -1150,7 +1154,7 @@
 	
 	if(active){
 		if(enemy_target(x, y)){
-			if(in_sight(target) && in_distance(target, 240)){
+			if(instance_seen(x, y, target) && instance_near(x, y, target, 240)){
 				scrAim(point_direction(x, y, target.x, target.y));
 				
 				 // Move Away:
@@ -1185,7 +1189,7 @@
 			else{
 				 // Follow Cat Boss:
 				var c = instance_nearest_array(x, y, instances_matching(CustomEnemy, "name", "CatBoss"));
-				if(in_sight(c) && !in_distance(c, 64)){
+				if(instance_seen(x, y, c) && !instance_near(x, y, c, 64)){
 					scrWalk(point_direction(x, y, c.x, c.y) + orandom(8), [15, 35]);
 				}
 				
@@ -1219,7 +1223,7 @@
 		if(current_frame_active) alarm1 = ceil(alarm1 / 2);
 		
 		if(enemy_target(x, y)){
-			if(in_sight(target) && in_distance(target, 128)){
+			if(instance_seen(x, y, target) && instance_near(x, y, target, 128)){
 				scrWalk(point_direction(x, y, target.x, target.y), alarm1);
 				scrAim(direction);
 			}
@@ -1581,7 +1585,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	var	_seekInst = noone,
 		_seekDis = (seek * skill_get(mut_bolt_marrow));
 		
-	if(_seekDis > 0 && in_distance(creator, 160)){
+	if(_seekDis > 0 && instance_near(x, y, creator, 160)){
 		with(instances_matching_ne(instances_matching_ne(hitme, "team", team, 0), "mask_index", mskNone, sprVoid)){
 			if(!instance_is(self, prop)){
 				var _dis = point_distance(x, y, other.x, other.y);
@@ -1945,12 +1949,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 	 // Normal Behavior:
 	else if(enemy_target(x, y)){
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			scrAim(point_direction(x, y, target.x, target.y));
 			
-			if(in_distance(target, 192)){
+			if(instance_near(x, y, target, 192)){
 				 // Attack:
-				if(in_distance(target, 128) || chance(1, 5)){
+				if(instance_near(x, y, target, 128) || chance(1, 5)){
 					alarm1 = 12;
 					ammo = 6;
 					
@@ -1965,7 +1969,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 				
 				 // Retreat:
-				if(in_distance(target, 32)){
+				if(instance_near(x, y, target, 32)){
 					scrWalk((gunangle + 180) + orandom(30), [20, 50]);
 				}
 			}
@@ -2191,7 +2195,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Sittin:
 		with(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch")){
-			if(in_sight(other) || chance(1, 2)){
+			if(instance_seen(x, y, other) || chance(1, 2)){
 				if(array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", id)) <= 0){
 					other.sit = id;
 					break;
@@ -2352,8 +2356,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				my_health < maxhealth
 				||
 				(
-					in_distance(target, 128) &&
-					(in_sight(target) || (in_distance(target, 96) && variable_instance_get(target, "reload", 0) > 0))
+					instance_near(x, y, target, 128) &&
+					(instance_seen(x, y, target) || (instance_near(x, y, target, 96) && variable_instance_get(target, "reload", 0) > 0))
 				)
 			){
 				cantravel = true;
@@ -2366,11 +2370,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			if(!sit || instance_is(sit, enemy) || chance(1, 12)){
 				if(!instance_is(sit, enemy)) sit = false;
 				
-				if(in_sight(target)){
+				if(instance_seen(x, y, target)){
 					scrAim(point_direction(x, y, target.x, target.y));
 					
 					 // Start Attack:
-					if(in_distance(target, 140) && chance(1, 3)){
+					if(instance_near(x, y, target, 140) && chance(1, 3)){
 						alarm1 = 4;
 						ammo = 10;
 						gunangle -= 45;
@@ -2404,7 +2408,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 								 // Open CatHole:
 								if(
 									!instance_exists(target) &&
-									in_distance(other, 48)	 &&
+									instance_near(x, y, other, 48)	 &&
 									CatHoleCover(true).open
 								){
 									other.alarm1 += 45;
@@ -2432,7 +2436,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					else if(!sit){
 						sit = true;
 						var n = instance_nearest(x, y, prop);
-						if(in_sight(n)) scrAim(point_direction(x, y, n.x, n.y));
+						if(instance_seen(x, y, n)) scrAim(point_direction(x, y, n.x, n.y));
 					}
 				}
 			}
@@ -2446,7 +2450,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			with(instances_matching(CustomObject, "name", "CatHole")){
 				if(chance(3, instance_number(enemy))){
 					if(!CatHoleCover().open){
-						if(!instance_exists(other.target) || in_distance(other.target, 140)){//in_sight(other.target)){
+						if(!instance_exists(other.target) || instance_near(x, y, other.target, 140)){//instance_seen(x, y, other.target)){
 							if(CatHoleCover(true).open){
 								with(other){
 									alarm1 = 15 + random(30);
@@ -2698,7 +2702,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				if(chance(4, 5)){
 					 // Attack:
-					if(chance(3, 4) && in_sight(target) && (in_distance(target, 80) || chance(1, 2))){
+					if(chance(3, 4) && instance_seen(x, y, target) && (instance_near(x, y, target, 80) || chance(1, 2))){
 						alarm1 = 10;
 						
 						with(enemy_shoot("CatBossAttack", gunangle, 0)){
@@ -2717,7 +2721,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					}
 					
 					 // Gas dash:
-					else if(!in_distance(target, 40)){
+					else if(!instance_near(x, y, target, 40)){
 						alarm2 = 15;
 						alarm1 += alarm2;
 						sprite_index = spr_chrg;
@@ -3728,7 +3732,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		var _dis = 36;
 		with(instances_matching(instance_rectangle_bbox(x - _dis, y - _dis, x + _dis, y + _dis, [Scorch, ScorchTop]), "bighole_check", null, false)){
 			bighole_check = true;
-			if(in_distance(other, _dis)) instance_destroy();
+			if(instance_near(x, y, other, _dis)) instance_destroy();
 		}
 		
 		 // Grab Portal:
@@ -3881,7 +3885,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Increment:
-		else if((in_distance(target, 180) && in_sight(target)) || phase < 2){
+		else if((instance_near(x, y, target, 180) && instance_seen(x, y, target)) || phase < 2){
 			if(phase > 1) phase++;
 			
 			image_index = 1;
@@ -4129,7 +4133,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 	if(instance_exists(t)){
 		with(FloorNormal) if(!place_meeting(x, y, Wall)){
-			if(in_distance(t, [32, 128])){
+			if(instance_near(x, y, t, [32, 128])){
 				array_push(f, id);
 			}
 		}
@@ -4352,7 +4356,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			var	_w = 32,
 				_h = 32;
 				
-			floor_set_align(16, 16, x, null);
+			floor_set_align(x, null, 16, 16);
 			
 			 // Clear:
 			with(instance_rectangle_bbox(x - _w, y - _h, x + _w - 1, y - 1, [Floor, TopPot, Bones])){
@@ -5085,7 +5089,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Noticable Players:
 	var p = [];
 	with(Player){
-		if(point_seen(other.x, other.y, index) && in_sight(other)){
+		if(point_seen(other.x, other.y, index) && instance_seen(x, y, other)){
 			array_push(p, id);
 		}
 	}
@@ -5126,7 +5130,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Watchin TV:
 	else{
 		var t = instance_nearest(x, y, TV);
-		if(in_sight(t) && in_distance(t, 96)){
+		if(instance_seen(x, y, t) && instance_near(x, y, t, 96)){
 			scrRight(point_direction(x, y, t.x, t.y));
 		}
 	}
@@ -5163,12 +5167,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	else{
 		with(instances_matching([Turtle, Rat], "", null)){
-			if(my_health < maxhealth && in_sight(other)){
+			if(my_health < maxhealth && instance_seen(x, y, other)){
 				_angered = true;
 			}
 		}
 		with(instances_matching(Corpse, "sprite_index", sprTurtleDead, sprRatDead)){
-			if(in_sight(other)){
+			if(instance_seen(x, y, other)){
 				_angered = true;
 			}
 		}
@@ -5565,8 +5569,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -5616,10 +5620,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

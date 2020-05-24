@@ -438,12 +438,12 @@
 			GullDead  = sprite(p + "sprGullDead",  6, 16, 16);
 			GullSword = sprite(p + "sprGullSword", 1,  6,  8);
 			
-			 // Hammerhead:
+			 // Hammerhead Fish:
 			p = m + "Hammer/";
-			HammerheadIdle = sprite(p + "sprHammerheadIdle",  6, 24, 24);
-			HammerheadHurt = sprite(p + "sprHammerheadHurt",  3, 24, 24);
-			HammerheadDead = sprite(p + "sprHammerheadDead", 10, 24, 24);
-			HammerheadChrg = sprite(p + "sprHammerheadDash",  2, 24, 24);
+			HammerSharkIdle = sprite(p + "sprHammerSharkIdle",  6, 24, 24);
+			HammerSharkHurt = sprite(p + "sprHammerSharkHurt",  3, 24, 24);
+			HammerSharkDead = sprite(p + "sprHammerSharkDead", 10, 24, 24);
+			HammerSharkChrg = sprite(p + "sprHammerSharkDash",  2, 24, 24);
 			
 			 // Jellyfish (0 = blue, 1 = purple, 2 = green, 3 = elite):
 			p = m + "Jellyfish/";
@@ -823,6 +823,9 @@
 				GroundFlameGreenBig          = sprite(p + "sprGroundFlameGreenBig",          8, 6, 8);
 				GroundFlameGreenDisappear    = sprite(p + "sprGroundFlameGreenDisappear",    4, 4, 6);
 				GroundFlameGreenBigDisappear = sprite(p + "sprGroundFlameGreenBigDisappear", 4, 6, 8);
+				
+				 // Top Pillar:
+				TopPillar = sprite(p + "sprTopPillar", 11, 24, 32);
 				
 			//#endregion
 			
@@ -1303,7 +1306,7 @@
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
 			
 			 // Hammerhead Pickup:
-			HammerHeadPickup		= sprite(p  + "sprHammerHeadPickup",		1, 5, 5, shn10);
+			HammerHeadPickup		= sprite(p + "sprHammerHeadPickup",		1, 5, 5, shn10);
 			HammerHeadPickupEffect	= sprite(p + "sprHammerHeadPickupEffect",	3, 16, 8);
 			
 			 // Sunken Chest:

@@ -105,7 +105,7 @@
 				_clones = instances_matching(CustomObject, "name", "Clone");
 				
 			with(instances_matching([enemy, Ally], "team", team)){
-				if(in_distance(other, 256)){
+				if(instance_near(x, y, other, 256)){
 				
 					 // Quality Assurance:
 					if(!instance_is(id, becomenemy)){
@@ -561,7 +561,7 @@
 			var _targetDir = point_direction(x, y, target.x, target.y),
 				_canWarp = my_health < maxhealth;
 			
-			if(in_sight(target)){
+			if(instance_seen(x, y, target)){
 			
 				 // Attempt Cloning:
 				if(chance((1 - (clone_num / clone_max)), 1)){
@@ -572,7 +572,7 @@
 				}
 				
 				 // Get Back, Bro:
-				if(in_distance(target, 64)){
+				if(instance_near(x, y, target, 64)){
 					scrWalk((_targetDir + 180) + orandom(30), random_range(10, 20));
 					alarm1 = walk + random(10);
 				}
@@ -601,7 +601,7 @@
 			}
 			
 			 // Watch Your Back:
-			if(in_sight(target)){
+			if(instance_seen(x, y, target)){
 				scrRight(_targetDir);
 			}
 		}
@@ -624,7 +624,7 @@
 		if(instance_exists(_target)){
 			with(instances_matching_ne(FloorNormal, "name", "WallFake")){
 				if(!place_meeting(x, y, Wall)){
-					if(in_distance(_target, [_minDis, _maxDis])){
+					if(instance_near(x, y, _target, [_minDis, _maxDis])){
 						array_push(_floors, id);
 					}
 				}
@@ -1253,7 +1253,7 @@
 	alarm1 = 80 + random(20);
 	
 	 // Near Target:
-	if(enemy_target(x, y) && in_distance(target, 240)){
+	if(enemy_target(x, y) && instance_near(x, y, target, 240)){
 		scrAim(point_direction(x, y, target.x, target.y));
 		
 		 // Attack:
@@ -1353,7 +1353,7 @@
 		}
 		
 		 // Aim After Target:
-		if(in_sight(target)){
+		if(instance_seen(x, y, target)){
 			var	l = 32,
 				d = point_direction(target_x, target_y, target.x, target.y);
 				
@@ -1609,13 +1609,13 @@
 	alarm1 = irandom_range(10, 30);
 	
 	if(enemy_target(x, y)){
-		var	_targetDir = point_direction(x, y, target.x, target.y),
-			_targetSeen = in_sight(target);
+		var	_targetDir  = point_direction(x, y, target.x, target.y),
+			_targetSeen = instance_seen(x, y, target);
 			
 		if(_targetSeen) target_seen = true;
 		
 		 // Attack:
-		if(chance(2, 3) && in_distance(target, 96)){
+		if(chance(2, 3) && instance_near(x, y, target, 96)){
 			alarm1 = 45;
 			walk = 0;
 			speed /= 2;
@@ -1783,7 +1783,7 @@
 	}
 	
 	 // Move Towards Target:
-	if(in_sight(target) && in_distance(target, 96)){
+	if(instance_seen(x, y, target) && instance_near(x, y, target, 96)){
 		scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), 14);
 		if(instance_is(target, prop)){
 			direction += orandom(60);
@@ -2484,6 +2484,36 @@
 		}
 	}
 	
+#define ntte_bloom
+	 // Crystal Heart Projectile:
+	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		 // Copy pasting code is truly so epic:
+		image_xscale *= _scale;
+		image_yscale *= _scale;
+		image_alpha  *= _alpha;
+		event_perform(ev_draw, 0);
+		image_xscale /= _scale;
+		image_yscale /= _scale;
+		image_alpha  /= _alpha;
+	}
+	
+	 // Teleport FX:
+	with(instances_matching(CustomObject, "name", "WarpPortal")){
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		image_xscale *= _scale;
+		image_yscale *= _scale;
+		image_alpha  *= _alpha;
+		event_perform(ev_draw, 0);
+		image_xscale /= _scale;
+		image_yscale /= _scale;
+		image_alpha  /= _alpha;
+	}
+	
 #define ntte_dark // Drawing Grays
 	 // Crystal Heart:
 	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
@@ -2529,36 +2559,6 @@
 	 // Mortar Plasma:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
 		draw_circle(x, y - z, 32 + orandom(1), false);
-	}
-	
-#define ntte_bloom
-	 // Crystal Heart Projectile:
-	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
-		var	_scale = 2,
-			_alpha = 0.1;
-			
-		 // Copy pasting code is truly so epic:
-		image_xscale *= _scale;
-		image_yscale *= _scale;
-		image_alpha  *= _alpha;
-		event_perform(ev_draw, 0);
-		image_xscale /= _scale;
-		image_yscale /= _scale;
-		image_alpha  /= _alpha;
-	}
-	
-	 // Teleport FX:
-	with(instances_matching(CustomObject, "name", "WarpPortal")){
-		var	_scale = 2,
-			_alpha = 0.1;
-			
-		image_xscale *= _scale;
-		image_yscale *= _scale;
-		image_alpha  *= _alpha;
-		event_perform(ev_draw, 0);
-		image_xscale /= _scale;
-		image_yscale /= _scale;
-		image_alpha  /= _alpha;
 	}
 	
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
@@ -2879,8 +2879,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -2930,10 +2930,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

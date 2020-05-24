@@ -471,7 +471,7 @@
 			with(CarVenus){
 				 // Fix Overlapping Chests:
 				if(place_meeting(x, y, chestprop) || place_meeting(x, y, prop)){
-					floor_set_align(32, 32, null, null);
+					floor_set_align(null, null, 32, 32);
 					with(floor_room_create(x, y, 1, 1, "", random(360), 0, 0)){
 						other.x = x;
 						other.y = y;
@@ -489,15 +489,15 @@
 			
 			 // Sludge Pool:
 			if(GameCont.subarea == 2){
-				var	_w = 4,
-					_h = 4,
-					_type = "round",
-					_dirOff = 90,
-					_floorDis = -32,
-					_spawnDis = 96,
+				var	_w          = 4,
+					_h          = 4,
+					_type       = "round",
+					_dirOff     = 90,
+					_floorDis   = -32,
+					_spawnDis   = 96,
 					_spawnFloor = FloorNormal;
 					
-				floor_set_align(32, 32, null, null);
+				floor_set_align(null, null, 32, 32);
 				
 				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 					 // Fill Some Corners:
@@ -568,7 +568,13 @@
 			 // Top Props:
 			with(array_shuffle(instances_matching_ge(Wall, "image_index", 2))){
 				if(chance(1, 6) && distance_to_object(TopPot) > 64 && distance_to_object(Bones) > 96){
-					top_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), choose(CrystalProp, CrystalProp, "NewCocoon"), -1, -1);
+					top_create(
+						random_range(bbox_left, bbox_right + 1),
+						random_range(bbox_top, bbox_bottom + 1),
+						choose(CrystalProp, CrystalProp, "NewCocoon"),
+						-1,
+						-1
+					);
 				}
 			}
 			
@@ -578,15 +584,15 @@
 			
 			 // Igloos:
 			if(chance(1, GameCont.subarea)){
-				var	_minID = GameObject.id,
-					_w = 3,
-					_h = 3,
-					_type = "",
-					_dirOff = [30, 90],
-					_spawnDis = 64,
+				var	_minID      = GameObject.id,
+					_w          = 3,
+					_h          = 3,
+					_type       = "",
+					_dirOff     = [30, 90],
+					_spawnDis   = 64,
 					_spawnFloor = FloorNormal;
 					
-				floor_set_align(32, 32, null, null);
+				floor_set_align(null, null, 32, 32);
 				
 				repeat(irandom_range(1, 3)){
 					var _floorDis = choose(0, -32);
@@ -677,23 +683,12 @@
 				instance_delete(id);
 			}
 			
-			 // Top Spawns
-			if(GameCont.subarea != 3){
-				_topChance /= 1.2;
-				_topSpawn = [
-					[Pillar,	1],
-					[Generator,	1/50]
-				];
-			}	
-			/*else with(ThroneStatue){
-				var f = instance_nearest(x, y, Carpet);
-				top_create(x + (72 * sign(x - f.x)), y - 8, ThroneStatue, -1, 0);
-			}*/
-			
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				with(JungleBandit){
-					repeat(chance(1, 5) ? 5 : 1) obj_create(x, y, "Gull");
+					repeat(chance(1, 5) ? 5 : 1){
+						obj_create(x, y, "Gull");
+					}
 					
 					 // Move to Wall:
 					top_create(x, y, id, -1, -1);
@@ -720,7 +715,7 @@
 						_dirOff = 90,
 						_floorDis = 0;
 						
-					floor_set_align(32, 32, null, null);
+					floor_set_align(null, null, 32, 32);
 					
 					with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 						 // Floor Time:
@@ -756,12 +751,12 @@
 			
 			 // Top Spawns:
 			_topSpawn = [
-				[BoneFish,     1],
-				["Puffer",     1],
-				["Hammerhead", (GameCont.loops > 0)],
-				[Freak,		   (GameCont.loops > 0) / 2],
-				[OasisBarrel,  1],
-				[Anchor,       1/4]
+				[BoneFish,      1],
+				["Puffer",      1],
+				["HammerShark", (GameCont.loops > 0)],
+				[Freak,		    (GameCont.loops > 0) / 2],
+				[OasisBarrel,   1],
+				[Anchor,        1/4]
 			];
 			
 			break;
@@ -802,11 +797,18 @@
 			 // Spawn Prism:
 			with(BigCursedChest) pet_spawn(x, y, "Prism");
 			
-			 // Top Spawns:
-			_topSpawn = [
-				[InvCrystal,	1],
-				["NewCocoon",	1/2]
-			];
+			 // Top Props:
+			with(array_shuffle(instances_matching_ge(Wall, "image_index", 2))){
+				if(chance(1, 6) && distance_to_object(TopPot) > 64 && distance_to_object(Bones) > 96){
+					top_create(
+						random_range(bbox_left, bbox_right + 1),
+						random_range(bbox_top, bbox_bottom + 1),
+						choose(InvCrystal, InvCrystal, "NewCocoon"),
+						-1,
+						-1
+					);
+				}
+			}
 			
 			break;
 			
@@ -1079,6 +1081,17 @@
 				}
 				
 				break;
+				
+			case TopDecalPalace: /// PALACE
+				
+				 // Pillars:
+				if(chance(1, 2)){
+					with(instance_nearest_bbox(x, y, Floor)){
+						top_create(other.x, other.y - 8, Pillar, point_direction(other.x, other.y, bbox_center_x, bbox_center_y), random_range(16, 64));
+					}
+				}
+				
+				break;
 		}
 	}
 	
@@ -1123,11 +1136,11 @@
 							
 						case BoneFish: // Fish Schools
 						case "Puffer":
-						case "Hammerhead":
+						case "HammerShark":
 							var	_num = irandom_range(1, 4) + (3 * GameCont.loops),
 								_ang = random(360);
 								
-							if(_obj == "Hammerhead"){
+							if(_obj == "HammerShark"){
 								_num = floor(_num / 4);
 							}
 							
@@ -1347,6 +1360,12 @@
 				spr_floor = other.sprite_index;
 			}
 		}
+	}
+	
+	 // Wall Depth Fix:
+	with(instances_matching(Wall, "depth", 0)){
+		depth++;
+		depth--;
 	}
 	
 #define step
@@ -1922,7 +1941,12 @@
 				 // LWO Weapons:
 				with([wep, bwep]){
 					var w = self;
-					if(is_object(w) && "ammo" in w && "amax" in w && array_exists(ntte_weps, wep_get(w))){
+					if(
+						is_object(w)
+						&& "ammo" in w
+						&& "amax" in w
+						&& array_exists(ntte_weps, wep_get(w))
+					){
 						var	_cost = lq_defget(w, "cost", 0),
 							_amax = w.amax,
 							_amaxRaw = (_amax / (1 + lq_defget(w, "buff", 0))),
@@ -2269,8 +2293,18 @@
 		}
 		
 		 // This is it:
-		with(instances_matching(Breath, "depth", -2)) depth = -3;
-		with(instances_matching([MeltSplat, Scorchmark], "depth", 1)) depth = 7;
+		with(instances_matching(Breath, "depth", -2)){
+			depth = -3;
+		}
+		with(instances_matching([MeltSplat, Scorchmark], "depth", 1)){
+			depth = 7;
+		}
+		with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
+			spr_shadow_y = -3;
+		}
+		with(instances_matching([Generator, GeneratorInactive], "spr_shadow", shd24, spr.shd.BigGenerator, spr.shd.BigGeneratorR)){
+			spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
+		}
 	}
 	catch(_error){
 		trace_error(_error);
@@ -3396,11 +3430,11 @@
 					with(player_find(p)){
 						draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
 						
-						var	l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
-							d = point_direction(_x, _y, x, y);
+						var	_l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
+							_d = point_direction(_x, _y, x, y);
 							
-						_x += lengthdir_x(l, d);
-						_y += lengthdir_y(l, d);
+						_x += lengthdir_x(_l, _d);
+						_y += lengthdir_y(_l, _d);
 					}
 					
 					 // Draw:
@@ -3696,8 +3730,8 @@
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define in_distance(_inst, _dis)                                                        return  mod_script_call(   'mod', 'telib', 'in_distance', _inst, _dis);
-#define in_sight(_inst)                                                                 return  mod_script_call(   'mod', 'telib', 'in_sight', _inst);
+#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc('mod', 'telib', 'instance_seen', _x, _y, _obj);
+#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call(   'mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call(   'mod', 'telib', 'instance_clone');
@@ -3747,10 +3781,9 @@
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
-#define floor_set_align(_alignW, _alignH, _alignX, _alignY)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignW, _alignH, _alignX, _alignY);
+#define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);
 #define floor_reset_style()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_style');
 #define floor_reset_align()                                                             return  mod_script_call_nc('mod', 'telib', 'floor_reset_align');
-#define floor_make(_x, _y, _obj)                                                        return  mod_script_call_nc('mod', 'telib', 'floor_make', _x, _y, _obj);
 #define floor_fill(_x, _y, _w, _h, _type)                                               return  mod_script_call_nc('mod', 'telib', 'floor_fill', _x, _y, _w, _h, _type);
 #define floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)                      return  mod_script_call_nc('mod', 'telib', 'floor_room_start', _spawnX, _spawnY, _spawnDis, _spawnFloor);
 #define floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)         return  mod_script_call_nc('mod', 'telib', 'floor_room_create', _x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis);

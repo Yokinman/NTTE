@@ -29,7 +29,7 @@
 #define weapon_swap(w)   return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
 #define weapon_sprt(w)   return (lq_defget(w, "visible", true) ? (weapon_avail() ? ((weapon_get_gold(w) != 0) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
 #define weapon_loadout   return ((argument_count > 0 && weapon_get_gold(argument0) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
-#define weapon_area(w)   return ((weapon_avail(w) && weapon_get_gold(w) == 0) ? 7 : -1); // 3-2
+#define weapon_area(w)   return ((argument_count > 0 && weapon_avail(w) && weapon_get_gold(w) == 0) ? 7 : -1); // 3-2
 #define weapon_gold(w)   return (lq_defget(w, "gold", false) ? -1 : 0);
 #define weapon_type(w)   return 0; // Melee
 #define weapon_auto(w)   return true;
