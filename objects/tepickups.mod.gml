@@ -4112,9 +4112,9 @@
 		
 		 // Vars:
 		mask_index = mskWepPickup;
-		target = instance_create(x, y, WepPickup);
-		target_x = 0;
-		target_y = 0;
+		target     = instance_create(x, y, WepPickup);
+		target_x   = 0;
+		target_y   = 0;
 		top_object = noone;
 		
 		 // Weapon:
@@ -4553,6 +4553,72 @@
 	
 	 // Replace Pickups / Chests:
 	else{
+		 // Bonus Pickups:
+		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
+			ntte_special_pickup = true;
+			
+			if(!position_meeting(xstart, ystart, ChestOpen)){
+				 // Bonus Ammo:
+				if(instance_is(self, AmmoPickup) && sprite_index == sprAmmo){
+					var	_ammoNum    = 0,
+						_ammoMax    = 0,
+						_ammoMin    = 0,
+						_wepTotal   = 0,
+						_wepChance  = 0;
+						
+					 // Determine Spawn Chance:
+					with(Player){
+						with([wep, bwep]){
+							var _wep = self;
+							with(other){
+								var	_type = weapon_get_type(_wep),
+									_cost = weapon_get_cost(_wep),
+									_load = weapon_get_load(_wep);
+									
+								 // Encourage Weapons Closer to Full Ammo:
+								if(_type > 0){
+									_ammoNum += ammo[_type];
+									_ammoMax += typ_amax[_type];
+									_ammoMin += min(typ_amax[_type], typ_ammo[_type] * 4);
+								}
+								
+								 // Encourage Ammo Intensive Weapons:
+								_wepTotal++;
+								_wepChance += min(1, ((_cost / ((_type == 1) ? 3 : 1)) / min(90, _load)) * 1.5);
+							}
+						}
+					}
+					
+					 // Replace:
+					if(chance(min(1, power(max(0, _ammoNum - _ammoMin) / (_ammoMax - _ammoMin), 3)), 1)){
+						if(chance(_wepChance, _wepTotal)){
+							obj_create(x, y, "BonusAmmoPickup");
+							instance_delete(id);
+						}
+					}
+				}
+				
+				 // Bonus HP:
+				else if(instance_is(self, HPPickup) && sprite_index == sprHP){
+					ntte_special_pickup = true;
+					
+					 // All Players Have Full HP:
+					with(Player){
+						if(my_health < maxhealth){
+							other.ntte_special_pickup = false;
+							break;
+						}
+					}
+					
+					 // Replace:
+					if(ntte_special_pickup){
+						obj_create(x, y, "BonusHealthPickup");
+						instance_delete(id);
+					}
+				}
+			}
+		}
+		/*
 		 // Bonus, Spirit, and Hammerhead Pickups:
 		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
 			ntte_special_pickup = false;
@@ -4590,6 +4656,7 @@
 				}
 			}
 		}
+		*/
 		
 		 // Cursed Ammo Chests:
 		with(instances_matching(AmmoChest, "cursedammochest_check", null)){

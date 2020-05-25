@@ -180,6 +180,11 @@
 				jump_y += vspeed_raw;
 			}
 			if(!point_seen_ext(x, y + (top_object.z / 2), sprite_width, sprite_height + (top_object.z / 2), -1)){
+				with(instance_nearest_bbox(x, y, Floor)){
+					with(instance_create(bbox_center_x, bbox_center_y, Corpse)){
+						sprite_index = mskNone;
+					}
+				}
 				instance_delete(id);
 			}
 		}

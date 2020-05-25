@@ -941,7 +941,7 @@
 	*/
 	
 	var	_inst   = noone,
-		_disMax = infinity,
+		_disMax = infinity;
 		
 	with(_obj){
 		if(!collision_line(_x, _y, x, y, Wall, false, false)){
@@ -969,7 +969,7 @@
 			instance_near(x, y, instances_matching(hitme, "team", 2), [32, 64])
 	*/
 	
-	var	_inst   = id,
+	var	_inst   = noone,
 		_disMin = (is_array(_dis) ? _dis[0] : 0),
 		_disMax = (is_array(_dis) ? _dis[1] : _dis);
 		

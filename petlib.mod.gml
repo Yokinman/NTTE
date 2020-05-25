@@ -935,7 +935,7 @@
 								
 								 // Punt:
 								if(
-									chance(speed, 16)
+									chance(speed, 12)
 									&& my_health <= 0
 									&& size == 1
 									&& team != 0
