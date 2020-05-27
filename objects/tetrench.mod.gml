@@ -3367,20 +3367,21 @@
 	audio_stop_sound(loop_snd);
 
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
-	var	_angle = image_angle,
+	var	_lastColor = draw_get_color(),
+		_angle = image_angle,
 		_x = x,
 		_y = y;
-
+		
 	 // Beam Start:
 	if(spr_strt != -1){
 		draw_sprite_ext(spr_strt, image_index, _x, _y, _xscale, _yscale, _angle, image_blend, _alpha);
 	}
-
+	
 	 // Quasar Ring Core:
 	if(ring){
 		draw_set_alpha((_alpha < 1) ? (_alpha / 2) : _alpha);
 		draw_set_color(image_blend);
-
+		
 		var o = 0;
 		repeat(2){
 			draw_circle(
@@ -3391,42 +3392,44 @@
 			);
 			o = (2 * _xscale * cos(wave / 13)) / max(shrink_delay / 20, 1);
 		}
-
+		
 		draw_set_alpha(1);
 	}
-
+	
 	 // Main Laser:
 	if(array_length(line_seg) > 0){
 		draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(sprite_index, image_index));
 		draw_set_alpha(_alpha);
 		draw_set_color(image_blend);
-
+		
 		with(line_seg){
 			draw_vertex_texture(x + (xoff * _yscale), y + (yoff * _yscale), xtex, ytex);
 		}
-
+		
 		draw_set_alpha(1);
 		draw_primitive_end();
-
+		
 		with(line_seg[array_length(line_seg) - 1]){
 			_angle = dir;
 			_x = x;
 			_y = y;
 		}
 	}
-
+	
 	 // Laser End:
 	if(spr_stop != -1){
 		var	_x1 = x - lengthdir_x(1,				 _angle),
 			_y1 = y - lengthdir_y(1,				 _angle),
 			_x2 = x + lengthdir_x(16 / image_xscale, _angle),
 			_y2 = y + lengthdir_y(16 / image_yscale, _angle);
-	
+			
 		if(!collision_line(_x1, _y1, _x2, _y2, TopSmall, false, false)){
 			draw_sprite_ext(spr_stop, image_index, _x, _y, min(_xscale, 1.25), _yscale, _angle, image_blend, _alpha);
 		}
 	}
-
+	
+	draw_set_color(_lastColor);
+	
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
 		with(creator){

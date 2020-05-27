@@ -383,6 +383,11 @@
 	 // Spin:
 	image_angle += 4 * spd * side * current_time_scale;
 	
+	 // BoltStick Depth Fix:
+	with(instances_matching_lt(instances_matching(BoltStick, "target", id), "depth", depth)){
+		depth = other.depth;
+	}
+	
 	 // Effects:
 	if(spd > 1 && point_seen(x, y, -1)){
 		if(chance_ct(1, 2)){
@@ -391,7 +396,7 @@
 				_debris = (walled && chance(1, 30)),
 				_x = x + lengthdir_x(l, d),
 				_y = y + lengthdir_y(l, d) - 2;
-	
+				
 			instance_create(_x, _y, (_debris ? Debris : Dust));
 			if(_debris){
 				sound_play_pitchvol(sndWallBreak, 2, 0.2);
@@ -489,21 +494,7 @@
 	
 	 // Die:
 	if(my_health <= 0 || place_meeting(x, y, PortalShock)){
-		 // Explo:
-		instance_create(x, y, Explosion);
-		repeat(3) instance_create(x, y, SmallExplosion);
-		
-		 // Effects:
-		repeat(3) instance_create(x + orandom(16), y + orandom(16), GroundFlame);
-		repeat(3 + irandom(3)) instance_create(x, y, Debris).sprite_index = spr.SawTrapDebris;
-		
-		 // Sounds:
-		sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
-		sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
-		
-		 // Pickups:
-		pickup_drop(50, 0);
-		
+		my_health = min(my_health, 0);
 		instance_destroy();
 	}
 	
@@ -525,7 +516,37 @@
 		spd = _hitvel / 4;
 		dir = _hitdir;
 	}
-
+	
+#define SawTrap_destroy
+	if(my_health <= 0){
+		 // Explo:
+		with(instance_create(x, y, Explosion)){
+			hitid = other.hitid;
+		}
+		repeat(3){
+			with(instance_create(x, y, SmallExplosion)){
+				hitid = other.hitid;
+			}
+		}
+		
+		 // Effects:
+		repeat(3){
+			instance_create(x + orandom(16), y + orandom(16), GroundFlame);
+		}
+		repeat(3 + irandom(3)){
+			with(instance_create(x, y, Debris)){
+				sprite_index = spr.SawTrapDebris;
+			}
+		}
+		
+		 // Sounds:
+		sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
+		sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
+		
+		 // Pickups:
+		pickup_drop(50, 0);
+	}
+	
 #define SawTrap_cleanup
 	sound_stop(loop_snd);
 

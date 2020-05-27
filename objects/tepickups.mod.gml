@@ -554,6 +554,58 @@
 	}
 	
 	
+#define BloodLustPickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = sprHP;
+		image_blend = c_red;
+		
+		 // Sounds:
+		snd_open = sndHPPickup;
+		snd_fade = sndBloodlustProc;
+		
+		 // Vars:
+		num      = -1 + (crown_current == crwn_haste);
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
+		
+		 // Events:
+		on_open = script_ref_create(BloodLustPickup_open);
+		on_fade = script_ref_create(BloodLustPickup_fade);
+		
+		return id;
+	}
+	
+#define BloodLustPickup_open
+	var _num = num;
+	
+	 // Regen:
+	if(fork()){
+		with(instance_is(other, Player) ? other : Player){
+			while(instance_exists(self)){
+				my_health += clamp(maxhealth - my_health, 0, _num);
+				
+				sound_play(sndBloodlustProc);
+				with(instance_create(x, y, BloodLust)){
+					creator = other;
+				}
+				
+				var _text = ((my_health < maxhealth) ? "%" : "MAX") + " HP";
+				pickup_text(_text, _num);
+				
+				if(my_health >= maxhealth) break;
+				
+				wait 45;
+			}
+		}
+		exit;
+	}
+	
+#define BloodLustPickup_fade
+	 // Effects:
+	instance_create(x, y, BloodLust);
+	
+	
 #define BoneBigPickup_create(_x, _y)
 	with(obj_create(_x, _y, "BonePickup")){
 		 // Visual:
@@ -667,11 +719,14 @@
 	}
 	
 #define BonusAmmoChest_open
-	var _num = num;
-	
+	var	_num  = num,
+		_text = `% @5(${spr.BonusText}:-0.3) AMMO`;
+		
 	 // Bonus Ammo:
 	if(instance_is(other, Player)){
 		with(other){
+			var _add = _num;
+			
 			 // Fish:
 			var	_ammoBase = [264, 32, 8, 7, 6, 10],
 				_ammoMult = 0;
@@ -680,15 +735,13 @@
 				_ammoMult += typ_ammo[i] / ((i < array_length(_ammoBase)) ? _ammoBase[i] : typ_ammo[i]);
 			}
 			_ammoMult = pfloor(_ammoMult / (array_length(typ_ammo) - 1), 0.05);
-			_num += round(8 * (_ammoMult - 1));
+			_add += round(16 * (_ammoMult - 1));
 			
 			 // Give Ammo:
-			bonus_ammo = variable_instance_get(id, "bonus_ammo", 0) + _num;
+			bonus_ammo = variable_instance_get(id, "bonus_ammo", 0) + _add;
 			
 			 // Text:
-			with(instance_create(x, y, PopupText)){
-				text = `+${_num} @5(${spr.BonusText}:-0.3) AMMO`;
-			}
+			pickup_text(_text, _add);
 		}
 	}
 	else repeat(2){
@@ -818,10 +871,13 @@
 	return false;
 	
 #define BonusAmmoPickup_open
-	var _num = num;
-	
+	var	_num  = num,
+		_text = `% @5(${spr.BonusText}:-0.3) AMMO`;
+		
 	 // Bonus Ammo:
 	with(instance_is(other, Player) ? other : Player){
+		var _add = _num;
+		
 		 // Fish:
 		var	_ammoBase = [264, 32, 8, 7, 6, 10],
 			_ammoMult = 0;
@@ -830,15 +886,13 @@
 			_ammoMult += typ_ammo[i] / ((i < array_length(_ammoBase)) ? _ammoBase[i] : typ_ammo[i]);
 		}
 		_ammoMult = pfloor(_ammoMult / (array_length(typ_ammo) - 1), 0.05);
-		_num += round(8 * (_ammoMult - 1));
+		_add += round(8 * (_ammoMult - 1));
 		
 		 // Give Ammo:
-		bonus_ammo = variable_instance_get(id, "bonus_ammo", 0) + _num;
+		bonus_ammo = variable_instance_get(id, "bonus_ammo", 0) + _add;
 		
 		 // Text:
-		with(instance_create(x, y, PopupText)){
-			text = `+${_num} @5(${spr.BonusText}:-0.3) AMMO`;
-		}
+		pickup_text(_text, _add);
 	}
 	
 	 // Effects:
@@ -859,7 +913,7 @@
 		snd_open = ((_skill > 0) ? sndHPPickupBig : sndHPPickup);
 		
 		 // Vars:
-		num  = 2 * (1 + _skill);
+		num  = 4 * (1 + _skill);
 		wave = random(90);
 		
 		 // Events:
@@ -870,17 +924,16 @@
 	}
 	
 #define BonusHealthChest_open
-	var _num = num;
-	
+	var	_num  = num,
+		_text = `% @5(${spr.BonusText}:-0.3) HP`;
+		
 	 // Bonus HP:
 	if(instance_is(other, Player)){
 		with(other){
 			bonus_health = variable_instance_get(id, "bonus_health", 0) + _num;
 			
 			 // Text:
-			with(instance_create(x, y, PopupText)){
-				text = `+${_num} @5(${spr.BonusText}:-0.3) HP`;
-			}
+			pickup_text(_text, _num);
 			
 			 // Effects:
 			with(instance_create(x, y, HealFX)){
@@ -972,7 +1025,7 @@
 		snd_fade = sndPickupDisappear;
 		
 		 // Vars:
-		num        = (1 * (1 + _skill)) + (crown_current == crwn_haste);
+		num        = (2 * (1 + _skill)) + (crown_current == crwn_haste);
 		pull_dis   = 30 + (30 * skill_get(mut_plutonium_hunger));
 		pull_spd   = 4;
 		pull_delay = 9;
@@ -987,16 +1040,15 @@
 	}
 	
 #define BonusHealthPickup_open
-	var _num = num;
-	
+	var	_num  = num,
+		_text = `% @5(${spr.BonusText}:-0.3) HP`;
+		
 	 // Bonus Health:
 	with(instance_is(other, Player) ? other : Player){
 		bonus_health = variable_instance_get(id, "bonus_health", 0) + _num;
 		
 		 // Text:
-		with(instance_create(x, y, PopupText)){
-			text = `+${_num} @5(${spr.BonusText}:-0.3) HP`;
-		}
+		pickup_text(_text, _num);
 		
 		 // Effects:
 		with(instance_create(x, y, HealFX)){
@@ -1165,7 +1217,7 @@
 	
 	
 #define BuriedVaultPedestal_create(_x, _y)
-	with(instance_create(_x, _y, CrownPed)){
+	with(instance_create(_x, _y, (instance_exists(CrownPed) ? CustomObject : CrownPed))){
 		 // Visual:
 		sprite_index = spr.BuriedVaultChestBase;
 		image_speed = 0.4;
@@ -2486,25 +2538,6 @@
 		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 	
-#define pickup_alarm(_time, _loopDecay)
-	/*
-		Returns the alarm0 to set on a pickup, affected by loop and crown of haste
-		
-		Args:
-			time      - The pickup's base alarm value
-			loopDecay - The percentage decay per loop
-	*/
-	
-	 // Loop:
-	_time /= 1 + (GameCont.loops * _loopDecay);
-	
-	 // Haste:
-	if(crown_current == crwn_haste){
-		_time /= (instance_is(self, BigRad) ? 2 : 3);
-	}
-	
-	return _time;
-	
 	
 #define HammerHeadPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
@@ -2512,40 +2545,51 @@
 		sprite_index = spr.HammerHeadPickup;
 		spr_open = sprHammerHead;
 		spr_fade = sprHammerHead;
+		spr_halo = spr.HammerHeadPickupEffectSpawn;
+		img_halo = 0;
 		
 		 // Sounds:
 		snd_open = sndHammerHeadProc;
 		snd_fade = sndHammerHeadEnd;
 		
 		 // Vars:
-		mask_index = mskPickup;
-		num        = 10 + (crown_current == crwn_haste);
-		pull_dis   = 30 + (30 * skill_get(mut_plutonium_hunger));
-		pull_spd   = 4;
-		pull_delay = 9;
+		num      = 10 + (crown_current == crwn_haste);
+		pull_dis = 30 + (30 * skill_get(mut_plutonium_hunger));
+		pull_spd = 4;
 		
 		 // Events:
+		on_step = script_ref_create(HammerHeadPickup_step);
 		on_open = script_ref_create(HammerHeadPickup_open);
 		on_fade = script_ref_create(HammerHeadPickup_fade);
+		
+		 // Sound:
+		sound_play_hit_ext(sndWeaponPickup,  0.3 + random(0.1), 1);
+		sound_play_hit_ext(sndHammerHeadEnd, 0.2 + random(0.1), 1.5);
 		
 		return id;
 	}
 	
+#define HammerHeadPickup_step
+	 // Animate Indicator:
+	img_halo += image_speed_raw;
+	if(img_halo >= sprite_get_number(spr_halo)){
+		img_halo %= sprite_get_number(spr_halo);
+		spr_halo = spr.HammerHeadPickupEffect;
+	}
+	
 #define HammerHeadPickup_draw
-	draw_sprite(spr.HammerHeadPickupEffect, (current_frame * current_time_scale * 0.4), x, y);
+	draw_sprite(spr_halo, img_halo, x, y);
 	
 #define HammerHeadPickup_open
-	var _num = num;
-	
+	var	_num  = num,
+		_text = `% @(color:${c_yellow})HAMMERHEAD`;
+		
 	 // Hammer Time:
 	with(instance_is(other, Player) ? other : Player){
 		hammerhead += _num;
 		
 		 // Text:
-		with(instance_create(x, y, PopupText)){
-			var _color = c_yellow;
-			text = `+${_num} @(color:${_color})HAMMERHEAD`;
-		}
+		pickup_text(_text, _num);
 	}
 	
 	 // Effects:
@@ -2582,7 +2626,7 @@
 		
 		return id;
 	}
-
+	
 #define HarpoonPickup_step
 	 // Stuck in Target:
 	if(instance_exists(target)){
@@ -2617,17 +2661,15 @@
 	
 #define HarpoonPickup_open
 	var	_type = 3,
-		_num = num;
+		_num  = num;
 		
 	 // +1 Bolt Ammo:
 	with(instance_is(other, Player) ? other : Player){
 		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
 		
 		 // Text:
-		with(instance_create(x, y, PopupText)){
-			text = `+${_num} ${other.typ_name[_type]}`;
-			target = other.index;
-		}
+		var _text = ((ammo[_type] < typ_amax[_type]) ? "%" : "MAX") + " " + typ_name[_type];
+		pickup_text(_text, _num);
 	}
 	
 	
@@ -3539,38 +3581,33 @@
 		on_open = script_ref_create(SpiritPickup_open);
 		on_fade = script_ref_create(SpiritPickup_fade);
 		
-		 // FX:
+		 // Sound:
 		sound_play_pitchvol(sndStrongSpiritGain, 1.4 + random(0.3), 0.7);
-		/*repeat(5){
-			with(scrFX(x, y, 3, Dust)){
-				depth = other.depth;
-			}
-		}*/
 		
 		return id;
 	}
-   
+	
 #define SpiritPickup_step
 	if(pull_delay > 0) pull_delay -= current_time_scale;
 	wave += current_time_scale;
 	
 	 // Animate Halo:
-	if(spr_halo != sprHalo){
-		img_halo += 0.4 * current_time_scale;
-		if(img_halo >= sprite_get_number(spr_halo)){
-			spr_halo = sprHalo;
-		}
+	img_halo += image_speed_raw;
+	if(img_halo >= sprite_get_number(spr_halo)){
+		img_halo %= sprite_get_number(spr_halo);
+		spr_halo = sprHalo;
 	}
 
 #define SpiritPickup_draw
 	 // Halos:
 	for(var i = 0; i < num; i++){
-		draw_sprite(spr_halo, img_halo, x, (y + 3) + sin(wave * 0.1) - (i * 7));
+		draw_sprite(spr_halo, img_halo, x, y + 3 + sin(wave * 0.1) - (i * 7));
 	}
 
 #define SpiritPickup_open
 	var	_inst = noone,
-		_num = num;
+		_num  = num,
+		_text ="% @yBONUS @wSPIRIT" + ((_num > 1) ? "S" : "");
 		
 	with(instance_is(other, Player) ? other : Player){
 		if("bonus_spirit" in self){
@@ -3580,10 +3617,7 @@
 			}
 			
 			 // Text:
-			with(instance_create(x, y, PopupText)){
-				mytext = `+${_num} @yBONUS @wSPIRIT${(_num > 1) ? "S" : ""}`;
-				target = other.index;
-			}
+			pickup_text(_text, _num);
 		}
 		
 		 // for all the headless chickens in the crowd:
@@ -3598,6 +3632,9 @@
 	for(var i = 0; i < num; i++){
 		instance_create(x, (y + 3) - (i * 7), StrongSpirit);
 	}
+	
+	 // Pity HP:
+	instance_create(x, y, HPPickup);
 	
 #define SpiritPickup_pull
 	return (pull_delay <= 0);
@@ -4355,7 +4392,12 @@
 			
 			 // Firing:
 			if(_fire <= 0 && canfire >= 1){
-				if(button_pressed(index, "fire") || (_auto ? (can_shoot == true && button_check(index, "fire")) : (clicked >= 1))){
+				if(_auto && can_shoot == true){
+					if(button_check(index, "fire")){
+						_fire = floor(min(100, 1 - (reload / weapon_get_load(_wep)), (ammo[_type] + bonus_ammo) / weapon_get_cost(_wep)));
+					}
+				}
+				else if(button_pressed(index, "fire") || (!_auto && clicked >= 1)){
 					_fire = 1;
 				}
 			}
@@ -4541,6 +4583,29 @@
 	}
 	*/
 	
+	 // Mutation Pickups:
+	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "mutationpickup_check", null)){
+		mutationpickup_check = false;
+		
+		if(chance(1, 3)){
+			if(("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)){
+				mutationpickup_check = true;
+				
+				 // Check if Last Boss on Level:
+				with(instances_matching_gt(enemy, "id", id)){
+					if(("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)){
+						other.mutationpickup_check = false;
+						break;
+					}
+				}
+				
+				if(mutationpickup_check){
+					obj_create(x + orandom(4), y + orandom(4), choose("SpiritPickup", "HammerHeadPickup"));
+				}
+			}
+		}
+	}
+	
 #define ntte_step
 	 // More:
 	var _minHard = 8;
@@ -4554,70 +4619,116 @@
 	 // Replace Pickups / Chests:
 	else{
 		 // Bonus Pickups:
-		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
-			ntte_special_pickup = true;
+		with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, RadChest, Mimic, SuperMimic], "bonuschest_check", null)){
+			bonuschest_check = false;
 			
 			if(!position_meeting(xstart, ystart, ChestOpen)){
-				 // Bonus Ammo:
-				if(instance_is(self, AmmoPickup) && sprite_index == sprAmmo){
-					var	_ammoNum    = 0,
-						_ammoMax    = 0,
-						_ammoMin    = 0,
-						_wepTotal   = 0,
-						_wepChance  = 0;
+				if(instance_is(self, Pickup) || GameCont.loops > 0){
+					var _chest = "";
+					
+					 // Bonus Ammo:
+					if(
+						(instance_is(self, AmmoPickup) && sprite_index == sprAmmo)                                                               ||
+						(instance_is(self, AmmoChest)  && array_exists([sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery], sprite_index)) ||
+						(instance_is(self, Mimic)      && spr_idle == sprMimicIdle)
+					){
+						_chest = "BonusAmmo";
 						
-					 // Determine Spawn Chance:
-					with(Player){
-						with([wep, bwep]){
-							var _wep = self;
-							with(other){
-								var	_type = weapon_get_type(_wep),
-									_cost = weapon_get_cost(_wep),
-									_load = weapon_get_load(_wep);
+						 // Determine Spawn Chance:
+						var	_ammoPick  = [0, 32, 8, 7, 6, 10],
+							_ammoNum   = 0,
+							_ammoMax   = 0,
+							_ammoMin   = 0,
+							_wepTotal  = 0,
+							_wepChance = 0;
+							
+						with(Player){
+							with([wep, bwep]){
+								var _wep = self;
+								with(other){
+									var _type = weapon_get_type(_wep);
 									
-								 // Encourage Weapons Closer to Full Ammo:
-								if(_type > 0){
-									_ammoNum += ammo[_type];
-									_ammoMax += typ_amax[_type];
-									_ammoMin += min(typ_amax[_type], typ_ammo[_type] * 4);
+									 // Encourage Weapons Closer to Full Ammo:
+									_ammoMax++;
+									if(_type > 0){
+										_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
+										_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
+									}
+									else{
+										_ammoMin += 1/3;
+										_ammoNum += 1/4;
+									}
+									
+									 // Encourage Ammo Intensive Weapons:
+									if(_wep != wep_none){
+										var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
+										if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
+											_cost += _wep.cost;
+										}
+										
+										_wepTotal++;
+										_wepChance += min(1, (_cost / min(90, weapon_get_load(_wep))) * 1.5);
+									}
 								}
-								
-								 // Encourage Ammo Intensive Weapons:
-								_wepTotal++;
-								_wepChance += min(1, ((_cost / ((_type == 1) ? 3 : 1)) / min(90, _load)) * 1.5);
+							}
+						}
+						
+						 // Replace:
+						if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin)){
+							if(chance(_wepChance, _wepTotal)){
+								bonuschest_check = true;
 							}
 						}
 					}
 					
-					 // Replace:
-					if(chance(min(1, power(max(0, _ammoNum - _ammoMin) / (_ammoMax - _ammoMin), 3)), 1)){
-						if(chance(_wepChance, _wepTotal)){
-							obj_create(x, y, "BonusAmmoPickup");
-							instance_delete(id);
+					 // Bonus HP:
+					else if(
+						(instance_is(self, HPPickup)    && sprite_index == sprHP)          ||
+						(instance_is(self, HealthChest) && sprite_index == sprHealthChest) ||
+						(instance_is(self, SuperMimic)  && spr_idle == sprSuperMimicIdle)  ||
+						(instance_is(self, RadChest)    && array_exists([sprRadChest, sprRadChestBig, sprRadChestMaggot], spr_idle))
+					){
+						_chest = "BonusHealth";
+						
+						 // Determine HP Surplus:
+						var	_health    = 0,
+							_healthMax = 0;
+							
+						with(Player){
+							_health    += max(0, my_health);
+							_healthMax += max(0, maxhealth);
+						}
+						with(instances_matching_lt(HPPickup, "id", id)){
+							_health += num;
+						}
+						with(instances_matching(Pickup, "name", "BonusHealthPickup")){
+							_healthMax += num;
+						}
+						
+						 // Replace:
+						if(!chance(1, 1 + (0.25 * (1 + (_health - _healthMax))))){
+							bonuschest_check = true;
 						}
 					}
-				}
-				
-				 // Bonus HP:
-				else if(instance_is(self, HPPickup) && sprite_index == sprHP){
-					ntte_special_pickup = true;
-					
-					 // All Players Have Full HP:
-					with(Player){
-						if(my_health < maxhealth){
-							other.ntte_special_pickup = false;
-							break;
-						}
-					}
 					
 					 // Replace:
-					if(ntte_special_pickup){
-						obj_create(x, y, "BonusHealthPickup");
+					if(bonuschest_check){
+						if(instance_is(self, Pickup)){
+							_chest += "Pickup";
+						}
+						if(instance_is(self, chestprop) || instance_is(self, RadChest)){
+							_chest += "Chest";
+						}
+						else if(instance_is(self, enemy)){
+							_chest += "Mimic";
+						}
+						obj_create(x, y, _chest);
 						instance_delete(id);
 					}
 				}
 			}
 		}
+		
 		/*
 		 // Bonus, Spirit, and Hammerhead Pickups:
 		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
@@ -4634,18 +4745,10 @@
 							obj_create(x, y, "SpiritPickup");
 						}
 						
-						else if(chance(1, 50)){
-							 // Hammerhead Pickups:
-							if(chance(2, 5)){
-								_sPickupsDec = 0.5;
-								obj_create(x, y, "HammerHeadPickup");
-							}
-							
-							 // Overheal / Overstock Pickups:
-							else{
-								_sPickupsDec = 1;
-								obj_create(x, y, (instance_is(self, HPPickup) ? "BonusHealthPickup" : "BonusAmmoPickup"));
-							}
+						 // Hammerhead Pickups:
+						else if(chance(1, 100)){
+							_sPickupsDec = 0.5;
+							obj_create(x, y, "HammerHeadPickup");
 						}
 						
 						if(_sPickupsDec > 0){
@@ -4659,49 +4762,33 @@
 		*/
 		
 		 // Cursed Ammo Chests:
-		with(instances_matching(AmmoChest, "cursedammochest_check", null)){
+		with(instances_matching([AmmoChest, Mimic], "cursedammochest_check", null)){
 			cursedammochest_check = false;
 			
 			if(!instance_is(self, IDPDChest)){
+				var _mimic = instance_is(self, Mimic);
+				
 				 // Crown of Curses:
-				if((crown_current == crwn_curses || GameCont.area == area_cursed_caves) && chance(1, 5)){
-					cursedammochest_check = true;
+				if(chance(1, (_mimic ? 3 : 5))){
+					if(crown_current == crwn_curses || GameCont.area == area_cursed_caves){
+						cursedammochest_check = true;
+					}
 				}
 				
 				 // Cursed Player:
-				with(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)){
-					if(chance(1, 2)) other.cursedammochest_check = true;
+				if(chance(1, 2)){
+					if(array_length(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)) > 0){
+						cursedammochest_check = true;
+					}
 				}
 				
 				 // Spawn:
 				if(cursedammochest_check){
-					chest_create(x, y, "CursedAmmoChest");
+					obj_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"));
 					instance_delete(id);
 				}
 			}
 		}
-		with(instances_matching(Mimic, "cursedmimic_check", null)){
-			cursedmimic_check = false;
-			
-			 // Crown of Curses:
-			if((crown_current == crwn_curses || GameCont.area == area_cursed_caves) && chance(1, 3)){
-				cursedmimic_check = true;
-			}
-			
-			 // Cursed Player:
-			with(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0)){
-				if(chance(1, 2)) other.cursedmimic_check = true;
-			}
-			
-			 // Spawn:
-			if(cursedmimic_check){
-				obj_create(x, y, "CursedMimic");
-				instance_delete(id);
-			}
-		}
-		
-		 // Bonus Chests:
-		
 	}
 	
 	 // Bonus Ammo / Overstock Cleanup:
@@ -5049,7 +5136,45 @@
 #macro bonusSpiritGain {}
 #macro bonusSpiritLose { active: false }
 
-
+#define pickup_alarm(_time, _loopDecay)
+	/*
+		Returns the alarm0 to set on a pickup, affected by loop and crown of haste
+		
+		Args:
+			time      - The pickup's base alarm value
+			loopDecay - The percentage decay per loop
+	*/
+	
+	 // Loop:
+	_time /= 1 + (GameCont.loops * _loopDecay);
+	
+	 // Haste:
+	if(crown_current == crwn_haste){
+		_time /= (instance_is(self, BigRad) ? 2 : 3);
+	}
+	
+	return _time;
+	
+#define pickup_text(_text, _num)
+	/*
+		Creates a PopupText with the given text, with all mentions of '%' in the text replaced by the given number
+		If called from a Player it will only appear on their screen
+	*/
+	
+	with(instance_create(x, y, PopupText)){
+		text = string_replace_all(_text, "%", ((_num < 0) ? "" : "+") + string(_num));
+		
+		 // Target Player's Screen:
+		if(instance_is(other, Player)){
+			target = other.index;
+		}
+		
+		return id;
+	}
+	
+	return noone;
+	
+	
 /// SCRIPTS
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1

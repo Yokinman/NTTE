@@ -4240,7 +4240,7 @@
 									idle_time = 10 + random(20);
 									
 									var n = (instance_exists(Player) ? instance_nearest(other.x, other.y, Player) : instance_nearest(other.x - 16, other.y - 16, Floor));
-									direction = point_direction(x, y, n.x, n.y - 8);
+									direction = point_direction(other.x, other.y, n.x, n.y - 8);
 									speed += current_time_scale;
 									
 									if("walk" in self) walk = idle_time;

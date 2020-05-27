@@ -15,6 +15,9 @@
 	 // level_start():
 	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
 	
+	 // ntte_music():
+	global.ntte_music = true;
+	
 	 // Area:
 	global.area_update = false;
 	global.area_mapdata = [];
@@ -133,9 +136,20 @@
 	
 	 // Top Decal Fix:
 	with(TopPot){
-		while(place_meeting(x, y, Wall) && place_meeting(x, y, PortalClear)){
-			x += lengthdir_x(16, dir);
-			y += lengthdir_y(16, dir);
+		while(place_meeting(x, y, Wall)){
+			var _break = true;
+			with(instances_meeting(x, y, Wall)){
+				if(place_meeting(x, y, PortalClear) && place_meeting(x, y, other)){
+					with(other){
+						_break = false;
+						while(place_meeting(x, y, other)){
+							x += lengthdir_x(16, dir);
+							y += lengthdir_y(16, dir);
+						}
+					}
+				}
+			}
+			if(_break) break;
 		}
 	}
 	
@@ -620,17 +634,6 @@
 				with(Necromancer) if(chance(1, 2)){
 					obj_create(x, y, "Cat");
 					instance_delete(id);
-				}
-				
-				 // Charging Wall-Top Bots:
-				var _num = (3 * GameCont.loops) + random_range(1, 3);
-				if(_num > 0) repeat(_num) with(instance_random(TopSmall)){
-					with(top_create(x, y, SnowBot, random(360), random_range(80, 192))){
-						jump = 0.5;
-						idle_walk_chance = 0;
-						target_save.alarm1 = irandom_range(3, 10);
-						with(target) spr_walk = sprSnowBotFire;
-					}
 				}
 			}
 			with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 200))){
@@ -1572,8 +1575,21 @@
 		}
 		
 		 // Slots:
-		while(array_length(ntte_pet) < ntte_pet_max){
-			array_push(ntte_pet, noone);
+		if(array_length(ntte_pet) != ntte_pet_max){
+			while(array_length(ntte_pet) < ntte_pet_max){
+				array_push(ntte_pet, noone);
+			}
+			while(array_length(ntte_pet) > ntte_pet_max){
+				var _break = true;
+				for(var i = 0; i < array_length(ntte_pet); i++){
+					if(!instance_exists(ntte_pet[i])){
+						ntte_pet = array_delete(ntte_pet, i);
+						_break = false;
+						break;
+					}
+				}
+				if(_break) break;
+			}
 		}
 		
 		 // Map Icons:
@@ -2517,36 +2533,9 @@
 	
 	instance_destroy();
 	
-#define draw_pause_pre
-	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
-		 // Dim:
-		var _col = c_white;
-		if(instance_exists(BackMainMenu)){
-			_col = merge_color(_col, c_black, 0.9);
-		}
-		
-		 // Skill HUD:
-		if(player_get_show_skills(player_find_local_nonsync())){
-			with(surface_setup("HUDSkill", null, null, null)){
-				x = view_xview_nonsync + (game_width - w);
-				y = view_yview_nonsync;
-				draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
-			}
-		}
-		
-		 // Main HUD:
-		if(player_get_show_hud(player_find_local_nonsync(), player_find_local_nonsync())){
-			with(surface_setup("HUDMain", null, null, null)){
-				x = view_xview_nonsync;
-				y = view_yview_nonsync;
-				draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
-			}
-		}
-	}
-	
-	instance_destroy();
-
 #define draw_pause
+	global.paused = true;
+	
 	 // (Frame Flash) Pet Map Icons:
 	if(global.pet_mapicon_pause < 2){
 		if(global.pet_mapicon_pause > 0){
@@ -2556,33 +2545,59 @@
 	}
 	global.pet_mapicon_pause_force = false;
 	
+	 // Pause HUD:
+	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
+		if(UberCont.alarm2 < 0){
+			 // Dim:
+			var _col = c_white;
+			if(instance_exists(BackMainMenu)){
+				_col = merge_color(_col, c_black, 0.9);
+			}
+			
+			 // Skill HUD:
+			if(player_get_show_skills(player_find_local_nonsync())){
+				with(surface_setup("HUDSkill", null, null, null)){
+					x = view_xview_nonsync + (game_width - w);
+					y = view_yview_nonsync;
+					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+				}
+			}
+			
+			 // Main HUD:
+			if(player_get_show_hud(player_find_local_nonsync(), player_find_local_nonsync())){
+				with(surface_setup("HUDMain", null, null, null)){
+					x = view_xview_nonsync;
+					y = view_yview_nonsync;
+					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+				}
+			}
+		}
+	}
+	
+#define draw_gui
+	 // Game Over Skill HUD:
+	if(!instance_exists(Player) && !instance_exists(GenCont) || instance_exists(PopoScene) || instance_exists(LastFire)){
+		if(!instance_exists(UnlockScreen)){
+			with(UberCont) if(visible){
+				if(player_get_show_skills(player_find_local_nonsync())){
+					with(surface_setup("HUDSkill", null, null, null)){
+						x = view_xview_nonsync + (game_width - w);
+						y = view_yview_nonsync;
+						draw_surface_scale(surf, x - view_xview_nonsync, y - view_yview_nonsync, 1 / scale);
+					}
+				}
+			}
+		}
+	}
+	
 #define draw_gui_end
 	 // Reset Mod Calling List:
 	ntte_call_mods = [];
 	
 	 // NTTE Music / Ambience:
-	if(array_length(instances_matching(CustomScript, "name", "ntte_begin_step")) <= 0){
-		ntte_music();
-	}
+	ntte_music();
+	global.ntte_music = true;
 	
-	 // Draw on Pause Screen but Below draw_pause Depth:
-	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
-		script_bind_draw(draw_pause_pre, UberCont.depth - 0.1);
-	}
-	
-	 // Game Over Skill HUD:
-	else if(!instance_exists(Player)){
-		with(UberCont) if(visible){
-			if(player_get_show_skills(player_find_local_nonsync())){
-				with(surface_setup("HUDSkill", null, null, null)){
-					x = view_xview_nonsync + (game_width - w);
-					y = view_yview_nonsync;
-					draw_surface_scale(surf, x - view_xview_nonsync, y - view_yview_nonsync, 1 / scale);
-				}
-			}
-		}
-	}
-
 	 // Pet Map Icon Drawing:
 	var _mapObj = [TopCont, GenCont, UberCont];
 	for(var i = 0; i < array_length(_mapObj); i++){
@@ -2606,7 +2621,7 @@
 		var _last = _mapObj.mapanim;
 		if("mapanim_petmapicon_last" in _mapObj) _last = _mapObj.mapanim_petmapicon_last;
 		_mapObj.mapanim_petmapicon_last = _mapObj.mapanim;
-
+		
 		_mapIndex = clamp(min(_last, _mapObj.mapanim), 0, _mapIndex);
 	}
 	
@@ -3043,6 +3058,11 @@
 		if(instance_exists(_player)){
 			 // Non-nonsync Stuff:
 			with(_player){
+				 // Bonus Ammo:
+				if("bonus_ammo" in self){
+					if("bonus_ammo_last" not in self) bonus_ammo_last = 0;
+				}
+				
 				 // Bonus HP:
 				if("bonus_health" in self){
 					if("bonus_health_max"  not in self) bonus_health_max = 0;
@@ -3088,13 +3108,18 @@
 			if(_HUDVisible || _HUDMain){
 				 // Bonus Ammo HUD:
 				with(instances_matching_gt(_player, "bonus_ammo", 0)){
+					var _textCol = (
+						(bonus_ammo != bonus_ammo_last)
+						? c_white
+						: merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))))
+					);
 					draw_set_font(fntSmall);
 					draw_set_halign(fa_right);
 					draw_set_valign(fa_top);
 					draw_text_nt(
 						_ox + 66,
 						_oy + 30 - (_players > 1),
-						`@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))))})+${bonus_ammo}`
+						`@(color:${_textCol})+${bonus_ammo}`
 					);
 				}
 				
@@ -3154,13 +3179,18 @@
 							}
 							
 							 // Text:
+							var _textCol = (
+								(_flashHurt || (bonus_health - bonus_health_last) >= 2/3)
+								? c_white
+								: merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))
+							);
 							draw_set_font(fntSmall);
-							draw_set_halign(fa_right);
+							draw_set_halign(fa_left);
 							draw_set_valign(fa_top);
 							draw_text_nt(
-								_x2 + 1,
+								_x1 - 3,
 								_y2 + 2,
-								`@(color:${merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))})+${bonus_health}`
+								`@(color:${_textCol})+${bonus_health}`
 							);
 						}
 					}
@@ -3379,6 +3409,15 @@
 			
 			 // Non-nonsync Stuff Pt.2:
 			with(_player){
+				 // Bonus Ammo:
+				if("bonus_ammo" in self){
+					var _diff = (bonus_ammo - bonus_ammo_last);
+					if(abs(_diff) > 1/2){
+						_diff *= current_time_scale / 2.5;
+					}
+					bonus_ammo_last += _diff;
+				}
+				
 				 // Bonus HP:
 				if("bonus_health" in self && sprite_index != spr_hurt){
 					var _diff = (bonus_health - bonus_health_last);
@@ -3587,53 +3626,57 @@
 		Overrides MusCont's alarms for playing area-specific music and ambience
 	*/
 	
-	var _area = GameCont.area;
-	
-	with(MusCont){
-		var	_mus = null,
-			_amb = null;
-			
-		 // Boss Music:
-		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
-			if(array_exists(ntte_area, _area)){
-				if(mod_script_exists("area", _area, "area_music_boss")){
-					alarm_set(2, -1);
-					_mus = mod_script_call("area", _area, "area_music_boss");
-				}
-			}
-		}
+	if(global.ntte_music){
+		global.ntte_music = false;
 		
-		 // Music / Ambience:
-		if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
-			if(array_exists(ntte_area, _area)){
-				if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
-					alarm_set(11, -1);
-					
-					 // Update MusCont:
-					if(_area != global.mus_area){
-						event_perform(ev_alarm, 11);
+		var _area = GameCont.area;
+		
+		with(MusCont){
+			var	_mus = null,
+				_amb = null;
+				
+			 // Boss Music:
+			if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
+				if(array_exists(ntte_area, _area)){
+					if(mod_script_exists("area", _area, "area_music_boss")){
+						alarm_set(2, -1);
+						_mus = mod_script_call("area", _area, "area_music_boss");
 					}
-					
-					_mus = mod_script_call("area", _area, "area_music");
-					_amb = mod_script_call("area", _area, "area_ambient");
 				}
 			}
-			global.mus_area = _area;
-		}
-		
-		 // Play:
-		if(is_real(_mus)){
-			if(sound_play_music(_mus)){
-				var _snd = sound_play_pitchvol(0, 0, 0);
-				sound_stop(_snd);
-				global.mus_current = _snd - 1;
+			
+			 // Music / Ambience:
+			if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
+				if(array_exists(ntte_area, _area)){
+					if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
+						alarm_set(11, -1);
+						
+						 // Update MusCont:
+						if(_area != global.mus_area){
+							event_perform(ev_alarm, 11);
+						}
+						
+						_mus = mod_script_call("area", _area, "area_music");
+						_amb = mod_script_call("area", _area, "area_ambient");
+					}
+				}
+				global.mus_area = _area;
 			}
-		}
-		if(is_real(_amb)){
-			if(sound_play_ambient(_amb)){
-				var _snd = sound_play_pitchvol(0, 0, 0);
-				sound_stop(_snd);
-				global.amb_current = _snd - 1;
+			
+			 // Play:
+			if(is_real(_mus)){
+				if(sound_play_music(_mus)){
+					var _snd = sound_play_pitchvol(0, 0, 0);
+					sound_stop(_snd);
+					global.mus_current = _snd - 1;
+				}
+			}
+			if(is_real(_amb)){
+				if(sound_play_ambient(_amb)){
+					var _snd = sound_play_pitchvol(0, 0, 0);
+					sound_stop(_snd);
+					global.amb_current = _snd - 1;
+				}
 			}
 		}
 	}

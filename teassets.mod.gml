@@ -1306,8 +1306,9 @@
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
 			
 			 // Hammerhead Pickup:
-			HammerHeadPickup		= sprite(p + "sprHammerHeadPickup",		1, 5, 5, shn10);
-			HammerHeadPickupEffect	= sprite(p + "sprHammerHeadPickupEffect",	3, 16, 8);
+			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5, 5, shn10);
+			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16, 8);
+			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16, 8);
 			
 			 // Sunken Chest:
 			SunkenChest     = sprite(p + "sprSunkenChest",     1, 12, 12, shn24);

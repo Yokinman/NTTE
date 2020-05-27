@@ -288,7 +288,7 @@
 			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 4);
 			
 			 // Silence:
-			mod_variable_set("mod", "ntte", "sPromptIndex", -1);
+			mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
 			
 			 // Effects:
 			swapmove = 1;
