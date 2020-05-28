@@ -494,7 +494,6 @@
 	
 	 // Die:
 	if(my_health <= 0 || place_meeting(x, y, PortalShock)){
-		my_health = min(my_health, 0);
 		instance_destroy();
 	}
 	
@@ -518,34 +517,32 @@
 	}
 	
 #define SawTrap_destroy
-	if(my_health <= 0){
-		 // Explo:
-		with(instance_create(x, y, Explosion)){
+	 // Explo:
+	with(instance_create(x, y, Explosion)){
+		hitid = other.hitid;
+	}
+	repeat(3){
+		with(instance_create(x, y, SmallExplosion)){
 			hitid = other.hitid;
 		}
-		repeat(3){
-			with(instance_create(x, y, SmallExplosion)){
-				hitid = other.hitid;
-			}
-		}
-		
-		 // Effects:
-		repeat(3){
-			instance_create(x + orandom(16), y + orandom(16), GroundFlame);
-		}
-		repeat(3 + irandom(3)){
-			with(instance_create(x, y, Debris)){
-				sprite_index = spr.SawTrapDebris;
-			}
-		}
-		
-		 // Sounds:
-		sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
-		sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
-		
-		 // Pickups:
-		pickup_drop(50, 0);
 	}
+	
+	 // Effects:
+	repeat(3){
+		instance_create(x + orandom(16), y + orandom(16), GroundFlame);
+	}
+	repeat(3 + irandom(3)){
+		with(instance_create(x, y, Debris)){
+			sprite_index = spr.SawTrapDebris;
+		}
+	}
+	
+	 // Sounds:
+	sound_play_hit_ext(sndExplosion, 1 + orandom(0.1), 3);
+	sound_play_hit_ext(snd_dead, 1 + orandom(0.2), 3);
+	
+	 // Pickups:
+	pickup_drop(50, 0);
 	
 #define SawTrap_cleanup
 	sound_stop(loop_snd);

@@ -457,7 +457,7 @@
 						ystart = _cy + orandom(4);
 						
 						 // Free Bone:
-						part++;
+						part = min(part + 1, sprite_get_number(spr_idle) - 2);
 						
 						 // Details:
 						with(instances_matching_gt(Detail, "id", _minID)){

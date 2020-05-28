@@ -759,7 +759,7 @@
 		 // Part Bonus:
 		part += variable_instance_get(GameCont, "visited_coast", 0);
 		part += GameCont.loops;
-		part = min(part, 2);
+		part = min(part, sprite_get_number(spr_idle) - 2);
 		
 		return id;
 	}
