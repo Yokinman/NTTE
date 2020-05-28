@@ -77,21 +77,23 @@
 		
 		 // Main Tents:
 		var	_ang = random(360),
-			_chests = instances_matching_ne([chestprop, RadChest], "name", "PetWeaponBecome");
+			_chest = [];
 			
+		with(instances_matching_ne([chestprop, RadChest], "object_index", RadMaggotChest)){
+			if(!position_meeting(x, y, PortalClear)){
+				array_push(_chest, id);
+			}
+		}
+		
 		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-			var	l = 40,
-				d = _dir + orandom(10);
+			var	_l = 40,
+				_d = _dir + orandom(10);
 				
-			with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BanditTent")){
-				 // Grab Chests:
-				with(instance_nearest_array(x, y, _chests)){
-					_chests = array_delete_value(_chests, self);
-					with(other){
-						target = other;
-						event_perform(ev_step, ev_step_begin);
-					}
-				}
+			with(obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BanditTent")){
+				 // Grab Nearest Chest:
+				target = instance_nearest_array(x, y, _chest);
+				_chest = array_delete_value(_chest, target);
+				event_perform(ev_step, ev_step_begin);
 			}
 		}
 		
@@ -361,7 +363,13 @@
 				}
 				
 				 // Grab Nearest Chest:
-				with(instance_nearest_rectangle(x1, y1, x2, y2, instances_matching_ne(instances_matching_ne([chestprop, RadChest], "name", "Backpack"), "object_index", RadMaggotChest))){
+				var _chest = [];
+				with(instances_matching_ne([chestprop, RadChest, Mimic, SuperMimic], "object_index", RadMaggotChest)){
+					if(!position_meeting(x, y, PortalClear)){
+						array_push(_chest, id);
+					}
+				}
+				with(instance_nearest_rectangle(x1, y1, x2, y2, _chest)){
 					with(instances_meeting(x, y, Bandit)){
 						if(place_meeting(x, y, other)){
 							x = _cx;
@@ -1966,6 +1974,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left

@@ -102,9 +102,9 @@
 		// Hyper Slug (kinda)
 	];
 	
-	spriteTeamMap = ds_map_create();
-	teamSpriteMap = ds_map_create();
-	teamSpriteObjectMap = ds_map_create();
+	sprite_team_map = ds_map_create();
+	team_sprite_map = ds_map_create();
+	team_sprite_obj_map = ds_map_create();
 	
 	with(_teamGrid){
 		var	_teamList = self,
@@ -122,11 +122,11 @@
 		with(_sprtList){
 			var _sprt = self;
 			if(sprite_exists(_sprt)){
-				if(!ds_map_exists(teamSpriteMap, _sprt)){
-					teamSpriteMap[? _sprt] = _sprtList;
+				if(!ds_map_exists(team_sprite_map, _sprt)){
+					team_sprite_map[? _sprt] = _sprtList;
 				}
-				if(!ds_map_exists(spriteTeamMap, _sprt)){
-					spriteTeamMap[? _sprt] = spriteTeamStart + array_find_index(_sprtList, _sprt);
+				if(!ds_map_exists(sprite_team_map, _sprt)){
+					sprite_team_map[? _sprt] = sprite_team_start + array_find_index(_sprtList, _sprt);
 				}
 			}
 		}
@@ -135,7 +135,7 @@
 		with(_objsList){
 			var _obj = self;
 			if(!is_real(_obj) || object_exists(_obj)){
-				if(!ds_map_exists(teamSpriteObjectMap, _obj)){
+				if(!ds_map_exists(team_sprite_obj_map, _obj)){
 					var _map = ds_map_create();
 					
 					with(_teamGrid){
@@ -158,7 +158,7 @@
 						}
 					}
 					
-					teamSpriteObjectMap[? _obj] = _map;
+					team_sprite_obj_map[? _obj] = _map;
 				}
 			}
 		}
@@ -177,8 +177,6 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro mod_type_current script_ref_create(0)[0]
-
 #macro area_campfire     0
 #macro area_desert       1
 #macro area_sewers       2
@@ -196,15 +194,22 @@
 #macro area_hq           106
 #macro area_crib         107
 
+#macro infinity 1/0
+
+#macro mod_type_current script_ref_create(0)[0]
+
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
+
 #macro anim_end (image_index + image_speed_raw >= image_number)
+
+#macro enemy_boss (("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index))
 
 #macro bbox_center_x (bbox_left + bbox_right + 1) / 2
 #macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
 #macro bbox_width    (bbox_right + 1) - bbox_left
 #macro bbox_height   (bbox_bottom + 1) - bbox_top
 
-#macro FloorNormal instances_matching(Floor, "object_index", Floor)
+#macro FloorNormal   instances_matching(Floor, "object_index", Floor)
 
 #macro ntte_alarm_min 0
 #macro ntte_alarm_max 11
@@ -215,12 +220,10 @@
 #macro ntte_obj_scrt  global.object_scrt
 #macro ntte_obj_bind  global.object_bind
 
-#macro spriteTeamStart     1
-#macro spriteTeamMap       global.sprite_team_map
-#macro teamSpriteMap       global.team_sprite_map
-#macro teamSpriteObjectMap global.team_sprite_object_map
-
-#macro infinity 1/0
+#macro sprite_team_start   1
+#macro sprite_team_map     global.sprite_team_map
+#macro team_sprite_map     global.team_sprite_map
+#macro team_sprite_obj_map global.team_sprite_object_map
 
 #define obj_create(_x, _y, _name)
 	if(is_real(_name) && object_exists(_name)){
@@ -1356,7 +1359,7 @@
 				}
 				
 				 // Boss Check:
-				_vars.boss = (("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index));
+				_vars.boss = enemy_boss;
 				
 				 // Charm Duration Speed:
 				_vars.time_speed = (_vars.boss ? 2 : 1);
@@ -5464,8 +5467,8 @@
 			sprite_get_team(sprAllyBullet) == 2
 	*/
 	
-	if(ds_map_exists(spriteTeamMap, _sprite)){
-		return spriteTeamMap[? _sprite];
+	if(ds_map_exists(sprite_team_map, _sprite)){
+		return sprite_team_map[? _sprite];
 	}
 	
 	return -1;
@@ -5478,8 +5481,8 @@
 			team_get_sprite(1, sprFlakBullet) == sprEFlak
 	*/
 	
-	var	_spriteList = teamSpriteMap[? _sprite],
-		_spriteIndex = _team - spriteTeamStart;
+	var	_spriteList = team_sprite_map[? _sprite],
+		_spriteIndex = _team - sprite_team_start;
 		
 	if(_spriteIndex >= 0 && _spriteIndex < array_length(_spriteList)){
 		return _spriteList[_spriteIndex];
@@ -5502,9 +5505,9 @@
 		sprite_index = team_get_sprite(_team, _spr);
 		
 		 // Object, for hardcoded stuff:
-		if(ds_map_exists(teamSpriteObjectMap, _obj)){
-			var	_objList = teamSpriteObjectMap[? _obj][? _spr],
-				_objIndex = _team - spriteTeamStart;
+		if(ds_map_exists(team_sprite_obj_map, _obj)){
+			var	_objList = team_sprite_obj_map[? _obj][? _spr],
+				_objIndex = _team - sprite_team_start;
 				
 			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
 				var _newObj = _objList[_objIndex];

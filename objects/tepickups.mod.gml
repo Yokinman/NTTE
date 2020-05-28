@@ -9,11 +9,6 @@
 	 // Bonus Pickups:
 	global.bonus_ammo_step = [];
 	
-	 // Special Pickups:
-	global.sPickupsMax = 4;
-	global.sPickupsInc = 1;
-	global.sPickupsNum = 1;
-	
 	 // Vault Flower:
 	global.VaultFlower_spawn = true; // used in ntte.mod
 	global.VaultFlower_alive = true;
@@ -86,10 +81,14 @@
 				"guardian juice",
 				"stopwatch"]; // a beautiful mistake
 				
-			if(skill_get(mut_boiling_veins) > 0)								array_push(_jsGrub, "sunset mayo");
-			if(array_length(instances_matching(Player, "notoxic", false)) > 0)	array_push(_jsGrub, "frog milk");
+			if(skill_get(mut_boiling_veins) > 0){
+				array_push(_jsGrub, "sunset mayo");
+			}
+			if(array_length(instances_matching(Player, "notoxic", false)) > 0){
+				array_push(_jsGrub, "frog milk");
+			}
 			
-			wep = _jsGrub[irandom(array_length(_jsGrub)-1)];
+			wep = _jsGrub[irandom(array_length(_jsGrub) - 1)];
 			roll = true;
 		}
 	}
@@ -2850,14 +2849,15 @@
 					sound_play(sndStrongSpiritGain);
 				}
 				
-				 // Bonus Spirit (Strong Spirit doesn't have built-in mutation stacking):
-				if("bonus_spirit" in self && _num > 0){
-					repeat(_num){
-						var _spirit = {};
-						array_push(other.spirit, _spirit);
-						array_push(bonus_spirit, _spirit);
-						sound_play(sndStrongSpiritGain);
-					}
+				 // Bonus Spirit (Strong Spirit's built-in mutation stacking don't exist):
+				if("bonus_spirit" not in self){
+					bonus_spirit = [];
+				}
+				if(_num > 0) repeat(_num){
+					var _spirit = {};
+					array_push(other.spirit, _spirit);
+					array_push(bonus_spirit, _spirit);
+					sound_play(sndStrongSpiritGain);
 				}
 			}
 			
@@ -3609,16 +3609,17 @@
 		_num  = num,
 		_text ="% @yBONUS @wSPIRIT" + ((_num > 1) ? "S" : "");
 		
+	 // Acquire Bonus Spirit:
 	with(instance_is(other, Player) ? other : Player){
-		if("bonus_spirit" in self){
-			 // Acquire Bonus Spirit:
-			if(_num > 0) repeat(_num){
-				array_push(bonus_spirit, bonusSpiritGain);
-			}
-			
-			 // Text:
-			pickup_text(_text, _num);
+		if("bonus_spirit" not in self){
+			bonus_spirit = [];
 		}
+		if(_num > 0) repeat(_num){
+			array_push(bonus_spirit, {});
+		}
+		
+		 // Text:
+		pickup_text(_text, _num);
 		
 		 // for all the headless chickens in the crowd:
 		my_health = max(my_health, 1);
@@ -4358,13 +4359,14 @@
 	
 /// GENERAL
 #define game_start
-	 // Reset:
-	global.sPickupsNum = 1;
+	 // Reset Vault Flower:
 	global.VaultFlower_spawn = true;
 	global.VaultFlower_alive = true;
 	
 	 // Delete Orchid Skills:
-	with(instances_matching(CustomObject, "name", "OrchidSkill")) instance_delete(id);
+	with(instances_matching(CustomObject, "name", "OrchidSkill")){
+		instance_delete(id);
+	}
 	
 #define ntte_begin_step
 	 // Bonus Ammo / Overstock:
@@ -4485,19 +4487,10 @@
 	}
 	
 	 // Bonus Spirits:
-	var _drawSpirit = false;
-	with(Player){
-		if("bonus_spirit" not in self){
-			bonus_spirit = [];
-			bonus_spirit_bend = 0;
-			bonus_spirit_bend_spd = 0;
-		}
-		
+	with(instances_matching_ne(Player, "bonus_spirit", null)){
 		if(array_length(bonus_spirit) > 0){
-			_drawSpirit = true;
-			
 			 // Grant Grace:
-			if(my_health <= 0){
+			if(my_health <= 0 && lsthealth > 0 && player_active){
 				if(skill_get(mut_strong_spirit) <= 0 || canspirit != true){
 					for(var i = array_length(bonus_spirit) - 1; i >= 0; i--){
 						var _spirit = bonus_spirit[i];
@@ -4523,9 +4516,9 @@
 			with(instances_matching(instances_matching(StrongSpirit, "creator", id), "visible", true)){
 				visible = false;
 				array_push(other.bonus_spirit, {
+					active       : false,
 					sprite_index : sprite_index,
-					image_index : image_index,
-					active : false
+					image_index  : image_index
 				});
 			}
 			
@@ -4548,79 +4541,82 @@
 				 // Gone:
 				else other.bonus_spirit = array_delete_value(other.bonus_spirit, self);
 			}
-		}
-		
-		 // Wobble:
-		var _num = array_length(bonus_spirit) + (skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0);
-		bonus_spirit_bend_spd += hspeed_raw / (3 * max(1, _num));
-		bonus_spirit_bend_spd += 0.1 * (0 - bonus_spirit_bend) * current_time_scale;
-		bonus_spirit_bend += bonus_spirit_bend_spd * current_time_scale;
-		bonus_spirit_bend_spd -= bonus_spirit_bend_spd * 0.15 * current_time_scale;
-	}
-	if(_drawSpirit){
-		script_bind_draw(draw_bonus_spirit, -8);
-	}
-	
-	/*
-	 // Spirit Pickups:
-	with(instances_matching_gt(instances_matching_le(instances_matching_lt(HPPickup, "blink", 0), "alarm0", ceil(current_time_scale)), "alarm0", 0)){
-		var	_can = true,
-			_spirit = 0;
 			
-		with(Player){
-			if(my_health < maxhealth){
-				_can = false;
+			 // Wobble:
+			if("bonus_spirit_bend" not in self){
+				bonus_spirit_bend = 0;
+				bonus_spirit_bend_spd = 0;
 			}
-			if("bonus_spirit" in self){
-				_spirit += array_length(bonus_spirit);
-			}
+			var _num = array_length(bonus_spirit) + (skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0);
+			bonus_spirit_bend_spd += hspeed_raw / (3 * max(1, _num));
+			bonus_spirit_bend_spd += 0.1 * (0 - bonus_spirit_bend) * current_time_scale;
+			bonus_spirit_bend += bonus_spirit_bend_spd * current_time_scale;
+			bonus_spirit_bend_spd -= bonus_spirit_bend_spd * 0.15 * current_time_scale;
 		}
-		if(_can && chance(1, 1 + _spirit)){
-			obj_create(x, y, "SpiritPickup");
-			instance_create(x, y, SmallChestFade);
-			instance_destroy();
+		else{
+			bonus_spirit_bend = 0;
+			bonus_spirit_bend_spd = 0;
 		}
 	}
-	*/
+	if(array_length(instances_matching(CustomScript, "name", "draw_bonus_spirit")) <= 0){
+		with(script_bind_draw(draw_bonus_spirit, -8)){
+			name = script[2];
+			persistent = true;
+		}
+	}
 	
-	 // Mutation Pickups:
-	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "mutationpickup_check", null)){
-		mutationpickup_check = false;
+	 // Spirit Pickups:
+	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "spiritpickup_check", null)){
+		spiritpickup_check = false;
 		
-		if(chance(1, 3)){
-			if(("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)){
-				mutationpickup_check = true;
+		if(GameCont.hard > 3){
+			var	_health    = 0,
+				_healthMax = 0;
 				
-				 // Check if Last Boss on Level:
-				with(instances_matching_gt(enemy, "id", id)){
-					if(("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)){
-						other.mutationpickup_check = false;
-						break;
+			with(Player){
+				_health    += my_health;
+				_healthMax += maxhealth;
+			}
+			
+			 // Below Half HP:
+			if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
+				 // Is Boss:
+				if(enemy_boss){
+					spiritpickup_check = true;
+					
+					 // Check if Last Boss on Level:
+					with(instances_matching_gt(enemy, "id", id)){
+						if(enemy_boss){
+							other.spiritpickup_check = false;
+							break;
+						}
 					}
-				}
-				
-				if(mutationpickup_check){
-					obj_create(x + orandom(4), y + orandom(4), choose("SpiritPickup", "HammerHeadPickup"));
+					
+					 // Spirit Time:
+					if(spiritpickup_check){
+						var	_x = x,
+							_y = y;
+							
+						if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
+							_x = posx;
+							_y = posy;
+						}
+						
+						if(position_meeting(_x, _y, Floor)){
+							obj_create(_x + orandom(4), _y + orandom(4), "SpiritPickup");
+						}
+					}
 				}
 			}
 		}
 	}
 	
 #define ntte_step
-	 // More:
-	var _minHard = 8;
-	if(instance_exists(GenCont)){
-		with(instances_matching(GenCont, "ntte_special_pickup", null)){
-			ntte_special_pickup = true;
-			global.sPickupsNum = min(global.sPickupsNum + global.sPickupsInc, global.sPickupsMax, (GameCont.hard < _minHard));
-		}
-	}
-	
 	 // Replace Pickups / Chests:
-	else{
+	if(!instance_exists(GenCont)){
 		 // Bonus Pickups:
-		with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, RadChest, Mimic, SuperMimic], "bonuschest_check", null)){
-			bonuschest_check = false;
+		with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, RadChest, Mimic, SuperMimic], "bonuspickup_check", null)){
+			bonuspickup_check = false;
 			
 			if(!position_meeting(xstart, ystart, ChestOpen)){
 				if(instance_is(self, Pickup) || GameCont.loops > 0){
@@ -4676,7 +4672,7 @@
 						 // Replace:
 						if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin)){
 							if(chance(_wepChance, _wepTotal)){
-								bonuschest_check = true;
+								bonuspickup_check = true;
 							}
 						}
 					}
@@ -4707,12 +4703,12 @@
 						
 						 // Replace:
 						if(!chance(1, 1 + (0.25 * (1 + (_health - _healthMax))))){
-							bonuschest_check = true;
+							bonuspickup_check = true;
 						}
 					}
 					
 					 // Replace:
-					if(bonuschest_check){
+					if(bonuspickup_check){
 						if(instance_is(self, Pickup)){
 							_chest += "Pickup";
 						}
@@ -4728,38 +4724,6 @@
 				}
 			}
 		}
-		
-		/*
-		 // Bonus, Spirit, and Hammerhead Pickups:
-		with(instances_matching([AmmoPickup, HPPickup], "ntte_special_pickup", null)){
-			ntte_special_pickup = false;
-			
-			if(GameCont.hard >= _minHard && global.sPickupsNum > 0){
-				if(!position_meeting(xstart, ystart, ChestOpen)){
-					if((instance_is(self, HPPickup) && sprite_index == sprHP) || (instance_is(self, AmmoPickup) && sprite_index == sprAmmo)){
-						var _sPickupsDec = 0;
-						
-						 // Spirit Pickups:
-						if(chance(1 + skill_get(mut_last_wish), 200)){
-							_sPickupsDec = 2;
-							obj_create(x, y, "SpiritPickup");
-						}
-						
-						 // Hammerhead Pickups:
-						else if(chance(1, 100)){
-							_sPickupsDec = 0.5;
-							obj_create(x, y, "HammerHeadPickup");
-						}
-						
-						if(_sPickupsDec > 0){
-							global.sPickupsNum -= _sPickupsDec;
-							instance_delete(id);
-						}
-					}
-				}
-			}
-		}
-		*/
 		
 		 // Cursed Ammo Chests:
 		with(instances_matching([AmmoChest, Mimic], "cursedammochest_check", null)){
@@ -5102,40 +5066,36 @@
 #define draw_bonus_spirit
 	if(lag) trace_time();
 	
-	with(instances_matching_ne(Player, "bonus_spirit", null)){
-		if(visible || variable_instance_get(self, "wading", 0) > 0){
-			var n = array_length(bonus_spirit);
-			if(n > 0){
-				var	_bend = bonus_spirit_bend,
-					_dir = 90,
-					_dis = 7,
-					_x = x,
-					_y = y + sin(wave * 0.1);
-					
-				if(skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0){
-					_x += lengthdir_x(_dis, _dir);
-					_y += lengthdir_y(_dis, _dir);
-					_dir += _bend;
-				}
+	var _lag = false;
+	
+	with(instances_matching(instances_matching_ne(Player, "bonus_spirit", null), "visible", true)){
+		var _num = array_length(bonus_spirit);
+		if(_num > 0){
+			var	_bend = (("bonus_spirit_bend" in self) ? bonus_spirit_bend : 0),
+				_dir = 90,
+				_dis = 7,
+				_x = x,
+				_y = y + sin(wave * 0.1);
 				
-				for(var i = 0; i < n; i++){
-					draw_sprite_ext(lq_defget(bonus_spirit[i], "sprite_index", mskNone), lq_defget(bonus_spirit[i], "image_index", 0), _x, _y, 1, 1, _dir - 90, c_white, 1);
-					_x += lengthdir_x(_dis, _dir);
-					_y += lengthdir_y(_dis, _dir);
-					_dir += _bend;
-				}
+			if(skill_get(mut_strong_spirit) > 0 && canspirit == true && array_length(instances_matching(StrongSpirit, "creator", id)) <= 0){
+				_x += lengthdir_x(_dis, _dir);
+				_y += lengthdir_y(_dis, _dir);
+				_dir += _bend;
 			}
+			
+			for(var i = 0; i < _num; i++){
+				draw_sprite_ext(lq_defget(bonus_spirit[i], "sprite_index", mskNone), lq_defget(bonus_spirit[i], "image_index", 0), _x, _y, 1, 1, _dir - 90, c_white, 1);
+				_x += lengthdir_x(_dis, _dir);
+				_y += lengthdir_y(_dis, _dir);
+				_dir += _bend;
+			}
+			
+			_lag = true;
 		}
 	}
 	
-	if(lag) trace_time(script[2]);
+	if(_lag && lag) trace_time(script[2]);
 	
-	 // Goodbye Bro:
-	instance_destroy();
-	
-#macro bonusSpiritGain {}
-#macro bonusSpiritLose { active: false }
-
 #define pickup_alarm(_time, _loopDecay)
 	/*
 		Returns the alarm0 to set on a pickup, affected by loop and crown of haste
@@ -5196,6 +5156,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                image_index + image_speed_raw >= image_number
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
+#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
