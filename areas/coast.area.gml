@@ -716,8 +716,8 @@
 				}
 			}
 		}
-		with(Portal){
-			if(image_alpha == 0 && !place_meeting(xstart, ystart, Floor)){
+		with(instances_matching(Portal, "visible", false)){
+			if(!place_meeting(xstart, ystart, Floor)){
 				if(endgame < 100){
 					var	r = 5 + image_index,
 						c = current_frame;
@@ -732,11 +732,6 @@
 					if("coast_portal_sound" not in self){
 						coast_portal_sound = true;
 						sound_play(sndOasisPortal);
-					}
-				}
-				else{
-					with(instances_matching(instances_matching(PortalL, "xstart", x), "ystart", y)){
-						instance_destroy();
 					}
 				}
 			}

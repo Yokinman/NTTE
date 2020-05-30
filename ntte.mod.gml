@@ -134,6 +134,9 @@
 		_spawnY = y;
 	}
 	
+	 // 'chest_create()' Toggle:
+	mod_variable_set("mod", "telib", "chest_create_start", true);
+	
 	 // Top Decal Fix:
 	with(TopPot){
 		while(place_meeting(x, y, Wall)){
@@ -1371,6 +1374,9 @@
 		depth--;
 	}
 	
+	 // 'chest_create()' Toggle:
+	mod_variable_set("mod", "telib", "chest_create_start", false);
+	
 #define step
 	ntte_begin_step();
 	
@@ -1901,20 +1907,22 @@
 		var o = 32;
 		with(instance_rectangle_bbox(bbox_left - o, bbox_top - o, bbox_right + o, bbox_bottom + o, instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team))){
 			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-				if(sprite_get_team(sprite_index) != 3 && fork()){
-					var	t = other.team,
-						h = variable_instance_get(other, "hitid");
+				if(sprite_get_team(sprite_index) != 3){
+					if(fork()){
+						var	t = other.team,
+							h = variable_instance_get(other, "hitid");
+							
+						wait 0;
 						
-					wait 0;
-					
-					if(instance_exists(self) && team == t){
-						if(hitid == -1 && !is_undefined(h)){
-							hitid = h;
+						if(instance_exists(self) && team == t){
+							if(hitid == -1 && !is_undefined(h)){
+								hitid = h;
+							}
+							team_instance_sprite(((team == 3) ? 1 : team), self);
 						}
-						team_instance_sprite(((team == 3) ? 1 : team), self);
+						
+						exit;
 					}
-					
-					exit;
 				}
 			}
 		}

@@ -62,7 +62,7 @@
 			instance_delete(id);
 		}
 		with(instances_matching(Mimic, "spr_idle", sprMimicIdle)){
-			obj_create(x, y, "BonusAmmoMimic");
+			chest_create(x, y, "BonusAmmoMimic");
 			instance_delete(id);
 		}
 		
@@ -88,7 +88,7 @@
 			instance_delete(id);
 		}
 		with(instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle)){
-			obj_create(x, y, "BonusHealthMimic");
+			chest_create(x, y, "BonusHealthMimic");
 			instance_delete(id);
 		}
 	}

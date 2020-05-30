@@ -824,8 +824,10 @@
 				GroundFlameGreenDisappear    = sprite(p + "sprGroundFlameGreenDisappear",    4, 4, 6);
 				GroundFlameGreenBigDisappear = sprite(p + "sprGroundFlameGreenBigDisappear", 4, 6, 8);
 				
-				 // Top Pillar:
-				TopPillar = sprite(p + "sprTopPillar", 11, 24, 32);
+				 // Pillar (Connects to the ground better):
+				sprite_replace(sprNuclearPillar,     "sprites/" + p + "sprNuclearPillar.png",     11, 24, 32);
+				sprite_replace(sprNuclearPillarHurt, "sprites/" + p + "sprNuclearPillarHurt.png",  3, 24, 32);
+				sprite_replace(sprNuclearPillarDead, "sprites/" + p + "sprNuclearPillarDead.png",  3, 24, 32);
 				
 			//#endregion
 			

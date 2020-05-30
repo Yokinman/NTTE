@@ -388,7 +388,10 @@
 				var	_obj = choose(BonePile, MaggotSpawn, RadMaggotChest, AmmoChest, WeaponChest),
 					_num = 1;
 					
-				if(object_is_ancestor(_obj, chestprop) || object_is_ancestor(_obj, RadChest) || _obj == RadChest){
+				if(
+					(_obj == chestprop || object_is_ancestor(_obj, chestprop)) ||
+					(_obj == RadChest  || object_is_ancestor(_obj, RadChest))
+				){
 					_num += skill_get(mut_open_mind);
 				}
 				
@@ -1663,8 +1666,8 @@
 					for(var j = 0; j < array_length(floors); j++){
 						with(floors[j]){
 							sprite_index = ((_roomSize == 3) ? spr.FloorPalaceShrineRoomLarge : spr.FloorPalaceShrineRoomSmall);
-							image_index	 = j;
-							depth = 7;
+							image_index	= j;
+							depth = 8;
 						}
 					}
 				}
@@ -1687,8 +1690,8 @@
 		 // Fancify:
 		with(instances_matching_ne(instances_matching_gt(FloorNormal, "id", _minID), "sprite_index", spr.FloorPalaceShrineRoomSmall, spr.FloorPalaceShrineRoomLarge)){
 			sprite_index = spr.FloorPalaceShrine;
-			image_index  = irandom(image_number - 1);
-			depth = 7;
+			image_index = irandom(image_number - 1);
+			depth = 8;
 		}
 	}
 	

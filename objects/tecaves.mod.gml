@@ -1016,7 +1016,7 @@
 				}
 			}
 		}
-		with(chest_create(_chestX, _chestY, chest_type)){
+		with(chest_create(_chestX, _chestY, _chest)){
 			with(instances_meeting(x, y, CrystalProp)){
 				instance_delete(id);
 			}

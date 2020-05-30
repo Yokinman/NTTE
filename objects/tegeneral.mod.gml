@@ -2370,23 +2370,24 @@
 		walk = 0;
 		walkspeed = 2;
 		maxspeed = 3;
-		revive_delay = 0;
-		stat_found = true;
+		loops = 0;
 		stat = {};
+		stat_found = true;
 		light = true;
 		light_radius = [32, 96]; // [Inner, Outer]
 		mask_store = null;
 		portal_angle = 0;
-		my_portalguy = noone;
-		my_corpse = noone;
+		portal_inst = noone;
+		corpse = true;
+		corpse_inst = noone;
 		revive = noone;
 		pickup_indicator = scrPickupIndicator("");
 		with(pickup_indicator) mask_index = mskShield;
 		
 		 // Scripts:
 		pet = "";
-		mod_type = "none";
-		mod_name = "none";
+		mod_type = "";
+		mod_name = "";
 		
 		 // Alarms:
 		alarm0 = 20 + random(10);
@@ -2403,9 +2404,9 @@
 	
 	 // Loading Screen Visual:
 	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
-		if(!instance_exists(my_portalguy)){
-			my_portalguy = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
-			with(my_portalguy){
+		if(!instance_exists(portal_inst)){
+			portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
+			with(portal_inst){
 				sprite_index = other.spr_hurt;
 				image_index = 2;
 				turnspeed *= 1.5;
@@ -2419,7 +2420,7 @@
 				}
 			}
 		}
-		with(my_portalguy){
+		with(portal_inst){
 			image_xscale = 0.85 + (0.15 * sin((-image_angle / 2) / 200));
 			image_yscale = image_xscale;
 			grow = 0;
@@ -2443,13 +2444,16 @@
 		mask_store = null;
 	}
 	
+	 // Loop HP Scaling:
+	if(loops != GameCont.loops){
+		maxhealth = round(maxhealth / (1 + (0.5 * loops)));
+		loops = GameCont.loops;
+		maxhealth = round(maxhealth * (1 + (0.5 * loops)));
+	}
+	
 	 // Loading/Level Up Screen:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
+	if(instance_exists(GenCont)){
 		visible = false;
-		
-		 // Reset:
-		with(revive) instance_destroy();
-		my_health = maxhealth;
 		portal_angle = 0;
 		
 		 // Follow Player:
@@ -2458,6 +2462,12 @@
 			x = _inst.x + orandom(16);
 			y = _inst.y + orandom(16);
 		}
+	}
+	
+	 // End of Level Revive:
+	if(instance_exists(GenCont) || (instance_exists(leader) && instance_exists(Portal))){
+		with(revive) instance_destroy();
+		my_health = maxhealth;
 	}
 	
 	if(visible){
@@ -2534,7 +2544,9 @@
 			motion_add(direction + orandom(20), speed * 2);
 			
 			 // Truly Dead:
-			if(!instance_exists(my_corpse)) my_corpse = corpse_drop(direction, speed);
+			if(corpse && !instance_exists(corpse_inst)){
+				corpse_inst = corpse_drop(direction, speed);
+			}
 			sound_play_hit(snd_dead, 0.3);
 			sprite_index = spr_hurt;
 			image_index = 0;
@@ -3017,7 +3029,7 @@
 		my_health = maxhealth;
 		
 		 // Delete Corpse:
-		with(my_corpse){
+		with(corpse_inst){
 			repeat(2) scrFX([x, 4], [y, 4], 0, Smoke);
 			instance_destroy();
 		}

@@ -1289,17 +1289,10 @@
 					d = _dir + orandom((360 / _num) * 0.4);
 					
 				with(chest_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RadChest)){
-					if(instance_is(self, RadChest)){
-						if(chance(1, 6)){
-							spr_idle = sprRadChestBig;
-							spr_hurt = sprRadChestBigHurt;
-							spr_dead = sprRadChestBigDead;
-						}
-						else{
-							spr_idle = sprRadChest;
-							spr_hurt = sprRadChestHurt;
-							spr_dead = sprRadChestCorpse;
-						}
+					if(instance_is(self, RadChest) && chance(1, 6)){
+						spr_idle = sprRadChestBig;
+						spr_hurt = sprRadChestBigHurt;
+						spr_dead = sprRadChestBigDead;
 					}
 				}
 			}
@@ -4373,11 +4366,14 @@
 	global.bonus_ammo_step = [];
 	with(instances_matching(instances_matching_gt(Player, "bonus_ammo", 0), "infammo", 0)){
 		if(player_active){
-			var	_wep      = wep,
-				_fire     = 0,
-				_type     = weapon_get_type(_wep),
-				_auto     = weapon_get_auto(_wep),
-				_internal = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep));
+			var	_wep          = wep,
+				_cost         = weapon_get_cost(_wep),
+				_load         = weapon_get_load(_wep),
+				_type         = weapon_get_type(_wep),
+				_auto         = weapon_get_auto(_wep),
+				_internal     = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
+				_internalCost = (_internal ? _wep.cost : 0),
+				_fire         = 0;
 				
 			 // Race-Specific:
 			switch(race){
@@ -4394,24 +4390,37 @@
 			
 			 // Firing:
 			if(_fire <= 0 && canfire >= 1){
-				if(_auto && can_shoot == true){
-					if(button_check(index, "fire")){
-						_fire = floor(min(100, 1 - (reload / weapon_get_load(_wep)), (ammo[_type] + bonus_ammo) / weapon_get_cost(_wep)));
+				 // Automatic:
+				if(_auto){
+					if(can_shoot == true){
+						if(button_check(index, "fire")){
+							_fire = 100;
+							if(_load > 0){
+								_fire = min(_fire, 1 - (min(0, reload) / _load));
+							}
+							if(_cost > 0){
+								_fire = min(_fire, (ammo[_type] + bonus_ammo) / _cost);
+							}
+							if(_internalCost > 0){
+								_fire = min(_fire, (_wep.ammo + bonus_ammo) / _internalCost);
+							}
+							_fire = floor(_fire);
+						}
+					}
+					
+					 // Reloading:
+					else if(button_pressed(index, "fire")){
+						_fire = 1;
 					}
 				}
-				else if(button_pressed(index, "fire") || (!_auto && clicked >= 1)){
+				
+				 // Manual:
+				else if(button_pressed(index, "fire") || clicked >= 1){
 					_fire = 1;
 				}
 			}
-			
-			 // Determine Cost:
-			var	_cost         = weapon_get_cost(_wep),
-				_internalCost = (_internal ? _wep.cost : 0);
-				
-			if(_fire > 0){
-				_cost         *= _fire;
-				_internalCost *= _fire;
-			}
+			_cost         *= max(1, _fire);
+			_internalCost *= max(1, _fire);
 			
 			 // Step:
 			if(ammo[_type] + bonus_ammo >= _cost){
@@ -4426,32 +4435,35 @@
 			
 			 // Give Bonus Ammo:
 			if(_fire > 0){
+				var	_bonus         = 0,
+					_internalBonus = 0;
+					
+				 // Reloading, Clamp Max Ammo:
 				if(can_shoot != true){
 					_cost         = min(_cost,         typ_amax[_type]);
 					_internalCost = min(_internalCost, (_internal ? lq_defget(_wep, "amax", 0) : 0));
 				}
 				
-				 // Normal:
-				var _bonus = 0;
-				if(ammo[_type] < _cost && ammo[_type] + bonus_ammo >= _cost){
-					_bonus = min(bonus_ammo, _cost - ammo[_type]);
+				 // Ammo:
+				if(ammo[_type] + bonus_ammo >= _cost){
+					 // Normal:
+					_bonus = clamp(_cost - ammo[_type], 0, bonus_ammo);
 					ammo[_type] += _bonus;
 					bonus_ammo  -= _bonus;
-				}
-				
-				 // Internal:
-				var _internalBonus = 0;
-				if(_internal){
-					if(_wep.ammo < _internalCost && _wep.ammo + bonus_ammo >= _internalCost){
-						_internalBonus = min(bonus_ammo, _internalCost - _wep.ammo);
-						_wep.ammo  += _internalBonus;
-						bonus_ammo -= _internalBonus;
+					
+					 // Internal:
+					if(_internal){
+						if(_wep.ammo + bonus_ammo >= _internalCost){
+							_internalBonus = clamp(_internalCost - _wep.ammo, 0, bonus_ammo);
+							_wep.ammo  += _internalBonus;
+							bonus_ammo -= _internalBonus;
+						}
 					}
 				}
 				
 				 // FX:
 				var _size = _bonus + _internalBonus;
-				if(_size > 0 || bonus_ammo <= 0){
+				if(_size > 0){
 					sound_play_pitchvol(
 						choose(sndGruntFire, sndRogueRifle),
 						(0.6 + random(1)) / clamp(_size, 1, 3),
@@ -4585,10 +4597,12 @@
 					spiritpickup_check = true;
 					
 					 // Check if Last Boss on Level:
-					with(instances_matching_gt(enemy, "id", id)){
-						if(enemy_boss){
-							other.spiritpickup_check = false;
-							break;
+					with(enemy){
+						if(my_health > 0 || id > other.id){
+							if(enemy_boss){
+								other.spiritpickup_check = false;
+								break;
+							}
 						}
 					}
 					
@@ -4615,111 +4629,106 @@
 	 // Replace Pickups / Chests:
 	if(!instance_exists(GenCont)){
 		 // Bonus Pickups:
-		with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, RadChest, Mimic, SuperMimic], "bonuspickup_check", null)){
+		with(instances_matching([AmmoPickup, AmmoChest, Mimic], "bonuspickup_check", null)){
 			bonuspickup_check = false;
 			
-			if(!position_meeting(xstart, ystart, ChestOpen)){
-				if(instance_is(self, Pickup) || GameCont.loops > 0){
-					var _chest = "";
-					
-					 // Bonus Ammo:
+			if(GameCont.hard > 4){
+				if(!position_meeting(xstart, ystart, ChestOpen)){
 					if(
 						(instance_is(self, AmmoPickup) && sprite_index == sprAmmo)                                                               ||
 						(instance_is(self, AmmoChest)  && array_exists([sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery], sprite_index)) ||
 						(instance_is(self, Mimic)      && spr_idle == sprMimicIdle)
 					){
-						_chest = "BonusAmmo";
+						bonuspickup_check = true;
 						
-						 // Determine Spawn Chance:
-						var	_ammoPick  = [0, 32, 8, 7, 6, 10],
-							_ammoNum   = 0,
-							_ammoMax   = 0,
-							_ammoMin   = 0,
-							_wepTotal  = 0,
-							_wepChance = 0;
-							
-						with(Player){
-							with([wep, bwep]){
-								var _wep = self;
-								with(other){
-									var _type = weapon_get_type(_wep);
-									
-									 // Encourage Weapons Closer to Full Ammo:
-									_ammoMax++;
-									if(_type > 0){
-										_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
-										_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
-									}
-									else{
-										_ammoMin += 1/3;
-										_ammoNum += 1/4;
-									}
-									
-									 // Encourage Ammo Intensive Weapons:
-									if(_wep != wep_none){
-										var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
-										if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
-											_cost += _wep.cost;
+						var _chest = "";
+						
+						 // Bonus Ammo:
+						if(_chest == ""){
+							var	_ammoPick  = [0, 32, 8, 7, 6, 10],
+								_ammoNum   = 0,
+								_ammoMax   = 0,
+								_ammoMin   = 0,
+								_wepTotal  = 0,
+								_wepChance = 0;
+								
+							 // Determine Spawn Chance:
+							with(Player){
+								with([wep, bwep]){
+									var _wep = self;
+									with(other){
+										var _type = weapon_get_type(_wep);
+										
+										 // Encourage Weapons Closer to Full Ammo:
+										_ammoMax++;
+										if(_type > 0){
+											_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
+											_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
+										}
+										else{
+											_ammoMin += 1/3;
+											_ammoNum += 1/4;
 										}
 										
-										_wepTotal++;
-										_wepChance += min(1, (_cost / min(90, weapon_get_load(_wep))) * 1.5);
+										 // Encourage Ammo Intensive Weapons:
+										if(_wep != wep_none){
+											var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
+											if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
+												_cost += _wep.cost;
+											}
+											
+											_wepTotal++;
+											_wepChance += min(1, (_cost / min(90, weapon_get_load(_wep))) * 1.5);
+										}
 									}
+								}
+							}
+							
+							 // Replace:
+							if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin)){
+								if(chance(_wepChance, _wepTotal)){
+									_chest = "BonusAmmo";
+								}
+							}
+						}
+						
+						 // Bonus HP:
+						if(_chest == ""){
+							var	_health      = 0,
+								_healthMax   = 0,
+								_healthBonus = 0;
+								
+							 // Determine Max HP:
+							with(Player){
+								_health    += max(0, my_health);
+								_healthMax += max(0, max(my_health, maxhealth));
+								
+								if("bonus_health" in self){
+									_healthBonus += max(0, bonus_health);
+								}
+							}
+							
+							 // Replace:
+							if(_health >= _healthMax){
+								if(chance(1, 4 * (4 + ((_healthMax + _healthBonus) / instance_number(Player))))){
+									_chest = "BonusHealth";
 								}
 							}
 						}
 						
 						 // Replace:
-						if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin)){
-							if(chance(_wepChance, _wepTotal)){
-								bonuspickup_check = true;
+						if(_chest != ""){
+							if(instance_is(self, Pickup)){
+								obj_create(x, y, _chest + "Pickup");
 							}
+							else if(instance_is(self, chestprop) || instance_is(self, RadChest)){
+								chest_create(x, y, _chest + "Chest");
+							}
+							else if(instance_is(self, enemy)){
+								chest_create(x, y, _chest + "Mimic");
+							}
+							instance_delete(id);
 						}
-					}
-					
-					 // Bonus HP:
-					else if(
-						(instance_is(self, HPPickup)    && sprite_index == sprHP)          ||
-						(instance_is(self, HealthChest) && sprite_index == sprHealthChest) ||
-						(instance_is(self, SuperMimic)  && spr_idle == sprSuperMimicIdle)  ||
-						(instance_is(self, RadChest)    && array_exists([sprRadChest, sprRadChestBig, sprRadChestMaggot], spr_idle))
-					){
-						_chest = "BonusHealth";
-						
-						 // Determine HP Surplus:
-						var	_health    = 0,
-							_healthMax = 0;
-							
-						with(Player){
-							_health    += max(0, my_health);
-							_healthMax += max(0, maxhealth);
-						}
-						with(instances_matching_lt(HPPickup, "id", id)){
-							_health += num;
-						}
-						with(instances_matching(Pickup, "name", "BonusHealthPickup")){
-							_healthMax += num;
-						}
-						
-						 // Replace:
-						if(!chance(1, 1 + (0.25 * (1 + (_health - _healthMax))))){
-							bonuspickup_check = true;
-						}
-					}
-					
-					 // Replace:
-					if(bonuspickup_check){
-						if(instance_is(self, Pickup)){
-							_chest += "Pickup";
-						}
-						if(instance_is(self, chestprop) || instance_is(self, RadChest)){
-							_chest += "Chest";
-						}
-						else if(instance_is(self, enemy)){
-							_chest += "Mimic";
-						}
-						obj_create(x, y, _chest);
-						instance_delete(id);
 					}
 				}
 			}
@@ -4748,7 +4757,7 @@
 				
 				 // Spawn:
 				if(cursedammochest_check){
-					obj_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"));
+					chest_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"));
 					instance_delete(id);
 				}
 			}

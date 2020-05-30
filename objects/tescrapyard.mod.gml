@@ -685,8 +685,8 @@
 		}
 		
 		 // Activate Saladman:
-		if(alarm0 < 0 && instance_seen(x, y, Player)){
-			if(point_seen_ext(x, y, -32, -32, -1) || instance_near(x, y, Player, 64)){
+		if(alarm0 < 0){
+			if(instance_exists(Portal) || (instance_seen(x, y, Player) && (point_seen_ext(x, y, -32, -32, -1) || instance_near(x, y, Player, 64)))){
 				alarm0 = 150;
 				with(instance_nearest(x, y, Player)){
 					with(other) scrRight(point_direction(x, y, other.x, other.y));

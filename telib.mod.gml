@@ -168,6 +168,9 @@
 	floor_reset_style();
 	floor_reset_align();
 	
+	 // chest_create():
+	global.chest_create_start = false;
+	
 	 // sleep_max():
 	global.sleep_max = 0;
 	
@@ -876,7 +879,8 @@
 	
 #define chest_create(_x, _y, _obj)
 	/*
-		Creates a given chest with some special spawn conditions applied, such as Crown of Love, Crown of Life, and Rogue
+		Creates a given chest/mimic with some special spawn conditions applied, such as Crown of Love, Crown of Life, and Rogue
+		!!! Don't use this for creating a custom area's basic chests during level gen, the game should handle that
 		!!! Don't use this for replacing chests with custom chests, put that in level_start or something
 		
 		Ex:
@@ -886,47 +890,121 @@
 	
 	if(
 		is_string(_obj)
-		|| _obj == chestprop
-		|| _obj == RadChest
-		|| object_is_ancestor(_obj, chestprop)
-		|| object_is_ancestor(_obj, RadChest)
+		|| object_is(_obj, chestprop)
+		|| object_is(_obj, RadChest)
+		|| object_is(_obj, Mimic)
+		|| object_is(_obj, SuperMimic)
 	){
+		var _levelStart = global.chest_create_start;
+		
 		 // Rad Canisters:
-		if(is_real(_obj) && (_obj == RadChest || object_is_ancestor(_obj, RadChest))){
+		if(is_real(_obj) && object_is(_obj, RadChest)){
+			if(_levelStart){
+				 // Rogue:
+				for(var i = 0; i < maxp; i++){
+					if(player_get_race(i) == "rogue"){
+						_obj = RogueChest;
+						break;
+					}
+				}
+				
+				 // Low HP:
+				if(chance(1, 2)){
+					with(Player){
+						if(my_health < (maxhealth + chickendeaths) / 2){
+							_obj = HealthChest;
+							break;
+						}
+					}
+				}
+				
+				 // Legacy Revive Mode:
+				var _players = 0;
+				for(var i = 0; i < maxp; i++){
+					_players += player_is_active(i);
+				}
+				if(instance_number(Player) < _players){
+					_obj = HealthChest;
+				}
+			}
+			
 			 // More Health Chests:
 			if(chance(2, 3) && crown_current == crwn_life){
 				_obj = HealthChest;
-			}
-			
-			 // Rogue:
-			else for(var i = 0; i < maxp; i++){
-				if(player_get_race(i) == "rogue"){
-					_obj = RogueChest;
-					break;
-				}
 			}
 		}
 		
 		 // Only Ammo Chests:
 		if(crown_current == crwn_love){
-			if(!is_real(_obj) || !object_is_ancestor(_obj, AmmoChest)){
-				if(!array_exists([ProtoChest, RogueChest, "Backpack", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "SunkenChest"], _obj)){
-					_obj = AmmoChest;
+			if(!is_real(_obj) || !object_is(_obj, AmmoChest)){
+				if(!array_exists([ProtoChest, RogueChest, "Backpack", "BonusAmmoChest", "BonusAmmoMimic", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "CursedMimic", "SunkenChest"], _obj)){
+					var _name = (is_real(_obj) ? object_get_name(_obj) : _obj);
+					if(string_pos("Mimic", _name) > 0){
+						_obj = Mimic;
+					}
+					else if(string_pos("Giant", _name) > 0){
+						_obj = GiantAmmoChest;
+					}
+					else{
+						_obj = AmmoChest;
+					}
+				}
+			}
+		}
+		
+		if(_levelStart){
+			 // Big Weapon Chests:
+			if(chance(GameCont.nochest, 4) && _obj == WeaponChest){
+				_obj = BigWeaponChest;
+			}
+			
+			 // Mimics:
+			if(!is_real(GameCont.area) || GameCont.area >= 2 || GameCont.loops >= 1){
+				if(chance(1, 11) && is_real(_obj) && object_is(_obj, AmmoChest)){
+					_obj = Mimic;
+				}	
+				if(chance(1, 51) && is_real(_obj) && object_is(_obj, HealthChest)){
+					_obj = SuperMimic;
 				}
 			}
 		}
 	}
 	
-	var _inst = obj_create(_x, _y, _obj);
+	 // Create:
+	var	_inst = noone,
+		_rads = GameCont.norads,
+		_health = [];
+		
+	if(!_levelStart){
+		GameCont.norads = 0;
+		with(Player){
+			array_push(_health, [id, my_health]);
+			my_health = maxhealth;
+		}
+	}
+	
+	_inst = obj_create(_x, _y, _obj);
+	
+	if(!_levelStart){
+		GameCont.norads = _rads;
+		with(_health) with(self[0]){
+			my_health = other[1];
+		}
+	}
 	
 	 // Replaced:
 	if(!instance_exists(_inst)){
-		with(instances_matching_gt(chestprop, "id", _inst)){
-			_inst = min(_inst, id);
+		with(instances_matching_gt([chestprop, RadChest, Mimic, SuperMimic], "id", _inst)){
+			if(!instance_exists(_inst) || id < _inst){
+				_inst = id;
+			}
 		}
 	}
 	
 	return _inst;
+	
+#define object_is(_object, _parent)
+	return (_object == _parent || object_is_ancestor(_object, _parent));
 	
 #define chance(_numer, _denom)
 	return random(_denom) < _numer;
@@ -4849,7 +4927,6 @@
 						break;
 						
 					case Pillar:
-						target.spr_idle = spr.TopPillar;
 						spr_shadow_y = -3;
 						break;
 						
