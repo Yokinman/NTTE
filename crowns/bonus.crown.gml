@@ -58,11 +58,11 @@
 			instance_delete(id);
 		}
 		with(instances_matching(AmmoChest, "sprite_index", sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery, sprIDPDChest)){
-			chest_create(x, y, "BonusAmmoChest");
+			chest_create(x, y, "BonusAmmoChest", false);
 			instance_delete(id);
 		}
 		with(instances_matching(Mimic, "spr_idle", sprMimicIdle)){
-			chest_create(x, y, "BonusAmmoMimic");
+			chest_create(x, y, "BonusAmmoMimic", false);
 			instance_delete(id);
 		}
 		
@@ -84,11 +84,11 @@
 			instance_delete(id);
 		}
 		with(instances_matching(HealthChest, "sprite_index", sprHealthChest)){
-			chest_create(x, y, "BonusHealthChest");
+			chest_create(x, y, "BonusHealthChest", false);
 			instance_delete(id);
 		}
 		with(instances_matching(SuperMimic, "spr_idle", sprSuperMimicIdle)){
-			chest_create(x, y, "BonusHealthMimic");
+			chest_create(x, y, "BonusHealthMimic", false);
 			instance_delete(id);
 		}
 	}
@@ -101,4 +101,4 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);

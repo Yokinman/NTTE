@@ -146,7 +146,7 @@
 			
 			if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 				with(instance_random(FloorNormal)){
-					with(chest_create(bbox_center_x, bbox_center_y, "SunkenChest")){
+					with(chest_create(bbox_center_x, bbox_center_y, "SunkenChest", true)){
 						var	_dis = 160 + orandom(32),
 							_dir = random(360);
 							
@@ -563,7 +563,8 @@
 			);
 			with(_instPush){
 				if(
-					distance_to_object(Portal) > 96 &&
+					distance_to_object(Portal) > 96
+					&&
 					(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)
 				){
 					if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
@@ -614,14 +615,14 @@
 			var n = instance_nearest(x, y, Portal);
 			if(instance_exists(n) && n.endgame >= 100){
 				if(wading > 120 || !instance_exists(Floor)){
-					if(n.type == 2){
-						instance_create(x, y, Portal);
-					}
-					else{
+					if(n.type == 1){
 						n.x = x;
 						n.y = y;
 						n.xstart = x;
 						n.ystart = y;
+					}
+					else{
+						instance_create(x, y, Portal);
 					}
 				}
 			}
@@ -670,7 +671,7 @@
 		 // Spinny Water Portals:
 		with(instances_matching(Portal, "coast_portal", null)){
 			coast_portal = false;
-			if(type != 2){
+			if(type == 1){
 				coast_portal = true;
 				
 				visible = false;
@@ -1434,7 +1435,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

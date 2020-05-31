@@ -32,6 +32,7 @@
 	teevent_add("MutantVats");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
+	teevent_add("BuriedVault");
 	
 	 // Pet History:
 	global.livePets = {};
@@ -46,8 +47,21 @@
 #macro ttip global.event_tip
 #macro list global.event_list
 
-#macro ScorpionCityPet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
+#macro BuriedVault_spawn (variable_instance_get(GenCont, "safespawn", 1) > 0 && GameCont.area != "coast")
 
+#macro ScorpionCity_pet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
+
+#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`${ttip}VAULT @wIN THE WALL`, `${ttip}DIG`, `ANCIENT ${ttip}STRUCTURES`));
+#define BuriedVault_hard    return 5; // 3-1+
+#define BuriedVault_chance  return ((GameCont.area == area_vault) ? 1/2 : (BuriedVault_spawn / (12 + (2 * variable_instance_get(GameCont, "buried_vaults", 0)))));
+
+#define BuriedVault_create
+	if(instance_exists(enemy) || GameCont.area == area_vault){
+		with(instance_random(Wall)){
+			obj_create(x, y, "BuriedVault");
+		}
+	}
+	
 #define BanditCamp_text    return `${ttip}BANDITS`;
 #define BanditCamp_area    return area_desert;
 #define BanditCamp_hard    return 3; // 1-3+
@@ -396,7 +410,7 @@
 				}
 				
 				if(_num > 0) repeat(_num){
-					chest_create(_cx + orandom(4), _cy + orandom(4), _obj);
+					chest_create(_cx + orandom(4), _cy + orandom(4), _obj, true);
 				}
 				
 				 // Maggots:
@@ -772,11 +786,11 @@
 	
 #define ScorpionCity_text    return choose(`THE AIR ${ttip}STINGS`, `${ttip}WHERE ARE WE GOING`);
 #define ScorpionCity_area    return area_desert;
-#define ScorpionCity_chance  return array_length(ScorpionCityPet);
+#define ScorpionCity_chance  return array_length(ScorpionCity_pet);
 
 #define ScorpionCity_create
 	 // Alert:
-	with(ScorpionCityPet){
+	with(ScorpionCity_pet){
 		scorpion_city--;
 		with(scrAlert(self, spr_icon)){
 			snd_flash = sndScorpionMelee;
@@ -1151,7 +1165,7 @@
 										_obj = choose("BatChest", "CatChest");
 									}
 									
-									with(chest_create(_x, _y, _obj)){
+									with(chest_create(_x, _y, _obj, true)){
 										x = xstart;
 										y = ystart;
 									}
@@ -1774,7 +1788,7 @@
 	
 	 // Replace Chest:
 	with(AmmoChest){
-		chest_create(x, y, IDPDChest);
+		chest_create(x, y, IDPDChest, true);
 		instance_delete(id);
 	}
 	
@@ -2006,7 +2020,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

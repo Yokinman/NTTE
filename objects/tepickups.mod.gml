@@ -22,27 +22,25 @@
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
-		spr_dead = spr.BackpackOpen;
 		sprite_index = spr.Backpack;
+		spr_dead     = spr.BackpackOpen;
+		spr_shadow   = shd16;
 		spr_shadow_y = 2;
-		spr_shadow = shd16;
 		
 		 // Sounds:
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
 		
 		 // Vars:
+		num = 2;
 		raddrop = 8;
-		switch(crown_current){
-			case crwn_none:   curse = false;        break;
-			case crwn_curses: curse = chance(2, 3); break;
-			default:          curse = chance(1, 7);
-		}
-		for(var i = 0; i < maxp; i++){
-			raddrop += (player_get_race(i) == "melting");
-		}
 		
 		 // Cursed:
-		if(curse){
+		switch(crown_current){
+			case crwn_none   : curse = false;        break;
+			case crwn_curses : curse = chance(2, 3); break;
+			default          : curse = chance(1, 7);
+		}
+		if(curse > 0){
 			spr_dead = spr.BackpackCursedOpen;
 			sprite_index = spr.BackpackCursed;
 		}
@@ -61,16 +59,19 @@
 			depth = other.depth - 1;
 		}
 	}
-
-#define Backpack_open
-	var _curse = curse;
 	
-	if(_curse) sound_play(sndCursedChest);
+#define Backpack_open
+	 // Sound:
+	if(curse > 0) sound_play(sndCursedChest);
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
-
-	 // DefPack Integration:	
-	if(mod_exists("mod", "defpack tools") && chance(1, 5)){
-		with(instance_create(x, y, WepPickup)){
+	
+	 // Weapon:
+	var _wepNum = 1 + ultra_get("steroids", 1);
+	if(_wepNum > 0){
+		var _wep = wep_none;
+		
+		 // DefPack Integration:
+		if(mod_exists("mod", "defpack tools") && chance(1, 5)){
 			var _jsGrub = [
 				"lightning blue lifting drink(tm)",
 				"extra double triple coffee",
@@ -79,8 +80,9 @@
 				"munitions mist",
 				"vinegar",
 				"guardian juice",
-				"stopwatch"]; // a beautiful mistake
-				
+				"stopwatch" // a beautiful mistake
+			];
+			
 			if(skill_get(mut_boiling_veins) > 0){
 				array_push(_jsGrub, "sunset mayo");
 			}
@@ -88,19 +90,23 @@
 				array_push(_jsGrub, "frog milk");
 			}
 			
-			wep = _jsGrub[irandom(array_length(_jsGrub) - 1)];
-			roll = true;
+			_wep = _jsGrub[irandom(array_length(_jsGrub) - 1)];
 		}
-	}
-	
-	 // Merged Weapon:
-	else{
-		var _part = wep_merge_decide(0, GameCont.hard + (2 * _curse));
-		if(array_length(_part) >= 2){
-			repeat(1 + ultra_get("steroids", 1)){
+		
+		 // Merged Weapon:
+		else{
+			var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+			if(array_length(_part) >= 2){
+				_wep = wep_merge(_part[0], _part[1]);
+			}
+		}
+		
+		 // Create:
+		if(_wep != wep_none){
+			repeat(_wepNum){
 				with(instance_create(x, y, WepPickup)){
-					wep = wep_merge(_part[0], _part[1]);
-					curse = _curse;
+					wep = _wep;
+					curse = other.curse;
 					ammo = true;
 					roll = true;
 				}
@@ -110,91 +116,95 @@
 	
 	 // Pickups:
 	var	_ang = random(360),
-		_num = 2 + ceil(skill_get(mut_rabbit_paw));
+		_num = ceil(num * power(1.4, skill_get(mut_rabbit_paw)));
 		
-	for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-		var _objMin = instance_create(x, y, Dust);
-		with(_objMin) depth = 0;
-		
-		 // Rogues:
-		var _rogue = 0;
-		for(var i = 0; i < maxp; i++) if(player_get_race(i) == "rogue"){
-			_rogue++;
-		}
-		
-		 // Determine Pickup:
-		if(chance(1, 40)){ // wtf this isnt a pickup
-			if(chance(1, 2)){
-				with(instance_create(x, y, Ally)){
-					with(scrAlert(self, spr.AllyAlert)){
-						target_y = -16;
+	if(_num > 0){
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+			var _minID = GameObject.id;
+			
+			 // Puf:
+			with(instance_create(x, y, Dust)){
+				depth = other.depth;
+			}
+			
+			 // Determine Drop:
+			if(chance(1, 40)){ // wtf this isnt a pickup
+				with(instance_create(x, y, choose(Bandit, Ally))){
+					with(scrAlert(self, (instance_is(self, Ally) ? spr.AllyAlert : spr.BanditAlert))){
 						flash = 6 + random(3);
 					}
 				}
 			}
-			else with(instance_create(x, y, Bandit)){
-				with(scrAlert(self, spr.BanditAlert)){
-					flash = 6 + random(3);
+			else{
+				pickup_drop(10000, 0);
+				
+				 // Rogues:
+				var _rogue = 0;
+				for(var i = 0; i < maxp; i++){
+					if(player_get_race(i) == "rogue"){
+						_rogue++;
+					}
+				}
+				
+				 // Modify Pickup:
+				with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
+					switch(object_index){
+						
+						case AmmoPickup:
+							
+							 // Portal Strikes:
+							if(chance(_rogue, 4)){
+								instance_create(x, y, RoguePickup);
+								instance_delete(id);
+							}
+							
+							 // Cursed:
+							else if(other.curse > cursed){
+								sprite_index = sprCursedAmmo;
+								cursed       = other.curse;
+								num          = 1 + (0.5 * cursed);
+								alarm0       = pickup_alarm(200 + random(30), 1/5) / (1 + (2 * cursed));
+							}
+							
+							break;
+							
+						case AmmoChest:
+							
+							 // Portal Strikes:
+							if(chance(_rogue, 4)){
+								chest_create(x, y, RogueChest, false);
+								instance_delete(id);
+							}
+							
+							 // Cursed:
+							else if(other.curse > 0){
+								chest_create(x, y, "CursedAmmoChest", false);
+								instance_delete(id);
+							}
+							
+							break;
+							
+					}
 				}
 			}
-		}
-		else{
-			pickup_drop(10000, 0);
-		}
-		with(instances_matching_gt([Pickup, chestprop, hitme], "id", _objMin)){
-			switch(object_index){
-				
-				case AmmoPickup:
-					
-					 // Portal Strikes:
-					if(chance(_rogue, 5)){
-						instance_create(x, y, RoguePickup);
-						instance_delete(id);
-						break;
-					}
-					
-					 // Cursed:
-					if(_curse > cursed){
-						sprite_index = sprCursedAmmo;
-						cursed       = _curse;
-						num          = 1 + (0.5 * cursed);
-						alarm0       = pickup_alarm(200 + random(30), 1/5) / (1 + (2 * cursed));
-					}
-					
-					break;
-					
-				case AmmoChest:
-					
-					 // Portal Strikes:
-					if(chance(_rogue, 5)){
-						chest_create(x, y, RogueChest);
-						instance_delete(id);
-						break;
-					}
-					
-					 // Cursed:
-					if(_curse){
-						chest_create(x, y, "CursedAmmoChest");
-						instance_delete(id);
-					}
-					
-					break;
-					
-			}
-		}
-		
-		 // Coolify:
-		with(instances_matching_gt([Pickup, chestprop, hitme], "id", _objMin)){
-			with(obj_create(x, y, "BackpackPickup")){
-				direction = d;
-				target = other;
-				event_perform(ev_step, ev_step_end);
+			
+			 // Coolify:
+			with(instances_matching_gt([Pickup, chestprop, hitme], "id", _minID)){
+				with(obj_create(x, y, "BackpackPickup")){
+					direction = _dir;
+					target = other;
+					event_perform(ev_step, ev_step_end);
+				}
 			}
 		}
 	}
 	
 	 // Rads:
-	repeat(raddrop){
+	var _rad = raddrop;
+	for(var i = 0; i < maxp; i++){
+		_rad += (player_get_race(i) == "melting");
+	}
+	if(_rad > 0) repeat(_rad){
 		with(instance_create(x, y, Rad)){
 			motion_add(random(360), random_range(3, 5));
 		}
@@ -797,6 +807,22 @@
 		sprite_index = spr_walk;
 	}
 	
+#define BonusAmmoMimic_end_step
+	 // Contact:
+	if(place_meeting(x, y, Player)){
+		with(instances_matching(instances_meeting(x, y, Player), "lasthit", hitid)){
+			if(place_meeting(x, y, other)){
+				if(sprite_index == spr_hurt && image_index == 0){
+					 // Give Bonus Ammo:
+					with(obj_create(x, y, "BonusAmmoPickup")){
+						BonusAmmoPickup_open();
+						instance_destroy();
+					}
+				}
+			}
+		}
+	}
+	
 #define BonusAmmoMimic_alrm1
 	alarm1 = irandom_range(90, 240);
 	
@@ -995,6 +1021,22 @@
 		sprite_index = spr_walk;
 	}
 	
+#define BonusHealthMimic_end_step
+	 // Contact:
+	if(place_meeting(x, y, Player)){
+		with(instances_matching(instances_meeting(x, y, Player), "lasthit", hitid)){
+			if(place_meeting(x, y, other)){
+				if(sprite_index == spr_hurt && image_index == 0){
+					 // Give Bonus Ammo:
+					with(obj_create(x, y, "BonusHealthPickup")){
+						BonusHealthPickup_open();
+						instance_destroy();
+					}
+				}
+			}
+		}
+	}
+	
 #define BonusHealthMimic_alrm1
 	alarm1 = irandom_range(180, 480);
 	
@@ -1097,13 +1139,18 @@
 				direction = d;
 				
 				 // Decide Chest:
-				target = chest_create(x, y, pool([
-					[AmmoChest,     1],
-					[WeaponChest,   1],
-					[HealthChest,   1],
-					["Backpack",    1],
-					["OrchidChest", 1]
-				]));
+				target = chest_create(
+					x,
+					y,
+					pool([
+						[AmmoChest,     1],
+						[WeaponChest,   1],
+						[HealthChest,   1],
+						["Backpack",    1],
+						["OrchidChest", 1]
+					]),
+					false
+				);
 				
 				event_perform(ev_step, ev_step_end);
 			}
@@ -1229,14 +1276,15 @@
 		spawn_inst = [];
 		
 		 // Loot:
-		target = chest_create(x, y + 2, pool([
+		var _chest = pool([
 			["BuriedVaultChest", 4],
 			[BigWeaponChest,     1],
 			//[RadChest,         1],
 			[ProtoChest,         1 * (!instance_exists(ProtoChest))],
 			[ProtoStatue,        2 * (GameCont.subarea == 2)], // (proto statues do not support non-subarea of 2)
 			[EnemyHorror,        1/5]
-		]));
+		]);
+		target = chest_create(x, y + 2, _chest, false);
 		with(target){
 			x = xstart;
 			y = ystart;
@@ -1285,10 +1333,10 @@
 			
 		if(_num > 0){
 			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-				var	l = random_range(16, 40),
-					d = _dir + orandom((360 / _num) * 0.4);
+				var	_l = random_range(16, 40),
+					_d = _dir + orandom((360 / _num) * 0.4);
 					
-				with(chest_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), RadChest)){
+				with(chest_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), RadChest, false)){
 					if(instance_is(self, RadChest) && chance(1, 6)){
 						spr_idle = sprRadChestBig;
 						spr_hurt = sprRadChestBigHurt;
@@ -1340,6 +1388,7 @@
 				var _inst = noone;
 				with(instance_random(instance_rectangle_bbox(x - 96, y - 96, x + 96, y + 96, instances_matching_ne(Floor, "id", floor_get(x, y))))){
 					_inst = instance_create(bbox_center_x, bbox_center_y, CrownGuardian);
+					portal_poof();
 				}
 				with(_inst){
 					spr_idle = sprCrownGuardianAppear;
@@ -2283,13 +2332,20 @@
 		}
 	}
 	
-	 // Melee Curse:
-	with(instances_matching(Player, "lasthit", hitid)){
-		if(curse < 1){
-			curse++;
-			sound_play(sndBigCursedChest);
+#define CursedMimic_end_step
+	 // Contact:
+	if(place_meeting(x, y, Player)){
+		with(instances_matching(instances_meeting(x, y, Player), "lasthit", hitid)){
+			if(place_meeting(x, y, other)){
+				if(sprite_index == spr_hurt && image_index == 0){
+					 // Curse:
+					if(curse < 1){
+						curse++;
+						sound_play(sndBigCursedChest);
+					}
+				}
+			}
 		}
-		lasthit = array_clone(lasthit);
 	}
 	
 #define CursedMimic_alrm1
@@ -3384,15 +3440,15 @@
 #define PalankingStatue_death
 	var _minID = GameObject.id;
 	pickup_drop(10000, 0);
-	chest_create(x, y, "Backpack");
+	chest_create(x, y, "Backpack", false);
 
 	 // Become Big:
 	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
 		if(instance_is(self, AmmoPickup) || instance_is(self, AmmoChest)){
-			chest_create(x, y, AmmoChest);
+			chest_create(x, y, AmmoChest, false);
 		}
 		else if(instance_is(self, HPPickup) || instance_is(self, HealthChest)){
-			chest_create(x, y, HealthChest);
+			chest_create(x, y, HealthChest, false);
 		}
 		instance_delete(id);
 	}
@@ -4722,10 +4778,10 @@
 								obj_create(x, y, _chest + "Pickup");
 							}
 							else if(instance_is(self, chestprop) || instance_is(self, RadChest)){
-								chest_create(x, y, _chest + "Chest");
+								chest_create(x, y, _chest + "Chest", false);
 							}
 							else if(instance_is(self, enemy)){
-								chest_create(x, y, _chest + "Mimic");
+								chest_create(x, y, _chest + "Mimic", false);
 							}
 							instance_delete(id);
 						}
@@ -4757,7 +4813,7 @@
 				
 				 // Spawn:
 				if(cursedammochest_check){
-					chest_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"));
+					chest_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"), false);
 					instance_delete(id);
 				}
 			}
@@ -5194,7 +5250,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

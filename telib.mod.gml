@@ -9,7 +9,7 @@
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
-		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "Crack", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
+		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
@@ -167,9 +167,6 @@
 	 // floor_set():
 	floor_reset_style();
 	floor_reset_align();
-	
-	 // chest_create():
-	global.chest_create_start = false;
 	
 	 // sleep_max():
 	global.sleep_max = 0;
@@ -486,14 +483,16 @@
 		array_sort(_inst, true);
 		
 		with(_inst){
-			var _num = alarm_get(i) - 1;
-			alarm_set(i, _num);
-			
-			 // Call Event:
-			if(_num == 0){
-				var _scrt = variable_instance_get(self, _alrm);
-				if(array_length(_scrt) >= 3){
-					with(self) mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
+			if(instance_exists(self)){
+				var _num = alarm_get(i) - 1;
+				alarm_set(i, _num);
+				
+				 // Call Event:
+				if(_num == 0){
+					var _scrt = variable_instance_get(self, _alrm);
+					if(array_length(_scrt) >= 3){
+						with(self) mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
+					}
 				}
 			}
 		}
@@ -877,15 +876,15 @@
 	
 	return instance_exists(target);
 	
-#define chest_create(_x, _y, _obj)
+#define chest_create(_x, _y, _obj, _levelStart)
 	/*
 		Creates a given chest/mimic with some special spawn conditions applied, such as Crown of Love, Crown of Life, and Rogue
 		!!! Don't use this for creating a custom area's basic chests during level gen, the game should handle that
 		!!! Don't use this for replacing chests with custom chests, put that in level_start or something
 		
 		Ex:
-			chest_create(x, y, WeaponChest)
-			chest_create(x, y, "BatChest")
+			chest_create(x, y, WeaponChest, true)
+			chest_create(x, y, "BatChest", false)
 	*/
 	
 	if(
@@ -895,8 +894,6 @@
 		|| object_is(_obj, Mimic)
 		|| object_is(_obj, SuperMimic)
 	){
-		var _levelStart = global.chest_create_start;
-		
 		 // Rad Canisters:
 		if(is_real(_obj) && object_is(_obj, RadChest)){
 			if(_levelStart){
@@ -1354,8 +1351,9 @@
 			
 			 // Auto-Offset:
 			if(instance_exists(target)){
-				var	_h1 = abs((sprite_get_yoffset(target.sprite_index) - sprite_get_bbox_top(target.sprite_index)) * image_yscale),
-					_h2 = abs(((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_yoffset(sprite_index)) * image_yscale);
+				var	_spr = ((target.sprite_index == sprAllyAppear) ? sprAllyIdle : target.sprite_index),
+					_h1  = abs((sprite_get_yoffset(_spr) - sprite_get_bbox_top(_spr)) * image_yscale),
+					_h2  = abs(((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_yoffset(sprite_index)) * image_yscale);
 					
 				target_y = -(1 + _h1 + _h2);
 			}
@@ -1671,19 +1669,18 @@
 	
 #define portal_poof()
 	/*
-		Get rid of portals, but make it look cool
+		Get rid of normal portals, but make it look cool
 	*/
 	
 	var _rescue = false;
 	
-	with(instances_matching_ge(instances_matching_ge(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 0), "image_alpha", 1)){
+	with(instances_matching_ge(instances_matching_ge(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1), "endgame", 0), "image_alpha", 1)){
 		sound_stop(sndPortalClose);
 		sound_stop(sndPortalLoop);
 		
 		 // Guardian:
 		if(
 			visible
-			&& type == 1
 			&& endgame >= 100
 			&& !place_meeting(x, y, PortalShock)
 			&& point_seen_ext(x, y, -8, -8, -1)
@@ -5199,8 +5196,8 @@
 		
 	floor_set_align(_x, _y, _ow, _oh);
 	
-	for(var _ox = 0; _ox < _w; _ox += _ow){
-		for(var _oy = 0; _oy < _h; _oy += _oh){
+	for(var _oy = 0; _oy < _h; _oy += _oh){
+		for(var _ox = 0; _ox < _w; _ox += _ow){
 			var _make = true;
 			
 			 // Type-Specific:

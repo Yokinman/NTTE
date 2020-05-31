@@ -810,6 +810,12 @@
 			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
 			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge",  9, 0, 0);
 			
+			 // Inactive Throne Hitbox (Can walk on top, so cool broo):
+			msk.NothingInactiveCool = sprite(p + "mskNothingInactiveCool", 1, 150, 100);
+			with(msk.NothingInactiveCool){
+				mask = [false, 0];
+			}
+			
 			//#region PROPS
 			p = m + "Props/";
 				
@@ -1026,6 +1032,13 @@
 		m = "areas/Sewers/";
 		p = m;
 			
+			 // Manhole:
+			PizzaManhole = [
+				sprite(p + "sprPizzaManhole0", 2, 16, 16),
+				sprite(p + "sprPizzaManhole1", 2, 16, 16),
+				sprite(p + "sprPizzaManhole2", 2, 16, 16)
+			];
+			
 			 // Sewer Pool:
 			SewerPool     = sprite(p + "sprSewerPool", 8,  0,  0);
 			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
@@ -1068,13 +1081,6 @@
 				PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
 				msk.PizzaDrain = sprite(p + "mskPizzaDrain",     1, 32, 38);
 				
-				 // Manhole:
-				PizzaManhole = [
-					sprite(p + "sprPizzaManholeA", 2, 0, 0),
-					sprite(p + "sprPizzaManholeB", 2, 0, 0),
-					sprite(p + "sprPizzaManholeC", 2, 0, 0)
-				];
-				
 				 // Rubble:
 				PizzaRubbleIdle = sprite(p + "sprPizzaRubble",     1, 16, 0);
 				PizzaRubbleHurt = sprite(p + "sprPizzaRubbleHurt", 3, 16, 0);
@@ -1108,12 +1114,16 @@
 			WallDecalLair = sprite(p + "sprWallDecalLair", 1, 16, 16);
 			
 			 // Manholes:
-			ManholeBottom      = sprite(p + "sprManholeBottom",       1, 16, 48);
-			Manhole            = sprite(p + "sprManhole",            12, 16, 48);
-			BigManholeBot      = sprite(p + "sprBigManholeBot",       1, 32, 32);
-			BigManholeTop      = sprite(p + "sprBigManholeTop",       6, 32, 32);
-			ManholeDebrisSmall = sprite(p + "sprManholeDebrisSmall",  4,  4,  4);
-			ManholeDebrisBig   = sprite(p + "sprManholeDebrisBig",    3, 12, 12);
+			Manhole               = sprite(p + "sprManhole",               12, 16, 48);
+			ManholeOpen           = sprite(p + "sprManholeOpen",            1, 16, 48);
+			BigManhole            = sprite(p + "sprBigManhole",             6, 32, 32);
+			BigManholeOpen        = sprite(p + "sprBigManholeOpen",         1, 32, 32);
+			BigManholeFloor       = sprite(p + "sprBigManholeFloor",        4,  0,  0);
+			BigManholeDebris      = sprite(p + "sprBigManholeDebris",       4,  4,  4);
+			BigManholeDebrisChunk = sprite(p + "sprBigManholeDebrisChunk",  3, 12, 12);
+			with(BigManholeOpen){
+				mask = [false, 0];
+			}
 			
 			//#region PROPS
 			p = m + "Props/";

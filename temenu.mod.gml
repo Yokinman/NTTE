@@ -195,14 +195,14 @@
 		if("type" not in self) type = opt_title;
 		if("pick" not in self){
 			switch(type){
-				case opt_toggle: pick = ["OFF", "ON"]; break;
-				case opt_slider: pick = [0, 1];        break;
-				default:         pick = [];            break;
+				case opt_toggle : pick = ["OFF", "ON"]; break;
+				case opt_slider : pick = [0, 1];        break;
+				default         : pick = [];            break;
 			}
 		}
-		if("save" not in self) save = "";
-		if("sync" not in self) sync = true;
-		if("splat" not in self) splat = 0;
+		if("save"    not in self) save = "";
+		if("sync"    not in self) sync = true;
+		if("splat"   not in self) splat = 0;
 		if("clicked" not in self) clicked = array_create(maxp, false);
 	}
 	with(MenuList.credits.list){
@@ -210,11 +210,13 @@
 		if("role" not in self) role = [];
 		if("link" not in self) link = [];
 		
+		 // Role Defaulterize:
 		if(!is_array(role)) role = [role];
 		for(var i = 0; i < array_length(role); i++){
 			if(!is_array(role[i])) role[i] = [role[i]];
 		}
 		
+		 // Link Defaulterize:
 		if(!is_array(link)) link = [link];
 		for(var i = 0; i < array_length(link); i++){
 			if(!is_array(link[i])) link[i] = [link[i]];
@@ -2635,7 +2637,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

@@ -652,75 +652,6 @@
 	}
 	
 	
-#define Crack_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index = spr.Crack;
-		image_speed = 0;
-		depth = 5;
-		visible = false;
-		
-		 // Vars:
-		mask_index = mskWepPickup;
-		
-		return id;
-	}
-	
-#define Crack_step
-	if(visible){
-		if(image_index < 1){
-			 // Effects:
-			if(chance_ct(1, 4)){
-				with(instance_create(x, y, Bubble)){
-					motion_set(90 + orandom(5), 4 + random(3));
-					friction = 0.2;
-				}
-			}
-			
-			 // Open:
-			if(place_meeting(x, y, Player) || place_meeting(x, y, Explosion)){
-				image_index = 1;
-				
-				 // Effects:
-				sleep(50);
-				view_shake_at(x, y, 20);
-				repeat(5 + irandom(5)){
-					with(instance_create(x, y, Debris)){
-						motion_set(random(360), 3 + random(5));
-					}
-				}
-				repeat(10 + irandom(10)){
-					with(instance_create(x, y, Bubble)){
-						motion_set(random(360), 1 + random(2));
-					}
-				}
-				
-				 // Sound:
-				sound_play_pitchvol(sndPillarBreak,   0.8, 1.2);
-				sound_play_pitchvol(sndOasisPortal,   1,   0.3);
-				sound_play_pitchvol(sndSnowTankShoot, 0.6, 0.3);
-				
-				 // Portal:
-				with(instance_create(x, y, Portal)){
-					sound_stop(sndPortalOpen);
-					image_alpha = 0;
-				}
-				GameCont.area = "trench";
-				GameCont.subarea = 0;
-			}
-		}
-	}
-	
-	 // Activate:
-	else if(instance_exists(Portal)){
-		visible = true;
-		
-		 // Notice me bro:
-		sound_play_hit_ext(sndPillarBreak, 0.7 + random(0.1), 8);
-		repeat(3) scrFX(x, y, 2, Smoke);
-	}
-	
-	
 #define HammerShark_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1802,7 +1733,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

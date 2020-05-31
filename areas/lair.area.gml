@@ -343,7 +343,10 @@
 					if(rectangle_in_rectangle(x, y, x + w, y + h, _x1, _y1, _x2, _y2)){
 						if(type != "Start"){
 							var _dir = round(point_direction(other.x + (other.w / 2), other.y + (other.h / 2), x + (w / 2), y + (h / 2)) / 90) * 90;
-							if(chance(1, 2)){
+							if(x + (w / 2) == other.x + (other.w / 2) && y + (h / 2) == other.y + (other.h / 2)){
+								_dir = round(random(360) / 90) * 90;
+							}
+							else if(chance(1, 2)){
 								_dir += choose(-90, -90, 90, 90, 180);
 							}
 							
@@ -376,7 +379,7 @@
 				with(room_list) if(y > _maxY) _maxY = y + floor(h / 2);
 				with(room_list) y -= _maxY;
 				
-				room_create(-1, -1, "Start");
+				room_create(0, 0, "Start");
 				
 				_done = false;
 			}
@@ -640,6 +643,10 @@
 			special = false;
 		}
 		
+		 // Center:
+		x -= floor(w / 2);
+		y -= floor(h / 2);
+		
 		 // Carpet Chance:
 		if(chance(carpet, 1)) carpeted = true;
 		else carpeted = false;
@@ -664,7 +671,7 @@
 		obj_create(_x, _y, _e);
 	}
 	
-#define room_pop
+#define room_pop()
 	var	_x = room_center[0] + (x * 32), // Left
 		_y = room_center[1] + (y * 32), // Top
 		_w = w * 32, // Width
@@ -697,7 +704,12 @@
 				_dir = round(random(360) / 90) * 90;
 				
 			for(var i = 0; i < array_length(_chest); i++){
-				chest_create(_cx + lengthdir_x(_dis, _dir + (i * 90)), _cy + lengthdir_y(_dis, _dir + (i * 90)), _chest[i]);
+				chest_create(
+					_cx + lengthdir_x(_dis, _dir + (i * 90)),
+					_cy + lengthdir_y(_dis, _dir + (i * 90)),
+					_chest[i],
+					true
+				);
 			}
 			
 			break;
@@ -838,7 +850,7 @@
 					_py = _cy + lengthdir_y(l, d);
 					
 				if(chance(1, 4)){
-					chest_create(_px, _py, "PizzaChest");
+					chest_create(_px, _py, "PizzaChest", true);
 				}
 				else obj_create(_px, _py, choose("PizzaStack", "PizzaStack", MoneyPile));
 			}
@@ -1278,7 +1290,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define chest_create(_x, _y, _obj)                                                      return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj);
+#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
