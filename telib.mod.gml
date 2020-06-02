@@ -14,7 +14,7 @@
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "Warp", "WarpPortal"],
-		"telabs"      : ["FreakChamber", "MutantVat", "WallSlide"]
+		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "FreakChamber", "MutantVat", "WallSlide"]
 	};
 	
 	 // Auto Create Event Script References:

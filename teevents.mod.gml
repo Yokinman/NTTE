@@ -30,6 +30,7 @@
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
 	teevent_add("MutantVats");
+	teevent_add("ButtonGame");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
 	teevent_add("BuriedVault");
@@ -1616,6 +1617,48 @@
 		 // Ring:
 		floor_set_style(1, null);
 		floor_fill(x, y, _w, _h, "ring");
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
+	
+	
+#define ButtonGame_text		return `NEVER TOUCH THE ${ttip}RED BUTTON`;
+#define ButtonGame_area 	return area_labs;
+#define ButtonGame_chance	return 0; // 1/4;
+#define ButtonGame_create
+	var _spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 128,
+		_spawnFloor = FloorNormal,
+		_w          = 5,
+		_h          = 5,
+		_type       = "",
+		_dirOff     = 0,
+		_floorDis   = -32;
+		
+	floor_set_align(null, null, 32, 32);
+	
+	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		 // The Button:
+		obj_create(x, y, "Button");
+		
+		 // Ring:
+		floor_set_style(1, null);
+		var _floors = floor_fill(x, y, _w, _h, "ring");
+		repeat(6){
+			with(instance_random(_floors)){
+				var o = (chance(1, 3) ? "ButtonChest" : "ButtonPickup")
+				obj_create(bbox_center_x + orandom(2), bbox_center_y + orandom(2), o);
+			}
+		}
+		with(_floors){
+			if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, prop)){
+				if(chance(1, 4)){
+					instance_create(bbox_center_x + orandom(2), (bbox_center_y - 8) + orandom(2), Tube);
+				}
+			}
+		}
 	}
 	
 	floor_reset_align();
