@@ -797,6 +797,14 @@
 				MutantVatLid   = sprite(p + "sprMutantVatLid",   8, 24, 24);
 				MutantVatGlass = sprite(p + "sprMutantVatGlass", 4, 6,  6);
 				
+				 // Button:
+				ButtonIdle		  = sprite(p + "sprButtonIdle", 	   1, 16, 16);
+				ButtonHurt		  = sprite(p + "sprButtonHurt", 	   3, 16, 16);
+				ButtonPressedIdle = sprite(p + "sprButtonPressedIdle", 1, 16, 16);
+				ButtonPressedHurt = sprite(p + "sprButtonPressedHurt", 3, 16, 16);
+				ButtonDead		  = sprite(p + "sprButtonDead", 	   4, 16, 16);
+				ButtonDebris	  = sprite(p + "sprButtonDebris",	   1, 12, 12);
+				
 			//#endregion
 			
 		//#endregion
@@ -1309,6 +1317,12 @@
 			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
 			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
 			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
+			
+			 // Button Chests:
+			ButtonChest 	   = sprite(p + "sprButtonChest",		 1, 9, 9, shn20);
+			ButtonChestDebris  = sprite(p + "sprButtonChestDebris",  2, 9, 9);
+			ButtonPickup	   = sprite(p + "sprButtonPickup",		 1, 6, 6, shn12);
+			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 13, 8);
