@@ -237,7 +237,7 @@
 		case sprFloor1      : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorLair;
 		case sprFloor1B     : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorLairB;
 		case sprFloor1Explo : return spr.FloorLairExplo;
-		case sprDetail1     : return sprDetail2;
+		case sprDetail1     : return spr.DetailLair;
 		
 		 // Walls:
 		case sprWall1Bot    : return spr.WallLairBot;
@@ -1259,7 +1259,7 @@
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#macro  anim_end                                                                                image_index + image_speed_raw >= image_number
+#macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)

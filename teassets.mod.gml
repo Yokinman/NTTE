@@ -1101,6 +1101,7 @@
 			FloorLair      = sprite(p + "sprFloorLair",      4, 0, 0);
 			FloorLairB     = sprite(p + "sprFloorLairB",     8, 0, 0);
 			FloorLairExplo = sprite(p + "sprFloorLairExplo", 4, 1, 1);
+			DetailLair     = sprite(p + "sprDetailLair",     6, 4, 4);
 			
 			 // Walls:
 			WallLairBot   = sprite(p + "sprWallLairBot",   4,  0,  0);
@@ -1115,13 +1116,13 @@
 			
 			 // Manholes:
 			Manhole               = sprite(p + "sprManhole",               12, 16, 48);
-			ManholeOpen           = sprite(p + "sprManholeOpen",            1, 16, 48);
+			ManholeOpen           = sprite(p + "sprManholeOpen",            1, 16, 16);
 			BigManhole            = sprite(p + "sprBigManhole",             6, 32, 32);
 			BigManholeOpen        = sprite(p + "sprBigManholeOpen",         1, 32, 32);
 			BigManholeFloor       = sprite(p + "sprBigManholeFloor",        4,  0,  0);
 			BigManholeDebris      = sprite(p + "sprBigManholeDebris",       4,  4,  4);
 			BigManholeDebrisChunk = sprite(p + "sprBigManholeDebrisChunk",  3, 12, 12);
-			with(BigManholeOpen){
+			with([ManholeOpen, BigManholeOpen]){
 				mask = [false, 0];
 			}
 			
