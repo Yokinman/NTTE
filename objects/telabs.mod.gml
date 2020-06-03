@@ -14,7 +14,7 @@
 		A labs event prop.
 	*/
 
-	with(instance_create(_x, _y, CustomProp)){
+	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		spr_idle = spr.ButtonIdle;
 		spr_hurt = spr.ButtonHurt;
@@ -47,6 +47,10 @@
 	}
 	
 #define Button_step
+	x = xstart;
+	y = ystart;
+	speed = 0;
+
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup)){
 		if(_pickup.pick != -1){
