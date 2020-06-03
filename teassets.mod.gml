@@ -805,6 +805,12 @@
 				ButtonDead		  = sprite(p + "sprButtonDead", 	   4, 16, 16);
 				ButtonDebris	  = sprite(p + "sprButtonDebris",	   1, 12, 12);
 				
+				ButtonRevive	 = sprite(p + "sprButtonRevive",	 12, 24, 48);
+				ButtonReviveArea = sprite(p + "sprButtonReviveArea", 8,  20, 20);
+				
+				PickupRevive	 = sprite(p + "sprPickupRevive",	 12, 24, 48);
+				PickupReviveArea = sprite(p + "sprPickupReviveArea", 8,  20, 20);
+				
 			//#endregion
 			
 		//#endregion

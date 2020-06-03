@@ -1625,11 +1625,11 @@
 	
 #define ButtonGame_text		return `NEVER TOUCH THE ${ttip}RED BUTTON`;
 #define ButtonGame_area 	return area_labs;
-#define ButtonGame_chance	return 0; // 1/4;
+#define ButtonGame_chance	return 1/4;
 #define ButtonGame_create
 	var _spawnX     = x,
 		_spawnY     = y,
-		_spawnDis   = 128,
+		_spawnDis   = 32,
 		_spawnFloor = FloorNormal,
 		_w          = 5,
 		_h          = 5,
@@ -1645,13 +1645,15 @@
 		
 		 // Ring:
 		floor_set_style(1, null);
+		
 		var _floors = floor_fill(x, y, _w, _h, "ring");
-		repeat(6){
+		repeat(5){
 			with(instance_random(_floors)){
-				var o = (chance(1, 3) ? "ButtonChest" : "ButtonPickup")
+				var o = (chance(1, 4) ? "ButtonChest" : "ButtonPickup")
 				obj_create(bbox_center_x + orandom(2), bbox_center_y + orandom(2), o);
 			}
 		}
+		/*
 		with(_floors){
 			if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, prop)){
 				if(chance(1, 4)){
@@ -1659,6 +1661,7 @@
 				}
 			}
 		}
+		*/
 	}
 	
 	floor_reset_align();
