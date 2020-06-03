@@ -15,9 +15,6 @@
 	 // level_start():
 	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
 	
-	 // ntte_music():
-	global.ntte_music = true;
-	
 	 // Area:
 	global.area_update = false;
 	global.area_mapdata = [];
@@ -2603,7 +2600,6 @@
 	
 	 // NTTE Music / Ambience:
 	ntte_music();
-	global.ntte_music = true;
 	
 	 // Pet Map Icon Drawing:
 	var _mapObj = [TopCont, GenCont, UberCont];
@@ -3646,57 +3642,53 @@
 		Overrides MusCont's alarms for playing area-specific music and ambience
 	*/
 	
-	if(global.ntte_music){
-		global.ntte_music = false;
-		
-		var _area = GameCont.area;
-		
-		with(MusCont){
-			var	_mus = null,
-				_amb = null;
-				
-			 // Boss Music:
-			if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
-				if(array_exists(ntte_area, _area)){
-					if(mod_script_exists("area", _area, "area_music_boss")){
-						alarm_set(2, -1);
-						_mus = mod_script_call("area", _area, "area_music_boss");
-					}
-				}
-			}
+	var _area = GameCont.area;
+	
+	with(MusCont){
+		var	_mus = null,
+			_amb = null;
 			
-			 // Music / Ambience:
-			if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
-				if(array_exists(ntte_area, _area)){
-					if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
-						alarm_set(11, -1);
-						
-						 // Update MusCont:
-						if(_area != global.mus_area){
-							event_perform(ev_alarm, 11);
-						}
-						
-						_mus = mod_script_call("area", _area, "area_music");
-						_amb = mod_script_call("area", _area, "area_ambient");
+		 // Boss Music:
+		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
+			if(array_exists(ntte_area, _area)){
+				if(mod_script_exists("area", _area, "area_music_boss")){
+					alarm_set(2, -1);
+					_mus = mod_script_call("area", _area, "area_music_boss");
+				}
+			}
+		}
+		
+		 // Music / Ambience:
+		if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
+			if(array_exists(ntte_area, _area)){
+				if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
+					alarm_set(11, -1);
+					
+					 // Update MusCont:
+					if(_area != global.mus_area){
+						event_perform(ev_alarm, 11);
 					}
-				}
-				global.mus_area = _area;
-			}
-			
-			 // Play:
-			if(is_real(_mus)){
-				if(sound_play_music(_mus)){
-					var _snd = sound_play_pitchvol(0, 0, 0);
-					sound_stop(_snd);
-					global.mus_current = _snd - 1;
+					
+					_mus = mod_script_call("area", _area, "area_music");
+					_amb = mod_script_call("area", _area, "area_ambient");
 				}
 			}
-			if(is_real(_amb)){
-				if(sound_play_ambient(_amb)){
-					var _snd = sound_play_pitchvol(0, 0, 0);
-					sound_stop(_snd);
-					global.amb_current = _snd - 1;
-				}
+			global.mus_area = _area;
+		}
+		
+		 // Play:
+		if(is_real(_mus)){
+			if(sound_play_music(_mus)){
+				var _snd = sound_play_pitchvol(0, 0, 0);
+				sound_stop(_snd);
+				global.mus_current = _snd - 1;
+			}
+		}
+		if(is_real(_amb)){
+			if(sound_play_ambient(_amb)){
+				var _snd = sound_play_pitchvol(0, 0, 0);
+				sound_stop(_snd);
+				global.amb_current = _snd - 1;
 			}
 		}
 	}
@@ -3759,7 +3751,7 @@
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#macro  anim_end                                                                                image_index + image_speed_raw >= image_number
+#macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)

@@ -4635,45 +4635,47 @@
 	
 	 // Spirit Pickups:
 	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "spiritpickup_check", null)){
-		spiritpickup_check = false;
-		
-		if(GameCont.hard > 3){
-			var	_health    = 0,
-				_healthMax = 0;
-				
-			with(Player){
-				_health    += my_health;
-				_healthMax += maxhealth;
-			}
+		if(!instance_is(self, CustomEnemy) || candie >= 1){
+			spiritpickup_check = false;
 			
-			 // Below Half HP:
-			if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
-				 // Is Boss:
-				if(enemy_boss){
-					spiritpickup_check = true;
+			if(GameCont.hard > 3){
+				var	_health    = 0,
+					_healthMax = 0;
 					
-					 // Check if Last Boss on Level:
-					with(enemy){
-						if(my_health > 0 || id > other.id){
-							if(enemy_boss){
-								other.spiritpickup_check = false;
-								break;
+				with(Player){
+					_health    += my_health;
+					_healthMax += maxhealth;
+				}
+				
+				 // Below Half HP:
+				if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
+					 // Is Boss:
+					if(enemy_boss){
+						spiritpickup_check = true;
+						
+						 // Check if Last Boss on Level:
+						with(enemy){
+							if(my_health > 0 || id > other.id){
+								if(enemy_boss){
+									other.spiritpickup_check = false;
+									break;
+								}
 							}
 						}
-					}
-					
-					 // Spirit Time:
-					if(spiritpickup_check){
-						var	_x = x,
-							_y = y;
-							
-						if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
-							_x = posx;
-							_y = posy;
-						}
 						
-						if(position_meeting(_x, _y, Floor)){
-							obj_create(_x + orandom(4), _y + orandom(4), "SpiritPickup");
+						 // Spirit Time:
+						if(spiritpickup_check){
+							var	_x = x,
+								_y = y;
+								
+							if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
+								_x = posx;
+								_y = posy;
+							}
+							
+							if(position_meeting(_x, _y, Floor)){
+								obj_create(_x + orandom(4), _y + orandom(4), "SpiritPickup");
+							}
 						}
 					}
 				}
@@ -5219,7 +5221,7 @@
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#macro  anim_end                                                                                image_index + image_speed_raw >= image_number
+#macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
