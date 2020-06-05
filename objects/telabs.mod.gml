@@ -14,13 +14,14 @@
 		A labs event prop.
 	*/
 
-	with(instance_create(_x, _y, CustomProp)){
+	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		spr_idle = spr.ButtonIdle;
 		spr_hurt = spr.ButtonHurt;
 		spr_dead = spr.ButtonDead;
 		sprite_index = spr_idle;
 		spr_shadow = mskNone;
+		image_speed = 0.4;
 		
 		 // Sounds:
 		snd_hurt = sndHitMetal;
@@ -29,6 +30,7 @@
 		 // Vars:
 		mask_index = -1;
 		maxhealth = 120;
+		raddrop = 0;
 		size = 2;
 		team = 1;
 		presses = 0;
@@ -39,10 +41,25 @@
 		}
 		effect_color = make_color_rgb(252, 56, 0);
 		
+		 // Alarms:
+		alarm0 = -1;
+		alarm1 = -1;
+		
 		return id;
 	}
 	
 #define Button_step
+	 // Hitme Stuff:
+	x = xstart;
+	y = ystart;
+	speed = 0;
+	
+	 // Animation:
+	if(anim_end){
+		sprite_index = spr_idle;
+	}
+	
+	 // Press:
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup)){
 		if(_pickup.pick != -1){
@@ -65,11 +82,22 @@
 			
 			sound_play(sndIDPDNadeAlmost);
 			
-			alarm0 = 15;
+			alarm0 = 20;
 		}
 	}
 	
-#define Button_death
+	 // Manual Death:
+	if(my_health <= 0){
+		instance_destroy();
+	}
+	
+#define Button_destroy
+	 // JW's Been Slackin':
+	sound_play_hit(snd_dead, 0.2);
+	corpse_drop(direction, speed);
+	rad_drop(x, y, raddrop, direction, speed);
+	
+	 // Effects:
 	var d = direction;
 	with(instance_create(x, y, Debris)){
 		sprite_index = spr.ButtonDebris;
@@ -80,36 +108,34 @@
 			motion_add(d + orandom(45), random(4));
 		}
 	}
+	repeat(5){
+		with(instance_create(x + orandom(20), y + orandom(20), PortalL)){
+			image_blend = other.effect_color;
+		}
+	}
 	
 #define Button_alrm0
 		
 	 // Positive Outcome:
 	var _col = effect_color;
-	if(chance(presses, 6 + GameCont.loops)){
-		var _x = x,
-			_y = y;
+	if(chance(presses * 2/3, 7)){
+		 // alarm2 = 30;
 			
 		 // Effects:
-		repeat(10){
-			sound_play(sndGunGun);
+		sound_play(sndGunGun);
+		repeat(15){
 			with(instance_create(x, y, Dust)){
 				sprite_index = sprSpiralStar;
 				image_blend = _col;
+				depth = other.depth - 1;
 				motion_set(random(360), 5);
 			}
 		}
 		
 		 // Open Chests:
 		with(instances_matching(chestprop, "name", "ButtonChest", "ButtonPickup")){
-			open_time = random(30);
-			
-			with(instance_create(x, y, BoltTrail)){
-				image_blend = _col;
-				image_angle = point_direction(x, y, _x, _y);
-				image_xscale = point_distance(x, y, _x, _y);
-			}
-			with(instance_create(x, y, ThrowHit)){
-				image_blend = _col;
+			with(obj_create(x, y, "PickupReviveArea")){
+				pickup = other;
 			}
 		}
 	}
@@ -117,7 +143,8 @@
 	 // Negative Outcome:
 	else{
 		 // Better Luck Next Time:
-		alarm1 = 30;
+		alarm1 = 40;
+		my_health = maxhealth;
 		
 		 // Effects:
 		sound_play(sndComputerBreak);
@@ -130,91 +157,93 @@
 		var _payout = [],
 			_pool = [
 			["Turret",		 3],
-			["FreakRevive",  3],
-			["NecroRevive",  2],
+			["FishFreak",  	 3],
+			["RhinoFreak",	 2],
+			["Necromancer",  2],
 			["FreakChamber", 1]
 		];
 		repeat(presses){
 			array_push(_payout, pool(_pool));
 		}
+		if(chance(1, 2)){
+			array_push(_payout, "Pickup");
+		}
 		
+		 // Locate Floors:
 		var _floors = [];
 		with(FloorNormal){
 			var _cx = bbox_center_x,
 				_cy = bbox_center_y;
 				
 			if(instance_near(_cx, _cy, other, 160)){
-				if(!instance_near(_cx, _cy, instance_nearest(_cx, _cy, Player), 40)){
-					if(!place_meeting(x, y, Wall)){
+				if(instance_seen(_cx, _cy, instance_nearest(_cx, _cy, Player))){
+					if(!place_meeting(x, y, Wall) && !place_meeting(x, y, other)){
 						array_push(_floors, id);
 					}
 				}
 			}
 		}
 		
-		var _minID = GameObject.id;
-		for(var i = 0; i < array_length(_payout); i++){
-			var _num = presses - i; // scaling kinda wacky rn
+		 // Spawn Stuff:
+		if(array_length(_floors) > 0){
+			var _blacklist = [];
 			
-			switch(_payout[i]){
-				case "Turret":
-					repeat(_num){
-						with(instance_random(_floors)){
-							if(!place_meeting(x, y, Turret)){
-								instance_create(bbox_center_x, bbox_center_y, Turret);
-							}
+			for(var i = 0; i < array_length(_payout); i++){
+				
+				 // Locate Floor For Real This Time:
+				var _floor = noone,
+					_tries = 100;
+					
+				while(_floor == noone && _tries-- > 0){
+					with(instance_random(_floors)){
+						if(!array_exists(_blacklist, id)){
+							_floor = id;
+							array_push(_blacklist, _floor);
 						}
 					}
+				}
 					
-					break;
-					
-				case "FreakRevive":
-					repeat(ceil(_num / 2)){
-						var _tries = 10;
-						while(_tries-- > 0){
-							with(instance_random(_floors)){
-								with(instance_nearest(bbox_center_x, bbox_center_y, Corpse)){
-									if(!place_meeting(x, y, ReviveArea)){
-										_tries = 0;
-										instance_create(x, y, ReviveArea);
-									}
-								}
-							}
-						}
-					}
-					
-					break;
-					
-				case "NecroRevive":
-					repeat(ceil(_num / 3)){
-						var _tries = 10;
-						while(_tries-- > 0){
-							with(instance_random(_floors)){
-								with(instance_nearest(bbox_center_x, bbox_center_y, Corpse)){
-									if(!place_meeting(x, y, NecroReviveArea)){
-										_tries = 0;
-										instance_create(x, y, NecroReviveArea);
-									}
-								}
-							}
-						}
-					}
-					
-					break;
-					
-				case "FreakChamber":
-					repeat(_num / 2){
-						with(instance_random(_floors)){
+				if(instance_exists(_floor)){
+					var _x = _floor.x + 16,
+						_y = _floor.y + 16;
+						
+					switch(_payout[i]){
+						case "FreakChamber":
 							with(obj_create(x, y, "FreakChamber")){
-								alarm0 = random_range(1, 5);
+								alarm0 = 10;
 							}
-						}
+							break;
+							
+						case "Turret":
+							instance_create(_x, _y, Turret);
+							break;
+							
+						case "Necromancer":
+							with(obj_create(_x, _y, "ButtonReviveArea")){
+								object_name = Necromancer;
+							}
+							break;
+							
+						case "FishFreak":
+							with(obj_create(_x, _y, "ButtonReviveArea")){
+								object_name = Freak;
+								num_objects = 3;
+							}
+							break;
+							
+						case "RhinoFreak":
+							with(obj_create(_x, _y, "ButtonReviveArea")){
+								object_name = RhinoFreak;
+							}
+							break;
+							
+						case "Pickup":
+							obj_create(_x, _y, "PickupReviveArea");
+							break;
 					}
-					
-					break;
+				}
 			}
 		}
-		// trace(`(${presses})`, _payout[i], _num);
 	}
 	
 #define Button_alrm1
@@ -227,12 +256,16 @@
 		visible = true;
 	}
 	
+#define Button_alrm2
+	 // Goodbye:
+	my_health = 0;
+	
 #define ButtonChest_create(_x, _y)
 	with(instance_create(_x, _y, chestprop)){
 		 // Visual:
 		spr_debris = spr.ButtonChestDebris;
-		sprite_index = spr.ButtonChest;
 		spr_shadow_y = 0;
+		sprite_index = spr.ButtonChest;
 		
 		 // Vars:
 		mask_index = sprAmmoChest;
@@ -242,56 +275,17 @@
 			["BonusAmmoChest",	 4],
 			["BonusHealthChest", 3]
 		];
-		open_time = -1;
 		
 		return id;
 	}
 	
-#define ButtonChest_step
-	 // Open Sesame:
-	if(open_time > 0){
-		open_time -= current_time_scale;
-		
-		if(chance_ct(1, 3)){
-			scrFX(x, y, [random(360), random(2)], Smoke)
-		}
-		
-		if(open_time <= 0){
-			var _sprt = spr_debris,
-				_pool = payout_pool;
-			
-			if(array_length(_pool) > 0){
-				with(chest_create(x, y, pool(_pool), false)){
-					motion_set(random(360), friction * 6);
-				}
-				
-				for(var i = 0; i < sprite_get_number(_sprt); i++){
-					with(instance_create(x, y, Debris)){
-						sprite_index = _sprt;
-						image_index = i;
-						friction = 0.6;
-						depth = other.depth + 1;
-						motion_set(random(360), 4);
-						
-						var l = (sprite_get_width(_sprt) + sprite_get_height(_sprt)) / 4;
-						x += lengthdir_x(l, direction);
-						y += lengthdir_y(l, direction);
-					}
-				}
-				
-				sleep_max(10);
-				
-				instance_delete(id);
-			}
-		}
-	}
-	
+
 #define ButtonPickup_create(_x, _y)
 	with(obj_create(_x, _y, "ButtonChest")){
 		 // Visual:
 		spr_debris = spr.ButtonPickupDebris;
-		sprite_index = spr.ButtonPickup;
 		spr_shadow = mskNone;
+		sprite_index = spr.ButtonPickup;
 		
 		 // Vars:
 		mask_index = mskPickup;
@@ -304,6 +298,51 @@
 		return id;
 	}
 
+#define ButtonReviveArea_create(_x, _y)
+	sound_play_hit(sndFreakPopoReviveArea, 0.2);
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.ButtonReviveArea;
+		image_speed = 0.4;
+		
+		 // Vars:
+		object_name = Bandit;
+		num_objects = 1;
+		object_vars = {};
+		
+		 // Alarms:
+		alarm0 = random_range(30, 50);
+		
+		return id;
+	}
+	
+#define ButtonReviveArea_alrm0
+	 // Create:
+	repeat(num_objects){
+		var o = obj_create(x, y, object_name),
+			n = lq_size(object_vars);
+			
+		 // Variable Time:
+		if(instance_exists(o) && n > 0){
+			for(var i = 0; i < n; i++){
+				var _var = lq_get_key(object_vars, i),
+					_val = lq_get_value(object_vars, i);
+					
+				variable_instance_set(o, _var, _val);
+			}
+		}
+	}
+	
+	 // Effects:
+	sound_play_hit(sndFreakPopoRevive, 0.2);
+	with(instance_create(x, y, ReviveFX)){
+		sprite_index = spr.ButtonRevive;
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
+	
 #define FreakChamber_create(_x, _y)
 	/*
 		Creates an epic room on the side of the level that opens to release freaks
@@ -1188,6 +1227,71 @@
 	*/
 	
 	
+#define PickupReviveArea_create(_x, _y)
+	sound_play_hit(sndFreakPopoReviveArea, 0.2);
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.PickupReviveArea;
+		image_speed = 0.4;
+		
+		 // Vars:
+		pickup = noone;
+		
+		 // Alarms:
+		alarm0 = 15;
+		
+		return id;
+	}
+	
+#define PickupReviveArea_alrm0
+	 // Open Button Pickups:
+	if(instance_exists(pickup)){
+		with(pickup){
+			var _sprt = spr_debris,
+				_pool = payout_pool;
+				
+			if(array_length(_pool) > 0){
+				
+				 // Chest:
+				chest_create(x, y, pool(_pool), false);
+				
+				 // Casing:
+				for(var i = 0; i < sprite_get_number(_sprt); i++){
+					with(instance_create(x, y, Debris)){
+						sprite_index = _sprt;
+						image_index = i;
+						friction = 0.6;
+						depth = other.depth + 1;
+						motion_set(random(360), 4);
+						
+						var l = (sprite_get_width(_sprt) + sprite_get_height(_sprt)) / 4;
+						x += lengthdir_x(l, direction);
+						y += lengthdir_y(l, direction);
+					}
+				}
+				
+				 // Goodbye:
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // New Button Pickup:
+	else{
+		var o = (chance(1, 5) ? "ButtonChest" : "ButtonPickup");
+		obj_create(x, y, o);
+	}
+	
+	 // Effects:
+	sound_play_hit(sndFreakPopoRevive, 0.2);
+	with(instance_create(x, y, ReviveFX)){
+		sprite_index = spr.PickupRevive;
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
+
 #define WallSlide_create(_x, _y)
 	/*
 		A controller that slides Walls around
@@ -1360,10 +1464,10 @@
 							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
 							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
 							with(instance_create(x, y + 2, ReviveFX)){
-								sprite_index = sprPopoRevive;
+								sprite_index = spr.PickupRevive; // sprPopoRevive;
 								image_xscale = 0.8;
 								image_yscale = image_xscale;
-								image_blend = make_color_rgb(100, 255, 50);
+								// image_blend = make_color_rgb(100, 255, 50);
 								depth = -2;
 							}
 						}
@@ -1385,6 +1489,17 @@
 				spr_dead = spr.FishFreakDead;
 			}
 		}
+	}
+	
+	
+#define ntte_dark // Drawing Grays
+	with(instances_matching(CustomObject, "name", "ButtonReviveArea")){
+		draw_circle(x, y, 64 + irandom(2), false);
+	}
+	
+#define ntte_dark_end // Drawing Clear
+	with(instances_matching(CustomObject, "name", "ButtonReviveArea")){
+		draw_circle(x, y, 32 + irandom(2), false);
 	}
 	
 	

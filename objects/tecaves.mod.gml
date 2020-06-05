@@ -297,6 +297,7 @@
 			max_tele_dist         - Maximum distance from the player the brain can teleport to
 			dying                 - Boolean. Tracks if the brain has entered its death phase
 			death_throes          - The remaining number of throes in the death phase
+			death_time			  - Time until the next death throe
 			parts                 - Used in death anim
 	*/
 
@@ -342,6 +343,7 @@
 		candie = false;
 		dying = false;
 		death_throes = irandom_range(3, 4);
+		death_time = 0;
 		parts = [];
 		
 		 // Alarms:
@@ -425,10 +427,17 @@
 		walk = 0;
 		
 		 // Mid Death:
-		var _still = (speed <= minspeed || (x == xprevious && y == yprevious));
-		if(death_throes > 0){
+		death_time -= current_time_scale;
+		if(death_time <= 0){
 			
-			if(_still){
+			 // Effects:
+			if(chance_ct(2, 5)){
+				instance_create(x + orandom(12), y + orandom(12), Smoke);
+			}
+			
+			if(death_throes > 0){
+				
+				death_time = random_range(10, 20);
 				death_throes--;
 				
 				 // Jerk Around:
@@ -459,14 +468,8 @@
 				}
 			}
 			
-			 // Effects:
-			if(chance_ct(2, 5)){
-				instance_create(x + orandom(12), y + orandom(12), Smoke);
-			}
-		}
-		
-		else{
-			if(_still){
+			 // Perish:
+			else{
 				candie = true;
 			}
 		}
@@ -642,6 +645,8 @@
 			}
 		}
 	}
+	
+#define CrystalBrain_alrm2
 	
 #define CrystalBrain_death
 	pickup_drop(100, 0);
@@ -1028,6 +1033,7 @@
 			}
 		}
 		
+		/*
 		 // Clientside Darkness:
 		var _darkAreas = [area_sewers, area_caves, area_labs, "pizza", "lair", "trench"];
 		if(array_exists(_darkAreas, area) && !array_exists(_darkAreas, GameCont.area)){
@@ -1038,6 +1044,7 @@
 				darkness = true;
 			}
 		}
+		*/
 		
 		 // Reveal:
 		with(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID)){
@@ -2162,6 +2169,11 @@
 		 // Vars:
 		mask_index = mskWepPickup;
 		open = false;
+		setup = true;
+		dest_area = irandom_range(1, 7);
+		dest_suba = 1;
+		dest_loop = 0;
+		pickup_indicator = noone;
 		
 		 // Alarms:
 		alarm0 = 30;
@@ -2169,10 +2181,27 @@
 		return id;
 	}
 	
+#define Warp_setup
+	setup = false;
+	
+	 // Pickup Indicator:
+	if(!instance_exists(pickup_indicator)){
+		var _text = area_get_name(dest_area, dest_suba, dest_loop);
+		
+		pickup_indicator = scrPickupIndicator("");
+		with(pickup_indicator){
+			text = `WARP#${_text}`;
+			yoff = 12;
+			visible = other.open;
+			mask_index = mskReviveArea;
+		}
+	}
+	
 #define Warp_step
+	if(setup) Warp_setup();
 	image_angle += current_time_scale;
 	
-	 // Sparkly:
+	 // Effectst:
 	if(chance_ct(1, 15)){
 		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
 			sprite_index = sprSpiralStar;
@@ -2186,6 +2215,35 @@
 			sprite_index = sprThrowHit;
 			image_xscale = 0.2 + random(0.3);
 			image_yscale = image_xscale;
+		}
+	}
+	
+	 // Warp:
+	if(open){
+		var _pickup = pickup_indicator;
+		if(_pickup.pick != -1){
+			
+			 // Record Destination:
+			var _destArea = mod_variable_get("area", "red", "destArea"),
+				_destSubA = mod_variable_get("area", "red", "destSubA")
+			
+			while(array_length(_destArea) < GameCont.loops){
+				array_push(_destArea, 1);
+				array_push(_destSubA, 1);
+			}
+			_destArea[GameCont.loops] = dest_area;
+			_destSubA[GameCont.loops] = dest_suba;
+			
+			 // We Out:
+			GameCont.area	 = dest_area;
+			GameCont.subarea = dest_suba - 1;
+			GameCont.loops	 = dest_loop;
+			with(obj_create(x, y, "WarpPortal")){
+				event_perform(ev_step, ev_step_normal);
+			}
+			
+			 // Goodbye:
+			instance_destroy();
 		}
 	}
 	
@@ -2405,6 +2463,7 @@
 	}
 	*/
 		
+	/*
 	 // Client-Side Darkness:
 	clientDarknessFloor = instances_matching(clientDarknessFloor, "", null);
 	with(Player){
@@ -2431,6 +2490,7 @@
 			clientDarknessCoeff[index] = 1;
 		}
 	}
+	*/
 	
 #define ntte_end_step
 	 // Spider Cocoons:
@@ -2527,6 +2587,7 @@
 	}
 	
 #define ntte_dark_end // Drawing Clear
+	/*
 	 // Client-Side Darkness:
 	if(array_length(clientDarknessFloor) > 0){
 		var _alph = draw_get_alpha(),
@@ -2536,11 +2597,12 @@
 		draw_set_alpha(clientDarknessCoeff[player_find_local_nonsync()]);
 		draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
 		draw_set_alpha(_alph);
-		
-		 // Crystal Heart:
-		with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
-			draw_crystal_heart_dark(15, 24 + random(2), 2);
-		}
+	}
+	*/
+	
+	 // Crystal Heart:
+	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
+		draw_crystal_heart_dark(15, 24 + random(2), 2);
 	}
 	
 	 // Mortar:

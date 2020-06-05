@@ -119,6 +119,10 @@
 	}
 	else heart_spawn = {};
 	
+	 // Reset Red Area Stuff:
+	mod_variable_set("area", "red", "destArea", []);
+	mod_variable_set("area", "red", "destSubA", []);
+	
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
@@ -243,9 +247,11 @@
 			
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
+				var _forceChaosHearts = (array_length(mod_variable_get("area", "red", "destArea")) > GameCont.loops);
+				
 				while((_heartNum + _chaosNum) > 0){
 					with(instance_random(_spawnFloor)){
-						var _type = ((GameCont.area == "red" || _chaosNum > 0) ? "ChaosHeart" : "CrystalHeart")
+						var _type = ((_forceChaosHearts || GameCont.area == "red" || _chaosNum > 0) ? "ChaosHeart" : "CrystalHeart");
 						with(obj_create(bbox_center_x, bbox_center_y + 2, _type)){
 							with(instance_create(x, y, PortalClear)){
 								mask_index = other.mask_index;
@@ -1320,6 +1326,16 @@
 						curse = other.curse;
 					}
 				}
+				instance_delete(id);
+			}
+		}
+	}
+	
+	 // Orchid Chests:
+	if(save_get("orchidSkillSeen", false)){
+		with(RadChest){
+			if(chance(GameCont.rad * (GameCont.level / 10), 900)){
+				obj_create(x, y, "OrchidChest");
 				instance_delete(id);
 			}
 		}
