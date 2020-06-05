@@ -2,12 +2,51 @@
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
+
+/*	
+	 // Potential Warp Destinations:
+	destList = [
+		area_desert,
+		area_sewers,
+		area_scrapyards,
+		area_caves,
+		area_city,
+		area_labs,
+		area_palace
+	];
+	warpDestX = [0, 27, 36, 63, 72, 99, 108];
+	
+	placeholderName = [];
+*/
+	
+	 // Warp Destination Tracking:
+	destArea = [];
+	destSubA = [];
+	destList = [
+	 // Area Name | Subarea Count | Starting Map X Position
+	 
+		[area_desert,		3,	0],
+		[area_sewers,		1,	27],
+		[area_scrapyards,	3,	36],
+		[area_caves,		1,	63],
+		[area_city, 		3,	72],
+		[area_labs, 		1,	99],
+		[area_palace,		3,	108]
+	];
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
+
+#macro destArea global.destArea
+#macro destSubA global.destSubA
+#macro destList global.destList
+
+// #macro destList global.destList
+// #macro placeholderName global.placeholderName
+// #macro warpDestX global.warpDestX
 
 #macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
 #macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
@@ -31,7 +70,32 @@
 	return choose("BLINDING", "THE RED DOT", `WELCOME TO THE @(color:${area_background_color()})WARP ZONE`);
 	
 #define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-	return [_lastx, 9, (_subarea == 1)];
+	var _x = view_xview_nonsync + (game_width / 2) - 70,
+		_y = view_yview_nonsync + (game_height / 2) + 7,
+		_color = draw_get_color();
+		
+	 // Post Exit:
+	if(array_length(destArea) > _loops){
+		var _destList = destList[destArea[_loops] - 1],
+			_destX = _destList[2] + (9 * (destSubA[_loops] - 1));
+		
+		if(_color != c_white){
+			var _frame = (current_frame * 0.4); // + _loops * (sprite_get_number(spr.RedDot) / (GameCont.loops + 1));
+			
+			draw_line_color(_x + _lastx + 1, _y + max(0, _lasty) + 1, _x + _lastx + 1, _y + max(0, _lasty) + 10, c_black, c_black);
+			draw_line_color(_x + _lastx,	 _y + max(0, _lasty) - 1, _x + _lastx,	   _y + max(0, _lasty) + 9,  _color,  _color);
+			draw_sprite_ext(spr.RedDot, _frame, _x + _lastx, (_y + max(0, _lasty)) + 9, 1, 1, 0, _color, 1);
+			
+			draw_line_color(_x + _destX + 1, _y - 8, _x + _destX + 1, _y + 1, c_black, c_black);
+			draw_line_color(_x + _destX,	 _y - 9, _x + _destX,	  _y,	  _color,  _color);
+			draw_sprite_ext(spr.RedDot, _frame, _x + _destX, _y - 9, 1, 1, 0, _color, 1);
+		}
+		
+		return [_destX,	0, true, false];
+	}
+	
+	 // Still in Warp Zone:
+	return [_lastx, 9 + max(0, _lasty), (_subarea == 1)];
 	
 #define area_sprite(_spr)
 	switch(_spr){
@@ -239,7 +303,10 @@
 				
 				 // Portal:
 				with(obj_create(x, y - 8, "Warp")){
+					var _list = destList[irandom(array_length(destList) - 1)];
 					
+					dest_area = _list[0];
+					dest_suba = irandom_range(1, _list[1]);
 				}
 			}
 			

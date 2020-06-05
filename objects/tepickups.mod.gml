@@ -3065,6 +3065,10 @@
 			flash       - How many frames to draw in flat white
 	*/
 	
+	 // First, Enable Orchid Chest Spawning:
+	save_set("orchidSkillSeen", true);
+	
+	 // Back to Business:
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.PetOrchidCharge;

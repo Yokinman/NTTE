@@ -21,6 +21,7 @@
 		spr_dead = spr.ButtonDead;
 		sprite_index = spr_idle;
 		spr_shadow = mskNone;
+		image_speed = 0.4;
 		
 		 // Sounds:
 		snd_hurt = sndHitMetal;
@@ -29,6 +30,7 @@
 		 // Vars:
 		mask_index = -1;
 		maxhealth = 120;
+		raddrop = 0;
 		size = 2;
 		team = 1;
 		presses = 0;
@@ -47,10 +49,17 @@
 	}
 	
 #define Button_step
+	 // Hitme Stuff:
 	x = xstart;
 	y = ystart;
 	speed = 0;
-
+	
+	 // Animation:
+	if(anim_end){
+		sprite_index = spr_idle;
+	}
+	
+	 // Press:
 	var _pickup = pickup_indicator;
 	if(instance_exists(_pickup)){
 		if(_pickup.pick != -1){
@@ -77,7 +86,17 @@
 		}
 	}
 	
-#define Button_death
+	 // Manual Death:
+	if(my_health <= 0){
+		instance_destroy();
+	}
+	
+#define Button_destroy
+	 // JW's Been Slackin':
+	sound_play_hit(snd_dead, 0.2);
+	corpse_drop(direction, speed);
+	rad_drop(x, y, raddrop, direction, speed);
+	
 	 // Effects:
 	var d = direction;
 	with(instance_create(x, y, Debris)){

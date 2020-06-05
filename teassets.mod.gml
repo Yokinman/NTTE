@@ -1225,7 +1225,7 @@
 			 // Misc:
 			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
 			SpiralStarfield = sprite(p + "sprSpiralStarfield", 2,  32,  32);
-			RedDot          = sprite(p + "sprRedDot",          9,   8,   8);
+			RedDot          = sprite(p + "sprRedDot",          9,   7,   7);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1331,9 +1331,13 @@
 			ButtonPickup	   = sprite(p + "sprButtonPickup",		 1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
+			 // Red Chest:
+			RedChest	 = sprite(p + "sprRedChest",	 1, 8, 8, shn16);
+			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
+			
 			 // Orchid Chest:
-			OrchidChest     = sprite(p + "sprOrchidChest",     1, 13, 8);
-			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 13, 8);
+			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
+			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
 			
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
