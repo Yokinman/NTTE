@@ -313,10 +313,11 @@
 			image_xscale - Room's width
 			image_yscale - Room's height
 			hallway_size - Hallway's length
-			type         - The type of room to create: "Freak", "Explo", "Rhino", "Vat"
-			obj          - The freak object to create
-			num          - How many freak objects to create
-			enemies      - How many enemies existed on creation
+			styleb       - The room's floor style
+			type         - The type of room to create: "Freak", "Explo", "Rhino", "Vat", "Popo"
+			obj          - The enemy to create
+			num          - How many enemies to create
+			enemies      - How many enemies existed in the level on creation
 			spawnmoment  - Opens when this percentage of enemies are left
 			open         - Can the room open anywhere, true/false
 			setup        - Perform type-specific setup code, true/false
@@ -331,12 +332,8 @@
 		image_xscale = 1;
 		image_yscale = 1;
 		hallway_size = 1;
-		type = pool({
-			"Freak" : 8,
-			"Rhino" : 4,
-			"Explo" : 4,
-			"Vat"   : 1
-		});
+		styleb = true;
+		type = "";
 		obj = -1;
 		num = 1;
 		enemies = instance_number(enemy);
@@ -344,11 +341,28 @@
 		open = false;
 		setup = true;
 		slide_path = [
-			[30,  0, 0, [sndToxicBoltGas,  0.4 + random(0.1), 1  ]], // Delay
-			[16,  0, 1, [sndTurretFire,    0.3 + random(0.1), 0.9]], // Inset
-			[10,  0, 0, [sndToxicBoltGas,  0.3 + random(0.1), 0.5]], // Delay
-			[16, 90, 1, [sndSwapMotorized, 0.5 + random(0.1), 1  ]]  // Open
+			[30,  0, 0, [sndToxicBoltGas,  0.5 + orandom(0.05), 1  ]], // Delay
+			[16,  0, 1, [sndTurretFire,    0.3 + random(0.1),   0.9]], // Inset
+			[10,  0, 0, [sndToxicBoltGas,  0.3 + random(0.1),   0.5]], // Delay
+			[16, 90, 1, [sndSwapMotorized, 0.5 + random(0.1),   1  ]]  // Open
 		];
+		
+		 // Determine Type:
+		switch(GameCont.area){
+			case area_hq:
+				type = pool({
+					"Popo" : 1
+				});
+				break;
+				
+			default:
+				type = pool({
+					"Freak" : 8,
+					"Rhino" : 4,
+					"Explo" : 4,
+					"Vat"   : 1
+				});
+		}
 		
 		return id;
 	}
@@ -385,6 +399,29 @@
 			image_yscale *= 3;
 			hallway_size *= irandom_range(1, 3);
 			break;
+			
+		case "Popo":
+			obj = choose(Grunt, Grunt, Shielder, Inspector);
+			num = ((obj == Grunt) ? irandom_range(2, 3) : 1) + GameCont.loops;
+			image_xscale *= 2;
+			image_yscale *= 2;
+			hallway_size *= 0.5;
+			styleb = false;
+			
+			 // Freak:
+			if(GameCont.loops > 2){
+				obj = PopoFreak;
+			}
+			
+			 // Sliding Door:
+			slide_path = [
+				[45,  0, 0,   [sndToxicBoltGas,    0.6 + random(0.1), 1  ]], // Delay
+				[ 6, 90, 0.5, [sndIDPDPortalSpawn, 6.0 + random(0.1), 1.4]], // Open Slightly
+				[15, 90, 0                                                ], // Delay
+				[13, 90, 1,   [sndIDPDNadeAlmost,  1.4 + random(0.1), 1.2]]  // Open Full
+			];
+			
+			break;
 	}
 	
 #define FreakChamber_step
@@ -406,15 +443,10 @@
 		}
 	}
 	
-	 // Synchronize:
+	 // Desynchronize:
 	if(alarm0 > 0){
-		with(instances_matching_gt(instances_matching(object_index, "name", name), "alarm0", 0)){
-			if(alarm0 < other.alarm0){
-				other.alarm0 = alarm0;
-			}
-			else{
-				alarm0 = other.alarm0;
-			}
+		with(instances_matching_ne(instances_matching(instances_matching(object_index, "name", name), "alarm0", alarm0), "id", id)){
+			alarm0 += 30;
 		}
 	}
 	
@@ -458,6 +490,11 @@
 		array_sort_sub(_spawnFloor, 0, true);
 		
 		 // Create Room:
+		var _spawnAvoid = (
+			(_hallDis < 32)
+			? [Floor, Wall, TopPot, Bones]
+			: [Floor, Wall, TopSmall, TopPot, Bones]
+		);
 		with(_spawnFloor){
 			var _floor = self[1];
 			with(other){
@@ -468,8 +505,8 @@
 					if(!position_meeting(_fx + dcos(_dir), _fy - dsin(_dir), Floor)){
 						var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
 							_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
-							_hallX = _fx + lengthdir_x(_hallDis / 2, _dir),
-							_hallY = _fy + lengthdir_y(_hallDis / 2, _dir),
+							_hallX = _fx + lengthdir_x(max(32, _hallDis) / 2, _dir),
+							_hallY = _fy + lengthdir_y(max(32, _hallDis) / 2, _dir),
 							_hallXOff = lengthdir_x(32, _dir),
 							_hallYOff = lengthdir_y(32, _dir);
 							
@@ -479,16 +516,24 @@
 								_hallY - (_hallH * 16) + max(0, _hallYOff),
 								_hallX + (_hallW * 16) + min(0, _hallXOff) - 1,
 								_hallY + (_hallH * 16) + min(0, _hallYOff) - 1,
-								[Floor, Wall, TopSmall, TopPot, Bones]
+								_spawnAvoid
 							)) <= 0
 						){
-							var _yoff = -(sprite_get_height(mask_index) * image_yscale) / 2;
+							var	_yoff = -(sprite_get_height(mask_index) * image_yscale) / 2,
+								_spawn = true;
+								
 							x = _fx + lengthdir_x(_hallDis, _dir) + lengthdir_x(_yoff, _dir - 90);
 							y = _fy + lengthdir_y(_hallDis, _dir) + lengthdir_y(_yoff, _dir - 90);
-							
 							image_angle = _dir;
 							
-							if(!place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !place_meeting(x, y, TopSmall) && !place_meeting(x, y, TopPot) && !place_meeting(x, y, Bones)){
+							for(var i = 0; i < array_length(_spawnAvoid); i++){
+								if(place_meeting(x, y, _spawnAvoid[i])){
+									_spawn = false;
+									break;
+								}
+							}
+							
+							if(_spawn){
 								var	_x = bbox_center_x,
 									_y = bbox_center_y,
 									_w = bbox_width  / 32,
@@ -498,32 +543,52 @@
 								var	_wall = [],
 									_tops = [];
 									
-								with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
-									array_push(_wall, variable_instance_get_list(self));
-									instance_delete(id);
+								if(array_exists(_spawnAvoid, Wall)){
+									with(instance_rectangle_bbox(_hallX - (_hallW * 16), _hallY - (_hallH * 16), _hallX + (_hallW * 16) - 1, _hallY + (_hallH * 16) - 1, Wall)){
+										array_push(_wall, variable_instance_get_list(self));
+										instance_delete(id);
+									}
 								}
-								with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
-									array_push(_tops, variable_instance_get_list(self));
-									instance_delete(id);
-								}
-								with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
-									array_push(_tops, variable_instance_get_list(self));
-									instance_delete(id);
+								if(array_exists(_spawnAvoid, TopSmall)){
+									with(instance_rectangle_bbox(_hallX - (_hallW * 16) - 16, _hallY - (_hallH * 16) - 16, _hallX + (_hallW * 16) + 16 - 1, _hallY + (_hallH * 16) + 16 - 1, TopSmall)){
+										array_push(_tops, variable_instance_get_list(self));
+										instance_delete(id);
+									}
+									with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
+										array_push(_tops, variable_instance_get_list(self));
+										instance_delete(id);
+									}
 								}
 								
 								 // Generate Room:
-								floor_set_style(1, null);
+								floor_set_style(styleb, null);
+								floor_set_align(null, null, 16, 16);
 								
 								var	_minID = GameObject.id,
 									_floorHall = floor_fill(_hallX, _hallY, _hallW, _hallH, ""),
 									_floorMain = floor_fill(_x, _y, _w, _h, "");
 									
 								floor_reset_style();
+								floor_reset_align();
 								
 								 // Transition Walls:
 								with(instances_matching_gt(Wall, "id", _minID)){
 									topspr = area_get_sprite(GameCont.area, sprWall1Trans);
-									if(sprite_index == sprWall6Bot) sprite_index = spr.Wall6BotTrans;
+									switch(sprite_index){
+										case sprWall6Bot:
+											sprite_index = spr.Wall6BotTrans;
+											break;
+									}
+								}
+								
+								 // Resprite Explo Tiles:
+								with(instances_matching_gt(FloorExplo, "id", _minID)){
+									switch(sprite_index){
+										case sprFloor106Explo:
+											sprite_index = spr.Floor106Small;
+											depth = 10;
+											break;
+									}
 								}
 								
 								 // Details:
@@ -553,7 +618,10 @@
 									
 									 // Don't Cover Pre-Existing TopSmalls:
 									if(instance_is(self, Wall) || instance_is(self, TopSmall)){
-										with(_tops){
+										if(place_meeting(x, y, TopPot) || place_meeting(x, y, Bones)){
+											_reveal = false;
+										}
+										else with(_tops){
 											if(x == other.x && y == other.y){
 												_reveal = false;
 												break;
@@ -579,12 +647,28 @@
 								if((is_real(obj) && object_exists(obj)) || is_string(obj)){
 									for(var i = 0; i < num; i++){
 										with(_floorMain[floor(((i + random(1)) / num) * array_length(_floorMain))]){
-											with(obj_create(bbox_center_x + orandom(4), bbox_center_y + orandom(4), other.obj)){
+											var _obj = other.obj;
+											
+											 // Elite IDPD:
+											switch(_obj){
+												case Grunt     : if(chance(1, 5)) _obj = EliteGrunt;     break;
+												case Shielder  : if(chance(1, 3)) _obj = EliteShielder;  break;
+												case Inspector : if(chance(1, 3)) _obj = EliteInspector; break;
+											}
+											
+											with(obj_create(bbox_center_x + orandom(4), bbox_center_y + orandom(4), _obj)){
 												if(instance_is(self, enemy)){
 													walk = true;
 													direction = random(360);
+													
+													 // Delay:
 													for(var j = 0; j < array_length(_slidePath); j++){
 														alarm1 += _slidePath[j, 0];
+													}
+													
+													 // No Roll:
+													if("roll" in self){
+														roll = false;
 													}
 												}
 											}
@@ -594,7 +678,9 @@
 								
 								 // Type-Specific:
 								switch(type){
+									
 									case "Explo":
+										
 										 // Scorchmarks:
 										with(_floorMain) if(chance(1, 3)){
 											with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Scorchmark)){
@@ -604,12 +690,38 @@
 												image_angle = random(360);
 											}
 										}
+										
 										break;
 										
 									case "Vat":
+										
+										 // Vat:
 										obj_create(_x, _y - 4, "MutantVat");
 										instance_create(_x + choose(-32, 32), _y - 2 + choose(-32, 32), Terminal);
+										
 										break;
+										
+									case "Popo":
+										
+										 // Center Piece:
+										if(_w > 1 && _h > 1){
+											with(instance_create(_x, _y, FloorMiddle)){
+												if(_w < 4 || _h < 4){
+													sprite_index = spr.FloorMiddleSmall;
+													mask_index   = msk.FloorMiddleSmall;
+												}
+											}
+										}
+										
+										 // Prepare Troops:
+										with(instances_matching_ne(instances_matching_gt(enemy, "id", _minID), "gunangle", null)){
+											direction = point_direction(x, y, _hallX, _hallY);
+											scrAim(direction);
+											alarm1 = max(1, alarm1 - 30);
+										}
+										
+										break;
+										
 								}
 								
 								 // Sliding Doors:
@@ -632,14 +744,16 @@
 									
 									 // Create TopSmall Wall:
 									else with(instance_create(x, y, Wall)){
-										topspr = other.sprite_index;
-										topindex = other.image_index;
+										topspr      = other.sprite_index;
+										topindex    = other.image_index;
 										image_blend = other.image_blend;
 										image_alpha = other.image_alpha;
 										
 										 // Resprite:
-										if(sprite_index == sprWall6Bot){
-											sprite_index = spr.Wall6BotTrans;
+										switch(sprite_index){
+											case sprWall6Bot:
+												sprite_index = spr.Wall6BotTrans;
+												break;
 										}
 										
 										 // Slide:
@@ -664,8 +778,12 @@
 										depth = min(depth, -1);
 										
 										 // Resprite:
-										if(sprite_index == sprWall6Bot && !visible){
-											sprite_index = spr.Wall6BotTrans;
+										if(!visible){
+											switch(sprite_index){
+												case sprWall6Bot:
+													sprite_index = spr.Wall6BotTrans;
+													break;
+											}
 										}
 										
 										 // Slide:

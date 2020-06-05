@@ -212,7 +212,7 @@
 	
 	 // Crystal Hearts:
 	if(_normalArea){
-		var	_heartNum = chance(GameCont.hard, 320 + (3 * GameCont.hard)),
+		var	_heartNum = (chance(GameCont.hard, 400 + (5 * GameCont.hard)) && GameCont.hard != 106),
 			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
 			
 		 // Guaranteed Spawn:
@@ -548,7 +548,7 @@
 			
 			break;
 			
-		case area_caves: /// CAVES
+		case area_caves: /// CRYSTAL CAVES
 			
 			 // Spawn Mortars:
 			with(instances_matching(LaserCrystal, "mortar_check", null)){
@@ -738,7 +738,7 @@
 			
 			break;
 			
-		case area_cursed_caves: /// CURSED CAVES
+		case area_cursed_caves: /// CURSED CRYSTAL CAVES
 			
 			 // Spawn Cursed Mortars:
 			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
@@ -765,6 +765,28 @@
 			with(instances_matching([JungleBandit, JungleFly], "", null)){
 				if(chance(1, 3)){
 					top_create(x, y, id, -1, -1);
+				}
+			}
+			
+			break;
+			
+		case area_hq: /// IDPD HQ
+			
+			 // Elevators:
+			with(WantPopo){
+				with(array_shuffle(FloorNormal)){
+					if(place_free(x, y) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 128){
+						obj_create(x, y, "FreakChamber");
+					}
+				}
+				instance_delete(id);
+			}
+			with(instances_matching([EliteGrunt, EliteShielder, EliteInspector], "", null)){
+				if(chance(1, 2)){
+					obj_create(_x, _y, "FreakChamber");
+					instance_delete(id);
+					with(VanSpawn) enemies--;
+					with(instances_matching(CustomObject, "name", "FreakChamber")) enemies--;
 				}
 			}
 			
@@ -2322,6 +2344,9 @@
 	}
 	with(instances_matching([MeltSplat, Scorchmark], "depth", 1)){
 		depth = 7;
+	}
+	with(instances_matching([VenuzCarpet, FloorMiddle], "depth", 7)){
+		depth = 8;
 	}
 	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
 		spr_shadow_y = -3;

@@ -4441,7 +4441,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		area = "lair";
 		subarea = 1;
 		styleb = 1;
-		hallway_dis = 320;
+		hallway_size = 320;
 		my_floor = noone;
 		
 		 // Cool Floor:
@@ -4549,12 +4549,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		my_health = 0;
 	}
 	if(name == "PizzaDrain"){
-		with(instances_matching_le(FloorExplo, "y", y - hallway_dis)){
+		with(instances_matching_le(FloorExplo, "y", y - hallway_size)){
 			instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
 			other.my_health = 0;
 		}
 	}
-	with(instance_rectangle(bbox_left - 16, y - hallway_dis, bbox_right + 16, bbox_top - 16, FloorExplo)){
+	with(instance_rectangle(bbox_left - 16, y - hallway_size, bbox_right + 16, bbox_top - 16, FloorExplo)){
 		instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
 		other.my_health = 0;
 	}
@@ -4609,7 +4609,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_bgColor = background_color;
 			
 		 // Borderize Area:
-		var _borderY = _sy - hallway_dis + 72;
+		var _borderY = _sy - hallway_size + 72;
 		area_border(_borderY, string(GameCont.area), _bgColor);
 		
 		 // Path Gen:
@@ -4894,7 +4894,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Vars:
 		area = area_sewers;
 		styleb = 0;
-		hallway_dis = 160;
+		hallway_size = 160;
 		
 		 // Room Type:
 		type = pool([

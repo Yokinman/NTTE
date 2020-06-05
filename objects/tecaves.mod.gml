@@ -743,27 +743,21 @@
 			with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
 				if(place_meeting(x, y, other)){
 					with(other) if(projectile_canhit_melee(other)){
-						 // Fixes:
-						var	_lastFreeze = UberCont.opt_freeze,
-							_lastGamma = skill_get(mut_gamma_guts);
-							
+						 // Sound:
 						if(!instance_is(other, Player)){
-							UberCont.opt_freeze = 0;
-							skill_set(mut_gamma_guts, 0);
 							sound_play_hit(snd_mele, 0.1);
 						}
 						
 						 // Damage:
+						var _lastSize = size;
+						size = other.size + 1;
 						meleedamage = max(1, other.my_health - 1);
 						event_perform(ev_collision, (instance_is(other, Player) ? Player : prop));
 						meleedamage = 0;
+						size = _lastSize;
 						
-						 // Reset Fixes:
-						if(!instance_is(other, Player)){
-							UberCont.opt_freeze = _lastFreeze;
-							skill_set(mut_gamma_guts, _lastGamma);
-						}
-						else{
+						 // Death:
+						if(instance_is(other, Player)){
 							my_health = 0;
 							GameCont.area = "red";
 							GameCont.subarea = 0;
