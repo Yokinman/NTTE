@@ -3066,7 +3066,7 @@
 	*/
 	
 	 // First, Enable Orchid Chest Spawning:
-	save_set("orchidSkillSeen", true);
+	save_set("orchid:seen", true);
 	
 	 // Back to Business:
 	with(instance_create(_x, _y, CustomObject)){

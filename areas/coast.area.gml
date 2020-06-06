@@ -32,7 +32,7 @@
 
 #define area_subarea           return 3;
 #define area_goal              return 100;
-#define area_next              return "oasis";
+#define area_next              return ["oasis", 1];
 #define area_music             return mus.Coast;
 #define area_music_boss        return mus.SealKing;
 #define area_ambient           return amb0b;
@@ -41,13 +41,13 @@
 #define area_darkness          return false;
 #define area_secret            return true;
 
-#define area_name(_subarea, _loop)
+#define area_name(_subarea, _loops)
 	return "@1(sprInterfaceIcons)1-" + string((_subarea <= 0) ? "?" : _subarea);
 	
 #define area_text
 	return choose("COWABUNGA", "WAVES CRASH", "SANDY SANCTUARY", "THE WATER CALLS", "SO MUCH GREEN", "ENDLESS BLUE");
 	
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
+#define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [
 		18.15 + (9 * (_subarea - 1)),
 		-9,
@@ -241,14 +241,11 @@
 	lastarea = area;
 	lastsubarea = subarea;
 	
-	 // Area End:
+	 // Next Area:
 	if(subarea >= area_subarea()){
-		var n = area_next();
-		if(!is_array(n)) n = [n];
-		if(array_length(n) < 1) array_push(n, mod_current);
-		if(array_length(n) < 2) array_push(n, 1);
-		area = n[0];
-		subarea = n[1];
+		var _next = area_next();
+		area = _next[0];
+		subarea = _next[1];
 	}
 	
 	 // Next Subarea: 

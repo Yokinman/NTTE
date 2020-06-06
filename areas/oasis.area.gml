@@ -23,13 +23,13 @@
 #define area_secret            return true;
 #define area_underwater        return true;
 
-#define area_name(_subarea, _loop)
+#define area_name(_subarea, _loops)
 	return "@1(sprInterfaceIcons)2-" + string(_subarea);
 	
 #define area_text
 	return choose("DON'T MOVE", "IT'S BEAUTIFUL DOWN HERE", "HOLD YOUR BREATH", "FISH", "RIPPLING SKY", "IT'S SO QUIET", "THERE'S SOMETHING IN THE WATER");
 	
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
+#define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [
 		44,
 		-9,
@@ -156,14 +156,11 @@
 	lastarea = area;
 	lastsubarea = subarea;
 	
-	 // Area End:
+	 // Next Area:
 	if(subarea >= area_subarea()){
-		var n = area_next();
-		if(!is_array(n)) n = [n];
-		if(array_length(n) < 1) array_push(n, mod_current);
-		if(array_length(n) < 2) array_push(n, 1);
-		area = n[0];
-		subarea = n[1];
+		var _next = area_next();
+		area = _next[0];
+		subarea = _next[1];
 	}
 	
 	 // Next Subarea: 

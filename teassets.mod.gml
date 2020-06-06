@@ -1251,6 +1251,20 @@
 			
 		//#endregion
 		
+		//#region IDPD HQ
+		m = "areas/HQ/";
+		p = m;
+			
+			 // Floors:
+			Floor106Small        = sprite(p + "sprFloor106Small",    4,  0,  0);
+			FloorMiddleSmall     = sprite(p + "sprFloorMiddleSmall", 1, 32, 32);
+			msk.FloorMiddleSmall = sprite(p + "mskFloorMiddleSmall", 1, 32, 32);
+			with(msk.FloorMiddleSmall){
+				mask = [false, 0];
+			}
+			
+		//#endregion
+		
 		//#region CHESTS/PICKUPS
 		m = "chests/";
 		p = m;
@@ -1333,9 +1347,9 @@
 			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
 			
 			 // Button Chests:
-			ButtonChest 	   = sprite(p + "sprButtonChest",		 1, 9, 9, shn20);
+			ButtonChest        = sprite(p + "sprButtonChest",        1, 9, 9, shn20);
 			ButtonChestDebris  = sprite(p + "sprButtonChestDebris",  2, 9, 9);
-			ButtonPickup	   = sprite(p + "sprButtonPickup",		 1, 6, 6, shn12);
+			ButtonPickup       = sprite(p + "sprButtonPickup",       1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
 			 // Red Crystal Chest:
