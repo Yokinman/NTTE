@@ -788,10 +788,10 @@
 	 // Rebuilding Skeleton:
 	if(part > 0){
 		 // Break Walls:
-		var	o = 4 * part,
-			_x1 = bbox_left  - o - (o * image_xscale),
+		var	_size = 4 * part,
+			_x1 = bbox_left  - _size - (_size * image_xscale),
 			_y1 = bbox_top,
-			_x2 = bbox_right + o - (o * image_xscale),
+			_x2 = bbox_right + _size - (_size * image_xscale),
 			_y2 = bbox_bottom;
 			
 		with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Wall)){

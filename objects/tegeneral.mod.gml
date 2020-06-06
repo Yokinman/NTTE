@@ -1610,13 +1610,20 @@
 		 // Alarms:
 		alarm0 = irandom_range(150, 240);
 		
+		 // No Portals:
+		with(obj_create(0, 0, "PortalPrevent")){
+			creator = other;
+		}
+		
 		return id;
 	}
 	
 #define Igloo_step
-	 // No Leaving Bro:
-	if(num > 0 && !instance_exists(enemy)){
-		portal_poof();
+	 // Allow Portals:
+	if(num <= 0){
+		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
+			instance_destroy();
+		}
 	}
 	
 #define Igloo_alrm0

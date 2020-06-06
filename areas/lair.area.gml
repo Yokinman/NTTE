@@ -212,7 +212,7 @@
 
 #define area_subarea           return 1;
 #define area_goal              return 110;
-#define area_next              return area_scrapyards;
+#define area_next              return [area_scrapyards, 1];
 #define area_music             return mus.Lair;
 #define area_music_boss        return mus.BigShots;
 #define area_ambient           return amb102;
@@ -222,14 +222,14 @@
 #define area_darkness          return true;
 #define area_secret            return true;
 
-#define area_name(_subarea, _loop)
+#define area_name(_subarea, _loops)
 	return "2-?";
 	
 #define area_text
 	return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
 	
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-	return [_lastx, 9];
+#define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
+	return [_lastX, 9];
 	
 #define area_sprite(_spr)
 	switch(_spr){
@@ -287,14 +287,11 @@
 	lastarea = area;
 	lastsubarea = subarea;
 	
-	 // Area End:
+	 // Next Area:
 	if(subarea >= area_subarea()){
-		var n = area_next();
-		if(!is_array(n)) n = [n];
-		if(array_length(n) < 1) array_push(n, mod_current);
-		if(array_length(n) < 2) array_push(n, 1);
-		area = n[0];
-		subarea = n[1];
+		var _next = area_next();
+		area = _next[0];
+		subarea = _next[1];
 	}
 	
 	 // Next Subarea: 

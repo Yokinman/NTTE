@@ -2,51 +2,15 @@
 	spr = mod_variable_get("mod", "teassets", "spr");
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
-
-/*	
-	 // Potential Warp Destinations:
-	destList = [
-		area_desert,
-		area_sewers,
-		area_scrapyards,
-		area_caves,
-		area_city,
-		area_labs,
-		area_palace
-	];
-	warpDestX = [0, 27, 36, 63, 72, 99, 108];
 	
-	placeholderName = [];
-*/
-	
-	 // Warp Destination Tracking:
-	destArea = [];
-	destSubA = [];
-	destList = [
-	 // Area Name | Subarea Count | Starting Map X Position
-	 
-		[area_desert,		3,	0],
-		[area_sewers,		1,	27],
-		[area_scrapyards,	3,	36],
-		[area_caves,		1,	63],
-		[area_city, 		3,	72],
-		[area_labs, 		1,	99],
-		[area_palace,		3,	108]
-	];
+	 // For Manual Map Drawing:
+	global.mapdata_warp_draw = [];
 	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
-
-#macro destArea global.destArea
-#macro destSubA global.destSubA
-#macro destList global.destList
-
-// #macro destList global.destList
-// #macro placeholderName global.placeholderName
-// #macro warpDestX global.warpDestX
 
 #macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
 #macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
@@ -55,7 +19,7 @@
 
 #define area_subarea           return 1;
 #define area_goal              return 60;
-#define area_next              return mod_current; // CAN'T LEAVE
+#define area_next              return [mod_current, 1]; // CAN'T LEAVE
 #define area_music             return mus.Red;
 #define area_ambient           return amb104;
 #define area_background_color  return make_color_rgb(235, 0, 67);
@@ -63,39 +27,78 @@
 #define area_darkness          return false;
 #define area_secret            return true;
 
-#define area_name(_subarea, _loop)
+#define area_name(_subarea, _loops)
 	return `@(color:${area_background_color()})???`;
 	
 #define area_text
 	return choose("BLINDING", "THE RED DOT", `WELCOME TO THE @(color:${area_background_color()})WARP ZONE`);
 	
-#define area_mapdata(_lastx, _lasty, _lastarea, _lastsubarea, _subarea, _loops)
-	var _x = view_xview_nonsync + (game_width / 2) - 70,
-		_y = view_yview_nonsync + (game_height / 2) + 7,
-		_color = draw_get_color();
-		
+#define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	 // Post Exit:
-	if(array_length(destArea) > _loops){
-		var _destList = destList[destArea[_loops] - 1],
-			_destX = _destList[2] + (9 * (destSubA[_loops] - 1));
-		
-		if(_color != c_white){
-			var _frame = (current_frame * 0.4); // + _loops * (sprite_get_number(spr.RedDot) / (GameCont.loops + 1));
-			
-			draw_line_color(_x + _lastx + 1, _y + max(0, _lasty) + 1, _x + _lastx + 1, _y + max(0, _lasty) + 10, c_black, c_black);
-			draw_line_color(_x + _lastx,	 _y + max(0, _lasty) - 1, _x + _lastx,	   _y + max(0, _lasty) + 9,  _color,  _color);
-			draw_sprite_ext(spr.RedDot, _frame, _x + _lastx, (_y + max(0, _lasty)) + 9, 1, 1, 0, _color, 1);
-			
-			draw_line_color(_x + _destX + 1, _y - 8, _x + _destX + 1, _y + 1, c_black, c_black);
-			draw_line_color(_x + _destX,	 _y - 9, _x + _destX,	  _y,	  _color,  _color);
-			draw_sprite_ext(spr.RedDot, _frame, _x + _destX, _y - 9, 1, 1, 0, _color, 1);
+	with(global.mapdata_warp_draw){
+		if(next.area != mod_current){
+			if(
+				subarea      == _subarea     &&
+				loops        == _loops       &&
+				last.x       == _lastX       &&
+				last.y       == _lastY       &&
+				last.area    == _lastArea    &&
+				last.subarea == _lastSubarea
+			){
+				var	_x = view_xview_nonsync + (game_width  / 2),
+					_y = view_yview_nonsync + (game_height / 2);
+					
+				 // Drawing Offset:
+				if(instance_exists(TopCont) && !instance_exists(Player) && !instance_exists(GenCont) && !instance_exists(PauseButton) && !instance_exists(BackMainMenu)){
+					_x -= 120;
+					_y += 4 - min(2, TopCont.go_stage);
+				}
+				else{
+					_x -= 70;
+					_y += 7;
+				}
+				
+				 // Manually Draw Map Warps:
+				var	_spr = spr.RedDot,
+					_img = (current_frame * 0.4), // + _loops * (sprite_get_number(spr.RedDot) / (GameCont.loops + 1)),
+					_col = draw_get_color(),
+					_alp = draw_get_alpha(),
+					_ax1 = floor(_x + last.x),
+					_ay1 = floor(_y + last.y - !last.showdot),
+					_ax2 = floor(_x + last.x),
+					_ay2 = floor(_y + max(0, last.y) + 9),
+					_bx1 = floor(_x + next.x),
+					_by1 = floor(_y + next.y),
+					_bx2 = floor(_x + next.x),
+					_by2 = floor(_y + min(0, next.y) - 9);
+					
+				with(UberCont){
+					 // Exit Warp:
+					draw_set_color(c_black);
+					draw_line_width(_ax1 + 1, _ay1 + 1, _ax2 + 1, _ay2 + 1, 1);
+					draw_set_color(_col);
+					draw_line_width(_ax1, _ay1, _ax2, _ay2, 1);
+					draw_sprite_ext(_spr, _img, _ax2, _ay2, 1, 1, 0, _col, _alp);
+					
+					 // Destination:
+					draw_set_color(c_black);
+					draw_line_width(_bx1 + 1, _by1 + 1, _bx2 + 1, _by2 + 1, 1);
+					draw_set_color(_col);
+					draw_line_width(_bx1, _by1, _bx2, _by2, 1);
+					draw_sprite_ext(_spr, _img, _bx2, _by2, 1, 1, 0, _col, _alp);
+				}
+				
+				return [next.x, next.y, false, false];
+			}
 		}
-		
-		return [_destX,	0, true, false];
 	}
 	
 	 // Still in Warp Zone:
-	return [_lastx, 9 + max(0, _lasty), (_subarea == 1)];
+	return [
+		_lastX,
+		max(0, _lastY) + 9,
+		(_subarea == 1)
+	];
 	
 #define area_sprite(_spr)
 	switch(_spr){
@@ -150,14 +153,11 @@
 	lastarea = area;
 	lastsubarea = subarea;
 	
-	 // Area End:
+	 // Next Area:
 	if(subarea >= area_subarea()){
-		var n = area_next();
-		if(!is_array(n)) n = [n];
-		if(array_length(n) < 1) array_push(n, mod_current);
-		if(array_length(n) < 2) array_push(n, 1);
-		area = n[0];
-		subarea = n[1];
+		var _next = area_next();
+		area = _next[0];
+		subarea = _next[1];
 	}
 	
 	 // Next Subarea: 
@@ -302,12 +302,7 @@
 				}
 				
 				 // Portal:
-				with(obj_create(x, y - 8, "Warp")){
-					var _list = destList[irandom(array_length(destList) - 1)];
-					
-					dest_area = _list[0];
-					dest_suba = irandom_range(1, _list[1]);
-				}
+				obj_create(x, y - 8, "Warp");
 			}
 			
 			floor_reset_align();
@@ -410,6 +405,26 @@
 	}
 	
 	return irandom(40);
+	
+#define ntte_end_step
+	 // Compile Area Map Visits:
+	if(area_visits > 0){
+		global.mapdata_warp_draw = [];
+		
+		var _mapdata = mod_script_call("mod", "ntte", "mapdata_get", -1);
+		
+		for(var i = array_length(_mapdata) - 2; i >= 1; i--){
+			var _data = _mapdata[i];
+			if(_data.area == mod_current){
+				array_push(global.mapdata_warp_draw, {
+					"subarea" : _data.subarea,
+					"loops"   : _data.loops,
+					"last"    : _mapdata[i - 1],
+					"next"    : _mapdata[i + 1]
+				});
+			}
+		}
+	}
 	
 	
 /// SCRIPTS

@@ -2161,49 +2161,52 @@
 #define Warp_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_open = spr.WarpOpen;
-		sprite_index = spr.Warp;
-		image_speed = 0.4;
-		depth = -7;
+		spr_idle     = spr.Warp;
+		spr_open     = spr.WarpOpen;
+		sprite_index = spr_idle;
+		image_speed  = 0.4;
+		image_alpha  = -1;
+		depth        = -7;
 		
 		 // Vars:
 		mask_index = mskWepPickup;
 		open = false;
 		setup = true;
-		dest_area = irandom_range(1, 7);
-		dest_suba = 1;
-		dest_loop = 0;
-		pickup_indicator = noone;
+		area = irandom_range(1, 7);
+		subarea = 1;
+		loops = 0;
+		pickup_indicator = scrPickupIndicator("");
+		with(pickup_indicator){
+			mask_index = mskReviveArea;
+			yoff = 12;
+		}
 		
 		 // Alarms:
 		alarm0 = 30;
 		
+		 // No Portals:
+		with(obj_create(0, 0, "PortalPrevent")){
+			creator = other;
+		}
+		
 		return id;
 	}
 	
-#define Warp_setup
-	setup = false;
-	
-	 // Pickup Indicator:
-	if(!instance_exists(pickup_indicator)){
-		var _text = area_get_name(dest_area, dest_suba, dest_loop);
-		
-		pickup_indicator = scrPickupIndicator("");
-		with(pickup_indicator){
-			text = `WARP#${_text}`;
-			yoff = 12;
-			visible = other.open;
-			mask_index = mskReviveArea;
+#define Warp_step
+	 // Animate:
+	if(anim_end){
+		if(sprite_index == (open ? spr_idle : spr_open)){
+			sprite_index = (open ? spr_open : spr_idle);
+			image_index = 0;
 		}
 	}
 	
-#define Warp_step
-	if(setup) Warp_setup();
+	 // Spin:
 	image_angle += current_time_scale;
 	
-	 // Effectst:
+	 // Effects:
 	if(chance_ct(1, 15)){
-		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), LaserCharge)){
+		with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), LaserCharge)){
 			sprite_index = sprSpiralStar;
 			image_index = choose(0, irandom(image_number - 1));
 			alarm0 = random_range(15, 30);
@@ -2211,7 +2214,7 @@
 		}
 	}
 	if(chance_ct(1, 20)){
-		with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), BulletHit)){
+		with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), BulletHit)){
 			sprite_index = sprThrowHit;
 			image_xscale = 0.2 + random(0.3);
 			image_yscale = image_xscale;
@@ -2219,52 +2222,55 @@
 	}
 	
 	 // Warp:
-	if(open){
-		var _pickup = pickup_indicator;
-		if(_pickup.pick != -1){
-			
-			 // Record Destination:
-			var _destArea = mod_variable_get("area", "red", "destArea"),
-				_destSubA = mod_variable_get("area", "red", "destSubA")
-			
-			while(array_length(_destArea) < GameCont.loops){
-				array_push(_destArea, 1);
-				array_push(_destSubA, 1);
-			}
-			_destArea[GameCont.loops] = dest_area;
-			_destSubA[GameCont.loops] = dest_suba;
-			
-			 // We Out:
-			GameCont.area	 = dest_area;
-			GameCont.subarea = dest_suba - 1;
-			GameCont.loops	 = dest_loop;
-			with(obj_create(x, y, "WarpPortal")){
-				event_perform(ev_step, ev_step_normal);
-			}
-			
-			 // Goodbye:
-			instance_destroy();
+	var _pickup = pickup_indicator;
+	with(_pickup){
+		visible = other.open;
+		if(text == ""){
+			text = `WARP#${area_get_name(other.area, other.subarea, other.loops)}`;
 		}
+	}
+	if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+		instance_destroy();
 	}
 	
 #define Warp_draw
+	image_alpha = abs(image_alpha);
+	
+	 // Self:
+	draw_self();
+	
+	 // Bloom:
 	draw_set_blend_mode(bm_add);
 	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha / 10);
 	draw_set_blend_mode(bm_normal);
 	
+	image_alpha *= -1;
+	
 #define Warp_alrm0
+	alarm0 = 30 + random(60);
+	
 	if(instance_number(enemy) - instance_number(Van) <= 0){
-		var p = instance_nearest(x, y, Player);
-		if(instance_exists(p) && !place_meeting(x, y, p)){
+		if(instance_exists(Player) && !place_meeting(x, y, Player)){
 			open = true;
-			sprite_index = spr_open;
-			
-			exit;
 		}
 	}
-
-	alarm0 = 30 + random(60);
-
+	
+	
+#define Warp_destroy
+	 // Allow Portals:
+	with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
+		instance_destroy();
+	}
+	
+	 // Warp:
+	obj_create(x, y, "WarpPortal");
+	with(GameCont){
+		area    = other.area;
+		subarea = other.subarea - 1; // won't work right but we can fix this later
+		loops   = other.loops;
+	}
+	
+	
 #define WarpPortal_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:

@@ -119,10 +119,6 @@
 	}
 	else heart_spawn = {};
 	
-	 // Reset Red Area Stuff:
-	mod_variable_set("area", "red", "destArea", []);
-	mod_variable_set("area", "red", "destSubA", []);
-	
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
@@ -247,11 +243,16 @@
 			
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
-				var _forceChaosHearts = (array_length(mod_variable_get("area", "red", "destArea")) > GameCont.loops);
+				 // Visited Warp Zone, Only Chaos Hearts:
+				if(_heartNum > 0 && variable_instance_get(GameCont, "visited_red", 0) > GameCont.loops){
+					_chaosNum += _heartNum;
+					_heartNum = 0;
+				}
 				
+				 // Create:
 				while((_heartNum + _chaosNum) > 0){
 					with(instance_random(_spawnFloor)){
-						var _type = ((_forceChaosHearts || GameCont.area == "red" || _chaosNum > 0) ? "ChaosHeart" : "CrystalHeart");
+						var _type = ((_chaosNum > 0) ? "ChaosHeart" : "CrystalHeart");
 						with(obj_create(bbox_center_x, bbox_center_y + 2, _type)){
 							with(instance_create(x, y, PortalClear)){
 								mask_index = other.mask_index;
@@ -1332,7 +1333,7 @@
 	}
 	
 	 // Orchid Chests:
-	if(save_get("orchidSkillSeen", false)){
+	if(save_get("orchid:seen", false)){
 		with(RadChest){
 			if(chance(GameCont.rad * (GameCont.level / 10), 900)){
 				obj_create(x, y, "OrchidChest");
@@ -1478,7 +1479,9 @@
 		
 		with(GameCont){
 			var i = waypoints - 1;
-			if(i >= 0) global.area_mapdata[i] = [area, subarea, loops];
+			if(i >= 0){
+				global.area_mapdata[i] = [area, subarea, loops];
+			}
 		}
 	}
 	
@@ -2703,15 +2706,19 @@
 	
 	 // Map Position:
 	var	_mapEnd = mapdata_get(_mapIndex),
-		_mapX = (game_width  / 2) - 70,
-		_mapY = (game_height / 2) + 7;
+		_mapX = game_width  / 2,
+		_mapY = game_height / 2;
 		
 	if(_mapObj == TopCont){
-		_mapX -= 50;
-		_mapY -= 3;
+		_mapX -= 120;
+		_mapY += 4;
 		if(instance_exists(_mapObj)){
 			_mapY -= min(2, _mapObj.go_stage);
 		}
+	}
+	else{
+		_mapX -= 70;
+		_mapY += 7;
 	}
 	
 	 // Draw Icons:
@@ -2777,43 +2784,56 @@
 
 #define mapdata_get(_index)
 	var _map = [];
+	
+	 // Disable Drawing:
+	var	_lastVis = array_create(maxp, true),
+		_lastCol = draw_get_color(),
+		_lastAlp = draw_get_alpha();
+		
+	for(var i = 0; i < maxp; i++){
+		_lastVis[i] = draw_get_visible(i);
+	}
+	draw_set_visible_all(false);
+	draw_set_color(c_white);
+	draw_set_alpha(0);
+	
 	for(var i = -1; i < GameCont.waypoints; i++){
 		var _data = {
-			x		 : 0,
-			y		 : 0,
-			area	 : -1,
-			subarea	 : 0,
-			loop	 : 0,
+			x        : 0,
+			y        : 0,
+			area     : -1,
+			subarea  : 0,
+			loops    : 0,
 			showdot  : false,
 			showline : true
 		};
 		
 		if(i >= 0 && i < array_length(global.area_mapdata)){
-			var	_last = _map[i],
-				a = global.area_mapdata[i];
+			var	_dataLast = _map[i],
+				_waypoint = global.area_mapdata[i];
 				
-			if(is_array(a)){
-				_data.area = a[0];
-				_data.subarea = a[1];
-				_data.loop = a[2];
+			if(is_array(_waypoint)){
+				_data.area    = _waypoint[0];
+				_data.subarea = _waypoint[1];
+				_data.loops   = _waypoint[2];
 			}
 			
 			 // Base Game:
 			if(is_real(_data.area)){
 				if(_data.area < 100){
-					var n = 0;
-					n += 3 *  ceil((floor(_data.area) - 1) / 2); // Main Areas
-					n += 1 * floor((floor(_data.area) - 1) / 2); // Transition Areas
-					n += _data.subarea - 1;                      // Subarea
-					n += (_data.area - floor(_data.area));       // Fractional Areas
+					var _num = 0;
+					_num += 3 *  ceil((floor(_data.area) - 1) / 2); // Main Areas
+					_num += 1 * floor((floor(_data.area) - 1) / 2); // Transition Areas
+					_num += _data.subarea - 1;                      // Subarea
+					_num += (_data.area - floor(_data.area));       // Fractional Areas
 					
-					_data.x = 9 * n;
+					_data.x = 9 * _num;
 					_data.y = 0;
 				}
 				
 				 // Secret Areas:
 				else{
-					_data.x = _last.x;
+					_data.x = _dataLast.x;
 					_data.y = 9;
 				}
 				
@@ -2823,14 +2843,14 @@
 			 // Modded:
 			else if(is_string(_data.area)){
 				with(UberCont){
-					var	d = mod_script_call("area", _data.area, "area_mapdata", _last.x, _last.y, _last.area, _last.subarea, _data.subarea, _data.loop),
-						n = array_length(d);
+					var	_dataNext = mod_script_call("area", _data.area, "area_mapdata", _dataLast.x, _dataLast.y, _dataLast.area, _dataLast.subarea, _data.subarea, _data.loops),
+						_dataSize = array_length(_dataNext);
 						
-					if(n >= 2){
-						_data.x = d[0];
-						_data.y = d[1];
-						if(n >= 3) _data.showdot = d[2];
-						if(n >= 4) _data.showline = d[3];
+					if(_dataSize >= 2){
+						_data.x = _dataNext[0];
+						_data.y = _dataNext[1];
+						if(_dataSize >= 3) _data.showdot  = _dataNext[2];
+						if(_dataSize >= 4) _data.showline = _dataNext[3];
 					}
 				}
 			}
@@ -2838,6 +2858,13 @@
 		
 		array_push(_map, _data);
 	}
+	
+	 // Reset Drawing:
+	for(var i = 0; i < maxp; i++){
+		draw_set_visible(i, _lastVis[i]);
+	}
+	draw_set_color(_lastCol);
+	draw_set_alpha(_lastAlp);
 	
 	 // Return Specific Waypoint:
 	if(_index >= 0){
