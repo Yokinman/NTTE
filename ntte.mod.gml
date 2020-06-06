@@ -119,6 +119,22 @@
 	}
 	else heart_spawn = {};
 	
+	 // Manually Run Game Start Scripts:
+	var _modData = [
+		[ntte_area, "area"],
+		[ntte_weps, "weapon"]
+	];
+	with(_modData){
+		var _modList = self[0],
+			_modType = self[1];
+			
+		with(_modList){
+			if(mod_script_exists(_modType, self, "game_start")){
+				mod_script_call(_modType, self, "game_start");
+			}
+		}
+	}
+	
 	 // Reset Red Area Stuff:
 	mod_variable_set("area", "red", "destArea", []);
 	mod_variable_set("area", "red", "destSubA", []);
@@ -1317,6 +1333,30 @@
 				instance_delete(id);
 			}
 		}
+	}
+	
+	 // Red Ammo:
+	var _redWep = false;
+	with(["wep", "bwep"]){
+		var o = self;
+		with(Player){
+			var _name = wep_get(variable_instance_get(self, o)),
+				_scrt = "weapon_red",
+				_type = "weapon";
+			
+			if(is_string(_name)){
+				if(mod_script_exists(_type, _name, _scrt)){
+					_redWep += real(mod_script_call(_type, _name, _scrt));
+				}
+			}
+		}
+	}
+	
+	if(_redWep > 0){
+		with(RadChest) if(chance(_redWep, 5)){
+			obj_create(x, y, "RedAmmoChest");
+			instance_delete(id);
+		} 
 	}
 	
 	 // Flies:

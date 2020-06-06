@@ -886,6 +886,7 @@
 		with(instance_create(x, y, Raven)){
 			variable_instance_set_list(self, variable_instance_get_list(other));
 			alarm1 = 20 + random(10);
+			name = null;
 			
 			 // Target:
 			if(

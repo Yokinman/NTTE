@@ -55,6 +55,9 @@
 		//#region WEAPONS
 		p = "weps/";
 			
+			 // Annihilator Stuff:
+			AnnihilatorDebris = sprite(p + "sprAnnihilatorDebris", 8, 8, 8);
+			
 			 // Bone:
 			Bone	  = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
@@ -75,6 +78,10 @@
 			AlbinoBolt      = sprite(p + "sprAlbinoBolt",     1,  8, 4);
 			AlbinoGrenade   = sprite(p + "sprAlbinoGrenade",  1,  4, 4);
 			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
+			
+			 // Annihilator Bullet:
+			AnnihilatorBullet		   = sprite(p + "sprAnnihilatorBullet", 		 2, 9, 9);
+			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5, 9, 9);
 			
 			 // Bat Discs:
 			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
@@ -1331,9 +1338,16 @@
 			ButtonPickup	   = sprite(p + "sprButtonPickup",		 1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
-			 // Red Chest:
+			 // Red Crystal Chest:
 			RedChest	 = sprite(p + "sprRedChest",	 1, 8, 8, shn16);
 			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
+			
+			 // Red Ammo Chest:
+			RedAmmoChest	 = sprite(p + "sprRedAmmoChest",	 1, 8, 8, shn16);
+			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1, 8, 8);
+			
+			 // Red Ammo Pickup:
+			RedAmmoPickup = sprite(p + "sprRedAmmoPickup", 1, 5, 5, shn10);
 			
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
@@ -1705,7 +1719,7 @@
 	ntte_area = ["coast", "oasis", "lair", "pizza", "red", "trench"];
 	ntte_race = ["parrot", "bee"];
 	ntte_crwn = ["bonus", "crime", "red"];
-	ntte_weps = ["bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+	ntte_weps = ["annihilator", "bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
 	
 	 // Reminders:
 	global.remind = [];

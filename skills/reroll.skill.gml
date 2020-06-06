@@ -10,6 +10,7 @@
 #define skill_text   return `@sREROLL @w${skill_get_name(global.skill)}`;
 #define skill_tip    return "~";
 #define skill_icon   return global.sprSkillHUD;
+#define skill_util	 return true;
 #define skill_avail  return false;
 
 #define skill_take(_num)
