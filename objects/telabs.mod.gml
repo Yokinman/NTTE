@@ -343,6 +343,89 @@
 	instance_destroy();
 	
 	
+#define EnergyBatSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.EnergyBatSlash;
+		image_speed = 0.4 / (1 + skill_get(mut_laser_brain));
+		
+		 // Vars:
+		mask_index = msk.EnergyBatSlash;
+		friction = 0.2;
+		creator = noone;
+		damage = 26; 
+		force = 16;
+		team = 0;
+		typ = 0;
+		candeflect = true;
+		
+		return id;
+	}
+	
+#define EnergyBatSlash_step
+	 // Fix For Mask Not Animating:
+	if(image_index >= 2 && mask_index != mskNone){
+		mask_index = mskNone;
+	}
+	
+#define EnergyBatSlash_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+		
+		/*
+		with(other){
+			if(my_health <= 0){
+				var o = other;
+				with(obj_create(x, y, (size >= 2) ? PlasmaImpact : "PlasmaImpactSmall")){
+					team	= o.team;
+					creator = o.creator;
+				}
+			}
+		}
+		*/
+	}
+	
+#define EnergyBatSlash_wall
+	
+#define EnergyBatSlash_projectile
+	with(other){
+		 // Deflect:
+		var o = other;
+		if(typ == 1 && o.candeflect){
+			with(obj_create(x, y, "VlasmaBullet")){
+				team	= o.team;
+				creator = o.creator;
+				speed	= other.speed;
+				direction	= o.direction;
+				image_angle	= direction;
+				
+				target = other.creator;
+				target_x = other.xstart;
+				target_y = other.ystart;
+				
+				damage = other.damage;
+				force  = other.force;
+				
+				// sprite_index = team_get_sprite(team, other.sprite_index);
+			}
+			
+			with(obj_create(x, y, "PlasmaImpactSmall")){
+				team	= o.team;
+				creator = o.creator;
+			}
+			
+			 // Goodbye:
+			instance_delete(id);
+		}
+		else{
+			
+			 // Destroy:
+			if(typ == 2){
+				instance_destroy();
+			}
+		}
+	}
+	
 #define FreakChamber_create(_x, _y)
 	/*
 		Creates an epic room on the side of the level that opens to release freaks

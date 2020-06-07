@@ -162,6 +162,10 @@
 			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
 			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5, 8, 8);
 			
+			 // Energy Bat Slash:
+			EnergyBatSlash	   = sprite(p + "sprEnergyBatSlash", 4, 24, 24);
+			msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 24, 24);
+			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
 			EnemyHeavyBullet        = sprite(p + "sprEnemyHeavyBullet",        2, 12, 12);
