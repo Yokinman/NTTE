@@ -96,6 +96,7 @@
 		[[spr.EnemyPlasmaImpactSmall					],	[spr.PlasmaImpactSmall						],	[										]], // Plasma Impact Small
 		[[spr.EnemyPlasmaTrail							],	[sprPlasmaTrail								],	[sprPopoPlasmaTrail						]], // Plasma Particle
 		[[spr.EnemyVlasmaBullet							],	[spr.VlasmaBullet							],	[										]], // Vector Plasma
+		[[spr.EnemyVlasmaCannon							],	[spr.VlasmaCannon							],  [										]], // Vector Plasma Cannon
 		[[sprEnemySlash									],	[sprSlash									],	[sprEnemySlash							]]  // Slash
 		// Devastator
 		// Lightning Cannon

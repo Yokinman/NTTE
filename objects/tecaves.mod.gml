@@ -2131,11 +2131,23 @@
 		target_x = x;
 		target_y = y;
 		my_sound = -1;
+		setup = true;
+		cannon = false;
 		
 		return id;
 	}
 	
+#define VlasmaBullet_setup
+	setup = false;
+	if(team == 2){
+		var _scale = lerp(1, 1.2, skill_get(mut_laser_brain));
+		image_xscale *= _scale;
+		image_yscale *= _scale;
+	}
+	
 #define VlasmaBullet_step
+	if(setup) VlasmaBullet_setup();
+	
 	 // Follow Target:
 	if(instance_exists(target)){
 		target_x = target.x;
@@ -2208,8 +2220,18 @@
 	}
 	
 #define VlasmaBullet_hit
-	if(image_speed == 0 && projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
+	if(image_speed == 0){
+		if(team == 2){
+			if(projectile_canhit(other)){
+				var _skill = 1 + skill_get(mut_laser_brain);
+				projectile_hit(other, (damage * _skill), force);
+			}
+		}
+		else{
+			if(projectile_canhit_melee(other)){
+				projectile_hit(other, damage, force);
+			}
+		}
 	}
 	
 #define VlasmaBullet_wall
@@ -2224,14 +2246,47 @@
 	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
 	
 	 // Explo:
+	if(cannon){
+		var _num = 6;
+		for(var d = 0; d < 360; d += (360 / _num)){
+			var _len = 96,
+				_dir = direction + d,
+				_x = x + lengthdir_x(_len, _dir),
+				_y = y + lengthdir_y(_len, _dir);
+				
+			with(team_instance_sprite(
+				sprite_get_team(sprite_index), 
+				enemy_shoot_ext(_x, _y, "VlasmaBullet", _dir, 0)
+			)){
+				target	 = other.target;
+				target_x = other.target_x;
+				target_y = other.target_y;
+			}
+		}
+	}
 	with(team_instance_sprite(
 		sprite_get_team(sprite_index),
-		enemy_shoot("PlasmaImpactSmall", direction, 0)
-	)){
+		enemy_shoot(
+			(cannon ? PlasmaImpact : "PlasmaImpactSmall"), 
+			direction, 
+			0
+	))){
 		image_angle = 0;
 		depth = other.depth;
 	}
 	
+	
+#define VlasmaCannon_create(_x, _y)
+	with(obj_create(_x, _y, "VlasmaBullet")){
+		 // Visual:
+		sprite_index = spr.VlasmaCannon;
+		
+		 // Vars:
+		damage = 4;
+		cannon = true;
+		
+		return id;	
+	}
 	
 #define WallFake_create(_x, _y)
 	/*

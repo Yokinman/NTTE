@@ -350,11 +350,12 @@
 		image_speed = 0.4 / (1 + skill_get(mut_laser_brain));
 		
 		 // Vars:
-		mask_index = msk.EnergyBatSlash;
+		mask_index = mskSlash; // msk.EnergyBatSlash;
 		friction = 0.2;
 		creator = noone;
-		damage = 26; 
-		force = 16;
+		walled = false;
+		damage = 22; 
+		force = 8;
 		team = 0;
 		typ = 0;
 		candeflect = true;
@@ -363,8 +364,8 @@
 	}
 	
 #define EnergyBatSlash_step
-	 // Fix For Mask Not Animating:
-	if(image_index >= 2 && mask_index != mskNone){
+	 // Nasty Fix:
+	if(image_index >= 2){
 		mask_index = mskNone;
 	}
 	
@@ -386,13 +387,40 @@
 	}
 	
 #define EnergyBatSlash_wall
+	/*
+	OLD CHUM
+	⣿⣿⣿⣿⣿⠟⠉⠁⠄⠄⠄⠈⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⠏⠄⠄⠄⠄⠄⠄⠄⠄⠄⠸⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣏⠄⡠⡤⡤⡤⡤⡤⡤⡠⡤⡤⣸⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣗⢝⢮⢯⡺⣕⢡⡑⡕⡍⣘⢮⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⡧⣝⢮⡪⡪⡪⡎⡎⡮⡲⣱⣻⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⠟⠁⢸⡳⡽⣝⢝⢌⢣⢃⡯⣗⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⠟⠁⠄⠄⠄⠹⡽⣺⢽⢽⢵⣻⢮⢯⠟⠿⠿⢿⣿⣿⣿⣿⣿
+	⡟⢀⠄⠄⠄⠄⠄⠙⠽⠽⡽⣽⣺⢽⠝⠄⠄⢰⢸⢝⠽⣙⢝⢿
+	⡄⢸⢹⢸⢱⢘⠄⠄⠄⠄⠄⠈⠄⠄⠄⣀⠄⠄⣵⣧⣫⣶⣜⣾
+	⣧⣬⣺⠸⡒⠬⡨⠄⠄⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⣷⣽⣿⣿
+	⣿⣿⣿⣷⠡⠑⠂⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣄⠠⢀⢀⢀⡀⡀⠠⢀⢲⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⢐⢀⠂⢄⠇⠠⠈⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣧⠄⠠⠈⢈⡄⠄⢁⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⡀⠠⠐⣼⠇⠄⡀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣯⠄⠄⡀⠈⠂⣀⠄⢀⠄⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⣶⣄⣀⠐⢀⣸⣷⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	*/
+	
+	 // Walled More Like Gnomed Haha:
+	if(!walled){
+		walled = true;
+		sound_play_hit(sndMeleeWall, 0.3);
+	}
 	
 #define EnergyBatSlash_projectile
 	with(other){
 		 // Deflect:
 		var o = other;
 		if(typ == 1 && o.candeflect){
-			with(obj_create(x, y, "VlasmaBullet")){
+			var _cannon = (damage > 3);
+			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
 				team	= o.team;
 				creator = o.creator;
 				speed	= other.speed;
@@ -402,16 +430,23 @@
 				target = other.creator;
 				target_x = other.xstart;
 				target_y = other.ystart;
-				
-				damage = other.damage;
-				force  = other.force;
-				
-				// sprite_index = team_get_sprite(team, other.sprite_index);
+			}
+			if(_cannon){
+				sleep(50);
 			}
 			
-			with(obj_create(x, y, "PlasmaImpactSmall")){
-				team	= o.team;
-				creator = o.creator;
+			 // Sounds:
+			var s = [
+				[sndPlasma,    sndPlasmaUpg], 
+				[sndPlasmaBig, sndPlasmaBigUpg]
+			];
+			
+			s = s[_cannon];
+			s = s[(team == 2 && skill_get(mut_laser_brain) > 0)];
+			sound_play_hit_ext(s, random_range(0.7, 1.3), 0.6);
+			
+			with(enemy_shoot((_cannon ? PlasmaImpact : "PlasmaImpactSmall"), 0, 0)){
+				image_angle = 0;
 			}
 			
 			 // Goodbye:
