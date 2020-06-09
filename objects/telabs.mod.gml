@@ -345,19 +345,17 @@
 	
 #define EnergyBatSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
+		var _skill = skill_get(mut_laser_brain);
+		
 		 // Visual:
 		sprite_index = spr.EnergyBatSlash;
-		image_speed = 0.4 / (1 + skill_get(mut_laser_brain));
+		image_speed  = 0.4 / ((_skill > 0) ? 1 + _skill : power(2, _skill)); // idk the base game does this
 		
 		 // Vars:
-		mask_index = mskSlash; // msk.EnergyBatSlash;
-		creator = noone;
-		walled = false;
-		damage = 22; 
-		force = 8;
-		team = 0;
-		typ = 0;
-		candeflect = true;
+		mask_index = mskSlash; //msk.EnergyBatSlash;
+		damage     = 22; 
+		force      = 8;
+		walled     = false;
 		
 		return id;
 	}
@@ -404,55 +402,68 @@
 	 // Walled More Like Gnomed Haha:
 	if(!walled){
 		walled = true;
-		sound_play_hit(sndMeleeWall, 0.3);
+		
+		 // Hit Wall FX:
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw,
+			_col = ((image_yscale > 0) ? c_lime : c_white);
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+				image_blend = _col;
+				sound_play_hit(sndMeleeWall, 0.3);
+			}
+		}
 	}
 	
 #define EnergyBatSlash_projectile
 	with(other){
 		 // Deflect:
-		var o = other;
-		if(typ == 1 && o.candeflect){
-			var _cannon = (damage > 3);
-			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
-				team	= o.team;
-				creator = o.creator;
-				speed	= other.speed;
-				direction	= o.direction;
-				image_angle	= direction;
+		if(typ == 1 && other.candeflect){
+			var	_cannon = (damage > 3),
+				_slash = other;
 				
-				target = other.creator;
-				target_x = other.xstart;
-				target_y = other.ystart;
+			 // Vlasma:
+			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
+				motion_add(_slash.direction, _slash.speed + 2);
+				image_angle	= direction;
+				creator     = _slash.creator;
+				team        = _slash.team;
+				target      = other.creator;
+				target_x    = other.xstart;
+				target_y    = other.ystart;
+			}
+			with(obj_create(x, y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
+				creator = _slash.creator;
+				team    = _slash.team;
+				depth   = other.depth;
 			}
 			if(_cannon){
 				sleep(50);
 			}
 			
 			 // Sounds:
-			var s = [
+			var _snd = [
 				[sndPlasma,    sndPlasmaUpg], 
 				[sndPlasmaBig, sndPlasmaBigUpg]
 			];
-			
-			s = s[_cannon];
-			s = s[(team == 2 && skill_get(mut_laser_brain) > 0)];
-			sound_play_hit_ext(s, random_range(0.7, 1.3), 0.6);
-			
-			with(enemy_shoot((_cannon ? PlasmaImpact : "PlasmaImpactSmall"), 0, 0)){
-				image_angle = 0;
-			}
+			sound_play_hit_ext(
+				_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
+				random_range(0.7, 1.3),
+				0.6
+			);
 			
 			 // Goodbye:
 			instance_delete(id);
 		}
-		else{
-			
-			 // Destroy:
-			if(typ == 2){
-				instance_destroy();
-			}
+		
+		 // Destroy:
+		else if(typ == 2){
+			instance_destroy();
 		}
 	}
+	
 	
 #define FreakChamber_create(_x, _y)
 	/*
@@ -825,6 +836,9 @@
 													if("roll" in self){
 														roll = false;
 													}
+												}
+												with(instances_matching_gt(PortalClear, "id", id)){
+													instance_destroy();
 												}
 											}
 										}
@@ -1424,12 +1438,12 @@
 		spr_shadow_y = 3;
 		hitid = [spr_idle, "SECURTY GUARD"];
 		depth = -2;
-		 
+		
 		 // Sounds:
 		var _male = true; // irandom(1);
 		snd_hurt = sndEliteShielderHurt; // (_male ? sndShielderHurtM : sndShielderHurtF);
 		snd_dead = sndEliteShielderDead; // (_male ? sndShielderDeadM : sndShielderDeadF);
-		 
+		
 		 // Vars:
 		mask_index = mskBandit;
 		friction = 0.4;
@@ -1450,7 +1464,7 @@
 		wep_index = _wepIndex;
 		queueswap = false;
 		swap_kick = 0;
- 		aim_x = xstart;
+		aim_x = xstart;
 		aim_y = ystart;
 		
 		 // Alarms:
@@ -1635,6 +1649,7 @@
 	
 	 // Important:
 	scrRight(gunangle);
+	
 	
 #define WallSlide_create(_x, _y)
 	/*

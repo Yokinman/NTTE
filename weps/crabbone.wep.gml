@@ -26,11 +26,13 @@
 #define weapon_type(w)
 	 // Return Other Weapon's Ammo Type:
 	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
-		with(other) return weapon_get_type((w == wep) ? bwep : wep);
+		with(other){
+			return weapon_get_type((w == wep) ? bwep : wep);
+		}
 	}
 	
-	 // Melee:
-	return 0;
+	 // Normal:
+	return type_melee;
 	
 #define weapon_sprt(w)
 	 // Custom Ammo Drawing:
@@ -47,28 +49,33 @@
 	 // Cursed:
 	var _curse = variable_instance_get(self, "curse", 0);
 	if(_curse > 0){
+		 // Shrink Wepangle:
+		if(abs(wepangle) == 120){
+			wepangle = 100 * sign(wepangle);
+		}
+		
+		 // Slash:
 		var	_skill = skill_get(mut_long_arms),
-			_flip  = sign(wepangle),
 			_heavy = ((++w.combo % 2) == 0),
-			_dis = lerp(10, 20, _skill),
-			_dir = gunangle;
+			_flip  = sign(wepangle),
+			_dis   = 10 + (10 * _skill),
+			_dir   = gunangle;
 			
 		with(obj_create(x + hspeed + lengthdir_x(_dis, _dir), y + vspeed + lengthdir_y(_dis, _dir), "BoneSlash")){
 			motion_add(
 				_dir + orandom(5 * other.accuracy),
 				lerp(2, 4, _skill)
 			);
-			
 			image_angle   = direction;
 			image_xscale *= 3/4;
 			image_yscale *= 3/4 * _flip;
-			rotspeed      = -2 * _flip;
+			rotspeed      = 2 * _flip;
 			heavy         = _heavy;
 			team          = other.team;
 			creator       = f.creator;
 		}
 		
-		
+		 // Sound:
 		sound_play_gun(sndWrench, 0.3, 0.5);
 		sound_play_pitchvol(sndBloodGamble, (_heavy ? 0.5 : 0.7) + random(0.2), (_heavy ? 0.7 : 0.5));
 		sound_play_hit(sndCursedReminder, 0.1);
@@ -79,10 +86,8 @@
 		 // Effects:
 		instance_create(x, y, Dust);
 		weapon_post(-9 - (3 * _heavy), 12 + (8 * _heavy), 1);
-		motion_add(_dir - (20 * _flip), 3 + _heavy);
+		motion_add(_dir + (20 * _flip), 3 + _heavy);
 		if(_heavy) sleep(10);
-		
-		wepangle *= -1;
 	}
 	
 	 // Fire:
@@ -107,8 +112,6 @@
 			motion_add(other.gunangle, 1);
 			image_angle = direction + 180;
 		}
-		
-		wepangle *= -1;
 	}
 	
 	 // Gone:
@@ -277,18 +280,24 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call(   'mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
 #define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
 #define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call(   'mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');

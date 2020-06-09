@@ -25,7 +25,7 @@
 #define weapon_text 	return `@wBEND @sTHE ${global.color}CONTINUUM`;
 #define weapon_swap 	return sndSwapHammer;
 #define weapon_area 	return (weapon_avail() ? 21 : -1); // L1 3-1
-#define weapon_type 	return 0;  // Melee
+#define weapon_type 	return type_melee;
 #define weapon_load 	return 20; // 0.66 Seconds
 #define weapon_melee(w)	return (lq_defget(w, "ammo", 1) <= 0);
 #define weapon_avail	return true; // unlock_get("pack:red");
@@ -150,7 +150,6 @@
 	else{
 		 // Effects:
 		wkick = 4;
-		wepangle *= -1;
 		move_contact_solid(gunangle, 2);
 		motion_add(gunangle, 3);
 		sleep(10);
@@ -177,6 +176,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

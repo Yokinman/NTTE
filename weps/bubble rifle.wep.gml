@@ -7,8 +7,8 @@
 #define weapon_swap   return sndSwapExplosive;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_type   return 4; // Explosive
-#define weapon_cost   return 2; // 2 Ammo
+#define weapon_type   return type_explosive;
+#define weapon_cost   return 2;
 #define weapon_load   return 9; // 0.3 Seconds
 #define weapon_avail  return unlock_get("pack:oasis");
 
@@ -64,6 +64,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

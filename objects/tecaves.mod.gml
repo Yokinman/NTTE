@@ -2105,10 +2105,13 @@
 	
 #define VlasmaBullet_setup
 	setup = false;
-	if(team == 2){
-		var _scale = lerp(1, 1.2, skill_get(mut_laser_brain));
-		image_xscale *= _scale;
-		image_yscale *= _scale;
+	
+	 // Brain:
+	if(instance_is(creator, Player)){
+		var _skill = skill_get(mut_laser_brain);
+		image_xscale *= power(1.2, _skill);
+		image_yscale *= power(1.2, _skill);
+		damage       *= power(2,   _skill);
 	}
 	
 #define VlasmaBullet_step
@@ -2119,16 +2122,13 @@
 		target_x = target.x;
 		target_y = target.y;
 		
-		with(target) if(team == other.team){
-			if("spr_weap" in id && sprite_exists(spr_weap)){
-				var l = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap),
-					d = (("gunangle" in id) ? gunangle : image_angle);
-					
-				with(other){
-					target_x += lengthdir_x(l, d);
-					target_y += lengthdir_y(l, d);
-				}
-			}
+		 // Gun Offset:
+		if(target == creator && "gunangle" in creator){
+			var	_l = (("spr_weap" in creator) ? (sprite_get_width(target.spr_weap) - sprite_get_xoffset(target.spr_weap)) : 16),
+				_d = creator.gunangle;
+				
+			target_x += lengthdir_x(_l, _d);
+			target_y += lengthdir_y(_l, _d);
 		}
 	}
 	
@@ -2203,16 +2203,12 @@
 	
 #define VlasmaBullet_hit
 	if(image_speed == 0){
-		if(team == 2){
-			if(projectile_canhit(other)){
-				var _skill = 1 + skill_get(mut_laser_brain);
-				projectile_hit(other, (damage * _skill), force);
-	}
-		}
-		else{
-			if(projectile_canhit_melee(other)){
-				projectile_hit(other, damage, force);
-			}
+		if(
+			instance_is(other, Player)
+			? projectile_canhit_melee(other)
+			: projectile_canhit(other)
+		){
+			projectile_hit(other, damage, force);
 		}
 	}
 	
@@ -2228,34 +2224,41 @@
 	sound_play_hit_ext(sndLaser,        1.1 + random(0.3), 1);
 	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
 	
-	 // Explo:
-	if(cannon){
-		var _num = 6;
-		for(var d = 0; d < 360; d += (360 / _num)){
+	 // Cannon:
+	if(cannon > 0){
+		var	_num = 6 * cannon,
+			_ang = direction;
+			
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
 			var _len = 96,
-				_dir = direction + d,
 				_x = x + lengthdir_x(_len, _dir),
 				_y = y + lengthdir_y(_len, _dir);
 				
-	with(team_instance_sprite(
-		sprite_get_team(sprite_index),
-				enemy_shoot_ext(_x, _y, "VlasmaBullet", (_dir + 180), 0)
-	)){
-				target	 = other.target;
-				target_x = other.target_x;
-				target_y = other.target_y;
+			with(team_instance_sprite(
+				sprite_get_team(sprite_index),
+				obj_create(_x, _y, "VlasmaBullet")
+			)){
+				direction   = _dir + 180;
+				image_angle = direction;
+				creator     = other.creator;
+				hitid       = other.hitid;
+				team        = other.team;
+				target      = other.target;
+				target_x    = other.target_x;
+				target_y    = other.target_y;
 			}
 		}
 	}
+	
+	 // Explo:
 	with(team_instance_sprite(
 		sprite_get_team(sprite_index),
-		enemy_shoot(
-			(cannon ? PlasmaImpact : "PlasmaImpactSmall"), 
-			direction, 
-			0
-	))){
-		image_angle = 0;
-		depth = other.depth;
+		obj_create(x, y, (cannon ? PlasmaImpact : "PlasmaImpactSmall"))
+	)){
+		creator = other.creator;
+		hitid   = other.hitid;
+		team    = other.team;
+		depth   = other.depth;
 	}
 	
 	
@@ -2270,6 +2273,7 @@
 		
 		return id;	
 	}
+	
 	
 #define WallFake_create(_x, _y)
 	/*

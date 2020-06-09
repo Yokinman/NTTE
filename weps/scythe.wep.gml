@@ -80,7 +80,7 @@
 #define weapon_text    return choose("@rREASSEMBLED", "@gRADIATION@s DETERIORATES @wBONES", "@wMARROW @sFROM A HUNDRED @gMUTANTS");
 #define weapon_swap    return sndBloodGamble;
 #define weapon_area    return (weapon_avail() ? 18 : -1); // 1-2 L1
-#define weapon_type    return 0; // Melee
+#define weapon_type    return type_melee;
 #define weapon_load    return scrWepModeInfo(argument0, "load");
 #define weapon_auto    return scrWepModeInfo(argument0, "auto");
 #define weapon_melee   return scrWepModeInfo(argument0, "mele");
@@ -135,19 +135,18 @@
 			
 			var	_skill = skill_get(mut_long_arms),
 				_heavy = ((++w.combo % 3) == 0),
-				_flip = sign(wepangle),
-				_dis = 10 + (10 * _skill),
-				_dir = gunangle + orandom(4 * accuracy);
+				_flip  = sign(wepangle),
+				_dis   = 10 + (10 * _skill),
+				_dir   = gunangle + orandom(4 * accuracy);
 				
 			with(obj_create(x + hspeed + lengthdir_x(_dis, _dir), y + vspeed + lengthdir_y(_dis, _dir), "BoneSlash")){
 				motion_add(
 					_dir,
 					lerp(2.5, 4.5, _skill)
 				);
-				
 				image_angle   = direction;
 				image_yscale *= _flip;
-				rotspeed      = -3 * _flip;
+				rotspeed      = 3 * _flip;
 				heavy         = _heavy;
 				team          = other.team;
 				creator       = f.creator;
@@ -161,11 +160,9 @@
 			}
 			
 			 // Effects:
-			motion_add(_dir - (30 * _flip), 3 + _heavy);
+			motion_add(_dir + (30 * _flip), 3 + _heavy);
 			weapon_post((_heavy ? -5 : 5), 6 + (10 * _heavy), 2);
 			if(_heavy) sleep(12);
-			
-			wepangle *= -1;
 			
 			break;
 		//#endregion
@@ -326,6 +323,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;

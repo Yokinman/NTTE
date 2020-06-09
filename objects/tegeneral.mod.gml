@@ -781,12 +781,12 @@
 	}
 	
 	repeat(3){
-		var	c = sign(image_yscale),
-			l = (heavy ? 24 : 16) + orandom(2),
-			d = direction - (random_range(30, 120) * c);
-
-		with(scrBoneDust(x + lengthdir_x(l, d), y + lengthdir_y(l, d))){
-			motion_set(d - (random_range(90, 120) * c), 1 + random(2));
+		var	_flip = sign(image_yscale),
+			_l = (heavy ? 24 : 16) + orandom(2),
+			_d = direction + (random_range(30, 120) * _flip);
+			
+		with(scrBoneDust(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d))){
+			motion_set(_d + (random_range(90, 120) * _flip), 1 + random(2));
 		}
 	}
 
@@ -863,15 +863,16 @@
 		friction = 0.4;
 		
 		 // Hit Wall FX:
-		if(instance_exists(Wall)){
-			var _ang = image_angle;
-			with(instance_nearest_bbox(x, y, Wall)){
-				with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
-					image_angle = _ang;
-					image_blend = choose(c_white, make_color_rgb(208, 197, 180), make_color_rgb(157, 133, 098), make_color_rgb(111, 082, 043));
-				}
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw,
+			_col = choose(c_white, make_color_rgb(208, 197, 180), make_color_rgb(157, 133, 098), make_color_rgb(111, 082, 043));
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+				image_blend = _col;
+				sound_play_hit_ext(sndMeleeWall, 1.2 + random(0.5), 2);
 			}
-			sound_play_hit_ext(sndMeleeWall, 1.2 + random(0.5), 0.5);
 		}
 	}
 

@@ -41,7 +41,7 @@
 		["skins/red crystal.skin.gml",              1 + _coop, "Skins"],
 		["skills/compassion.skill.gml",             1 + _coop, "Mutations"],
 		["skills/reroll.skill.gml",                 1 + _coop],
-		["skills/annihilation.skill.gml",			1 + _coop],
+		["skills/annihilation.skill.gml",           1 + _coop],
 		["crowns/bonus.crown.gml",                  0 + _coop, "Crowns"],
 		["crowns/red.crown.gml",                    0 + _coop],
 		["crowns/crime.crown.gml",                  1 + _coop],
@@ -67,9 +67,9 @@
 		["weps/quasar blaster.wep.gml",             1],
 		["weps/quasar rifle.wep.gml",               1],
 		["weps/quasar cannon.wep.gml",              1],
-		["weps/annihilator.wep.gml",				1],
+		["weps/annihilator.wep.gml",                1],
 		["weps/teleport gun.wep.gml",               1],
-		["weps/energy bat.wep.gml",					1]
+		["weps/energy bat.wep.gml",                 1]
 	];
 	global.load_max += array_length(global.list);
 	

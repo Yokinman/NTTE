@@ -2664,7 +2664,7 @@
 				}
 				
 				with(creator){
-					if("wepangle" in self) wepangle *= -1;
+					//if("wepangle" in self) wepangle *= -1;
 					
 					 // Kick, Shift, Shake, Knockback:
 					if(instance_is(self, Player)){

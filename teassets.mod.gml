@@ -165,18 +165,16 @@
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Vector Plasma:
-			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5, 8, 8);
-			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
-			PopoVlasmaBullet  = sprite(p + "sprPopoVlasmaBullet",  5, 8, 8);
-			
+			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5,  8,  8);
+			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5,  8,  8);
+			PopoVlasmaBullet  = sprite(p + "sprPopoVlasmaBullet",  5,  8,  8);
 			EnemyVlasmaCannon = sprite(p + "sprEnemyVlasmaCannon", 5, 10, 10);
-			VlasmaCannon	  = sprite(p + "sprVlasmaCannon",	   5, 10, 10);
+			VlasmaCannon      = sprite(p + "sprVlasmaCannon",      5, 10, 10);
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
 			
-			
 			 // Energy Bat Slash:
-			EnergyBatSlash	   = sprite(p + "sprEnergyBatSlash", 3, 0,  24);
-			// msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
+			EnergyBatSlash     = sprite(p + "sprEnergyBatSlash", 3,  0,  24);
+			//msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
