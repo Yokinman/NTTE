@@ -987,7 +987,7 @@
 				
 			while(_num > 0 && _tries-- > 0){
 				var	_moveDis = 32,
-					_moveDir = round(_dir / 90) * 90;
+					_moveDir = pround(_dir, 90);
 					
 				_fx += lengthdir_x(_moveDis, _moveDir);
 				_fy += lengthdir_y(_moveDis, _moveDir);
@@ -2751,11 +2751,44 @@
 		}
 		
 		 // Wall Collision:
-		with(path_wall) with(other){
-			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw = 0;
-				if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw = 0;
+		if(visible || instance_exists(revive)){
+			move_step(1);
+			
+			with(path_wall){
+				var _walled = false;
+				with(other){
+					if(place_meeting(x, y, other)){
+						_walled = true;
+						
+						x = xprevious;
+						y = yprevious;
+						
+						var	_mx = 1,
+							_my = 1;
+							
+						with(path_wall) with(other){
+							for(var _mx; _mx >= 0; _mx -= 0.5){
+								if(!place_meeting(x + (hspeed_raw * _mx), y, other)){
+									break;
+								}
+							}
+							for(var _my; _my >= 0; _my -= 0.5){
+								if(!place_meeting(x, y + (vspeed_raw * _my), other)){
+									break;
+								}
+							}
+						}
+						
+						hspeed_raw *= max(0, _mx);
+						vspeed_raw *= max(0, _my);
+						x += hspeed_raw;
+						y += vspeed_raw;
+					}
+				}
+				if(_walled) break;
 			}
+			
+			move_step(-1);
 		}
 	}
 	
@@ -2770,29 +2803,6 @@
 	if(mask_index == mskNone && mask_store != null){
 		mask_index = mask_store;
 		mask_store = null;
-	}
-	
-	 // Wall Collision Part2:
-	if(visible || instance_exists(revive)){
-		with(path_wall) with(other){
-			var _wall = other;
-			
-			if(place_meeting(x, y, _wall)){
-				x = xprevious;
-				y = yprevious;
-				if(place_meeting(x + hspeed_raw, y, _wall)) hspeed_raw = 0;
-				if(place_meeting(x, y + vspeed_raw, _wall)) vspeed_raw = 0;
-				x += hspeed_raw;
-				y += vspeed_raw;
-				
-				 // Just in Case:
-				if(place_meeting(x, y, _wall)){
-					speed = 0;
-					instance_budge(path_wall, -1);
-					break;
-				}
-			}
-		}
 	}
 	
 #define Pet_draw
@@ -3276,13 +3286,13 @@
 							alarm2 = alarm1 - random(3);
 							
 							 // Peekin:
-							var	l = 16,
-								d = round(point_direction(cover_x, cover_y, _tx, _ty) / 90) * 90,
-								_peekLeft  = !collision_line(cover_x + lengthdir_x(l, d - 90), cover_y + lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
-								_peekRight = !collision_line(cover_x - lengthdir_x(l, d - 90), cover_y - lengthdir_y(l, d - 90), _tx, _ty, Wall, false, false),
+							var	_l = 16,
+								_d = pround(point_direction(cover_x, cover_y, _tx, _ty), 90),
+								_peekLeft  = !collision_line(cover_x + lengthdir_x(_l, _d - 90), cover_y + lengthdir_y(_l, _d - 90), _tx, _ty, Wall, false, false),
+								_peekRight = !collision_line(cover_x - lengthdir_x(_l, _d - 90), cover_y - lengthdir_y(_l, _d - 90), _tx, _ty, Wall, false, false),
 								_peekSide = sign(_peekRight - _peekLeft);
 								
-							scrWalk(d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
+							scrWalk(_d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
 							
 							 // Stay in Cover:
 							if(_peekRight || _peekLeft){
@@ -3519,17 +3529,17 @@
 	if(in_range(point_distance(_coverX, _coverY, _fromX, _fromY), shootdis_min, shootdis_max)){
 		if(collision_line(_coverX, _coverY, _fromX, _fromY, Wall, false, false)){
 			if(!position_meeting(_coverX, _coverY, Wall)){
-				var	l = 16,
-					d = round(point_direction(_coverX, _coverY, _fromX, _fromY) / 90) * 90;
+				var	_l = 16,
+					_d = pround(point_direction(_coverX, _coverY, _fromX, _fromY), 90);
 					
 				if(
-					position_meeting(_coverX + lengthdir_x(l, d),      _coverY + lengthdir_y(l, d),      Wall) ||
-					position_meeting(_coverX + lengthdir_x(l, d - 90), _coverY + lengthdir_y(l, d - 90), Wall) ||
-					position_meeting(_coverX + lengthdir_x(l, d + 90), _coverY + lengthdir_y(l, d + 90), Wall)
+					position_meeting(_coverX + lengthdir_x(_l, _d),      _coverY + lengthdir_y(_l, _d),      Wall) ||
+					position_meeting(_coverX + lengthdir_x(_l, _d - 90), _coverY + lengthdir_y(_l, _d - 90), Wall) ||
+					position_meeting(_coverX + lengthdir_x(_l, _d + 90), _coverY + lengthdir_y(_l, _d + 90), Wall)
 				){
 					if(
-						!collision_line(_coverX + lengthdir_x(l, d - 90), _coverY + lengthdir_y(l, d - 90), _fromX, _fromY, Wall, false, false) ||
-						!collision_line(_coverX - lengthdir_x(l, d - 90), _coverY - lengthdir_y(l, d - 90), _fromX, _fromY, Wall, false, false)
+						!collision_line(_coverX + lengthdir_x(_l, _d - 90), _coverY + lengthdir_y(_l, _d - 90), _fromX, _fromY, Wall, false, false) ||
+						!collision_line(_coverX - lengthdir_x(_l, _d - 90), _coverY - lengthdir_y(_l, _d - 90), _fromX, _fromY, Wall, false, false)
 					){
 						return true;
 					}
@@ -5609,7 +5619,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -5672,13 +5684,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -5717,6 +5731,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

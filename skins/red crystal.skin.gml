@@ -12,7 +12,7 @@
 #define skin_lock     return "REACH "        + area_get_name("red", 1, 0);
 #define skin_unlock   return "FOR REACHING " + area_get_name("red", 1, 0);
 #define skin_ttip     return choose("NEVER MORE ALIVE", "FAMILY CAN WAIT");
-#define skin_avail    return unlock_get(`skin:${mod_current}`);
+#define skin_avail    return unlock_get("skin:" + mod_current);
 #define skin_portrait return spr.CrystalRedPortrait;
 #define skin_mapicon  return spr.CrystalRedMapIcon;
 

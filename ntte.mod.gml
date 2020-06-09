@@ -113,9 +113,9 @@
 			- Excludes boss levels
 		*/
 		
-		heart_spawn.area = irandom_range(2, 7);
-		heart_spawn.suba = irandom_range(1, max(1, area_get_subarea(heart_spawn.area) - 1));
-		heart_spawn.loop = 0;
+		heart_spawn.area    = irandom_range(2, 7);
+		heart_spawn.subarea = irandom_range(1, max(1, area_get_subarea(heart_spawn.area) - 1));
+		heart_spawn.loops   = 0;
 	}
 	else heart_spawn = {};
 	
@@ -215,12 +215,17 @@
 		var	_heartNum = (chance(GameCont.hard, 400 + (5 * GameCont.hard)) && GameCont.hard != 106),
 			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
 			
+		 // Guarantee Unnecessary:
+		if(_heartNum > 0){
+			heart_spawn = {};
+		}
+		
 		 // Guaranteed Spawn:
 		if(lq_size(heart_spawn) > 0){
 			if(
-				lq_defget(heart_spawn, "area", GameCont.area)    == GameCont.area    &&
-				lq_defget(heart_spawn, "suba", GameCont.subarea) == GameCont.subarea &&
-				lq_defget(heart_spawn, "loop", GameCont.loops)   == GameCont.loops
+				lq_defget(heart_spawn, "area",    GameCont.area)    == GameCont.area    &&
+				lq_defget(heart_spawn, "subarea", GameCont.subarea) == GameCont.subarea &&
+				lq_defget(heart_spawn, "loops",   GameCont.loops)   == GameCont.loops
 			){
 				_heartNum++;
 				
@@ -244,7 +249,7 @@
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
 				 // Visited Warp Zone, Only Chaos Hearts:
-				if(_heartNum > 0 && variable_instance_get(GameCont, "visited_red", 0) > GameCont.loops){
+				if(_heartNum > 0 && variable_instance_get(GameCont, "ntte_visits_red", 0) > GameCont.loops){
 					_chaosNum += _heartNum;
 					_heartNum = 0;
 				}
@@ -1305,7 +1310,7 @@
 	
 	 // Lair Chests:
 	var	_crime = (crown_current == "crime"),
-		_lair = (variable_instance_get(GameCont, "visited_lair", 0) > 0);
+		_lair = (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
 		
 	if(_lair || _crime){
 		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
@@ -1895,6 +1900,9 @@
 		}
 	}
 	
+	 // Call Scripts:
+	ntte_call("step");
+	
 	 // Better Inactive Throne Hitbox:
 	with(instances_matching(NothingIntroMask, "mask_index", mskNothingInactive, msk.NothingInactiveCool)){
 		with(instances_matching(instances_matching([NothingInactive, BecomeNothing], "xstart", xstart), "ystart", ystart)){
@@ -1941,12 +1949,15 @@
 		}
 		
 		 // Better Collision:
-		var _solid = solid;
+		var _lastSolid = solid;
 		solid = true;
 		with(Player){
-			var _friction = min(abs(speed), friction_raw) * sign(speed);
-			speed -= _friction;
-			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
+			move_step(1);
+			
+			if(place_meeting(x, y, other)){
+				x = xprevious;
+				y = yprevious;
+				
 				if(place_meeting(x, y + max(0, vspeed_raw), other)){
 					direction = 270 + (30 * clamp(hspeed / 4, -1, 1));
 				}
@@ -1954,13 +1965,11 @@
 					event_perform(ev_collision, InvisiWall);
 				}
 			}
-			speed += _friction;
+			
+			move_step(-1);
 		}
-		solid = _solid;
+		solid = _lastSolid;
 	}
-	
-	 // Call Scripts:
-	ntte_call("step");
 	
 	if(lag) trace_time("ntte_step");
 	
@@ -2639,9 +2648,6 @@
 	}
 	
 #define draw_gui_end
-	 // Reset Mod Calling List:
-	ntte_call_mods = [];
-	
 	 // NTTE Music / Ambience:
 	ntte_music();
 	
@@ -2656,6 +2662,9 @@
 	
 	 // NTTE Time Stat:
 	stat_set("time", stat_get("time") + (current_time_scale / 30));
+	
+	 // Reset Mod Calling List:
+	ntte_call_mods = [];
 	
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
@@ -3183,7 +3192,7 @@
 						(bonus_ammo != bonus_ammo_last)
 						? c_white
 						: (
-							(drawempty > 26)
+							(drawempty > 26 && ammo[weapon_get_type(wep)] + bonus_ammo < weapon_get_cost(wep))
 							? c_red
 							: merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))))
 						)
@@ -3832,7 +3841,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -3895,13 +3906,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -3940,6 +3953,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

@@ -444,7 +444,7 @@
 		damage = 4;
 		force = 4;
 		typ = 1;
-		angle = round(random(360) / 45) * 45;
+		angle = pround(random(360), 45);
 		turn = orandom(1);
 		
 		 // Alarms:
@@ -467,7 +467,7 @@
 	}
 	
 	 // Effects:
-	var _ang = round(angle / 45) * 45;
+	var _ang = pround(angle, 45);
 	for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
 		if(chance_ct(1 + (alarm2 < 0), 4)){
 			var _spd = random_range(1, 3);
@@ -521,7 +521,7 @@
 	
 	 // Quasars:
 	var	_dis = 16,
-		_ang = round(angle / 45) * 45;
+		_ang = pround(angle, 45);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
 		with(enemy_shoot_ext(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir, 0)){
@@ -4440,6 +4440,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		size = 3;
 		area = "lair";
 		subarea = 1;
+		loops = GameCont.loops;
 		styleb = 1;
 		hallway_size = 320;
 		my_floor = noone;
@@ -4463,8 +4464,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Stay Still:
-	x = (round(xstart / 16) * 16) - 16;
-	y = (round(ystart / 16) * 16);
+	x = pround(xstart, 16) - 16;
+	y = pround(ystart, 16);
 	speed = 0;
 	
 	if(!instance_exists(GenCont)){
@@ -4563,8 +4564,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(my_health <= 0) instance_destroy();
 
 #define PizzaDrain_end_step
-	x = (round(xstart / 16) * 16) - 16;
-	y = (round(ystart / 16) * 16);
+	x = pround(xstart, 16) - 16;
+	y = pround(ystart, 16);
 	speed = 0;
 
 #define PizzaDrain_destroy
@@ -4641,7 +4642,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Generate the Realm:
 		var _lastArea = GameCont.area;
 		if(!instance_exists(Portal)){
-			area_generate(area, subarea, _sx + 16, _sy - 16, true, 0, null);
+			area_generate(area, subarea, loops, _sx + 16, _sy - 16, true, 0, null);
 		}
 		
 		 // Finish Path:
@@ -5670,7 +5671,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -5733,13 +5736,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -5778,6 +5783,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

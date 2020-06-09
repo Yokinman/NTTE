@@ -9,8 +9,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
-#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
+#macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
+#macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
 #define area_subarea           return 1;
 #define area_next              return [area_scrapyards, 1];
@@ -106,7 +106,7 @@
 	}
 	
 	 // Remember:
-	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
+	variable_instance_set(GameCont, "ntte_visits_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	 // Fix Depth:
@@ -116,6 +116,9 @@
 	material = (styleb ? 6 : 2);
 	
 #define area_start
+	 // Enable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
+	
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
 		with(Wall.id) if(place_meeting(x, y, Floor)){
@@ -207,18 +210,21 @@
 	}
 	
 #define area_finish
-	lastarea = area;
-	lastsubarea = subarea;
+	 // Next Subarea:
+	if(subarea < area_subarea()){
+		subarea++;
+	}
 	
 	 // Next Area:
-	if(subarea >= area_subarea()){
+	else{
 		var _next = area_next();
 		area = _next[0];
 		subarea = _next[1];
 	}
 	
-	 // Next Subarea: 
-	else subarea++;
+#define area_transit
+	 // Disable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, false);
 	
 #define area_make_floor
 	var	_den = GenCont.turtle_den,
@@ -352,7 +358,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -415,13 +423,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -460,6 +470,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

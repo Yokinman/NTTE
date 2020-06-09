@@ -384,17 +384,15 @@
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
-			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle",  10, 24, 24);
-			CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",   3, 24, 24);
-			CrystalHeartDead = sprite(p + "sprCrystalHeartDead",  22, 24, 24);
-			
-			ChaosHeartIdle = sprite(p + "sprChaosHeartIdle",  10, 24, 24);
-			ChaosHeartHurt = sprite(p + "sprChaosHeartHurt",   3, 24, 24);
-			ChaosHeartDead = sprite(p + "sprChaosHeartDead",  22, 24, 24);
-			
-			CrystalHeartProjOut   = sprite(p + "sprCrystalHeartProjOut",   2, 10, 10);
-			CrystalHeartProjMid   = sprite(p + "sprCrystalHeartProjMid",   2, 10, 10);
-			CrystalHeartProjTrail = sprite(p + "sprCrystalHeartProjTrail", 4, 10, 10);
+			CrystalHeartIdle        = sprite(p + "sprCrystalHeartIdle",       10, 24, 24);
+			CrystalHeartHurt        = sprite(p + "sprCrystalHeartHurt",        3, 24, 24);
+			CrystalHeartDead        = sprite(p + "sprCrystalHeartDead",       22, 24, 24);
+			ChaosHeartIdle          = sprite(p + "sprChaosHeartIdle",         10, 24, 24);
+			ChaosHeartHurt          = sprite(p + "sprChaosHeartHurt",          3, 24, 24);
+			ChaosHeartDead          = sprite(p + "sprChaosHeartDead",         22, 24, 24);
+			CrystalHeartBulletOut   = sprite(p + "sprCrystalHeartBulletOut",   2, 10, 10);
+			CrystalHeartBulletMid   = sprite(p + "sprCrystalHeartBulletMid",   2, 10, 10);
+			CrystalHeartBulletTrail = sprite(p + "sprCrystalHeartBulletTrail", 4, 10, 10);
 			
 			 // Diver:
 			p = m + "Diver/";
@@ -1204,11 +1202,13 @@
 			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:
-			WallRedBot   = sprite(p + "sprWallCrystalBot",   2, 0,  0);
-			WallRedTop   = sprite(p + "sprWallCrystalTop",   4, 0,  0);
-			WallRedOut   = sprite(p + "sprWallCrystalOut",   1, 4, 12);
-			WallRedTrans = sprite(p + "sprWallCrystalTrans", 4, 0,  0);
-			DebrisRed    = sprite(p + "sprDebrisCrystal",    4, 4,  4);
+			WallRedBot   = sprite(p + "sprWallCrystalBot",    2, 0,  0);
+			WallRedTop   = sprite(p + "sprWallCrystalTop",    4, 0,  0);
+			WallRedOut   = sprite(p + "sprWallCrystalOut",    1, 4, 12);
+			WallRedTrans = sprite(p + "sprWallCrystalTrans",  4, 0,  0);
+			WallRedFake  =[sprite(p + "sprWallCrystalFake1", 16, 0,  0),
+			               sprite(p + "sprWallCrystalFake2", 16, 0,  0)];
+			DebrisRed    = sprite(p + "sprDebrisCrystal",     4, 4,  4);
 			
 			 // Fake Walls:
 			WallFakeBot = sprite(p + "sprWallFakeBot", 16, 0, 0);
@@ -1576,11 +1576,11 @@
 			
 			 // Mantis:
 			p = m + "Vault/";
-			PetOrchidIcon   = sprite(p + "sprPetOrchidIcon",    1,  6,  6);
-			PetOrchidIdle   = sprite(p + "sprPetOrchidIdle",   28, 12, 12);
-			PetOrchidWalk   = sprite(p + "sprPetOrchidWalk",    6, 12, 12);
-			PetOrchidHurt   = sprite(p + "sprPetOrchidHurt",    3, 12, 12);
-			PetOrchidCharge = sprite(p + "sprPetOrchidCharge",  2, 12, 12);
+			PetOrchidIcon = sprite(p + "sprPetOrchidIcon",  1,  6,  6);
+			PetOrchidIdle = sprite(p + "sprPetOrchidIdle", 28, 12, 12);
+			PetOrchidWalk = sprite(p + "sprPetOrchidWalk",  6, 12, 12);
+			PetOrchidHurt = sprite(p + "sprPetOrchidHurt",  3, 12, 12);
+			PetOrchidBall = sprite(p + "sprPetOrchidBall",  2, 12, 12);
 			
 			 // Weapon Chest Mimic:
 			p = m + "Weapon/";

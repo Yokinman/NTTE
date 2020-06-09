@@ -12,10 +12,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
-#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
-
-#macro isWallFake ("name" in self && name == "WallFake")
+#macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
+#macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
 #define area_subarea           return 1;
 #define area_goal              return 60;
@@ -36,15 +34,15 @@
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	 // Post Exit:
 	with(global.mapdata_warp_draw){
-		if(next.area != mod_current){
-			if(
-				subarea      == _subarea     &&
-				loops        == _loops       &&
-				last.x       == _lastX       &&
-				last.y       == _lastY       &&
-				last.area    == _lastArea    &&
-				last.subarea == _lastSubarea
-			){
+		if(
+			subarea      == _subarea     &&
+			loops        == _loops       &&
+			last.x       == _lastX       &&
+			last.y       == _lastY       &&
+			last.area    == _lastArea    &&
+			last.subarea == _lastSubarea
+		){
+			if(next.area != mod_current){
 				var	_x = view_xview_nonsync + (game_width  / 2),
 					_y = view_yview_nonsync + (game_height / 2);
 					
@@ -125,23 +123,20 @@
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
 	
-	 // Skin Time:
-	if(variable_instance_get(GenCont, "iswarpzone", false)){
-		unlock_set("skin:red crystal", true);
-	}
-	
 	 // Remember:
-	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
+	variable_instance_set(GameCont, "ntte_visits_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	 // Fix Depth:
-	if(isWallFake) depth = 10;
-	else if(styleb) depth = 8;
+	if(styleb) depth = 8;
 	
 	 // Footsteps:
 	material = 2;
 	
 #define area_start
+	 // Enable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
+	
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
 		with(Wall.id) if(place_meeting(x, y, Floor)){
@@ -150,18 +145,26 @@
 	}
 	
 #define area_finish
-	lastarea = area;
-	lastsubarea = subarea;
+	 // Next Subarea:
+	if(subarea < area_subarea()){
+		subarea++;
+	}
 	
 	 // Next Area:
-	if(subarea >= area_subarea()){
+	else{
 		var _next = area_next();
 		area = _next[0];
 		subarea = _next[1];
 	}
 	
-	 // Next Subarea: 
-	else subarea++;
+	 // Skin Time:
+	if(variable_instance_get(GenCont, "iswarpzone", true)){
+		unlock_set("skin:red crystal", true);
+	}
+	
+#define area_transit
+	 // Disable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, false);
 	
 #define area_make_floor
 	var	_x = x,
@@ -203,7 +206,7 @@
 			if(abs(angle_difference(direction_start, point_direction(xstart, ystart, x + _ox, y + _oy))) > 60){
 				x -= _ox;
 				y -= _oy;
-				direction = round(direction_start / 90) * 90;
+				direction = pround(direction_start, 90);
 			}
 		}
 		
@@ -247,7 +250,7 @@
 	
 	 // Props:
 	else if(chance(1, 4)){
-		obj_create(x + 16, y + 16, "CrystalProp" + ((styleb && !isWallFake) ? "White" : "Red"));
+		obj_create(x + 16, y + 16, "CrystalProp" + (styleb ? "White" : "Red"));
 	}
 	
 	 // Warp Rooms:
@@ -287,7 +290,7 @@
 						}
 						
 						 // Move:
-						var _moveDir = round((point_direction(_x, _y, other.xstart, other.ystart) + orandom(60)) / 90) * 90;
+						var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
 						_x += lengthdir_x(_moveDis, _moveDir);
 						_y += lengthdir_y(_moveDis, _moveDir);
 					}
@@ -320,20 +323,24 @@
 	
 	 // Secrets Upon Secrets:
 	if(variable_instance_get(GenCont, "iswarpzone", true)){
-		var _floorArray = [];
-		with(FloorNormal) if(array_length(instances_matching_lt(instances_matching(FloorNormal, "x", x), "y", y)) <= 0){
-			array_push(_floorArray, id);
+		var _floorTarget = noone;
+		
+		 // Search for Highest Floors:
+		with(array_shuffle(FloorNormal)){
+			if(array_length(instances_matching_lt(instances_matching(FloorNormal, "x", x), "y", y)) <= 0){
+				_floorTarget = id;
+				break;
+			}
 		}
 		
-		 // Highest Floor:
-		var _floorTarget = instance_random(_floorArray);
+		 // Secret Room:
 		with(_floorTarget){
-			var	_w = 3,
-				_h = 3,
-				_type = "",
-				_dirOff = 60,
-				_floorDis = random_range(80, 160),
-				_dirStart = 90,
+			var	_w          = 3,
+				_h          = 3,
+				_type       = "",
+				_dirOff     = 60,
+				_floorDis   = random_range(80, 160),
+				_dirStart   = 90,
 				_levelFloor = FloorNormal;
 				
 			floor_set_align(null, null, 32, 32);
@@ -352,13 +359,18 @@
 						&&
 						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _levelFloor)) <= 0
 					){
-						 // Walls and Props:
-						with(obj_create(_x, _y, "WallFake")){
-							area_pop_props();
+						 // Floors & Walls:
+						with(floor_set(_x, _y, true)){
+							depth = 10;
+							for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
+								for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
+									obj_create(_wx, _wy, "WallFake");
+								}
+							}
 						}
 						
 						 // Move:
-						var _moveDir = round((point_direction(_x, _y, _floorTarget.x, _floorTarget.y) + orandom(60)) / 90) * 90;
+						var _moveDir = pround(point_direction(_x, _y, _floorTarget.x, _floorTarget.y) + orandom(60), 90);
 						_x += lengthdir_x(_moveDis, _moveDir);
 						_y += lengthdir_y(_moveDis, _moveDir);
 					}
@@ -366,16 +378,16 @@
 				
 				 // Secrets Upon Secrets Upon Secres:
 				with(instance_random(floors)){
-					var v = y - 32;
-					while(place_meeting(x, v, Floor)){
-						v -= 32;
-					}
-					obj_create(x, v, "WallFake");
-					with(obj_create(x, (v - 32), "WallFake")){
-						 // Secret Chest:
-						with(chest_create(x + 16, y + 16, "Backpack", true)){
-						
+					with(floor_room_create(bbox_center_x, bbox_center_y, 1, 2, "", 90, 0, 0)){
+						 // Fake Walls:
+						for(var _wx = x1; _wx < x2; _wx += 16){
+							for(var _wy = y1; _wy < y2; _wy += 16){
+								obj_create(_wx, _wy, "WallFake");
+							}
 						}
+						
+						 // Chest:
+						chest_create(x, y1 + 16, "Backpack", true);
 					}
 				}
 				
@@ -459,7 +471,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -522,13 +536,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -567,6 +583,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

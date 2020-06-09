@@ -25,8 +25,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro area_active (!instance_exists(GenCont) && !instance_exists(LevCont) && ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area) == mod_current && GameCont.subarea > 0)
-#macro area_visits variable_instance_get(GameCont, "visited_" + mod_current, 0)
+#macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
+#macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
 #macro wading_color make_color_rgb(44, 37, 122)
 
@@ -39,7 +39,7 @@
 #define area_background_color  return make_color_rgb(27, 118, 184);
 #define area_shadow_color      return c_black;
 #define area_darkness          return false;
-#define area_secret            return true;
+#define area_secret            return false;
 
 #define area_name(_subarea, _loops)
 	return "@1(sprInterfaceIcons)1-" + string((_subarea <= 0) ? "?" : _subarea);
@@ -109,13 +109,16 @@
 	global.pop_enemies_wait = 0;
 	
 	 // Remember:
-	variable_instance_set(GameCont, "visited_" + mod_current, area_visits + 1);
+	variable_instance_set(GameCont, "ntte_visits_" + mod_current, area_visits + 1);
 	
 #define area_setup_floor
 	 // Footsteps:
 	material = 1;
 	
 #define area_start
+	 // Enable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
+	
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
 		case 1: // Shell
@@ -238,20 +241,23 @@
 	unlock_set("race:parrot", true);
 	
 #define area_finish
-	lastarea = area;
-	lastsubarea = subarea;
+	 // Next Subarea:
+	if(subarea < area_subarea()){
+		subarea++;
+	}
 	
 	 // Next Area:
-	if(subarea >= area_subarea()){
+	else{
 		var _next = area_next();
 		area = _next[0];
 		subarea = _next[1];
 	}
 	
-	 // Next Subarea: 
-	else subarea++;
-	
 #define area_transit
+	 // Disable Area:
+	variable_instance_set(GameCont, "ntte_active_" + mod_current, false);
+	
+	 // NTTE Update:
 	mod_variable_set("mod", "ntte", "area_update", true);
 	
 	 // There Ain't No More Water:
@@ -640,6 +646,69 @@
 			}
 		}
 		
+		 // Spinny Water Portals:
+		with(instances_matching(Portal, "coast_portal", null)){
+			coast_portal = (type == 1);
+			alarm0 = -1;
+			
+			if(coast_portal){
+				visible = false;
+				sound_stop(sndPortalOpen);
+				
+				 // Flash Sea:
+				with(instances_matching(CustomDraw, "name", "sea_draw")){
+					flash = 0;
+				}
+				
+				 // Move to Sea:
+				var	_moveDis = 8,
+					_moveDir = 0;
+					
+				with(Floor){
+					_moveDir += point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
+				}
+				_moveDir /= instance_number(Floor);
+				
+				while(distance_to_object(Floor) < 120){
+					x += lengthdir_x(_moveDis, _moveDir);
+					y += lengthdir_y(_moveDis, _moveDir);
+				}
+				
+				 // Move Spawned Stuff:
+				with(instance_nearest(xstart, ystart, PortalShock)){
+					x = other.x;
+					y = other.y;
+				}
+				repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
+					x = other.x;
+					y = other.y;
+				}
+				
+				xstart = x;
+				ystart = y;
+				xprevious = x;
+				yprevious = y;
+			}
+		}
+		with(instances_matching_lt(instances_matching(Portal, "visible", false), "endgame", 100)){
+			if(!place_meeting(xstart, ystart, Floor)){
+				var	r = 5 + image_index,
+					c = current_frame;
+					
+				x = xstart + (cos(c) * r);
+				y = ystart + (sin(c) * r);
+				
+				if(current_frame_active){
+					instance_create(x, y, choose(Sweat, Sweat, Bubble));
+				}
+				
+				if("coast_portal_sound" not in self){
+					coast_portal_sound = true;
+					sound_play(sndOasisPortal);
+				}
+			}
+		}
+		
 		 // Weird fix for ultra bolts destroying themselves when not touching a floor:
 		global.ultraboltfix_floors = [];
 		with(UltraBolt){
@@ -664,76 +733,6 @@
 		 // Wall Stuff:
 		with(instances_matching(Wall, "visible", false)) visible = true;
 		with(TopSmall) instance_destroy();
-		
-		 // Spinny Water Portals:
-		with(instances_matching(Portal, "coast_portal", null)){
-			coast_portal = false;
-			if(type == 1){
-				coast_portal = true;
-				
-				visible = false;
-				sound_stop(sndPortalOpen);
-				with(instances_matching(CustomDraw, "name", "sea_draw")) flash = 0;
-				
-				 // Player Touched It:
-				if(endgame < 100){
-					endgame = 100;
-					sound_stop(sndPortalClose);
-					with(instances_matching(Player, "mask_index", mskNone)) mask_index = mskPlayer;
-				}
-				
-				 // Move to Water:
-				event_perform(ev_alarm, 0);
-				alarm0 = -1;
-				
-				var	_sx = x,
-					_sy = y,
-					_moveDis = 8,
-					_moveDir = 0;
-					
-				with(Floor){
-					_moveDir += point_direction(bbox_center_x, bbox_center_y, _sx, _sy);
-				}
-				_moveDir /= instance_number(Floor);
-				
-				while(distance_to_object(Floor) < 120){
-					x += lengthdir_x(_moveDis, _moveDir);
-					y += lengthdir_y(_moveDis, _moveDir);
-				}
-				xstart = x;
-				ystart = y;
-				
-				 // Move Spawned Stuff:
-				with(instance_nearest(_sx, _sy, PortalShock)){
-					x = other.x;
-					y = other.y;
-				}
-				repeat(5) with(instance_nearest(_sx, _sy, PortalL)){
-					x = other.x;
-					y = other.y;
-				}
-			}
-		}
-		with(instances_matching(Portal, "visible", false)){
-			if(!place_meeting(xstart, ystart, Floor)){
-				if(endgame < 100){
-					var	r = 5 + image_index,
-						c = current_frame;
-						
-					x = xstart + (cos(c) * r);
-					y = ystart + (sin(c) * r);
-					
-					if(current_frame_active){
-						instance_create(x, y, choose(Sweat, Sweat, Bubble));
-					}
-					
-					if("coast_portal_sound" not in self){
-						coast_portal_sound = true;
-						sound_play(sndOasisPortal);
-					}
-				}
-			}
-		}
 		
 		 // Watery Dust:
 		with(instances_matching(Dust, "coast_water", null)){
@@ -1311,7 +1310,7 @@
 	}
 	else{
 		wave_dis = round(5.5 + (0.5 * sin(_wave / 200)) + random(1));
-		wave_ang = round(random(45) / 15) * 15;
+		wave_ang = pround(random(45), 15);
 	}
 	
 	if(lag) trace_time("sea_draw Foam");
@@ -1377,7 +1376,7 @@
 		visible = _visible;
 	}
 	
-	if(lag) trace_time(`sea_inst_visible(${depth})`);
+	if(lag) trace_time(script[2] + "(" + string(depth) + ")");
 	
 	instance_destroy();
 	
@@ -1414,7 +1413,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -1477,13 +1478,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -1522,6 +1525,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);

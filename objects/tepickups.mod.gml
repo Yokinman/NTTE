@@ -2721,6 +2721,181 @@
 	}
 	
 	
+#define OrchidBall_create(_x, _y)
+	/*
+		The Orchid pet's mutation projectile
+		
+		Args:
+			skill       - The mutation to give, automatically decided by default
+			time        - The lifespan of the given mutation
+			target      - The instance to fly towards
+			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
+			creator     - Who created this ball, bro
+			trail_col   - The trail effect's 'image_blend'
+			flash       - How many frames to draw in flat white
+	*/
+	
+	 // First, Enable Orchid Chest Spawning:
+	save_set("orchid:seen", true);
+	
+	 // Back to Business:
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.PetOrchidBall;
+		depth        = -9;
+		
+		 // Vars:
+		mask_index   = mskSuperFlakBullet;
+		image_xscale = 1.5;
+		image_yscale = image_xscale;
+		friction     = 0.6;
+		direction    = random(360);
+		speed        = 8;
+		skill        = OrchidSkill_decide();
+		time         = -1;
+		target       = instance_nearest(x, y, Player);
+		target_seek  = false;
+		creator      = noone;
+		trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
+		flash        = 3;
+		
+		return id;
+	}
+	
+#define OrchidBall_step
+	if(flash > 0) flash -= current_time_scale;
+	
+	 // Grow / Shrink:
+	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
+		_scaleAdd = (current_time_scale / 15);
+		
+	image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
+	image_yscale += clamp(_scale - image_yscale, -_scaleAdd, _scaleAdd);
+	
+	 // Spin:
+	image_angle += hspeed_raw / 3;
+	
+	 // Effects:
+	if(visible && chance_ct(1, 4)){
+		scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
+	}
+	
+	 // Doin':
+	if(target_seek){
+		if(target != noone){
+			if(instance_exists(target)){
+				 // Epic Success:
+				if(place_meeting(x, y, target) || place_meeting(x, y, Portal)){
+					instance_destroy();
+				}
+				
+				 // Movin':
+				else{
+					motion_add_ct(point_direction(x, y, target.x, target.y), 1.5);
+					speed = min(speed, 10);
+					
+					 // Trail:
+					if(current_frame_active){
+						repeat(1 + chance(1, 3)){
+							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
+								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
+								image_blend  = other.trail_col;
+								image_xscale = 0.8;
+								image_yscale = image_xscale;
+								image_angle  = random(360);
+								depth        = other.depth + 0.1;
+								// image_speed  = 0.4;
+							}
+						}
+					}
+				}
+			}
+			
+			 // Fresh Meat:
+			else if(instance_exists(Player)){
+				target = instance_nearest(x, y, Player);
+			}
+				
+			 // Disappear:
+			else instance_destroy();
+		}
+	}
+	else if(speed <= 3){
+		target_seek = true;
+		flash = 3;
+	}
+	
+#define OrchidBall_draw
+	if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
+	draw_self();
+	if(flash > 0) draw_set_fog(false, 0, 0, 0);
+	
+	 // Bloom:
+	var	_scale = 2,
+		_alpha = 0.1;
+		
+	draw_set_blend_mode(bm_add);
+	image_xscale *= _scale;
+	image_yscale *= _scale;
+	image_alpha  *= _alpha;
+	draw_self();
+	image_xscale /= _scale;
+	image_yscale /= _scale;
+	image_alpha  /= _alpha;
+	draw_set_blend_mode(bm_normal);
+	
+#define OrchidBall_destroy
+	 // Mutate:
+	with(obj_create(x, y, "OrchidSkill")){
+		creator = other.creator;
+		if(other.skill != mut_none){
+			skill = other.skill;
+		}
+		if(other.time >= 0){
+			time = other.time;
+		}
+	}
+	
+	 // Alert:
+	with(target){
+		var _icon = skill_get_icon(other.skill);
+		with(scrAlert(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			alert       = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
+			blink       = 15;
+			alarm0      = 60;
+			snd_flash   = sndLevelUp;
+			
+			 // Fix Overlap:
+			while(array_length(instances_meeting(target.x + target_x, target.y + target_y, instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", target))) > 0){
+				target_y -= 8;
+			}
+		}
+	}
+	
+	 // Effects:
+	repeat(10 + irandom(10)){
+		with(scrFX([x, 16], [y, 16], [direction, 3 + random(3)], "VaultFlowerSparkle")){
+			depth = -9;
+			friction = 0.2;
+		}
+	}
+	var _len = 16;
+	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
+		speed = 1;
+		direction = other.direction;
+		sprite_index = sprMutant6Dead;
+		image_index = 11;
+		image_speed = 0.5;
+		image_xscale = 0.75;
+		image_yscale = image_xscale;
+		image_angle = direction - 90;
+		depth = -4;
+	}
+	sleep(20);
+	
+	
 #define OrchidChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -2746,7 +2921,7 @@
 	
 #define OrchidChest_open
 	 // Skill:
-	with(obj_create(x, y, "OrchidSkillBecome")){
+	with(obj_create(x, y, "OrchidBall")){
 		if(instance_is(other, Player)) target = other;
 		direction = 90 + orandom(45);
 	}
@@ -2804,7 +2979,7 @@
 		}
 	}
 	
-	var _skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidSkillBecome");
+	var _skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidBall");
 	with(array_shuffle(_skillList)){
 		var _skill = self;
 		if(_skillAll || (skill_get(_skill) == 0 && array_length(instances_matching(_skillInst, "skill", _skill)) <= 0)){
@@ -2813,7 +2988,7 @@
 	}
 	
 	return mut_none;
-
+	
 #define OrchidSkill_create(_x, _y)
 	/*
 		Manages the pet Orchid's timed mutation
@@ -3049,181 +3224,6 @@
 			
 			break;
 	}
-	
-	
-#define OrchidSkillBecome_create(_x, _y)
-	/*
-		The Orchid pet's mutation projectile
-		
-		Args:
-			skill       - The mutation to give, automatically decided by default
-			time        - The lifespan of the given mutation
-			target      - The instance to fly towards
-			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
-			creator     - Who created this ball, bro
-			trail_col   - The trail effect's 'image_blend'
-			flash       - How many frames to draw in flat white
-	*/
-	
-	 // First, Enable Orchid Chest Spawning:
-	save_set("orchid:seen", true);
-	
-	 // Back to Business:
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index = spr.PetOrchidCharge;
-		depth = -9;
-		
-		 // Vars:
-		speed = 8;
-		friction = 0.6;
-		direction = random(360);
-		image_xscale = 1.5;
-		image_yscale = image_xscale;
-		mask_index = mskSuperFlakBullet;
-		skill = OrchidSkill_decide();
-		time = -1;
-		target = instance_nearest(x, y, Player);
-		target_seek = false;
-		creator = noone;
-		trail_col = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
-		flash = 3;
-		
-		return id;
-	}
-	
-#define OrchidSkillBecome_step
-	if(flash > 0) flash -= current_time_scale;
-	
-	 // Grow / Shrink:
-	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
-		_scaleAdd = (current_time_scale / 15);
-		
-	image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
-	image_yscale += clamp(_scale - image_yscale, -_scaleAdd, _scaleAdd);
-	
-	 // Spin:
-	image_angle += hspeed_raw / 3;
-	
-	 // Effects:
-	if(visible && chance_ct(1, 4)){
-		scrFX([x, 6], [y, 6], 0, "VaultFlowerSparkle");
-	}
-	
-	 // Doin':
-	if(target_seek){
-		if(target != noone){
-			if(instance_exists(target)){
-				 // Epic Success:
-				if(place_meeting(x, y, target) || place_meeting(x, y, Portal)){
-					instance_destroy();
-				}
-				
-				 // Movin':
-				else{
-					motion_add_ct(point_direction(x, y, target.x, target.y), 1.5);
-					speed = min(speed, 10);
-					
-					 // Trail:
-					if(current_frame_active){
-						repeat(1 + chance(1, 3)){
-							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
-								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
-								image_blend  = other.trail_col;
-								image_xscale = 0.8;
-								image_yscale = image_xscale;
-								image_angle  = random(360);
-								depth        = other.depth + 0.1;
-								// image_speed  = 0.4;
-							}
-						}
-					}
-				}
-			}
-			
-			 // Fresh Meat:
-			else if(instance_exists(Player)){
-				target = instance_nearest(x, y, Player);
-			}
-				
-			 // Disappear:
-			else instance_destroy();
-		}
-	}
-	else if(speed <= 3){
-		target_seek = true;
-		flash = 3;
-	}
-	
-#define OrchidSkillBecome_draw
-	if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
-	draw_self();
-	if(flash > 0) draw_set_fog(false, 0, 0, 0);
-	
-	 // Bloom:
-	var	_scale = 2,
-		_alpha = 0.1;
-		
-	draw_set_blend_mode(bm_add);
-	image_xscale *= _scale;
-	image_yscale *= _scale;
-	image_alpha  *= _alpha;
-	draw_self();
-	image_xscale /= _scale;
-	image_yscale /= _scale;
-	image_alpha  /= _alpha;
-	draw_set_blend_mode(bm_normal);
-	
-#define OrchidSkillBecome_destroy
-	 // Mutate:
-	with(obj_create(x, y, "OrchidSkill")){
-		creator = other.creator;
-		if(other.skill != mut_none){
-			skill = other.skill;
-		}
-		if(other.time >= 0){
-			time = other.time;
-		}
-	}
-	
-	 // Alert:
-	with(target){
-		var _icon = skill_get_icon(other.skill);
-		with(scrAlert(self, _icon[0])){
-			image_index = _icon[1];
-			image_speed = 0;
-			alert       = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
-			blink       = 15;
-			alarm0      = 60;
-			snd_flash   = sndLevelUp;
-			
-			 // Fix Overlap:
-			while(array_length(instances_meeting(target.x + target_x, target.y + target_y, instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", target))) > 0){
-				target_y -= 8;
-			}
-		}
-	}
-	
-	 // Effects:
-	repeat(10 + irandom(10)){
-		with(scrFX([x, 16], [y, 16], [direction, 3 + random(3)], "VaultFlowerSparkle")){
-			depth = -9;
-			friction = 0.2;
-		}
-	}
-	var _len = 16;
-	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
-		speed = 1;
-		direction = other.direction;
-		sprite_index = sprMutant6Dead;
-		image_index = 11;
-		image_speed = 0.5;
-		image_xscale = 0.75;
-		image_yscale = image_xscale;
-		image_angle = direction - 90;
-		depth = -4;
-	}
-	sleep(20);
 	
 	
 #define PalaceAltar_create(_x, _y)
@@ -4479,17 +4479,15 @@
 					_fire = 1;
 				}
 			}
-			_cost         *= max(1, _fire);
-			_internalCost *= max(1, _fire);
 			
 			 // Step:
-			if(ammo[_type] + bonus_ammo >= _cost){
+			if(ammo[_type] - (_cost * _fire) <= _cost){
 				array_push(global.bonus_ammo_step, {
 					inst  : id,
 					last  : GameObject.id,
 					type  : _type,
-					wkick : wkick,
-					bonus : (ammo[_type] <= _cost)
+					wkick : ((can_shoot == true) ? ((wkick == 0) ? 4 : wkick + (sign(wkick) * current_time_scale)) : wkick),
+					bonus : (ammo[_type] + bonus_ammo >= _cost * max(1, _fire))
 				});
 			}
 			
@@ -4498,7 +4496,9 @@
 				var	_bonus         = 0,
 					_internalBonus = 0;
 					
-				 // Reloading, Clamp Max Ammo:
+				 // Cost:
+				_cost         *= _fire;
+				_internalCost *= _fire;
 				if(can_shoot != true){
 					_cost         = min(_cost,         typ_amax[_type]);
 					_internalCost = min(_internalCost, (_internal ? lq_defget(_wep, "amax", 0) : 0));
@@ -4828,28 +4828,36 @@
 	
 	 // Bonus Ammo / Overstock Cleanup:
 	with(global.bonus_ammo_step){
-		with(inst){
-			drawempty = 0;
-			
-			if(other.bonus){
-				 // Prevent Low Ammo Text:
-				var _wkick = other.wkick;
-				with(instances_matching(instances_matching(instances_matching_gt(PopupText, "id", other.last), "target", index), "text", "EMPTY", "NOT ENOUGH " + typ_name[other.type])){
-					other.wkick = _wkick;
+		if(instance_exists(inst)){
+			 // Prevent Low Ammo Text:
+			if(bonus){
+				var	_txtNon = loc(`HUD:NoAmmo:${type}`, loc("HUD:NoAmmo", "EMPTY")),
+					_txtIns = loc(`HUD:InsAmmo:${type}`, string_replace(loc("HUD:InsAmmo", "NOT ENOUGH %"), "%", inst.typ_name[type]));
+					
+				with(instances_matching(instances_matching(instances_matching_gt(PopupText, "id", last), "target", inst.index), "text", _txtNon, _txtIns)){
+					if(other.inst.wkick == -2){
+						other.inst.wkick = other.wkick;
+					}
 					sound_stop(sndEmpty);
 					instance_destroy();
 				}
-				
-				 // Cool Blue Shells:
-				with(instances_matching_ne(instances_matching_gt(Shell, "id", other.last), "sprite_index", sprSodaCan)){
-					if(position_meeting(x, y, other)){
-						sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
-						if(chance(1, 5)){
-							image_blend = merge_color(image_blend, c_blue, 0.25);
-						}
+			}
+			
+			 // Cool Blue Shells:
+			with(instances_matching_ne(instances_matching_gt(Shell, "id", last), "sprite_index", sprSodaCan)){
+				if(position_meeting(x, y, other.inst)){
+					sprite_index = ((sprite_get_width(sprite_index) > 3) ? spr.BonusShellHeavy : spr.BonusShell);
+					if(chance(1, 5)){
+						image_blend = merge_color(image_blend, c_blue, 0.25);
 					}
 				}
 			}
+		}
+	}
+	with(instances_matching_gt(instances_matching_gt(Player, "bonus_ammo", 0), "drawempty", 0)){
+		var _type = weapon_get_type(wep);
+		if(ammo[_type] + bonus_ammo >= typ_ammo[_type]){
+			drawempty = 0;
 		}
 	}
 	
@@ -5238,7 +5246,9 @@
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define pfloor(_num, _precision)                                                        return  floor(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
+#define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
+#define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
 #define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
@@ -5301,13 +5311,15 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
-#define area_get_name(_area, _subarea, _loop)                                           return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loop);
+#define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);
 #define area_get_secret(_area)                                                          return  mod_script_call_nc('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_underwater', _area);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc('mod', 'telib', 'area_border', _y, _area, _color);
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)      return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup);
+#define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc('mod', 'telib', 'floor_set_style', _style, _area);
@@ -5346,6 +5358,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
