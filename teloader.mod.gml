@@ -68,7 +68,8 @@
 		["weps/quasar rifle.wep.gml",               1],
 		["weps/quasar cannon.wep.gml",              1],
 		["weps/annihilator.wep.gml",				1],
-		["weps/teleport gun.wep.gml",               1]
+		["weps/teleport gun.wep.gml",               1],
+		["weps/energy bat.wep.gml",					1]
 	];
 	global.load_max += array_length(global.list);
 	
