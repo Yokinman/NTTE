@@ -6,14 +6,14 @@
 	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidChest", "OrchidSkill", "OrchidSkillBecome", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedAmmoChest", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "Warp", "WarpPortal"],
+		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedAmmoChest", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "EnergyBatSlash", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
@@ -1673,66 +1673,57 @@
 		Get rid of normal portals, but make it look cool
 	*/
 	
-	var _rescue = false;
-	
-	with(instances_matching_ge(instances_matching_ge(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1), "endgame", 0), "image_alpha", 1)){
-		sound_stop(sndPortalClose);
-		sound_stop(sndPortalLoop);
-		
-		 // Guardian:
-		if(
-			visible
-			&& endgame >= 100
-			&& !place_meeting(x, y, PortalShock)
-			&& point_seen_ext(x, y, -8, -8, -1)
-			&& chance(1, 2)
-		){
-			with(obj_create(x, y, "PortalGuardian")){
-				x = xstart;
-				y = ystart;
-				sprite_index = spr_appear;
-				right = other.image_xscale;
-				portal = true;
+	with(instances_matching_ge(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1)){
+		if(!place_meeting(x, y, Player)){
+			//sound_stop(sndPortalClose);
+			sound_stop(sndPortalLoop);
+			
+			 // Guardian:
+			if(
+				visible
+				&& type == 1
+				&& endgame >= 100
+				&& !position_meeting(x, y, PortalShock)
+				&& point_seen_ext(x, y, -8, -8, -1)
+				&& chance(1, 2)
+			){
+				with(obj_create(x, y, "PortalGuardian")){
+					x = xstart;
+					y = ystart;
+					sprite_index = spr_appear;
+					right = other.image_xscale;
+					portal = true;
+				}
+				sound_play_hit_ext(
+					asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
+					2 + orandom(0.1),
+					3
+				);
 			}
-			sound_play_hit_ext(
-				asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
-				2 + orandom(0.1),
-				3
-			);
-		}
-		
-		 // Normal:
-		else with(instance_create(x, y, BulletHit)){
-			name = "PortalPoof";
-			sprite_index = sprPortalDisappear;
-			image_xscale = other.image_xscale;
-			image_yscale = other.image_yscale;
-			image_angle = other.image_angle;
-			image_blend = other.image_blend;
-			image_alpha = other.image_alpha;
-			depth = other.depth;
-		}
-		
-		 // Rescue Players:
-		with(Player){
-			if(instance_seen(x, y, other)){
-				array_push(_rescue, self);
+			
+			 // Normal:
+			else with(instance_create(x, y, BulletHit)){
+				name         = "PortalPoof";
+				sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = other.image_angle;
+				image_blend  = other.image_blend;
+				image_alpha  = other.image_alpha;
+				depth        = other.depth;
 			}
-		}
-		
-		instance_destroy();
-	}
-	
-	 // Rescue Players:
-	if(array_length(instances_matching_lt(Portal, "endgame", 100)) <= 0){
-		with(_rescue){
-			if(mask_index == mskNone){
-				mask_index = ((race == char_bigdog) ? mskScrapBoss : mskPlayer);
+			
+			 // Rescue Players:
+			if(timer > 30){
+				with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
+					if(instance_near(x, y, instance_seen(x, y, other), 48)){
+						if(skill_get(mut_throne_butt) > 0) angle = 0;
+						else roll = true;
+					}
+				}
 			}
-			if(angle != 0){
-				if(skill_get(mut_throne_butt) > 0) angle = 0;
-				else roll = true;
-			}
+			
+			instance_destroy();
 		}
 	}
 	
@@ -1804,14 +1795,47 @@
 	
 	return random_range(-n, n);
 	
-#define pfloor(_num, _precision)
-	return floor(_num / _precision) * _precision;
-	
 #define pround(_num, _precision)
-	return round(_num / _precision) * _precision;
+	/*
+		Precision 'round()'
+		
+		Ex:
+			pround(7, 3) == 6
+	*/
+	
+	if(_precision != 0){
+		return round(_num / _precision) * _precision;
+	}
+	
+	return _num;
+	
+#define pfloor(_num, _precision)
+	/*
+		Precision 'floor()'
+		
+		Ex:
+			pfloor(2.7, 0.5) == 2.5
+	*/
+	
+	if(_precision != 0){
+		return floor(_num / _precision) * _precision;
+	}
+	
+	return _num;
 	
 #define pceil(_num, _precision)
-	return ceil(_num / _precision) * _precision;
+	/*
+		Precision 'ceil()'
+		
+		Ex:
+			pceil(-9, 5) == -5
+	*/
+	
+	if(_precision != 0){
+		return ceil(_num / _precision) * _precision;
+	}
+	
+	return _num;
 	
 #define array_exists(_array, _value)
 	return (array_find_index(_array, _value) >= 0);
@@ -2350,7 +2374,7 @@
 	
 #define game_activate()
 	/*
-		Reactivates all instances and unpauses the game
+		Reactivates all objects and unpauses the game
 	*/
 	
 	with(UberCont) with(self){
@@ -2364,7 +2388,7 @@
 	
 	with(UberCont) with(self){
 		var	_lastIntro = opt_bossintros,
-			_lastLoop = GameCont.loops,
+			_lastLoops = GameCont.loops,
 			_player = noone;
 			
 		 // Ensure Boss Intro Plays:
@@ -2386,7 +2410,7 @@
 		 // Reset:
 		alarm2 = -1;
 		opt_bossintros = _lastIntro;
-		GameCont.loops = _lastLoop;
+		GameCont.loops = _lastLoops;
 		with(_player) instance_delete(id);
 		
 		 // Unpause Game, Then Deactivate Objects:
@@ -2394,37 +2418,38 @@
 		event_perform(ev_draw, ev_draw_post);
 	}
 	
-#define area_generate(_area, _subarea, _x, _y, _setArea, _overlapFloor, _scrSetup)
+#define area_generate(_area, _subarea, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)
 	/*
 		Deactivates the game, generates a given area, and reactivates the game
 		Returns the ID of the GenCont used to create the area, or null if the area couldn't be generated
 		
 		Args:
-			area/subarea - Area to generate
-			x/y          - Spawn position
-			setArea      - Set the current area to the generated area
-			                 True  : Sets the area, background_color, BackCont vars, TopCont vars, and calls .mod level_start scripts
-			                 False : Maintains the current area and deletes new IDPD spawns
-			overlapFloor - Number 0 to 1, determines the percent of current level floors that can be overlapped
-			scrSetup     - Script reference, called right before floor generation
+			area/subarea/loops - Area to generate
+			x/y                - Spawn position
+			setArea            - Set the current area to the generated area
+			                       True  : Sets the area, background_color, BackCont vars, TopCont vars, and calls .mod level_start scripts
+			                       False : Maintains the current area and deletes new IDPD spawns
+			overlapFloor       - Number 0 to 1, determines the percent of current level floors that can be overlapped
+			scrSetup           - Script reference, called right before floor generation
 			
 		Ex:
-			var _genID = area_generate(area_scrapyards, 3, x, y, false, 0, null);
+			var _genID = area_generate(area_scrapyards, 3, GameCont.loops, x, y, false, 0, null);
 			with(instances_matching_gt(chestprop, "id", _genID)){
 				instance_delete(id);
 			}
 	*/
 	
 	if(is_real(_area) || is_string(_area)){
-		var	_lastArea = GameCont.area,
-			_lastSubarea = GameCont.subarea,
+		var	_lastArea            = GameCont.area,
+			_lastSubarea         = GameCont.subarea,
+			_lastLoops           = GameCont.loops,
 			_lastBackgroundColor = background_color,
-			_lastLetterbox = game_letterbox,
-			_lastViewObj = [],
-			_lastViewPan = [],
-			_lastViewShk = [],
-			_lastObjVars = [],
-			_lastSolid = [];
+			_lastLetterbox       = game_letterbox,
+			_lastViewObj         = [],
+			_lastViewPan         = [],
+			_lastViewShk         = [],
+			_lastObjVars         = [],
+			_lastSolid           = [];
 			
 		 // Remember Stuff:
 		for(var i = 0; i < maxp; i++){
@@ -2490,8 +2515,9 @@
 		}
 		
 		 // Generate Level:
-		GameCont.area = _area;
+		GameCont.area    = _area;
 		GameCont.subarea = _subarea;
+		GameCont.loops   = _loops;
 		var _genID = instance_create(0, 0, GenCont);
 		with(_genID) with(self){
 			var	_ox = (_x - 10016),
@@ -2671,8 +2697,9 @@
 		
 		 // Reset Area:
 		if(!_setArea){
-			GameCont.area = _lastArea;
+			GameCont.area    = _lastArea;
 			GameCont.subarea = _lastSubarea;
+			GameCont.loops   = _lastLoops;
 			background_color = _lastBackgroundColor;
 			with(_lastObjVars){
 				var	_obj = self[0],
@@ -2699,7 +2726,7 @@
 	
 	return null;
 	
-#define area_get_name(_area, _subarea, _loop)
+#define area_get_name(_area, _subarea, _loops)
 	/*
 		Returns the current area's name as it would appear on the map
 	*/
@@ -2710,7 +2737,7 @@
 	if(is_string(_area)){
 		a = ["MOD"];
 		if(mod_script_exists("area", _area, "area_name")){
-			var _custom = mod_script_call("area", _area, "area_name", _subarea, _loop);
+			var _custom = mod_script_call("area", _area, "area_name", _subarea, _loops);
 			if(is_string(_custom)) a = [_custom];
 		}
 	}
@@ -2743,9 +2770,9 @@
 	}
 	
 	 // Loop:
-	if(real(_loop) > 0){
+	if(real(_loops) > 0){
 		array_push(a, " " + ((UberCont.hardmode == true) ? "H" : "L"));
-		array_push(a, _loop);
+		array_push(a, _loops);
 	}
 	
 	 // Compile Name:
@@ -2761,7 +2788,20 @@
 	return _name;
 	
 #define area_get_subarea(_area)
-	if(is_real(_area)){
+	/*
+		Returns how many subareas are in the given area
+	*/
+	
+	 // Custom Area:
+	if(is_string(_area)){
+		var _scrt = "area_subarea";
+		if(mod_script_exists("area", _area, _scrt)){
+			return mod_script_call("area", _area, _scrt);
+		}
+	}
+	
+	 // Normal Area:
+	else if(is_real(_area)){
 		 // Secret Areas:
 		if(_area == area_hq) return 3;
 		if(_area >= 100) return 1;
@@ -2772,157 +2812,147 @@
 		return 3;
 	}
 	
-	 // Custom Area:
-	var _scrt = "area_subarea";
-	if(mod_script_exists("area", _area, _scrt)){
-		return mod_script_call("area", _area, _scrt);
-	}
-	
 	return 0;
-
-#define area_get_secret(_area)
-	if(is_real(_area)){
-		return (_area >= 100);
-	}
-
-	 // Custom Area:
-	var _scrt = "area_secret";
-	if(mod_script_exists("area", _area, _scrt)){
-		return mod_script_call("area", _area, _scrt);
-	}
-
-	return false;
-
-#define area_get_underwater(_area)
-	if(is_real(_area)){
-		return (_area == area_oasis);
-	}
-
-	 // Custom Area:
-	var _scrt = "area_underwater";
-	if(mod_script_exists("area", _area, _scrt)){
-		return mod_script_call("area", _area, _scrt);
-	}
-
-	return false;
-
-#define floor_walls()
-	var	_x1 = bbox_left - 16,
-		_y1 = bbox_top - 16,
-		_x2 = bbox_right + 16 + 1,
-		_y2 = bbox_bottom + 16 + 1,
-		_minID = GameObject.id;
-		
-	for(var _x = _x1; _x < _x2; _x += 16){
-		for(var _y = _y1; _y < _y2; _y += 16){
-			if(_x == _x1 || _y == _y1 || _x == _x2 - 16 || _y == _y2 - 16){
-				if(!position_meeting(_x, _y, Floor)){
-					instance_create(_x, _y, Wall);
-				}
-			}
-		}
-	}
 	
-	return _minID;
-
-#define floor_bones(_num, _chance, _linked)
+#define area_get_secret(_area)
 	/*
-		Checks if the current Floor is a vertical hallway and then creates Bones decals on the Walls left and right of the current Floor
+		Returns whether or not an area is secret
 		
-		Args:
-			num    - How many decals can be made vertically
-			chance - Chance to create each decal
-			linked - Decal should always spawn with one on the other side, true/false
-			
-		Ex:
-			floor_bones(2, 1,    false) == DESERT / CAMPFIRE
-			floor_bones(1, 1/10, true ) == SEWERS / PIZZA SEWERS / JUNGLE
-			floor_bones(2, 1/7,  false) == SCRAPYARDS / FROZEN CITY
-			floor_bones(2, 1/9,  false) == CRYSTAL CAVES / CURSED CRYSTAL CAVES / OASIS
+		Means the area:
+			Has Proto Statues
+			Is returned to from other secret areas like Crib, IDPD HQ, Crown Vault, etc.
+			Spawns IDPD on new Crowns
+			Creates rad canisters when below the desired amount
+			..?
 	*/
 	
-	var _inst = [];
+	 // Custom Area:
+	if(is_string(_area)){
+		var _scrt = "area_secret";
+		if(mod_script_exists("area", _area, _scrt)){
+			return mod_script_call("area", _area, _scrt);
+		}
+	}
 	
-	if(!collision_rectangle(bbox_left - 16, bbox_top, bbox_right + 16, bbox_bottom, Floor, false, true)){
-		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += (32 / _num)){
-			var _create = true;
-			for(var _side = 0; _side <= 1; _side++){
-				if(_side == 0 || !_linked){
-					_create = (random(1) < _chance);
-				}
-				if(_create){
-					var _x = lerp(bbox_left, bbox_right + 1, _side);
-					with(obj_create(_x, _y, "WallDecal")){
-						image_xscale = ((_side > 0.5) ? -1 : 1);
-						array_push(_inst, id);
-					}
-				}
+	 // Normal Area:
+	else if(is_real(_area)){
+		return (_area >= 100);
+	}
+	
+	return false;
+	
+#define area_get_underwater(_area)
+	/*
+		Returns if a given area is underwater, like Oasis
+	*/
+	
+	 // Custom Area:
+	if(is_string(_area)){
+		var _scrt = "area_underwater";
+		if(mod_script_exists("area", _area, _scrt)){
+			return mod_script_call("area", _area, _scrt);
+		}
+	}
+	
+	 // Normal Area:
+	return (_area == area_oasis);
+	
+#define area_get_back_color(_area)
+	/*
+		Returns a given area's background color, but also supports custom areas
+	*/
+	
+	 // Custom Area:
+	if(is_string(_area)){
+		var _scrt = "area_background_color";
+		if(mod_script_exists("area", _area, _scrt)){
+			return mod_script_call("area", _area, _scrt);
+		}
+	}
+	
+	 // Normal Area:
+	return area_get_background_color(_area);
+	
+#define area_get_shad_color(_area)
+	/*
+		Return's a given area's shadow color, but also supports custom areas
+	*/
+	
+	 // Custom Area:
+	if(is_string(_area)){
+		var _scrt = "area_shadow_color";
+		if(mod_script_exists("area", _area, _scrt)){
+			return mod_script_call("area", _area, _scrt);
+		}
+	}
+	
+	 // Normal Area:
+	return area_get_shadow_color(_area);
+	
+#define area_get_sprite(_area, _spr)
+	/*
+		Returns a given area's variant of the given sprite
+		
+		Ex:
+			area_get_sprite(area_sewers, sprFloor1) == sprFloor2
+			area_get_sprite(area_city, sprDebris1)  == sprDebris5
+			area_get_sprite(area_caves, sprBones)   == sprCaveDecal
+	*/
+	
+	 // Store Sprites:
+	if(!mod_variable_exists(mod_type_current, mod_current, "area_sprite_map")){
+		var _map = ds_map_create();
+		_map[? 0  ] = [sprFloor0,   sprFloor0,    sprFloor0Explo,   sprWall0Trans,   sprWall0Bot,   sprWall0Out,   sprWall0Top,   sprDebris0,   sprDetail0,   sprNightBones,      sprNightDesertTopDecal];
+		_map[? 1  ] = [sprFloor1,   sprFloor1B,   sprFloor1Explo,   sprWall1Trans,   sprWall1Bot,   sprWall1Out,   sprWall1Top,   sprDebris1,   sprDetail1,   sprBones,           sprDesertTopDecal     ];
+		_map[? 2  ] = [sprFloor2,   sprFloor2B,   sprFloor2Explo,   sprWall2Trans,   sprWall2Bot,   sprWall2Out,   sprWall2Top,   sprDebris2,   sprDetail2,   sprSewerDecal,      sprTopDecalSewers     ];
+		_map[? 3  ] = [sprFloor3,   sprFloor3B,   sprFloor3Explo,   sprWall3Trans,   sprWall3Bot,   sprWall3Out,   sprWall3Top,   sprDebris3,   sprDetail3,   sprScrapDecal,      sprTopDecalScrapyard  ];
+		_map[? 4  ] = [sprFloor4,   sprFloor4B,   sprFloor4Explo,   sprWall4Trans,   sprWall4Bot,   sprWall4Out,   sprWall4Top,   sprDebris4,   sprDetail4,   sprCaveDecal,       sprTopDecalCave       ];
+		_map[? 5  ] = [sprFloor5,   sprFloor5B,   sprFloor5Explo,   sprWall5Trans,   sprWall5Bot,   sprWall5Out,   sprWall5Top,   sprDebris5,   sprDetail5,   sprIceDecal,        sprTopDecalCity       ];
+		_map[? 6  ] = [sprFloor6,   sprFloor6B,   sprFloor6Explo,   sprWall6Trans,   sprWall6Bot,   sprWall6Out,   sprWall6Top,   sprDebris6,   sprDetail6,   -1,                 -1                    ];
+		_map[? 7  ] = [sprFloor7,   sprFloor7B,   sprFloor7Explo,   sprWall7Trans,   sprWall7Bot,   sprWall7Out,   sprWall7Top,   sprDebris7,   -1,           -1,                 sprPalaceTopDecal     ];
+		_map[? 100] = [sprFloor100, sprFloor100B, sprFloor100Explo, sprWall100Trans, sprWall100Bot, sprWall100Out, sprWall100Top, sprDebris100, -1,           -1,                 -1                    ];
+		_map[? 101] = [sprFloor101, sprFloor101B, sprFloor101Explo, sprWall101Trans, sprWall101Bot, sprWall101Out, sprWall101Top, sprDebris101, sprDetail101, sprCoral,           -1                    ];
+		_map[? 102] = [sprFloor102, sprFloor102B, sprFloor102Explo, sprWall102Trans, sprWall102Bot, sprWall102Out, sprWall102Top, sprDebris102, sprDetail102, sprPizzaSewerDecal, sprTopDecalPizzaSewers];
+		_map[? 103] = [sprFloor103, sprFloor103B, sprFloor103Explo, sprWall103Trans, sprWall103Bot, sprWall103Out, sprWall103Top, sprDebris103, -1,           -1,                 -1                    ];
+		_map[? 104] = [sprFloor104, sprFloor104B, sprFloor104Explo, sprWall104Trans, sprWall104Bot, sprWall104Out, sprWall104Top, sprDebris104, sprDetail104, sprInvCaveDecal,    sprTopDecalInvCave    ];
+		_map[? 105] = [sprFloor105, sprFloor105B, sprFloor105Explo, sprWall105Trans, sprWall105Bot, sprWall105Out, sprWall105Top, sprDebris105, -1,           sprJungleDecal,     sprTopDecalJungle     ];
+		_map[? 106] = [sprFloor106, sprFloor106B, sprFloor106Explo, sprWall106Trans, sprWall106Bot, sprWall106Out, sprWall106Top, sprDebris106, -1,           -1,                 sprTopPot             ];
+		_map[? 107] = [sprFloor107, sprFloor107B, sprFloor107Explo, sprWall107Trans, sprWall107Bot, sprWall107Out, sprWall107Top, sprDebris107, -1,           -1,                 -1                    ];
+		global.area_sprite_map = _map;
+	}
+	
+	 // Convert to Desert Sprite:
+	if(sprite_exists(_spr)){
+		with(ds_map_values(global.area_sprite_map)){
+			var i = array_find_index(self, _spr);
+			if(i >= 0){
+				_spr = global.area_sprite_map[? 1][i];
+				if(_spr == sprDesertTopDecal) _spr = sprTopPot;
+				break;
 			}
 		}
 	}
 	
-	return _inst;
-
-#define floor_reveal(_x1, _y1, _x2, _y2, _time)
-	var	_bind = instances_matching(CustomScript, "name", "floor_reveal_draw"),
-		_reveal = {
-			creator     : noone,
-			x1          : _x1,
-			y1          : _y1,
-			x2          : _x2,
-			y2          : _y2,
-			ox          : 0,
-			oy          : -8,
-			time        : _time,
-			time_max    : _time,
-			color       : background_color,
-			flash       : true,
-			flash_color : c_white
-		};
-		
-	 // Bind Script:
-	if(array_length(_bind) <= 0){
-		_bind = script_bind_draw(floor_reveal_draw, -8);
-		with(_bind){
-			name = script[2];
-			list = [];
+	 // Custom:
+	if(is_string(_area)){
+		var s = mod_script_call("area", _area, "area_sprite", _spr);
+		if(s != 0 && is_real(s)){
+			return s;
 		}
 	}
 	
-	 // Add to List:
-	with(_bind){
-		_reveal.creator = id;
-		array_push(list, _reveal);
-	}
-	
-	return _reveal;
-
-#define floor_reveal_draw
-	var _destroyInst = [FloorExplo, Explosion, PortalClear, EnergyHammerSlash];
-	
-	with(list){
-		 // Revealing:
-		if(time > 0 && (time <= time_max || array_length(instance_rectangle_bbox(x1, y1, x2, y2, _destroyInst)) <= 0)){
-			var	_num = clamp(time / time_max, 0, 1),
-				_col = ((time > time_max) ? color : merge_color(flash_color, color, (flash ? (1 - _num) : _num)));
-				
-			draw_set_alpha(_num);
-			draw_set_color(_col);
-			draw_rectangle(x1 + ox, y1 + oy, x2 + ox, y2 + oy, false);
+	 // Normal:
+	if(ds_map_exists(global.area_sprite_map, _area)){
+		var	_list = global.area_sprite_map[? _area],
+			i = array_find_index(global.area_sprite_map[? 1], _spr);
 			
-			time -= current_time_scale;
+		if(i >= 0 && i < array_length(_list)){
+			return _list[i];
 		}
-		
-		 // Done:
-		else other.list = array_delete_value(other.list, self);
 	}
-	draw_set_alpha(1);
 	
-	 // Goodbye:
-	if(array_length(list) <= 0){
-		instance_destroy();
-	}
-
+	return -1;
+	
 #define area_border(_y, _area, _color)
 	with(script_bind_draw(area_border_step, infinity, _y, _area, _color)){
 		cavein = false;
@@ -3133,69 +3163,122 @@
 	
 	instance_destroy();
 	
-#define area_get_sprite(_area, _spr)
-	/*
-		Returns a given area's variant of the given sprite
+#define floor_walls()
+	var	_x1 = bbox_left - 16,
+		_y1 = bbox_top - 16,
+		_x2 = bbox_right + 16 + 1,
+		_y2 = bbox_bottom + 16 + 1,
+		_minID = GameObject.id;
 		
-		Ex:
-			area_get_sprite(area_sewers, sprFloor1) == sprFloor2
-			area_get_sprite(area_city, sprDebris1)  == sprDebris5
-			area_get_sprite(area_caves, sprBones)   == sprCaveDecal
-	*/
-	
-	 // Store Sprites:
-	if(!mod_variable_exists(mod_type_current, mod_current, "area_sprite_map")){
-		var _map = ds_map_create();
-		_map[? 0  ] = [sprFloor0,   sprFloor0,    sprFloor0Explo,   sprWall0Trans,   sprWall0Bot,   sprWall0Out,   sprWall0Top,   sprDebris0,   sprDetail0,   sprNightBones,      sprNightDesertTopDecal];
-		_map[? 1  ] = [sprFloor1,   sprFloor1B,   sprFloor1Explo,   sprWall1Trans,   sprWall1Bot,   sprWall1Out,   sprWall1Top,   sprDebris1,   sprDetail1,   sprBones,           sprDesertTopDecal     ];
-		_map[? 2  ] = [sprFloor2,   sprFloor2B,   sprFloor2Explo,   sprWall2Trans,   sprWall2Bot,   sprWall2Out,   sprWall2Top,   sprDebris2,   sprDetail2,   sprSewerDecal,      sprTopDecalSewers     ];
-		_map[? 3  ] = [sprFloor3,   sprFloor3B,   sprFloor3Explo,   sprWall3Trans,   sprWall3Bot,   sprWall3Out,   sprWall3Top,   sprDebris3,   sprDetail3,   sprScrapDecal,      sprTopDecalScrapyard  ];
-		_map[? 4  ] = [sprFloor4,   sprFloor4B,   sprFloor4Explo,   sprWall4Trans,   sprWall4Bot,   sprWall4Out,   sprWall4Top,   sprDebris4,   sprDetail4,   sprCaveDecal,       sprTopDecalCave       ];
-		_map[? 5  ] = [sprFloor5,   sprFloor5B,   sprFloor5Explo,   sprWall5Trans,   sprWall5Bot,   sprWall5Out,   sprWall5Top,   sprDebris5,   sprDetail5,   sprIceDecal,        sprTopDecalCity       ];
-		_map[? 6  ] = [sprFloor6,   sprFloor6B,   sprFloor6Explo,   sprWall6Trans,   sprWall6Bot,   sprWall6Out,   sprWall6Top,   sprDebris6,   sprDetail6,   -1,                 -1                    ];
-		_map[? 7  ] = [sprFloor7,   sprFloor7B,   sprFloor7Explo,   sprWall7Trans,   sprWall7Bot,   sprWall7Out,   sprWall7Top,   sprDebris7,   -1,           -1,                 sprPalaceTopDecal     ];
-		_map[? 100] = [sprFloor100, sprFloor100B, sprFloor100Explo, sprWall100Trans, sprWall100Bot, sprWall100Out, sprWall100Top, sprDebris100, -1,           -1,                 -1                    ];
-		_map[? 101] = [sprFloor101, sprFloor101B, sprFloor101Explo, sprWall101Trans, sprWall101Bot, sprWall101Out, sprWall101Top, sprDebris101, sprDetail101, sprCoral,           -1                    ];
-		_map[? 102] = [sprFloor102, sprFloor102B, sprFloor102Explo, sprWall102Trans, sprWall102Bot, sprWall102Out, sprWall102Top, sprDebris102, sprDetail102, sprPizzaSewerDecal, sprTopDecalPizzaSewers];
-		_map[? 103] = [sprFloor103, sprFloor103B, sprFloor103Explo, sprWall103Trans, sprWall103Bot, sprWall103Out, sprWall103Top, sprDebris103, -1,           -1,                 -1                    ];
-		_map[? 104] = [sprFloor104, sprFloor104B, sprFloor104Explo, sprWall104Trans, sprWall104Bot, sprWall104Out, sprWall104Top, sprDebris104, sprDetail104, sprInvCaveDecal,    sprTopDecalInvCave    ];
-		_map[? 105] = [sprFloor105, sprFloor105B, sprFloor105Explo, sprWall105Trans, sprWall105Bot, sprWall105Out, sprWall105Top, sprDebris105, -1,           sprJungleDecal,     sprTopDecalJungle     ];
-		_map[? 106] = [sprFloor106, sprFloor106B, sprFloor106Explo, sprWall106Trans, sprWall106Bot, sprWall106Out, sprWall106Top, sprDebris106, -1,           -1,                 sprTopPot             ];
-		_map[? 107] = [sprFloor107, sprFloor107B, sprFloor107Explo, sprWall107Trans, sprWall107Bot, sprWall107Out, sprWall107Top, sprDebris107, -1,           -1,                 -1                    ];
-		global.area_sprite_map = _map;
-	}
-	
-	 // Convert to Desert Sprite:
-	if(sprite_exists(_spr)){
-		with(ds_map_values(global.area_sprite_map)){
-			var i = array_find_index(self, _spr);
-			if(i >= 0){
-				_spr = global.area_sprite_map[? 1][i];
-				if(_spr == sprDesertTopDecal) _spr = sprTopPot;
-				break;
+	for(var _x = _x1; _x < _x2; _x += 16){
+		for(var _y = _y1; _y < _y2; _y += 16){
+			if(_x == _x1 || _y == _y1 || _x == _x2 - 16 || _y == _y2 - 16){
+				if(!position_meeting(_x, _y, Floor)){
+					instance_create(_x, _y, Wall);
+				}
 			}
 		}
 	}
 	
-	 // Custom:
-	if(is_string(_area)){
-		var s = mod_script_call("area", _area, "area_sprite", _spr);
-		if(s != 0 && is_real(s)){
-			return s;
-		}
-	}
-	
-	 // Normal:
-	if(ds_map_exists(global.area_sprite_map, _area)){
-		var	_list = global.area_sprite_map[? _area],
-			i = array_find_index(global.area_sprite_map[? 1], _spr);
+	return _minID;
+
+#define floor_bones(_num, _chance, _linked)
+	/*
+		Checks if the current Floor is a vertical hallway and then creates Bones decals on the Walls left and right of the current Floor
+		
+		Args:
+			num    - How many decals can be made vertically
+			chance - Chance to create each decal
+			linked - Decal should always spawn with one on the other side, true/false
 			
-		if(i >= 0 && i < array_length(_list)){
-			return _list[i];
+		Ex:
+			floor_bones(2, 1,    false) == DESERT / CAMPFIRE
+			floor_bones(1, 1/10, true ) == SEWERS / PIZZA SEWERS / JUNGLE
+			floor_bones(2, 1/7,  false) == SCRAPYARDS / FROZEN CITY
+			floor_bones(2, 1/9,  false) == CRYSTAL CAVES / CURSED CRYSTAL CAVES / OASIS
+	*/
+	
+	var _inst = [];
+	
+	if(!collision_rectangle(bbox_left - 16, bbox_top, bbox_right + 16, bbox_bottom, Floor, false, true)){
+		for(var _y = bbox_top; _y < bbox_bottom + 1; _y += (32 / _num)){
+			var _create = true;
+			for(var _side = 0; _side <= 1; _side++){
+				if(_side == 0 || !_linked){
+					_create = (random(1) < _chance);
+				}
+				if(_create){
+					var _x = lerp(bbox_left, bbox_right + 1, _side);
+					with(obj_create(_x, _y, "WallDecal")){
+						image_xscale = ((_side > 0.5) ? -1 : 1);
+						array_push(_inst, id);
+					}
+				}
+			}
 		}
 	}
 	
-	return -1;
+	return _inst;
+
+#define floor_reveal(_x1, _y1, _x2, _y2, _time)
+	var	_bind = instances_matching(CustomScript, "name", "floor_reveal_draw"),
+		_reveal = {
+			creator     : noone,
+			x1          : _x1,
+			y1          : _y1,
+			x2          : _x2,
+			y2          : _y2,
+			ox          : 0,
+			oy          : -8,
+			time        : _time,
+			time_max    : _time,
+			color       : background_color,
+			flash       : true,
+			flash_color : c_white
+		};
+		
+	 // Bind Script:
+	if(array_length(_bind) <= 0){
+		_bind = script_bind_draw(floor_reveal_draw, -8);
+		with(_bind){
+			name = script[2];
+			list = [];
+		}
+	}
+	
+	 // Add to List:
+	with(_bind){
+		_reveal.creator = id;
+		array_push(list, _reveal);
+	}
+	
+	return _reveal;
+
+#define floor_reveal_draw
+	var _destroyInst = [FloorExplo, Explosion, PortalClear, EnergyHammerSlash];
+	
+	with(list){
+		 // Revealing:
+		if(time > 0 && (time <= time_max || array_length(instance_rectangle_bbox(x1, y1, x2, y2, _destroyInst)) <= 0)){
+			var	_num = clamp(time / time_max, 0, 1),
+				_col = ((time > time_max) ? color : merge_color(flash_color, color, (flash ? (1 - _num) : _num)));
+				
+			draw_set_alpha(_num);
+			draw_set_color(_col);
+			draw_rectangle(x1 + ox, y1 + oy, x2 + ox, y2 + oy, false);
+			
+			time -= current_time_scale;
+		}
+		
+		 // Done:
+		else other.list = array_delete_value(other.list, self);
+	}
+	draw_set_alpha(1);
+	
+	 // Goodbye:
+	if(array_length(list) <= 0){
+		instance_destroy();
+	}
 	
 #define floor_get(_x, _y)
 	 // Find Floor:
@@ -3268,7 +3351,7 @@
 	
 #define floor_set_style(_style, _area)
 	global.floor_style = _style;
-	global.floor_area = _area;
+	global.floor_area  = _area;
 	
 #define floor_reset_style()
 	floor_set_style(null, null);
@@ -4048,68 +4131,68 @@
 	
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)
 	 // Auto-Determine Grid Size:
-	var	_tileSize = 16,
-		_areaWidth  = (ceil(abs(_xtarget - _xstart) / _tileSize) * _tileSize) + 320,
-		_areaHeight = (ceil(abs(_ytarget - _ystart) / _tileSize) * _tileSize) + 320;
-
+	var	_tileSize   = 16,
+		_areaWidth  = pceil(abs(_xtarget - _xstart), _tileSize) + 320,
+		_areaHeight = pceil(abs(_ytarget - _ystart), _tileSize) + 320;
+		
 	_areaWidth = max(_areaWidth, _areaHeight);
 	_areaHeight = max(_areaWidth, _areaHeight);
-
+	
 	var _triesMax = 4 * ceil((_areaWidth + _areaHeight) / _tileSize);
-
+	
 	 // Clamp Path X/Y:
-	_xstart = floor(_xstart / _tileSize) * _tileSize;
-	_ystart = floor(_ystart / _tileSize) * _tileSize;
-	_xtarget = floor(_xtarget / _tileSize) * _tileSize;
-	_ytarget = floor(_ytarget / _tileSize) * _tileSize;
-
+	_xstart  = pfloor(_xstart,  _tileSize);
+	_ystart  = pfloor(_ystart,  _tileSize);
+	_xtarget = pfloor(_xtarget, _tileSize);
+	_ytarget = pfloor(_ytarget, _tileSize);
+	
 	 // Grid Setup:
-	var	_gridw = ceil(_areaWidth / _tileSize),
-		_gridh = ceil(_areaHeight / _tileSize),
-		_gridx = round((((_xstart + _xtarget) / 2) - (_areaWidth  / 2)) / _tileSize) * _tileSize,
-		_gridy = round((((_ystart + _ytarget) / 2) - (_areaHeight / 2)) / _tileSize) * _tileSize,
-		_grid = ds_grid_create(_gridw, _gridh),
+	var	_gridw    = ceil(_areaWidth  / _tileSize),
+		_gridh    = ceil(_areaHeight / _tileSize),
+		_gridx    = pround(((_xstart + _xtarget) / 2) - (_areaWidth  / 2), _tileSize),
+		_gridy    = pround(((_ystart + _ytarget) / 2) - (_areaHeight / 2), _tileSize),
+		_grid     = ds_grid_create(_gridw, _gridh),
 		_gridCost = ds_grid_create(_gridw, _gridh);
-
+		
 	ds_grid_clear(_grid, -1);
-
+	
 	 // Mark Walls:
 	with(instance_rectangle(_gridx, _gridy, _gridx + _areaWidth, _gridy + _areaHeight, _wall)){
 		if(position_meeting(x, y, id)){
 			_grid[# (x - _gridx) / _tileSize, (y - _gridy) / _tileSize] = -2;
 		}
 	}
-
+	
 	 // Pathing:
-	var	_x1 = (_xtarget - _gridx) / _tileSize,
-		_y1 = (_ytarget - _gridy) / _tileSize,
-		_x2 = (_xstart - _gridx) / _tileSize,
-		_y2 = (_ystart - _gridy) / _tileSize,
+	var	_x1         = (_xtarget - _gridx) / _tileSize,
+		_y1         = (_ytarget - _gridy) / _tileSize,
+		_x2         = (_xstart  - _gridx) / _tileSize,
+		_y2         = (_ystart  - _gridy) / _tileSize,
 		_searchList = [[_x1, _y1, 0]],
-		_tries = _triesMax;
-
+		_tries      = _triesMax;
+		
 	while(_tries-- > 0){
 		var	_search = _searchList[0],
-			_sx = _search[0],
-			_sy = _search[1],
-			_sp = _search[2];
-
+			_sx     = _search[0],
+			_sy     = _search[1],
+			_sp     = _search[2];
+			
 		if(_sp >= infinity) break; // No more searchable tiles
 		_search[2] = infinity;
-
+		
 		 // Sort Through Neighboring Tiles:
 		var _costSoFar = _gridCost[# _sx, _sy];
 		for(var i = 0; i < 2*pi; i += pi/2){
 			var	_nx = _sx + cos(i),
 				_ny = _sy - sin(i),
 				_nc = _costSoFar + 1;
-
+				
 			if(_grid[# _nx, _ny] == -1){
 				if(_nx >= 0 && _ny >= 0){
 					if(_nx < _gridw && _ny < _gridh){
 						_gridCost[# _nx, _ny] = _nc;
 						_grid[# _nx, _ny] = point_direction(_nx, _ny, _sx, _sy);
-
+						
 						 // Add to Search List:
 						array_push(_searchList, [
 							_nx,
@@ -4119,24 +4202,24 @@
 					}
 				}
 			}
-
+			
 			 // Path Complete:
 			if(_nx == _x2 && _ny == _y2){
 				_tries = 0;
 				break;
 			}
 		}
-
+		
 		 // Next:
 		array_sort_sub(_searchList, 2, true);
 	}
-
+	
 	 // Pack Path into Array:
-	var	_x = _xstart,
-		_y = _ystart,
-		_path = [[_x + (_tileSize / 2), _y + (_tileSize / 2)]],
+	var	_x     = _xstart,
+		_y     = _ystart,
+		_path  = [[_x + (_tileSize / 2), _y + (_tileSize / 2)]],
 		_tries = _triesMax;
-
+		
 	while(_tries-- > 0){
 		var _dir = _grid[# ((_x - _gridx) / _tileSize), ((_y - _gridy) / _tileSize)];
 		if(_dir >= 0){
@@ -4148,19 +4231,19 @@
 			_path = []; // Couldn't find path
 			break;
 		}
-
+		
 		 // Done:
 		if(_x == _xtarget && _y == _ytarget){
 			break;
 		}
 	}
 	if(_tries <= 0) _path = []; // Couldn't find path
-
+	
 	ds_grid_destroy(_grid);
 	ds_grid_destroy(_gridCost);
-
+	
 	return _path;
-
+	
 #define path_shrink(_path, _wall, _skipMax)
 	var	_pathNew = [],
 		_link = 0;
@@ -5321,6 +5404,23 @@
 		}
 		
 		UberCont.opt_shake = _shake;
+	}
+	
+#define move_step(_mult)
+	/*
+		Performs an instance's basic movement code, scaled by a given number
+	*/
+	
+	if(speed != 0){
+		speed -= min(abs(speed), friction_raw * _mult) * sign(speed);
+	}
+	if(gravity != 0){
+		hspeed += lengthdir_x(gravity_raw, gravity_direction) * _mult;
+		vspeed += lengthdir_y(gravity_raw, gravity_direction) * _mult;
+	}
+	if(speed != 0){
+		x += hspeed_raw * _mult;
+		y += vspeed_raw * _mult;
 	}
 	
 #define sound_play_hit_ext(_sound, _pitch, _volume)
