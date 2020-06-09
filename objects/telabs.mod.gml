@@ -351,7 +351,6 @@
 		
 		 // Vars:
 		mask_index = mskSlash; // msk.EnergyBatSlash;
-		friction = 0.2;
 		creator = noone;
 		walled = false;
 		damage = 22; 
@@ -361,12 +360,6 @@
 		candeflect = true;
 		
 		return id;
-	}
-	
-#define EnergyBatSlash_step
-	 // Nasty Fix:
-	if(image_index >= 2){
-		mask_index = mskNone;
 	}
 	
 #define EnergyBatSlash_hit
@@ -1410,6 +1403,234 @@
 	instance_destroy();
 	
 
+#define PopoSecurity_create(_x, _y)
+	var _wepArray = [spr.PopoSecurityMinigun, spr.PopoSecurityCannon],
+		_wepIndex = irandom(array_length(_wepArray) - 1);
+		
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.PopoSecurityIdle;
+		spr_walk = spr.PopoSecurityWalk;
+		spr_hurt = spr.PopoSecurityHurt;
+		spr_dead = spr.PopoSecurityDead;
+		spr_weap = _wepArray[_wepIndex];
+		sprite_index = spr_idle;
+		spr_shadow = shd24;
+		spr_shadow_y = 3;
+		hitid = [spr_idle, "SECURTY GUARD"];
+		depth = -2;
+		 
+		 // Sounds:
+		var _male = true; // irandom(1);
+		snd_hurt = sndEliteShielderHurt; // (_male ? sndShielderHurtM : sndShielderHurtF);
+		snd_dead = sndEliteShielderDead; // (_male ? sndShielderDeadM : sndShielderDeadF);
+		 
+		 // Vars:
+		mask_index = mskBandit;
+		friction = 0.4;
+		maxhealth = 150;
+		raddrop = 0;
+		team = 3;
+		size = 1;
+		ammo = 0;
+		male = _male;
+		walk = 0;
+		wkick = 0;
+		right = 1;
+		gunangle = 0;
+		maxspeed = 3.6;
+		grenades = 3;
+		walkspeed = 0.8;
+		wep_array = _wepArray;
+		wep_index = _wepIndex;
+		queueswap = false;
+		swap_kick = 0;
+ 		aim_x = xstart;
+		aim_y = ystart;
+		
+		 // Alarms:
+		alarm1 = 60;
+		alarm2 = -1;
+		
+		 // NTTE:
+		ntte_walk = true;
+		ntte_anim = true;
+		
+		return id;
+	}
+	
+#define PopoSecurity_step
+	swap_kick = 0;
+	
+#define PopoSecurity_draw
+	 // Back Weapon:
+	draw_weapon(
+		wep_array[(wep_index + 1) % array_length(wep_array)], 
+		x, 
+		y + swap_kick, 
+		90 + (20 * right), 
+		0, 
+		0, 
+		right, 
+		merge_color(image_blend, c_black, 0.25), 
+		image_alpha
+	);
+	
+	if(gunangle > 180)  draw_self_enemy();
+	draw_weapon(spr_weap, x, (y - swap_kick), gunangle, 0, wkick, right, image_blend, image_alpha);
+	if(gunangle <= 180) draw_self_enemy();
+	
+#macro popoSecurityMinigun 0
+#macro popoSecurtiyCannon  1
+#define PopoSecurity_alrm1
+	alarm1 = 30;
+	
+	 // Swap Weapon:
+	if(queueswap){
+		wep_index = ((wep_index + 1) % array_length(wep_array));
+		swap_kick = 1;
+		queueswap = 0;
+		
+		spr_weap = wep_array[wep_index];
+		
+		var _len = 10;
+		instance_create(x + lengthdir_x(_len, gunangle), y + lengthdir_y(_len, gunangle), WepSwap);
+		sound_play_hit(sndSwapEnergy, 0.3);
+		
+		alarm1 = 10;
+	}
+	else{
+		if(ammo <= 0){
+			if(enemy_target(x, y) && instance_seen(x, y, target)){
+				gunangle = point_direction(x, y, target.x, target.y);
+				if(instance_near(x, y, target, 128)){
+				
+					 // Begin Attack:
+					if(chance(2, 3)){
+						switch(wep_index){
+							case popoSecurityMinigun:
+								ammo = irandom_range(8, 12);
+								alarm1 = 1;
+								
+								break;
+								
+							case popoSecurtiyCannon:
+								ammo = 1;
+								alarm1 = 1;
+								
+								break;
+						}
+					}
+					
+					 // Strafe:
+					else{
+						scrWalk(gunangle + (random_range(30, 90) * choose(-1, 1)), random_range(10, 20));
+						alarm1 = random_range(10, 20);
+					}
+				}
+			}
+			else{
+			
+				 // Wander:
+				if(chance(2, 3)){
+					gunangle = random(360);
+					scrWalk(gunangle, random_range(20, 40));
+					alarm1 = random_range(20, 30);
+				}
+			}
+		}
+		else{
+			ammo--;
+			
+			 // Retarget:
+			if(instance_exists(target)){
+				var _len = point_distance(x, y, target.x, target.y) + 48;
+				gunangle = point_direction(x, y, target.x, target.y);
+				
+				aim_x = x + lengthdir_x(_len, gunangle);
+				aim_y = y + lengthdir_y(_len, gunangle);
+			}
+			
+			switch(wep_index){
+				case popoSecurityMinigun:
+					alarm1 = 5;
+					
+					wkick = 8;
+					motion_add(gunangle, 2);
+					move_contact_solid(gunangle, 2);
+					
+					sound_play_hit(sndGruntFire, 0.3);
+					
+					var _len = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap) + 4;
+					repeat(irandom_range(2, 3)){
+						team_instance_sprite(
+							team, 
+							scrFX(
+								x + lengthdir_x(_len, gunangle) + orandom(3), 
+								y + lengthdir_y(_len, gunangle) + orandom(3), 
+								[gunangle + 180, random(2)], 
+								PlasmaTrail
+						));
+					}
+					
+					 // Fire:
+					with(team_instance_sprite(team, enemy_shoot_ext(aim_x, aim_y, "VlasmaBullet", (gunangle + 180), 0))){
+						target	 = other;
+						target_x = other.x;
+						target_y = other.y;
+						my_sound = sound_play_hit(sndEliteGruntRocketFly, 0.3);
+					}
+					
+					break;
+					
+				case popoSecurtiyCannon:
+					wkick = 8;
+					motion_add(gunangle, 4);
+					move_contact_solid(gunangle, 4);
+					
+					sound_play_hit(sndGruntFire, 0.3);
+					
+					var _len = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap) + 4;
+					repeat(irandom_range(4, 7)){
+						team_instance_sprite(
+							team, 
+							scrFX(
+								x + lengthdir_x(_len, gunangle) + orandom(5), 
+								y + lengthdir_y(_len, gunangle) + orandom(5), 
+								[gunangle + 180, random(2)], 
+								PlasmaTrail
+						));
+					}
+					
+					 // Fire:
+					with(team_instance_sprite(team, enemy_shoot_ext(aim_x, aim_y, "VlasmaCannon", (gunangle + 180), 0))){
+						target	 = other;
+						target_x = other.x;
+						target_y = other.y;
+						my_sound = sound_play_hit(sndEliteGruntRocketFly, 0.3);
+					}
+					
+					break;
+			}
+			
+			 // Switch Wep:
+			if(ammo <= 0){
+				if(chance(2, 3)){
+					queueswap = true;
+					alarm1 = 10;
+				}
+				else{
+					
+					 // Take a Break:
+					alarm1 = random_range(20, 30);
+				}
+			}
+		}
+	}
+	
+	 // Important:
+	scrRight(gunangle);
+	
 #define WallSlide_create(_x, _y)
 	/*
 		A controller that slides Walls around

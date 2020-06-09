@@ -1,9 +1,9 @@
 #define init
 	 // Sprites:
-	global.sprWep		= sprite_add_weapon("../sprites/weps/sprAnnihilator.png",		   8, 0);
-	global.sprWepHUD	= sprite_add(		"../sprites/weps/sprAnnihilatorHUD.png",	1, 0, 3);
-	global.sprWepDamage = sprite_add_weapon("../sprites/weps/sprAnnihilatorDamage.png",	   8, 0);
-	global.sprWepBroken = sprite_add_weapon("../sprites/weps/sprAnnihilatorBroken.png",    4, 4);
+	global.sprWep		= sprite_add_weapon("../sprites/weps/sprAnnihilator.png",		   8, 2);
+	global.sprWepHUD	= sprite_add(		"../sprites/weps/sprAnnihilatorHUD.png",	1, 0,  3);
+	// global.sprWepDamage = sprite_add_weapon("../sprites/weps/sprAnnihilatorDamage.png",	   8, 0);
+	// global.sprWepBroken = sprite_add_weapon("../sprites/weps/sprAnnihilatorBroken.png",    4, 4);
 	global.sprWepLocked = mskNone;
 	
 	global.color = `@(color:${make_color_rgb(235, 0, 67)})`;
@@ -73,7 +73,9 @@
 	
 	return global.sprWepHUD;
 
-#define weapon_sprt(w)
+#define weapon_sprt
+	
+	/*
 	var _sprite = global.sprWepLocked;
 	if(weapon_avail()){
 		if(lq_defget(w, "ammo", 1) > 0){
@@ -85,6 +87,7 @@
 			_sprite = global.sprWepBroken;
 		}
 	}
+	*/
 	
 	/*
 	 // Uncomment for a Lightshow:
@@ -100,7 +103,7 @@
 	}
 	*/
 	
-	return _sprite;
+	return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 
 #define step(_primary)
 	var	b = (_primary ? "" : "b"),
@@ -145,28 +148,28 @@
 		sound_play(sndEnergyScrewdriver);
 	}
 	else{
-		 // Fire:
-		var _skill = skill_get(mut_long_arms);
-		with(obj_create(x, y, "AnnihilatorSlash")){
-			creator = other;
-			team	= other.team;
-			speed	= lerp(2, 4, _skill);
-			direction	= other.gunangle;
-			image_angle = direction;
-			
-			image_yscale = sign(other.wepangle);
-			
-			var _len = lerp(10, 20, _skill);
-			x += lengthdir_x(_len, direction);
-			y += lengthdir_y(_len, direction);
-		}
-		
 		 // Effects:
 		wkick = 4;
 		wepangle *= -1;
 		move_contact_solid(gunangle, 2);
 		motion_add(gunangle, 3);
 		sleep(10);
+		
+		 // Fire:
+		var _skill = skill_get(mut_long_arms);
+		with(obj_create(x, y, "AnnihilatorSlash")){
+			creator = other;
+			team	= other.team;
+			speed	= lerp(2, 5, _skill);
+			direction	= other.gunangle;
+			image_angle = direction;
+			
+			image_yscale = sign(other.wepangle);
+			
+			var _len = lerp(0, 20, _skill);
+			x += lengthdir_x(_len, direction);
+			y += lengthdir_y(_len, direction);
+		}
 		
 		 // Sounds:
 		sound_play(sndScrewdriver);

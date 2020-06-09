@@ -797,6 +797,12 @@
 				}
 			}
 			
+			 // Security Guards:
+			with(instance_random(instances_matching([Grunt, Shielder, Inspector], "", null))){
+				obj_create(x, y, "PopoSecurity");
+				instance_delete(id);
+			}
+			
 			break;
 			
 		case area_crib: /// CRIB
@@ -811,7 +817,7 @@
 		on_step = script_ref_create_ext(mod_type, mod_name, event + "_step");
 		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
 		
-		 // Event Generation:
+		 // Event Generation:o
 		var _minID = GameObject.id;
 		mod_script_call(mod_type, mod_name, event + "_create");
 		floors = array_combine(floors, instances_matching_gt(Floor, "id", _minID));
@@ -1335,7 +1341,7 @@
 	 // Orchid Chests:
 	if(save_get("orchid:seen", false)){
 		with(RadChest){
-			if(chance(GameCont.rad * (GameCont.level / 10), 900)){
+			if(chance(GameCont.rad * (GameCont.level / 10), 600 * 3)){
 				obj_create(x, y, "OrchidChest");
 				instance_delete(id);
 			}

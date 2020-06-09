@@ -80,8 +80,13 @@
 			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
 			
 			 // Annihilator Bullet:
-			AnnihilatorBullet		   = sprite(p + "sprAnnihilatorBullet", 		 2, 9, 9);
-			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5, 9, 9);
+			AnnihilatorBullet		   = sprite(p + "sprAnnihilatorBullet", 		 2, 9,  9);
+			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5, 9,  9);
+			
+			AnnihilatorBulletEffect	   = sprite(p + "sprAnnihilatorBulletEffect",	 7, 16, 16);
+			
+			 // Annihilator Slash:
+			AnnihilatorSlash = sprite(p + "sprAnnihilatorSlash", 3, 0, 24);
 			
 			 // Bat Discs:
 			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
@@ -136,6 +141,7 @@
 			 // Small Plasma Impact:
 			EnemyPlasmaImpactSmall = sprite(p + "sprEnemyPlasmaImpactSmall", 7,  8,  8);
 			PlasmaImpactSmall      = sprite(p + "sprPlasmaImpactSmall",      7,  8,  8);
+			PopoPlasmaImpactSmall  = sprite(p + "sprPopoPlasmaImpactSmall",	 7,  8,  8);
 			msk.PlasmaImpactSmall  = sprite(p + "mskPlasmaImpactSmall",      7, 16, 16);
 			with(msk.PlasmaImpactSmall){
 				mask = [true, 0];
@@ -159,15 +165,18 @@
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Vector Plasma:
-			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
 			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5, 8, 8);
+			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5, 8, 8);
+			PopoVlasmaBullet  = sprite(p + "sprPopoVlasmaBullet",  5, 8, 8);
 			
+			EnemyVlasmaCannon = sprite(p + "sprEnemyVlasmaCannon", 5, 10, 10);
 			VlasmaCannon	  = sprite(p + "sprVlasmaCannon",	   5, 10, 10);
-			EnemyVlasmaCannon = sprite(p + "sprVlasmaCannon",	   5, 10, 10);
+			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
+			
 			
 			 // Energy Bat Slash:
-			EnergyBatSlash	   = sprite(p + "sprEnergyBatSlash", 4, 0,  24);
-			msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
+			EnergyBatSlash	   = sprite(p + "sprEnergyBatSlash", 3, 0,  24);
+			// msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
@@ -560,6 +569,15 @@
 					sprite(p + "sprPitSpark5", 5, 16, 16),
 				];
 				TentacleWheel = sprite(p + "sprTentacleWheel", 2, 40, 40);
+				
+			 // Popo Security:
+			p = m + "PopoSecurity/";
+			PopoSecurityIdle	= sprite(p + "sprPopoSecurityIdle",    11, 16, 16);
+			PopoSecurityWalk	= sprite(p + "sprPopoSecurityWalk",    6,  16, 16);
+			PopoSecurityHurt	= sprite(p + "sprPopoSecurityHurt",    3,  16, 16);
+			PopoSecurityDead	= sprite(p + "sprPopoSecurityDead",    7,  16, 16);
+			PopoSecurityCannon	= sprite(p + "sprPopoSecurityCannon",  1,  7,  8);
+			PopoSecurityMinigun = sprite(p + "sprPopoSecurityMinigun", 1,  7,  8);
 				
 			 // Portal Guardian:
 			p = m + "PortalGuardian/";

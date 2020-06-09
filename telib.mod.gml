@@ -14,7 +14,7 @@
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartProj", "CrystalPropRed", "CrystalPropWhite", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedAmmoChest", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "WallFake", "Warp", "WarpPortal"],
-		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "EnergyBatSlash", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "WallSlide"]
+		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "EnergyBatSlash", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -93,10 +93,10 @@
 		[[spr.EnemyPlasmaBig,			"CustomPlasma"	],	[sprPlasmaBallBig,		PlasmaBig			],	[										]], // Plasma Big
 		[[spr.EnemyPlasmaHuge,			"CustomPlasma"	],	[sprPlasmaBallHuge,		PlasmaHuge			],	[										]], // Plasma Huge
 		[[spr.EnemyPlasmaImpact							],	[sprPlasmaImpact							],	[sprPopoPlasmaImpact					]], // Plasma Impact
-		[[spr.EnemyPlasmaImpactSmall					],	[spr.PlasmaImpactSmall						],	[										]], // Plasma Impact Small
+		[[spr.EnemyPlasmaImpactSmall					],	[spr.PlasmaImpactSmall						],	[spr.PopoPlasmaImpactSmall				]], // Plasma Impact Small
 		[[spr.EnemyPlasmaTrail							],	[sprPlasmaTrail								],	[sprPopoPlasmaTrail						]], // Plasma Particle
-		[[spr.EnemyVlasmaBullet							],	[spr.VlasmaBullet							],	[										]], // Vector Plasma
-		[[spr.EnemyVlasmaCannon							],	[spr.VlasmaCannon							],  [										]], // Vector Plasma Cannon
+		[[spr.EnemyVlasmaBullet							],	[spr.VlasmaBullet							],	[spr.PopoVlasmaBullet					]], // Vector Plasma
+		[[spr.EnemyVlasmaCannon							],	[spr.VlasmaCannon							],  [spr.PopoVlasmaCannon					]], // Vector Plasma Cannon
 		[[sprEnemySlash									],	[sprSlash									],	[sprEnemySlash							]]  // Slash
 		// Devastator
 		// Lightning Cannon

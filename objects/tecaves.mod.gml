@@ -82,6 +82,7 @@
 		if(is_object(_wep) && lq_defget(_wep, "ammo", 0) > 0){
 			_wep.ammo--;
 			
+			/*
 			with(instances_matching([Player, WepPickup], "", null)){
 				if(wep == _wep || (("bwep" in id) && bwep == _wep)){
 					
@@ -96,6 +97,7 @@
 					}
 				}
 			}
+			*/
 			
 			 // Annihilation Time:
 			mod_script_call("skill", "annihilation", "skill_init", other, 5);
@@ -119,7 +121,7 @@
 #define AnnihilatorSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
-		sprite_index = sprEnergyShank;
+		sprite_index = spr.AnnihilatorSlash;
 		image_speed = 0.4;
 		
 		 // Vars:
@@ -2152,6 +2154,18 @@
 	if(instance_exists(target)){
 		target_x = target.x;
 		target_y = target.y;
+		
+		with(target) if(team == other.team){
+			if("spr_weap" in id && sprite_exists(spr_weap)){
+				var l = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap),
+					d = (("gunangle" in id) ? gunangle : image_angle);
+					
+				with(other){
+					target_x += lengthdir_x(l, d);
+					target_y += lengthdir_y(l, d);
+				}
+			}
+		}
 	}
 	
 	 // Movement:
@@ -2256,7 +2270,7 @@
 				
 			with(team_instance_sprite(
 				sprite_get_team(sprite_index), 
-				enemy_shoot_ext(_x, _y, "VlasmaBullet", _dir, 0)
+				enemy_shoot_ext(_x, _y, "VlasmaBullet", (_dir + 180), 0)
 			)){
 				target	 = other.target;
 				target_x = other.target_x;

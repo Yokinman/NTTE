@@ -3943,15 +3943,15 @@
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
 					var s = skill_get_at(i);
 					if(s != mut_patience){
-						var _util = false,
-							_scrt = "skill_util";
+						var a = true,
+							n = "skill_avail";
 							
-						 // Identify Utility Skills:
-						if(is_string(s) && mod_script_exists("skill", s, _scrt)){
-							_util = mod_script_call("skill", s, _scrt);
+						 // Identify Available Skills:
+						if(is_string(s) && mod_script_exists("skill", s, n)){
+							a = mod_script_call("skill", s, n);
 						}
 						
-						if(!_util){
+						if(a){
 							array_push(_skillList, s);
 						}
 					}

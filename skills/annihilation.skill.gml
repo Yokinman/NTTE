@@ -1,4 +1,5 @@
 #define init
+	global.spr = mod_variable_get("mod", "teassets", "spr");
 	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
 	
 	 // List of Vanilla HitID Text Components:
@@ -155,6 +156,8 @@
 	if(chance(1, 3)) skill_init(obj_create(0, 0, "TrafficCrab"), 	1 + irandom(4));
 	*/
 	
+#macro spr global.spr
+	
 #define skill_name return "ANNIHILATION";
 #define skill_text   
 	var _text = `${global.color}DESTROY @sALL `,
@@ -248,7 +251,6 @@
 	return _text;
 	
 #define skill_icon   return global.sprSkillHUD;
-#define skill_util	 return true;
 #define skill_avail  return false;
 	
 #define step
@@ -314,9 +316,19 @@
 	if(_lag) trace_time();
 	
 	with(global.enemyList){
-		var _array = instances_matching(object_index, "name", name),
-			_minID = GameObject.id;
-			
+		var _array = instances_matching(object_index, "name", name);
+		
+		 // Effect:
+		with(_array){
+			var _scale = 1;//((size < 3) ? 0.5 : 1);
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = spr.AnnihilatorBulletEffect;
+				image_xscale = _scale;
+				image_yscale = _scale;
+			}
+		}
+		
+		var _minID = GameObject.id;
 		with(_array){
 			enemy_annihilate_destroy(id);
 		}
