@@ -36,11 +36,114 @@
 #macro surfWallFakeMaskBot global.surfWallFakeMaskBot
 #macro surfWallFakeMaskTop global.surfWallFakeMaskTop
 
+#macro baseCloneCol global.cloneCol
+
 #macro clientDarknessCoeff global.clientDarknessCoeff
 #macro clientDarknessFloor global.clientDarknessFloor
 
-#macro baseCloneCol global.cloneCol
+#define AnnihilatorBullet_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visuals:
+		spr_idle = spr.AnnihilatorBullet;
+		spr_dead = spr.AnnihilatorBulletDisappear;
+		sprite_index = spr_idle;
 
+		 // Vars:
+		mask_index = mskBullet2;
+		friction = 1;
+		creator = noone;
+		damage = 999;
+		force = 999;
+		team = 0;
+		typ = 2;
+		my_lwo = noone;
+		
+		return id;
+	}
+	
+#define AnnihilatorBullet_step
+	if(speed <= 8){
+		sprite_index = spr_dead;
+		image_speed  = 0.4;
+	}
+	
+#define AnnihilatorBullet_anim
+	if(sprite_index == spr_idle){
+		image_index = 1;
+	}
+	else{
+		instance_destroy();
+	}
+	
+#define AnnihilatorBullet_wall
+	with(instance_create(x + hspeed, y + vspeed, BulletHit)){
+		
+	}
+	
+	 // Goodbye:
+	instance_destroy();
+	
+#define AnnihilatorBullet_hit
+	if(projectile_canhit(other)){
+		var _wep = my_lwo;
+		if(is_object(_wep) && lq_defget(_wep, "ammo", 0) > 0){
+			_wep.ammo--;
+			
+			with(instances_matching([Player, WepPickup], "", null)){
+				if(wep == _wep || (("bwep" in id) && bwep == _wep)){
+					
+					 // Effects:
+					var _sprite = spr.AnnihilatorDebris;
+					for(var i = 0; i < sprite_get_number(_sprite); i++){
+						with(instance_create(x, y, Debris)){
+							sprite_index = _sprite;
+							image_index  = i;
+							motion_set(random(360), random(4));
+						}
+					}
+				}
+			}
+			
+			 // Annihilation Time:
+			mod_script_call("skill", "annihilation", "skill_init", other, 5);
+			GameCont.hard += 1;
+		}
+		else{
+			
+			 // This Crazy:
+			projectile_hit(other, damage, force, direction);
+		}
+		
+		 // Effects:
+		with(instance_create(x, y, BulletHit)){
+			
+		}
+		
+		 // Goodbye:
+		instance_destroy();
+	}
+	
+#define AnnihilatorSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = sprEnergyShank;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = mskSlash;
+		damage = 8;
+		force = 12;
+		
+		return id;
+	}
+	
+#define AnnihilatorSlash_wall
+
+#define AnnihilatorSlash_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+	}
+	
 #define ChaosHeart_create(_x, _y)
 	/*
 		A special variant of crystal hearts unique to the red crown
@@ -1534,6 +1637,53 @@
 	return _inst;
 	
 	
+#define RedAmmoChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		spr_shadow_y = -3;
+		sprite_index = spr.RedAmmoChest;
+		spr_dead = spr.RedAmmoChestOpen;
+		
+		 // Sounds:
+		snd_open = sndRogueCanister;
+		
+		 // Scripts:
+		on_open = script_ref_create(RedAmmoChest_open)
+		 
+		return id;
+	}
+	
+#define RedAmmoChest_open
+	var _redWep = null;
+	if(instance_is(other, Player)){
+		with(other){
+			with(["wep", "bwep"]){
+				if(is_undefined(_redWep)){
+					var _weap = variable_instance_get(other, "wep"),
+						_name = wep_get(_weap),
+						_scrt = "weapon_red",
+						_type = "weapon";
+						
+					if(mod_script_exists(_type, _name, _scrt)){
+						if(mod_script_call(_type, _name, _scrt)){
+							_redWep = _weap;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	 // Get Ammo:
+	if(!is_undefined(_redWep)){
+		lq_set(_redWep, "ammo", min(lq_defget(_redWep, "ammo", 0) + 1, lq_defget(_redWep, "amax", 55)));
+		var i = other.index;
+		with(instance_create(x, y, PopupText)){
+			target = i;
+			text = `+1 ${lq_get(_redWep, "anam")}`;
+		}
+	}
+	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1945,17 +2095,23 @@
 		target_y   = y;
 		walled     = false;
 		my_sound   = -1;
+		setup = true;
+		cannon = false;
 		
 		return id;
 	}
 	
-#define VlasmaBullet_anim
-	if(instance_exists(self)){
-		image_index = image_number - 1;
-		image_speed = 0;
+#define VlasmaBullet_setup
+	setup = false;
+	if(team == 2){
+		var _scale = lerp(1, 1.2, skill_get(mut_laser_brain));
+		image_xscale *= _scale;
+		image_yscale *= _scale;
 	}
 	
 #define VlasmaBullet_step
+	if(setup) VlasmaBullet_setup();
+	
 	 // Follow Target:
 	if(instance_exists(target)){
 		target_x = target.x;
@@ -2025,9 +2181,25 @@
 	image_alpha  /= _alpha;
 	draw_set_blend_mode(bm_normal);
 	
+#define VlasmaBullet_anim
+	if(instance_exists(self)){
+		image_index = image_number - 1;
+		image_speed = 0;
+	}
+	
 #define VlasmaBullet_hit
-	if(image_speed == 0 && projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
+	if(image_speed == 0){
+		if(team == 2){
+			if(projectile_canhit(other)){
+				var _skill = 1 + skill_get(mut_laser_brain);
+				projectile_hit(other, (damage * _skill), force);
+	}
+		}
+		else{
+			if(projectile_canhit_melee(other)){
+				projectile_hit(other, damage, force);
+			}
+		}
 	}
 	
 #define VlasmaBullet_wall
@@ -2043,14 +2215,47 @@
 	sound_play_hit_ext(sndLightningHit, 0.9 + random(0.2), 1);
 	
 	 // Explo:
+	if(cannon){
+		var _num = 6;
+		for(var d = 0; d < 360; d += (360 / _num)){
+			var _len = 96,
+				_dir = direction + d,
+				_x = x + lengthdir_x(_len, _dir),
+				_y = y + lengthdir_y(_len, _dir);
+				
 	with(team_instance_sprite(
 		sprite_get_team(sprite_index),
-		enemy_shoot("PlasmaImpactSmall", direction, 0)
+				enemy_shoot_ext(_x, _y, "VlasmaBullet", _dir, 0)
 	)){
+				target	 = other.target;
+				target_x = other.target_x;
+				target_y = other.target_y;
+			}
+		}
+	}
+	with(team_instance_sprite(
+		sprite_get_team(sprite_index),
+		enemy_shoot(
+			(cannon ? PlasmaImpact : "PlasmaImpactSmall"), 
+			direction, 
+			0
+	))){
 		image_angle = 0;
 		depth = other.depth;
 	}
 	
+	
+#define VlasmaCannon_create(_x, _y)
+	with(obj_create(_x, _y, "VlasmaBullet")){
+		 // Visual:
+		sprite_index = spr.VlasmaCannon;
+		
+		 // Vars:
+		damage = 4;
+		cannon = true;
+		
+		return id;	
+	}
 	
 #define WallFake_create(_x, _y)
 	/*
@@ -2523,6 +2728,11 @@
 	}
 	
 #define ntte_bloom
+	 // Annihilator Bullets:
+	with(instances_matching(CustomProjectile, "name", "AnnihilatorBullet")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha / 10);
+	}
+
 	 // Crystal Heart Projectile:
 	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
 		var	_scale = 2,

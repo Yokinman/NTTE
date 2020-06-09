@@ -3942,7 +3942,19 @@
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
 					var s = skill_get_at(i);
-					if(s != mut_patience) array_push(_skillList, s);
+					if(s != mut_patience){
+						var _util = false,
+							_scrt = "skill_util";
+							
+						 // Identify Utility Skills:
+						if(is_string(s) && mod_script_exists("skill", s, _scrt)){
+							_util = mod_script_call("skill", s, _scrt);
+						}
+						
+						if(!_util){
+							array_push(_skillList, s);
+						}
+					}
 				}
 				
 				if(array_length(_skillList) > 0){
