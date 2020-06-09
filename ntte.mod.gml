@@ -3105,7 +3105,7 @@
 										
 									if(_scale > 0){
 										if(_flash) draw_set_fog(true, c_white, 0, 0);
-										draw_sprite_ext(spr.PetOrchidCharge, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
+										draw_sprite_ext(spr.PetOrchidBall, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
 									}
 								}
 								
