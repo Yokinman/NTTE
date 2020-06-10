@@ -1415,6 +1415,8 @@
 		m = "races/";
 			
 			var _list = {
+				// [Name, Frames, X, Y, Has B Variant]
+				
 				"parrot" : {
 					skin : 2,
 					sprt : [
