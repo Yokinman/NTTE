@@ -29,7 +29,11 @@
 	return `@(color:${area_background_color()})???`;
 	
 #define area_text
-	return choose("BLINDING", "THE RED DOT", `WELCOME TO THE @(color:${area_background_color()})WARP ZONE`);
+	return choose(
+		"BLINDING",
+		`@(color:${area_background_color()})THE RED DOT`,
+		`WELCOME TO THE @(color:${area_background_color()})WARP ZONE`
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	 // Post Exit:
@@ -44,8 +48,21 @@
 		){
 			if(next.area != mod_current){
 				var	_x = view_xview_nonsync + (game_width  / 2),
-					_y = view_yview_nonsync + (game_height / 2);
+					_y = view_yview_nonsync + (game_height / 2),
+					_lx = last.x,
+					_ly = last.y,
+					_nx = next.x,
+					_ny = next.y;
 					
+				 // Area Offset Fix:
+				switch(next.area){
+					case area_oasis        : _nx = 0;  break;
+					case area_pizza_sewers : _nx = 27; break;
+					case area_mansion      : _nx = 36; break;
+					case area_cursed_caves : _nx = 54; break;
+					case area_jungle       : _nx = 72; break;
+				}
+				
 				 // Drawing Offset:
 				if(instance_exists(TopCont) && !instance_exists(Player) && !instance_exists(GenCont) && !instance_exists(PauseButton) && !instance_exists(BackMainMenu)){
 					_x -= 120;
@@ -61,14 +78,14 @@
 					_img = (current_frame * 0.4), // + _loops * (sprite_get_number(spr.RedDot) / (GameCont.loops + 1)),
 					_col = draw_get_color(),
 					_alp = draw_get_alpha(),
-					_ax1 = floor(_x + last.x),
-					_ay1 = floor(_y + last.y - !last.showdot),
-					_ax2 = floor(_x + last.x),
-					_ay2 = floor(_y + max(0, last.y) + 9),
-					_bx1 = floor(_x + next.x),
-					_by1 = floor(_y + next.y),
-					_bx2 = floor(_x + next.x),
-					_by2 = floor(_y + min(0, next.y) - 9);
+					_ax1 = floor(_x + _lx),
+					_ay1 = floor(_y + _ly - !last.showdot),
+					_ax2 = floor(_x + _lx),
+					_ay2 = floor(_y + max(0, _ly) + 9),
+					_bx1 = floor(_x + _nx),
+					_by1 = floor(_y + _ny),
+					_bx2 = floor(_x + _nx),
+					_by2 = floor(_y + min(0, _ny) - 9);
 					
 				with(UberCont){
 					 // Exit Warp:
@@ -86,7 +103,7 @@
 					draw_sprite_ext(_spr, _img, _bx2, _by2, 1, 1, 0, _col, _alp);
 				}
 				
-				return [next.x, next.y, false, false];
+				return [_nx, _ny, false, false];
 			}
 		}
 	}
@@ -139,8 +156,10 @@
 	
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
-		with(Wall.id) if(place_meeting(x, y, Floor)){
-			instance_destroy();
+		with(Wall.id){
+			if(place_meeting(x, y, Floor) && abs(point_distance(10016, 10016, x, y) - 48) < 12){
+				instance_destroy();
+			}
 		}
 	}
 	
@@ -158,8 +177,23 @@
 	}
 	
 	 // Skin Time:
-	if(variable_instance_get(GenCont, "iswarpzone", true)){
-		unlock_set("skin:red crystal", true);
+	unlock_set("skin:red crystal", true);
+	
+	 // Warping:
+	with(instances_matching(CustomObject, "name", "WarpPortal")){
+		if(!instance_exists(portal)){
+			GameCont.area    = area;
+			GameCont.subarea = subarea;
+			GameCont.loops   = loops;
+			
+			 // Cursed:
+			if(GameCont.area == area_caves){
+				with(Player) if(curse > 0 || bcurse > 0){
+					GameCont.area = area_cursed_caves;
+					break;
+				}
+			}
+		}
 	}
 	
 #define area_transit
@@ -255,17 +289,17 @@
 	
 	 // Warp Rooms:
 	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
-		if(chance(1, 20) || array_length(instances_matching(CustomObject, "name", "Warp")) <= 0){
-			var _w = 2,
-				_h = 2,
-				_type = "",
-				_dirOff = 90,
-				_floorDis = random_range(48, 96),
-				_spawnX = 10016,
-				_spawnY = 10016,
-				_spawnDis = 64,
-				_spawnFloor = instances_matching(FloorNormal, "styleb", 0),
-				_floorHallwaySearch = FloorNormal;
+		if(chance(1, 12 * array_length(instances_matching(CustomObject, "name", "Warp")))){
+			var _w          = 2,
+				_h          = 2,
+				_type       = "",
+				_dirOff     = 90,
+				_floorDis   = random_range(48, 96),
+				_spawnX     = 10016,
+				_spawnY     = 10016,
+				_spawnDis   = 64,
+				_levelFloor = FloorNormal,
+				_spawnFloor = instances_matching(_levelFloor, "styleb", 0);
 				
 			floor_set_align(null, null, 32, 32);
 			floor_set_style(1, null);
@@ -280,7 +314,7 @@
 					while(
 						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
 						&&
-						(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, _floorHallwaySearch)) <= 0)
+						(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, _levelFloor)) <= 0)
 					){
 						 // Floor + Props:
 						if(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, FloorNormal)) <= 0){
@@ -305,7 +339,7 @@
 				}
 				
 				 // Portal:
-				obj_create(x, y - 8, "Warp");
+				obj_create(x, y - 4, "Warp");
 			}
 			
 			floor_reset_align();
@@ -323,54 +357,58 @@
 	
 	 // Secrets Upon Secrets:
 	if(variable_instance_get(GenCont, "iswarpzone", true)){
-		var _floorTarget = noone;
+		var	_w          = 3,
+			_h          = 3,
+			_type       = "",
+			_dirOff     = 60,
+			_floorDis   = random_range(80, 160),
+			_dirStart   = 90,
+			_spawnX     = 10016,
+			_spawnY     = 10016,
+			_spawnDis   = 64,
+			_spawnFloor = [],
+			_levelFloor = FloorNormal;
+			
+		floor_set_align(null, null, 32, 32);
+		floor_set_style(1, null);
 		
-		 // Search for Highest Floors:
-		with(array_shuffle(FloorNormal)){
-			if(array_length(instances_matching_lt(instances_matching(FloorNormal, "x", x), "y", y)) <= 0){
-				_floorTarget = id;
-				break;
+		 // Spawn From Highest Floors:
+		with(_levelFloor){
+			if(array_length(instances_matching_lt(instances_matching(_levelFloor, "x", x), "y", y)) <= 0){
+				array_push(_spawnFloor, id);
 			}
 		}
 		
 		 // Secret Room:
-		with(_floorTarget){
-			var	_w          = 3,
-				_h          = 3,
-				_type       = "",
-				_dirOff     = 60,
-				_floorDis   = random_range(80, 160),
-				_dirStart   = 90,
-				_levelFloor = FloorNormal;
-				
-			floor_set_align(null, null, 32, 32);
-			floor_set_style(1, null);
-			
+		with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-				var	_minID = GameObject.id,
-					_x = x + 16,
-					_y = y + 16,
-					_moveDis = 32;
-					
-				 // Create Hallway:
-				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), floors)){
+				var _minID = GameObject.id;
+				
+				 // Hallway:
+				with(instance_random(floors)){
+					var	_x = bbox_center_x,
+						_y = bbox_center_y,
+						_moveDis = 32;
+						
 					while(
-						point_distance(_x, _y, _floorTarget.x, _floorTarget.y) > _moveDis / 2
+						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
 						&&
-						array_length(instance_rectangle_bbox(_x, _y, _x + 31, _y + 31, _levelFloor)) <= 0
+						(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, _levelFloor)) <= 0)
 					){
-						 // Floors & Walls:
-						with(floor_set(_x, _y, true)){
-							depth = 10;
-							for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
-								for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
-									obj_create(_wx, _wy, "WallFake");
+						 // Floor & Fake Walls:
+						if(!position_meeting(_x, _y, Floor) || array_length(instances_at(_x, _y, FloorNormal)) <= 0){
+							with(floor_set(_x - 16, _y - 16, true)){
+								depth = 10;
+								for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
+									for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
+										obj_create(_wx, _wy, "WallFake");
+									}
 								}
 							}
 						}
 						
 						 // Move:
-						var _moveDir = pround(point_direction(_x, _y, _floorTarget.x, _floorTarget.y) + orandom(60), 90);
+						var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
 						_x += lengthdir_x(_moveDis, _moveDir);
 						_y += lengthdir_y(_moveDis, _moveDir);
 					}
@@ -399,10 +437,10 @@
 					image_index = 0;
 				}
 			}
-			
-			floor_reset_align();
-			floor_reset_style();
 		}
+		
+		floor_reset_align();
+		floor_reset_style();
 	}
 	
 #define area_effect(_vx, _vy)

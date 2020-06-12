@@ -27,7 +27,15 @@
 	return "@1(sprInterfaceIcons)2-" + string(_subarea);
 	
 #define area_text
-	return choose("DON'T MOVE", "IT'S BEAUTIFUL DOWN HERE", "HOLD YOUR BREATH", "FISH", "RIPPLING SKY", "IT'S SO QUIET", "THERE'S SOMETHING IN THE WATER");
+	return choose(
+		"DON'T MOVE",
+		"IT'S BEAUTIFUL DOWN HERE",
+		"HOLD YOUR BREATH",
+		"FISH",
+		"RIPPLING SKY",
+		"IT'S SO QUIET",
+		"THERE'S SOMETHING IN THE WATER"
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [

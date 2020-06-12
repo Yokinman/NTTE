@@ -33,7 +33,11 @@
 	return "1-" + string(_subarea);
 	
 #define area_text
-	return choose("tip1", "tip2", "tip3");
+	return choose(
+		"tip1",
+		"tip2",
+		"tip3"
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [

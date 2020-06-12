@@ -2278,7 +2278,7 @@
 		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
 		if(is_object(_lwo)){
 			_fire.wep = lq_clone(_lwo);
-
+			
 			if(_fire.wepheld){
 				_fire.creator.wep = _fire.wep;
 			}
@@ -2758,7 +2758,7 @@
 				a = ["HQ", _subarea];
 				break;
 				
-			case area_mansion:
+			case area_crib:
 				a = ["$$$"];
 				break;
 				

@@ -226,10 +226,16 @@
 	return "2-?";
 	
 #define area_text
-	return choose("DON'T PET THEM", "SO MANY FLEAS", "ITCHY", "VENTILATION", "THE AIR STINGS");
+	return choose(
+		"DON'T PET THEM",
+		"SO MANY FLEAS",
+		"ITCHY",
+		"VENTILATION",
+		"THE AIR STINGS"
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
-	return [_lastX, 9];
+	return [((_lastArea == "red") ? 27 : _lastX), 9];
 	
 #define area_sprite(_spr)
 	switch(_spr){
@@ -281,8 +287,10 @@
 	
 	 // Delete SpawnWall:
 	if(instance_exists(Wall)){
-		with(Wall.id) if(place_meeting(x, y, Floor)){
-			instance_destroy();
+		with(Wall.id){
+			if(place_meeting(x, y, Floor) && abs(point_distance(10016, 10016, x, y) - 48) < 12){
+				instance_destroy();
+			}
 		}
 	}
 	

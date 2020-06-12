@@ -806,7 +806,7 @@
 		walkspeed   = 0.3;
 		maxspeed    = 2;
 		area        = "red";
-		subarea     = 0;
+		subarea     = 1;
 		loops       = GameCont.loops;
 		white       = false;
 		
@@ -866,9 +866,12 @@
 						snd_dead = -1;
 					}
 					sound_play_hit(snd_mele, 0.1);
-					sound_play_music(-1);
 					
 					 // Red:
+					if(!area_get_secret(GameCont.area)){
+						GameCont.lastarea    = GameCont.area;
+						GameCont.lastsubarea = GameCont.subarea;
+					}
 					GameCont.area    = area;
 					GameCont.subarea = subarea;
 					GameCont.loops   = loops;
@@ -968,9 +971,9 @@
 		area       = "red";
 		subarea    = 1;
 		loops      = GameCont.loops;
-		area_seed  = random_get_seed() + irandom(1000);
+		area_seed  = irandom(random_get_seed());
+		area_goal  = irandom_range(10, 20);
 		area_chest = AmmoChest;
-		area_goal  = 10 + irandom(10);
 		setup      = true;
 		
 		 // Alarms:
@@ -2284,7 +2287,8 @@
 	with(instance_create(_x, _y, Wall)){
 		 // Visual:
 		sprite_index = spr.WallRedFake[irandom(array_length(spr.WallRedFake) - 1)];
-		image_speed  = random_range(0.1, 0.4);
+		image_index  = 0;
+		image_speed  = 0.2 + (0.1 * sin((x / 16) + (y / 16)));
 		depth        = 3;
 		visible      = true;
 		
@@ -2312,22 +2316,58 @@
 		 // Visual:
 		spr_idle     = spr.Warp;
 		spr_open     = spr.WarpOpen;
+		spr_open_out = spr.WarpOpenOut;
 		sprite_index = spr_idle;
 		image_speed  = 0.4;
+		image_angle  = random(360);
 		image_alpha  = -1;
-		depth        = -7;
+		depth        = -8;
 		
 		 // Vars:
-		mask_index = mskWepPickup;
-		open = false;
-		setup = true;
-		area = irandom_range(1, 7);
-		subarea = 1;
-		loops = 0;
+		mask_index       = -1;
+		open             = false;
+		setup            = true;
+		area             = "red";
+		subarea          = 1;
+		loops            = GameCont.loops;
+		seed             = GameCont.gameseed[(max(0, GameCont.atseed) + array_length(instances_matching_lt(instances_matching(CustomObject, "name", "Warp"), "id", id))) % array_length(GameCont.gameseed)];
 		pickup_indicator = scrPickupIndicator("");
 		with(pickup_indicator){
 			mask_index = mskReviveArea;
-			yoff = 12;
+			yoff = 8;
+		}
+		
+		 // Determine Area:
+		var	_pick = [],
+			_secret = chance(1, 8);
+			
+		with(array_combine([area_campfire, area_desert, area_sewers, area_scrapyards, area_caves, area_city, area_labs, area_palace, area_vault, area_oasis, area_pizza_sewers, area_mansion, area_cursed_caves, area_jungle, area_hq, area_crib], mod_get_names("area"))){
+			var _area = self;
+			if(!array_exists([area_campfire, area_vault, area_oasis, area_pizza_sewers, area_hq, "red"], _area)){
+				 // Cursed:
+				if(_area == area_caves){
+					with(Player) if(curse > 0 || bcurse > 0){
+						_area = area_cursed_caves;
+						break;
+					}
+				}
+				
+				 // Add:
+				array_push(_pick, _area);
+			}
+		}
+		if(array_length(_pick) > 0){
+			area = _pick[irandom(array_length(_pick) - 1)];
+			with(array_shuffle(_pick)){
+				var _area = self;
+				if(!_secret xor area_get_secret(_area)){
+					if(array_length(instances_matching_ne(instances_matching(instances_matching(CustomObject, "name", "Warp"), "area", _area), "id", other)) <= 0){
+						other.area = _area;
+						break;
+					}
+				}
+			}
+			subarea = irandom_range(1, area_get_subarea(area));
 		}
 		
 		 // Alarms:
@@ -2342,19 +2382,59 @@
 	}
 	
 #define Warp_step
-	 // Animate:
-	if(anim_end){
-		if(sprite_index == (open ? spr_idle : spr_open)){
-			sprite_index = (open ? spr_open : spr_idle);
-			image_index = 0;
-		}
-	}
+	var _sparkle = 1;
 	
 	 // Spin:
 	image_angle += current_time_scale;
 	
+	 // Open / Close:
+	var	_openScale = 3,
+		_scale = ((open || sprite_index == (open ? spr_open : spr_idle)) ? 1 : 1 / _openScale);
+		
+	image_xscale += (_scale - image_xscale) * 0.2 * current_time_scale;
+	image_yscale += (_scale - image_yscale) * 0.2 * current_time_scale;
+	
+	if(max(abs(_scale - image_xscale), abs(_scale - image_yscale)) < 0.1){
+		if(sprite_index == (open ? spr_idle : spr_open)){
+			sprite_index = (open ? spr_open : spr_idle);
+			
+			 // Grow / Shrink:
+			image_xscale *= (open ? 1 / _openScale : _openScale);
+			image_yscale *= (open ? 1 / _openScale : _openScale);
+		}
+	}
+	
+	 // Break Walls:
+	else{
+		if(open && frame_active(2)){
+			var _lastArea = GameCont.area;
+			GameCont.area = area;
+			
+			y += 4;
+			
+			if(place_meeting(x, y, Wall)){
+				with(instances_meeting(x, y, Wall)){
+					if(place_meeting(x, y, other)){
+						instance_create(x, y, FloorExplo);
+						instance_destroy();
+					}
+				}
+			}
+			else with(instance_nearest_bbox(x + orandom(32), y + orandom(32), Wall)){
+				instance_create(x, y, FloorExplo);
+				instance_destroy();
+			}
+			sound_stop(sndWallBreak);
+			
+			y -= 4;
+			
+			GameCont.area = _lastArea;
+		}
+		_sparkle *= 2;
+	}
+	
 	 // Effects:
-	if(chance_ct(1, 15)){
+	if(chance_ct(1, 15 / _sparkle)){
 		with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), LaserCharge)){
 			sprite_index = sprSpiralStar;
 			image_index = choose(0, irandom(image_number - 1));
@@ -2362,7 +2442,7 @@
 			motion_set(90, random_range(0.2, 0.5));
 		}
 	}
-	if(chance_ct(1, 20)){
+	if(chance_ct(1, 20 / _sparkle)){
 		with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), BulletHit)){
 			sprite_index = sprThrowHit;
 			image_xscale = 0.2 + random(0.3);
@@ -2385,38 +2465,84 @@
 #define Warp_draw
 	image_alpha = abs(image_alpha);
 	
+	 // Area Color:
+	var _color = area_get_back_color(area);
+	_color = make_color_hsv(
+		color_get_hue(_color),
+		color_get_saturation(_color),
+		lerp(color_get_value(_color), 255, 1/3)
+	);
+	
 	 // Self:
+	if(sprite_index = spr_open){
+		draw_sprite_ext(spr_open_out, current_frame * image_speed, x, y, image_xscale, image_yscale, image_angle, _color, image_alpha);
+	}
 	draw_self();
 	
 	 // Bloom:
 	draw_set_blend_mode(bm_add);
-	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha / 10);
+	if(sprite_index = spr_open){
+		draw_sprite_ext(spr_open_out, current_frame * image_speed, x, y, image_xscale * 1.4, image_yscale * 1.4, image_angle, _color, image_alpha * 0.075);
+	}
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, _color, image_alpha * 0.075);
 	draw_set_blend_mode(bm_normal);
 	
 	image_alpha *= -1;
 	
 #define Warp_alrm0
-	alarm0 = 30 + random(60);
+	alarm0 = 30;
 	
+	 // Warp Time:
 	if(instance_number(enemy) - instance_number(Van) <= 0){
-		if(instance_exists(Player) && !place_meeting(x, y, Player)){
+		if(instance_seen(x, y, Player)){
 			open = true;
+			alarm0 = -1;
+			var _snd = sound_play_hit_ext(sndHyperCrystalSearch, 0.5 + orandom(0.1), 4);
+			if(sound_play_ambient(sndHyperCrystalAppear)){
+				sound_pitch(_snd + 1, 0.6);
+			}
 		}
 	}
 	
-	
 #define Warp_destroy
-	 // Allow Portals:
-	with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
-		instance_destroy();
+	if(open){
+		 // Allow Portals:
+		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
+			instance_destroy();
+		}
+		
+		 // Close Warps:
+		with(instances_matching(object_index, "name", name)){
+			open = false;
+			alarm0 = -1;
+		}
+		
+		 // Going to a New Dimension:
+		with(GameCont){
+			var _lastSeed = {};
+			with(["mutseed", "junseed", "patseed", "codseed"]){
+				var _seed = variable_instance_get(other, self);
+				lq_set(_lastSeed, self, (is_array(_seed) ? array_clone(_seed) : _seed));
+			}
+			game_set_seed(other.seed);
+			for(var i = 0; i < lq_size(_lastSeed); i++){
+				variable_instance_set(self, lq_get_key(_lastSeed, i), lq_get_value(_lastSeed, i));
+			}
+		}
+		
+		 // Warp:
+		GameCont.area    = area;
+		GameCont.subarea = subarea;
+		GameCont.loops   = loops;
+		obj_create(x, y, "WarpPortal");
 	}
 	
-	 // Warp:
-	obj_create(x, y, "WarpPortal");
-	with(GameCont){
-		area    = other.area;
-		subarea = other.subarea - 1; // won't work right but we can fix this later
-		loops   = other.loops;
+	 // Blip Out:
+	else with(instance_create(x, y, BulletHit)){
+		sprite_index = sprThrowHit;
+		image_angle  = other.image_angle;
+		image_xscale = other.image_xscale;
+		image_yscale = other.image_yscale;
 	}
 	
 	
@@ -2424,12 +2550,15 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = sprPortalClear;
-		depth = -8;
+		depth        = -8;
 		
 		 // Vars:
-		mask_index = sprPortalShock;
+		mask_index   = sprPortalShock;
 		image_xscale = 0.6;
 		image_yscale = image_xscale;
+		area         = GameCont.area;
+		subarea      = GameCont.subarea;
+		loops        = GameCont.loops;
 		
 		 // Portal:
 		portal = instance_create(x, y, BigPortal);
@@ -2441,12 +2570,17 @@
 		}
 		instance_create(x, y, PortalShock);
 		
+		 // Sound:
+		audio_sound_set_track_position(sound_play_pitchvol(sndLastNotifyDeath, 0.6 + random(0.1), 2), 0.4);
+		sound_play_music(-1);
+		sound_play_ambient(-1);
+		
 		 // Effects:
 		repeat(30){
-			var	l = 32 + random(8),
-				d = random(360);
+			var	_l = 32 + random(8),
+				_d = random(360);
 				
-			with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(2)], Dust)){
+			with(scrFX(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d, 4 + random(2)], Dust)){
 				friction = 0.4;
 				sprite_index = sprSmoke;
 			}
@@ -2461,8 +2595,19 @@
 	 // Shrink:
 	if(!instance_exists(portal) || portal.endgame < 100){
 		var _shrinkSpeed = 1/80 * current_time_scale;
-		image_xscale -= _shrinkSpeed;
-		image_yscale -= _shrinkSpeed;
+		if(image_xscale > 0 && image_yscale > 0){
+			image_xscale -= _shrinkSpeed;
+			image_yscale -= _shrinkSpeed;
+			
+			 // Blip Out:
+			if(image_xscale <= 0 || image_yscale <= 0){
+				image_xscale = 0;
+				image_yscale = 0;
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = sprThrowHit;
+				}
+			}
+		}
 	}
 	
 	 // Destroy Walls:
@@ -2508,30 +2653,33 @@
 	
 	 // Effects:
 	if(current_frame_active){
-		var	l = 64,
-			d = random(360);
+		var	_l = 64,
+			_d = random(360);
 			
-		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), LaserCharge)){
+		with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), LaserCharge)){
 			alarm0 = random_range(15, 20);
-			motion_set(d + 180, random_range(1, 2));
+			motion_set(_d + 180, random_range(1, 2));
 			sprite_index = sprSpiralStar;
-			direction = d + 180;
-			speed = l / alarm0;
+			direction = _d + 180;
+			speed = _l / alarm0;
 		}
 	}
 	if(chance_ct(1, 5)){
-		var	l = random_range(32, 128),
-			d = random(360);
+		var	_l = random_range(32, 128),
+			_d = random(360);
 			
-		with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), BulletHit)){
+		with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), BulletHit)){
 			sprite_index = sprWepSwap;
 		}
 	}
 	
-	 // Later, Bro:
-	if(image_xscale <= 0 || image_yscale <= 0){
-		instance_destroy();
-		exit;
+	 // Warpin Help:
+	with(portal) if(anim_end){
+		if(array_exists(instance_is(self, BigPortal) ? [sprBigPortalDisappear] : [sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear], sprite_index)){
+			GameCont.area = "red";
+			GameCont.subarea = 0;
+			event_perform(ev_other, ev_animation_end);
+		}
 	}
 	
 #define WarpPortal_draw
@@ -2544,12 +2692,6 @@
 	draw_sprite_ext(sprite_index, image_index, x, y, _xsc, _ysc, image_angle, image_blend, image_alpha);
 	
 	image_alpha = -abs(image_alpha); // CustomObject
-	
-#define WarpPortal_destroy
-	 // Blip Out:
-	with(instance_create(x, y, BulletHit)){
-		sprite_index = sprThrowHit;
-	}
 	
 	
 /// GENERAL
@@ -2580,36 +2722,6 @@
 					if(array_length(_part) >= 2){
 						wep = wep_merge(_part[0], _part[1]);
 					}
-				}
-			}
-		}
-	}
-	
-	 // Wall Shine:
-	with(surfWallShineMask){
-		if(
-			(instance_number(Wall) != wall_num) ||
-			(instance_exists(Wall) && wall_min < Wall.id)
-		){
-			reset = true;
-			
-			 // Update Vars:
-			wall_num  = instance_number(Wall);
-			wall_min  = GameObject.id;
-			wall_inst = instances_matching(Wall,     "topspr",       spr.WallRedTop, spr.WallRedTrans);
-			tops_inst = instances_matching(TopSmall, "sprite_index", spr.WallRedTop, spr.WallRedTrans);
-		}
-		
-		 // Time to Shine:
-		if(array_length(wall_inst) > 0 || array_length(tops_inst) > 0){
-			script_bind_draw(draw_wall_shine, -6.0001);
-			
-			 // Crystal Tunnel Particles:
-			if(GameCont.area != "red"){
-				if(chance_ct(1, 40)){
-					do var i = irandom(maxp - 1);
-					until player_is_active(i);
-					mod_script_call_nc("area", "red", "area_effect", view_xview[i], view_yview[i]);
 				}
 			}
 		}
@@ -2671,14 +2783,8 @@
 					var	_type  = lq_get_key(_layer, i),
 						_depth = lq_get_value(_layer, i);
 						
-					with(script_bind_draw(draw_wall_fake, _depth, _type)){
-						depth++;
-						depth--;
-					}
-					with(script_bind_draw(draw_wall_fake_reveal, _depth - 1)){
-						depth++;
-						depth--;
-					}
+					script_bind_draw(draw_wall_fake, _depth, _type);
+					script_bind_draw(draw_wall_fake_reveal, _depth - 1);
 				}
 			}
 		}
@@ -2686,6 +2792,36 @@
 		 // Reset Player Circles:
 		else with(instances_matching_gt(Player, "red_wall_fake", 0)){
 			red_wall_fake = 0;
+		}
+	}
+	
+	 // Wall Shine:
+	with(surfWallShineMask){
+		if(
+			(instance_number(Wall) != wall_num) ||
+			(instance_exists(Wall) && wall_min < Wall.id)
+		){
+			reset = true;
+			
+			 // Update Vars:
+			wall_num  = instance_number(Wall);
+			wall_min  = GameObject.id;
+			wall_inst = instances_matching(Wall,     "topspr",       spr.WallRedTop, spr.WallRedTrans);
+			tops_inst = instances_matching(TopSmall, "sprite_index", spr.WallRedTop, spr.WallRedTrans);
+		}
+		
+		 // Time to Shine:
+		if(array_length(wall_inst) > 0 || array_length(tops_inst) > 0){
+			script_bind_draw(draw_wall_shine, object_get_depth(SubTopCont) - 1);
+			
+			 // Crystal Tunnel Particles:
+			if(GameCont.area != "red"){
+				if(chance_ct(1, 40)){
+					do var i = irandom(maxp - 1);
+					until player_is_active(i);
+					mod_script_call_nc("area", "red", "area_effect", view_xview[i], view_yview[i]);
+				}
+			}
 		}
 	}
 	

@@ -56,7 +56,15 @@
 	return "@1(sprInterfaceIcons)3-" + string(_subarea);
 	
 #define area_text
-	return choose("IT'S SO DARK", "SHADOWS CRAWL", "IT'S ELECTRIC", "GLOWING", "BLUB", "SWIM OVER PITS", "UNTOUCHED");
+	return choose(
+		"IT'S SO DARK",
+		"SHADOWS CRAWL",
+		"IT'S ELECTRIC",
+		"GLOWING",
+		"BLUB",
+		"SWIM OVER PITS",
+		"UNTOUCHED"
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [

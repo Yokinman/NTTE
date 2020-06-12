@@ -122,7 +122,7 @@
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
-		_normalArea = (GameCont.hard > 1 && instance_exists(enemy)),
+		_normalArea = (GameCont.hard > 1 && instance_number(enemy) > instance_number(EnemyHorror)),
 		_topChance  = 1/100,
 		_topSpawn   = [];
 		
@@ -323,6 +323,7 @@
 	
 	 // Area-Specific:
 	switch(GameCont.area){
+		
 		case area_campfire: /// CAMPFIRE
 			
 			 // Unlock Custom Crowns:
@@ -786,12 +787,13 @@
 			
 			 // Elevators:
 			with(WantPopo){
+				instance_delete(id);
 				with(array_shuffle(FloorNormal)){
 					if(place_free(x, y) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 128){
 						obj_create(x, y, "FreakChamber");
+						break;
 					}
 				}
-				instance_delete(id);
 			}
 			with(instances_matching([EliteGrunt, EliteShielder, EliteInspector], "", null)){
 				if(chance(1, 2)){
@@ -810,11 +812,6 @@
 			
 			break;
 			
-		case area_crib: /// CRIB
-			
-			 // Hmmmm:
-			
-			break;
 	}
 	
 	 // Activate Events:
@@ -1422,9 +1419,6 @@
 			persistent = true;
 		}
 	}
-	if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
-		script_bind_draw(draw_shadows_top, -6.001);
-	}
 	
 #define ntte_call(_call)
 	/*
@@ -1864,6 +1858,7 @@
 	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
 		with(WepPickup){
 			if(!instance_exists(variable_instance_get(self, "portal_inst", noone))){
+				var _lastSeed = random_get_seed();
 				portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
 				with(portal_inst){
 					sprite_index = other.sprite_index;
@@ -1872,6 +1867,7 @@
 					rotspeed = orandom(15);
 					dist = random_range(80, 120);
 				}
+				random_set_seed(_lastSeed);
 			}
 			with(portal_inst){
 				image_xscale = 0.7 + (0.1 * sin((-image_angle / 2) / 200));
@@ -1994,6 +1990,9 @@
 				else{
 					event_perform(ev_collision, InvisiWall);
 				}
+				
+				x += hspeed_raw;
+				y += vspeed_raw;
 			}
 			
 			move_step(-1);
@@ -2162,7 +2161,9 @@
 	with(instances_matching(SpiralCont, "ntte_spiral", null)){
 		ntte_spiral = true;
 		
-		var _lastTimeScale = current_time_scale;
+		var	_lastTimeScale = current_time_scale,
+			_lastSeed = random_get_seed();
+			
 		current_time_scale = 1;
 		
 		switch(GameCont.area){
@@ -2296,6 +2297,7 @@
 		}
 		
 		current_time_scale = _lastTimeScale;
+		random_set_seed(_lastSeed);
 	}
 	if(GameCont.area == "red"){
 		 // Starfield:
@@ -2439,6 +2441,11 @@
 			}
 		}
 		with(_pop) mergewep_indicator = true;
+	}
+	
+	 // Bind Shadow Drawing:
+	if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
+		script_bind_draw(draw_shadows_top, -6.001);
 	}
 	
 	if(lag) trace_time("ntte_end_step");
