@@ -47,7 +47,7 @@
 		spr_idle = spr.AnnihilatorBullet;
 		spr_dead = spr.AnnihilatorBulletDisappear;
 		sprite_index = spr_idle;
-
+		
 		 // Vars:
 		mask_index = mskBullet2;
 		friction = 1;
@@ -86,7 +86,7 @@
 #define AnnihilatorBullet_hit
 	if(projectile_canhit(other)){
 		if(instance_is(creator, Player) && instance_is(other, enemy)){
-			creator.redammo_held -= redammo_cost;
+			creator.redammo -= redammo_cost;
 			redammo_cost = 0;
 			
 			 // Annihilation Time:
