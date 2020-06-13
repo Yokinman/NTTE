@@ -45,7 +45,14 @@
 	return "@1(sprInterfaceIcons)1-" + string((_subarea <= 0) ? "?" : _subarea);
 	
 #define area_text
-	return choose("COWABUNGA", "WAVES CRASH", "SANDY SANCTUARY", "THE WATER CALLS", "SO MUCH GREEN", "ENDLESS BLUE");
+	return choose(
+		"COWABUNGA",
+		"WAVES CRASH",
+		"SANDY SANCTUARY",
+		"THE WATER CALLS",
+		"SO MUCH GREEN",
+		"ENDLESS BLUE"
+	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	return [

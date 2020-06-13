@@ -11,8 +11,7 @@
 	global.sprShotbow     = sprite_add_weapon_base64(b[2],  6, 3);
 	global.sprSlugbolt    = sprite_add_weapon_base64(b[3],  6, 5);
 	global.sprSlugboltHUD = sprite_add_weapon_base64(b[3], 11, 5);
-	
-	global.sprWepLocked	= mskNone;
+	global.sprWepLocked	  = mskNone;
 	
 	 // LWO:
 	lwoWep = {

@@ -1249,8 +1249,9 @@
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
 			 // Warp:
-			Warp	 = sprite(p + "sprWarp",     2, 16, 16);
-			WarpOpen = sprite(p + "sprWarpOpen", 4, 32, 32);
+			Warp	    = sprite(p + "sprWarp",        2, 16, 16);
+			WarpOpen    = sprite(p + "sprWarpOpen",    2, 32, 32);
+			WarpOpenOut = sprite(p + "sprWarpOpenOut", 4, 32, 32);
 			
 			 // Misc:
 			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
@@ -1415,6 +1416,8 @@
 		m = "races/";
 			
 			var _list = {
+				// [Name, Frames, X, Y, Has B Variant]
+				
 				"parrot" : {
 					skin : 2,
 					sprt : [

@@ -4438,132 +4438,156 @@
 	global.bonus_ammo_step = [];
 	with(instances_matching(instances_matching_gt(Player, "bonus_ammo", 0), "infammo", 0)){
 		if(player_active){
-			var	_wep          = wep,
-				_cost         = weapon_get_cost(_wep),
-				_load         = weapon_get_load(_wep),
-				_type         = weapon_get_type(_wep),
-				_auto         = weapon_get_auto(_wep),
-				_internal     = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
-				_internalCost = (_internal ? _wep.cost : 0),
-				_fire         = 0;
+			var	_wepNum  = 1,
+				_wepList = [{
+					"wep"       : wep,
+					"reload"    : reload,
+					"clicked"   : (clicked >= 1),
+					"canfire"   : (canfire >= 1),
+					"can_shoot" : (can_shoot == true),
+					"button"    : "fire"
+				}];
 				
-			 // Race-Specific:
-			switch(race){
-				case "steroids": // Automatic Weapons
-					if(_auto >= 0) _auto = true;
-					break;
-					
-				case "venuz": // Pop Pop
-					if(canspec && button_pressed(index, "spec")){
-						_fire = floor(2 * (1 + skill_get(mut_throne_butt)));
-					}
-					break;
+			 // Dual Wielding:
+			if(race == "steroids"){
+				_wepNum++;
+				array_push(_wepList, {
+					"wep"       : bwep,
+					"reload"    : breload,
+					"clicked"   : false,
+					"canfire"   : canspec,
+					"can_shoot" : (bcan_shoot == true),
+					"button"    : "spec"
+				});
 			}
 			
-			 // Firing:
-			if(_fire <= 0 && canfire >= 1){
-				 // Automatic:
-				if(_auto){
-					if(can_shoot == true){
-						if(button_check(index, "fire")){
-							_fire = 100;
-							if(_load > 0){
-								_fire = min(_fire, 1 - (min(0, reload) / _load));
+			while(_wepNum-- > 0){
+				var	_info         = _wepList[_wepNum],
+					_wep          = _info.wep,
+					_cost         = weapon_get_cost(_wep),
+					_load         = weapon_get_load(_wep),
+					_type         = weapon_get_type(_wep),
+					_auto         = weapon_get_auto(_wep),
+					_internal     = (is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)),
+					_internalCost = (_internal ? _wep.cost : 0);
+					
+				 // Automatic Weapons:
+				if(race == "steroids" && _auto >= 0){
+					_auto = true;
+				}
+				
+				 // Firing:
+				var _fire = 0;
+				if(_wepNum == 0 && race == "venuz" && canspec && button_pressed(index, "spec")){
+					_fire = floor(2 * (1 + skill_get(mut_throne_butt)));
+				}
+				else if(_info.canfire){
+					 // Automatic:
+					if(_auto >= 1){
+						if(_info.can_shoot){
+							if(button_check(index, _info.button)){
+								_fire = 100;
+								if(_load > 0){
+									_fire = min(_fire, 1 - (min(0, _info.reload) / _load));
+								}
+								if(_cost > 0){
+									_fire = min(_fire, (ammo[_type] + bonus_ammo) / _cost);
+								}
+								if(_internalCost > 0){
+									_fire = min(_fire, (_wep.ammo + bonus_ammo) / _internalCost);
+								}
+								_fire = floor(_fire);
 							}
-							if(_cost > 0){
-								_fire = min(_fire, (ammo[_type] + bonus_ammo) / _cost);
-							}
-							if(_internalCost > 0){
-								_fire = min(_fire, (_wep.ammo + bonus_ammo) / _internalCost);
-							}
-							_fire = floor(_fire);
+						}
+						
+						 // Reloading:
+						else if(button_pressed(index, _info.button)){
+							_fire = 1;
 						}
 					}
 					
-					 // Reloading:
-					else if(button_pressed(index, "fire")){
+					 // Manual:
+					else if(button_pressed(index, _info.button) || _info.clicked){
 						_fire = 1;
 					}
 				}
 				
-				 // Manual:
-				else if(button_pressed(index, "fire") || clicked >= 1){
-					_fire = 1;
-				}
-			}
-			
-			 // Step:
-			if(ammo[_type] - (_cost * _fire) <= _cost){
-				array_push(global.bonus_ammo_step, {
-					inst  : id,
-					last  : GameObject.id,
-					type  : _type,
-					wkick : ((can_shoot == true) ? ((wkick == 0) ? 4 : wkick + (sign(wkick) * current_time_scale)) : wkick),
-					bonus : (ammo[_type] + bonus_ammo >= _cost * max(1, _fire))
-				});
-			}
-			
-			 // Give Bonus Ammo:
-			if(_fire > 0){
-				var	_bonus         = 0,
-					_internalBonus = 0;
-					
-				 // Cost:
-				_cost         *= _fire;
-				_internalCost *= _fire;
-				if(can_shoot != true){
-					_cost         = min(_cost,         typ_amax[_type]);
-					_internalCost = min(_internalCost, (_internal ? lq_defget(_wep, "amax", 0) : 0));
+				 // Step:
+				if(ammo[_type] - (_cost * _fire) <= _cost){
+					array_push(global.bonus_ammo_step, {
+						num    : _wepNum,
+						inst   : id,
+						last   : GameObject.id,
+						type   : weapon_get_type(wep),
+						btype  : weapon_get_type(bwep),
+						wkick  : wkick  + (sign(wkick)  * current_time_scale),
+						bwkick : bwkick + (sign(bwkick) * current_time_scale),
+						bonus  : (ammo[_type] - (_cost * _fire) + bonus_ammo >= _cost)
+					});
 				}
 				
-				 // Ammo:
-				if(ammo[_type] + bonus_ammo >= _cost){
-					 // Normal:
-					_bonus = clamp(_cost - ammo[_type], 0, bonus_ammo);
-					ammo[_type] += _bonus;
-					bonus_ammo  -= _bonus;
+				 // Give Bonus Ammo:
+				if(_fire > 0){
+					var	_bonus         = 0,
+						_internalBonus = 0;
+						
+					 // Cost:
+					_cost         *= _fire;
+					_internalCost *= _fire;
+					if(!_info.can_shoot){
+						_cost         = min(_cost,         typ_amax[_type]);
+						_internalCost = min(_internalCost, (_internal ? lq_defget(_wep, "amax", 0) : 0));
+					}
 					
-					 // Internal:
-					if(_internal){
-						if(_wep.ammo + bonus_ammo >= _internalCost){
-							_internalBonus = clamp(_internalCost - _wep.ammo, 0, bonus_ammo);
-							_wep.ammo  += _internalBonus;
-							bonus_ammo -= _internalBonus;
+					 // Ammo:
+					if(ammo[_type] + bonus_ammo >= _cost){
+						 // Normal:
+						_bonus = clamp(_cost - ammo[_type], 0, bonus_ammo);
+						ammo[_type] += _bonus;
+						bonus_ammo  -= _bonus;
+						
+						 // Internal:
+						if(_internal){
+							if(_wep.ammo + bonus_ammo >= _internalCost){
+								_internalBonus = clamp(_internalCost - _wep.ammo, 0, bonus_ammo);
+								_wep.ammo  += _internalBonus;
+								bonus_ammo -= _internalBonus;
+							}
 						}
 					}
-				}
-				
-				 // FX:
-				var _size = _bonus + _internalBonus;
-				if(_size > 0){
-					sound_play_pitchvol(
-						choose(sndGruntFire, sndRogueRifle),
-						(0.6 + random(1)) / clamp(_size, 1, 3),
-						0.8 + (0.1 * _size)
-					);
 					
-					with(instance_create(x, y, WepSwap)){
-						name = "BonusAmmoFire";
-						creator = other;
-						sprite_index = sprImpactWrists;
-						image_xscale = 0.425 + (0.075 * _size);
-						image_blend = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
-						image_speed = 0.35;
+					 // FX:
+					var _size = _bonus + _internalBonus;
+					if(_size > 0){
+						sound_play_pitchvol(
+							choose(sndGruntFire, sndRogueRifle),
+							(0.6 + random(1)) / clamp(_size, 1, 3),
+							0.8 + (0.1 * _size)
+						);
 						
-						 // Normal:
-						if(other.bonus_ammo > 0){
-							image_index = max(2 - image_speed, 3 - (_size / 3));
+						with(instance_create(x, y, WepSwap)){
+							name         = "BonusAmmoFire";
+							creator      = other;
+							sprite_index = sprImpactWrists;
+							image_xscale = 0.425 + (0.075 * _size);
+							image_blend  = merge_color(c_aqua, choose(c_white, c_blue), random(0.4));
+							image_speed  = 0.35;
+							
+							 // Normal:
+							if(other.bonus_ammo > 0){
+								image_index = max(2 - image_speed, 3 - (_size / 3));
+							}
+							
+							 // End:
+							else{
+								image_xscale *= 1.5;
+								sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+								sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+							}
+							
+							image_xscale = min(1.2, image_xscale);
+							image_yscale = image_xscale;
 						}
-						
-						 // End:
-						else{
-							image_xscale *= 1.5;
-							sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-							sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
-						}
-						
-						image_xscale = min(1.2, image_xscale);
-						image_yscale = image_xscale;
 					}
 				}
 			}
@@ -4649,48 +4673,58 @@
 		}
 	}
 	
-	 // Spirit Pickups:
-	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "spiritpickup_check", null)){
+	 // Mutation Pickups:
+	with(instances_matching(instances_matching_le(enemy, "my_health", 0), "mutationpickup_check", null)){
 		if(!instance_is(self, CustomEnemy) || candie >= 1){
-			spiritpickup_check = false;
+			mutationpickup_check = false;
 			
 			if(GameCont.hard > 3){
-				var	_health    = 0,
-					_healthMax = 0;
+				if(enemy_boss){
+					mutationpickup_check = true;
 					
-				with(Player){
-					_health    += my_health;
-					_healthMax += maxhealth;
-				}
-				
-				 // Below Half HP:
-				if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
-					 // Is Boss:
-					if(enemy_boss){
-						spiritpickup_check = true;
-						
-						 // Check if Last Boss on Level:
-						with(enemy){
-							if(my_health > 0 || id > other.id){
-								if(enemy_boss){
-									other.spiritpickup_check = false;
-									break;
-								}
+					 // Is Last Boss on Level:
+					with(enemy){
+						if(my_health > 0 || id > other.id){
+							if(enemy_boss){
+								other.mutationpickup_check = false;
+								break;
 							}
 						}
+					}
+					
+					 // Pickup Time:
+					if(mutationpickup_check){
+						var	_x = x,
+							_y = y;
+							
+						if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
+							_x = posx;
+							_y = posy;
+						}
 						
-						 // Spirit Time:
-						if(spiritpickup_check){
-							var	_x = x,
-								_y = y;
+						if(position_meeting(_x, _y, Floor)){
+							var	_obj       = "",
+								_health    = 0,
+								_healthMax = 0;
 								
-							if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
-								_x = posx;
-								_y = posy;
+							with(Player){
+								_health    += my_health;
+								_healthMax += maxhealth;
 							}
 							
-							if(position_meeting(_x, _y, Floor)){
-								obj_create(_x + orandom(4), _y + orandom(4), "SpiritPickup");
+							 // Spirit:
+							if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
+								_obj = "SpiritPickup";
+							}
+							
+							 // HammerHead:
+							else if(chance(1 + GameCont.loops, 4)){
+								_obj = "HammerHeadPickup"
+							}
+							
+							 // Create:
+							if(_obj != ""){
+								obj_create(_x + orandom(4), _y + orandom(4), _obj);
 							}
 						}
 					}
@@ -4843,12 +4877,17 @@
 		if(instance_exists(inst)){
 			 // Prevent Low Ammo Text:
 			if(bonus){
-				var	_txtNon = loc(`HUD:NoAmmo:${type}`, loc("HUD:NoAmmo", "EMPTY")),
-					_txtIns = loc(`HUD:InsAmmo:${type}`, string_replace(loc("HUD:InsAmmo", "NOT ENOUGH %"), "%", inst.typ_name[type]));
+				var	_txtNonA = loc(`HUD:NoAmmo:${type  }`, loc("HUD:NoAmmo", "EMPTY")),
+					_txtNonB = loc(`HUD:NoAmmo:${btype }`, loc("HUD:NoAmmo", "EMPTY")),
+					_txtInsA = loc(`HUD:InsAmmo:${type }`, string_replace(loc("HUD:InsAmmo", "NOT ENOUGH %"), "%", inst.typ_name[type])),
+					_txtInsB = loc(`HUD:InsAmmo:${btype}`, string_replace(loc("HUD:InsAmmo", "NOT ENOUGH %"), "%", inst.typ_name[btype]));
 					
-				with(instances_matching(instances_matching(instances_matching_gt(PopupText, "id", last), "target", inst.index), "text", _txtNon, _txtIns)){
-					if(other.inst.wkick == -2){
+				with(instances_matching(instances_matching(instances_matching_gt(PopupText, "id", last), "target", inst.index), "text", _txtNonA, _txtNonB, _txtInsA, _txtInsB)){
+					if(text == _txtNonA || text == _txtInsA){
 						other.inst.wkick = other.wkick;
+					}
+					if(text == _txtNonB || text == _txtInsB){
+						other.inst.bwkick = other.bwkick;
 					}
 					sound_stop(sndEmpty);
 					instance_destroy();
@@ -4866,10 +4905,18 @@
 			}
 		}
 	}
-	with(instances_matching_gt(instances_matching_gt(Player, "bonus_ammo", 0), "drawempty", 0)){
-		var _type = weapon_get_type(wep);
-		if(ammo[_type] + bonus_ammo >= typ_ammo[_type]){
-			drawempty = 0;
+	with(instances_matching_gt(Player, "bonus_ammo", 0)){
+		if(drawempty > 0){
+			var _ammo = ammo[weapon_get_type(wep)];
+			if(_ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(wep)){
+				drawempty = 0;
+			}
+		}
+		if(drawemptyb > 0){
+			var _ammo = ammo[weapon_get_type(bwep)];
+			if(_ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(bwep)){
+				drawemptyb = 0;
+			}
 		}
 	}
 	
@@ -5080,6 +5127,20 @@
 		with(instances_matching(AmmoChestMystery, "sprite_index", sprAmmoChestMystery)){
 			sprite_index = sprAmmoChestSteroids;
 		}
+	}
+	
+	 // HammerHead Persistence:
+	if(instance_exists(GenCont)){
+		var _hammerMin = 20 * skill_get(mut_hammerhead);
+		with(instances_matching_gt(Player, "hammerhead", _hammerMin)){
+			var _save = (hammerhead - _hammerMin);
+			hammerhead_save = _save + variable_instance_get(self, "hammerhead_save", 0);
+			hammerhead -= _save;
+		}
+	}
+	else with(instances_matching_ne(Player, "hammerhead_save", 0, null)){
+		hammerhead += hammerhead_save;
+		hammerhead_save = 0;
 	}
 	
 #define ntte_shadows

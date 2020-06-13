@@ -55,18 +55,18 @@
 	 // Charge Trident:
 	if(w.visible){
 		w.chrg = true;
-		w.primary = !f.spec;
+		w.primary = !(f.spec && f.roids);
 		
 		 // Charging:
 		if(w.chrg_num < w.chrg_max){
 			 // Determine Charge Speed:
 			var s = 1;
-			with(f.creator) if(instance_is(self, Player)){
-				s *= reloadspeed;
-				s *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
-			}
 			if(race == "venuz"){
 				s *= 1.2 + (0.4 * ultra_get(race, 2));
+			}
+			with(f.creator) if(instance_is(self, Player)){
+				s *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
+				s *= reloadspeed;
 			}
 			
 			 // Charge:

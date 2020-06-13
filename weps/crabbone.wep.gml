@@ -136,25 +136,20 @@
 		
 		 // Pickup Bones:
 		if(place_meeting(x, y, WepPickup)){
-			with(instances_meeting(x, y, instances_matching(WepPickup, "visible", true))){
+			with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", variable_instance_get(other, b + "curse", 0)))){
 				if(place_meeting(x, y, other)){
 					if(wep_get(wep) == mod_current){
-						w.ammo++;
+						var _num = lq_defget(wep, "ammo", 1);
+						w.ammo += _num;
 						
+						 // Pickuped:
 						with(other){
 							if(_primary || race == "steroids"){
 								variable_instance_set(self, b + "wkick", min(-8, variable_instance_get(self, b + "wkick")));
 							}
-							else with(instance_create(x, y, PopupText)){
-								text = "+1 BONE";
+							else{
+								mod_script_call("mod", "tepickups", "pickup_text", "% BONE", _num);
 							}
-						}
-						
-						 // Curse:
-						if(curse > variable_instance_get(other, b + "curse")){
-							variable_instance_set(other, b + "curse", curse);
-							sound_play_pitch(sndCursedChest, 1.2);
-							repeat(8) scrFX([x, 8], [y, 8], random(1), Curse);
 						}
 						
 						 // Epic Time:
