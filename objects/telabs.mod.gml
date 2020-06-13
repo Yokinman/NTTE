@@ -352,7 +352,7 @@
 		image_speed  = 0.4 / ((_skill > 0) ? 1 + _skill : power(2, _skill)); // idk the base game does this
 		
 		 // Vars:
-		mask_index = mskSlash; //msk.EnergyBatSlash;
+		mask_index = mskSlash;
 		damage     = 22; 
 		force      = 8;
 		walled     = false;
@@ -465,6 +465,7 @@
 	}
 	
 	
+#define EntanglerSlash_create(_x, _y)
 #define FreakChamber_create(_x, _y)
 	/*
 		Creates an epic room on the side of the level that opens to release freaks

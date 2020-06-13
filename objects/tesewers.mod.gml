@@ -1796,16 +1796,19 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.BatScreech;
-		mask_index = msk.BatScreech;
 		image_speed = 0.4;
+		hitid = [sprite_index, "SOUND"];
 		depth = -3;
 		
 		 // Vars:
+		mask_index = msk.BatScreech;
+		typ = 0;
 		team = 1;
 		force = 1;
+		damage = 0;
 		creator = noone;
 		candeflect = false;
-		can_effect = true;
+		// can_effect = true;
 		
 		/*
 		 // Effects:
@@ -1863,9 +1866,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatScreech_hit
 	 // Push Dudes Away:
-	with(instances_matching_ne(hitme, "team", team)){
-		if(place_meeting(x, y, other)){
+	if(projectile_canhit(other)){
+		with(other){
 			motion_add(point_direction(other.x, other.y, x, y), other.force);
+		}
+		
+		 // Damage?:
+		if(damage > 0 && projectile_canhit_melee(other)){
+			projectile_hit(other, damage);
 		}
 	}
 	

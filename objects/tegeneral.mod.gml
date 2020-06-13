@@ -3762,13 +3762,15 @@
 		with(obj_create(x, y, "BatScreech")){
 			image_alpha = 0;
 			creator = other.creator;
-			team	= other.team;
+			damage  = 4;
 			force  *= 3/2;
+			team	= other.team;
 		}
 		with(instances_matching_gt(Dust, "id", _minID)){
 			instance_delete(id);
 		}
 		
+		/*
 		 // Lightning:
 		for(var i = 0; i < 360; i += 360 / 4){
 			var d = direction + i;
@@ -3794,6 +3796,7 @@
 				instance_delete(id);
 			}
 		}
+		*/
 		
 		 // Effects:
 		sleep(80);

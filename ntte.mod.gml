@@ -1343,38 +1343,53 @@
 		}
 	}
 	
+	 // Red Ammo Canisters:
+	var _redWep = false;
+	with(Player){
+		with(["wep", "bwep"]){
+			var o = self;
+			if(!_redWep){
+				with(other){
+					var _name = wep_get(variable_instance_get(self, o)),
+						_scrt = "weapon_red",
+						_type = "weapon";
+						
+					if(is_string(_name)){
+						if(mod_script_exists(_type, _name, _scrt)){
+							_redWep = (mod_script_call(_type, _name, _scrt) > 0);
+						}
+					}
+				}
+			}
+		}
+	}
+	if(_redWep){
+		 // Spawn With Rogue Chest:
+		with(RogueChest){
+			floor_set_align(32, 32, null, null);
+			
+			with(floor_room(x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
+				obj_create(x, y, "RedAmmoChest");
+			}
+			
+			floor_reset_align();
+		}
+		
+		 // Rad Chest Replacement:
+		with(RadChest){
+			obj_create(x, y, "RedAmmoChest");
+			instance_delete(id);
+		}
+	}
+	
 	 // Orchid Chests:
 	if(save_get("orchid:seen", false)){
-		with(RadChest){
+		with(instances_matching([RadChest, RogueChest], "", null)){
 			if(chance(GameCont.rad * (GameCont.level / 10), 600 * 3)){
 				obj_create(x, y, "OrchidChest");
 				instance_delete(id);
 			}
 		}
-	}
-	
-	 // Red Ammo:
-	var _redWep = false;
-	with(["wep", "bwep"]){
-		var o = self;
-		with(Player){
-			var _name = wep_get(variable_instance_get(self, o)),
-				_scrt = "weapon_red",
-				_type = "weapon";
-			
-			if(is_string(_name)){
-				if(mod_script_exists(_type, _name, _scrt)){
-					_redWep += real(mod_script_call(_type, _name, _scrt));
-				}
-			}
-		}
-	}
-	
-	if(_redWep > 0){
-		with(RadChest) if(chance(_redWep, 5)){
-			obj_create(x, y, "RedAmmoChest");
-			instance_delete(id);
-		} 
 	}
 	
 	 // Flies:
@@ -1637,6 +1652,16 @@
 		global.pet_mapicon[index] = _list;
 	}
 	
+	 // Red Ammo:
+	with(Player){
+		if("redammo" not in self){
+			redammo = 0;
+		}
+		if("redamax" not in self){
+			redamax = 55;
+		}
+	}
+	
 	 // NTTE Areas:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		var _area = (
@@ -1747,7 +1772,7 @@
 		if(fork()){
 			var	_x = x,
 				_y = y,
-				_save = ["ntte_pet", "feather_ammo", "bonus_ammo"],
+				_save = ["ntte_pet", "feather_ammo", "bonus_ammo", "redammo", "redamax"],
 				_vars = {},
 				_race = race;
 				
@@ -2068,6 +2093,22 @@
 			if(race == "parrot"){
 				var _wish = (2 * feather_num);
 				feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
+			}
+			
+			 // Red Ammo:
+			var _wish = 0;
+			with(["wep", "bwep"]){
+				var _name = wep_get(variable_instance_get(other, self, "")),
+					_scrt = "weapon_red",
+					_type = "weapon";
+					
+				if(mod_script_exists(_type, _name, _scrt)){
+					_wish += (mod_script_call(_type, _name, _scrt) > 0);
+				}
+			}
+			if(_wish > 0){
+				_wish *= 5;
+				redammo = min(redammo + (_wish * _wishDiff), redamax + ((99 - redamax) * skill_get(mut_back_muscle)));
 			}
 		}
 	}

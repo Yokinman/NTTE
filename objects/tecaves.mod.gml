@@ -56,7 +56,7 @@
 		force = 999;
 		team = 0;
 		typ = 2;
-		my_lwo = noone;
+		redammo_cost = 0;
 		
 		return id;
 	}
@@ -85,30 +85,12 @@
 	
 #define AnnihilatorBullet_hit
 	if(projectile_canhit(other)){
-		var _wep = my_lwo;
-		if(is_object(_wep) && lq_defget(_wep, "ammo", 0) > 0){
-			_wep.ammo--;
-			
-			/*
-			with(instances_matching([Player, WepPickup], "", null)){
-				if(wep == _wep || (("bwep" in id) && bwep == _wep)){
-					
-					 // Effects:
-					var _sprite = spr.AnnihilatorDebris;
-					for(var i = 0; i < sprite_get_number(_sprite); i++){
-						with(instance_create(x, y, Debris)){
-							sprite_index = _sprite;
-							image_index  = i;
-							motion_set(random(360), random(4));
-						}
-					}
-				}
-			}
-			*/
+		if(instance_is(creator, Player) && instance_is(other, enemy)){
+			creator.redammo_held -= redammo_cost;
+			redammo_cost = 0;
 			
 			 // Annihilation Time:
-			mod_script_call("skill", "annihilation", "skill_init", other, 5);
-			GameCont.hard += 1;
+			mod_script_call("skill", "annihilation", "skill_init", other, 2);
 		}
 		else{
 			
@@ -125,6 +107,19 @@
 		instance_destroy();
 	}
 	
+#define AnnihilatorBullet_cleanup
+	 // Refund Unspent Ammo:
+	if(instance_is(creator, Player)){
+		with(creator){
+			redammo = min(
+				redammo + other.redammo_cost, 
+				redamax + (
+					(99 - redamax) * skill_get(mut_back_muscle)
+				)
+			);
+		}
+	}
+	
 #define AnnihilatorSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
@@ -133,13 +128,20 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
+		candeflect = true;
 		damage = 8;
 		force = 12;
+		team = 1;
+		typ = 0;
+		walled = false;
 		
 		return id;
 	}
 	
 #define AnnihilatorSlash_wall
+	if(!walled){
+		walled = true;
+	}
 
 #define AnnihilatorSlash_hit
 	if(projectile_canhit_melee(other)){
@@ -1203,6 +1205,85 @@
 	}
 	
 	
+#define EntanglerSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		// sprite_index = spr.EntanglerSlash;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = mskSlash;
+		candeflect = true;
+		damage = 8;
+		force = 12;
+		team = 2;
+		setup = true;
+		walled = false;
+		hit_list = {};
+		cancharm = false;
+		redammo_cost = 0;
+		
+		return id;
+	}
+	
+#define EntanglerSlash_setup
+	setup = false;
+	
+	var _charm = false;
+	with(instances_meeting(x, y, instances_matching_ne(enemy, "team", team))){
+		if(place_meeting(x, y, other)){
+			_charm = true;
+			redammo_cost = 0;
+			
+			 // maybe do charm stuff here instead idk
+		}
+	}
+	
+	if(_charm){
+		 // Visual:
+		// sprite_index = spr.EntanglerSlashCharm;
+		
+		 // Vars:
+		cancharm = true;
+	}
+		
+	
+#define EntanglerSlash_step
+	if(setup) EntanglerSlash_setup();
+	
+#define EntanglerSlash_wall
+	if(!walled){
+		walled = true;
+		
+		sound_play_hit(sndMeleeWall, 0.2);
+		
+	}
+
+#define EntanglerSlash_hit
+	if(team != other.team && lq_defget(hit_list, string(other), 0) <= current_frame){
+		lq_set(hit_list, string(other), current_frame + 6);
+		
+		 // The Good Stuff:
+		if(cancharm){
+			 // iou charmed clones
+		}
+		
+		projectile_hit(other, damage, force, direction);
+	}
+	
+#define EntanglerSlash_cleanup
+	 // Refund Unspent Ammo:
+	if(instance_is(creator, Player)){
+		with(creator){
+			redammo = min(
+				redammo + other.redammo_cost, 
+				redamax + (
+					(99 - redamax) * skill_get(mut_back_muscle)
+				)
+			);
+		}
+	}
+
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
@@ -1649,6 +1730,11 @@
 		 // Sounds:
 		snd_open = sndRogueCanister;
 		
+		 // Vars:
+		mask_index = -1;
+		raddrop = 25;
+		num = 5;
+		
 		 // Scripts:
 		on_open = script_ref_create(RedAmmoChest_open)
 		 
@@ -1656,36 +1742,125 @@
 	}
 	
 #define RedAmmoChest_open
-	var _redWep = null;
 	if(instance_is(other, Player)){
-		with(other){
-			with(["wep", "bwep"]){
-				if(is_undefined(_redWep)){
-					var _weap = variable_instance_get(other, "wep"),
-						_name = wep_get(_weap),
-						_scrt = "weapon_red",
-						_type = "weapon";
-						
-					if(mod_script_exists(_type, _name, _scrt)){
-						if(mod_script_call(_type, _name, _scrt)){
-							_redWep = _weap;
-						}
-					}
-				}
+		red_ammo_add(other, num);
+	}
+	else{
+		
+		 // Cutie:
+		obj_create(x, y, "RedAmmoPickup");
+	}
+	
+#define RedAmmoPickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = spr.RedAmmoPickup;
+		
+		 // Sounds:
+		snd_open = sndRogueCanister;
+		snd_dead = sndPickupDisappear;
+		
+		 // Vars:
+		mask_index = mskPickup;
+		num = 5;
+		
+		 // Events:
+		on_pull = script_ref_create(RedAmmoPickup_pull);
+		on_open = script_ref_create(RedAmmoPickup_open);
+		 
+		return id;
+	}
+	
+#define RedAmmoPickup_pull
+	return (instance_get_red(other) > 0);
+	
+#define RedAmmoPickup_open
+	if(instance_is(other, Player)){
+		red_ammo_add(other, num);
+	}
+	
+#define RedAmmoPopup_create(_x, _y)
+	with(instance_create(_x, _y, PopupText)){
+		 // Visual:
+		image_blend = make_color_rgb(235, 0, 67);
+		
+		 // Vars:
+		num_symbols = 3;
+		symbol_list = ["?", "?", "?", "?", "$", "%", "&", "_"];
+		text_prefix = "";
+		text_suffix = "@wAMMO";
+		
+		return id;
+	}
+	
+#define RedAmmoPopup_step
+	text = text_prefix + ` @(color:${image_blend})`;
+	repeat(num_symbols){
+		text += symbol_list[irandom(array_length(symbol_list) - 1)];
+	}
+	text += " " + text_suffix;
+	
+#define red_ammo_add(_player, _num)
+	with(_player){
+		 // Initialize:
+		if("redammo" not in id){
+			redammo = 0;
+			redamax = 55;
+		}
+		
+		redammo += _num;
+		
+		 // Maxed Out:
+		var _maxRed = redamax + ((99 - redamax) * skill_get(mut_back_muscle));
+		if(redammo >= _maxRed){
+			redammo = _maxRed;
+			
+			with(obj_create(x, y, "RedAmmoPopup")){
+				text_prefix = "MAX";
+				target = other.index;
+			}
+		}
+		else{
+			
+			 // Room to Spare:
+			with(obj_create(x, y, "RedAmmoPopup")){
+				text_prefix = "+" + string(_num);
+				target = other.index;
 			}
 		}
 	}
 	
-	 // Get Ammo:
-	if(!is_undefined(_redWep)){
-		lq_set(_redWep, "ammo", min(lq_defget(_redWep, "ammo", 0) + 1, lq_defget(_redWep, "amax", 55)));
-		var i = other.index;
-		with(instance_create(x, y, PopupText)){
-			target = i;
-			text = `+1 ${lq_get(_redWep, "anam")}`;
+#define instance_get_red(_inst)
+	/*
+		Blanket function for finding the 'weapon_red' value 
+		of Players and WepPickups.
+	*/
+	var _redAmmo = 0;
+	with(["wep", "bwep"]){
+		var o = self;
+		if(_redAmmo <= 0){
+			var _wep = wep_get(variable_instance_get(_inst, o));
+			if(!is_undefined(_wep)){
+				_redAmmo = weapon_get_red(_wep);
+			}
 		}
 	}
+	return _redAmmo;
 	
+#define weapon_get_red(_wep)
+	/*
+		Returns the 'weapon_red' value of a given weapon.
+	*/
+	var _name = wep_get(_wep),
+		_scrt = "weapon_red",
+		_type = "weapon";
+		
+	if(is_string(_name) && mod_script_exists(_type, _name, _scrt)){
+		return mod_script_call(_type, _name, _scrt);
+	}
+	
+	return 0;
+
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:

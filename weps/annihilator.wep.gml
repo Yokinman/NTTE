@@ -1,41 +1,26 @@
 #define init
 	 // Sprites:
 	global.sprWep		= sprite_add_weapon("../sprites/weps/sprAnnihilator.png",		   8, 2);
-	global.sprWepHUD	= sprite_add(		"../sprites/weps/sprAnnihilatorHUD.png",	1, 0,  3);
-	// global.sprWepDamage = sprite_add_weapon("../sprites/weps/sprAnnihilatorDamage.png",	   8, 0);
-	// global.sprWepBroken = sprite_add_weapon("../sprites/weps/sprAnnihilatorBroken.png",    4, 4);
+	global.sprWepHUD1	= sprite_add(		"../sprites/weps/sprAnnihilatorHUD1.png",	1, 0, 3);
+	global.sprWepHUD2   = sprite_add(		"../sprites/weps/sprAnnihilatorHUD2.png",	1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
 	global.color = `@(color:${make_color_rgb(235, 0, 67)})`;
 	
-	 // LWO:
-	lwoWep = {
-		wep   : mod_current,
-		ammo  : 1,
-		amax  : 55,
-		anam  : "CHARGE",
-		cost  : 0,
-		buff  : false,
-		proj  : noone
-	};
-	 
-#macro lwoWep global.lwoWep
-	
+#define weapon_sprt		return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_name 	return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
 #define weapon_text 	return `@wBEND @sTHE ${global.color}CONTINUUM`;
 #define weapon_swap 	return sndSwapHammer;
 #define weapon_area 	return (weapon_avail() ? 21 : -1); // L1 3-1
 #define weapon_type 	return type_melee;
 #define weapon_load 	return 20; // 0.66 Seconds
-#define weapon_melee(w)	return (lq_defget(w, "ammo", 1) <= 0);
 #define weapon_avail	return true; // unlock_get("pack:red");
-#define weapon_red		return true;
+#define weapon_red		return 5;
+#define weapon_melee	return (variable_instance_get(self, "redammo", 0) < weapon_red());
 
 #define weapon_sprt_hud(w)	
 	if(instance_is(self, Player) && (instance_is(other, TopCont) || instance_is(other, UberCont))){
-		var _primary = (w == wep);
-			
-		 // Copy-Pasted Code Time:
+		var _primary = (wep == w);
 		if(player_get_show_hud(index, player_find_local_nonsync())){
 			if(!instance_exists(menubutton) || index == player_find_local_nonsync()){
 				var	_x = view_xview_nonsync + (_primary ? 42 : 86),
@@ -46,97 +31,68 @@
 				if(_active > 1) _x -= 19;
 				
 				 // Determine Color:
-				var _col = "@w";
-				if(lq_defget(w, "ammo", 1) > 0){
-					if(instance_exists(lq_defget(w, "proj", noone))){
-						_col = `@q${global.color}`;
+				var _col = "w";
+				if(redammo > 0){
+					if(_primary || (race == "steroids")){
+						if(redammo < weapon_red()){
+							_col = "r";
+						}
 					}
 					else{
-						if(!_primary && race != "steroids"){
-							_col = "@s";
-						}
+						_col = "s";
 					}
 				}
 				else{
-					_col = "@d";
+					_col = "d";
+				}
+				
+				var _txt = string(redammo),
+					_num = string_length(_txt);
+					
+				if(array_length(instances_matching_gt(instances_matching(projectile, "creator", id), "redammo_cost", 0)) > 0){
+					_txt = "";
+					repeat(_num){
+						_txt += choose("?", "?", "?", "?", "$", "%", "&", "_");
+					}
 				}
 				
 				 // !!!
 				draw_set_halign(fa_left);
 				draw_set_valign(fa_top);
 				draw_set_projection(2, index);
-				draw_text_nt(_x, _y, _col + string(lq_defget(w, "ammo", 1)));
+				draw_text_nt(_x, _y, "@" + _col + _txt);
 				draw_reset_projection();
 			}
 		}
-	}
-	
-	return global.sprWepHUD;
-
-#define weapon_sprt
-	
-	/*
-	var _sprite = global.sprWepLocked;
-	if(weapon_avail()){
-		if(lq_defget(w, "ammo", 1) > 0){
-			_sprite = global.sprWep;
-		}
-		else{
-			
-			 // Melee Mode:
-			_sprite = global.sprWepBroken;
+		
+		
+		 // Curse Outline:
+		if(variable_instance_get(id, (_primary ? "" : "b") + "curse")){
+			return global.sprWepHUD1;
 		}
 	}
-	*/
 	
-	/*
-	 // Uncomment for a Lightshow:
-	if(instance_is(self, Player) && wep == w){
-		for(var i = 0; i < 3; i ++){
-			draw_set_color_write_enable((i == 0), (i == 1), (i == 2), 1);
-			
-			var _wepAngle = (wepangle * weapon_melee(w));
-			draw_sprite_ext(_sprite, 0, x + orandom(3), y + orandom(3), image_xscale, image_yscale * right, gunangle + _wepAngle, image_blend, image_alpha);
-			
-		}
-		draw_set_color_write_enable(1, 1, 1, 1);
-	}
-	*/
-	
-	return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-
-#define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-	
-	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(lwoWep);
-		variable_instance_set(self, b + "wep", w);
-	}
-	
-	 // Dynamic Reload:
-	if(instance_exists(w.proj)){
-		variable_instance_set(id, b + "reload", weapon_load());
-	}
+	 // Red Outline:
+	return global.sprWepHUD2;
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);
 	w = f.wep;
-	
-	if(w.ammo > 0){
+		
+	var _cost = weapon_red();
+	if(redammo >= _cost){
+		redammo -= _cost;
+		
+		 // Fire:
 		with(obj_create(x, y, "AnnihilatorBullet")){
-			creator = other;
-			team	= other.team;
-			speed	= 16;
-			direction	= other.gunangle;
-			image_angle	= direction;
+			creator  = other;
+			team	 = other.team;
+			motion_set(other.gunangle, 16);
 			
-			 // Remember Each Other:
-			my_lwo = w;
-			w.proj = id;
+			image_angle	 = direction;
+			redammo_cost = _cost
 		}
-	
+		
 		 // Effects:
 		wkick = 10;
 		var d = gunangle + 180;
@@ -148,32 +104,30 @@
 		sound_play(sndEnergyScrewdriver);
 	}
 	else{
+		
+		 // Fire:
+		var _skill = skill_get(mut_long_arms),
+			_lngth = lerp(0, 20, _skill);
+			
+		with(obj_create(x + lengthdir_x(_lngth, gunangle), y + lengthdir_y(_lngth, gunangle), "AnnihilatorSlash")){
+			creator  = other;
+			team	 = other.team;
+			motion_set(other.gunangle, lerp(2, 5, _skill));
+			
+			image_angle  = direction;
+			image_yscale = sign(other.wepangle);
+		}
+		
 		 // Effects:
 		wkick = 4;
 		move_contact_solid(gunangle, 2);
 		motion_add(gunangle, 3);
 		sleep(10);
 		
-		 // Fire:
-		var _skill = skill_get(mut_long_arms);
-		with(obj_create(x, y, "AnnihilatorSlash")){
-			creator = other;
-			team	= other.team;
-			speed	= lerp(2, 5, _skill);
-			direction	= other.gunangle;
-			image_angle = direction;
-			
-			image_yscale = sign(other.wepangle);
-			
-			var _len = lerp(0, 20, _skill);
-			x += lengthdir_x(_len, direction);
-			y += lengthdir_y(_len, direction);
-		}
-		
 		 // Sounds:
 		sound_play(sndScrewdriver);
 	}
-	
+
 	
 /// SCRIPTS
 #macro  type_melee                                                                              0
