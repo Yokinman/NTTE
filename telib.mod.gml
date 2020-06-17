@@ -3,18 +3,18 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
-	 // Add an object to this list if you want it to appear in cheats mod spawn menu or if you want to specify create event arguments for it in global.objectScrt:
+	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "RedAmmoChest", "RedAmmoPickup", "RedAmmoPopup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedAmmoChest", "RedAmmoPickup", "RedAmmoPopup", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
-		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "EnergyBatSlash", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
+		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorExplosion", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
+		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
 	 // Auto Create Event Script References:
@@ -521,7 +521,7 @@
 	
 #define obj_step
 	/*
-		Manually performs all "Custom" object step events for debugging lag
+		Manually performs all "Custom" object step events (only when debugging lag)
 	*/
 	
 	var	_obj = ntte_obj_base,
@@ -540,7 +540,7 @@
 	
 #define obj_end_step
 	/*
-		Manually performs all "Custom" object end step events for debugging lag
+		Manually performs all "Custom" object end step events (only when debugging lag)
 	*/
 	
 	var	_obj = ntte_obj_base,
@@ -816,18 +816,15 @@
 	}
 	scrRight(_dir);
 	
-#define enemy_shoot(_object, _dir, _spd)
-	return enemy_shoot_ext(x, y, _object, _dir, _spd);
-
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)
+#define enemy_shoot(_x, _y, _object, _dir, _spd)
 	var _inst = obj_create(_x, _y, _object);
 	
 	with(_inst){
 		speed += _spd;
 		direction = _dir;
 		image_angle = direction;
-		if("hitid" in other) hitid = other.hitid;
-		if("team" in other) team = other.team;
+		if("hitid" in self && "hitid" in other) hitid = other.hitid;
+		if("team"  in self && "team"  in other) team  = other.team;
 		
 		 // Auto-Creator:
 		creator = other;
@@ -842,7 +839,7 @@
 	}
 	
 	return _inst;
-
+	
 #define enemy_walk(_spdAdd, _spdMax)
 	if(walk > 0){
 		motion_add(direction, _spdAdd);
@@ -1115,6 +1112,7 @@
 					case "oasis"  : return "BUBBLE GUNS";
 					case "trench" : return "TECH GUNS";
 					case "lair"   : return "SAWBLADE GUNS";
+					case "red"    : return "RED GUNS";
 				}
 					
 				return _pack;
@@ -1197,6 +1195,7 @@
 					case "oasis"  : return "SOAP AND WATER";
 					case "trench" : return "TERRORS FROM THE DEEP";
 					case "lair"   : return "DEVICES OF TORTURE";
+					case "red"    : return "???";
 				}
 				
 				break;
@@ -1839,26 +1838,39 @@
 	
 #define array_exists(_array, _value)
 	return (array_find_index(_array, _value) >= 0);
-
+	
 #define array_count(_array, _value)
 	var _count = 0;
 	with(_array) if(self == _value) _count++;
 	return _count;
-
+	
 #define array_flip(_array)
+	/*
+		Flips a given array
+		
+		Ex:
+			array_flip([1, 7, 5, 9]) == [9, 5, 7, 1]
+	*/
+	
 	var	a = array_clone(_array),
 		m = array_length(_array);
-
+		
 	for(var i = 0; i < m; i++){
 		_array[@i] = a[(m - 1) - i];
 	}
-
+	
 	return _array;
-
+	
 #define array_combine(_array1, _array2)
-	var a = array_clone(_array1);
-	array_copy(a, array_length(a), _array2, 0, array_length(_array2));
-	return a;
+	/*
+		Returns a new array made by joining the two given arrays
+	*/
+	
+	var _new = array_clone(_array1);
+	
+	array_copy(_new, array_length(_new), _array2, 0, array_length(_array2));
+	
+	return _new;
 
 #define array_shuffle(_array)
 	var	_size = array_length(_array),
@@ -1877,7 +1889,7 @@
 	
 #define pool(_pool)
 	/*
-		Accepts a LWO or array of value:weight pairs, and returns one of them based on random chance
+		Accepts a LWO or array of value:weight pairs, and returns one of the values based on random chance
 		
 		Ex:
 			pool({
@@ -1918,16 +1930,34 @@
 	return null;
 	
 #define array_delete(_array, _index)
+	/*
+		Returns a new array with the value at the given index removed
+		
+		Ex:
+			array_delete([1, 2, 3], 1) == [1, 3]
+	*/
+	
 	var _new = array_slice(_array, 0, _index);
+	
 	array_copy(_new, array_length(_new), _array, _index + 1, array_length(_array) - (_index + 1));
+	
 	return _new;
 	
 #define array_delete_value(_array, _value)
-	var a = _array;
-	while(array_find_index(a, _value) >= 0){
-		a = array_delete(a, array_find_index(a, _value));
+	/*
+		Returns a new array with the given value removed
+		
+		Ex:
+			array_delete_value([1, 2, 3, 2], 2) == [1, 3]
+	*/
+	
+	var _new = _array;
+	
+	while(array_find_index(_new, _value) >= 0){
+		_new = array_delete(_new, array_find_index(_new, _value));
 	}
-	return a;
+	
+	return _new;
 	
 #define array_clone_deep(_array)
 	var _new = array_clone(_array);
@@ -2212,11 +2242,13 @@
 		for(var i = 0; i < _listMax; i++){
 			var _name = lq_get_key(_list, i);
 			if(!variable_is_readonly(_inst, _name)){
-				if(_isCustom && string_pos("on_", _name) == 1){
-					try variable_instance_set(_inst, _name, lq_get_value(_list, i));
-					catch(_error){}
+				if(_name in _inst || !is_undefined(lq_get_value(_list, i))){
+					if(_isCustom && string_pos("on_", _name) == 1){
+						try variable_instance_set(_inst, _name, lq_get_value(_list, i));
+						catch(_error){}
+					}
+					else variable_instance_set(_inst, _name, lq_get_value(_list, i));
 				}
-				else variable_instance_set(_inst, _name, lq_get_value(_list, i));
 			}
 		}
 	}
@@ -4132,6 +4164,23 @@
 		case wep_golden_frog_pistol     : return sprGoldToxicGunLoadout;
 	}
 	
+	return 0;
+	
+#define weapon_get_red(_wep)
+	/*
+		Returns how much red ammo a weapon uses
+	*/
+	
+	var	_type = "weapon",
+		_name = wep_get(_wep),
+		_scrt = "weapon_red";
+		
+	 // Custom:
+	if(is_string(_name) && mod_script_exists(_type, _name, _scrt)){
+		return mod_script_call_nc(_type, _name, _scrt);
+	}
+	
+	 // Normal:
 	return 0;
 	
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)

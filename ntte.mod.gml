@@ -4,13 +4,8 @@
 	lag = false;
 	
 	 // Mod Lists:
-	ntte_area = mod_variable_get("mod", "teassets", "area");
-	ntte_race = mod_variable_get("mod", "teassets", "race");
-	ntte_crwn = mod_variable_get("mod", "teassets", "crwn");
-	ntte_weps = mod_variable_get("mod", "teassets", "weps");
-	
-	 // List of Mods to Call:
-	ntte_call_mods = [];
+	ntte_mods = mod_variable_get("mod", "teassets", "mods");
+	ntte_mods_call = [];
 	
 	 // level_start():
 	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
@@ -52,12 +47,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro ntte_area global.area
-#macro ntte_race global.race
-#macro ntte_crwn global.crwn
-#macro ntte_weps global.weps
-
-#macro ntte_call_mods global.call_mods
+#macro ntte_mods      global.mods
+#macro ntte_mods_call global.mods_call
 
 #macro heart_spawn global.heart_spawn
 
@@ -76,7 +67,7 @@
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
 		var _race = player_get_race(i);
-		if(array_exists(ntte_race, _race)){
+		if(array_exists(ntte_mods.race, _race)){
 			var _stat = "race:" + _race + ":runs";
 			stat_set(_stat, stat_get(_stat) + 1);
 		}
@@ -129,25 +120,6 @@
 	with(instance_nearest(_spawnX, _spawnY, Player)){
 		_spawnX = x;
 		_spawnY = y;
-	}
-	
-	 // Top Decal Fix:
-	with(TopPot){
-		while(place_meeting(x, y, Wall)){
-			var _break = true;
-			with(instances_meeting(x, y, Wall)){
-				if(place_meeting(x, y, PortalClear) && place_meeting(x, y, other)){
-					with(other){
-						_break = false;
-						while(place_meeting(x, y, other)){
-							x += lengthdir_x(16, dir);
-							y += lengthdir_y(16, dir);
-						}
-					}
-				}
-			}
-			if(_break) break;
-		}
 	}
 	
 	 // Visibilize Pets:
@@ -327,7 +299,7 @@
 		case area_campfire: /// CAMPFIRE
 			
 			 // Unlock Custom Crowns:
-			if(array_exists(ntte_crwn, crown_current)){
+			if(array_exists(ntte_mods.crown, crown_current)){
 				unlock_set(`loadout:crown:${crown_current}`, true);
 			}
 			
@@ -1341,41 +1313,26 @@
 	}
 	
 	 // Red Ammo Canisters:
-	var _redWep = false;
 	with(Player){
-		with(["wep", "bwep"]){
-			var o = self;
-			if(!_redWep){
-				with(other){
-					var _name = wep_get(variable_instance_get(self, o)),
-						_scrt = "weapon_red",
-						_type = "weapon";
-						
-					if(is_string(_name)){
-						if(mod_script_exists(_type, _name, _scrt)){
-							_redWep = (mod_script_call(_type, _name, _scrt) > 0);
-						}
-					}
-				}
-			}
-		}
-	}
-	if(_redWep){
-		 // Spawn With Rogue Chest:
-		with(RogueChest){
-			floor_set_align(32, 32, null, null);
-			
-			with(floor_room(x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
+		if(weapon_get_red(wep) > 0 || weapon_get_red(bwep) > 0){
+			 // Rad Chest Replacement:
+			with(RadChest){
 				obj_create(x, y, "RedAmmoChest");
+				instance_delete(id);
 			}
 			
-			floor_reset_align();
-		}
-		
-		 // Rad Chest Replacement:
-		with(RadChest){
-			obj_create(x, y, "RedAmmoChest");
-			instance_delete(id);
+			 // Spawn With Rogue Chest:
+			with(RogueChest){
+				floor_set_align(32, 32, null, null);
+				
+				with(floor_room(x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
+					obj_create(x, y, "RedAmmoChest");
+				}
+				
+				floor_reset_align();
+			}
+			
+			break;
 		}
 	}
 	
@@ -1409,6 +1366,25 @@
 				sprite_index = msk.SludgePoolSmall;
 				spr_floor = other.sprite_index;
 			}
+		}
+	}
+	
+	 // Top Decal Fix:
+	with(TopPot){
+		while(place_meeting(x, y, Wall)){
+			var _break = true;
+			with(instances_meeting(x, y, Wall)){
+				if(place_meeting(x, y, PortalClear) && place_meeting(x, y, other)){
+					with(other){
+						_break = false;
+						while(place_meeting(x, y, other)){
+							x += lengthdir_x(16, dir);
+							y += lengthdir_y(16, dir);
+						}
+					}
+				}
+			}
+			if(_break) break;
 		}
 	}
 	
@@ -1447,55 +1423,33 @@
 	var _scrt = "ntte_" + _call;
 	
 	 // Compile Mod Calling List:
-	if(array_length(ntte_call_mods) <= 0){
-		 // General Mods:
-		with([
-			["mod", "temenu"],
-			["mod", "teevents"],
-			["mod", "petlib"]
-		]){
-			var	_type = self[0],
-				_name = self[1];
-				
-			array_push(
-				ntte_call_mods,
-				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
-			);
-		}
-		
-		 // Area Mods:
-		with(ntte_area){
-			var	_type = "area",
-				_name = self;
-				
-			array_push(
-				ntte_call_mods,
-				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
-			);
-		}
-		
-		 // Object Mods:
-		var _objList = mod_variable_get("mod", "telib", "object_list");
-		for(var i = 0; i < lq_size(_objList); i++){
-			var	_type = "mod",
-				_name = lq_get_key(_objList, i);
-				
-			array_push(
-				ntte_call_mods,
-				[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
-			);
+	if(array_length(ntte_mods_call) <= 0){
+		 // Compile:
+		with(["mod", "area"]){
+			var _type = self;
+			with(lq_get(ntte_mods, _type)){
+				var _name = self;
+				if(mod_exists(_type, _name)){
+					if(_type != "mod" || _name != mod_current){
+						array_push(
+							ntte_mods_call,
+							[_type, _name, mod_variable_get(_type, _name, "debug_lag")]
+						);
+					}
+				}
+			}
 		}
 		
 		 // Debugging Lag:
 		if(lag || instance_exists(PauseButton) || instance_exists(BackMainMenu)){
-			with(ntte_call_mods){
+			with(ntte_mods_call){
 				self[@2] = false;
 			}
 		}
 	}
 	
 	 // Call Scripts:
-	with(ntte_call_mods){
+	with(ntte_mods_call){
 		var	_type = self[0],
 			_name = self[1];
 			
@@ -1533,7 +1487,7 @@
 	if(instance_exists(Menu)){
 		if(!mod_exists("mod", "teloader")){
 			 // Custom Character Stuff:
-			with(ntte_race){
+			with(ntte_mods.race){
 				var _name = self;
 				
 				 // Create Custom CampChars:
@@ -1566,7 +1520,7 @@
 			 // CampChar Management:
 			for(var i = 0; i < maxp; i++) if(player_is_active(i)){
 				var _race = player_get_race(i);
-				if(array_exists(ntte_race, _race)){
+				if(array_exists(ntte_mods.race, _race)){
 					with(instances_matching(CampChar, "race", _race)){
 						 // Pan Camera:
 						var _local = false;
@@ -1611,49 +1565,59 @@
 		}
 	}
 	
-	 // Pets:
+	 // NTTE Player Systems:
 	with(Player){
-		if("ntte_pet" not in self){
-			ntte_pet = [];
-		}
-		if("ntte_pet_max" not in self){
-			ntte_pet_max = global.pet_max;
-		}
-		
-		 // Slots:
-		if(array_length(ntte_pet) != ntte_pet_max){
-			while(array_length(ntte_pet) < ntte_pet_max){
-				array_push(ntte_pet, noone);
+		/// Pets:
+			if("ntte_pet" not in self){
+				ntte_pet = [];
 			}
-			while(array_length(ntte_pet) > ntte_pet_max){
-				var _break = true;
-				for(var i = 0; i < array_length(ntte_pet); i++){
-					if(!instance_exists(ntte_pet[i])){
-						ntte_pet = array_delete(ntte_pet, i);
-						_break = false;
-						break;
-					}
+			if("ntte_pet_max" not in self){
+				ntte_pet_max = global.pet_max;
+			}
+			
+			 // Slots:
+			if(array_length(ntte_pet) != ntte_pet_max){
+				while(array_length(ntte_pet) < ntte_pet_max){
+					array_push(ntte_pet, noone);
 				}
-				if(_break) break;
+				while(array_length(ntte_pet) > ntte_pet_max){
+					var _break = true;
+					for(var i = 0; i < array_length(ntte_pet); i++){
+						if(!instance_exists(ntte_pet[i])){
+							ntte_pet = array_delete(ntte_pet, i);
+							_break = false;
+							break;
+						}
+					}
+					if(_break) break;
+				}
 			}
-		}
-		
-		 // Map Icons:
-		var _list = [];
-		with(ntte_pet) if(instance_exists(self)){
-			array_push(_list, pet_get_icon(mod_type, mod_name, pet));
-		}
-		global.pet_mapicon[index] = _list;
-	}
-	
-	 // Red Ammo:
-	with(Player){
-		if("redammo" not in self){
-			redammo = 0;
-		}
-		if("redamax" not in self){
-			redamax = 55;
-		}
+			
+			 // Map Icons:
+			var _list = [];
+			with(ntte_pet) if(instance_exists(self)){
+				array_push(_list, pet_get_icon(mod_type, mod_name, pet));
+			}
+			global.pet_mapicon[index] = _list;
+			
+		/// Red Ammo:
+			if("red_ammo" not in self){
+				red_ammo = 0;
+			}
+			if("red_amax" not in self){
+				red_amax = 4;
+			}
+			if("red_amax_muscle" not in self){
+				red_amax_muscle = 0;
+			}
+			
+			 // Back Muscle:
+			var _muscle = skill_get(mut_back_muscle);
+			if(red_amax_muscle != _muscle){
+				red_amax -= 4 * red_amax_muscle;
+				red_amax_muscle = _muscle;
+				red_amax += 4 * red_amax_muscle;
+			}
 	}
 	
 	 // NTTE Areas:
@@ -1663,7 +1627,7 @@
 			? GameCont.lastarea
 			: GameCont.area
 		);
-		if(array_exists(ntte_area, _area)){
+		if(array_exists(ntte_mods.area, _area)){
 			 // Underwater Area:
 			if(area_get_underwater(_area)){
 				mod_script_call("mod", "teoasis", "underwater_step");
@@ -1689,7 +1653,7 @@
 	
 	 // Game Win Crown Unlock:
 	with(instances_matching_le(instances_matching_gt(PlayerSit, "alarm0", 0), "alarm0", ceil(current_time_scale))){
-		if(array_exists(ntte_crwn, crown_current)){
+		if(array_exists(ntte_mods.crown, crown_current)){
 			unlock_set(`loadout:crown:${crown_current}`, true);
 		}
 	}
@@ -1720,7 +1684,7 @@
 			_spec = button_pressed(i, "spec");
 			
 		if(_fire || _spec){
-			with(ntte_weps){
+			with(ntte_mods.wep){
 				var	_name = self,
 					_scrt = "weapon_blood";
 					
@@ -1761,12 +1725,56 @@
 		}
 	}
 	
+	 // Last Wish:
+	with(instances_matching_ne(GameCont, "ntte_lastwish", skill_get(mut_last_wish))){
+		var _wishDiff = (skill_get(mut_last_wish) - variable_instance_get(id, "ntte_lastwish", 0));
+		ntte_lastwish = skill_get(mut_last_wish);
+		
+		if(ntte_lastwish != 0 && _wishDiff != 0){
+			with(Player){
+				 // LWO Weapons:
+				with([wep, bwep]){
+					var _wep = self;
+					if(
+						is_object(_wep)
+						&& "ammo" in _wep
+						&& "amax" in _wep
+						&& array_exists(ntte_mods.wep, wep_get(_wep))
+					){
+						var	_cost    = lq_defget(_wep, "cost", 0),
+							_amax    = _wep.amax,
+							_amaxRaw = (_amax / (1 + lq_defget(_wep, "buff", 0))),
+							_wish    = lq_defget(_wep, "wish", (_amaxRaw < 200) ? ceil(_amax * 0.35) : round(_amax * 0.785));
+							
+						_wep.ammo = clamp(_wep.ammo + (_wish * _wishDiff), _cost, _amax);
+					}
+				}
+				
+				 // Parrot:
+				if(race == "parrot"){
+					if(feather_ammo < feather_ammo_max){
+						var _wish = (2 * feather_num);
+						feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
+					}
+				}
+				
+				 // Red Ammo:
+				if("red_ammo" in self){
+					if(weapon_get_red(wep) > 0 || weapon_get_red(bwep) > 0){
+						var _wish = red_amax;
+						red_ammo = min(red_ammo + (_wish * _wishDiff), red_amax);
+					}
+				}
+			}
+		}
+	}
+	
 	 // Player Death:
 	with(instances_matching_le(Player, "my_health", 0)){
 		if(fork()){
 			var	_x = x,
 				_y = y,
-				_save = ["ntte_pet", "feather_ammo", "bonus_ammo", "redammo", "redamax"],
+				_save = ["ntte_pet", "feather_ammo", "bonus_ammo", "red_ammo", "red_amax", "red_amax_muscle"],
 				_vars = {},
 				_race = race;
 				
@@ -1792,7 +1800,7 @@
 				}
 				
 				 // Race Deaths Stat:
-				if(array_exists(ntte_race, _race)){
+				if(array_exists(ntte_mods.race, _race)){
 					var _stat = "race:" + _race + ":lost";
 					stat_set(_stat, stat_get(_stat) + 1);
 				}
@@ -1932,7 +1940,8 @@
 					"coast",
 					"oasis",
 					"trench",
-					"lair"
+					"lair",
+					"red"
 				];
 				
 				if(array_exists(_packList, GameCont.area)){
@@ -2060,90 +2069,40 @@
 		}
 	}
 	
-	 // Last Wish:
-	with(instances_matching_ne(Player, "ntte_lastwish", skill_get(mut_last_wish))){
-		var _wishDiff = (skill_get(mut_last_wish) - variable_instance_get(id, "ntte_lastwish", 0));
-		ntte_lastwish = skill_get(mut_last_wish);
-		
-		if(ntte_lastwish != 0){
-			 // LWO Weapons:
-			with([wep, bwep]){
-				var w = self;
-				if(
-					is_object(w)
-					&& "ammo" in w
-					&& "amax" in w
-					&& array_exists(ntte_weps, wep_get(w))
-				){
-					var	_cost = lq_defget(w, "cost", 0),
-						_amax = w.amax,
-						_amaxRaw = (_amax / (1 + lq_defget(w, "buff", 0))),
-						_wish = lq_defget(w, "wish", (
-							(_amaxRaw < 200)
-							? ceil(_amax * 0.35)
-							: round(_amax * 0.785)
-						));
-						
-					w.ammo = clamp(w.ammo + (_wish * _wishDiff), _cost, _amax);
-				}
-			}
-			
-			 // Parrot:
-			if(race == "parrot"){
-				var _wish = (2 * feather_num);
-				feather_ammo = clamp(feather_ammo + (_wish * _wishDiff), feather_num, feather_ammo_max);
-			}
-			
-			 // Red Ammo:
-			var _wish = 0;
-			with(["wep", "bwep"]){
-				var _name = wep_get(variable_instance_get(other, self, "")),
-					_scrt = "weapon_red",
-					_type = "weapon";
-					
-				if(mod_script_exists(_type, _name, _scrt)){
-					_wish += (mod_script_call(_type, _name, _scrt) > 0);
-				}
-			}
-			if(_wish > 0){
-				_wish *= 5;
-				redammo = min(redammo + (_wish * _wishDiff), redamax + ((99 - redamax) * skill_get(mut_back_muscle)));
-			}
-		}
-	}
-	
 	 // Weapon Unlock Stuff:
 	with(Player){
-		var w = 0;
-		with([wep_get(wep), wep_get(bwep)]){
-			var _wep = self;
+		with(["", "b"]){
+			var _b = self;
 			with(other){
-				if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && array_exists(ntte_weps, _wep)){
+				var _wep = wep_get(variable_instance_get(id, _b + "wep"));
+				if(is_string(_wep) && mod_script_exists("weapon", _wep, "weapon_avail") && array_exists(ntte_mods.wep, _wep)){
 					 // No Cheaters (bro just play the mod):
 					if(!mod_script_call("weapon", _wep, "weapon_avail")){
-						variable_instance_set(id, ["wep", "bwep"][w], "crabbone");
-						var a = choose(-120, 120);
-						variable_instance_set(id, ["wepangle", "bwepangle"][w], a);
+						variable_instance_set(id, _b + "wep",      "crabbone");
+						variable_instance_set(id, _b + "wepangle", choose(-120, 120));
 						
 						 // Effects:
 						sound_play(sndCrownRandom);
 						view_shake_at(x, y, 20);
 						instance_create(x, y, GunWarrantEmpty);
-						repeat(2) with(scrFX(x, y, [gunangle + a, 2.5], Smoke)){
-							depth = other.depth - 1;
+						repeat(2){
+							with(scrFX(x, y, [gunangle + variable_instance_get(id, _b + "wepangle"), 2.5], Smoke)){
+								depth = other.depth - 1;
+							}
 						}
 					}
 					
 					 // Weapon Found:
-					else stat_set("found:" + _wep + ".wep", true);
+					else if(stat_get("found:" + _wep + ".wep") == false){
+						stat_set("found:" + _wep + ".wep", true);
+					}
 				}
 			}
-			w++;
 		}
 	}
 	
 	 // Crown Found:
-	if(is_string(crown_current) && array_exists(ntte_crwn, crown_current)){
+	if(is_string(crown_current) && array_exists(ntte_mods.crown, crown_current)){
 		stat_set("found:" + crown_current + ".crown", true);
 	}
 	
@@ -2162,7 +2121,7 @@
 		var _statRace = [];
 		for(var i = 0; i < maxp; i++){
 			var _race = player_get_race(i);
-			if(array_exists(ntte_race, _race) && !array_exists(_statRace, _race)){
+			if(array_exists(ntte_mods.race, _race) && !array_exists(_statRace, _race)){
 				array_push(_statRace, _race);
 			}
 		}
@@ -2174,7 +2133,7 @@
 			 // General Stats:
 			for(var i = 0; i < lq_size(_statList); i++){
 				var	_stat = _statPath + lq_get_key(_statList, i),
-					_add = lq_get_value(_statList, i);
+					_add  = lq_get_value(_statList, i);
 					
 				if(_add > 0){
 					stat_set(_stat, stat_get(_stat) + _add);
@@ -2190,10 +2149,10 @@
 			}
 			
 			 // Best Run:
-		 	if(GameCont.kills >= stat_get(_statPath + "best:kill")){
-		 		stat_set(_statPath + "best:area", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
-		 		stat_set(_statPath + "best:kill", GameCont.kills);
-		 	}
+			if(GameCont.kills >= stat_get(_statPath + "best:kill")){
+				stat_set(_statPath + "best:area", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
+				stat_set(_statPath + "best:kill", GameCont.kills);
+			}
 		}
 	}
 	global.kills_last = GameCont.kills;
@@ -2203,7 +2162,7 @@
 		ntte_spiral = true;
 		
 		var	_lastTimeScale = current_time_scale,
-			_lastSeed = random_get_seed();
+			_lastSeed      = random_get_seed();
 			
 		current_time_scale = 1;
 		
@@ -2454,6 +2413,12 @@
 	}
 	with(instances_matching([Generator, GeneratorInactive], "spr_shadow", shd24, spr.shd.BigGenerator, spr.shd.BigGeneratorR)){
 		spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
+	}
+	with(instances_matching(MaggotSpawn, "hitid_fix", null)){
+		hitid_fix = (!is_real(hitid) && !is_array(hitid));
+		if(hitid_fix){
+			hitid = [sprMSpawnIdle, "MAGGOT NEST"];
+		}
 	}
 	
 	 // Call Scripts:
@@ -2742,7 +2707,7 @@
 	stat_set("time", stat_get("time") + (current_time_scale / 30));
 	
 	 // Reset Mod Calling List:
-	ntte_call_mods = [];
+	ntte_mods_call = [];
 	
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){
@@ -3204,21 +3169,56 @@
 	}
 	
 	 // Player HUD:
-	for(var _index = 0; _index < maxp; _index++) if(player_is_active(_index)){
-		var	_player = player_find(_index),
-			_side = _hudSide[_index],
-			_flip = (_side ? -1 : 1),
-			_HUDVisible = (_visible && player_get_show_hud(_index, player_find_local_nonsync())),
-			_HUDMain = (player_find_local_nonsync() == _index);
-			
-		draw_set_projection(2, _index);
+	for(var _index = 0; _index < maxp; _index++){
+		var _player = player_find(_index);
 		
 		if(instance_exists(_player)){
-			 // Non-nonsync Stuff:
+			var	_side       = _hudSide[_index],
+				_flip       = (_side ? -1 : 1),
+				_HUDMain    = (player_find_local_nonsync() == _index),
+				_HUDVisible = (_visible && player_get_show_hud(_index, player_find_local_nonsync())),
+				_HUDDraw    = (_HUDMain || _HUDVisible);
+				
+			draw_set_projection(2, _index);
+			
 			with(_player){
 				 // Bonus Ammo:
 				if("bonus_ammo" in self){
-					if("bonus_ammo_last" not in self) bonus_ammo_last = 0;
+					if("bonus_ammo_last" not in self){
+						bonus_ammo_last = 0;
+					}
+					
+					 // Draw:
+					if(bonus_ammo > 0 && _HUDDraw){
+						draw_set_font(fntSmall);
+						draw_set_halign(fa_right);
+						draw_set_valign(fa_top);
+						
+						 // Text Color:
+						var _textCol = c_white;
+						if(bonus_ammo == bonus_ammo_last){
+							if(drawempty > 26 && ammo[weapon_get_type(wep)] + bonus_ammo < weapon_get_cost(wep)){
+								_textCol = c_red;
+							}
+							else{
+								_textCol = merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))));
+							}
+						}
+						
+						 // Draw Text:
+						draw_text_nt(
+							_ox + 66,
+							_oy + 30 - (_players > 1),
+							`@(color:${_textCol})+${bonus_ammo}`
+						);
+					}
+					
+					 // Last Bonus Ammo:
+					var _diff = (bonus_ammo - bonus_ammo_last);
+					if(abs(_diff) > 1/2){
+						_diff *= current_time_scale / 2.5;
+					}
+					bonus_ammo_last += _diff;
 				}
 				
 				 // Bonus HP:
@@ -3245,10 +3245,128 @@
 					
 					 // Expand HUD:
 					bonus_health_hud += ((bonus_health > 0) - bonus_health_hud) * 0.5 * current_time_scale;
+					
+					 // Draw:
+					if(_HUDDraw){
+						var	_x1 = _ox + 106 - (85 * _side),
+							_y1 = _oy + 5,
+							_x2 = _x1 + (3 * bonus_health_hud * _flip),
+							_y2 = _y1 + 10;
+							
+						if(_side ? (_x1 > _x2 + 1) : (_x2 > _x1 + 1)){
+							draw_set_color(c_black);
+							draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
+							draw_set_color(c_white);
+							draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
+							draw_set_color(c_black);
+							draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
+							
+							 // Filling:
+							var	_fx = ((_x1 + _x2) / 2) - _flip,
+								_fy = _y2 - 1,
+								_fw = _x2 - _x1,
+								_fh = _fy - (_y1 + 1),
+								_col = merge_color(c_aqua, c_blue, 0.15 + (0.05 * cos(current_frame / 20)));
+								
+							if(bonus_health_last > bonus_health){
+								draw_set_color(merge_color(_col, c_black, 0.5));
+								draw_line_width(_fx, _fy - max(_fh * (bonus_health_last / bonus_health_max), 1 / game_scale_nonsync), _fx, _fy, _fw);
+							}
+							if(bonus_health > 0){
+								var	_fy1 = _fy - max(_fh * (bonus_health / bonus_health_max), 1 / game_scale_nonsync),
+									_fy2 = _fy;
+									
+								draw_set_color(_col);
+								draw_line_width(_fx, _fy1, _fx, _fy2, _fw);
+								
+								 // Flash / Cell Highlight:
+								var	_flashHealth = (current_frame / 6) % (2 + bonus_health_max),
+									_flashHurt   = ((sprite_index == spr_hurt && image_index < 1 && player_active) || (lsthealth < my_health && lsthealth <= 1));
+									
+								if(
+									_flashHurt
+									|| bonus_health_last < bonus_health
+									|| (my_health <= 1 && _flashHealth < bonus_health && bonus_health == bonus_health_max)
+								){
+									var	_flashNum = (_flashHurt ? 0 : clamp(1 - (0.5 * abs(bonus_health - bonus_health_last)), 0, 1)),
+										_flashCol = merge_color(c_white, merge_color(_col, c_white, min(0.8, 1 - frac(_flashHealth))), _flashNum),
+										_flashY   = _fy,
+										_flashH   = max(_fh / bonus_health_max, 1 / game_scale_nonsync);
+										
+									if(_flashHealth < bonus_health){
+										_flashY = _fy - (_fh * ((floor(_flashHealth) + 0.5) / bonus_health_max));
+									}
+									
+									draw_set_color(_flashCol);
+									
+									draw_line_width(
+										_fx,
+										clamp(lerp(_fy1, _flashY - (_flashH / 2), _flashNum), _fy1, _fy2),
+										_fx,
+										clamp(lerp(_fy2, _flashY + (_flashH / 2), _flashNum), _fy1, _fy2),
+										_fw
+									);
+								}
+								
+								 // Text:
+								var _textCol = (
+									(_flashHurt || (bonus_health - bonus_health_last) >= 2/3)
+									? c_white
+									: merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))
+								);
+								draw_set_font(fntSmall);
+								draw_set_halign(fa_left);
+								draw_set_valign(fa_top);
+								draw_text_nt(
+									_x1 - 3,
+									_y2 + 2,
+									`@(color:${_textCol})+${bonus_health}`
+								);
+							}
+						}
+					}
+					
+					 // Last Bonus HP:
+					if("bonus_health" in self && sprite_index != spr_hurt){
+						var _diff = (bonus_health - bonus_health_last);
+						if(abs(_diff) > 1/5){
+							_diff *= current_time_scale / 3;
+						}
+						bonus_health_last += _diff;
+					}
 				}
 				
-				 // Feathers:
+				 // Red Ammo:
+				var _b = ["", "b"];
+				for(var i = 0; i < array_length(_b); i++){
+					var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
+						_cost = weapon_get_red(_wep);
+						
+					if(_cost > 0 && "red_ammo" in self){
+						var	_x = _ox + 43 + (44 * i),
+							_y = _oy + 20,
+							_max = 4;
+							
+						 // Main:
+						draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
+						
+						 // Charges:
+						for(var j = 0; j < red_ammo; j++){
+							draw_sprite(spr.RedAmmoHUDCharge, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+						}
+						
+						 // Cost:
+						if(red_ammo < _cost){
+							if(variable_instance_get(self, "drawempty" + _b[i], 0) > 0 && (wave % 10) < 5){
+								draw_sprite(spr.RedAmmoHUDCost, 0, _x + 4 + (4 * (_cost % _max)), _y + 4);
+							}
+						}
+					}
+				}
+				
+				 // Parrot:
 				if(race == "parrot"){
+					 // Expand HUD:
 					var m = ceil(feather_ammo_max / feather_num);
 					if(array_length(feather_ammo_hud) != m){
 						feather_ammo_hud = array_create(m);
@@ -3260,303 +3378,198 @@
 					if(feather_ammo < feather_ammo_max) feather_ammo_hud_flash = 0;
 					else feather_ammo_hud_flash += current_time_scale;
 					*/
-				}
-			}
-			
-			if(_HUDVisible || _HUDMain){
-				 // Bonus Ammo HUD:
-				with(instances_matching_gt(_player, "bonus_ammo", 0)){
-					var _textCol = (
-						(bonus_ammo != bonus_ammo_last)
-						? c_white
-						: (
-							(drawempty > 26 && ammo[weapon_get_type(wep)] + bonus_ammo < weapon_get_cost(wep))
-							? c_red
-							: merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))))
-						)
-					);
 					
-					draw_set_font(fntSmall);
-					draw_set_halign(fa_right);
-					draw_set_valign(fa_top);
-					
-					draw_text_nt(
-						_ox + 66,
-						_oy + 30 - (_players > 1),
-						`@(color:${_textCol})+${bonus_ammo}`
-					);
-				}
-				
-				 // Bonus HP HUD:
-				with(instances_matching_ne(_player, "bonus_health", null)){
-					var	_x1 = _ox + 106 - (85 * _side),
-						_y1 = _oy + 5,
-						_x2 = _x1 + (3 * bonus_health_hud * _flip),
-						_y2 = _y1 + 10;
+					 // Draw:
+					if(_HUDDraw){
+						var _skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10));
 						
-					if(_side ? (_x1 > _x2 + 1) : (_x2 > _x1 + 1)){
-						draw_set_color(c_black);
-						draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
-						draw_set_color(c_white);
-						draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
-						draw_set_color(c_black);
-						draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
-						
-						 // Filling:
-						var	_fx = ((_x1 + _x2) / 2) - _flip,
-							_fy = _y2 - 1,
-							_fw = _x2 - _x1,
-							_fh = _fy - (_y1 + 1),
-							_col = merge_color(c_aqua, c_blue, 0.15 + (0.05 * cos(current_frame / 20)));
-							
-						if(bonus_health_last > bonus_health){
-							draw_set_color(merge_color(_col, c_black, 0.5));
-							draw_line_width(_fx, _fy - max(_fh * (bonus_health_last / bonus_health_max), 1 / game_scale_nonsync), _fx, _fy, _fw);
-						}
-						if(bonus_health > 0){
-							var	_fy1 = _fy - max(_fh * (bonus_health / bonus_health_max), 1 / game_scale_nonsync),
-								_fy2 = _fy;
+						 // Ultra B:
+						if(charm_hplink_hud > 0){
+							var	_HPCur = max(0, my_health),
+								_HPMax = max(0, maxhealth),
+								_HPLst = max(0, lsthealth),
+								_HPCurCharm = max(0, charm_hplink_hud_hp[0]),
+								_HPMaxCharm = max(0, charm_hplink_hud_hp[1]),
+								_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
+								_w = 83,
+								_h = 7,
+								_x = _ox + 22,
+								_y = _oy + 7,
+								_HPw = floor(_w * (1 - (0.7 * charm_hplink_hud)));
 								
-							draw_set_color(_col);
-							draw_line_width(_fx, _fy1, _fx, _fy2, _fw);
+							draw_set_halign(fa_center);
+							draw_set_valign(fa_middle);
 							
-							 // Flash / Cell Highlight:
-							var	_flashHealth = (current_frame / 6) % (2 + bonus_health_max),
-								_flashHurt   = ((sprite_index == spr_hurt && image_index < 1 && player_active) || (lsthealth < my_health && lsthealth <= 1));
+							 // Main BG:
+							draw_set_color(c_black);
+							draw_rectangle(_x, _y, _x + _w, _y + _h, false);
 								
-							if(
-								_flashHurt
-								|| bonus_health_last < bonus_health
-								|| (my_health <= 1 && _flashHealth < bonus_health && bonus_health == bonus_health_max)
-							){
-								var	_flashNum = (_flashHurt ? 0 : clamp(1 - (0.5 * abs(bonus_health - bonus_health_last)), 0, 1)),
-									_flashCol = merge_color(c_white, merge_color(_col, c_white, min(0.8, 1 - frac(_flashHealth))), _flashNum),
-									_flashY   = _fy,
-									_flashH   = max(_fh / bonus_health_max, 1 / game_scale_nonsync);
+							/// Charmed HP:
+								var	_x1 = _x + _HPw + 2,
+									_x2 = _x + _w;
 									
-								if(_flashHealth < bonus_health){
-									_flashY = _fy - (_fh * ((floor(_flashHealth) + 0.5) / bonus_health_max));
+								if(_x1 < _x2){
+									 // lsthealth Filling:
+									if(_HPLstCharm > _HPCurCharm){
+										draw_set_color(merge_color(
+											merge_color(_skinCol, player_get_color(index), 0.5),
+											make_color_rgb(21, 27, 42),
+											2/3
+										));
+										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLstCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+									}
+									
+									 // my_health Filling:
+									if(_HPCurCharm > 0 && _HPMaxCharm > 0){
+										draw_set_color(
+											(sprite_index == spr_hurt && image_index < 1)
+											? c_white
+											: merge_color(_skinCol, player_get_color(index), 0.5)
+										);
+										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+									}
+									
+									 // Text:
+									var _HPText = `${_HPCurCharm}/${_HPMaxCharm}`;
+									draw_set_font(
+										(string_length(_HPText) > 7 || ((string_length(_HPText) - 1) * 8) >= _x2 - _x1)
+										? fntSmall
+										: fntM
+									);
+									draw_text_nt(min(floor(lerp(_x1, _x + _w, 0.54)), _x + _w - (string_width(_HPText) / 2)), _y + 1 + floor(_h / 2), _HPText);
 								}
 								
-								draw_set_color(_flashCol);
+							/// Normal HP:
+								 // BG:
+								draw_set_color(c_black);
+								draw_rectangle(_x, _y, _x + _HPw, _y + _h, false);
 								
-								draw_line_width(
-									_fx,
-									clamp(lerp(_fy1, _flashY - (_flashH / 2), _flashNum), _fy1, _fy2),
-									_fx,
-									clamp(lerp(_fy2, _flashY + (_flashH / 2), _flashNum), _fy1, _fy2),
-									_fw
-								);
-							}
-							
-							 // Text:
-							var _textCol = (
-								(_flashHurt || (bonus_health - bonus_health_last) >= 2/3)
-								? c_white
-								: merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))
-							);
-							draw_set_font(fntSmall);
-							draw_set_halign(fa_left);
-							draw_set_valign(fa_top);
-							draw_text_nt(
-								_x1 - 3,
-								_y2 + 2,
-								`@(color:${_textCol})+${bonus_health}`
-							);
-						}
-					}
-				}
-				
-				 // Parrot:
-				with(instances_matching(_player, "race", "parrot")){
-					var _skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10));
-					
-					 // Ultra B:
-					if(charm_hplink_hud > 0){
-						var	_HPCur = max(0, my_health),
-							_HPMax = max(0, maxhealth),
-							_HPLst = max(0, lsthealth),
-							_HPCurCharm = max(0, charm_hplink_hud_hp[0]),
-							_HPMaxCharm = max(0, charm_hplink_hud_hp[1]),
-							_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
-							_w = 83,
-							_h = 7,
-							_x = _ox + 22,
-							_y = _oy + 7,
-							_HPw = floor(_w * (1 - (0.7 * charm_hplink_hud)));
-							
-						draw_set_halign(fa_center);
-						draw_set_valign(fa_middle);
-						
-						 // Main BG:
-						draw_set_color(c_black);
-						draw_rectangle(_x, _y, _x + _w, _y + _h, false);
-							
-						/// Charmed HP:
-							var	_x1 = _x + _HPw + 2,
-								_x2 = _x + _w;
-								
-							if(_x1 < _x2){
-								 // lsthealth Filling:
-								if(_HPLstCharm > _HPCurCharm){
+								 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
+								if(_HPLst > _HPCur){
 									draw_set_color(merge_color(
-										merge_color(_skinCol, player_get_color(index), 0.5),
+										player_get_color(index),
 										make_color_rgb(21, 27, 42),
 										2/3
 									));
-									draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLstCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+									draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
 								}
 								
 								 // my_health Filling:
-								if(_HPCurCharm > 0 && _HPMaxCharm > 0){
+								if(_HPCur > 0 && _HPMax > 0){
 									draw_set_color(
-										(sprite_index == spr_hurt && image_index < 1)
+										(_HPLst < _HPCur)
 										? c_white
-										: merge_color(_skinCol, player_get_color(index), 0.5)
+										: player_get_color(index)
 									);
-									draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+									draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
 								}
 								
 								 // Text:
-								var _HPText = `${_HPCurCharm}/${_HPMaxCharm}`;
-								draw_set_font(
-									(string_length(_HPText) > 7 || ((string_length(_HPText) - 1) * 8) >= _x2 - _x1)
-									? fntSmall
-									: fntM
-								);
-								draw_text_nt(min(floor(lerp(_x1, _x + _w, 0.54)), _x + _w - (string_width(_HPText) / 2)), _y + 1 + floor(_h / 2), _HPText);
-							}
-							
-						/// Normal HP:
-							 // BG:
-							draw_set_color(c_black);
-							draw_rectangle(_x, _y, _x + _HPw, _y + _h, false);
-							
-							 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
-							if(_HPLst > _HPCur){
-								draw_set_color(merge_color(
-									player_get_color(index),
-									make_color_rgb(21, 27, 42),
-									2/3
-								));
-								draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
-							}
-							
-							 // my_health Filling:
-							if(_HPCur > 0 && _HPMax > 0){
-								draw_set_color(
-									(_HPLst < _HPCur)
-									? c_white
-									: player_get_color(index)
-								);
-								draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
-							}
-							
-							 // Text:
-							if(_HPLst >= _HPCur || sin(wave) > 0){
-								var _HPText = `${_HPCur}/${_HPMax}`;
-								draw_set_font(
-									(string_length(_HPText) > 6 * (1 - charm_hplink_hud))
-									? fntSmall
-									: fntM
-								);
-								draw_text_nt(_x + floor(_HPw * 0.55), _y + 1 + floor(_h / 2), _HPText);
-							}
-							
-						 // Separator:
-						if(_HPw < _w){
-							draw_set_color(c_white);
-							draw_line_width(_x + _HPw + 1, _y - 2, _x + _HPw + 1, _y + _h, 1);
-							if(_HPw + 1 < _w){
-								draw_set_color(c_black);
-								draw_line_width(_x + _HPw + 2, _y - 2, _x + _HPw + 2, _y + _h, 1);
-							}
-						}
-					}
-					
-					 // Parrot Feathers:
-					var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "bonus_health_hud", 0) * _flip),
-						_y = _oy + 11,
-						_spr = race_get_sprite(race, sprChickenFeather),
-						_sprHUD = race_get_sprite(race, sprRogueAmmoHUD),
-						_output = feather_num_mult,
-						_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
-						_hudGoal = [feather_ammo, 0];
-						
-					with(instances_matching_ne(_feathers, "canhud", true)){
-						if(canhold) canhud = true;
-					}
-					for(var i = 0; i < array_length(_hudGoal); i++){
-						_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
-					}
-					
-					for(var i = 0; i < array_length(feather_ammo_hud); i++){
-						var	_hud = feather_ammo_hud[i],
-							_xsc = _flip,
-							_ysc = 1,
-							_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
-							_alp = 1,
-							_dx = _x + (5 * i * _flip),
-							_dy = _y;
-							
-						 // Gradual Fill Change:
-						for(var j = 0; j < array_length(_hudGoal); j++){
-							var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
-							if(_diff != 0){
-								if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
-									_hud[j] += _diff;
-								}
-								else{
-									_hud[j] += _diff * 2/3 * current_time_scale;
-								}
-							}
-						}
-						
-						 // Extend Shootable Feathers:
-						if(i < _output && _hud[0] > 0){
-							_dx -= _flip;
-							if(_hud[0] > _hud[1]) _dy++;
-						}
-						
-						 // Draw:
-						draw_sprite_ext(_sprHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
-						_dx -= sprite_get_xoffset(_spr) * _xsc;
-						_dy -= sprite_get_yoffset(_spr) * _ysc;
-						for(var j = 0; j < array_length(_hud); j++){
-							if(_hud[j] > 0){
-								var	_l = 0,
-									_t = 0,
-									_w = max(1, sprite_get_width(_spr) * _hud[j]),
-									_h = sprite_get_height(_spr);
-									
-								draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
-								draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
-								
-								 // Separation Line:
-								if(_hud[j] < 1 && _hud[0] > _hud[1]){
-									_l += _w - 1;
-									_w = 1;
-									draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
-									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
+								if(_HPLst >= _HPCur || sin(wave) > 0){
+									var _HPText = `${_HPCur}/${_HPMax}`;
+									draw_set_font(
+										(string_length(_HPText) > 6 * (1 - charm_hplink_hud))
+										? fntSmall
+										: fntM
+									);
+									draw_text_nt(_x + floor(_HPw * 0.55), _y + 1 + floor(_h / 2), _HPText);
 								}
 								
-								/*
-								 // Flash:
-								if(j == 0 && feather_ammo_hud_flash > 0){
-									var	_flash = ((feather_ammo_hud_flash - 1 - array_length(feather_ammo_hud) - (i * _flip)) % 150),
-										_flashAlpha = _alp * ((3 - _flash) / 5);
-										
-									if(_flash >= 0 && _flashAlpha > 0){
-										if(!_pause){
-											draw_set_fog(true, merge_color(_skinCol, c_white, 1), 0, 0);
-											draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _flashAlpha);
-										}
+							 // Separator:
+							if(_HPw < _w){
+								draw_set_color(c_white);
+								draw_line_width(_x + _HPw + 1, _y - 2, _x + _HPw + 1, _y + _h, 1);
+								if(_HPw + 1 < _w){
+									draw_set_color(c_black);
+									draw_line_width(_x + _HPw + 2, _y - 2, _x + _HPw + 2, _y + _h, 1);
+								}
+							}
+						}
+						
+						 // Parrot Feathers:
+						var	_x = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "bonus_health_hud", 0) * _flip),
+							_y = _oy + 11,
+							_spr = race_get_sprite(race, sprChickenFeather),
+							_sprHUD = race_get_sprite(race, sprRogueAmmoHUD),
+							_output = feather_num_mult,
+							_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
+							_hudGoal = [feather_ammo, 0];
+							
+						with(instances_matching_ne(_feathers, "canhud", true)){
+							if(canhold) canhud = true;
+						}
+						for(var i = 0; i < array_length(_hudGoal); i++){
+							_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
+						}
+						
+						for(var i = 0; i < array_length(feather_ammo_hud); i++){
+							var	_hud = feather_ammo_hud[i],
+								_xsc = _flip,
+								_ysc = 1,
+								_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
+								_alp = 1,
+								_dx = _x + (5 * i * _flip),
+								_dy = _y;
+								
+							 // Gradual Fill Change:
+							for(var j = 0; j < array_length(_hudGoal); j++){
+								var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
+								if(_diff != 0){
+									if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
+										_hud[j] += _diff;
+									}
+									else{
+										_hud[j] += _diff * 2/3 * current_time_scale;
 									}
 								}
-								*/
 							}
+							
+							 // Extend Shootable Feathers:
+							if(i < _output && _hud[0] > 0){
+								_dx -= _flip;
+								if(_hud[0] > _hud[1]) _dy++;
+							}
+							
+							 // Draw:
+							draw_sprite_ext(_sprHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+							_dx -= sprite_get_xoffset(_spr) * _xsc;
+							_dy -= sprite_get_yoffset(_spr) * _ysc;
+							for(var j = 0; j < array_length(_hud); j++){
+								if(_hud[j] > 0){
+									var	_l = 0,
+										_t = 0,
+										_w = max(1, sprite_get_width(_spr) * _hud[j]),
+										_h = sprite_get_height(_spr);
+										
+									draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
+									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
+									
+									 // Separation Line:
+									if(_hud[j] < 1 && _hud[0] > _hud[1]){
+										_l += _w - 1;
+										_w = 1;
+										draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
+										draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
+									}
+									
+									/*
+									 // Flash:
+									if(j == 0 && feather_ammo_hud_flash > 0){
+										var	_flash = ((feather_ammo_hud_flash - 1 - array_length(feather_ammo_hud) - (i * _flip)) % 150),
+											_flashAlpha = _alp * ((3 - _flash) / 5);
+											
+										if(_flash >= 0 && _flashAlpha > 0){
+											if(!_pause){
+												draw_set_fog(true, merge_color(_skinCol, c_white, 1), 0, 0);
+												draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _flashAlpha);
+											}
+										}
+									}
+									*/
+								}
+							}
+							draw_set_fog(false, 0, 0, 0);
 						}
-						draw_set_fog(false, 0, 0, 0);
 					}
 					
 					 // LOW HP:
@@ -3578,43 +3591,22 @@
 				}
 			}
 			
-			 // Non-nonsync Stuff Pt.2:
-			with(_player){
-				 // Bonus Ammo:
-				if("bonus_ammo" in self){
-					var _diff = (bonus_ammo - bonus_ammo_last);
-					if(abs(_diff) > 1/2){
-						_diff *= current_time_scale / 2.5;
-					}
-					bonus_ammo_last += _diff;
-				}
-				
-				 // Bonus HP:
-				if("bonus_health" in self && sprite_index != spr_hurt){
-					var _diff = (bonus_health - bonus_health_last);
-					if(abs(_diff) > 1/5){
-						_diff *= current_time_scale / 3;
-					}
-					bonus_health_last += _diff;
-				}
+			draw_reset_projection();
+			
+			 // Copy HUD Drawing & Clear Screen:
+			if(_HUDMain){
+				surface_screenshot(_surfMain.surf);
 			}
-		}
-		
-		draw_reset_projection();
-		
-		 // Copy HUD Drawing & Clear Screen:
-		if(_HUDMain){
-			surface_screenshot(_surfMain.surf);
-		}
-		with(_surfScreen){
-			if(_HUDVisible){
-				surface_screenshot(surf);
+			with(_surfScreen){
+				if(_HUDVisible){
+					surface_screenshot(surf);
+				}
+				draw_set_blend_mode_ext(bm_one, bm_zero);
+				draw_set_alpha(0);
+				draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_alpha(1);
+				draw_set_blend_mode(bm_normal);
 			}
-			draw_set_blend_mode_ext(bm_one, bm_zero);
-			draw_set_alpha(0);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_alpha(1);
-			draw_set_blend_mode(bm_normal);
 		}
 	}
 	
@@ -3805,7 +3797,7 @@
 			
 		 // Boss Music:
 		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
-			if(array_exists(ntte_area, _area)){
+			if(array_exists(ntte_mods.area, _area)){
 				if(mod_script_exists("area", _area, "area_music_boss")){
 					alarm_set(2, -1);
 					_mus = mod_script_call("area", _area, "area_music_boss");
@@ -3815,7 +3807,7 @@
 		
 		 // Music / Ambience:
 		if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
-			if(array_exists(ntte_area, _area)){
+			if(array_exists(ntte_mods.area, _area)){
 				if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
 					alarm_set(11, -1);
 					
@@ -3976,8 +3968,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -4018,6 +4009,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -4031,12 +4023,12 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
 #define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);

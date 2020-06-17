@@ -42,83 +42,83 @@
 #macro clientDarknessFloor global.clientDarknessFloor
 
 #define AnnihilatorBullet_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
+	with(obj_create(_x, _y, "CustomShell")){
 		 // Visuals:
-		spr_idle = spr.AnnihilatorBullet;
-		spr_dead = spr.AnnihilatorBulletDisappear;
-		sprite_index = spr_idle;
+		sprite_index = spr.AnnihilatorBullet;
+		spr_fade     = spr.AnnihilatorBulletDisappear
+		spr_dead     = spr.AnnihilatorBulletHit;
 		
 		 // Vars:
-		mask_index = mskBullet2;
-		friction = 1;
-		creator = noone;
-		damage = 999;
-		force = 999;
-		team = 0;
-		typ = 2;
-		redammo_cost = 0;
+		mask_index   = mskFlakBullet;
+		friction     = 1;
+		damage       = 400;
+		force        = 10;
+		bonus_damage = 40;
+		minspeed     = 8;
+		wallbounce   = 7 * skill_get(mut_shotgun_shoulders);
+		
+		 // Events:
+		on_hit = AnnihilatorBullet_hit;
 		
 		return id;
 	}
 	
-#define AnnihilatorBullet_step
-	if(speed <= 8){
-		sprite_index = spr_dead;
-		image_speed  = 0.4;
-	}
-	
-#define AnnihilatorBullet_anim
-	if(sprite_index == spr_idle){
-		image_index = 1;
-	}
-	else{
-		instance_destroy();
-	}
-	
-#define AnnihilatorBullet_wall
-	with(instance_create(x + hspeed, y + vspeed, BulletHit)){
-		
-	}
-	
-	 // Goodbye:
-	instance_destroy();
-	
 #define AnnihilatorBullet_hit
 	if(projectile_canhit(other)){
-		if(instance_is(creator, Player) && instance_is(other, enemy)){
-			creator.redammo -= redammo_cost;
-			redammo_cost = 0;
-			
-			 // Annihilation Time:
-			mod_script_call("skill", "annihilation", "skill_init", other, 2);
-		}
-		else{
-			
-			 // This Crazy:
-			projectile_hit(other, damage, force, direction);
-		}
+		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
 		
-		 // Effects:
-		with(instance_create(x, y, BulletHit)){
-			
+		 // Annihilation Time:
+		if(!instance_is(other, prop) && other.team != 0){
+			mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
 		}
 		
 		 // Goodbye:
+		with(obj_create(x, y, "AnnihilatorExplosion")){
+			sprite_index = other.spr_dead;
+		}
 		instance_destroy();
 	}
 	
-#define AnnihilatorBullet_cleanup
-	 // Refund Unspent Ammo:
-	if(instance_is(creator, Player)){
-		with(creator){
-			redammo = min(
-				redammo + other.redammo_cost, 
-				redamax + (
-					(99 - redamax) * skill_get(mut_back_muscle)
-				)
-			);
+	
+#define AnnihilatorExplosion_create(_x, _y)
+	/*
+		An explosion that deals massive pinpoint damage and destroys any enemy projectiles and explosions that it touches
+	*/
+	
+	with(instance_create(_x, _y, MeatExplosion)){
+		 // Visual:
+		sprite_index = spr.AnnihilatorBulletHit;
+		image_angle  = random(360);
+		
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage     = 200;
+		force      = 2;
+		target     = noone;
+		
+		 // Extra Clearage:
+		with(instance_create(x, y, PortalShock)){
+			mask_index   = other.mask_index;
+			sprite_index = other.sprite_index;
+			image_index  = other.image_index;
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale;
+			image_angle  = other.image_angle;
+			image_speed  = other.image_speed;
+			with(instances_matching_gt(PortalClear, "id", id)){
+				instance_destroy();
+			}
 		}
+		
+		return id;
 	}
+	
+#define AnnihilatorExplosion_end_step
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y;
+	}
+	
 	
 #define AnnihilatorSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
@@ -128,12 +128,9 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		candeflect = true;
-		damage = 8;
-		force = 12;
-		team = 1;
-		typ = 0;
-		walled = false;
+		damage     = 8;
+		force      = 12;
+		walled     = false;
 		
 		return id;
 	}
@@ -141,12 +138,26 @@
 #define AnnihilatorSlash_wall
 	if(!walled){
 		walled = true;
+		
+		 // Hit Wall FX:
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw,
+			_col = area_get_back_color("red");
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+				image_blend = _col;
+				sound_play_hit(sndMeleeWall, 0.3);
+			}
+		}
 	}
-
+	
 #define AnnihilatorSlash_hit
 	if(projectile_canhit_melee(other)){
 		projectile_hit(other, damage, force, direction);
 	}
+	
 	
 #define ChaosHeart_create(_x, _y)
 	/*
@@ -896,7 +907,13 @@
 	instance_create(x, y, PortalClear);
 	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
 	for(var i = 0; i < array_length(_chestTypes); i++){
-		with(enemy_shoot("CrystalHeartBullet", direction + ((i / array_length(_chestTypes)) * 360) + orandom(4), 4)){
+		with(enemy_shoot(
+			x,
+			y,
+			"CrystalHeartBullet",
+			direction + ((i / array_length(_chestTypes)) * 360) + orandom(4),
+			4
+		)){
 			area_chest = _chestTypes[i];
 			
 			 // Chaos Heart Area Decision:
@@ -1208,6 +1225,128 @@
 	}
 	
 	
+#define EnergyBatSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		var _skill = skill_get(mut_laser_brain);
+		
+		 // Visual:
+		sprite_index = spr.EnergyBatSlash;
+		image_speed  = 0.4 / ((_skill > 0) ? 1 + _skill : power(2, _skill)); // idk the base game does this
+		
+		 // Vars:
+		mask_index = mskSlash;
+		damage     = 22; 
+		force      = 8;
+		walled     = false;
+		
+		return id;
+	}
+	
+#define EnergyBatSlash_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+		
+		/*
+		with(other){
+			if(my_health <= 0){
+				var o = other;
+				with(obj_create(x, y, (size >= 2) ? PlasmaImpact : "PlasmaImpactSmall")){
+					team	= o.team;
+					creator = o.creator;
+				}
+			}
+		}
+		*/
+	}
+	
+#define EnergyBatSlash_wall
+	/*
+	OLD CHUM
+	⣿⣿⣿⣿⣿⠟⠉⠁⠄⠄⠄⠈⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⠏⠄⠄⠄⠄⠄⠄⠄⠄⠄⠸⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣏⠄⡠⡤⡤⡤⡤⡤⡤⡠⡤⡤⣸⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣗⢝⢮⢯⡺⣕⢡⡑⡕⡍⣘⢮⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⡧⣝⢮⡪⡪⡪⡎⡎⡮⡲⣱⣻⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⠟⠁⢸⡳⡽⣝⢝⢌⢣⢃⡯⣗⢿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⠟⠁⠄⠄⠄⠹⡽⣺⢽⢽⢵⣻⢮⢯⠟⠿⠿⢿⣿⣿⣿⣿⣿
+	⡟⢀⠄⠄⠄⠄⠄⠙⠽⠽⡽⣽⣺⢽⠝⠄⠄⢰⢸⢝⠽⣙⢝⢿
+	⡄⢸⢹⢸⢱⢘⠄⠄⠄⠄⠄⠈⠄⠄⠄⣀⠄⠄⣵⣧⣫⣶⣜⣾
+	⣧⣬⣺⠸⡒⠬⡨⠄⠄⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⣷⣽⣿⣿
+	⣿⣿⣿⣷⠡⠑⠂⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣄⠠⢀⢀⢀⡀⡀⠠⢀⢲⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⢐⢀⠂⢄⠇⠠⠈⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣧⠄⠠⠈⢈⡄⠄⢁⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⡀⠠⠐⣼⠇⠄⡀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣯⠄⠄⡀⠈⠂⣀⠄⢀⠄⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	⣿⣿⣿⣿⣿⣶⣄⣀⠐⢀⣸⣷⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿
+	*/
+	
+	 // Walled More Like Gnomed Haha:
+	if(!walled){
+		walled = true;
+		
+		 // Hit Wall FX:
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw,
+			_col = ((image_yscale > 0) ? c_lime : c_white);
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+				image_blend = _col;
+				sound_play_hit(sndMeleeWall, 0.3);
+			}
+		}
+	}
+	
+#define EnergyBatSlash_projectile
+	with(other){
+		 // Deflect:
+		if(typ == 1 && other.candeflect){
+			var	_cannon = (damage > 3),
+				_slash = other;
+				
+			 // Vlasma:
+			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
+				motion_add(_slash.direction, _slash.speed + 2);
+				image_angle	= direction;
+				creator     = _slash.creator;
+				team        = _slash.team;
+				target      = other.creator;
+				target_x    = other.xstart;
+				target_y    = other.ystart;
+			}
+			with(obj_create(x, y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
+				creator = _slash.creator;
+				team    = _slash.team;
+				depth   = other.depth;
+			}
+			if(_cannon){
+				sleep(50);
+			}
+			
+			 // Sounds:
+			var _snd = [
+				[sndPlasma,    sndPlasmaUpg], 
+				[sndPlasmaBig, sndPlasmaBigUpg]
+			];
+			sound_play_hit_ext(
+				_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
+				random_range(0.7, 1.3),
+				0.6
+			);
+			
+			 // Goodbye:
+			instance_delete(id);
+		}
+		
+		 // Destroy:
+		else if(typ == 2){
+			instance_destroy();
+		}
+	}
+	
+	
 #define EntanglerSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
@@ -1216,15 +1355,13 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		candeflect = true;
-		damage = 8;
-		force = 12;
-		team = 2;
-		setup = true;
-		walled = false;
-		hit_list = {};
-		cancharm = false;
-		redammo_cost = 0;
+		damage     = 8;
+		force      = 12;
+		setup      = true;
+		walled     = false;
+		hit_list   = {};
+		cancharm   = false;
+		red_ammo   = 0;
 		
 		return id;
 	}
@@ -1236,7 +1373,7 @@
 	with(instances_meeting(x, y, instances_matching_ne(enemy, "team", team))){
 		if(place_meeting(x, y, other)){
 			_charm = true;
-			redammo_cost = 0;
+			red_ammo = 0;
 			
 			 // maybe do charm stuff here instead idk
 		}
@@ -1259,7 +1396,6 @@
 		walled = true;
 		
 		sound_play_hit(sndMeleeWall, 0.2);
-		
 	}
 
 #define EntanglerSlash_hit
@@ -1276,15 +1412,8 @@
 	
 #define EntanglerSlash_cleanup
 	 // Refund Unspent Ammo:
-	if(instance_is(creator, Player)){
-		with(creator){
-			redammo = min(
-				redammo + other.redammo_cost, 
-				redamax + (
-					(99 - redamax) * skill_get(mut_back_muscle)
-				)
-			);
-		}
+	with(creator) if("red_ammo" in self){
+		red_ammo = min(red_ammo + other.red_ammo, red_amax);
 	}
 
 #define InvMortar_create(_x, _y)
@@ -1455,7 +1584,7 @@
 		sound_play(sndPlasma);
 		
 		 // Shoot Mortar:
-		with(enemy_shoot_ext(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
+		with(enemy_shoot(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
 			z += 18;
 			var d = point_distance(x, y, _tx, _ty) / speed;
 			zspeed = (d * zfriction * 0.5) - (z / d);
@@ -1723,147 +1852,6 @@
 	return _inst;
 	
 	
-#define RedAmmoChest_create(_x, _y)
-	with(obj_create(_x, _y, "CustomChest")){
-		 // Visual:
-		spr_shadow_y = -3;
-		sprite_index = spr.RedAmmoChest;
-		spr_dead = spr.RedAmmoChestOpen;
-		
-		 // Sounds:
-		snd_open = sndRogueCanister;
-		
-		 // Vars:
-		mask_index = -1;
-		raddrop = 25;
-		num = 5;
-		
-		 // Scripts:
-		on_open = script_ref_create(RedAmmoChest_open)
-		 
-		return id;
-	}
-	
-#define RedAmmoChest_open
-	if(instance_is(other, Player)){
-		red_ammo_add(other, num);
-	}
-	else{
-		
-		 // Cutie:
-		obj_create(x, y, "RedAmmoPickup");
-	}
-	
-#define RedAmmoPickup_create(_x, _y)
-	with(obj_create(_x, _y, "CustomPickup")){
-		 // Visual:
-		sprite_index = spr.RedAmmoPickup;
-		
-		 // Sounds:
-		snd_open = sndRogueCanister;
-		snd_dead = sndPickupDisappear;
-		
-		 // Vars:
-		mask_index = mskPickup;
-		num = 5;
-		
-		 // Events:
-		on_pull = script_ref_create(RedAmmoPickup_pull);
-		on_open = script_ref_create(RedAmmoPickup_open);
-		 
-		return id;
-	}
-	
-#define RedAmmoPickup_pull
-	return (instance_get_red(other) > 0);
-	
-#define RedAmmoPickup_open
-	if(instance_is(other, Player)){
-		red_ammo_add(other, num);
-	}
-	
-#define RedAmmoPopup_create(_x, _y)
-	with(instance_create(_x, _y, PopupText)){
-		 // Visual:
-		image_blend = make_color_rgb(235, 0, 67);
-		
-		 // Vars:
-		num_symbols = 3;
-		symbol_list = ["?", "?", "?", "?", "$", "%", "&", "_"];
-		text_prefix = "";
-		text_suffix = "@wAMMO";
-		
-		return id;
-	}
-	
-#define RedAmmoPopup_step
-	text = text_prefix + ` @(color:${image_blend})`;
-	repeat(num_symbols){
-		text += symbol_list[irandom(array_length(symbol_list) - 1)];
-	}
-	text += " " + text_suffix;
-	
-#define red_ammo_add(_player, _num)
-	with(_player){
-		 // Initialize:
-		if("redammo" not in id){
-			redammo = 0;
-			redamax = 55;
-		}
-		
-		redammo += _num;
-		
-		 // Maxed Out:
-		var _maxRed = redamax + ((99 - redamax) * skill_get(mut_back_muscle));
-		if(redammo >= _maxRed){
-			redammo = _maxRed;
-			
-			with(obj_create(x, y, "RedAmmoPopup")){
-				text_prefix = "MAX";
-				target = other.index;
-			}
-		}
-		else{
-			
-			 // Room to Spare:
-			with(obj_create(x, y, "RedAmmoPopup")){
-				text_prefix = "+" + string(_num);
-				target = other.index;
-			}
-		}
-	}
-	
-#define instance_get_red(_inst)
-	/*
-		Blanket function for finding the 'weapon_red' value 
-		of Players and WepPickups.
-	*/
-	var _redAmmo = 0;
-	with(["wep", "bwep"]){
-		var o = self;
-		if(_redAmmo <= 0){
-			var _wep = wep_get(variable_instance_get(_inst, o));
-			if(!is_undefined(_wep)){
-				_redAmmo = weapon_get_red(_wep);
-			}
-		}
-	}
-	return _redAmmo;
-	
-#define weapon_get_red(_wep)
-	/*
-		Returns the 'weapon_red' value of a given weapon.
-	*/
-	var _name = wep_get(_wep),
-		_scrt = "weapon_red",
-		_type = "weapon";
-		
-	if(is_string(_name) && mod_script_exists(_type, _name, _scrt)){
-		return mod_script_call(_type, _name, _scrt);
-	}
-	
-	return 0;
-
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1921,7 +1909,7 @@
 				var	l = 128,
 					d = (i * 90) + pround(_targetDir, 45) + orandom(2);
 					
-				with(enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
+				with(enemy_shoot(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
 					sprite_index = spr.EnemyVlasmaBullet;
 					target = other;
 					target_x = other.x;
@@ -1959,7 +1947,7 @@
 	pickup_drop(20, 0);
 	
 	 // Plasma:
-	with(team_instance_sprite(1, enemy_shoot(PlasmaImpact, 0, 0))){
+	with(team_instance_sprite(1, enemy_shoot(x, y, PlasmaImpact, 0, 0))){
 		mask_index = mskPopoPlasmaImpact;
 		with(instance_create(x, y, PortalClear)){
 			mask_index   = other.mask_index;
@@ -2548,11 +2536,6 @@
 		 // Alarms:
 		alarm0 = 30;
 		
-		 // No Portals:
-		with(obj_create(0, 0, "PortalPrevent")){
-			creator = other;
-		}
-		
 		return id;
 	}
 	
@@ -2625,6 +2608,11 @@
 		}
 	}
 	
+	 // No Portals:
+	if(!instance_exists(enemy)){
+		portal_poof();
+	}
+	
 	 // Warp:
 	var _pickup = pickup_indicator;
 	with(_pickup){
@@ -2681,11 +2669,6 @@
 	
 #define Warp_destroy
 	if(open){
-		 // Allow Portals:
-		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
-			instance_destroy();
-		}
-		
 		 // Close Warps:
 		with(instances_matching(object_index, "name", name)){
 			open = false;
@@ -3059,7 +3042,10 @@
 #define ntte_bloom
 	 // Annihilator Bullets:
 	with(instances_matching(CustomProjectile, "name", "AnnihilatorBullet")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha / 10);
+		if(bonus > 0){
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
+		}
+		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 
 	 // Crystal Heart Projectile:
@@ -3557,8 +3543,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -3599,6 +3584,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -3612,10 +3598,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

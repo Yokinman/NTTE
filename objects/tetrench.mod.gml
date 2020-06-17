@@ -424,7 +424,7 @@
 				var n = instance_nearest(x, y, Player);
 				_dir = point_direction(x, y, n.x, n.y);
 			}
-			with(enemy_shoot(EnemyLightning, _dir, 0)){
+			with(enemy_shoot(x, y, EnemyLightning, _dir, 0)){
 				ammo = 6 + random(2);
 				event_perform(ev_alarm, 0);
 			}
@@ -489,54 +489,56 @@
 			direction = point_direction(x, y, arc_inst.x, arc_inst.y) + orandom(10);
 		}
 	}
-
+	
 #define Eel_death
 	if(elite){
 		spr_dead = spr.EeliteDead;
-
+		
 		 // Death Lightning:
-		repeat(2) with(enemy_shoot(EnemyLightning, random(360), 0.5)){
-			alarm0 = 2 + random(4);
-			ammo = 1 + random(2);
-			image_speed *= random_range(0.75, 1);
-			with(instance_create(x, y, LightningHit)){
-				motion_add(other.direction, random(2));
+		repeat(2){
+			with(enemy_shoot(x, y, EnemyLightning, random(360), 0.5)){
+				alarm0 = 2 + random(4);
+				ammo = 1 + random(2);
+				image_speed *= random_range(0.75, 1);
+				with(instance_create(x, y, LightningHit)){
+					motion_add(other.direction, random(2));
+				}
 			}
 		}
 		sound_play_pitchvol(sndLightningCrystalDeath, 1.5 + random(0.5), 1);
 	}
-
+	
 	 // Type-Pickups:
 	else switch(type){
 		case 0: // Blue
 			if(chance(2 * pickup_chance_multiplier, 3)){
 				instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
-
+				
 				 // FX:
 				with(instance_create(x, y, FXChestOpen)){
 					motion_add(other.direction, random(1));
 				}
 			}
 			break;
-
+			
 		case 1: // Purple
 			if(chance(2 * pickup_chance_multiplier, 3)){
 				instance_create(x + orandom(2), y + orandom(2), HPPickup);
-
+				
 				 // FX:
 				repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AllyDamage)){
 					motion_add(other.direction + orandom(30), random(1));
 				}
 			}
 			break;
-
+			
 		case 2: // Green
 			with(instance_create(x, y, BigRad)){
 				motion_add(other.direction, other.speed);
 				motion_add(random(360), 3);
 				speed *= power(0.9, speed);
 			}
-
+			
 			 // FX:
 			repeat(2) with(instance_create(x + orandom(4), y + orandom(4), EatRad)){
 				sprite_index = sprEatBigRadPlut;
@@ -544,8 +546,8 @@
 			}
 			break;
 	}
-
-
+	
+	
 #define EelSkull_create(_x, _y)
 	/*
 		Epic prop, drops bone
@@ -740,7 +742,7 @@
 	image_yscale -= 0.03;
 
 #define ElectroPlasma_destroy
-	enemy_shoot("ElectroPlasmaImpact", direction, 0);
+	enemy_shoot(x, y, "ElectroPlasmaImpact", direction, 0);
 	ElectroPlasma_untether();
 
 #define ElectroPlasma_untether
@@ -876,31 +878,31 @@
 #define Jelly_alrm1
 	alarm1 = 40 + random(20);
 	enemy_target(x, y);
-
+	
 	 // Always movin':
 	scrWalk(direction, alarm1);
-
+	
 	if(instance_seen(x, y, target)){
 		var _targetDir = point_direction(x, y, target.x, target.y);
-
+		
 		 // Steer towards target:
 		motion_add(_targetDir, 0.4);
 		scrRight(direction);
-
+		
 		 // Attack:
 		if(chance(1, 3) && instance_near(x, y, target, [32, 256])){
 			alarm1 += 30;
-
+			
 			 // Shoot lightning disc:
 			if(type > 2){
 				for(var a = _targetDir; a < _targetDir + 360; a += (360 / 3)){
-					with(enemy_shoot("LightningDiscEnemy", a, 8)){
+					with(enemy_shoot(x, y, "LightningDiscEnemy", a, 8)){
 						shrink /= 2; // Last twice as long
 					}
 				}
 			}
-			else enemy_shoot("LightningDiscEnemy", _targetDir, 8);
-
+			else enemy_shoot(x, y, "LightningDiscEnemy", _targetDir, 8);
+			
 			 // Effects:
 			sound_play_hit(sndLightningHit, 0.25);
 			sound_play_pitch(sndLightningCrystalCharge,0.8);
@@ -1700,7 +1702,7 @@
 					
 					if(!instance_exists(my_laser)){
 						with(other){
-							other.my_laser = enemy_shoot_ext(other.x, other.y, "QuasarBeam", _dir, 0);
+							other.my_laser = enemy_shoot(other.x, other.y, "QuasarBeam", _dir, 0);
 						}
 						with(my_laser){
 							damage = 6;
@@ -2050,7 +2052,7 @@
 			var	_last = electroplasma_last,
 				_ang = (2000 / max(1, _targetDis)) * image_xscale;
 				
-			with(enemy_shoot_ext(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
+			with(enemy_shoot(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
 				tether_inst = _last;
 				image_xscale *= other.image_xscale;
 				image_yscale *= other.image_yscale;
@@ -2489,7 +2491,7 @@
 						
 					 // Bomb Attack:
 					if(bomb){
-						with(enemy_shoot("PitSquidBomb", point_direction(x, y, target.x, target.y), 0)){
+						with(enemy_shoot(x, y, "PitSquidBomb", point_direction(x, y, target.x, target.y), 0)){
 							target = _target;
 							triple = false;
 							ammo = 4 + irandom(3);
@@ -2649,7 +2651,7 @@
 	
 		 // Spawn Next Bomb:
 		if(ammo > 0){
-			with(enemy_shoot_ext(_x, _y, "PitSquidBomb", _dir, 0)){
+			with(enemy_shoot(_x, _y, "PitSquidBomb", _dir, 0)){
 				target = other.target;
 				ammo = other.ammo - 1;
 			}
@@ -2683,7 +2685,7 @@
 			var	_x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			with(enemy_shoot_ext(_x, _y, "PlasmaImpactSmall", direction, 0)){
+			with(enemy_shoot(_x, _y, "PlasmaImpactSmall", direction, 0)){
 				sprite_index = spr.EnemyPlasmaImpactSmall;
 				array_push(_explo, id);
 			}
@@ -2692,14 +2694,14 @@
 
 	 // Single Sucker:
 	else{
-		with(enemy_shoot_ext(_x, _y, PlasmaImpact, direction, 0)){
+		with(enemy_shoot(_x, _y, PlasmaImpact, direction, 0)){
 			sprite_index = spr.EnemyPlasmaImpact;
 			array_push(_explo, id);
 		}
 		
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
-			with(enemy_shoot_ext(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
+			with(enemy_shoot(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
 				zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfriction) / (speed * 2);
 			}
 		}
@@ -4400,8 +4402,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -4442,6 +4443,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -4455,10 +4457,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

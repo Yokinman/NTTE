@@ -135,11 +135,17 @@
 			 // Splinters:
 			var d = 90 * (1 - (ammo / ammo_max));
 			for(var i = -sign(d); i <= sign(d); i += 2){
-				with(enemy_shoot("AlbinoBolt", direction + 180 + (d * i), 15)){
+				with(enemy_shoot(
+					x,
+					y,
+					"AlbinoBolt",
+					direction + 180 + (d * i),
+					15
+				)){
 					small = true;
 				}
 			}
-	
+			
 			 // Effects:
 			sound_play_pitchvol(
 				((ammo & 1) ? sndTurretFire : sndSplinterPistol),
@@ -291,7 +297,7 @@
 		if(gonnafire <= 0){
 			alarm1 = 30;
 			
-			enemy_shoot("AlbinoBolt", gunangle, 16);
+			enemy_shoot(x, y, "AlbinoBolt", gunangle, 16);
 			
 			sound_play_pitchvol(sndHeavyCrossbow, 1.2 + random(0.2), 0.8);
 			sound_play_pitchvol(sndTurretFire,    0.8 + random(0.2), 0.8);
@@ -338,7 +344,7 @@
 			}
 			
 			 // Throw Grenade:
-			enemy_shoot("AlbinoGrenade", gunangle, random_range(8, 12));
+			enemy_shoot(x, y, "AlbinoGrenade", gunangle, random_range(8, 12));
 			motion_add(gunangle + 180, 2);
 			
 			 // Sound:
@@ -524,7 +530,7 @@
 		_ang = pround(angle, 45);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-		with(enemy_shoot_ext(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir, 0)){
+		with(enemy_shoot(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir, 0)){
 			hold_x = x;
 			hold_y = y;
 			scale_goal = 0.8;
@@ -657,7 +663,7 @@
 				_x = x + lengthdir_x(l, d),
 				_y = y + lengthdir_y(l, d);
 				
-			enemy_shoot_ext(_x, _y, LHBouncer, d, 3);
+			enemy_shoot(_x, _y, LHBouncer, d, 3);
 			scrFX(_x, _y, [d, 2], Smoke);
 			
 			sound_play_hit(sndBouncerSmg, 0.2);
@@ -785,7 +791,7 @@
 			s = 2;
 			
 		for (var i = 0; i <= 5; i++){
-			with(enemy_shoot("VenomPellet", gunangle + orandom(2 + i), s * i)){
+			with(enemy_shoot(x, y, "VenomPellet", gunangle + orandom(2 + i), s * i)){
 				move_contact_solid(direction, d + d * i);
 				
 				 // Effects:
@@ -905,7 +911,7 @@
 	}
 	
 	 // Screech:
-	with(enemy_shoot("BatScreech", 0, 0)){
+	with(enemy_shoot(x, y, "BatScreech", 0, 0)){
 		if(!is_undefined(_scale)){
 			image_xscale = _scale;
 			image_yscale = _scale;
@@ -1139,7 +1145,7 @@
 				 // Flak Time:
 				else{
 					wkick -= 4;
-					enemy_shoot("VenomFlak", gunangle + orandom(10), 12);
+					enemy_shoot(x, y, "VenomFlak", gunangle + orandom(10), 12);
 				}
 			}
 			
@@ -1364,11 +1370,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Screech:
-	enemy_shoot("BatScreech", 0, 0);
+	enemy_shoot(x, y, "BatScreech", 0, 0);
 	if(_extraNum > 0){
 		var l = 56;
 		for(var d = gunangle; d < gunangle + 360; d += (360 / _extraNum)){
-			with enemy_shoot_ext(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0){
+			with enemy_shoot(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0){
 				image_xscale = _extraScale;
 				image_yscale = _extraScale;
 			}
@@ -1938,7 +1944,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(ammo <= 0){
 			alarm1 = 20;
 			
-			with(enemy_shoot_ext(_x, _y, Grenade, gunangle, 9)){
+			with(enemy_shoot(_x, _y, Grenade, gunangle, 9)){
 				alarm0 = 10 + random(10);
 			}
 			
@@ -1952,7 +1958,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Mini Nade Shots:
 		else{
-			enemy_shoot_ext(_x, _y, MiniNade, gunangle, 7 + random(2));
+			enemy_shoot(_x, _y, MiniNade, gunangle, 7 + random(2));
 			
 			 // Effects:
 			wkick = 6;
@@ -1962,7 +1968,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Shared Effects:
-		with(enemy_shoot_ext(_x, _y, TrapFire, gunangle, random(1))){
+		with(enemy_shoot(_x, _y, TrapFire, gunangle, random(1))){
 			image_speed = 0.4;
 		}
 		repeat(1 + irandom(2)) with(scrFlameSpark(_x, _y)) motion_set(other.gunangle + orandom(30), random(5));
@@ -2039,7 +2045,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_y = y + lengthdir_y(l, d);
 			
 		if(position_meeting(_x, _y, Floor)){
-			enemy_shoot_ext(_x, _y, TrapFire, d + random_range(60, 90), random(2));
+			enemy_shoot(_x, _y, TrapFire, d + random_range(60, 90), random(2));
 		}
 		with(scrFlameSpark(_x, _y)){
 			motion_add(d + random_range(30, 90), random(5));
@@ -2345,7 +2351,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Toxic:
 		repeat(2){
-			with(enemy_shoot_ext(_x, _y, ToxicGas, gunangle + orandom(6), 4)){
+			with(enemy_shoot(_x, _y, ToxicGas, gunangle + orandom(6), 4)){
 				friction = 0.12;
 				cat_toxic = true;
 				if(!instance_is(other.sit, enemy)) team = 0;
@@ -2706,7 +2712,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					if(chance(3, 4) && instance_seen(x, y, target) && (instance_near(x, y, target, 80) || chance(1, 2))){
 						alarm1 = 10;
 						
-						with(enemy_shoot("CatBossAttack", gunangle, 0)){
+						with(enemy_shoot(x, y, "CatBossAttack", gunangle, 0)){
 							target = other.target;
 							type = other.super;
 							other.alarm1 += alarm0;
@@ -2790,7 +2796,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Gas:
 	repeat(2 + irandom(3)){
-		with(enemy_shoot(ToxicGas, direction + 180 + orandom(15), 2 + random(1))){
+		with(enemy_shoot(
+			x,
+			y,
+			ToxicGas,
+			direction + 180 + orandom(15),
+			2 + random(1)
+		)){
 			friction = 0.16;
 			team = 0;
 			cat_toxic = true;
@@ -3429,7 +3441,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Visual:
 		sprite_index = sprToxicGrenade;
 		mask_index = mskNone;
-
+		
 		 // Vars:
 		z = 1;
 		zspeed = 0;
@@ -3437,16 +3449,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		damage = 0;
 		force = 0;
 		right = choose(-1, 1);
-
+		
 		return id;
 	}
-
+	
 #define CatGrenade_step
 	 // Rise & Fall:
 	z += zspeed * current_time_scale;
 	zspeed -= zfriction * current_time_scale;
 	depth = max(-z, -12);
-
+	
 	 // Trail:
 	if(chance_ct(1, 2)){
 		with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
@@ -3458,37 +3470,37 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			depth = other.depth;
 		}
 	}
-
+	
 	 // Hit:
 	if(z <= 0) instance_destroy();
-
+	
 #define CatGrenade_draw
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
-
+	
 #define CatGrenade_hit
 	// nada
-
+	
 #define CatGrenade_wall
 	// nada
-
+	
 #define CatGrenade_destroy
 	with(instance_create(x, y, Explosion)){
 		team = other.team;
 		creator = other.creator;
 		hitid = other.hitid;
 	}
-
-	repeat(18) {
-		with(enemy_shoot(ToxicGas, random(360), 4)) {
+	
+	repeat(18){
+		with(enemy_shoot(x, y, ToxicGas, random(360), 4)) {
 			friction = 0.2;
 		}
 	}
-
+	
 	 // Sound:
 	sound_play(sndGrenade);
 	sound_play(sndToxicBarrelGas);
-
-
+	
+	
 #define CatHole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -4156,7 +4168,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Revenge:
-	repeat(4 + irandom(2)) enemy_shoot("GatorStatueFlak", 0, 0);
+	repeat(4 + irandom(2)){
+		enemy_shoot(x, y, "GatorStatueFlak", 0, 0);
+	}
 	sound_play_hit_ext(sndCrownNo,		0.8, 0.4);
 	sound_play_hit_ext(sndStatueCharge, 0.8, 0.4);
 	
@@ -4222,7 +4236,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 #define GatorStatueFlak_destroy
-	enemy_shoot(EFlakBullet, 0, 0);
+	enemy_shoot(x, y, EFlakBullet, 0, 0);
 	
 	
 #define Manhole_create(_x, _y)
@@ -5503,7 +5517,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Venom Lines:
 		if((d mod 90) == 0){
 			for(var i = 0; i <= 4; i++){
-				with(enemy_shoot("VenomPellet", direction + d + orandom(2 + i), 2 * i)){
+				with(enemy_shoot(
+					x,
+					y,
+					"VenomPellet",
+					direction + d + orandom(2 + i),
+					2 * i
+				)){
 					move_contact_solid(direction, 4 + (4 * i));
 					
 					 // Effects:
@@ -5516,10 +5536,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Individual:
-		else{
-			with(enemy_shoot("VenomPellet", direction + d + orandom(2), 5.8 + random(0.4))){
-				move_contact_solid(direction, 6);
-			}
+		else with(enemy_shoot(
+			x,
+			y,
+			"VenomPellet",
+			direction + d + orandom(2),
+			5.8 + random(0.4)
+		)){
+			move_contact_solid(direction, 6);
 		}
 	}
 	
@@ -5561,7 +5585,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sound_play_hit(sndFrogEggSpawn3, 0.4);
 		
 		 // Replace bullet:
-		enemy_shoot(EnemyBullet2, direction, speed);
+		enemy_shoot(x, y, EnemyBullet2, direction, speed);
 		instance_delete(id);
 	}
 	
@@ -5736,8 +5760,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -5778,6 +5801,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -5791,10 +5815,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

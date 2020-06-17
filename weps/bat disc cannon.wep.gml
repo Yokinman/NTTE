@@ -3,12 +3,12 @@
 	global.sprWepLocked = mskNone;
 	
 	lwoWep = {
-		wep : mod_current,
-		ammo : 14,
-		amax : 14,
-		anam : "SAWBLADES",
-		cost : 7,
-		buff : false,
+		wep     : mod_current,
+		ammo    : 14,
+		amax    : 14,
+		anam    : "SAWBLADES",
+		cost    : 7,
+		buff    : false,
 		canload : true
 	};
 	
@@ -27,7 +27,7 @@
 #define weapon_sprt(w)
 	wepammo_draw(w); // Custom Ammo Drawing
 	return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-
+	
 #define weapon_fire(w)
 	var f = wepfire_init(w);
 	w = f.wep;

@@ -1,7 +1,7 @@
 #define init
 	 // SPRITES //
 	spr = {};
-	sprLoad = [[spr, 0]];
+	spr_load = [[spr, 0]];
 	with(spr){
 		var m, p;
 		msk = {};
@@ -80,10 +80,9 @@
 			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
 			
 			 // Annihilator Bullet:
-			AnnihilatorBullet		   = sprite(p + "sprAnnihilatorBullet", 		 2, 9,  9);
-			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5, 9,  9);
-			
-			AnnihilatorBulletEffect	   = sprite(p + "sprAnnihilatorBulletEffect",	 7, 16, 16);
+			AnnihilatorBullet          = sprite(p + "sprAnnihilatorBullet",          2,  9,  9);
+			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5,  9,  9);
+			AnnihilatorBulletHit       = sprite(p + "sprAnnihilatorBulletHit",       7, 16, 16);
 			
 			 // Annihilator Slash:
 			AnnihilatorSlash = sprite(p + "sprAnnihilatorSlash", 3, 0, 24);
@@ -1249,7 +1248,7 @@
 			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
 			
 			 // Warp:
-			Warp	    = sprite(p + "sprWarp",        2, 16, 16);
+			Warp        = sprite(p + "sprWarp",        2, 16, 16);
 			WarpOpen    = sprite(p + "sprWarpOpen",    2, 32, 32);
 			WarpOpenOut = sprite(p + "sprWarpOpenOut", 4, 32, 32);
 			
@@ -1294,9 +1293,9 @@
 		p = m;
 			
 			 // Cursed Ammo Chests:
-			CursedAmmoChest	            = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
+			CursedAmmoChest             = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
 			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",          1,  8,  8);
-			CursedAmmoChestSteroids 	= sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
+			CursedAmmoChestSteroids     = sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
 			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
 			CursedMimicIdle             = sprite(p + "sprCursedMimicIdle",              1, 16, 16);
 			CursedMimicFire             = sprite(p + "sprCursedMimicFire",              4, 16, 16);
@@ -1326,7 +1325,7 @@
 			CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
 			
 			 // Bone:
-			BonePickup	  =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
+			BonePickup    =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
 			                sprite(p + "sprBonePickup1",    1, 4, 4, shn8),
 			                sprite(p + "sprBonePickup2",    1, 4, 4, shn8),
 			                sprite(p + "sprBonePickup3",    1, 4, 4, shn8)];
@@ -1376,16 +1375,17 @@
 			ButtonPickup       = sprite(p + "sprButtonPickup",       1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
-			 // Red Crystal Chest:
-			RedChest	 = sprite(p + "sprRedChest",	 1, 8, 8, shn16);
-			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
-			
-			 // Red Ammo Chest:
-			RedAmmoChest	 = sprite(p + "sprRedAmmoChest",	 1, 8, 8, shn16);
+			 // Red Ammo:
+			RedAmmoChest     = sprite(p + "sprRedAmmoChest",     1, 8, 8, shn16);
 			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1, 8, 8);
+			RedAmmoPickup    = sprite(p + "sprRedAmmoPickup",    1, 5, 5, shn10);
+			RedAmmoHUD       = sprite(p + "sprRedAmmoHUD",       2, 1, 1);
+			RedAmmoHUDCharge = sprite(p + "sprRedAmmoHUDCharge", 2, 1, 2);
+			RedAmmoHUDCost   = sprite(p + "sprRedAmmoHUDCost",   1, 1, 2);
 			
-			 // Red Ammo Pickup:
-			RedAmmoPickup = sprite(p + "sprRedAmmoPickup", 1, 5, 5, shn10);
+			 // Red Crystal Chest:
+			RedChest     = sprite(p + "sprRedChest",     1, 8, 8, shn16);
+			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
 			
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
@@ -1755,11 +1755,41 @@
 	global.surf = {};
 	global.shad = {};
 	
-	 // Mod Lists:
-	ntte_area = ["coast", "oasis", "lair", "pizza", "red", "trench"];
-	ntte_race = ["parrot", "bee"];
-	ntte_crwn = ["bonus", "crime", "red"];
-	ntte_weps = ["annihilator", "bat disc cannon", "bat disc launcher", "bat tether", "big throw", "bubble cannon", "bubble minigun", "bubble rifle", "bubble shotgun", "clam shield", "crabbone", "electroplasma rifle", "electroplasma shotgun", "harpoon launcher", "hyper bubbler", "lightring launcher", "merge", "net launcher", "quasar blaster", "quasar cannon", "quasar rifle", "red rifle", "scythe", "super lightring launcher", "tesla coil", "trident"];
+	 // Compile Mod Lists:
+	ntte_mods = {
+		"mod"   : [],
+		"wep"   : [],
+		"area"  : [],
+		"race"  : [],
+		"skin"  : [],
+		"skill" : [],
+		"crown" : []
+	};
+	if(fork()){
+		var _find = [];
+		file_find_all(".", _find, 1);
+		while(array_length(_find) <= 0) wait 0;
+		
+		with(_find){
+			if(!is_dir && ext == ".gml"){
+				var _split = string_split(name, ".");
+				if(array_length(_split) >= 2){
+					var	_type = _split[array_length(_split) - 2],
+						_name = string_copy(name, 1, string_length(name) - string_length("." + _type + ext));
+						
+					if(_type == "weapon"){
+						_type = "wep";
+					}
+					
+					if(lq_exists(ntte_mods, _type)){
+						array_push(lq_get(ntte_mods, _type), _name);
+					}
+				}
+			}
+		}
+		
+		exit;
+	}
 	
 	 // Reminders:
 	global.remind = [];
@@ -1808,7 +1838,9 @@
 #macro snd global.snd
 #macro mus snd.mus
 
-#macro sprLoad global.spr_load
+#macro ntte_mods global.mods
+
+#macro spr_load global.spr_load
 
 #macro shnWep true
 #macro shn8   spr.Shine8
@@ -1819,12 +1851,7 @@
 #macro shn24  spr.Shine24
 #macro shn64  spr.Shine64
 
-#macro ntte_area global.area
-#macro ntte_race global.race
-#macro ntte_crwn global.crwn
-#macro ntte_weps global.weps
-
-#macro save     global.save
+#macro save      global.save
 #macro save_auto global.save_auto
 #macro save_path "save.sav"
 
@@ -1880,7 +1907,7 @@
 	
 #define option_get(_name)
 	/*
-		Returns the value associated with a given option's name, which may be altered from the base value for simpler usage
+		Returns the value associated with a given option's name, which may be altered from the raw value for simpler usage
 		Returns 1 if nothing was found
 		
 		Ex:
@@ -1934,8 +1961,8 @@
 	
 	 // Old Stat Names:
 	switch(_name){
-		case "race:parrot:best:area": _default = stat_get("race:parrot:bestArea"); break;
-		case "race:parrot:best:kill": _default = stat_get("race:parrot:bestKill"); break;
+		case "race:parrot:best:area" : _default = stat_get("race:parrot:bestArea"); break;
+		case "race:parrot:best:kill" : _default = stat_get("race:parrot:bestKill"); break;
 		
 		default:
 			if(string_pos("found:", _name) == 1){
@@ -2356,7 +2383,7 @@
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
 var _shine = argument_count > 4 ? argument[4] : false;
 	
-	sprLoad = [[spr, 0]];
+	spr_load = [[spr, 0]];
 	
 	return {
 		path  : "sprites/" + _path,
@@ -2370,15 +2397,15 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	
 #define step
 	 // Sprite Loading:
-	if(array_length(sprLoad) > 0){
+	if(array_length(spr_load) > 0){
 		repeat(20){
-			while(array_length(sprLoad) > 0){
-				var	m = array_length(sprLoad) - 1,
-					_list = sprLoad[m, 0],
-					_index = sprLoad[m, 1];
+			while(array_length(spr_load) > 0){
+				var	m = array_length(spr_load) - 1,
+					_list = spr_load[m, 0],
+					_index = spr_load[m, 1];
 					
 				if(_index < lq_size(_list) || _index < array_length(_list)){
-					sprLoad[m, 1]++;
+					spr_load[m, 1]++;
 					
 					var _spr = null;
 					if(is_object(_list)){
@@ -2414,7 +2441,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 								 // Semi-Manual Shine (sprite_add_weapon is wack with taller sprites):
 								else{
 									 // Wait for Sprite to Load:
-									var	_base = sprite_add(_path, _img, _x, _y),
+									var	_base    = sprite_add(_path, _img, _x, _y),
 										_waitMax = 90,
 										_waitBox = [sprite_get_bbox_left(_base), sprite_get_bbox_top(_base), sprite_get_bbox_right(_base), sprite_get_bbox_bottom(_base)];
 										
@@ -2459,18 +2486,18 @@ var _shine = argument_count > 4 ? argument[4] : false;
 					
 					 // Search Deeper:
 					else if(is_object(_spr) || is_array(_spr)){
-						array_push(sprLoad, [_spr, 0]);
+						array_push(spr_load, [_spr, 0]);
 					}
 				}
 				
 				 // Go Back:
-				else sprLoad = array_slice(sprLoad, 0, m);
+				else spr_load = array_slice(spr_load, 0, m);
 			}
 		}
 	}
 	
 	 // Locked Weapon Spriterize:
-	with(ntte_weps){
+	with(ntte_mods.wep){
 		var _name = self;
 		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
 			var _spr = mod_variable_get("weapon", _name, "sprWep");
@@ -2904,7 +2931,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	}
 	
 	 // No Crash:
-	with(ntte_race){
+	with(ntte_mods.race){
 		with(instances_matching([CampChar, CharSelect], "race", self)){
 			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
 				motion_add(random(360), random(random(8)));

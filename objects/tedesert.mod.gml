@@ -77,14 +77,24 @@
 		if(gold){
 			var o = random_range(20, 60);
 			for(var a = -o; a <= o; a += o){
-				enemy_shoot("VenomPellet", gunangle + a, ((a == 0) ? 10 : 6) + random(2));
+				enemy_shoot(
+					x,
+					y,
+					"VenomPellet",
+					gunangle + a,
+					((a == 0) ? 10 : 6) + random(2)
+				);
 			}
 		}
 		
 		 // Normal venom shot:
-		else{
-			enemy_shoot("VenomPellet", gunangle + orandom(20), 7 + random(4));
-		}
+		else enemy_shoot(
+			x,
+			y,
+			"VenomPellet",
+			gunangle + orandom(20),
+			7 + random(4)
+		);
 		
 		 // Effects:
 		sound_play_pitch(sndScorpionFire, 1.4 + random(0.2));
@@ -151,8 +161,8 @@
 	
 	 // Venom Explosion:
 	if(gold){
-		repeat(4 + irandom(4)) enemy_shoot("VenomPellet", random(360), 8 + random(4));
-		repeat(8 + irandom(8)) enemy_shoot("VenomPellet", random(360), 4 + random(4));
+		repeat(4 + irandom(4)) enemy_shoot(x, y, "VenomPellet", random(360), 8 + random(4));
+		repeat(8 + irandom(8)) enemy_shoot(x, y, "VenomPellet", random(360), 4 + random(4));
 	}
 	
 	 // Effects:
@@ -1451,33 +1461,39 @@
 		scrWalk(random(360), 20);
 		scrAim(direction);
 	}
-
+	
 #define CoastBoss_alrm2
 	 // Fire Bubble Bombs:
 	repeat(irandom_range(1, 2)){
 		if(ammo > 0){
 			alarm2 = 2;
-
+			
 			 // Blammo:
 			sound_play(sndOasisShoot);
-			enemy_shoot("BubbleBomb", gunangle + (sin(shot_wave / 4) * 16), 8 + random(4));
+			enemy_shoot(
+				x,
+				y,
+				"BubbleBomb",
+				gunangle + (sin(shot_wave / 4) * 16),
+				8 + random(4)
+			);
 			shot_wave += alarm2;
 			walk++;
-
+			
 			 // End:
 			if(--ammo <= 0){
 				alarm1 = 60;
 			}
 		}
 	}
-
+	
 #define CoastBoss_alrm3
 	enemy_target(x, y);
 	swim_target = target;
-
+	
 	alarm3 = 8;
 	alarm1 = alarm3 + 10;
-
+	
 	if(sprite_index != spr_dive){
 		 // Dive:
 		if(swim <= 0){
@@ -1486,14 +1502,14 @@
 			spr_shadow = mskNone;
 			sound_play(sndOasisBossMelee);
 		}
-
+		
 		 // Bubble Trail:
 		else if(swim > 80){
-			enemy_shoot("BubbleBomb", direction + orandom(10), 4);
+			enemy_shoot(x, y, "BubbleBomb", direction + orandom(10), 4);
 			sound_play_hit(sndBouncerBounce, 0.3);
 		}
 	}
-
+	
 #define CoastBoss_death
 	 // Coast Entrance:
 	instance_create(x, y, Portal);
@@ -1643,26 +1659,36 @@
 #define PetVenom_destroy
 	var	_dir = direction,
 		_lvl = GameCont.level;
-
+		
 	sleep(10);
 	view_shake_max_at(x, y, 10 + (2 * _lvl));
-
+	
 	 // Fire:
 	for(var i = -1; i <= 1; i++){
 		repeat(irandom_range(4, 8) + (2 * (i == 0)) + (2 * _lvl)){
 			 // Main Shot:
 			if(i == 0){
-				with(enemy_shoot(EnemyBullet2, _dir + orandom(12), 8 + random(6))){
+				with(enemy_shoot(
+					x,
+					y,
+					EnemyBullet2,
+					_dir + orandom(12),
+					8 + random(6)
+				)){
 					force = 12;
 				}
 			}
 			
 			 // Side Shots:
-			else{
-				enemy_shoot("VenomPellet", _dir + (45 * i) + orandom(16) + (i * random(6 * _lvl)), 4 + random(10));
-			}
+			else enemy_shoot(
+				x,
+				y,
+				"VenomPellet",
+				_dir + (45 * i) + orandom(16) + (i * random(6 * _lvl)),
+				4 + random(10)
+			);
 		}
-
+		
 		 // Effects:
 		with(instance_create(x, y, AcidStreak)){
 			motion_set(_dir + (45 * i), 4);
@@ -1671,12 +1697,12 @@
 			image_yscale = 1.0;
 		}
 	}
-
+	
 	 // Sounds:
 	sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 2.5);
 	sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 2.5);
-
-
+	
+	
 #define ScorpionRock_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -1959,8 +1985,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -2001,6 +2026,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -2014,10 +2040,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

@@ -3609,6 +3609,150 @@
 	}
 	
 	
+#define RedAmmoChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.RedAmmoChest;
+		spr_dead     = spr.RedAmmoChestOpen;
+		spr_shadow_y = -3;
+		
+		 // Sounds:
+		snd_open = sndRogueCanister;
+		
+		 // Vars:
+		num = 1;
+		
+		 // Scripts:
+		on_open = script_ref_create(RedAmmoChest_open);
+		
+		return id;
+	}
+	
+#define RedAmmoChest_open
+	var _num = num;
+	
+	 // Red Ammo:
+	if(instance_is(other, Player)){
+		with(other) if("red_ammo" in self){
+			red_ammo = min(red_ammo + _num, red_amax);
+			
+			 // Text:
+			var _text = ((red_ammo < red_amax) ? "%" : "MAX") + "AMMO";
+			pickup_text(_text, _num);
+		}
+	}
+	else repeat(_num){
+		obj_create(x, y, "RedAmmoPickup");
+	}
+	
+	
+#define RedAmmoPickup_create(_x, _y)
+	with(obj_create(_x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = spr.RedAmmoPickup;
+		
+		 // Sounds:
+		snd_open = sndRogueCanister;
+		snd_dead = sndPickupDisappear;
+		
+		 // Vars:
+		num = 1;
+		
+		 // Events:
+		on_pull = script_ref_create(RedAmmoPickup_pull);
+		on_open = script_ref_create(RedAmmoPickup_open);
+		 
+		return id;
+	}
+	
+#define RedAmmoPickup_pull
+	if(weapon_get_red(other.wep) > 0 || weapon_get_red(other.bwep) > 0){
+		return true;
+	}
+	return false;
+	
+#define RedAmmoPickup_open
+	var	_num  = num,
+		_text = `% AMMO`;
+		
+	 // Red Ammo:
+	with(instance_is(other, Player) ? other : Player){
+		if("red_ammo" in self){
+			red_ammo = min(red_ammo + _num, red_amax);
+			
+			 // Text:
+			var _text = ((red_ammo < red_amax) ? "%" : "MAX") + " AMMO";
+			pickup_text(_text, _num);
+		}
+	}
+	
+	
+#define RedAmmoPopup_create(_x, _y)
+	with(instance_create(_x, _y, PopupText)){
+		 // Visual:
+		image_blend = make_color_rgb(235, 0, 67);
+		
+		 // Vars:
+		num_symbols = 3;
+		text_prefix = "";
+		text_suffix = "@wAMMO";
+		symbol_list = {
+			"?"  : 2,
+			"$"  : 1,
+			"%"  : 1,
+			"&"  : 1,
+			"\#" : 1,
+			"_"  : 0.25
+		};
+		
+		return id;
+	}
+	
+#define RedAmmoPopup_step
+	if(frame_active(2)){
+		text = text_prefix + ` @(color:${image_blend})`;
+		var _list = lq_clone(symbol_list);
+		repeat(num_symbols){
+			var _char = pool(_list);
+			if(is_string(_char)){
+				text += _char;
+				lq_set(_list, _char, lq_get(_list, _char) - 1);
+			}
+		}
+		text += " " + text_suffix;
+	}
+	
+	
+#define red_ammo_add(_player, _num)
+	with(_player){
+		 // Initialize:
+		if("red_ammo" not in self) red_ammo = 0;
+		if("red_amax" not in self) red_amax = 4;
+		
+		 // :
+		red_ammo += _num;
+		
+		 // Maxed Out:
+		var _maxRed = red_amax + ((99 - red_amax) * skill_get(mut_back_muscle));
+		if(red_ammo >= _maxRed){
+			red_ammo = _maxRed;
+			
+			with(obj_create(x, y, "RedAmmoPopup")){
+				text_prefix = "MAX";
+				target = other.index;
+			}
+		}
+		else{
+			
+			 // Room to Spare:
+			with(obj_create(x, y, "RedAmmoPopup")){
+				text_prefix = "+" + string(_num);
+				target = other.index;
+			}
+		}
+	}
+	
+	
 #define SpiritPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -4680,51 +4824,56 @@
 			
 			if(GameCont.hard > 3){
 				if(enemy_boss){
-					mutationpickup_check = true;
-					
-					 // Is Last Boss on Level:
-					with(enemy){
-						if(my_health > 0 || id > other.id){
-							if(enemy_boss){
-								other.mutationpickup_check = false;
-								break;
+					if(
+						(!instance_exists(Generator) || !instance_is(self, Nothing)) &&
+						(!instance_exists(LastChair) || !instance_is(self, Last))
+					){
+						mutationpickup_check = true;
+						
+						 // Is Last Boss on Level:
+						with(enemy){
+							if(my_health > 0 || id > other.id){
+								if(enemy_boss){
+									other.mutationpickup_check = false;
+									break;
+								}
 							}
-						}
-					}
-					
-					 // Pickup Time:
-					if(mutationpickup_check){
-						var	_x = x,
-							_y = y;
-							
-						if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
-							_x = posx;
-							_y = posy;
 						}
 						
-						if(position_meeting(_x, _y, Floor)){
-							var	_obj       = "",
-								_health    = 0,
-								_healthMax = 0;
+						 // Pickup Time:
+						if(mutationpickup_check){
+							var	_x = x,
+								_y = y;
 								
-							with(Player){
-								_health    += my_health;
-								_healthMax += maxhealth;
+							if(instance_is(self, CustomEnemy) && "name" in self && name == "PitSquid"){
+								_x = posx;
+								_y = posy;
 							}
 							
-							 // Spirit:
-							if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
-								_obj = "SpiritPickup";
-							}
-							
-							 // HammerHead:
-							else if(chance(1 + GameCont.loops, 4)){
-								_obj = "HammerHeadPickup"
-							}
-							
-							 // Create:
-							if(_obj != ""){
-								obj_create(_x + orandom(4), _y + orandom(4), _obj);
+							if(position_meeting(_x, _y, Floor)){
+								var	_obj       = "",
+									_health    = 0,
+									_healthMax = 0;
+									
+								with(Player){
+									_health    += my_health;
+									_healthMax += maxhealth;
+								}
+								
+								 // Spirit:
+								if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
+									_obj = "SpiritPickup";
+								}
+								
+								 // HammerHead:
+								else if(chance(1 + GameCont.loops, 4)){
+									_obj = "HammerHeadPickup"
+								}
+								
+								 // Create:
+								if(_obj != ""){
+									obj_create(_x + orandom(4), _y + orandom(4), _obj);
+								}
 							}
 						}
 					}
@@ -4907,14 +5056,18 @@
 	}
 	with(instances_matching_gt(Player, "bonus_ammo", 0)){
 		if(drawempty > 0){
-			var _ammo = ammo[weapon_get_type(wep)];
-			if(_ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(wep)){
+			var	_type = weapon_get_type(wep),
+				_ammo = ammo[_type];
+				
+			if(_type != 0 && _ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(wep)){
 				drawempty = 0;
 			}
 		}
 		if(drawemptyb > 0){
-			var _ammo = ammo[weapon_get_type(bwep)];
-			if(_ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(bwep)){
+			var	_type = weapon_get_type(bwep),
+				_ammo = ammo[_type];
+				
+			if(_type != 0 && _ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(bwep)){
 				drawemptyb = 0;
 			}
 		}
@@ -5376,8 +5529,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -5418,6 +5570,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -5431,10 +5584,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

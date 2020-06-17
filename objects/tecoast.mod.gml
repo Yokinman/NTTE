@@ -781,7 +781,7 @@
 	if(gonnafire){
 		gonnafire = false;
 		
-		enemy_shoot("DiverHarpoon", gunangle, 14);
+		enemy_shoot(x, y, "DiverHarpoon", gunangle, 14);
 		sound_play(sndCrossbow);
 		
 		alarm1 = 20 + random(30);
@@ -1019,7 +1019,7 @@
 #define Gull_alrm2
 	 // Slash:
 	scrAim(point_direction(x, y, target.x, target.y) + orandom(10));
-	with(enemy_shoot(EnemySlash, gunangle, 4)){
+	with(enemy_shoot(x, y, EnemySlash, gunangle, 4)){
 		damage = 2;
 	}
 	sound_play(sndChickenSword);
@@ -2083,7 +2083,7 @@
 		var _dis = (ground_smash * 24);
 		for(var a = 0; a < 360; a += (360 / 16)){
 			 // Ground Smash Slash:
-			with(enemy_shoot_ext(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 1)){
+			with(enemy_shoot(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 1)){
 				team = -1;
 			}
 			
@@ -2112,7 +2112,7 @@
 	
 #define Palanking_alrm3
 	 // Slappin:
-	enemy_shoot_ext(x, y + 16 - z, "PalankingSlash", gunangle, 8);
+	enemy_shoot(x, y + 16 - z, "PalankingSlash", gunangle, 8);
 	motion_add(gunangle, 4);
 	
 	 // Effects:
@@ -2328,7 +2328,7 @@
 		_dis = 24;
 
 	for(var a = 0; a < 360; a += (360 / 16)){
-		enemy_shoot_ext(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 3 + random(1));
+		enemy_shoot(_x + lengthdir_x(_dis, a), _y - 4 + lengthdir_y(_dis * 0.66, a), "PalankingSlashGround", a, 3 + random(1));
 
 		 // Effects:
 		if(chance(1, 4)){
@@ -2742,7 +2742,7 @@
 	motion_set(gunangle, maxspeed);
 	
 	 // Heavy Slash:
-	with(enemy_shoot(EnemySlash, gunangle, ((dash - 2) * dash_factor))){
+	with(enemy_shoot(x, y, EnemySlash, gunangle, ((dash - 2) * dash_factor))){
 		sprite_index = sprHeavySlash;
 		friction = 0.4;
 		damage = 10;
@@ -2930,7 +2930,7 @@
 			 // Shield Mode:
 			if(shield){
 				if(!instance_exists(shield_inst)){
-					shield_inst = enemy_shoot("ClamShield", gunangle, 0);
+					shield_inst = enemy_shoot(x, y, "ClamShield", gunangle, 0);
 					with(shield_inst){
 						mask_index = sprWall0Out;
 					}
@@ -3282,7 +3282,7 @@
 							
 							 // Stabby:
 							if(_canAttack && instance_near(x, y, target, 80)){
-								with(enemy_shoot(Shank, gunangle, 3)){
+								with(enemy_shoot(x, y, Shank, gunangle, 3)){
 									damage = 2;
 								}
 								motion_add(gunangle, 2);
@@ -3397,7 +3397,7 @@
 							toss_ammo--;
 							toss_time = 60;
 							toss_speed = random_range(7, 9);
-							toss = enemy_shoot("SealDisc", random(360), 0);
+							toss = enemy_shoot(x, y, "SealDisc", random(360), 0);
 						}
 					}
 					
@@ -3516,7 +3516,7 @@
 			var	_dis = 24 + trident_dist,
 				_dir = gunangle;
 				
-			with(enemy_shoot_ext(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
+			with(enemy_shoot(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
 				damage = 3;
 				image_angle = _dir;
 				image_xscale = 0.5;
@@ -3546,7 +3546,7 @@
 			
 			 // Blammo:
 			repeat(6){
-				enemy_shoot(EnemyBullet1, gunangle + orandom(6), 6 + random(2));
+				enemy_shoot(x, y, EnemyBullet1, gunangle + orandom(6), 6 + random(2));
 			}
 			
 			 // Effects:
@@ -3569,7 +3569,7 @@
 			if(chance(1, 3)) alarm2 = irandom_range(3, 5);
 			
 			 // Pew:
-			enemy_shoot(EnemyBullet3, gunangle + orandom(4), 12 + random(2));
+			enemy_shoot(x, y, EnemyBullet3, gunangle + orandom(4), 12 + random(2));
 			
 			 // Effects:
 			scrFX(x, y, [gunangle, 2], Smoke);
@@ -3593,7 +3593,7 @@
 			}
 			
 			 // Shooty:
-			enemy_shoot(EnemyBullet1, gunangle, 6);
+			enemy_shoot(x, y, EnemyBullet1, gunangle, 6);
 			
 			 // Effects:
 			wkick = 10;
@@ -4041,7 +4041,7 @@
 			 // Throw Out Anchor:
 			if(!instance_exists(anchor)){
 				alarm1 = 60;
-				anchor = enemy_shoot("SealAnchor", gunangle, 0);
+				anchor = enemy_shoot(x, y, "SealAnchor", gunangle, 0);
 				anchor_throw = 8;
 				anchor_spin = max(20, abs(anchor_spin)) * sign(anchor_spin);
 				if(instance_exists(target)){
@@ -4375,7 +4375,7 @@
 				_y = y + 4;
 
 			repeat(choose(2, 3)){
-				enemy_shoot_ext(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
+				enemy_shoot(_x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
 			}
 			gunangle += (sweep_dir * sweep_spd);
 
@@ -4762,7 +4762,7 @@
 			if(is_object(w)){
 				w.wepangle = angle_difference(other.image_angle, gunangle)
 				if(chance(1, 8)) w.wepangle += 360 * sign(w.wepangle);
-				variable_instance_set(self, _b + "wepangle",	w.wepangle);
+				variable_instance_set(self, _b + "wepangle", w.wepangle);
 			}
 		}
 		
@@ -5060,8 +5060,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -5102,6 +5101,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -5115,10 +5115,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

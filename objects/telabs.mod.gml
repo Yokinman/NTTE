@@ -343,129 +343,6 @@
 	instance_destroy();
 	
 	
-#define EnergyBatSlash_create(_x, _y)
-	with(instance_create(_x, _y, CustomSlash)){
-		var _skill = skill_get(mut_laser_brain);
-		
-		 // Visual:
-		sprite_index = spr.EnergyBatSlash;
-		image_speed  = 0.4 / ((_skill > 0) ? 1 + _skill : power(2, _skill)); // idk the base game does this
-		
-		 // Vars:
-		mask_index = mskSlash;
-		damage     = 22; 
-		force      = 8;
-		walled     = false;
-		
-		return id;
-	}
-	
-#define EnergyBatSlash_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
-		
-		/*
-		with(other){
-			if(my_health <= 0){
-				var o = other;
-				with(obj_create(x, y, (size >= 2) ? PlasmaImpact : "PlasmaImpactSmall")){
-					team	= o.team;
-					creator = o.creator;
-				}
-			}
-		}
-		*/
-	}
-	
-#define EnergyBatSlash_wall
-	/*
-	OLD CHUM
-	⣿⣿⣿⣿⣿⠟⠉⠁⠄⠄⠄⠈⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⠏⠄⠄⠄⠄⠄⠄⠄⠄⠄⠸⢿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣏⠄⡠⡤⡤⡤⡤⡤⡤⡠⡤⡤⣸⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣗⢝⢮⢯⡺⣕⢡⡑⡕⡍⣘⢮⢿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⡧⣝⢮⡪⡪⡪⡎⡎⡮⡲⣱⣻⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⠟⠁⢸⡳⡽⣝⢝⢌⢣⢃⡯⣗⢿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⠟⠁⠄⠄⠄⠹⡽⣺⢽⢽⢵⣻⢮⢯⠟⠿⠿⢿⣿⣿⣿⣿⣿
-	⡟⢀⠄⠄⠄⠄⠄⠙⠽⠽⡽⣽⣺⢽⠝⠄⠄⢰⢸⢝⠽⣙⢝⢿
-	⡄⢸⢹⢸⢱⢘⠄⠄⠄⠄⠄⠈⠄⠄⠄⣀⠄⠄⣵⣧⣫⣶⣜⣾
-	⣧⣬⣺⠸⡒⠬⡨⠄⠄⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⣷⣽⣿⣿
-	⣿⣿⣿⣷⠡⠑⠂⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣄⠠⢀⢀⢀⡀⡀⠠⢀⢲⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣿⢐⢀⠂⢄⠇⠠⠈⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣧⠄⠠⠈⢈⡄⠄⢁⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣿⡀⠠⠐⣼⠇⠄⡀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣯⠄⠄⡀⠈⠂⣀⠄⢀⠄⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	⣿⣿⣿⣿⣿⣶⣄⣀⠐⢀⣸⣷⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿
-	*/
-	
-	 // Walled More Like Gnomed Haha:
-	if(!walled){
-		walled = true;
-		
-		 // Hit Wall FX:
-		var	_x = bbox_center_x + hspeed_raw,
-			_y = bbox_center_y + vspeed_raw,
-			_col = ((image_yscale > 0) ? c_lime : c_white);
-			
-		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
-			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
-				image_angle = point_direction(_x, _y, x, y);
-				image_blend = _col;
-				sound_play_hit(sndMeleeWall, 0.3);
-			}
-		}
-	}
-	
-#define EnergyBatSlash_projectile
-	with(other){
-		 // Deflect:
-		if(typ == 1 && other.candeflect){
-			var	_cannon = (damage > 3),
-				_slash = other;
-				
-			 // Vlasma:
-			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
-				motion_add(_slash.direction, _slash.speed + 2);
-				image_angle	= direction;
-				creator     = _slash.creator;
-				team        = _slash.team;
-				target      = other.creator;
-				target_x    = other.xstart;
-				target_y    = other.ystart;
-			}
-			with(obj_create(x, y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
-				creator = _slash.creator;
-				team    = _slash.team;
-				depth   = other.depth;
-			}
-			if(_cannon){
-				sleep(50);
-			}
-			
-			 // Sounds:
-			var _snd = [
-				[sndPlasma,    sndPlasmaUpg], 
-				[sndPlasmaBig, sndPlasmaBigUpg]
-			];
-			sound_play_hit_ext(
-				_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
-				random_range(0.7, 1.3),
-				0.6
-			);
-			
-			 // Goodbye:
-			instance_delete(id);
-		}
-		
-		 // Destroy:
-		else if(typ == 2){
-			instance_destroy();
-		}
-	}
-	
-	
-#define EntanglerSlash_create(_x, _y)
 #define FreakChamber_create(_x, _y)
 	/*
 		Creates an epic room on the side of the level that opens to release freaks
@@ -1594,7 +1471,7 @@
 					}
 					
 					 // Fire:
-					with(team_instance_sprite(team, enemy_shoot_ext(aim_x, aim_y, "VlasmaBullet", (gunangle + 180), 0))){
+					with(team_instance_sprite(team, enemy_shoot(aim_x, aim_y, "VlasmaBullet", (gunangle + 180), 0))){
 						target	 = other;
 						target_x = other.x;
 						target_y = other.y;
@@ -1623,7 +1500,7 @@
 					}
 					
 					 // Fire:
-					with(team_instance_sprite(team, enemy_shoot_ext(aim_x, aim_y, "VlasmaCannon", (gunangle + 180), 0))){
+					with(team_instance_sprite(team, enemy_shoot(aim_x, aim_y, "VlasmaCannon", (gunangle + 180), 0))){
 						target	 = other;
 						target_x = other.x;
 						target_y = other.y;
@@ -1952,8 +1829,7 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_object, _dir, _spd)                                                return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _object, _dir, _spd);
-#define enemy_shoot_ext(_x, _y, _object, _dir, _spd)                                    return  mod_script_call(   'mod', 'telib', 'enemy_shoot_ext', _x, _y, _object, _dir, _spd);
+#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -1994,6 +1870,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
@@ -2007,10 +1884,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
 #define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

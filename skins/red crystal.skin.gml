@@ -7,16 +7,16 @@
 #macro snd global.snd
 #macro mus snd.mus
 
-#define skin_race     return "crystal";
-#define skin_name     return ((argument_count <= 0 || argument0) ? "RED" : skin_lock());
-#define skin_lock     return "REACH "        + area_get_name("red", 1, 0);
-#define skin_unlock   return "FOR REACHING " + area_get_name("red", 1, 0);
-#define skin_ttip     return choose("NEVER MORE ALIVE", "FAMILY CAN WAIT");
-#define skin_avail    return unlock_get("skin:" + mod_current);
-#define skin_portrait return spr.CrystalRedPortrait;
-#define skin_mapicon  return spr.CrystalRedMapIcon;
+#define skin_race      return "crystal";
+#define skin_name      return ((argument_count <= 0 || argument0) ? "RED" : skin_lock());
+#define skin_lock      return "REACH "        + area_get_name("red", 1, 0);
+#define skin_unlock    return "FOR REACHING " + area_get_name("red", 1, 0);
+#define skin_ttip      return choose("NEVER MORE ALIVE", "FAMILY CAN WAIT");
+#define skin_avail     return unlock_get("skin:" + mod_current);
+#define skin_portrait  return spr.CrystalRedPortrait;
+#define skin_mapicon   return spr.CrystalRedMapIcon;
 
-#define skin_button		
+#define skin_button
 	sprite_index = spr.CrystalRedLoadout;
 	image_index  = skin_avail();
 	

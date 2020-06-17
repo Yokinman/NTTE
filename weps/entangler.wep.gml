@@ -19,7 +19,7 @@
 
 #define weapon_sprt_hud(w)	
 	if(instance_is(self, Player) && (instance_is(other, TopCont) || instance_is(other, UberCont))){
-		draw_ammo(index, (wep == w), redammo, redamax, (race == "steroids"));
+		draw_ammo(index, (wep == w), red_ammo, red_amax, (race == "steroids"));
 	}
 	
 	return global.sprWepHUD;
@@ -46,7 +46,7 @@
 		team          = other.team;
 		
 		can_charm	  = (weapon_red() > 0);
-		redammo_cost  = weapon_red();
+		red_ammo  = weapon_red();
 	}
 	
 	 // Effects:

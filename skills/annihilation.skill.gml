@@ -2,207 +2,55 @@
 	global.spr = mod_variable_get("mod", "teassets", "spr");
 	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
 	
-	 // List of Vanilla HitID Text Components:
-	global.enemyHitidText = [
-		"bandit", 
-		"maggot", 
-		"rad maggot", 
-		"big maggot", 
-		"scorpion", 
-		"golden scorpion", 
-		"big bandit", 
-		"rat", 
-		"big rat", 
-		"green rat", 
-		"gator", 
-		"frog", 
-		"super frog", 
-		"mom", 
-		"assassin", 
-		"raven", 
-		"salamander", 
-		"sniper", 
-		"big dog", 
-		"spider", 
-		"new cave thing", 
-		"laser crystal", 
-		"hyper crystal", 
-		"snow bandit", 
-		"snowbot", 
-		"wolf", 
-		"snowtank", 
-		"lil hunter", 
-		"freak", 
-		"explo freak", 
-		"rhino freak", 
-		"necromancer", 
-		"turret", 
-		"technomancer", 
-		"guardian", 
-		"explo guardian", 
-		"dog guardian", 
-		"throne", 
-		"throne II", 
-		"bonefish", 
-		"crab", 
-		"turtle", 
-		"molefish", 
-		"molesarge", 
-		"fireballer", 
-		"super fireballer", 
-		"jock", 
-		"@p@qc@qu@qr@qs@qe@qd @qs@qp@qi@qd@qe@qr", 
-		"@p@qc@qu@qr@qs@qe@qd @qc@qr@qy@qs@qt@qa@ql", 
-		"mimic", 
-		"health mimic", 
-		"grunt", 
-		"inspector", 
-		"shielder", 
-		"crown guardian", 
-		"explosion", 
-		"small explosion", 
-		"fire trap", 
-		"shield", 
-		"toxic", 
-		"horror", 
-		"barrel", 
-		"toxic barrel", 
-		"golden barrel", 
-		"car", 
-		"venus car", 
-		"venus car fixed", 
-		"venus car 2", 
-		"icy car", 
-		"thrown car", 
-		"mine", 
-		"crown of death", 
-		"rogue strike", 
-		"blood launcher", 
-		"blood cannon", 
-		"blood hammer", 
-		"disc", 
-		"@p@qc@qu@qr@qs@qe", 
-		"big dog missile", 
-		"halloween bandit", 
-		"lil hunter fly", 
-		"throne death", 
-		"jungle bandit", 
-		"jungle assassin", 
-		"jungle fly", 
-		"crown of hatred", 
-		"ice flower", 
-		"@p@qc@qu@qr@qs@qe@qd @qa@qm@qm@qo @qp@qi@qc@qk@qu@qp", 
-		"electrocution", 
-		"elite grunt", 
-		"blood gamble", 
-		"elite shielder", 
-		"elite inspector", 
-		"captain", 
-		"van", 
-		"buff gator", 
-		"generator", 
-		"lightning crystal", 
-		"golden snowtank", 
-		"green explosion", 
-		"small generator", 
-		"golden disc", 
-		"big dog explosion", 
-		"popo freak", 
-		"throne II death", 
-		"big fish"
-	];
-	
-	/*
-	global.enemyAdjacents = [
-		[[BigMaggot, null],		[BigMaggotBurrow, null]],
-		[[Generator, null],		[GeneratorInactive, null]],
-		[[MeleeBandit, null],	[MeleeFake, null]],
-		[[Raven, null], 		[RavenFly, null],			[CustomEnemy, "TopRaven"]],
-		[[ScrapBoss, null], 	[BecomeScrapBoss, null]]
-	];
-	*/
-	
 	/*
 		TODO:
-		- program enemy adjacents so the code treats objects the player
-		  percieves as the same in the same manner
 		- rewrite display name pluralizer code to account for multi-character 
 		  endings
 		- lower priority, but make the skill ttip condense excess enemy entries 
 		  into an "and X more" type deal
-		- fix softlocks with:
-			- pitsquid post death
-			- palanking phase change infinite summons
-			- deleting the throne intro mask
-		- fix bugs with:
-			- red heart/sewer and pizza drains spawning levels without enemies 
-			  or chests (blacklist them from the recursive cleanup)
-		
-	*/
-	
-	global.color = `@(color:${make_color_rgb(235, 0, 67)})`;
-	
-	game_start();
-	
-#define game_start
-	global.newLevel = false;
-	global.enemyList = [];
-	
-	/*
-	if(chance(1, 3)) skill_init(obj_create(0, 0, Bandit),			1 + irandom(4));
-	if(chance(1, 3)) skill_init(obj_create(0, 0, HyperCrystal),		1 + irandom(4));
-	if(chance(1, 3)) skill_init(obj_create(0, 0, SuperFireBaller),	1 + irandom(4));
-	if(chance(1, 3)) skill_init(obj_create(0, 0, "BanditHiker"), 	1 + irandom(4));
-	if(chance(1, 3)) skill_init(obj_create(0, 0, "TrafficCrab"), 	1 + irandom(4));
+		- fix palanking phase change infinite summons
 	*/
 	
 #macro spr global.spr
+
+#macro annihilation_list variable_instance_get(GameCont, "annihilation_list", [])
+
+#define skill_name   return "ANNIHILATION";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
+
+#define skill_text
+	var	_text = `@(color:${area_get_back_color("red")})DESTROY`,
+		_list = [];
+		
+	 // Get Annihilated Enemies:
+	with(annihilation_list){
+		array_push(_list, " @w" + string_upper(text));
+	}
 	
-#define skill_name return "ANNIHILATION";
-#define skill_text   
-	var _text = `${global.color}DESTROY @sALL `,
-		_ammo = infinity;
-	
-	 // Generate Text:	
-	var n = array_length(global.enemyList);
-	for(var i = 0; i < n; i++){
-		with(global.enemyList[i]){
-			
-			 // Punctuatiom:
-			var p = "@s",
-				c = " @sAND";
-				
-			if(n > 1 && i < (n - 1)){
-				if(n <= 2){
-					p = c;
-				}
-				else{
-					
-					 // The Oxford Comma:
-					if(i >= (n - 2)){
-						p = "," + c;
-					}
-					else{
-						p = ",@s";
-					}
-				}
+	 // Compile Text:
+	var _max = array_length(_list);
+	if(_max > 0){
+		_text += "S @sALL";
+		
+		 // Enemy List:
+		if(_max > 1){
+			_list[_max - 1] = " @sAND" + _list[_max - 1];
+			if(_max == 2){
+				_text += "#";
 			}
-			
-			 // Find Lowest Duration:
-			if(ammo < _ammo){
-				_ammo = ammo;
+			else for(var i = 1; i < _max; i += 2){
+				_list[i] = "#" + _list[i];
 			}
-			
-			_text += `@w${display_name}${p} `;
 		}
-	}
-	
-	 // Ending:
-	if(_ammo > 2){
-		_text += `FOR THE NEXT @w${_ammo - 1} LEVELS`;
-	}
-	else{
-		if(_ammo > 1){
+		_text += array_join(_list, ((_max > 2) ? "," : "")) + "#@s";
+		
+		 // Duration:
+		var _num = skill_get(mod_current);
+		if(_num > 2){
+			_text += `FOR THE NEXT @w${_num - 1} LEVELS`;
+		}
+		else if(_num > 1){
 			_text += "THROUGH THE @wNEXT LEVEL";
 		}
 		else{
@@ -210,243 +58,355 @@
 		}
 	}
 	
-	 // Format Text:
-	var _textSplit = string_split(_text, " "),
-		_stringLen = 0,
-		_maxLength = 24;
-		
-	_text = "";
-	for(var i = 0; i < array_length(_textSplit); i++){
-		var s = _textSplit[i],
-			l = string_length(string_letters(s));
-			
-		_stringLen += l;
-		if(_stringLen >= _maxLength){
-			_stringLen = l;
-			_text += "#";
-		}
-		else{
-			_text += " ";
-		}
-		
-		_text += s;
-	}
-	
-	/*
-	 // Debug:
-	_text += "#@b";
-	with(global.enemyList){
-		_text += `${ammo} `;
-	}
-	*/
-	
 	return _text;
 	
 #define skill_tip
-	var _text = choose("GOODBYE", "SO LONG", "FAREWELL") + ", ";
-	with(global.enemyList[irandom(array_length(global.enemyList) - 1)]){
-		_text += global.color + display_name;
+	var _text = choose("GOODBYE", "SO LONG", "FAREWELL");
+	
+	if(array_length(annihilation_list) > 0){
+		_text += ", " + `@(color:${area_get_back_color("red")})` + annihilation_list[irandom(array_length(annihilation_list) - 1)].text;
 	}
 	
 	return _text;
 	
-#define skill_icon   return global.sprSkillHUD;
-#define skill_avail  return false;
+#define skill_lose
+	GameCont.annihilation_list = [];
 	
 #define step
-	if(instance_exists(GenCont)){
-		global.newLevel = true;
-	}
-	else{
-		if(global.newLevel){
-			global.newLevel = false;
-			
-			 // Decrement:
-			var _newEnemyList = [];
-			with(global.enemyList){
-				ammo--;
-				if(ammo > 0){
-					array_push(_newEnemyList, self);
-				}
+	 // Reduce Counters Between Levels:
+	with(instances_matching(GenCont, "annihilation_check", null)){
+		annihilation_check = true;
+		
+		var _num = 0;
+		
+		with(annihilation_list){
+			if(ammo > 0 && --ammo <= 0){
+				GameCont.annihilation_list = mod_script_call_nc("mod", "telib", "array_delete_value", annihilation_list, self);
 			}
-			global.enemyList = _newEnemyList;
+			_num = max(_num, ammo);
 		}
 		
-		 // Goodbye:
-		if(array_length(global.enemyList) <= 0){
-			skill_set(mod_current, 0);
+		if(skill_get(mod_current) > 0){
+			skill_set(mod_current, max(0, _num));
 		}
 	}
 	
-	 // Part II:
-	script_bind_end_step(end_step, 0);
-	
-#define end_step
-	 // Annihilation Time:
-	if(skill_get(mod_current) > 0){
-		enemy_annihilate();
+	 // Kill:
+	with(annihilation_list){
+		with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
+			annihilation_check = true;
+			
+			 // No Rads:
+			if("raddrop" in self){
+				raddrop = 0;
+			}
+			
+			 // Annihilate:
+			with(obj_create(x + orandom(1), y + orandom(1), "AnnihilatorExplosion")){
+				target = other;
+				other.nexthurt = 0;
+				damage = min(damage, max(10, other.my_health));
+				event_perform(ev_collision, other.object_index);
+			}
+		}
 	}
 	
-	 // Goodbye:
-	instance_destroy();
+#define enemy_annihilate(_inst, _num)
+	/*
+		Kills a given enemy for a given numbers of levels, only takes an instance argument right now
+	*/
 	
-#define skill_lose
-	global.enemyList = [];
-	
-#define skill_init(_inst, _num)
-	skill_set(mod_current, 1);
+	if("annihilation_list" not in GameCont){
+		GameCont.annihilation_list = [];
+	}
 	
 	 // Add Enemy Info to List:
-	var _info = {};
-	with(_info){
-		display_name = string_replace_all(instance_get_name(_inst, true), "@Q", ""); // shaky text looks gross here, sorry
-		object_index = variable_instance_get(_inst, "object_index");
-		name = variable_instance_get(_inst, "name");
-		ammo = _num;
-	}
-	array_push(global.enemyList, _info);
-	
-	 // Perish:
 	with(_inst){
-		enemy_annihilate();
-	}
-
-#define enemy_annihilate
-	var _lag = false;
-	if(_lag) trace_time();
-	
-	with(global.enemyList){
-		var _array = instances_matching(object_index, "name", name);
-		
-		 // Effect:
-		with(_array){
-			var _scale = 1;//((size < 3) ? 0.5 : 1);
-			with(instance_create(x, y, BulletHit)){
-				sprite_index = spr.AnnihilatorBulletEffect;
-				image_xscale = _scale;
-				image_yscale = _scale;
-			}
-		}
-		
-		var _minID = GameObject.id;
-		with(_array){
-			enemy_annihilate_destroy(id);
-		}
-		
-		 // Recursive Cleanup:
-		if(array_length(_array)){
-			var _array = [Effect, Explosion, LastDie, Pickup, becomenemy, chestprop, enemy, projectile],
-				_tries = 100; // Confirmed exit in the event of an infinite loop:
+		with({
+			"object_index" : object_index,
+			"custom"       : (string_pos("Custom", object_get_name(object_index)) == 1),
+			"name"         : variable_instance_get(self, "name"),
+			"text"         : string_plural(string_replace_all(string_lower(instance_get_name(self)), "@q", "")),
+			"ammo"         : _num
+		}){
+			var _add = true;
 				
-			while(array_length(instances_matching_gt(_array, "id", _minID)) > 0 && _tries-- > 0){
-				with(instances_matching_gt(_array, "id", _minID)){
-					enemy_annihilate_destroy(id);
-				}
-			}
-		}
-	}
-	
-	if(_lag) trace_time("enemy_annihilate")
-	
-#define enemy_annihilate_destroy(_inst)
-	if(instance_exists(_inst)){
-		with(_inst){
-			with(_inst){
-				
-				 // Kill:
-				if(instance_is(id, hitme) && "my_health" in id){
-					projectile_hit_raw(id, my_health, false);
-				}
-				
-				 // Custom Death Scripts:
-				if(array_length(variable_instance_get(id, "on_death", [])) >= 3){
-					if(mod_script_exists(on_death[0], on_death[1], on_death[2])){
-						mod_script_call(on_death[0], on_death[1], on_death[2]);
+			 // Update Old Entries:
+			with(annihilation_list){
+				if(object_index == other.object_index && name == other.name){
+					if(other.ammo > ammo){
+						text = other.text;
+						ammo = other.ammo;
 					}
+					_add = false;
 				}
 			}
 			
-			 // Goodbye:
-			instance_destroy();
+			 // Reset:
+			with(instances_matching_ne((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
+				if(annihilation_check){
+					annihilation_check = null;
+				}
+			}
+			
+			 // Add:
+			if(_add){
+				array_push(annihilation_list, self);
+			}
 		}
 	}
-
-#define instance_get_name(_inst, _plural)
-	var _string = null;
 	
-	 // Get Name:
-	if(instance_exists(_inst)){
-		var _name = variable_instance_get(_inst, "name");
+	 // Activate:
+	if(skill_get(mod_current) >= 0 && skill_get(mod_current) < _num){
+		skill_set(mod_current, _num);
+	}
+	
+#define string_plural(_string)
+	/*
+		Returns the plural form of the given string, assuming that it ends with a singular noun
+		Doesn't support wild stuff like 'person/people' cause english sucks wtf
+	*/
+	
+	var _length = string_length(_string);
+	
+	if(_length > 0){
+		var	_lower = string_lower(_string),
+			_char  = string_char_at(_lower, _length);
+			
+		switch(_char){
+			case "s":
+			case "x":
+			case "z":
+			case "h":
+				if(_char != "h" || array_find_index(["c", "s"], string_char_at(_lower, _length - 1)) >= 0){
+					_string += "e";
+				}
+				break;
+				
+			case "y":
+			case "o":
+				if(array_find_index(["a", "e", "i", "o", "u"], string_char_at(_lower, _length - 1)) < 0){
+					if(_char == "y"){
+						_string = string_copy(_string, 1, _length - 1) + "i";
+					}
+					_string += "e";
+				}
+				break;
+				
+			case "f":
+				if(string_char_at(_lower, _length - 1) == "l"){
+					_string = string_copy(_string, 1, _length - 1) + "ve";
+				}
+				break;
+				
+			case "e":
+				if(
+					string_char_at(_lower, _length - 2) == "i" &&
+					string_char_at(_lower, _length - 1) == "f"
+				){
+					_string = string_copy(_string, 1, _length - 2) + "ve";
+				}
+				break;
+		}
 		
+		_string += "s";
+	}
+	
+	return _string;
+	
+#define instance_get_name(_inst)
+	/*
+		Returns a displayable name for a given instance or object
+	*/
+	
+	var _name = "";
+	
+	 // Object:
+	if(is_object(_inst)){
+		_name = object_get_name(_inst);
+	}
+	
+	 // Instance:
+	else if(instance_exists(_inst)){
 		 // Enemies and Projectiles:
 		if("hitid" in _inst){
 			var _hitid = _inst.hitid;
-				
-			 // Return Custom HitID Name:
-			if(is_array(_hitid) && array_length(_hitid) >= 1){
-				_string = _hitid[1];
+			if(is_real(_inst.hitid)){
+				_hitid = death_cause(_inst.hitid);
 			}
-			else{
-				
-				 // Return Hardcoded Vanilla Names:
-				if(is_real(_hitid) && is_undefined(_name)){
-					_string = loc("CauseOfDeath:" + string(_hitid), global.enemyHitidText[_hitid]);
-				}
+			if(is_array(_hitid) && array_length(_hitid) > 1){
+				_name = _hitid[1];
 			}
 		}
 		
-		 // Generate Name from Instance Variables:
-		if(is_undefined(_string)){
-			_string = "";
-			if(is_undefined(_name)){
-				_name = object_get_name(_inst.object_index);
-			}
+		 // Normal:
+		if(_name == ""){
+			_name = object_get_name(_inst.object_index);
 			
-			for(var i = 1; i <= string_length(_name); i++){
-				var _char = string_char_at(_name, i);
-				if(i > 1){
-					
-					 // Add Spaces:
-					if(string_length(string_lettersdigits(_char)) > 0 && _char == string_upper(_char)){
-						_string += " ";
-					}
-				}
-				_string += _char;
-			}
-		}
-	
-		 // Final Touches:
-		_string = string_upper(_string);
-		
-		 // The Most Epic Pluralizer of All Time:
-		if(_plural){
-			var _len = string_length(_string),
-				_end = "";
-				
-			switch(string_char_at(_string, _len)){
-				case "S":
-					_string += "ES"; // miss u cactues
-					break;
-					
-				case "Y": 
-					_string = string_copy(_string, 1, _len - 1) + "IES"; 
-					break;
-					
-				default:
-					_string += "S";
+			 // Custom:
+			if(
+				"name" in _inst
+				&& is_string(_inst.name)
+				&& string_length(_inst.name) > 0
+				&& string_pos("Custom", _name) == 1
+			){
+				_name = _inst.name;
 			}
 		}
 	}
 	
-	 // Delivery:
-	return _string;
+	 // Auto-Space:
+	if(string_pos(" ", _name) <= 0){
+		_name = string_replace_all(_name, "_", " ");
+		
+		var _charLast = "";
+		for(var i = 1; i <= string_length(_name); i++){
+			var _char = string_char_at(_name, i);
+			if(string_letters(_charLast) != ""){
+				if(string_lettersdigits(_char) != "" && _char == string_upper(_char)){
+					_name = string_insert(" ", _name, i);
+					i++;
+				}
+			}
+			_charLast = _char;
+		}
+	}
+	
+	return _name;
+	
+#define death_cause(_cause)
+	/*
+		Returns the death cause associated with a given index as an array containing [Sprite, Name]
+	*/
+	
+	_cause = floor(_cause);
+	
+	 // Normal:
+	var _loc = `CauseOfDeath:${_cause}`;
+	switch(_cause){
+		case   0 : return [sprBanditIdle,           loc(_loc, "bandit"                                              )];
+		case   1 : return [sprMaggotIdle,           loc(_loc, "maggot"                                              )];
+		case   2 : return [sprRadMaggot,            loc(_loc, "rad maggot"                                          )];
+		case   3 : return [sprBigMaggotIdle,        loc(_loc, "big maggot"                                          )];
+		case   4 : return [sprScorpionIdle,         loc(_loc, "scorpion"                                            )];
+		case   5 : return [sprGoldScorpionIdle,     loc(_loc, "golden scorpion"                                     )];
+		case   6 : return [sprBanditBossIdle,       loc(_loc, "big bandit"                                          )];
+		case   7 : return [sprRatIdle,              loc(_loc, "rat"                                                 )];
+		case   8 : return [sprRatkingIdle,          loc(_loc, "big rat"                                             )];
+		case   9 : return [sprFastRatIdle,          loc(_loc, "green rat"                                           )];
+		case  10 : return [sprGatorIdle,            loc(_loc, "gator"                                               )];
+		case  11 : return [sprExploderIdle,         loc(_loc, "frog"                                                )];
+		case  12 : return [sprSuperFrogIdle,        loc(_loc, "super frog"                                          )];
+		case  13 : return [sprFrogQueenIdle,        loc(_loc, "mom"                                                 )];
+		case  14 : return [sprMeleeIdle,            loc(_loc, "assassin"                                            )];
+		case  15 : return [sprRavenIdle,            loc(_loc, "raven"                                               )];
+		case  16 : return [sprSalamanderIdle,       loc(_loc, "salamander"                                          )];
+		case  17 : return [sprSniperIdle,           loc(_loc, "sniper"                                              )];
+		case  18 : return [sprScrapBossIdle,        loc(_loc, "big dog"                                             )];
+		case  19 : return [sprSpiderIdle,           loc(_loc, "spider"                                              )];
+		case  20 : return [sprBanditIdle,           loc(_loc, "new cave thing"                                      )];
+		case  21 : return [sprLaserCrystalIdle,     loc(_loc, "laser crystal"                                       )];
+		case  22 : return [sprHyperCrystalIdle,     loc(_loc, "hyper crystal"                                       )];
+		case  23 : return [sprSnowBanditIdle,       loc(_loc, "snow bandit"                                         )];
+		case  24 : return [sprSnowBotIdle,          loc(_loc, "snowbot"                                             )];
+		case  25 : return [sprWolfIdle,             loc(_loc, "wolf"                                                )];
+		case  26 : return [sprSnowTankIdle,         loc(_loc, "snowtank"                                            )];
+		case  27 : return [sprLilHunter,            loc(_loc, "lil hunter"                                          )];
+		case  28 : return [sprFreak1Idle,           loc(_loc, "freak"                                               )];
+		case  29 : return [sprExploFreakIdle,       loc(_loc, "explo freak"                                         )];
+		case  30 : return [sprRhinoFreakIdle,       loc(_loc, "rhino freak"                                         )];
+		case  31 : return [sprNecromancerIdle,      loc(_loc, "necromancer"                                         )];
+		case  32 : return [sprTurretIdle,           loc(_loc, "turret"                                              )];
+		case  33 : return [sprTechnoMancer,         loc(_loc, "technomancer"                                        )];
+		case  34 : return [sprGuardianIdle,         loc(_loc, "guardian"                                            )];
+		case  35 : return [sprExploGuardianIdle,    loc(_loc, "explo guardian"                                      )];
+		case  36 : return [sprDogGuardianWalk,      loc(_loc, "dog guardian"                                        )];
+		case  37 : return [sprNothingOn,            loc(_loc, "throne"                                              )];
+		case  38 : return [sprNothing2Idle,         loc(_loc, "throne II"                                           )];
+		case  39 : return [sprBoneFish1Idle,        loc(_loc, "bonefish"                                            )];
+		case  40 : return [sprCrabIdle,             loc(_loc, "crab"                                                )];
+		case  41 : return [sprTurtleIdle,           loc(_loc, "turtle"                                              )];
+		case  42 : return [sprMolefishIdle,         loc(_loc, "molefish"                                            )];
+		case  43 : return [sprMolesargeIdle,        loc(_loc, "molesarge"                                           )];
+		case  44 : return [sprFireBallerIdle,       loc(_loc, "fireballer"                                          )];
+		case  45 : return [sprSuperFireBallerIdle,  loc(_loc, "super fireballer"                                    )];
+		case  46 : return [sprJockIdle,             loc(_loc, "jock"                                                )];
+		case  47 : return [sprInvSpiderIdle,        loc(_loc, "@p@qc@qu@qr@qs@qe@qd @qs@qp@qi@qd@qe@qr"             )];
+		case  48 : return [sprInvLaserCrystalIdle,  loc(_loc, "@p@qc@qu@qr@qs@qe@qd @qc@qr@qy@qs@qt@qa@ql"          )];
+		case  49 : return [sprMimicTell,            loc(_loc, "mimic"                                               )];
+		case  50 : return [sprSuperMimicTell,       loc(_loc, "health mimic"                                        )];
+		case  51 : return [sprGruntIdle,            loc(_loc, "grunt"                                               )];
+		case  52 : return [sprInspectorIdle,        loc(_loc, "inspector"                                           )];
+		case  53 : return [sprShielderIdle,         loc(_loc, "shielder"                                            )];
+		case  54 : return [sprOldGuardianIdle,      loc(_loc, "crown guardian"                                      )];
+		case  55 : return [sprExplosion,            loc(_loc, "explosion"                                           )];
+		case  56 : return [sprSmallExplosion,       loc(_loc, "small explosion"                                     )];
+		case  57 : return [sprTrapGameover,         loc(_loc, "fire trap"                                           )];
+		case  58 : return [sprShielderShieldAppear, loc(_loc, "shield"                                              )];
+		case  59 : return [sprToxicGas,             loc(_loc, "toxic"                                               )];
+		case  60 : return [sprEnemyHorrorIdle,      loc(_loc, "horror"                                              )];
+		case  61 : return [sprBarrel,               loc(_loc, "barrel"                                              )];
+		case  62 : return [sprToxicBarrel,          loc(_loc, "toxic barrel"                                        )];
+		case  63 : return [sprGoldBarrel,           loc(_loc, "golden barrel"                                       )];
+		case  64 : return [sprCarIdle,              loc(_loc, "car"                                                 )];
+		case  65 : return [sprVenusCar,             loc(_loc, "venus car"                                           )];
+		case  66 : return [sprVenusCarFixed,        loc(_loc, "venus car fixed"                                     )];
+		case  67 : return [sprVenuzCar2,            loc(_loc, "venus car 2"                                         )];
+		case  68 : return [sprFrozenCar,            loc(_loc, "icy car"                                             )];
+		case  69 : return [sprFrozenCarThrown,      loc(_loc, "thrown car"                                          )];
+		case  70 : return [sprWaterMine,            loc(_loc, "mine"                                                )];
+		case  71 : return [sprCrown1Idle,           loc(_loc, "crown of death"                                      )];
+		case  72 : return [sprPopoExplo,            loc(_loc, "rogue strike"                                        )];
+		case  73 : return [sprBloodNader,           loc(_loc, "blood launcher"                                      )];
+		case  74 : return [sprBloodCannon,          loc(_loc, "blood cannon"                                        )];
+		case  75 : return [sprBloodHammer,          loc(_loc, "blood hammer"                                        )];
+		case  76 : return [sprDisc,                 loc(_loc, "disc"                                                )];
+		case  77 : return [sprCurse,                loc(_loc, "@p@qc@qu@qr@qs@qe"                                   )];
+		case  78 : return [sprScrapBossMissileIdle, loc(_loc, "big dog missile"                                     )];
+		case  79 : return [sprSpookyBanditIdle,     loc(_loc, "halloween bandit"                                    )];
+		case  80 : return [sprLilHunterHurt,        loc(_loc, "lil hunter fly"                                      )];
+		case  81 : return [sprNothingDeathLoop,     loc(_loc, "throne death"                                        )];
+		case  82 : return [sprJungleBanditIdle,     loc(_loc, "jungle bandit"                                       )];
+		case  83 : return [sprJungleAssassinIdle,   loc(_loc, "jungle assassin"                                     )];
+		case  84 : return [sprJungleFlyIdle,        loc(_loc, "jungle fly"                                          )];
+		case  85 : return [sprCrown1Idle,           loc(_loc, "crown of hatred"                                     )];
+		case  86 : return [sprIceFlowerIdle,        loc(_loc, "ice flower"                                          )];
+		case  87 : return [sprCursedAmmo,           loc(_loc, "@p@qc@qu@qr@qs@qe@qd @qa@qm@qm@qo @qp@qi@qc@qk@qu@qp")];
+		case  88 : return [sprLightningDeath,       loc(_loc, "electrocution"                                       )];
+		case  89 : return [sprEliteGruntIdle,       loc(_loc, "elite grunt"                                         )];
+		case  90 : return [sprKillsIcon,            loc(_loc, "blood gamble"                                        )];
+		case  91 : return [sprEliteShielderIdle,    loc(_loc, "elite shielder"                                      )];
+		case  92 : return [sprEliteInspectorIdle,   loc(_loc, "elite inspector"                                     )];
+		case  93 : return [sprLastIdle,             loc(_loc, "captain"                                             )];
+		case  94 : return [sprVanDrive,             loc(_loc, "van"                                                 )];
+		case  95 : return [sprBuffGatorIdle,        loc(_loc, "buff gator"                                          )];
+		case  96 : return [sprBigGenerator,         loc(_loc, "generator"                                           )];
+		case  97 : return [sprLightningCrystalIdle, loc(_loc, "lightning crystal"                                   )];
+		case  98 : return [sprGoldTankIdle,         loc(_loc, "golden snowtank"                                     )];
+		case  99 : return [sprGreenExplosion,       loc(_loc, "green explosion"                                     )];
+		case 100 : return [sprSmallGenerator,       loc(_loc, "small generator"                                     )];
+		case 101 : return [sprGoldDisc,             loc(_loc, "golden disc"                                         )];
+		case 102 : return [sprBigDogExplode,        loc(_loc, "big dog explosion"                                   )];
+		case 103 : return [sprPopoFreakIdle,        loc(_loc, "popo freak"                                          )];
+		case 104 : return [sprNothing2Death,        loc(_loc, "throne II death"                                     )];
+		case 105 : return [sprOasisBossIdle,        loc(_loc, "big fish"                                            )];
+	}
+	
+	 // Sprite:
+	if(sprite_exists(_cause)){
+		return [_cause, sprite_get_name(_cause)];
+	}
+	
+	 // None:
+	return [mskNone, ""];
 	
 	
 /// SCRIPTS
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  infinity																				1/0
+#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(n)                                                                      return  random_range(-n, n);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);

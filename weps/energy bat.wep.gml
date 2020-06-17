@@ -1,42 +1,19 @@
 #define init
-	 // Sprites:
-	global.sprWep		= sprite_add("../sprites/weps/sprEnergyBat.png", 7, 0, 4);
-	global.sprWepLocked = mskNone;
+	global.sprWep = sprite_add("../sprites/weps/sprEnergyBat.png", 7, 0, 4);
 	
-#define weapon_name   return (weapon_avail() ? "ENERGY BAT" : "LOCKED");
+#define weapon_name   return "ENERGY BAT";
 #define weapon_text   return "LOST BUT NOT FORGOTTEN"; // Rest in Peace stevesteven98
 #define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 10 : -1); // 5-2
+#define weapon_sprt   return global.sprWep;
+#define weapon_area   return 10; // 5-2
 #define weapon_type   return type_energy;
 #define weapon_cost   return 2;
 #define weapon_load   return 12; // 0.4 Seconds
 #define weapon_melee  return true;
-#define weapon_avail  return true;
 
 #define weapon_fire(w)
 	var f = wepfire_init(w);
 	w = f.wep;
-	
-	 // Effects:
-	var _dir = gunangle + (60 * sign(wepangle));
-	weapon_post(5, 10, 15);
-	motion_add(_dir, 4);
-	move_contact_solid(_dir, 3);
-	instance_create(x, y, Dust);
-	/*
-	var _spr = weapon_sprt(),
-		_len = (sprite_get_width(_spr) - sprite_get_yoffset(_spr)) * 3/4,
-		_dir = gunangle + wepangle,
-		_x = x + lengthdir_x(_len, _dir),
-		_y = y + lengthdir_y(_len, _dir);
-		
-	repeat(3){
-		with(instance_create(_x + orandom(4), _y + orandom(4), PlasmaTrail)){
-			motion_set(_dir + (30 * sign(other.wepangle)), random(2));
-		}
-	}
-	*/
 	
 	 // Fire:
 	var _skill = skill_get(mut_long_arms),
@@ -64,6 +41,26 @@
 		sound_play_pitchvol(sndEnergyHammer,   random_range(1.2, 1.5), 0.9);
 		sound_play_pitchvol(sndBlackSwordMega, random_range(0.5, 0.7), 0.2);
 	}
+	
+	 // Effects:
+	var _dir = gunangle + (60 * sign(wepangle));
+	weapon_post(5, 10, 15);
+	motion_add(_dir, 4);
+	move_contact_solid(_dir, 3);
+	instance_create(x, y, Dust);
+	/*
+	var _spr = weapon_sprt(),
+		_len = (sprite_get_width(_spr) - sprite_get_yoffset(_spr)) * 3/4,
+		_dir = gunangle + wepangle,
+		_x = x + lengthdir_x(_len, _dir),
+		_y = y + lengthdir_y(_len, _dir);
+		
+	repeat(3){
+		with(instance_create(_x + orandom(4), _y + orandom(4), PlasmaTrail)){
+			motion_set(_dir + (30 * sign(other.wepangle)), random(2));
+		}
+	}
+	*/
 	
 	
 /// SCRIPTS
