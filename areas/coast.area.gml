@@ -1170,7 +1170,9 @@
 						
 						 // Outlines:
 						if(_charmOutline){
-							var _charmColor = player_get_color(player_is_active(_charm.index) ? _charm.index : player_find_local_nonsync());
+							var	_charmIndex = (player_is_active(_charm.index) ? _charm.index : player_find_local_nonsync()),
+								_charmColor = (player_is_active(_charmIndex) ? player_get_color(_charmIndex) : c_white);
+								
 							draw_set_fog(true, _charmColor, 0, 0);
 							for(var a = 0; a < 360; a += 90){
 								draw_surface_part(surf, 0, 0, _w, _h, _x + dcos(a), _y - dsin(a));

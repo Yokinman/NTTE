@@ -2648,6 +2648,8 @@
 	 // Pause HUD:
 	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
 		if(UberCont.alarm2 < 0){
+			var _local = player_find_local_nonsync();
+			
 			 // Dim:
 			var _col = c_white;
 			if(instance_exists(BackMainMenu)){
@@ -2655,7 +2657,7 @@
 			}
 			
 			 // Skill HUD:
-			if(player_get_show_skills(player_find_local_nonsync())){
+			if(player_is_active(_local) && player_get_show_skills(_local)){
 				with(surface_setup("HUDSkill", null, null, null)){
 					x = view_xview_nonsync + (game_width - w);
 					y = view_yview_nonsync;
@@ -2664,7 +2666,7 @@
 			}
 			
 			 // Main HUD:
-			if(player_get_show_hud(player_find_local_nonsync(), player_find_local_nonsync())){
+			if(player_is_active(_local) && player_get_show_hud(_local, _local)){
 				with(surface_setup("HUDMain", null, null, null)){
 					x = view_xview_nonsync;
 					y = view_yview_nonsync;
@@ -2679,7 +2681,8 @@
 	if(!instance_exists(Player) && !instance_exists(GenCont) || instance_exists(PopoScene) || instance_exists(LastFire)){
 		if(!instance_exists(UnlockScreen)){
 			with(UberCont) if(visible){
-				if(player_get_show_skills(player_find_local_nonsync())){
+				var _local = player_find_local_nonsync();
+				if(player_is_active(_local) && player_get_show_skills(_local)){
 					with(surface_setup("HUDSkill", null, null, null)){
 						x = view_xview_nonsync + (game_width - w);
 						y = view_yview_nonsync;
@@ -2928,12 +2931,13 @@
 #define ntte_hud(_visible)
 	if(lag) trace_time();
 	
-	var	_vx = view_xview_nonsync,
-		_vy = view_yview_nonsync,
-		_gw = game_width,
-		_gh = game_height,
-		_ox = _vx,
-		_oy = _vy;
+	var	_local = player_find_local_nonsync(),
+		_vx    = view_xview_nonsync,
+		_vy    = view_yview_nonsync,
+		_gw    = game_width,
+		_gh    = game_height,
+		_ox    = _vx,
+		_oy    = _vy;
 		
 	 // Pause Imminent:
 	var _pause = false;
@@ -3158,7 +3162,7 @@
 	 // Copy Skill Drawing & Clear Screen:
 	surface_screenshot(_surfSkill.surf);
 	with(_surfScreen){
-		if(_visible && instance_exists(Player) && player_get_show_skills(player_find_local_nonsync())){
+		if(_visible && instance_exists(Player) && player_is_active(_local) && player_get_show_skills(_local)){
 			surface_screenshot(surf);
 		}
 		draw_set_blend_mode_ext(bm_one, bm_zero);
@@ -3175,8 +3179,8 @@
 		if(instance_exists(_player)){
 			var	_side       = _hudSide[_index],
 				_flip       = (_side ? -1 : 1),
-				_HUDMain    = (player_find_local_nonsync() == _index),
-				_HUDVisible = (_visible && player_get_show_hud(_index, player_find_local_nonsync())),
+				_HUDMain    = (_local == _index),
+				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local)),
 				_HUDDraw    = (_HUDMain || _HUDVisible);
 				
 			draw_set_projection(2, _index);
@@ -3622,14 +3626,13 @@
 		 // Coast Indicator:
 		if(instance_exists(Player)){
 			with(instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true)){
-				var p = player_find_local_nonsync();
-				if(point_seen(x, y, p)){
+				if(point_seen(x, y, player_find_local_nonsync())){
 					var	_size = 4,
 						_x = x,
 						_y = y;
 						
 					 // Drawn to Player:
-					with(player_find(p)){
+					with(instance_nearest(_x, _y, Player)){
 						draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
 						
 						var	_l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),

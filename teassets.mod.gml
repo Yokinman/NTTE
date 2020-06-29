@@ -1858,9 +1858,7 @@
 #macro game_scale_nonsync game_screen_get_width_nonsync() / game_width
 
 #define save_ntte()
-	if(player_is_local_nonsync(player_find_local_nonsync())){
-		string_save(json_encode(save), save_path);
-	}
+	string_save(json_encode(save), save_path);
 	
 #define save_get(_name, _default)
 	/*
@@ -1927,7 +1925,8 @@
 			
 		case "outline": // Auto Outlines
 			if(_value >= 2){
-				_value = player_get_outlines(player_find_local_nonsync());
+				var _local = player_find_local_nonsync();
+				_value = (player_is_active(_local) ? player_get_outlines(_local) : false);
 			}
 			break;
 			

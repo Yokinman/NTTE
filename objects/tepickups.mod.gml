@@ -4275,7 +4275,8 @@
 	
 #define VaultFlower_PickupIndicator_icon(_inst, _instMeet)
 	with(_instMeet){
-		if(player_get_show_prompts(index, player_find_local_nonsync())){
+		var _local = player_find_local_nonsync();
+		if(player_is_active(_local) && player_get_show_prompts(index, _local)){
 			with(_inst){
 				if(nearwep == other.nearwep && "skill" in creator){
 					var _icon = skill_get_icon(creator.skill);

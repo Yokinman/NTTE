@@ -1287,7 +1287,7 @@
 			
 			 // Outlines:
 			if(_outline){
-				draw_set_fog(true, player_get_color(_index), 0, 0);
+				draw_set_fog(true, (player_is_active(_index) ? player_get_color(_index) : c_white), 0, 0);
 				for(var a = 0; a < 360; a += 90){
 					draw_surface_scale(surf, x + dcos(a), y - dsin(a), 1 / scale);
 				}

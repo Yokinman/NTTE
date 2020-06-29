@@ -2359,8 +2359,9 @@
 	}
 
 #define draw_ammo(_index, _primary, _ammo, _ammoMax, _steroids)
-	if(player_get_show_hud(_index, player_find_local_nonsync())){
-		if(!instance_exists(menubutton) || _index == player_find_local_nonsync()){
+	var _local = player_find_local_nonsync();
+	if(player_is_active(_local) && player_get_show_hud(_index, _local)){
+		if(!instance_exists(menubutton) || _index == _local){
 			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
 				_y = view_yview_nonsync + 21;
 				

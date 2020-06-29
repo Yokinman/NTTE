@@ -428,7 +428,7 @@
 	
 	 // Sound:
 	var _volGoal = (spd / maxspeed);
-	if(_volGoal > 0 && point_in_rectangle(x, y, view_xview_nonsync, view_yview_nonsync, view_xview_nonsync + game_width, view_yview_nonsync + game_height)){
+	if(_volGoal > 0 && point_seen(x, y, player_find_local_nonsync())){
 		if(!audio_is_playing(loop_snd)){
 			loop_snd = audio_play_sound(snd.SawTrap, 0, true);
 			audio_sound_gain(loop_snd, 0, 0);

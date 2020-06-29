@@ -3116,13 +3116,16 @@
 	/*
 	 // Client-Side Darkness:
 	if(array_length(clientDarknessFloor) > 0){
-		var _alph = draw_get_alpha(),
-			_vx = view_xview_nonsync,
-			_vy = view_yview_nonsync;
-			
-		draw_set_alpha(clientDarknessCoeff[player_find_local_nonsync()]);
-		draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
-		draw_set_alpha(_alph);
+		var _local = player_find_local_nonsync();
+		if(_local >= 0 && _local < array_length(clientDarknessCoeff)){
+			var	_alp = draw_get_alpha(),
+				_vx  = view_xview_nonsync,
+				_vy  = view_yview_nonsync;
+				
+			draw_set_alpha(clientDarknessCoeff[_local]);
+			draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
+			draw_set_alpha(_alp);
+		}
 	}
 	*/
 	
