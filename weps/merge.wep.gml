@@ -2308,7 +2308,7 @@
 	
 #define weapon_fire(w)
 	if(is_object(w)){
-		var f = mod_script_call("mod", "telib", "wepfire_init", w);
+		var f = mod_script_call("mod", "telib", "weapon_fire_init", w);
 		w = f.wep;
 		
 		GunCont(lq_defget(w, "base", wepDefault), x, y, team, f.creator, gunangle, accuracy);

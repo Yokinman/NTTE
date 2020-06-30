@@ -41,124 +41,6 @@
 #macro clientDarknessCoeff global.clientDarknessCoeff
 #macro clientDarknessFloor global.clientDarknessFloor
 
-#define AnnihilatorBullet_create(_x, _y)
-	with(obj_create(_x, _y, "CustomShell")){
-		 // Visuals:
-		sprite_index = spr.AnnihilatorBullet;
-		spr_fade     = spr.AnnihilatorBulletDisappear
-		spr_dead     = spr.AnnihilatorBulletHit;
-		
-		 // Vars:
-		mask_index   = mskFlakBullet;
-		friction     = 1;
-		damage       = 400;
-		force        = 10;
-		bonus_damage = 40;
-		minspeed     = 8;
-		wallbounce   = 7 * skill_get(mut_shotgun_shoulders);
-		
-		 // Events:
-		on_hit = AnnihilatorBullet_hit;
-		
-		return id;
-	}
-	
-#define AnnihilatorBullet_hit
-	if(projectile_canhit(other)){
-		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
-		
-		 // Annihilation Time:
-		if(!instance_is(other, prop) && other.team != 0){
-			mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
-		}
-		
-		 // Goodbye:
-		with(obj_create(x, y, "AnnihilatorExplosion")){
-			sprite_index = other.spr_dead;
-		}
-		instance_destroy();
-	}
-	
-	
-#define AnnihilatorExplosion_create(_x, _y)
-	/*
-		An explosion that deals massive pinpoint damage and destroys any enemy projectiles and explosions that it touches
-	*/
-	
-	with(instance_create(_x, _y, MeatExplosion)){
-		 // Visual:
-		sprite_index = spr.AnnihilatorBulletHit;
-		image_angle  = random(360);
-		
-		 // Vars:
-		mask_index = mskEnemyBullet1;
-		damage     = 200;
-		force      = 2;
-		target     = noone;
-		
-		 // Extra Clearage:
-		with(instance_create(x, y, PortalShock)){
-			mask_index   = other.mask_index;
-			sprite_index = other.sprite_index;
-			image_index  = other.image_index;
-			image_xscale = other.image_xscale;
-			image_yscale = other.image_yscale;
-			image_angle  = other.image_angle;
-			image_speed  = other.image_speed;
-			with(instances_matching_gt(PortalClear, "id", id)){
-				instance_destroy();
-			}
-		}
-		
-		return id;
-	}
-	
-#define AnnihilatorExplosion_end_step
-	if(instance_exists(target)){
-		x = target.x;
-		y = target.y;
-	}
-	
-	
-#define AnnihilatorSlash_create(_x, _y)
-	with(instance_create(_x, _y, CustomSlash)){
-		 // Visual:
-		sprite_index = spr.AnnihilatorSlash;
-		image_speed = 0.4;
-		
-		 // Vars:
-		mask_index = mskSlash;
-		damage     = 8;
-		force      = 12;
-		walled     = false;
-		
-		return id;
-	}
-	
-#define AnnihilatorSlash_wall
-	if(!walled){
-		walled = true;
-		
-		 // Hit Wall FX:
-		var	_x = bbox_center_x + hspeed_raw,
-			_y = bbox_center_y + vspeed_raw,
-			_col = area_get_back_color("red");
-			
-		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
-			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
-				image_angle = point_direction(_x, _y, x, y);
-				image_blend = _col;
-				sound_play_hit(sndMeleeWall, 0.3);
-			}
-		}
-	}
-	
-#define AnnihilatorSlash_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
-	}
-	
-	
 #define ChaosHeart_create(_x, _y)
 	/*
 		A special variant of crystal hearts unique to the red crown
@@ -1350,7 +1232,7 @@
 #define EntanglerSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
-		// sprite_index = spr.EntanglerSlash;
+		sprite_index = spr.EntanglerSlash;
 		image_speed = 0.4;
 		
 		 // Vars:
@@ -1413,9 +1295,10 @@
 #define EntanglerSlash_cleanup
 	 // Refund Unspent Ammo:
 	with(creator) if("red_ammo" in self){
-		red_ammo = min(red_ammo + other.red_ammo, red_amax);
+	//	red_ammo = min(red_ammo + other.red_ammo, red_amax);
 	}
-
+	
+	
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
@@ -1851,6 +1734,123 @@
 	
 	return _inst;
 	
+	
+#define RedBullet_create(_x, _y)
+	with(obj_create(_x, _y, "CustomShell")){
+		 // Visuals:
+		sprite_index = spr.RedBullet;
+		spr_fade     = spr.RedBulletDisappear
+		spr_dead     = spr_fade;
+		
+		 // Vars:
+		mask_index   = mskFlakBullet;
+		friction     = 1;
+		damage       = 400;
+		force        = 10;
+		bonus_damage = 40;
+		minspeed     = 8;
+		wallbounce   = 7 * skill_get(mut_shotgun_shoulders);
+		
+		 // Events:
+		on_hit = RedBullet_hit;
+		
+		return id;
+	}
+	
+#define RedBullet_hit
+	if(projectile_canhit(other)){
+		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
+		
+		 // Annihilation Time:
+		if(instance_is(other, prop) || other.team == 0){
+			obj_create(x, y, "RedExplosion");
+		}
+		else{
+			mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
+		}
+		
+		 // Goodbye:
+		with(instance_create(x, y, BulletHit)){
+			sprite_index = other.spr_dead;
+		}
+		instance_destroy();
+	}
+	
+	
+#define RedExplosion_create(_x, _y)
+	/*
+		An explosion that deals massive pinpoint damage and destroys any enemy projectiles and explosions that it touches
+	*/
+	
+	with(instance_create(_x, _y, MeatExplosion)){
+		 // Visual:
+		sprite_index = spr.RedExplosion;
+		image_angle  = random(360);
+		
+		 // Vars:
+		mask_index = mskPlasma;
+		damage     = 200;
+		force      = 2;
+		target     = noone;
+		
+		return id;
+	}
+	
+#define RedExplosion_end_step
+	 // Follow Target:
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y;
+	}
+	
+	 // Clear Explosions:
+	if(place_meeting(x, y, Explosion)){
+		with(instances_meeting(x, y, Explosion)){
+			if(place_meeting(x, y, other)){
+				instance_destroy();
+			}
+		}
+	}
+	
+	
+#define RedSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.RedSlash;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = mskSlash;
+		damage     = 8;
+		force      = 12;
+		walled     = false;
+		
+		return id;
+	}
+	
+#define RedSlash_wall
+	if(!walled){
+		walled = true;
+		
+		 // Hit Wall FX:
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw,
+			_col = area_get_back_color("red");
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+				image_blend = _col;
+				sound_play_hit(sndMeleeWall, 0.3);
+			}
+		}
+	}
+	
+#define RedSlash_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+	}
+
 	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -3041,7 +3041,7 @@
 	
 #define ntte_bloom
 	 // Annihilator Bullets:
-	with(instances_matching(CustomProjectile, "name", "AnnihilatorBullet")){
+	with(instances_matching(CustomProjectile, "name", "RedBullet")){
 		if(bonus > 0){
 			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
 		}

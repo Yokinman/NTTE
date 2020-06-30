@@ -710,22 +710,22 @@
 	if(broken){
 		sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2.5);
 		
-		var p = false;
-		with(["wep", "bwep"]){
-			var o = self;
-			with(Player) if(wep_get(variable_instance_get(id, o)) == "scythe"){
-				p = true;
+		 // For u yokin:
+		var _pickup = false;
+		with(Player){
+			if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+				_pickup = true;
+				break;
 			}
 		}
-		
-		 // For u yokin:
-		if(p){
+		if(_pickup){
 			repeat(2) with(obj_create(x, y, "BonePickup")){
 				sprite_index = spr.BoneShard;
 				motion_add(random(360), 2);
 			}
 		}
 		
+		 // Shard Time:
 		else repeat(2) with(instance_create(x, y, Shell)){
 			sprite_index = spr.BoneShard;
 			image_speed = 0;
@@ -834,29 +834,31 @@
 	sound_play_hit(snd_hurt, 0.3);  // Sound
 	
 	 // Secret:
-	if(
-		(instance_is(other, CustomProjectile) && "name" in other && other.name == "Bone")
-		||
-		(instance_is(other, ThrownWep) && wep_get(other.wep) == "crabbone")
-		||
-		(instance_is(other, CustomProjectile) && variable_instance_get(other, "name") == "BoneArrow")
-	){
-		var _add = lq_defget(variable_instance_get(other, "wep"), "ammo", 1) + variable_instance_get(other, "big", 0);
-		
-		part += _add;
-		my_health = max(my_health, maxhealth);
-		
-		 // Effects:
-		sound_play_hit(sndMutant14Turn, 0.2);
-		repeat(3 * _add){
-			instance_create(other.x + orandom(4), other.y + orandom(4), Bubble);
-			with(instance_create(x - (image_xscale * 8 * part), y, Smoke)){
-				motion_add(random(360), 1);
-				depth = -2;
+	with(other){
+		if(
+			(instance_is(self, ThrownWep) && wep_get(wep) == "crabbone")
+			||
+			(instance_is(self, CustomProjectile) && "name" in self && (name == "Bone" || name == "BoneArrow"))
+		){
+			var _add = lq_defget(variable_instance_get(self, "wep"), "ammo", 1) + variable_instance_get(self, "big", 0);
+			
+			with(other){
+				part += _add;
+				my_health = max(my_health, maxhealth);
+				
+				 // Effects:
+				sound_play_hit(sndMutant14Turn, 0.2);
+				repeat(3 * _add){
+					instance_create(other.x + orandom(4), other.y + orandom(4), Bubble);
+					with(instance_create(x - (image_xscale * 8 * part), y, Smoke)){
+						motion_add(random(360), 1);
+						depth = -2;
+					}
+				}
 			}
+			
+			instance_delete(id);
 		}
-		
-		instance_delete(other);
 	}
 	
 #define CoastBossBecome_destroy
@@ -1857,9 +1859,15 @@
 #define ntte_step
 	 // Separate Bones:
 	with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
-		if(is_object(wep) && wep_get(wep) == "crabbone" && lq_defget(wep, "ammo", 1) > 1){
+		if(
+			is_object(wep)
+			&& wep_get(wep) == "crabbone"
+			&& lq_defget(wep, "ammo", 1) > 1
+		){
 			wep.ammo--;
-			with(instance_create(x, y, WepPickup)) wep = "crabbone";
+			with(instance_create(x, y, WepPickup)){
+				wep = wep_get(other.wep);
+			}
 		}
 		else crabbone_splitcheck = true;
 	}

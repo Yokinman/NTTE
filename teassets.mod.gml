@@ -79,14 +79,6 @@
 			AlbinoGrenade   = sprite(p + "sprAlbinoGrenade",  1,  4, 4);
 			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
 			
-			 // Annihilator Bullet:
-			AnnihilatorBullet          = sprite(p + "sprAnnihilatorBullet",          2,  9,  9);
-			AnnihilatorBulletDisappear = sprite(p + "sprAnnihilatorBulletDisappear", 5,  9,  9);
-			AnnihilatorBulletHit       = sprite(p + "sprAnnihilatorBulletHit",       7, 16, 16);
-			
-			 // Annihilator Slash:
-			AnnihilatorSlash = sprite(p + "sprAnnihilatorSlash", 3, 0, 24);
-			
 			 // Bat Discs:
 			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
 			BatDiscBig   = sprite(p + "sprBatDiscBig",   2, 14, 14);
@@ -127,6 +119,9 @@
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
 			
+			 // Entangler:
+			EntanglerSlash = sprite(p + "sprEntanglerSlash", 3, 0, 24);
+			
 			 // Harpoon:
 			Harpoon      = sprite(p + "sprHarpoon",      1, 4, 3, shnWep);
 			HarpoonOpen  = sprite(p + "sprHarpoonOpen",  5, 4, 3);
@@ -160,8 +155,18 @@
 			QuasarBeamTrail = sprite(p + "sprQuasarBeamTrail", 3,  4,  4);
 			msk.QuasarBeam  = sprite(p + "mskQuasarBeam",      1, 32, 16);
 			
+			 // Red:
+			RedBullet          = sprite(p + "sprRedBullet",          2,  9,  9);
+			RedBulletDisappear = sprite(p + "sprRedBulletDisappear", 5,  9,  9);
+			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
+			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
+			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
+			
+			 // Energy Bat Slash:
+			EnergyBatSlash     = sprite(p + "sprEnergyBatSlash", 3,  0,  24);
+			//msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
 			
 			 // Vector Plasma:
 			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5,  8,  8);
@@ -170,10 +175,6 @@
 			EnemyVlasmaCannon = sprite(p + "sprEnemyVlasmaCannon", 5, 10, 10);
 			VlasmaCannon      = sprite(p + "sprVlasmaCannon",      5, 10, 10);
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
-			
-			 // Energy Bat Slash:
-			EnergyBatSlash     = sprite(p + "sprEnergyBatSlash", 3,  0,  24);
-			//msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);

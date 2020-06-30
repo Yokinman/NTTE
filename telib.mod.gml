@@ -13,7 +13,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["AnnihilatorBullet", "AnnihilatorExplosion", "AnnihilatorSlash", "ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
+		"tecaves"     : ["ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
@@ -2278,7 +2278,19 @@
 	}
 	return false;
 	
-#define wepfire_init(_wep)
+#define weapon_fire_init(_wep)
+	/*
+		Called from a 'weapon_fire' script to do some basic weapon firing setup
+		Returns a LWO with some useful variables
+		
+		Vars:
+			wep     - The weapon's value, may be modified from the given argument
+			creator - The actual instance firing, for 'player_fire_ext()' support
+			wepheld - The weapon is in the firing instance's primary slot, true/false
+			roids   - The weapon is being shot by steroids' active
+			spec    - The weapon is being shot by an active
+	*/
+	
 	var _fire = {
 		wep     : _wep,
 		creator : noone,
@@ -2319,7 +2331,12 @@
 
 	return _fire;
 
-#define wepammo_fire(_wep)
+#define weapon_ammo_fire(_wep)
+	/*
+		Called from a 'weapon_fire' script to process LWO weapons with internal ammo
+		Returns 'true' if the weapon had enough internal ammo to fire, 'false' otherwise
+	*/
+	
 	 // Infinite Ammo:
 	if(infammo != 0) return true;
 	
@@ -2352,42 +2369,82 @@
 	
 	return false;
 
-#define wepammo_draw(_wep)
-	if(instance_is(self, Player) && (instance_is(other, TopCont) || instance_is(other, UberCont)) && is_object(_wep)){
-		var _ammo = lq_defget(_wep, "ammo", 0);
-		draw_ammo(index, (wep == _wep), _ammo, lq_defget(_wep, "amax", _ammo), (race == "steroids"));
+#define weapon_ammo_hud(_wep)
+	/*
+		Called from a 'weapon_sprt_hud' script to draw HUD for LWO weapons with internal ammo
+		Returns the weapon's normal sprite for easy returning
+		
+		Ex:
+			#define weapon_sprt_hud(w)
+				return weapon_ammo_hud(w);
+	*/
+	
+	 // Draw Ammo:
+	if(
+		instance_is(self, Player)
+		&& (instance_is(other, TopCont) || instance_is(other, UberCont))
+		&& is_object(_wep)
+	){
+		var	_ammo    = lq_defget(_wep, "ammo", 0),
+			_ammoMax = lq_defget(_wep, "amax", _ammo),
+			_ammoMin = lq_defget(_wep, "amin", round(_ammoMax * 0.2));
+			
+		draw_ammo(index, (bwep != _wep), (race == "steroids"), _ammo, _ammoMin);
 	}
+	
+	 // Default Sprite:
+	return weapon_get_sprt(_wep);
 
-#define draw_ammo(_index, _primary, _ammo, _ammoMax, _steroids)
+#define draw_ammo(_index, _primary, _steroids, _ammo, _ammoMin)
+	/*
+		Draws ammo HUD text
+		
+		Args:
+			index    - The player to draw HUD for
+			primary  - Is a primary weapon, true/false
+			steroids - Player can dual wield, true/false
+			ammo     - Ammo, can be a string or number
+			ammoMin  - Low ammo threshold
+	*/
+	
 	var _local = player_find_local_nonsync();
+	
 	if(player_is_active(_local) && player_get_show_hud(_index, _local)){
 		if(!instance_exists(menubutton) || _index == _local){
 			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
 				_y = view_yview_nonsync + 21;
 				
+			 // Co-op Offset:
 			var _active = 0;
-			for(var i = 0; i < maxp; i++) _active += player_is_active(i);
-			if(_active > 1) _x -= 19;
+			for(var i = 0; i < maxp; i++){
+				_active += player_is_active(i);
+			}
+			if(_active > 1){
+				_x -= 19;
+			}
 			
-			 // Determine Color:
-			var _col = "w";
+			 // Color:
+			var _text = "";
 			if(is_real(_ammo)){
+				_text += "@";
 				if(_ammo > 0){
 					if(_primary || _steroids){
-						if(_ammo <= ceil(_ammoMax * 0.2)){
-							_col = "r";
+						if(_ammo > _ammoMin){
+							_text += "w";
 						}
+						else _text += "r";
 					}
-					else _col = "s";
+					else _text += "s";
 				}
-				else _col = "d";
+				else _text += "d";
 			}
+			_text += string(_ammo);
 			
 			 // !!!
 			draw_set_halign(fa_left);
 			draw_set_valign(fa_top);
 			draw_set_projection(2, _index);
-			draw_text_nt(_x, _y, "@" + _col + string(_ammo));
+			draw_text_nt(_x, _y, _text);
 			draw_reset_projection();
 		}
 	}
@@ -4002,12 +4059,12 @@
 		_imgInd	= -1,
 		_imgSpd	= 0.4,
 		a, _off, _wx, _wy;
-
+		
 	while(_dis > _disAdd){
 		_dis -= _disAdd;
 		_x += _ox;
 		_y += _oy;
-
+		
 		 // Wavy Offset:
 		if(_dis > _disAdd){
 			a = (_dis / _disMax) * pi;
@@ -4015,13 +4072,13 @@
 			_wx = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(a));
 			_wy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(a / 2));
 		}
-
+		
 		 // End:
 		else{
 			_wx = _x2;
 			_wy = _y2;
 		}
-
+		
 		 // Lightning:
 		with(instance_create(_wx, _wy, _obj)){
 			ammo = ceil(_dis / _disAdd);
@@ -4031,7 +4088,7 @@
 			hitid = _hitid;
 			creator = other;
 			team = _team;
-
+			
 			 // Exists 1 Frame - Manually Animate:
 			if(_imgInd < 0){
 				_imgInd = ((current_frame + _arc) * image_speed) % image_number;
@@ -4039,14 +4096,14 @@
 			}
 			image_index = _imgInd;
 			image_speed_raw = _imgSpd;
-
+			
 			array_push(_inst, id);
 		}
-
+		
 		_lx = _wx;
 		_ly = _wy;
 	}
-
+	
 	 // FX:
 	if(chance_ct(array_length(_inst), 200)){
 		with(_inst[irandom(array_length(_inst) - 1)]){
@@ -4057,15 +4114,23 @@
 			else sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
 		}
 	}
-
+	
 	return _inst;
-
+	
 #define wep_get(_wep)
+	/*
+		For use with LWO weapons
+		
+		Ex:
+			wep_get({ wep:{ wep:{ wep:123 }}}) == 123
+	*/
+	
 	if(is_object(_wep)){
 		return wep_get(lq_defget(_wep, "wep", wep_none));
 	}
+	
 	return _wep;
-
+	
 #define wep_merge(_stock, _front)
 	return mod_script_call_nc("weapon", "merge", "weapon_merge", _stock, _front);
 
@@ -4143,26 +4208,26 @@
 	
 	 // Normal:
 	else switch(_wepRaw){
-		case wep_revolver               : return sprRevolverLoadout;
-		case wep_golden_revolver        : return sprGoldRevolverLoadout;
-		case wep_chicken_sword          : return sprChickenSwordLoadout;
-		case wep_rogue_rifle            : return sprRogueRifleLoadout;
-		case wep_rusty_revolver         : return sprRustyRevolverLoadout;
-		case wep_golden_wrench          : return sprGoldWrenchLoadout;
-		case wep_golden_machinegun      : return sprGoldMachinegunLoadout;
-		case wep_golden_shotgun         : return sprGoldShotgunLoadout;
-		case wep_golden_crossbow        : return sprGoldCrossbowLoadout;
-		case wep_golden_grenade_launcher: return sprGoldGrenadeLauncherLoadout;
-		case wep_golden_laser_pistol    : return sprGoldLaserPistolLoadout;
-		case wep_golden_screwdriver     : return sprGoldScrewdriverLoadout;
-		case wep_golden_assault_rifle   : return sprGoldAssaultRifleLoadout;
-		case wep_golden_slugger         : return sprGoldSluggerLoadout;
-		case wep_golden_splinter_gun    : return sprGoldSplintergunLoadout;
-		case wep_golden_bazooka         : return sprGoldBazookaLoadout;
-		case wep_golden_plasma_gun      : return sprGoldPlasmaGunLoadout;
-		case wep_golden_nuke_launcher   : return sprGoldNukeLauncherLoadout;
-		case wep_golden_disc_gun        : return sprGoldDiscgunLoadout;
-		case wep_golden_frog_pistol     : return sprGoldToxicGunLoadout;
+		case wep_revolver                : return sprRevolverLoadout;
+		case wep_golden_revolver         : return sprGoldRevolverLoadout;
+		case wep_chicken_sword           : return sprChickenSwordLoadout;
+		case wep_rogue_rifle             : return sprRogueRifleLoadout;
+		case wep_rusty_revolver          : return sprRustyRevolverLoadout;
+		case wep_golden_wrench           : return sprGoldWrenchLoadout;
+		case wep_golden_machinegun       : return sprGoldMachinegunLoadout;
+		case wep_golden_shotgun          : return sprGoldShotgunLoadout;
+		case wep_golden_crossbow         : return sprGoldCrossbowLoadout;
+		case wep_golden_grenade_launcher : return sprGoldGrenadeLauncherLoadout;
+		case wep_golden_laser_pistol     : return sprGoldLaserPistolLoadout;
+		case wep_golden_screwdriver      : return sprGoldScrewdriverLoadout;
+		case wep_golden_assault_rifle    : return sprGoldAssaultRifleLoadout;
+		case wep_golden_slugger          : return sprGoldSluggerLoadout;
+		case wep_golden_splinter_gun     : return sprGoldSplintergunLoadout;
+		case wep_golden_bazooka          : return sprGoldBazookaLoadout;
+		case wep_golden_plasma_gun       : return sprGoldPlasmaGunLoadout;
+		case wep_golden_nuke_launcher    : return sprGoldNukeLauncherLoadout;
+		case wep_golden_disc_gun         : return sprGoldDiscgunLoadout;
+		case wep_golden_frog_pistol      : return sprGoldToxicGunLoadout;
 	}
 	
 	return 0;

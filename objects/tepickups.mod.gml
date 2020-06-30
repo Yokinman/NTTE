@@ -656,8 +656,10 @@
 	}
 	
 #define BonePickup_pull
-	if(speed <= 0 && (wep_get(other.wep) == "scythe" || wep_get(other.bwep) == "scythe")){
-		return true;
+	if(speed <= 0){
+		if(wep_get(other.wep) == "scythe" || wep_get(other.bwep) == "scythe"){
+			return true;
+		}
 	}
 	return false;
 
@@ -673,11 +675,10 @@
 	
 	 // Give Ammo:
 	with(instance_is(other, Player) ? other : Player){
-		with(["wep", "bwep"]){
-			var w = variable_instance_get(other, self);
-			if(wep_get(w) == "scythe" && "ammo" in w){
-				if(w.ammo < w.amax){
-					w.ammo = min(w.ammo + _num, w.amax);
+		with([wep, bwep]){
+			if(is_object(self) && wep_get(self) == "scythe"){
+				if(ammo < amax){
+					ammo = min(ammo + _num, amax);
 					break;
 				}
 			}
@@ -1812,9 +1813,9 @@
 			var _hue = [0, 40, 120, 0, 160, 80];
 				
 			if(
-				wep_get(drop) == "merge"		&&
-				"stock" in lq_get(drop, "base")	&&
-				"front" in lq_get(drop, "base")
+				wep_get(drop) == "merge"
+				&& "stock" in lq_get(drop, "base")
+				&& "front" in lq_get(drop, "base")
 			){
 				var	a = _hue[clamp(weapon_get_type(drop.base.stock), 0, array_length(_hue) - 1)],
 					b = _hue[clamp(weapon_get_type(drop.base.front), 0, array_length(_hue) - 1)],

@@ -1914,9 +1914,8 @@
 	with(instances_matching(GenCont, "ntte_wep_unlock", null)){
 		ntte_wep_unlock = true;
 		with(Player){
-			with(["wep", "bwep"]){
-				var _wep = variable_instance_get(other, self);
-					
+			with([wep, bwep]){
+				var _wep = self;
 				if(weapon_get_gold(_wep) != 0){
 					if(array_exists(["merge", "trident"], wep_get(_wep))){
 						var	_path = `loadout:wep:${other.race}`,
@@ -2329,8 +2328,11 @@
 		if(GameCont.hard > 1){
 			if(global.scythe_tip_index != -1){
 				var _scythe = false;
-				with(Player) if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
-					_scythe = true;
+				with(Player){
+					if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+						_scythe = true;
+						break;
+					}
 				}
 				if(_scythe){
 					tip_ntte = global.scythe_tip[global.scythe_tip_index];
@@ -3186,6 +3188,34 @@
 			draw_set_projection(2, _index);
 			
 			with(_player){
+				 // Red Ammo:
+				var _b = ["", "b"];
+				for(var i = 0; i < array_length(_b); i++){
+					var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
+						_cost = weapon_get_red(_wep);
+						
+					if(_cost > 0 && "red_ammo" in self){
+						var	_x = _ox + 43 + (44 * i),
+							_y = _oy + 20,
+							_max = 4;
+							
+						 // Main:
+						draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
+						
+						 // Charges:
+						for(var j = 0; j < red_ammo; j++){
+							draw_sprite(spr.RedAmmoHUDCharge, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+						}
+						
+						 // Cost:
+						if(red_ammo < _cost){
+							if(variable_instance_get(self, "drawempty" + _b[i], 0) > 0 && (wave % 10) < 5){
+								draw_sprite(spr.RedAmmoHUDCost, 0, _x + 4 + (4 * (_cost % _max)), _y + 4);
+							}
+						}
+					}
+				}
+				
 				 // Bonus Ammo:
 				if("bonus_ammo" in self){
 					if("bonus_ammo_last" not in self){
@@ -3337,34 +3367,6 @@
 							_diff *= current_time_scale / 3;
 						}
 						bonus_health_last += _diff;
-					}
-				}
-				
-				 // Red Ammo:
-				var _b = ["", "b"];
-				for(var i = 0; i < array_length(_b); i++){
-					var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
-						_cost = weapon_get_red(_wep);
-						
-					if(_cost > 0 && "red_ammo" in self){
-						var	_x = _ox + 43 + (44 * i),
-							_y = _oy + 20,
-							_max = 4;
-							
-						 // Main:
-						draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
-						
-						 // Charges:
-						for(var j = 0; j < red_ammo; j++){
-							draw_sprite(spr.RedAmmoHUDCharge, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
-						}
-						
-						 // Cost:
-						if(red_ammo < _cost){
-							if(variable_instance_get(self, "drawempty" + _b[i], 0) > 0 && (wave % 10) < 5){
-								draw_sprite(spr.RedAmmoHUDCost, 0, _x + 4 + (4 * (_cost % _max)), _y + 4);
-							}
-						}
 					}
 				}
 				

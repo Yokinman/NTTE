@@ -49,7 +49,7 @@
 	return current_time_scale;
 	
 #define weapon_fire(w)
-	var f = wepfire_init(w);
+	var f = weapon_fire_init(w);
 	w = f.wep;
 	
 	 // Charge Trident:
@@ -117,7 +117,7 @@
 #define trident_chrg(w)
 	if(!w.chrg){
 		with(creator){
-			var	f = wepfire_init(w),
+			var	f = weapon_fire_init(w),
 				b = (w.primary ? "" : "b");
 				
 			if(w.chrg_num > 0){
@@ -279,8 +279,10 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
-#define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
-#define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
+#define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
+#define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
+#define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
+#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define frame_active(_interval)                                                         return  mod_script_call_nc('mod', 'telib', 'frame_active', _interval);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');

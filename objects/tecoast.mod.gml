@@ -1938,14 +1938,16 @@
 	}
 	else{
 		switch(phase){
+			
 			case 0: // Wave of Seals
+				
 				var	_delay = 20,
 					_groups = 5;
 					
 				for(var d = 0; d < 360; d += (360 / _groups)){
 					var	_x = 10016,
 						_y = 10016,
-						s = scrSealSpawn(_x, _y, point_direction(_x, _y, x, y) + d, _delay);
+						s = seal_wave(_x, _y, point_direction(_x, _y, x, y) + d, _delay);
 						
 					if(d == 0){
 						intro_pan_x = s.x;
@@ -1955,51 +1957,55 @@
 					
 					_delay += 15 + random(15);
 				}
+				
 				break;
 				
 			case 1:
+			case 2:
+			case 3:
+			case 4: // Seal Army Arrives
+				
+				 // Initial Seal Bros:
+				if(phase == 1){
+					var	_ang   = random(360),
+						_odis  = 32,
+						_odir  = point_direction(10016, 10016, x, y),
+						_delay = 10;
+						
+					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+						var _dis = 64 + random(16);
+						
+						seal_wave(x + lengthdir_x(_odis, _odir) + lengthdir_x(_dis, _dir), y + lengthdir_y(_odis, _odir) + lengthdir_y(_dis, _dir), _dir + 180, _delay);
+						
+						_delay += 10 + random(10);
+					}
+				}
+				
+				 // Seal Plop:
+				//repeat(4) instance_create(other.x + x, other.y + y, Sweat);
+				sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
+				
+				 // Palanquin Holders:
+				var _seal = obj_create(x, y, "Seal");
+				seal_add(id, _seal);
+				with(_seal){
+					hold = true;
+					creator = other;
+					scared = true;
+				}
+				
+				 // Continue:
+				phase++;
+				alarm0 = ((phase < 4) ? 8 : 16);
+				
+				break;
+				
+			case 5: // Lift Palanking
+				
 				if(!active){
-					 // Initial Seals:
-					if(array_count(seal, noone) == array_length(seal)){
-						var	d = random(360),
-							_delay = 10,
-							_odis = 32,
-							_odir = point_direction(10016, 10016, x, y);
-							
-						for(var _dir = d; _dir < d + 360; _dir += (360 / 3)){
-							var _dis = 64 + random(16);
-							
-							scrSealSpawn(x + lengthdir_x(_odis, _odir) + lengthdir_x(_dis, _dir), y + lengthdir_y(_odis, _odir) + lengthdir_y(_dis, _dir), _dir + 180, _delay);
-							
-							_delay += 10 + random(10);
-						}
-					}
-					
-					 // Palanquin Holders
-					if(array_length(seal) < seal_max || array_count(seal, noone) > 0){
-						 // Seal Plop:
-						//repeat(4) instance_create(other.x + x, other.y + y, Sweat);
-						sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
-						
-						 // Spawn Seals:
-						var _seal = obj_create(x, y, "Seal");
-						seal_add(id, _seal);
-						with(_seal){
-							hold = true;
-							creator = other;
-							scared = true;
-						}
-						
-						if(array_count(seal, noone) <= 0) alarm0 = 16;
-						else alarm0 = 8;
-					}
-					
-					 // Lift Palanking:
-					else{
-						active = true;
-						zgoal = 12;
-						alarm0 = 30;
-					}
+					active = true;
+					zgoal = 12;
+					alarm0 = 30;
 				}
 				else{
 					alarm1 = 60 + irandom(40);
@@ -2017,13 +2023,19 @@
 						scrWalk(gunangle, 90);
 					}
 				}
-				if(intro_pan <= 0){
-					intro_pan_x = x;
-					intro_pan_y = y;
-					intro_pan = 10;
-				}
-				intro_pan += alarm0;
+				
 				break;
+				
+		}
+		
+		 // Pan:
+		if(phase > 0){
+			if(intro_pan <= 0){
+				intro_pan_x = x;
+				intro_pan_y = y;
+				intro_pan = 10;
+			}
+			intro_pan += alarm0;
 		}
 	}
 	
@@ -2062,7 +2074,7 @@
 			sound_play(snd.PalankingCall);
 			
 			repeat(2){
-				scrSealSpawn(x, y, gunangle + orandom(30), 30 + random(10));
+				seal_wave(x, y, gunangle + orandom(30), 30 + random(10));
 			}
 		}
 	}
@@ -2194,7 +2206,7 @@
 	
 #macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
 
-#define scrSealSpawn(_xstart, _ystart, _dir, _delay)
+#define seal_wave(_xstart, _ystart, _dir, _delay)
 	var s = {
 		x     : _xstart,
 		y     : _ystart,

@@ -1,15 +1,8 @@
 #define init
-	global.spr = mod_variable_get("mod", "teassets", "spr");
-	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
+	spr = mod_variable_get("mod", "teassets", "spr");
 	
-	/*
-		TODO:
-		- rewrite display name pluralizer code to account for multi-character 
-		  endings
-		- lower priority, but make the skill ttip condense excess enemy entries 
-		  into an "and X more" type deal
-		- fix palanking phase change infinite summons
-	*/
+	 // Sprites:
+	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
 	
 #macro spr global.spr
 
@@ -96,13 +89,13 @@
 		with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
 			annihilation_check = true;
 			
-			 // No Rads:
+			 // Less Rads:
 			if("raddrop" in self){
-				raddrop = 0;
+				raddrop = round(raddrop / 2);
 			}
 			
 			 // Annihilate:
-			with(obj_create(x + orandom(1), y + orandom(1), "AnnihilatorExplosion")){
+			with(obj_create(x + orandom(1), y + orandom(1), "RedExplosion")){
 				target = other;
 				other.nexthurt = 0;
 				damage = min(damage, max(10, other.my_health));
@@ -170,9 +163,17 @@
 	var _length = string_length(_string);
 	
 	if(_length > 0){
-		var	_lower = string_lower(_string),
-			_char  = string_char_at(_lower, _length);
-			
+		var _lower = string_lower(_string);
+		
+		 // Wacky Exceptions:
+		with(["deer", "fish", "sheep"]){
+			if(string_delete(_lower, 1, string_length(_lower) - string_length(self)) == self){
+				return _string;
+			}
+		}
+		
+		 // Pluralize:
+		var _char  = string_char_at(_lower, _length);
 		switch(_char){
 			case "s":
 			case "x":
@@ -208,7 +209,6 @@
 				}
 				break;
 		}
-		
 		_string += "s";
 	}
 	
@@ -219,10 +219,11 @@
 		Returns a displayable name for a given instance or object
 	*/
 	
-	var _name = "";
-	
+	var	_name = "",
+		_canSpace = true;
+		
 	 // Object:
-	if(is_object(_inst)){
+	if(object_exists(_inst)){
 		_name = object_get_name(_inst);
 	}
 	
@@ -235,7 +236,8 @@
 				_hitid = death_cause(_inst.hitid);
 			}
 			if(is_array(_hitid) && array_length(_hitid) > 1){
-				_name = _hitid[1];
+				_name = string(_hitid[1]);
+				if(_name != "") _canSpace = false;
 			}
 		}
 		
@@ -244,32 +246,35 @@
 			_name = object_get_name(_inst.object_index);
 			
 			 // Custom:
-			if(
-				"name" in _inst
-				&& is_string(_inst.name)
-				&& string_length(_inst.name) > 0
-				&& string_pos("Custom", _name) == 1
-			){
-				_name = _inst.name;
+			if("name" in _inst && string_pos("Custom", _name) == 1){
+				_name = string(_inst.name);
 			}
 		}
 	}
 	
 	 // Auto-Space:
-	if(string_pos(" ", _name) <= 0){
-		_name = string_replace_all(_name, "_", " ");
-		
-		var _charLast = "";
-		for(var i = 1; i <= string_length(_name); i++){
-			var _char = string_char_at(_name, i);
-			if(string_letters(_charLast) != ""){
-				if(string_lettersdigits(_char) != "" && _char == string_upper(_char)){
-					_name = string_insert(" ", _name, i);
-					i++;
-				}
+	if(_canSpace && string_pos(" ", _name) <= 0){
+		var	_char     = "",
+			_charLast = "",
+			_charNext = "";
+			
+		for(var i = 0; i <= string_length(_name); i++){
+			_charNext = string_char_at(_name, i + 1);
+			
+			if(
+				(_char != string_lower(_char) && (_charLast != string_upper(_charLast) || (_charLast != string_lower(_charLast) && _charNext != string_upper(_charNext))))
+				|| (string_digits(_char) != "" && string_letters(_charLast) != "")
+				|| (string_letters(_char) != "" && string_digits(_charLast) != "") 
+			){
+				_name = string_insert(" ", _name, i);
+				i++;
 			}
+			
 			_charLast = _char;
+			_char = _charNext;
 		}
+		
+		_name = string_replace_all(_name, "_", " ");
 	}
 	
 	return _name;

@@ -12,12 +12,15 @@
 #define weapon_name  return "BONE";
 #define weapon_text  return "BONE THE FISH"; // yokin no
 #define weapon_swap  return sndBloodGamble;
+#define weapon_sprt  return global.sprWep;
 #define weapon_load  return ((variable_instance_get(self, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
-	with(Player) if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
-		return 4;
+	with(Player){
+		if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
+			return 4;
+		}
 	}
 	
 	 // If not, it don't:
@@ -34,16 +37,17 @@
 	 // Normal:
 	return type_melee;
 	
-#define weapon_sprt(w)
+#define weapon_sprt_hud(w)
 	 // Custom Ammo Drawing:
 	if(lq_defget(w, "ammo", 0) > 1){
-		wepammo_draw(w);
+		return weapon_ammo_hud(w);
 	}
 	
-	return global.sprWep;
+	 // Normal:
+	return weapon_get_sprt(w);
 	
 #define weapon_fire(w)
-	var f = wepfire_init(w);
+	var f = weapon_fire_init(w);
 	w = f.wep;
 	
 	 // Cursed:
@@ -91,7 +95,7 @@
 	}
 	
 	 // Fire:
-	else if(wepammo_fire(w)){
+	else if(weapon_ammo_fire(w)){
 		 // Throw Bone:
 		with(obj_create(x, y, "Bone")){
 			motion_add(other.gunangle, 16);
@@ -179,10 +183,10 @@
 			if(!instance_exists(variable_instance_get(id, "pickup_scythe", noone))){
 				pickup_scythe = obj_create(x, y, "PickupIndicator");
 				with(pickup_scythe){
-					text = "SCYTHE";
+					text    = "SCYTHE";
 					creator = other;
-					index = other.index;
-					depth = 1000000;
+					index   = other.index;
+					depth   = 1000000;
 					on_meet = script_ref_create(scythe_PickupIndicator_meet);
 				}
 			}
@@ -190,11 +194,13 @@
 			
 			 // Bro 10 bones dont fit in a 3x3 square
 			if(player_is_active(pickup_scythe.pick)){
-				var _wep = "scythe";
-				variable_instance_set(id, b + "wep", _wep);
+				with(pickup_scythe) instance_destroy();
+				
+				 // Give Scythe:
+				mod_script_call("weapon", "scythe", "scythe_swap", _primary);
 				
 				 // Unlock:
-				unlock_set("wep:" + _wep, true);
+				unlock_set("wep:scythe", true);
 				
 				 // Drop Spare Bones:
 				w.ammo -= 10;
@@ -203,39 +209,6 @@
 						wep = mod_current;
 					}
 				}
-				
-				 // Sounds:
-				sound_play_pitch(weapon_get_swap(wep), 0.5);
-				sound_play_pitchvol(sndCursedChest, 0.9, 2);
-				sound_play_pitchvol(sndFishWarrantEnd, 1.2, 2);
-				
-				wkick = -3;
-				gunshine = 1;
-				swapmove = 1;
-				
-				 // !
-				with(instance_create(x, y, PopupText)){
-					target = other.index;
-					mytext = weapon_get_name(_wep) + "!";
-				}
-				
-				 // Bone Piece Effects:
-				var	l = 12,
-					d = gunangle + wepangle;
-					
-				repeat(8){
-					with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BoneFX")){
-						motion_add(d, 1);
-						creator = other;
-					}
-				}
-				
-				l = 8;
-				repeat(6){
-					with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d + orandom(60), 1 + random(5)], Dust)) depth = -3;
-				}
-				
-				with(pickup_scythe) instance_destroy();
 			}
 		}
 		else with(variable_instance_get(id, "pickup_scythe", noone)){
@@ -287,13 +260,14 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
-#define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
-#define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
+#define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
+#define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
+#define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
+#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
 #define stat_get(_name)                                                                 return  mod_script_call(   'mod', 'teassets', 'stat_get', _name);
 #define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call(   'mod', 'telib', 'wep_get', _wep);

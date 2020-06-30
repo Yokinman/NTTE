@@ -1,136 +1,189 @@
 #define init
 	 // Sprites:
-	var b = [
-		"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"
-	];
-	global.sprWep         = sprite_add_weapon_base64(b[0],  5, 7);
-	global.sprWepHUD      = sprite_add_weapon_base64(b[1], 10, 7);
-	global.sprShotbow     = sprite_add_weapon_base64(b[2],  6, 3);
-	global.sprSlugbolt    = sprite_add_weapon_base64(b[3],  6, 5);
-	global.sprSlugboltHUD = sprite_add_weapon_base64(b[3], 11, 5);
-	global.sprWepLocked	  = mskNone;
+	global.sprWep        = sprite_add_weapon("../sprites/weps/sprScythe.png",   5, 7);
+	global.sprWepHUD     = sprite_add_weapon("../sprites/weps/sprScythe.png",  10, 7);
+	global.sprShotbow    = sprite_add_weapon("../sprites/weps/sprShotbow.png",  6, 3);
+	global.sprSlugbow    = sprite_add_weapon("../sprites/weps/sprSlugbow.png",  6, 5);
+	global.sprSlugbowHUD = sprite_add_weapon("../sprites/weps/sprSlugbow.png", 11, 5);
+	global.sprWepLocked	 = mskNone;
 	
 	 // LWO:
-	lwoWep = {
+	global.lwoWep = {
 		wep   : mod_current,
 		ammo  : 0,
 		amax  : 55,
+		amin  : 4,
 		anam  : "BONES",
-		cost  : 0,
 		buff  : false,
-		mode  : 0,
+		mode  : scythe_basic,
+		cost  : 0,
 		combo : 0
 	};
 	
-	 // Mode Info:
-	wepModes = [
-		{
-			name : "BONE SCYTHE",
-			sprt : global.sprWep,
-			swap : sndSwapSword,
-			cost : 0,
-			load : 12, // 0.4 Seconds
-			auto : true,
-			mele : true,
-			
-			sprt_hud : global.sprWepHUD
-		},
-		{
-			name : "BONE SHOTBOW",
-			sprt : global.sprShotbow,
-			swap : sndSwapMachinegun,
-			cost : 5,
-			load : 18, // 0.6 Seconds
-			auto : true
-		},
-		{
-			name : "BONE SLUGBOW",
-			sprt : global.sprSlugbolt,
-			swap : sndSwapMotorized,
-			cost : 5,
-			load : 15, // 0.5 Seconds
-			auto : false,
-			
-			sprt_hud : global.sprSlugboltHUD
-		}
-	];
+	 // Modes:
+	scythe_mode = [];
+	scythe_mode[scythe_basic] = {
+		name     : "BONE SCYTHE",
+		text     : "@rREASSEMBLED",
+		sprt     : global.sprWep,
+		sprt_hud : global.sprWepHUD,
+		swap     : sndBloodGamble,
+		cost     : 0,
+		load     : 12, // 0.4 Seconds
+		auto     : true,
+		melee    : true
+	};
+	scythe_mode[scythe_shotbow] = {
+		name     : "BONE SHOTBOW",
+		text     : "@wMARROW @sFROM A HUNDRED @gMUTANTS",
+		sprt     : global.sprShotbow,
+		sprt_hud : global.sprShotbow,
+		swap     : sndSwapMachinegun,
+		cost     : 5,
+		load     : 18, // 0.6 Seconds
+		auto     : true,
+		melee    : false
+	};
+	scythe_mode[scythe_slugbow] = {
+		name     : "BONE SLUGBOW",
+		text     : "@gRADIATION@s DETERIORATES @wBONES",
+		sprt     : global.sprSlugbow,
+		sprt_hud : global.sprSlugbowHUD,
+		swap     : sndSwapMotorized,
+		cost     : 5,
+		load     : 15, // 0.5 Seconds
+		auto     : false,
+		melee    : false
+	};
 	
-	 // Global Step
-	while(true){
-		with(Player) if(wep_get(wep) == mod_current){
-			script_bind_end_step(scythe_swap, 0, id);
-		}
-		wait 0;
+#macro scythe_mode    global.scythe_mode
+#macro scythe_basic   0
+#macro scythe_shotbow 1
+#macro scythe_slugbow 2
+
+#define scythe_get(_wep, _field)
+	/*
+		Returns a given field from the given LWO weapon
+		Defaults to a basic scythe's value if the field isn't found
+	*/
+	
+	return lq_defget(scythe_mode[lq_defget(_wep, "mode", scythe_basic)], _field, lq_defget(scythe_mode[scythe_basic], _field, 0));
+	
+#define scythe_swap(_primary)
+	/*
+		Called from a Player to cycle to their scythe's next mode
+		If not holding a scythe in the given slot, a scythe is set to that slot
+	*/
+	
+	var	_b   = (_primary ? "" : "b"),
+		_wep = variable_instance_get(self, _b + "wep");
+		
+	 // Give Scythe:
+	if(wep_get(_wep) != mod_current){
+		_wep = mod_current;
+		variable_instance_set(self, _b + "wep", _wep);
+		
+		 // Sound:
+		sound_play_pitch(weapon_get_swap(_wep), 0.5);
+		sound_play_pitchvol(sndCursedChest, 0.9, 2);
+		sound_play_pitchvol(sndFishWarrantEnd, 1.2, 2);
 	}
 	
-#macro wepModes global.wepModes
-#macro numModes array_length(wepModes)
-
-#macro lwoWep global.lwoWep
-
-#define scrWepModeInfo(_wep, _name)
-	var _index = lq_defget(_wep, "mode", 0);
-	return lq_defget(wepModes[_index], _name, false);
+	 // Swap Scythe:
+	else{
+		 // LWO Setup:
+		if(!is_object(_wep)){
+			_wep = lq_clone(global.lwoWep);
+			variable_instance_set(self, _b + "wep", _wep);
+		}
+		
+		 // Swap:
+		_wep.mode = max(0, ++_wep.mode % array_length(scythe_mode));
+		_wep.cost = scythe_get(_wep, "cost");
+		
+		 // Sound:
+		sound_play(weapon_get_swap(_wep));
+		sound_play_hit(sndMutant14Turn, 0.1);
+		sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 4);
+	}
+	if(_primary){
+		clicked = false;
+	}
 	
-#define weapon_name    return (weapon_avail() ? scrWepModeInfo(argument0, "name") : "LOCKED");
-#define weapon_text    return choose("@rREASSEMBLED", "@gRADIATION@s DETERIORATES @wBONES", "@wMARROW @sFROM A HUNDRED @gMUTANTS");
-#define weapon_swap    return sndBloodGamble;
-#define weapon_area    return (weapon_avail() ? 18 : -1); // 1-2 L1
-#define weapon_type    return type_melee;
-#define weapon_load    return scrWepModeInfo(argument0, "load");
-#define weapon_auto    return scrWepModeInfo(argument0, "auto");
-#define weapon_melee   return scrWepModeInfo(argument0, "mele");
-#define weapon_avail   return unlock_get("wep:" + mod_current);
-#define weapon_unlock  return "A PACKAGE DEAL";
-
-#define weapon_sprt(w)
-	 // Draw Ammo:
-	if(is_object(w) && instance_is(self, Player)){
-		var	_ammo = w.ammo,
-			_primary = (wep == w),
-			_steroids = (race == "steroids"),
-			_col = "w";
+	 // Effects:
+	swapmove = 1;
+	if(visible && !instance_exists(GenCont) && !instance_exists(LevCont)){
+		variable_instance_set(self, _b + "wkick", -3);
+		gunshine = 1;
+		
+		 // !
+		with(instance_create(x, y, PopupText)){
+			text = weapon_get_name(_wep) + "!";
+			target = other.index;
+		}
+		
+		 // Bone Piece Effects:
+		var	_num = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id)),
+			_l   = 12,
+			_d   = gunangle + variable_instance_get(self, _b + "wepangle");
 			
-		if(_ammo > 0){
-			if(_primary || _steroids){
-				if(_ammo < 5){
-					_col = "r";
+		if(_num > 0) repeat(_num){
+			with(scrFX(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d, 1], "BoneFX")){
+				creator = other;
+			}
+		}
+		
+		_l = 8;
+		
+		repeat(6){
+			with(scrFX(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d + orandom(60), 1 + random(5)], Dust)){
+				depth = -3;
+			}
+		}
+	}
+	
+#define scythe_swap_step
+	for(var i = 0; i < maxp; i++){
+		if(button_pressed(i, "pick")){
+			with(instances_matching(Player, "index", i)){
+				if(wep_get(wep) == mod_current && !instance_exists(nearwep)){
+					 // Swap:
+					scythe_swap(true);
+					
+					 // Silence:
+					mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
 				}
 			}
-			else _col = "s";
 		}
-		else _col = "d";
-		
-		w.ammo = `@${_col}${_ammo}`;
-		
-		wepammo_draw(w);
-		
-		w.ammo = _ammo;
 	}
 	
-	 // Locked:
-	if(!weapon_avail()) return global.sprWepLocked;
+#define weapon_name(w)   return (weapon_avail() ? scythe_get(w, "name") : "LOCKED");
+#define weapon_text(w)   return scythe_get(w, "text");
+#define weapon_swap(w)   return scythe_get(w, "swap");
+#define weapon_sprt(w)   return (weapon_avail() ? scythe_get(w, "sprt") : global.sprWepLocked);
+#define weapon_area      return (weapon_avail() ? 18 : -1); // 1-2 L1
+#define weapon_type      return type_melee;
+#define weapon_load(w)   return scythe_get(w, "load");
+#define weapon_auto(w)   return scythe_get(w, "auto");
+#define weapon_melee(w)  return scythe_get(w, "melee");
+#define weapon_avail     return unlock_get("wep:" + mod_current);
+#define weapon_unlock    return "A PACKAGE DEAL";
+
+#define weapon_sprt_hud(w)
+	 // Custom Ammo HUD:
+	weapon_ammo_hud(w);
 	
-	 // Hud Sprite:
-	var _sprtHud = scrWepModeInfo(w, "sprt_hud");
-	if(_sprtHud != false && (instance_is(other, TopCont) || instance_is(other, UberCont))){
-		return scrWepModeInfo(w, "sprt_hud");
-	}
-	
-	 // Normal Sprite:
-	return scrWepModeInfo(w, "sprt");
+	 // HUD Sprite:
+	return scythe_get(w, "sprt_hud");
 	
 #define weapon_fire(w)
-	var f = wepfire_init(w);
+	var f = weapon_fire_init(w);
 	w = f.wep;
 	
 	 // Mode Specific:
 	switch(w.mode){
-		//#region SCYTHE:
-		case 0:
+		
+		case scythe_basic:
 			
 			var	_skill = skill_get(mut_long_arms),
 				_heavy = ((++w.combo % 3) == 0),
@@ -164,12 +217,10 @@
 			if(_heavy) sleep(12);
 			
 			break;
-		//#endregion
-		
-		//#region SHOTBOW:
-		case 1:
 			
-			if(wepammo_fire(w)){
+		case scythe_shotbow:
+			
+			if(weapon_ammo_fire(w)){
 				 // Projectile:
 				var	d = gunangle + (accuracy * orandom(12)),
 					o = 20 * accuracy;
@@ -195,12 +246,10 @@
 			}
 			
 			break;
-		//#endregion
-		
-		//#region SLUGBOLT
-		case 2:
 			
-			if(wepammo_fire(w)){
+		case scythe_slugbow:
+			
+			if(weapon_ammo_fire(w)){
 				 // Projectile:
 				var d = gunangle + (accuracy * orandom(4));
 				with(obj_create(x, y, "BoneArrow")){
@@ -224,7 +273,7 @@
 			}
 			
 			break;
-		//#endregion
+			
 	}
 	
 #define step(_primary)
@@ -233,7 +282,7 @@
 		
 	 // LWO Setup:
 	if(!is_object(w)){
-		w = lq_clone(lwoWep);
+		w = lq_clone(global.lwoWep);
 		variable_instance_set(self, b + "wep", w);
 	}
 	
@@ -267,58 +316,13 @@
 		}
 	}
 	
-#define scythe_swap
-	with(Player){
-		if(button_pressed(index, "pick") && !instance_exists(nearwep) && wep_get(wep) == mod_current){
-			var w = wep;
-			
-			 // Swap:
-			with(w){
-				mode = ++mode % numModes;
-				cost = scrWepModeInfo(w, "cost");
-			}
-			
-			 // Sound:
-			sound_play(scrWepModeInfo(w, "swap"));
-			sound_play_hit(sndMutant14Turn, 0.1);
-			sound_play_hit_ext(sndFishWarrantEnd, 1 + random(0.2), 4);
-			
-			 // Silence:
-			mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
-			
-			 // Effects:
-			swapmove = 1;
-			if(visible && !instance_exists(GenCont) && !instance_exists(LevCont)){
-				wkick = -3;
-				gunshine = 1;
-				clicked = false;
-				
-				 // !
-				with(instance_create(x, y, PopupText)){
-					target = other.index;
-					mytext = scrWepModeInfo(w, "name") + "!";
-				}
-				
-				 // Bone Piece Effects:
-				var	n = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id)),
-					l = 12,
-					d = gunangle + wepangle;
-					
-				if(n > 0) repeat(n){
-					with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BoneFX")){
-						motion_add(d, 1);
-						creator = other;
-					}
-				}
-				
-				l = 8;
-				repeat(6){
-					with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d + orandom(60), 1 + random(5)], Dust)) depth = -3;
-				}
-			}
+	 // Bind End Step:
+	if(array_length(instances_matching(CustomScript, "name", "scythe_swap_step")) <= 0){
+		with(script_bind_end_step(scythe_swap_step, 0)){
+			name = script[2];
+			persistent = true;
 		}
 	}
-	instance_destroy();
 	
 	
 /// SCRIPTS
@@ -334,10 +338,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define wepfire_init(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepfire_init', _wep);
-#define wepammo_draw(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_draw', _wep);
-#define wepammo_fire(_wep)                                                              return  mod_script_call(   'mod', 'telib', 'wepammo_fire', _wep);
+#define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
+#define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
+#define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
+#define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
+#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define sound_play_hit_ext(_snd, _pit, _vol)											return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
