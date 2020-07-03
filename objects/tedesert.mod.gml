@@ -583,7 +583,7 @@
 			
 			 // Rare:
 			if(instance_is(self, JungleFly) && GameCont.loops <= 0){
-				with(scrAlert(self, spr.FlyAlert)){
+				with(alert_create(self, spr.FlyAlert)){
 					alarm0 = 75;
 					blink = 20;
 				}
@@ -763,8 +763,8 @@
 		team = 0;
 		
 		 // Easter:
-		pickup_indicator = scrPickupIndicator("DONATE");
-		with(pickup_indicator) on_meet = script_ref_create(CoastBossBecome_PickupIndicator_meet);
+		prompt = prompt_create("DONATE");
+		with(prompt) on_meet = script_ref_create(CoastBossBecome_prompt_meet);
 		
 		 // Part Bonus:
 		part += variable_instance_get(GameCont, "ntte_visits_coast", 0);
@@ -785,13 +785,14 @@
 	else sprite_index = spr_idle;
 	
 	 // Boneman Feature:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup)) with(player_find(_pickup.pick)){
-		projectile_hit(id, 1);
-		lasthit = [sprBone, "GENEROSITY"];
-		
-		with(other) with(obj_create(x, y, "Bone")){
-			projectile_hit(other, damage);
+	if(instance_exists(prompt)){
+		with(player_find(prompt.pick)){
+			projectile_hit(id, 1);
+			lasthit = [sprBone, "GENEROSITY"];
+			
+			with(other) with(obj_create(x, y, "Bone")){
+				projectile_hit(other, damage);
+			}
 		}
 	}
 	
@@ -879,7 +880,7 @@
 		with(instance_create(x, y, Dust)) motion_add(a, 3);
 	}
 	
-#define CoastBossBecome_PickupIndicator_meet
+#define CoastBossBecome_prompt_meet
 	if(other.race == "skeleton") return true;
 	return false;
 	
@@ -945,7 +946,9 @@
 		fish_swim = [];
 		fish_swim_delay = 0;
 		fish_swim_regen = 0;
-		for(var i = 0; i < (GameCont.loops * 3); i++) fish_train[i] = noone;
+		for(var i = 0; i < (GameCont.loops * 3); i++){
+			fish_train[i] = noone;
+		}
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -1209,22 +1212,25 @@
 	
 	 // Fish Train:
 	if(array_length(fish_train) > 0){
-		var	_leader = id,
-			_broken = false;
+		var	_leader    = id,
+			_broken    = false,
+			_fishSwim  = fish_swim,
+			_fishIndex = 0;
 			
-		for(var i = 0; i < array_length(fish_train); i++){
+		with(fish_train){
 			if(_broken){
-				with(fish_train[i]) visible = true;
-				fish_train[i] = noone;
+				if(instance_exists(self)){
+					visible = true;
+				}
+				other.fish_train[_fishIndex] = noone;
 			}
 			else{
-				var	_fish = fish_train[i],
-					b = false;
-					
+				var _fish = self;
+				
 				 // Fish Regen:
-				if(array_length(fish_swim) > i && fish_swim[i]){
-					if(!instance_exists(_fish) && fish_swim_regen <= 0){
-						fish_swim_regen = 3;
+				if(!instance_exists(_fish) && other.fish_swim_regen <= 0){
+					if(_fishIndex < array_length(_fishSwim) && _fishSwim[_fishIndex]){
+						other.fish_swim_regen = 3;
 						
 						_fish = obj_create(_leader.x, _leader.y, (chance(1, 100) ? "Puffer" : BoneFish));
 						
@@ -1233,34 +1239,33 @@
 							creator = other;
 							
 							 // Keep Distance:
-							var	l = 2,
-								d = _leader.direction + 180;
+							var	_l = 2,
+								_d = _leader.direction + 180;
 								
 							while(instance_near(x, y, _leader, 24)){
-								x += lengthdir_x(l, d);
-								y += lengthdir_y(l, d);
-								direction = d;
+								x += lengthdir_x(_l, _d);
+								y += lengthdir_y(_l, _d);
+								direction = _d;
 							}
 							
 							 // Spawn Poof:
 							//sound_play(snd)
-							repeat(8) with(instance_create(x, y, Dust)){
-								motion_add(random(360), 1);
+							repeat(8) with(scrFX(x, y, 1, Dust)){
 								depth = other.depth - 1;
 							}
 						}
 						
-						fish_train[i] = _fish;
+						other.fish_train[_fishIndex] = _fish;
 					}
 				}
 				
 				if(instance_exists(_fish)){
 					with(_fish){
-						alarm1 = 15 + (i * 4);
+						alarm1 = 15 + (_fishIndex * 4);
 						
 						 // Swimming w/ Big Fish:
-						visible = !other.fish_swim[i];
-						if(other.fish_swim[i]){
+						visible = !_fishSwim[_fishIndex];
+						if(_fishSwim[_fishIndex]){
 							scrRight(point_direction(x, y, _leader.x, _leader.y));
 							
 							if(speed > 0 && chance(1, 3)){
@@ -1276,24 +1281,25 @@
 							_max = 6;
 							
 						if(_dis > _max){
-							var	l = 2,
-								d = point_direction(x, y, _leader.x, _leader.y);
+							var	_l = 2,
+								_d = point_direction(x, y, _leader.x, _leader.y);
 								
 							while(_dis > _max){
-								x += lengthdir_x(l, d);
-								y += lengthdir_y(l, d);
-								_dis -= l;
+								x += lengthdir_x(_l, _d);
+								y += lengthdir_y(_l, _d);
+								_dis -= _l;
 							}
-							motion_add(d, 1);
+							motion_add(_d, 1);
 						}
 						_leader = id;
 					}
 				}
 				else{
 					_broken = true;
-					fish_train[i] = noone;
+					other.fish_train[_fishIndex] = noone;
 				}
 			}
+			_fishIndex++;
 		}
 	}
 	
@@ -1301,14 +1307,16 @@
 	if(fish_swim_delay <= 0){
 		fish_swim_delay = 3;
 		for(var i = 0; i <= 1; i++){
-			var p = array_find_last_index(fish_swim, i);
-			if(p >= 0 && p < array_length(fish_train) - 1){
-				fish_swim[p + 1] = i;
+			var _pos = array_find_last_index(fish_swim, i);
+			if(_pos >= 0 && _pos < array_length(fish_train) - 1){
+				fish_swim[_pos + 1] = i;
 				
 				 // EZ burrow:
-				with(fish_train[p + 1]){
-					repeat(8) with(instance_create(x + orandom(8) + hspeed, y + orandom(8) + vspeed, Dust)){
-						depth = other.depth - 1;
+				with(fish_train[_pos + 1]){
+					repeat(8){
+						with(instance_create(x + hspeed + orandom(8), y + vspeed + orandom(8), Dust)){
+							depth = other.depth - 1;
+						}
 					}
 				}
 			}
@@ -1317,7 +1325,7 @@
 	}
 	fish_swim_delay -= current_time_scale;
 	fish_swim_regen -= current_time_scale;
-
+	
 #define CoastBoss_hurt(_hitdmg, _hitvel, _hitdir)
 	 // Can't be hurt while swimming:
 	/*if(swim){
@@ -1328,7 +1336,7 @@
 				repeat(5) with(instance_create(x, y, Dust)){
 					motion_add(random(360), 3);
 				}
-		
+				
 				 // Destroy (1 frame delay to prevent errors):
 				if(fork()){
 					wait 0;
@@ -1338,23 +1346,23 @@
 			}
 		}
 	}*/
-
+	
 	//else{
 		my_health -= _hitdmg;          // Damage
 		nexthurt = current_frame + 6;  // I-Frames
 		sound_play_hit(snd_hurt, 0.3); // Sound
-
+		
 		 // Half HP:
 		var h = (maxhealth / 2);
 		if(in_range(my_health, h - _hitdmg + 1, h)){
 			sound_play(snd_lowh);
 		}
-
+		
 		 // Knockback:
 		if(swim <= 0){
 			motion_add(_hitdir, _hitvel);
 		}
-
+		
 		 // Hurt Sprite:
 		var s = [spr_fire, spr_chrg, spr_efir, spr_dive, spr_rise];
 		if(array_find_index(s, sprite_index) < 0){
@@ -1362,69 +1370,81 @@
 			image_index = 0;
 		}
 	//}
-
+	
 #define CoastBoss_draw
-	var h = (nexthurt > current_frame + 3);
-
-	var _leader = id;
-	with(fish_train) if(instance_exists(self) && other.fish_swim[array_find_index(other.fish_train, self)]){
-		var	_spr = sprite_index,
-			_img = image_index,
-			_xscale = image_xscale * right,
-			_yscale = image_yscale,
-			_x = x - (sprite_get_xoffset(_spr) * _xscale),
-			_y = bbox_bottom - (sprite_get_yoffset(_spr) * _yscale) - 1 + spr_shadow_y;
-
-		draw_sprite_part_ext(_spr, _img, 0, 0, sprite_get_width(_spr), sprite_get_yoffset(_spr), _x, _y, _xscale, _yscale, image_blend, image_alpha);
+	var _hurt = (nexthurt > current_frame + 3);
+	
+	 // Burrowed Fish Train:
+	var _fishIndex = 0;
+	with(fish_train){
+		if(instance_exists(self) && other.fish_swim[_fishIndex]){
+			var	_spr = sprite_index,
+				_img = image_index,
+				_xsc = image_xscale * right,
+				_ysc = image_yscale,
+				_x   = x - (sprite_get_xoffset(_spr) * _xsc),
+				_y   = bbox_bottom - (sprite_get_yoffset(_spr) * _ysc) - 1 + spr_shadow_y;
+				
+			draw_sprite_part_ext(_spr, _img, 0, 0, sprite_get_width(_spr), sprite_get_yoffset(_spr), _x, _y, _xsc, _ysc, image_blend, image_alpha);
+		}
+		_fishIndex++;
 	}
-
+	
+	 // Swimming:
 	if(swim > 0){
-		var	_cx = x,
-			_cy = y + 7;
-
-		if(h) d3d_set_fog(1, image_blend, 0, 0);
-		for(var a = 0; a < 4; a++){
-			var	_x = _cx,
-				_y = _cy,
-				_xscale = image_xscale,
-				_yscale = image_yscale,
-				_blend = image_blend,
-				_alpha = image_alpha,
-				_swimSpd = (current_frame / 3),
-				_spr = [spr.BigFishSwimFrnt,            spr.BigFishSwimBack                 ],
-				_ang = [swim_ang_frnt,                  swim_ang_back                       ],
-				_dis = [10 * _xscale,                   10 * _xscale                        ], // Offset Distance
-				_dir = [_ang[0] + (5 * sin(_swimSpd)),  _ang[1] + 180 + (5 * sin(_swimSpd)) ], // Offset Direction
-				_trn = [15 * cos(_swimSpd),             -25 * cos(_swimSpd)                 ];
-
+		var	_cx  = x,
+			_cy  = y + 7,
+			_xsc = image_xscale,
+			_ysc = image_yscale,
+			_alp = image_alpha,
+			_spd = current_frame / 3; // Swimming animation speed
+			
+		if(_hurt){
+			draw_set_fog(true, image_blend, 0, 0);
+		}
+		
+		for(var i = 0; i <= 270; i += 90){
+			var	_x   = _cx,
+				_y   = _cy,
+				_col = image_blend,
+				_spr = [spr.BigFishSwimFrnt,       spr.BigFishSwimBack             ],
+				_ang = [swim_ang_frnt,             swim_ang_back                   ],
+				_dis = [10 * _xsc,                 10 * _xsc                       ], // Offset Distance
+				_dir = [_ang[0] + (5 * sin(_spd)), _ang[1] + 180 + (5 * sin(_spd)) ], // Offset Direction
+				_trn = [15 * cos(_spd),            -25 * cos(_spd)                 ];
+				
 			 // Outline:
-			if(a < 3){
-				_blend = c_black;
-				_x += lengthdir_x(1, a * 90);
-				_y += lengthdir_y(1, a * 90);
+			if(i < 270){
+				_x += dcos(i);
+				_y -= dsin(i);
+				_col = c_black;
 			}
-
+			
 			 // Draw Front & Back Fins:
 			for(var j = 0; j < array_length(_spr); j++){
-				var	s = _spr[j],
-					_drawx = _x + lengthdir_x(_dis[j], _dir[j]),
-					_drawy = _y + lengthdir_y(_dis[j], _dir[j]);
-
-				for(var i = 0; i < sprite_get_number(s); i++){
-					draw_sprite_ext(s, i, _drawx, _drawy - (i * _yscale), _xscale, _yscale, _ang[j] - 90 + _trn[j], _blend, _alpha);
+				var	_dx   = _x + lengthdir_x(_dis[j], _dir[j]),
+					_dy   = _y + lengthdir_y(_dis[j], _dir[j]),
+					_dspr = _spr[j];
+					
+				for(var _img = 0; _img < sprite_get_number(_dspr); _img++){
+					draw_sprite_ext(_dspr, _img, _dx, _dy - (_img * _ysc), _xsc, _ysc, _ang[j] - 90 + _trn[j], _col, _alp);
 				}
 			}
 		}
 	}
-
+	
 	 // Normal Self:
 	else{
-		if(h && sprite_index != spr_hurt) d3d_set_fog(1, image_blend, 0, 0);
+		if(_hurt && sprite_index != spr_hurt){
+			draw_set_fog(1, image_blend, 0, 0);
+		}
 		draw_self_enemy();
 	}
-
-	if(h) d3d_set_fog(0, 0, 0, 0);
-
+	
+	if(_hurt){
+		draw_set_fog(false, 0, 0, 0);
+	}
+	
 #define CoastBoss_alrm1
 	alarm1 = 30 + random(20);
 	
@@ -1894,12 +1914,12 @@
 #define ntte_shadows
 	 // SharkBoss Loop Train:
 	with(instances_matching(CustomEnemy, "name", "CoastBoss")){
-		for(var i = 0; i < array_length(fish_train); i++){
-			if(array_length(fish_swim) > i && fish_swim[i]){
-				with(fish_train[i]){
-					draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
-				}
+		var _fishIndex = 0;
+		with(fish_train){
+			if(instance_exists(self) && other.fish_swim[_fishIndex]){
+				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 			}
+			_fishIndex++;
 		}
 	}
 	
@@ -2048,10 +2068,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

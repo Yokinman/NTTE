@@ -6,7 +6,7 @@
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "PickupIndicator", "Pizza", "PizzaChest", "PizzaStack", "RedAmmoChest", "RedAmmoPickup", "RedAmmoPopup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "RedAmmoPopup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
@@ -1313,21 +1313,34 @@
 	
 	return _unlock;
 	
-#define scrPickupIndicator(_text)
-	with(obj_create(x, y, "PickupIndicator")){
-		text = _text;
+#define prompt_create(_text)
+	/*
+		Creates an E key prompt with the given text that targets the current instance
+	*/
+	
+	with(obj_create(x, y, "Prompt")){
+		text    = _text;
 		creator = other;
-		depth = other.depth;
+		depth   = other.depth;
+		
 		return id;
 	}
+	
 	return noone;
 	
-#define scrAlert(_inst, _sprite)
+#define alert_create(_inst, _sprite)
+	/*
+		Creates an "AlertIndicator" with the given sprite that targets the given instance
+		Automatically spaces out the icon and alert sprite from the instance so everything is readable
+	*/
+	
 	 // Group:
 	if((is_real(_inst) && object_exists(_inst)) || is_array(_inst)){
-		var a = [];
-		with(_inst) array_push(a, scrAlert(self, _sprite));
-		return a;
+		var _list = [];
+		with(_inst){
+			array_push(_list, alert_create(self, _sprite));
+		}
+		return _list;
 	}
 	
 	 // Normal:
@@ -1345,9 +1358,9 @@
 		}
 		
 		with(obj_create(_x, _y, "AlertIndicator")){
-			target = _inst;
+			target       = _inst;
 			sprite_index = _sprite;
-			image_index = irandom(image_number - 1);
+			image_index  = irandom(image_number - 1);
 			
 			 // Auto-Offset:
 			if(instance_exists(target)){
@@ -4810,7 +4823,7 @@
 		
 		 // Auto-set Stuff:
 		if(instance_exists(self)){
-			with(pickup_indicator) if(text == ""){
+			with(prompt) if(text == ""){
 				text = `@2(${other.spr_icon})` + other.pet;
 			}
 			if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
@@ -5531,14 +5544,14 @@
 		Performs an instance's basic movement code, scaled by a given number
 	*/
 	
-	if(speed != 0){
-		speed -= min(abs(speed), friction_raw * _mult) * sign(speed);
+	if(friction_raw != 0 && speed_raw != 0){
+		speed_raw -= min(abs(speed_raw), friction_raw * _mult) * sign(speed_raw);
 	}
-	if(gravity != 0){
-		hspeed += lengthdir_x(gravity_raw, gravity_direction) * _mult;
-		vspeed += lengthdir_y(gravity_raw, gravity_direction) * _mult;
+	if(gravity_raw != 0){
+		hspeed_raw += lengthdir_x(gravity_raw, gravity_direction) * _mult;
+		vspeed_raw += lengthdir_y(gravity_raw, gravity_direction) * _mult;
 	}
-	if(speed != 0){
+	if(speed_raw != 0){
 		x += hspeed_raw * _mult;
 		y += vspeed_raw * _mult;
 	}
@@ -5842,15 +5855,15 @@
 									 // Specifics:
 									switch(_obj){
 										case SuperFlakBullet:
-											snd_dead = sndSuperFlakExplode;
+											snd_dead     = sndSuperFlakExplode;
 											bonus_damage = 5;
-											flak = array_create(5, FlakBullet);
-											super = true;
+											flak         = array_create(5, FlakBullet);
+											super        = true;
 											break;
 											
 										case EFlakBullet:
 											bonus_damage = 0;
-											flak = array_create(10);
+											flak         = array_create(10);
 											for(var i = 0; i < array_length(flak); i++){
 												flak[i] = {
 													object_index : EnemyBullet3,

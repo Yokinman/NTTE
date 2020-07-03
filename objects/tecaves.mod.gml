@@ -1237,6 +1237,7 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
+		friction   = 0.1;
 		damage     = 8;
 		force      = 12;
 		setup      = true;
@@ -1821,6 +1822,7 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
+		friction   = 0.1;
 		damage     = 8;
 		force      = 12;
 		walled     = false;
@@ -2487,15 +2489,17 @@
 		depth        = -8;
 		
 		 // Vars:
-		mask_index       = -1;
-		open             = false;
-		setup            = true;
-		area             = "red";
-		subarea          = 1;
-		loops            = GameCont.loops;
-		seed             = GameCont.gameseed[(max(0, GameCont.atseed) + array_length(instances_matching_lt(instances_matching(CustomObject, "name", "Warp"), "id", id))) % array_length(GameCont.gameseed)];
-		pickup_indicator = scrPickupIndicator("");
-		with(pickup_indicator){
+		mask_index = -1;
+		open       = false;
+		setup      = true;
+		area       = "red";
+		subarea    = 1;
+		loops      = GameCont.loops;
+		seed       = GameCont.gameseed[(max(0, GameCont.atseed) + array_length(instances_matching_lt(instances_matching(CustomObject, "name", "Warp"), "id", id))) % array_length(GameCont.gameseed)];
+		
+		 // Prompt:
+		prompt = prompt_create("");
+		with(prompt){
 			mask_index = mskReviveArea;
 			yoff = 8;
 		}
@@ -2614,14 +2618,13 @@
 	}
 	
 	 // Warp:
-	var _pickup = pickup_indicator;
-	with(_pickup){
+	with(prompt){
 		visible = other.open;
 		if(text == ""){
 			text = `WARP#${area_get_name(other.area, other.subarea, other.loops)}`;
 		}
 	}
-	if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
 		instance_destroy();
 	}
 	
@@ -3040,12 +3043,15 @@
 	}
 	
 #define ntte_bloom
-	 // Annihilator Bullets:
+	 // Annihilator:
 	with(instances_matching(CustomProjectile, "name", "RedBullet")){
 		if(bonus > 0){
 			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
 		}
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+	}
+	with(instances_matching(CustomProjectile, "name", "RedSlash")){
+		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 
 	 // Crystal Heart Projectile:
@@ -3601,10 +3607,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

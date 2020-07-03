@@ -23,14 +23,10 @@
 		_dir   = gunangle;
 		
 	with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "EnergyBatSlash")){
-		motion_add(
-			_dir,
-			lerp(2, 5, _skill)
-		);
-		image_angle   = direction;
+		projectile_init(other.team, f.creator);
+		motion_add(_dir, lerp(2, 5, _skill));
+		image_angle = direction;
 		image_yscale *= _flip;
-		team          = other.team;
-		creator       = other;
 	}
 	
 	 // Sounds:
@@ -45,7 +41,7 @@
 	
 	 // Effects:
 	var _dir = gunangle + (60 * sign(wepangle));
-	weapon_post(5, 10, 15);
+	weapon_post(-4, 10, 15);
 	motion_add(_dir, 4);
 	move_contact_solid(_dir, 3);
 	instance_create(x, y, Dust);

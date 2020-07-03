@@ -29,7 +29,7 @@
 #define AlertIndicator_create(_x, _y)
 	/*
 		A cool alert effect used to quickly draw the Player's attention
-		Generally you should use 'scrAlert()' to create alert indicators
+		Generally you should use 'alert_create()' to create alert indicators
 		
 		Vars:
 			sprite_index      - The main icon sprite
@@ -47,8 +47,8 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.BanditAlert;
-		image_speed = 0.4;
-		image_alpha = -1; // CustomObject
+		image_speed  = 0.4;
+		image_alpha  = -1; // CustomObject
 		alert = {
 			"spr" : spr.AlertIndicator,
 			"col" : make_color_rgb(252, 56, 0),
@@ -60,12 +60,12 @@
 		snd_flash = sndSlider;
 		
 		 // Vars:
-		target = noone;
+		target   = noone;
 		target_x = 0;
 		target_y = -16;
-		canview = true;
-		blink = 30;
-		flash = 3;
+		canview  = true;
+		blink    = 30;
+		flash    = 3;
 		
 		 // Alarms:
 		alarm0 = 90;
@@ -1219,21 +1219,21 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprFlakBullet;
-		spr_dead = sprFlakHit;
+		spr_dead     = sprFlakHit;
 		
 		 // Sounds:
 		snd_dead = sndFlakExplode;
 		
 		 // Vars:
-		mask_index = mskFlakBullet;
-		friction = 0.4;
-		damage = 4;
-		force = 6;
-		typ = 1;
-		bonus = true;
+		mask_index   = mskFlakBullet;
+		friction     = 0.4;
+		damage       = 4;
+		force        = 6;
+		typ          = 1;
+		bonus        = true;
 		bonus_damage = 2;
-		flak = array_create(16, Bullet2);
-		super = false;
+		flak         = array_create(16, Bullet2);
+		super        = false;
 		
 		 // Alarms:
 		alarm2 = 2;
@@ -1604,13 +1604,13 @@
 		
 		 // Vars:
 		mask_index = -1;
-		maxhealth = 30;
-		team = 1;
-		size = 3;
-		num  = irandom_range(5, 6);
-		type = irandom_range(4, 6);
-		alert = true;
-		chest = chance(1, 5);
+		maxhealth  = 30;
+		team       = 1;
+		size       = 3;
+		num        = irandom_range(5, 6);
+		type       = irandom_range(4, 6);
+		alert      = true;
+		chest      = chance(1, 5);
 		
 		 // Alarms:
 		alarm0 = irandom_range(150, 240);
@@ -1662,7 +1662,7 @@
 					alert = false;
 					alarm0 = 30;
 					
-					with(scrAlert(self, spr.SealArcticAlert)){
+					with(alert_create(self, spr.SealArcticAlert)){
 						flash = other.alarm0;
 						if(other.chest){
 							alert = { spr:sprBreath, x:1, y:2 };
@@ -1682,7 +1682,7 @@
 			}
 		}
 		if(alert){
-			with(scrAlert(self, spr.SealArcticAlert)){
+			with(alert_create(self, spr.SealArcticAlert)){
 				vspeed = -3;
 				if(other.chest){
 					alert = { spr:sprBreath, x:1, y:2 };
@@ -2363,38 +2363,42 @@
 		snd_dead = sndAllyDead;
 		
 		 // Vars:
-		mask_index = mskPlayer;
-		direction = random(360);
-		friction = 0.4;
-		leader = noone;
-		can_take = true;
-		can_path = true;
-		path = [];
-		path_dir = 0;
-		path_wall = [Wall, InvisiWall];
-		path_delay = 0;
-		maxhealth = 0;
-		my_health = 0;
-		team = 0;
-		size = 1;
-		push = 1;
-		wave = random(1000);
-		walk = 0;
-		walkspeed = 2;
-		maxspeed = 3;
-		loops = 0;
-		stat = {};
-		stat_found = true;
-		light = true;
+		mask_index   = mskPlayer;
+		direction    = random(360);
+		friction     = 0.4;
+		leader       = noone;
+		can_take     = true;
+		can_path     = true;
+		path         = [];
+		path_dir     = 0;
+		path_wall    = [Wall, InvisiWall];
+		path_delay   = 0;
+		maxhealth    = 0;
+		my_health    = 0;
+		team         = 0;
+		size         = 1;
+		push         = 1;
+		wave         = random(1000);
+		walk         = 0;
+		walkspeed    = 2;
+		maxspeed     = 3;
+		loops        = 0;
+		stat         = {};
+		stat_found   = true;
+		light        = true;
 		light_radius = [32, 96]; // [Inner, Outer]
-		mask_store = null;
+		mask_store   = null;
 		portal_angle = 0;
-		portal_inst = noone;
-		corpse = true;
-		corpse_inst = noone;
-		revive = noone;
-		pickup_indicator = scrPickupIndicator("");
-		with(pickup_indicator) mask_index = mskShield;
+		portal_inst  = noone;
+		corpse       = true;
+		corpse_inst  = noone;
+		revive       = noone;
+		
+		 // Prompt:
+		prompt = prompt_create("");
+		with(prompt){
+			mask_index = mskShield;
+		}
 		
 		 // Scripts:
 		pet = "";
@@ -2533,10 +2537,10 @@
 				
 				 // Text:
 				var _text = "";
-				with(other.pickup_indicator){
+				with(other.prompt){
 					_text = text;
 				}
-				with(pickup_indicator){
+				with(prompt){
 					if(other.damage > 0){
 						draw_set_font(fntM);
 						
@@ -2620,7 +2624,6 @@
 	}
 	
 	 // Player Owns Pet:
-	var _pickup = pickup_indicator;
 	if(instance_exists(leader)){
 		can_take = false;
 		persistent = true;
@@ -2685,8 +2688,8 @@
 		if(visible){
 			persistent = false;
 			
-			if(can_take && instance_exists(_pickup)){
-				with(player_find(_pickup.pick)){
+			if(can_take && instance_exists(prompt)){
+				with(player_find(prompt.pick)){
 					var _max = array_length(ntte_pet);
 					if(_max > 0){
 						 // Remove Oldest Pet:
@@ -2735,7 +2738,7 @@
 			}
 		}
 	}
-	with(_pickup) visible = other.can_take;
+	with(prompt) visible = other.can_take;
 	
 	if(visible || instance_exists(revive)){
 		if(instance_exists(leader)) team = leader.team;
@@ -2983,7 +2986,7 @@
 #define PetRevive_create(_x, _y)
 	/*
 		The death controller object for Pets
-		Handles the visuals and pickup indicator for dead Pets
+		Handles the visuals and prompt for dead Pets
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
@@ -2991,10 +2994,14 @@
 		depth = -5;
 		
 		 // Vars:
-		damage = 1;
+		damage  = 1;
 		creator = noone;
-		pickup_indicator = scrPickupIndicator(`@rREVIVE`);
-		with(pickup_indicator) mask_index = mskReviveArea; // revive hahahahoho
+		
+		 // Prompt:
+		prompt = prompt_create(`@rREVIVE`);
+		with(prompt){
+			mask_index = mskReviveArea; // revive hahahahoho
+		}
 		
 		return id;
 	}
@@ -3008,11 +3015,10 @@
 		y = creator.y;
 		
 		 // Revive:
-		var _pickup = pickup_indicator;
-		if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+		if(instance_exists(prompt) && player_is_active(prompt.pick)){
 			 // Damage:
 			if(damage > 0){
-				with(player_find(_pickup.pick)){
+				with(player_find(prompt.pick)){
 					with(other) projectile_hit_raw(other, damage, true);
 					lasthit = [sprHealBigFX, "LOVE"];
 				}
@@ -3033,8 +3039,9 @@
 			}
 			
 			 // Friendify:
-			with(creator) with(pickup_indicator){
-				pick = _pickup.pick;
+			var _prompt = prompt;
+			with(creator) with(prompt){
+				pick = _prompt.pick;
 			}
 			
 			instance_destroy();
@@ -3069,8 +3076,12 @@
 		 
 		 // Vars:
 		type = irandom(5);
-		pickup_indicator = scrPickupIndicator("BATTLE");
-		pickup_indicator.yoff = -1;
+		
+		 // Prompt:
+		prompt = prompt_create("BATTLE");
+		with(prompt){
+			yoff = -1;
+		}
 		
 		 // Curse:
 		switch(crown_current){
@@ -3089,14 +3100,13 @@
 	}
 	
 	 // Activated:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
 		with(obj_create(x, y, "PetWeaponBoss")){
 			type = other.type;
 			curse = other.curse;
 			
 			 // Push Away:
-			with(player_find(_pickup.pick)) with(other){
+			with(player_find(prompt.pick)) with(other){
 				motion_add(point_direction(other.x, other.y, x, y), 3);
 			}
 		}
@@ -3473,7 +3483,7 @@
 										
 									case 2: // Warning
 										_reload = 9;
-										with(scrAlert(self, spr_icon)){
+										with(alert_create(self, spr_icon)){
 											alert.x--;
 											flash = 2;
 											blink = 10;
@@ -5094,7 +5104,7 @@
 					
 					 // Alert:
 					if(point_seen(x, y, -1)){
-						with(scrAlert(self, spr.BanditAlert)){
+						with(alert_create(self, spr.BanditAlert)){
 							flash = 6;
 							alarm0 = 60;
 							blink = 15;
@@ -5145,7 +5155,7 @@
 						sound_play_hit_ext(sndSpiderMelee, 0.6 + random(0.2), 1.5);
 						
 						 // Alert:
-						with(scrAlert(self, spr_icon)){
+						with(alert_create(self, spr_icon)){
 							alert.x--;
 							alert.col = make_color_rgb(16, 226, 165);
 							flash = 6;
@@ -5739,10 +5749,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

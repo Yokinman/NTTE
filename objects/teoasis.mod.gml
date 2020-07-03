@@ -883,39 +883,38 @@
 #define OasisPetBecome_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.SlaughterPropIdle;
-		spr_hurt = spr.SlaughterPropHurt;
-		spr_dead = spr.SlaughterPropDead;
-		spr_shadow = shd24;
+		spr_idle     = spr.SlaughterPropIdle;
+		spr_hurt     = spr.SlaughterPropHurt;
+		spr_dead     = spr.SlaughterPropDead;
+		spr_shadow   = shd24;
 		spr_shadow_y = -2;
-		image_speed = 0.4;
-		depth = -1;
+		image_speed  = 0.4;
+		depth        = -1;
 		
 		 // Sound:
 		snd_hurt = sndHitRock;
 		snd_dead = sndOasisDeath;
 		
 		 // Vars:
-		mask_index = mskFrogEgg;
+		mask_index   = mskFrogEgg;
 		image_xscale = choose(-1, 1);
-		maxhealth = 30;
-		raddrop = 0;
-		size = 1;
-		team = 0;
-		pickup_indicator = scrPickupIndicator("SHARE");
+		maxhealth    = 30;
+		raddrop      = 0;
+		size         = 1;
+		team         = 0;
+		prompt       = prompt_create("SHARE");
 		
 		return id;
 	}
 	
 #define OasisPetBecome_step
 	 // Donate Rad Chunk:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup)){
+	if(instance_exists(prompt)){
 		var _cost = 10;
 		
-		_pickup.visible = (GameCont.rad >= _cost && raddrop <= 0);
+		prompt.visible = (GameCont.rad >= _cost && raddrop <= 0);
 		
-		with(player_find(_pickup.pick)){
+		with(player_find(prompt.pick)){
 			GameCont.rad -= _cost;
 			var r = instance_create(x, y, BigRad);
 			with(r){
@@ -1827,10 +1826,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

@@ -1698,14 +1698,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatDisc_alrm0
 	 // Projectiles:
-	for(var d = direction; d < direction + 360; d += (360 / 7)){
+	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 7)){
 		with(obj_create(x, y, "BatDisc")){
-			direction = d;
+			projectile_init(other.team, other.creator);
+			direction = _dir;
 			visible = other.visible;
 			in_wall = other.in_wall;
-			creator = other.creator;
 			my_lwo = other.my_lwo;
-			team = other.team;
 			ammo *= sign(other.ammo);
 		}
 		
@@ -2226,7 +2225,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		ntte_anim = false;
 		
 		 // Sittin:
-		with(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch")){
+		with(array_shuffle(array_combine(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"), instances_matching(chestprop, "", null)))){
 			if(instance_seen(x, y, other) || chance(1, 2)){
 				if(array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", id)) <= 0){
 					other.sit = id;
@@ -2261,7 +2260,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 				else{
 					sprite_index = spr_sit1_side;
-					if(array_exists(["ChairFront", "Couch"], variable_instance_get(sit, "name"))){
+					if(array_exists(["ChairFront", "Couch"], variable_instance_get(sit, "name")) || instance_is(sit, VenuzCouch)){
 						sprite_index = spr_sit1;
 					}
 					image_index = 0;
@@ -2307,25 +2306,28 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define Cat_draw
 	if(sit){
-		if(instance_is(sit, enemy)){
-			var	_x = x,
-				_y = y;
+		if(instance_exists(sit) && !object_exists(sit)){
+			if(instance_is(sit, prop)){
+				y += 2;
+				draw_self_enemy();
+				y -= 2;
+			}
+			else{
+				var	_x = x,
+					_y = y;
+					
+				x = sit.x;
+				y = sit.bbox_top;
 				
-			x = sit.x;
-			y = sit.bbox_top;
-			
-			if(gunangle >  180) draw_self_enemy();
-			draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-			if(gunangle <= 180) draw_self_enemy();
-			
-			x = _x;
-			y = _y;
+				if(gunangle >  180) draw_self_enemy();
+				draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+				if(gunangle <= 180) draw_self_enemy();
+				
+				x = _x;
+				y = _y;
+			}
 		}
-		else{
-			y += 2;
-			draw_self_enemy();
-			y -= 2;
-		}
+		else draw_self_enemy();
 	}
 	else{
 		if(gunangle >  180) draw_self_enemy();
@@ -3436,69 +3438,69 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 
 
-#define CatGrenade_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = sprToxicGrenade;
-		mask_index = mskNone;
-		
-		 // Vars:
-		z = 1;
-		zspeed = 0;
-		zfriction = 0.8;
-		damage = 0;
-		force = 0;
-		right = choose(-1, 1);
-		
-		return id;
-	}
-	
-#define CatGrenade_step
-	 // Rise & Fall:
-	z += zspeed * current_time_scale;
-	zspeed -= zfriction * current_time_scale;
-	depth = max(-z, -12);
-	
-	 // Trail:
-	if(chance_ct(1, 2)){
-		with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
-			sprite_index = sprToxicGas;
-			image_xscale = 0.25;
-			image_yscale = image_xscale;
-			image_angle = random(360);
-			image_speed = 0.4;
-			depth = other.depth;
-		}
-	}
-	
-	 // Hit:
-	if(z <= 0) instance_destroy();
-	
-#define CatGrenade_draw
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
-	
-#define CatGrenade_hit
-	// nada
-	
-#define CatGrenade_wall
-	// nada
-	
-#define CatGrenade_destroy
-	with(instance_create(x, y, Explosion)){
-		team = other.team;
-		creator = other.creator;
-		hitid = other.hitid;
-	}
-	
-	repeat(18){
-		with(enemy_shoot(x, y, ToxicGas, random(360), 4)) {
-			friction = 0.2;
-		}
-	}
-	
-	 // Sound:
-	sound_play(sndGrenade);
-	sound_play(sndToxicBarrelGas);
+//#define CatGrenade_create(_x, _y)
+//	with(instance_create(_x, _y, CustomProjectile)){
+//		 // Visual:
+//		sprite_index = sprToxicGrenade;
+//		
+//		 // Vars:
+//		mask_index = mskNone;
+//		z = 1;
+//		zspeed = 0;
+//		zfriction = 0.8;
+//		damage = 0;
+//		force = 0;
+//		right = choose(-1, 1);
+//		
+//		return id;
+//	}
+//	
+//#define CatGrenade_step
+//	 // Rise & Fall:
+//	z += zspeed * current_time_scale;
+//	zspeed -= zfriction * current_time_scale;
+//	depth = max(-z, -12);
+//	
+//	 // Trail:
+//	if(chance_ct(1, 2)){
+//		with(instance_create(x + orandom(4), y - z + orandom(4), PlasmaTrail)) {
+//			sprite_index = sprToxicGas;
+//			image_xscale = 0.25;
+//			image_yscale = image_xscale;
+//			image_angle = random(360);
+//			image_speed = 0.4;
+//			depth = other.depth;
+//		}
+//	}
+//	
+//	 // Hit:
+//	if(z <= 0) instance_destroy();
+//	
+//#define CatGrenade_draw
+//	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale * right, image_angle - (speed * 2) + (max(zspeed, -8) * 8), image_blend, image_alpha);
+//	
+//#define CatGrenade_hit
+//	// nada
+//	
+//#define CatGrenade_wall
+//	// nada
+//	
+//#define CatGrenade_destroy
+//	with(instance_create(x, y, Explosion)){
+//		team    = other.team;
+//		creator = other.creator;
+//		hitid   = other.hitid;
+//	}
+//	
+//	repeat(18){
+//		with(enemy_shoot(x, y, ToxicGas, random(360), 4)) {
+//			friction = 0.2;
+//		}
+//	}
+//	
+//	 // Sound:
+//	sound_play(sndGrenade);
+//	sound_play(sndToxicBarrelGas);
 	
 	
 #define CatHole_create(_x, _y)
@@ -4079,14 +4081,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.GatorStatueIdle;
-		spr_hurt = spr.GatorStatueHurt;
-		spr_dead = spr.GatorStatueDead;
-		spr_shadow = shd32;
+		spr_idle     = spr.GatorStatueIdle;
+		spr_hurt     = spr.GatorStatueHurt;
+		spr_dead     = spr.GatorStatueDead;
+		spr_shadow   = shd32;
 		spr_shadow_y = 7;
 		sprite_index = spr_idle;
-		hitid = [spr.GatorStatueIdle, "GATOR STATUE"];
-		depth = -1;
+		hitid        = [spr.GatorStatueIdle, "GATOR STATUE"];
+		depth        = -1;
 		
 		 // Sounds:
 		snd_hurt = sndHitRock;
@@ -4094,13 +4096,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		mask_index = mskScorpion;
-		maxhealth = 80;
-		raddrop = 8
-		size = 3;
-		pickup_indicator = scrPickupIndicator("BLESSING");
-		with(pickup_indicator){
+		maxhealth  = 56;
+		raddrop    = 8
+		size       = 3;
+		skill      = mut_shotgun_shoulders;
+		
+		 // Prompt:
+		prompt = prompt_create("BLESSING");
+		with(prompt){
 			mask_index = mskReviveArea;
-			yoff = -12;
+			yoff = -10;
 		}
 		
 		return id;
@@ -4108,135 +4113,184 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define GatorStatue_step
 	 // Accept Blessing:
-	with(pickup_indicator){
-		if(player_is_active(pick)){
-			 // Effects:
-			with(player_find(pick)) sound_play(snd_valt);
-			sound_play(sndShotReload);
-			with(instance_create(x - 1, y - 7, EatRad)){
-				sprite_index = sprEatBigRadPlut;
-				depth = other.depth - 1;
-			}
-			with(instance_create(x, y, PopupText)){
-				mytext = "BLESSED!";
-				target = other.pick;
-			}
-			
-			 // Skill:
-			with(obj_create(x, y, "OrchidSkill")){
-				color1 = make_color_rgb(72, 253,  8); // make_color_rgb(252, 056, 000);
-				color2 = make_color_rgb( 3,  33, 18)
-				skill  = mut_shotgun_shoulders;
-				time   = 3600; // 2 minutes
-			}
-			
-			 // Inactive:
-			visible = false;
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
+		prompt.visible = false;
+		
+		 // Skill:
+		with(obj_create(x, y, "OrchidSkill")){
+			color1 = make_color_rgb(72, 253,  8); // make_color_rgb(252, 056, 000);
+			color2 = make_color_rgb( 3,  33, 18)
+			skill  = other.skill;
+			time   = 3600; // 2 minutes
+		}
+		
+		 // Effects:
+		var _icon = skill_get_icon(skill);
+		with(alert_create(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
+			blink       = 15;
+			alarm0      = 60;
+			snd_flash   = sndShotReload;
+		}
+		with(instance_create(x, y, PopupText)){
+			text   = "BLESSED!";
+			target = other.prompt.pick;
+		}
+		with(player_find(prompt.pick)){
+			sound_play(snd_valt);
 		}
 	}
 	
 #define GatorStatue_death
-	 // Effects:
-	repeat(10){
-		scrFX(    [x, 16], [y, 16], [90,          1 + random(4)], Dust);
-		scrFX(     x,       y,      [random(360), 2 + random(3)], Debris);
-		with(scrFX(x,       y,      [random(360), 1 + random(4)], Shell)){
-			sprite_index = sprShotShell;
+	var _wepNum = 2;
+	
+	 // Revenge:
+	repeat(4){
+		with(obj_create(x, y, "GatorStatueFlak")){
+			projectile_init(1, other);
+			hitid = other.hitid;
 		}
+	}
+	if(instance_exists(prompt) && prompt.visible){
+		with(obj_create(x, y, "CustomFlak")){
+			projectile_init(1, other);
+			sprite_index = spr.EnemySuperFlak;
+			spr_dead     = spr.EnemySuperFlakHit;
+			depth        = -1;
+			hitid        = other.hitid;
+			snd_dead     = sndSuperFlakExplode;
+			mask_index   = mskSuperFlakBullet;
+			direction    = 90;
+			speed        = 0.1;
+			friction     = speed / 60;
+			damage       = 10;
+			bonus_damage = 0;
+			force        = 8;
+			typ          = 2;
+			flak         = array_create(5, EFlakBullet);
+			super        = true;
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = other.spr_dead;
+				friction     = other.friction;
+				hspeed       = other.hspeed;
+				vspeed       = other.vspeed;
+			}
+		}
+		_wepNum *= 2;
 	}
 	
 	 // Merged Shell Weapons:
-	repeat(2){
-		var	_part = null,
-			_tries = 100;
+	if(_wepNum > 0) repeat(_wepNum){
+		var	_wepNum   = 128,
+			_wepMod   = mod_get_names("weapon"),
+			_wepAvoid = [];
 			
-		while(_tries-- > 0 && !(array_length(_part) >= 2 && weapon_get_type(_part[1].weap) == 2)){
-			_part = wep_merge_decide(0, GameCont.hard + 1);
+		 // Compile Non-Shell Weapons:
+		for(var i = _wepNum + array_length(_wepMod) - 1; i >= 0; i--){
+			var _wep = ((i < _wepNum) ? i : _wepMod[i - _wepNum]);
+			if(weapon_get_type(_wep) != 2){
+				array_push(_wepAvoid, _wep);
+			}
 		}
 		
+		 // Weapon:
+		var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, GameCont.hard, -1, _wepAvoid, false);
 		if(array_length(_part) >= 2){
-			with(instance_create(x, y, WepPickup)){
-				wep = wep_merge(_part[0], _part[1]);
+			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
+				wep  = wep_merge(_part[0], _part[1]);
 				ammo = true;
 				roll = true;
-				with(obj_create(x, y, "BackpackPickup")){
-					target = other;
-					event_perform(ev_step, ev_step_end);
-				}
 			}
 		}
 	}
 	
-	 // Revenge:
-	repeat(4 + irandom(2)){
-		enemy_shoot(x, y, "GatorStatueFlak", 0, 0);
-	}
-	sound_play_hit_ext(sndCrownNo,		0.8, 0.4);
+	 // Effects:
+	sound_play_hit_ext(sndCrownNo,      0.8, 0.4);
 	sound_play_hit_ext(sndStatueCharge, 0.8, 0.4);
+	repeat(10){
+		scrFX(    [x, 16], [y, 16], [90, 1 + random(4)], Dust);
+		scrFX(     x,       y,      2 + random(3),       Debris);
+		with(scrFX(x,       y,      1 + random(4),       Shell)){
+			sprite_index = sprShotShell;
+		}
+	}
+	sleep(100);
 	
 	
 #define GatorStatueFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprEFlak;
-		image_speed = 0.4;
+		image_speed  = 0.4;
+		depth        = -1;
 		
 		 // Vars:
-		mask_index = mskNone;
-		setup = true;
-		scale = 0;
-		effect_color = make_color_rgb(252, 056, 000);
+		mask_index   = mskFlakBullet;
+		image_xscale = 0;
+		image_yscale = 0;
+		visible      = false;
+		damage       = 4;
+		typ          = 2;
+		grow         = 1/45;
+		effect_color = make_color_rgb(252, 56, 0);
+		
+		 // Alarms:
+		alarm0 = irandom_range(1, 10);
+		
+		 // Find Player:
+		if(instance_exists(Player)){
+			with(array_shuffle(instances_matching(Floor, "", null))){
+				if(!place_meeting(x, y, Wall)){
+					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
+						other.x = bbox_center_x;
+						other.y = bbox_center_y;
+					}
+				}
+			}
+		}
 		
 		return id;
 	}
 	
-#define GatorStatueFlak_setup
-	setup = false;
-	
-	var	t = instance_nearest(x, y, Player),
-		f = [];
+#define GatorStatueFlak_step
+	if(visible){
+		 // Grow:
+		image_xscale += grow * current_time_scale;
+		image_yscale += grow * current_time_scale;
+		var _scale = max(image_xscale, image_yscale);
 		
-	if(instance_exists(t)){
-		with(FloorNormal) if(!place_meeting(x, y, Wall)){
-			if(instance_near(x, y, t, [32, 128])){
-				array_push(f, id);
+		 // Particles:
+		if(chance_ct(1, 2)){
+			with(scrFX(x, y, random_range(2, 5) * _scale, PlasmaTrail)){
+				sprite_index = spr.QuasarBeamTrail;
 			}
 		}
-		with(instance_random(f)){
-			with(other){
-				x = other.x + 16;
-				y = other.y + 16;
-			}
+		
+		 // Explode:
+		if(_scale > 1){
+			instance_destroy();
 		}
 	}
 	
-	 // Effects:
+#define GatorStatueFlak_alrm0
+	 // Activate:
+	visible = true;
 	with(instance_create(x, y, ThrowHit)){
 		image_blend = other.effect_color;
 	}
-	
-#define GatorStatueFlak_step
-	if(setup) GatorStatueFlak_setup();
-	
-	 // Grow:
-	scale += (current_time_scale / 60);
-	image_xscale = scale;
-	image_yscale = scale;
-	
-	 // Particles:
-	if(chance_ct(1, 2)){
-		with(scrFX(x, y, random_range(2, 5) * scale, PlasmaTrail)){
-			sprite_index = spr.QuasarBeamTrail;
-		}
-	}
-	
-	 // Explode:
-	if(scale >= 1){
-		instance_destroy();
-	}
+	sound_play_hit_ext(sndServerBreak, 2 + orandom(0.2), 1.2);
 	
 #define GatorStatueFlak_destroy
-	enemy_shoot(x, y, EFlakBullet, 0, 0);
+	 // Blammo:
+	with(team_instance_sprite(
+		sprite_get_team(sprite_index),
+		instance_create(x, y, EFlakBullet)
+	)){
+		projectile_init(other.team, other.creator);
+		hitid = other.hitid;
+	}
 	
 	
 #define Manhole_create(_x, _y)
@@ -4428,16 +4482,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, Feather)){
 		 // Visual:
 		sprite_index = spr.Paper;
-		image_index = random(image_number);
-		image_speed = 0;
-
+		image_index  = irandom(image_number - 1);
+		image_speed  = 0;
+		
 		 // Vars:
 		friction = 0.2;
-
+		
 		return id;
 	}
-
-
+	
+	
 #define PizzaDrain_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -5019,6 +5073,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						with(instance_create(_dx, _dy, Debris)){
 							sprite_index = (chance(1, 4) ? sprShotShellBig : sprShotShell);
 							motion_add(random(360), random(1));
+							alarm0 = -1;
 						}
 					}
 				}
@@ -5159,7 +5214,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				case "GatorStatue":
 					
 					with(obj_create(x, y - 4, _roomType)){
-						obj_create(x, y - 24, "CatLight");
+						with(obj_create(x, y - 22, "CatLight")){
+							w1 = 14;
+							w2 = 34;
+							h1 = 34;
+							h2 = 7;
+						}
 					}
 					
 					break;
@@ -5815,10 +5875,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

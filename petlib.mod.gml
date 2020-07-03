@@ -326,17 +326,17 @@
 	depth = -1;
 	
 	 // Vars:
-	mask_index = mskFreak;
-	maxspeed = 2;
-	push = 0;
-	wep = wep_none;
-	wep_inst = noone;
-	ammo = true;
-	curse = false;
-	open = false;
-	hush = 0;
-	hushtime = 0;
-	pickup_mimic = scrPickupIndicator("DROP");
+	mask_index   = mskFreak;
+	maxspeed     = 2;
+	push         = 0;
+	wep          = wep_none;
+	wep_inst     = noone;
+	ammo         = true;
+	curse        = false;
+	open         = false;
+	hush         = 0;
+	hushtime     = 0;
+	prompt_mimic = prompt_create("DROP");
 	
 	 // Stat:
 	if("weapons" not in stat) stat.weapons = [];
@@ -390,7 +390,7 @@
 
 #define Mimic_step
 	 // Weapon Storage:
-	with(pickup_mimic) visible = false;
+	with(prompt_mimic) visible = false;
 	if(instance_exists(leader)){
 		 // Open Chest:
 		if(place_meeting(x, y, Player)){
@@ -419,11 +419,11 @@
 			}
 
 			 // Not Holding Weapon:
-			if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(pickup_mimic)){
-				with(pickup_mimic) visible = true;
+			if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(prompt_mimic)){
+				with(prompt_mimic) visible = true;
 
 				 // Place Weapon:
-				with(player_find(pickup_mimic.pick)){
+				with(player_find(prompt_mimic.pick)){
 					if(canpick && wep != wep_none){
 						if(!curse){
 							with(other){
@@ -572,7 +572,7 @@
 		wading = 0;
 	}
 	else canwade = true;
-
+	
 	 // Grabbing Pickup:
 	if(instance_exists(pickup)){
 		if(pickup_held){
@@ -582,7 +582,7 @@
 					y = other.y + 4;
 					xprevious = x;
 					yprevious = y;
-
+					
 					 // Keep pickup alive:
 					if(blink < 30){
 						blink = 30;
@@ -594,27 +594,27 @@
 			}
 			else other.pickup = noone;
 		}
-
+		
 		 // Grab Pickup:
 		else if(place_meeting(x, y, pickup)){
 			pickup_held = true;
 			pickup_x = pickup.x;
 			pickup_y = pickup.y;
-
+			
 			 // Stat:
 			if("ntte_statparrot" not in pickup){
 				pickup.ntte_statparrot = true;
 				stat.pickups++;
 			}
 		}
-
+		
 		 // Speed Bonus:
 		if(speed >= maxspeed - friction){
 			speed += abs(1 * sin(wave / 4));
 		}
 	}
 	else pickup_held = false;
-
+	
 	 // Perching:
 	if(
 		instance_exists(perched)
@@ -628,7 +628,7 @@
 		perched_y = sprite_get_bbox_top(perched.sprite_index) - sprite_get_yoffset(perched.sprite_index) - 4;
 		spr_bubble_y = -2 + perched_y;
 	}
-
+	
 	else{
 		 // Unperch:
 		if(perched != noone){
@@ -641,7 +641,7 @@
 			scrWalk(random(360), 16);
 			if(!instance_exists(leader)) can_take = true;
 		}
-
+		
 		 // Perch on Leader:
 		if(instance_exists(leader) && leader.visible){
 			if("race" not in leader || leader.race != "horror"){ // Horror is too painful to stand on
@@ -652,7 +652,7 @@
 			}
 		}
 	}
-
+	
 #define Parrot_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	 // Perched:
 	if(instance_exists(perched)){
@@ -804,13 +804,13 @@
 	right_delay = 0;
 	mount = false;
 	mount_y = 0;
-	pickup_mount_time = -1;
-	pickup_mount_text = ["MOUNT", "DISMOUNT"];
-	pickup_mount = scrPickupIndicator(pickup_mount_text[mount]);
-	with(pickup_mount){
+	prompt_mount_time = -1;
+	prompt_mount_text = ["MOUNT", "DISMOUNT"];
+	prompt_mount = prompt_create(prompt_mount_text[mount]);
+	with(prompt_mount){
 		image_xscale = 2;
 		image_yscale = 2;
-		on_meet = script_ref_create(Salamander_PickupIndicator_meet);
+		on_meet = script_ref_create(Salamander_prompt_meet);
 	}
 	
 	 // Stat:
@@ -839,15 +839,15 @@
 	
 #define Salamander_step
 	 // Mount/Unmount:
-	var _pickup = pickup_mount;
+	var _pickup = prompt_mount;
 	if(instance_exists(_pickup)){
 		if(player_is_active(_pickup.pick) || (mount && !instance_exists(leader))){
 			mount = !mount;
 			mount_y = 0;
 			
-			 // Pickup Indicator:
-			pickup_mount_time = (mount ? 0 : -1);
-			_pickup.text = pickup_mount_text[mount];
+			 // Prompt:
+			prompt_mount_time = (mount ? 0 : -1);
+			_pickup.text = prompt_mount_text[mount];
 			_pickup.creator = (mount ? leader : self);
 			
 			 // Move Rider:
@@ -874,27 +874,27 @@
 			}
 		}
 		
-		 // Hide Indicator:
-		if(pickup_mount_time > 0){
-			pickup_mount_time = max(0, pickup_mount_time - current_time_scale);
+		 // Hide Prompt:
+		if(prompt_mount_time > 0){
+			prompt_mount_time = max(0, prompt_mount_time - current_time_scale);
 			
 			 // Puff Out:
-			if(pickup_mount_time <= 2){
-				_pickup.text = pickup_mount_text[mount];
-				if(pickup_mount_time > 0){
-					_pickup.text = `@(color:${merge_color(c_black, c_white, (pickup_mount_time - 1) / 2)})` + _pickup.text;
+			if(prompt_mount_time <= 2){
+				_pickup.text = prompt_mount_text[mount];
+				if(prompt_mount_time > 0){
+					_pickup.text = `@(color:${merge_color(c_black, c_white, (prompt_mount_time - 1) / 2)})` + _pickup.text;
 				}
 				else{
 					sound_play_hit_ext(sndSalamanderEndFire, 1.5 + orandom(0.1), 1);
 				}
 			}
 		}
-		_pickup.visible = (pickup_mount_time != 0 && instance_exists(leader));
+		_pickup.visible = (prompt_mount_time != 0 && instance_exists(leader));
 		
-		 // Unhide Indicator:
-		if(pickup_mount_time == 0){
+		 // Unhide Prompt:
+		if(prompt_mount_time == 0){
 			with(leader) if(canpick && button_pressed(index, "pick") && !instance_exists(nearwep)){
-				other.pickup_mount_time = 40;
+				other.prompt_mount_time = 40;
 				sound_play_hit_ext(sndAppear, 1 + orandom(0.1), 0.8);
 			}
 		}
@@ -1246,7 +1246,7 @@
 		else scrWalk(random(360), 15);
 	}
 	
-#define Salamander_PickupIndicator_meet
+#define Salamander_prompt_meet
 	if(creator == other || variable_instance_get(creator, "leader") == other){
 		return true;
 	}
@@ -1819,15 +1819,15 @@
 			spr_hurt = spr.PetSpiderCursedHurt;
 			spr_icon = spr.PetSpiderCursedIcon;
 			sprite_index = spr_idle;
-			with(pickup_indicator){
+			with(prompt){
 				text = string_replace(text, string(_lastIcon), string(other.spr_icon));
 			}
 			
 			 // Alert:
-			with(scrAlert(id, spr_icon)){
-				alert = { spr:sprCurse, x:alert.x + 1, y:3 };
-				alarm0 = 90;
-				flash = 10;
+			with(alert_create(id, spr_icon)){
+				alert     = { spr:sprCurse, x:alert.x + 1, y:3 };
+				alarm0    = 90;
+				flash     = 10;
 				snd_flash = sndCursedChest;
 			}
 		}
@@ -2214,7 +2214,7 @@
 		 // Icon:
 		if(spr_icon == spr.PetOctoIcon){
 			spr_icon = spr.PetOctoHideIcon;
-			with(pickup_indicator){
+			with(prompt){
 				text = string_replace(text, string(spr.PetOctoIcon), string(other.spr_icon));
 			}
 		}
@@ -2238,7 +2238,7 @@
 		 // Icon:
 		if(spr_icon == spr.PetOctoHideIcon){
 			spr_icon = spr.PetOctoIcon;
-			with(pickup_indicator){
+			with(prompt){
 				text = string_replace(text, string(spr.PetOctoHideIcon), string(other.spr_icon));
 			}
 		}
@@ -2765,7 +2765,7 @@
 					
 					 // Icon:
 					if(_type == "icon" && name == "Pet"){
-						with(pickup_indicator){
+						with(prompt){
 							text = string_replace_all(text, string(_spr), string(_new));
 						}
 					}
@@ -3630,10 +3630,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

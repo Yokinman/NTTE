@@ -643,7 +643,7 @@
 			
 			 // Alert:
 			with(my_alert) instance_destroy();
-			my_alert = scrAlert(self, spr.SludgePoolAlert);
+			my_alert = alert_create(self, spr.SludgePoolAlert);
 			with(my_alert){
 				alert.spr = spr.AlertIndicatorMystery;
 				alert.col = c_yellow;
@@ -1134,13 +1134,12 @@
 							_ysc = image_yscale,
 							_col = image_blend,
 							_alp = image_alpha,
-							_sludgeHeight = max(1 / _surfScale,
+							_w = sprite_get_width(_spr),
+							_h = max(1 / _surfScale,
 								(_canShader && (instance_is(self, Corpse) || instance_is(self, Pickup) || instance_is(self, chestprop) || instance_is(self, prop)))
 								? (sprite_get_bbox_bottom(_spr) + 1) - sprite_get_yoffset(_spr)
-								: 1 + (_spr == sprRavenIdle || _spr == spr.BoneRavenIdle)
+								: 1 + ((string_pos("Sit", sprite_get_name(_spr)) > 0) ? 3 : (_spr == sprRavenIdle || _spr == spr.BoneRavenIdle))
 							),
-							_w = sprite_get_width(_spr),
-							_h = _sludgeHeight,
 							_l = 0,
 							_t = sprite_get_bbox_bottom(_spr) + 1 - _h,
 							_x = x - (sprite_get_xoffset(_spr) * _xsc) + _l,
@@ -1314,10 +1313,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

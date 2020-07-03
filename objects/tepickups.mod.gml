@@ -130,7 +130,7 @@
 			 // Determine Drop:
 			if(chance(1, 40)){ // wtf this isnt a pickup
 				with(instance_create(x, y, choose(Bandit, Ally))){
-					with(scrAlert(self, (instance_is(self, Ally) ? spr.AllyAlert : spr.BanditAlert))){
+					with(alert_create(self, (instance_is(self, Ally) ? spr.AllyAlert : spr.BanditAlert))){
 						flash = 6 + random(3);
 					}
 				}
@@ -1528,22 +1528,22 @@
 		depth            = -8;
 		
 		 // Vars:
-		mask_index       = mskWepPickup;
-		friction         = 0.4;
-		creator          = noone;
-		pickup_indicator = scrPickupIndicator("");
-		shine            = 0.025;
-		open_state       = 0;
-		open             = 1;
-		wave             = random(100);
-		type             = ChestShop_basic;
-		drop             = 0;
-		num              = 0;
-		text             = "";
-		desc             = "";
-		soda             = "";
-		curse            = false;
-		setup            = true;
+		mask_index = mskWepPickup;
+		friction   = 0.4;
+		creator    = noone;
+		prompt     = prompt_create("");
+		shine      = 0.025;
+		open_state = 0;
+		open       = 1;
+		wave       = random(100);
+		type       = ChestShop_basic;
+		drop       = 0;
+		num        = 0;
+		text       = "";
+		desc       = "";
+		soda       = "";
+		curse      = false;
+		setup      = true;
 		
 		return id;
 	}
@@ -1853,33 +1853,35 @@
 			break;
 	}
 	
-	with(pickup_indicator) text = `${other.text}#@s${other.desc}`;
+	with(prompt){
+		text = `${other.text}#@s${other.desc}`;
+	}
 	
 #define ChestShop_step
 	wave += current_time_scale;
 	
 	 // Setup:
 	if(setup) ChestShop_setup();
-
+	
 	 // Shine Delay:
 	if(image_index < 1 && shine > 0){
 		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
-
+	
 	 // Particles:
 	if(instance_exists(creator) && chance_ct(1, 8 * ((open > 0) ? 1 : open_state))){
 		var	_x = creator.x,
 			_y = creator.y,
 			_l = point_distance(_x, _y, x, y),
 			_d = point_direction(_x, _y, x, y) + orandom(8);
-
+			
 		if(open > 0){
 			_l = random(_l);
 		}
 		else{
 			_l = random_range(_l * (1 - open_state), _l);
 		}
-
+		
 		with(instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_y(_l, _d) + orandom(4), BulletHit)){
 			motion_add(_d + choose(0, 180), random(0.5));
 			sprite_index = sprLightning;
@@ -1894,10 +1896,11 @@
 			instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_x(_l, _d) + orandom(4), Curse);
 		}
 	}
-
+	
 	 // Open for Business:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup)) _pickup.visible = (open > 0);
+	if(instance_exists(prompt)){
+		prompt.visible = (open > 0);
+	}
 	if(open > 0){
 		open_state += (1 - open_state) * 0.15 * current_time_scale;
 		
@@ -1905,10 +1908,10 @@
 		if(!instance_exists(Player) && open_state >= 1){
 			open = 0;
 		}
-
+		
 		 // Take Item:
-		if(instance_exists(_pickup)){
-			var p = player_find(_pickup.pick);
+		if(instance_exists(prompt)){
+			var p = player_find(prompt.pick);
 			if(instance_exists(p)){
 				var	_x = x,
 					_y = y,
@@ -2860,7 +2863,7 @@
 	 // Alert:
 	with(target){
 		var _icon = skill_get_icon(other.skill);
-		with(scrAlert(self, _icon[0])){
+		with(alert_create(self, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
 			alert       = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
@@ -3106,7 +3109,7 @@
 				 // Alert:
 				with(chest) with(other){
 					var _icon = skill_get_icon(skill);
-					with(scrAlert(other, _icon[0])){
+					with(alert_create(other, _icon[0])){
 						image_index = _icon[1];
 						image_speed = 0;
 						alert = {};
@@ -3251,13 +3254,13 @@
 		skill = mut_none;
 		effect_color = make_color_rgb(72, 253, 8); // make_color_rgb(190, 253, 8);
 		
-		 // Pickup Indicator:
-		pickup_indicator = scrPickupIndicator("  CHOOSE");
-		with(pickup_indicator){
+		 // Prompt:
+		prompt = prompt_create("  CHOOSE");
+		with(prompt){
 			xoff = -8;
 			yoff = -16;
 			mask_index = mskReviveArea;
-			on_meet = script_ref_create(VaultFlower_PickupIndicator_meet);
+			on_meet = script_ref_create(VaultFlower_prompt_meet);
 		}
 		
 		 // Alarms:
@@ -3285,10 +3288,8 @@
 	}
 	
 	 // Pickup:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup)){
-		if(player_is_active(_pickup.pick)){
-			
+	if(instance_exists(prompt)){
+		if(player_is_active(prompt.pick)){
 			 // Grant Blessing:
 			with(obj_create(0, 0, "OrchidSkill")){
 				color1 = make_color_rgb(72, 253,  8);
@@ -3305,7 +3306,7 @@
 			
 			 // Disable All Altars:
 			with(instances_matching(object_index, "name", name)){
-				with(pickup_indicator) visible = false;
+				with(prompt) visible = false;
 				alarm0 = 10 + random(10);
 			}
 		}
@@ -3421,7 +3422,7 @@
 						jump_time = 1;
 						with(target){
 							type = choose(irandom_range(4, 6), 4);
-							scrAlert(self, spr.SealArcticAlert);
+							alert_create(self, spr.SealArcticAlert);
 						}
 					}
 				}
@@ -3512,49 +3513,6 @@
 			}
 		}
 	}
-
-#define PickupIndicator_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		mask_index = mskWepPickup;
-		persistent = true;
-		creator = noone;
-		nearwep = noone;
-		depth = 0; // Priority (0==WepPickup)
-		pick = -1;
-		xoff = 0;
-		yoff = 0;
-		
-		 // Events:
-		on_meet = null;
-		
-		return id;
-	}
-	
-#define PickupIndicator_begin_step
-	with(nearwep) instance_delete(id);
-	
-#define PickupIndicator_end_step
-	 // Follow Creator:
-	var c = creator;
-	if(c != noone){
-		if(instance_exists(c)){
-			if(instance_exists(nearwep)) with(nearwep){
-				x += c.x - other.x;
-				y += c.y - other.y;
-				visible = true;
-			}
-			x = c.x;
-			y = c.y;
-			//image_angle = c.image_angle;
-			//image_xscale = c.image_xscale;
-			//image_yscale = c.image_yscale;
-		}
-		else instance_destroy();
-	}
-	
-#define PickupIndicator_cleanup
-	with(nearwep) instance_delete(id);
 	
 	
 #define Pizza_create(_x, _y)
@@ -3608,6 +3566,50 @@
 		obj_create(x + orandom(2 * num), y + orandom(2 * num), "Pizza");
 		instance_create(x + orandom(4), y + orandom(4), Dust);
 	}
+	
+	
+#define Prompt_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mask_index = mskWepPickup;
+		persistent = true;
+		creator = noone;
+		nearwep = noone;
+		depth = 0; // Priority (0==WepPickup)
+		pick = -1;
+		xoff = 0;
+		yoff = 0;
+		
+		 // Events:
+		on_meet = null;
+		
+		return id;
+	}
+	
+#define Prompt_begin_step
+	with(nearwep) instance_delete(id);
+	
+#define Prompt_end_step
+	 // Follow Creator:
+	var c = creator;
+	if(c != noone){
+		if(instance_exists(c)){
+			if(instance_exists(nearwep)) with(nearwep){
+				x += c.x - other.x;
+				y += c.y - other.y;
+				visible = true;
+			}
+			x = c.x;
+			y = c.y;
+			//image_angle = c.image_angle;
+			//image_xscale = c.image_xscale;
+			//image_yscale = c.image_yscale;
+		}
+		else instance_destroy();
+	}
+	
+#define Prompt_cleanup
+	with(nearwep) instance_delete(id);
 	
 	
 #define RedAmmoChest_create(_x, _y)
@@ -3898,7 +3900,7 @@
 			}
 			
 			 // Alert:
-			with(scrAlert(self, spr.SkealAlert)){
+			with(alert_create(self, spr.SkealAlert)){
 				flash = 10;
 			}
 			
@@ -4075,11 +4077,11 @@
 		
 		 // Vars:
 		mask_index = mskBigSkull;
-		maxhealth = 30;
-		size = 3;
-		skill = mut_last_wish;
-		alive = global.VaultFlower_alive;
-		pickup_indicator = noone;
+		maxhealth  = 30;
+		size       = 3;
+		skill      = mut_last_wish;
+		alive      = global.VaultFlower_alive;
+		prompt     = noone;
 		
 		 // Determine Skill:
 		if(alive){
@@ -4113,14 +4115,14 @@
 			}
 		}
 		
-		 // Pickup Indicator:
+		 // Prompt:
 		if(alive){
-			pickup_indicator = scrPickupIndicator("  REROLL");
-			with(pickup_indicator){
+			prompt = prompt_create("  REROLL");
+			with(prompt){
 				mask_index = mskLast;
 				xoff = -8;
 				yoff = -10;
-				on_meet = script_ref_create(VaultFlower_PickupIndicator_meet);
+				on_meet = script_ref_create(VaultFlower_prompt_meet);
 			}
 		}
 		
@@ -4130,8 +4132,6 @@
 #define VaultFlower_step
 	x = xstart;
 	y = ystart;
-	
-	var _pickup = pickup_indicator;
 	
 	if(alive){
 		 // Sprites:
@@ -4145,7 +4145,7 @@
 		}
 		
 		 // Interact:
-		else if(instance_exists(_pickup) && player_is_active(_pickup.pick)){
+		else if(instance_exists(prompt) && player_is_active(prompt.pick)){
 			global.VaultFlower_alive = false;
 			
 			 // Reroll:
@@ -4155,7 +4155,7 @@
 			 // FX:
 			image_index = 0;
 			sprite_index = spr.VaultFlowerHurt;
-			with(scrAlert(self, skill_get_icon("reroll")[0])){
+			with(alert_create(self, skill_get_icon("reroll")[0])){
 				image_speed = 0;
 				alert = {};
 				snd_flash = sndLevelUp;
@@ -4177,7 +4177,9 @@
 				depth = -8;
 			}*/
 			sound_play_pitchvol(sndStatueXP, 0.3, 2);
-			with(player_find(_pickup.pick)) sound_play(snd_crwn);
+			with(player_find(prompt.pick)){
+				sound_play(snd_crwn);
+			}
 			
 			/*if(fork()){
 				alive = false;
@@ -4230,7 +4232,7 @@
 		}
 	}
 	
-	with(_pickup) visible = other.alive;
+	with(prompt) visible = other.alive;
 
 #define VaultFlower_death
 	 // Effects:
@@ -4268,13 +4270,13 @@
 		audio_sound_set_track_position(sound_play_pitchvol(sndVaultBossWin, 1.75, 0.5), 0.5);*/
 	}
 	
-#define VaultFlower_PickupIndicator_meet
+#define VaultFlower_prompt_meet
 	if(instance_exists(TopCont)){
-		script_bind_draw(VaultFlower_PickupIndicator_icon, TopCont.depth, self, other);
+		script_bind_draw(VaultFlower_prompt_icon, TopCont.depth, self, other);
 	}
 	return true;
 	
-#define VaultFlower_PickupIndicator_icon(_inst, _instMeet)
+#define VaultFlower_prompt_icon(_inst, _instMeet)
 	with(_instMeet){
 		var _local = player_find_local_nonsync();
 		if(player_is_active(_local) && player_get_show_prompts(index, _local)){
@@ -4485,10 +4487,10 @@
 #define WepPickupStick_create(_x, _y)
 	with(instance_create(_x, _y, WepPickup)){
 		 // Vars:
-		mask_index = mskShield;
+		mask_index   = mskShield;
 		stick_target = noone;
-		stick_x = 0;
-		stick_y = 0;
+		stick_x      = 0;
+		stick_y      = 0;
 		stick_damage = 0;
 		
 		return id;
@@ -4516,12 +4518,12 @@
 		
 		 // Deal Damage w/ Taken Out:
 		if(stick_damage != 0 && fork()){
-			var	_damage = stick_damage,
+			var	_damage  = stick_damage,
 				_creator = creator,
-				_ang = rotation,
-				_wep = wep,
-				_x = x,
-				_y = y;
+				_ang     = rotation,
+				_wep     = wep,
+				_x       = x,
+				_y       = y;
 				
 			wait 0;
 			
@@ -4562,6 +4564,7 @@
 	}
 	else if(stick_target != noone){
 		stick_target = noone;
+		mask_index = mskWepPickup;
 		visible = true;
 		canwade = true;
 		rotspeed = random_range(1, 2) * choose(-1, 1);
@@ -5122,8 +5125,8 @@
 	}
 	global.pickup_custom = [];
 	
-	 // Pickup Indicator Collision:
-	var _inst = instances_matching(CustomObject, "name", "PickupIndicator");
+	 // Prompt Collision:
+	var _inst = instances_matching(CustomObject, "name", "Prompt");
 	with(_inst) pick = -1;
 	_inst = instances_matching(_inst, "visible", true);
 	if(array_length(_inst) > 0){
@@ -5586,10 +5589,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

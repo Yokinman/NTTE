@@ -28,22 +28,24 @@
 		snd_dead = sndServerBreak;
 		
 		 // Vars:
-		mask_index = -1;
-		maxhealth = 120;
-		raddrop = 0;
-		size = 2;
-		team = 1;
-		presses = 0;
-		pickup_indicator = scrPickupIndicator("PUSH");
-		with(pickup_indicator){
-			mask_index = mskReviveArea;
-			yoff = -8;
-		}
+		mask_index   = -1;
+		maxhealth    = 120;
+		raddrop      = 0;
+		size         = 2;
+		team         = 1;
+		presses      = 0;
 		effect_color = make_color_rgb(252, 56, 0);
 		
 		 // Alarms:
 		alarm0 = -1;
 		alarm1 = -1;
+		
+		 // Prompt:
+		prompt = prompt_create("PUSH");
+		with(prompt){
+			mask_index = mskReviveArea;
+			yoff = -8;
+		}
 		
 		return id;
 	}
@@ -60,30 +62,25 @@
 	}
 	
 	 // Press:
-	var _pickup = pickup_indicator;
-	if(instance_exists(_pickup)){
-		if(_pickup.pick != -1){
-			 // Visual:
-			spr_idle = spr.ButtonPressedIdle;
-			spr_hurt = spr.ButtonPressedHurt;
-			sprite_index = spr_hurt;
-			
-			 // Vars:
-			presses++;
-			_pickup.visible = false;
-			
-			 // Effects and Stuff:
-			portal_poof();
-			
-			var _col = effect_color;
-			with(instance_create(x, y - 6, FXChestOpen)){
-				image_blend = _col;
-			}
-			
-			sound_play(sndIDPDNadeAlmost);
-			
-			alarm0 = 20;
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
+		 // Visual:
+		spr_idle = spr.ButtonPressedIdle;
+		spr_hurt = spr.ButtonPressedHurt;
+		sprite_index = spr_hurt;
+		
+		 // Vars:
+		presses++;
+		alarm0 = 20;
+		prompt.visible = false;
+		
+		 // Close Portal:
+		portal_poof();
+		
+		 // Effects and Stuff:
+		with(instance_create(x, y - 6, FXChestOpen)){
+			image_blend = other.effect_color;
 		}
+		sound_play(sndIDPDNadeAlmost);
 	}
 	
 	 // Manual Death:
@@ -252,13 +249,14 @@
 	spr_hurt = spr.ButtonHurt;
 	sprite_index = spr_idle;
 	
-	with(pickup_indicator){
+	with(prompt){
 		visible = true;
 	}
 	
 #define Button_alrm2
 	 // Goodbye:
 	my_health = 0;
+	
 	
 #define ButtonChest_create(_x, _y)
 	with(instance_create(_x, _y, chestprop)){
@@ -1208,7 +1206,7 @@
 						
 						 // New Icon:
 						var _newIcon = string(spr_icon);
-						with(pickup_indicator){
+						with(prompt){
 							text = string_replace(text, string(_lastIcon), _newIcon);
 						}
 						
@@ -1884,10 +1882,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

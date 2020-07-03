@@ -1464,8 +1464,37 @@
 	return weapon_merge_decide_raw(_hardMin, _hardMax, -1, -1, false);
 	
 #define weapon_merge_decide_raw(_hardMin, _hardMax, _stock, _front, _gold)
+	/*
+		Returns a 2-element array containing the [stock, front] weapons, for use with 'weapon_merge'
+		Returns an empty array if a weapon combination couldn't be found
+		
+		Args:
+			hardMin/hardMax - The difficulty range to get weapons from
+			stock/front     - For manually presetting the stock/front weapon, leave -1 to remain automatic
+			                  These can also be arrays, representing a list of weapons to not pick
+			gold            - Only use golden weapons, true/false
+			
+		Ex:
+			weapon_merge_decide_raw(0, GameCont.hard, -1, -1, false)
+			weapon_merge_decide_raw(3, GameCont.hard, wep_shotgun, [wep, bwep], false)
+	*/
+	
+	var	_stockAvoid = [],
+		_frontAvoid = [];
+		
+	if(is_array(_stock)){
+		_stockAvoid = _stock;
+		_stock = -1;
+	}
+	if(is_array(_front)){
+		_frontAvoid = _front;
+		_front = -1;
+	}
+	
 	 // Robot:
-	for(var i = 0; i < maxp; i++) if(player_get_race(i) == "robot") _hardMax++;
+	for(var i = 0; i < maxp; i++){
+		_hardMax += (player_get_race(i) == "robot");
+	}
 	_hardMin += (5 * ultra_get("robot", 1));
 	
 	 // Just in Case:
@@ -1478,18 +1507,16 @@
 		var _add = true;
 		if(
 			mele
-			||
-			(_gold xor (gold != 0)) // ^^ is kinda ugly bro
-			||
-			((area < _hardMin || area > _hardMax) && !(_gold && array_exists([wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol], weap)))
+			|| (_gold xor (gold != 0)) // ^^ is kinda ugly bro
+			|| ((area < _hardMin || area > _hardMax) && !(_gold && array_exists([wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol], weap)))
 		){
 			_add = false;
 		}
 		else switch(weap){
-			case wep_super_disc_gun:        if(variable_instance_get(other, "curse", 0) <= 0) _add = false; break;
-			case wep_golden_nuke_launcher:  if(!UberCont.hardmode)                            _add = false; break;
-			case wep_golden_disc_gun:       if(!UberCont.hardmode)                            _add = false; break;
-			case wep_gun_gun:               if(crown_current != crwn_guns)                    _add = false; break;
+			case wep_super_disc_gun       : if(variable_instance_get(other, "curse", 0) <= 0) _add = false; break;
+			case wep_golden_nuke_launcher : if(!UberCont.hardmode)                            _add = false; break;
+			case wep_golden_disc_gun      : if(!UberCont.hardmode)                            _add = false; break;
+			case wep_gun_gun              : if(crown_current != crwn_guns)                    _add = false; break;
 			
 			 // Bro no melee allowed:
 			case wep_jackhammer:
@@ -1501,28 +1528,33 @@
 	}
 	
 	 // Randomly Select Weps from List:
-	var	_min = 0,
-		_max = array_length(_pickList),
+	var	_min  = 0,
+		_max  = array_length(_pickList),
 		_part = [];
 		
 	array_shuffle(_pickList);
 	
-	for(var s = _min; s < _max; s++){
-		for(var f = (is_object(_stock) ? _min : _min); f < _max; f++){
-			var	_partStock = (is_object(_stock) ? _stock : _pickList[s]),
-				_partFront = (is_object(_front) ? _front : _pickList[f]);
+	for(var _s = _min; _s < _max; _s++){
+		for(var _f = _min; _f < _max; _f++){
+			var	_stockPart = (is_object(_stock) ? _stock : _pickList[_s]),
+				_frontPart = (is_object(_front) ? _front : _pickList[_f]),
+				_stockWeap = lq_defget(_stockPart, "weap", _stockPart),
+				_frontWeap = lq_defget(_frontPart, "weap", _frontPart);
 				
-			if(lq_defget(_partStock, "weap", _partStock) != lq_defget(_partFront, "weap", _partFront)){
-				_part = [_partStock, _partFront];
-				
-				 // Difficulty Check:
-				if(1 + max(1, lq_defget(_partStock, "area", 0)) + max(1, lq_defget(_partFront, "area", 0)) <= _hardMax){
-					return _part;
+			if(_stockWeap != _frontWeap){
+				if(!array_exists(_stockAvoid, _stockWeap) && !array_exists(_frontAvoid, _frontWeap)){
+					_part = [_stockPart, _frontPart];
+					
+					 // Difficulty Check:
+					if(1 + max(1, lq_defget(_stockPart, "area", 0)) + max(1, lq_defget(_frontPart, "area", 0)) <= _hardMax){
+						return _part;
+					}
 				}
 			}
 			
 			if(is_object(_front)) break;
 		}
+		
 		if(is_object(_stock)) break;
 	}
 	
@@ -4586,10 +4618,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

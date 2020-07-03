@@ -1867,7 +1867,7 @@
 					alert = false;
 					with(other){
 						var _other = other;
-						with(scrAlert(noone, spr.SealAlert)){
+						with(alert_create(noone, spr.SealAlert)){
 							x = _other.x;
 							y = _other.y - 16;
 							flash = 6;
@@ -4485,28 +4485,28 @@
 		 // Visual:
 		sprite_index = spr.Trident;
 		image_speed = 0.4;
-
+		
 		 // Vars:
-		mask_index = msk.Trident;
-		damage = 40;
-		force = 5;
-		typ = 1;
-		curse = false;
-		curse_return = false;
+		mask_index         = msk.Trident;
+		damage             = 40;
+		force              = 5;
+		typ                = 1;
+		curse              = false;
+		curse_return       = false;
 		curse_return_delay = false;
-		rotspeed = 0;
-		target = noone;
-		marrow_target = noone;
-		hit_time = 0;
-		hit_list = {};
-		wep = "trident";
+		rotspeed           = 0;
+		target             = noone;
+		marrow_target      = noone;
+		hit_time           = 0;
+		hit_list           = {};
+		wep                = "trident";
 		
 		 // Alarms:
 		alarm0 = 15;
 		
 		return id;
 	}
-
+	
 #define Trident_step
 	hit_time += current_time_scale;
 	
@@ -5127,10 +5127,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

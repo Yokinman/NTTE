@@ -1843,7 +1843,7 @@
 			var _spr = spr.PopoAlert;
 			if(array_length(instances_matching(IDPDSpawn, "elite", true)) > 0) _spr = spr.PopoEliteAlert;
 			if(array_length(instances_matching(IDPDSpawn, "freak", true)) > 0) _spr = spr.PopoFreakAlert;
-			with(scrAlert(self, _spr)){
+			with(alert_create(self, _spr)){
 				vspeed = -0.8;
 				image_speed = 0.1;
 				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
@@ -1868,7 +1868,7 @@
 		}
 		
 		 // Alert:
-		with(scrAlert(noone, spr.VanAlert)){
+		with(alert_create(noone, spr.VanAlert)){
 			image_xscale *= _side;
 			alert.x *= -1;
 			canview = false;
@@ -2426,7 +2426,7 @@
 	 // Call Scripts:
 	ntte_call("end_step");
 	
-	 // Merged Weapon Pickup Indicator:
+	 // Merged Weapon Prompt:
 	with(instances_matching(WepPickup, "mergewep_indicator", null)){
 		mergewep_indicator = true;
 		
@@ -3668,7 +3668,7 @@
 				if(instance_exists(revive)){
 					if(instance_exists(leader)){
 						_draw = true;
-						with(revive) with(pickup_indicator){
+						with(revive) with(prompt){
 							if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep)) > 0){
 								_draw = false;
 							}
@@ -3741,7 +3741,7 @@
 					
 					 // Alert (!) Shadow:
 					if(_alertCan){
-						var	_alertImg = lq_defget(alert, "img", current_frame * image_speed),
+						var	_alertImg = lq_defget(alert, "img", -0.4),
 							_alertX   = _x + (lq_defget(alert, "x", 0) * _xsc),
 							_alertY   = _y + (lq_defget(alert, "y", 0) * _ysc),
 							_alertXSc = lq_defget(alert, "xsc", _xsc),
@@ -3750,6 +3750,10 @@
 							_alertCol = lq_defget(alert, "col", c_white),
 							_alertAlp = lq_defget(alert, "alp", _alp);
 							
+						if(_alertImg < 0){
+							_alertImg *= -current_frame;
+						}
+						
 						for(var	_ox = -1; _ox <= 1; _ox++){
 							for(var	_oy = -1; _oy <= 2; _oy++){
 								draw_sprite_ext(
@@ -4028,11 +4032,11 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);

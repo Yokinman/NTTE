@@ -793,7 +793,7 @@
 	 // Alert:
 	with(ScorpionCity_pet){
 		scorpion_city--;
-		with(scrAlert(self, spr_icon)){
+		with(alert_create(self, spr_icon)){
 			snd_flash = sndScorpionMelee;
 		}
 	}
@@ -1255,7 +1255,7 @@
 					
 					 // Alert:
 					if(_alert){
-						with(scrAlert(noone, spr.GatorAlert)){
+						with(alert_create(noone, spr.GatorAlert)){
 							y -= 16;
 							vspeed = -2;
 							snd_flash = sndBuffGatorHit;
@@ -1264,7 +1264,7 @@
 					
 					 // ?
 					else with(inst) if(instance_is(self, enemy) && my_health > 0){
-						with(scrAlert(self, -1)){
+						with(alert_create(self, -1)){
 							alert.spr = spr.AlertIndicatorMystery;
 							alert.col = c_yellow;
 							target_y -= 2;
@@ -1811,7 +1811,7 @@
 	with(instance_nearest(10016, 10016, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
-			with(scrAlert(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
+			with(alert_create(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
 				image_speed = 0.1;
 				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
 				target_x = -3;
@@ -2160,10 +2160,10 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define scrPickupIndicator(_text)                                                       return  mod_script_call(   'mod', 'telib', 'scrPickupIndicator', _text);
-#define scrAlert(_inst, _sprite)                                                        return  mod_script_call(   'mod', 'telib', 'scrAlert', _inst, _sprite);
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
-#define charm_instance(_instance, _charm)                                               return  mod_script_call_nc('mod', 'telib', 'charm_instance', _instance, _charm);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
 #define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
+#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

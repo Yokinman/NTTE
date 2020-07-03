@@ -1,4 +1,6 @@
 #define init
+	ntte_version = 2.0;
+	
 	 // SPRITES //
 	spr = {};
 	spr_load = [[spr, 0]];
@@ -1839,7 +1841,8 @@
 #macro snd global.snd
 #macro mus snd.mus
 
-#macro ntte_mods global.mods
+#macro ntte_mods    global.mods
+#macro ntte_version global.version
 
 #macro spr_load global.spr_load
 

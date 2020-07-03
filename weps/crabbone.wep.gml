@@ -180,21 +180,21 @@
 		 // Bro don't look here:
 		if(w.ammo >= 10){
 			 // E Indicator:
-			if(!instance_exists(variable_instance_get(id, "pickup_scythe", noone))){
-				pickup_scythe = obj_create(x, y, "PickupIndicator");
-				with(pickup_scythe){
+			if(!instance_exists(variable_instance_get(id, "prompt_scythe", noone))){
+				prompt_scythe = obj_create(x, y, "Prompt");
+				with(prompt_scythe){
 					text    = "SCYTHE";
 					creator = other;
 					index   = other.index;
 					depth   = 1000000;
-					on_meet = script_ref_create(scythe_PickupIndicator_meet);
+					on_meet = script_ref_create(scythe_prompt_meet);
 				}
 			}
-			pickup_scythe.yoff = sin(other.wave / 10);
+			prompt_scythe.yoff = sin(other.wave / 10);
 			
 			 // Bro 10 bones dont fit in a 3x3 square
-			if(player_is_active(pickup_scythe.pick)){
-				with(pickup_scythe) instance_destroy();
+			if(player_is_active(prompt_scythe.pick)){
+				with(prompt_scythe) instance_destroy();
 				
 				 // Give Scythe:
 				mod_script_call("weapon", "scythe", "scythe_swap", _primary);
@@ -211,7 +211,7 @@
 				}
 			}
 		}
-		else with(variable_instance_get(id, "pickup_scythe", noone)){
+		else with(variable_instance_get(id, "prompt_scythe", noone)){
 			instance_destroy();
 		}
 	}
@@ -240,7 +240,7 @@
 		}
 	}
 	
-#define scythe_PickupIndicator_meet
+#define scythe_prompt_meet
 	if(other.index == index && wep_get(other.wep) == mod_current){
 		return true;
 	}
