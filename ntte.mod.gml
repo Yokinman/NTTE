@@ -1207,7 +1207,7 @@
 	}
 	
 	 // Top Chests:
-	if(_normalArea && (GameCont.area != area_desert || GameCont.loops > 0)){
+	if(false && _normalArea && (GameCont.area != area_desert || GameCont.loops > 0)){
 		var _obj = -1;
 		
 		 // Health:
@@ -1285,7 +1285,7 @@
 	
 	 // Lair Chests:
 	var	_crime = (crown_current == "crime"),
-		_lair = (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
+		_lair  = (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
 		
 	if(_lair || _crime){
 		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
@@ -1345,6 +1345,9 @@
 			}
 		}
 	}
+	
+	 // Bonus Chests:
+	mod_script_call("mod", "tepickups", "bonus_pickup_replace", true);
 	
 	 // Flies:
 	with(MaggotSpawn){

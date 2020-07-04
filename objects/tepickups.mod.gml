@@ -450,16 +450,16 @@
 		}
 	}
 	spr_dead = -1;
-
+	
 	 // Create Weapon Shops:
-	var	o = 50 / (1 + (0.5 * big)),
+	var	_angOff = 50 / (1 + (0.5 * big)),
 		_shop = [];
-
-	for(var a = -o * (1 + big); a <= o * (1 + big); a += o){
-		var	l = 28,
-			d = a + 90;
-
-		with(obj_create(x + lengthdir_x(l * ((3 + big) / 3), d), y + lengthdir_y(l, d), "ChestShop")){
+		
+	for(var _ang = -_angOff * (1 + big); _ang <= _angOff * (1 + big); _ang += _angOff){
+		var	_l = 28,
+			_d = _ang + 90;
+			
+		with(obj_create(x + lengthdir_x(_l * ((3 + big) / 3), _d), y + lengthdir_y(_l, _d), "ChestShop")){
 			type = ChestShop_wep;
 			drop = wep_screwdriver;
 			open += other.big;
@@ -468,7 +468,7 @@
 			array_push(_shop, id);
 		}
 	}
-
+	
 	 // Determine Weapons:
 	var	_hardMin = 0,
 		_hardMax = GameCont.hard + (2 * curse),
@@ -4891,110 +4891,7 @@
 	 // Replace Pickups / Chests:
 	if(!instance_exists(GenCont)){
 		 // Bonus Pickups:
-		with(instances_matching([AmmoPickup, AmmoChest, Mimic], "bonuspickup_check", null)){
-			bonuspickup_check = false;
-			
-			if(GameCont.hard > 4){
-				if(!position_meeting(xstart, ystart, ChestOpen)){
-					if(
-						(instance_is(self, AmmoPickup) && sprite_index == sprAmmo)                                                               ||
-						(instance_is(self, AmmoChest)  && array_exists([sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery], sprite_index)) ||
-						(instance_is(self, Mimic)      && spr_idle == sprMimicIdle)
-					){
-						bonuspickup_check = true;
-						
-						var _chest = "";
-						
-						 // Bonus Ammo:
-						if(_chest == ""){
-							var	_ammoPick  = [0, 32, 8, 7, 6, 10],
-								_ammoNum   = 0,
-								_ammoMax   = 0,
-								_ammoMin   = 0,
-								_wepTotal  = 0,
-								_wepChance = 0;
-								
-							 // Determine Spawn Chance:
-							with(Player){
-								with([wep, bwep]){
-									var _wep = self;
-									with(other){
-										var _type = weapon_get_type(_wep);
-										
-										 // Encourage Weapons Closer to Full Ammo:
-										_ammoMax++;
-										if(_type > 0){
-											_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
-											_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
-										}
-										else{
-											_ammoMin += 1/3;
-											_ammoNum += 1/4;
-										}
-										
-										 // Encourage Ammo Intensive Weapons:
-										if(_wep != wep_none){
-											var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
-											if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
-												_cost += _wep.cost;
-											}
-											
-											_wepTotal++;
-											_wepChance += min(1, (_cost / min(90, weapon_get_load(_wep))) * 1.5);
-										}
-									}
-								}
-							}
-							
-							 // Replace:
-							if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin)){
-								if(chance(_wepChance, _wepTotal)){
-									_chest = "BonusAmmo";
-								}
-							}
-						}
-						
-						 // Bonus HP:
-						if(_chest == ""){
-							var	_health      = 0,
-								_healthMax   = 0,
-								_healthBonus = 0;
-								
-							 // Determine Max HP:
-							with(Player){
-								_health    += max(0, my_health);
-								_healthMax += max(0, max(my_health, maxhealth));
-								
-								if("bonus_health" in self){
-									_healthBonus += max(0, bonus_health);
-								}
-							}
-							
-							 // Replace:
-							if(_health >= _healthMax){
-								if(chance(1, 4 * (4 + ((_healthMax + _healthBonus) / instance_number(Player))))){
-									_chest = "BonusHealth";
-								}
-							}
-						}
-						
-						 // Replace:
-						if(_chest != ""){
-							if(instance_is(self, Pickup)){
-								obj_create(x, y, _chest + "Pickup");
-							}
-							else if(instance_is(self, chestprop) || instance_is(self, RadChest)){
-								chest_create(x, y, _chest + "Chest", false);
-							}
-							else if(instance_is(self, enemy)){
-								chest_create(x, y, _chest + "Mimic", false);
-							}
-							instance_delete(id);
-						}
-					}
-				}
-			}
-		}
+		bonus_pickup_replace(false);
 		
 		 // Cursed Ammo Chests:
 		with(instances_matching([AmmoChest, Mimic], "cursedammochest_check", null)){
@@ -5443,6 +5340,142 @@
 	}
 	
 	return noone;
+	
+#define bonus_pickup_replace(_levelStart)
+	/*
+		Replaces pickups and chests with their bonus versions
+	*/
+	
+	with(instances_matching([Pickup, chestprop, Mimic, SuperMimic], "bonus_pickup_check", null)){
+		bonus_pickup_check = false;
+		
+		if(!position_meeting(xstart, ystart, ChestOpen)){
+			var _bonusCrown = (crown_current == "bonus");
+			
+			if(GameCont.hard > 4 || _bonusCrown){
+				var	_isAmmo = false,
+					_isHP   = false;
+					
+				 // Replace Ammo:
+				if(
+					(instance_is(self, AmmoPickup) && sprite_index == sprAmmo)                                                               ||
+					(instance_is(self, AmmoChest)  && array_exists([sprAmmoChest, sprAmmoChestSteroids, sprAmmoChestMystery], sprite_index)) ||
+					(instance_is(self, Mimic)      && spr_idle == sprMimicIdle)
+				){
+					bonus_pickup_check = true;
+					_isAmmo = true;
+				}
+				
+				 // Replace HP:
+				else if(_bonusCrown){
+					if(
+						(instance_is(self, HPPickup)    && sprite_index == sprHP)          ||
+						(instance_is(self, HealthChest) && sprite_index == sprHealthChest) ||
+						(instance_is(self, SuperMimic)  && spr_idle == sprSuperMimicIdle)
+					){
+						bonus_pickup_check = true;
+						_isHP = true;
+					}
+				}
+				
+				 // Bonus Time:
+				if(bonus_pickup_check){
+					var	_chest = "",
+						_force = (_bonusCrown && _levelStart);
+						
+					 // Bonus Ammo:
+					if(_isAmmo || (_chest == "" && !_force)){
+						var	_ammoPick  = [0, 32, 8, 7, 6, 10],
+							_ammoNum   = 0,
+							_ammoMax   = 0,
+							_ammoMin   = 0,
+							_wepTotal  = 0,
+							_wepChance = 0;
+							
+						 // Determine Spawn Chance:
+						with(Player){
+							with([wep, bwep]){
+								var _wep = self;
+								with(other){
+									var _type = weapon_get_type(_wep);
+									
+									 // Encourage Weapons Closer to Full Ammo:
+									_ammoMax++;
+									if(_type > 0){
+										_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
+										_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
+									}
+									else{
+										_ammoMin += 1/3;
+										_ammoNum += 1/4;
+									}
+									
+									 // Encourage Ammo Intensive Weapons:
+									if(_wep != wep_none){
+										var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
+										if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
+											_cost += _wep.cost;
+										}
+										
+										_wepTotal++;
+										_wepChance += min(1, (_cost / min(90, weapon_get_load(_wep))) * 1.5);
+									}
+								}
+							}
+						}
+						
+						 // Replace:
+						if(chance(_ammoNum - _ammoMin, _ammoMax - _ammoMin) || _bonusCrown || _force){
+							if(chance(_wepChance * (1 + _bonusCrown), _wepTotal) || _force){
+								_chest = "BonusAmmo";
+							}
+						}
+					}
+					
+					 // Bonus HP:
+					if(_isHP || (_chest == "" && !_force)){
+						var	_HP      = 0,
+							_HPMax   = 0,
+							_HPBonus = 0;
+							
+						 // Determine Max HP:
+						with(Player){
+							_HP    += max(0, my_health);
+							_HPMax += max(0, max(my_health, maxhealth));
+							
+							if("bonus_health" in self){
+								_HPBonus += max(0, bonus_health);
+							}
+						}
+						
+						 // Replace:
+						if(_HP >= _HPMax || _bonusCrown || _force){
+							if(chance(1 * (1 + _bonusCrown), 4 * (4 + ((_HPMax + _HPBonus) / instance_number(Player)))) || _force){
+								_chest = "BonusHealth";
+							}
+						}
+					}
+					
+					 // Replace:
+					if(_chest != ""){
+						if(instance_is(self, Pickup)){
+							obj_create(x, y, _chest + "Pickup");
+						}
+						else if(instance_is(self, chestprop) || instance_is(self, RadChest)){
+							chest_create(x, y, _chest + "Chest", _levelStart);
+						}
+						else if(instance_is(self, enemy)){
+							chest_create(x, y, _chest + "Mimic", _levelStart);
+						}
+						instance_delete(id);
+					}
+					else if(_bonusCrown){
+						instance_delete(id);
+					}
+				}
+			}
+		}
+	}
 	
 	
 /// SCRIPTS

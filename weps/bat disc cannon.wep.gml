@@ -83,7 +83,9 @@
 	
 	 // Encourage Less Hold-Down-LMouse Play:
 	if(w.canload){
-		if(w.ammo <= 0) w.canload = false;
+		if(w.ammo <= 0 && variable_instance_get(self, "bonus_ammo", 0) <= 0){
+			w.canload = false;
+		}
 	}
 	else{
 		 // Stop Reloading:
