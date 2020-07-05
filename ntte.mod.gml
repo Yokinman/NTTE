@@ -3208,6 +3208,7 @@
 						 // Charges:
 						for(var j = 0; j < red_ammo; j++){
 							draw_sprite(spr.RedAmmoHUDCharge, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+							draw_sprite(spr.RedAmmoHUDBar, (red_amax > _max), (_x + 2) + j, _y);
 						}
 						
 						 // Cost:
@@ -3216,6 +3217,9 @@
 								draw_sprite(spr.RedAmmoHUDCost, 0, _x + 4 + (4 * (_cost % _max)), _y + 4);
 							}
 						}
+						
+						 // Notch:
+						draw_sprite(spr.RedAmmoHUDNotch, 0, (_x + 3) + (_cost * 4), (_y + 5) - (button_pressed(index, "swap") && canswap));// + (variable_instance_get(self, "drawempty" + _b[i], 0) > 0));
 					}
 				}
 				

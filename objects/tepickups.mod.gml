@@ -3640,7 +3640,7 @@
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = ((red_ammo < red_amax) ? "%" : "MAX") + "AMMO";
+			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
 			pickup_text(_text, _num);
 		}
 	}
@@ -3675,54 +3675,17 @@
 	return false;
 	
 #define RedAmmoPickup_open
-	var	_num  = num,
-		_text = `% AMMO`;
-		
+	var	_num  = num;
+	
 	 // Red Ammo:
 	with(instance_is(other, Player) ? other : Player){
 		if("red_ammo" in self){
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = ((red_ammo < red_amax) ? "%" : "MAX") + " AMMO";
+			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
 			pickup_text(_text, _num);
 		}
-	}
-	
-	
-#define RedAmmoPopup_create(_x, _y)
-	with(instance_create(_x, _y, PopupText)){
-		 // Visual:
-		image_blend = make_color_rgb(235, 0, 67);
-		
-		 // Vars:
-		num_symbols = 3;
-		text_prefix = "";
-		text_suffix = "@wAMMO";
-		symbol_list = {
-			"?"  : 2,
-			"$"  : 1,
-			"%"  : 1,
-			"&"  : 1,
-			"\#" : 1,
-			"_"  : 0.25
-		};
-		
-		return id;
-	}
-	
-#define RedAmmoPopup_step
-	if(frame_active(2)){
-		text = text_prefix + ` @(color:${image_blend})`;
-		var _list = lq_clone(symbol_list);
-		repeat(num_symbols){
-			var _char = pool(_list);
-			if(is_string(_char)){
-				text += _char;
-				lq_set(_list, _char, lq_get(_list, _char) - 1);
-			}
-		}
-		text += " " + text_suffix;
 	}
 	
 	
@@ -5102,6 +5065,26 @@
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+	
+	 // Red Weapon Pickup Ammo:
+	with(instances_matching(WepPickup, "ntte_red", null)){
+		ntte_red = weapon_get_red(wep_get(wep));
+	}
+	with(instances_matching_gt(instances_matching_gt(WepPickup, "ntte_red", 0), "ammo", 0)){
+		if(place_meeting(x, y, Player)){
+			ammo = 0;
+			var _num = 1;
+			with(instance_nearest(x, y, Player)){
+				if("red_ammo" in self){
+					red_ammo = min(red_ammo + _num, red_amax);
+					
+					 // Text:
+					var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
+					pickup_text(_text, _num);
 				}
 			}
 		}

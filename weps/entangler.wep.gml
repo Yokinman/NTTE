@@ -14,7 +14,14 @@
 #define weapon_text   return `@(color:${area_get_back_color("red")})YOOOOOOO`;
 #define weapon_swap   return sndSwapSword;
 #define weapon_area   return (weapon_avail() ? 21 : -1); // L1 3-1
-#define weapon_type   return type_melee;
+#define weapon_type
+	 // Weapon Pickup Ammo Outline:
+	if(instance_is(other, WepPickup) && instance_is(self, WepPickup)){
+		return type_bullet;
+	}
+	
+	return type_melee;
+	
 #define weapon_load   return 20; // 0.66 Seconds
 #define weapon_melee  return true;
 #define weapon_avail  return unlock_get("pack:red");

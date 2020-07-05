@@ -893,55 +893,7 @@
 			4
 		)){
 			area_chest = _chestTypes[i];
-			
-			 // Chaos Heart Area Decision:
-			if(other.white){
-				var _area  = [GameCont.area, area],
-					_loops = GameCont.loops;
-					
-				 // Decision Making Two:
-				if(chance(1, 2)){
-					var a = [GameCont.area];
-					
-					while(true){
-						switch(a[irandom(array_length(a) - 1)]){
-							case area_campfire     :                                     break;
-							case area_desert       : a = [area_sewers, area_scrapyards]; break;
-							case "coast"           : a = [area_scrapyards, area_jungle]; break;
-							case area_oasis        :
-							case "oasis"           : a = [area_sewers, area_labs];       break;
-							case "trench"          : a = [area_sewers, area_caves];      break;
-							case area_sewers       : a = [area_caves];                   break;
-							case area_pizza_sewers :
-							case "pizza"           :                                     break;
-							case "lair"            :                                     break;
-							case area_scrapyards   : a = [area_sewers, area_city];       break;
-							case area_mansion      :                                     break;
-							case area_crib         :                                     break;
-							case area_caves        : a = [area_labs];                    break;
-							case area_cursed_caves :                                     break;
-							case area_city         : a = [area_labs, area_palace];       break;
-							case area_jungle       :                                     break;
-							case area_labs         : a = [area_sewers, area_caves];      break;
-							case area_palace       : a = [area_scrapyards, area_labs];   break;
-							case area_hq           :                                     break;
-							case "red"             :                                     break;
-						}
-						
-						 // Decrement Loop:
-						if(_loops >= 1 && chance(1, 2)){
-							_loops--;
-						}
-						else break;
-					}
-					
-					 // Woah:
-					_area = a;
-				}
-				
-				area  = _area[irandom(array_length(_area) - 1)];
-				loops = _loops;
-			}
+			area_chaos = other.white;
 		}
 	}
 	
@@ -971,6 +923,7 @@
 		area_seed  = irandom(random_get_seed());
 		area_goal  = irandom_range(10, 20);
 		area_chest = AmmoChest;
+		area_chaos = false;
 		setup      = true;
 		
 		 // Alarms:
@@ -981,6 +934,54 @@
 	
 #define CrystalHeartBullet_setup
 	setup = false;
+	
+	 // Determine Area:
+	if(area_chaos){
+		var _area = [GameCont.area, area],
+			_loops = GameCont.loops;
+					
+		if(chance(1, 2)){
+			var a = [GameCont.area];
+			
+			while(true){
+				switch(a[irandom(array_length(a) - 1)]){
+					case area_campfire     :                                     break;
+					case area_desert       : a = [area_sewers, area_scrapyards]; break;
+					case "coast"           : a = [area_scrapyards, area_jungle]; break;
+					case area_oasis        :
+					case "oasis"           : a = [area_sewers, area_labs];       break;
+					case "trench"          : a = [area_sewers, area_caves];      break;
+					case area_sewers       : a = [area_caves];                   break;
+					case area_pizza_sewers :
+					case "pizza"           :                                     break;
+					case "lair"            :                                     break;
+					case area_scrapyards   : a = [area_sewers, area_city];       break;
+					case area_mansion      :                                     break;
+					case area_crib         :                                     break;
+					case area_caves        : a = [area_labs];                    break;
+					case area_cursed_caves :                                     break;
+					case area_city         : a = [area_labs, area_palace];       break;
+					case area_jungle       :                                     break;
+					case area_labs         : a = [area_sewers, area_caves];      break;
+					case area_palace       : a = [area_scrapyards, area_labs];   break;
+					case area_hq           :                                     break;
+					case "red"             :                                     break;
+				}
+				
+				 // Decrement Loop:
+				if(_loops >= 1 && chance(1, 2)){
+					_loops--;
+				}
+				else break;
+			}
+			
+			 // Woah:
+			_area = a;
+		}
+		
+		area  = _area[irandom(array_length(_area) - 1)];
+		loops = _loops;
+	}
 	
 	 // Colorize:
 	var _col = area_get_back_color(area);
@@ -1131,10 +1132,20 @@
 		}
 		
 		 // Red Crown Quality Assurance:
-		if(crown_current == "red"){
-			with(instances_matching([PizzaEntrance, CarVenus, IceFlower], "", null)){
+		if(area_chaos){
+			with(instances_matching_gt([PizzaEntrance, CarVenus, IceFlower], "id", _genID)){
 				instance_delete(id);
 			}
+		}
+		
+		 // Floor Depth Fix:
+		with(Floor){
+			depth--;
+			depth++;
+		}
+		with(FloorExplo){
+			depth--;
+			depth++;
 		}
 		
 		 // Goodbye:
@@ -1917,6 +1928,26 @@
 	}
 	
 	
+#define RedShank_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.RedShank;
+		image_speed = 0.4;
+		
+		 // Vars:
+		mask_index = -1;
+		damage     = 10; // 6;
+		force      = 6;
+		candeflect = false;
+		
+		return id;
+	}
+	
+#define RedShank_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+	}
+	
 #define RedSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
@@ -1928,6 +1959,7 @@
 		friction   = 0.1;
 		damage     = 8;
 		force      = 12;
+		candeflect = true;
 		walled     = false;
 		
 		return id;
@@ -1955,7 +1987,6 @@
 	if(projectile_canhit_melee(other)){
 		projectile_hit(other, damage, force, direction);
 	}
-
 	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -3140,7 +3171,7 @@
 		}
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
-	with(instances_matching(CustomProjectile, "name", "RedSlash")){
+	with(instances_matching(CustomProjectile, "name", "RedShank", "RedSlash")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 

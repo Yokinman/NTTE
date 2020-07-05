@@ -57,9 +57,6 @@
 		//#region WEAPONS
 		p = "weps/";
 			
-			 // Annihilator Stuff:
-			AnnihilatorDebris = sprite(p + "sprAnnihilatorDebris", 8, 8, 8);
-			
 			 // Bone:
 			Bone	  = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
@@ -162,6 +159,7 @@
 			RedBulletDisappear = sprite(p + "sprRedBulletDisappear", 5,  9,  9);
 			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
 			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
+			RedShank		   = sprite(p + "sprRedShank",			 2,  0, 8);
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
@@ -1382,12 +1380,15 @@
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
 			 // Red Ammo:
-			RedAmmoChest     = sprite(p + "sprRedAmmoChest",     1, 8, 8, shn16);
-			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1, 8, 8);
-			RedAmmoPickup    = sprite(p + "sprRedAmmoPickup",    1, 5, 5, shn10);
-			RedAmmoHUD       = sprite(p + "sprRedAmmoHUD",       2, 1, 1);
-			RedAmmoHUDCharge = sprite(p + "sprRedAmmoHUDCharge", 2, 1, 2);
-			RedAmmoHUDCost   = sprite(p + "sprRedAmmoHUDCost",   1, 1, 2);
+			RedAmmoChest     = sprite(p + "sprRedAmmoChest",     1,  8,  8, shn16);
+			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1,  8,  8);
+			RedAmmoPickup    = sprite(p + "sprRedAmmoPickup",    1,  5,  5, shn10);
+			RedAmmoHUD       = sprite(p + "sprRedAmmoHUD",       2,  1,  1);
+			RedAmmoHUDCharge = sprite(p + "sprRedAmmoHUDCharge", 2,  1,  2);
+			RedAmmoHUDCost   = sprite(p + "sprRedAmmoHUDCost",   1,  1,  2);
+			RedAmmoHUDNotch  = sprite(p + "sprRedAmmoHUDNotch",  1,  1,  0);
+			RedAmmoHUDBar	 = sprite(p + "sprRedAmmoHUDBar",	 2,  0,  0);
+			RedAmmoPopup	 = sprite(p + "sprRedAmmoPopup",	 12, 12, 4);
 			
 			 // Red Crystal Chest:
 			RedChest     = sprite(p + "sprRedChest",     1, 8, 8, shn16);

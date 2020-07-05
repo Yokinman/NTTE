@@ -26,7 +26,7 @@
 #define area_secret            return true;
 
 #define area_name(_subarea, _loops)
-	return `@(color:${area_background_color()})???`;
+	return `@3(${spr.RedAmmoPopup}:-0.8)`; // `@(color:${area_background_color()})???`;
 	
 #define area_text
 	return choose(
