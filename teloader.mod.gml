@@ -48,6 +48,11 @@
 		["weps/merge.wep.gml",                      1 + _coop, "Weapons"],
 		["weps/crabbone.wep.gml",                   1],
 		["weps/scythe.wep.gml",                     1],
+		["weps/teleport gun.wep.gml",               1],
+		["weps/energy bat.wep.gml",                 1],
+		["weps/annihilator.wep.gml",                1],
+		["weps/entangler.wep.gml",                  1],
+		["weps/tunneller.wep.gml",					1],
 		["weps/bat disc launcher.wep.gml",          1],
 		["weps/bat disc cannon.wep.gml",            1],
 		["weps/harpoon launcher.wep.gml",           1],
@@ -66,11 +71,7 @@
 		["weps/electroplasma shotgun.wep.gml",      1],
 		["weps/quasar blaster.wep.gml",             1],
 		["weps/quasar rifle.wep.gml",               1],
-		["weps/quasar cannon.wep.gml",              1],
-		["weps/annihilator.wep.gml",                1],
-		["weps/entangler.wep.gml",                  1],
-		["weps/teleport gun.wep.gml",               1],
-		["weps/energy bat.wep.gml",                 1]
+		["weps/quasar cannon.wep.gml",              1]
 	];
 	global.load_max += array_length(global.list);
 	
