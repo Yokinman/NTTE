@@ -392,18 +392,21 @@
 			
 			 // Crystal Brain:
 			p = m + "CrystalBrain/";
-			CrystalBrainIdle      = sprite(p + "sprCrystalBrainIdle",       6, 24, 24);
-			CrystalBrainHurt      = sprite(p + "sprCrystalBrainHurt",       3, 24, 24);
-			CrystalBrainDead      = sprite(p + "sprCrystalBrainDead",       7, 24, 24);
-			CrystalBrainAppear    = sprite(p + "sprCrystalBrainAppear",	    4, 24, 24);
-			CrystalBrainDisappear = sprite(p + "sprCrystalBrainDisappear",  7, 24, 24);
-			CrystalBrainChunk     = sprite(p + "sprCrystalBrainChunk",      4,  8,  8);
-			CrystalBrainPart      = sprite(p + "sprCrystalBrainPart",       7, 24, 24);
-			CrystalBrainEffect    = sprite(p + "sprCrystalBrainEffect",    10,  8,  8);
-			CrystalBrainSurfMask  = sprite(p + "sprCrystalBrainSurfMask",   1,  0,  0);
-			
-			CloneOverlay       = sprite(p + "sprCloneOverlay",       8, 0, 0);
-			CloneOverlayCorpse = sprite(p + "sprCloneOverlayCorpse", 8, 0, 0);
+			CrystalBrainIdle          = sprite(p + "sprCrystalBrainIdle",           6, 24, 24);
+			CrystalBrainHurt          = sprite(p + "sprCrystalBrainHurt",           3, 24, 24);
+			CrystalBrainDead          = sprite(p + "sprCrystalBrainDead",           7, 24, 24);
+			CrystalBrainAppear        = sprite(p + "sprCrystalBrainAppear",         4, 24, 24);
+			CrystalBrainDisappear     = sprite(p + "sprCrystalBrainDisappear",      7, 24, 24);
+			CrystalBrainChunk         = sprite(p + "sprCrystalBrainChunk",          4,  8,  8);
+			CrystalBrainPart          = sprite(p + "sprCrystalBrainPart",           7, 24, 24);
+			CrystalBrainEffect        = sprite(p + "sprCrystalBrainEffect",        10,  8,  8);
+			CrystalBrainEffectAlly    = sprite(p + "sprCrystalBrainEffectAlly",    10,  8,  8);
+			CrystalBrainEffectPopo    = sprite(p + "sprCrystalBrainEffectPopo",    10,  8,  8);
+			CrystalBrainSurfMask      = sprite(p + "sprCrystalBrainSurfMask",       1,  0,  0);
+			CrystalCloneOverlay       = sprite(p + "sprCrystalCloneOverlay",        8,  0,  0);
+			CrystalCloneOverlayAlly   = sprite(p + "sprCrystalCloneOverlayAlly",    8,  0,  0);
+			CrystalCloneOverlayPopo   = sprite(p + "sprCrystalCloneOverlayPopo",    8,  0,  0);
+			CrystalCloneOverlayCorpse = sprite(p + "sprCrystalCloneOverlayCorpse",  8,  0,  0);
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";

@@ -721,24 +721,36 @@
 		charm_hplink_hud += (_hudGoal - charm_hplink_hud) * 0.2 * current_time_scale;
 		if(abs(_hudGoal - charm_hplink_hud) < 0.01) charm_hplink_hud = _hudGoal;
 	}
+	
 	instance_destroy();
 	
 #define charm_step
 	if(lag) trace_time();
 	
-	var	_instList = array_clone(inst),
-		_varsList = array_clone(vars),
-		_charmDraw = array_create(maxp + 1),
-		_charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
+	var	_charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak],
+		_charmDraw   = array_create(maxp + 1);
 		
+	 // Charm Draw Setup:
 	for(var i = 0; i < array_length(_charmDraw); i++){
 		_charmDraw[i] = {
 			inst  : [],
-			depth : 9999
+			depth : infinity
 		};
 	}
 	
-	var _instNum = 0;
+	 // Collect Charmed Instances:
+	with(instances_matching_ne(_charmObject, "ntte_charm", null)){
+		if(ntte_charm.charmed && array_find_index(other.inst, id) < 0){
+			array_push(other.inst, id);
+			array_push(other.vars, ntte_charm);
+		}
+	}
+	
+	 // Charm Step:
+	var	_instNum  = 0,
+		_instList = array_clone(inst),
+		_varsList = array_clone(vars);
+		
 	with(_instList){
 		var _vars = _varsList[_instNum++];
 		
@@ -746,8 +758,8 @@
 			if(!instance_exists(self)) _vars.charmed = false;
 			else{
 				if("ntte_charm_override" not in self || !ntte_charm_override){
-					var	_minID = GameObject.id,
-						_target = _vars.target,
+					var	_minID       = GameObject.id,
+						_target      = _vars.target,
 						_targetCrash = (!instance_exists(Player) && instance_is(self, Grunt)), // References player-specific vars in its alarm event, causing a crash
 						_aggroFactor = 10;
 						

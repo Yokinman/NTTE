@@ -1074,9 +1074,11 @@
 			if(place_meeting(x, y, Floor)){
 				_open = true;
 				with(instance_create(x, y, PortalClear)){
-					mask_index = other.mask_index;
+					mask_index   = other.mask_index;
+					sprite_index = other.sprite_index;
 					image_xscale = other.image_xscale;
 					image_yscale = other.image_yscale;
+					image_angle  = other.image_angle;
 				}
 			}
 			with(layout) if(!_open && obj == Floor){
@@ -3674,11 +3676,11 @@
 				
 				 // Just in Case:
 				with(instance_create(x, y, PortalClear)){
-					mask_index = other.mask_index;
+					mask_index   = other.mask_index;
 					sprite_index = other.sprite_index;
 					image_xscale = other.image_xscale;
 					image_yscale = other.image_yscale;
-					image_angle = other.image_angle;
+					image_angle  = other.image_angle;
 				}
 				
 				 // Portal:
@@ -4569,11 +4571,11 @@
 				if(other.maxspeed <= 0 || !instance_budge(Wall, -1)){
 					 // Emergency+:
 					with(instance_create(x, y, PortalClear)){
-						mask_index = other.mask_index;
+						mask_index   = other.mask_index;
 						sprite_index = other.sprite_index;
 						image_xscale = other.image_xscale;
 						image_yscale = other.image_yscale;
-						image_angle = other.image_angle;
+						image_angle  = other.image_angle;
 					}
 					
 					 // No Baby Jails:

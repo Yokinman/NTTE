@@ -13,7 +13,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
-		"tecaves"     : ["ChaosHeart", "Clone", "CrystalBrain", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
+		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "EntanglerSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
@@ -210,7 +210,7 @@
 #macro bbox_width    (bbox_right + 1) - bbox_left
 #macro bbox_height   (bbox_bottom + 1) - bbox_top
 
-#macro FloorNormal   instances_matching(Floor, "object_index", Floor)
+#macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #macro ntte_alarm_min 0
 #macro ntte_alarm_max 11
@@ -595,10 +595,10 @@
 		with(instances_matching_ne(inst, "depth", depth)){
 			if(array_length(instances_matching(_bind, "depth", depth)) <= 0){
 				with(script_bind_draw(obj_bind, depth)){
-					name = script[2];
-					type = "draw";
-					inst = [other];
-					inst_obj = lq_get(ntte_obj_bind, type);
+					name       = script[2];
+					type       = "draw";
+					inst       = [other];
+					inst_obj   = lq_get(ntte_obj_bind, type);
 					persistent = true;
 				}
 			}
@@ -1385,10 +1385,10 @@
 	if(array_length(_bind) <= 0){
 		_bind = script_bind_end_step(0, 0);
 		with(_bind){
-			script = script_ref_create_ext("race", "parrot", "charm_step")
-			name = script[2];
-			inst = [];
-			vars = [];
+			script = script_ref_create_ext("race", "parrot", "charm_step");
+			name   = script[2];
+			inst   = [];
+			vars   = [];
 		}
 	}
 	
@@ -1414,9 +1414,9 @@
 		
 		if(_charm ^^ _vars.charmed){
 			_vars.charmed = _charm;
-			_vars.target = noone;
-			_vars.index = -1;
-			_vars.time = 0;
+			_vars.target  = noone;
+			_vars.index   = -1;
+			_vars.time    = 0;
 			
 			 // Charm:
 			if(_charm){
@@ -1462,12 +1462,6 @@
 					case sprNecroReviveArea:
 						sprite_index = spr.AllyNecroReviveArea;
 						break;
-				}
-				
-				 // Add to List:
-				with(_bind){
-					array_push(inst, other);
-					array_push(vars, _vars);
 				}
 			}
 			
@@ -2163,6 +2157,8 @@
 		return id;
 	}
 	
+	return noone;
+	
 #define data_clone(_value)
 	/*
 		Returns an exact copy of the given value
@@ -2218,8 +2214,8 @@
 		Returns an exact copy of the given ds_grid
 	*/
 	
-	var	_w = ds_grid_width(_grid),
-		_h = ds_grid_height(_grid),
+	var	_w   = ds_grid_width(_grid),
+		_h   = ds_grid_height(_grid),
 		_new = ds_grid_create(_w, _h);
 		
 	for(var _x = 0; _x < _w; _x++){
@@ -4025,7 +4021,7 @@
 	}
 	
 	 // Search for Open Space:
-	var	_dis = 0,
+	var	_dis    = 0,
 		_disAdd = 4;
 		
 	while(_dis <= _disMax){

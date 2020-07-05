@@ -1380,7 +1380,7 @@
 				if(place_meeting(x, y, PortalClear) && place_meeting(x, y, other)){
 					with(other){
 						_break = false;
-						while(place_meeting(x, y, other)){
+						while(place_meeting(x, y, Floor) || place_meeting(x, y, other)){
 							x += lengthdir_x(16, dir);
 							y += lengthdir_y(16, dir);
 						}
