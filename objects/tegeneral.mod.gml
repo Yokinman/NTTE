@@ -3104,11 +3104,11 @@
 	 // Activated:
 	if(instance_exists(prompt) && player_is_active(prompt.pick)){
 		with(obj_create(x, y, "PetWeaponBoss")){
-			type = other.type;
+			type  = other.type;
 			curse = other.curse;
 			
 			 // Push Away:
-			with(player_find(prompt.pick)) with(other){
+			with(player_find(other.prompt.pick)) with(other){
 				motion_add(point_direction(other.x, other.y, x, y), 3);
 			}
 		}
