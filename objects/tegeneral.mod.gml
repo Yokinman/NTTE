@@ -2730,7 +2730,7 @@
 						
 						 // Effects:
 						with(instance_create(x, y, WepSwap)){
-							sprite_index = sprHealFX;
+							sprite_index = ((skill_get("compassion") > 0) ? sprHealBigFX : sprHealFX);
 							creator = other;
 						}
 						sound_play(sndHealthChestBig);
