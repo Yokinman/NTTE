@@ -182,11 +182,13 @@
 	 // Warping:
 	with(instances_matching(CustomObject, "name", "WarpPortal")){
 		if(!instance_exists(portal)){
-			GameCont.area        = area;
-			GameCont.subarea     = subarea;
-			GameCont.loops       = loops;
-			GameCont.lastarea    = area;
-			GameCont.lastsubarea = subarea;
+			GameCont.area    = area;
+			GameCont.subarea = subarea;
+			GameCont.loops   = loops;
+			if(!area_get_secret(GameCont.area)){
+				GameCont.lastarea    = GameCont.area;
+				GameCont.lastsubarea = GameCont.subarea;
+			}
 			
 			 // Cursed:
 			if(GameCont.area == area_caves){

@@ -811,6 +811,8 @@
 								wait 0;
 								_compare.slct = file_md5(a);
 								_compare.lock = file_md5(b);
+								file_unload(a);
+								file_unload(b);
 								exit;
 							}
 						}
@@ -907,6 +909,7 @@
 								if(_hash == crownCompare[crwn].slct){
 									_crown.slct = crwn;
 								}
+								file_unload(f);
 								exit;
 							}
 						}
