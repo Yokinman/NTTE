@@ -31,7 +31,7 @@
 #define area_text
 	return choose(
 		"BLINDING",
-		`THE RED DOT`,
+		"THE RED DOT",
 		`WELCOME TO THE @(color:${area_background_color()})WARP ZONE`
 	);
 	
@@ -182,9 +182,11 @@
 	 // Warping:
 	with(instances_matching(CustomObject, "name", "WarpPortal")){
 		if(!instance_exists(portal)){
-			GameCont.area    = area;
-			GameCont.subarea = subarea;
-			GameCont.loops   = loops;
+			GameCont.area        = area;
+			GameCont.subarea     = subarea;
+			GameCont.loops       = loops;
+			GameCont.lastarea    = area;
+			GameCont.lastsubarea = subarea;
 			
 			 // Cursed:
 			if(GameCont.area == area_caves){

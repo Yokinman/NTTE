@@ -346,9 +346,9 @@
 		else arcing = -1;
 		
 		if(
-			arcing >= 0											&&
-			point_distance(x, y, _ax, _ay) < arc_inst.arc_dis	&&
-			!collision_line(x, y, _ax, _ay, Wall, false, false)
+			arcing >= 0
+			&& point_distance(x, y, _ax, _ay) < arc_inst.arc_dis
+			&& !collision_line(x, y, _ax, _ay, Wall, false, false)
 		){
 			 // Start Arcing:
 			if(arcing < 1){
@@ -3943,7 +3943,7 @@
 /// GENERAL
 #define ntte_begin_step
 	 // Bind Angler Trail Drawing:
-	if(array_length(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0)) >= 0){
+	if(array_length(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0)) > 0){
 		script_bind_draw(draw_anglertrail, -3);
 	}
 	
