@@ -1832,23 +1832,22 @@
 			}
 		}
 	}
-
-
+	
 #define Spider_alrm0(_leaderDir, _leaderDis)
 	alarm0 = 20 + irandom(20);
-
+	
 	if(instance_exists(leader)){
 		 // Pathfinding:
 		if(path_dir != null){
 			scrWalk(path_dir + orandom(15), [5, 10]);
 			return walk;
 		}
-
+		
 		 // Move Towards Leader:
 		else{
 			scrWalk(_leaderDir + orandom(30), 20);
 			if(_leaderDis > 160) return walk;
-
+			
 			/*
 			var _target = noone;
 			
@@ -1856,10 +1855,10 @@
 			with(leader){
 				_target = instance_near(x, y, instance_seen(x, y, other), 256));
 			}
-				
+			
 			var t = array_length(instances_matching(instances_matching(CustomProjectile, "name", "SpiderTangle"), "creator", leader));
 			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
-			
+				
 				 // Snare Larget:
 				if(instance_seen(x, y, _target)){
 					var _targetDir = point_direction(x, y, _target.x, _target.y);
@@ -1891,17 +1890,17 @@
 			*/
 		}
 	}
-
+	
 	 // Wander:
 	else{
 		scrWalk(random(360), [5, 10]);
 	}
-
+	
 #define Spider_web_add(_x, _y)
 	array_push(web_list, {
-		x : _x,
-		y : _y,
-		frame : other.web_frame + 120,
+		x      : _x,
+		y      : _y,
+		frame  : other.web_frame + 120,
 		wading : (GameCont.area == "coast" && !position_meeting(_x, _y, Floor))
 	});
 	
@@ -1949,6 +1948,7 @@
 	
 #define Twins_step
 	twin_angle = (twin_angle + current_time_scale) % 360;
+	
 	var _twinsCount = 0,
 		_twinsIndex = 0,
 		_petName = pet,
@@ -1957,6 +1957,7 @@
 	 // Create twin_array:
 	var _leader = leader,
 		_doLink = false;
+		
 	for(var i = 0; i < twin_count; i++){
 		if(!instance_exists(twin_array[i])){
 			twin_array[i] = obj_create(x, y, "TwinOrbital");
@@ -1977,11 +1978,12 @@
 			}
 		}
 	}
-		
+	
 	 // Leader:
 	var _leaderAngle = twin_angle;
 	if(instance_exists(leader)){
 		twin_orbit_coeff = min(twin_orbit_coeff + (current_time_scale / 30), 1);
+		
 		x = lerp(x, leader.x, twin_orbit_coeff);
 		y = lerp(y, leader.y, twin_orbit_coeff);
 		
@@ -2009,7 +2011,7 @@
 	 // Orbit:
 	var l = lerp(12, 24 + ((twin_count - 1) * 10), twin_orbit_coeff),
 		o = (360 / (_twinsCount * twin_count)) * _twinsIndex;
-	
+		
 	for(var i = 0; i < twin_count; i++){
 		var a = lerp(twin_angle, _leaderAngle, twin_orbit_coeff),
 			d = ((a * 2) + (i * (360 / twin_count)) + o) % 360;
@@ -2025,9 +2027,6 @@
 			depth = other.depth + (dsin(d) / 100);
 		}
 	}
-	
-#define Twins_alrm0(_leaderDir, _leaderDis)
-	return 30;
 	
 	
 #define Octo_create

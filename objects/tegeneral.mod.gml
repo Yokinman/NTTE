@@ -193,7 +193,7 @@
 					depth = -6.0001;
 					
 					break;
-
+					
 				case area_caves:
 				case area_cursed_caves: // Face drill
 					
@@ -211,7 +211,7 @@
 		}
 	}
 	return noone;
-
+	
 #define BigDecal_step
 	if(!instance_exists(GenCont)){
 		 // Area-Specifics:
@@ -226,13 +226,12 @@
 					[ 11,  28],
 					[ 24,  18]
 				];
-
+				
 				// Trench vent bubbles:
 				for(var i = 0; i < array_length(_vents); i++){
 					if(chance_ct(1, 8)){
 						var p = _vents[i];
 						with(instance_create(x + p[0], y + p[1], Bubble)){
-							depth = -8;
 							friction = 0.2;
 							motion_set(90 + orandom(5), random_range(4, 7));
 						}
@@ -240,28 +239,13 @@
 				}
 				break;
 		}
-
+		
 		 // he ded lol:
 		if(place_meeting(x, y, Floor)){
 			instance_destroy();
 		}
 	}
-
-#define BigDecal_draw
-	 // Flying Ravens:
-	/*
-	with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom + 64, RavenFly)){
-		draw_sprite_ext(sprite_index, image_index, x, y + z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	}
-	*/
-
-	 // Bubble Fix:
-	if(distance_to_object(Bubble) < 40){
-		with(instance_rectangle(bbox_left, bbox_top - 32, bbox_right, bbox_bottom, Bubble)){
-			draw_self();
-		}
-	}
-
+	
 #define BigDecal_destroy
 	 // General FX:
 	sleep(100);
@@ -2222,10 +2206,11 @@
 						 // Charm Enemy:
 						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
 						with(charm_instance(target, true)){
-							index = other.index;
-							if(_wasUncharmed || time >= 0){
+							if(_wasUncharmed || time >= 0 || feather){
 								time += max(other.stick_time, 1);
 							}
+							index   = other.index;
+							feather = true;
 						}
 					}
 					

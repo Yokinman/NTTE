@@ -1,35 +1,34 @@
 #define init
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprTunneller.png",          5, 5);
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprTunneller.png",          8, 6);
 	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprTunnellerHUD.png",    1, 0, 3);
 	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprTunnellerHUDRed.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
-	 // LWO:
-	global.lwoWep = {
-		wep   : mod_current,
-		melee : true
-	}
-	
-#define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_name     return (weapon_avail() ? "TUNNELLER" : "LOCKED");
-#define weapon_text     return choose("WE'VE COME FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY @wRIPOFF`);
-#define weapon_swap     return sndSwapSword;
-#define weapon_area     return (weapon_avail() ? 12 : -1); // 6-1
+#define weapon_name   return (weapon_avail() ? "TUNNELLER" : "LOCKED");
+#define weapon_text   return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
+#define weapon_swap   return sndSwapSword;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area   return (weapon_avail() ? 12 : -1); // 6-1
+#define weapon_load   return 24; // 0.8 Seconds
+#define weapon_auto   return true;
+#define weapon_melee  return false;
+#define weapon_avail  return unlock_get("pack:red");
+#define weapon_red    return 1;
+
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
-	if(instance_is(other, WepPickup) && instance_is(self, WepPickup)){
-		return type_bullet;
+	if(instance_is(self, WepPickup) && instance_is(other, WepPickup)){
+		if(image_index > 1 && ammo > 0){
+			for(var i = 0; i < 360; i += 90){
+				draw_sprite_ext(sprite_index, 1, x + dcos(i), y - dsin(i), 1, 1, rotation, image_blend, image_alpha);
+			}
+		}
 	}
 	
+	 // Type:
 	return type_melee;
 	
-#define weapon_load     return 24; // 0.8 Seconds
-#define weapon_auto(w)	return weapon_melee(w);
-#define weapon_melee(w) return lq_defget(w, "melee", true);
-#define weapon_avail    return unlock_get("pack:red");
-#define weapon_red      return 1;
-
 #define weapon_sprt_hud(w)
 	 // Curse Outline:
 	if(instance_is(self, Player) && ((wep == w && curse) || (bwep == w && bcurse))){
@@ -51,94 +50,72 @@
 		 // Annihilator:
 		with(obj_create(x, y, "CrystalHeartBullet")){
 			projectile_init(other.team, other);
-			motion_set(other.gunangle + (orandom(4) * other.accuracy), 4);
+			motion_add(other.gunangle + orandom(4 * other.accuracy), 4);
 			image_angle = direction;
-			area_goal  = irandom_range(8, 12);
-			area_chaos = true; 
-			area_chest = pool([
-				[AmmoChest, 		 4],
-				[WeaponChest,		 4],
-				["Backpack",		 3],
-				["BonusAmmoChest",	 2],
+			damage      = 20;
+			area_goal   = irandom_range(8, 12);
+			area_chaos  = true; 
+			area_chest  = pool([
+				[AmmoChest,          4],
+				[WeaponChest,        4],
+				["Backpack",         3],
+				["BonusAmmoChest",   2],
 				["BonusHealthChest", 2],
-				["RedAmmoChest",	 1]
+				["RedAmmoChest",     1]
 			]);
 		}
 		
 		 // Effects:
-		weapon_post(12, 24, 12);
-		var d = gunangle + 180;
-		motion_add(d, 4);
-		move_contact_solid(d, 4);
+		weapon_post(18, 24, 12);
+		motion_add(gunangle + 180, 4);
+		move_contact_solid(gunangle + 180, 4);
 	}
 	
 	 // Normal:
-	else{
-		wepangle *= -1;
-		repeat(3){
-			if(instance_exists(self)){
-				 // Shank:
-				var _skill = skill_get(mut_long_arms),
-					_dir = gunangle + (orandom(15) * accuracy),
-					_len = lerp(0, 20, _skill);
-					
-				with(obj_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), "RedShank")){
-					projectile_init(other.team, other);
-					motion_add(_dir, lerp(3, 6, _skill));
-					image_angle = direction;
-				}
+	else if(fork()){
+		for(var i = 0; i < 3; i++){
+			 // Shank:
+			var	_skill = skill_get(mut_long_arms),
+				_dir   = gunangle + orandom(10 * accuracy),
+				_len   = 10 * _skill;
 				
-				 // Effects:
-				weapon_post(4, 8, 4);
-				motion_add(gunangle, 3);
-				wepangle *= -1;
-				
-				 // Sounds:
-				sound_play(sndScrewdriver);
-				
-				 // Hold Your Metaphorical Horses:
-				wait(4);
+			with(obj_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), "RedShank")){
+				projectile_init(other.team, other);
+				motion_add(_dir, lerp(3, 6, _skill));
+				image_angle = direction;
 			}
+			
+			 // Effects:
+			weapon_post(-3, 8, 2);
+			motion_add(gunangle, 3);
+			
+			 // Sounds:
+			sound_play(sndScrewdriver);
+			
+			 // Hold Your Metaphorical Horses:
+			wait(4);
+			if(!instance_exists(self)) break;
 		}
+		exit;
 	}
 	
 #define step(_primary)
 	var	b = (_primary ? "" : "b"),
 		w = variable_instance_get(self, b + "wep");
 		
-	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(global.lwoWep);
-		variable_instance_set(self, b + "wep", w);
+	 // Empty Unextend:
+	if((b + "wkick") in self){
+		if("red_ammo" not in self || red_ammo < weapon_get_red(w)){
+			var	_goal = 6,
+				_kick = variable_instance_get(self, b + "wkick");
+				
+			if(_kick >= 0 && _kick < _goal){
+				_kick = min(_goal, _kick + (2 * current_time_scale));
+				variable_instance_set(self, b + "wkick", _kick);
+			}
+		}
 	}
 	
-	 // Transition Between Shooty/Melee:
-	var	_wepangle = variable_instance_get(self, b + "wepangle", 0),
-		_wkick    = variable_instance_get(self, b + "wkick",    0);
-		
-	if("red_ammo" not in self || red_ammo < weapon_red()){
-		if(!w.melee){
-			w.melee   = true;
-			_wepangle = choose(-1, 1);
-			_wkick    = 4;
-		}
-		_wepangle = lerp(_wepangle, max(abs(_wepangle), 120) * sign(_wepangle), 0.4 * current_time_scale);
-	}
-	else if(w.melee){
-		_wepangle -= _wepangle * 0.4 * current_time_scale;
-		
-		 // Done:
-		if(abs(_wepangle) < 1){
-			w.melee = false;
-			_wkick = 2;
-		}
-	}
-	if((b + "wepangle") in self){
-		variable_instance_set(self, b + "wepangle", _wepangle);
-	}
-	if((b + "wkick") in self){
-		variable_instance_set(self, b + "wkick", _wkick);
-	}
 	
 /// SCRIPTS
 #macro  type_melee                                                                              0

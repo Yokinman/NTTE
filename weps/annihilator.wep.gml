@@ -16,19 +16,24 @@
 #define weapon_swap     return sndSwapHammer;
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area     return (weapon_avail() ? 21 : -1); // L1 3-1
-#define weapon_type     
-	 // Weapon Pickup Ammo Outline:
-	if(instance_is(other, WepPickup) && instance_is(self, WepPickup)){
-		return type_bullet;
-	}
-	
-	return type_melee;
-
 #define weapon_load     return 24; // 0.8 Seconds
 #define weapon_melee(w) return lq_defget(w, "melee", true);//(!instance_is(self, Player) || variable_instance_get(self, "red_ammo", 0) < weapon_get_red(w));
 #define weapon_avail    return unlock_get("pack:red");
 #define weapon_red      return 2;
 
+#define weapon_type
+	 // Weapon Pickup Ammo Outline:
+	if(instance_is(self, WepPickup) && instance_is(other, WepPickup)){
+		if(image_index > 1 && ammo > 0){
+			for(var i = 0; i < 360; i += 90){
+				draw_sprite_ext(sprite_index, 1, x + dcos(i), y - dsin(i), 1, 1, rotation, image_blend, image_alpha);
+			}
+		}
+	}
+	
+	 // Type:
+	return type_melee;
+	
 #define weapon_sprt_hud(w)
 	 // Normal Outline:
 	if(instance_is(self, Player)){

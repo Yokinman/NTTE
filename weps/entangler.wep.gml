@@ -9,24 +9,29 @@
 	
 #macro spr global.spr
 
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_name   return (weapon_avail() ? "ENTANGLER" : "LOCKED");
 #define weapon_text   return `@(color:${area_get_back_color("red")})YOOOOOOO`;
 #define weapon_swap   return sndSwapSword;
+#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area   return (weapon_avail() ? 21 : -1); // L1 3-1
-#define weapon_type
-	 // Weapon Pickup Ammo Outline:
-	if(instance_is(other, WepPickup) && instance_is(self, WepPickup)){
-		return type_bullet;
-	}
-	
-	return type_melee;
-	
 #define weapon_load   return 20; // 0.66 Seconds
 #define weapon_melee  return true;
 #define weapon_avail  return unlock_get("pack:red");
 #define weapon_red    return 1;
 
+#define weapon_type
+	 // Weapon Pickup Ammo Outline:
+	if(instance_is(self, WepPickup) && instance_is(other, WepPickup)){
+		if(image_index > 1 && ammo > 0){
+			for(var i = 0; i < 360; i += 90){
+				draw_sprite_ext(sprite_index, 1, x + dcos(i), y - dsin(i), 1, 1, rotation, image_blend, image_alpha);
+			}
+		}
+	}
+	
+	 // Type:
+	return type_melee;
+	
 #define weapon_sprt_hud(w)
 	 // Normal Outline:
 	if(instance_is(self, Player)){

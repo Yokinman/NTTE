@@ -53,7 +53,7 @@
 		
 		 // Sounds:
 		sound_play_pitch(sndEliteShielderFire, 0.9 + random(0.3));
-		sound_play_pitch(sndGammaGutsProc, 1.0 + random(0.2));
+		sound_play_pitch(sndGammaGutsProc,     1.0 + random(0.2));
 		
 		wait(3);
 	}

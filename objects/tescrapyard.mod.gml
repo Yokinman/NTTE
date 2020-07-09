@@ -1058,9 +1058,6 @@
 /// GENERAL
 #define ntte_end_step
 	 // Bind Events:
-	if(instance_exists(RavenFly)){
-		script_bind_draw(draw_ravenflys, -8);
-	}
 	if(array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0){
 		script_bind_draw(draw_sludge, -4);
 	}
@@ -1076,22 +1073,6 @@
 	with(instances_matching(instances_matching(CustomHitme, "name", "SawTrap"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
 	}
-
-#define draw_ravenflys
-	if(lag) trace_time();
-	
-	 // RavenFlys draw at like -6 depth, not cool bro:
-	with(RavenFly){
-		y += z;
-		image_xscale *= right;
-		draw_self();
-		y -= z;
-		image_xscale /= right;
-	}
-	
-	if(lag) trace_time(script[2]);
-	
-	instance_destroy();
 	
 #define draw_sludge
 	if(lag) trace_time();

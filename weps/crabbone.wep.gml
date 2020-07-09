@@ -136,11 +136,19 @@
 	 // Holdin Bone:
 	if(w.ammo > 0){
 		 // Extend Bone:
-		variable_instance_set(self, b + "wkick", min(-5, variable_instance_get(self, b + "wkick")));
+		if((b + "wkick") in self){
+			var	_goal = -5,
+				_kick = variable_instance_get(self, b + "wkick");
+				
+			if(_kick <= 0 && _kick > _goal){
+				_kick = max(_goal, _kick - (2 * current_time_scale));
+				variable_instance_set(self, b + "wkick", _kick);
+			}
+		}
 		
 		 // Pickup Bones:
 		if(place_meeting(x, y, WepPickup)){
-			with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", variable_instance_get(other, b + "curse", 0)))){
+			with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", variable_instance_get(self, b + "curse", 0)))){
 				if(place_meeting(x, y, other)){
 					if(wep_get(wep) == mod_current){
 						var _num = lq_defget(wep, "ammo", 1);
@@ -149,7 +157,7 @@
 						 // Pickuped:
 						with(other){
 							if(_primary || race == "steroids"){
-								variable_instance_set(self, b + "wkick", min(-8, variable_instance_get(self, b + "wkick")));
+								variable_instance_set(self, b + "wkick", 2);
 							}
 							else{
 								mod_script_call("mod", "tepickups", "pickup_text", "% BONE", _num);
