@@ -5044,27 +5044,38 @@
 		}
 	}
 	
+#define ntte_end_step
 	 // Red Weapon Pickup Ammo:
-	with(instances_matching(WepPickup, "ntte_red", null)){
-		ntte_red = weapon_get_red(wep_get(wep));
-	}
-	with(instances_matching_gt(instances_matching_gt(WepPickup, "ntte_red", 0), "ammo", 0)){
+	with(instances_matching_gt(WepPickup, "ammo", 0)){
 		if(place_meeting(x, y, Player)){
-			ammo = 0;
-			var _num = 1;
-			with(instance_nearest(x, y, Player)){
-				if("red_ammo" in self){
-					red_ammo = min(red_ammo + _num, red_amax);
+			if(weapon_get_red(wep) > 0){
+				with(instance_nearest_array(x, y, instances_matching_ne(Player, "red_ammo", null))){
+					other.ammo = false;
 					
-					 // Text:
-					var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
-					pickup_text(_text, _num);
+					 // Crown of Protection:
+					if(crown_current == crwn_protection){
+						var _num = 1;
+						my_health = min(my_health + _num, maxhealth);
+						
+						 // Text:
+						var _text = `${((my_health < maxhealth) ? "%" : "MAX")} HP`;
+						pickup_text(_text, _num);
+					}
+					
+					 // Normal:
+					else{
+						var _num = 1;
+						red_ammo = min(red_ammo + _num, red_amax);
+						
+						 // Text:
+						var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
+						pickup_text(_text, _num);
+					}
 				}
 			}
 		}
 	}
 	
-#define ntte_end_step
 	 // Bonus HP / Overheal:
 	with(instances_matching_gt(Player, "bonus_health", 0)){
 		drawlowhp = 0;
