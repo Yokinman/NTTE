@@ -597,6 +597,12 @@
 	}
 	
 	 // Pickups:
+ 	pickup_drop(50, 35);
+	pickup_drop(50, 35);
+	pickup_drop(100, 0);
+	pickup_drop(100, 0);
+	
+	/*
 	if(chance(1, 10)){
 		with(chest_create(x, y, BigWeaponChest, false)){
 			motion_add(random(360), 2);
@@ -611,6 +617,7 @@
 	}
 	pickup_drop(100, 0);
 	pickup_drop(100, 0);
+	*/
 	
 #define BigMaggotSpawn_cleanup
 	sound_stop(sndMaggotSpawnIdle);

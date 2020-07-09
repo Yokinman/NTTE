@@ -2214,9 +2214,8 @@
 		spr_walk = spr.TentacleIdle;
 		spr_hurt = spr.TentacleIdle;
 		spr_dead = spr.TentacleDead;
-		spr_dash = spr.TentacleDash;
 		spr_appear = spr.TentacleSpwn;
-		spr_disappear = spr.TentacleDead;
+		spr_disappear = spr.TentacleTele;
 		depth = -2 - (y / 20000);
 		hitid = [spr_idle, "PIT SQUID"];
 		image_speed = 0.4 + orandom(0.1);
@@ -2319,6 +2318,7 @@
 
 	 // Dead:
 	if(!instance_exists(creator) || (!bomb && creator.pit_height < 1)){
+		spr_dead = spr_disappear;
 		my_health = 0;
 		snd_dead = -1;
 	}
@@ -2590,19 +2590,22 @@
 
 #define PitSquidArm_death
 	pickup_drop(30, 0);
-	repeat(3) with(scrFX(x, y, 1, Smoke)) depth = 2;
+	// repeat(3) with(scrFX(x, y, 1, Smoke)) depth = 2;
 	
-	 // Manual Corpse:
-	if(corpse){
-		corpse = false;
-		with(corpse_drop(direction, speed)){
-			if(other.sprite_index == other.spr_appear){
-				image_index = (image_number - 1) * (1 - (ceil(other.image_index) / (other.image_number - 1)));
+	if(spr_dead != spr_disappear){
+		sleep(35);
+		var n = 3;
+		for(var i = 0; i < 360; i += (360 / n)){
+			var d = direction + i;
+				
+			with(instance_create(x, y, BloodStreak)){
+				sprite_index = spr.SquidBloodStreak;
+				motion_set(d + orandom(10), 3);
+				image_angle = direction;
 			}
 		}
 	}
-
-
+	
 #define PitSquidBomb_create(_x, _y)
 	/*
 		Used by PitSquidArm to create a trail of plasma explosions

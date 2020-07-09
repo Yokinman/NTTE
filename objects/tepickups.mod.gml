@@ -3295,7 +3295,7 @@
 				color1 = make_color_rgb(72, 253,  8);
 				color2 = make_color_rgb( 3,  33, 18)
 				skill  = other.skill;
-				time   = 120 * 30; // 2 minutes
+				time   = 180 * 30; // 3 minutes
 			}
 			
 			 // Effect:
@@ -3332,6 +3332,7 @@
 	repeat(4){
 		obj_create(x + orandom(24), (y + 8) + orandom(24), "GroundFlameGreen");
 	}
+	/*
 	repeat(2 + irandom(1)){
 		with(obj_create(x + orandom(16), (y + 8) + orandom(16), "GroundFlameGreen")){
 			spr_dead = sprThroneFlameEnd;
@@ -3340,6 +3341,7 @@
 			image_xscale = 0.8;
 		}
 	}
+	*/
 	with(instance_create(x, y - 8, EatRad)){
 		sprite_index = sprMutant6Dead;
 		image_speed  = 0.4;
@@ -3397,6 +3399,7 @@
 		while(phase < _cPhase){
 			phase++;
 			
+			/*
 			 // Loot:
 			var _minID = GameObject.id;
 			pickup_drop(10000, 0);
@@ -3407,30 +3410,9 @@
 				}
 			}
 			
-			/*		disabled for now
-			 // Protection:
-			var	_sealCap = 10,
-				_sealNum = array_length(instances_matching(CustomEnemy, "name", "Seal"));
-				
-			if(_sealNum < _sealCap){
-				repeat(min(3, _sealCap - _sealNum)){
-					var _spawnDir = point_direction(x, y, 10016, 10016) + orandom(90),
-						_spawnDis = 180;
-					
-					with(top_create(x - 50, y, "Seal", _spawnDir, _spawnDis)){
-						idle_time = 0;
-						jump_time = 1;
-						with(target){
-							type = choose(irandom_range(4, 6), 4);
-							alert_create(self, spr.SealArcticAlert);
-						}
-					}
-				}
-			}
-			*/
-			
 			 // Blank:
 			scrPalankingStatueBlank(1 + phase);
+			*/
 			
 			 // Resprite:
 			spr_idle = spr.PalankingStatueIdle[phase];
@@ -3445,6 +3427,11 @@
 
 #define PalankingStatue_death
 	var _minID = GameObject.id;
+	with(obj_create(x, y, "BackpackPickup")){
+		target = obj_create(x, y, "Backpack");
+	}
+	
+	/*
 	pickup_drop(10000, 0);
 	chest_create(x, y, "Backpack", false);
 
@@ -3472,6 +3459,7 @@
 	
 	 // Blank:
 	scrPalankingStatueBlank(2 + phase);
+	*/
 	
 	 // Effects:
 	scrPalankingStatueChunk(x, y, random(360), random_range(3, 8), random_range(3, 8));

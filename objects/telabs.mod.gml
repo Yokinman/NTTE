@@ -14,6 +14,78 @@
 		A labs event prop.
 	*/
 
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle = spr.ButtonIdle;
+		spr_hurt = spr.ButtonHurt;
+		spr_dead = spr.ButtonDead;
+		sprite_index = spr_idle;
+		spr_shadow = mskNone;
+		image_speed = 0.4;
+		
+		 // Sounds:
+		snd_hurt = sndHitMetal;
+		snd_dead = sndServerBreak;
+		
+		 // Vars:
+		mask_index   = -1;
+		maxhealth    = 40;
+		raddrop      = 0;
+		size         = 2;
+		team         = 1;
+		
+		 // Prompt:
+		prompt = prompt_create(" PRESS?");
+		with(prompt){
+			mask_index = mskReviveArea;
+			yoff = -8;
+		}
+		
+		return id;
+	}
+	
+#define Button_step
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
+		 // Visual:
+		spr_idle = spr.ButtonPressedIdle;
+		spr_hurt = spr.ButtonPressedHurt;
+		sprite_index = spr_hurt;
+		
+		 // Effects:
+		sound_play(sndCrownAppear);
+		with(instance_create(x, y - 10, SmallChestFade)){
+			image_blend = make_color_rgb(252, 56, 0);
+		}
+		
+		 // Prompt:
+		instance_delete(prompt);
+	}
+	
+#define ButtonChest_create(_x, _y)
+	with(instance_create(_x, _y, chestprop)){
+		 // Visual:
+		spr_debris = spr.ButtonChestDebris;
+		spr_shadow_y = 0;
+		sprite_index = spr.ButtonChest;
+		
+		 // Vars:
+		mask_index = sprAmmoChest;
+		payout_pool = [
+			[AmmoChest, 		 3],
+			[WeaponChest,		 2],
+			["BonusAmmoChest",	 4],
+			["BonusHealthChest", 3]
+		];
+		
+		return id;
+	}
+	
+
+#define ButtonOld_create(_x, _y)
+	/*
+		Depricated version of the Button object.
+	*/
+
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		spr_idle = spr.ButtonIdle;
@@ -50,7 +122,7 @@
 		return id;
 	}
 	
-#define Button_step
+#define ButtonOld_step
 	 // Hitme Stuff:
 	x = xstart;
 	y = ystart;
@@ -88,7 +160,7 @@
 		instance_destroy();
 	}
 	
-#define Button_destroy
+#define ButtonOld_destroy
 	 // JW's Been Slackin':
 	sound_play_hit(snd_dead, 0.2);
 	corpse_drop(direction, speed);
@@ -111,7 +183,7 @@
 		}
 	}
 	
-#define Button_alrm0
+#define ButtonOld_alrm0
 		
 	 // Positive Outcome:
 	var _col = effect_color;
@@ -243,7 +315,7 @@
 		}
 	}
 	
-#define Button_alrm1
+#define ButtonOld_alrm1
 	 // Visual:
 	spr_idle = spr.ButtonIdle;
 	spr_hurt = spr.ButtonHurt;
@@ -253,31 +325,11 @@
 		visible = true;
 	}
 	
-#define Button_alrm2
+#define ButtonOld_alrm2
 	 // Goodbye:
 	my_health = 0;
 	
 	
-#define ButtonChest_create(_x, _y)
-	with(instance_create(_x, _y, chestprop)){
-		 // Visual:
-		spr_debris = spr.ButtonChestDebris;
-		spr_shadow_y = 0;
-		sprite_index = spr.ButtonChest;
-		
-		 // Vars:
-		mask_index = sprAmmoChest;
-		payout_pool = [
-			[AmmoChest, 		 3],
-			[WeaponChest,		 2],
-			["BonusAmmoChest",	 4],
-			["BonusHealthChest", 3]
-		];
-		
-		return id;
-	}
-	
-
 #define ButtonPickup_create(_x, _y)
 	with(obj_create(_x, _y, "ButtonChest")){
 		 // Visual:

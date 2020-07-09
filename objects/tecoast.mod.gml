@@ -225,7 +225,7 @@
 				_goalDir += 180;
 			}
 			
-			image_angle = angle_lerp(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/8) * current_time_scale);
+			image_angle = angle_lerp(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/16) * current_time_scale);
 			direction = image_angle;
 			
 			 // Manually Rotate BoltSticks:
@@ -2074,7 +2074,7 @@
 			sound_play(snd.PalankingCall);
 			
 			repeat(2){
-				seal_wave(x, y, gunangle + orandom(30), 30 + random(10));
+				seal_wave(x, y, (gunangle + 90) + random(180), 20 + random(20));
 			}
 		}
 	}
@@ -3207,9 +3207,9 @@
 	
 	 // Reset Vars:
 	if(slide > 0){
-		image_angle = _lastAng;
-		y = _lastY;
-	}
+			image_angle = _lastAng;
+			y = _lastY;
+		}
 	
 #define Seal_alrm1
 	alarm1 = 30 + random(30);

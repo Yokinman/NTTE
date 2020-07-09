@@ -203,13 +203,19 @@
 	floor_set_align(null, null, 32, 32);
 	
 	 // Type Setup:
-	type = pool({
+	var _pool = {
 		"Chest"    : 2,
 		"Scorpion" : 1,
 		"Maggot"   : 1,
-		"Skull"    : 1,
-		"Dummy"    : 1
-	});
+		"Skull"    : 1
+	};
+	if(GameCont.loops <= 0){
+		
+		 // This mechanic is not suited for loop environments I think: 
+		lq_set(_pool, "Dummy", 1);
+	}
+	type = pool(_pool);
+	
 	switch(type){
 		case "Chest":
 		case "Dummy":
@@ -634,6 +640,9 @@
 					if(instance_exists(n)){
 						scrAim(point_direction(x, y, n.x, n.y));
 					}
+					
+					 // Awesomesauce:
+					hitid = [sprTargetIdle, "BANDIT AMBUSH"];
 				}
 				
 				instance_destroy();
@@ -665,6 +674,12 @@
 		_spawnY     = _y,
 		_spawnDis   = 160,
 		_spawnFloor = FloorNormal;
+		
+	 // Upgrade:	
+	with(WeaponChest){
+		chest_create(x, y, BigWeaponChest, true);
+		instance_delete(id);
+	}
 		
 	 // Find Spawn Location:
 	with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
@@ -1516,7 +1531,7 @@
 		repeat(3){
 			with(floor_room(_iglooSpawnX, _iglooSpawnY, _iglooSpawnDis, _iglooSpawnFloor, _iglooW, _iglooH, _iglooType, _iglooDirOff, _iglooFloorDis)){
 				with(obj_create(x, y, "Igloo")){
-					//num--;
+					chest = true;
 				}
 			}
 		}
@@ -1625,8 +1640,33 @@
 	
 #define ButtonGame_text		return `NEVER TOUCH THE ${ttip}RED BUTTON`;
 #define ButtonGame_area 	return area_labs;
-#define ButtonGame_chance	return 1/4;
+#define ButtonGame_chance	return 0; // 1/4;
 #define ButtonGame_create
+	var _spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 32,
+		_spawnFloor = FloorNormal,
+		_w          = 4,
+		_h          = 4,
+		_type       = "",
+		_dirOff     = 0,
+		_floorDis   = -32;
+		
+	floor_set_align(null, null, 32, 32);
+	
+	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		 // The Button:
+		obj_create(x, y, "Button");
+		
+		 // Ring:
+		floor_set_style(1, null);
+		floor_fill(x, y, _w, _h, "ring");
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
+
+	/*
 	var _spawnX     = x,
 		_spawnY     = y,
 		_spawnDis   = 32,
@@ -1653,22 +1693,14 @@
 				obj_create(bbox_center_x + orandom(2), bbox_center_y + orandom(2), o);
 			}
 		}
-		/*
-		with(_floors){
-			if(!place_meeting(x, y, chestprop) && !place_meeting(x, y, prop)){
-				if(chance(1, 4)){
-					instance_create(bbox_center_x + orandom(2), (bbox_center_y - 8) + orandom(2), Tube);
-				}
-			}
-		}
-		*/
 	}
 	
 	floor_reset_align();
 	floor_reset_style();
+	*/
 	
 	
-#define PalaceShrine_text    return `${ttip}RAD MANIPULATION @wIS KINDA TRICKY`;
+#define PalaceShrine_text    return choose(`${ttip}RAD MANIPULATION @wIS KINDA TRICKY`, `${ttip}FINAL PROVISIONS`);
 #define PalaceShrine_area    return area_palace;
 #define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
 
@@ -1774,14 +1806,25 @@
 				s = _skillTypes[t];
 				
 			if(w != wep_none){
-				if(skill_get(s) <= 0){
-					array_push(_skillArray, s);
-				}
 				
-				 // Ammo Consuming Melee Weapons:
-				if(skill_get(mut_long_arms) <= 0){
-					if(t != 0 && weapon_is_melee(w)){
-						array_push(_skillArray, mut_long_arms);
+				 // Scythe Exception (Kinda Ugly):
+				if(wep_get(w) == "scythe"){
+					array_push(_skillArray, mut_long_arms);
+					array_push(_skillArray, mut_bolt_marrow);
+					array_push(_skillArray, mut_shotgun_shoulders);
+				}
+				else{
+					
+					 // We Pushin':
+					if(skill_get(s) <= 0){
+						array_push(_skillArray, s);
+					}
+					
+					 // Ammo Consuming Melee Weapons:
+					if(skill_get(mut_long_arms) <= 0){
+						if(t != 0 && weapon_is_melee(w)){
+							array_push(_skillArray, mut_long_arms);
+						}
 					}
 				}
 			}

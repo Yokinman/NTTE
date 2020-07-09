@@ -41,6 +41,22 @@
 	 // Crystal Heart Guarantee:
 	heart_spawn = {};
 	
+	 // Secret Area Entry Weapon Guarantees:
+	secret_area_entry_weapons = [
+		{
+			weap : wep_grenade_launcher,
+			area : area_sewers,
+			suba : 1,
+			seen : false
+		},
+		{
+			weap : wep_screwdriver,
+			area : area_scrapyards,
+			suba : 1,
+			seen : false
+		}
+	]
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -51,6 +67,8 @@
 #macro ntte_mods_call global.mods_call
 
 #macro heart_spawn global.heart_spawn
+
+#macro secret_area_entry_weapons global.secret_area_entry_weapons
 
 #define game_start
 	 // Reset:
@@ -109,6 +127,11 @@
 		heart_spawn.loops   = 0;
 	}
 	else heart_spawn = {};
+	
+	 // Secret Area Entry Weapons:
+	with(secret_area_entry_weapons){
+		seen = false;
+	}
 	
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
@@ -2457,6 +2480,23 @@
 	 // Bind Shadow Drawing:
 	if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
 		script_bind_draw(draw_shadows_top, -6.001);
+	}
+	
+	 // Guaranteed Secret Area Entry Weapons:
+	with(instances_matching(WepPickup, "ntte_secret_area_entry_weapon_check", null)){
+		ntte_secret_area_entry_weapon_check = true;
+		with(secret_area_entry_weapons){
+			if(!seen){
+				if(GameCont.area == area && GameCont.subarea == suba){
+					if(array_length(instances_matching(instances_matching(instances_matching(ChestOpen, "sprite_index", sprWeaponChestOpen, sprWeaponChestBigOpen), "xstart", other.xstart), "ystart", other.ystart)) > 0){
+						other.wep = weap;
+					}
+				}
+				if(other.wep == weap){
+					seen = true;
+				}
+			}
+		}
 	}
 	
 	if(lag) trace_time("ntte_end_step");

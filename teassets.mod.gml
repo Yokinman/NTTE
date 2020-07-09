@@ -545,14 +545,13 @@
 				PitSquidEyelid  = sprite(p + "sprPitsquidEyelid", 3, 19, 19);
 				
 				 // Tentacles:
-				TentacleSpwn = sprite(p + "sprTentacleSpwn",           6, 20, 28);
-				TentacleIdle = sprite(p + "sprTentacleIdle",           8, 20, 28);
-				TentacleHurt = sprite(p + "sprTentacleHurt",           3, 20, 28);
-				TentacleDead = sprite(p + "sprTentacleDead",           6, 20, 28);
-				TentacleWarn = sprite(p + "sprTentacleWarn",          15, 12, 12);
-				TentacleDash =[sprite(p + "sprTentacleBackwards",      2, 20, 20),
-				               sprite(p + "sprTentacleForwards",       2, 20, 20)];
-				SquidCharge  = sprite(p + "Particles/sprSquidCharge",  5, 24, 24);
+				TentacleIdle = sprite(p + "sprTentacleIdle", 8, 20, 28);
+				TentacleDead = sprite(p + "sprTentacleDead", 4, 20, 28);
+				TentacleSpwn = sprite(p + "sprTentacleSpwn", 6, 20, 28);
+				TentacleTele = sprite(p + "sprTentacleTele", 6, 20, 28);
+				
+				SquidCharge 	 = sprite(p + "Particles/sprSquidCharge",      5,  24, 24);
+				SquidBloodStreak = sprite(p + "Particles/sprSquidBloodStreak", 7,  0,  8);
 				
 				 // Maw:
 				PitSquidMawBite = sprite(p + "sprPitsquidMawBite", 14, 19, 19);
