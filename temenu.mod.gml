@@ -756,17 +756,15 @@
 	instance_destroy();
 	
 #define draw_loadout_crown
-	var	_p          = loadoutPlayer,
-		_race       = player_get_race_fix(_p),
-		_crown      = lq_get(crownRace, _race),
-		_vx         = view_xview_nonsync,
-		_vy         = view_yview_nonsync,
-		_surfScreen = -1,
-		_surfCrown  = -1,
-		_w          = 20,
-		_h          = 20,
-		_cx         = game_width - 102,
-		_cy         = 75;
+	var	_p     = loadoutPlayer,
+		_race  = player_get_race_fix(_p),
+		_crown = lq_get(crownRace, _race),
+		_vx    = view_xview_nonsync,
+		_vy    = view_yview_nonsync,
+		_w     = 20,
+		_h     = 20,
+		_cx    = game_width - 102,
+		_cy    = 75;
 		
 	if(!is_undefined(_crown)){
 		if(array_length(instances_matching(Loadout, "selected", true)) > 0){
@@ -822,7 +820,6 @@
 				}
 			}
 			
-			
 			 // Normal Crown Icons:
 			if(array_length(_crown.icon) <= 0){
 				var	_crownList = instances_matching(LoadoutCrown, "", null),
@@ -875,42 +872,48 @@
 						with(other){
 							visible = true;
 							
-							 // Capture Screen:
-							if(!surface_exists(_surfScreen)){
-								_surfScreen = surface_create(game_width, game_height);
+							var	_crwn  = crwn,
+								_crwnX = x,
+								_crwnY = y + 2;
+							
+							with(surface_setup("CrownCompareScreen", game_width, game_height, 1)){
+								x = _vx;
+								y = _vy;
 								
-								surface_set_target(_surfScreen);
+								 // Capture Screen:
+								surface_set_target(surf);
 								draw_clear(c_black);
 								surface_reset_target();
-								
 								draw_set_blend_mode_ext(bm_one, bm_one);
-								surface_screenshot(_surfScreen);
+								surface_screenshot(surf);
 								draw_set_blend_mode(bm_normal);
-							}
-							
-							 // Capture Crown Icon from Screen Capture:
-							if(!surface_exists(_surfCrown)){
-								_surfCrown = surface_create(_w, _h);
-							}
-							surface_set_target(_surfCrown);
-							draw_clear_alpha(0, 0);
-							draw_surface(_surfScreen, -(x - (_h / 2) - _vx), -(y + 2 - (_w / 2) - _vy));
-							surface_reset_target();
-							
-							 // Compare MD5 Hashes w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
-							var f = crownPath + string(crwn) + crownPathD;
-							surface_save(_surfCrown, f);
-							surface_destroy(_surfCrown);
-							file_load(f);
-							if(fork()){
-								wait 0;
-								var _hash = file_md5(f);
-								locked = (_hash == crownCompare[crwn].lock);
-								if(_hash == crownCompare[crwn].slct){
-									_crown.slct = crwn;
+								
+								 // Capture Crown Icon:
+								with(surface_setup("CrownCompare", _w, _h, 1)){
+									x = (w / 2);
+									y = (h / 2);
+									
+									 // Draw Crown Icon from Screen Surface:
+									surface_set_target(surf);
+									draw_clear_alpha(0, 0);
+									draw_surface(other.surf, -(_crwnX - x - other.x), -(_crwnY - y - other.y));
+									surface_reset_target();
+									
+									 // Compare MD5 Hashes w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
+									var _path = crownPath + string(_crwn) + crownPathD;
+									surface_save(surf, _path);
+									file_load(_path);
+									if(fork()){
+										wait 0;
+										var _hash = file_md5(_path);
+										locked = (_hash == crownCompare[_crwn].lock);
+										if(_hash == crownCompare[_crwn].slct){
+											_crown.slct = _crwn;
+										}
+										file_unload(_path);
+										exit;
+									}
 								}
-								file_unload(f);
-								exit;
 							}
 						}
 					}

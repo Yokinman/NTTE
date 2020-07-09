@@ -1778,7 +1778,6 @@
 		}
 	}
 	
-	
 #define ntte_dark // Drawing Grays
 	with(instances_matching(CustomObject, "name", "ButtonReviveArea")){
 		draw_circle(x, y, 64 + irandom(2), false);

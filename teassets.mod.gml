@@ -31,8 +31,8 @@
 			"oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
 			"trench": sprite("areas/Trench/sprTrenchBigTopDecal",       1, 32, 24)
 		};
-		NestDebris		  = sprite("areas/Scrapyard/sprNestDebris", 16,     4,  4);
-		msk.BigTopDecal	  = sprite("areas/Desert/mskBigTopDecal",    1,    32, 24);
+		NestDebris        = sprite("areas/Scrapyard/sprNestDebris", 16,     4,  4);
+		msk.BigTopDecal   = sprite("areas/Desert/mskBigTopDecal",    1,    32, 24);
 		shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 48-16, 32);
 		shd.BigGeneratorR = sprite("areas/Palace/shdBigGeneratorR",  1, 48+16, 32);
 		
@@ -141,9 +141,9 @@
 			}
 			
 			 // Portal Bullet:
-			PortalBullet    	  = sprite(p + "sprPortalBullet",   	   4, 12, 12);
-			PortalBulletHit		  = sprite(p + "sprPortalBulletHit",	   4, 16, 16);
-			PortalBulletSpawn	  = sprite(p + "sprPortalBulletSpawn",	   7, 26, 26);
+			PortalBullet          = sprite(p + "sprPortalBullet",          4, 12, 12);
+			PortalBulletHit       = sprite(p + "sprPortalBulletHit",       4, 16, 16);
+			PortalBulletSpawn     = sprite(p + "sprPortalBulletSpawn",     7, 26, 26);
 			PortalBulletLightning = sprite(p + "sprPortalBulletLightning", 4, 0,  1);
 			
 			 // Quasar Beam:
@@ -159,7 +159,7 @@
 			RedBulletDisappear = sprite(p + "sprRedBulletDisappear", 5,  9,  9);
 			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
 			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
-			RedShank		   = sprite(p + "sprRedShank",			 2,  0, 8);
+			RedShank           = sprite(p + "sprRedShank",           2, -5,  8);
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
@@ -367,7 +367,7 @@
 			               sprite(p + "sprCatSnowGoSitSide", 3, 12, 12)];
 			CatSnowSit2  =[sprite(p + "sprCatSnowSit",       6, 12, 12),
 			               sprite(p + "sprCatSnowSitSide",   6, 12, 12)];
-			CatWeap	 = sprite(p + "sprCatToxer",     1,  3,  4);
+			CatWeap  = sprite(p + "sprCatToxer",     1,  3,  4);
 			AcidPuff = sprite(p + "sprAcidPuff",     4, 16, 16);
 			
 			 // Cat Boss:
@@ -428,22 +428,22 @@
 			
 			 // Eel:
 			p = m + "Eel/";
-			EelIdle	   =[sprite(p + "sprEelIdleBlue",    8, 16, 16),
+			EelIdle    =[sprite(p + "sprEelIdleBlue",    8, 16, 16),
 			             sprite(p + "sprEelIdlePurple",  8, 16, 16),
 			             sprite(p + "sprEelIdleGreen",   8, 16, 16)];
-			EelHurt	   =[sprite(p + "sprEelHurtBlue",    3, 16, 16),
+			EelHurt    =[sprite(p + "sprEelHurtBlue",    3, 16, 16),
 			             sprite(p + "sprEelHurtPurple",  3, 16, 16),
 			             sprite(p + "sprEelHurtGreen",   3, 16, 16)];
-			EelDead	   =[sprite(p + "sprEelDeadBlue",    9, 16, 16),
+			EelDead    =[sprite(p + "sprEelDeadBlue",    9, 16, 16),
 			             sprite(p + "sprEelDeadPurple",  9, 16, 16),
 			             sprite(p + "sprEelDeadGreen",   9, 16, 16)];
-			EelTell	   =[sprite(p + "sprEelTellBlue",    8, 16, 16),
+			EelTell    =[sprite(p + "sprEelTellBlue",    8, 16, 16),
 			             sprite(p + "sprEelTellPurple",  8, 16, 16),
 			             sprite(p + "sprEelTellGreen",   8, 16, 16)];
 			EeliteIdle = sprite(p + "sprEelIdleElite",   8, 16, 16);
 			EeliteHurt = sprite(p + "sprEelHurtElite",   3, 16, 16);
 			EeliteDead = sprite(p + "sprEelDeadElite",   9, 16, 16);
-			WantEel	   = sprite(p + "sprWantEel",       16, 16, 16);
+			WantEel    = sprite(p + "sprWantEel",       16, 16, 16);
 			
 			 // Fish Freaks:
 			p = m + "FishFreak/";
@@ -469,17 +469,17 @@
 			
 			 // Jellyfish (0 = blue, 1 = purple, 2 = green, 3 = elite):
 			p = m + "Jellyfish/";
-			JellyFire	   = sprite(p + "sprJellyfishFire",        6, 24, 24);
+			JellyFire      = sprite(p + "sprJellyfishFire",        6, 24, 24);
 			JellyEliteFire = sprite(p + "sprJellyfishEliteFire",   6, 24, 24);
-			JellyIdle	   =[sprite(p + "sprJellyfishBlueIdle",    8, 24, 24),
+			JellyIdle      =[sprite(p + "sprJellyfishBlueIdle",    8, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleIdle",  8, 24, 24),
 			                 sprite(p + "sprJellyfishGreenIdle",   8, 24, 24),
 			                 sprite(p + "sprJellyfishEliteIdle",   8, 24, 24)];
-			JellyHurt	   =[sprite(p + "sprJellyfishBlueHurt",    3, 24, 24),
+			JellyHurt      =[sprite(p + "sprJellyfishBlueHurt",    3, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleHurt",  3, 24, 24),
 			                 sprite(p + "sprJellyfishGreenHurt",   3, 24, 24),
 			                 sprite(p + "sprJellyfishEliteHurt",   3, 24, 24)];
-			JellyDead	   =[sprite(p + "sprJellyfishBlueDead",   10, 24, 24),
+			JellyDead      =[sprite(p + "sprJellyfishBlueDead",   10, 24, 24),
 			                 sprite(p + "sprJellyfishPurpleDead", 10, 24, 24),
 			                 sprite(p + "sprJellyfishGreenDead",  10, 24, 24),
 			                 sprite(p + "sprJellyfishEliteDead",  10, 24, 24)];
@@ -570,13 +570,13 @@
 				
 			 // Popo Security:
 			p = m + "PopoSecurity/";
-			PopoSecurityIdle	= sprite(p + "sprPopoSecurityIdle",    11, 16, 16);
-			PopoSecurityWalk	= sprite(p + "sprPopoSecurityWalk",    6,  16, 16);
-			PopoSecurityHurt	= sprite(p + "sprPopoSecurityHurt",    3,  16, 16);
-			PopoSecurityDead	= sprite(p + "sprPopoSecurityDead",    7,  16, 16);
-			PopoSecurityCannon	= sprite(p + "sprPopoSecurityCannon",  1,  7,  8);
+			PopoSecurityIdle    = sprite(p + "sprPopoSecurityIdle",    11, 16, 16);
+			PopoSecurityWalk    = sprite(p + "sprPopoSecurityWalk",    6,  16, 16);
+			PopoSecurityHurt    = sprite(p + "sprPopoSecurityHurt",    3,  16, 16);
+			PopoSecurityDead    = sprite(p + "sprPopoSecurityDead",    7,  16, 16);
+			PopoSecurityCannon  = sprite(p + "sprPopoSecurityCannon",  1,  7,  8);
 			PopoSecurityMinigun = sprite(p + "sprPopoSecurityMinigun", 1,  7,  8);
-				
+			
 			 // Portal Guardian:
 			p = m + "PortalGuardian/";
 			PortalGuardianIdle      = sprite(p + "sprPortalGuardianIdle",      4, 16, 16);
@@ -773,7 +773,7 @@
 			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
 			WallSpiderBot       = sprite(p + "sprWallSpiderBot",       2, 0, 0);
 			WallSpiderling      = sprite(p + "sprWallSpiderling",      4, 8, 8);
-			WallSpiderlingTrans	= sprite(p + "sprWallSpiderlingTrans", 4, 8, 8);
+			WallSpiderlingTrans = sprite(p + "sprWallSpiderlingTrans", 4, 8, 8);
 			
 		//#endregion
 		
@@ -813,7 +813,7 @@
 		p = m;
 			
 			 // Freak Chamber:
-			Wall6BotTrans	  = sprite(p + "sprWall6BotTrans",	   4, 0,  0);
+			Wall6BotTrans     = sprite(p + "sprWall6BotTrans",     4,  0,  0);
 			FreakChamberAlarm = sprite(p + "sprFreakChamberAlarm", 4, 12, 12);
 			
 			//#region PROPS
@@ -828,18 +828,16 @@
 				MutantVatGlass = sprite(p + "sprMutantVatGlass", 4, 6,  6);
 				
 				 // Button:
-				ButtonIdle		  = sprite(p + "sprButtonIdle", 	   1, 16, 16);
-				ButtonHurt		  = sprite(p + "sprButtonHurt", 	   3, 16, 16);
-				ButtonPressedIdle = sprite(p + "sprButtonPressedIdle", 1, 16, 16);
-				ButtonPressedHurt = sprite(p + "sprButtonPressedHurt", 3, 16, 16);
-				ButtonDead		  = sprite(p + "sprButtonDead", 	   4, 16, 16);
-				ButtonDebris	  = sprite(p + "sprButtonDebris",	   1, 12, 12);
-				
-				ButtonRevive	 = sprite(p + "sprButtonRevive",	 12, 24, 48);
-				ButtonReviveArea = sprite(p + "sprButtonReviveArea", 8,  20, 20);
-				
-				PickupRevive	 = sprite(p + "sprPickupRevive",	 12, 24, 48);
-				PickupReviveArea = sprite(p + "sprPickupReviveArea", 8,  20, 20);
+				ButtonIdle        = sprite(p + "sprButtonIdle",         1, 16, 16);
+				ButtonHurt        = sprite(p + "sprButtonHurt",         3, 16, 16);
+				ButtonPressedIdle = sprite(p + "sprButtonPressedIdle",  1, 16, 16);
+				ButtonPressedHurt = sprite(p + "sprButtonPressedHurt",  3, 16, 16);
+				ButtonDead        = sprite(p + "sprButtonDead",         4, 16, 16);
+				ButtonDebris      = sprite(p + "sprButtonDebris",       1, 12, 12);
+				ButtonRevive      = sprite(p + "sprButtonRevive",      12, 24, 48);
+				ButtonReviveArea  = sprite(p + "sprButtonReviveArea",   8, 20, 20);
+				PickupRevive      = sprite(p + "sprPickupRevive",      12, 24, 48);
+				PickupReviveArea  = sprite(p + "sprPickupReviveArea",   8, 20, 20);
 				
 			//#endregion
 			
@@ -957,7 +955,7 @@
 				PalmFortHurt = sprite(p + "sprPalmFortHurt", 3, 32, 56);
 				
 				 // Sea/Seal Mine:
-				SealMine	 = sprite(p + "sprSeaMine",     1, 12, 12);
+				SealMine     = sprite(p + "sprSeaMine",     1, 12, 12);
 				SealMineHurt = sprite(p + "sprSeaMineHurt", 3, 12, 12);
 				
 			p = m + "Decals/";
@@ -1256,9 +1254,10 @@
 			WarpOpenOut = sprite(p + "sprWarpOpenOut", 4, 32, 32);
 			
 			 // Misc:
-			Starfield       = sprite(p + "sprStarfield",       2, 256, 256);
-			SpiralStarfield = sprite(p + "sprSpiralStarfield", 2,  32,  32);
-			RedDot          = sprite(p + "sprRedDot",          9,   7,   7);
+			RedDot          = sprite(p + "sprRedDot",           9,   7,   7);
+			RedText         = sprite(p + "sprRedText",         12,  12,   4);
+			Starfield       = sprite(p + "sprStarfield",        2, 256, 256);
+			SpiralStarfield = sprite(p + "sprSpiralStarfield",  2,  32,  32);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1379,15 +1378,13 @@
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
 			 // Red Ammo:
-			RedAmmoChest     = sprite(p + "sprRedAmmoChest",     1,  8,  8, shn16);
-			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1,  8,  8);
-			RedAmmoPickup    = sprite(p + "sprRedAmmoPickup",    1,  5,  5, shn10);
-			RedAmmoHUD       = sprite(p + "sprRedAmmoHUD",       2,  1,  1);
-			RedAmmoHUDCharge = sprite(p + "sprRedAmmoHUDCharge", 2,  1,  2);
-			RedAmmoHUDCost   = sprite(p + "sprRedAmmoHUDCost",   1,  1,  2);
-			RedAmmoHUDNotch  = sprite(p + "sprRedAmmoHUDNotch",  1,  1,  0);
-			RedAmmoHUDBar	 = sprite(p + "sprRedAmmoHUDBar",	 2,  0,  0);
-			RedAmmoPopup	 = sprite(p + "sprRedAmmoPopup",	 12, 12, 4);
+			RedAmmoChest     = sprite(p + "sprRedAmmoChest",     1, 8, 8, shn16);
+			RedAmmoChestOpen = sprite(p + "sprRedAmmoChestOpen", 1, 8, 8);
+			RedAmmoPickup    = sprite(p + "sprRedAmmoPickup",    1, 5, 5, shn10);
+			RedAmmoHUD       = sprite(p + "sprRedAmmoHUD",       2, 1, 1);
+			RedAmmoHUDAmmo   = sprite(p + "sprRedAmmoHUDAmmo",   2, 1, 2);
+			RedAmmoHUDFill   = sprite(p + "sprRedAmmoHUDFill",   2, 0, 0);
+			RedAmmoHUDCost   = sprite(p + "sprRedAmmoHUDCost",   2, 2, 2);
 			
 			 // Red Crystal Chest:
 			RedChest     = sprite(p + "sprRedChest",     1, 8, 8, shn16);

@@ -516,7 +516,7 @@
 				with(instances_matching(_feathers, "canhold", false)){
 					 // Remove Charm Time:
 					if(target != creator){
-						if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) > 0 || creator != other)){
+						if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) >= 0 || creator != other)){
 							with(target){
 								ntte_charm.time -= other.stick_time;
 								if(ntte_charm.time <= 0){
@@ -727,7 +727,7 @@
 #define charm_step
 	if(lag) trace_time();
 	
-	var	_charmObject = [hitme, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak],
+	var	_charmObject = [hitme, becomenemy, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak],
 		_charmDraw   = array_create(maxp + 1);
 		
 	 // Charm Draw Setup:
@@ -842,15 +842,17 @@
 						else for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
 							var a = alarm_get(_alarmNum);
 							if(a > 0 && a <= ceil(current_time_scale)){
-								alarm_set(_alarmNum, -1);
+								alarm_set(_alarmNum, 0);
 								
 								 // Call Alarm Event:
 								event_perform(ev_alarm, _alarmNum);
 								if(!instance_exists(self)) break;
 								
 								 // 1 Frame Extra:
-								var a = alarm_get(_alarmNum);
-								if(a > 0) alarm_set(_alarmNum, a + ceil(current_time_scale));
+								a = alarm_get(_alarmNum);
+								if(a > 0){
+									alarm_set(_alarmNum, a + ceil(current_time_scale));
+								}
 							}
 						}
 					}
@@ -1168,37 +1170,49 @@
 					}
 					
 					 // Charm Timer:
-					else if((instance_is(self, hitme) || instance_is(self, becomenemy)) && _vars.time > 0){
+					else if(_vars.time >= 0){
 						_vars.time -= _vars.time_speed * current_time_scale;
-						if(_vars.time <= 0) charm_instance(self, false);
+						if(_vars.time <= 0){
+							charm_instance(self, false);
+						}
 					}
 				}
 			}
 			
 			 // Charm Spawned Enemies:
-			with(instances_matching(instances_matching(_charmObject, "creator", self), "ntte_charm", null)){
-				if(!instance_exists(other) || place_meeting(x, y, other)){
-					var c = charm_instance(id, true);
-					c.index = _vars.index;
-					
-					if(instance_is(self, hitme)){
-						 // Kill When Uncharmed if Infinitely Spawned:
-						if(!_vars.boss && "kills" in self && kills <= 0){
-							c.kill = true;
-							if("raddrop" in self) raddrop = 0;
-						}
+			if(_vars.charmed){
+				with(instances_matching(instances_matching(_charmObject, "creator", self), "ntte_charm", null)){
+					var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
+					if(!_hitme || !instance_exists(other) || place_meeting(x, y, other)){
+						var c = charm_instance(id, true);
+						c.time    = _vars.time;
+						c.index   = _vars.index;
+						c.feather = _vars.feather;
 						
-						 // Featherize:
-						repeat(max(_vars.time / 90, 1)){
-							with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
-								target = other;
-								index = _vars.index;
-								with(player_find(index)) other.bskin = bskin;
-								sprite_index = race_get_sprite("parrot", sprite_index);
+						if(_hitme){
+							 // Kill When Uncharmed if Infinitely Spawned:
+							if(!_vars.boss && "kills" in self && kills <= 0){
+								c.kill = true;
+								if("raddrop" in self) raddrop = 0;
+							}
+							
+							 // Featherize:
+							if(c.feather && _vars.time >= 0){
+								repeat(max(c.time / 90, 1)){
+									with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
+										target = other;
+										index  = c.index;
+										with(player_find(index)){
+											other.bskin = bskin;
+										}
+										sprite_index = race_get_sprite("parrot", sprite_index);
+									}
+								}
+								c.time = -1;
 							}
 						}
+						else c.time_speed = 0;
 					}
-					else c.time = _vars.time;
 				}
 			}
 		}

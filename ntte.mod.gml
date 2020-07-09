@@ -2405,11 +2405,11 @@
 		
 		var _list = mod_variable_get("mod", "teevents", "event_list");
 		for(var i = 0; i < array_length(_list); i++){
-			var	_scrt = _list[i],
+			var	_scrt    = _list[i],
 				_modType = _scrt[0],
 				_modName = _scrt[1],
-				_name = _scrt[2],
-				_area = mod_script_call(_modType, _modName, _name + "_area");
+				_name    = _scrt[2],
+				_area    = mod_script_call(_modType, _modName, _name + "_area");
 				
 			if(_area == null || GameCont.area == _area){
 				var _hard = mod_script_call(_modType, _modName, _name + "_hard");
@@ -2435,6 +2435,10 @@
 	}
 	with(instances_matching([VenuzCarpet, FloorMiddle], "depth", 7)){
 		depth = 8;
+	}
+	with(instances_matching_gt([Bubble, RavenFly, LilHunterFly], "depth", object_get_depth(SubTopCont))){
+		depth = -8;
+		visible = true;
 	}
 	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
 		spr_shadow_y = -3;
@@ -3232,34 +3236,38 @@
 			
 			with(_player){
 				 // Red Ammo:
-				var _b = ["", "b"];
-				for(var i = 0; i < array_length(_b); i++){
-					var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
-						_cost = weapon_get_red(_wep);
-						
-					if(_cost > 0 && "red_ammo" in self){
-						var	_x = _ox + 43 + (44 * i),
-							_y = _oy + 20,
-							_max = 4;
-							
-						 // Main:
-						draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
-						
-						 // Charges:
-						for(var j = 0; j < red_ammo; j++){
-							draw_sprite(spr.RedAmmoHUDCharge, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
-							draw_sprite(spr.RedAmmoHUDBar, (red_amax > _max), (_x + 2) + j, _y);
-						}
-						
-						 // Cost:
-						if(red_ammo < _cost){
-							if(variable_instance_get(self, "drawempty" + _b[i], 0) > 0 && (wave % 10) < 5){
-								draw_sprite(spr.RedAmmoHUDCost, 0, _x + 4 + (4 * (_cost % _max)), _y + 4);
+				if("red_ammo" in self){
+					if(_HUDDraw){
+						var _b = ["", "b"];
+						for(var i = 0; i < array_length(_b); i++){
+							var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
+								_cost = weapon_get_red(_wep);
+								
+							if(_cost > 0){
+								var	_x   = _ox + 43 + (44 * i),
+									_y   = _oy + 20,
+									_max = 4;
+									_low = (
+										red_ammo < _cost
+										&& (wave % 10) < 5
+										&& variable_instance_get(self, "drawempty" + _b[i], 0) > 0
+									);
+									
+								 // Main:
+								draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
+								
+								 // Ammo Charges:
+								if(red_ammo > 0){
+									draw_sprite_ext(spr.RedAmmoHUDFill, (red_amax > _max), _x + 2, _y, red_ammo, 1, 0, c_white, 1);
+									for(var j = 0; j < red_ammo; j++){
+										draw_sprite(spr.RedAmmoHUDAmmo, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+									}
+								}
+								
+								 // Cost Indicator:
+								draw_sprite(spr.RedAmmoHUDCost, _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
 							}
 						}
-						
-						 // Notch:
-						draw_sprite(spr.RedAmmoHUDNotch, 0, (_x + 3) + (_cost * 4), (_y + 5) - (button_pressed(index, "swap") && canswap));// + (variable_instance_get(self, "drawempty" + _b[i], 0) > 0));
 					}
 				}
 				

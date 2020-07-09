@@ -299,13 +299,23 @@
 	
 	 // Big Ammo:
 	if(place_meeting(x, y, WepPickup)){
-		with(instances_meeting(x, y, instances_matching(WepPickup, "visible", true))){
+		with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", variable_instance_get(self, b + "curse", 0)))){
 			if(place_meeting(x, y, other)){
 				if(wep_get(wep) == "crabbone"){
-					w.ammo = min(w.ammo + 20, w.amax);
+					var _num = lq_defget(wep, "ammo", 1);
+					w.ammo = min(w.ammo + (20 * _num), w.amax);
+					
+					 // Pickuped:
+					with(other){
+						if(!_primary && race != "steroids"){
+							mod_script_call("mod", "tepickups", "pickup_text", "% BONE", _num);
+						}
+					}
 					
 					 // Effects:
-					with(instance_create(x, y, DiscDisappear)) image_angle = other.rotation;
+					with(instance_create(x, y, DiscDisappear)){
+						image_angle = other.rotation;
+					}
 					sound_play_pitchvol(sndHPPickup, 4, 0.6);
 					sound_play_pitchvol(sndPickupDisappear, 1.2, 0.6);
 					sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.4);

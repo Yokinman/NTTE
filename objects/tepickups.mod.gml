@@ -2388,8 +2388,8 @@
 	with(instance_create(_x, _y, chestprop)){
 		 // Visual:
 		sprite_index = sprAmmoChest;
-		spr_dead = sprAmmoChestOpen;
-		spr_open = sprFXChestOpen;
+		spr_dead     = sprAmmoChestOpen;
+		spr_open     = sprFXChestOpen;
 		
 		 // Sound:
 		snd_open = sndAmmoChest;
@@ -2412,38 +2412,42 @@
 	}
 	
 	 // Open Chest:
-	var c = [Player, PortalShock];
-	for(var i = 0; i < array_length(c); i++) if(place_meeting(x, y, c[i])){
-		with(instance_nearest(x, y, c[i])) with(other){
-			 // Hatred:
-			if(crown_current == crwn_hatred){
-				repeat(16) with(instance_create(x, y, Rad)){
-					motion_add(random(360), random_range(2, 6));
+	var _meet = [Player, PortalShock];
+	for(var i = 0; i < array_length(_meet); i++){
+		if(place_meeting(x, y, _meet[i])){
+			with(instance_nearest(x, y, _meet[i])) with(other){
+				 // Hatred:
+				if(crown_current == crwn_hatred){
+					repeat(16) with(instance_create(x, y, Rad)){
+						motion_add(random(360), random_range(2, 6));
+					}
+					if(instance_is(other, Player)){
+						projectile_hit_raw(other, 1, true);
+					}
 				}
-				if(instance_is(other, Player)){
-					projectile_hit_raw(other, 1, true);
+				
+				 // Call Chest Open Event:
+				var e = on_open;
+				if(is_array(e)){
+					mod_script_call(e[0], e[1], e[2]);
 				}
-			}
-			
-			 // Call Chest Open Event:
-			var e = on_open;
-			if(is_array(e)){
-				mod_script_call(e[0], e[1], e[2]);
-			}
-			
-			 // Effects:
-			if(sprite_exists(spr_dead)){
-				with(instance_create(x, y, ChestOpen)) sprite_index = other.spr_dead;
-			}
-			if(sprite_exists(spr_open)){
-				with(instance_create(x, y, FXChestOpen)){
-					sprite_index = other.spr_open;
+				
+				 // Effects:
+				if(sprite_exists(spr_dead)){
+					with(instance_create(x, y, ChestOpen)){
+						sprite_index = other.spr_dead;
+					}
 				}
+				if(sprite_exists(spr_open)){
+					with(instance_create(x, y, FXChestOpen)){
+						sprite_index = other.spr_open;
+					}
+				}
+				sound_play(snd_open);
+				
+				instance_destroy();
+				exit;
 			}
-			sound_play(snd_open);
-			
-			instance_destroy();
-			exit;
 		}
 	}
 	
@@ -3001,7 +3005,7 @@
 			color1 - The main HUD color
 			color2 - The secondary HUD color
 			skill  - The mutation to give, automatically decided by default
-			time   - How long the mutation lasts
+			time   - How many frames the mutation lasts
 			num    - The value of the mutation
 			flash  - Visual HUD flash, true/false
 	*/
@@ -3140,7 +3144,7 @@
 		
 		 // Timer:
 		time_max = max(time, time_max);
-		if(time > 0 && !instance_exists(GenCont) && !instance_exists(LevCont)){
+		if(time >= 0 && !instance_exists(GenCont) && !instance_exists(LevCont)){
 			time -= current_time_scale;
 			
 			 // Goodbye:
@@ -3628,7 +3632,7 @@
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
+			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
 			pickup_text(_text, _num);
 		}
 	}
@@ -3671,38 +3675,8 @@
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
+			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
 			pickup_text(_text, _num);
-		}
-	}
-	
-	
-#define red_ammo_add(_player, _num)
-	with(_player){
-		 // Initialize:
-		if("red_ammo" not in self) red_ammo = 0;
-		if("red_amax" not in self) red_amax = 4;
-		
-		 // :
-		red_ammo += _num;
-		
-		 // Maxed Out:
-		var _maxRed = red_amax + ((99 - red_amax) * skill_get(mut_back_muscle));
-		if(red_ammo >= _maxRed){
-			red_ammo = _maxRed;
-			
-			with(obj_create(x, y, "RedAmmoPopup")){
-				text_prefix = "MAX";
-				target = other.index;
-			}
-		}
-		else{
-			
-			 // Room to Spare:
-			with(obj_create(x, y, "RedAmmoPopup")){
-				text_prefix = "+" + string(_num);
-				target = other.index;
-			}
 		}
 	}
 	
@@ -5058,27 +5032,38 @@
 		}
 	}
 	
+#define ntte_end_step
 	 // Red Weapon Pickup Ammo:
-	with(instances_matching(WepPickup, "ntte_red", null)){
-		ntte_red = weapon_get_red(wep_get(wep));
-	}
-	with(instances_matching_gt(instances_matching_gt(WepPickup, "ntte_red", 0), "ammo", 0)){
+	with(instances_matching_gt(WepPickup, "ammo", 0)){
 		if(place_meeting(x, y, Player)){
-			ammo = 0;
-			var _num = 1;
-			with(instance_nearest(x, y, Player)){
-				if("red_ammo" in self){
-					red_ammo = min(red_ammo + _num, red_amax);
+			if(weapon_get_red(wep) > 0){
+				with(instance_nearest_array(x, y, instances_matching_ne(Player, "red_ammo", null))){
+					other.ammo = false;
 					
-					 // Text:
-					var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedAmmoPopup}:-0.8) AMMO`;
-					pickup_text(_text, _num);
+					 // Crown of Protection:
+					if(crown_current == crwn_protection){
+						var _num = 1;
+						my_health = min(my_health + _num, maxhealth);
+						
+						 // Text:
+						var _text = `${((my_health < maxhealth) ? "%" : "MAX")} HP`;
+						pickup_text(_text, _num);
+					}
+					
+					 // Normal:
+					else{
+						var _num = 1;
+						red_ammo = min(red_ammo + _num, red_amax);
+						
+						 // Text:
+						var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
+						pickup_text(_text, _num);
+					}
 				}
 			}
 		}
 	}
 	
-#define ntte_end_step
 	 // Bonus HP / Overheal:
 	with(instances_matching_gt(Player, "bonus_health", 0)){
 		drawlowhp = 0;

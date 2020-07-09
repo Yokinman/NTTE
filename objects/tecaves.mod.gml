@@ -549,11 +549,15 @@
 					if(instance_is(self, enemy)){
 						kills = 0;
 						my_health = ceil(my_health / 2);
+						if(canmelee == true){
+							canmelee = false;
+							alarm11 = 30;
+						}
 					}
 				}
 				
 				 // Move Away:
-				if(!instance_budge(other, -1)){
+				if(!instance_budge(_target, -1)){
 					var	_dis = 16,
 						_dir = random(360);
 						
@@ -596,8 +600,8 @@
 		y = target.y;
 		
 		 // Visual:
-		mask_index = target.sprite_index;
 		depth = target.depth - 1;
+		mask_index = target.sprite_index;
 		if(appear > 0){
 			target.visible = false;
 		}
@@ -656,54 +660,49 @@
 				
 				 // Cloned Instances:
 				with(_inst){
-					var _flash = (time < 60 && floor(time / 2) % 2);
-					if(_flash){
-						draw_set_fog(true, c_black, 0, 0);
-					}
-					with(target){
-						 // Self:
-						with(self) event_perform(ev_draw, 0);
-						
-						 // Appearing Visual:
-						if(other.appear > 0){
-							visible = true;
+					if(time > 60 || (time % 6) < 3){
+						with(target){
+							 // Self:
+							with(self) event_perform(ev_draw, 0);
 							
-							 // Set Hitbox to Sprite:
-							var	_lastMask   = mask_index,
-								_lastXScale = image_xscale;
+							 // Appearing Visual:
+							if(other.appear > 0){
+								visible = true;
 								
-							mask_index = sprite_index;
-							if("right" in self){
-								image_xscale *= right;
-							}
-							
-							 // Cool Wavy Cut:
-							var	_x1 = bbox_left,
-								_y1 = bbox_top,
-								_x2 = bbox_right  + 1,
-								_y2 = bbox_bottom + 1,
-								_h  = (_y2 - _y1) / 16,
-								_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+								 // Set Hitbox to Sprite:
+								var	_lastMask   = mask_index,
+									_lastXScale = image_xscale;
+									
+								mask_index = sprite_index;
+								if("right" in self){
+									image_xscale *= right;
+								}
 								
-							draw_set_blend_mode_ext(bm_zero, bm_zero);
-							draw_primitive_begin(pr_trianglestrip);
-							
-							draw_vertex(_x1, _y1);
-							for(var _x = _x1; _x <= _x2; _x++){
-								draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
-								draw_vertex(_x, _y1);
+								 // Cool Wavy Cut:
+								var	_x1 = bbox_left,
+									_y1 = bbox_top,
+									_x2 = bbox_right  + 1,
+									_y2 = bbox_bottom + 1,
+									_h  = (_y2 - _y1) / 16,
+									_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+									
+								draw_set_blend_mode_ext(bm_zero, bm_zero);
+								draw_primitive_begin(pr_trianglestrip);
+								
+								draw_vertex(_x1, _y1);
+								for(var _x = _x1; _x <= _x2; _x++){
+									draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
+									draw_vertex(_x, _y1);
+								}
+								
+								draw_primitive_end();
+								draw_set_blend_mode(bm_normal);
+								
+								 // Reset Hitbox:
+								mask_index   = _lastMask;
+								image_xscale = _lastXScale;
 							}
-							
-							draw_primitive_end();
-							draw_set_blend_mode(bm_normal);
-							
-							 // Reset Hitbox:
-							mask_index   = _lastMask;
-							image_xscale = _lastXScale;
 						}
-					}
-					if(_flash){
-						draw_set_fog(false, c_white, 0, 0);
 					}
 				}
 				
@@ -1033,7 +1032,17 @@
 	
 #define CrystalHeartBullet_hit
 	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage);
+		projectile_hit_push(other, damage, force);
+		
+		 // Slow:
+		x -= hspeed_raw;
+		y -= vspeed_raw;
+		speed /= 2;
+		
+		 // Effects:
+		sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 1.5);
+		view_shake_at(x, y, 4);
+		sleep(10);
 	}
 	
 #define CrystalHeartBullet_wall
@@ -1929,24 +1938,17 @@
 	
 	
 #define RedShank_create(_x, _y)
-	with(instance_create(_x, _y, CustomSlash)){
+	with(instance_create(_x, _y, Shank)){
 		 // Visual:
 		sprite_index = spr.RedShank;
-		image_speed = 0.4;
 		
 		 // Vars:
-		mask_index = -1;
-		damage     = 10; // 6;
-		force      = 6;
-		candeflect = false;
+		damage = 10;
+		force  = 6;
 		
 		return id;
 	}
 	
-#define RedShank_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
-	}
 	
 #define RedSlash_create(_x, _y)
 	with(instance_create(_x, _y, CustomSlash)){
@@ -2235,22 +2237,22 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.PetTwinsRed;
-		image_speed = 0;
-		depth = -3;
+		image_speed  = 0;
+		depth        = -3;
 		
 		 // Vars:
 		mask_index = mskFreak;
-		creator = noone;
-		leader = noone;
-		white = false;
-		setup = true;
-		damage = 2;
-		force = 4;
-		team = 2;
-		kick = 0;
-		kick_dir = 0;
-		twin = noone;
-		free = false;
+		creator    = noone;
+		leader     = noone;
+		white      = false;
+		setup      = true;
+		damage     = 2;
+		force      = 4;
+		team       = 2;
+		kick       = 0;
+		kick_dir   = 0;
+		twin       = noone;
+		free       = false;
 		
 		return id;
 	}
@@ -2316,7 +2318,7 @@
 		kick = 6;
 		kick_dir = _projDir;
 		
-		scrTwinOrbitalFX(x, y, _projDir);
+		TwinOrbital_effect(x, y, _projDir);
 		repeat(irandom_range(1, 3)){
 			with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
 				alarm0 = random_range(10, 20);
@@ -2326,8 +2328,8 @@
 		with(twin){
 			kick = -3;
 			kick_dir = _projDir;
-		
-			scrTwinOrbitalFX(x, y, _projDir);
+			
+			TwinOrbital_effect(x, y, _projDir);
 			repeat(irandom_range(1, 3)){
 				with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
 					sprite_index = sprSpiralStar;
@@ -2369,7 +2371,7 @@
 		draw_sprite_ext(sprite_index, image_index, x + lengthdir_x(kick, kick_dir), y + lengthdir_y(kick, kick_dir), image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	}
 	
-#define scrTwinOrbitalFX(_x, _y, _dir)
+#define TwinOrbital_effect(_x, _y, _dir)
 	var _sprite = (white ? spr.PetTwinsEffectWhite : spr.PetTwinsEffectRed);
 	with(instance_create(_x, _y, BulletHit)){
 		sprite_index = _sprite;
@@ -3164,19 +3166,22 @@
 	}
 	
 #define ntte_bloom
-	 // Annihilator:
+	 // Red:
 	with(instances_matching(CustomProjectile, "name", "RedBullet")){
 		if(bonus > 0){
 			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
 		}
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
-	with(instances_matching(CustomProjectile, "name", "RedShank", "RedSlash")){
+	with(instances_matching(CustomProjectile, "name", "RedSlash")){
+		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+	}
+	with(instances_matching(Shank, "name", "RedShank")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 	}
 
 	 // Crystal Heart Projectile:
-	with(instances_matching(projectile, "name", "CrystalHeartOrb")){
+	with(instances_matching(projectile, "name", "CrystalHeartBullet")){
 		var	_scale = 2,
 			_alpha = 0.1;
 			

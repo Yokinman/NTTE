@@ -294,10 +294,10 @@
 											case "draw"       : _bind = script_bind_draw(obj_bind, _inst.depth); break;
 										}
 										with(_bind){
-											name = script[2];
-											type = _event;
-											inst = [];
-											inst_obj = lq_get(ntte_obj_bind, type);
+											name       = script[2];
+											type       = _event;
+											inst       = [];
+											inst_obj   = lq_get(ntte_obj_bind, type);
 											persistent = true;
 										}
 									}
@@ -1402,11 +1402,12 @@
 				"on_step"    : [],     // Custom object step event
 				"index"      : -1,     // Player who charmed
 				"team"       : -1,     // Original team before charming
-				"time"       : 0,      // Charm duration in frames
+				"time"       : -1,     // Charm duration in frames
 				"time_speed" : 1,      // Charm duration decrement speed
 				"walk"       : 0,      // For overwriting movement on certain dudes (Assassin, big dog)
 				"boss"       : false,  // Instance is a boss
-				"kill"       : false   // Kill when uncharmed (For dudes who were spawned by charmed dudes)
+				"kill"       : false,  // Kill when uncharmed (For dudes who were spawned by charmed dudes)
+				"feather"    : false   // Was charmed using feathers
 			};
 		}
 		
@@ -1416,7 +1417,8 @@
 			_vars.charmed = _charm;
 			_vars.target  = noone;
 			_vars.index   = -1;
-			_vars.time    = 0;
+			_vars.time    = -1;
+			_vars.feather = false;
 			
 			 // Charm:
 			if(_charm){
@@ -5557,11 +5559,11 @@
 		'sound_play_hit()' distance-based sound, but with pitch and volume arguments
 	*/
 	
-	var s = sound_play_hit(_sound, 0);
-	sound_pitch(s, _pitch);
-	sound_volume(s, audio_sound_get_gain(s) * _volume);
+	var _s = sound_play_hit(_sound, 0);
+	sound_pitch(_s, _pitch);
+	sound_volume(_s, audio_sound_get_gain(_s) * _volume);
 	
-	return s;
+	return _s;
 
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)
 	/*
