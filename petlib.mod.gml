@@ -378,6 +378,7 @@
 						|| _wep == wep_golden_frog_pistol
 						|| _wep == "crabbone"
 						|| _wep == "merge"
+						|| _wep == "super teleport gun"
 					){
 						_max++;
 					}

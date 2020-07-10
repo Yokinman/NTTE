@@ -612,6 +612,118 @@
 	}
 	
 	
+#define BubbleSlash_create(_x, _y)
+	with(instance_create(_x, _y, CustomSlash)){
+		 // Visual:
+		sprite_index = spr.BubbleSlash;
+		image_speed  = 0.4;
+		
+		 // Vars:
+		mask_index = mskSlash;
+		damage = 8;
+		force = 12;
+		walled = false;
+		
+		return id;
+	}
+	
+#define BubbleSlash_projectile
+	with(other){
+		 // Enbubble:
+		if(typ == 1 && variable_instance_get(id, "bubble_bombed") != true && other.candeflect){
+			bubble_bombed = true;
+			var	_cannon = (damage > 3),
+				_slash = other;
+			
+			 // Deflect:
+			team		 = _slash.team;
+			deflected	 = true;
+			direction	 = _slash.direction;
+			image_angle  = _slash.direction;
+			sprite_index = team_get_sprite(team, sprite_index);
+				
+			 // Bubble Bomb:
+			with(obj_create(x, y, "BubbleBomb")){
+				creator = _slash.creator;
+				team    = _slash.team;
+				big 	= _cannon;
+				array_push(held, other);
+				motion_set(_slash.direction + orandom(12), _slash.speed - 2);
+				move_contact_solid(direction, 6);
+			}
+			if(_cannon){
+				sleep(50);
+			}
+			
+			 // Effects:
+			with(instance_create(x, y, Bubble)){
+				image_angle  = random(360);
+				image_xscale = 0.75;
+				image_yscale = image_xscale;
+			}
+			with(instance_create(x, y, BubblePop)){
+				image_index  = 1;
+				image_angle  = random(360);
+				image_xscale = 0.8;
+				image_yscale = image_xscale;
+				depth		 = other.depth - 1;
+			}
+		}
+		
+		 // Destroy:
+		else if(typ == 2){
+			instance_destroy();
+		}
+	}
+	
+#define BubbleSlash_hit
+	var o = other;
+	if(projectile_canhit_melee(o)){
+		projectile_hit(o, damage, force, direction);
+		
+		 // Game Feel Shit:
+		repeat(clamp((o.size * 2), 1, 6)){
+			with(instance_create(x, y, Bubble)){
+				image_angle = random(360);
+				image_xscale = 0.75;
+				image_yscale = image_xscale;
+				motion_add(o.direction + orandom(12), irandom(3) + 2)
+				friction = 0.1;
+			}
+		}
+		
+		with(instance_create(o.x, o.y, BubblePop)){
+			image_index  = 1;
+			image_angle  = random(360);
+			sprite_index = ((o.size >= 2) ? spr.BigBubblePop : sprPlayerBubblePop);
+			depth		 = o.depth - 1;
+			/*
+			image_xscale = min(0.75 + 0.25 * o.size, 3);
+			image_yscale = image_xscale;
+			*/
+		}
+		
+		if(o.my_health <= 0){
+			view_shake_at(x, y, min(1, o.size) * 5);
+			sleep(min(1, o.size) * 12);
+		}
+	}
+	
+#define BubbleSlash_wall
+	if(!walled){
+		walled = true;
+		
+		 // Hit Wall FX:
+		var	_x = bbox_center_x + hspeed_raw,
+			_y = bbox_center_y + vspeed_raw;
+			
+		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
+				image_angle = point_direction(_x, _y, x, y);
+			}
+		}
+	}
+
 #define CrabTank_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;

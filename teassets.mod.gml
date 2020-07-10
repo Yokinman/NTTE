@@ -105,6 +105,7 @@
 			BubbleExplosionSmall = sprite(p + "sprBubbleExplosionSmall",  7, 12, 12);
 			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
 			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
+			BubbleSlash			 = sprite(p + "sprBubbleSlash",        	  3,  0, 24);
 			
 			 // Clam Shield:
 			ClamShield          = sprite(p + "sprClamShield",      14,  0,  7);
