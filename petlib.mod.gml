@@ -370,6 +370,7 @@
 						|| w == wep_golden_frog_pistol
 						|| w == "crabbone"
 						|| w == "merge"
+						|| w == "super teleport gun"
 					){
 						_max++;
 						if(array_exists(_value, w)) _num++;

@@ -334,7 +334,7 @@
 	if(!teleport){
 		if(enemy_target(x, y)){
 			var _targetDir = point_direction(x, y, target.x, target.y),
-				_canWarp = (my_health < maxhealth);
+				_canWarp = true; // (my_health < maxhealth);
 			
 			if(instance_seen(x, y, target)){
 			
@@ -393,25 +393,43 @@
 	}
 	
 	 // Warp In:
-	else if(enemy_target(x, y)){
-		var	_minDis = min_tele_dist,
-			_maxDis = max_tele_dist;
-			
-		with(array_shuffle(FloorNormal)){
-			if(!place_meeting(x, y, Wall)){
-				var	_x = bbox_center_x,
-					_y = bbox_center_y;
+	else{
+		if(enemy_target(x, y)){
+			var _floor = noone,
+				_enemy = instances_matching(CustomEnemy, "name", "RedSpider");
+			if(my_health < maxhealth || array_length(_enemy) <= 0){
+				var _minDis = min_tele_dist,
+					_maxDis = max_tele_dist;
 					
-				if(instance_near(_x, _y, other.target, [_minDis, _maxDis])){
-					with(other){
-						teleport_x = _x;
-						teleport_y = _y;
-						
-						 // Visual:
-						sprite_index = spr_appear;
-						image_index = 0;
+				with(array_shuffle(FloorNormal)){
+					if(!instance_exists(_floor) && !place_meeting(x, y, Wall)){
+						var _x = bbox_center_x,
+							_y = bbox_center_y;
+							
+						if(instance_near(_x, _y, other.target, [_minDis, _maxDis])){
+							_floor = id;
+						}
 					}
 				}
+			}
+			else{
+				with(array_shuffle(_enemy)){
+					with(instance_nearest_array(x, y, FloorNormal)){
+						if(!instance_exists(_floor) && !place_meeting(x, y, Wall)){
+							_floor = id;
+						}
+					}
+				}
+			}
+			if(instance_exists(_floor)){
+				with(_floor){
+					other.teleport_x = bbox_center_x;
+					other.teleport_y = bbox_center_y;
+				}
+				
+				 // Visual:
+				sprite_index = spr_appear;
+				image_index  = 0;
 			}
 		}
 	}
